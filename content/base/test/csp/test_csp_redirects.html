@@ -20,6 +20,7 @@ var path = "/tests/content/base/test/csp/";
 // debugging
 function log(s) {
   return;
+  dump("**" + s + "\n");
   var log = document.getElementById("log");
   log.textContent = log.textContent+s+"\n";
 }
@@ -27,26 +28,22 @@ function log(s) {
 // used to watch if requests are blocked by CSP or allowed through
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
-  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    // subject should be an nsURI, and should be either allowed or blocked.
-    if (!SpecialPowers.can_QI(subject))
-      return;
-
     var testpat = new RegExp("testid=([a-z0-9-]+)");
     var asciiSpec;
     var testid;
 
-    if (topic === "http-on-modify-request") {
+    if (topic === "specialpowers-http-notify-request") {
       // request was sent
-      asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
-      if (!testpat.test(asciiSpec)) return;
-      testid = testpat.exec(asciiSpec)[1];
+      var allowedUri = data;
+      if (!testpat.test(allowedUri)) return;
+      testid = testpat.exec(allowedUri)[1];
       if (testExpectedResults[testid] == "completed") return;
-      log("allowed: "+asciiSpec);
-      window.testResult(testid, asciiSpec, true);
+      log("allowed: "+allowedUri);
+      window.testResult(testid, allowedUri, true);
     }
 
     else if (topic === "csp-on-violate-policy") {
@@ -65,7 +62,7 @@ examiner.prototype  = {
 
   remove: function() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-    SpecialPowers.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }
 window.examiner = new examiner();
@@ -132,7 +129,13 @@ var testResult = function(testName, url, result) {
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
+  {'set':[["security.csp.speccompliant", true],
+          // This defaults to 0 ("preload none") on mobile (B2G/Android), which
+          // blocks loading the resource until the user interacts with a
+          // corresponding widget, which breaks the media_* tests. We set it
+          // back to the default used by desktop Firefox to get consistent
+          // behavior.
+          ["media.preload.default", 2]]},
   function() {
     // save this for last so that our listeners are registered.
     // ... this loads the testbed of good and bad requests.
