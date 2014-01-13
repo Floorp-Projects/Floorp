@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.home.HomeConfig.PageEntry;
-import org.mozilla.gecko.home.HomeConfig.PageType;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomePager;
 
 import android.content.Context;
@@ -23,15 +23,15 @@ import java.util.List;
 class HomeAdapter extends FragmentStatePagerAdapter {
 
     private final Context mContext;
-    private final ArrayList<PageInfo> mPageInfos;
-    private final HashMap<String, Fragment> mPages;
+    private final ArrayList<PanelInfo> mPanelInfos;
+    private final HashMap<String, Fragment> mPanels;
 
     private boolean mCanLoadHint;
 
-    private OnAddPageListener mAddPageListener;
+    private OnAddPanelListener mAddPanelListener;
 
-    interface OnAddPageListener {
-        public void onAddPage(String title);
+    interface OnAddPanelListener {
+        public void onAddPanel(String title);
     }
 
     public HomeAdapter(Context context, FragmentManager fm) {
@@ -40,25 +40,25 @@ class HomeAdapter extends FragmentStatePagerAdapter {
         mContext = context;
         mCanLoadHint = HomeFragment.DEFAULT_CAN_LOAD_HINT;
 
-        mPageInfos = new ArrayList<PageInfo>();
-        mPages = new HashMap<String, Fragment>();
+        mPanelInfos = new ArrayList<PanelInfo>();
+        mPanels = new HashMap<String, Fragment>();
     }
 
     @Override
     public int getCount() {
-        return mPageInfos.size();
+        return mPanelInfos.size();
     }
 
     @Override
     public Fragment getItem(int position) {
-        PageInfo info = mPageInfos.get(position);
+        PanelInfo info = mPanelInfos.get(position);
         return Fragment.instantiate(mContext, info.getClassName(), info.getArgs());
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        if (mPageInfos.size() > 0) {
-            PageInfo info = mPageInfos.get(position);
+        if (mPanelInfos.size() > 0) {
+            PanelInfo info = mPanelInfos.get(position);
             return info.getTitle().toUpperCase();
         }
 
@@ -68,7 +68,7 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         Fragment fragment = (Fragment) super.instantiateItem(container, position);
-        mPages.put(mPageInfos.get(position).getId(), fragment);
+        mPanels.put(mPanelInfos.get(position).getId(), fragment);
 
         return fragment;
     }
@@ -76,17 +76,17 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         super.destroyItem(container, position, object);
-        mPages.remove(mPageInfos.get(position).getId());
+        mPanels.remove(mPanelInfos.get(position).getId());
     }
 
-    public void setOnAddPageListener(OnAddPageListener listener) {
-        mAddPageListener = listener;
+    public void setOnAddPanelListener(OnAddPanelListener listener) {
+        mAddPanelListener = listener;
     }
 
-    public int getItemPosition(String pageId) {
-        for (int i = 0; i < mPageInfos.size(); i++) {
-            final String id = mPageInfos.get(i).getId();
-            if (id.equals(pageId)) {
+    public int getItemPosition(String panelId) {
+        for (int i = 0; i < mPanelInfos.size(); i++) {
+            final String id = mPanelInfos.get(i).getId();
+            if (id.equals(panelId)) {
                 return i;
             }
         }
@@ -94,32 +94,32 @@ class HomeAdapter extends FragmentStatePagerAdapter {
         return -1;
     }
 
-    public String getPageIdAtPosition(int position) {
-        // getPageAtPosition() might be called before HomeAdapter
-        // has got its initial list of PageEntries. Just bail.
-        if (mPageInfos.isEmpty()) {
+    public String getPanelIdAtPosition(int position) {
+        // getPanelIdAtPosition() might be called before HomeAdapter
+        // has got its initial list of PanelConfigs. Just bail.
+        if (mPanelInfos.isEmpty()) {
             return null;
         }
 
-        return mPageInfos.get(position).getId();
+        return mPanelInfos.get(position).getId();
     }
 
-    private void addPage(PageInfo info) {
-        mPageInfos.add(info);
+    private void addPanel(PanelInfo info) {
+        mPanelInfos.add(info);
 
-        if (mAddPageListener != null) {
-            mAddPageListener.onAddPage(info.getTitle());
+        if (mAddPanelListener != null) {
+            mAddPanelListener.onAddPanel(info.getTitle());
         }
     }
 
-    public void update(List<PageEntry> pageEntries) {
-        mPages.clear();
-        mPageInfos.clear();
+    public void update(List<PanelConfig> panelConfigs) {
+        mPanels.clear();
+        mPanelInfos.clear();
 
-        if (pageEntries != null) {
-            for (PageEntry pageEntry : pageEntries) {
-                final PageInfo info = new PageInfo(pageEntry);
-                addPage(info);
+        if (panelConfigs != null) {
+            for (PanelConfig panelConfig : panelConfigs) {
+                final PanelInfo info = new PanelInfo(panelConfig);
+                addPanel(info);
             }
         }
 
@@ -132,34 +132,34 @@ class HomeAdapter extends FragmentStatePagerAdapter {
 
     public void setCanLoadHint(boolean canLoadHint) {
         // We cache the last hint value so that we can use it when
-        // creating new pages. See PageInfo.getArgs().
+        // creating new panels. See PanelInfo.getArgs().
         mCanLoadHint = canLoadHint;
 
-        // Enable/disable loading on all existing pages
-        for (Fragment page : mPages.values()) {
-            final HomeFragment homePage = (HomeFragment) page;
-            homePage.setCanLoadHint(canLoadHint);
+        // Enable/disable loading on all existing panels
+        for (Fragment panelFragment : mPanels.values()) {
+            final HomeFragment panel = (HomeFragment) panelFragment;
+            panel.setCanLoadHint(canLoadHint);
         }
     }
 
-    private final class PageInfo {
-        private final PageEntry mPageEntry;
+    private final class PanelInfo {
+        private final PanelConfig mPanelConfig;
 
-        PageInfo(PageEntry pageEntry) {
-            mPageEntry = pageEntry;
+        PanelInfo(PanelConfig panelConfig) {
+            mPanelConfig = panelConfig;
         }
 
         public String getId() {
-            return mPageEntry.getId();
+            return mPanelConfig.getId();
         }
 
         public String getTitle() {
-            return mPageEntry.getTitle();
+            return mPanelConfig.getTitle();
         }
 
         public String getClassName() {
-            final PageType type = mPageEntry.getType();
-            return type.getPageClass().getName();
+            final PanelType type = mPanelConfig.getType();
+            return type.getPanelClass().getName();
         }
 
         public Bundle getArgs() {
@@ -167,9 +167,9 @@ class HomeAdapter extends FragmentStatePagerAdapter {
 
             args.putBoolean(HomePager.CAN_LOAD_ARG, mCanLoadHint);
 
-            // Only list pages need the page entry
-            if (mPageEntry.getType() == PageType.LIST) {
-                args.putParcelable(HomePager.PAGE_ENTRY_ARG, mPageEntry);
+            // Only ListPanel's need the PanelConfig argument
+            if (mPanelConfig.getType() == PanelType.LIST) {
+                args.putParcelable(HomePager.PANEL_CONFIG_ARG, mPanelConfig);
             }
 
             return args;

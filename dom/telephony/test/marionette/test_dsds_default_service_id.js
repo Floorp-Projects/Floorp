@@ -18,7 +18,7 @@ function setPrefAndVerify(prefKey, setVal, service, attrName, expectedVal, defer
   let prefVal = Services.prefs.getIntPref(prefKey);
   is(prefVal, setVal, "'" + prefKey + "' set to " + setVal);
 
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     let defaultVal = service[attrName];
     is(defaultVal, expectedVal, attrName);
 
@@ -29,7 +29,7 @@ function setPrefAndVerify(prefKey, setVal, service, attrName, expectedVal, defer
 function getNumRadioInterfaces() {
   let deferred = Promise.defer();
 
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     let numRil = Services.prefs.getIntPref(PREF_RIL_NUM_RADIO_INTERFACES);
     log("numRil = " + numRil);
 
@@ -42,7 +42,7 @@ function getNumRadioInterfaces() {
 function getService(contractId, ifaceName) {
   let deferred = Promise.defer();
 
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     log("Getting service for " + ifaceName);
     let service = Cc[contractId].getService(Ci[ifaceName]);
     ok(service, "service.constructor is " + service.constructor);
@@ -60,7 +60,7 @@ function checkInitialEquality(attrName, prefKey, service) {
   let origPrefVal = Services.prefs.getIntPref(prefKey);
   ok(isFinite(origPrefVal), "default '" + prefKey + "' value");
 
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     let defaultVal = service[attrName];
     is(defaultVal, origPrefVal, attrName);
 
@@ -95,7 +95,7 @@ function checkValueChange(attrName, prefKey, numRil, service) {
     // Set to (numRil - 1) and verify defaultVal equals.
     setPrefAndVerify(prefKey, numRil - 1, service, attrName, numRil - 1, deferred);
   } else {
-    window.setTimeout(function () {
+    window.setTimeout(function() {
       deferred.resolve(service);
     }, 0);
   }
@@ -111,7 +111,7 @@ function verify(contractId, ifaceName, attrName, prefKey, numRil) {
     .then(checkSetToNegtiveValue.bind(null, attrName, prefKey))
     .then(checkSetToOverflowedValue.bind(null, attrName, prefKey, numRil))
     .then(checkValueChange.bind(null, attrName, prefKey, numRil))
-    .then(function () {
+    .then(function() {
       // Reset.
       Services.prefs.clearUserPref(prefKey);
 

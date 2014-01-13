@@ -25,16 +25,16 @@ add_test(function test_ril_consts_cellbroadcast_misc() {
 
 add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
 
   function test_dcs(dcs, encoding, language, hasLanguageIndicator, messageClass) {
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return dcs;
     };
 
@@ -49,11 +49,11 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
   }
 
   function test_dcs_throws(dcs) {
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return dcs;
     };
 
-    do_check_throws(function () {
+    do_check_throws(function() {
       worker.GsmPDUHelper.readCbDataCodingScheme({});
     }, "Unsupported CBS data coding scheme: " + dcs);
   }
@@ -134,20 +134,20 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
 
 add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
 
   function test_data(options, expected) {
     let readIndex = 0;
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return options[3][readIndex++];
     };
-    worker.Buf.readUint8Array = function (length) {
+    worker.Buf.readUint8Array = function(length) {
       let array = new Uint8Array(length);
       for (let i = 0; i < length; i++) {
         array[i] = this.readUint8();
@@ -210,10 +210,10 @@ add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
 
 add_test(function test_ril_worker__checkCellBroadcastMMISettable() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -260,10 +260,10 @@ add_test(function test_ril_worker__checkCellBroadcastMMISettable() {
 
 add_test(function test_ril_worker__mergeCellBroadcastConfigs() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });

@@ -32,8 +32,8 @@ import java.util.List;
 /**
  * A page in about:home that displays a ListView of bookmarks.
  */
-public class BookmarksPage extends HomeFragment {
-    public static final String LOGTAG = "GeckoBookmarksPage";
+public class BookmarksPanel extends HomeFragment {
+    public static final String LOGTAG = "GeckoBookmarksPanel";
 
     // Cursor loader ID for list of bookmarks.
     private static final int LOADER_ID_BOOKMARKS_LIST = 0;
@@ -61,7 +61,7 @@ public class BookmarksPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.home_bookmarks_page, container, false);
+        final View view = inflater.inflate(R.layout.home_bookmarks_panel, container, false);
 
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
 

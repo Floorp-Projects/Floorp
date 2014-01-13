@@ -68,8 +68,6 @@ AddonUpdateService.prototype = {
         }
       });
     });
-
-    RecommendedSearchResults.search();
   }
 };
 
@@ -112,72 +110,6 @@ UpdateCheckListener.prototype = {
     Services.obs.notifyObservers(data, "addon-update-ended", this._status);
   }
 };
-
-// -----------------------------------------------------------------------
-// RecommendedSearchResults fetches add-on data and saves it to a cache
-// -----------------------------------------------------------------------
-
-var RecommendedSearchResults = {
-  _getFile: function() {
-    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    let file = dirService.get("ProfD", Ci.nsILocalFile);
-    file.append("recommended-addons.json");
-    return file;
-  },
-
-  _writeFile: function (aFile, aData) {
-    if (!aData)
-      return;
-
-    // Asynchronously copy the data to the file.
-    let array = new TextEncoder().encode(aData);
-    OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
-      Services.obs.notifyObservers(null, "recommended-addons-cache-updated", "");
-    });
-  },
-  
-  searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
-    let self = this;
-
-    // Filter addons already installed
-    AddonManager.getAllAddons(function(aAllAddons) {
-      let addons = aAddons.filter(function(addon) {
-        for (let i = 0; i < aAllAddons.length; i++)
-          if (addon.id == aAllAddons[i].id)
-            return false;
-
-        return true;
-      });
-
-      let json = {
-        addons: []
-      };
-
-      addons.forEach(function(aAddon) {
-        json.addons.push({
-          id: aAddon.id,
-          name: aAddon.name,
-          version: aAddon.version,
-          learnmoreURL: aAddon.learnmoreURL,
-          iconURL: aAddon.iconURL
-        })
-      });
-
-      let file = self._getFile();
-      self._writeFile(file, JSON.stringify(json));
-    });
-  },
-  
-  searchFailed: function searchFailed() { },
-  
-  search: function() {
-    const kAddonsMaxDisplay = 2;
-
-    if (AddonRepository.isSearching)
-      AddonRepository.cancelSearch();
-    AddonRepository.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
-  }
-}
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);
 
