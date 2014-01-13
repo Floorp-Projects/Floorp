@@ -42,6 +42,7 @@ function onAlertShowing() {
     todo("Notifications don't use XUL windows on all platforms.");
     notification.close();
     finish();
+    return;
   }
   EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"), {});
   alertWindow.close();
