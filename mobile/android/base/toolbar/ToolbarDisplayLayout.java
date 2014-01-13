@@ -47,17 +47,38 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+* {@code ToolbarDisplayLayout} is the UI for when the toolbar is in
+* display state. It's used to display the state of the currently selected
+* tab. It should always be updated through a single entry point
+* (updateFromTab) and should never track any tab events or gecko messages
+* on its own to keep it as dumb as possible.
+*
+* The UI has two possible modes: progress and display which are triggered
+* when UpdateFlags.PROGRESS is used depending on the current tab state.
+* The progress mode is triggered when the tab is loading a page. Display mode
+* is used otherwise.
+*
+* {@code ToolbarDisplayLayout} is meant to be owned by {@code BrowserToolbar}
+* which is the main event bus for the toolbar subsystem.
+*/
 public class ToolbarDisplayLayout extends GeckoLinearLayout
                                   implements Animation.AnimationListener {
 
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
 
+    // To be used with updateFromTab() to allow the caller
+    // to give enough context for the requested state change.
     enum UpdateFlags {
         TITLE,
         FAVICON,
         PROGRESS,
         SITE_IDENTITY,
         PRIVATE_MODE,
+
+        // Disable any animation that might be
+        // triggered from this state change. Mostly
+        // used on tab switches, see BrowserToolbar.
         DISABLE_ANIMATIONS
     }
 
