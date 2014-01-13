@@ -4,9 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBS      = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIBS)
+LIBS      = ../$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIBS)
 
-LOCAL_INCLUDES += -I$(topsrcdir) -I..
+LOCAL_INCLUDES += -I$(srcdir)/.. -I..
 
 ifdef MOZ_SHARED_ICU
 EXTRA_LIBS += $(MOZ_ICU_LIBS)
@@ -22,7 +22,7 @@ endif
 # the build directory.
 PP_TARGETS += JSAPI_TESTS_AUTOLOAD
 JSAPI_TESTS_AUTOLOAD := jsapi-tests-gdb.py.in
-JSAPI_TESTS_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(topsrcdir))
+JSAPI_TESTS_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(srcdir)/..)
 
 include $(topsrcdir)/config/rules.mk
 
