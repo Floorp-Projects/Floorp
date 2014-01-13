@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=950909
+-->
+<window title="Mozilla Bug 950909"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=950909"
+     target="_blank">Mozilla Bug 950909</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /*
+   * Test for bug 950909. This has to be a chrome tests because content needs
+   * to apply a chrome binding (file_bug950909.xml), which will only be registered
+   * as a chrome:// URI during mochitest-chrome runs. And the binding has to be
+   * served from a chrome origin, because otherwise implements="nsIFoo" attributes
+   * are ignored. So this test needs 3 files, all told. Ugh.
+   */
+
+  // Just wait. When the iframe loads, it'll apply the binding, which will
+  // trigger the constructor for the binding.
+  SimpleTest.waitForExplicitFinish();
+
+  ]]>
+  </script>
+  <iframe src="http://example.com/tests/dom/xbl/test/file_bug950909.html"/>
+</window>

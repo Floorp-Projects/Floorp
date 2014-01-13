@@ -750,7 +750,7 @@ LayerManagerComposite::CreateDrawTarget(const IntSize &aSize,
                          aSize.width > 64 && aSize.height > 64 &&
                          gfxPlatformMac::GetPlatform()->UseAcceleratedCanvas();
   if (useAcceleration) {
-    return Factory::CreateDrawTarget(BACKEND_COREGRAPHICS_ACCELERATED,
+    return Factory::CreateDrawTarget(BackendType::COREGRAPHICS_ACCELERATED,
                                      aSize, aFormat);
   }
 #endif

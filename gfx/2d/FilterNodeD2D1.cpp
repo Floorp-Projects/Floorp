@@ -33,11 +33,11 @@ D2D1_COLORMATRIX_ALPHA_MODE D2DAlphaMode(uint32_t aMode)
 D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE D2DAffineTransformInterpolationMode(uint32_t aFilter)
 {
   switch (aFilter) {
-  case FILTER_GOOD:
+  case Filter::GOOD:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
-  case FILTER_LINEAR:
+  case Filter::LINEAR:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
-  case FILTER_POINT:
+  case Filter::POINT:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
   default:
     MOZ_CRASH("Unknown enum value!");
@@ -128,19 +128,19 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode)
 
 TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
 {
-  if (aDT->GetType() == BACKEND_DIRECT2D1_1) {
-    return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, EXTEND_CLAMP);
+  if (aDT->GetType() == BackendType::DIRECT2D1_1) {
+    return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, ExtendMode::CLAMP);
   }
   RefPtr<ID2D1Image> image;
   switch (aSurface->GetType()) {
-  case SURFACE_D2D1_1_IMAGE:
+  case SurfaceType::D2D1_1_IMAGE:
     image = static_cast<SourceSurfaceD2D1*>(aSurface)->GetImage();
     static_cast<SourceSurfaceD2D1*>(aSurface)->EnsureIndependent();
     break;
-  case SURFACE_D2D1_BITMAP:
+  case SurfaceType::D2D1_BITMAP:
    image = static_cast<SourceSurfaceD2D*>(aSurface)->GetBitmap();
     break;
-  case SURFACE_D2D1_DRAWTARGET: {
+  case SurfaceType::D2D1_DRAWTARGET: {
       SourceSurfaceD2DTarget *surf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
       image = surf->GetBitmap(static_cast<DrawTargetD2D*>(aDT)->GetRT());
     }
@@ -153,41 +153,41 @@ TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface
   return image;
 }
 
-uint32_t ConvertValue(uint32_t aType, uint32_t aAttribute, uint32_t aValue)
+uint32_t ConvertValue(FilterType aType, uint32_t aAttribute, uint32_t aValue)
 {
   switch (aType) {
-  case FILTER_COLOR_MATRIX:
+  case FilterType::COLOR_MATRIX:
     if (aAttribute == ATT_COLOR_MATRIX_ALPHA_MODE) {
       aValue = D2DAlphaMode(aValue);
     }
     break;
-  case FILTER_TRANSFORM:
+  case FilterType::TRANSFORM:
     if (aAttribute == ATT_TRANSFORM_FILTER) {
       aValue = D2DAffineTransformInterpolationMode(aValue);
     }
     break;
-  case FILTER_BLEND:
+  case FilterType::BLEND:
     if (aAttribute == ATT_BLEND_BLENDMODE) {
       aValue = D2DBlendMode(aValue);
     }
     break;
-  case FILTER_MORPHOLOGY:
+  case FilterType::MORPHOLOGY:
     if (aAttribute == ATT_MORPHOLOGY_OPERATOR) {
       aValue = D2DMorphologyMode(aValue);
     }
     break;
-  case FILTER_DISPLACEMENT_MAP:
+  case FilterType::DISPLACEMENT_MAP:
     if (aAttribute == ATT_DISPLACEMENT_MAP_X_CHANNEL ||
         aAttribute == ATT_DISPLACEMENT_MAP_Y_CHANNEL) {
       aValue = D2DChannelSelector(aValue);
     }
     break;
-  case FILTER_TURBULENCE:
+  case FilterType::TURBULENCE:
     if (aAttribute == ATT_TURBULENCE_TYPE) {
       aValue = D2DTurbulenceNoise(aValue);
     }
     break;
-  case FILTER_COMPOSITE:
+  case FilterType::COMPOSITE:
     if (aAttribute == ATT_COMPOSITE_OPERATOR) {
       aValue = D2DFilterCompositionMode(aValue);
     }
@@ -197,10 +197,10 @@ uint32_t ConvertValue(uint32_t aType, uint32_t aAttribute, uint32_t aValue)
   return aValue;
 }
 
-void ConvertValue(uint32_t aType, uint32_t aAttribute, IntSize &aValue)
+void ConvertValue(FilterType aType, uint32_t aAttribute, IntSize &aValue)
 {
   switch (aType) {
-  case FILTER_MORPHOLOGY:
+  case FilterType::MORPHOLOGY:
     if (aAttribute == ATT_MORPHOLOGY_RADII) {
       aValue.width *= 2;
       aValue.width += 1;
@@ -212,7 +212,7 @@ void ConvertValue(uint32_t aType, uint32_t aAttribute, IntSize &aValue)
 }
 
 UINT32
-GetD2D1InputForInput(uint32_t aType, uint32_t aIndex)
+GetD2D1InputForInput(FilterType aType, uint32_t aIndex)
 {
   return aIndex;
 }
@@ -222,41 +222,41 @@ GetD2D1InputForInput(uint32_t aType, uint32_t aIndex)
   return D2D1_##d2dname
 
 UINT32
-GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
+GetD2D1PropForAttribute(FilterType aType, uint32_t aIndex)
 {
   switch (aType) {
-  case FILTER_COLOR_MATRIX:
+  case FilterType::COLOR_MATRIX:
     switch (aIndex) {
       CONVERT_PROP(COLOR_MATRIX_MATRIX, COLORMATRIX_PROP_COLOR_MATRIX);
       CONVERT_PROP(COLOR_MATRIX_ALPHA_MODE, COLORMATRIX_PROP_ALPHA_MODE);
     }
     break;
-  case FILTER_TRANSFORM:
+  case FilterType::TRANSFORM:
     switch (aIndex) {
       CONVERT_PROP(TRANSFORM_MATRIX, 2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX);
       CONVERT_PROP(TRANSFORM_FILTER, 2DAFFINETRANSFORM_PROP_INTERPOLATION_MODE);
     }
-  case FILTER_BLEND:
+  case FilterType::BLEND:
     switch (aIndex) {
       CONVERT_PROP(BLEND_BLENDMODE, BLEND_PROP_MODE);
     }
     break;
-  case FILTER_MORPHOLOGY:
+  case FilterType::MORPHOLOGY:
     switch (aIndex) {
       CONVERT_PROP(MORPHOLOGY_OPERATOR, MORPHOLOGY_PROP_MODE);
     }
     break;
-  case FILTER_FLOOD:
+  case FilterType::FLOOD:
     switch (aIndex) {
       CONVERT_PROP(FLOOD_COLOR, FLOOD_PROP_COLOR);
     }
     break;
-  case FILTER_TILE:
+  case FilterType::TILE:
     switch (aIndex) {
       CONVERT_PROP(TILE_SOURCE_RECT, TILE_PROP_RECT);
     }
     break;
-  case FILTER_TABLE_TRANSFER:
+  case FilterType::TABLE_TRANSFER:
     switch (aIndex) {
       CONVERT_PROP(TABLE_TRANSFER_DISABLE_R, TABLETRANSFER_PROP_RED_DISABLE);
       CONVERT_PROP(TABLE_TRANSFER_DISABLE_G, TABLETRANSFER_PROP_GREEN_DISABLE);
@@ -268,7 +268,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(TABLE_TRANSFER_TABLE_A, TABLETRANSFER_PROP_ALPHA_TABLE);
     }
     break;
-  case FILTER_DISCRETE_TRANSFER:
+  case FilterType::DISCRETE_TRANSFER:
     switch (aIndex) {
       CONVERT_PROP(DISCRETE_TRANSFER_DISABLE_R, DISCRETETRANSFER_PROP_RED_DISABLE);
       CONVERT_PROP(DISCRETE_TRANSFER_DISABLE_G, DISCRETETRANSFER_PROP_GREEN_DISABLE);
@@ -280,7 +280,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(DISCRETE_TRANSFER_TABLE_A, DISCRETETRANSFER_PROP_ALPHA_TABLE);
     }
     break;
-  case FILTER_LINEAR_TRANSFER:
+  case FilterType::LINEAR_TRANSFER:
     switch (aIndex) {
       CONVERT_PROP(LINEAR_TRANSFER_DISABLE_R, LINEARTRANSFER_PROP_RED_DISABLE);
       CONVERT_PROP(LINEAR_TRANSFER_DISABLE_G, LINEARTRANSFER_PROP_GREEN_DISABLE);
@@ -296,7 +296,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(LINEAR_TRANSFER_SLOPE_A, LINEARTRANSFER_PROP_ALPHA_SLOPE);
     }
     break;
-  case FILTER_GAMMA_TRANSFER:
+  case FilterType::GAMMA_TRANSFER:
     switch (aIndex) {
       CONVERT_PROP(GAMMA_TRANSFER_DISABLE_R, GAMMATRANSFER_PROP_RED_DISABLE);
       CONVERT_PROP(GAMMA_TRANSFER_DISABLE_G, GAMMATRANSFER_PROP_GREEN_DISABLE);
@@ -316,7 +316,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(GAMMA_TRANSFER_OFFSET_A, GAMMATRANSFER_PROP_ALPHA_OFFSET);
     }
     break;
-  case FILTER_CONVOLVE_MATRIX:
+  case FilterType::CONVOLVE_MATRIX:
     switch (aIndex) {
       CONVERT_PROP(CONVOLVE_MATRIX_BIAS, CONVOLVEMATRIX_PROP_BIAS);
       CONVERT_PROP(CONVOLVE_MATRIX_KERNEL_MATRIX, CONVOLVEMATRIX_PROP_KERNEL_MATRIX);
@@ -324,14 +324,14 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(CONVOLVE_MATRIX_KERNEL_UNIT_LENGTH, CONVOLVEMATRIX_PROP_KERNEL_UNIT_LENGTH);
       CONVERT_PROP(CONVOLVE_MATRIX_PRESERVE_ALPHA, CONVOLVEMATRIX_PROP_PRESERVE_ALPHA);
     }
-  case FILTER_DISPLACEMENT_MAP:
+  case FilterType::DISPLACEMENT_MAP:
     switch (aIndex) {
       CONVERT_PROP(DISPLACEMENT_MAP_SCALE, DISPLACEMENTMAP_PROP_SCALE);
       CONVERT_PROP(DISPLACEMENT_MAP_X_CHANNEL, DISPLACEMENTMAP_PROP_X_CHANNEL_SELECT);
       CONVERT_PROP(DISPLACEMENT_MAP_Y_CHANNEL, DISPLACEMENTMAP_PROP_Y_CHANNEL_SELECT);
     }
     break;
-  case FILTER_TURBULENCE:
+  case FilterType::TURBULENCE:
     switch (aIndex) {
       CONVERT_PROP(TURBULENCE_BASE_FREQUENCY, TURBULENCE_PROP_BASE_FREQUENCY);
       CONVERT_PROP(TURBULENCE_NUM_OCTAVES, TURBULENCE_PROP_NUM_OCTAVES);
@@ -340,28 +340,28 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(TURBULENCE_TYPE, TURBULENCE_PROP_NOISE);
     }
     break;
-  case FILTER_ARITHMETIC_COMBINE:
+  case FilterType::ARITHMETIC_COMBINE:
     switch (aIndex) {
       CONVERT_PROP(ARITHMETIC_COMBINE_COEFFICIENTS, ARITHMETICCOMPOSITE_PROP_COEFFICIENTS);
     }
     break;
-  case FILTER_COMPOSITE:
+  case FilterType::COMPOSITE:
     switch (aIndex) {
       CONVERT_PROP(COMPOSITE_OPERATOR, COMPOSITE_PROP_MODE);
     }
     break;
-  case FILTER_GAUSSIAN_BLUR:
+  case FilterType::GAUSSIAN_BLUR:
     switch (aIndex) {
       CONVERT_PROP(GAUSSIAN_BLUR_STD_DEVIATION, GAUSSIANBLUR_PROP_STANDARD_DEVIATION);
     }
     break;
-  case FILTER_DIRECTIONAL_BLUR:
+  case FilterType::DIRECTIONAL_BLUR:
     switch (aIndex) {
       CONVERT_PROP(DIRECTIONAL_BLUR_STD_DEVIATION, DIRECTIONALBLUR_PROP_STANDARD_DEVIATION);
       CONVERT_PROP(DIRECTIONAL_BLUR_DIRECTION, DIRECTIONALBLUR_PROP_ANGLE);
     }
     break;
-  case FILTER_POINT_DIFFUSE:
+  case FilterType::POINT_DIFFUSE:
     switch (aIndex) {
       CONVERT_PROP(POINT_DIFFUSE_DIFFUSE_CONSTANT, POINTDIFFUSE_PROP_DIFFUSE_CONSTANT);
       CONVERT_PROP(POINT_DIFFUSE_POSITION, POINTDIFFUSE_PROP_LIGHT_POSITION);
@@ -370,7 +370,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(POINT_DIFFUSE_KERNEL_UNIT_LENGTH, POINTDIFFUSE_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_SPOT_DIFFUSE:
+  case FilterType::SPOT_DIFFUSE:
     switch (aIndex) {
       CONVERT_PROP(SPOT_DIFFUSE_DIFFUSE_CONSTANT, SPOTDIFFUSE_PROP_DIFFUSE_CONSTANT);
       CONVERT_PROP(SPOT_DIFFUSE_POINTS_AT, SPOTDIFFUSE_PROP_POINTS_AT);
@@ -382,7 +382,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(SPOT_DIFFUSE_KERNEL_UNIT_LENGTH, SPOTDIFFUSE_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_DISTANT_DIFFUSE:
+  case FilterType::DISTANT_DIFFUSE:
     switch (aIndex) {
       CONVERT_PROP(DISTANT_DIFFUSE_DIFFUSE_CONSTANT, DISTANTDIFFUSE_PROP_DIFFUSE_CONSTANT);
       CONVERT_PROP(DISTANT_DIFFUSE_AZIMUTH, DISTANTDIFFUSE_PROP_AZIMUTH);
@@ -392,7 +392,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(DISTANT_DIFFUSE_KERNEL_UNIT_LENGTH, DISTANTDIFFUSE_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_POINT_SPECULAR:
+  case FilterType::POINT_SPECULAR:
     switch (aIndex) {
       CONVERT_PROP(POINT_SPECULAR_SPECULAR_CONSTANT, POINTSPECULAR_PROP_SPECULAR_CONSTANT);
       CONVERT_PROP(POINT_SPECULAR_SPECULAR_EXPONENT, POINTSPECULAR_PROP_SPECULAR_EXPONENT);
@@ -402,7 +402,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(POINT_SPECULAR_KERNEL_UNIT_LENGTH, POINTSPECULAR_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_SPOT_SPECULAR:
+  case FilterType::SPOT_SPECULAR:
     switch (aIndex) {
       CONVERT_PROP(SPOT_SPECULAR_SPECULAR_CONSTANT, SPOTSPECULAR_PROP_SPECULAR_CONSTANT);
       CONVERT_PROP(SPOT_SPECULAR_SPECULAR_EXPONENT, SPOTSPECULAR_PROP_SPECULAR_EXPONENT);
@@ -415,7 +415,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(SPOT_SPECULAR_KERNEL_UNIT_LENGTH, SPOTSPECULAR_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_DISTANT_SPECULAR:
+  case FilterType::DISTANT_SPECULAR:
     switch (aIndex) {
       CONVERT_PROP(DISTANT_SPECULAR_SPECULAR_CONSTANT, DISTANTSPECULAR_PROP_SPECULAR_CONSTANT);
       CONVERT_PROP(DISTANT_SPECULAR_SPECULAR_EXPONENT, DISTANTSPECULAR_PROP_SPECULAR_EXPONENT);
@@ -426,7 +426,7 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(DISTANT_SPECULAR_KERNEL_UNIT_LENGTH, DISTANTSPECULAR_PROP_KERNEL_UNIT_LENGTH);
     }
     break;
-  case FILTER_CROP:
+  case FilterType::CROP:
     switch (aIndex) {
       CONVERT_PROP(CROP_RECT, CROP_PROP_RECT);
     }
@@ -437,10 +437,10 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
 }
 
 bool
-GetD2D1PropsForIntSize(uint32_t aType, uint32_t aIndex, UINT32 *aPropWidth, UINT32 *aPropHeight)
+GetD2D1PropsForIntSize(FilterType aType, uint32_t aIndex, UINT32 *aPropWidth, UINT32 *aPropHeight)
 {
   switch (aType) {
-  case FILTER_MORPHOLOGY:
+  case FilterType::MORPHOLOGY:
     if (aIndex == ATT_MORPHOLOGY_RADII) {
       *aPropWidth = D2D1_MORPHOLOGY_PROP_WIDTH;
       *aPropHeight = D2D1_MORPHOLOGY_PROP_HEIGHT;
@@ -454,55 +454,55 @@ GetD2D1PropsForIntSize(uint32_t aType, uint32_t aIndex, UINT32 *aPropWidth, UINT
 static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
 {
   switch (aType) {
-  case FILTER_COLOR_MATRIX:
+  case FilterType::COLOR_MATRIX:
     return CLSID_D2D1ColorMatrix;
-  case FILTER_TRANSFORM:
+  case FilterType::TRANSFORM:
     return CLSID_D2D12DAffineTransform;
-  case FILTER_BLEND:
+  case FilterType::BLEND:
     return CLSID_D2D1Blend;
-  case FILTER_MORPHOLOGY:
+  case FilterType::MORPHOLOGY:
     return CLSID_D2D1Morphology;
-  case FILTER_FLOOD:
+  case FilterType::FLOOD:
     return CLSID_D2D1Flood;
-  case FILTER_TILE:
+  case FilterType::TILE:
     return CLSID_D2D1Tile;
-  case FILTER_TABLE_TRANSFER:
+  case FilterType::TABLE_TRANSFER:
     return CLSID_D2D1TableTransfer;
-  case FILTER_LINEAR_TRANSFER:
+  case FilterType::LINEAR_TRANSFER:
     return CLSID_D2D1LinearTransfer;
-  case FILTER_DISCRETE_TRANSFER:
+  case FilterType::DISCRETE_TRANSFER:
     return CLSID_D2D1DiscreteTransfer;
-  case FILTER_GAMMA_TRANSFER:
+  case FilterType::GAMMA_TRANSFER:
     return CLSID_D2D1GammaTransfer;
-  case FILTER_DISPLACEMENT_MAP:
+  case FilterType::DISPLACEMENT_MAP:
     return CLSID_D2D1DisplacementMap;
-  case FILTER_TURBULENCE:
+  case FilterType::TURBULENCE:
     return CLSID_D2D1Turbulence;
-  case FILTER_ARITHMETIC_COMBINE:
+  case FilterType::ARITHMETIC_COMBINE:
     return CLSID_D2D1ArithmeticComposite;
-  case FILTER_COMPOSITE:
+  case FilterType::COMPOSITE:
     return CLSID_D2D1Composite;
-  case FILTER_GAUSSIAN_BLUR:
+  case FilterType::GAUSSIAN_BLUR:
     return CLSID_D2D1GaussianBlur;
-  case FILTER_DIRECTIONAL_BLUR:
+  case FilterType::DIRECTIONAL_BLUR:
     return CLSID_D2D1DirectionalBlur;
-  case FILTER_POINT_DIFFUSE:
+  case FilterType::POINT_DIFFUSE:
     return CLSID_D2D1PointDiffuse;
-  case FILTER_POINT_SPECULAR:
+  case FilterType::POINT_SPECULAR:
     return CLSID_D2D1PointSpecular;
-  case FILTER_SPOT_DIFFUSE:
+  case FilterType::SPOT_DIFFUSE:
     return CLSID_D2D1SpotDiffuse;
-  case FILTER_SPOT_SPECULAR:
+  case FilterType::SPOT_SPECULAR:
     return CLSID_D2D1SpotSpecular;
-  case FILTER_DISTANT_DIFFUSE:
+  case FilterType::DISTANT_DIFFUSE:
     return CLSID_D2D1DistantDiffuse;
-  case FILTER_DISTANT_SPECULAR:
+  case FilterType::DISTANT_SPECULAR:
     return CLSID_D2D1DistantSpecular;
-  case FILTER_CROP:
+  case FilterType::CROP:
     return CLSID_D2D1Crop;
-  case FILTER_PREMULTIPLY:
+  case FilterType::PREMULTIPLY:
     return CLSID_D2D1Premultiply;
-  case FILTER_UNPREMULTIPLY:
+  case FilterType::UNPREMULTIPLY:
     return CLSID_D2D1UnPremultiply;
   }
   return GUID_NULL;
@@ -512,7 +512,7 @@ static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
 TemporaryRef<FilterNode>
 FilterNodeD2D1::Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aType)
 {
-  if (aType == FILTER_CONVOLVE_MATRIX) {
+  if (aType == FilterType::CONVOLVE_MATRIX) {
     return new FilterNodeConvolveD2D1(aDT, aDC);
   }
 
@@ -527,10 +527,10 @@ FilterNodeD2D1::Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aTyp
   }
 
   switch (aType) {
-    case FILTER_LINEAR_TRANSFER:
-    case FILTER_GAMMA_TRANSFER:
-    case FILTER_TABLE_TRANSFER:
-    case FILTER_DISCRETE_TRANSFER:
+    case FilterType::LINEAR_TRANSFER:
+    case FilterType::GAMMA_TRANSFER:
+    case FilterType::TABLE_TRANSFER:
+    case FilterType::DISCRETE_TRANSFER:
       return new FilterNodeComponentTransferD2D1(aDT, aDC, effect, aType);
     default:
       return new FilterNodeD2D1(aDT, effect, aType);
@@ -541,7 +541,7 @@ void
 FilterNodeD2D1::InitUnmappedProperties()
 {
   switch (mType) {
-    case FILTER_TRANSFORM:
+    case FilterType::TRANSFORM:
       mEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_BORDER_MODE, D2D1_BORDER_MODE_HARD);
       break;
     default:
@@ -556,7 +556,7 @@ FilterNodeD2D1::SetInput(uint32_t aIndex, SourceSurface *aSurface)
   ID2D1Effect* effect = InputEffect();
   MOZ_ASSERT(input < effect->GetInputCount());
 
-  if (mType == FILTER_COMPOSITE) {
+  if (mType == FilterType::COMPOSITE) {
     UINT32 inputCount = effect->GetInputCount();
 
     if (aIndex == inputCount - 1 && aSurface == nullptr) {
@@ -576,7 +576,7 @@ FilterNodeD2D1::SetInput(uint32_t aIndex, FilterNode *aFilter)
   UINT32 input = GetD2D1InputForInput(mType, aIndex);
   ID2D1Effect* effect = InputEffect();
 
-  if (mType == FILTER_COMPOSITE) {
+  if (mType == FilterType::COMPOSITE) {
     UINT32 inputCount = effect->GetInputCount();
 
     if (aIndex == inputCount - 1 && aFilter == nullptr) {
@@ -603,10 +603,10 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, uint32_t aValue)
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
-  if (mType == FILTER_TURBULENCE && aIndex == ATT_TURBULENCE_BASE_FREQUENCY) {
+  if (mType == FilterType::TURBULENCE && aIndex == ATT_TURBULENCE_BASE_FREQUENCY) {
     mEffect->SetValue(input, D2D1::Vector2F(FLOAT(aValue), FLOAT(aValue)));
     return;
-  } else if (mType == FILTER_DIRECTIONAL_BLUR && aIndex == ATT_DIRECTIONAL_BLUR_DIRECTION) {
+  } else if (mType == FilterType::DIRECTIONAL_BLUR && aIndex == ATT_DIRECTIONAL_BLUR_DIRECTION) {
     mEffect->SetValue(input, aValue == BLUR_DIRECTION_X ? 0 : 90.0f);
     return;
   }
@@ -682,12 +682,12 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Color &aValue)
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   switch (mType) {
-  case FILTER_POINT_DIFFUSE:
-  case FILTER_SPOT_DIFFUSE:
-  case FILTER_DISTANT_DIFFUSE:
-  case FILTER_POINT_SPECULAR:
-  case FILTER_SPOT_SPECULAR:
-  case FILTER_DISTANT_SPECULAR:
+  case FilterType::POINT_DIFFUSE:
+  case FilterType::SPOT_DIFFUSE:
+  case FilterType::DISTANT_DIFFUSE:
+  case FilterType::POINT_SPECULAR:
+  case FilterType::SPOT_SPECULAR:
+  case FilterType::DISTANT_SPECULAR:
     mEffect->SetValue(input, D2D1::Vector3F(aValue.r, aValue.g, aValue.b));
 	break;
   default:
@@ -707,7 +707,7 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Rect &aValue)
 void
 FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect &aValue)
 {
-  if (mType == FILTER_TURBULENCE) {
+  if (mType == FilterType::TURBULENCE) {
     MOZ_ASSERT(aIndex == ATT_TURBULENCE_RECT);
 
     mEffect->SetValue(D2D1_TURBULENCE_PROP_OFFSET, D2D1::Vector2F(Float(aValue.x), Float(aValue.y)));
@@ -759,7 +759,7 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix &aMatrix)
 }
 
 FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC)
-  : FilterNodeD2D1(aDT, nullptr, FILTER_CONVOLVE_MATRIX)
+  : FilterNodeD2D1(aDT, nullptr, FilterType::CONVOLVE_MATRIX)
   , mEdgeMode(EDGE_MODE_DUPLICATE)
 {
   // Correctly handling the interaction of edge mode and source rect is a bit

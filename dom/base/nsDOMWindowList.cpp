@@ -38,8 +38,7 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
 {
-  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-  mDocShellNode = docShellAsNode; // Weak Reference
+  mDocShellNode = aDocShell; // Weak Reference
 
   return NS_OK;
 }

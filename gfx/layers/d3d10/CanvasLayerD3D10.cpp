@@ -77,7 +77,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mDrawTarget = aData.mDrawTarget;
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
-    void *texture = mDrawTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE);
+    void *texture = mDrawTarget->GetNativeSurface(NativeSurfaceType::D3D10_TEXTURE);
 
     if (texture) {
       mTexture = static_cast<ID3D10Texture2D*>(texture);
@@ -168,11 +168,11 @@ CanvasLayerD3D10::UpdateSurface()
         DataSourceSurface* frameData = shareSurf->GetData();
         // Scope for gfxContext, so it's destroyed before Unmap.
         {
-          RefPtr<DrawTarget> mapDt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
+          RefPtr<DrawTarget> mapDt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                                                       (uint8_t*)map.pData,
                                                                       shareSurf->Size(),
                                                                       map.RowPitch,
-                                                                      FORMAT_B8G8R8A8);
+                                                                      SurfaceFormat::B8G8R8A8);
 
           nsRefPtr<gfxImageSurface> thebesFrameData =
               new gfxImageSurface(frameData->GetData(),

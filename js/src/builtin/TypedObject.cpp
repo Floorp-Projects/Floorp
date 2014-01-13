@@ -581,6 +581,10 @@ const JSFunctionSpec ArrayType::typeObjectMethods[] = {
     JS_FN("dimension", ArrayType::dimension, 1, 0),
     JS_FN("toSource", TypeObjectToSource, 0, 0),
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeObjectEquivalent"},
+    JS_SELF_HOSTED_FN("build",    "TypedObjectArrayTypeBuild", 3, 0),
+    JS_SELF_HOSTED_FN("buildPar", "TypedObjectArrayTypeBuildPar", 3, 0),
+    JS_SELF_HOSTED_FN("from",     "TypedObjectArrayTypeFrom", 3, 0),
+    JS_SELF_HOSTED_FN("fromPar",  "TypedObjectArrayTypeFromPar", 3, 0),
     JS_FS_END
 };
 
@@ -591,6 +595,14 @@ const JSPropertySpec ArrayType::typedObjectProperties[] = {
 const JSFunctionSpec ArrayType::typedObjectMethods[] = {
     {"forEach", {nullptr, nullptr}, 1, 0, "ArrayForEach"},
     {"redimension", {nullptr, nullptr}, 1, 0, "TypedArrayRedimension"},
+    JS_SELF_HOSTED_FN("map",        "TypedArrayMap",        2, 0),
+    JS_SELF_HOSTED_FN("mapPar",     "TypedArrayMapPar",     2, 0),
+    JS_SELF_HOSTED_FN("reduce",     "TypedArrayReduce",     2, 0),
+    JS_SELF_HOSTED_FN("reducePar",  "TypedArrayReducePar",  2, 0),
+    JS_SELF_HOSTED_FN("scatter",    "TypedArrayScatter",    4, 0),
+    JS_SELF_HOSTED_FN("scatterPar", "TypedArrayScatterPar", 4, 0),
+    JS_SELF_HOSTED_FN("filter",     "TypedArrayFilter",     1, 0),
+    JS_SELF_HOSTED_FN("filterPar",  "TypedArrayFilterPar",  1, 0),
     JS_FS_END
 };
 

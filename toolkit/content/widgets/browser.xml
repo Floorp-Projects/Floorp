@@ -242,6 +242,21 @@
         ]]></getter>
       </property>
 
+      <field name="_loadContext">null</field>
+
+      <property name="loadContext" readonly="true">
+        <getter><![CDATA[
+          if (this._loadContext)
+            return this._loadContext;
+
+          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          if (!frameLoader)
+            return null;
+          this._loadContext = frameLoader.loadContext;
+          return this._loadContext;
+        ]]></getter>
+      </property>
+
       <property name="docShellIsActive">
         <getter>
           <![CDATA[
@@ -496,7 +511,7 @@
                          .currentURI.spec == aSoughtURI.spec)
               return aDocShell;
             var node = aDocShell.QueryInterface(
-                                   Components.interfaces.nsIDocShellTreeNode);
+                                   Components.interfaces.nsIDocShellTreeItem);
             for (var i = 0; i < node.childCount; ++i) {
               var docShell = node.getChildAt(i);
               docShell = this.findChildShell(docShell, aSoughtURI);

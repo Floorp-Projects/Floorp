@@ -368,12 +368,16 @@ var BrowserUI = {
 
     Task.spawn(function() {
       let postData = {};
+      let webNav = Ci.nsIWebNavigation;
+      let flags = webNav.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+                  webNav.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
       aURI = yield Browser.getShortcutOrURI(aURI, postData);
-      Browser.loadURI(aURI, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP, postData: postData });
+      Browser.loadURI(aURI, { flags: flags, postData: postData });
 
       // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
       // and the proper third-party fixup can be done
-      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP | 
+                       Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
       let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
       gHistSvc.markPageAsTyped(uri);
 

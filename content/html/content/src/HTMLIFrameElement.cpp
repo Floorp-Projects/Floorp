@@ -158,7 +158,6 @@ HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapScrollingAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
@@ -175,7 +174,6 @@ HTMLIFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
   static const MappedAttributeEntry* const map[] = {
     attributes,
-    sScrollingAttributeMap,
     sImageAlignAttributeMap,
     sCommonAttributeMap,
   };
@@ -220,8 +218,8 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     // alreay been updated.
     mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
   }
-  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aNotify);
+  return nsGenericHTMLFrameElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                                 aNotify);
 }
 
 nsresult

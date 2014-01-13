@@ -22,7 +22,6 @@ class nsFrameLoader;
 class nsIContent;
 class nsIDocument;
 class nsIDocShell;
-class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
