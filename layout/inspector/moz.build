@@ -45,7 +45,7 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '../style',
     '/content/base/src',
-    '/content/xbl/src',
+    '/dom/xbl',
 ]
 
 if CONFIG['ENABLE_TESTS']:

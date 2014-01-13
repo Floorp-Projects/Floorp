@@ -24,14 +24,14 @@ GfxFormatToSkiaConfig(SurfaceFormat format)
 {
   switch (format)
   {
-    case FORMAT_B8G8R8A8:
+    case SurfaceFormat::B8G8R8A8:
       return SkBitmap::kARGB_8888_Config;
-    case FORMAT_B8G8R8X8:
+    case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return SkBitmap::kARGB_8888_Config;
-    case FORMAT_R5G6B5:
+    case SurfaceFormat::R5G6B5:
       return SkBitmap::kRGB_565_Config;
-    case FORMAT_A8:
+    case SurfaceFormat::A8:
       return SkBitmap::kA8_Config;
     default:
       return SkBitmap::kARGB_8888_Config;
@@ -44,13 +44,13 @@ SkiaConfigToGfxFormat(SkBitmap::Config config)
   switch (config)
   {
     case SkBitmap::kARGB_8888_Config:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     case SkBitmap::kRGB_565_Config:
-      return FORMAT_R5G6B5;
+      return SurfaceFormat::R5G6B5;
     case SkBitmap::kA8_Config:
-      return FORMAT_A8;
+      return SurfaceFormat::A8;
     default:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
   }
 }
 
@@ -60,14 +60,14 @@ GfxFormatToGrConfig(SurfaceFormat format)
 {
   switch (format)
   {
-    case FORMAT_B8G8R8A8:
+    case SurfaceFormat::B8G8R8A8:
       return kBGRA_8888_GrPixelConfig;
-    case FORMAT_B8G8R8X8:
+    case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return kBGRA_8888_GrPixelConfig;
-    case FORMAT_R5G6B5:
+    case SurfaceFormat::R5G6B5:
       return kRGB_565_GrPixelConfig;
-    case FORMAT_A8:
+    case SurfaceFormat::A8:
       return kAlpha_8_GrPixelConfig;
     default:
       return kRGBA_8888_GrPixelConfig;
@@ -88,11 +88,11 @@ CapStyleToSkiaCap(CapStyle aCap)
 {
   switch (aCap)
   {
-    case CAP_BUTT:
+    case CapStyle::BUTT:
       return SkPaint::kButt_Cap;
-    case CAP_ROUND:
+    case CapStyle::ROUND:
       return SkPaint::kRound_Cap;
-    case CAP_SQUARE:
+    case CapStyle::SQUARE:
       return SkPaint::kSquare_Cap;
   }
   return SkPaint::kDefault_Cap;
@@ -103,12 +103,12 @@ JoinStyleToSkiaJoin(JoinStyle aJoin)
 {
   switch (aJoin)
   {
-    case JOIN_BEVEL:
+    case JoinStyle::BEVEL:
       return SkPaint::kBevel_Join;
-    case JOIN_ROUND:
+    case JoinStyle::ROUND:
       return SkPaint::kRound_Join;
-    case JOIN_MITER:
-    case JOIN_MITER_OR_BEVEL:
+    case JoinStyle::MITER:
+    case JoinStyle::MITER_OR_BEVEL:
       return SkPaint::kMiter_Join;
   }
   return SkPaint::kDefault_Join;
@@ -159,57 +159,57 @@ GfxOpToSkiaOp(CompositionOp op)
 {
   switch (op)
   {
-    case OP_OVER:
+    case CompositionOp::OP_OVER:
       return SkXfermode::kSrcOver_Mode;
-    case OP_ADD:
+    case CompositionOp::OP_ADD:
       return SkXfermode::kPlus_Mode;
-    case OP_ATOP:
+    case CompositionOp::OP_ATOP:
       return SkXfermode::kSrcATop_Mode;
-    case OP_OUT:
+    case CompositionOp::OP_OUT:
       return SkXfermode::kSrcOut_Mode;
-    case OP_IN:
+    case CompositionOp::OP_IN:
       return SkXfermode::kSrcIn_Mode;
-    case OP_SOURCE:
+    case CompositionOp::OP_SOURCE:
       return SkXfermode::kSrc_Mode;
-    case OP_DEST_IN:
+    case CompositionOp::OP_DEST_IN:
       return SkXfermode::kDstIn_Mode;
-    case OP_DEST_OUT:
+    case CompositionOp::OP_DEST_OUT:
       return SkXfermode::kDstOut_Mode;
-    case OP_DEST_OVER:
+    case CompositionOp::OP_DEST_OVER:
       return SkXfermode::kDstOver_Mode;
-    case OP_DEST_ATOP:
+    case CompositionOp::OP_DEST_ATOP:
       return SkXfermode::kDstATop_Mode;
-    case OP_XOR:
+    case CompositionOp::OP_XOR:
       return SkXfermode::kXor_Mode;
-    case OP_MULTIPLY:
+    case CompositionOp::OP_MULTIPLY:
       return SkXfermode::kMultiply_Mode;
-    case OP_SCREEN:
+    case CompositionOp::OP_SCREEN:
       return SkXfermode::kScreen_Mode;
-    case OP_OVERLAY:
+    case CompositionOp::OP_OVERLAY:
       return SkXfermode::kOverlay_Mode;
-    case OP_DARKEN:
+    case CompositionOp::OP_DARKEN:
       return SkXfermode::kDarken_Mode;
-    case OP_LIGHTEN:
+    case CompositionOp::OP_LIGHTEN:
       return SkXfermode::kLighten_Mode;
-    case OP_COLOR_DODGE:
+    case CompositionOp::OP_COLOR_DODGE:
       return SkXfermode::kColorDodge_Mode;
-    case OP_COLOR_BURN:
+    case CompositionOp::OP_COLOR_BURN:
       return SkXfermode::kColorBurn_Mode;
-    case OP_HARD_LIGHT:
+    case CompositionOp::OP_HARD_LIGHT:
       return SkXfermode::kHardLight_Mode;
-    case OP_SOFT_LIGHT:
+    case CompositionOp::OP_SOFT_LIGHT:
       return SkXfermode::kSoftLight_Mode;
-    case OP_DIFFERENCE:
+    case CompositionOp::OP_DIFFERENCE:
       return SkXfermode::kDifference_Mode;
-    case OP_EXCLUSION:
+    case CompositionOp::OP_EXCLUSION:
       return SkXfermode::kExclusion_Mode;
-    case OP_HUE:
+    case CompositionOp::OP_HUE:
       return SkXfermode::kHue_Mode;
-    case OP_SATURATION:
+    case CompositionOp::OP_SATURATION:
       return SkXfermode::kSaturation_Mode;
-    case OP_COLOR:
+    case CompositionOp::OP_COLOR:
       return SkXfermode::kColor_Mode;
-    case OP_LUMINOSITY:
+    case CompositionOp::OP_LUMINOSITY:
       return SkXfermode::kLuminosity_Mode;
     default:
       return SkXfermode::kSrcOver_Mode;
@@ -261,11 +261,11 @@ ExtendModeToTileMode(ExtendMode aMode)
 {
   switch (aMode)
   {
-    case EXTEND_CLAMP:
+    case ExtendMode::CLAMP:
       return SkShader::kClamp_TileMode;
-    case EXTEND_REPEAT:
+    case ExtendMode::REPEAT:
       return SkShader::kRepeat_TileMode;
-    case EXTEND_REFLECT:
+    case ExtendMode::REFLECT:
       return SkShader::kMirror_TileMode;
   }
   return SkShader::kClamp_TileMode;

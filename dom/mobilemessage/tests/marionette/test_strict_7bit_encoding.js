@@ -137,11 +137,11 @@ let tasks = {
   _tasks: [],
   _nextTaskIndex: 0,
 
-  push: function push(func) {
+  push: function(func) {
     this._tasks.push(func);
   },
 
-  next: function next() {
+  next: function() {
     let index = this._nextTaskIndex++;
     let task = this._tasks[index];
     try {
@@ -155,11 +155,11 @@ let tasks = {
     }
   },
 
-  finish: function finish() {
+  finish: function() {
     this._tasks[this._tasks.length - 1]();
   },
 
-  run: function run() {
+  run: function() {
     this.next();
   }
 };
@@ -213,7 +213,7 @@ function testBug877141() {
   testStrict7BitEncodingHelper(sent, sent);
 }
 
-tasks.push(function () {
+tasks.push(function() {
   log("Testing with dom.sms.strict7BitEncoding enabled");
   SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", true);
   tasks.next();
@@ -221,7 +221,7 @@ tasks.push(function () {
 
 
 // Test for combined string.
-tasks.push(function () {
+tasks.push(function() {
   let sent = "", received = "";
   for (let c in GSM_SMS_STRICT_7BIT_CHARMAP) {
     sent += c;
@@ -232,7 +232,7 @@ tasks.push(function () {
 
 // When strict7BitEncoding is enabled, we should replace characters that
 // can't be encoded with GSM 7-Bit alphabets with '*'.
-tasks.push(function () {
+tasks.push(function() {
   // "Happy New Year" in Chinese.
   let sent = "\u65b0\u5e74\u5feb\u6a02", received = "****";
   testStrict7BitEncodingHelper(sent, received);
@@ -240,14 +240,14 @@ tasks.push(function () {
 
 tasks.push(testBug877141);
 
-tasks.push(function () {
+tasks.push(function() {
   log("Testing with dom.sms.strict7BitEncoding disabled");
   SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", false);
   tasks.next();
 });
 
 // Test for combined string.
-tasks.push(function () {
+tasks.push(function() {
   let sent = "";
   for (let c in GSM_SMS_STRICT_7BIT_CHARMAP) {
     sent += c;
@@ -255,7 +255,7 @@ tasks.push(function () {
   testStrict7BitEncodingHelper(sent, sent);
 });
 
-tasks.push(function () {
+tasks.push(function() {
   // "Happy New Year" in Chinese.
   let sent = "\u65b0\u5e74\u5feb\u6a02";
   testStrict7BitEncodingHelper(sent, sent);

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>flow.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="compressor.html">
+                compressor.js
+              </a>
+            
+              
+              <a class="source" href="connection.html">
+                connection.js
+              </a>
+            
+              
+              <a class="source" href="endpoint.html">
+                endpoint.js
+              </a>
+            
+              
+              <a class="source" href="flow.html">
+                flow.js
+              </a>
+            
+              
+              <a class="source" href="framer.html">
+                framer.js
+              </a>
+            
+              
+              <a class="source" href="index.html">
+                index.js
+              </a>
+            
+              
+              <a class="source" href="stream.html">
+                stream.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>flow.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> assert = require(<span class="string">'assert'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="the-flow-class">The Flow class</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Flow is a <a href="http://nodejs.org/api/stream.html#stream_class_stream_duplex">Duplex stream</a> subclass which implements HTTP/2 flow control. It is designed to be
+subclassed by <a href="connection.html">Connection</a> and the <code>upstream</code> component of <a href="stream.html">Stream</a>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> Duplex  = require(<span class="string">'stream'</span>).Duplex;
+
+exports.Flow = Flow;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <h2 id="public-api">Public API</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <ul>
+<li><p><strong>Event: &#39;error&#39; (type)</strong>: signals an error</p>
+</li>
+<li><p><strong>setInitialWindow(size)</strong>: the initial flow control window size can be changed <em>any time</em>
+(<a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-04#section-6.9.2">as described in the standard</a>) using this method</p>
+</li>
+<li><p><strong>disableRemoteFlowControl()</strong>: sends a WINDOW_UPDATE signaling that we don&#39;t want flow control</p>
+</li>
+<li><p><strong>disableLocalFlowControl()</strong>: disables flow control for outgoing frames</p>
+</li>
+</ul>
+<h2 id="api-for-child-classes">API for child classes</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <ul>
+<li><p><strong>new Flow([flowControlId])</strong>: creating a new flow that will listen for WINDOW_UPDATES frames
+with the given <code>flowControlId</code> (or every update frame if not given)</p>
+</li>
+<li><p><strong>_send()</strong>: called when more frames should be pushed. The child class is expected to override
+this (instead of the <code>_read</code> method of the Duplex class).</p>
+</li>
+<li><p><strong>_receive(frame, readyCallback)</strong>: called when there&#39;s an incoming frame. The child class is
+expected to override this (instead of the <code>_write</code> method of the Duplex class).</p>
+</li>
+<li><p><strong>push(frame): bool</strong>: schedules <code>frame</code> for sending.</p>
+<p>Returns <code>true</code> if it needs more frames in the output queue, <code>false</code> if the output queue is
+full, and <code>null</code> if did not push the frame into the output queue (instead, it pushed it into
+the flow control queue).</p>
+</li>
+<li><p><strong>read(limit): frame</strong>: like the regular <code>read</code>, but the &#39;flow control size&#39; (0 for non-DATA
+frames, length of the payload for DATA frames) of the returned frame will be under <code>limit</code>.
+Small exception: pass -1 as <code>limit</code> if the max. flow control size is 0. <code>read(0)</code> means the
+same thing as <a href="http://nodejs.org/api/stream.html#stream_stream_read_0">in the original API</a>.</p>
+</li>
+<li><p><strong>getLastQueuedFrame(): frame</strong>: returns the last frame in output buffers</p>
+</li>
+<li><p><strong>_log</strong>: the Flow class uses the <code>_log</code> object of the parent</p>
+</li>
+</ul>
+<h2 id="constructor">Constructor</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>When a HTTP/2.0 connection is first established, new streams are created with an initial flow
+control window size of 65535 bytes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> INITIAL_WINDOW_SIZE = <span class="number">65535</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p><code>flowControlId</code> is needed if only specific WINDOW_UPDATEs should be watched.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">Flow</span><span class="params">(flowControlId)</span> {</span>
+  Duplex.call(<span class="keyword">this</span>, { objectMode: <span class="literal">true</span> });
+
+  <span class="keyword">this</span>._window = <span class="keyword">this</span>._initialWindow = INITIAL_WINDOW_SIZE;
+  <span class="keyword">this</span>._flowControlId = flowControlId;
+  <span class="keyword">this</span>._queue = [];
+  <span class="keyword">this</span>._ended = <span class="literal">false</span>;
+  <span class="keyword">this</span>._received = <span class="number">0</span>;
+  <span class="keyword">this</span>._remoteFlowControlDisabled = <span class="literal">false</span>;
+}
+Flow.prototype = Object.create(Duplex.prototype, { constructor: { value: Flow } });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <h2 id="incoming-frames">Incoming frames</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p><code>_receive</code> is called when there&#39;s an incoming frame.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._receive = <span class="function"><span class="keyword">function</span> <span class="title">_receive</span><span class="params">(frame, callback)</span> {</span>
+  <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'The _receive(frame, callback) method has to be overridden by the child class!'</span>);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p><code>_receive</code> is called by <code>_write</code> which in turn is <a href="http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1">called by Duplex</a> when someone <code>write()</code>s
+to the flow. It emits the &#39;receiving&#39; event and notifies the window size tracking code if the
+incoming frame is a WINDOW_UPDATE.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._write = <span class="function"><span class="keyword">function</span> <span class="title">_write</span><span class="params">(frame, encoding, callback)</span> {</span>
+  <span class="keyword">if</span> (frame.flags.END_STREAM || (frame.type === <span class="string">'RST_STREAM'</span>)) {
+    <span class="keyword">this</span>._ended = <span class="literal">true</span>;
+  }
+
+  <span class="keyword">if</span> ((frame.type === <span class="string">'DATA'</span>) &amp;&amp; (frame.data.length &gt; <span class="number">0</span>) &amp;&amp; !<span class="keyword">this</span>._remoteFlowControlDisabled) {
+    <span class="keyword">this</span>._receive(frame, <span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
+      <span class="keyword">this</span>._received += frame.data.length;
+      <span class="keyword">if</span> (!<span class="keyword">this</span>._restoreWindowTimer) {
+        <span class="keyword">this</span>._restoreWindowTimer = setImmediate(<span class="keyword">this</span>._restoreWindow.bind(<span class="keyword">this</span>));
+      }
+      callback();
+    }.bind(<span class="keyword">this</span>));
+  }
+
+  <span class="keyword">else</span> {
+    <span class="keyword">this</span>._receive(frame, callback);
+  }
+
+  <span class="keyword">if</span> ((frame.type === <span class="string">'WINDOW_UPDATE'</span>) &amp;&amp;
+      ((<span class="keyword">this</span>._flowControlId === <span class="literal">undefined</span>) || (frame.stream === <span class="keyword">this</span>._flowControlId))) {
+    <span class="keyword">this</span>._updateWindow(frame);
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p><code>_restoreWindow</code> basically acknowledges the DATA frames received since it&#39;s last call. It sends
+a WINDOW_UPDATE that restores the flow control window of the remote end.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._restoreWindow = <span class="function"><span class="keyword">function</span> <span class="title">_restoreWindow</span><span class="params">()</span> {</span>
+  <span class="keyword">delete</span> <span class="keyword">this</span>._restoreWindowTimer;
+  <span class="keyword">if</span> (!<span class="keyword">this</span>._ended &amp;&amp; !<span class="keyword">this</span>._remoteFlowControlDisabled &amp;&amp; (<span class="keyword">this</span>._received &gt; <span class="number">0</span>)) {
+    <span class="keyword">this</span>.push({
+      type: <span class="string">'WINDOW_UPDATE'</span>,
+      flags: {},
+      stream: <span class="keyword">this</span>._flowControlId,
+      window_size: <span class="keyword">this</span>._received
+    });
+    <span class="keyword">this</span>._received = <span class="number">0</span>;
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Must be called after sending a SETTINGS frame that turns off flow control on the remote side.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.disableRemoteFlowControl = <span class="function"><span class="keyword">function</span> <span class="title">disableRemoteFlowControl</span><span class="params">()</span> {</span>
+  <span class="keyword">this</span>._log.debug(<span class="string">'Turning off remote flow control'</span>);
+  <span class="keyword">this</span>._remoteFlowControlDisabled = <span class="literal">true</span>;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h2 id="outgoing-frames-sending-procedure">Outgoing frames - sending procedure</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <pre><code>                                    flow
+           +-------------------------------------------------+
+           |                                                 |
+           +--------+           +---------+                  |
+   read()  | output |  _read()  | flow    |  _send()         |
+&lt;----------|        |&lt;----------| control |&lt;-------------    |
+           | buffer |           | buffer  |                  |
+           +--------+           +---------+                  |
+           | input  |                                        |
+----------&gt;|        |-----------------------------------&gt;    |
+  write()  | buffer |  _write()              _receive()      |
+           +--------+                                        |
+           |                                                 |
+           +-------------------------------------------------+</code></pre>
+<p><code>_send</code> is called when more frames should be pushed to the output buffer.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._send = <span class="function"><span class="keyword">function</span> <span class="title">_send</span><span class="params">()</span> {</span>
+  <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">'The _send() method has to be overridden by the child class!'</span>);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p><code>_send</code> is called by <code>_read</code> which is in turn <a href="http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1">called by Duplex</a> when it wants to have more
+items in the output queue.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._read = <span class="function"><span class="keyword">function</span> <span class="title">_read</span><span class="params">()</span> {</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <ul>
+<li>if the flow control queue is empty, then let the user push more frames</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (<span class="keyword">this</span>._queue.length === <span class="number">0</span>) {
+    <span class="keyword">this</span>._send();
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <ul>
+<li>if there are items in the flow control queue, then let&#39;s put them into the output queue (to
+the extent it is possible with respect to the window size and output queue feedback)</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">this</span>._window &gt; <span class="number">0</span>) {
+    <span class="keyword">this</span>._readableState.sync = <span class="literal">true</span>; <span class="comment">// to avoid reentrant calls</span>
+    <span class="keyword">do</span> {
+      <span class="keyword">var</span> moreNeeded = <span class="keyword">this</span>._push(<span class="keyword">this</span>._queue[<span class="number">0</span>]);
+      <span class="keyword">if</span> (moreNeeded !== <span class="literal">null</span>) {
+        <span class="keyword">this</span>._queue.shift();
+      }
+    } <span class="keyword">while</span> (moreNeeded &amp;&amp; (<span class="keyword">this</span>._queue.length &gt; <span class="number">0</span>));
+    <span class="keyword">this</span>._readableState.sync = <span class="literal">false</span>;
+
+    assert((moreNeeded == <span class="literal">false</span>) ||                              <span class="comment">// * output queue is full</span>
+           (<span class="keyword">this</span>._queue.length === <span class="number">0</span>) ||                         <span class="comment">// * flow control queue is empty</span>
+           (!<span class="keyword">this</span>._window &amp;&amp; (<span class="keyword">this</span>._queue[<span class="number">0</span>].type === <span class="string">'DATA'</span>))); <span class="comment">// * waiting for window update</span>
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <ul>
+<li>otherwise, come back when the flow control window is positive</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">else</span> {
+    <span class="keyword">this</span>.once(<span class="string">'window_update'</span>, <span class="keyword">this</span>._read);
+  }
+};
+
+<span class="keyword">var</span> MAX_PAYLOAD_SIZE = <span class="number">4096</span>; <span class="comment">// Must not be greater than MAX_HTTP_PAYLOAD_SIZE which is 16383</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p><code>read(limit)</code> is like the <code>read</code> of the Readable class, but it guarantess that the &#39;flow control
+size&#39; (0 for non-DATA frames, length of the payload for DATA frames) of the returned frame will
+be under <code>limit</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.read = <span class="function"><span class="keyword">function</span> <span class="title">read</span><span class="params">(limit)</span> {</span>
+  <span class="keyword">if</span> (limit === <span class="number">0</span>) {
+    <span class="keyword">return</span> Duplex.prototype.read.call(<span class="keyword">this</span>, <span class="number">0</span>);
+  } <span class="keyword">else</span> <span class="keyword">if</span> (limit === -<span class="number">1</span>) {
+    limit = <span class="number">0</span>;
+  } <span class="keyword">else</span> <span class="keyword">if</span> ((limit === <span class="literal">undefined</span>) || (limit &gt; MAX_PAYLOAD_SIZE)) {
+    limit = MAX_PAYLOAD_SIZE;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <ul>
+<li>Looking at the first frame in the queue without pulling it out if possible. This will save
+a costly unshift if the frame proves to be too large to return.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">var</span> firstInQueue = <span class="keyword">this</span>._readableState.buffer[<span class="number">0</span>];
+  <span class="keyword">var</span> frame = firstInQueue || Duplex.prototype.read.call(<span class="keyword">this</span>);
+
+  <span class="keyword">if</span> ((frame === <span class="literal">null</span>) || (frame.type !== <span class="string">'DATA'</span>) || (frame.data.length &lt;= limit)) {
+    <span class="keyword">if</span> (firstInQueue) {
+      Duplex.prototype.read.call(<span class="keyword">this</span>);
+    }
+    <span class="keyword">return</span> frame;
+  }
+
+  <span class="keyword">else</span> <span class="keyword">if</span> (limit &lt;= <span class="number">0</span>) {
+    <span class="keyword">if</span> (!firstInQueue) {
+      <span class="keyword">this</span>.unshift(frame);
+    }
+    <span class="keyword">return</span> <span class="literal">null</span>;
+  }
+
+  <span class="keyword">else</span> {
+    <span class="keyword">this</span>._log.trace({ frame: frame, size: frame.data.length, forwardable: limit },
+                    <span class="string">'Splitting out forwardable part of a DATA frame.'</span>);
+    <span class="keyword">var</span> forwardable = {
+      type: <span class="string">'DATA'</span>,
+      flags: {},
+      stream: frame.stream,
+      data: frame.data.slice(<span class="number">0</span>, limit)
+    };
+    frame.data = frame.data.slice(limit);
+
+    <span class="keyword">if</span> (!firstInQueue) {
+      <span class="keyword">this</span>.unshift(frame);
+    }
+    <span class="keyword">return</span> forwardable;
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p><code>_parentPush</code> pushes the given <code>frame</code> into the output queue</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._parentPush = <span class="function"><span class="keyword">function</span> <span class="title">_parentPush</span><span class="params">(frame)</span> {</span>
+  <span class="keyword">this</span>._log.trace({ frame: frame }, <span class="string">'Pushing frame into the output queue'</span>);
+
+  <span class="keyword">if</span> (frame &amp;&amp; (frame.type === <span class="string">'DATA'</span>) &amp;&amp; (<span class="keyword">this</span>._window !== <span class="literal">Infinity</span>)) {
+    <span class="keyword">this</span>._log.trace({ window: <span class="keyword">this</span>._window, by: frame.data.length },
+                    <span class="string">'Decreasing flow control window size.'</span>);
+    <span class="keyword">this</span>._window -= frame.data.length;
+    assert(<span class="keyword">this</span>._window &gt;= <span class="number">0</span>);
+  }
+
+  <span class="keyword">return</span> Duplex.prototype.push.call(<span class="keyword">this</span>, frame);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p><code>_push(frame)</code> pushes <code>frame</code> into the output queue and decreases the flow control window size.
+It is capable of splitting DATA frames into smaller parts, if the window size is not enough to
+push the whole frame. The return value is similar to <code>push</code> except that it returns <code>null</code> if it
+did not push the whole frame to the output queue (but maybe it did push part of the frame).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._push = <span class="function"><span class="keyword">function</span> <span class="title">_push</span><span class="params">(frame)</span> {</span>
+  <span class="keyword">var</span> data = frame &amp;&amp; (frame.type === <span class="string">'DATA'</span>) &amp;&amp; frame.data;
+
+  <span class="keyword">if</span> (!data || (data.length &lt;= <span class="keyword">this</span>._window)) {
+    <span class="keyword">return</span> <span class="keyword">this</span>._parentPush(frame);
+  }
+
+  <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">this</span>._window &lt;= <span class="number">0</span>) {
+    <span class="keyword">return</span> <span class="literal">null</span>;
+  }
+
+  <span class="keyword">else</span> {
+    <span class="keyword">this</span>._log.trace({ frame: frame, size: frame.data.length, forwardable: <span class="keyword">this</span>._window },
+                    <span class="string">'Splitting out forwardable part of a DATA frame.'</span>);
+    frame.data = data.slice(<span class="keyword">this</span>._window);
+    <span class="keyword">this</span>._parentPush({
+      type: <span class="string">'DATA'</span>,
+      flags: {},
+      stream: frame.stream,
+      data: data.slice(<span class="number">0</span>, <span class="keyword">this</span>._window)
+    });
+    <span class="keyword">return</span> <span class="literal">null</span>;
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Push <code>frame</code> into the flow control queue, or if it&#39;s empty, then directly into the output queue</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.push = <span class="function"><span class="keyword">function</span> <span class="title">push</span><span class="params">(frame)</span> {</span>
+  <span class="keyword">if</span> (frame === <span class="literal">null</span>) {
+    <span class="keyword">this</span>._log.debug(<span class="string">'Enqueueing outgoing End Of Stream'</span>);
+  } <span class="keyword">else</span> {
+    <span class="keyword">this</span>._log.debug({ frame: frame }, <span class="string">'Enqueueing outgoing frame'</span>);
+  }
+
+  <span class="keyword">var</span> moreNeeded = <span class="literal">null</span>;
+  <span class="keyword">if</span> (<span class="keyword">this</span>._queue.length === <span class="number">0</span>) {
+    moreNeeded = <span class="keyword">this</span>._push(frame);
+  }
+
+  <span class="keyword">if</span> (moreNeeded === <span class="literal">null</span>) {
+    <span class="keyword">this</span>._queue.push(frame);
+  }
+
+  <span class="keyword">return</span> moreNeeded;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p><code>getLastQueuedFrame</code> returns the last frame in output buffers. This is primarily used by the
+<a href="stream.html">Stream</a> class to mark the last frame with END_STREAM flag.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.getLastQueuedFrame = <span class="function"><span class="keyword">function</span> <span class="title">getLastQueuedFrame</span><span class="params">()</span> {</span>
+  <span class="keyword">var</span> readableQueue = <span class="keyword">this</span>._readableState.buffer;
+  <span class="keyword">return</span> <span class="keyword">this</span>._queue[<span class="keyword">this</span>._queue.length - <span class="number">1</span>] || readableQueue[readableQueue.length - <span class="number">1</span>];
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <h2 id="outgoing-frames-managing-the-window-size">Outgoing frames - managing the window size</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Flow control window size is manipulated using the <code>_increaseWindow</code> method.</p>
+<ul>
+<li>Invoking it with <code>Infinite</code> means turning off flow control. Flow control cannot be enabled
+again once disabled. Any attempt to re-enable flow control MUST be rejected with a
+FLOW_CONTROL_ERROR error code.</li>
+<li>A sender MUST NOT allow a flow control window to exceed 2^31 - 1 bytes. The action taken
+depends on it being a stream or the connection itself.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> WINDOW_SIZE_LIMIT = Math.pow(<span class="number">2</span>, <span class="number">31</span>) - <span class="number">1</span>;
+
+Flow.prototype._increaseWindow = <span class="function"><span class="keyword">function</span> <span class="title">_increaseWindow</span><span class="params">(size)</span> {</span>
+  <span class="keyword">if</span> ((<span class="keyword">this</span>._window === <span class="literal">Infinity</span>) &amp;&amp; (size !== <span class="literal">Infinity</span>)) {
+    <span class="keyword">this</span>._log.error(<span class="string">'Trying to increase flow control window after flow control was turned off.'</span>);
+    <span class="keyword">this</span>.emit(<span class="string">'error'</span>, <span class="string">'FLOW_CONTROL_ERROR'</span>);
+  } <span class="keyword">else</span> {
+    <span class="keyword">this</span>._log.trace({ window: <span class="keyword">this</span>._window, by: size }, <span class="string">'Increasing flow control window size.'</span>);
+    <span class="keyword">this</span>._window += size;
+    <span class="keyword">if</span> ((<span class="keyword">this</span>._window !== <span class="literal">Infinity</span>) &amp;&amp; (<span class="keyword">this</span>._window &gt; WINDOW_SIZE_LIMIT)) {
+      <span class="keyword">this</span>._log.error(<span class="string">'Flow control window grew too large.'</span>);
+      <span class="keyword">this</span>.emit(<span class="string">'error'</span>, <span class="string">'FLOW_CONTROL_ERROR'</span>);
+    } <span class="keyword">else</span> {
+      <span class="keyword">this</span>.emit(<span class="string">'window_update'</span>);
+    }
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>The <code>_updateWindow</code> method gets called every time there&#39;s an incoming WINDOW_UPDATE frame. It
+modifies the flow control window:</p>
+<ul>
+<li>Flow control can be disabled for an individual stream by sending a WINDOW_UPDATE with the
+END_FLOW_CONTROL flag set. The payload of a WINDOW_UPDATE frame that has the END_FLOW_CONTROL
+flag set is ignored.</li>
+<li>A sender that receives a WINDOW_UPDATE frame updates the corresponding window by the amount
+specified in the frame.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype._updateWindow = <span class="function"><span class="keyword">function</span> <span class="title">_updateWindow</span><span class="params">(frame)</span> {</span>
+  <span class="keyword">this</span>._increaseWindow(frame.flags.END_FLOW_CONTROL ? <span class="literal">Infinity</span> : frame.window_size);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>A SETTINGS frame can alter the initial flow control window size for all current streams. When the
+value of SETTINGS_INITIAL_WINDOW_SIZE changes, a receiver MUST adjust the size of all stream by
+calling the <code>setInitialWindow</code> method. The window size has to be modified by the difference
+between the new value and the old value.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.setInitialWindow = <span class="function"><span class="keyword">function</span> <span class="title">setInitialWindow</span><span class="params">(initialWindow)</span> {</span>
+  <span class="keyword">this</span>._increaseWindow(initialWindow - <span class="keyword">this</span>._initialWindow);
+  <span class="keyword">this</span>._initialWindow = initialWindow;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Flow control for outgoing frames can be disabled by the peer with various methods.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Flow.prototype.disableLocalFlowControl = <span class="function"><span class="keyword">function</span> <span class="title">disableLocalFlowControl</span><span class="params">()</span> {</span>
+  <span class="keyword">this</span>._increaseWindow(<span class="literal">Infinity</span>);
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

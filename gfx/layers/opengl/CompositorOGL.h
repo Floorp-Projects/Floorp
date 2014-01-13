@@ -165,7 +165,7 @@ public:
            RGBARectLayerProgramType : RGBALayerProgramType;
   }
   gfx::SurfaceFormat GetFBOFormat() const {
-    return gfx::FORMAT_R8G8B8A8;
+    return gfx::SurfaceFormat::R8G8B8A8;
   }
 
   /**

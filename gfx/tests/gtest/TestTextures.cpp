@@ -177,12 +177,12 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   ASSERT_EQ(host->GetFlags(), client->GetFlags());
 
   // This will work iff the compositor is not BasicCompositor
-  ASSERT_EQ(host->GetFormat(), mozilla::gfx::FORMAT_YUV);
+  ASSERT_EQ(host->GetFormat(), mozilla::gfx::SurfaceFormat::YUV);
 
   // host read
   ASSERT_TRUE(host->Lock());
 
-  ASSERT_TRUE(host->GetFormat() == mozilla::gfx::FORMAT_YUV);
+  ASSERT_TRUE(host->GetFormat() == mozilla::gfx::SurfaceFormat::YUV);
 
   YCbCrImageDataDeserializer yuvDeserializer(host->GetBuffer());
   ASSERT_TRUE(yuvDeserializer.IsValid());
@@ -257,7 +257,7 @@ TEST(Layers, TextureYCbCrSerialization) {
 
   RefPtr<TextureClient> client
     = new MemoryTextureClient(nullptr,
-                              mozilla::gfx::FORMAT_YUV,
+                              mozilla::gfx::SurfaceFormat::YUV,
                               TEXTURE_DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);

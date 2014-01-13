@@ -5468,13 +5468,13 @@ nsGlobalWindow::GetLength(uint32_t* aLength)
 already_AddRefed<nsIDOMWindow>
 nsGlobalWindow::GetChildWindow(const nsAString& aName)
 {
-  nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(GetDocShell()));
-  NS_ENSURE_TRUE(dsn, nullptr);
+  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+  NS_ENSURE_TRUE(docShell, nullptr);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
-  dsn->FindChildWithName(PromiseFlatString(aName).get(),
-                         false, true, nullptr, nullptr,
-                         getter_AddRefs(child));
+  docShell->FindChildWithName(PromiseFlatString(aName).get(),
+                              false, true, nullptr, nullptr,
+                              getter_AddRefs(child));
 
   nsCOMPtr<nsIDOMWindow> child_win(do_GetInterface(child));
   return child_win.forget();

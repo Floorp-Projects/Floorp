@@ -9,6 +9,8 @@
 
 #include "common/version.h"
 
+#include <algorithm>
+
 #include "libGLESv2/main.h"
 #include "libGLESv2/utilities.h"
 #include "libGLESv2/Buffer.h"

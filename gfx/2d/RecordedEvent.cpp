@@ -17,9 +17,9 @@ using namespace std;
 static std::string NameFromBackend(BackendType aType)
 {
   switch (aType) {
-  case BACKEND_NONE:
+  case BackendType::NONE:
     return "None";
-  case BACKEND_DIRECT2D:
+  case BackendType::DIRECT2D:
     return "Direct2D";
   default:
     return "Unknown";
@@ -149,22 +149,22 @@ RecordedEvent::RecordPatternData(std::ostream &aStream, const PatternStorage &aP
   WriteElement(aStream, aPattern.mType);
 
   switch (aPattern.mType) {
-  case PATTERN_COLOR:
+  case PatternType::COLOR:
     {
       WriteElement(aStream, *reinterpret_cast<const ColorPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_LINEAR_GRADIENT:
+  case PatternType::LINEAR_GRADIENT:
     {
       WriteElement(aStream, *reinterpret_cast<const LinearGradientPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_RADIAL_GRADIENT:
+  case PatternType::RADIAL_GRADIENT:
     {
       WriteElement(aStream, *reinterpret_cast<const RadialGradientPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_SURFACE:
+  case PatternType::SURFACE:
     {
       WriteElement(aStream, *reinterpret_cast<const SurfacePatternStorage*>(&aPattern.mStorage));
       return;
@@ -180,22 +180,22 @@ RecordedEvent::ReadPatternData(std::istream &aStream, PatternStorage &aPattern) 
   ReadElement(aStream, aPattern.mType);
 
   switch (aPattern.mType) {
-  case PATTERN_COLOR:
+  case PatternType::COLOR:
     {
       ReadElement(aStream, *reinterpret_cast<ColorPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_LINEAR_GRADIENT:
+  case PatternType::LINEAR_GRADIENT:
     {
       ReadElement(aStream, *reinterpret_cast<LinearGradientPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_RADIAL_GRADIENT:
+  case PatternType::RADIAL_GRADIENT:
     {
       ReadElement(aStream, *reinterpret_cast<RadialGradientPatternStorage*>(&aPattern.mStorage));
       return;
     }
-  case PATTERN_SURFACE:
+  case PatternType::SURFACE:
     {
       ReadElement(aStream, *reinterpret_cast<SurfacePatternStorage*>(&aPattern.mStorage));
       return;
@@ -211,13 +211,13 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
   aDestination.mType = aSource.GetType();
   
   switch (aSource.GetType()) {
-  case PATTERN_COLOR:
+  case PatternType::COLOR:
     {
       reinterpret_cast<ColorPatternStorage*>(&aDestination.mStorage)->mColor =
         static_cast<const ColorPattern*>(&aSource)->mColor;
       return;
     }
-  case PATTERN_LINEAR_GRADIENT:
+  case PatternType::LINEAR_GRADIENT:
     {
       LinearGradientPatternStorage *store =
         reinterpret_cast<LinearGradientPatternStorage*>(&aDestination.mStorage);
@@ -229,7 +229,7 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
       store->mStops = pat->mStops.get();
       return;
     }
-  case PATTERN_RADIAL_GRADIENT:
+  case PatternType::RADIAL_GRADIENT:
     {
       RadialGradientPatternStorage *store =
         reinterpret_cast<RadialGradientPatternStorage*>(&aDestination.mStorage);
@@ -243,7 +243,7 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
       store->mStops = pat->mStops.get();
       return;
     }
-  case PATTERN_SURFACE:
+  case PatternType::SURFACE:
     {
       SurfacePatternStorage *store =
         reinterpret_cast<SurfacePatternStorage*>(&aDestination.mStorage);
@@ -310,13 +310,13 @@ void
 RecordedEvent::OutputSimplePatternInfo(const PatternStorage &aStorage, std::stringstream &aOutput) const
 {
   switch (aStorage.mType) {
-  case PATTERN_COLOR:
+  case PatternType::COLOR:
     {
       const Color color = reinterpret_cast<const ColorPatternStorage*>(&aStorage.mStorage)->mColor;
       aOutput << "Color: (" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
       return;
     }
-  case PATTERN_LINEAR_GRADIENT:
+  case PatternType::LINEAR_GRADIENT:
     {
       const LinearGradientPatternStorage *store =
         reinterpret_cast<const LinearGradientPatternStorage*>(&aStorage.mStorage);
@@ -325,7 +325,7 @@ RecordedEvent::OutputSimplePatternInfo(const PatternStorage &aStorage, std::stri
         ") - (" << store->mEnd.x << ", " << store->mEnd.y << ") Stops: " << store->mStops;
       return;
     }
-  case PATTERN_RADIAL_GRADIENT:
+  case PatternType::RADIAL_GRADIENT:
     {
       const RadialGradientPatternStorage *store =
         reinterpret_cast<const RadialGradientPatternStorage*>(&aStorage.mStorage);
@@ -333,7 +333,7 @@ RecordedEvent::OutputSimplePatternInfo(const PatternStorage &aStorage, std::stri
         store->mCenter2.y << ") Radius 2: " << store->mRadius2;
       return;
     }
-  case PATTERN_SURFACE:
+  case PatternType::SURFACE:
     {
       const SurfacePatternStorage *store =
         reinterpret_cast<const SurfacePatternStorage*>(&aStorage.mStorage);
@@ -461,9 +461,9 @@ struct GenericPattern
   operator Pattern*()
   {
     switch(mStorage->mType) {
-    case PATTERN_COLOR:
+    case PatternType::COLOR:
       return new (mColPat) ColorPattern(reinterpret_cast<ColorPatternStorage*>(&mStorage->mStorage)->mColor);
-    case PATTERN_SURFACE:
+    case PatternType::SURFACE:
       {
         SurfacePatternStorage *storage = reinterpret_cast<SurfacePatternStorage*>(&mStorage->mStorage);
         mPattern =
@@ -471,7 +471,7 @@ struct GenericPattern
                                         storage->mExtend, storage->mMatrix, storage->mFilter);
         return mPattern;
       }
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
       {
         LinearGradientPatternStorage *storage = reinterpret_cast<LinearGradientPatternStorage*>(&mStorage->mStorage);
         mPattern =
@@ -480,7 +480,7 @@ struct GenericPattern
                                                   storage->mMatrix);
         return mPattern;
       }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
       {
         RadialGradientPatternStorage *storage = reinterpret_cast<RadialGradientPatternStorage*>(&mStorage->mStorage);
         mPattern =
@@ -1217,7 +1217,7 @@ RecordedFilterNodeCreation::RecordedFilterNodeCreation(istream &aStream)
 void
 RecordedFilterNodeCreation::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
-  aStringStream << "[" << mRefPtr << "] FilterNode created (Type: " << mType << ")";
+  aStringStream << "[" << mRefPtr << "] FilterNode created (Type: " << int(mType) << ")";
 }
 
 void

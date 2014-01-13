@@ -18,6 +18,7 @@
 #include "GLContext.h"
 
 using mozilla::gl::GLContext;
+using mozilla::gl::GLFeature;
 using mozilla::gfx::DrawTarget;
 
 static mozilla::ThreadLocal<GLContext*> sGLContext;
@@ -333,7 +334,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
                     strcat(extensionsString, "GL_OES_vertex_array_object ");
                 }
 
-                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_standard_derivatives)) {
+                if (sGLContext.get()->IsSupported(GLFeature::standard_derivatives)) {
                     strcat(extensionsString, "GL_OES_standard_derivatives ");
                 }
             }

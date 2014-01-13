@@ -22,6 +22,8 @@
 #include "libGLESv2/renderer/Renderer.h"
 #include "libGLESv2/renderer/VertexDataManager.h"
 
+#include <algorithm>
+
 #undef near
 #undef far
 

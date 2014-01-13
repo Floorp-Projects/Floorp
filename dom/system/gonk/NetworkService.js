@@ -79,7 +79,7 @@ NetworkService.prototype = {
   // Helpers
 
   idgen: 0,
-  controlMessage: function controlMessage(params, callback) {
+  controlMessage: function(params, callback) {
     if (callback) {
       let id = this.idgen++;
       params.id = id;
@@ -88,7 +88,7 @@ NetworkService.prototype = {
     this.worker.postMessage(params);
   },
 
-  handleWorkerMessage: function handleWorkerMessage(e) {
+  handleWorkerMessage: function(e) {
     if(DEBUG) debug("NetworkManager received message from worker: " + JSON.stringify(e.data));
     let response = e.data;
     let id = response.id;
@@ -105,7 +105,7 @@ NetworkService.prototype = {
 
   // nsINetworkService
 
-  getNetworkInterfaceStats: function getNetworkInterfaceStats(networkName, callback) {
+  getNetworkInterfaceStats: function(networkName, callback) {
     if(DEBUG) debug("getNetworkInterfaceStats for " + networkName);
 
     let params = {
@@ -123,7 +123,7 @@ NetworkService.prototype = {
     });
   },
 
-  setNetworkInterfaceAlarm: function setNetworkInterfaceAlarm(networkName, threshold, callback) {
+  setNetworkInterfaceAlarm: function(networkName, threshold, callback) {
     if (!networkName) {
       callback.networkUsageAlarmResult(-1);
       return;
@@ -137,7 +137,7 @@ NetworkService.prototype = {
     this._setNetworkInterfaceAlarm(networkName, threshold, callback);
   },
 
-  _setNetworkInterfaceAlarm: function _setNetworkInterfaceAlarm(networkName, threshold, callback) {
+  _setNetworkInterfaceAlarm: function(networkName, threshold, callback) {
     debug("setNetworkInterfaceAlarm for " + networkName + " at " + threshold + "bytes");
 
     let params = {
@@ -159,7 +159,7 @@ NetworkService.prototype = {
     });
   },
 
-  _enableNetworkInterfaceAlarm: function _enableNetworkInterfaceAlarm(networkName, threshold, callback) {
+  _enableNetworkInterfaceAlarm: function(networkName, threshold, callback) {
     debug("enableNetworkInterfaceAlarm for " + networkName + " at " + threshold + "bytes");
 
     let params = {
@@ -180,7 +180,7 @@ NetworkService.prototype = {
     });
   },
 
-  _disableNetworkInterfaceAlarm: function _disableNetworkInterfaceAlarm(networkName, callback) {
+  _disableNetworkInterfaceAlarm: function(networkName, callback) {
     debug("disableNetworkInterfaceAlarm for " + networkName);
 
     let params = {
@@ -200,7 +200,7 @@ NetworkService.prototype = {
     });
   },
 
-  setWifiOperationMode: function setWifiOperationMode(interfaceName, mode, callback) {
+  setWifiOperationMode: function(interfaceName, mode, callback) {
     if(DEBUG) debug("setWifiOperationMode on " + interfaceName + " to " + mode);
 
     let params = {
@@ -221,7 +221,7 @@ NetworkService.prototype = {
     });
   },
 
-  resetRoutingTable: function resetRoutingTable(network) {
+  resetRoutingTable: function(network) {
     if (!network.ip || !network.netmask) {
       if(DEBUG) debug("Either ip or netmask is null. Cannot reset routing table.");
       return;
@@ -235,7 +235,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  setDNS: function setDNS(networkInterface) {
+  setDNS: function(networkInterface) {
     if(DEBUG) debug("Going DNS to " + networkInterface.name);
     let options = {
       cmd: "setDNS",
@@ -246,7 +246,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  setDefaultRouteAndDNS: function setDefaultRouteAndDNS(network, oldInterface) {
+  setDefaultRouteAndDNS: function(network, oldInterface) {
     if(DEBUG) debug("Going to change route and DNS to " + network.name);
     let options = {
       cmd: "setDefaultRouteAndDNS",
@@ -260,7 +260,7 @@ NetworkService.prototype = {
     this.setNetworkProxy(network);
   },
 
-  removeDefaultRoute: function removeDefaultRoute(ifname) {
+  removeDefaultRoute: function(ifname) {
     if(DEBUG) debug("Remove default route for " + ifname);
     let options = {
       cmd: "removeDefaultRoute",
@@ -269,7 +269,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  addHostRoute: function addHostRoute(network) {
+  addHostRoute: function(network) {
     if(DEBUG) debug("Going to add host route on " + network.name);
     let options = {
       cmd: "addHostRoute",
@@ -280,7 +280,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  removeHostRoute: function removeHostRoute(network) {
+  removeHostRoute: function(network) {
     if(DEBUG) debug("Going to remove host route on " + network.name);
     let options = {
       cmd: "removeHostRoute",
@@ -291,7 +291,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  removeHostRoutes: function removeHostRoutes(ifname) {
+  removeHostRoutes: function(ifname) {
     if(DEBUG) debug("Going to remove all host routes on " + ifname);
     let options = {
       cmd: "removeHostRoutes",
@@ -300,7 +300,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  addHostRouteWithResolve: function addHostRouteWithResolve(network, hosts) {
+  addHostRouteWithResolve: function(network, hosts) {
     if(DEBUG) debug("Going to add host route after dns resolution on " + network.name);
     let options = {
       cmd: "addHostRoute",
@@ -311,7 +311,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  removeHostRouteWithResolve: function removeHostRouteWithResolve(network, hosts) {
+  removeHostRouteWithResolve: function(network, hosts) {
     if(DEBUG) debug("Going to remove host route after dns resolution on " + network.name);
     let options = {
       cmd: "removeHostRoute",
@@ -322,7 +322,7 @@ NetworkService.prototype = {
     this.worker.postMessage(options);
   },
 
-  setNetworkProxy: function setNetworkProxy(network) {
+  setNetworkProxy: function(network) {
     try {
       if (!network.httpProxyHost || network.httpProxyHost === "") {
         // Sets direct connection to internet.
@@ -353,7 +353,7 @@ NetworkService.prototype = {
   },
 
   // Enable/Disable DHCP server.
-  setDhcpServer: function setDhcpServer(enabled, config, callback) {
+  setDhcpServer: function(enabled, config, callback) {
     if (null === config) {
       config = {};
     }
@@ -372,7 +372,7 @@ NetworkService.prototype = {
   },
 
   // Enable/disable WiFi tethering by sending commands to netd.
-  setWifiTethering: function setWifiTethering(enable, config, callback) {
+  setWifiTethering: function(enable, config, callback) {
     // config should've already contained:
     //   .ifname
     //   .internalIfname
@@ -399,7 +399,7 @@ NetworkService.prototype = {
   },
 
   // Enable/disable USB tethering by sending commands to netd.
-  setUSBTethering: function setUSBTethering(enable, config, callback) {
+  setUSBTethering: function(enable, config, callback) {
     config.cmd = "setUSBTethering";
     // The callback function in controlMessage may not be fired immediately.
     config.isAsync = true;
@@ -420,7 +420,7 @@ NetworkService.prototype = {
   },
 
   // Switch usb function by modifying property of persist.sys.usb.config.
-  enableUsbRndis: function enableUsbRndis(enable, callback) {
+  enableUsbRndis: function(enable, callback) {
     if(DEBUG) debug("enableUsbRndis: " + enable);
 
     let params = {
@@ -437,12 +437,12 @@ NetworkService.prototype = {
     // The callback function in controlMessage may not be fired immediately.
     params.isAsync = true;
     //this._usbTetheringAction = TETHERING_STATE_ONGOING;
-    this.controlMessage(params, function (data) {
+    this.controlMessage(params, function(data) {
       callback.enableUsbRndisResult(data.result, data.enable);
     });
   },
 
-  updateUpStream: function updateUpStream(previous, current, callback) {
+  updateUpStream: function(previous, current, callback) {
     let params = {
       cmd: "updateUpStream",
       isAsync: true,
@@ -450,7 +450,7 @@ NetworkService.prototype = {
       current: current
     };
 
-    this.controlMessage(params, function (data) {
+    this.controlMessage(params, function(data) {
       let code = data.resultCode;
       let reason = data.resultReason;
       if(DEBUG) debug("updateUpStream result: Code " + code + " reason " + reason);

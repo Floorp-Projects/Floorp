@@ -232,20 +232,23 @@ function run_test() {
     return;
   }
 
-  setupTestCommon(false);
-  do_register_cleanup(cleanupUpdaterTest);
-
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
-  // Launch the callback helper application so it is in use during the update
+  // Launch the callback helper application so it is in use during the update.
   let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20"];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT];
   let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
   callbackAppProcess.init(callbackApp);
   callbackAppProcess.run(false, args, args.length);
 
+  setupAppFilesAsync();
+}
+
+function setupAppFilesFinished() {
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
 
@@ -261,21 +264,17 @@ function doUpdate() {
     applyToDir.lastModifiedTime = yesterday;
   }
 
-  // apply the complete mar
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, checkUpdateApplied);
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED);
 }
 
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   setupHelperFinish();
 }
 
 function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
+  do_check_eq(readStatusState(), STATE_SUCCEEDED);
 
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
@@ -286,7 +285,10 @@ function checkUpdate() {
   }
 
   checkFilesAfterUpdateSuccess();
-  checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  // Sorting on Linux is different so skip this check for now.
+  if (!IS_UNIX) {
+    checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  }
 
   if (IS_WIN) {
     logTestInfo("testing tobedeleted directory doesn't exist");
@@ -296,4 +298,3 @@ function checkUpdate() {
 
   checkCallbackServiceLog();
 }
-

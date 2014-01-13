@@ -19,11 +19,11 @@ namespace gfx {
 static inline bool
 IsOperatorBoundByMask(CompositionOp aOp) {
   switch (aOp) {
-  case OP_IN:
-  case OP_OUT:
-  case OP_DEST_IN:
-  case OP_DEST_ATOP:
-  case OP_SOURCE:
+  case CompositionOp::OP_IN:
+  case CompositionOp::OP_OUT:
+  case CompositionOp::OP_DEST_IN:
+  case CompositionOp::OP_DEST_ATOP:
+  case CompositionOp::OP_SOURCE:
     return false;
   default:
     return true;
@@ -72,9 +72,9 @@ static inline int
 BytesPerPixel(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return 1;
-  case FORMAT_R5G6B5:
+  case SurfaceFormat::R5G6B5:
     return 2;
   default:
     return 4;

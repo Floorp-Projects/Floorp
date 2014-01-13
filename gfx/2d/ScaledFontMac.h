@@ -20,7 +20,7 @@ public:
   ScaledFontMac(CGFontRef aFont, Float aSize);
   virtual ~ScaledFontMac();
 
-  virtual FontType GetType() const { return FONT_MAC; }
+  virtual FontType GetType() const { return FontType::MAC; }
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
 #endif

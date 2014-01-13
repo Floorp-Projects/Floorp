@@ -515,6 +515,10 @@ private:
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
+    virtual bool RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
+                                              int32_t* aStatus,
+                                              bool* aSuccess);
+
     virtual bool RecvAddIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
     virtual bool RecvRemoveIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
 

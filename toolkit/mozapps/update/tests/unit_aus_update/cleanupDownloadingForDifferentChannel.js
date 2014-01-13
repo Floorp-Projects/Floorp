@@ -6,7 +6,7 @@
 /* General Update Manager Tests */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing removal of an active update for a channel that is not" +
               "valid due to switching channels (Bug 486275).");
@@ -40,9 +40,5 @@ function run_test() {
   logTestInfo("verifying contents of " + FILE_UPDATE_ACTIVE);
   do_check_eq(readFile(file), getLocalUpdatesXMLString(""));
 
-  do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
+  doTestFinish();
 }

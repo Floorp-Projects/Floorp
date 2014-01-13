@@ -320,11 +320,10 @@ static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, int32_t aI
     fprintf(out, "' parent=%p <\n", static_cast<void*>(parent));
 
     ++aIndent;
-    nsCOMPtr<nsIDocShellTreeNode> shellAsNode(do_QueryInterface(aShellItem));
-    shellAsNode->GetChildCount(&n);
+    aShellItem->GetChildCount(&n);
     for (i = 0; i < n; ++i) {
         nsCOMPtr<nsIDocShellTreeItem> child;
-        shellAsNode->GetChildAt(i, getter_AddRefs(child));
+        aShellItem->GetChildAt(i, getter_AddRefs(child));
         if (child) {
             DumpAWebShell(child, out, aIndent);
         }

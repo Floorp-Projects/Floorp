@@ -301,7 +301,12 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
 
   // We'll receive several notifications, we need to exit when we
   // have either successfully launched or have timed out.
-  while (mProcessState < PROCESS_CONNECTED) {
+  while (mProcessState != PROCESS_CONNECTED) {
+    // If there was an error then return it, don't wait out the timeout.
+    if (mProcessState == PROCESS_ERROR) {
+      break;
+    }
+
     lock.Wait(timeoutTicks);
 
     if (timeoutTicks != PR_INTERVAL_NO_TIMEOUT) {
@@ -843,6 +848,15 @@ GeckoChildProcessHost::OnMessageReceived(const IPC::Message& aMsg)
 void
 GeckoChildProcessHost::OnChannelError()
 {
+  // Update the process state to an error state if we have a channel
+  // error before we're connected. This fixes certain failures,
+  // but does not address the full range of possible issues described
+  // in the FIXME comment below.
+  MonitorAutoLock lock(mMonitor);
+  if (mProcessState < PROCESS_CONNECTED) {
+    mProcessState = PROCESS_ERROR;
+    lock.Notify();
+  }
   // FIXME/bug 773925: save up this error for the next listener.
 }
 

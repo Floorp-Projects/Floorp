@@ -124,7 +124,7 @@ public:
   virtual TemporaryRef<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
      
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const
   {
     return mA->CreatePathBuilder(aFillRule);
   }
@@ -132,7 +132,7 @@ public:
   virtual TemporaryRef<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
-                        ExtendMode aExtendMode = EXTEND_CLAMP) const
+                        ExtendMode aExtendMode = ExtendMode::CLAMP) const
   {
     return mA->CreateGradientStops(aStops, aNumStops, aExtendMode);
   }

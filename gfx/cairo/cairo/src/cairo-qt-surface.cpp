@@ -1733,9 +1733,9 @@ cairo_qt_surface_get_image (cairo_surface_t *surface)
  *
  * - Figure out why QBrush isn't working with non-repeated images
  *
- * - Correct repeat mode; right now, every surface source is EXTEND_REPEAT
+ * - Correct repeat mode; right now, every surface source is ExtendMode::REPEAT
  *   - implement EXTEND_NONE (?? probably need to clip to the extents of the source)
- *   - implement EXTEND_REFLECT (create temporary and copy 4x, then EXTEND_REPEAT that)
+ *   - implement ExtendMode::REFLECT (create temporary and copy 4x, then ExtendMode::REPEAT that)
  *
  * - stroke-image failure
  *

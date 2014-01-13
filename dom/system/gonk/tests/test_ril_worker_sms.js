@@ -110,15 +110,15 @@ function removeSpecialChar(str, needle) {
 
 function newWriteHexOctetAsUint8Worker() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
 
-  worker.GsmPDUHelper.writeHexOctet = function (value) {
+  worker.GsmPDUHelper.writeHexOctet = function(value) {
     worker.Buf.writeUint8(value);
   };
 
@@ -128,10 +128,10 @@ function newWriteHexOctetAsUint8Worker() {
 function add_test_receiving_sms(expected, pdu) {
   add_test(function test_receiving_sms() {
     let worker = newWorker({
-      postRILMessage: function fakePostRILMessage(data) {
+      postRILMessage: function(data) {
         // Do nothing
       },
-      postMessage: function fakePostMessage(message) {
+      postMessage: function(message) {
         do_print("fullBody: " + message.fullBody);
         do_check_eq(expected, message.fullBody)
       }
@@ -221,7 +221,7 @@ test_receiving_ucs2_alphabets(ucs2str);
 add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
   let worker = newWriteHexOctetAsUint8Worker();
 
-  worker.Buf.sendParcel = function () {
+  worker.Buf.sendParcel = function() {
     // Each sendParcel() call represents one outgoing segment of a multipart
     // SMS message. Here, we have the first segment send, so it's "Hello "
     // only.

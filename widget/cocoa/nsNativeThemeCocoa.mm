@@ -2131,8 +2131,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         isTransparent = thebesCtx->OriginalSurface()->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
       } else {
         SurfaceFormat format  = thebesCtx->GetDrawTarget()->GetFormat();
-        isTransparent = (format == FORMAT_R8G8B8A8) ||
-                        (format == FORMAT_B8G8R8A8);
+        isTransparent = (format == SurfaceFormat::R8G8B8A8) ||
+                        (format == SurfaceFormat::B8G8R8A8);
       }
       if (isTransparent) {
         // Clear the background to get correct transparency.

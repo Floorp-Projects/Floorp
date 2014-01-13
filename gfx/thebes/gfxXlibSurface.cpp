@@ -89,7 +89,7 @@ gfxXlibSurface::~gfxXlibSurface()
 {
 #if defined(GL_PROVIDER_GLX)
     if (mGLXPixmap) {
-        gl::sDefGLXLib.DestroyPixmap(mGLXPixmap);
+        gl::sGLXLibrary.DestroyPixmap(mGLXPixmap);
     }
 #endif
     // gfxASurface's destructor calls RecordMemoryFreed().
@@ -278,7 +278,7 @@ gfxXlibSurface::Finish()
 {
 #if defined(GL_PROVIDER_GLX)
     if (mGLXPixmap) {
-        gl::sDefGLXLib.DestroyPixmap(mGLXPixmap);
+        gl::sGLXLibrary.DestroyPixmap(mGLXPixmap);
         mGLXPixmap = None;
     }
 #endif
@@ -598,7 +598,7 @@ gfxXlibSurface::GetGLXPixmap()
         NS_ASSERTION(CairoStatus() != CAIRO_STATUS_SURFACE_FINISHED,
             "GetGLXPixmap called after surface finished");
 #endif
-        mGLXPixmap = gl::sDefGLXLib.CreatePixmap(this);
+        mGLXPixmap = gl::sGLXLibrary.CreatePixmap(this);
     }
     return mGLXPixmap;
 }

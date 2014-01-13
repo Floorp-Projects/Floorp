@@ -881,6 +881,11 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
 
   infoObject->SetPreliminaryHandshakeDone();
 
+  SSLChannelInfo channelInfo;
+  if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
+    infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
+  }
+
   // Get the NPN value.
   SSLNextProtoState state;
   unsigned char npnbuf[256];

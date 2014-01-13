@@ -13,7 +13,7 @@ TemporaryRef<DataSourceSurface>
 DataSourceSurface::GetDataSurface()
 {
   RefPtr<DataSourceSurface> temp;
-  if (GetType() == SURFACE_DATA) {
+  if (GetType() == SurfaceType::DATA) {
     temp = this;
   } else {
     temp = new DataSourceSurfaceWrapper(this);

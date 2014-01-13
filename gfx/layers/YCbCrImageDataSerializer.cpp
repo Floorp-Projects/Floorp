@@ -250,7 +250,7 @@ TemporaryRef<gfx::DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
   RefPtr<gfx::DataSourceSurface> result =
-    gfx::Factory::CreateDataSourceSurface(GetYSize(), gfx::FORMAT_R8G8B8X8);
+    gfx::Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::R8G8B8X8);
 
   gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
                            result->GetData(),
