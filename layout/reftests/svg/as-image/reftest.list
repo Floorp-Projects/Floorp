@@ -34,8 +34,6 @@ skip-if(B2G) == background-image-rect-1svg.html  lime100x100-ref.html # bug 7734
 == border-image-simple-2.html       lime100x100-ref.html
 
 # Test for canvas "drawImage" method
-# NOTE: The canvas reftests that involve scaling currently fail with fuzziness
-# on various edges, as noted below. These will be fixed in followup bugs.
 == canvas-drawImage-simple-1a.html lime100x100-ref.html
 == canvas-drawImage-simple-1b.html lime100x100-ref.html
 
@@ -43,11 +41,12 @@ skip-if(B2G) == canvas-drawImage-scale-1a.html lime100x100-ref.html
 skip-if(B2G) == canvas-drawImage-scale-1b.html lime100x100-ref.html
 skip-if(B2G) == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
-fails == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
-fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
+# Fuzzyness and fails for scaling should be fixed by bug 941467
+fuzzy(1,2) fails-if(Android) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
 skip-if(B2G) == canvas-drawImage-slice-1a.html lime100x100-ref.html
-fails-if(!azureQuartz&&!azureSkia) == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
+== canvas-drawImage-slice-1b.html lime100x100-ref.html
 
 == canvas-drawImage-origin-clean-1.html lime100x100-ref.html
 
