@@ -18,7 +18,6 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "cert.h"
-#include "certi.h"
 #include "xconst.h"
 #include "secerr.h"
 #include "secoid.h"
@@ -4185,9 +4184,8 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
         } else {
             certUsage = certUsageStatusResponder;
         }
-        rv = cert_VerifyCertWithFlags(handle, signerCert, PR_TRUE, certUsage,
-                                      producedAt, CERT_VERIFYCERT_SKIP_OCSP,
-                                      pwArg, NULL);
+        rv = CERT_VerifyCert(handle, signerCert, PR_TRUE,
+                             certUsage, producedAt, pwArg, NULL);
         if (rv != SECSuccess) {
             PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
             goto finish;
