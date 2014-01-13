@@ -19,7 +19,7 @@ bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStr
 {
 #ifdef USE_SKIA
   bool opaque;
-  if (format == FORMAT_B8G8R8A8) {
+  if (format == SurfaceFormat::B8G8R8A8) {
     opaque = false;
   } else {
     opaque = true;

@@ -233,7 +233,7 @@ PathCG::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 
   // The transform parameter of CGPathContainsPoint doesn't seem to work properly on OS X 10.5
   // so we transform aPoint ourselves.
-  return CGPathContainsPoint(mPath, nullptr, point, mFillRule == FILL_EVEN_ODD);
+  return CGPathContainsPoint(mPath, nullptr, point, mFillRule == FillRule::FILL_EVEN_ODD);
 }
 
 static size_t

@@ -260,7 +260,6 @@ const PING_BGUC_ADDON_HAVE_INCOMPAT          = 30;
 var gLocale     = null;
 
 #ifdef MOZ_B2G
-var gVolumeMountLock = null;
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
     return Services.env.get("EXTERNAL_STORAGE");
 });
@@ -1223,75 +1222,60 @@ function cleanUpUpdatesDir(aBackgroundUpdate) {
   // Bail out if we don't have appropriate permissions
   try {
     var updateDir = getUpdatesDir();
-  }
-  catch (e) {
+  } catch (e) {
     return;
   }
 
-  var e = updateDir.directoryEntries;
-  while (e.hasMoreElements()) {
-    var f = e.getNext().QueryInterface(Ci.nsIFile);
-    // Preserve the last update log file for debugging purposes
-    if (f.leafName == FILE_UPDATE_LOG) {
-      var dir;
+  // Preserve the last update log file for debugging purposes.
+  let file = updateDir.clone();
+  file.append(FILE_UPDATE_LOG);
+  if (file.exists()) {
+    let dir;
+    if (aBackgroundUpdate && getUpdateDirNoCreate([]).equals(getAppBaseDir())) {
+      dir = getUpdatesDirInApplyToDir();
+    } else {
+      dir = updateDir.parent;
+    }
+    let logFile = dir.clone();
+    logFile.append(FILE_LAST_LOG);
+    if (logFile.exists()) {
       try {
-        // If we don't use the update root directory, the log files are written
-        // inside the application directory.  In that case, we want to write
-        // the log files to the updated directory in the case of background
-        // updates, so that they would be available when we replace that
-        // directory with the application directory later on.
-        if (aBackgroundUpdate && getUpdateDirNoCreate([]).equals(getAppBaseDir())) {
-          dir = getUpdatesDirInApplyToDir();
-        } else {
-          dir = f.parent.parent;
-        }
-        var logFile = dir.clone();
-        logFile.append(FILE_LAST_LOG);
-        if (logFile.exists()) {
-          try {
-            logFile.moveTo(dir, FILE_BACKUP_LOG);
-          }
-          catch (e) {
-            LOG("cleanUpUpdatesDir - failed to rename file " + logFile.path +
-                " to " + FILE_BACKUP_LOG);
-          }
-        }
-        f.moveTo(dir, FILE_LAST_LOG);
-        if (aBackgroundUpdate) {
-          // We're not going to delete any files, so we can just
-          // bail out of the loop right now.
-          break;
-        } else {
-          continue;
-        }
+        logFile.moveTo(dir, FILE_BACKUP_LOG);
+      } catch (e) {
+        LOG("cleanUpUpdatesDir - failed to rename file " + logFile.path +
+            " to " + FILE_BACKUP_LOG);
       }
-      catch (e) {
-        LOG("cleanUpUpdatesDir - failed to move file " + f.path + " to " +
-            dir.path + " and rename it to " + FILE_LAST_LOG);
-      }
-    } else if (aBackgroundUpdate) {
-      // Don't delete any files when an update has been staged, as
-      // we need to keep them around in case we would have to fall
-      // back to applying the update on application restart.
-      continue;
     }
+
+    try {
+      file.moveTo(dir, FILE_LAST_LOG);
+    } catch (e) {
+      LOG("cleanUpUpdatesDir - failed to rename file " + file.path +
+          " to " + FILE_LAST_LOG);
+    }
+  }
+
+  if (!aBackgroundUpdate) {
+    let e = updateDir.directoryEntries;
+    while (e.hasMoreElements()) {
+      let f = e.getNext().QueryInterface(Ci.nsIFile);
 #ifdef MOZ_WIDGET_GONK
-    if (f.leafName == FILE_UPDATE_LINK) {
-      let linkedFile = getFileFromUpdateLink(updateDir);
-      if (linkedFile && linkedFile.exists()) {
-        linkedFile.remove(false);
+      if (f.leafName == FILE_UPDATE_LINK) {
+        let linkedFile = getFileFromUpdateLink(updateDir);
+        if (linkedFile && linkedFile.exists()) {
+          linkedFile.remove(false);
+        }
       }
-    }
 #endif
 
-    // Now, recursively remove this file.  The recursive removal is really
-    // only needed on Mac OSX because this directory will contain a copy of
-    // updater.app, which is itself a directory.
-    try {
-      f.remove(true);
-    }
-    catch (e) {
-      LOG("cleanUpUpdatesDir - failed to remove file " + f.path);
+      // Now, recursively remove this file.  The recursive removal is needed for
+      // Mac OSX because this directory will contain a copy of updater.app,
+      // which is itself a directory.
+      try {
+        f.remove(true);
+      } catch (e) {
+        LOG("cleanUpUpdatesDir - failed to remove file " + f.path);
+      }
     }
   }
   releaseSDCardMountLock();
@@ -1321,7 +1305,7 @@ function getLocale() {
   if (gLocale)
     return gLocale;
 
-  for each (res in ['app', 'gre']) {
+  for (let res of ['app', 'gre']) {
     var channel = Services.io.newChannel("resource://" + res + "/" + FILE_UPDATE_LOCALE, null, null);
     try {
       var inputStream = channel.open();

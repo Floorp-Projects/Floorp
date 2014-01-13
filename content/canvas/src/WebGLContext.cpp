@@ -439,8 +439,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 #endif
     bool forceEnabled =
         Preferences::GetBool("webgl.force-enabled", false);
-    bool useMesaLlvmPipe =
-        Preferences::GetBool("gfx.prefer-mesa-llvmpipe", false);
     bool disabled =
         Preferences::GetBool("webgl.disabled", false);
     bool prefer16bit =
@@ -533,7 +531,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
 #ifdef XP_WIN
     // allow forcing GL and not EGL/ANGLE
-    if (useMesaLlvmPipe || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
         preferEGL = false;
         useANGLE = false;
         useOpenGL = true;
@@ -555,13 +553,9 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     // try the default provider, whatever that is
     if (!gl && useOpenGL) {
-        gl::ContextFlags flag = useMesaLlvmPipe
-                                ? gl::ContextFlagsMesaLLVMPipe
-                                : gl::ContextFlagsNone;
-        gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
+        gl = gl::GLContextProvider::CreateOffscreen(size, caps);
         if (gl && !InitAndValidateGL()) {
-            GenerateWarning("Error during %s initialization",
-                            useMesaLlvmPipe ? "Mesa LLVMpipe" : "OpenGL");
+            GenerateWarning("Error during OpenGL initialization");
             return NS_ERROR_FAILURE;
         }
     }
@@ -1296,7 +1290,7 @@ WebGLContext::MaybeRestoreContext()
     if (mContextStatus != ContextNotLost || gl == nullptr)
         return;
 
-    bool isEGL = gl->GetContextType() == gl::ContextTypeEGL,
+    bool isEGL = gl->GetContextType() == gl::GLContextType::EGL,
          isANGLE = gl->IsANGLE();
 
     GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;

@@ -391,7 +391,7 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
       (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
     return aDocShell;
 
-  var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+  var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
   for (var i = 0; i < node.childCount; ++i) {
     var docShell = node.getChildAt(i);
     docShell = findChildShell(aDocument, docShell, aSoughtURI);
@@ -1839,8 +1839,10 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup) {
     postData = null;
 
   var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-  if (allowThirdPartyFixup)
+  if (allowThirdPartyFixup) {
     flags |= nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    flags |= nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+  }
 
   try {
     gBrowser.loadURIWithFlags(uri, flags, referrer, null, postData);
@@ -5904,8 +5906,9 @@ function WindowIsClosing()
  * @returns true if closing can proceed, false if it got cancelled.
  */
 function warnAboutClosingWindow() {
-  // Popups aren't considered full browser windows.
-  let isPBWindow = PrivateBrowsingUtils.isWindowPrivate(window);
+  // Popups aren't considered full browser windows; we also ignore private windows.
+  let isPBWindow = PrivateBrowsingUtils.isWindowPrivate(window) &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing;
   if (!isPBWindow && !toolbar.visible)
     return gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
 

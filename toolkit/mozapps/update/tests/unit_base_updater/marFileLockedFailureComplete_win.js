@@ -182,11 +182,10 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
-  // Exclusively lock an existing file so it is in use during the update
+  // Exclusively lock an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
   let helperDestDir = getApplyDirFile("a/b/");
   helperBin.copyTo(helperDestDir, FILE_HELPER_BIN);
@@ -196,7 +195,8 @@ function run_test() {
   let lockFileRelPath = TEST_FILES[3].relPathDir.split("/");
   lockFileRelPath = lockFileRelPath.slice(2);
   lockFileRelPath = lockFileRelPath.join("/") + "/" + TEST_FILES[3].fileName;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20", lockFileRelPath];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT, lockFileRelPath];
   let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
                      createInstance(AUS_Ci.nsIProcess);
   lockFileProcess.init(helperBin);
@@ -206,22 +206,14 @@ function run_test() {
 }
 
 function doUpdate() {
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for failure when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 1);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR);
+}
 
+function checkUpdateApplied() {
   setupHelperFinish();
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  // The update status format for a failure is failed: # where # is the error
-  // code for the failure.
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
-
   checkFilesAfterUpdateFailure();
   checkUpdateLogContains(ERR_RENAME_FILE);
 
@@ -230,8 +222,4 @@ function checkUpdate() {
   do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

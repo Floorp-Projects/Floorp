@@ -1818,7 +1818,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     }
 
     nsRefPtr<gfxContext> context;
-    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BACKEND_CAIRO)) {
+    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO)) {
         RefPtr<DrawTarget> dt =
             gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, IntSize(bufW, bufH));
 

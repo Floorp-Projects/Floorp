@@ -79,17 +79,17 @@ TemporaryRef<Path>
 ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
 {
 #ifdef USE_SKIA
-  if (aTarget->GetType() == BACKEND_SKIA) {
+  if (aTarget->GetType() == BackendType::SKIA) {
     SkPath path = GetSkiaPathForGlyphs(aBuffer);
-    return new PathSkia(path, FILL_WINDING);
+    return new PathSkia(path, FillRule::FILL_WINDING);
   }
 #endif
 #ifdef USE_CAIRO
-  if (aTarget->GetType() == BACKEND_CAIRO) {
+  if (aTarget->GetType() == BackendType::CAIRO) {
     MOZ_ASSERT(mScaledFont);
 
     DrawTarget *dt = const_cast<DrawTarget*>(aTarget);
-    cairo_t *ctx = static_cast<cairo_t*>(dt->GetNativeSurface(NATIVE_SURFACE_CAIRO_CONTEXT));
+    cairo_t *ctx = static_cast<cairo_t*>(dt->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
 
     bool isNewContext = !ctx;
     if (!ctx) {
@@ -128,14 +128,14 @@ void
 ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
 {
 #ifdef USE_SKIA
-  if (aBackendType == BACKEND_SKIA) {
+  if (aBackendType == BackendType::SKIA) {
     PathBuilderSkia *builder = static_cast<PathBuilderSkia*>(aBuilder);
     builder->AppendPath(GetSkiaPathForGlyphs(aBuffer));
     return;
   }
 #endif
 #ifdef USE_CAIRO
-  if (aBackendType == BACKEND_CAIRO) {
+  if (aBackendType == BackendType::CAIRO) {
     MOZ_ASSERT(mScaledFont);
 
     PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(aBuilder);

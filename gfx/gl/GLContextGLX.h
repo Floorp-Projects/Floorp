@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace gl {
 
-typedef GLXLibrary::LibraryType LibType;
-
 class GLContextGLX : public GLContext
 {
 public:
@@ -26,15 +24,14 @@ public:
                     GLXDrawable drawable,
                     GLXFBConfig cfg,
                     bool deleteDrawable,
-                    LibType libType = GLXLibrary::OPENGL_LIB,
                     gfxXlibSurface* pixmap = nullptr);
 
     ~GLContextGLX();
 
-    virtual GLContextType GetContextType() MOZ_OVERRIDE { return ContextTypeGLX; }
+    virtual GLContextType GetContextType() MOZ_OVERRIDE { return GLContextType::GLX; }
 
     static GLContextGLX* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == ContextTypeGLX);
+        MOZ_ASSERT(gl->GetContextType() == GLContextType::GLX);
         return static_cast<GLContextGLX*>(gl);
     }
 
@@ -63,8 +60,7 @@ private:
                  GLXContext aContext,
                  bool aDeleteDrawable,
                  bool aDoubleBuffered,
-                 gfxXlibSurface *aPixmap,
-                 LibType libType);
+                 gfxXlibSurface *aPixmap);
 
     GLXContext mContext;
     Display *mDisplay;

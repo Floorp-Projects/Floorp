@@ -483,6 +483,11 @@ class RecursiveMakeBackend(CommonBackend):
                 return current, [], all_subdirs
             return current, all_subdirs, []
 
+        # build everything in parallel, including static dirs
+        def compile_filter(current, subdirs):
+            current, parallel, sequential = parallel_filter(current, subdirs)
+            return current, subdirs.static + parallel, sequential
+
         # Skip static dirs during export traversal, or build everything in
         # parallel when enabled.
         def export_filter(current, subdirs):
@@ -498,7 +503,7 @@ class RecursiveMakeBackend(CommonBackend):
             if current in self._may_skip[tier]:
                 current = None
             return current, [], subdirs.parallel + \
-                subdirs.static + subdirs.dirs + subdirs.tests
+                subdirs.dirs + subdirs.tests
 
         # Because of bug 925236 and possible other unknown race conditions,
         # don't parallelize the tools tier.
@@ -506,12 +511,12 @@ class RecursiveMakeBackend(CommonBackend):
             if current in self._may_skip[tier]:
                 current = None
             return current, subdirs.parallel, \
-                subdirs.static + subdirs.dirs + subdirs.tests + subdirs.tools
+                subdirs.dirs + subdirs.tests + subdirs.tools
 
         # compile, binaries and tools tiers use the same traversal as export
         filters = {
             'export': export_filter,
-            'compile': parallel_filter,
+            'compile': compile_filter,
             'binaries': parallel_filter,
             'libs': libs_filter,
             'tools': tools_filter,

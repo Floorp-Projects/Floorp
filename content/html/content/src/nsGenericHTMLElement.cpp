@@ -1431,12 +1431,6 @@ nsGenericHTMLElement::sBackgroundColorAttributeMap[] = {
   { nullptr }
 };
 
-/* static */ const Element::MappedAttributeEntry
-nsGenericHTMLElement::sScrollingAttributeMap[] = {
-  { &nsGkAtoms::scrolling },
-  { nullptr }
-};
-
 void
 nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
                                                  nsRuleData* aRuleData)
@@ -1673,51 +1667,6 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
 {
   MapBackgroundInto(aAttributes, aData);
   MapBGColorInto(aAttributes, aData);
-}
-
-void
-nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
-                                                nsRuleData* aData)
-{
-  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)))
-    return;
-
-  // scrolling
-  nsCSSValue* overflowValues[2] = {
-    aData->ValueForOverflowX(),
-    aData->ValueForOverflowY(),
-  };
-  for (uint32_t i = 0; i < ArrayLength(overflowValues); ++i) {
-    if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::scrolling);
-      if (value && value->Type() == nsAttrValue::eEnum) {
-        int32_t mappedValue;
-        switch (value->GetEnumValue()) {
-          case NS_STYLE_FRAME_ON:
-          case NS_STYLE_FRAME_SCROLL:
-          case NS_STYLE_FRAME_YES:
-            mappedValue = NS_STYLE_OVERFLOW_SCROLL;
-            break;
-
-          case NS_STYLE_FRAME_OFF:
-          case NS_STYLE_FRAME_NOSCROLL:
-          case NS_STYLE_FRAME_NO:
-            mappedValue = NS_STYLE_OVERFLOW_HIDDEN;
-            break;
-        
-          case NS_STYLE_FRAME_AUTO:
-            mappedValue = NS_STYLE_OVERFLOW_AUTO;
-            break;
-
-          default:
-            NS_NOTREACHED("unexpected value");
-            mappedValue = NS_STYLE_OVERFLOW_AUTO;
-            break;
-        }
-        overflowValues[i]->SetIntValue(mappedValue, eCSSUnit_Enumerated);
-      }
-    }
-  }
 }
 
 //----------------------------------------------------------------------

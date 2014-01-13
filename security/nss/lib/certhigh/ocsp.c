@@ -4227,8 +4227,7 @@ finish:
  * algorithm was used.
  */
 static PRBool
-ocsp_CertIDsMatch(CERTCertDBHandle *handle,
-		  CERTOCSPCertID *requestCertID,
+ocsp_CertIDsMatch(CERTOCSPCertID *requestCertID,
 		  CERTOCSPCertID *responseCertID)
 {
     PRBool match = PR_FALSE;
@@ -4285,7 +4284,7 @@ ocsp_CertIDsMatch(CERTCertDBHandle *handle,
 	break;
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
- 	return SECFailure;
+ 	return PR_FALSE;
     }
 
     if ((keyHash != NULL)
@@ -4319,7 +4318,7 @@ ocsp_GetSingleResponseForCertID(CERTOCSPSingleResponse **responses,
 
     for (i = 0; responses[i] != NULL; i++) {
 	single = responses[i];
-	if (ocsp_CertIDsMatch(handle, certID, single->certID)) {
+	if (ocsp_CertIDsMatch(certID, single->certID)) {
 	    return single;
 	}
     }

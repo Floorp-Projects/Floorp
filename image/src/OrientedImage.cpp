@@ -100,10 +100,10 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   gfx::SurfaceFormat surfaceFormat;
   gfxImageFormat imageFormat;
   if (InnerImage()->FrameIsOpaque(aWhichFrame)) {
-    surfaceFormat = gfx::FORMAT_B8G8R8X8;
+    surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
     imageFormat = gfxImageFormatARGB32;
   } else {
-    surfaceFormat = gfx::FORMAT_B8G8R8A8;
+    surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
     imageFormat = gfxImageFormatARGB32;
   }
 

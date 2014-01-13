@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* Application in use complete MAR file stage patch apply success test */
+/* Application in use complete MAR file staged patch apply success test */
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -228,12 +228,9 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
-  gBackgroundUpdate = true;
+  gStageUpdate = true;
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
-
-  let applyToDir = getApplyDirFile();
 
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful
@@ -241,13 +238,15 @@ function run_test() {
   if (IS_MACOSX) {
     let now = Date.now();
     let yesterday = now - (1000 * 60 * 60 * 24);
+    let applyToDir = getApplyDirFile(null, true);
     applyToDir.lastModifiedTime = yesterday;
   }
 
   // Launch the callback helper application so it is in use during the update
   let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT];
   let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
   callbackAppProcess.init(callbackApp);
@@ -257,70 +256,45 @@ function run_test() {
 }
 
 function doUpdate() {
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_APPLIED, null);
 
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_APPLIED);
-
-  let applyToDir = getApplyDirFile();
-
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
     let now = Date.now();
-    let applyToDir = getApplyDirFile();
+    let applyToDir = getApplyDirFile(null, true);
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
   checkFilesAfterUpdateSuccess();
 
-  // Now switch the application and its updated version
-  gBackgroundUpdate = false;
+  // Now switch the application and its updated version.
+  gStageUpdate = false;
   gSwitchApp = true;
-  exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "switching to the updated application");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_SUCCEEDED);
+}
 
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
-
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
+function checkUpdateApplied() {
+  let applyToDir = getApplyDirFile();
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
     let now = Date.now();
-    let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
   checkFilesAfterUpdateSuccess();
 
-  // Make sure that the intermediate directory has been removed
+  // Make sure that the intermediate directory has been removed.
   let updatedDir = applyToDir.clone();
-  updatedDir.append(UPDATED_DIR_SUFFIX.replace("/", ""));
+  updatedDir.append(DIR_UPDATED);
   do_check_false(updatedDir.exists());
 
   setupHelperFinish();
 }
 
-
 function checkUpdate() {
   checkCallbackAppLog();
-}
-
-
-function end_test() {
-  cleanupUpdaterTest();
 }

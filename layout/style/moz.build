@@ -147,12 +147,12 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/html/content/src',
-    '../../content/xbl/src',
     '../../content/xul/document/src',
     '../base',
     '../generic',
     '../xul',
     '/dom/base',
+    '/dom/xbl',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
