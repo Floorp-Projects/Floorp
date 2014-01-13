@@ -38,7 +38,7 @@
 
 "use strict";
 
-importScripts("ril_consts.js", "systemlibs.js");
+importScripts("ril_consts.js");
 importScripts("resource://gre/modules/workers/require.js");
 
 // set to true in ril_consts.js to see debug messages
@@ -53,6 +53,7 @@ if (!this.debug) {
   };
 }
 
+let RIL_EMERGENCY_NUMBERS;
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
 // Timeout value for emergency callback mode.
@@ -74,23 +75,22 @@ const MMI_MAX_LENGTH_SHORT_CODE = 2;
 
 const MMI_END_OF_USSD = "#";
 
-let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = libcutils.property_get("ro.moz.ril.callstate_extra_int", "false") === "true";
+let RILQUIRKS_CALLSTATE_EXTRA_UINT32;
 // This may change at runtime since in RIL v6 and later, we get the version
 // number via the UNSOLICITED_RIL_CONNECTED parcel.
-let RILQUIRKS_V5_LEGACY = libcutils.property_get("ro.moz.ril.v5_legacy", "true") === "true";
-let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = libcutils.property_get("ro.moz.ril.dial_emergency_call", "false") === "true";
-let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.simstate_extra_field", "false") === "true";
+let RILQUIRKS_V5_LEGACY;
+let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL;
+let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS;
 // Needed for call-waiting on Peak device
-let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true";
+let RILQUIRKS_EXTRA_UINT32_2ND_CALL;
 // On the emulator we support querying the number of lock retries
-let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.ril.query_icc_count", "false") == "true";
+let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT;
 
 // Ril quirk to Send STK Profile Download
-let RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true";
+let RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD;
 
 // Ril quirk to attach data registration on demand.
-let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
-  libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true";
+let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND;
 
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
@@ -111,7 +111,7 @@ let Buf = {
 
     // Maps tokens we send out with requests to the request type, so that
     // when we get a response parcel back, we know what request it was for.
-    this.mTokenRequestMap = {};
+    this.mTokenRequestMap = new Map();
   },
 
   /**
@@ -125,7 +125,7 @@ let Buf = {
       let token = this.readInt32();
       let error = this.readInt32();
 
-      options = this.mTokenRequestMap[token];
+      options = this.mTokenRequestMap.get(token);
       if (!options) {
         if (DEBUG) {
           debug("Suspicious uninvited request found: " + token + ". Ignored!");
@@ -133,7 +133,7 @@ let Buf = {
         return;
       }
 
-      delete this.mTokenRequestMap[token];
+      this.mTokenRequestMap.delete(token);
       request_type = options.rilRequestType;
 
       options.rilRequestError = error;
@@ -174,7 +174,7 @@ let Buf = {
     }
     options.rilRequestType = type;
     options.rilRequestError = null;
-    this.mTokenRequestMap[this.mToken] = options;
+    this.mTokenRequestMap.set(this.mToken, options);
     this.mToken++;
     return this.mToken;
   },
@@ -2912,12 +2912,8 @@ let RIL = {
    *        The number to look up.
    */
    _isEmergencyNumber: function(number) {
-     // Check read-write ecclist property first.
-     let numbers = libcutils.property_get("ril.ecclist");
-     if (!numbers) {
-       // Then read-only ecclist property since others RIL only uses this.
-       numbers = libcutils.property_get("ro.ril.ecclist");
-     }
+     // Check ril provided numbers first.
+     let numbers = RIL_EMERGENCY_NUMBERS;
 
      if (numbers) {
        numbers = numbers.split(",");
@@ -3585,11 +3581,8 @@ let RIL = {
         }
 
         // Set flag for outgoing emergency call.
-        if (newCall.isOutgoing && this._isEmergencyNumber(newCall.number)) {
-          newCall.isEmergency = true;
-        } else {
-          newCall.isEmergency = false;
-        }
+        newCall.isEmergency = newCall.isOutgoing &&
+                              this._isEmergencyNumber(newCall.number);
 
         // Add to our map.
         if (newCall.isMpty) {
@@ -4962,6 +4955,16 @@ let RIL = {
     CLIENT_ID = options.clientId;
     this.cellBroadcastDisabled = options.cellBroadcastDisabled;
     this.clirMode = options.clirMode;
+    RIL_EMERGENCY_NUMBERS = options.rilEmergencyNumbers;
+    let quirks = options.quirks;
+    RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
+    RILQUIRKS_V5_LEGACY = quirks.v5Legacy;
+    RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = quirks.requestUseDialEmergencyCall;
+    RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = quirks.simAppStateExtraFields;
+    RILQUIRKS_EXTRA_UINT32_2ND_CALL = quirks.extraUint2ndCall;
+    RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = quirks.haveQueryIccLockRetryCount;
+    RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = quirks.sendStkProfileDownload;
+    RILQUIRKS_DATA_REGISTRATION_ON_DEMAND = quirks.dataRegistrationOnDemand;
   }
 };
 

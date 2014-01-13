@@ -1110,6 +1110,9 @@ let RemoteDebugger = {
                "/data/local/debugger-socket";
     try {
       DebuggerServer.openListener(path);
+      // Temporary event, until bug 942756 lands and offer a way to know
+      // when the server is up and running
+      Services.obs.notifyObservers(null, 'debugger-server-started', null);
       this._running = true;
     } catch (e) {
       dump('Unable to start debugger server: ' + e + '\n');
