@@ -299,16 +299,18 @@
       }
 
       var ltk = lastToken.type.keyword;
-      if (ltk != null
-          && ltk != "debugger"
-          && ltk != "null"
-          && ltk != "true"
-          && ltk != "false"
-          && ltk != "this"
-          && ltk != "break"
-          && ltk != "continue"
-          && ltk != "default") {
-        return true;
+      if (ltk != null) {
+        if (ltk == "break" || ltk == "continue") {
+          return token.type.type != ";";
+        }
+        if (ltk != "debugger"
+            && ltk != "null"
+            && ltk != "true"
+            && ltk != "false"
+            && ltk != "this"
+            && ltk != "default") {
+          return true;
+        }
       }
 
       if (ltt == ")" && (token.type.type != ")"
