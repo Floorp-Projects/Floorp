@@ -22,7 +22,7 @@ let pendingEmulatorCmdCount = 0;
 function sendCmdToEmulator(cmd, callback) {
   ++pendingEmulatorCmdCount;
 
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     is(result[0], "OK", "Emulator response");
@@ -39,11 +39,11 @@ let tasks = {
   _tasks: [],
   _nextTaskIndex: 0,
 
-  push: function push(func) {
+  push: function(func) {
     this._tasks.push(func);
   },
 
-  next: function next() {
+  next: function() {
     let index = this._nextTaskIndex++;
     let task = this._tasks[index];
     try {
@@ -57,11 +57,11 @@ let tasks = {
     }
   },
 
-  finish: function finish() {
+  finish: function() {
     this._tasks[this._tasks.length - 1]();
   },
 
-  run: function run() {
+  run: function() {
     this.next();
   }
 };
@@ -126,7 +126,7 @@ function setEmulatorRoaming(roaming, callback) {
       is(connection.voice.roaming, roaming, "voice.roaming");
 
       let cmd = "gsm data " + (roaming ? "roaming" : "home");
-      sendCmdToEmulator(cmd, function () {
+      sendCmdToEmulator(cmd, function() {
 
         connection.addEventListener("datachange", function ondatachange() {
           connection.removeEventListener("datachange", ondatachange);

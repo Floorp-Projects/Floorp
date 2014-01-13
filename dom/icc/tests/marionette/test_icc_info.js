@@ -21,7 +21,7 @@ function setRadioEnabled(enabled) {
 
 function setEmulatorMccMnc(mcc, mnc) {
   let cmd = "operator set 0 Android,Android," + mcc + mnc;
-  emulatorHelper.sendCommand(cmd, function (result) {
+  emulatorHelper.sendCommand(cmd, function(result) {
     let re = new RegExp("" + mcc + mnc + "$");
     ok(result[0].match(re), "MCC/MNC should be changed.");
   });

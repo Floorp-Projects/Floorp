@@ -43,22 +43,16 @@ window.violation_reports = {
 // get sent out to the wire.  This also watches for violation reports to go out.
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
-  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    // subject should be an nsURI, and should be either allowed or blocked.
-    if(!SpecialPowers.can_QI(subject))
-       return;
-
     var testpat = new RegExp("testid=([a-z0-9_]+)");
 
-    if (topic === "http-on-modify-request") {
-      var asciiSpec = SpecialPowers.getPrivilegedProps(
-                        SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"),
-                        "URI.asciiSpec");
-      if (!testpat.test(asciiSpec)) return;
-      var testid = testpat.exec(asciiSpec)[1];
+    if (topic === "specialpowers-http-notify-request") {
+      var uri = data;
+      if (!testpat.test(uri)) return;
+      var testid = testpat.exec(uri)[1];
 
       // violation reports don't come through here, but the requested resources do
       // if the test has already finished, move on.  Some things throw multiple
@@ -68,8 +62,8 @@ examiner.prototype  = {
       } catch(e) { return; }
 
       // these are requests that were allowed by CSP
-      var testid = testpat.exec(asciiSpec)[1];
-      window.testResult(testid, 'allowed', asciiSpec + " allowed by csp");
+      var testid = testpat.exec(uri)[1];
+      window.testResult(testid, 'allowed', uri + " allowed by csp");
     }
 
     if(topic === "csp-on-violate-policy") {
@@ -112,7 +106,7 @@ examiner.prototype  = {
   // or mochitests might get borked.
   remove: function() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-    SpecialPowers.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }
 window.bug836922examiner = new examiner();

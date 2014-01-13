@@ -59,7 +59,7 @@ function cleanUp() {
   finish();
 }
 
-waitFor(test_revert_previous_setting_on_invalid_value, function () {
+waitFor(test_revert_previous_setting_on_invalid_value, function() {
   return navigator.mozMobileConnections[0].voice.connected;
 });
 

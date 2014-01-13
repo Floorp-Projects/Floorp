@@ -87,7 +87,7 @@ function sendCellBroadcastMessage(pdu, callback) {
   pendingEmulatorCmdCount++;
 
   let cmd = "cbs pdu " + pdu;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     pendingEmulatorCmdCount--;
 
     is(result[0], "OK", "Emulator response");
@@ -187,7 +187,7 @@ function testReceiving_GSM_GeographicalScope() {
     let pdu = buildHexStr(((gs & 0x03) << 14), 4)
             + buildHexStr(0, (CB_MESSAGE_SIZE_GSM - 2) * 2);
 
-    doTestHelper(pdu, nextTest, function (message) {
+    doTestHelper(pdu, nextTest, function(message) {
       is(message.gsmGeographicalScope, CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[gs],
          "message.gsmGeographicalScope");
     });
@@ -211,7 +211,7 @@ function testReceiving_GSM_MessageCode() {
     let pdu = buildHexStr(((messageCode & 0x3FF) << 4), 4)
             + buildHexStr(0, (CB_MESSAGE_SIZE_GSM - 2) * 2);
 
-    doTestHelper(pdu, nextTest, function (message) {
+    doTestHelper(pdu, nextTest, function(message) {
       is(message.messageCode, messageCode, "message.messageCode");
     });
   }
@@ -233,7 +233,7 @@ function testReceiving_GSM_MessageId() {
             + buildHexStr((messageId & 0xFFFF), 4)
             + buildHexStr(0, (CB_MESSAGE_SIZE_GSM - 4) * 2);
 
-    doTestHelper(pdu, nextTest, function (message) {
+    doTestHelper(pdu, nextTest, function(message) {
       is(message.messageId, messageId, "message.messageId");
       ok(message.etws == null, "message.etws");
     });
@@ -326,7 +326,7 @@ function testReceiving_GSM_Language_and_Body() {
 
     let nextTest = (dcs < 0xFF) ? do_test.bind(null, dcs + 1)
                                  : testReceiving_GSM_Timestamp;
-    doTestHelper(pdu, nextTest, function (message) {
+    doTestHelper(pdu, nextTest, function(message) {
       if (language) {
         is(message.language, language, "message.language");
       } else if (indicator) {
@@ -358,7 +358,7 @@ function testReceiving_GSM_Timestamp() {
   log("Test receiving GSM Cell Broadcast - Timestamp");
 
   let pdu = buildHexStr(0, CB_MESSAGE_SIZE_GSM * 2);
-  doTestHelper(pdu, testReceiving_GSM_WarningType, function (message) {
+  doTestHelper(pdu, testReceiving_GSM_WarningType, function(message) {
     // Cell Broadcast messages do not contain a timestamp field (however, ETWS
     // does). We only check the timestamp doesn't go too far (60 seconds) here.
     let msMessage = message.timestamp.getTime();
@@ -380,7 +380,7 @@ function testReceiving_GSM_WarningType() {
             + buildHexStr((messageId & 0xFFFF), 4)
             + buildHexStr(0, (CB_MESSAGE_SIZE_GSM - 4) * 2);
 
-    doTestHelper(pdu, nextTest, function (message) {
+    doTestHelper(pdu, nextTest, function(message) {
       is(message.messageId, messageId, "message.messageId");
       ok(message.etws != null, "message.etws");
 
@@ -402,7 +402,7 @@ function doTestEmergencyUserAlert_or_Popup(name, mask, nextTest) {
           + buildHexStr(CB_GSM_MESSAGEID_ETWS_BEGIN, 4)
           + buildHexStr(0, (CB_MESSAGE_SIZE_GSM - 4) * 2);
 
-  doTestHelper(pdu, nextTest, function (message) {
+  doTestHelper(pdu, nextTest, function(message) {
     is(message.messageId, CB_GSM_MESSAGEID_ETWS_BEGIN, "message.messageId");
     ok(message.etws != null, "message.etws");
     is(message.etws[name], mask != 0, "message.etws." + name);
@@ -435,7 +435,7 @@ function testReceiving_GSM_Multipart() {
       pdus.push(pdu);
     }
 
-    doTestHelper(pdus, nextTest, function (message) {
+    doTestHelper(pdus, nextTest, function(message) {
       is(message.body.length, (numParts * CB_MAX_CONTENT_7BIT),
          "message.body");
     });
@@ -475,7 +475,7 @@ function cleanUp() {
   finish();
 }
 
-waitFor(testGsmMessageAttributes, function () {
+waitFor(testGsmMessageAttributes, function() {
   return navigator.mozMobileConnections[0].voice.connected;
 });
 
