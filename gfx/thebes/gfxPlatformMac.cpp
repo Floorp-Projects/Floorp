@@ -425,18 +425,15 @@ gfxPlatformMac::SupportsOffMainThreadCompositing()
   return true;
 }
 
-void
-gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
+qcms_profile *
+gfxPlatformMac::GetPlatformCMSOutputProfile()
 {
-    mem = nullptr;
-    size = 0;
-
     CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
     if (!cspace) {
         cspace = ::CGColorSpaceCreateDeviceRGB();
     }
     if (!cspace) {
-        return;
+        return nullptr;
     }
 
     CFDataRef iccp = ::CGColorSpaceCopyICCProfile(cspace);
@@ -444,20 +441,12 @@ gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
     ::CFRelease(cspace);
 
     if (!iccp) {
-        return;
+        return nullptr;
     }
 
-    // copy to external buffer
-    size = static_cast<size_t>(::CFDataGetLength(iccp));
-    if (size > 0) {
-        void *data = malloc(size);
-        if (data) {
-            memcpy(data, ::CFDataGetBytePtr(iccp), size);
-            mem = data;
-        } else {
-            size = 0;
-        }
-    }
+    qcms_profile* profile = qcms_profile_from_memory(::CFDataGetBytePtr(iccp), static_cast<size_t>(::CFDataGetLength(iccp)));
 
     ::CFRelease(iccp);
+
+    return profile;
 }
