@@ -99,7 +99,7 @@ protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
-    virtual void GetPlatformCMSOutputProfile(void *&mem, size_t &size);
+    virtual qcms_profile *GetPlatformCMSOutputProfile();
 
     virtual bool SupportsOffMainThreadCompositing();
 #ifdef MOZ_X11
