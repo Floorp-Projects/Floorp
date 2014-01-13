@@ -13,7 +13,7 @@
 <overlay id="editBookmarkOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <vbox id="editBookmarkPanelContent">
+  <vbox id="editBookmarkPanelContent" flex="1">
     <broadcaster id="paneElementsBroadcaster"/>
 
     <hbox id="editBMPanel_selectionCount" hidden="true" pack="center">
@@ -107,13 +107,15 @@
           </hbox>
         </row>
 
-        <row align="center" id="editBMPanel_folderTreeRow" collapsed="true">
+        <row id="editBMPanel_folderTreeRow" collapsed="true" flex="1">
           <spacer/>
           <vbox flex="1">
             <tree id="editBMPanel_folderTree"
+                  flex="1"
                   class="placesTree"
                   type="places"
                   height="150"
+                  minheight="150"
                   editable="true"
                   onselect="gEditItemOverlay.onFolderTreeSelect();"
                   hidecolumnpicker="true"
