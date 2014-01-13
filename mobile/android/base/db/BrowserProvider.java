@@ -2975,7 +2975,7 @@ public class BrowserProvider extends ContentProvider {
 
         // If no URL is provided, insert using the default one.
         if (TextUtils.isEmpty(faviconUrl) && !TextUtils.isEmpty(pageUrl)) {
-            values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconUrl(pageUrl));
+            values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconURL(pageUrl));
         }
 
         long now = System.currentTimeMillis();
