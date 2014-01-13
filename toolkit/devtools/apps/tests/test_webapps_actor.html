@@ -75,7 +75,9 @@ var steps = [
     SpecialPowers.pushPrefEnv({
       set: [["dom.mozBrowserFramesEnabled", true],
             ["security.apps.privileged.CSP.default",
-             "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'"]
+             "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'"],
+            ["devtools.debugger.unix-domain-socket", 6000],
+            ["devtools.debugger.prompt-connection", false]
            ]
     }, next);
   },
