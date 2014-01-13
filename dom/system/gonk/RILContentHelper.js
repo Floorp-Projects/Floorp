@@ -426,10 +426,7 @@ DOMMMIError.prototype = {
   classID:          DOMMMIERROR_CID,
   contractID:       "@mozilla.org/dom/mmi-error;1",
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsISupports]),
-  __init: function(serviceCode,
-                   name,
-                   message,
-                   additionalInformation) {
+  __init: function(serviceCode, name, message, additionalInformation) {
     this.__DOM_IMPL__.init(name, message);
     this.serviceCode = serviceCode;
     this.additionalInformation = additionalInformation;
@@ -951,9 +948,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCardLockRetryCount: function(clientId,
-                                                        window,
-                                                        lockType) {
+  getCardLockRetryCount: function(clientId, window, lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1021,10 +1016,8 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkMenuSelection: function(clientId,
-                                                      window,
-                                                      itemIdentifier,
-                                                      helpRequested) {
+  sendStkMenuSelection: function(clientId, window, itemIdentifier,
+                                 helpRequested) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1038,9 +1031,7 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkTimerExpiration: function(clientId,
-                                                          window,
-                                                          timer) {
+  sendStkTimerExpiration: function(clientId, window, timer) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1977,8 +1968,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, contact);
   },
 
-  handleVoicemailNotification: function(clientId,
-                                                                    message) {
+  handleVoicemailNotification: function(clientId, message) {
     let changed = false;
     if (!this.voicemailStatuses[clientId]) {
       this.voicemailStatuses[clientId] = new VoicemailStatus(clientId);
