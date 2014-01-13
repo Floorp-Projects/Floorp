@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=952365
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 952365</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 952365 **/
+
+    var onvolumechange;
+    var x = {};
+    
+    (function() {
+       onvolumechange = x;
+       ise(onvolumechange, x,
+           "Should preserve an object value when assigning to event handler");
+       // Test that we don't try to actually call the non-callable object
+       window.dispatchEvent(new Event("volumechange"));
+       onvolumechange = 5;
+       ise(onvolumechange, null,
+           "Non-object values should become null when assigning to event handler");
+    })();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=952365">Mozilla Bug 952365</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
