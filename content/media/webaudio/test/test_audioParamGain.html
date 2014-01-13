@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioParam with pre-gain </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var ctx = new AudioContext();
+var source = ctx.createOscillator();
+var lfo = ctx.createOscillator();
+var lfoIntensity = ctx.createGain();
+var effect = ctx.createGain();
+var sp = ctx.createScriptProcessor(2048, 1);
+
+source.frequency.value = 440;
+lfo.frequency.value = 2;
+// Very low gain, so the LFO should have very little influence
+// on the source, its RMS value should be close to the nominal value
+// for a sine wave.
+lfoIntensity.gain.value = 0.0001;
+
+lfo.connect(lfoIntensity);
+lfoIntensity.connect(effect.gain);
+source.connect(effect);
+effect.connect(sp);
+
+sp.onaudioprocess = function(e) {
+  var buffer = e.inputBuffer.getChannelData(0);
+  var rms = 0;
+  for (var i = 0; i < buffer.length; i++) {
+    rms += buffer[i] * buffer[i];
+  }
+
+  rms /= buffer.length;
+  rms = Math.sqrt(rms);
+
+  // 1 / Math.sqrt(2) is the theoretical RMS value for a sine wave.
+  ok(fuzzyCompare(rms, 1 / Math.sqrt(2)),
+      "Gain correctly applied to the AudioParam.");
+
+  ctx = null;
+  sp.onaudioprocess = null;
+  lfo.stop(0);
+  source.stop(0);
+
+  SimpleTest.finish();
+}
+
+lfo.start(0);
+source.start(0);
+
+</script>
+</pre>
+</body>
