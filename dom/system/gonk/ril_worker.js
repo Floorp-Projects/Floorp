@@ -5449,65 +5449,65 @@ RIL[REQUEST_SET_CLIR] = function(length, options) {
 };
 
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = function(length, options) {
-    options.success = (options.rilRequestError === 0);
-    if (!options.success) {
-      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    let rulesLength = 0;
-    if (length) {
-      rulesLength = Buf.readInt32();
-    }
-    if (!rulesLength) {
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-    let rules = new Array(rulesLength);
-    for (let i = 0; i < rulesLength; i++) {
-      let rule = {};
-      rule.active       = Buf.readInt32() == 1; // CALL_FORWARD_STATUS_*
-      rule.reason       = Buf.readInt32(); // CALL_FORWARD_REASON_*
-      rule.serviceClass = Buf.readInt32();
-      rule.toa          = Buf.readInt32();
-      rule.number       = Buf.readString();
-      rule.timeSeconds  = Buf.readInt32();
-      rules[i] = rule;
-    }
-    options.rules = rules;
-    if (options.rilMessageType === "sendMMI") {
-      options.statusMessage = MMI_SM_KS_SERVICE_INTERROGATED;
-      // MMI query call forwarding options request returns a set of rules that
-      // will be exposed in the form of an array of nsIDOMMozMobileCFInfo
-      // instances.
-      options.additionalInformation = rules;
-    }
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendChromeMessage(options);
+    return;
+  }
+
+  let rulesLength = 0;
+  if (length) {
+    rulesLength = Buf.readInt32();
+  }
+  if (!rulesLength) {
+    options.success = false;
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+    this.sendChromeMessage(options);
+    return;
+  }
+  let rules = new Array(rulesLength);
+  for (let i = 0; i < rulesLength; i++) {
+    let rule = {};
+    rule.active       = Buf.readInt32() == 1; // CALL_FORWARD_STATUS_*
+    rule.reason       = Buf.readInt32(); // CALL_FORWARD_REASON_*
+    rule.serviceClass = Buf.readInt32();
+    rule.toa          = Buf.readInt32();
+    rule.number       = Buf.readString();
+    rule.timeSeconds  = Buf.readInt32();
+    rules[i] = rule;
+  }
+  options.rules = rules;
+  if (options.rilMessageType === "sendMMI") {
+    options.statusMessage = MMI_SM_KS_SERVICE_INTERROGATED;
+    // MMI query call forwarding options request returns a set of rules that
+    // will be exposed in the form of an array of nsIDOMMozMobileCFInfo
+    // instances.
+    options.additionalInformation = rules;
+  }
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_SET_CALL_FORWARD] = function(length, options) {
-    options.success = (options.rilRequestError === 0);
-    if (!options.success) {
-      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    } else if (options.rilMessageType === "sendMMI") {
-      switch (options.action) {
-        case CALL_FORWARD_ACTION_ENABLE:
-          options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-          break;
-        case CALL_FORWARD_ACTION_DISABLE:
-          options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-          break;
-        case CALL_FORWARD_ACTION_REGISTRATION:
-          options.statusMessage = MMI_SM_KS_SERVICE_REGISTERED;
-          break;
-        case CALL_FORWARD_ACTION_ERASURE:
-          options.statusMessage = MMI_SM_KS_SERVICE_ERASED;
-          break;
-      }
+  options.success = (options.rilRequestError === 0);
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  } else if (options.rilMessageType === "sendMMI") {
+    switch (options.action) {
+      case CALL_FORWARD_ACTION_ENABLE:
+        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
+        break;
+      case CALL_FORWARD_ACTION_DISABLE:
+        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+        break;
+      case CALL_FORWARD_ACTION_REGISTRATION:
+        options.statusMessage = MMI_SM_KS_SERVICE_REGISTERED;
+        break;
+      case CALL_FORWARD_ACTION_ERASURE:
+        options.statusMessage = MMI_SM_KS_SERVICE_ERASED;
+        break;
     }
-    this.sendChromeMessage(options);
+  }
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_QUERY_CALL_WAITING] = function(length, options) {
   options.success = (options.rilRequestError === 0);
