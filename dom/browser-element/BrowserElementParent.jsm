@@ -547,16 +547,19 @@ BrowserElementParent.prototype = {
     return this._sendDOMRequest('purge-history');
   },
 
-  _getScreenshot: function(_width, _height) {
+  _getScreenshot: function(_width, _height, _mimeType) {
     let width = parseInt(_width);
     let height = parseInt(_height);
+    let mimeType = (typeof _mimeType === 'string') ?
+      _mimeType.trim().toLowerCase() : 'image/jpeg';
     if (isNaN(width) || isNaN(height) || width < 0 || height < 0) {
       throw Components.Exception("Invalid argument",
                                  Cr.NS_ERROR_INVALID_ARG);
     }
 
     return this._sendDOMRequest('get-screenshot',
-                                {width: width, height: height});
+                                {width: width, height: height,
+                                 mimeType: mimeType});
   },
 
   _recvNextPaint: function(data) {

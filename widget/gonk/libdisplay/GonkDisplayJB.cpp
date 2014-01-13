@@ -114,12 +114,17 @@ GonkDisplayJB::GonkDisplayJB()
         mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, usage, &error);
     }
 
-    mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, mAlloc);
+#if ANDROID_VERSION >= 19
+    sp<BufferQueue> bq = new BufferQueue(mAlloc);
+#else
+    sp<BufferQueue> bq = new BufferQueue(true, mAlloc);
+#endif
+    mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, bq);
 
 #if ANDROID_VERSION == 17
     sp<SurfaceTextureClient> stc = new SurfaceTextureClient(static_cast<sp<ISurfaceTexture> >(mFBSurface->getBufferQueue()));
 #else
-    sp<Surface> stc = new Surface(static_cast<sp<IGraphicBufferProducer> >(mFBSurface->getBufferQueue()));
+    sp<Surface> stc = new Surface(static_cast<sp<IGraphicBufferProducer> >(bq));
 #endif
     mSTClient = stc;
 

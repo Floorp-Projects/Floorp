@@ -86,13 +86,15 @@ DirectoryProvider.prototype = {
       // getUpdateDir will set persistent to false since it may toggle between
       // /data/local/ and /mnt/sdcard based on free space and/or availability
       // of the sdcard.
-      return this.getUpdateDir(persistent, UPDATES_DIR);
+      // before download, check if free space is 2.1 times of update.mar
+      return this.getUpdateDir(persistent, UPDATES_DIR, 2.1);
     }
     if (prop == XRE_OS_UPDATE_APPLY_TO_DIR) {
       // getUpdateDir will set persistent to false since it may toggle between
       // /data/local/ and /mnt/sdcard based on free space and/or availability
       // of the sdcard.
-      return this.getUpdateDir(persistent, FOTA_DIR);
+      // before apply, check if free space is 1.1 times of update.mar
+      return this.getUpdateDir(persistent, FOTA_DIR, 1.1);
     }
 #else
     // In desktop builds, coreAppsDir is the same as the profile directory.
@@ -171,7 +173,7 @@ DirectoryProvider.prototype = {
     return null;
   },
 
-  getUpdateDir: function dp_getUpdateDir(persistent, subdir) {
+  getUpdateDir: function dp_getUpdateDir(persistent, subdir, multiple) {
     let defaultUpdateDir = this.getDefaultUpdateDir();
     persistent.value = false;
 
@@ -189,7 +191,7 @@ DirectoryProvider.prototype = {
       return defaultUpdateDir;
     }
 
-    let requiredSpace = selectedPatch.size * 2;
+    let requiredSpace = selectedPatch.size * multiple;
     let updateDir = this.findUpdateDirWithFreeSpace(requiredSpace, subdir);
     if (updateDir) {
       return updateDir;

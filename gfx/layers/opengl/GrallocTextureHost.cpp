@@ -31,8 +31,6 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
     return swapRB ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
     return gfx::SurfaceFormat::R5G6B5;
-  case android::PIXEL_FORMAT_A_8:
-    return gfx::SurfaceFormat::A8;
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
@@ -71,7 +69,6 @@ TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
   case android::PIXEL_FORMAT_RGBA_8888:
   case android::PIXEL_FORMAT_RGBX_8888:
   case android::PIXEL_FORMAT_RGB_565:
-  case android::PIXEL_FORMAT_A_8:
     return LOCAL_GL_TEXTURE_2D;
   default:
     if (aFormat >= 0x100 && aFormat <= 0x1FF) {

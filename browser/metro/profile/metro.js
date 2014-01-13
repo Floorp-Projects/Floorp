@@ -121,6 +121,9 @@ pref("browser.display.history.maxresults", 100);
 /* max items per section of the startui */
 pref("browser.display.startUI.maxresults", 16);
 
+// Number of times to display firstrun instructions on new tab page
+pref("browser.firstrun.count", 3);
+
 // Backspace and Shift+Backspace behavior
 // 0 goes Back/Forward
 // 1 act like PgUp/PgDown

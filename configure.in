@@ -246,6 +246,11 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
         ;;
+    19)
+        GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        MOZ_NFC=1
+
+        ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
         ;;

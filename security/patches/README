@@ -1,2 +1,5 @@
 This directory contains patches that were added locally
 on top of the NSS release.
+
+bug-950129.patch  Make OCSP fetching policy for OCSP response signing
+                  certificates consistent.
