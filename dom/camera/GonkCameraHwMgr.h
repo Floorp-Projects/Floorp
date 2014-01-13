@@ -78,7 +78,7 @@ public:
     RAW_SENSOR_ORIENTATION,
     OFFSET_SENSOR_ORIENTATION
   };
-  int      GetSensorOrientation(uint32_t aType = OFFSET_SENSOR_ORIENTATION);
+  int      GetSensorOrientation(uint32_t aType = RAW_SENSOR_ORIENTATION);
 
   int      AutoFocus();
   void     CancelAutoFocus();
