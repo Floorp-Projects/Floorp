@@ -1024,8 +1024,8 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   if (!ocspEnabled) {
     ocspStaplingEnabled = false;
   }
-  PublicSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
-  PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
+  PublicSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
+  PrivateSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
 
   setNonPkixOcspEnabled(ocspEnabled);
 
