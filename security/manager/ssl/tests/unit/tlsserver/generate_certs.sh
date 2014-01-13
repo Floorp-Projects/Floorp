@@ -59,7 +59,7 @@ $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -N -f $PASSWORD_FILE
 COMMON_ARGS="-v 360 -w -1 -2 -z $NOISE_FILE"
 
 function make_CA {
-  CA_RESPONSES="y\n0\ny"
+  CA_RESPONSES="y\n1\ny"
   NICKNAME="${1}"
   SUBJECT="${2}"
   DERFILE="${3}"
@@ -74,7 +74,24 @@ function make_CA {
 
 SERIALNO=1
 
-function make_cert {
+function make_INT {
+  INT_RESPONSES="y\n0\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
+  NICKNAME="${1}"
+  SUBJECT="${2}"
+  CA="${3}"
+
+  echo -e "$INT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -S \
+                                                    -n $NICKNAME \
+                                                    -s "$SUBJECT" \
+                                                    -c $CA \
+                                                    -t ",," \
+                                                    -m $SERIALNO \
+                                                    --extAIA \
+                                                    $COMMON_ARGS
+  SERIALNO=$(($SERIALNO + 1))
+}
+
+function make_EE {
   CERT_RESPONSES="n\n\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
   NICKNAME="${1}"
   SUBJECT="${2}"
@@ -98,10 +115,13 @@ function make_cert {
 
 make_CA testCA 'CN=Test CA' test-ca.der
 make_CA otherCA 'CN=Other test CA' other-test-ca.der
-make_cert localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com"
+make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com"
 # A cert that is like localhostAndExampleCom, but with a different serial number for
 # testing the "OCSP response is from the right issuer, but it is for the wrong cert"
 # case.
-make_cert ocspOtherEndEntity 'CN=Other Cert' testCA "localhost,*.example.com"
+make_EE ocspOtherEndEntity 'CN=Other Cert' testCA "localhost,*.example.com"
+
+make_INT testINT 'CN=Test Intermediate' testCA
+make_EE ocspEEWithIntermediate 'CN=Test End-entity with Intermediate' testINT "localhost,*.example.com"
 
 cleanup
