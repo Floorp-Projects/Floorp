@@ -166,6 +166,8 @@
     "content/events/test/test_bug508479.html":"drag event, also fails on Android",
     "content/events/test/test_dragstart.html":"drag event, also fails on Android",
 
+    "content/events/test/test_bug864040.html":"failing when the test gets moved around, and on debug",
+
     "content/html/content/test/forms/test_input_file_picker.html":"5 failures out of 139 and timing out, bug 901581",
     "content/html/content/test/forms/test_validation.html":"374 total, bug 901848, no keygen support",
 

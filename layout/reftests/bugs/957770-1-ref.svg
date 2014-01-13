@@ -1,0 +1,10 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <text x="80" y="80" font-size="32px" font-family="sans-serif"
+        dominant-baseline="text-before-edge" text-decoration="underline">
+    Hello, out there
+  </text>
+</svg>

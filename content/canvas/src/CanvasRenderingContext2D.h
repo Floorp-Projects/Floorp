@@ -23,6 +23,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
+#include "nsLayoutUtils.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -579,6 +580,11 @@ protected:
                  double dx, double dy, double dw, double dh, 
                  uint8_t optional_argc, mozilla::ErrorResult& error);
 
+  void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
+                            mozilla::gfx::Rect* bounds, double dx, double dy,
+                            double dw, double dh, double sx, double sy,
+                            double sw, double sh, gfxIntSize imgSize);
+
   nsString& GetFont()
   {
     /* will initilize the value if not set, else does nothing */
@@ -693,7 +699,7 @@ protected:
   {
     if (NeedToDrawShadow()) {
       // In this case the shadow rendering will use the operator.
-      return mozilla::gfx::OP_OVER;
+      return mozilla::gfx::CompositionOp::OP_OVER;
     }
 
     return CurrentState().op;
@@ -759,10 +765,10 @@ protected:
                      globalAlpha(1.0f),
                      shadowBlur(0.0),
                      dashOffset(0.0f),
-                     op(mozilla::gfx::OP_OVER),
-                     fillRule(mozilla::gfx::FILL_WINDING),
-                     lineCap(mozilla::gfx::CAP_BUTT),
-                     lineJoin(mozilla::gfx::JOIN_MITER_OR_BEVEL),
+                     op(mozilla::gfx::CompositionOp::OP_OVER),
+                     fillRule(mozilla::gfx::FillRule::FILL_WINDING),
+                     lineCap(mozilla::gfx::CapStyle::BUTT),
+                     lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
                      imageSmoothingEnabled(true)
     { }
 

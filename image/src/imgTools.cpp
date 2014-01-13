@@ -156,7 +156,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
                     Rect(0, 0, aScaledWidth, aScaledHeight),
                     Rect(0, 0, frameWidth, frameHeight),
                     DrawSurfaceOptions(),
-                    DrawOptions(1.0f, OP_SOURCE));
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   } else {
     gfxContext ctx(dest);
 

@@ -65,10 +65,12 @@ gfxPlatformMac::gfxPlatformMac()
     DisableFontActivation();
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
-    uint32_t contentMask = (1 << BACKEND_COREGRAPHICS);
-    InitBackendPrefs(canvasMask, BACKEND_COREGRAPHICS,
-                     contentMask, BACKEND_COREGRAPHICS);
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) |
+                          BackendTypeBit(BackendType::SKIA) |
+                          BackendTypeBit(BackendType::COREGRAPHICS);
+    uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS);
+    InitBackendPrefs(canvasMask, BackendType::COREGRAPHICS,
+                     contentMask, BackendType::COREGRAPHICS);
 }
 
 gfxPlatformMac::~gfxPlatformMac()
@@ -363,8 +365,8 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateThebesSurfaceAliasForDrawTarget_hack(mozilla::gfx::DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
-    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
+  if (aTarget->GetType() == BackendType::COREGRAPHICS) {
+    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NativeSurfaceType::CGCONTEXT));
     unsigned char* data = (unsigned char*)CGBitmapContextGetData(cg);
     size_t bpp = CGBitmapContextGetBitsPerPixel(cg);
     size_t stride = CGBitmapContextGetBytesPerRow(cg);
@@ -384,7 +386,7 @@ gfxPlatformMac::CreateThebesSurfaceAliasForDrawTarget_hack(mozilla::gfx::DrawTar
 already_AddRefed<gfxASurface>
 gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aTarget->GetType() == BackendType::COREGRAPHICS_ACCELERATED) {
     RefPtr<SourceSurface> source = aTarget->Snapshot();
     RefPtr<DataSourceSurface> sourceData = source->GetDataSurface();
     unsigned char* data = sourceData->GetData();
@@ -394,8 +396,8 @@ gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     nsRefPtr<gfxImageSurface> cpy = new gfxImageSurface(ThebesIntSize(sourceData->GetSize()), gfxImageFormatARGB32);
     cpy->CopyFrom(surf);
     return cpy.forget();
-  } else if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
-    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
+  } else if (aTarget->GetType() == BackendType::COREGRAPHICS) {
+    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NativeSurfaceType::CGCONTEXT));
 
     //XXX: it would be nice to have an implicit conversion from IntSize to gfxIntSize
     IntSize intSize = aTarget->GetSize();

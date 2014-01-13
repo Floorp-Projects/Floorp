@@ -4802,11 +4802,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   SurfaceFromElementResult result;
   nsresult rv;
 
-  bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
-  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
-    wantImageSurface = true;
-  }
-
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                             getter_AddRefs(imgRequest));
@@ -4833,6 +4828,8 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv))
     return result;
 
+  uint32_t noRasterize = aSurfaceFlags & SFE_NO_RASTERIZING_VECTORS;
+
   uint32_t whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
                         ? (uint32_t) imgIContainer::FRAME_FIRST
                         : (uint32_t) imgIContainer::FRAME_CURRENT;
@@ -4841,10 +4838,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
     frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-  nsRefPtr<gfxASurface> framesurf =
-    imgContainer->GetFrame(whichFrame, frameFlags);
-  if (!framesurf)
-    return result;
 
   int32_t imgWidth, imgHeight;
   rv = imgContainer->GetWidth(&imgWidth);
@@ -4852,23 +4845,38 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv) || NS_FAILED(rv2))
     return result;
 
-  nsRefPtr<gfxASurface> gfxsurf = framesurf;
-  if (wantImageSurface) {
-    IntSize size(imgWidth, imgHeight);
-    RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
-    RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
-                                                             output->GetData(),
-                                                             size,
-                                                             output->Stride(),
-                                                             FORMAT_B8G8R8A8);
-    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, gfxsurf);
+  if (!noRasterize || imgContainer->GetType() == imgIContainer::TYPE_RASTER) {
+    bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
+    if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+      wantImageSurface = true;
+    }
+    
+    nsRefPtr<gfxASurface> gfxsurf =
+      imgContainer->GetFrame(whichFrame, frameFlags);
+    if (!gfxsurf)
+      return result;
 
-    dt->CopySurface(source, IntRect(0, 0, imgWidth, imgHeight), IntPoint());
-    dt->Flush();
+    if (wantImageSurface) {
+      IntSize size(imgWidth, imgHeight);
+      RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+      RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                                               output->GetData(),
+                                                               size,
+                                                               output->Stride(),
+                                                               SurfaceFormat::B8G8R8A8);
+      RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, gfxsurf);
 
-    result.mSourceSurface = output;
+      dt->CopySurface(source, IntRect(0, 0, imgWidth, imgHeight), IntPoint());
+      dt->Flush();
+
+      result.mSourceSurface = output;
+    } else {
+      result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxsurf);
+    }
   } else {
-    result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxsurf);
+    result.mDrawInfo.mImgContainer = imgContainer;
+    result.mDrawInfo.mWhichFrame = whichFrame;
+    result.mDrawInfo.mDrawingFlags = frameFlags;
   }
 
   int32_t corsmode;
@@ -4916,10 +4924,10 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
     RefPtr<DrawTarget> dt;
     if (premultAlpha) {
       if (aTarget) {
-        dt = aTarget->CreateSimilarDrawTarget(IntSize(size.width, size.height), FORMAT_B8G8R8A8);
+        dt = aTarget->CreateSimilarDrawTarget(IntSize(size.width, size.height), SurfaceFormat::B8G8R8A8);
       } else {
         dt = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(size.width, size.height),
-                                                                          FORMAT_B8G8R8A8);
+                                                                          SurfaceFormat::B8G8R8A8);
       }
       if (!dt) {
         return result;
@@ -4929,7 +4937,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
       // TODO: RenderContextsExternal expects to get a gfxImageFormat
       // so that it can un-premultiply.
       RefPtr<DataSourceSurface> data = Factory::CreateDataSourceSurface(IntSize(size.width, size.height),
-                                                                        FORMAT_B8G8R8A8);
+                                                                        SurfaceFormat::B8G8R8A8);
       memset(data->GetData(), 0, data->Stride() * size.height);
       result.mSourceSurface = data;
       nsRefPtr<gfxImageSurface> image = new gfxImageSurface(data->GetData(),

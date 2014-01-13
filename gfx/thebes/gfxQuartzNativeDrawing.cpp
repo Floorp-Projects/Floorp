@@ -41,7 +41,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
 
     if (!mContext->IsCairo()) {
       DrawTarget *dt = mContext->GetDrawTarget();
-      if (dt->GetType() == BACKEND_COREGRAPHICS) {
+      if (dt->GetType() == BackendType::COREGRAPHICS) {
         if (dt->IsDualDrawTarget()) {
           IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
                               NSToIntFloor(mNativeRect.height * mBackingScale));
@@ -49,7 +49,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
          if (backingSize.IsEmpty())
             return nullptr;
 
-          mDrawTarget = Factory::CreateDrawTarget(BACKEND_COREGRAPHICS, backingSize, FORMAT_B8G8R8A8);
+          mDrawTarget = Factory::CreateDrawTarget(BackendType::COREGRAPHICS, backingSize, SurfaceFormat::B8G8R8A8);
 
           Matrix transform;
           transform.Scale(mBackingScale, mBackingScale);

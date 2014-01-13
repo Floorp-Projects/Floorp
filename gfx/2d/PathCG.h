@@ -69,13 +69,13 @@ public:
   }
   virtual ~PathCG() { CGPathRelease(mPath); }
 
-  // Paths will always return BACKEND_COREGRAPHICS, but note that they
-  // are compatible with BACKEND_COREGRAPHICS_ACCELERATED backend.
-  virtual BackendType GetBackendType() const { return BACKEND_COREGRAPHICS; }
+  // Paths will always return BackendType::COREGRAPHICS, but note that they
+  // are compatible with BackendType::COREGRAPHICS_ACCELERATED backend.
+  virtual BackendType GetBackendType() const { return BackendType::COREGRAPHICS; }
 
-  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
-                                                             FillRule aFillRule = FILL_WINDING) const;
+                                                             FillRule aFillRule = FillRule::FILL_WINDING) const;
 
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const;
   virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,

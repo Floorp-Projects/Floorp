@@ -43,7 +43,7 @@ public:
 #endif
 
   // Not true, but required to instantiate a ScaledFontBase.
-  virtual FontType GetType() const { return FONT_SKIA; }
+  virtual FontType GetType() const { return FontType::SKIA; }
 
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }

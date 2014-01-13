@@ -1,4 +1,4 @@
-//) |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
+// |reftest| skip-if(!this.hasOwnProperty("SIMD"))
 var BUGNUMBER = 946042;
 var float32x4 = SIMD.float32x4;
 var int32x4 = SIMD.int32x4;

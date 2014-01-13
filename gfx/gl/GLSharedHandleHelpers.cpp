@@ -153,12 +153,12 @@ SharedTextureHandle CreateSharedHandle(GLContext* gl,
                                        SharedTextureBufferType bufferType)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return 0;
 
     // Both EGLImage and SurfaceTexture only support same-process currently, but
     // it's possible to make SurfaceTexture work across processes. We should do that.
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return 0;
 
     switch (bufferType) {
@@ -196,10 +196,10 @@ void ReleaseSharedHandle(GLContext* gl,
                          SharedTextureHandle sharedHandle)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return;
 
-    if (shareType != SameProcess) {
+    if (shareType != SharedTextureShareType::SameProcess) {
         NS_ERROR("Implementation not available for this sharing type");
         return;
     }
@@ -233,10 +233,10 @@ bool GetSharedHandleDetails(GLContext* gl,
                             SharedHandleDetails& details)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return false;
 
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return false;
 
     SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
@@ -247,7 +247,7 @@ bool GetSharedHandleDetails(GLContext* gl,
         SurfaceTextureWrapper* surfaceWrapper = reinterpret_cast<SurfaceTextureWrapper*>(wrapper);
 
         details.mTarget = LOCAL_GL_TEXTURE_EXTERNAL;
-        details.mTextureFormat = gfx::FORMAT_R8G8B8A8;
+        details.mTextureFormat = gfx::SurfaceFormat::R8G8B8A8;
         surfaceWrapper->SurfaceTexture()->GetTransformMatrix(details.mTextureTransform);
         break;
     }
@@ -255,7 +255,7 @@ bool GetSharedHandleDetails(GLContext* gl,
 
     case SharedHandleType_Image:
         details.mTarget = LOCAL_GL_TEXTURE_2D;
-        details.mTextureFormat = gfx::FORMAT_R8G8B8A8;
+        details.mTextureFormat = gfx::SurfaceFormat::R8G8B8A8;
         break;
 
     default:
@@ -271,10 +271,10 @@ bool AttachSharedHandle(GLContext* gl,
                         SharedTextureHandle sharedHandle)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return false;
 
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return false;
 
     SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);

@@ -16,7 +16,7 @@ interface nsIURI;
  * location, stop or restart an in process load, or determine where the object
  * has previously gone.
  */
-[scriptable, uuid(28404f7e-0f17-4dc3-a21a-2074d8659b02)]
+[scriptable, uuid(dbd6241d-c76e-42c0-9410-930589d803a2)]
 interface nsIWebNavigation : nsISupports
 {
   /**
@@ -190,6 +190,11 @@ interface nsIWebNavigation : nsISupports
    * URIs entered by users.  This flag must not be passed to Reload.
    */
   const unsigned long LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x100000;
+
+  /**
+   * This flag specifies that common scheme typos should be corrected.
+   */
+  const unsigned long LOAD_FLAGS_FIXUP_SCHEME_TYPOS = 0x200000;
 
   /* Note that flag 0x80000 is available. */
 

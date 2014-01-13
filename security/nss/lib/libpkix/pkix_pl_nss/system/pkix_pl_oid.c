@@ -107,33 +107,16 @@ pkix_pl_OID_Equals(
         PKIX_Boolean *pResult,
         void *plContext)
 {
-        PKIX_UInt32 secondType;
-        SECComparison cmpResult;
+        PKIX_Int32 cmpResult;
 
         PKIX_ENTER(OID, "pkix_pl_OID_Equals");
         PKIX_NULLCHECK_THREE(first, second, pResult);
-
-        PKIX_CHECK(pkix_CheckType(first, PKIX_OID_TYPE, plContext),
-                    PKIX_FIRSTARGUMENTNOTANOID);
-
-        PKIX_CHECK(PKIX_PL_Object_GetType(second, &secondType, plContext),
-                    PKIX_COULDNOTGETTYPEOFSECONDARGUMENT);
-
-        *pResult = PKIX_FALSE;
-
-        /*
-         * Do a quick check that the second object is an OID.
-         * If so, check that their lengths are equal.
-         */
-        if (secondType != PKIX_OID_TYPE) {
-                goto cleanup;
-        }
 
         PKIX_CHECK(pkix_pl_OID_Comparator
                     (first, second, &cmpResult, plContext),
                     PKIX_OIDCOMPARATORFAILED);
 
-        *pResult = (cmpResult == SECEqual);
+        *pResult = (cmpResult == 0);
 cleanup:
 
         PKIX_RETURN(OID);

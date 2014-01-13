@@ -12,7 +12,7 @@ TemporaryRef<DataSourceSurface>
 FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
 {
   IntSize size = aSource->GetSize();
-  RefPtr<DataSourceSurface> alpha = Factory::CreateDataSourceSurface(size, FORMAT_A8);
+  RefPtr<DataSourceSurface> alpha = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
   uint8_t* sourceData = aSource->GetData();
   int32_t sourceStride = aSource->Stride();
   uint8_t* alphaData = alpha->GetData();
@@ -118,10 +118,10 @@ FilterProcessing::SeparateColorChannels(DataSourceSurface* aSource,
                                         RefPtr<DataSourceSurface>& aChannel3)
 {
   IntSize size = aSource->GetSize();
-  aChannel0 = Factory::CreateDataSourceSurface(size, FORMAT_A8);
-  aChannel1 = Factory::CreateDataSourceSurface(size, FORMAT_A8);
-  aChannel2 = Factory::CreateDataSourceSurface(size, FORMAT_A8);
-  aChannel3 = Factory::CreateDataSourceSurface(size, FORMAT_A8);
+  aChannel0 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  aChannel1 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  aChannel2 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  aChannel3 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
   uint8_t* sourceData = aSource->GetData();
   int32_t sourceStride = aSource->Stride();
   uint8_t* channel0Data = aChannel0->GetData();
@@ -145,7 +145,7 @@ FilterProcessing::CombineColorChannels(DataSourceSurface* aChannel0, DataSourceS
 {
   IntSize size = aChannel0->GetSize();
   RefPtr<DataSourceSurface> result =
-    Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   int32_t resultStride = result->Stride();
   uint8_t* resultData = result->GetData();
   int32_t channelStride = aChannel0->Stride();

@@ -497,7 +497,7 @@ public:
   // The type of draw target returned by LockDrawTarget.
   virtual gfx::BackendType BackendType()
   {
-    return gfx::BACKEND_NONE;
+    return gfx::BackendType::NONE;
   }
 
   virtual void ReleaseResources() {}
@@ -590,7 +590,7 @@ public:
   virtual gfx::DrawTarget* LockDrawTarget();
   virtual gfx::BackendType BackendType() MOZ_OVERRIDE
   {
-    return gfx::BACKEND_CAIRO;
+    return gfx::BackendType::CAIRO;
   }
   virtual void Unlock() MOZ_OVERRIDE;
   virtual bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType) MOZ_OVERRIDE;

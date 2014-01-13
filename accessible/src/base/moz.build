@@ -59,17 +59,17 @@ if a11y_log:
     ]
 
 LOCAL_INCLUDES += [
-    '../../../content/xbl/src',
-    '../../../ipc/chromium/src',
-    '../../../layout/generic',
-    '../../../layout/style',
-    '../../../layout/svg',
-    '../../../layout/xul',
-    '../../../layout/xul/tree/',
     '../generic',
     '../html',
     '../xpcom',
     '../xul',
+    '/dom/xbl',
+    '/ipc/chromium/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/svg',
+    '/layout/xul',
+    '/layout/xul/tree/',
 ]
 
 if CONFIG['MOZ_ENABLE_GTK']:

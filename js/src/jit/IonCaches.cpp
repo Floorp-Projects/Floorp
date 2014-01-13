@@ -3988,9 +3988,14 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         CallObject *callObj = &scopeObj->as<CallObject>();
         if (!callObj->isForEval()) {
             JSFunction *fun = &callObj->callee();
-            JSScript *script = fun->nonLazyScript();
-            if (!script->funHasExtensibleScope())
-                return;
+            // The function might have been relazified under rare conditions.
+            // In that case, we pessimistically create the guard, as we'd
+            // need to root various pointers to delazify,
+            if (fun->hasScript()) {
+                JSScript *script = fun->nonLazyScript();
+                if (!script->funHasExtensibleScope())
+                    return;
+            }
         }
     } else if (scopeObj->is<GlobalObject>()) {
         // If this is the last object on the scope walk, and the property we've

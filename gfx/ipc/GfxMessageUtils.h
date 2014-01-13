@@ -660,9 +660,9 @@ struct ParamTraits<mozilla::layers::CompositableType>
 
 template <>
 struct ParamTraits<mozilla::gfx::SurfaceFormat>
-  : public EnumSerializer<mozilla::gfx::SurfaceFormat,
-                          mozilla::gfx::FORMAT_B8G8R8A8,
-                          mozilla::gfx::FORMAT_UNKNOWN>
+  : public TypedEnumSerializer<mozilla::gfx::SurfaceFormat,
+                               mozilla::gfx::SurfaceFormat::B8G8R8A8,
+                               mozilla::gfx::SurfaceFormat::UNKNOWN>
 {};
 
 template <>

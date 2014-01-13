@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* General Partial MAR File stage Patch Apply Test */
+/* General Partial MAR File Staged Patch Apply Test */
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -231,13 +231,9 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
-  gBackgroundUpdate = true;
+  gStageUpdate = true;
+  setupTestCommon();
   setupUpdaterTest(FILE_PARTIAL_MAR);
-
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  let applyToDir = getApplyDirFile();
 
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on all updates since
@@ -245,24 +241,17 @@ function run_test() {
   if (IS_MACOSX) {
     let now = Date.now();
     let yesterday = now - (1000 * 60 * 60 * 24);
+    let applyToDir = getApplyDirFile();
     applyToDir.lastModifiedTime = yesterday;
   }
 
-  // apply the partial mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a partial mar");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_APPLIED, null);
 
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
-  do_check_eq(readStatusFile(updatesDir), STATE_APPLIED);
-
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
     let now = Date.now();
+    let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
@@ -273,26 +262,21 @@ function run_test() {
     checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
   }
 
-  // This shouldn't exist anyways in background updates, but let's make sure
+  // This shouldn't exist anyways for staged updates, but let's make sure.
   logTestInfo("testing tobedeleted directory doesn't exist");
   let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
   toBeDeletedDir = getTargetDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
 
-  // Now switch the application and its updated version
-  gBackgroundUpdate = false;
+  // Now switch the application and its updated version.
+  gStageUpdate = false;
   gSwitchApp = true;
-  exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "switching to the updated application");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_SUCCEEDED);
+}
 
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
-
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
+function checkUpdateApplied() {
+  let applyToDir = getApplyDirFile();
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
@@ -307,19 +291,15 @@ function run_test() {
     checkUpdateLogContents(LOG_PARTIAL_SWITCH_SUCCESS);
   }
 
-  // This shouldn't exist anyways in background updates, but let's make sure
+  // This shouldn't exist anyways for staged updates, but let's make sure.
   logTestInfo("testing tobedeleted directory doesn't exist");
   toBeDeletedDir = getApplyDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
 
-  // Make sure that the intermediate directory has been removed
+  // Make sure that the intermediate directory has been removed.
   let updatedDir = applyToDir.clone();
-  updatedDir.append(UPDATED_DIR_SUFFIX.replace("/", ""));
+  updatedDir.append(DIR_UPDATED);
   do_check_false(updatedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

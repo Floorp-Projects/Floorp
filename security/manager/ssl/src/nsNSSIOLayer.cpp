@@ -133,6 +133,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mNotedTimeUntilReady(false),
     mKEAUsed(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
     mKEAExpected(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
+    mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
     mProviderFlags(providerFlags),
     mSocketCreationTimestamp(TimeStamp::Now()),
     mPlaintextBytesRead(0)
@@ -170,6 +171,13 @@ NS_IMETHODIMP
 nsNSSSocketInfo::SetKEAExpected(int16_t aKea)
 {
   mKEAExpected = aKea;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetSSLVersionUsed(int16_t *aSSLVersionUsed)
+{
+  *aSSLVersionUsed = mSSLVersionUsed;
   return NS_OK;
 }
 

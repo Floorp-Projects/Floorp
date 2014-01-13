@@ -87,7 +87,7 @@ _cairo_d2d_set_operator(cairo_d2d_device_t *device,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (device->mBlendStates[op]) {
+    if (device->mBlendStates[static_cast<size_t>(op)]) {
 	device->mD3D10Device->OMSetBlendState(device->mBlendStates[op], NULL, 0xffffffff);
 	return CAIRO_INT_STATUS_SUCCESS;
     }

@@ -10,6 +10,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
 #include "nsLineLayout.h"
 
+#include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
@@ -1534,6 +1535,20 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
   }
 }
 
+static float
+GetInflationForVerticalAlignment(nsIFrame* aFrame,
+                                 nscoord aInflationMinFontSize)
+{
+  if (aFrame->IsSVGText()) {
+    const nsIFrame* container =
+      nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::svgTextFrame);
+    NS_ASSERTION(container, "expected to find an ancestor SVGTextFrame");
+    return
+      static_cast<const SVGTextFrame*>(container)->GetFontSizeScaleFactor();
+  }
+  return nsLayoutUtils::FontSizeInflationInner(aFrame, aInflationMinFontSize);
+}
+
 #define VERTICAL_ALIGN_FRAMES_NO_MINIMUM nscoord_MAX
 #define VERTICAL_ALIGN_FRAMES_NO_MAXIMUM nscoord_MIN
 
@@ -1551,7 +1566,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // Get the parent frame's font for all of the frames in this span
   nsRefPtr<nsFontMetrics> fm;
   float inflation =
-    nsLayoutUtils::FontSizeInflationInner(spanFrame, mInflationMinFontSize);
+    GetInflationForVerticalAlignment(spanFrame, mInflationMinFontSize);
   nsLayoutUtils::GetFontMetricsForFrame(spanFrame, getter_AddRefs(fm),
                                         inflation);
   mBlockReflowState->rendContext->SetFont(fm);
@@ -1685,7 +1700,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // is based on the line-height value, not the font-size. Also
     // compute the top leading.
     float inflation =
-      nsLayoutUtils::FontSizeInflationInner(spanFrame, mInflationMinFontSize);
+      GetInflationForVerticalAlignment(spanFrame, mInflationMinFontSize);
     nscoord logicalHeight = nsHTMLReflowState::
       CalcLineHeight(spanFrame->StyleContext(),
                      mBlockReflowState->ComputedHeight(),
@@ -1934,7 +1949,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // Percentages are like lengths, except treated as a percentage
         // of the elements line-height value.
         float inflation =
-          nsLayoutUtils::FontSizeInflationInner(frame, mInflationMinFontSize);
+          GetInflationForVerticalAlignment(frame, mInflationMinFontSize);
         pctBasis = nsHTMLReflowState::CalcLineHeight(
           frame->StyleContext(), mBlockReflowState->ComputedHeight(),
           inflation);

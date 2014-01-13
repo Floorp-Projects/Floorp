@@ -21,7 +21,7 @@ public:
   virtual uint8_t *GetData() { return mRawData; }
   virtual int32_t Stride() { return mStride; }
 
-  virtual SurfaceType GetType() const { return SURFACE_DATA; }
+  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   virtual IntSize GetSize() const { return mSize; }
   virtual SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -47,7 +47,7 @@ public:
   virtual uint8_t *GetData() { return mArray; }
   virtual int32_t Stride() { return mStride; }
 
-  virtual SurfaceType GetType() const { return SURFACE_DATA; }
+  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   virtual IntSize GetSize() const { return mSize; }
   virtual SurfaceFormat GetFormat() const { return mFormat; }
 

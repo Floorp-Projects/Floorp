@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 943249</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+iframe { height: 80px; border:0; padding:0; margin:0; }
+
+    </style>
+</head>
+<body>
+<div style="float:left">
+scrolling="no", overflow:scroll<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="no", overflow:auto<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="no", overflow:hidden<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="no", overflow:visible<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="no", overflow:inherit<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+</div>
+
+<div style="float:left">
+scrolling="yes", overflow:scroll<br>
+    <iframe src="data:text/html,<body style='overflow:scroll'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="yes", overflow:auto<br>
+    <iframe src="data:text/html,<body>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="yes", overflow:hidden<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="yes", overflow:visible<br>
+    <iframe src="data:text/html,<body>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+scrolling="yes", overflow:inherit<br>
+    <iframe src="data:text/html,<body>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+</div>
+
+<div style="float:left">
+overflow:hidden<br>
+    <iframe src="data:text/html,<body>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+overflow:scroll, overflow:hidden<br>
+    <iframe src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+overflow:scroll<br>
+    <iframe src="data:text/html,<body>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>"></iframe><br>
+</div>
+
+</body></html>

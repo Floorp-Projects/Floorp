@@ -851,7 +851,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
 
   // Try to create an offscreen surface.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
-   gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aParams.imageRect.Size().ToIntSize(), gfx::FORMAT_B8G8R8A8);
+   gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aParams.imageRect.Size().ToIntSize(), gfx::SurfaceFormat::B8G8R8A8);
 
   // If we couldn't create the draw target, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs

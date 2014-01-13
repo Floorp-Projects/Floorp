@@ -45,7 +45,7 @@ public:
     mStops =
       gfx::gfxGradientCache::GetOrCreateGradientStops(aRT,
                                                       mRawStops,
-                                                      gfx::EXTEND_CLAMP);
+                                                      gfx::ExtendMode::CLAMP);
 
     return mStops;
   }

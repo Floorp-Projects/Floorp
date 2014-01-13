@@ -330,7 +330,7 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
     return nullptr;
   }
 
-  if (aFillRule == FILL_WINDING) {
+  if (aFillRule == FillRule::FILL_WINDING) {
     sink->SetFillMode(D2D1_FILL_MODE_WINDING);
   }
 

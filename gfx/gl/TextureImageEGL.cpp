@@ -71,14 +71,14 @@ TextureImageEGL::TextureImageEGL(GLuint aTexture,
     }
 
     if (mUpdateFormat == gfxImageFormatRGB16_565) {
-        mTextureFormat = gfx::FORMAT_R8G8B8X8;
+        mTextureFormat = gfx::SurfaceFormat::R8G8B8X8;
     } else if (mUpdateFormat == gfxImageFormatRGB24) {
         // RGB24 means really RGBX for Thebes, which means we have to
         // use the right shader and ignore the uninitialized alpha
         // value.
-        mTextureFormat = gfx::FORMAT_B8G8R8X8;
+        mTextureFormat = gfx::SurfaceFormat::B8G8R8X8;
     } else {
-        mTextureFormat = gfx::FORMAT_B8G8R8A8;
+        mTextureFormat = gfx::SurfaceFormat::B8G8R8A8;
     }
 }
 
