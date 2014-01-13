@@ -393,7 +393,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mTouchListenerTimeoutTask(nullptr),
      mX(MOZ_THIS_IN_INITIALIZER_LIST()),
      mY(MOZ_THIS_IN_INITIALIZER_LIST()),
-     mZoomConstraints(true, MIN_ZOOM, MAX_ZOOM),
+     mZoomConstraints(false, MIN_ZOOM, MAX_ZOOM),
      mLastSampleTime(GetFrameTime()),
      mState(NOTHING),
      mLastAsyncScrollTime(GetFrameTime()),
@@ -1643,6 +1643,8 @@ void AsyncPanZoomController::TimeoutTouchListeners() {
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
+  APZC_LOG("%p updating zoom constraints to %d %f %f\n", this, aConstraints.mAllowZoom,
+    aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
   mZoomConstraints.mAllowZoom = aConstraints.mAllowZoom;
   mZoomConstraints.mMinZoom = (MIN_ZOOM > aConstraints.mMinZoom ? MIN_ZOOM : aConstraints.mMinZoom);
   mZoomConstraints.mMaxZoom = (MAX_ZOOM > aConstraints.mMaxZoom ? aConstraints.mMaxZoom : MAX_ZOOM);
