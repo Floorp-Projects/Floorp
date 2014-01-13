@@ -243,6 +243,32 @@ addEventListener("ImageContentLoaded", function (aEvent) {
   }
 }, false);
 
+Services.obs.addObserver(function (aSubject, aTopic, aData) {
+  if (aSubject == content.document) {
+    sendAsyncMessage("DocumentInserted", {synthetic: aSubject.mozSyntheticDocument});
+  }
+}, "document-element-inserted", false);
+
+function _getMarkupViewer() {
+  return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+}
+
+addMessageListener("FullZoom", function (aMessage) {
+  _getMarkupViewer().fullZoom = aMessage.data.value;
+});
+
+addMessageListener("TextZoom", function (aMessage) {
+  _getMarkupViewer().textZoom = aMessage.data.value;
+});
+
+addEventListener("FullZoomChange", function (aEvent) {
+  sendAsyncMessage("FullZoomChange", { value: _getMarkupViewer().fullZoom });
+}, false);
+
+addEventListener("TextZoomChange", function (aEvent) {
+  sendAsyncMessage("TextZoomChange", { value: _getMarkupViewer().textZoom });
+}, false);
+
 RemoteAddonsChild.init(this);
 
 addMessageListener("History:UseGlobalHistory", function (aMessage) {
