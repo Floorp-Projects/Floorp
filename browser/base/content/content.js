@@ -277,3 +277,7 @@ let ClickEventHandler = {
   }
 };
 ClickEventHandler.init();
+
+addEventListener("DOMWebNotificationClicked", function(event) {
+  sendAsyncMessage("DOMWebNotificationClicked", {});
+}, false);
