@@ -20,7 +20,7 @@ function do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  let pm = Services.permissions;
+  let pm = Services.perms;
   let now = Number(Date.now());
   let permType = "test/expiration-perm";
   let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
@@ -68,7 +68,7 @@ function do_run_test() {
 function permission_observer(generator, now, type) {
   // Set up our observer object.
   this.generator = generator;
-  this.pm = Services.permissions;
+  this.pm = Services.perms;
   this.now = now;
   this.type = type;
   this.adds = 0;
@@ -125,7 +125,7 @@ permission_observer.prototype = {
     } else if (data == "cleared") {
       // only clear once: at the end
       do_check_false(this.cleared);
-      do_check_eq(do_count_enumerator(Services.permissions.enumerator), 0);
+      do_check_eq(do_count_enumerator(Services.perms.enumerator), 0);
       this.cleared = true;
 
     } else {

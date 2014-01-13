@@ -1659,6 +1659,9 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (!fun)
         return false;
 
+    if (!JSFunction::setTypeForScriptedFunction(cx, fun))
+        return false;
+
     if (hasRest)
         fun->setHasRest();
 

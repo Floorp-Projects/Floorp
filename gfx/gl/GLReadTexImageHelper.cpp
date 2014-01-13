@@ -508,15 +508,10 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         return nullptr;
     }
 
-    realGLboolean oldBlend, oldScissor;
     GLint oldrb, oldfb, oldprog, oldTexUnit, oldTex;
     GLuint rb, fb;
 
     do {
-        /* Save current GL state */
-        oldBlend = mGL->fIsEnabled(LOCAL_GL_BLEND);
-        oldScissor = mGL->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-
         mGL->fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
         mGL->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
         mGL->fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
@@ -536,9 +531,8 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
             break;
         }
 
-        /* Set required GL state */
-        mGL->fDisable(LOCAL_GL_BLEND);
-        mGL->fDisable(LOCAL_GL_SCISSOR_TEST);
+        ScopedGLState scopedScissorTestState(mGL, LOCAL_GL_SCISSOR_TEST, false);
+        ScopedGLState scopedBlendState(mGL, LOCAL_GL_BLEND, false);
 
         ScopedViewportRect(mGL, 0, 0, aSize.width, aSize.height);
 
@@ -631,12 +625,6 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
     // note that deleting 0 has no effect in any of these calls
     mGL->fDeleteRenderbuffers(1, &rb);
     mGL->fDeleteFramebuffers(1, &fb);
-
-    if (oldBlend)
-        mGL->fEnable(LOCAL_GL_BLEND);
-
-    if (oldScissor)
-        mGL->fEnable(LOCAL_GL_SCISSOR_TEST);
 
     if (aTextureId)
         mGL->fBindTexture(aTextureTarget, oldTex);

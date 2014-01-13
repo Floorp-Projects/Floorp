@@ -568,6 +568,7 @@ Notification::ShowInternal()
         ops.mId = alertName;
         ops.mDir = DirectionToString(mDir);
         ops.mLang = mLang;
+        ops.mTag = mTag;
 
         if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
           NS_WARNING("Converting dict to object failed!");

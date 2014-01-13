@@ -1431,13 +1431,13 @@ struct nsStyleText {
   }
 
   // These are defined in nsStyleStructInlines.h.
+  inline bool HasTextShadow() const;
+  inline nsCSSShadowArray* GetTextShadow() const;
 
   // The aContextFrame argument on each of these is the frame this
   // style struct is for.  If the frame is for SVG text, the return
   // value will be massaged to be something that makes sense for
   // SVG text.
-  inline bool HasTextShadow(const nsIFrame* aContextFrame) const;
-  inline nsCSSShadowArray* GetTextShadow(const nsIFrame* aContextFrame) const;
   inline bool WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const;
   inline bool WordCanWrap(const nsIFrame* aContextFrame) const;
 };

@@ -1341,9 +1341,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
     fileSize = 0;
   }
 
-  // We need this extra raw pointer because we can't assign to the smart
-  // pointer directly since QuotaObject::AddRef needs to acquire the same mutex.
-  QuotaObject* quotaObject;
+  nsRefPtr<QuotaObject> result;
   {
     MutexAutoLock lock(mQuotaMutex);
 
@@ -1364,16 +1362,26 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
       return nullptr;
     }
 
+    // We need this extra raw pointer because we can't assign to the smart
+    // pointer directly since QuotaObject::AddRef would try to acquire the same
+    // mutex.
+    QuotaObject* quotaObject;
     if (!originInfo->mQuotaObjects.Get(path, &quotaObject)) {
+      // Create a new QuotaObject.
       quotaObject = new QuotaObject(originInfo, path, fileSize);
+
+      // Put it to the hashtable. The hashtable is not responsible to delete
+      // the QuotaObject.
       originInfo->mQuotaObjects.Put(path, quotaObject);
-      // The hashtable is not responsible to delete the QuotaObject.
     }
+
+    // Addref the QuotaObject and move the ownership to the result. This must
+    // happen before we unlock!
+    result = quotaObject->LockedAddRef();
   }
 
   // The caller becomes the owner of the QuotaObject, that is, the caller is
   // is responsible to delete it when the last reference is removed.
-  nsRefPtr<QuotaObject> result = quotaObject;
   return result.forget();
 }
 
