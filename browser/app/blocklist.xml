@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1387580658000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1389295339000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -53,7 +53,7 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i224" id="{336D0C35-8A85-403a-B9D2-65C292C39087}">
+      <emItem  blockID="i535" id="/^ext@WebexpEnhancedV1alpha[0-9]+\.net$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -61,8 +61,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i117" id="{ce7e73df-6a44-4028-8079-5927a588c948}">
-                        <versionRange  minVersion="0" maxVersion="1.0.8" severity="1">
+      <emItem  blockID="i506" id="/^ext@bettersurfplus/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
@@ -110,10 +110,6 @@
                   </emItem>
       <emItem  blockID="i72" os="WINNT" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
                         <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i506" id="ext@bettersurfplus.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i100" id="{394DCBA4-1F92-4f8e-8EC9-8D2CB90CB69B}">
@@ -457,6 +453,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i246" id="support@vide1flash2.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -553,6 +553,10 @@
                   </emItem>
       <emItem  blockID="i92" id="play5@vide04flash.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i117" id="{ce7e73df-6a44-4028-8079-5927a588c948}">
+                        <versionRange  minVersion="0" maxVersion="1.0.8" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
@@ -872,7 +876,7 @@
                         <versionRange  minVersion="0" maxVersion="2.1.0.19.99" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
+      <emItem  blockID="i224" id="{336D0C35-8A85-403a-B9D2-65C292C39087}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -946,6 +950,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i534" id="{f9d03c26-0575-497e-821d-f7956d23e0ca}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>

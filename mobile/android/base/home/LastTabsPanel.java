@@ -36,9 +36,9 @@ import android.widget.TextView;
 /**
  * Fragment that displays tabs from last session in a ListView.
  */
-public class LastTabsPage extends HomeFragment {
+public class LastTabsPanel extends HomeFragment {
     // Logging tag name
-    private static final String LOGTAG = "GeckoLastTabsPage";
+    private static final String LOGTAG = "GeckoLastTabsPanel";
 
     // Cursor loader ID for the session parser
     private static final int LOADER_ID_LAST_TABS = 0;
@@ -49,7 +49,7 @@ public class LastTabsPage extends HomeFragment {
     // The view shown by the fragment.
     private ListView mList;
 
-    // The title for this HomeFragment page.
+    // The title for this HomeFragment panel.
     private TextView mTitle;
 
     // The button view for restoring tabs from last session.
@@ -64,11 +64,11 @@ public class LastTabsPage extends HomeFragment {
     // On new tabs listener
     private OnNewTabsListener mNewTabsListener;
 
-    public static LastTabsPage newInstance() {
-        return new LastTabsPage();
+    public static LastTabsPanel newInstance() {
+        return new LastTabsPanel();
     }
 
-    public LastTabsPage() {
+    public LastTabsPanel() {
         mNewTabsListener = null;
     }
 
@@ -93,7 +93,7 @@ public class LastTabsPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_last_tabs_page, container, false);
+        return inflater.inflate(R.layout.home_last_tabs_panel, container, false);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class LastTabsPage extends HomeFragment {
         mRestoreButton.setVisibility(View.GONE);
 
         if (mEmptyView == null) {
-            // Set empty page view. We delay this so that the empty view won't flash.
+            // Set empty panel view. We delay this so that the empty view won't flash.
             final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
             mEmptyView = emptyViewStub.inflate();
 

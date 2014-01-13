@@ -3,7 +3,7 @@
 
 "use strict";
 
-const INITIAL_VALUE = "initial-value-" + Date.now();
+const INITIAL_VALUE = "browser_broadcast.js-initial-value-" + Date.now();
 
 /**
  * This test ensures we won't lose tab data queued in the content script when
