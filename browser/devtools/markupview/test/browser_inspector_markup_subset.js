@@ -132,7 +132,10 @@ function test() {
     // Make sure that clicking the "more" button loads all the nodes.
     let container = getContainerForRawNode(markup, doc.querySelector("body"));
     let button = container.elt.querySelector("button");
-    button.click();
+    let win = button.ownerDocument.defaultView;
+
+    EventUtils.sendMouseEvent({type: "click"}, button, win);
+
     markup._waitForChildren().then(() => {
       assertChildren("abcdefghijklmnopqrstuvwxyz");
       finishUp();

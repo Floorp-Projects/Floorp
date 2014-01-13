@@ -62,6 +62,23 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+* {@code BrowserToolbar} is single entry point for users of the toolbar
+* subsystem i.e. this should be the only import outside the 'toolbar'
+* package.
+*
+* {@code BrowserToolbar} serves at the single event bus for all
+* sub-components in the toolbar. It tracks tab events and gecko messages
+* and update the state of its inner components accordingly.
+*
+* It has two states, display and edit, which are controlled by
+* ToolbarEditLayout and ToolbarDisplayLayout. In display state, the toolbar
+* displays the current state for the selected tab. In edit state, it shows
+* a text entry for searching bookmarks/history. {@code BrowserToolbar}
+* provides public API to enter, cancel, and commit the edit state as well
+* as a set of listeners to allow {@code BrowserToolbar} users to react
+* to state changes accordingly.
+*/
 public class BrowserToolbar extends GeckoRelativeLayout
                             implements Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,

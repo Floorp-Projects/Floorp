@@ -5,10 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cu = Components.utils;
+var Cr = Components.results;
+// On B2G scope object misbehaves and we have to bind globals to `this`
+// in order to ensure theses variable to be visible in transport.js
+this.Ci = Ci;
+this.Cc = Cc;
+this.Cu = Cu;
+this.Cr = Cr;
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
