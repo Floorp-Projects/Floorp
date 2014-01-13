@@ -36,7 +36,11 @@ public:
   // Main-thread only
   void ResetStoredData();
   void NotePrivateBrowsingStatus();
-  void SetOCSPStaplingEnabled(bool enabled) { mOCSPStaplingEnabled = enabled; }
+  void SetOCSPOptions(bool fetchingEnabled, bool staplingEnabled)
+  {
+    mOCSPFetchingEnabled = fetchingEnabled;
+    mOCSPStaplingEnabled = staplingEnabled;
+  }
 
   // The following methods may be called from any thread
   bool SocketCreated();
@@ -44,6 +48,7 @@ public:
   static void NoteCertOverrideServiceInstantiated();
   static void NoteCertDBServiceInstantiated();
   bool IsOCSPStaplingEnabled() const { return mOCSPStaplingEnabled; }
+  bool IsOCSPFetchingEnabled() const { return mOCSPFetchingEnabled; }
 
 private:
   void Cleanup();
@@ -58,6 +63,7 @@ private:
   Mutex mMutex;
   bool mSocketCreated;
   bool mOCSPStaplingEnabled;
+  bool mOCSPFetchingEnabled;
 };
 
 SharedSSLState* PublicSSLState();

@@ -136,6 +136,7 @@ SharedSSLState::SharedSSLState()
 , mMutex("SharedSSLState::mMutex")
 , mSocketCreated(false)
 , mOCSPStaplingEnabled(false)
+, mOCSPFetchingEnabled(false)
 {
   mIOLayerHelpers.Init();
   mClientAuthRemember->Init();
