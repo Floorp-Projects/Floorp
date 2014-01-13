@@ -35,7 +35,6 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-trylater.example.com", ORTTryLater, nullptr },
   { "ocsp-stapling-needssig.example.com", ORTNeedsSig, nullptr },
   { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized, nullptr },
-  { "ocsp-stapling-with-intermediate.example.com", ORTGood, "ocspEEWithIntermediate" },
   { nullptr, ORTNull, nullptr }
 };
 
@@ -53,17 +52,9 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
     fprintf(stderr, "found pre-defined host '%s'\n", host->mHostName);
   }
 
-  const char *certNickname;
-  if (strcmp(host->mHostName,
-             "ocsp-stapling-with-intermediate.example.com") == 0) {
-    certNickname = host->mAdditionalCertName;
-  } else {
-    certNickname = DEFAULT_CERT_NICKNAME;
-  }
-
   ScopedCERTCertificate cert;
   SSLKEAType certKEA;
-  if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, certNickname,
+  if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, DEFAULT_CERT_NICKNAME,
                                                     &cert, &certKEA)) {
     return SSL_SNI_SEND_ALERT;
   }
