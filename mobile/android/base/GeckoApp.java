@@ -499,7 +499,7 @@ public abstract class GeckoApp
         (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground(Void... params) {
-                return Favicons.getFaviconUrlForPageUrl(url);
+                return Favicons.getFaviconURLForPageURL(url);
             }
 
             @Override
