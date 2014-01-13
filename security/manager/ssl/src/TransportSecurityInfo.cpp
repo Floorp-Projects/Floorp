@@ -705,7 +705,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
       case certDNSName:
         name.AssignASCII((char*)current->name.other.data, current->name.other.len);
         if (!allNames.IsEmpty()) {
-          allNames.Append(NS_LITERAL_STRING(" , "));
+          allNames.Append(NS_LITERAL_STRING(", "));
         }
         ++nameCount;
         allNames.Append(name);
@@ -730,7 +730,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
           }
           if (!name.IsEmpty()) {
             if (!allNames.IsEmpty()) {
-              allNames.Append(NS_LITERAL_STRING(" , "));
+              allNames.Append(NS_LITERAL_STRING(", "));
             }
             ++nameCount;
             allNames.Append(name);

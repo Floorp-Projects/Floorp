@@ -9,7 +9,7 @@ function getPrincipalFromDomain(aDomain) {
 
 function run_test() {
   let profile = do_get_profile();
-  let pm = Services.permissions;
+  let pm = Services.perms;
   let perm = 'test-idn';
 
   // We create three principal linked to IDN.

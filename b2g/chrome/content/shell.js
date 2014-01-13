@@ -786,7 +786,11 @@ var AlertsHelper = {
             clicked: (detail.type === "desktop-notification-click"),
             title: listener.title,
             body: listener.text,
-            imageURL: listener.imageURL
+            imageURL: listener.imageURL,
+            lang: listener.lang,
+            dir: listener.dir,
+            id: listener.id,
+            tag: listener.tag
           },
           Services.io.newURI(listener.target, null, null),
           Services.io.newURI(listener.manifestURL, null, null)
@@ -911,7 +915,11 @@ var AlertsHelper = {
       title: data.title,
       text: data.text,
       manifestURL: details.manifestURL,
-      imageURL: data.imageURL
+      imageURL: data.imageURL,
+      lang: details.lang || undefined,
+      id: details.id || undefined,
+      dir: details.dir || undefined,
+      tag: details.tag || undefined
     };
     this.registerAppListener(data.uid, listener);
 
@@ -1102,6 +1110,9 @@ let RemoteDebugger = {
                "/data/local/debugger-socket";
     try {
       DebuggerServer.openListener(path);
+      // Temporary event, until bug 942756 lands and offer a way to know
+      // when the server is up and running
+      Services.obs.notifyObservers(null, 'debugger-server-started', null);
       this._running = true;
     } catch (e) {
       dump('Unable to start debugger server: ' + e + '\n');
