@@ -17,7 +17,6 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsIURI.h"
 #include "nsIContentViewer.h"
 #include "nsICacheService.h"
@@ -1636,22 +1635,21 @@ nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsID
   int32_t pcnt=0, ncnt=0, dsCount=0;
   nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(aPrevEntry));
   nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(aNextEntry));
-  nsCOMPtr<nsIDocShellTreeNode> dsTreeNode(do_QueryInterface(aParent));
 
-  if (!dsTreeNode)
+  if (!aParent)
     return NS_ERROR_FAILURE;
   if (!prevContainer || !nextContainer)
     return NS_ERROR_FAILURE;
 
   prevContainer->GetChildCount(&pcnt);
   nextContainer->GetChildCount(&ncnt);
-  dsTreeNode->GetChildCount(&dsCount);
+  aParent->GetChildCount(&dsCount);
 
   // Create an array for child docshells.
   nsCOMArray<nsIDocShell> docshells;
   for (int32_t i = 0; i < dsCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem;
-    dsTreeNode->GetChildAt(i, getter_AddRefs(treeItem));
+    aParent->GetChildAt(i, getter_AddRefs(treeItem));
     nsCOMPtr<nsIDocShell> shell = do_QueryInterface(treeItem);
     if (shell) {
       docshells.AppendObject(shell);

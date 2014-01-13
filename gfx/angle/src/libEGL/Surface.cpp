@@ -20,6 +20,8 @@
 #include "libEGL/main.h"
 #include "libEGL/Display.h"
 
+#include <algorithm>
+
 namespace egl
 {
 

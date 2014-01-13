@@ -119,7 +119,7 @@ protected:
   };
 
   /**
-   * Returns FORMAT_B8G8R8A8 or FORMAT_A8, depending on the current surface
+   * Returns SurfaceFormat::B8G8R8A8 or SurfaceFormat::A8, depending on the current surface
    * format and the format hint.
    */
   SurfaceFormat DesiredFormat(SurfaceFormat aCurrentFormat,
@@ -133,9 +133,9 @@ protected:
    * rect (or the input surface's dimensions), the remaining area is filled
    * according to aEdgeMode: The default, EDGE_MODE_NONE, simply pads with
    * transparent black.
-   * If non-null, the returned surface is guaranteed to be of FORMAT_A8 or
-   * FORMAT_B8G8R8A8. If aFormatHint is NEED_COLOR_CHANNELS, the returned
-   * surface is guaranteed to be of FORMAT_B8G8R8A8 always.
+   * If non-null, the returned surface is guaranteed to be of SurfaceFormat::A8 or
+   * SurfaceFormat::B8G8R8A8. If aFormatHint is NEED_COLOR_CHANNELS, the returned
+   * surface is guaranteed to be of SurfaceFormat::B8G8R8A8 always.
    * Each pixel row of the returned surface is guaranteed to be 16-byte aligned.
    */
   TemporaryRef<DataSourceSurface>

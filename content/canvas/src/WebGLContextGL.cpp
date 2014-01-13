@@ -1425,6 +1425,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                         JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
                         JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
                 }
+                break;
+
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_RENDERBUFFER));
 
@@ -1432,11 +1434,10 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             {
                 return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
             }
-
-            default:
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-                return JS::NullValue();
         }
+
+        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
+        return JS::NullValue();
     } else if (fba.Texture()) {
         switch (pname) {
              case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
@@ -1448,6 +1449,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                         JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
                         JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
                 }
+                break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_TEXTURE));
@@ -1467,11 +1469,10 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                     face = 0;
                 return JS::Int32Value(face);
             }
-
-            default:
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-                return JS::NullValue();
         }
+
+        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
+        return JS::NullValue();
     } else {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
@@ -2151,7 +2152,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         // Bug 750527
         if (gl->WorkAroundDriverBugs() &&
             updateInfoSucceeded &&
-            gl->Vendor() == gl::GLContext::VendorNVIDIA)
+            gl->Vendor() == gl::GLVendor::NVIDIA)
         {
             if (program == mCurrentProgram)
                 gl->fUseProgram(progname);
@@ -2689,16 +2690,16 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     // texture sources in the first place.
 
     switch (data->GetFormat()) {
-        case FORMAT_B8G8R8A8:
+        case SurfaceFormat::B8G8R8A8:
             *format = WebGLTexelFormat::BGRA8; // careful, our ARGB means BGRA
             break;
-        case FORMAT_B8G8R8X8:
+        case SurfaceFormat::B8G8R8X8:
             *format = WebGLTexelFormat::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
             break;
-        case FORMAT_A8:
+        case SurfaceFormat::A8:
             *format = WebGLTexelFormat::A8;
             break;
-        case FORMAT_R5G6B5:
+        case SurfaceFormat::R5G6B5:
             *format = WebGLTexelFormat::RGB565;
             break;
         default:
@@ -3118,7 +3119,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
         if (gl->WorkAroundDriverBugs()) {
 #ifdef XP_MACOSX
-            if (gl->Vendor() == gl::GLContext::VendorNVIDIA) {
+            if (gl->Vendor() == gl::GLVendor::NVIDIA) {
                 // Work around bug 890432
                 resources.MaxExpressionComplexity = 1000;
             }
@@ -3222,12 +3223,12 @@ WebGLContext::CompileShader(WebGLShader *shader)
 #ifdef XP_MACOSX
             if (gl->WorkAroundDriverBugs()) {
                 // Work around bug 665578 and bug 769810
-                if (gl->Vendor() == gl::GLContext::VendorATI) {
+                if (gl->Vendor() == gl::GLVendor::ATI) {
                     compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
                 }
 
                 // Work around bug 735560
-                if (gl->Vendor() == gl::GLContext::VendorIntel) {
+                if (gl->Vendor() == gl::GLVendor::Intel) {
                     compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
                 }
             }

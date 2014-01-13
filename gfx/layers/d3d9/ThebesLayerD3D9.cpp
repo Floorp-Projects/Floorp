@@ -480,7 +480,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
     return;
 
   nsRefPtr<gfxContext> context;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BACKEND_CAIRO)) {
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO)) {
      RefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(destinationSurface,
                                                                IntSize(destinationSurface->GetSize().width,

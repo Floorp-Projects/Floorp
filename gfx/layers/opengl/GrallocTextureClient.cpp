@@ -92,7 +92,7 @@ GrallocTextureClientOGL::DropTextureData()
 GrallocTextureClientOGL::GrallocTextureClientOGL(GrallocBufferActor* aActor,
                                                  gfx::IntSize aSize,
                                                  TextureFlags aFlags)
-: BufferTextureClient(nullptr, gfx::FORMAT_UNKNOWN, aFlags)
+: BufferTextureClient(nullptr, gfx::SurfaceFormat::UNKNOWN, aFlags)
 , mAllocator(nullptr)
 , mGrallocFlags(android::GraphicBuffer::USAGE_SW_READ_OFTEN)
 , mMappedBuffer(nullptr)
@@ -215,21 +215,21 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
   bool swapRB = GetFlags() & TEXTURE_RB_SWAPPED;
 
   switch (mFormat) {
-  case gfx::FORMAT_R8G8B8A8:
+  case gfx::SurfaceFormat::R8G8B8A8:
     format = swapRB ? android::PIXEL_FORMAT_BGRA_8888 : android::PIXEL_FORMAT_RGBA_8888;
     break;
-  case gfx::FORMAT_B8G8R8A8:
+  case gfx::SurfaceFormat::B8G8R8A8:
     format = swapRB ? android::PIXEL_FORMAT_RGBA_8888 : android::PIXEL_FORMAT_BGRA_8888;
     break;
-  case gfx::FORMAT_R8G8B8X8:
-  case gfx::FORMAT_B8G8R8X8:
+  case gfx::SurfaceFormat::R8G8B8X8:
+  case gfx::SurfaceFormat::B8G8R8X8:
     // there is no android BGRX format?
     format = android::PIXEL_FORMAT_RGBX_8888;
     break;
-  case gfx::FORMAT_R5G6B5:
+  case gfx::SurfaceFormat::R5G6B5:
     format = android::PIXEL_FORMAT_RGB_565;
     break;
-  case gfx::FORMAT_A8:
+  case gfx::SurfaceFormat::A8:
     format = android::PIXEL_FORMAT_A_8;
     break;
   default:
@@ -259,19 +259,19 @@ GrallocTextureClientOGL::AllocateForGLRendering(gfx::IntSize aSize)
                    android::GraphicBuffer::USAGE_HW_TEXTURE;
 
   switch (mFormat) {
-  case gfx::FORMAT_R8G8B8A8:
-  case gfx::FORMAT_B8G8R8A8:
+  case gfx::SurfaceFormat::R8G8B8A8:
+  case gfx::SurfaceFormat::B8G8R8A8:
     format = android::PIXEL_FORMAT_RGBA_8888;
     break;
-  case gfx::FORMAT_R8G8B8X8:
-  case gfx::FORMAT_B8G8R8X8:
+  case gfx::SurfaceFormat::R8G8B8X8:
+  case gfx::SurfaceFormat::B8G8R8X8:
     // there is no android BGRX format?
     format = android::PIXEL_FORMAT_RGBX_8888;
     break;
-  case gfx::FORMAT_R5G6B5:
+  case gfx::SurfaceFormat::R5G6B5:
     format = android::PIXEL_FORMAT_RGB_565;
     break;
-  case gfx::FORMAT_A8:
+  case gfx::SurfaceFormat::A8:
     format = android::PIXEL_FORMAT_A_8;
     break;
   default:

@@ -3126,8 +3126,6 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream *aStream)
     }
 
     if (mStopped) {
-      NS_ABORT_IF_FALSE(mLingeringCloseTimer,
-                        "OnInputReady after stop without linger");
       continue;
     }
 

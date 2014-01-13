@@ -187,12 +187,10 @@ function run_test() {
     return;
   }
 
-  setupTestCommon(false);
-  do_register_cleanup(cleanupUpdaterTest);
-
+  setupTestCommon();
   setupUpdaterTest(FILE_PARTIAL_MAR);
 
-  // Exclusively lock an existing file so it is in use during the update
+  // Exclusively lock an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
   let helperDestDir = getApplyDirFile("a/b/");
   helperBin.copyTo(helperDestDir, FILE_HELPER_BIN);
@@ -202,30 +200,31 @@ function run_test() {
   let lockFileRelPath = TEST_FILES[3].relPathDir.split("/");
   lockFileRelPath = lockFileRelPath.slice(2);
   lockFileRelPath = lockFileRelPath.join("/") + "/" + TEST_FILES[3].fileName;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20", lockFileRelPath];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT, lockFileRelPath];
   let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
                      createInstance(AUS_Ci.nsIProcess);
   lockFileProcess.init(helperBin);
   lockFileProcess.run(false, args, args.length);
 
+  setupAppFilesAsync();
+}
+
+function setupAppFilesFinished() {
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
 
 function doUpdate() {
-  // apply the complete mar
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED, checkUpdateApplied);
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED);
 }
 
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   setupHelperFinish();
 }
 
 function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_FAILED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  // The update status format for a failure is failed: # where # is the error
-  // code for the failure.
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusState(), STATE_FAILED);
 
   checkFilesAfterUpdateFailure();
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);

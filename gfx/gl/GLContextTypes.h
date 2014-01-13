@@ -7,6 +7,7 @@
 #define GLCONTEXT_TYPES_H_
 
 #include "GLTypes.h"
+#include "mozilla/TypedEnum.h"
 
 namespace mozilla {
 namespace gl {
@@ -15,34 +16,24 @@ class GLContext;
 
 typedef uintptr_t SharedTextureHandle;
 
-enum SharedTextureShareType {
+MOZ_BEGIN_ENUM_CLASS(SharedTextureShareType)
     SameProcess = 0,
     CrossProcess
-};
+MOZ_END_ENUM_CLASS(SharedTextureShareType)
 
-enum SharedTextureBufferType {
-    TextureID
-#ifdef MOZ_WIDGET_ANDROID
-    , SurfaceTexture
-#endif
-#ifdef XP_MACOSX
-    , IOSurface
-#endif
-};
+MOZ_BEGIN_ENUM_CLASS(SharedTextureBufferType)
+    TextureID,
+    SurfaceTexture,
+    IOSurface
+MOZ_END_ENUM_CLASS(SharedTextureBufferType)
 
-enum ContextFlags {
-    ContextFlagsNone = 0x0,
-    ContextFlagsGlobal = 0x1,
-    ContextFlagsMesaLLVMPipe = 0x2
-};
-
-enum GLContextType {
-    ContextTypeUnknown,
-    ContextTypeWGL,
-    ContextTypeCGL,
-    ContextTypeGLX,
-    ContextTypeEGL
-};
+MOZ_BEGIN_ENUM_CLASS(GLContextType)
+    Unknown,
+    WGL,
+    CGL,
+    GLX,
+    EGL
+MOZ_END_ENUM_CLASS(GLContextType)
 
 struct GLFormats
 {

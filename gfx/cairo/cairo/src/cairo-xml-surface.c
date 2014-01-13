@@ -118,8 +118,8 @@ _extend_to_string (cairo_extend_t extend)
 {
     static const char *names[] = {
 	"EXTEND_NONE",		/* CAIRO_EXTEND_NONE */
-	"EXTEND_REPEAT",	/* CAIRO_EXTEND_REPEAT */
-	"EXTEND_REFLECT",	/* CAIRO_EXTEND_REFLECT */
+	"ExtendMode::REPEAT",	/* CAIRO_EXTEND_REPEAT */
+	"ExtendMode::REFLECT",	/* CAIRO_EXTEND_REFLECT */
 	"EXTEND_PAD"		/* CAIRO_EXTEND_PAD */
     };
     assert (extend < ARRAY_LENGTH (names));
@@ -131,7 +131,7 @@ _filter_to_string (cairo_filter_t filter)
 {
     static const char *names[] = {
 	"FILTER_FAST",		/* CAIRO_FILTER_FAST */
-	"FILTER_GOOD",		/* CAIRO_FILTER_GOOD */
+	"Filter::GOOD",		/* CAIRO_FILTER_GOOD */
 	"FILTER_BEST",		/* CAIRO_FILTER_BEST */
 	"FILTER_NEAREST",	/* CAIRO_FILTER_NEAREST */
 	"FILTER_BILINEAR",	/* CAIRO_FILTER_BILINEAR */

@@ -53,7 +53,7 @@
 
     <!--
          The content of the banner should align with the Grid/List views
-         in BookmarksPage. BookmarksListView has a 120dp padding and
+         in BookmarksPanel. BookmarksListView has a 120dp padding and
          the TwoLinePageRows have a 50dp padding. Hence HomeBanner should
          have 170dp padding.
     -->

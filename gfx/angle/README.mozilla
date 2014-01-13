@@ -54,6 +54,9 @@ In this order:
     https://chromium.googlesource.com/angle/angle/+/0dd3b3ff66cdc50882125d21e60112d5161279b4
     https://chromium.googlesource.com/angle/angle/+/0685fbde65a3e90d8d4d4a6c72f2cc1771617fd0
 
+  angle-fix-vc12.patch:
+    Fixes angle to build on Visual Studio 2013
+
 In addition to these patches, the Makefile.in and moz.build build files are ours,
 they're not present in upsteam ANGLE. Therefore, changes made to the build files
 should not be stored in the local .patch files.

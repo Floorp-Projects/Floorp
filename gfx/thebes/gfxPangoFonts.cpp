@@ -2188,16 +2188,16 @@ gfxFcFont::GetGlyphRenderingOptions()
 
   switch (hint_style) {
     case CAIRO_HINT_STYLE_NONE:
-      hinting = mozilla::gfx::FONT_HINTING_NONE;
+      hinting = mozilla::gfx::FontHinting::NONE;
       break;
     case CAIRO_HINT_STYLE_SLIGHT:
-      hinting = mozilla::gfx::FONT_HINTING_LIGHT;
+      hinting = mozilla::gfx::FontHinting::LIGHT;
       break;
     case CAIRO_HINT_STYLE_FULL:
-      hinting = mozilla::gfx::FONT_HINTING_FULL;
+      hinting = mozilla::gfx::FontHinting::FULL;
       break;
     default:
-      hinting = mozilla::gfx::FONT_HINTING_NORMAL;
+      hinting = mozilla::gfx::FontHinting::NORMAL;
       break;
   }
 

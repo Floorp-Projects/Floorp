@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* Replace app binary complete MAR file stage patch apply success test */
+/* Replace app binary complete MAR file staged patch apply success test */
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -188,34 +188,21 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
-  gBackgroundUpdate = true;
+  gStageUpdate = true;
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_WIN_MAR);
 
   gCallbackBinFile = "exe0.exe";
 
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_APPLIED, null);
 
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_APPLIED);
-
-  // Now switch the application and its updated version
-  gBackgroundUpdate = false;
+  // Now switch the application and its updated version.
+  gStageUpdate = false;
   gSwitchApp = true;
-  exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "switching to the updated application");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_SUCCEEDED);
+}
 
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
-
+function checkUpdateApplied() {
   checkFilesAfterUpdateSuccess();
 
   logTestInfo("testing tobedeleted directory doesn't exist");
@@ -223,8 +210,4 @@ function run_test() {
   do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

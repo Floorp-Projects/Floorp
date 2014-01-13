@@ -753,7 +753,7 @@ class XPCShellTests(object):
                     return wrapped
                 setattr(self.log, fun_name, wrap(unwrapped))
 
-        self.nodeProc = None
+        self.nodeProc = {}
 
     def buildTestList(self):
         """
@@ -940,33 +940,38 @@ class XPCShellTests(object):
 
         # We try to find the node executable in the path given to us by the user in
         # the MOZ_NODE_PATH environment variable
-        localPath = os.getenv('MOZ_NODE_PATH', None)
+        # localPath = os.getenv('MOZ_NODE_PATH', None)
+        # Temporarily, we use the node binary in this directory
+        localPath = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'node')
         if localPath and os.path.exists(localPath) and os.path.isfile(localPath):
             nodeBin = localPath
 
         if nodeBin:
             self.log.info('Found node at %s' % (nodeBin,))
+
+            def startServer(name, serverJs):
+                if os.path.exists(serverJs):
+                    # OK, we found our SPDY server, let's try to get it running
+                    self.log.info('Found %s at %s' % (name, serverJs))
+                    try:
+                        # We pipe stdin to node because the spdy server will exit when its
+                        # stdin reaches EOF
+                        process = Popen([nodeBin, serverJs], stdin=PIPE, stdout=PIPE,
+                                stderr=STDOUT, env=self.env, cwd=os.getcwd())
+                        self.nodeProc[name] = process
+
+                        # Check to make sure the server starts properly by waiting for it to
+                        # tell us it's started
+                        msg = process.stdout.readline()
+                        if 'server listening' in msg:
+                            nodeMozInfo['hasNode'] = True  # Todo: refactor this
+                    except OSError, e:
+                        # This occurs if the subprocess couldn't be started
+                        self.log.error('Could not run %s server: %s' % (name, str(e)))
+
             myDir = os.path.split(os.path.abspath(__file__))[0]
-            mozSpdyJs = os.path.join(myDir, 'moz-spdy', 'moz-spdy.js')
-
-            if os.path.exists(mozSpdyJs):
-                # OK, we found our SPDY server, let's try to get it running
-                self.log.info('Found moz-spdy at %s' % (mozSpdyJs,))
-                stdout, stderr = self.getPipes()
-                try:
-                    # We pipe stdin to node because the spdy server will exit when its
-                    # stdin reaches EOF
-                    self.nodeProc = Popen([nodeBin, mozSpdyJs], stdin=PIPE, stdout=PIPE,
-                            stderr=STDOUT, env=self.env, cwd=os.getcwd())
-
-                    # Check to make sure the server starts properly by waiting for it to
-                    # tell us it's started
-                    msg = self.nodeProc.stdout.readline()
-                    if msg.startswith('SPDY server listening'):
-                        nodeMozInfo['hasNode'] = True
-                except OSError, e:
-                    # This occurs if the subprocess couldn't be started
-                    self.log.error('Could not run node SPDY server: %s' % (str(e),))
+            startServer('moz-spdy', os.path.join(myDir, 'moz-spdy', 'moz-spdy.js'))
+            startServer('moz-http2', os.path.join(myDir, 'moz-http2', 'moz-http2.js'))
 
         mozinfo.update(nodeMozInfo)
 
@@ -974,10 +979,9 @@ class XPCShellTests(object):
         """
           Shut down our node process, if it exists
         """
-        if self.nodeProc:
-            self.log.info('Node SPDY server shutting down ...')
-            # moz-spdy exits when its stdin reaches EOF, so force that to happen here
-            self.nodeProc.communicate()
+        for name, proc in self.nodeProc.iteritems():
+            self.log.info('Node %s server shutting down ...' % name)
+            proc.terminate()
 
     def writeXunitResults(self, results, name=None, filename=None, fh=None):
         """

@@ -23,16 +23,17 @@ function run_test() {
     return;
   }
 
-  setupTestCommon(false);
-  do_register_cleanup(cleanupUpdaterTest);
-
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
-  // apply the complete mar
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, checkUpdateApplied, null, false);
+  setupAppFilesAsync();
 }
 
-function checkUpdateApplied() {
+function setupAppFilesFinished() {
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, false);
+}
+
+function checkUpdateFinished() {
   checkFilesAfterUpdateSuccess();
 
   // We need to check the service log even though this is a bootstrap

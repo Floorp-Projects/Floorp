@@ -302,7 +302,7 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
     }
   } else if (mDrawTarget) {
     SurfaceFormat format = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
-      FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8;
+      SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
 
     if (format != mDrawTarget->GetFormat()) {
       mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, format);
@@ -502,10 +502,10 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
 
   if (gfxPlatform::GetPlatform()->SupportsAzureContent() && !mDrawTarget) {
     if (aMode == SURFACE_COMPONENT_ALPHA) {
-      mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, FORMAT_B8G8R8X8);
+      mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, SurfaceFormat::B8G8R8X8);
     } else {
       mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
-        FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8);
+        SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8);
     }
 
     if (!mDrawTarget) {

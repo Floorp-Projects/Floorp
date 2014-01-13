@@ -137,7 +137,7 @@ let HomeBanner = {
   }
 };
 
-function List(options) {
+function Panel(options) {
   if ("id" in options)
     this.id = options.id;
 
@@ -145,11 +145,12 @@ function List(options) {
     this.title = options.title;
 }
 
-function HomeLists() {
+function HomePanels() {
+  // XXX: Not renaming this because it is going away in bug 958192
   this.PREF_KEY = "home_lists";
 
   this._sharedPrefs = new SharedPreferences();
-  this._lists = {};
+  this._panels = {};
 
   let prefValue = this._sharedPrefs.getCharPref(this.PREF_KEY);
   if (!prefValue) {
@@ -157,47 +158,47 @@ function HomeLists() {
   }
 
   JSON.parse(prefValue).forEach(data => {
-    let list = new List(data);
-    this._lists[list.id] = list;
+    let panel = new Panel(data);
+    this._panels[panel.id] = panel;
   });
 }
 
-HomeLists.prototype = {
+HomePanels.prototype = {
   add: function(options) {
-    let list = new List(options);
-    if (!list.id || !list.title) {
-      throw "Can't create a home list without an id and title!";
+    let panel = new Panel(options);
+    if (!panel.id || !panel.title) {
+      throw "Can't create a home panel without an id and title!";
     }
 
-    // Bail if the list already exists
-    if (list.id in this._lists) {
-      throw "List already exists: " + list.id;
+    // Bail if the panel already exists
+    if (panel.id in this._panels) {
+      throw "Panel already exists: " + panel.id;
     }
 
-    this._lists[list.id] = list;
+    this._panels[panel.id] = panel;
     this._updateSharedPref();
 
     // Send a message to Java to update the home pager if it's currently showing
     sendMessageToJava({
-      type: "HomeLists:Added",
-      id: list.id,
-      title: list.title
+      type: "HomePanels:Added",
+      id: panel.id,
+      title: panel.title
     });
   },
 
   remove: function(id) {
-    delete this._lists[id];
+    delete this._panels[id];
     this._updateSharedPref();
   },
 
-  // Set a shared pref so that Java can know about this list before Gecko is running
+  // Set a shared pref so that Java can know about this panel before Gecko is running
   _updateSharedPref: function() {
-    let lists = [];
-    for (let id in this._lists) {
-      let list = this._lists[id];
-      lists.push({ id: list.id, title: list.title});
+    let panels = [];
+    for (let id in this._panels) {
+      let panel = this._panels[id];
+      panels.push({ id: panel.id, title: panel.title});
     }
-    this._sharedPrefs.setCharPref(this.PREF_KEY, JSON.stringify(lists));
+    this._sharedPrefs.setCharPref(this.PREF_KEY, JSON.stringify(panels));
   }
 
 };
@@ -205,5 +206,5 @@ HomeLists.prototype = {
 // Public API
 this.Home = {
   banner: HomeBanner,
-  lists: new HomeLists()
+  panels: new HomePanels()
 }

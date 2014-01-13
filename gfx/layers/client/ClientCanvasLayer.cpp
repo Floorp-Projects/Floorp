@@ -47,7 +47,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
     SurfaceFactory_GL* factory = nullptr;
     if (!mForceReadback) {
       if (ClientManager()->AsShadowForwarder()->GetCompositorBackendType() == mozilla::layers::LAYERS_OPENGL) {
-        if (mGLContext->GetContextType() == ContextTypeEGL) {
+        if (mGLContext->GetContextType() == GLContextType::EGL) {
           bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
 
           if (!isCrossProcess) {

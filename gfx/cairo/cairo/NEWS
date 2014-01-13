@@ -1074,7 +1074,7 @@ in cairo_quartz_surface_create.
 
 Fix to correctly handle 0x0 sized surfaces.
 
-Optimize drawing of EXTEND_REPEAT patterns for OS X 10.5.
+Optimize drawing of ExtendMode::REPEAT patterns for OS X 10.5.
 
 Snapshot 1.5.2 (2007-10-30 Carl Worth <cworth@cworth.org>)
 ==========================================================
@@ -3111,7 +3111,7 @@ And at least the following bugs have been fixed:
  * PS: Don't walk off end of array when printing "~>"
  * Fix some memory leaks in the test suite rig
  * SVG: Fix memory leak when using cairo_mask
- * Fix EXTEND_REFLECT and EXTEND_PAD to not crash (though these are
+ * Fix ExtendMode::REFLECT and EXTEND_PAD to not crash (though these are
    still not yet fully implemented for surface patterns).
 
 This has been a tremendous effort by everyone, and I'm proud to have

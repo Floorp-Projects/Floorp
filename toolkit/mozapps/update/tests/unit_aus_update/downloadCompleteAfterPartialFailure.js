@@ -3,13 +3,15 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing download a complete on partial failure. Calling " +
               "nsIUpdatePrompt::showUpdateError should call getNewPrompter " +
               "and alert on the object returned by getNewPrompter when the " +
               "update.state == " + STATE_FAILED + " and the update.errorCode " +
               "== " + WRITE_ERROR + " (Bug 595059).");
+
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
   let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
@@ -41,7 +43,6 @@ function end_test() {
   let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                               WindowWatcherFactory);
-  cleanupTestCommon();
 }
 
 var WindowWatcher = {
@@ -55,7 +56,8 @@ var WindowWatcher = {
                                                       [Services.appinfo.name,
                                                        Services.appinfo.name], 2);
         do_check_eq(aText, text);
-        do_test_finished();
+
+        doTestFinish();
       }
     }; 
   },

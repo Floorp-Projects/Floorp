@@ -1159,7 +1159,7 @@ nsPrintEngine::IsParentAFrameSet(nsIDocShell * aParent)
 // Recursively build a list of sub documents to be printed
 // that mirrors the document tree
 void
-nsPrintEngine::BuildDocTree(nsIDocShellTreeNode *      aParentNode,
+nsPrintEngine::BuildDocTree(nsIDocShell *      aParentNode,
                             nsTArray<nsPrintObject*> * aDocList,
                             nsPrintObject *            aPO)
 {
@@ -1180,17 +1180,15 @@ nsPrintEngine::BuildDocTree(nsIDocShellTreeNode *      aParentNode,
       if (viewer) {
         nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
         if (viewerFile) {
-          nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(child));
-          nsCOMPtr<nsIDocShellTreeNode> childNode(do_QueryInterface(child));
-          nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(childDocShell);
+          nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(childAsShell);
           nsPrintObject * po = new nsPrintObject();
           po->mParent = aPO;
-          nsresult rv = po->Init(childDocShell, doc, aPO->mPrintPreview);
+          nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
           if (NS_FAILED(rv))
             NS_NOTREACHED("Init failed?");
           aPO->mKids.AppendElement(po);
           aDocList->AppendElement(po);
-          BuildDocTree(childNode, aDocList, po);
+          BuildDocTree(childAsShell, aDocList, po);
         }
       }
     }
@@ -3757,11 +3755,10 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 
     // dump the views of the sub documents
     int32_t i, n;
-    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-    docShellAsNode->GetChildCount(&n);
+    aDocShell->GetChildCount(&n);
     for (i = 0; i < n; i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
-      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      aDocShell->GetChildAt(i, getter_AddRefs(child));
       nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
       if (childAsShell) {
         DumpViews(childAsShell, out);

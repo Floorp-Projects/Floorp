@@ -34,7 +34,7 @@ ApplyBlending_Scalar(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
 {
   IntSize size = aInput1->GetSize();
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
   }

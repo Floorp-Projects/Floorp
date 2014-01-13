@@ -193,9 +193,9 @@ AppendToString(nsACString& s, const Filter filter,
   s += pfx;
 
   switch (filter) {
-    case FILTER_GOOD: s += "FILTER_GOOD"; break;
-    case FILTER_LINEAR: s += "FILTER_LINEAR"; break;
-    case FILTER_POINT: s += "FILTER_POINT"; break;
+    case Filter::GOOD: s += "Filter::GOOD"; break;
+    case Filter::LINEAR: s += "Filter::LINEAR"; break;
+    case Filter::POINT: s += "Filter::POINT"; break;
   }
   return s += sfx;
 }
@@ -237,14 +237,14 @@ AppendToString(nsACString& s, mozilla::gfx::SurfaceFormat format,
 {
   s += pfx;
   switch (format) {
-  case FORMAT_B8G8R8A8:  s += "FORMAT_B8G8R8A8"; break;
-  case FORMAT_B8G8R8X8:  s += "FORMAT_B8G8R8X8"; break;
-  case FORMAT_R8G8B8A8:  s += "FORMAT_R8G8B8A8"; break;
-  case FORMAT_R8G8B8X8:  s += "FORMAT_R8G8B8X8"; break;
-  case FORMAT_R5G6B5:    s += "FORMAT_R5G6B5"; break;
-  case FORMAT_A8:        s += "FORMAT_A8"; break;
-  case FORMAT_YUV:       s += "FORMAT_YUV"; break;
-  case FORMAT_UNKNOWN:   s += "FORMAT_UNKNOWN"; break;
+  case SurfaceFormat::B8G8R8A8:  s += "SurfaceFormat::B8G8R8A8"; break;
+  case SurfaceFormat::B8G8R8X8:  s += "SurfaceFormat::B8G8R8X8"; break;
+  case SurfaceFormat::R8G8B8A8:  s += "SurfaceFormat::R8G8B8A8"; break;
+  case SurfaceFormat::R8G8B8X8:  s += "SurfaceFormat::R8G8B8X8"; break;
+  case SurfaceFormat::R5G6B5:    s += "SurfaceFormat::R5G6B5"; break;
+  case SurfaceFormat::A8:        s += "SurfaceFormat::A8"; break;
+  case SurfaceFormat::YUV:       s += "SurfaceFormat::YUV"; break;
+  case SurfaceFormat::UNKNOWN:   s += "SurfaceFormat::UNKNOWN"; break;
   }
 
   return s += sfx;
