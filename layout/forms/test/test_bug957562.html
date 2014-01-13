@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=957562
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 903715</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=957562">Mozilla Bug 957562</a>
+<p id="display"></p>
+<input id="n" onfocus="kill()" type="number" style="border:20px solid black">
+<pre id="test">
+</pre>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+var killed = false;
+function kill() {
+  if (killed) {
+    return;
+  }
+  killed = true;
+  n.style.display = 'none';
+  r = n.getBoundingClientRect();
+  setTimeout(function() {
+    ok(true, "Didn't crash");
+    SimpleTest.finish();
+  }, 0);
+}
+
+function runTests()
+{
+  synthesizeMouse(n, 2, 2, {});
+}
+</script>
+</body>
+</html>
