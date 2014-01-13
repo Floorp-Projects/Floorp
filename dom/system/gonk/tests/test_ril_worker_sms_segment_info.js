@@ -28,10 +28,10 @@ add_test(function test_RadioInterface__countGsm7BitSeptets() {
   });
 
   let helper = worker.GsmPDUHelper;
-  helper.resetOctetWritten = function () {
+  helper.resetOctetWritten = function() {
     helper.octetsWritten = 0;
   };
-  helper.writeHexOctet = function () {
+  helper.writeHexOctet = function() {
     helper.octetsWritten++;
   };
 

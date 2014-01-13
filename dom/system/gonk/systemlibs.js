@@ -105,7 +105,7 @@ this.libcutils = (function() {
 /**
  * Network-related functions from libnetutils.
  */
-this.libnetutils = (function () {
+this.libnetutils = (function() {
   let library;
   try {
     library = ctypes.open("libnetutils.so");
@@ -363,7 +363,7 @@ this.libnetutils = (function () {
                       ctypes.int.ptr); // lease
 
     let wrapCFunc = function wrapCFunc(c_fn) {
-      return function (ifname) {
+      return function(ifname) {
         let ret = c_fn(ifname,
                        ints.addressOfElement(0),
                        ints.addressOfElement(1),

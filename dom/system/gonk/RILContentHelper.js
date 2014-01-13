@@ -114,7 +114,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsISyncMessageSender");
 
-XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function () {
+XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function() {
   let appInfo = Cc["@mozilla.org/xre/app-info;1"];
   let isParentProcess = !appInfo || appInfo.getService(Ci.nsIXULRuntime)
                           .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;

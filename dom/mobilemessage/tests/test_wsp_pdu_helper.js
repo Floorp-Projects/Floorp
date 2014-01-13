@@ -14,7 +14,7 @@ function run_test() {
 //
 
 add_test(function test_ensureHeader() {
-  do_check_throws(function () {
+  do_check_throws(function() {
       WSP.ensureHeader({}, "no-such-property");
     }, "FatalCodeError"
   );
@@ -62,15 +62,15 @@ add_test(function test_Octet_decode() {
 //// Octet.decodeMultiple ////
 
 add_test(function test_Octet_decodeMultiple() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeMultiple(data, 3);
     }, [0, 1, 2], [0, 1, 2], null
   );
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeMultiple(data, 3);
     }, new Uint8Array([0, 1, 2]), new Uint8Array([0, 1, 2]), null
   );
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeMultiple(data, 4);
     }, [0, 1, 2], null, "RangeError"
   );
@@ -81,15 +81,15 @@ add_test(function test_Octet_decodeMultiple() {
 //// Octet.decodeEqualTo ////
 
 add_test(function test_Octet_decodeEqualTo() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeEqualTo(data, 1);
     }, [1], 1, null
   );
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeEqualTo(data, 2);
     }, [1], null, "CodeError"
   );
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Octet.decodeEqualTo(data, 2);
     }, [], null, "RangeError"
   );
@@ -110,7 +110,7 @@ add_test(function test_Octet_encode() {
 //// Octet.encodeMultiple ////
 
 add_test(function test_Octet_encodeMultiple() {
-  wsp_encode_test_ex(function (data, input) {
+  wsp_encode_test_ex(function(data, input) {
     WSP.Octet.encodeMultiple(data, input);
     return data.array;
   }, [0, 1, 2, 3], [0, 1, 2, 3]);
@@ -798,7 +798,7 @@ add_test(function test_Parameter_decode() {
 //// Parameter.decodeMultiple ////
 
 add_test(function test_Parameter_decodeMultiple() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.Parameter.decodeMultiple(data, 13);
     }, [1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0], {start: "<smil>", a: "B"}
   );
@@ -1132,12 +1132,12 @@ add_test(function test_ContentTypeValue_decodeMedia() {
 //// ContentTypeValue.decodeMediaType ////
 
 add_test(function test_ContentTypeValue_decodeMediaType() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.ContentTypeValue.decodeMediaType(data, 1);
     }, [0x3E | 0x80],
     {media: "application/vnd.wap.mms-message", params: null}
   );
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.ContentTypeValue.decodeMediaType(data, 14);
     }, [0x3E | 0x80, 1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
     {media: "application/vnd.wap.mms-message", params: {start: "<smil>", a: "B"}}
@@ -1149,7 +1149,7 @@ add_test(function test_ContentTypeValue_decodeMediaType() {
 //// ContentTypeValue.decodeContentGeneralForm ////
 
 add_test(function test_ContentTypeValue_decodeContentGeneralForm() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.ContentTypeValue.decodeContentGeneralForm(data);
     }, [14, 0x3E | 0x80, 1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
     {media: "application/vnd.wap.mms-message", params: {start: "<smil>", a: "B"}}
@@ -1267,7 +1267,7 @@ add_test(function test_ApplicationIdValue_decode() {
 //// PduHelper.parseHeaders ////
 
 add_test(function test_PduHelper_parseHeaders() {
-  wsp_decode_test_ex(function (data) {
+  wsp_decode_test_ex(function(data) {
       return WSP.PduHelper.parseHeaders(data, data.array.length);
     }, [0x80 | 0x05, 2, 0x23, 0x28, 0x80 | 0x2F, 0x80 | 0x04],
     {"age": 9000, "x-wap-application-id": "x-wap-application:mms.ua"}
@@ -1291,7 +1291,7 @@ add_test(function StringContent_decode() {
     let raw = conv.convertToByteArray(str);
     let data = {array: raw, offset: 0};
     let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
-    wsp_decode_test_ex(function (data) {
+    wsp_decode_test_ex(function(data) {
         return WSP.PduHelper.decodeStringContent(data.array, "utf-8");
       }, octetArray, str);
   }
@@ -1307,7 +1307,7 @@ add_test(function StringContent_decode() {
     let raw = conv.convertToByteArray(str);
     let data = {array: raw, offset: 0};
     let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
-    wsp_decode_test_ex(function (data) {
+    wsp_decode_test_ex(function(data) {
         return WSP.PduHelper.decodeStringContent(data.array, "utf-16");
       }, raw, str);
   }

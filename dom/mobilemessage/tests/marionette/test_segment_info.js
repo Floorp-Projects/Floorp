@@ -58,7 +58,7 @@ let tasks = {
 };
 
 function addTest(text, strict7BitEncoding, expected) {
-  tasks.push(function () {
+  tasks.push(function() {
     if (strict7BitEncoding != currentStrict7BitEncoding) {
       currentStrict7BitEncoding = strict7BitEncoding;
       SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding",

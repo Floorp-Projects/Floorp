@@ -34,7 +34,7 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
   });
 
   function test_dcs(dcs, encoding, language, hasLanguageIndicator, messageClass) {
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return dcs;
     };
 
@@ -49,11 +49,11 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
   }
 
   function test_dcs_throws(dcs) {
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return dcs;
     };
 
-    do_check_throws(function () {
+    do_check_throws(function() {
       worker.GsmPDUHelper.readCbDataCodingScheme({});
     }, "Unsupported CBS data coding scheme: " + dcs);
   }
@@ -144,10 +144,10 @@ add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
 
   function test_data(options, expected) {
     let readIndex = 0;
-    worker.Buf.readUint8 = function () {
+    worker.Buf.readUint8 = function() {
       return options[3][readIndex++];
     };
-    worker.Buf.readUint8Array = function (length) {
+    worker.Buf.readUint8Array = function(length) {
       let array = new Uint8Array(length);
       for (let i = 0; i < length; i++) {
         array[i] = this.readUint8();

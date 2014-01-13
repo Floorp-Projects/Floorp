@@ -780,7 +780,7 @@ NetworkManager.prototype = {
     config.internalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface;
     config.externalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface;
 
-    gNetworkService.setWifiTethering(enable, config, (function (error) {
+    gNetworkService.setWifiTethering(enable, config, (function(error) {
       let resetSettings = error;
       this.notifyError(resetSettings, callback, error);
     }).bind(this));
@@ -883,7 +883,7 @@ NetworkManager.prototype = {
       externalIfname: network.name
     };
 
-    let callback = (function () {
+    let callback = (function() {
       // Update external network interface.
       debug("Update upstream interface to " + network.name);
       gNetworkService.updateUpStream(previous, current, this.onConnectionChangedReport.bind(this));
@@ -906,12 +906,12 @@ let CaptivePortalDetectionHelper = (function() {
   const EVENT_DISCONNECT = "Disconnect";
   let _ongoingInterface = null;
   let _available = ("nsICaptivePortalDetector" in Ci);
-  let getService = function () {
+  let getService = function() {
     return Cc['@mozilla.org/toolkit/captive-detector;1']
              .getService(Ci.nsICaptivePortalDetector);
   };
 
-  let _performDetection = function (interfaceName, callback) {
+  let _performDetection = function(interfaceName, callback) {
     let capService = getService();
     let capCallback = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
@@ -937,7 +937,7 @@ let CaptivePortalDetectionHelper = (function() {
     }
   };
 
-  let _abort = function (interfaceName) {
+  let _abort = function(interfaceName) {
     if (_ongoingInterface !== interfaceName) {
       return;
     }
@@ -956,7 +956,7 @@ let CaptivePortalDetectionHelper = (function() {
           // perform captive portal detection on wifi interface
           if (_available && network &&
               network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-            _performDetection(network.name, function () {
+            _performDetection(network.name, function() {
               // TODO: bug 837600
               // We can disconnect wifi in here if user abort the login procedure.
             });
@@ -985,9 +985,9 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
 
 let debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump("-*- NetworkManager: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }
