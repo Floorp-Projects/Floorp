@@ -694,7 +694,27 @@ function RadioInterfaceLayer() {
   let options = {
     debug: debugPref,
     cellBroadcastDisabled: false,
-    clirMode: RIL.CLIR_DEFAULT
+    clirMode: RIL.CLIR_DEFAULT,
+    quirks: {
+      callstateExtraUint32:
+        libcutils.property_get("ro.moz.ril.callstate_extra_int", "false") === "true",
+      v5Legacy:
+        libcutils.property_get("ro.moz.ril.v5_legacy", "true") === "true",
+      requestUseDialEmergencyCall:
+        libcutils.property_get("ro.moz.ril.dial_emergency_call", "false") === "true",
+      simAppStateExtraFields:
+        libcutils.property_get("ro.moz.ril.simstate_extra_field", "false") === "true",
+      extraUint2ndCall:
+        libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true",
+      haveQueryIccLockRetryCount:
+        libcutils.property_get("ro.moz.ril.query_icc_count", "false") == "true",
+      sendStkProfileDownload:
+        libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true",
+      dataRegistrationOnDemand:
+        libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true"
+    },
+    rilEmergencyNumbers: libcutils.property_get("ril.ecclist") ||
+                         libcutils.property_get("ro.ril.ecclist")
   };
 
   try {
