@@ -606,9 +606,12 @@ GetOSApplyToDir(nsACString& applyToDir)
   NS_ASSERTION(ds, "Can't get directory service");
 
   nsCOMPtr<nsIFile> osApplyToDir;
-  DebugOnly<nsresult> rv = ds->Get(XRE_OS_UPDATE_APPLY_TO_DIR, NS_GET_IID(nsIFile),
+  nsresult rv = ds->Get(XRE_OS_UPDATE_APPLY_TO_DIR, NS_GET_IID(nsIFile),
                                    getter_AddRefs(osApplyToDir));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the OS applyTo dir");
+  if (NS_FAILED(rv)) {
+    LOG(("Can't get the OS applyTo dir"));
+    return rv;
+  }
 
   return osApplyToDir->GetNativePath(applyToDir);
 }
@@ -1115,14 +1118,20 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
     // This needs to be done on the main thread, so we pass it along in
     // BackgroundThreadInfo
     nsresult rv = GetOSApplyToDir(osApplyToDir);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the OS apply to dir");
+    if (NS_FAILED(rv)) {
+      LOG(("Can't get the OS apply to dir"));
+      return rv;
+    }
 
     SetOSApplyToDir(aUpdate, osApplyToDir);
 
     mInfo.mIsOSUpdate = true;
     rv = NS_NewNativeLocalFile(osApplyToDir, false,
                                getter_AddRefs(mInfo.mOSApplyToDir));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create nsIFile for OS apply to dir");
+    if (NS_FAILED(rv)) {
+      LOG(("Can't create nsIFile for OS apply to dir"));
+      return rv;
+    }
   }
 #endif
 
