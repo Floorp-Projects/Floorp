@@ -4702,12 +4702,10 @@
     "description": "Status of OCSP stapling on this handshake (1=present, good; 2=none; 3=present, expired; 4=present, other error)"
   },
   "CERT_OCSP_ENABLED": {
-    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Is OCSP fetching enabled? (pref security.OCSP.enabled)"
   },
   "CERT_OCSP_REQUIRED": {
-    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Is OCSP required when the cert has an OCSP URI? (pref security.OCSP.require)"
   }
