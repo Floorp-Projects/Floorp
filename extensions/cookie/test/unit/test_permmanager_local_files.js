@@ -9,7 +9,7 @@ function getPrincipalFromURIString(uriStr)
 }
 
 function run_test() {
-  let pm = Services.permissions;
+  let pm = Services.perms;
 
   // If we add a permission to a file:// URI, the test should return true.
   let principal = getPrincipalFromURIString("file:///foo/bar");

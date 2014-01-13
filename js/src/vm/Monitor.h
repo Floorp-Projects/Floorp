@@ -76,7 +76,11 @@ class AutoLockMonitor
     }
 
     bool isFor(Monitor &other) const {
+#ifdef JS_THREADSAFE
         return monitor.lock_ == other.lock_;
+#else
+        return true;
+#endif
     }
 
     void wait(PRCondVar *condVar) {
@@ -145,7 +149,11 @@ class AutoUnlockMonitor
     }
 
     bool isFor(Monitor &other) const {
+#ifdef JS_THREADSAFE
         return monitor.lock_ == other.lock_;
+#else
+        return true;
+#endif
     }
 };
 

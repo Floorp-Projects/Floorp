@@ -21,10 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(Services, "etld",
                                    "@mozilla.org/network/effective-tld-service;1",
                                    "nsIEffectiveTLDService");
 
-XPCOMUtils.defineLazyServiceGetter(Services, "permissions",
-                                   "@mozilla.org/permissionmanager;1",
-                                   "nsIPermissionManager");
-
 function do_check_throws(f, result, stack)
 {
   if (!stack)

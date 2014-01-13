@@ -602,7 +602,6 @@ void RTSPSource::onDisconnected(const sp<AMessage> &msg) {
 void RTSPSource::finishDisconnectIfPossible() {
     if (mState != DISCONNECTED) {
         mHandler->disconnect();
-        return;
     }
 
     (new AMessage)->postReply(mDisconnectReplyID);

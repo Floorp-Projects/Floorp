@@ -12,20 +12,20 @@ function run_test() {
                                null);
 
   // add a permission entry for that URI
-  Services.permissions.add(uri, kType, kCapability);
+  Services.perms.add(uri, kType, kCapability);
   do_check_true(permission_exists(kTestAddr, kType, kCapability));
 
-  Services.permissions.removeAll();
+  Services.perms.removeAll();
 
   uri = Services.io.newURI("mailto:" + kTestAddr, null, null);
-  Services.permissions.add(uri, kType, kCapability);
+  Services.perms.add(uri, kType, kCapability);
   do_check_true(permission_exists(kTestAddr, kType, kCapability));
 
-  Services.permissions.removeAll();
+  Services.perms.removeAll();
 }
 
 function permission_exists(aHost, aType, aCapability) {
-  let e = Services.permissions.enumerator;
+  let e = Services.perms.enumerator;
   while (e.hasMoreElements()) {
     let perm = e.getNext().QueryInterface(Ci.nsIPermission);
     if (perm.host == aHost &&

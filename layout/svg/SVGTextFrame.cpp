@@ -632,8 +632,10 @@ struct TextRenderedRun
     eIncludeFill = 1,
     // Includes the stroke geometry of the text in the returned rectangle.
     eIncludeStroke = 2,
+    // Includes any text shadow in the returned rectangle.
+    eIncludeTextShadow = 4,
     // Don't include any horizontal glyph overflow in the returned rectangle.
-    eNoHorizontalOverflow = 4
+    eNoHorizontalOverflow = 8
   };
 
   /**
@@ -910,11 +912,21 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
   }
-  gfxRect fillInAppUnits(x, baseline - above,
-                         width, metrics.mBoundingBox.height + above + below);
+  nsRect fillInAppUnits(x, baseline - above,
+                        width, metrics.mBoundingBox.height + above + below);
+
+  // Account for text-shadow.
+  if (aFlags & eIncludeTextShadow) {
+    fillInAppUnits =
+      nsLayoutUtils::GetTextShadowRectsUnion(fillInAppUnits, mFrame);
+  }
 
   // Convert the app units rectangle to user units.
-  gfxRect fill = AppUnitsToFloatCSSPixels(fillInAppUnits, aContext);
+  gfxRect fill = AppUnitsToFloatCSSPixels(gfxRect(fillInAppUnits.x,
+                                                  fillInAppUnits.y,
+                                                  fillInAppUnits.width,
+                                                  fillInAppUnits.height),
+                                          aContext);
 
   // Scale the rectangle up due to any mFontSizeScaleFactor.  We scale
   // it around the text's origin.
@@ -3738,14 +3750,25 @@ SVGTextFrame::ReflowSVG()
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eAllFrames);
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     uint32_t runFlags = 0;
+    if (run.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+      runFlags |= TextRenderedRun::eIncludeFill |
+                  TextRenderedRun::eIncludeTextShadow;
+    }
+    if (nsSVGUtils::HasStroke(run.mFrame)) {
+      runFlags |= TextRenderedRun::eIncludeFill |
+                  TextRenderedRun::eIncludeTextShadow;
+    }
+    // Our "visual" overflow rect needs to be valid for building display lists
+    // for hit testing, which means that for certain values of 'pointer-events'
+    // it needs to include the geometry of the fill or stroke even when the fill/
+    // stroke don't actually render (e.g. when stroke="none" or
+    // stroke-opacity="0"). GetGeometryHitTestFlags accounts for 'pointer-events'.
+    // The text-shadow is not part of the hit-test area.
     uint16_t hitTestFlags = nsSVGUtils::GetGeometryHitTestFlags(run.mFrame);
-
-    if ((hitTestFlags & SVG_HIT_TEST_FILL) ||
-        run.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    if (hitTestFlags & SVG_HIT_TEST_FILL) {
       runFlags |= TextRenderedRun::eIncludeFill;
     }
-    if ((hitTestFlags & SVG_HIT_TEST_STROKE) ||
-        nsSVGUtils::HasStroke(run.mFrame)) {
+    if (hitTestFlags & SVG_HIT_TEST_STROKE) {
       runFlags |= TextRenderedRun::eIncludeStroke;
     }
 
