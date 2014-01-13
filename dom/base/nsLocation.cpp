@@ -237,6 +237,13 @@ nsLocation::SetURI(nsIURI* aURI, bool aReplace)
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContent);
     }
 
+    // Get the incumbent script's browsing context to set as source.
+    nsCOMPtr<nsPIDOMWindow> sourceWindow =
+      do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
+    if (sourceWindow) {
+      loadInfo->SetSourceDocShell(sourceWindow->GetDocShell());
+    }
+
     return docShell->LoadURI(aURI, loadInfo,
                              nsIWebNavigation::LOAD_FLAGS_NONE, true);
   }
