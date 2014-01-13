@@ -2841,8 +2841,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     If lenientFloatCode is not None, it should be used in cases when
     we're a non-finite float that's not unrestricted.
 
-    If allowTreatNonCallableAsNull is true, then [TreatNonCallableAsNull]
-    extended attributes on nullable callback functions will be honored.
+    If allowTreatNonCallableAsNull is true, then [TreatNonCallableAsNull] and
+    [TreatNonObjectAsNull] extended attributes on nullable callback functions
+    will be honored.
 
     If isCallbackReturnValue is "JSImpl" or "Callback", then the declType may be
     adjusted to make it easier to return from a callback.  Since that type is
@@ -3737,6 +3738,8 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isCallback():
         assert not isEnforceRange and not isClamp
         assert not type.treatNonCallableAsNull() or type.nullable()
+        assert not type.treatNonObjectAsNull() or type.nullable()
+        assert not type.treatNonObjectAsNull() or not type.treatNonCallableAsNull()
 
         name = type.unroll().identifier.name
         if type.nullable():
@@ -3758,6 +3761,17 @@ for (uint32_t i = 0; i < length; ++i) {
                 "} else {\n"
                 "  ${declName} = nullptr;\n"
                 "}")
+        elif allowTreatNonCallableAsNull and type.treatNonObjectAsNull():
+            if not isDefinitelyObject:
+                haveObject = "${val}.isObject()"
+                if defaultValue is not None:
+                    assert(isinstance(defaultValue, IDLNullValue))
+                    haveObject = "${haveValue} && " + haveObject
+                template = CGIfElseWrapper(haveObject,
+                                           CGGeneric(conversion),
+                                           CGGeneric("${declName} = nullptr;")).define()
+            else:
+                template = conversion
         else:
             template = wrapObjectTemplate(
                 "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n" +
@@ -10774,6 +10788,7 @@ class CGCallback(CGClass):
                  getters=[], setters=[]):
         self.baseName = baseName
         self._deps = idlObject.getDeps()
+        self.idlObject = idlObject
         name = idlObject.identifier.name
         if isJSImplementedDescriptor(descriptorProvider):
             name = jsImplName(name)
@@ -10801,6 +10816,13 @@ class CGCallback(CGClass):
                          methods=realMethods+getters+setters)
 
     def getConstructors(self):
+        if (not self.idlObject.isInterface() and
+            not self.idlObject._treatNonObjectAsNull):
+            body = "MOZ_ASSERT(JS_ObjectIsCallable(nullptr, mCallback));"
+        else:
+            # Not much we can assert about it, other than not being null, and
+            # CallbackObject does that already.
+            body = ""
         return [ClassConstructor(
             [Argument("JS::Handle<JSObject*>", "aCallback"), Argument("nsIGlobalObject*", "aIncumbentGlobal")],
             bodyInHeader=True,
@@ -10808,7 +10830,8 @@ class CGCallback(CGClass):
             explicit=True,
             baseConstructors=[
                 "%s(aCallback, aIncumbentGlobal)" % self.baseName,
-                ])]
+                ],
+            body=body)]
 
     def getMethodImpls(self, method):
         assert method.needThisHandling
@@ -10872,6 +10895,7 @@ class CGCallback(CGClass):
 
 class CGCallbackFunction(CGCallback):
     def __init__(self, callback, descriptorProvider):
+        self.callback = callback
         CGCallback.__init__(self, callback, descriptorProvider,
                             "CallbackFunction",
                             methods=[CallCallback(callback, descriptorProvider)])
@@ -11176,7 +11200,8 @@ class CallbackMethod(CallbackMember):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
             "thisObj": self.getThisObj(),
-            "getCallable": self.getCallableDecl()
+            "getCallable": self.getCallableDecl(),
+            "callGuard": self.getCallGuard()
             }
         if self.argCount > 0:
             replacements["argv"] = "argv.begin()"
@@ -11185,7 +11210,7 @@ class CallbackMethod(CallbackMember):
             replacements["argv"] = "nullptr"
             replacements["argc"] = "0"
         return string.Template("${getCallable}"
-                "if (!JS_CallFunctionValue(cx, ${thisObj}, callable,\n"
+                "if (${callGuard}!JS_CallFunctionValue(cx, ${thisObj}, callable,\n"
                 "                          ${argc}, ${argv}, rval.address())) {\n"
                 "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                 "  return${errorReturn};\n"
@@ -11205,6 +11230,11 @@ class CallCallback(CallbackMethod):
 
     def getPrettyName(self):
         return self.callback.identifier.name
+
+    def getCallGuard(self):
+        if self.callback._treatNonObjectAsNull:
+            return "JS_ObjectIsCallable(cx, mCallback) && "
+        return ""
 
 class CallbackOperationBase(CallbackMethod):
     """
@@ -11243,6 +11273,9 @@ class CallbackOperationBase(CallbackMethod):
             '} else {\n'
             '%s'
             '}\n' % CGIndenter(CGGeneric(getCallableFromProp)).define())
+
+    def getCallGuard(self):
+        return ""
 
 class CallbackOperation(CallbackOperationBase):
     """
