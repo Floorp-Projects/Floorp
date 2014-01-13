@@ -239,7 +239,7 @@ skip-if(B2G) == 234964-1.html 234964-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
 skip-if(B2G) == 240933-1.html 240933-1-ref.html
-skip-if(B2G) fails-if(Android) == 240933-2.html 240933-2-ref.html
+skip-if(B2G) == 240933-2.html 240933-2-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 skip-if(B2G) == 243519-1.html 243519-1-ref.html
