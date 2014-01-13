@@ -261,6 +261,28 @@ void ReleaseDPCache(CRLDPCache* dpcache, PRBool writeLocked);
  */
 void CERT_MapStanError();
 
+/* Like CERT_VerifyCert, except with an additional argument, flags. The
+ * flags are defined immediately below.
+ *
+ * OCSP checking is always skipped when certUsage is certUsageStatusResponder.
+ */
+SECStatus
+cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
+                         PRBool checkSig, SECCertUsage certUsage, PRTime t,
+                         PRUint32 flags, void *wincx, CERTVerifyLog *log);
+
+/* Use the default settings.
+ * cert_VerifyCertWithFlags(..., CERT_VERIFYCERT_USE_DEFAULTS) is equivalent
+ * to CERT_VerifyCert(...);
+ */
+#define CERT_VERIFYCERT_USE_DEFAULTS 0
+
+/* Skip all the OCSP checks during certificate verification, regardless of
+ * the global OCSP settings. By default, certificate |cert| will have its
+ * revocation status checked via OCSP according to the global OCSP settings.
+ */
+#define CERT_VERIFYCERT_SKIP_OCSP 1
+
 /* Interface function for libpkix cert validation engine:
  * cert_verify wrapper. */
 SECStatus
