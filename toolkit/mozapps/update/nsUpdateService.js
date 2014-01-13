@@ -260,7 +260,6 @@ const PING_BGUC_ADDON_HAVE_INCOMPAT          = 30;
 var gLocale     = null;
 
 #ifdef MOZ_B2G
-var gVolumeMountLock = null;
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
     return Services.env.get("EXTERNAL_STORAGE");
 });
