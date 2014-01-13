@@ -30,11 +30,11 @@ let tasks = {
   _tasks: [],
   _nextTaskIndex: 0,
 
-  push: function push(func) {
+  push: function(func) {
     this._tasks.push(func);
   },
 
-  next: function next() {
+  next: function() {
     let index = this._nextTaskIndex++;
     let task = this._tasks[index];
     try {
@@ -48,17 +48,17 @@ let tasks = {
     }
   },
 
-  finish: function finish() {
+  finish: function() {
     this._tasks[this._tasks.length - 1]();
   },
 
-  run: function run() {
+  run: function() {
     this.next();
   }
 };
 
 function addTest(text, strict7BitEncoding, expected) {
-  tasks.push(function () {
+  tasks.push(function() {
     if (strict7BitEncoding != currentStrict7BitEncoding) {
       currentStrict7BitEncoding = strict7BitEncoding;
       SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding",

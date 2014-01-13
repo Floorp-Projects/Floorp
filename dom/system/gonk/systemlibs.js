@@ -42,13 +42,13 @@ this.libcutils = (function() {
     }
     let fake_propdb = Object.create(null);
     return {
-      property_get: function fake_property_get(key, defaultValue) {
+      property_get: function(key, defaultValue) {
         if (key in fake_propdb) {
           return fake_propdb[key];
         }
         return defaultValue === undefined ? null : defaultValue;
       },
-      property_set: function fake_property_set(key, value) {
+      property_set: function(key, value) {
         fake_propdb[key] = value;
       }
     };
@@ -75,7 +75,7 @@ this.libcutils = (function() {
      * @param defaultValue [optional]
      *        Default value to return if the property isn't set (default: null)
      */
-    property_get: function property_get(key, defaultValue) {
+    property_get: function(key, defaultValue) {
       if (defaultValue === undefined) {
         defaultValue = null;
       }
@@ -91,7 +91,7 @@ this.libcutils = (function() {
      * @param value
      *        Value to set the property to.
      */
-    property_set: function property_set(key, value) {
+    property_set: function(key, value) {
       let rv = c_property_set(key, value);
       if (rv) {
         throw Error('libcutils.property_set("' + key + '", "' + value +
@@ -105,7 +105,7 @@ this.libcutils = (function() {
 /**
  * Network-related functions from libnetutils.
  */
-this.libnetutils = (function () {
+this.libnetutils = (function() {
   let library;
   try {
     library = ctypes.open("libnetutils.so");
@@ -116,7 +116,7 @@ this.libnetutils = (function () {
     // For now we just fake the ctypes library interfacer to return
     // no-op functions when library.declare() is called.
     library = {
-      declare: function fake_declare() {
+      declare: function() {
         return function fake_libnetutils_function() {};
       }
     };
@@ -363,7 +363,7 @@ this.libnetutils = (function () {
                       ctypes.int.ptr); // lease
 
     let wrapCFunc = function wrapCFunc(c_fn) {
-      return function (ifname) {
+      return function(ifname) {
         let ret = c_fn(ifname,
                        ints.addressOfElement(0),
                        ints.addressOfElement(1),
@@ -409,7 +409,7 @@ this.netHelpers = {
   /**
    * Swap byte orders for 32-bit value
    */
-  swap32: function swap32(n) {
+  swap32: function(n) {
     return (((n >> 24) & 0xFF) <<  0) |
            (((n >> 16) & 0xFF) <<  8) |
            (((n >>  8) & 0xFF) << 16) |
@@ -420,7 +420,7 @@ this.netHelpers = {
    * Convert network byte order to host byte order
    * Note: Assume that the system is little endian
    */
-  ntohl: function ntohl(n) {
+  ntohl: function(n) {
     return this.swap32(n);
   },
 
@@ -428,7 +428,7 @@ this.netHelpers = {
    * Convert host byte order to network byte order
    * Note: Assume that the system is little endian
    */
-  htonl: function htonl(n) {
+  htonl: function(n) {
     return this.swap32(n);
   },
 
@@ -439,7 +439,7 @@ this.netHelpers = {
    * @param ip
    *        IP address in number format.
    */
-  ipToString: function ipToString(ip) {
+  ipToString: function(ip) {
     return ((ip >>  0) & 0xFF) + "." +
            ((ip >>  8) & 0xFF) + "." +
            ((ip >> 16) & 0xFF) + "." +
@@ -453,7 +453,7 @@ this.netHelpers = {
    * @param string
    *        String containing the IP address.
    */
-  stringToIP: function stringToIP(string) {
+  stringToIP: function(string) {
     if (!string) {
       return null;
     }
@@ -477,7 +477,7 @@ this.netHelpers = {
   /**
    * Make a subnet mask.
    */
-  makeMask: function makeMask(len) {
+  makeMask: function(len) {
     let mask = 0;
     for (let i = 0; i < len; ++i) {
       mask |= (0x80000000 >> i);
@@ -488,7 +488,7 @@ this.netHelpers = {
   /**
    * Get Mask length from given mask address
    */
-  getMaskLength: function getMaskLength(mask) {
+  getMaskLength: function(mask) {
     let len = 0;
     let netmask = this.ntohl(mask);
     while (netmask & 0x80000000) {
