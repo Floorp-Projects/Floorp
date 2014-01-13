@@ -2264,8 +2264,7 @@ var XPIProvider = {
     }
     catch (e) { }
 
-    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
-    TelemetryPing.setAddOns(data);
+    Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).TelemetryPing.setAddOns(data);
   },
 
   /**
