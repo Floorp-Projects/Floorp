@@ -5597,9 +5597,15 @@ dnl = Disable PulseAudio
 dnl ========================================================
 
 dnl If using Linux, ensure that the PA library is available
-if test "$OS_TARGET" = "Linux" -a -z "$MOZ_B2G"; then
-    MOZ_PULSEAUDIO=1
-fi
+case "$OS_TARGET" in
+WINNT|Darwin|Android|OpenBSD)
+    ;;
+*)
+    if test -z "$MOZ_B2G"; then
+        MOZ_PULSEAUDIO=1
+    fi
+    ;;
+esac
 
 MOZ_ARG_DISABLE_BOOL(pulseaudio,
 [  --disable-pulseaudio          Disable PulseAudio support],
@@ -5622,9 +5628,13 @@ AC_SUBST(MOZ_PULSEAUDIO_CFLAGS)
 dnl ========================================================
 dnl = Enable GStreamer
 dnl ========================================================
-if test "$OS_TARGET" = "Linux"; then
-  MOZ_GSTREAMER=1
-fi
+case "$OS_TARGET" in
+WINNT|Darwin|Android)
+    ;;
+*)
+    MOZ_GSTREAMER=1
+    ;;
+esac
 
 MOZ_ARG_ENABLE_BOOL(gstreamer,
 [  --enable-gstreamer           Enable GStreamer support],

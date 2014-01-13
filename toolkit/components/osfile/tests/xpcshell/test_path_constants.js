@@ -37,6 +37,8 @@ add_task(function() {
   do_check_true(!!OS.Constants.Path.desktopDir);
   do_check_eq(OS.Constants.Path.desktopDir, Services.dirsvc.get("Desk", Components.interfaces.nsIFile).path);
 
+  compare_paths(OS.Constants.Path.userApplicationDataDir, "UAppData");
+
   compare_paths(OS.Constants.Path.winAppDataDir, "AppData");
   compare_paths(OS.Constants.Path.winStartMenuProgsDir, "Progs");
 
