@@ -64,6 +64,16 @@ case $cmd in
 		cp -t ${tgtpath}/js/src -dRp \
 			${SRCDIR}/../../python
 	fi
+	if [ ! -e ${SRCDIR}/dom/bindings/mozwebidlcodegen ]; then
+		${MKDIR} -p ${tgtpath}/js/src/dom/bindings
+		cp -t ${tgtpath}/js/src/dom/bindings -dRp \
+			${SRCDIR}/../../dom/bindings/mozwebidlcodegen
+	fi
+	if [ ! -e ${SRCDIR}/media/webrtc/trunk/tools/gyp ]; then
+		${MKDIR} -p ${tgtpath}/js/src/media/webrtc/trunk/tools
+		cp -t ${tgtpath}/js/src/media/webrtc/trunk/tools -dRp \
+			${SRCDIR}/../../media/webrtc/trunk/tools/gyp
+	fi
 	if [ ! -e ${SRCDIR}/testing ]; then
 		${MKDIR} -p ${tgtpath}/js/src/testing
 		cp -t ${tgtpath}/js/src/testing -dRp \
