@@ -1,6 +1,0 @@
-ifndef INCLUDED_AUTOCONF_MK
-INCLUDED_AUTOCONF_MK = 1
-include $(DEPTH)/config/emptyvars.mk
-@ALLSUBSTS@
-include $(topsrcdir)/config/baseconfig.mk
-endif
