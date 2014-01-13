@@ -15,7 +15,7 @@ function sendSmsToEmulator(from, text, callback) {
   ++pendingEmulatorCmdCount;
 
   let cmd = "sms send " + from + " " + text;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     callback(result[0] == "OK");
@@ -83,7 +83,7 @@ function deleteAllMessages() {
 
     let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       ok(false, "failed to delete all messages");
       tasks.finish();
     }
@@ -91,7 +91,7 @@ function deleteAllMessages() {
 }
 
 function sendMessage(to, body) {
-  manager.onsent = function () {
+  manager.onsent = function() {
     manager.onsent = null;
     tasks.next();
   };
@@ -100,11 +100,11 @@ function sendMessage(to, body) {
 }
 
 function receiveMessage(from, body) {
-  manager.onreceived = function () {
+  manager.onreceived = function() {
     manager.onreceived = null;
     tasks.next();
   };
-  sendSmsToEmulator(from, body, function (success) {
+  sendSmsToEmulator(from, body, function(success) {
     if (!success) {
       tasks.finish();
     }
@@ -118,7 +118,7 @@ function getAllThreads(callback) {
   ok(cursor instanceof DOMCursor,
      "cursor is instanceof " + cursor.constructor);
 
-  cursor.onsuccess = function (event) {
+  cursor.onsuccess = function(event) {
     if (!cursor.done) {
       threads.push(cursor.result);
       cursor.continue();
@@ -156,7 +156,7 @@ function checkThread(bodies, lastBody, unreadCount, participants,
   // Check whether the thread does contain all the messages it supposed to have.
   let filter = new MozSmsFilter;
   filter.threadId = thread.id;
-  getAllMessages(function (messages) {
+  getAllMessages(function(messages) {
     is(messages.length, bodies.length, "messages.length and bodies.length");
 
     for (let message of messages) {
@@ -174,7 +174,7 @@ function checkThread(bodies, lastBody, unreadCount, participants,
 
 tasks.push(deleteAllMessages);
 
-tasks.push(getAllThreads.bind(null, function (threads) {
+tasks.push(getAllThreads.bind(null, function(threads) {
   is(threads.length, 0, "Empty thread list at beginning.");
   tasks.next();
 }));
@@ -373,7 +373,7 @@ checkFuncs.push(checkThread.bind(null, ["thread 18-1", "thread 18-2"],
                                  "thread 18-2", 0, ["555211018"]));
 
 // Check threads.
-tasks.push(getAllThreads.bind(null, function (threads) {
+tasks.push(getAllThreads.bind(null, function(threads) {
   is(threads.length, checkFuncs.length, "number of threads got");
 
   (function callback() {
@@ -388,7 +388,7 @@ tasks.push(getAllThreads.bind(null, function (threads) {
 
 tasks.push(deleteAllMessages);
 
-tasks.push(getAllThreads.bind(null, function (threads) {
+tasks.push(getAllThreads.bind(null, function(threads) {
   is(threads.length, 0, "Empty thread list at the end.");
   tasks.next();
 }));

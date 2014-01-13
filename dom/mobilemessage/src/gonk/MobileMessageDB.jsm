@@ -69,7 +69,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMMSService",
                                    "@mozilla.org/mms/rilmmsservice;1",
                                    "nsIMmsService");
 
-XPCOMUtils.defineLazyGetter(this, "MMS", function () {
+XPCOMUtils.defineLazyGetter(this, "MMS", function() {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
   return MMS;
@@ -118,11 +118,11 @@ MobileMessageDB.prototype = {
     }
 
     let request = indexedDB.open(this.dbName, this.dbVersion);
-    request.onsuccess = function (event) {
+    request.onsuccess = function(event) {
       if (DEBUG) debug("Opened database:", self.dbName, self.dbVersion);
       gotDB(event.target.result);
     };
-    request.onupgradeneeded = function (event) {
+    request.onupgradeneeded = function(event) {
       if (DEBUG) {
         debug("Database needs upgrade:", self.dbName,
               event.oldVersion, event.newVersion);
@@ -234,11 +234,11 @@ MobileMessageDB.prototype = {
 
       update(currentVersion);
     };
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       //TODO look at event.target.Code and change error constant accordingly
       callback("Error opening database!", null);
     };
-    request.onblocked = function (event) {
+    request.onblocked = function(event) {
       callback("Opening database request is blocked.", null);
     };
   },
@@ -259,7 +259,7 @@ MobileMessageDB.prototype = {
       storeNames = [MESSAGE_STORE_NAME];
     }
     if (DEBUG) debug("Opening transaction for object stores: " + storeNames);
-    this.ensureDB(function (error, db) {
+    this.ensureDB(function(error, db) {
       if (error) {
         if (DEBUG) debug("Could not open database: " + error);
         callback(error);
@@ -367,7 +367,7 @@ MobileMessageDB.prototype = {
       return;
     }
 
-    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
+    this.newTxn(READ_WRITE, function(error, txn, messageStore) {
       if (error) {
         return;
       }
@@ -671,7 +671,7 @@ MobileMessageDB.prototype = {
       // new record in participantStore.
       let number = mostRecentRecord.senderOrReceiver;
       self.findParticipantRecordByAddress(participantStore, number, true,
-                                          function (participantRecord) {
+                                          function(participantRecord) {
         // Also create a new record in threadStore.
         let threadRecord = {
           participantIds: [participantRecord.id],
@@ -682,13 +682,13 @@ MobileMessageDB.prototype = {
           unreadCount: mostRecentRecord.unreadCount,
         };
         let addThreadRequest = threadStore.add(threadRecord);
-        addThreadRequest.onsuccess = function (event) {
+        addThreadRequest.onsuccess = function(event) {
           threadRecord.id = event.target.result;
 
           let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
           let messageRequest = messageStore.index("number")
                                            .openCursor(numberRange, NEXT);
-          messageRequest.onsuccess = function (event) {
+          messageRequest.onsuccess = function(event) {
             let messageCursor = event.target.result;
             if (!messageCursor) {
               // No more message records, check next most recent record.
@@ -722,12 +722,12 @@ MobileMessageDB.prototype = {
             // Check next message record.
             messageCursor.continue();
           };
-          messageRequest.onerror = function () {
+          messageRequest.onerror = function() {
             // Error in fetching message records, check next most recent record.
             mostRecentCursor.continue();
           };
         };
-        addThreadRequest.onerror = function () {
+        addThreadRequest.onerror = function() {
           // Error in fetching message records, check next most recent record.
           mostRecentCursor.continue();
         };
@@ -912,7 +912,7 @@ MobileMessageDB.prototype = {
     let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     let self = this;
 
-    let isInvalid = function (participantRecord) {
+    let isInvalid = function(participantRecord) {
       let entries = [];
       for (let addr of participantRecord.addresses) {
         entries.push({
@@ -1020,7 +1020,7 @@ MobileMessageDB.prototype = {
             }
             self.findThreadRecordByParticipants(threadStore, participantStore,
                                                 threadParticipants, true,
-                                                function (threadRecord,
+                                                function(threadRecord,
                                                           participantIds) {
               if (!participantIds) {
                 debug("participantIds is empty!");
@@ -1068,7 +1068,7 @@ MobileMessageDB.prototype = {
                 unreadCount: messageRecord.read ? 0 : 1,
                 lastMessageType: messageRecord.type
               };
-              threadStore.add(threadRecord).onsuccess = function (event) {
+              threadStore.add(threadRecord).onsuccess = function(event) {
                 let threadId = event.target.result;
                 // Setup threadId & threadIdIndex.
                 messageRecord.threadId = threadId;
@@ -1475,7 +1475,7 @@ MobileMessageDB.prototype = {
       }
 
       // 2) Traverse throught all participants and check all alias addresses.
-      aParticipantStore.openCursor().onsuccess = (function (event) {
+      aParticipantStore.openCursor().onsuccess = (function(event) {
         let cursor = event.target.result;
         if (!cursor) {
           // Have traversed whole object store but still in vain.
@@ -1486,7 +1486,7 @@ MobileMessageDB.prototype = {
 
           let participantRecord = { addresses: [normalizedAddress] };
           let addRequest = aParticipantStore.add(participantRecord);
-          addRequest.onsuccess = function (event) {
+          addRequest.onsuccess = function(event) {
             participantRecord.id = event.target.result;
             if (DEBUG) {
               debug("findParticipantRecordByAddress: created "
@@ -1547,7 +1547,7 @@ MobileMessageDB.prototype = {
     (function findParticipantId(index, result) {
       if (index >= aAddresses.length) {
         // Sort numerically.
-        result.sort(function (a, b) {
+        result.sort(function(a, b) {
           return a - b;
         });
         if (DEBUG) debug("findParticipantIdsByAddresses: returning " + result);
@@ -1557,7 +1557,7 @@ MobileMessageDB.prototype = {
 
       self.findParticipantRecordByAddress(aParticipantStore,
                                           aAddresses[index++], aCreate,
-                                          function (participantRecord) {
+                                          function(participantRecord) {
         if (!participantRecord) {
           if (!aSkipNonexistent) {
             if (DEBUG) debug("findParticipantIdsByAddresses: returning null");
@@ -1581,7 +1581,7 @@ MobileMessageDB.prototype = {
     }
     this.findParticipantIdsByAddresses(aParticipantStore, aAddresses,
                                        aCreateParticipants, false,
-                                       function (participantIds) {
+                                       function(participantIds) {
       if (!participantIds) {
         if (DEBUG) debug("findThreadRecordByParticipants: returning null");
         aCallback(null, null);
@@ -1589,7 +1589,7 @@ MobileMessageDB.prototype = {
       }
       // Find record from thread store.
       let request = aThreadStore.index("participantIds").get(participantIds);
-      request.onsuccess = function (event) {
+      request.onsuccess = function(event) {
         let threadRecord = event.target.result;
         if (DEBUG) {
           debug("findThreadRecordByParticipants: return "
@@ -2296,7 +2296,7 @@ MobileMessageDB.prototype = {
   getMessageRecordByTransactionId: function getMessageRecordByTransactionId(aTransactionId, aCallback) {
     if (DEBUG) debug("Retrieving message with transaction ID " + aTransactionId);
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
+    this.newTxn(READ_ONLY, function(error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
         aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
@@ -2332,7 +2332,7 @@ MobileMessageDB.prototype = {
   getMessageRecordById: function getMessageRecordById(aMessageId, aCallback) {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
+    this.newTxn(READ_ONLY, function(error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
         aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
@@ -2399,7 +2399,7 @@ MobileMessageDB.prototype = {
     if (DEBUG) debug("deleteMessage: message ids " + JSON.stringify(messageIds));
     let deleted = [];
     let self = this;
-    this.newTxn(READ_WRITE, function (error, txn, stores) {
+    this.newTxn(READ_WRITE, function(error, txn, stores) {
       if (error) {
         if (DEBUG) debug("deleteMessage: failed to open transaction");
         aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
@@ -2467,7 +2467,7 @@ MobileMessageDB.prototype = {
     let cursor = new GetMessagesCursor(this, callback);
 
     let self = this;
-    self.newTxn(READ_ONLY, function (error, txn, stores) {
+    self.newTxn(READ_ONLY, function(error, txn, stores) {
       let collector = cursor.collector;
       let collect = collector.collect.bind(collector);
       FilterSearcherHelper.transact(self, txn, error, filter, reverse, collect);
@@ -2478,7 +2478,7 @@ MobileMessageDB.prototype = {
 
   markMessageRead: function markMessageRead(messageId, value, aSendReadReport, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
-    this.newTxn(READ_WRITE, function (error, txn, stores) {
+    this.newTxn(READ_WRITE, function(error, txn, stores) {
       if (error) {
         if (DEBUG) debug(error);
         aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
@@ -2570,7 +2570,7 @@ MobileMessageDB.prototype = {
     if (DEBUG) debug("Getting thread list");
 
     let cursor = new GetThreadsCursor(this, callback);
-    this.newTxn(READ_ONLY, function (error, txn, threadStore) {
+    this.newTxn(READ_ONLY, function(error, txn, threadStore) {
       let collector = cursor.collector;
       if (error) {
         if (DEBUG) debug(error);
@@ -2773,7 +2773,7 @@ let FilterSearcherHelper = {
       let participantStore = txn.objectStore(PARTICIPANT_STORE_NAME);
       mmdb.findParticipantIdsByAddresses(participantStore, filter.numbers,
                                          false, true,
-                                         (function (participantIds) {
+                                         (function(participantIds) {
         if (!participantIds || !participantIds.length) {
           // Oops! No such participant at all.
 
@@ -3074,7 +3074,7 @@ UnionResultsCollector.prototype = {
 
     let tres = contexts[0].results;
     let qres = contexts[1].results;
-    tres = tres.filter(function (element) {
+    tres = tres.filter(function(element) {
       return qres.indexOf(element.id) != -1;
     });
 
@@ -3153,7 +3153,7 @@ GetMessagesCursor.prototype = {
 
     // Or, we have to open another transaction ourselves.
     let self = this;
-    this.mmdb.newTxn(READ_ONLY, function (error, txn, messageStore) {
+    this.mmdb.newTxn(READ_ONLY, function(error, txn, messageStore) {
       if (error) {
         self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
@@ -3234,7 +3234,7 @@ GetThreadsCursor.prototype = {
 
     // Or, we have to open another transaction ourselves.
     let self = this;
-    this.mmdb.newTxn(READ_ONLY, function (error, txn, threadStore) {
+    this.mmdb.newTxn(READ_ONLY, function(error, txn, threadStore) {
       if (error) {
         self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;

@@ -437,7 +437,7 @@ NetworkService.prototype = {
     // The callback function in controlMessage may not be fired immediately.
     params.isAsync = true;
     //this._usbTetheringAction = TETHERING_STATE_ONGOING;
-    this.controlMessage(params, function (data) {
+    this.controlMessage(params, function(data) {
       callback.enableUsbRndisResult(data.result, data.enable);
     });
   },
@@ -450,7 +450,7 @@ NetworkService.prototype = {
       current: current
     };
 
-    this.controlMessage(params, function (data) {
+    this.controlMessage(params, function(data) {
       let code = data.resultCode;
       let reason = data.resultReason;
       if(DEBUG) debug("updateUpStream result: Code " + code + " reason " + reason);

@@ -77,7 +77,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
-XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function () {
+XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function() {
   let ns = {};
   Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
   return ns.PhoneNumberUtils;

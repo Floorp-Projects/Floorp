@@ -23,15 +23,15 @@ function newWorkerWithParcel(parcelBuf) {
   let index = 0; // index for read
   let buf = parcelBuf;
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.readUint16 = function () {
+  worker.Buf.readUint16 = function() {
     return buf[index++];
   };
 
-  worker.Buf.readInt32 = function () {
+  worker.Buf.readInt32 = function() {
     return buf[index++];
   };
 

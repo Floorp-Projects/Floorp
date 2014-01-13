@@ -13718,7 +13718,7 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   updatePhonebookSet: function updatePhonebookSet(pbr, contact, onsuccess, onerror) {
-    let updateAdnCb = function () {
+    let updateAdnCb = function() {
       this.updateSupportedPBRFields(pbr, contact, onsuccess, onerror);
     }.bind(this);
 

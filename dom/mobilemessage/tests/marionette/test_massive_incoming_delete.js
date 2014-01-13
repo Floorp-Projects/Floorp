@@ -22,7 +22,7 @@ function sendSmsToEmulator(from, text) {
   ++pendingEmulatorCmdCount;
 
   let cmd = "sms send " + from + " " + text;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     is(result[0], "OK", "Emulator response");

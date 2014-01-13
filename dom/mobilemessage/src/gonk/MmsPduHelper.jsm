@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 let DEBUG; // set to true to see debug messages
 
-this.MMS_VERSION = (function () {
+this.MMS_VERSION = (function() {
   Cu.import("resource://gre/modules/Services.jsm");
 
   try {
@@ -1308,7 +1308,7 @@ this.PduHelper = {
         "checkMandatoryFields: unsupported message type " + type);
     }
 
-    entry.mandatoryFields.forEach(function (name) {
+    entry.mandatoryFields.forEach(function(name) {
       WSP.ensureHeader(msg.headers, name);
     });
 
@@ -1455,7 +1455,7 @@ this.PduHelper = {
   },
 };
 
-const MMS_PDU_TYPES = (function () {
+const MMS_PDU_TYPES = (function() {
   let pdus = {};
   function add(number, hasContent, mandatoryFields) {
     pdus[number] = {
@@ -1520,7 +1520,7 @@ const MMS_PDU_TYPES = (function () {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.4
  */
-const MMS_HEADER_FIELDS = (function () {
+const MMS_HEADER_FIELDS = (function() {
   let names = {};
   function add(name, number, coder) {
     let entry = {
@@ -1599,7 +1599,7 @@ const MMS_HEADER_FIELDS = (function () {
 })();
 
 // @see OMA-TS-MMS_ENC-V1_3-20110913-A Table 27: Parameter Name Assignments
-const MMS_WELL_KNOWN_PARAMS = (function () {
+const MMS_WELL_KNOWN_PARAMS = (function() {
   let params = {};
 
   function add(name, number, coder) {
@@ -1619,11 +1619,11 @@ const MMS_WELL_KNOWN_PARAMS = (function () {
 
 let debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump("-$- MmsPduHelper: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }
 
 this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([

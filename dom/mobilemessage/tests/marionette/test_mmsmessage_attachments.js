@@ -71,14 +71,14 @@ function deleteAllMessages() {
 
     let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       ok(false, "failed to delete all messages");
       tasks.finish();
     }
   });
 }
 
-tasks.push(function () {
+tasks.push(function() {
   log("Verifying initial state.");
 
   manager = window.navigator.mozMobileMessage;
@@ -88,10 +88,10 @@ tasks.push(function () {
   tasks.next();
 });
 
-tasks.push(function () {
+tasks.push(function() {
   log("MmsMessage.attachments should be an empty array.");
 
-  manager.onfailed = function (event) {
+  manager.onfailed = function(event) {
     manager.onfailed = null;
 
     let message = event.message;

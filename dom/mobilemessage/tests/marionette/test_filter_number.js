@@ -15,7 +15,7 @@ function sendSmsToEmulator(from, text) {
   ++pendingEmulatorCmdCount;
 
   let cmd = "sms send " + from + " " + text;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     is(result[0], "OK", "Emulator response");
@@ -85,7 +85,7 @@ function deleteAllMessages() {
 
     let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       ok(false, "failed to delete all messages");
       tasks.finish();
     }
@@ -97,7 +97,7 @@ function checkMessage(needle, secondary) {
 
   let filter = new MozSmsFilter();
   filter.numbers = [needle];
-  getAllMessages(function (messages) {
+  getAllMessages(function(messages) {
     is(messages.length, 2, "should have exactly 2 messages");
 
     // Check the messages are sent to/received from either 'needle' or
@@ -167,9 +167,9 @@ tasks.push(function populateMessages() {
   sendMessage(count);
 });
 
-tasks.push(function () {
+tasks.push(function() {
   log("Verifying number of messages in database");
-  getAllMessages(function (messages) {
+  getAllMessages(function(messages) {
     is(messages.length, NUM_THREADS * 2,
        "should have exactly " + (NUM_THREADS * 2) + " messages");
 

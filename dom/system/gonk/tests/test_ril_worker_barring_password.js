@@ -18,15 +18,15 @@ function newUint8Worker() {
   let index = 0; // index for read
   let buf = [];
 
-  worker.Buf.writeUint8 = function (value) {
+  worker.Buf.writeUint8 = function(value) {
     buf.push(value);
   };
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function (offset) {
+  worker.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 

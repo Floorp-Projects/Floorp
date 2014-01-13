@@ -15,7 +15,7 @@ const PREF_RIL_NUM_RADIO_INTERFACES = "ril.numRadioInterfaces";
 
 ok(libcutils, "libcutils is available");
 
-let propNum = (function () {
+let propNum = (function() {
   try {
     let numString = libcutils.property_get(PROP_RO_MOZ_RIL_NUMCLIENTS, "1");
     let num = parseInt(numString, 10);

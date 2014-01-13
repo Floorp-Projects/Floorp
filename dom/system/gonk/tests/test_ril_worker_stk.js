@@ -15,15 +15,15 @@ function newUint8Worker() {
   let index = 0; // index for read
   let buf = [];
 
-  worker.Buf.writeUint8 = function (value) {
+  worker.Buf.writeUint8 = function(value) {
     buf.push(value);
   };
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function (offset) {
+  worker.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 
@@ -37,7 +37,7 @@ function newUint8SupportOutgoingIndexWorker() {
   let index = 4;          // index for read
   let buf = [0, 0, 0, 0]; // Preserved parcel size
 
-  worker.Buf.writeUint8 = function (value) {
+  worker.Buf.writeUint8 = function(value) {
     if (worker.Buf.outgoingIndex >= buf.length) {
       buf.push(value);
     } else {
@@ -47,11 +47,11 @@ function newUint8SupportOutgoingIndexWorker() {
     worker.Buf.outgoingIndex++;
   };
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function (offset) {
+  worker.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 
@@ -67,7 +67,7 @@ function newUint8SupportOutgoingIndexWorker() {
 add_test(function test_if_send_stk_terminal_profile() {
   let worker = newUint8Worker();
   let profileSend = false;
-  worker.RIL.sendStkTerminalProfile = function (data) {
+  worker.RIL.sendStkTerminalProfile = function(data) {
     profileSend = true;
   };
 
@@ -115,7 +115,7 @@ add_test(function test_stk_terminal_response() {
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
@@ -1086,7 +1086,7 @@ add_test(function test_stk_event_download_location_status() {
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
@@ -1169,7 +1169,7 @@ add_test(function test_stk_event_download_language_selection() {
   let pduHelper = worker.GsmPDUHelper;
   let iccHelper = worker.ICCPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
@@ -1227,7 +1227,7 @@ add_test(function test_stk_event_download_user_activity() {
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
@@ -1275,7 +1275,7 @@ add_test(function test_stk_event_download_idle_screen_available() {
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
@@ -1323,7 +1323,7 @@ add_test(function test_stk_event_download_browser_termination() {
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
 
-  buf.sendParcel = function () {
+  buf.sendParcel = function() {
     // Type
     do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
