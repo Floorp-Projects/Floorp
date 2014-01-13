@@ -540,7 +540,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         Matrix dtTransform = drawTarget->GetTransform();
         deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
         cairoTarget = static_cast<cairo_surface_t*>
-            (drawTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
+            (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE));
     }
 
     cairo_surface_t* tempXlibSurface =
@@ -578,7 +578,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
   
     SurfaceFormat moz2DFormat =
         cairo_surface_get_content(tempXlibSurface) == CAIRO_CONTENT_COLOR ?
-            FORMAT_B8G8R8A8 : FORMAT_B8G8R8X8;
+            SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     if (method != eAlphaExtraction) {
         if (drawTarget) {
             // It doesn't matter if moz2DFormat doesn't exactly match the format

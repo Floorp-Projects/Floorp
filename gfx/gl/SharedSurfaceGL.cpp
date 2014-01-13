@@ -254,18 +254,18 @@ SharedSurface_Basic::Create(GLContext* gl,
                                formats.color_texType,
                                size);
 
-    SurfaceFormat format = FORMAT_B8G8R8X8;
+    SurfaceFormat format = SurfaceFormat::B8G8R8X8;
     switch (formats.color_texInternalFormat) {
     case LOCAL_GL_RGB:
     case LOCAL_GL_RGB8:
         if (formats.color_texType == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
-            format = FORMAT_R5G6B5;
+            format = SurfaceFormat::R5G6B5;
         else
-            format = FORMAT_B8G8R8X8;
+            format = SurfaceFormat::B8G8R8X8;
         break;
     case LOCAL_GL_RGBA:
     case LOCAL_GL_RGBA8:
-        format = FORMAT_B8G8R8A8;
+        format = SurfaceFormat::B8G8R8A8;
         break;
     default:
         MOZ_CRASH("Unhandled Tex format.");

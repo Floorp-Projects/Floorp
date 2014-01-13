@@ -11,7 +11,7 @@ function sendSmsToEmulator(from, text) {
   ++pendingEmulatorCmdCount;
 
   let cmd = "sms send " + from + " " + text;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     is(result[0], "OK", "Emulator response");
@@ -24,11 +24,11 @@ let tasks = {
   _tasks: [],
   _nextTaskIndex: 0,
 
-  push: function push(func) {
+  push: function(func) {
     this._tasks.push(func);
   },
 
-  next: function next() {
+  next: function() {
     let index = this._nextTaskIndex++;
     let task = this._tasks[index];
     try {
@@ -42,11 +42,11 @@ let tasks = {
     }
   },
 
-  finish: function finish() {
+  finish: function() {
     this._tasks[this._tasks.length - 1]();
   },
 
-  run: function run() {
+  run: function() {
     this.next();
   }
 };
@@ -79,7 +79,7 @@ function deleteAllMessages() {
 
     let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       ok(false, "failed to delete all messages");
       tasks.finish();
     }
@@ -109,7 +109,7 @@ function validate(number, normalizedNumber) {
 }
 
 let manager = window.navigator.mozMobileMessage;
-tasks.push(function () {
+tasks.push(function() {
   log("Verifying initial state.");
   ok(manager instanceof MozMobileMessageManager,
      "manager is instance of " + manager.constructor);

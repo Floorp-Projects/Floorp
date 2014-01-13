@@ -27,7 +27,7 @@ public:
     mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(this));
   }
 
-  virtual SurfaceType GetType() const { return SURFACE_RECORDING; }
+  virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
   virtual IntSize GetSize() const { return mFinalSurface->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mFinalSurface->GetFormat(); }
   virtual TemporaryRef<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
@@ -49,7 +49,7 @@ public:
     mRecorder->RecordEvent(RecordedGradientStopsDestruction(this));
   }
 
-  virtual BackendType GetBackendType() const { return BACKEND_RECORDING; }
+  virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
 
   RefPtr<GradientStops> mFinalGradientStops;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
@@ -58,7 +58,7 @@ public:
 static SourceSurface *
 GetSourceSurface(SourceSurface *aSurface)
 {
-  if (aSurface->GetType() != SURFACE_RECORDING) {
+  if (aSurface->GetType() != SurfaceType::RECORDING) {
     return aSurface;
   }
 
@@ -68,7 +68,7 @@ GetSourceSurface(SourceSurface *aSurface)
 static GradientStops *
 GetGradientStops(GradientStops *aStops)
 {
-  if (aStops->GetBackendType() != BACKEND_RECORDING) {
+  if (aStops->GetBackendType() != BackendType::RECORDING) {
     return aStops;
   }
 
@@ -169,9 +169,9 @@ struct AdjustedPattern
   operator Pattern*()
   {
     switch(mOrigPattern->GetType()) {
-    case PATTERN_COLOR:
+    case PatternType::COLOR:
       return mOrigPattern;
-    case PATTERN_SURFACE:
+    case PatternType::SURFACE:
       {
         SurfacePattern *surfPat = static_cast<SurfacePattern*>(mOrigPattern);
         mPattern =
@@ -180,7 +180,7 @@ struct AdjustedPattern
                                         surfPat->mFilter);
         return mPattern;
       }
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
       {
         LinearGradientPattern *linGradPat = static_cast<LinearGradientPattern*>(mOrigPattern);
         mPattern =
@@ -189,7 +189,7 @@ struct AdjustedPattern
                                                   linGradPat->mMatrix);
         return mPattern;
       }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
       {
         RadialGradientPattern *radGradPat = static_cast<RadialGradientPattern*>(mOrigPattern);
         mPattern =
@@ -265,7 +265,7 @@ DrawTargetRecording::StrokeLine(const Point &aBegin,
 Path*
 DrawTargetRecording::GetPathForPathRecording(const Path *aPath) const
 {
-  if (aPath->GetBackendType() != BACKEND_RECORDING) {
+  if (aPath->GetBackendType() != BackendType::RECORDING) {
     return nullptr;
   }
 
@@ -574,7 +574,7 @@ void
 DrawTargetRecording::EnsureStored(const Path *aPath)
 {
   if (!mRecorder->HasStoredPath(aPath)) {
-    if (aPath->GetBackendType() != BACKEND_RECORDING) {
+    if (aPath->GetBackendType() != BackendType::RECORDING) {
       gfxWarning() << "Cannot record this fill path properly!";
     } else {
       PathRecording *recPath = const_cast<PathRecording*>(static_cast<const PathRecording*>(aPath));

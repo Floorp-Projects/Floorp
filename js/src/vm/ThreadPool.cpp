@@ -112,7 +112,7 @@ class js::ThreadPoolWorker : public ThreadPoolBaseWorker
     bool start();
 
     // Invoked from main thread; signals the worker loop to return.
-    void terminate();
+    void terminate(AutoLockMonitor &lock);
 };
 
 // ThreadPoolMainWorker
@@ -280,7 +280,7 @@ ThreadPoolWorker::run()
                 lock.wait();
 
             if (state_ == TERMINATED) {
-                pool_->join();
+                pool_->join(lock);
                 return;
             }
 
@@ -299,16 +299,16 @@ ThreadPoolWorker::run()
         // Join the pool.
         {
             AutoLockMonitor lock(*pool_);
-            pool_->join();
+            pool_->join(lock);
         }
     }
 }
 
 void
-ThreadPoolWorker::terminate()
+ThreadPoolWorker::terminate(AutoLockMonitor &lock)
 {
+    MOZ_ASSERT(lock.isFor(*pool_));
     MOZ_ASSERT(state_ != TERMINATED);
-    pool_->assertIsHoldingLock();
     state_ = TERMINATED;
 }
 
@@ -369,8 +369,10 @@ ThreadPool::ThreadPool(JSRuntime *rt)
 ThreadPool::~ThreadPool()
 {
     terminateWorkers();
+#ifdef JS_THREADSAFE
     if (joinBarrier_)
         PR_DestroyCondVar(joinBarrier_);
+#endif
 }
 
 bool
@@ -467,7 +469,7 @@ ThreadPool::terminateWorkers()
 
         // Signal to the workers they should quit.
         for (uint32_t i = 0; i < workers_.length(); i++)
-            workers_[i]->terminate();
+            workers_[i]->terminate(lock);
 
         // Wake up all the workers. Set the number of active workers to the
         // current number of workers so we can make sure they all join.
@@ -475,7 +477,7 @@ ThreadPool::terminateWorkers()
         lock.notifyAll();
 
         // Wait for all workers to join.
-        waitForWorkers();
+        waitForWorkers(lock);
 
         while (workers_.length() > 0)
             js_delete(workers_.popCopy());
@@ -491,27 +493,20 @@ ThreadPool::terminate()
 }
 
 void
-ThreadPool::join()
+ThreadPool::join(AutoLockMonitor &lock)
 {
-#ifdef JS_THREADSAFE
-    assertIsHoldingLock();
+    MOZ_ASSERT(lock.isFor(*this));
     if (--activeWorkers_ == 0)
-        PR_NotifyCondVar(joinBarrier_);
-#endif
+        lock.notify(joinBarrier_);
 }
 
 void
-ThreadPool::waitForWorkers()
+ThreadPool::waitForWorkers(AutoLockMonitor &lock)
 {
-#ifdef JS_THREADSAFE
-    assertIsHoldingLock();
-    while (activeWorkers_ > 0) {
-        mozilla::DebugOnly<PRStatus> status =
-            PR_WaitCondVar(joinBarrier_, PR_INTERVAL_NO_TIMEOUT);
-        MOZ_ASSERT(status == PR_SUCCESS);
-    }
+    MOZ_ASSERT(lock.isFor(*this));
+    while (activeWorkers_ > 0)
+        lock.wait(joinBarrier_);
     job_ = nullptr;
-#endif
 }
 
 ParallelResult
@@ -571,7 +566,7 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t numSlices)
     // point, the slices themselves may not be finished processing.
     {
         AutoLockMonitor lock(*this);
-        waitForWorkers();
+        waitForWorkers(lock);
     }
 
     // Everything went swimmingly. Give yourself a pat on the back.

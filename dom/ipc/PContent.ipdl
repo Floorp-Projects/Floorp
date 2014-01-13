@@ -507,6 +507,8 @@ parent:
                                 bool isAudio,
                                 bool isVideo);
 
+    sync GetGraphicsFeatureStatus(int32_t aFeature) returns (int32_t aStatus, bool aSuccess);
+
     AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
     RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
 both:

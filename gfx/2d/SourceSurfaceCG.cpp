@@ -42,7 +42,7 @@ SourceSurfaceCG::GetDataSurface()
   RefPtr<DataSourceSurface> dataSurf = new DataSourceSurfaceCG(mImage);
 
   // We also need to make sure that the returned surface has
-  // surface->GetType() == SURFACE_DATA.
+  // surface->GetType() == SurfaceType::DATA.
   dataSurf = new DataSourceSurfaceWrapper(dataSurf);
 
   return dataSurf;
@@ -66,21 +66,21 @@ CreateCGImage(void *aInfo,
   int bitsPerPixel = 0;
 
   switch (aFormat) {
-    case FORMAT_B8G8R8A8:
+    case SurfaceFormat::B8G8R8A8:
       colorSpace = CGColorSpaceCreateDeviceRGB();
       bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
       bitsPerComponent = 8;
       bitsPerPixel = 32;
       break;
 
-    case FORMAT_B8G8R8X8:
+    case SurfaceFormat::B8G8R8X8:
       colorSpace = CGColorSpaceCreateDeviceRGB();
       bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
       bitsPerComponent = 8;
       bitsPerPixel = 32;
       break;
 
-    case FORMAT_A8:
+    case SurfaceFormat::A8:
       // XXX: why don't we set a colorspace here?
       bitsPerComponent = 8;
       bitsPerPixel = 8;
@@ -96,7 +96,7 @@ CreateCGImage(void *aInfo,
                                                                 releaseCallback);
 
   CGImageRef image;
-  if (aFormat == FORMAT_A8) {
+  if (aFormat == SurfaceFormat::A8) {
     CGFloat decode[] = {1.0, 0.0};
     image = CGImageMaskCreate (aSize.width, aSize.height,
                                bitsPerComponent,
@@ -219,7 +219,7 @@ CGContextRef CreateBitmapContextForImage(CGImageRef image)
 
 DataSourceSurfaceCG::DataSourceSurfaceCG(CGImageRef aImage)
 {
-  mFormat = FORMAT_B8G8R8A8;
+  mFormat = SurfaceFormat::B8G8R8A8;
   mImage = aImage;
   mCg = CreateBitmapContextForImage(aImage);
   if (mCg == nullptr) {
@@ -261,7 +261,7 @@ SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTa
 {
   mDrawTarget = aDrawTarget;
   mFormat = aDrawTarget->GetFormat();
-  mCg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT);
+  mCg = (CGContextRef)aDrawTarget->GetNativeSurface(NativeSurfaceType::CGCONTEXT);
   if (!mCg)
     abort();
 
@@ -328,7 +328,7 @@ SourceSurfaceCGBitmapContext::~SourceSurfaceCGBitmapContext()
 
 SourceSurfaceCGIOSurfaceContext::SourceSurfaceCGIOSurfaceContext(DrawTargetCG *aDrawTarget)
 {
-  CGContextRef cg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT_ACCELERATED);
+  CGContextRef cg = (CGContextRef)aDrawTarget->GetNativeSurface(NativeSurfaceType::CGCONTEXT_ACCELERATED);
 
   RefPtr<MacIOSurface> surf = MacIOSurface::IOSurfaceContextGetSurface(cg);
 
@@ -365,7 +365,7 @@ void SourceSurfaceCGIOSurfaceContext::EnsureImage() const
   // memcpy when the bitmap context is modified gives us more predictable
   // performance characteristics.
   if (!mImage) {
-    mImage = CreateCGImage(mData, mData, mSize, mStride, FORMAT_B8G8R8A8);
+    mImage = CreateCGImage(mData, mData, mSize, mStride, SurfaceFormat::B8G8R8A8);
   }
 
 }

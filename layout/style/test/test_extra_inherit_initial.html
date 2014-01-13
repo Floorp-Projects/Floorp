@@ -76,7 +76,7 @@ function test_property(property)
 // To avoid triggering the slow script dialog, we have to test one
 // property at a time.
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
+SimpleTest.requestLongerTimeout(4);
 var props = [];
 for (var prop in gCSSProperties)
   props.push(prop);

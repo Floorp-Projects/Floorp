@@ -389,3 +389,20 @@ nsFirstLetterFrame::GetBaseline() const
 {
   return mBaseline;
 }
+
+int
+nsFirstLetterFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+{
+  if (GetPrevContinuation()) {
+    // We shouldn't get calls to GetSkipSides for later continuations since
+    // they have separate style contexts with initial values for all the
+    // properties that could trigger a call to GetSkipSides.  Then again,
+    // it's not really an error to call GetSkipSides on any frame, so
+    // that's why we handle it properly.
+    return 1 << NS_SIDE_LEFT |
+           1 << NS_SIDE_RIGHT |
+           1 << NS_SIDE_TOP |
+           1 << NS_SIDE_BOTTOM;
+  }
+  return 0;  // first continuation displays all sides
+}

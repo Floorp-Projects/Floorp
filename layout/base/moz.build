@@ -116,8 +116,6 @@ LOCAL_INCLUDES += [
     '../../content/events/src',
     '../../content/html/content/src',
     '../../content/svg/content/src',
-    '../../content/xbl/src',
-    '../../dom/base',
     '../../view/src',
     '../forms',
     '../generic',
@@ -129,6 +127,8 @@ LOCAL_INCLUDES += [
     '../xul',
     '../xul/tree/',
     '/docshell/base',
+    '/dom/base',
+    '/dom/xbl',
     '/xpcom/ds',
 ]
 

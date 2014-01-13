@@ -89,7 +89,7 @@ nsSVGPathGeometryElement::CreatePathBuilder()
 FillRule
 nsSVGPathGeometryElement::GetFillRule()
 {
-  FillRule fillRule = FILL_WINDING; // Equivalent to NS_STYLE_FILL_RULE_NONZERO
+  FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to NS_STYLE_FILL_RULE_NONZERO
 
   nsRefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr,
@@ -102,7 +102,7 @@ nsSVGPathGeometryElement::GetFillRule()
                                            NS_STYLE_FILL_RULE_EVENODD);
 
     if (styleContext->StyleSVG()->mFillRule == NS_STYLE_FILL_RULE_EVENODD) {
-      fillRule = FILL_EVEN_ODD;
+      fillRule = FillRule::FILL_EVEN_ODD;
     }
   } else {
     // ReportToConsole

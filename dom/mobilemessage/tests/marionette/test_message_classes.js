@@ -26,7 +26,7 @@ function sendSmsPduToEmulator(pdu) {
   ++pendingEmulatorCmdCount;
 
   let cmd = "sms pdu " + pdu;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     --pendingEmulatorCmdCount;
 
     is(result[0], "OK", "Emulator response");

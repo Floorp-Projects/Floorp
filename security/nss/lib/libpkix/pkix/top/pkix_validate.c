@@ -1113,7 +1113,7 @@ PKIX_ValidateChain(
                         pVerifyTree,
                         plContext);
 
-                if (chainFailed || (reasonCode != 0)) {
+                if (chainFailed) {
 
                         /* cert chain failed to validate */
 
@@ -1128,6 +1128,10 @@ PKIX_ValidateChain(
                         }
 
                 } else {
+
+                        /* XXX Remove this assertion after 2014-12-31.
+                         * See bug 946984. */
+                        PORT_Assert(reasonCode == 0);
 
                         /* cert chain successfully validated! */
                         PKIX_CHECK(pkix_ValidateResult_Create
@@ -1393,7 +1397,7 @@ PKIX_ValidateChain_NB(
                         goto cleanup;
                 }
 
-                if (chainFailed || (reasonCode != 0)) {
+                if (chainFailed) {
 
                         /* cert chain failed to validate */
 
@@ -1408,6 +1412,10 @@ PKIX_ValidateChain_NB(
                         }
 
                 } else {
+
+                        /* XXX Remove this assertion after 2014-12-31.
+                         * See bug 946984. */
+                        PORT_Assert(reasonCode == 0);
 
                         /* cert chain successfully validated! */
                         PKIX_CHECK(pkix_ValidateResult_Create

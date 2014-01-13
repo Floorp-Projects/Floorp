@@ -235,7 +235,7 @@ public:
   virtual gfx::DrawTarget* LockDrawTarget() MOZ_OVERRIDE;
   virtual gfx::BackendType BackendType() MOZ_OVERRIDE
   {
-    return gfx::BACKEND_DIRECT2D;
+    return gfx::BackendType::DIRECT2D;
   }
 
   virtual void Unlock() MOZ_OVERRIDE;

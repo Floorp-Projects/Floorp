@@ -245,7 +245,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
         BlitSurface(destDT, destRect, dt);
         return;
       }
-      dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width), ceil(destRect.height)), FORMAT_B8G8R8A8);
+      dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width), ceil(destRect.height)), SurfaceFormat::B8G8R8A8);
     }
     if (surf || dt) {
       if (surf) {

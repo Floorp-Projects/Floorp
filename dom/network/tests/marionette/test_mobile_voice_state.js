@@ -20,7 +20,7 @@ document.body.appendChild(ifr);
 let emulatorCmdPendingCount = 0;
 function setEmulatorVoiceState(state) {
   emulatorCmdPendingCount++;
-  runEmulatorCmd("gsm voice " + state, function (result) {
+  runEmulatorCmd("gsm voice " + state, function(result) {
     emulatorCmdPendingCount--;
     is(result[0], "OK");
   });
@@ -28,7 +28,7 @@ function setEmulatorVoiceState(state) {
 
 function setEmulatorGsmLocation(lac, cid) {
   emulatorCmdPendingCount++;
-  runEmulatorCmd("gsm location " + lac + " " + cid, function (result) {
+  runEmulatorCmd("gsm location " + lac + " " + cid, function(result) {
     emulatorCmdPendingCount--;
     is(result[0], "OK");
   });

@@ -1142,7 +1142,7 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
   rawStops[1].color = secondColor;
   rawStops[1].offset = 0.5;
   RefPtr<GradientStops> gs =
-    gfxGradientCache::GetGradientStops(aDT, rawStops, EXTEND_CLAMP);
+    gfxGradientCache::GetGradientStops(aDT, rawStops, ExtendMode::CLAMP);
   if (!gs) {
     // Having two corners, both with reversed color stops is pretty common
     // for certain border types. Let's optimize it!
@@ -1151,7 +1151,7 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
     Point tmp = aPoint1;
     aPoint1 = aPoint2;
     aPoint2 = tmp;
-    gs = gfxGradientCache::GetOrCreateGradientStops(aDT, rawStops, EXTEND_CLAMP);
+    gs = gfxGradientCache::GetOrCreateGradientStops(aDT, rawStops, ExtendMode::CLAMP);
   }
   return gs;
 }
