@@ -358,6 +358,11 @@ public:
                                          mCtx->CurrentState().op);
   }
 
+  operator DrawTarget*() 
+  {
+    return mTarget;
+  }
+
   DrawTarget* operator->()
   {
     return mTarget;
@@ -3094,14 +3099,17 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       CanvasImageCache::Lookup(element, mCanvasElement, &imgSize);
   }
 
+  nsLayoutUtils::DirectDrawInfo drawInfo;
+
   if (!srcSurf) {
     // The canvas spec says that drawImage should draw the first frame
-    // of animated images
-    uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
+    // of animated images. We also don't want to rasterize vector images.
+    uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME |
+                        nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS;
     nsLayoutUtils::SurfaceFromElementResult res =
       nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
 
-    if (!res.mSourceSurface) {
+    if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
       // Spec says to silently do nothing if the element is still loading.
       if (!res.mIsStillLoading) {
         error.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -3126,12 +3134,16 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
                                             res.mCORSUsed);
     }
 
-    if (res.mImageRequest) {
-      CanvasImageCache::NotifyDrawImage(element, mCanvasElement, res.mImageRequest,
-                                        res.mSourceSurface, imgSize);
-    }
+    if (res.mSourceSurface) {
+      if (res.mImageRequest) {
+        CanvasImageCache::NotifyDrawImage(element, mCanvasElement, res.mImageRequest,
+                                          res.mSourceSurface, imgSize);
+      }
 
-    srcSurf = res.mSourceSurface;
+      srcSurf = res.mSourceSurface;
+    } else {
+      drawInfo = res.mDrawInfo;
+    }
   }
 
   if (optional_argc == 0) {
@@ -3178,14 +3190,60 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
 
-  AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
-    DrawSurface(srcSurf,
-                mgfx::Rect(dx, dy, dw, dh),
-                mgfx::Rect(sx, sy, sw, sh),
-                DrawSurfaceOptions(filter),
-                DrawOptions(CurrentState().globalAlpha, UsedOperation()));
+  if (srcSurf) {
+    AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
+      DrawSurface(srcSurf,
+                  mgfx::Rect(dx, dy, dw, dh),
+                  mgfx::Rect(sx, sy, sw, sh),
+                  DrawSurfaceOptions(filter),
+                  DrawOptions(CurrentState().globalAlpha, UsedOperation()));
+  } else {
+    DrawDirectlyToCanvas(drawInfo, &bounds, dx, dy, dw, dh,
+                         sx, sy, sw, sh, imgSize);
+  }
 
   RedrawUser(gfxRect(dx, dy, dw, dh));
+}
+
+void
+CanvasRenderingContext2D::DrawDirectlyToCanvas(
+                          const nsLayoutUtils::DirectDrawInfo& image,
+                          mgfx::Rect* bounds, double dx, double dy,
+                          double dw, double dh, double sx, double sy,
+                          double sw, double sh, gfxIntSize imgSize)
+{
+  gfxMatrix contextMatrix;
+
+  AdjustedTarget tempTarget(this, bounds->IsEmpty() ? nullptr: bounds);
+
+  // get any already existing transforms on the context. Include transformations used for context shadow
+  if (tempTarget) {
+    Matrix matrix = tempTarget->GetTransform();
+    contextMatrix = gfxMatrix(matrix._11, matrix._12, matrix._21,
+                              matrix._22, matrix._31, matrix._32);
+  }
+
+  gfxMatrix transformMatrix;
+  transformMatrix.Translate(gfxPoint(sx, sy));
+  if (dw > 0 && dh > 0) {
+    transformMatrix.Scale(sw/dw, sh/dh);
+  }
+  transformMatrix.Translate(gfxPoint(-dx, -dy));
+
+  nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
+  context->SetMatrix(contextMatrix);
+  
+  // FLAG_CLAMP is added for increased performance
+  uint32_t modifiedFlags = image.mDrawingFlags | imgIContainer::FLAG_CLAMP;
+
+  nsresult rv = image.mImgContainer->
+    Draw(context, GraphicsFilter::FILTER_GOOD, transformMatrix,
+         gfxRect(gfxPoint(dx, dy), gfxIntSize(dw, dh)),
+         nsIntRect(nsIntPoint(0, 0), gfxIntSize(imgSize.width, imgSize.height)),
+         gfxIntSize(imgSize.width, imgSize.height), nullptr, image.mWhichFrame,
+         modifiedFlags);
+
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 #ifdef USE_SKIA_GPU

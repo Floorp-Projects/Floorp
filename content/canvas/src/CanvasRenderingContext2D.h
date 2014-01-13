@@ -23,6 +23,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
+#include "nsLayoutUtils.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -578,6 +579,11 @@ protected:
                  double sx, double sy, double sw, double sh,
                  double dx, double dy, double dw, double dh, 
                  uint8_t optional_argc, mozilla::ErrorResult& error);
+
+  void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
+                            mozilla::gfx::Rect* bounds, double dx, double dy,
+                            double dw, double dh, double sx, double sy,
+                            double sw, double sh, gfxIntSize imgSize);
 
   nsString& GetFont()
   {
