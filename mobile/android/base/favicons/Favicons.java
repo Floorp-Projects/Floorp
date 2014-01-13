@@ -65,7 +65,7 @@ public class Favicons {
     // doing so is not necessary.
     private static final NonEvictingLruCache<String, String> sPageURLMappings = new NonEvictingLruCache<String, String>(NUM_PAGE_URL_MAPPINGS_TO_STORE);
 
-    public static String getFaviconUrlForPageUrlFromCache(String pageURL) {
+    public static String getFaviconURLForPageURLFromCache(String pageURL) {
         return sPageURLMappings.get(pageURL);
     }
 
@@ -73,7 +73,7 @@ public class Favicons {
      * Insert the given pageUrl->faviconUrl mapping into the memory cache of such mappings.
      * Useful for short-circuiting local database access.
      */
-    public static void putFaviconUrlForPageUrlInCache(String pageURL, String faviconURL) {
+    public static void putFaviconURLForPageURLInCache(String pageURL, String faviconURL) {
         sPageURLMappings.put(pageURL, faviconURL);
     }
 
@@ -143,7 +143,7 @@ public class Favicons {
 
         // If there's no favicon URL given, try and hit the cache with the default one.
         if (cacheURL == null)  {
-            cacheURL = guessDefaultFaviconUrl(pageURL);
+            cacheURL = guessDefaultFaviconURL(pageURL);
         }
 
         // If it's something we can't even figure out a default URL for, just give up.
@@ -231,7 +231,7 @@ public class Favicons {
      * @return The URL of the Favicon used by that webpage, according to either the History database
      *         or a somewhat educated guess.
      */
-    public static String getFaviconUrlForPageUrl(String pageURL) {
+    public static String getFaviconURLForPageURL(String pageURL) {
         // Attempt to determine the Favicon URL from the Tabs datastructure. Can dodge having to use
         // the database sometimes by doing this.
         String targetURL;
@@ -246,7 +246,7 @@ public class Favicons {
         targetURL = BrowserDB.getFaviconUrlForHistoryUrl(sContext.getContentResolver(), pageURL);
         if (targetURL == null) {
             // Nothing in the history database. Fall back to the default URL and hope for the best.
-            targetURL = guessDefaultFaviconUrl(pageURL);
+            targetURL = guessDefaultFaviconURL(pageURL);
         }
         return targetURL;
     }
@@ -407,7 +407,7 @@ public class Favicons {
      * @param pageURL Page URL for which a default Favicon URL is requested
      * @return The default Favicon URL.
      */
-    public static String guessDefaultFaviconUrl(String pageURL) {
+    public static String guessDefaultFaviconURL(String pageURL) {
         // Special-casing for about: pages. The favicon for about:pages which don't provide a link tag
         // is bundled in the database, keyed only by page URL, hence the need to return the page URL
         // here. If the database ever migrates to stop being silly in this way, this can plausibly
