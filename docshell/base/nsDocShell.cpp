@@ -9115,13 +9115,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         aLoadType == LOAD_HISTORY ||
         aLoadType == LOAD_LINK) {
 
-        // Split mCurrentURI and aURI on the '#' character.  Make sure we read
+        nsCOMPtr<nsIURI> currentURI;
+        if (sURIFixup && mCurrentURI) {
+            rv = sURIFixup->CreateExposableURI(mCurrentURI,
+                                               getter_AddRefs(currentURI));
+            NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+            currentURI = mCurrentURI;
+        }
+        // Split currentURI and aURI on the '#' character.  Make sure we read
         // the return values of SplitURIAtHash; if it fails, we don't want to
         // allow a short-circuited navigation.
         nsAutoCString curBeforeHash, curHash, newBeforeHash, newHash;
         nsresult splitRv1, splitRv2;
-        splitRv1 = mCurrentURI ?
-            nsContentUtils::SplitURIAtHash(mCurrentURI,
+        splitRv1 = currentURI ?
+            nsContentUtils::SplitURIAtHash(currentURI,
                                            curBeforeHash, curHash) :
             NS_ERROR_FAILURE;
         splitRv2 = nsContentUtils::SplitURIAtHash(aURI, newBeforeHash, newHash);
@@ -9178,9 +9186,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (aSHEntry && mDocumentRequest) {
                 mDocumentRequest->Cancel(NS_BINDING_ABORTED);
             }
-
-            // Save the current URI; we need it if we fire a hashchange later.
-            nsCOMPtr<nsIURI> oldURI = mCurrentURI;
 
             // Save the position of the scrollers.
             nscoord cx = 0, cy = 0;
@@ -9342,15 +9347,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
 
                 if (doHashchange) {
-                    // Make sure to use oldURI here, not mCurrentURI, because by
-                    // now, mCurrentURI has changed!
-                    win->DispatchAsyncHashchange(oldURI, aURI);
+                    // Note that currentURI hasn't changed because it's on the
+                    // stack, so we can just use it directly as the old URI.
+                    win->DispatchAsyncHashchange(currentURI, aURI);
                 }
             }
 
             // Inform the favicon service that the favicon for oldURI also
             // applies to aURI.
-            CopyFavicon(oldURI, aURI, mInPrivateBrowsing);
+            CopyFavicon(currentURI, aURI, mInPrivateBrowsing);
 
             return NS_OK;
         }
