@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.open();
+    document.write("<!DOCTYPE html>New Document here");
+    document.close();
+    // Notify parent via postMessage, since otherwise exceptions will not get
+    // caught by its onerror handler.
+    parent.postMessage("doTest", "*");
+  });
+</script>
