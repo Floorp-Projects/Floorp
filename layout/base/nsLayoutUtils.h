@@ -23,7 +23,6 @@ class nsBlockFrame;
 class gfxASurface;
 class gfxDrawable;
 class nsView;
-class imgIContainer;
 class nsIFrame;
 class nsStyleCoord;
 class nsStyleCorners;
@@ -51,6 +50,7 @@ struct nsOverflowAreas;
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "nsRuleNode.h"
+#include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 
 #include <limits>
@@ -1568,7 +1568,19 @@ public:
     /* Whether we should skip premultiplication -- the resulting
        image will always be an image surface, and must not be given to
        Thebes for compositing! */
-    SFE_NO_PREMULTIPLY_ALPHA = 1 << 3
+    SFE_NO_PREMULTIPLY_ALPHA = 1 << 3,
+    /* Whether we should skip getting a surface for vector images and
+       return a DirectDrawInfo containing an imgIContainer instead. */
+    SFE_NO_RASTERIZING_VECTORS = 1 << 4
+  };
+
+  struct DirectDrawInfo {
+    /* imgIContainer to directly draw to a context */
+    nsCOMPtr<imgIContainer> mImgContainer;
+    /* which frame to draw */
+    uint32_t mWhichFrame;
+    /* imgIContainer flags to use when drawing */
+    uint32_t mDrawingFlags;
   };
 
   struct SurfaceFromElementResult {
@@ -1577,6 +1589,8 @@ public:
     /* mSurface will contain the resulting surface, or will be nullptr on error */
     nsRefPtr<gfxASurface> mSurface;
     mozilla::RefPtr<SourceSurface> mSourceSurface;
+    /* Contains info for drawing when there is no mSourceSurface. */
+    DirectDrawInfo mDrawInfo;
 
     /* The size of the surface */
     gfxIntSize mSize;

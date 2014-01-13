@@ -30,7 +30,7 @@ public:
   SourceSurfaceCG(CGImageRef aImage) : mImage(aImage) {}
   ~SourceSurfaceCG();
 
-  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_IMAGE; }
+  virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_IMAGE; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
@@ -58,7 +58,7 @@ public:
   DataSourceSurfaceCG(CGImageRef aImage);
   ~DataSourceSurfaceCG();
 
-  virtual SurfaceType GetType() const { return SURFACE_DATA; }
+  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -98,7 +98,7 @@ public:
   SourceSurfaceCGBitmapContext(DrawTargetCG *);
   ~SourceSurfaceCGBitmapContext();
 
-  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
+  virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_CGCONTEXT; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const { return mFormat; }
   virtual TemporaryRef<DataSourceSurface> GetDataSurface()
@@ -153,7 +153,7 @@ public:
   SourceSurfaceCGIOSurfaceContext(DrawTargetCG *);
   ~SourceSurfaceCGIOSurfaceContext();
 
-  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
+  virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_CGCONTEXT; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const { return mFormat; }
 

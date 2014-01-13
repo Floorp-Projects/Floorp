@@ -508,8 +508,8 @@ private:
     {
       MOZ_ASSERT(NS_FAILED(mErrorCode));
 
-        Throw(aCx, mErrorCode);
-      }
+      Throw(aCx, mErrorCode);
+    }
   };
 
 public:
@@ -1804,14 +1804,6 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
   if (!isSyncXHR)  {
     autoUnpin.Clear();
     MOZ_ASSERT(autoSyncLoop.empty());
-    return;
-  }
-
-  // If our sync XHR was canceled during the send call the worker is going
-  // away.  We have no idea how far through the send call we got.  There may
-  // be a ProxyCompleteRunnable in the sync loop, but rather than run the loop
-  // to get it we just let our RAII helpers clean up.
-  if (mCanceled) {
     return;
   }
 

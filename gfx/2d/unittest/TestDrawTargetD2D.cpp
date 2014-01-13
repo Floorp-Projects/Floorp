@@ -19,5 +19,5 @@ TestDrawTargetD2D::TestDrawTargetD2D()
 
   Factory::SetDirect3D10Device(mDevice);
 
-  mDT = Factory::CreateDrawTarget(BACKEND_DIRECT2D, IntSize(DT_WIDTH, DT_HEIGHT), FORMAT_B8G8R8A8);
+  mDT = Factory::CreateDrawTarget(BackendType::DIRECT2D, IntSize(DT_WIDTH, DT_HEIGHT), SurfaceFormat::B8G8R8A8);
 }

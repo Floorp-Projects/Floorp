@@ -62,10 +62,10 @@ gfxPlatformGtk::gfxPlatformGtk()
     sUseXRender = mozilla::Preferences::GetBool("gfx.xrender.enabled");
 #endif
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    uint32_t contentMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    InitBackendPrefs(canvasMask, BACKEND_CAIRO,
-                     contentMask, BACKEND_CAIRO);
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    InitBackendPrefs(canvasMask, BackendType::CAIRO,
+                     contentMask, BackendType::CAIRO);
 }
 
 gfxPlatformGtk::~gfxPlatformGtk()
@@ -453,8 +453,8 @@ gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     NativeFont nativeFont;
 
-    if (aTarget->GetType() == BACKEND_CAIRO || aTarget->GetType() == BACKEND_SKIA) {
-        nativeFont.mType = NATIVE_FONT_CAIRO_FONT_FACE;
+    if (aTarget->GetType() == BackendType::CAIRO || aTarget->GetType() == BackendType::SKIA) {
+        nativeFont.mType = NativeFontType::CAIRO_FONT_FACE;
         nativeFont.mFont = aFont->GetCairoScaledFont();
         return Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
     }

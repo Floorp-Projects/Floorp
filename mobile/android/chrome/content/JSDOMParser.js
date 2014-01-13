@@ -779,7 +779,7 @@
      */
     readChildren: function (node) {
       let child;
-      while (child = this.readNode()) {
+      while ((child = this.readNode())) {
         // Don't keep Comment nodes
         if (child.nodeType !== 8) {
           node.childNodes.push(child);

@@ -52,7 +52,7 @@ static void
 RunTest (TestEntry *test, gfxContext *ctx) {
     nsRefPtr<gfxFontGroup> fontGroup;
     if (!lastFamilies || strcmp(lastFamilies, test->mFamilies)) {
-        gfxFontStyle style_western_normal_16 (mozilla::gfx::FONT_STYLE_NORMAL,
+        gfxFontStyle style_western_normal_16 (mozilla::gfx::FontStyle::NORMAL,
                                               400,
                                               0,
                                               16.0,

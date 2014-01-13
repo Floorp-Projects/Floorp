@@ -62,3 +62,4 @@ fails-if(!cocoaWidget) == 329069-5.html 329069-5-ref.html # bug 603710
 fails-if(!gtk2Widget&&!Android) == 617869-1.html 617869-1-ref.html 
 == 723509-1.html 723509-1-ref.html
 == 922550-1.html 922550-1-ref.html
+== 958249.html 958249-ref.html

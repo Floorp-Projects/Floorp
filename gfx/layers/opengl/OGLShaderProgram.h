@@ -54,16 +54,16 @@ static inline ShaderProgramType
 ShaderProgramFromSurfaceFormat(gfx::SurfaceFormat aFormat)
 {
   switch (aFormat) {
-    case gfx::FORMAT_B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
       return BGRALayerProgramType;
-    case gfx::FORMAT_B8G8R8X8:
+    case gfx::SurfaceFormat::B8G8R8X8:
       return BGRXLayerProgramType;
-    case gfx::FORMAT_R8G8B8A8:
+    case gfx::SurfaceFormat::R8G8B8A8:
       return RGBALayerProgramType;
-    case gfx::FORMAT_R8G8B8X8:
-    case gfx::FORMAT_R5G6B5:
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R5G6B5:
       return RGBXLayerProgramType;
-    case gfx::FORMAT_A8:
+    case gfx::SurfaceFormat::A8:
       // We don't have a specific luminance shader
       break;
     default:
@@ -78,12 +78,12 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
 {
   switch(aTarget) {
     case LOCAL_GL_TEXTURE_EXTERNAL:
-      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
+      MOZ_ASSERT(aFormat == gfx::SurfaceFormat::R8G8B8A8);
       return RGBAExternalLayerProgramType;
     case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
-      MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8 ||
-                 aFormat == gfx::FORMAT_R8G8B8X8);
-      if (aFormat == gfx::FORMAT_R8G8B8A8)
+      MOZ_ASSERT(aFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+                 aFormat == gfx::SurfaceFormat::R8G8B8X8);
+      if (aFormat == gfx::SurfaceFormat::R8G8B8A8)
         return RGBARectLayerProgramType;
       else
         return RGBXRectLayerProgramType;

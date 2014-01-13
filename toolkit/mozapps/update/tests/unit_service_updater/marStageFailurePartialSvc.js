@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* General Partial MAR File Background Patch Apply Failure Test */
+/* General Partial MAR File Staged Patch Apply Failure Test */
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -228,34 +228,54 @@ function run_test() {
     return;
   }
 
-  setupTestCommon(false);
-  do_register_cleanup(cleanupUpdaterTest);
-
-  gBackgroundUpdate = true;
+  gStageUpdate = true;
+  setupTestCommon();
   setupUpdaterTest(FILE_PARTIAL_MAR);
 
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
+  // For Mac OS X set the last modified time for the root directory to a date in
+  // the past to test that the last modified time is updated on all updates since
+  // the precomplete file in the root of the bundle is renamed, etc. (bug 600098).
+  if (IS_MACOSX) {
+    let now = Date.now();
+    let yesterday = now - (1000 * 60 * 60 * 24);
+    let applyToDir = getApplyDirFile();
+    applyToDir.lastModifiedTime = yesterday;
+  }
 
-  // apply the partial mar
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED, checkUpdateApplied);
+  setupAppFilesAsync();
 }
 
-function checkUpdateApplied() {
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
+function setupAppFilesFinished() {
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED);
+}
+
+function checkUpdateFinished() {
   logTestInfo("testing update.status should be " + STATE_FAILED);
-  // The update status format for a failure is failed: # where # is the error
-  // code for the failure.
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusState(), STATE_FAILED);
 
+  if (IS_MACOSX) {
+    logTestInfo("testing last modified time on the apply to directory has " +
+                "changed after a successful update (bug 600098)");
+    let now = Date.now();
+    let applyToDir = getApplyDirFile();
+    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
+    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
+  }
+
+  gStageUpdate = false;
   checkFilesAfterUpdateFailure();
-  checkUpdateLogContents(LOG_PARTIAL_FAILURE);
+  // Sorting on Linux is different so skip this check for now.
+  if (!IS_UNIX) {
+    gStageUpdate = true;
+    checkUpdateLogContents(LOG_PARTIAL_FAILURE);
+  }
 
-  // This shouldn't exist anyways in background updates, but let's make sure
+  // This shouldn't exist anyways for staged updates, but let's make sure.
   logTestInfo("testing tobedeleted directory doesn't exist");
   let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
   toBeDeletedDir = getTargetDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
 
-  removeCallbackCopy();
+  waitForFilesInUse();
 }

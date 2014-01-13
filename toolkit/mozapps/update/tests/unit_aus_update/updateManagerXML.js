@@ -4,7 +4,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing addition of a successful update to " + FILE_UPDATES_DB +
               " and verification of update properties including the format " +
@@ -208,9 +208,5 @@ function run_test() {
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_FAILED);
 
-  do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
+  doTestFinish();
 }

@@ -713,7 +713,7 @@ bool
 nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
                                       nsIDocShellTreeOwner* aOwner,
                                       int32_t aParentType,
-                                      nsIDocShellTreeNode* aParentNode)
+                                      nsIDocShell* aParentNode)
 {
   NS_PRECONDITION(aItem, "Must have docshell treeitem");
   NS_PRECONDITION(mOwnerContent, "Must have owning content");
@@ -1571,9 +1571,8 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsISupports> container =
-    doc->GetContainer();
-  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(docShell);
   NS_ENSURE_STATE(parentAsWebNav);
 
   // Create the docshell...
@@ -1615,52 +1614,40 @@ nsFrameLoader::MaybeCreateDocShell()
     mDocShell->SetName(frameName);
   }
 
-  // If our container is a web-shell, inform it that it has a new
-  // child. If it's not a web-shell then some things will not operate
-  // properly.
+  // Inform our docShell that it has a new child.
+  // Note: This logic duplicates a lot of logic in
+  // nsSubDocumentFrame::AttributeChanged.  We should fix that.
 
-  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentAsWebNav));
-  if (parentAsNode) {
-    // Note: This logic duplicates a lot of logic in
-    // nsSubDocumentFrame::AttributeChanged.  We should fix that.
+  int32_t parentType;
+  docShell->GetItemType(&parentType);
 
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-      do_QueryInterface(parentAsNode);
+  // XXXbz why is this in content code, exactly?  We should handle
+  // this some other way.....  Not sure how yet.
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+  NS_ENSURE_STATE(parentTreeOwner);
+  mIsTopLevelContent =
+    AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType, docShell);
 
-    int32_t parentType;
-    parentAsItem->GetItemType(&parentType);
+  // Make sure all shells have links back to the content element
+  // in the nearest enclosing chrome shell.
+  nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
 
-    // XXXbz why is this in content code, exactly?  We should handle
-    // this some other way.....  Not sure how yet.
-    nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-    parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-    NS_ENSURE_STATE(parentTreeOwner);
-    mIsTopLevelContent =
-      AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType,
-                             parentAsNode);
+  if (parentType == nsIDocShellTreeItem::typeChrome) {
+    // Our parent shell is a chrome shell. It is therefore our nearest
+    // enclosing chrome shell.
 
-    // Make sure all shells have links back to the content element
-    // in the nearest enclosing chrome shell.
-    nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+    chromeEventHandler = do_QueryInterface(mOwnerContent);
+    NS_ASSERTION(chromeEventHandler,
+                 "This mContent should implement this.");
+  } else {
+    // Our parent shell is a content shell. Get the chrome event
+    // handler from it and use that for our shell as well.
 
-    if (parentType == nsIDocShellTreeItem::typeChrome) {
-      // Our parent shell is a chrome shell. It is therefore our nearest
-      // enclosing chrome shell.
-
-      chromeEventHandler = do_QueryInterface(mOwnerContent);
-      NS_ASSERTION(chromeEventHandler,
-                   "This mContent should implement this.");
-    } else {
-      nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
-
-      // Our parent shell is a content shell. Get the chrome event
-      // handler from it and use that for our shell as well.
-
-      parentShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
-    }
-
-    mDocShell->SetChromeEventHandler(chromeEventHandler);
+    docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
   }
+
+  mDocShell->SetChromeEventHandler(chromeEventHandler);
 
   // This is nasty, this code (the do_GetInterface(mDocShell) below)
   // *must* come *after* the above call to
@@ -2689,5 +2676,20 @@ nsFrameLoader::GetTabParent(nsITabParent** aTabParent)
 {
   nsCOMPtr<nsITabParent> tp = mRemoteBrowser;
   tp.forget(aTabParent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (mRemoteBrowser) {
+    loadContext = mRemoteBrowser->GetLoadContext();
+  } else {
+    nsCOMPtr<nsIDocShell> docShell;
+    GetDocShell(getter_AddRefs(docShell));
+    loadContext = do_GetInterface(docShell);
+  }
+  loadContext.forget(aLoadContext);
   return NS_OK;
 }
