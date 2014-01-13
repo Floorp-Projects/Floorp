@@ -719,6 +719,8 @@ breakout:
                 if (node->cert)
                     CERT_DestroyCertificate(node->cert);
             }
+            log.head = log.tail = NULL;
+            log.count = 0;
             rv = 1;
         } else {
             fprintf(stderr, "Chain is good!\n");
