@@ -73,23 +73,17 @@ function test_property(property)
     test_value(info.other_values[idx]);
 }
 
-// To avoid triggering the slow script dialog, we have to test one
-// property at a time.
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(4);
-var props = [];
-for (var prop in gCSSProperties)
-  props.push(prop);
-props = props.reverse();
-function do_one() {
-  if (props.length == 0) {
-    SimpleTest.finish();
-    return;
+
+function start_test() {
+  for (var prop in gCSSProperties) {
+    test_property(prop);
   }
-  test_property(props.pop());
-  SimpleTest.executeSoon(do_one);
+  SimpleTest.finish();
 }
-SimpleTest.executeSoon(do_one);
+
+start_test(); // XXXdholbert (next patch makes this async, after pref-tweak)
 
 </script>
 </pre>
