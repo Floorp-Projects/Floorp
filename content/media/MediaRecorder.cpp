@@ -86,7 +86,7 @@ class MediaRecorder::Session: public nsIObserver
       if (mSession->IsEncoderError()) {
         recorder->NotifyError(NS_ERROR_UNEXPECTED);
       }
-      nsresult rv = recorder->CreateAndDispatchBlobEvent(mSession);
+      nsresult rv = recorder->CreateAndDispatchBlobEvent(mSession->GetEncodedData());
       if (NS_FAILED(rv)) {
         recorder->NotifyError(rv);
       }
@@ -544,8 +544,8 @@ MediaRecorder::RequestData(ErrorResult& aResult)
   }
 
   NS_DispatchToMainThread(
-    NS_NewRunnableMethodWithArg<Session *>(this,
-                                           &MediaRecorder::CreateAndDispatchBlobEvent, mSession),
+    NS_NewRunnableMethodWithArg<const already_AddRefed<nsIDOMBlob> >(this,
+      &MediaRecorder::CreateAndDispatchBlobEvent, mSession->GetEncodedData()),
     NS_DISPATCH_NORMAL);
 }
 
@@ -576,7 +576,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
 }
 
 nsresult
-MediaRecorder::CreateAndDispatchBlobEvent(Session *aSession)
+MediaRecorder::CreateAndDispatchBlobEvent(const already_AddRefed<nsIDOMBlob> &aBlob)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
@@ -588,7 +588,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(Session *aSession)
   BlobEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mData = aSession->GetEncodedData();
+  init.mData = aBlob;
   nsRefPtr<BlobEvent> event =
     BlobEvent::Constructor(this,
                            NS_LITERAL_STRING("dataavailable"),
