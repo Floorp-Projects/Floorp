@@ -37,7 +37,7 @@ import java.util.EnumSet;
 /**
  * Fragment that displays reading list contents in a ListView.
  */
-public class ReadingListPage extends HomeFragment {
+public class ReadingListPanel extends HomeFragment {
     // Cursor loader ID for reading list
     private static final int LOADER_ID_READING_LIST = 0;
 
@@ -80,7 +80,7 @@ public class ReadingListPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_reading_list_page, container, false);
+        return inflater.inflate(R.layout.home_reading_list_panel, container, false);
     }
 
     @Override

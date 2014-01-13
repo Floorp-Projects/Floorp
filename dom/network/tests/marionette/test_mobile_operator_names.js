@@ -25,7 +25,7 @@ ifr.onload = function() {
   network = voice.network;
   ok(network, "voice network info valid");
 
-  waitFor(testMobileOperatorNames, function () {
+  waitFor(testMobileOperatorNames, function() {
     return voice.connected;
   });
 };
@@ -34,7 +34,7 @@ document.body.appendChild(ifr);
 let emulatorCmdPendingCount = 0;
 function sendEmulatorCommand(cmd, callback) {
   emulatorCmdPendingCount++;
-  runEmulatorCmd(cmd, function (result) {
+  runEmulatorCmd(cmd, function(result) {
     emulatorCmdPendingCount--;
 
     is(result[result.length - 1], "OK");
@@ -47,7 +47,7 @@ function setEmulatorOperatorNamesAndMccMnc(which, longName, shortName,
                                            mcc, mnc, callback) {
   let cmd = "operator set " + which + " " + longName + "," +
             shortName + "," + mcc + mnc;
-  sendEmulatorCommand(cmd, function (result) {
+  sendEmulatorCommand(cmd, function(result) {
     let re = new RegExp("^" + longName + "," +
                         shortName + "," + mcc + mnc);
     ok(result[which].match(re), "Long/short name and mcc/mnc should be changed.");
@@ -60,7 +60,7 @@ function setEmulatorOperatorNamesAndMccMnc(which, longName, shortName,
 
 function setEmulatorOperatorNames(which, longName, shortName, callback) {
   let cmd = "operator set " + which + " " + longName + "," + shortName;
-  sendEmulatorCommand(cmd, function (result) {
+  sendEmulatorCommand(cmd, function(result) {
     let re = new RegExp("^" + longName + "," + shortName + ",");
     ok(result[which].match(re), "Long/short name should be changed.");
 
@@ -72,7 +72,7 @@ function setEmulatorOperatorNames(which, longName, shortName, callback) {
 
 function setEmulatorRoaming(roaming, callback) {
   let cmd = "gsm voice " + (roaming ? "roaming" : "home");
-  sendEmulatorCommand(cmd, function (result) {
+  sendEmulatorCommand(cmd, function(result) {
     is(result[0], "OK");
 
     if (callback) {
@@ -98,7 +98,7 @@ function doTestMobileOperatorNames(longName, shortName, callback) {
 
   checkValidMccMnc();
 
-  waitForVoiceChange(function () {
+  waitForVoiceChange(function() {
     is(network.longName, longName, "network.longName");
     is(network.shortName, shortName, "network.shortName");
 
@@ -111,10 +111,10 @@ function doTestMobileOperatorNames(longName, shortName, callback) {
 }
 
 function testMobileOperatorNames() {
-  doTestMobileOperatorNames("Mozilla", "B2G", function () {
-    doTestMobileOperatorNames("Mozilla", "", function () {
-      doTestMobileOperatorNames("", "B2G", function () {
-        doTestMobileOperatorNames("", "", function () {
+  doTestMobileOperatorNames("Mozilla", "B2G", function() {
+    doTestMobileOperatorNames("Mozilla", "", function() {
+      doTestMobileOperatorNames("", "B2G", function() {
+        doTestMobileOperatorNames("", "", function() {
           doTestMobileOperatorNames("Android", "Android", testOperatorPLMNList);
         });
       });
@@ -126,7 +126,7 @@ function doTestOperatorPLMNList(mcc, mnc, expectedLongName,
                                 expectedShortName, callback) {
   log("Testing mcc = " + mcc + ", mnc = " + mnc + ":");
 
-  waitForVoiceChange(function () {
+  waitForVoiceChange(function() {
     is(network.longName, expectedLongName, "network.longName");
     is(network.shortName, expectedShortName, "network.shortName");
     is(network.mcc, mcc, "network.mcc");
@@ -157,7 +157,7 @@ function doTestRoamingCheck(longName, shortName, callback) {
   log("Testing roaming check '" + longName + "', '" + shortName + "':");
 
   setEmulatorOperatorNames(OPERATOR_ROAMING, longName, shortName,
-                           window.setTimeout.bind(window, function () {
+                           window.setTimeout.bind(window, function() {
       let done = false;
       function resetRoaming() {
         if (!done) {
@@ -169,7 +169,7 @@ function doTestRoamingCheck(longName, shortName, callback) {
         setEmulatorRoaming(false);
       }
 
-      waitForVoiceChange(function () {
+      waitForVoiceChange(function() {
         is(network.longName, longName, "network.longName");
         is(network.shortName, shortName, "network.shortName");
         is(voice.roaming, false, "voice.roaming");
@@ -177,7 +177,7 @@ function doTestRoamingCheck(longName, shortName, callback) {
         resetRoaming();
       });
 
-      setEmulatorRoaming(true, function () {
+      setEmulatorRoaming(true, function() {
         done = true;
       });
     }, 3000) // window.setTimeout.bind
@@ -187,14 +187,14 @@ function doTestRoamingCheck(longName, shortName, callback) {
 function testRoamingCheck() {
   // If Either long name or short name of current registered operator matches
   // SPN("Android"), then the `roaming` attribute should be set to false.
-  doTestRoamingCheck("Android", "Android", function () {
-    doTestRoamingCheck("Android", "android", function () {
-      doTestRoamingCheck("Android", "Xxx", function () {
-        doTestRoamingCheck("android", "Android", function () {
-          doTestRoamingCheck("android", "android", function () {
-            doTestRoamingCheck("android", "Xxx", function () {
-              doTestRoamingCheck("Xxx", "Android", function () {
-                doTestRoamingCheck("Xxx", "android", function () {
+  doTestRoamingCheck("Android", "Android", function() {
+    doTestRoamingCheck("Android", "android", function() {
+      doTestRoamingCheck("Android", "Xxx", function() {
+        doTestRoamingCheck("android", "Android", function() {
+          doTestRoamingCheck("android", "android", function() {
+            doTestRoamingCheck("android", "Xxx", function() {
+              doTestRoamingCheck("Xxx", "Android", function() {
+                doTestRoamingCheck("Xxx", "android", function() {
                   setEmulatorOperatorNames(OPERATOR_ROAMING, "TelKila", "TelKila",
                                            window.setTimeout.bind(window, cleanUp, 3000));
                 });

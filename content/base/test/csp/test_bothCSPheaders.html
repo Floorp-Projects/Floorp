@@ -24,18 +24,14 @@ var totalTests = 2;
 // get sent out to the wire.
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
-  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    // subject should be an nsURI, and should be either allowed or blocked.
-    if(!SpecialPowers.can_QI(subject))
-      return;
-
-    if (topic === "http-on-modify-request") {
-      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
-      if (asciiSpec == prefixedHeaderImgURL || asciiSpec == unprefixedHeaderImgURL) {
-        is(asciiSpec, unprefixedHeaderImgURL, "Load was allowed - should be allowed by unprefixed header (blocked by prefixed)");
+    if (topic === "specialpowers-http-notify-request") {
+      var allowedUri = data;
+      if (allowedUri == prefixedHeaderImgURL || allowedUri == unprefixedHeaderImgURL) {
+        is(allowedUri, unprefixedHeaderImgURL, "Load was allowed - should be allowed by unprefixed header (blocked by prefixed)");
         testRan();
       }
     }
@@ -55,7 +51,7 @@ examiner.prototype  = {
   // or mochitests might get borked.
   remove: function() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-    SpecialPowers.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }
 

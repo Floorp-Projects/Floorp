@@ -18,15 +18,15 @@ function newUint8Worker() {
   let index = 0; // index for read
   let buf = [];
 
-  worker.Buf.writeUint8 = function (value) {
+  worker.Buf.writeUint8 = function(value) {
     buf.push(value);
   };
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function (offset) {
+  worker.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 
@@ -66,7 +66,7 @@ add_test(function test_change_call_barring_password() {
 add_test(function test_check_change_call_barring_password_result() {
   let barringPasswordOptions;
   let worker = newWorker({
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       do_check_eq(barringPasswordOptions.pin, PIN);
       do_check_eq(barringPasswordOptions.newPin, NEW_PIN);
       do_check_eq(message.errorMsg, GECKO_ERROR_SUCCESS);
