@@ -4631,6 +4631,7 @@
                      role="presentation"
                      layer="true" />
           <xul:image xbl:inherits="src=image,fadein,pinned,selected"
+                     anonid="tab-icon-image"
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
