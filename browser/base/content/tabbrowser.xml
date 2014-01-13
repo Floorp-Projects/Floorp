@@ -2946,7 +2946,7 @@
           let browser = aMessage.target;
 
           switch (aMessage.name) {
-            case "DOMTitleChanged":
+            case "DOMTitleChanged": {
               let tab = this._getTabForBrowser(browser);
               if (!tab)
                 return;
@@ -2954,7 +2954,8 @@
               if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
                 tab.setAttribute("titlechanged", "true");
               break;
-            case "contextmenu":
+            }
+            case "contextmenu": {
               gContextMenuContentData = { event: aMessage.objects.event,
                                           browser: browser };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
@@ -2963,6 +2964,16 @@
                               gContextMenuContentData.event.clientY,
                               true, false, null);
               break;
+            }
+            case "DOMWebNotificationClicked": {
+              let tab = this._getTabForBrowser(browser);
+              if (!tab)
+                return;
+              this.selectedTab = tab;
+              let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+              focusManager.activeWindow = window;
+              break;
+            }
           }
         ]]></body>
       </method>
@@ -3020,6 +3031,7 @@
             messageManager.addMessageListener("DOMTitleChanged", this);
             messageManager.addMessageListener("contextmenu", this);
           }
+          messageManager.addMessageListener("DOMWebNotificationClicked", this);
         ]]>
       </constructor>
 

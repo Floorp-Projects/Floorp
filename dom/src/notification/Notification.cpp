@@ -391,6 +391,13 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData)
 {
   if (!strcmp("alertclickcallback", aTopic)) {
+    nsCOMPtr<nsPIDOMWindow> window = mNotification->GetOwner();
+    nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+    if (doc) {
+      nsContentUtils::DispatchChromeEvent(doc, window,
+                                          NS_LITERAL_STRING("DOMWebNotificationClicked"),
+                                          true, true);
+    }
     mNotification->DispatchTrustedEvent(NS_LITERAL_STRING("click"));
   } else if (!strcmp("alertfinished", aTopic)) {
     mNotification->mIsClosed = true;
