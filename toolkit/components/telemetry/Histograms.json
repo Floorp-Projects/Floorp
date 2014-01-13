@@ -5584,6 +5584,12 @@
     "n_values": 8,
     "description": "Status of OCSP stapling on this handshake (1=present, good; 2=none; 3=present, expired; 4=present, other error)"
   },
+  "SSL_OCSP_MAY_FETCH": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "For non-stapling cases, is OCSP fetching a possibility? (0=yes, 1=no because missing/invalid OCSP URI, 2=no because fetching disabled, 3=no because both)"
+  },
   "TELEMETRY_TEST_EXPIRED": {
     "expires_in_version": "4.0a1",
     "kind": "flag",
