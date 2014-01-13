@@ -9522,9 +9522,7 @@ let ICCPDUHelper = {
    * @param alphaId     Alpha Identifier to be written.
    * @param number      Dialling Number to be written.
    */
-  writeAlphaIdDiallingNumber: function(recordSize,
-                                                                  alphaId,
-                                                                  number) {
+  writeAlphaIdDiallingNumber: function(recordSize, alphaId, number) {
     // Write String length
     let strLen = recordSize * 2;
     Buf.writeInt32(strLen);

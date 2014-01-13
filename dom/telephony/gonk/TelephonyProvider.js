@@ -199,8 +199,7 @@ TelephonyProvider.prototype = {
    * Track the active call and update the audio system as its state changes.
    */
   _activeCall: null,
-  _updateCallAudioState: function(aCall,
-                                                        aConferenceState) {
+  _updateCallAudioState: function(aCall, aConferenceState) {
     if (aConferenceState === nsITelephonyProvider.CALL_STATE_CONNECTED) {
       this._activeCall = new ConferenceCall(aConferenceState);
       gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
@@ -378,8 +377,7 @@ TelephonyProvider.prototype = {
     this._listeners.splice(index, 1);
   },
 
-  _enumerateCallsForClient: function(aClientId,
-                                                              aListener) {
+  _enumerateCallsForClient: function(aClientId, aListener) {
     if (DEBUG) debug("Enumeration of calls for client " + aClientId);
 
     let deferred = Promise.defer();

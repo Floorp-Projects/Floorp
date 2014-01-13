@@ -787,9 +787,7 @@ NetworkManager.prototype = {
   },
 
   // Enable/disable USB tethering by sending commands to netd.
-  setUSBTethering: function(enable,
-                                            tetheringInterface,
-                                            callback) {
+  setUSBTethering: function(enable, tetheringInterface, callback) {
     let params = this.getUSBTetheringParameters(enable, tetheringInterface);
 
     if (params === null) {

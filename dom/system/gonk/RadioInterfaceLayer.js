@@ -2843,8 +2843,7 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCallingLineIdRestriction: function(target,
-                                                                    message) {
+  setCallingLineIdRestriction: function(target, message) {
     if (DEBUG) {
       this.debug("setCallingLineIdRestriction: " + JSON.stringify(message));
     }
@@ -3719,8 +3718,7 @@ RadioInterface.prototype = {
                                                       reason: reason });
   },
 
-  sendWorkerMessage: function(rilMessageType, message,
-                                                callback) {
+  sendWorkerMessage: function(rilMessageType, message, callback) {
     this.workerMessenger.send(rilMessageType, message, function(response) {
       return callback.handleResponse(response);
     });

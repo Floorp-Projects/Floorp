@@ -44,11 +44,8 @@ let PDUBuilder = {
     }
   },
 
-  writeStringAsSeptets: function(message,
-                                                      paddingBits,
-                                                      langIndex,
-                                                      langShiftIndex)
-  {
+  writeStringAsSeptets: function(message, paddingBits, langIndex,
+                                 langShiftIndex) {
     const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
     const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
 

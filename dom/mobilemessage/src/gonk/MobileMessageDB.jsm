@@ -1294,8 +1294,7 @@ MobileMessageDB.prototype = {
     };
   },
 
-  matchParsedPhoneNumbers: function(addr1, parsedAddr1,
-                                                            addr2, parsedAddr2) {
+  matchParsedPhoneNumbers: function(addr1, parsedAddr1, addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
          parsedAddr1.internationalNumber === parsedAddr2.internationalNumber) ||
         (parsedAddr1.nationalNumber &&
@@ -1423,8 +1422,8 @@ MobileMessageDB.prototype = {
     }
   },
 
-  findParticipantRecordByAddress: function(
-      aParticipantStore, aAddress, aCreate, aCallback) {
+  findParticipantRecordByAddress: function(aParticipantStore, aAddress,
+                                           aCreate, aCallback) {
     if (DEBUG) {
       debug("findParticipantRecordByAddress("
             + JSON.stringify(aAddress) + ", " + aCreate + ")");
@@ -1528,8 +1527,8 @@ MobileMessageDB.prototype = {
     }).bind(this);
   },
 
-  findParticipantIdsByAddresses: function(
-      aParticipantStore, aAddresses, aCreate, aSkipNonexistent, aCallback) {
+  findParticipantIdsByAddresses: function(aParticipantStore, aAddresses,
+                                          aCreate, aSkipNonexistent, aCallback) {
     if (DEBUG) {
       debug("findParticipantIdsByAddresses("
             + JSON.stringify(aAddresses) + ", "
@@ -1571,9 +1570,9 @@ MobileMessageDB.prototype = {
     }) (0, []);
   },
 
-  findThreadRecordByParticipants: function(
-      aThreadStore, aParticipantStore, aAddresses,
-      aCreateParticipants, aCallback) {
+  findThreadRecordByParticipants: function(aThreadStore, aParticipantStore,
+                                           aAddresses, aCreateParticipants,
+                                           aCallback) {
     if (DEBUG) {
       debug("findThreadRecordByParticipants(" + JSON.stringify(aAddresses)
             + ", " + aCreateParticipants + ")");
@@ -1670,8 +1669,8 @@ MobileMessageDB.prototype = {
   },
 
   replaceShortMessageOnSave: function(aTransaction, aMessageStore,
-                                       aParticipantStore, aThreadStore,
-                                       aMessageRecord, aAddresses) {
+                                      aParticipantStore, aThreadStore,
+                                      aMessageRecord, aAddresses) {
     let isReplaceTypePid = (aMessageRecord.pid) &&
                            ((aMessageRecord.pid >= RIL.PDU_PID_REPLACE_SHORT_MESSAGE_TYPE_1 &&
                              aMessageRecord.pid <= RIL.PDU_PID_REPLACE_SHORT_MESSAGE_TYPE_7) ||
@@ -1732,9 +1731,8 @@ MobileMessageDB.prototype = {
     });
   },
 
-  realSaveRecord: function(aTransaction, aMessageStore,
-                                          aParticipantStore, aThreadStore,
-                                          aMessageRecord, aAddresses) {
+  realSaveRecord: function(aTransaction, aMessageStore, aParticipantStore,
+                           aThreadStore, aMessageRecord, aAddresses) {
     let self = this;
     this.findThreadRecordByParticipants(aThreadStore, aParticipantStore,
                                         aAddresses, true,
@@ -1880,8 +1878,8 @@ MobileMessageDB.prototype = {
     }
   },
 
-  updateMessageDeliveryById: function(
-      id, type, receiver, delivery, deliveryStatus, envelopeId, callback) {
+  updateMessageDeliveryById: function(id, type, receiver, delivery,
+                                      deliveryStatus, envelopeId, callback) {
     if (DEBUG) {
       debug("Setting message's delivery by " + type + " = "+ id
             + " receiver: " + receiver
@@ -2020,11 +2018,8 @@ MobileMessageDB.prototype = {
     threadParticipants = threadParticipants.concat(slicedReceivers);
   },
 
-  updateThreadByMessageChange: function(messageStore,
-                                                                    threadStore,
-                                                                    threadId,
-                                                                    messageId,
-                                                                    messageRead) {
+  updateThreadByMessageChange: function(messageStore, threadStore, threadId,
+                                        messageId, messageRead) {
     threadStore.get(threadId).onsuccess = function(event) {
       // This must exist.
       let threadRecord = event.target.result;
@@ -2224,8 +2219,8 @@ MobileMessageDB.prototype = {
     this.saveRecord(aMessage, addresses, aCallback);
   },
 
-  setMessageDeliveryByMessageId: function(
-      messageId, receiver, delivery, deliveryStatus, envelopeId, callback) {
+  setMessageDeliveryByMessageId: function(messageId, receiver, delivery,
+                                          deliveryStatus, envelopeId, callback) {
     this.updateMessageDeliveryById(messageId, "messageId",
                                    receiver, delivery, deliveryStatus,
                                    envelopeId, callback);
@@ -2233,13 +2228,13 @@ MobileMessageDB.prototype = {
   },
 
   setMessageDeliveryStatusByEnvelopeId: function(aEnvelopeId, aReceiver,
-                                                  aDeliveryStatus, aCallback) {
+                                                 aDeliveryStatus, aCallback) {
     this.updateMessageDeliveryById(aEnvelopeId, "envelopeId", aReceiver, null,
                                    aDeliveryStatus, null, aCallback);
   },
 
   setMessageReadStatusByEnvelopeId: function(aEnvelopeId, aReceiver,
-                                              aReadStatus, aCallback) {
+                                             aReadStatus, aCallback) {
     if (DEBUG) {
       debug("Setting message's read status by envelopeId = " + aEnvelopeId +
             ", receiver: " + aReceiver + ", readStatus: " + aReadStatus);
@@ -2645,8 +2640,7 @@ let FilterSearcherHelper = {
    *        Result colletor function. It takes three parameters -- txn, message
    *        id, and message timestamp.
    */
-  filterTimestamp: function(startDate, endDate, direction, txn,
-                                            collect) {
+  filterTimestamp: function(startDate, endDate, direction, txn, collect) {
     let range = null;
     if (startDate != null && endDate != null) {
       range = IDBKeyRange.bound(startDate.getTime(), endDate.getTime());
