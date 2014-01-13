@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script>
+  if (location.hash == "#target") {
+    parent.postMessage("haveHash", "*");
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      document.open();
+      document.write("<!DOCTYPE html><html style='height: 100%'><body style='height: 100%'><div style='height: 200%'></div><div id='target'></div></body></html>");
+      document.close();
+      // Notify parent via postMessage, since otherwise exceptions will not get
+      // caught by its onerror handler.
+      parent.postMessage("doTest", "*");
+    });
+  }
+</script>
