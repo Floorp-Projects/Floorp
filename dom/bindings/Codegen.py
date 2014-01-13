@@ -10839,13 +10839,13 @@ class CGCallback(CGClass):
         # Strip out the JSContext*/JSObject* args
         # that got added.
         assert args[0].name == "cx" and args[0].argType == "JSContext*"
-        assert args[1].name == "aThisObj" and args[1].argType == "JS::Handle<JSObject*>"
+        assert args[1].name == "aThisVal" and args[1].argType == "JS::Handle<JS::Value>"
         args = args[2:]
         # Record the names of all the arguments, so we can use them when we call
         # the private method.
         argnames = [arg.name for arg in args]
-        argnamesWithThis = ["s.GetContext()", "thisObjJS"] + argnames
-        argnamesWithoutThis = ["s.GetContext()", "JS::NullPtr()"] + argnames
+        argnamesWithThis = ["s.GetContext()", "thisValJS"] + argnames
+        argnamesWithoutThis = ["s.GetContext()", "JS::UndefinedHandleValue"] + argnames
         # Now that we've recorded the argnames for our call to our private
         # method, insert our optional argument for deciding whether the
         # CallSetup should re-throw exceptions on aRv.
@@ -10869,6 +10869,8 @@ class CGCallback(CGClass):
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
             "}\n"
+            "JS::Rooted<JS::Value> thisValJS(s.GetContext(),\n"
+            "                                JS::ObjectValue(*thisObjJS));\n"
             "return ${methodName}(${callArgs});").substitute({
                 "errorReturn" : method.getDefaultRetval(),
                 "callArgs" : ", ".join(argnamesWithThis),
@@ -11143,10 +11145,10 @@ class CallbackMember(CGNativeMember):
                 args.append(Argument("ExceptionHandling", "aExceptionHandling",
                                      "eReportExceptions"))
             return args
-        # We want to allow the caller to pass in a "this" object, as
+        # We want to allow the caller to pass in a "this" value, as
         # well as a JSContext.
         return [Argument("JSContext*", "cx"),
-                Argument("JS::Handle<JSObject*>", "aThisObj")] + args
+                Argument("JS::Handle<JS::Value>", "aThisVal")] + args
 
     def getCallSetup(self):
         if self.needThisHandling:
@@ -11199,7 +11201,7 @@ class CallbackMethod(CallbackMember):
     def getCall(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
-            "thisObj": self.getThisObj(),
+            "thisVal": self.getThisVal(),
             "getCallable": self.getCallableDecl(),
             "callGuard": self.getCallGuard()
             }
@@ -11210,8 +11212,8 @@ class CallbackMethod(CallbackMember):
             replacements["argv"] = "nullptr"
             replacements["argc"] = "0"
         return string.Template("${getCallable}"
-                "if (${callGuard}!JS_CallFunctionValue(cx, ${thisObj}, callable,\n"
-                "                          ${argc}, ${argv}, rval.address())) {\n"
+                "if (${callGuard}!JS::Call(cx, ${thisVal}, callable,\n"
+                "              ${argc}, ${argv}, &rval)) {\n"
                 "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                 "  return${errorReturn};\n"
                 "}\n").substitute(replacements)
@@ -11222,8 +11224,8 @@ class CallCallback(CallbackMethod):
         CallbackMethod.__init__(self, callback.signatures()[0], "Call",
                                 descriptorProvider, needThisHandling=True)
 
-    def getThisObj(self):
-        return "aThisObj"
+    def getThisVal(self):
+        return "aThisVal"
 
     def getCallableDecl(self):
         return "JS::Rooted<JS::Value> callable(cx, JS::ObjectValue(*mCallback));\n"
@@ -11245,13 +11247,13 @@ class CallbackOperationBase(CallbackMethod):
         self.methodName = descriptor.binaryNames.get(jsName, jsName)
         CallbackMethod.__init__(self, signature, nativeName, descriptor, singleOperation, rethrowContentException)
 
-    def getThisObj(self):
+    def getThisVal(self):
         if not self.singleOperation:
-            return "mCallback"
+            return "JS::ObjectValue(*mCallback)"
         # This relies on getCallableDecl declaring a boolean
         # isCallable in the case when we're a single-operation
         # interface.
-        return "isCallable ? aThisObj.get() : mCallback"
+        return "isCallable ? aThisVal.get() : JS::ObjectValue(*mCallback)"
 
     def getCallableDecl(self):
         replacements = {
