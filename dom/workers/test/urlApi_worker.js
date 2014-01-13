@@ -263,6 +263,8 @@ onmessage = function() {
     if ('pathname' in test) is(test.pathname, url.pathname, "pathname");
     if ('search' in test) is(test.search, url.search, "search");
     if ('hash' in test) is(test.hash, url.hash, "hash");
+
+    if ('href' in test) is (test.href, url + '', 'stringify works');
   }
 
   postMessage({type: 'finish' });
