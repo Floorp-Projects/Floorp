@@ -337,7 +337,6 @@ DIST_FILES += \
   chrome.manifest \
   update.locale \
   removed-files \
-  recommended-addons.json \
   distribution \
   $(NULL)
 

@@ -967,7 +967,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       aReflowState.ComputedHeight() != NS_AUTOHEIGHT &&
       ShouldApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     nsMargin heightExtras = aReflowState.ComputedPhysicalBorderPadding();
-    if (GetSkipSides() & NS_SIDE_TOP) {
+    if (GetSkipSides() & (1 << NS_SIDE_TOP)) {
       heightExtras.top = 0;
     } else {
       // Bottom margin never causes us to create continuations, so we

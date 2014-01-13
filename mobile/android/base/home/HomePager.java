@@ -8,9 +8,9 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.home.HomeAdapter.OnAddPageListener;
-import org.mozilla.gecko.home.HomeConfig.PageEntry;
-import org.mozilla.gecko.home.HomeConfig.PageType;
+import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
@@ -40,12 +40,12 @@ public class HomePager extends ViewPager {
     private Decor mDecor;
     private View mTabStrip;
 
-    private final OnAddPageListener mAddPageListener;
+    private final OnAddPanelListener mAddPanelListener;
 
     private final HomeConfig mConfig;
     private ConfigLoaderCallbacks mConfigLoaderCallbacks;
 
-    private String mInitialPageId;
+    private String mInitialPanelId;
 
     // Whether or not we need to restart the loader when we show the HomePager.
     private boolean mRestartLoader;
@@ -88,7 +88,7 @@ public class HomePager extends ViewPager {
     }
 
     static final String CAN_LOAD_ARG = "canLoad";
-    static final String PAGE_ENTRY_ARG = "pageEntry";
+    static final String PANEL_CONFIG_ARG = "panelConfig";
 
     public HomePager(Context context) {
         this(context, null);
@@ -101,16 +101,16 @@ public class HomePager extends ViewPager {
         mConfig = HomeConfig.getDefault(mContext);
         mConfigLoaderCallbacks = new ConfigLoaderCallbacks();
 
-        mAddPageListener = new OnAddPageListener() {
+        mAddPanelListener = new OnAddPanelListener() {
             @Override
-            public void onAddPage(String title) {
+            public void onAddPanel(String title) {
                 if (mDecor != null) {
                     mDecor.onAddPagerView(title);
                 }
             }
         };
 
-        // This is to keep all 4 pages in memory after they are
+        // This is to keep all 4 panels in memory after they are
         // selected in the pager.
         setOffscreenPageLimit(3);
 
@@ -173,17 +173,17 @@ public class HomePager extends ViewPager {
     private void redisplay(LoaderManager lm, FragmentManager fm) {
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
-        // If mInitialPageId is non-null, this means the HomePager hasn't
+        // If mInitialPanelId is non-null, this means the HomePager hasn't
         // finished loading its config yet. Simply re-show() with the
-        // current target page.
-        final String currentPageId;
-        if (mInitialPageId != null) {
-            currentPageId = mInitialPageId;
+        // current target panel.
+        final String currentPanelId;
+        if (mInitialPanelId != null) {
+            currentPanelId = mInitialPanelId;
         } else {
-            currentPageId = adapter.getPageIdAtPosition(getCurrentItem());
+            currentPanelId = adapter.getPanelIdAtPosition(getCurrentItem());
         }
 
-        show(lm, fm, currentPageId, null);
+        show(lm, fm, currentPanelId, null);
     }
 
     /**
@@ -191,25 +191,25 @@ public class HomePager extends ViewPager {
      *
      * @param fm FragmentManager for the adapter
      */
-    public void show(LoaderManager lm, FragmentManager fm, String pageId, PropertyAnimator animator) {
+    public void show(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
         mLoaded = true;
-        mInitialPageId = pageId;
+        mInitialPanelId = panelId;
 
         // Only animate on post-HC devices, when a non-null animator is given
         final boolean shouldAnimate = (animator != null && Build.VERSION.SDK_INT >= 11);
 
         final HomeAdapter adapter = new HomeAdapter(mContext, fm);
-        adapter.setOnAddPageListener(mAddPageListener);
+        adapter.setOnAddPanelListener(mAddPanelListener);
         adapter.setCanLoadHint(!shouldAnimate);
         setAdapter(adapter);
 
         setVisibility(VISIBLE);
 
         // Don't show the tabs strip until we have the
-        // list of pages in place.
+        // list of panels in place.
         mTabStrip.setVisibility(View.INVISIBLE);
 
-        // Load list of pages from configuration. Restart the loader if necessary.
+        // Load list of panels from configuration. Restart the loader if necessary.
         if (mRestartLoader) {
             lm.restartLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
             mRestartLoader = false;
@@ -279,7 +279,7 @@ public class HomePager extends ViewPager {
         return super.onInterceptTouchEvent(event);
     }
 
-    private void updateUiFromPageEntries(List<PageEntry> pageEntries) {
+    private void updateUiFromPanelConfigs(List<PanelConfig> panelConfigs) {
         // We only care about the adapter if HomePager is currently
         // loaded, which means it's visible in the activity.
         if (!mLoaded) {
@@ -293,27 +293,27 @@ public class HomePager extends ViewPager {
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
         // Disable loading until the final current item is defined
-        // after loading the page entries. This is to stop any temporary
+        // after loading the panel configs. This is to stop any temporary
         // active item from loading.
         boolean originalCanLoadHint = adapter.getCanLoadHint();
         adapter.setCanLoadHint(false);
 
-        // Update the adapter with the new page entries
-        adapter.update(pageEntries);
+        // Update the adapter with the new panel configs
+        adapter.update(panelConfigs);
 
-        final int count = (pageEntries != null ? pageEntries.size() : 0);
+        final int count = (panelConfigs != null ? panelConfigs.size() : 0);
         mTabStrip.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
 
-        // Use the default page as defined in the HomePager's configuration
-        // if the initial page wasn't explicitly set by the show() caller.
-        if (mInitialPageId != null) {
-            // XXX: Handle the case where the desired page isn't currently in the adapter (bug 949178)
-            setCurrentItem(adapter.getItemPosition(mInitialPageId), false);
-            mInitialPageId = null;
+        // Use the default panel as defined in the HomePager's configuration
+        // if the initial panel wasn't explicitly set by the show() caller.
+        if (mInitialPanelId != null) {
+            // XXX: Handle the case where the desired panel isn't currently in the adapter (bug 949178)
+            setCurrentItem(adapter.getItemPosition(mInitialPanelId), false);
+            mInitialPanelId = null;
         } else {
             for (int i = 0; i < count; i++) {
-                final PageEntry pageEntry = pageEntries.get(i);
-                if (pageEntry.isDefault()) {
+                final PanelConfig panelConfig = panelConfigs.get(i);
+                if (panelConfig.isDefault()) {
                     setCurrentItem(i, false);
                     break;
                 }
@@ -325,20 +325,20 @@ public class HomePager extends ViewPager {
         adapter.setCanLoadHint(originalCanLoadHint);
     }
 
-    private class ConfigLoaderCallbacks implements LoaderCallbacks<List<PageEntry>> {
+    private class ConfigLoaderCallbacks implements LoaderCallbacks<List<PanelConfig>> {
         @Override
-        public Loader<List<PageEntry>> onCreateLoader(int id, Bundle args) {
+        public Loader<List<PanelConfig>> onCreateLoader(int id, Bundle args) {
             return new HomeConfigLoader(mContext, mConfig);
         }
 
         @Override
-        public void onLoadFinished(Loader<List<PageEntry>> loader, List<PageEntry> pageEntries) {
-            updateUiFromPageEntries(pageEntries);
+        public void onLoadFinished(Loader<List<PanelConfig>> loader, List<PanelConfig> panelConfigs) {
+            updateUiFromPanelConfigs(panelConfigs);
         }
 
         @Override
-        public void onLoaderReset(Loader<List<PageEntry>> loader) {
-            updateUiFromPageEntries(null);
+        public void onLoaderReset(Loader<List<PanelConfig>> loader) {
+            updateUiFromPanelConfigs(null);
         }
     }
 }

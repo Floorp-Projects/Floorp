@@ -30,7 +30,7 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
   {
     return mDrawTarget ? mDrawTarget->GetFormat()
-                       : gfx::FORMAT_UNKNOWN;
+                       : gfx::SurfaceFormat(gfx::SurfaceFormat::UNKNOWN);
   }
 
   RefPtr<gfx::DrawTarget> mDrawTarget;

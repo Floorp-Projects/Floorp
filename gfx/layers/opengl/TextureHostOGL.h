@@ -97,13 +97,13 @@ inline ShaderProgramType
 GetProgramTypeForSurfaceFormat(gfx::SurfaceFormat aFormat)
  {
   switch (aFormat) {
-  case gfx::FORMAT_B8G8R8A8:
+  case gfx::SurfaceFormat::B8G8R8A8:
     return BGRALayerProgramType;;
-  case gfx::FORMAT_B8G8R8X8:
+  case gfx::SurfaceFormat::B8G8R8X8:
     return BGRXLayerProgramType;;
-  case gfx::FORMAT_R8G8B8X8:
+  case gfx::SurfaceFormat::R8G8B8X8:
     return RGBXLayerProgramType;;
-  case gfx::FORMAT_R8G8B8A8:
+  case gfx::SurfaceFormat::R8G8B8A8:
     return RGBALayerProgramType;;
   default:
     MOZ_CRASH("unhandled program type");
@@ -351,7 +351,7 @@ public:
     , mTextureHandle(0)
     , mTextureTarget(LOCAL_GL_TEXTURE_2D)
     , mUploadTexture(0)
-    , mFormat(gfx::FORMAT_UNKNOWN)
+    , mFormat(gfx::SurfaceFormat::UNKNOWN)
   {
     MOZ_COUNT_CTOR(StreamTextureSourceOGL);
   }
@@ -582,7 +582,7 @@ public:
     mYTexture  = new Channel;
     mCbTexture = new Channel;
     mCrTexture = new Channel;
-    mFormat = gfx::FORMAT_YUV;
+    mFormat = gfx::SurfaceFormat::YUV;
   }
 
   ~YCbCrDeprecatedTextureHostOGL()
@@ -632,7 +632,7 @@ public:
     }
     virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
     {
-      return gfx::FORMAT_A8;
+      return gfx::SurfaceFormat::A8;
     }
   };
 
@@ -682,7 +682,7 @@ public:
     , mTextureHandle(0)
     , mWrapMode(LOCAL_GL_CLAMP_TO_EDGE)
     , mSharedHandle(0)
-    , mShareType(gl::SameProcess)
+    , mShareType(gl::SharedTextureShareType::SameProcess)
   {}
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
@@ -739,7 +739,7 @@ public:
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType()
   {
-    return (mFormat == gfx::FORMAT_B8G8R8A8) ?
+    return (mFormat == gfx::SurfaceFormat::B8G8R8A8) ?
              GFX_CONTENT_COLOR_ALPHA :
              GFX_CONTENT_COLOR;
   }
@@ -818,7 +818,7 @@ public:
 
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
-    return (mFormat == gfx::FORMAT_B8G8R8A8) ?
+    return (mFormat == gfx::SurfaceFormat::B8G8R8A8) ?
              GFX_CONTENT_COLOR_ALPHA :
              GFX_CONTENT_COLOR;
   }

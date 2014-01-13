@@ -26,7 +26,7 @@ public:
                      DrawTargetCairo* aDrawTarget = nullptr);
   virtual ~SourceSurfaceCairo();
 
-  virtual SurfaceType GetType() const { return SURFACE_CAIRO; }
+  virtual SurfaceType GetType() const { return SurfaceType::CAIRO; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
@@ -52,7 +52,7 @@ public:
   virtual unsigned char *GetData();
   virtual int32_t Stride();
 
-  virtual SurfaceType GetType() const { return SURFACE_CAIRO_IMAGE; }
+  virtual SurfaceType GetType() const { return SurfaceType::CAIRO_IMAGE; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
 

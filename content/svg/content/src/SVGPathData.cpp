@@ -817,7 +817,7 @@ SVGPathData::ToPathForLengthOrPositionMeasuring() const
   // pass as aStrokeWidth doesn't matter (since it's only used to determine the
   // length of those extra little lines).
 
-  return BuildPath(FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 0);
+  return BuildPath(FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 0);
 }
 
 static double

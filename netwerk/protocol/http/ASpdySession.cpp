@@ -8,8 +8,7 @@
 #include "HttpLog.h"
 
 /*
-  Currently supported are spdy/3.1 and spdy/3
-
+  Currently supported are HTTP-draft-[see nshttp.h]/2.0 spdy/3.1 and spdy/3
 */
 
 #include "nsHttp.h"
@@ -19,8 +18,10 @@
 #include "PSpdyPush.h"
 #include "SpdyPush3.h"
 #include "SpdyPush31.h"
+#include "Http2Push.h"
 #include "SpdySession3.h"
 #include "SpdySession31.h"
+#include "Http2Session.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -36,7 +37,8 @@ ASpdySession::NewSpdySession(uint32_t version,
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
   MOZ_ASSERT(version == SPDY_VERSION_3 ||
-             version == SPDY_VERSION_31 ,
+             version == SPDY_VERSION_31 ||
+             version == NS_HTTP2_DRAFT_VERSION,
              "Unsupported spdy version");
 
   // Don't do a runtime check of IsSpdyV?Enabled() here because pref value
@@ -49,7 +51,13 @@ ASpdySession::NewSpdySession(uint32_t version,
   if (version == SPDY_VERSION_3)
     return new SpdySession3(aTransaction, aTransport, aPriority);
 
-  return new SpdySession31(aTransaction, aTransport, aPriority);
+  if (version == SPDY_VERSION_31)
+    return new SpdySession31(aTransaction, aTransport, aPriority);
+
+  if (version == NS_HTTP2_DRAFT_VERSION)
+    return new Http2Session(aTransaction, aTransport, aPriority);
+
+  return nullptr;
 }
 
 SpdyInformation::SpdyInformation()
@@ -59,6 +67,9 @@ SpdyInformation::SpdyInformation()
 
   Version[1] = SPDY_VERSION_31;
   VersionString[1] = NS_LITERAL_CSTRING("spdy/3.1");
+
+  Version[2] = NS_HTTP2_DRAFT_VERSION;
+  VersionString[2] = NS_LITERAL_CSTRING(NS_HTTP2_DRAFT_TOKEN);
 }
 
 bool
@@ -71,6 +82,8 @@ SpdyInformation::ProtocolEnabled(uint32_t index)
     return gHttpHandler->IsSpdyV3Enabled();
   case 1:
     return gHttpHandler->IsSpdyV31Enabled();
+  case 2:
+    return gHttpHandler->IsHttp2DraftEnabled();
   }
   return false;
 }
@@ -104,6 +117,7 @@ SpdyPushCache::~SpdyPushCache()
 {
   mHashSpdy3.Clear();
   mHashSpdy31.Clear();
+  mHashHttp2.Clear();
 }
 
 bool
@@ -149,6 +163,29 @@ SpdyPushCache::RemovePushedStreamSpdy31(nsCString key)
         key.get(), rv ? rv->StreamID() : 0));
   if (rv)
     mHashSpdy31.Remove(key);
+  return rv;
+}
+
+bool
+SpdyPushCache::RegisterPushedStreamHttp2(nsCString key,
+                                         Http2PushedStream *stream)
+{
+  LOG3(("SpdyPushCache::RegisterPushedStreamHttp2 %s 0x%X\n",
+        key.get(), stream->StreamID()));
+  if(mHashHttp2.Get(key))
+    return false;
+  mHashHttp2.Put(key, stream);
+  return true;
+}
+
+Http2PushedStream *
+SpdyPushCache::RemovePushedStreamHttp2(nsCString key)
+{
+  Http2PushedStream *rv = mHashHttp2.Get(key);
+  LOG3(("SpdyPushCache::RemovePushedStreamHttp2 %s 0x%X\n",
+        key.get(), rv ? rv->StreamID() : 0));
+  if (rv)
+    mHashHttp2.Remove(key);
   return rv;
 }
 

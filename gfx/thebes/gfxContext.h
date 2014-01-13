@@ -731,12 +731,12 @@ private:
   
   struct AzureState {
     AzureState()
-      : op(mozilla::gfx::OP_OVER)
+      : op(mozilla::gfx::CompositionOp::OP_OVER)
       , opIsClear(false)
       , color(0, 0, 0, 1.0f)
       , clipWasReset(false)
-      , fillRule(mozilla::gfx::FILL_WINDING)
-      , aaMode(mozilla::gfx::AA_SUBPIXEL)
+      , fillRule(mozilla::gfx::FillRule::FILL_WINDING)
+      , aaMode(mozilla::gfx::AntialiasMode::SUBPIXEL)
       , patternTransformChanged(false)
     {}
 

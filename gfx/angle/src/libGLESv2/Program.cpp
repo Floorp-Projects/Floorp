@@ -12,6 +12,8 @@
 #include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/ResourceManager.h"
 
+#include <algorithm>
+
 namespace gl
 {
 const char * const g_fakepath = "C:\\fakepath";

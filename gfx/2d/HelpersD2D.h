@@ -53,10 +53,10 @@ static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
 {
   D2D1_EXTEND_MODE extend;
   switch (aExtendMode) {
-  case EXTEND_REPEAT:
+  case ExtendMode::REPEAT:
     extend = D2D1_EXTEND_MODE_WRAP;
     break;
-  case EXTEND_REFLECT:
+  case ExtendMode::REFLECT:
     extend = D2D1_EXTEND_MODE_MIRROR;
     break;
   default:
@@ -69,7 +69,7 @@ static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
 static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
 {
   switch (aFilter) {
-  case FILTER_POINT:
+  case Filter::POINT:
     return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
   default:
     return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
@@ -80,7 +80,7 @@ static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
 static inline D2D1_INTERPOLATION_MODE D2DInterpolationMode(const Filter &aFilter)
 {
   switch (aFilter) {
-  case FILTER_POINT:
+  case Filter::POINT:
     return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
   default:
     return D2D1_INTERPOLATION_MODE_LINEAR;
@@ -106,7 +106,7 @@ static inline D2D1_VECTOR_3F D2DVector3D(const Point3D &aPoint)
 static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
 {
   switch (aMode) {
-  case AA_NONE:
+  case AntialiasMode::NONE:
     return D2D1_ANTIALIAS_MODE_ALIASED;
   default:
     return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
@@ -134,15 +134,15 @@ static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat)
 {
   switch(aFormat.format) {
   case DXGI_FORMAT_A8_UNORM:
-    return FORMAT_A8;
+    return SurfaceFormat::A8;
   case DXGI_FORMAT_B8G8R8A8_UNORM:
     if (aFormat.alphaMode == D2D1_ALPHA_MODE_IGNORE) {
-      return FORMAT_B8G8R8X8;
+      return SurfaceFormat::B8G8R8X8;
     } else {
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     }
   default:
-    return FORMAT_B8G8R8A8;
+    return SurfaceFormat::B8G8R8A8;
   }
 }
 
@@ -166,11 +166,11 @@ static inline Point ToPoint(const D2D1_POINT_2F &aPoint)
 static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_B8G8R8A8:
+  case SurfaceFormat::B8G8R8A8:
     return DXGI_FORMAT_B8G8R8A8_UNORM;
-  case FORMAT_B8G8R8X8:
+  case SurfaceFormat::B8G8R8X8:
     return DXGI_FORMAT_B8G8R8A8_UNORM;
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return DXGI_FORMAT_A8_UNORM;
   default:
     return DXGI_FORMAT_UNKNOWN;
@@ -180,7 +180,7 @@ static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 static inline D2D1_ALPHA_MODE D2DAlphaModeForFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_B8G8R8X8:
+  case SurfaceFormat::B8G8R8X8:
     return D2D1_ALPHA_MODE_IGNORE;
   default:
     return D2D1_ALPHA_MODE_PREMULTIPLIED;
@@ -196,27 +196,27 @@ static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
 static inline D2D1_COMPOSITE_MODE D2DCompositionMode(CompositionOp aOp)
 {
   switch(aOp) {
-  case OP_OVER:
+  case CompositionOp::OP_OVER:
     return D2D1_COMPOSITE_MODE_SOURCE_OVER;
-  case OP_ADD:
+  case CompositionOp::OP_ADD:
     return D2D1_COMPOSITE_MODE_PLUS;
-  case OP_ATOP:
+  case CompositionOp::OP_ATOP:
     return D2D1_COMPOSITE_MODE_SOURCE_ATOP;
-  case OP_OUT:
+  case CompositionOp::OP_OUT:
     return D2D1_COMPOSITE_MODE_SOURCE_OUT;
-  case OP_IN:
+  case CompositionOp::OP_IN:
     return D2D1_COMPOSITE_MODE_SOURCE_IN;
-  case OP_SOURCE:
+  case CompositionOp::OP_SOURCE:
     return D2D1_COMPOSITE_MODE_SOURCE_COPY;
-  case OP_DEST_IN:
+  case CompositionOp::OP_DEST_IN:
     return D2D1_COMPOSITE_MODE_DESTINATION_IN;
-  case OP_DEST_OUT:
+  case CompositionOp::OP_DEST_OUT:
     return D2D1_COMPOSITE_MODE_DESTINATION_OUT;
-  case OP_DEST_OVER:
+  case CompositionOp::OP_DEST_OVER:
     return D2D1_COMPOSITE_MODE_DESTINATION_OVER;
-  case OP_DEST_ATOP:
+  case CompositionOp::OP_DEST_ATOP:
     return D2D1_COMPOSITE_MODE_DESTINATION_ATOP;
-  case OP_XOR:
+  case CompositionOp::OP_XOR:
     return D2D1_COMPOSITE_MODE_XOR;
   default:
     return D2D1_COMPOSITE_MODE_SOURCE_OVER;
@@ -226,7 +226,7 @@ static inline D2D1_COMPOSITE_MODE D2DCompositionMode(CompositionOp aOp)
 
 static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 {
-  if (aPattern.GetType() != PATTERN_RADIAL_GRADIENT) {
+  if (aPattern.GetType() != PatternType::RADIAL_GRADIENT) {
     return true;
   }
 
@@ -380,28 +380,28 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   D2D1_LINE_JOIN joinStyle;
 
   switch (aStrokeOptions.mLineCap) {
-  case CAP_BUTT:
+  case CapStyle::BUTT:
     capStyle = D2D1_CAP_STYLE_FLAT;
     break;
-  case CAP_ROUND:
+  case CapStyle::ROUND:
     capStyle = D2D1_CAP_STYLE_ROUND;
     break;
-  case CAP_SQUARE:
+  case CapStyle::SQUARE:
     capStyle = D2D1_CAP_STYLE_SQUARE;
     break;
   }
 
   switch (aStrokeOptions.mLineJoin) {
-  case JOIN_MITER:
+  case JoinStyle::MITER:
     joinStyle = D2D1_LINE_JOIN_MITER;
     break;
-  case JOIN_MITER_OR_BEVEL:
+  case JoinStyle::MITER_OR_BEVEL:
     joinStyle = D2D1_LINE_JOIN_MITER_OR_BEVEL;
     break;
-  case JOIN_ROUND:
+  case JoinStyle::ROUND:
     joinStyle = D2D1_LINE_JOIN_ROUND;
     break;
-  case JOIN_BEVEL:
+  case JoinStyle::BEVEL:
     joinStyle = D2D1_LINE_JOIN_BEVEL;
     break;
   }
@@ -494,9 +494,9 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
     // Extend mode is irrelevant, the displayed rect is completely contained
     // by the source bitmap.
     uploadRect = rect;
-  } else if (aExtendMode == EXTEND_CLAMP && uploadRect.Intersects(rect)) {
+  } else if (aExtendMode == ExtendMode::CLAMP && uploadRect.Intersects(rect)) {
     // Calculate the rectangle on the source bitmap that touches our
-    // surface, and upload that, for EXTEND_CLAMP we can actually guarantee
+    // surface, and upload that, for ExtendMode::CLAMP we can actually guarantee
     // correct behaviour in this case.
     uploadRect = uploadRect.Intersect(rect);
 

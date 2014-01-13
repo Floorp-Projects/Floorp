@@ -36,6 +36,7 @@ namespace net {
 
 class SpdyPushedStream3;
 class SpdyPushedStream31;
+class Http2PushedStream;
 
 // One cache per load group
 class SpdyPushCache
@@ -61,6 +62,14 @@ public:
   SpdyPushedStream31 *RemovePushedStreamSpdy31(nsCString key);
 private:
   nsDataHashtable<nsCStringHashKey, SpdyPushedStream31 *> mHashSpdy31;
+
+// for http/2
+public:
+  bool               RegisterPushedStreamHttp2(nsCString key,
+                                               Http2PushedStream *stream);
+  Http2PushedStream *RemovePushedStreamHttp2(nsCString key);
+private:
+  nsDataHashtable<nsCStringHashKey, Http2PushedStream *> mHashHttp2;
 };
 
 } // namespace mozilla::net

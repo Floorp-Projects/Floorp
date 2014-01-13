@@ -111,7 +111,7 @@ FINAL_LIBRARY = 'xul'
 if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
     DEFINES['USE_GLX_TEST'] = True
 
-for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'OS_TARGET',
+for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_VERSION', 'OS_TARGET',
             'MOZ_WIDGET_TOOLKIT'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 

@@ -613,7 +613,7 @@ public:
   virtual gfx::DrawTarget* LockDrawTarget() MOZ_OVERRIDE;
   virtual gfx::BackendType BackendType() MOZ_OVERRIDE
   {
-    return gfx::BACKEND_CAIRO;
+    return gfx::BackendType::CAIRO;
   }
   virtual void Unlock() MOZ_OVERRIDE;
 
@@ -654,7 +654,7 @@ public:
   virtual gfx::DrawTarget* LockDrawTarget() MOZ_OVERRIDE;
   virtual gfx::BackendType BackendType() MOZ_OVERRIDE
   {
-    return gfx::BACKEND_CAIRO;
+    return gfx::BackendType::CAIRO;
   }
   virtual void Unlock() MOZ_OVERRIDE;
 

@@ -5,7 +5,7 @@
 
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing cleanup of an update download in progress for an " +
               "older version of the application on startup (Bug 485624)");
@@ -32,9 +32,5 @@ function run_test() {
   }
   do_check_eq(gUpdateManager.updateCount, 0);
 
-  do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
+  doTestFinish();
 }

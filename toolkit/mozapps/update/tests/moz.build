@@ -22,7 +22,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
         '%s.cpp' % s for s in SIMPLE_PROGRAMS
     ]
 
-for var in ('MOZ_APP_NAME', 'MOZ_APP_DISPLAYNAME', 'BIN_SUFFIX', 'MOZ_DEBUG'):
+for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
+            'MOZ_APP_VENDOR', 'BIN_SUFFIX', 'MOZ_DEBUG'):
     DEFINES[var] = CONFIG[var]
 
 DEFINES['NS_NO_XPCOM'] = True

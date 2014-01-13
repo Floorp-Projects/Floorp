@@ -44,8 +44,8 @@ struct GradientCacheKey : public PLDHashEntryHdr {
   {
     PLDHashNumber hash = 0;
     FloatUint32 convert;
-    hash = AddToHash(hash, aKey->mBackendType);
-    hash = AddToHash(hash, aKey->mExtend);
+    hash = AddToHash(hash, int(aKey->mBackendType));
+    hash = AddToHash(hash, int(aKey->mExtend));
     for (uint32_t i = 0; i < aKey->mStops.Length(); i++) {
       hash = AddToHash(hash, aKey->mStops[i].color.ToABGR());
       // Use the float bits as hash, except for the cases of 0.0 and -0.0 which both map to 0

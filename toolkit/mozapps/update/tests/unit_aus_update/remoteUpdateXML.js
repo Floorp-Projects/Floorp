@@ -7,7 +7,7 @@ var gNextRunFunc;
 var gExpectedCount;
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing remote update xml attributes");
 
@@ -17,10 +17,6 @@ function run_test() {
   overrideXHR(callHandleEvent);
   standardInit();
   do_execute_soon(run_test_pt01);
-}
-
-function end_test() {
-  cleanupTestCommon();
 }
 
 // Helper function for testing update counts returned from an update xml
@@ -48,8 +44,7 @@ function callHandleEvent() {
     var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(AUS_Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  }
-  catch(e) {
+  } catch (e) {
     gXHR.responseXML = null;
   }
   var e = { target: gXHR };
@@ -99,8 +94,7 @@ function check_test_pt02() {
 //    var formatter = AUS_Cc["@mozilla.org/toolkit/URLFormatterService;1"].
 //                    getService(AUS_Ci.nsIURLFormatter);
 //    defaultDetailsURL = formatter.formatURLPref(PREF_APP_UPDATE_URL_DETAILS);
-//  }
-//  catch (e) {
+//  } catch (e) {
 //    defaultDetailsURL = "";
 //  }
 
@@ -326,5 +320,6 @@ function check_test_pt12() {
   var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   do_check_neq(bestUpdate, null);
   do_check_eq(bestUpdate.displayVersion, "version 1.0");
-  do_test_finished();
+
+  doTestFinish();
 }
