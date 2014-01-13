@@ -9,10 +9,10 @@ function run_test() {
 
 add_test(function test_ril_worker_cellbroadcast_activate() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(id, parcel) {
+    postRILMessage: function(id, parcel) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -48,10 +48,10 @@ add_test(function test_ril_worker_cellbroadcast_activate() {
 add_test(function test_ril_worker_cellbroadcast_config() {
   let currentParcel;
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(id, parcel) {
+    postRILMessage: function(id, parcel) {
       currentParcel = parcel;
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -106,10 +106,10 @@ add_test(function test_ril_worker_cellbroadcast_config() {
 
 add_test(function test_ril_worker_cellbroadcast_merge_config() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(id, parcel) {
+    postRILMessage: function(id, parcel) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });

@@ -506,7 +506,7 @@ RILContentHelper.prototype = {
                                                  Ci.nsIVoicemailProvider,
                                                  Ci.nsIIccProvider]}),
 
-  updateDebugFlag: function updateDebugFlag() {
+  updateDebugFlag: function() {
     try {
       DEBUG = RIL.DEBUG_CONTENT_HELPER ||
               Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
@@ -514,13 +514,13 @@ RILContentHelper.prototype = {
   },
 
   // An utility function to copy objects.
-  updateInfo: function updateInfo(srcInfo, destInfo) {
+  updateInfo: function(srcInfo, destInfo) {
     for (let key in srcInfo) {
       destInfo[key] = srcInfo[key];
     }
   },
 
-  updateConnectionInfo: function updateConnectionInfo(srcInfo, destInfo) {
+  updateConnectionInfo: function(srcInfo, destInfo) {
     for (let key in srcInfo) {
       if ((key != "network") && (key != "cell")) {
         destInfo[key] = srcInfo[key];
@@ -558,7 +558,7 @@ RILContentHelper.prototype = {
    * 1. Should clear iccInfo to null if there is no card detected.
    * 2. Need to create corresponding object based on iccType.
    */
-  updateIccInfo: function updateIccInfo(clientId, newInfo) {
+  updateIccInfo: function(clientId, newInfo) {
     let rilContext = this.rilContexts[clientId];
 
     // Card is not detected, clear iccInfo to null.
@@ -599,7 +599,7 @@ RILContentHelper.prototype = {
 
   rilContexts: null,
 
-  getRilContext: function getRilContext(clientId) {
+  getRilContext: function(clientId) {
     // Update ril contexts by sending IPC message to chrome only when the first
     // time we require it. The information will be updated by following info
     // changed messages.
@@ -629,12 +629,12 @@ RILContentHelper.prototype = {
    * nsIIccProvider
    */
 
-  getIccInfo: function getIccInfo(clientId) {
+  getIccInfo: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.iccInfo;
   },
 
-  getCardState: function getIccInfo(clientId) {
+  getCardState: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.cardState;
   },
@@ -643,39 +643,39 @@ RILContentHelper.prototype = {
    * nsIMobileConnectionProvider
    */
 
-  getLastKnownNetwork: function getLastKnownNetwork(clientId) {
+  getLastKnownNetwork: function(clientId) {
     return cpmm.sendSyncMessage("RIL:GetLastKnownNetwork", {
       clientId: clientId
     })[0];
   },
 
-  getLastKnownHomeNetwork: function getLastKnownHomeNetwork(clientId) {
+  getLastKnownHomeNetwork: function(clientId) {
     return cpmm.sendSyncMessage("RIL:GetLastKnownHomeNetwork", {
       clientId: clientId
     })[0];
   },
 
-  getVoiceConnectionInfo: function getVoiceConnectionInfo(clientId) {
+  getVoiceConnectionInfo: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.voiceConnectionInfo;
   },
 
-  getDataConnectionInfo: function getDataConnectionInfo(clientId) {
+  getDataConnectionInfo: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.dataConnectionInfo;
   },
 
-  getIccId: function getIccId(clientId) {
+  getIccId: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.iccInfo && context.iccInfo.iccid;
   },
 
-  getNetworkSelectionMode: function getNetworkSelectionMode(clientId) {
+  getNetworkSelectionMode: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.networkSelectionMode;
   },
 
-  getRadioState: function getRadioState(clientId) {
+  getRadioState: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.radioState;
   },
@@ -686,7 +686,7 @@ RILContentHelper.prototype = {
    */
   _selectingNetworks: null,
 
-  getNetworks: function getNetworks(clientId, window) {
+  getNetworks: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -704,7 +704,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  selectNetwork: function selectNetwork(clientId, window, network) {
+  selectNetwork: function(clientId, window, network) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -752,7 +752,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  selectNetworkAutomatically: function selectNetworkAutomatically(clientId, window) {
+  selectNetworkAutomatically: function(clientId, window) {
 
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -783,7 +783,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setPreferredNetworkType: function setPreferredNetworkType(clientId, window, type) {
+  setPreferredNetworkType: function(clientId, window, type) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -802,7 +802,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getPreferredNetworkType: function getPreferredNetworkType(clientId, window) {
+  getPreferredNetworkType: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -820,7 +820,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setRoamingPreference: function setRoamingPreference(clientId, window, mode) {
+  setRoamingPreference: function(clientId, window, mode) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -845,7 +845,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getRoamingPreference: function getRoamingPreference(clientId, window) {
+  getRoamingPreference: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -863,7 +863,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setVoicePrivacyMode: function setVoicePrivacyMode(clientId, window, enabled) {
+  setVoicePrivacyMode: function(clientId, window, enabled) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -882,7 +882,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getVoicePrivacyMode: function getVoicePrivacyMode(clientId, window) {
+  getVoicePrivacyMode: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -900,7 +900,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCardLockState: function getCardLockState(clientId, window, lockType) {
+  getCardLockState: function(clientId, window, lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -919,7 +919,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  unlockCardLock: function unlockCardLock(clientId, window, info) {
+  unlockCardLock: function(clientId, window, info) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -935,7 +935,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setCardLock: function setCardLock(clientId, window, info) {
+  setCardLock: function(clientId, window, info) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -951,7 +951,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCardLockRetryCount: function getCardLockRetryCount(clientId,
+  getCardLockRetryCount: function(clientId,
                                                         window,
                                                         lockType) {
     if (window == null) {
@@ -970,7 +970,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  sendMMI: function sendMMI(clientId, window, mmi) {
+  sendMMI: function(clientId, window, mmi) {
     if (DEBUG) debug("Sending MMI " + mmi);
     if (!window) {
       throw Components.Exception("Can't get window object",
@@ -992,7 +992,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  cancelMMI: function cancelMMI(clientId, window) {
+  cancelMMI: function(clientId, window) {
     if (DEBUG) debug("Cancel MMI");
     if (!window) {
       throw Components.Exception("Can't get window object",
@@ -1009,7 +1009,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  sendStkResponse: function sendStkResponse(clientId, window, command, response) {
+  sendStkResponse: function(clientId, window, command, response) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1021,7 +1021,7 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkMenuSelection: function sendStkMenuSelection(clientId,
+  sendStkMenuSelection: function(clientId,
                                                       window,
                                                       itemIdentifier,
                                                       helpRequested) {
@@ -1038,7 +1038,7 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkTimerExpiration: function sendStkTimerExpiration(clientId,
+  sendStkTimerExpiration: function(clientId,
                                                           window,
                                                           timer) {
     if (window == null) {
@@ -1053,7 +1053,7 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkEventDownload: function sendStkEventDownload(clientId, window, event) {
+  sendStkEventDownload: function(clientId, window, event) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1066,7 +1066,7 @@ RILContentHelper.prototype = {
     });
   },
 
-  iccOpenChannel: function iccOpenChannel(clientId, window, aid) {
+  iccOpenChannel: function(clientId, window, aid) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1085,7 +1085,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  iccExchangeAPDU: function iccExchangeAPDU(clientId, window, channel, apdu) {
+  iccExchangeAPDU: function(clientId, window, channel, apdu) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1106,7 +1106,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  iccCloseChannel: function iccCloseChannel(clientId, window, channel) {
+  iccCloseChannel: function(clientId, window, channel) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1125,7 +1125,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  readContacts: function readContacts(clientId, window, contactType) {
+  readContacts: function(clientId, window, contactType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1145,7 +1145,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  updateContact: function updateContact(clientId, window, contactType, contact, pin2) {
+  updateContact: function(clientId, window, contactType, contact, pin2) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1193,7 +1193,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCallForwardingOption: function getCallForwardingOption(clientId, window, reason) {
+  getCallForwardingOption: function(clientId, window, reason) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1218,7 +1218,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setCallForwardingOption: function setCallForwardingOption(clientId, window, cfInfo) {
+  setCallForwardingOption: function(clientId, window, cfInfo) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1249,7 +1249,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCallBarringOption: function getCallBarringOption(clientId, window, option) {
+  getCallBarringOption: function(clientId, window, option) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1276,7 +1276,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setCallBarringOption: function setCallBarringOption(clientId, window, option) {
+  setCallBarringOption: function(clientId, window, option) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1304,7 +1304,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  changeCallBarringPassword: function changeCallBarringPassword(clientId, window, info) {
+  changeCallBarringPassword: function(clientId, window, info) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1329,7 +1329,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCallWaitingOption: function getCallWaitingOption(clientId, window) {
+  getCallWaitingOption: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1347,7 +1347,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setCallWaitingOption: function setCallWaitingOption(clientId, window, enabled) {
+  setCallWaitingOption: function(clientId, window, enabled) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1366,7 +1366,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCallingLineIdRestriction: function getCallingLineIdRestriction(clientId, window) {
+  getCallingLineIdRestriction: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1384,8 +1384,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setCallingLineIdRestriction:
-    function setCallingLineIdRestriction(clientId, window, clirMode) {
+  setCallingLineIdRestriction: function(clientId, window, clirMode) {
 
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -1405,7 +1404,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  exitEmergencyCbMode: function exitEmergencyCbMode(clientId, window) {
+  exitEmergencyCbMode: function(clientId, window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1423,7 +1422,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  setRadioEnabled: function setRadioEnabled(clientId, window, enabled) {
+  setRadioEnabled: function(clientId, window, enabled) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1451,7 +1450,7 @@ RILContentHelper.prototype = {
   voicemailStatuses: null,
 
   voicemailDefaultServiceId: 0,
-  getVoicemailDefaultServiceId: function getVoicemailDefaultServiceId() {
+  getVoicemailDefaultServiceId: function() {
     let id = Services.prefs.getIntPref(kPrefVoicemailDefaultServiceId);
 
     if (id >= gNumRadioInterfaces || id < 0) {
@@ -1461,7 +1460,7 @@ RILContentHelper.prototype = {
     return id;
   },
 
-  getVoicemailInfo: function getVoicemailInfo(clientId) {
+  getVoicemailInfo: function(clientId) {
     // Get voicemail infomation by IPC only on first time.
     this.getVoicemailInfo = function getVoicemailInfo(clientId) {
       return this.voicemailInfos[clientId];
@@ -1478,19 +1477,19 @@ RILContentHelper.prototype = {
     return this.voicemailInfos[clientId];
   },
 
-  getVoicemailNumber: function getVoicemailNumber(clientId) {
+  getVoicemailNumber: function(clientId) {
     return this.getVoicemailInfo(clientId).number;
   },
 
-  getVoicemailDisplayName: function getVoicemailDisplayName(clientId) {
+  getVoicemailDisplayName: function(clientId) {
     return this.getVoicemailInfo(clientId).displayName;
   },
 
-  getVoicemailStatus: function getVoicemailStatus(clientId) {
+  getVoicemailStatus: function(clientId) {
     return this.voicemailStatuses[clientId];
   },
 
-  registerListener: function registerListener(listenerType, clientId, listener) {
+  registerListener: function(listenerType, clientId, listener) {
     if (!this[listenerType]) {
       return;
     }
@@ -1507,7 +1506,7 @@ RILContentHelper.prototype = {
     if (DEBUG) debug("Registered " + listenerType + " listener: " + listener);
   },
 
-  unregisterListener: function unregisterListener(listenerType, clientId, listener) {
+  unregisterListener: function(listenerType, clientId, listener) {
     if (!this[listenerType]) {
       return;
     }
@@ -1523,17 +1522,17 @@ RILContentHelper.prototype = {
     }
   },
 
-  registerMobileConnectionMsg: function registerMobileConnectionMsg(clientId, listener) {
+  registerMobileConnectionMsg: function(clientId, listener) {
     if (DEBUG) debug("Registering for mobile connection related messages");
     this.registerListener("_mobileConnectionListeners", clientId, listener);
     cpmm.sendAsyncMessage("RIL:RegisterMobileConnectionMsg");
   },
 
-  unregisterMobileConnectionMsg: function unregisteMobileConnectionMsg(clientId, listener) {
+  unregisterMobileConnectionMsg: function(clientId, listener) {
     this.unregisterListener("_mobileConnectionListeners", clientId, listener);
   },
 
-  registerVoicemailMsg: function registerVoicemailMsg(listener) {
+  registerVoicemailMsg: function(listener) {
     if (DEBUG) debug("Registering for voicemail-related messages");
     // To follow the listener registration scheme, we add a dummy clientId 0.
     // All voicemail events are routed to listener for client id 0.
@@ -1542,38 +1541,38 @@ RILContentHelper.prototype = {
     cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
   },
 
-  unregisterVoicemailMsg: function unregisteVoicemailMsg(listener) {
+  unregisterVoicemailMsg: function(listener) {
     // To follow the listener unregistration scheme, we add a dummy clientId 0.
     // All voicemail events are routed to listener for client id 0.
     // See |handleVoicemailNotification|.
     this.unregisterListener("_voicemailListeners", 0, listener);
   },
 
-  registerCellBroadcastMsg: function registerCellBroadcastMsg(listener) {
+  registerCellBroadcastMsg: function(listener) {
     if (DEBUG) debug("Registering for Cell Broadcast related messages");
     //TODO: Bug 921326 - Cellbroadcast API: support multiple sim cards
     this.registerListener("_cellBroadcastListeners", 0, listener);
     cpmm.sendAsyncMessage("RIL:RegisterCellBroadcastMsg");
   },
 
-  unregisterCellBroadcastMsg: function unregisterCellBroadcastMsg(listener) {
+  unregisterCellBroadcastMsg: function(listener) {
     //TODO: Bug 921326 - Cellbroadcast API: support multiple sim cards
     this.unregisterListener("_cellBroadcastListeners", 0, listener);
   },
 
-  registerIccMsg: function registerIccMsg(clientId, listener) {
+  registerIccMsg: function(clientId, listener) {
     if (DEBUG) debug("Registering for ICC related messages");
     this.registerListener("_iccListeners", clientId, listener);
     cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
   },
 
-  unregisterIccMsg: function unregisterIccMsg(clientId, listener) {
+  unregisterIccMsg: function(clientId, listener) {
     this.unregisterListener("_iccListeners", clientId, listener);
   },
 
   // nsIObserver
 
-  observe: function observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (data == kPrefRilDebuggingEnabled) {
@@ -1592,7 +1591,7 @@ RILContentHelper.prototype = {
 
   // nsIMessageListener
 
-  fireRequestSuccess: function fireRequestSuccess(requestId, result) {
+  fireRequestSuccess: function(requestId, result) {
     let request = this.takeRequest(requestId);
     if (!request) {
       if (DEBUG) {
@@ -1609,14 +1608,14 @@ RILContentHelper.prototype = {
     Services.DOMRequest.fireSuccess(request, result);
   },
 
-  dispatchFireRequestSuccess: function dispatchFireRequestSuccess(requestId, result) {
+  dispatchFireRequestSuccess: function(requestId, result) {
     let currentThread = Services.tm.currentThread;
 
     currentThread.dispatch(this.fireRequestSuccess.bind(this, requestId, result),
                            Ci.nsIThread.DISPATCH_NORMAL);
   },
 
-  fireRequestError: function fireRequestError(requestId, error) {
+  fireRequestError: function(requestId, error) {
     let request = this.takeRequest(requestId);
     if (!request) {
       if (DEBUG) {
@@ -1633,14 +1632,14 @@ RILContentHelper.prototype = {
     Services.DOMRequest.fireError(request, error);
   },
 
-  dispatchFireRequestError: function dispatchFireRequestError(requestId, error) {
+  dispatchFireRequestError: function(requestId, error) {
     let currentThread = Services.tm.currentThread;
 
     currentThread.dispatch(this.fireRequestError.bind(this, requestId, error),
                            Ci.nsIThread.DISPATCH_NORMAL);
   },
 
-  fireRequestDetailedError: function fireRequestDetailedError(requestId, detailedError) {
+  fireRequestDetailedError: function(requestId, detailedError) {
     let request = this.takeRequest(requestId);
     if (!request) {
       if (DEBUG) {
@@ -1653,7 +1652,7 @@ RILContentHelper.prototype = {
     Services.DOMRequest.fireDetailedError(request, detailedError);
   },
 
-  receiveMessage: function receiveMessage(msg) {
+  receiveMessage: function(msg) {
     let request;
     if (DEBUG) {
       debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
@@ -1873,7 +1872,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleSimpleRequest: function handleSimpleRequest(requestId, errorMsg, result) {
+  handleSimpleRequest: function(requestId, errorMsg, result) {
     if (errorMsg) {
       this.fireRequestError(requestId, errorMsg);
     } else {
@@ -1881,7 +1880,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
+  handleGetAvailableNetworks: function(message) {
     if (DEBUG) debug("handleGetAvailableNetworks: " + JSON.stringify(message));
     if (message.errorMsg) {
       if (DEBUG) {
@@ -1902,7 +1901,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, networks);
   },
 
-  handleSelectNetwork: function handleSelectNetwork(clientId, message, mode) {
+  handleSelectNetwork: function(clientId, message, mode) {
     this._selectingNetworks[clientId] = null;
     this.rilContexts[clientId].networkSelectionMode = mode;
 
@@ -1913,7 +1912,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleIccExchangeAPDU: function handleIccExchangeAPDU(message) {
+  handleIccExchangeAPDU: function(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
     } else {
@@ -1922,7 +1921,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleReadIccContacts: function handleReadIccContacts(message) {
+  handleReadIccContacts: function(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
@@ -1952,7 +1951,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, result);
   },
 
-  handleUpdateIccContact: function handleUpdateIccContact(message) {
+  handleUpdateIccContact: function(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
@@ -1978,7 +1977,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, contact);
   },
 
-  handleVoicemailNotification: function handleVoicemailNotification(clientId,
+  handleVoicemailNotification: function(clientId,
                                                                     message) {
     let changed = false;
     if (!this.voicemailStatuses[clientId]) {
@@ -2019,7 +2018,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  _cfRulesToMobileCfInfo: function _cfRulesToMobileCfInfo(rules) {
+  _cfRulesToMobileCfInfo: function(rules) {
     for (let i = 0; i < rules.length; i++) {
       let rule = rules[i];
       let info = new MobileCFInfo();
@@ -2028,7 +2027,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleGetCallForwardingOptions: function handleGetCallForwardingOptions(message) {
+  handleGetCallForwardingOptions: function(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
@@ -2038,7 +2037,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, message.rules);
   },
 
-  handleGetCallBarringOptions: function handleGetCallBarringOptions(message) {
+  handleGetCallBarringOptions: function(message) {
     if (!message.success) {
       this.fireRequestError(message.requestId, message.errorMsg);
     } else {
@@ -2047,8 +2046,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleGetCallingLineIdRestriction:
-    function handleGetCallingLineIdRestriction(message) {
+  handleGetCallingLineIdRestriction: function(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
@@ -2058,7 +2056,7 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, status);
   },
 
-  handleExitEmergencyCbMode: function handleExitEmergencyCbMode(message) {
+  handleExitEmergencyCbMode: function(message) {
     let requestId = message.requestId;
     let request = this.takeRequest(requestId);
     if (!request) {
@@ -2072,7 +2070,7 @@ RILContentHelper.prototype = {
     Services.DOMRequest.fireSuccess(request, null);
   },
 
-  handleSendCancelMMI: function handleSendCancelMMI(message) {
+  handleSendCancelMMI: function(message) {
     if (DEBUG) debug("handleSendCancelMMI " + JSON.stringify(message));
     let request = this.takeRequest(message.requestId);
     let requestWindow = this._windowsMap[message.requestId];
@@ -2119,7 +2117,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  _deliverEvent: function _deliverEvent(clientId, listenerType, name, args) {
+  _deliverEvent: function(clientId, listenerType, name, args) {
     if (!this[listenerType]) {
       return;
     }
@@ -2148,7 +2146,7 @@ RILContentHelper.prototype = {
   /**
    * Helper for guarding us again invalid reason values for call forwarding.
    */
-  _isValidCFReason: function _isValidCFReason(reason) {
+  _isValidCFReason: function(reason) {
     switch (reason) {
       case Ci.nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_UNCONDITIONAL:
       case Ci.nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_MOBILE_BUSY:
@@ -2165,7 +2163,7 @@ RILContentHelper.prototype = {
   /**
    * Helper for guarding us again invalid action values for call forwarding.
    */
-  _isValidCFAction: function _isValidCFAction(action) {
+  _isValidCFAction: function(action) {
     switch (action) {
       case Ci.nsIDOMMozMobileCFInfo.CALL_FORWARD_ACTION_DISABLE:
       case Ci.nsIDOMMozMobileCFInfo.CALL_FORWARD_ACTION_ENABLE:
@@ -2180,7 +2178,7 @@ RILContentHelper.prototype = {
   /**
    * Helper for guarding us against invalid program values for call barring.
    */
-  _isValidCallBarringProgram: function _isValidCallBarringProgram(program) {
+  _isValidCallBarringProgram: function(program) {
     switch (program) {
       case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING:
       case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL:
@@ -2196,8 +2194,7 @@ RILContentHelper.prototype = {
   /**
    * Helper for guarding us against invalid options for call barring.
    */
-  _isValidCallBarringOptions:
-      function _isValidCallBarringOptions(options, usedForSetting) {
+  _isValidCallBarringOptions: function(options, usedForSetting) {
     if (!options ||
         options.serviceClass == null ||
         !this._isValidCallBarringProgram(options.program)) {

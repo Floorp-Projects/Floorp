@@ -290,10 +290,10 @@ add_test(function test_read_cdmaspn() {
  */
 add_test(function test_cdma_spn_display_condition() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
