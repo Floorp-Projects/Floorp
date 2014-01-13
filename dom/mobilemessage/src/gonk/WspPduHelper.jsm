@@ -2481,7 +2481,7 @@ this.PduHelper = {
 //       Deprecated items should only be supported for backward compatibility
 //       purpose.
 // @see WAP-230-WSP-20010705-a Appendix A. Assigned Numbers.
-this.WSP_HEADER_FIELDS = (function () {
+this.WSP_HEADER_FIELDS = (function() {
   let names = {};
   function add(name, number, coder) {
     let entry = {
@@ -2577,7 +2577,7 @@ this.WSP_HEADER_FIELDS = (function () {
 
 // WSP Content Type Assignments
 // @see http://www.openmobilealliance.org/tech/omna/omna-wsp-content-type.aspx
-this.WSP_WELL_KNOWN_CONTENT_TYPES = (function () {
+this.WSP_WELL_KNOWN_CONTENT_TYPES = (function() {
   let types = {};
 
   function add(type, number) {
@@ -2702,7 +2702,7 @@ this.WSP_WELL_KNOWN_CONTENT_TYPES = (function () {
 // Note: Items commented out are either deprecated or not implemented.
 //       Deprecated items should not be used.
 // @see WAP-230-WSP-20010705-a Appendix A. Assigned Numbers.
-this.WSP_WELL_KNOWN_PARAMS = (function () {
+this.WSP_WELL_KNOWN_PARAMS = (function() {
   let params = {};
 
   function add(name, number, coder) {
@@ -2757,7 +2757,7 @@ this.WSP_WELL_KNOWN_PARAMS = (function () {
 // WSP Character Set Assignments
 // @see WAP-230-WSP-20010705-a Appendix A. Assigned Numbers.
 // @see http://www.iana.org/assignments/character-sets
-this.WSP_WELL_KNOWN_CHARSETS = (function () {
+this.WSP_WELL_KNOWN_CHARSETS = (function() {
   let charsets = {};
 
   function add(name, number, converter) {
@@ -2804,7 +2804,7 @@ this.WSP_WELL_KNOWN_CHARSETS = (function () {
 
 // OMNA PUSH Application ID
 // @see http://www.openmobilealliance.org/tech/omna/omna-push-app-id.aspx
-this.OMNA_PUSH_APPLICATION_IDS = (function () {
+this.OMNA_PUSH_APPLICATION_IDS = (function() {
   let ids = {};
 
   function add(urn, number) {
@@ -2824,11 +2824,11 @@ this.OMNA_PUSH_APPLICATION_IDS = (function () {
 
 let debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump("-@- WspPduHelper: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }
 
 this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([

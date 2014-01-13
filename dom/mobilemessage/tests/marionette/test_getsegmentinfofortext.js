@@ -47,7 +47,7 @@ let tasks = {
 };
 
 function addTest(text, segments, charsPerSegment, charsAvailableInLastSegment) {
-  tasks.push(function () {
+  tasks.push(function() {
     log("Testing '" + text + "' ...");
     let domRequest = manager.getSegmentInfoForText(text);
     ok(domRequest, "DOMRequest object returned.");
@@ -78,7 +78,7 @@ function addTest(text, segments, charsPerSegment, charsAvailableInLastSegment) {
 }
 
 function addTestThrows(text) {
-  tasks.push(function () {
+  tasks.push(function() {
     log("Testing '" + text + "' ...");
     try {
       let domRequest = manager.getSegmentInfoForText(text);

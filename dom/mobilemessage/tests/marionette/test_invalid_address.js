@@ -71,7 +71,7 @@ function deleteAllMessages() {
 
     let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       ok(false, "failed to delete all messages");
       tasks.finish();
     }
@@ -112,7 +112,7 @@ function testInvalidAddressForMMS(aInvalidAddrs)  {
   };
 }
 
-tasks.push(function () {
+tasks.push(function() {
   log("Verifying initial state.");
 
   manager = window.navigator.mozMobileMessage;

@@ -15,15 +15,15 @@ function newUint8Worker() {
   let index = 0; // index for read
   let buf = [];
 
-  worker.Buf.writeUint8 = function (value) {
+  worker.Buf.writeUint8 = function(value) {
     buf.push(value);
   };
 
-  worker.Buf.readUint8 = function () {
+  worker.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function (offset) {
+  worker.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 
@@ -77,19 +77,19 @@ add_test(function test_fetch_ruim_recodes() {
   function testFetchRuimRecordes(expectCalled) {
     let ifCalled = [];
 
-    ruimHelper.getIMSI_M = function () {
+    ruimHelper.getIMSI_M = function() {
       ifCalled.push("getIMSI_M");
     };
 
-    ruimHelper.readCST = function () {
+    ruimHelper.readCST = function() {
       ifCalled.push("readCST");
     };
 
-    ruimHelper.readCDMAHome = function () {
+    ruimHelper.readCDMAHome = function() {
       ifCalled.push("readCDMAHome");
     };
 
-    RIL.getCdmaSubscription = function () {
+    RIL.getCdmaSubscription = function() {
       ifCalled.push("getCdmaSubscription");
     };
 

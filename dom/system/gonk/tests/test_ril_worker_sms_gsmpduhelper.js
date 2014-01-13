@@ -22,7 +22,7 @@ add_test(function test_GsmPDUHelper_readDataCodingScheme() {
 
   let helper = worker.GsmPDUHelper;
   function test_dcs(dcs, encoding, messageClass, mwi) {
-    helper.readHexOctet = function () {
+    helper.readHexOctet = function() {
       return dcs;
     }
 
@@ -160,10 +160,10 @@ add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
   });
 
   let helper = worker.GsmPDUHelper;
-  helper.resetOctetWritten = function () {
+  helper.resetOctetWritten = function() {
     helper.octetsWritten = 0;
   };
-  helper.writeHexOctet = function () {
+  helper.writeHexOctet = function() {
     helper.octetsWritten++;
   };
 
@@ -207,7 +207,7 @@ add_test(function test_GsmPDUHelper_readAddress() {
       uint16Array[i] = addrHex[i].charCodeAt();
     }
 
-    worker.Buf.readUint16 = function (){
+    worker.Buf.readUint16 = function(){
       if(ix >= uint16Array.length) {
         do_throw("out of range in uint16Array");
       }

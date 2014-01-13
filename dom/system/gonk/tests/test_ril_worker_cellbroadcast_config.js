@@ -71,7 +71,7 @@ add_test(function test_ril_worker_cellbroadcast_config() {
                             : REQUEST_GSM_SET_BROADCAST_SMS_CONFIG;
 
     let found = false;
-    worker.postRILMessage = function (id, parcel) {
+    worker.postRILMessage = function(id, parcel) {
       u32Parcel = U32ArrayFromParcelArray(Array.slice(parcel));
       if (u32Parcel[1] != parcelType) {
         return;

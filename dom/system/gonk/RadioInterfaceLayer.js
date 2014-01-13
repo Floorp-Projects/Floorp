@@ -193,19 +193,19 @@ XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyProvider",
                                    "@mozilla.org/telephony/telephonyprovider;1",
                                    "nsIGonkTelephonyProvider");
 
-XPCOMUtils.defineLazyGetter(this, "WAP", function () {
+XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
   return wap;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function () {
+XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function() {
   let ns = {};
   Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
   return ns.PhoneNumberUtils;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
+XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
   return {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
                                            Ci.nsIObserver]),
@@ -499,7 +499,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
   };
 });
 
-XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
+XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
   return {
     ril: null,
     pendingMessages: [],  // For queueing "RIL:SetRadioEnabled" messages.
@@ -626,7 +626,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
 // Initialize shared preference "ril.numRadioInterfaces" according to system
 // property.
 try {
-  Services.prefs.setIntPref(kPrefRilNumRadioInterfaces, (function () {
+  Services.prefs.setIntPref(kPrefRilNumRadioInterfaces, (function() {
     // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
     // explicitly set to any number larger-equal than 0, return num; else, return
     // 1 for compatibility.
@@ -868,7 +868,7 @@ RadioInterfaceLayer.prototype = {
     oldRadioInterface.dataCallSettings.enabled = false;
 
     if (oldRadioInterface.anyDataConnected()) {
-      this._pendingDataCallRequest = function () {
+      this._pendingDataCallRequest = function() {
         if (DEBUG) debug("Executing pending data call request.");
         let newRadioInterface = this.radioInterfaces[this._dataDefaultClientId];
         if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
@@ -935,7 +935,7 @@ RadioInterfaceLayer.prototype = {
 };
 
 XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
-                            "numRadioInterfaces", function () {
+                            "numRadioInterfaces", function() {
   try {
     return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
   } catch(e) {}
@@ -3722,7 +3722,7 @@ RadioInterface.prototype = {
 
   sendWorkerMessage: function sendWorkerMessage(rilMessageType, message,
                                                 callback) {
-    this.workerMessenger.send(rilMessageType, message, function (response) {
+    this.workerMessenger.send(rilMessageType, message, function(response) {
       return callback.handleResponse(response);
     });
   }
