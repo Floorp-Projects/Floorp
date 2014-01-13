@@ -151,24 +151,39 @@ DrawTargetSkia::PurgeAllCaches()
 
 #endif
 
-static SkBitmap
-GetBitmapForSurface(SourceSurface *aSurface)
+/**
+ * When constructing a temporary SkBitmap via GetBitmapForSurface, we may also
+ * have to construct a temporary DataSourceSurface, which must live as long as
+ * the SkBitmap. So we return a pair of the SkBitmap and the (optional)
+ * temporary surface.
+ */
+struct TempBitmap
 {
-  switch (aSurface->GetType()) {
-  case SurfaceType::SKIA:
-    return static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
-  case SurfaceType::DATA:
-    {
-      DataSourceSurface* surf = static_cast<DataSourceSurface*>(aSurface);
-      SkBitmap tmp;
-      tmp.setConfig(GfxFormatToSkiaConfig(surf->GetFormat()),
-                    surf->GetSize().width, surf->GetSize().height, surf->Stride());
-      tmp.setPixels(surf->GetData());
-      return tmp;
-    }
-  default:
+  SkBitmap mBitmap;
+  RefPtr<SourceSurface> mTmpSurface;
+};
+
+static TempBitmap
+GetBitmapForSurface(SourceSurface* aSurface)
+{
+  TempBitmap result;
+
+  if (aSurface->GetType() == SurfaceType::SKIA) {
+    result.mBitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
+    return result;
+  }
+
+  RefPtr<DataSourceSurface> surf = aSurface->GetDataSurface();
+  if (!surf) {
     MOZ_CRASH("Non-skia SourceSurfaces need to be DataSourceSurfaces");
   }
+
+  result.mBitmap.setConfig(GfxFormatToSkiaConfig(surf->GetFormat()),
+                                 surf->GetSize().width, surf->GetSize().height,
+                                 surf->Stride());
+  result.mBitmap.setPixels(surf->GetData());
+  result.mTmpSurface = surf.forget();
+  return result;
 }
 
 DrawTargetSkia::DrawTargetSkia()
@@ -197,7 +212,9 @@ DrawTargetSkia::Snapshot()
   return snapshot;
 }
 
-void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
+static void
+SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, TempBitmap& aTmpBitmap,
+                Float aAlpha = 1.0)
 {
   switch (aPattern.GetType()) {
     case PatternType::COLOR: {
@@ -265,7 +282,8 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
     }
     case PatternType::SURFACE: {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
-      const SkBitmap& bitmap = GetBitmapForSurface(pat.mSurface);
+      aTmpBitmap = GetBitmapForSurface(pat.mSurface);
+      const SkBitmap& bitmap = aTmpBitmap.mBitmap;
 
       SkShader::TileMode mode = ExtendModeToTileMode(pat.mExtendMode);
       SkShader* shader = SkShader::CreateBitmapShader(bitmap, mode, mode);
@@ -286,7 +304,7 @@ struct AutoPaintSetup {
     : mNeedsRestore(false), mAlpha(1.0)
   {
     Init(aCanvas, aOptions);
-    SetPaintPattern(mPaint, aPattern, mAlpha);
+    SetPaintPattern(mPaint, aPattern, mTmpBitmap, mAlpha);
   }
 
   AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions)
@@ -334,6 +352,7 @@ struct AutoPaintSetup {
 
   // TODO: Maybe add an operator overload to access this easier?
   SkPaint mPaint;
+  TempBitmap mTmpBitmap;
   bool mNeedsRestore;
   SkCanvas* mCanvas;
   Float mAlpha;
@@ -374,7 +393,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   SkRect sourceBoundingRect = RectToSkRect(boundingSource);
   SkIRect sourceBoundingIRect = RectToSkIRect(boundingSource);
 
-  const SkBitmap& bitmap = GetBitmapForSurface(aSurface);
+  TempBitmap bitmap = GetBitmapForSurface(aSurface);
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
   if (aSurfOptions.mFilter == Filter::POINT) {
@@ -394,7 +413,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
     rectTransform.mapRect(&destRect);
   }
 
-  mCanvas->drawBitmapRect(bitmap, &sourceBoundingIRect, destRect, &paint.mPaint);
+  mCanvas->drawBitmapRect(bitmap.mBitmap, &sourceBoundingIRect, destRect, &paint.mPaint);
 
   if (!integerAligned) {
     mCanvas->restore();
@@ -425,8 +444,9 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   uint32_t blurFlags = SkBlurMaskFilter::kHighQuality_BlurFlag |
                        SkBlurMaskFilter::kIgnoreTransform_BlurFlag;
-  const SkBitmap& bitmap = GetBitmapForSurface(aSurface);
-  SkShader* shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
+  TempBitmap bitmap = GetBitmapForSurface(aSurface);
+  SkShader* shader = SkShader::CreateBitmapShader(bitmap.mBitmap,
+    SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
   SkMatrix matrix;
   matrix.reset();
   matrix.setTranslateX(SkFloatToScalar(aDest.x));
@@ -470,7 +490,7 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
   SkSafeUnref(paint.setLooper(dl));
 
   SkRect rect = RectToSkRect(Rect(Float(aDest.x), Float(aDest.y),
-                                  Float(bitmap.width()), Float(bitmap.height())));
+                                  Float(bitmap.mBitmap.width()), Float(bitmap.mBitmap.height())));
   mCanvas->drawRect(rect, paint);
   mCanvas->restore();
 }
@@ -628,7 +648,8 @@ DrawTargetSkia::Mask(const Pattern &aSource,
   AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
 
   SkPaint maskPaint;
-  SetPaintPattern(maskPaint, aMask);
+  TempBitmap tmpBitmap;
+  SetPaintPattern(maskPaint, aMask, tmpBitmap);
   
   SkLayerRasterizer *raster = new SkLayerRasterizer();
   raster->addLayer(maskPaint);
@@ -647,7 +668,8 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
   AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
 
   SkPaint maskPaint;
-  SetPaintPattern(maskPaint, SurfacePattern(aMask, ExtendMode::CLAMP));
+  TempBitmap tmpBitmap;
+  SetPaintPattern(maskPaint, SurfacePattern(aMask, ExtendMode::CLAMP), tmpBitmap);
 
   SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
   transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
@@ -726,7 +748,7 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
 
   MarkChanged();
 
-  const SkBitmap& bitmap = GetBitmapForSurface(aSurface);
+  TempBitmap bitmap = GetBitmapForSurface(aSurface);
 
   mCanvas->save();
   mCanvas->resetMatrix();
@@ -744,7 +766,7 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
     paint.setXfermodeMode(SkXfermode::kSrc_Mode);
   }
 
-  mCanvas->drawBitmapRect(bitmap, &source, dest, &paint);
+  mCanvas->drawBitmapRect(bitmap.mBitmap, &source, dest, &paint);
   mCanvas->restore();
 }
 
