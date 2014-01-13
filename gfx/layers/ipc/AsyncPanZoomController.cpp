@@ -242,11 +242,6 @@ static int gAsyncScrollThrottleTime = 100;
 static int gAsyncScrollTimeout = 300;
 
 /**
- * Temporary pref for disabling zoom in metrofx on aurora.
- */
-static bool gAsyncZoomDisabled = false;
-
-/**
  * Pref that enables integration with the Metro "cross-slide" gesture.
  */
 static bool gCrossSlideEnabled = false;
@@ -375,7 +370,6 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddFloatVarCache(&gYStationarySizeMultiplier, "apz.y_stationary_size_multiplier", gYStationarySizeMultiplier);
   Preferences::AddIntVarCache(&gAsyncScrollThrottleTime, "apz.asyncscroll.throttle", gAsyncScrollThrottleTime);
   Preferences::AddIntVarCache(&gAsyncScrollTimeout, "apz.asyncscroll.timeout", gAsyncScrollTimeout);
-  Preferences::AddBoolVarCache(&gAsyncZoomDisabled, "apz.asynczoom.disabled", gAsyncZoomDisabled);
   Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
   Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
   gUseProgressiveTilePainting = gfxPlatform::UseProgressiveTilePainting();
@@ -399,7 +393,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mTouchListenerTimeoutTask(nullptr),
      mX(MOZ_THIS_IN_INITIALIZER_LIST()),
      mY(MOZ_THIS_IN_INITIALIZER_LIST()),
-     mZoomConstraints(true, MIN_ZOOM, MAX_ZOOM),
+     mZoomConstraints(false, MIN_ZOOM, MAX_ZOOM),
      mLastSampleTime(GetFrameTime()),
      mState(NOTHING),
      mLastAsyncScrollTime(GetFrameTime()),
@@ -416,9 +410,6 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
 
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
-  }
-  if (gAsyncZoomDisabled) {
-    mZoomConstraints.mAllowZoom = false;
   }
 }
 
@@ -1652,9 +1643,8 @@ void AsyncPanZoomController::TimeoutTouchListeners() {
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
-  if (gAsyncZoomDisabled) {
-    return;
-  }
+  APZC_LOG("%p updating zoom constraints to %d %f %f\n", this, aConstraints.mAllowZoom,
+    aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
   mZoomConstraints.mAllowZoom = aConstraints.mAllowZoom;
   mZoomConstraints.mMinZoom = (MIN_ZOOM > aConstraints.mMinZoom ? MIN_ZOOM : aConstraints.mMinZoom);
   mZoomConstraints.mMaxZoom = (MAX_ZOOM > aConstraints.mMaxZoom ? aConstraints.mMaxZoom : MAX_ZOOM);
