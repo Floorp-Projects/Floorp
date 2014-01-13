@@ -30,11 +30,20 @@ import android.view.View.OnKeyListener;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 
+/**
+* {@code ToolbarEditText} is the text entry used when the toolbar
+* is in edit state. It handles all the necessary input method machinery
+* as well as the tracking of different text types (empty, search, or url).
+* It's meant to be owned by {@code ToolbarEditLayout}.
+*/
 public class ToolbarEditText extends CustomEditText
                              implements AutocompleteHandler {
 
     private static final String LOGTAG = "GeckoToolbarEditText";
 
+    // Used to track the current type of content in the
+    // text entry so that ToolbarEditLayout can update its
+    // state accordingly.
     enum TextType {
         EMPTY,
         SEARCH_QUERY,

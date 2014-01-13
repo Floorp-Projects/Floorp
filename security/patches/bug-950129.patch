@@ -1,0 +1,195 @@
+# HG changeset patch
+# Parent 352d188c67d9fefd82524c4439a5d04679687945
+# User Brian Smith <brian@briansmith.org>
+diff --git a/security/nss/lib/certdb/certi.h b/security/nss/lib/certdb/certi.h
+--- a/security/nss/lib/certdb/certi.h
++++ b/security/nss/lib/certdb/certi.h
+@@ -256,16 +256,38 @@ void ReleaseDPCache(CRLDPCache* dpcache,
+ 
+ /*
+  * map Stan errors into NSS errors
+  * This function examines the stan error stack and automatically sets
+  * PORT_SetError(); to the appropriate SEC_ERROR value.
+  */
+ void CERT_MapStanError();
+ 
++/* Like CERT_VerifyCert, except with an additional argument, flags. The
++ * flags are defined immediately below.
++ *
++ * OCSP checking is always skipped when certUsage is certUsageStatusResponder.
++ */
++SECStatus
++cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
++                         PRBool checkSig, SECCertUsage certUsage, PRTime t,
++                         PRUint32 flags, void *wincx, CERTVerifyLog *log);
++
++/* Use the default settings.
++ * cert_VerifyCertWithFlags(..., CERT_VERIFYCERT_USE_DEFAULTS) is equivalent
++ * to CERT_VerifyCert(...);
++ */
++#define CERT_VERIFYCERT_USE_DEFAULTS 0
++
++/* Skip all the OCSP checks during certificate verification, regardless of
++ * the global OCSP settings. By default, certificate |cert| will have its
++ * revocation status checked via OCSP according to the global OCSP settings.
++ */
++#define CERT_VERIFYCERT_SKIP_OCSP 1
++
+ /* Interface function for libpkix cert validation engine:
+  * cert_verify wrapper. */
+ SECStatus
+ cert_VerifyCertChainPkix(CERTCertificate *cert,
+                          PRBool checkSig,
+                          SECCertUsage     requiredUsage,
+                          PRTime           time,
+                          void            *wincx,
+diff --git a/security/nss/lib/certhigh/certvfy.c b/security/nss/lib/certhigh/certvfy.c
+--- a/security/nss/lib/certhigh/certvfy.c
++++ b/security/nss/lib/certhigh/certvfy.c
+@@ -1195,17 +1195,17 @@ CERT_VerifyCertificate(CERTCertDBHandle 
+ 
+         if (rv != SECSuccess) {
+             /* EXIT_IF_NOT_LOGGING(log); XXX ???? */
+             INVALID_USAGE();
+         }
+ 
+         /*
+          * Check OCSP revocation status, but only if the cert we are checking
+-         * is not a status reponder itself.  We only do this in the case
++         * is not a status responder itself. We only do this in the case
+          * where we checked the cert chain (above); explicit trust "wins"
+          * (avoids status checking, just as it avoids CRL checking) by
+          * bypassing this code.
+          */
+ 
+         if (PR_FALSE == checkedOCSP) {
+             checkedOCSP = PR_TRUE; /* only check OCSP once */
+             statusConfig = CERT_GetStatusConfig(handle);
+@@ -1230,20 +1230,29 @@ loser:
+     return(valid);
+ }
+ 
+ SECStatus
+ CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
+ 		PRBool checkSig, SECCertUsage certUsage, PRTime t,
+ 		void *wincx, CERTVerifyLog *log)
+ {
++    return cert_VerifyCertWithFlags(handle, cert, checkSig, certUsage, t,
++                                    CERT_VERIFYCERT_USE_DEFAULTS, wincx, log);
++}
++
++SECStatus
++cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
++                         PRBool checkSig, SECCertUsage certUsage, PRTime t,
++                         PRUint32 flags, void *wincx, CERTVerifyLog *log)
++{
+     SECStatus rv;
+     unsigned int requiredKeyUsage;
+     unsigned int requiredCertType;
+-    unsigned int flags;
++    unsigned int failedFlags;
+     unsigned int certType;
+     PRBool       trusted;
+     PRBool       allowOverride;
+     SECCertTimeValidity validity;
+     CERTStatusConfig *statusConfig;
+    
+ #ifdef notdef 
+     /* check if this cert is in the Evil list */
+@@ -1302,41 +1311,43 @@ CERT_VerifyCert(CERTCertDBHandle *handle
+ 	PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
+ 	LOG_ERROR_OR_EXIT(log,cert,0,requiredKeyUsage);
+     }
+     if ( !( certType & requiredCertType ) ) {
+ 	PORT_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE);
+ 	LOG_ERROR_OR_EXIT(log,cert,0,requiredCertType);
+     }
+ 
+-    rv = cert_CheckLeafTrust(cert,certUsage, &flags, &trusted);
++    rv = cert_CheckLeafTrust(cert, certUsage, &failedFlags, &trusted);
+     if (rv  == SECFailure) {
+ 	PORT_SetError(SEC_ERROR_UNTRUSTED_CERT);
+-	LOG_ERROR_OR_EXIT(log,cert,0,flags);
++	LOG_ERROR_OR_EXIT(log, cert, 0, failedFlags);
+     } else if (trusted) {
+ 	goto done;
+     }
+ 
+ 
+     rv = CERT_VerifyCertChain(handle, cert, checkSig, certUsage,
+ 			      t, wincx, log);
+     if (rv != SECSuccess) {
+ 	EXIT_IF_NOT_LOGGING(log);
+     }
+ 
+     /*
+-     * Check revocation status, but only if the cert we are checking
+-     * is not a status reponder itself.  We only do this in the case
+-     * where we checked the cert chain (above); explicit trust "wins"
+-     * (avoids status checking, just as it avoids CRL checking, which
+-     * is all done inside VerifyCertChain) by bypassing this code.
++     * Check revocation status, but only if the cert we are checking is not a
++     * status responder itself and the caller did not ask us to skip the check.
++     * We only do this in the case where we checked the cert chain (above);
++     * explicit trust "wins" (avoids status checking, just as it avoids CRL
++     * checking, which is all done inside VerifyCertChain) by bypassing this
++     * code.
+      */
+-    statusConfig = CERT_GetStatusConfig(handle);
+-    if (certUsage != certUsageStatusResponder && statusConfig != NULL) {
+-	if (statusConfig->statusChecker != NULL) {
++    if (!(flags & CERT_VERIFYCERT_SKIP_OCSP) &&
++	certUsage != certUsageStatusResponder) {
++	statusConfig = CERT_GetStatusConfig(handle);
++	if (statusConfig && statusConfig->statusChecker) {
+ 	    rv = (* statusConfig->statusChecker)(handle, cert,
+ 							 t, wincx);
+ 	    if (rv != SECSuccess) {
+ 		LOG_ERROR_OR_EXIT(log,cert,0,0);
+ 	    }
+ 	}
+     }
+ 
+diff --git a/security/nss/lib/certhigh/ocsp.c b/security/nss/lib/certhigh/ocsp.c
+--- a/security/nss/lib/certhigh/ocsp.c
++++ b/security/nss/lib/certhigh/ocsp.c
+@@ -13,16 +13,17 @@
+ #include "prnetdb.h"
+ 
+ #include "seccomon.h"
+ #include "secitem.h"
+ #include "secoidt.h"
+ #include "secasn1.h"
+ #include "secder.h"
+ #include "cert.h"
++#include "certi.h"
+ #include "xconst.h"
+ #include "secerr.h"
+ #include "secoid.h"
+ #include "hasht.h"
+ #include "sechash.h"
+ #include "secasn1.h"
+ #include "plbase64.h"
+ #include "keyhi.h"
+@@ -4179,18 +4180,19 @@ CERT_VerifyOCSPResponseSignature(CERTOCS
+         rv = SECSuccess;
+     } else {
+         SECCertUsage certUsage;
+         if (CERT_IsCACert(signerCert, NULL)) {
+             certUsage = certUsageAnyCA;
+         } else {
+             certUsage = certUsageStatusResponder;
+         }
+-        rv = CERT_VerifyCert(handle, signerCert, PR_TRUE,
+-                             certUsage, producedAt, pwArg, NULL);
++        rv = cert_VerifyCertWithFlags(handle, signerCert, PR_TRUE, certUsage,
++                                      producedAt, CERT_VERIFYCERT_SKIP_OCSP,
++                                      pwArg, NULL);
+         if (rv != SECSuccess) {
+             PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
+             goto finish;
+         }
+     }
+ 
+     rv = ocsp_VerifyResponseSignature(signerCert, signature,
+                                       tbsResponseDataDER,

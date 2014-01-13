@@ -35,6 +35,7 @@ let loaderGlobals = {
   btoa: btoa,
   console: console,
   _Iterator: Iterator,
+  ChromeWorker: ChromeWorker,
   loader: {
     lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
     lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
@@ -43,7 +44,8 @@ let loaderGlobals = {
 };
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
-var BuiltinProvider = {
+function BuiltinProvider() {}
+BuiltinProvider.prototype = {
   load: function() {
     this.loader = new loader.Loader({
       modules: {
@@ -72,7 +74,8 @@ var BuiltinProvider = {
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
       },
-      globals: loaderGlobals
+      globals: loaderGlobals,
+      invisibleToDebugger: this.invisibleToDebugger
     });
 
     return promise.resolve(undefined);
@@ -87,7 +90,8 @@ var BuiltinProvider = {
 // Used when the tools should be loaded from a mozilla-central checkout.  In addition
 // to different paths, it needs to write chrome.manifest files to override chrome urls
 // from the builtin tools.
-var SrcdirProvider = {
+function SrcdirProvider() {}
+SrcdirProvider.prototype = {
   fileURI: function(path) {
     let file = new FileUtils.File(path);
     return Services.io.newFileURI(file).spec;
@@ -134,7 +138,8 @@ var SrcdirProvider = {
         "acorn": acornURI,
         "acorn_loose": acornLoosseURI
       },
-      globals: loaderGlobals
+      globals: loaderGlobals,
+      invisibleToDebugger: this.invisibleToDebugger
     });
 
     return this._writeManifest(devtoolsDir).then(null, Cu.reportError);
@@ -218,11 +223,28 @@ var SrcdirProvider = {
  * then a new one can also be created.
  */
 this.DevToolsLoader = function DevToolsLoader() {
-  this._chooseProvider();
+  this.require = this.require.bind(this);
 };
 
 DevToolsLoader.prototype = {
+  get provider() {
+    if (!this._provider) {
+      this._chooseProvider();
+    }
+    return this._provider;
+  },
+
   _provider: null,
+
+  /**
+   * A dummy version of require, in case a provider hasn't been chosen yet when
+   * this is first called.  This will then be replaced by the real version.
+   * @see setProvider
+   */
+  require: function() {
+    this._chooseProvider();
+    return this.require.apply(this, arguments);
+  },
 
   /**
    * Add a URI to the loader.
@@ -234,7 +256,7 @@ DevToolsLoader.prototype = {
    */
   loadURI: function(id, uri) {
     let module = loader.Module(id, uri);
-    return loader.load(this._provider.loader, module).exports;
+    return loader.load(this.provider.loader, module).exports;
   },
 
   /**
@@ -248,7 +270,7 @@ DevToolsLoader.prototype = {
    */
   main: function(id) {
     this._mainid = id;
-    this._main = loader.main(this._provider.loader, id);
+    this._main = loader.main(this.provider.loader, id);
 
     // Mirror the main module's exports on this object.
     Object.getOwnPropertyNames(this._main).forEach(key => {
@@ -271,6 +293,7 @@ DevToolsLoader.prototype = {
       this._provider.unload("newprovider");
     }
     this._provider = provider;
+    this._provider.invisibleToDebugger = this.invisibleToDebugger;
     this._provider.load();
     this.require = loader.Require(this._provider.loader, { id: "devtools" });
 
@@ -284,9 +307,9 @@ DevToolsLoader.prototype = {
    */
   _chooseProvider: function() {
     if (Services.prefs.prefHasUserValue("devtools.loader.srcdir")) {
-      this.setProvider(SrcdirProvider);
+      this.setProvider(new SrcdirProvider());
     } else {
-      this.setProvider(BuiltinProvider);
+      this.setProvider(new BuiltinProvider());
     }
   },
 
@@ -302,6 +325,17 @@ DevToolsLoader.prototype = {
     delete this._provider;
     this._chooseProvider();
   },
+
+  /**
+   * Sets whether the compartments loaded by this instance should be invisible
+   * to the debugger.  Invisibility is needed for loaders that support debugging
+   * of chrome code.  This is true of remote target environments, like Fennec or
+   * B2G.  It is not the default case for desktop Firefox because we offer the
+   * Browser Toolbox for chrome debugging there, which uses its own, separate
+   * loader instance.
+   * @see browser/devtools/framework/ToolboxProcess.jsm
+   */
+  invisibleToDebugger: Services.appinfo.name !== "Firefox"
 };
 
 // Export the standard instance of DevToolsLoader used by the tools.

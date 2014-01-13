@@ -1156,7 +1156,9 @@ var WifiManager = (function() {
   manager.getHttpProxyNetwork = getHttpProxyNetwork;
   manager.setHttpProxy = setHttpProxy;
   manager.configureHttpProxy = configureHttpProxy;
-  manager.setSuspendOptimizations = wifiCommand.setSuspendOptimizations;
+  manager.setSuspendOptimizations = (sdkVersion >= 16)
+                                   ? wifiCommand.setSuspendOptimizationsJB
+                                   : wifiCommand.setSuspendOptimizationsICS;
   manager.setStaticIpMode = setStaticIpMode;
   manager.getRssiApprox = wifiCommand.getRssiApprox;
   manager.getLinkSpeed = wifiCommand.getLinkSpeed;
