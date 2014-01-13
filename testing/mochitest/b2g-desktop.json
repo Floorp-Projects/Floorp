@@ -676,7 +676,6 @@
     "layout/generic/test/test_plugin_clipping.xhtml": "Bug 931116, b2g desktop specific, initial triage",
     "layout/generic/test/test_plugin_clipping2.xhtml": "Bug 931116, b2g desktop specific, initial triage",
     "layout/generic/test/test_plugin_clipping_table.xhtml": "Bug 931116, b2g desktop specific, initial triage",
-    "layout/generic/test/test_plugin_clipping_transformed.xhtml": "Bug 931116, b2g desktop specific, initial triage",
-    "toolkit/devtools/apps/tests/test_webapps_actor.html": "Bug 931116, b2g desktop specific, initial triage"
+    "layout/generic/test/test_plugin_clipping_transformed.xhtml": "Bug 931116, b2g desktop specific, initial triage"
   }
 }
