@@ -10566,10 +10566,18 @@ nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
 
     // Step 2: Resolve aURL
     bool equalURIs = true;
-    nsCOMPtr<nsIURI> oldURI = mCurrentURI;
+    nsCOMPtr<nsIURI> currentURI;
+    if (sURIFixup && mCurrentURI) {
+        rv = sURIFixup->CreateExposableURI(mCurrentURI,
+                                           getter_AddRefs(currentURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        currentURI = mCurrentURI;
+    }
+    nsCOMPtr<nsIURI> oldURI = currentURI;
     nsCOMPtr<nsIURI> newURI;
     if (aURL.Length() == 0) {
-        newURI = mCurrentURI;
+        newURI = currentURI;
     }
     else {
         // 2a: Resolve aURL relative to mURI
@@ -10599,7 +10607,7 @@ nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
             // the new URI has the same origin as our current URI, we also
             // check that the two URIs have the same userpass. (The
             // security manager says that |http://foo.com| and
-            // |http://me@foo.com| have the same origin.)  mCurrentURI
+            // |http://me@foo.com| have the same origin.)  currentURI
             // won't contain the password part of the userpass, so this
             // means that it's never valid to specify a password in a
             // pushState or replaceState URI.
@@ -10609,14 +10617,14 @@ nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
             NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
 
             // It's very important that we check that newURI is of the same
-            // origin as mCurrentURI, not docBaseURI, because a page can
+            // origin as currentURI, not docBaseURI, because a page can
             // set docBaseURI arbitrarily to any domain.
             nsAutoCString currentUserPass, newUserPass;
-            NS_ENSURE_SUCCESS(mCurrentURI->GetUserPass(currentUserPass),
+            NS_ENSURE_SUCCESS(currentURI->GetUserPass(currentUserPass),
                               NS_ERROR_FAILURE);
             NS_ENSURE_SUCCESS(newURI->GetUserPass(newUserPass),
                               NS_ERROR_FAILURE);
-            if (NS_FAILED(secMan->CheckSameOriginURI(mCurrentURI,
+            if (NS_FAILED(secMan->CheckSameOriginURI(currentURI,
                                                      newURI, true)) ||
                 !currentUserPass.Equals(newUserPass)) {
 
@@ -10641,8 +10649,8 @@ nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
             }
         }
 
-        if (mCurrentURI) {
-            mCurrentURI->Equals(newURI, &equalURIs);
+        if (currentURI) {
+            currentURI->Equals(newURI, &equalURIs);
         }
         else {
             equalURIs = false;
@@ -10704,7 +10712,7 @@ nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
     // SHEntry's URI was modified in this way by a push/replaceState call
     // set URIWasModified to true for the current SHEntry (bug 669671).
     bool sameExceptHashes = true, oldURIWasModified = false;
-    newURI->EqualsExceptRef(mCurrentURI, &sameExceptHashes);
+    newURI->EqualsExceptRef(currentURI, &sameExceptHashes);
     oldOSHE->GetURIWasModified(&oldURIWasModified);
     newSHEntry->SetURIWasModified(!sameExceptHashes || oldURIWasModified);
 
