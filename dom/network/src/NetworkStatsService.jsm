@@ -428,19 +428,26 @@ this.NetworkStatsService = {
     debug("clear stats for network " + network.id + " of type " + network.type);
 
     if (!this._networks[netId]) {
-      let error = "Invalid networkType";
-      let result = null;
-
-      // Check if network is valid but has not established a connection yet.
+      // Check if network is valid but has not established a connection yet. If it is not
+      // found in RIL networks, it can be a SIM network used in the past having sample
+      // in the database.
       let rilNetworks = this.getRilNetworks();
-      if (rilNetworks[netId]) {
-        error = null;
-        result = true;
-      }
+      if (!rilNetworks[netId]) {
+        // Check if it is available in the DB.
+        this._db.isNetworkAvailable(network, function(aError, aResult) {
+          if (aResult) {
+            this._db.clearInterfaceStats(network, function onDBCleared(aError, aResult) {
+              mm.sendAsyncMessage("NetworkStats:Clear:Return",
+                                  { id: msg.id, error: aError, result: aResult });
+            });
+            return;
+          }
 
-      mm.sendAsyncMessage("NetworkStats:Clear:Return",
-                          { id: msg.id, error: error, result: result });
-      return;
+          mm.sendAsyncMessage("NetworkStats:Clear:Return",
+                              { id: msg.id, error: "Invalid networkType", result: null });
+        });
+        return;
+      }
     }
 
     this._db.clearInterfaceStats(network, function onDBCleared(aError, aResult) {
