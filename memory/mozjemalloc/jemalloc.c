@@ -164,7 +164,7 @@
  */
 #define MALLOC_STATS
 
-/* Memory filling (junk/zero). */
+/* Memory filling (junk/poison/zero). */
 #define MALLOC_FILL
 
 #ifndef MALLOC_PRODUCTION
@@ -1287,12 +1287,14 @@ const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
 static bool	opt_abort = true;
 #ifdef MALLOC_FILL
 static bool	opt_junk = true;
+static bool	opt_poison = true;
 static bool	opt_zero = false;
 #endif
 #else
 static bool	opt_abort = false;
 #ifdef MALLOC_FILL
 static const bool	opt_junk = false;
+static const bool	opt_poison = false;
 static const bool	opt_zero = false;
 #endif
 #endif
@@ -4448,7 +4450,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size = bin->reg_size;
 
 #ifdef MALLOC_FILL
-	if (opt_junk)
+	if (opt_poison)
 		memset(ptr, 0x5a, size);
 #endif
 
@@ -4531,7 +4533,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 
 #ifdef MALLOC_FILL
 #ifndef MALLOC_STATS
-	if (opt_junk)
+	if (opt_poison)
 #endif
 #endif
 	{
@@ -4541,7 +4543,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 
 #ifdef MALLOC_FILL
 #ifdef MALLOC_STATS
-		if (opt_junk)
+		if (opt_poison)
 #endif
 			memset(ptr, 0x5a, size);
 #endif
@@ -4682,7 +4684,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 	if (psize == oldsize) {
 		/* Same size class. */
 #ifdef MALLOC_FILL
-		if (opt_junk && size < oldsize) {
+		if (opt_poison && size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize -
 			    size);
 		}
@@ -4699,7 +4701,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 		if (psize < oldsize) {
 #ifdef MALLOC_FILL
 			/* Fill before shrinking in order avoid a race. */
-			if (opt_junk) {
+			if (opt_poison) {
 				memset((void *)((uintptr_t)ptr + size), 0x5a,
 				    oldsize - size);
 			}
@@ -4769,7 +4771,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 	return (ret);
 IN_PLACE:
 #ifdef MALLOC_FILL
-	if (opt_junk && size < oldsize)
+	if (opt_poison && size < oldsize)
 		memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize - size);
 	else if (opt_zero && size > oldsize)
 		memset((void *)((uintptr_t)ptr + oldsize), 0, size - oldsize);
@@ -5161,7 +5163,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 	    CHUNK_CEILING(size) == CHUNK_CEILING(oldsize)) {
 		size_t psize = PAGE_CEILING(size);
 #ifdef MALLOC_FILL
-		if (opt_junk && size < oldsize) {
+		if (opt_poison && size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize
 			    - size);
 		}
@@ -5407,6 +5409,7 @@ malloc_print_stats(void)
 		_malloc_message("Boolean MALLOC_OPTIONS: ",
 		    opt_abort ? "A" : "a", "", "");
 #ifdef MALLOC_FILL
+		_malloc_message(opt_poison ? "C" : "c", "", "", "");
 		_malloc_message(opt_junk ? "J" : "j", "", "", "");
 #endif
 #ifdef MALLOC_PAGEFILE
@@ -5750,6 +5753,16 @@ MALLOC_OUT:
 						opt_balance_threshold <<= 1;
 #endif
 					break;
+#ifdef MALLOC_FILL
+#ifndef MALLOC_PRODUCTION
+				case 'c':
+					opt_poison = false;
+					break;
+				case 'C':
+					opt_poison = true;
+					break;
+#endif
+#endif
 				case 'f':
 					opt_dirty_max >>= 1;
 					break;
@@ -6585,6 +6598,11 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	stats->opt_junk =
 #ifdef MALLOC_FILL
 	    opt_junk ? true :
+#endif
+	    false;
+	stats->opt_poison =
+#ifdef MALLOC_FILL
+	    opt_poison ? true :
 #endif
 	    false;
 	stats->opt_utrace =
