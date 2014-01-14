@@ -426,8 +426,8 @@ function isBidiEnabled() {
     return true;
 
   // then check intl.uidirection.<locale>
-  var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                  getService(Ci.nsIXULChromeRegistry);
+  var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
+                  getService(Components.interfaces.nsIXULChromeRegistry);
   if (chromeReg.isLocaleRTL("global"))
     return true;
 
