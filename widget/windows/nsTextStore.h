@@ -38,6 +38,12 @@ class nsWindow;
 class MetroWidget;
 #endif
 
+namespace mozilla {
+namespace widget {
+struct MSGResult;
+} // namespace widget
+} // namespace mozilla
+
 // It doesn't work well when we notify TSF of text change
 // during a mutation observer call because things get broken.
 // So we post a message and notify TSF when we get it later.
@@ -108,6 +114,10 @@ public:
   static void     Terminate(void);
 
   static bool     ProcessRawKeyMessage(const MSG& aMsg);
+  static void     ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
+                                 WPARAM& aWParam, LPARAM& aLParam,
+                                 mozilla::widget::MSGResult& aResult);
+
 
   static void     SetIMEOpenState(bool);
   static bool     GetIMEOpenState(void);
@@ -131,14 +141,6 @@ public:
   {
     NS_ENSURE_TRUE(sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
     return sTsfTextStore->OnTextChangeInternal(aStart, aOldEnd, aNewEnd);
-  }
-
-  static void     OnTextChangeMsg(void)
-  {
-    NS_ENSURE_TRUE_VOID(sTsfTextStore);
-    // Notify TSF text change
-    // (see comments on WM_USER_TSF_TEXTCHANGE in nsTextStore.h)
-    sTsfTextStore->OnTextChangeMsgInternal();
   }
 
   static nsresult OnSelectionChange(void)
@@ -198,8 +200,8 @@ public:
 
   static bool     IsIMM_IME()
   {
-    return sTsfTextStore && mozilla::IsVistaOrLater() ?
-      sTsfTextStore->mIsIMM_IME : IsIMM_IME(::GetKeyboardLayout(0));
+    return sTsfTextStore ? sTsfTextStore->mIsIMM_IME :
+                           IsIMM_IME(::GetKeyboardLayout(0));
   }
 
   static bool     IsIMM_IME(HKL aHKL)
@@ -244,7 +246,7 @@ protected:
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
   nsresult OnTextChangeInternal(uint32_t, uint32_t, uint32_t);
-  void     OnTextChangeMsgInternal(void);
+  void     OnTextChangeMsg();
   nsresult OnSelectionChangeInternal(void);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
