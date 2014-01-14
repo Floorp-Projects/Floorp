@@ -33,16 +33,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileConnectionArray)
 NS_INTERFACE_MAP_END
 
 MobileConnectionArray::MobileConnectionArray(nsPIDOMWindow* aWindow)
-: mWindow(aWindow)
+: mWindow(aWindow), mInitialized(false)
 {
-  int32_t numRil = mozilla::Preferences::GetInt("ril.numRadioInterfaces", 1);
+  uint32_t numRil = mozilla::Preferences::GetUint("ril.numRadioInterfaces", 1);
   MOZ_ASSERT(numRil > 0);
 
-  for (int32_t id = 0; id < numRil; id++) {
-    nsRefPtr<MobileConnection> mobileConnection = new MobileConnection(id);
-    mobileConnection->Init(aWindow);
-    mMobileConnections.AppendElement(mobileConnection);
-  }
+  bool ret = mMobileConnections.SetLength(numRil);
+  MOZ_ASSERT(ret);
 
   SetIsDOMBinding();
 }
@@ -53,11 +50,26 @@ MobileConnectionArray::~MobileConnectionArray()
 }
 
 void
+MobileConnectionArray::Init()
+{
+  mInitialized = true;
+
+  for (uint32_t id = 0; id < mMobileConnections.Length(); id++) {
+    nsRefPtr<MobileConnection> mobileConnection = new MobileConnection(id);
+    mobileConnection->Init(mWindow);
+    mMobileConnections[id] = mobileConnection;
+  }
+}
+
+void
 MobileConnectionArray::DropConnections()
 {
-  for (uint32_t i = 0; i < mMobileConnections.Length(); i++) {
-    mMobileConnections[i]->Shutdown();
+  if (mInitialized) {
+    for (uint32_t i = 0; i < mMobileConnections.Length(); i++) {
+      mMobileConnections[i]->Shutdown();
+    }
   }
+
   mMobileConnections.Clear();
 }
 
@@ -75,7 +87,7 @@ MobileConnectionArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 nsIDOMMozMobileConnection*
-MobileConnectionArray::Item(uint32_t aIndex) const
+MobileConnectionArray::Item(uint32_t aIndex)
 {
   bool unused;
   return IndexedGetter(aIndex, unused);
@@ -88,8 +100,12 @@ MobileConnectionArray::Length() const
 }
 
 nsIDOMMozMobileConnection*
-MobileConnectionArray::IndexedGetter(uint32_t aIndex, bool& aFound) const
+MobileConnectionArray::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
+  if (!mInitialized) {
+    Init();
+  }
+
   aFound = false;
   aFound = aIndex < mMobileConnections.Length();
 
