@@ -5793,7 +5793,7 @@ RIL[REQUEST_QUERY_CLIP] = function(length, options) {
 };
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 
-RIL.readDataCall_v5 = function readDataCall_v5(options) {
+RIL.readDataCall_v5 = function(options) {
   if (!options) {
     options = {};
   }
@@ -5805,7 +5805,7 @@ RIL.readDataCall_v5 = function readDataCall_v5(options) {
   return options;
 };
 
-RIL.readDataCall_v6 = function readDataCall_v6(options) {
+RIL.readDataCall_v6 = function(options) {
   if (!options) {
     options = {};
   }
@@ -5827,17 +5827,6 @@ RIL.readDataCall_v6 = function readDataCall_v6(options) {
   }
   if (options.gw) {
     options.gw = options.gw.split(" ")[0];
-  }
-  options.ip = null;
-  options.netmask = null;
-  options.broadcast = null;
-  if (options.ipaddr) {
-    options.ip = options.ipaddr.split("/")[0];
-    let ip_value = netHelpers.stringToIP(options.ip);
-    let prefix_len = options.ipaddr.split("/")[1];
-    let mask_value = netHelpers.makeMask(prefix_len);
-    options.netmask = netHelpers.ipToString(mask_value);
-    options.broadcast = netHelpers.ipToString((ip_value & mask_value) + ~mask_value);
   }
   return options;
 };
