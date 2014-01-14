@@ -29,6 +29,7 @@ const EVAL_FUNCTION_TIMEOUT      = 1000; // milliseconds
 const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
+const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
@@ -1487,6 +1488,7 @@ var Scratchpad = {
       mode: Editor.modes.js,
       value: initialText,
       lineNumbers: true,
+      showTrailingSpace: Services.prefs.getBoolPref(SHOW_TRAILING_SPACE),
       contextMenu: "scratchpad-text-popup"
     });
 
