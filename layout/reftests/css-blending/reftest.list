@@ -34,3 +34,5 @@ fuzzy-if(azureSkia||gtk2Widget,1,1600) pref(layout.css.background-blend-mode.ena
 fuzzy-if(d2d,1,1600) fuzzy-if(azureSkia||gtk2Widget,2,12800) fuzzy-if(OSX==10.6,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation-ref.svg
 fuzzy-if(d2d||azureSkia||gtk2Widget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen-ref.svg
 fuzzy-if(azureQuartz,1,1600) fuzzy-if(d2d||azureSkia||gtk2Widget,10,4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light-ref.svg
+
+fuzzy-if(azureQuartz,2,40000) fuzzy-if(azureSkia||d2d||gtk2Widget,1,40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
