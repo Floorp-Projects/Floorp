@@ -1229,12 +1229,16 @@ ContentParent::ContentParent(mozIApplication* aApp,
                              bool aIsNuwaProcess /* = false */)
     : mOSPrivileges(aOSPrivileges)
     , mIsForBrowser(aIsForBrowser)
+    , mIsNuwaProcess(aIsNuwaProcess)
 {
     InitializeMembers();  // Perform common initialization.
 
-    // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated should
-    // be true.
+    // No more than one of !!aApp, aIsForBrowser, aIsForPreallocated should be
+    // true.
     MOZ_ASSERT(!!aApp + aIsForBrowser + aIsForPreallocated <= 1);
+
+    // Only the preallocated process uses Nuwa.
+    MOZ_ASSERT_IF(aIsNuwaProcess, aIsForPreallocated);
 
     // Insert ourselves into the global linked list of ContentParent objects.
     if (!sContentParents) {
@@ -1308,6 +1312,7 @@ ContentParent::ContentParent(ContentParent* aTemplate,
     : mOSPrivileges(aOSPrivileges)
     , mAppManifestURL(aAppManifestURL)
     , mIsForBrowser(false)
+    , mIsNuwaProcess(false)
 {
     InitializeMembers();  // Perform common initialization.
 
@@ -1487,6 +1492,14 @@ ContentParent::IsForApp()
 {
     return !mAppManifestURL.IsEmpty();
 }
+
+#ifdef MOZ_NUWA_PROCESS
+bool
+ContentParent::IsNuwaProcess()
+{
+    return mIsNuwaProcess;
+}
+#endif
 
 int32_t
 ContentParent::Pid()
@@ -1873,7 +1886,10 @@ ContentParent::Observe(nsISupports* aSubject,
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        unused << SendPMemoryReportRequestConstructor((uint32_t)(uintptr_t)aData);
+#ifdef MOZ_NUWA_PROCESS
+        if (!IsNuwaProcess())
+#endif
+            unused << SendPMemoryReportRequestConstructor((uint32_t)(uintptr_t)aData);
     }
     else if (!strcmp(aTopic, "child-gc-request")){
         unused << SendGarbageCollect();
