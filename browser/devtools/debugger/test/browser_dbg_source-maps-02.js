@@ -8,12 +8,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 const JS_URL = EXAMPLE_URL + "code_binary_search.js";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gSources, gFrames, gPrefs, gOptions;
+let gDebuggee, gPanel, gDebugger, gEditor;
+let gSources, gFrames, gPrefs, gOptions;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
-    gTab = aTab;
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -26,7 +25,6 @@ function test() {
     waitForSourceShown(gPanel, ".coffee")
       .then(testToggleGeneratedSource)
       .then(testSetBreakpoint)
-      .then(testHitBreakpoint)
       .then(testToggleOnPause)
       .then(testResume)
       .then(() => closeDebuggerAndFinish(gPanel))
@@ -68,34 +66,23 @@ function testSetBreakpoint() {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a js file.");
 
-    deferred.resolve();
-  });
+    gDebugger.gClient.addOneTimeListener("resumed", () => {
+      waitForCaretAndScopes(gPanel, 7).then(() => {
+        // Make sure that we have JavaScript stack frames.
+        is(gFrames.itemCount, 1,
+          "Should have only one frame.");
+        is(gFrames.getItemAtIndex(0).attachment.url.indexOf(".coffee"), -1,
+          "First frame should not be a coffee source frame.");
+        isnot(gFrames.getItemAtIndex(0).attachment.url.indexOf(".js"), -1,
+          "First frame should be a JS frame.");
 
-  return deferred.promise;
-}
+        deferred.resolve();
+      });
 
-function testHitBreakpoint() {
-  let deferred = promise.defer();
-
-  gDebugger.gThreadClient.resume(aResponse => {
-    ok(!aResponse.error, "Shouldn't get an error resuming.");
-    is(aResponse.type, "resumed", "Type should be 'resumed'.");
-
-    waitForCaretAndScopes(gPanel, 7).then(() => {
-      // Make sure that we have JavaScript stack frames.
-      is(gFrames.itemCount, 1,
-        "Should have only one frame.");
-      is(gFrames.getItemAtIndex(0).attachment.url.indexOf(".coffee"), -1,
-        "First frame should not be a coffee source frame.");
-      isnot(gFrames.getItemAtIndex(0).attachment.url.indexOf(".js"), -1,
-        "First frame should be a JS frame.");
-
-      deferred.resolve();
+      // This will cause the breakpoint to be hit, and put us back in the
+      // paused state.
+      gDebuggee.binary_search([0, 2, 3, 5, 7, 10], 5);
     });
-
-    // This will cause the breakpoint to be hit, and put us back in the
-    // paused state.
-    gDebuggee.binary_search([0, 2, 3, 5, 7, 10], 5);
   });
 
   return deferred.promise;
@@ -148,7 +135,6 @@ function testResume() {
 }
 
 registerCleanupFunction(function() {
-  gTab = null;
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
