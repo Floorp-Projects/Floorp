@@ -7390,25 +7390,39 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
           ::PostMessageW(aWnd, MOZ_WM_REACTIVATE, aWParam, aLParam);
           return true;
         }
-      } else if (sPendingNCACTIVATE && LOWORD(aWParam) == WA_INACTIVE &&
-                 NeedsToHandleNCActivateDelayed(aWnd)) {
-        // If focus moves to non-popup widget or focusable popup, the window
-        // needs to update its nonclient area.
+        // Don't rollup the popup when focus moves back to the parent window
+        // from a popup because such case is caused by strange mouse drivers.
+        nsWindow* prevWindow =
+          WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
+        if (prevWindow && prevWindow->IsPopup()) {
+          return false;
+        }
+      } else if (LOWORD(aWParam) == WA_INACTIVE) {
         nsWindow* activeWindow =
           WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
-        if (!activeWindow || !activeWindow->IsPopup()) {
-          sSendingNCACTIVATE = true;
-          ::SendMessageW(aWnd, WM_NCACTIVATE, false, 0);
-          sSendingNCACTIVATE = false;
+        if (sPendingNCACTIVATE && NeedsToHandleNCActivateDelayed(aWnd)) {
+          // If focus moves to non-popup widget or focusable popup, the window
+          // needs to update its nonclient area.
+          if (!activeWindow || !activeWindow->IsPopup()) {
+            sSendingNCACTIVATE = true;
+            ::SendMessageW(aWnd, WM_NCACTIVATE, false, 0);
+            sSendingNCACTIVATE = false;
+          }
+          sPendingNCACTIVATE = false;
         }
-        sPendingNCACTIVATE = false;
+        // If focus moves from/to popup, we don't need to rollup the popup
+        // because such case is caused by strange mouse drivers.
+        if (activeWindow) {
+          if (activeWindow->IsPopup()) {
+            return false;
+          }
+          nsWindow* deactiveWindow = WinUtils::GetNSWindowPtr(aWnd);
+          if (deactiveWindow && deactiveWindow->IsPopup()) {
+            return false;
+          }
+        }
       }
-      // XXX Why do we need to check the message pos?
-      if (!EventIsInsideWindow(popupWindow) &&
-          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
-        break;
-      }
-      return false;
+      break;
 
     case MOZ_WM_REACTIVATE:
       // The previous active window should take back focus.
@@ -7432,7 +7446,6 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       return false;
 
     case WM_MOUSEACTIVATE:
-      // XXX Why do we need to check the message pos?
       if (!EventIsInsideWindow(popupWindow) &&
           GetPopupsToRollup(rollupListener, &popupsToRollup)) {
         // WM_MOUSEACTIVATE may be caused by moving the mouse (e.g., X-mouse
@@ -7456,23 +7469,14 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       // If focus moves to other window created in different process/thread,
       // e.g., a plugin window, popups should be rolled up.
       if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
-        // XXX Why do we need to check the message pos?
-        if (!EventIsInsideWindow(popupWindow) &&
-            GetPopupsToRollup(rollupListener, &popupsToRollup)) {
-          break;
-        }
+        break;
       }
       return false;
 
     case WM_MOVING:
     case WM_SIZING:
     case WM_MENUSELECT:
-      // XXX Why do we need to check the message pos?
-      if (!EventIsInsideWindow(popupWindow) &&
-          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
-        break;
-      }
-      return false;
+      break;
 
     default:
       return false;
