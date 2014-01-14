@@ -1439,6 +1439,7 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP VIEW IF EXISTS " + Obsolete.VIEW_BOOKMARKS_WITH_IMAGES);
 
             db.execSQL("DROP INDEX IF EXISTS bookmarks_url_index");
+            db.execSQL("DROP INDEX IF EXISTS bookmarks_type_deleted_index");
             db.execSQL("DROP INDEX IF EXISTS bookmarks_guid_index");
             db.execSQL("DROP INDEX IF EXISTS bookmarks_modified_index");
 
