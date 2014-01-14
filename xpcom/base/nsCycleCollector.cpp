@@ -155,6 +155,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/HoldDropJSObjects.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/LinkedList.h"
@@ -1094,6 +1095,8 @@ enum ccType {
 
 typedef js::SliceBudget SliceBudget;
 
+class JSPurpleBuffer;
+
 class nsCycleCollector : public nsIMemoryReporter
 {
     NS_DECL_ISUPPORTS
@@ -1126,6 +1129,8 @@ class nsCycleCollector : public nsIMemoryReporter
 
     uint32_t mUnmergedNeeded;
     uint32_t mMergedInARow;
+
+    JSPurpleBuffer* mJSPurpleBuffer;
 
 public:
     nsCycleCollector();
@@ -1169,6 +1174,7 @@ public:
                              size_t *aWeakMapsSize,
                              size_t *aPurpleBufferSize) const;
 
+    JSPurpleBuffer* GetJSPurpleBuffer();
 private:
     void CheckThreadSafety();
     void ShutdownCollect();
@@ -2151,6 +2157,122 @@ MayHaveChild(void *o, nsCycleCollectionParticipant* cp)
     return cf.MayHaveChild();
 }
 
+template<class T>
+class SegmentedArrayElement : public LinkedListElement<SegmentedArrayElement<T>>
+                            , public AutoFallibleTArray<T, 60>
+{
+};
+
+template<class T>
+class SegmentedArray
+{
+public:
+    ~SegmentedArray()
+    {
+        MOZ_ASSERT(IsEmpty());
+    }
+
+    void AppendElement(T& aElement)
+    {
+        SegmentedArrayElement<T>* last = mSegments.getLast();
+        if (!last || last->Length() == last->Capacity()) {
+            last = new SegmentedArrayElement<T>();
+            mSegments.insertBack(last);
+        }
+        last->AppendElement(aElement);
+    }
+
+    void Clear()
+    {
+        SegmentedArrayElement<T>* first;
+        while ((first = mSegments.popFirst())) {
+            delete first;
+        }
+    }
+
+    SegmentedArrayElement<T>* GetFirstSegment()
+    {
+        return mSegments.getFirst();
+    }
+
+    bool IsEmpty()
+    {
+        return !GetFirstSegment();
+    }
+
+private:
+    mozilla::LinkedList<SegmentedArrayElement<T>> mSegments;
+};
+
+// JSPurpleBuffer keeps references to GCThings which might affect the
+// next cycle collection. It is owned only by itself and during unlink its
+// self reference is broken down and the object ends up killing itself.
+// If GC happens before CC, references to GCthings and the self reference are
+// removed.
+class JSPurpleBuffer
+{
+public:
+    JSPurpleBuffer(JSPurpleBuffer*& aReferenceToThis)
+      : mReferenceToThis(aReferenceToThis)
+    {
+        mReferenceToThis = this;
+        NS_ADDREF_THIS();
+        mozilla::HoldJSObjects(this);
+    }
+
+    ~JSPurpleBuffer()
+    {
+        MOZ_ASSERT(mValues.IsEmpty());
+        MOZ_ASSERT(mObjects.IsEmpty());
+    }
+
+    void Destroy()
+    {
+        mReferenceToThis = nullptr;
+        mValues.Clear();
+        mObjects.Clear();
+        mozilla::DropJSObjects(this);
+        NS_RELEASE_THIS();
+    }
+
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(JSPurpleBuffer)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(JSPurpleBuffer)
+
+    JSPurpleBuffer*& mReferenceToThis;
+    SegmentedArray<JS::Heap<JS::Value>> mValues;
+    SegmentedArray<JS::Heap<JSObject*>> mObjects;
+};
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(JSPurpleBuffer)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSPurpleBuffer)
+    tmp->Destroy();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSPurpleBuffer)
+    CycleCollectionNoteChild(cb, tmp, "self");
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+#define NS_TRACE_SEGMENTED_ARRAY(_field)                                       \
+    {                                                                          \
+        auto segment = tmp->_field.GetFirstSegment();                          \
+        while (segment) {                                                      \
+            for (uint32_t i = segment->Length(); i > 0;) {                     \
+                aCallbacks.Trace(&segment->ElementAt(--i), #_field, aClosure); \
+            }                                                                  \
+            segment = segment->getNext();                                      \
+        }                                                                      \
+    }
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(JSPurpleBuffer)
+    NS_TRACE_SEGMENTED_ARRAY(mValues)
+    NS_TRACE_SEGMENTED_ARRAY(mObjects)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(JSPurpleBuffer, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(JSPurpleBuffer, Release)
+
 struct SnowWhiteObject
 {
   void* mPointer;
@@ -2158,7 +2280,7 @@ struct SnowWhiteObject
   nsCycleCollectingAutoRefCnt* mRefCnt;
 };
 
-class SnowWhiteKiller
+class SnowWhiteKiller : public TraceCallbacks
 {
 public:
     SnowWhiteKiller(nsCycleCollector *aCollector, uint32_t aMaxCount)
@@ -2183,6 +2305,7 @@ public:
             if (!o.mRefCnt->get() && !o.mRefCnt->IsInPurpleBuffer()) {
                 mCollector->RemoveObjectFromGraph(o.mPointer);
                 o.mRefCnt->stabilizeForDeletion();
+                o.mParticipant->Trace(o.mPointer, *this, nullptr);
                 o.mParticipant->DeleteCycleCollectable(o.mPointer);
             }
         }
@@ -2206,6 +2329,43 @@ public:
     bool HasSnowWhiteObjects() const
     {
       return mObjects.Length() > 0;
+    }
+
+    virtual void Trace(JS::Heap<JS::Value>* aValue, const char* aName,
+                       void* aClosure) const
+    {
+        void* thing = JSVAL_TO_TRACEABLE(aValue->get());
+        if (thing && xpc_GCThingIsGrayCCThing(thing)) {
+            mCollector->GetJSPurpleBuffer()->mValues.AppendElement(*aValue);
+        }
+    }
+
+    virtual void Trace(JS::Heap<jsid>* aId, const char* aName,
+                       void* aClosure) const
+    {
+    }
+
+    virtual void Trace(JS::Heap<JSObject*>* aObject, const char* aName,
+                       void* aClosure) const
+    {
+        if (*aObject && xpc_GCThingIsGrayCCThing(*aObject)) {
+            mCollector->GetJSPurpleBuffer()->mObjects.AppendElement(*aObject);
+        }
+    }
+
+    virtual void Trace(JS::Heap<JSString*>* aString, const char* aName,
+                       void* aClosure) const
+    {
+    }
+
+    virtual void Trace(JS::Heap<JSScript*>* aScript, const char* aName,
+                       void* aClosure) const
+    {
+    }
+
+    virtual void Trace(JS::Heap<JSFunction*>* aFunction, const char* aName,
+                       void* aClosure) const
+    {
     }
 
 private:
@@ -2812,7 +2972,8 @@ nsCycleCollector::nsCycleCollector() :
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
     mUnmergedNeeded(0),
-    mMergedInARow(0)
+    mMergedInARow(0),
+    mJSPurpleBuffer(nullptr)
 {
 }
 
@@ -3057,6 +3218,9 @@ nsCycleCollector::PrepareForGarbageCollection()
     if (mIncrementalPhase == IdlePhase) {
         MOZ_ASSERT(mGraph.IsEmpty(), "Non-empty graph when idle");
         MOZ_ASSERT(!mBuilder, "Non-null builder when idle");
+        if (mJSPurpleBuffer) {
+            mJSPurpleBuffer->Destroy();
+        }
         return;
     }
 
@@ -3230,6 +3394,18 @@ nsCycleCollector::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
     // These fields are deliberately not measured:
     // - mJSRuntime: because it's non-owning and measured by JS reporters.
     // - mParams: because it only contains scalars.
+}
+
+JSPurpleBuffer*
+nsCycleCollector::GetJSPurpleBuffer()
+{
+  if (!mJSPurpleBuffer) {
+    // JSPurpleBuffer keeps itself alive, but we need to create it in such way
+    // that it ends up in the normal purple buffer. That happens when
+    // nsRefPtr goes out of the scope and calls Release.
+    nsRefPtr<JSPurpleBuffer> pb = new JSPurpleBuffer(mJSPurpleBuffer);
+  }
+  return mJSPurpleBuffer;
 }
 
 ////////////////////////////////////////////////////////////////////////
