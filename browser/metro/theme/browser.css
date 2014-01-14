@@ -216,7 +216,7 @@ documenttab[selected] .documenttab-selection {
 
 /* Start UI ----------------------------------------------------------------- */
 
-#content-viewport[startpage] browser {
+#content-viewport[startpage] .active-tab-notificationbox {
   padding-bottom: @toolbar_height@;
 }
 
