@@ -272,6 +272,12 @@ pref("media.mediasource.enabled", false);
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
 #endif
+#ifdef MOZ_WEBM_ENCODER
+pref("media.encoder.webm.enabled", true);
+#endif
+#ifdef MOZ_OMX_ENCODER
+pref("media.encoder.omx.enabled", true);
+#endif
 
 // Whether to enable Web Audio support
 pref("media.webaudio.enabled", true);
