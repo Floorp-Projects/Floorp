@@ -23,7 +23,7 @@ exports.Flow = Flow;
 //
 // * **disableLocalFlowControl()**: disables flow control for outgoing frames
 //
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-04#section-6.9.2
+// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.9.2
 
 // API for child classes
 // ---------------------

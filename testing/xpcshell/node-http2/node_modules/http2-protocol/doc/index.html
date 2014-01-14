@@ -73,14 +73,14 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
-              <p><a href="https://github.com/molnarg/node-http2">node-http2-protocol</a> is an implementation of the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-06">HTTP/2 (draft 06)</a>
+              <p><a href="https://github.com/molnarg/node-http2">node-http2-protocol</a> is an implementation of the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-09">HTTP/2 (draft 09)</a>
 framing layer for <a href="http://nodejs.org/">node.js</a>.</p>
 <p>The main building blocks are <a href="http://nodejs.org/api/stream.html">node.js streams</a> that are connected through pipes.</p>
 <p>The main components are:</p>
 <ul>
 <li><p><a href="endpoint.html">Endpoint</a>: represents an HTTP/2 endpoint (client or server). It&#39;s
 responsible for the the first part of the handshake process (sending/receiving the
-<a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-06#section-3.5">connection header</a>) and manages other components (framer, compressor,
+<a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-3.5">connection header</a>) and manages other components (framer, compressor,
 connection, streams) that make up a client or server.</p>
 </li>
 <li><p><a href="connection.html">Connection</a>: multiplexes the active HTTP/2 streams, manages connection
@@ -88,7 +88,7 @@ lifecycle and settings, and responsible for enforcing the connection level limit
 control, initiated stream limit)</p>
 </li>
 <li><p><a href="stream.html">Stream</a>: implementation of the <a href="http2-stream">HTTP/2 stream concept</a>.
-Implements the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-06#section-5.1">stream state machine</a> defined by the standard, provides
+Implements the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-5.1">stream state machine</a> defined by the standard, provides
 management methods and events for using the stream (sending/receiving headers, data, etc.),
 and enforces stream level constraints (flow control, sending only legal frames).</p>
 </li>

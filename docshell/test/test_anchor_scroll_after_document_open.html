@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=881487
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 881487</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 881487 **/
+  SimpleTest.waitForExplicitFinish();
+  // Child needs to invoke us, otherwise our onload will fire before the child
+  // has done the write/close bit.
+  var gotOnload = false;
+  addLoadEvent(function() {
+    gotOnload = true;
+  });
+  onmessage = function handleMessage(msg) {
+    if (msg.data == "doTest") {
+      if (!gotOnload) {
+        addLoadEvent(function() { handleMessage(msg); });
+        return;
+      }
+      frames[0].onscroll = function() {
+        ok(true, "Got a scroll event");
+        SimpleTest.finish();
+      }
+      frames[0].location.hash = "#target";
+      return;
+    }
+    if (msg.data == "haveHash") {
+      ok(false, "Child got reloaded");
+    } else {
+      ok(false, "Unexpected message");
+    }
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=881487">Mozilla Bug 881487</a>
+<p id="display">
+  <!-- iframe goes here so it can scroll -->
+<iframe src="file_anchor_scroll_after_document_open.html"></iframe>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

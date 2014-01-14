@@ -31,4 +31,13 @@ builtin(include, ../../build/autoconf/python-virtualenv.m4)dnl
 builtin(include, ../../build/autoconf/winsdk.m4)dnl
 builtin(include, ../../build/autoconf/icu.m4)dnl
 
+define([__MOZ_AC_INIT_PREPARE], defn([AC_INIT_PREPARE]))
+define([AC_INIT_PREPARE],
+[if test -z "$srcdir"; then
+  srcdir=`dirname "[$]0"`
+fi
+srcdir="$srcdir/../.."
+__MOZ_AC_INIT_PREPARE($1)
+])
+
 MOZ_PROG_CHECKMSYS()

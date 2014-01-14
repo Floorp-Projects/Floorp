@@ -479,7 +479,7 @@ stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
 
 stage-jstests: make-stage-dir
-	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
+	$(MAKE) -C $(DEPTH)/js/src/js/src/tests stage-package
 
 stage-android: make-stage-dir
 ifdef MOZ_ENABLE_SZIP

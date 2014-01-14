@@ -3261,6 +3261,7 @@ public:
   static void RootFrameList(nsPresContext* aPresContext,
                             FILE* out, int32_t aIndent);
   virtual void DumpFrameTree();
+  void DumpFrameTreeLimited();
 
   NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
 #endif

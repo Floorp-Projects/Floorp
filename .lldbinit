@@ -9,3 +9,8 @@ settings set target.inline-breakpoint-strategy always
 # will show a variable declared as "nsIFrame *" that points to an nsBlockFrame
 # object as being of type "nsBlockFrame *" rather than "nsIFrame *".
 settings set target.prefer-dynamic-value run-target
+
+# Import the module that defines complex Gecko debugging commands.  Rather
+# than do any kind of searching, this assumes that you are running lldb from
+# the top level source directory.
+script sys.path.append('python/lldbutils'); import lldbutils; lldbutils.init()

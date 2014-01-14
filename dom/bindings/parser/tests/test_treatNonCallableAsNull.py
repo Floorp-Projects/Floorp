@@ -54,3 +54,18 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should have thrown.")
+
+    parser = parser.reset()
+
+    threw = False
+    try:
+        parser.parse("""
+            [TreatNonCallableAsNull, TreatNonObjectAsNull]
+            callback Function = any(any... arguments);
+        """)
+
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should have thrown.")

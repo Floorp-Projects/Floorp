@@ -951,21 +951,21 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
           // They all have getters, so we can just make it.
           JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, wrapper));
           JS::Rooted<JSFunction*> fun(cx,
-                                      JS_NewFunctionById(cx, (JSNative)attrSpec.getter.op,
+                                      JS_NewFunctionById(cx, (JSNative)attrSpec.getter.propertyOp.op,
                                                          0, 0, global, id));
           if (!fun)
             return false;
-          SET_JITINFO(fun, attrSpec.getter.info);
+          SET_JITINFO(fun, attrSpec.getter.propertyOp.info);
           JSObject *funobj = JS_GetFunctionObject(fun);
           desc.setGetterObject(funobj);
           desc.attributesRef() |= JSPROP_GETTER;
-          if (attrSpec.setter.op) {
+          if (attrSpec.setter.propertyOp.op) {
             // We have a setter! Make it.
-            fun = JS_NewFunctionById(cx, (JSNative)attrSpec.setter.op, 1, 0,
+            fun = JS_NewFunctionById(cx, (JSNative)attrSpec.setter.propertyOp.op, 1, 0,
                                      global, id);
             if (!fun)
               return false;
-            SET_JITINFO(fun, attrSpec.setter.info);
+            SET_JITINFO(fun, attrSpec.setter.propertyOp.info);
             funobj = JS_GetFunctionObject(fun);
             desc.setSetterObject(funobj);
             desc.attributesRef() |= JSPROP_SETTER;
