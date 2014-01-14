@@ -28,6 +28,10 @@ var ContextMenus = {
 
   init: function() {
     document.addEventListener("contextmenu", this, false);
+
+    document.getElementById("contextmenu-enable").addEventListener("click", ContextMenus.enable.bind(this), false);
+    document.getElementById("contextmenu-disable").addEventListener("click", ContextMenus.disable.bind(this), false);
+    document.getElementById("contextmenu-uninstall").addEventListener("click", ContextMenus.uninstall.bind(this), false);
   },
 
   handleEvent: function(event) {
@@ -82,20 +86,24 @@ function init() {
 
   AddonManager.addInstallListener(Addons);
   AddonManager.addAddonListener(Addons);
-  Addons.getAddons();
+  Addons.init();
   showList();
   ContextMenus.init();
+
+  document.getElementById("header-button").addEventListener("click", openLink, false);
 }
+
 
 function uninit() {
   AddonManager.removeInstallListener(Addons);
   AddonManager.removeAddonListener(Addons);
 }
 
-function openLink(aElement) {
+function openLink(aEvent) {
   try {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-    let url = formatter.formatURLPref(aElement.getAttribute("pref"));
+
+    let url = formatter.formatURLPref(aEvent.currentTarget.getAttribute("pref"));
     let BrowserApp = gChromeWin.BrowserApp;
     BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
   } catch (ex) {}
@@ -179,9 +187,8 @@ var Addons = {
     let outer = document.createElement("div");
     outer.className = "addon-item list-item";
     outer.setAttribute("role", "button");
-    outer.addEventListener("click", function() {
-      openLink(document.getElementById("header-button"));
-    }.bind(this), true);
+    outer.setAttribute("pref", "extensions.getAddons.browseAddons");
+    outer.addEventListener("click", openLink, true);
 
     let img = document.createElement("img");
     img.className = "icon";
@@ -194,7 +201,7 @@ var Addons = {
     let title = document.createElement("div");
     title.id = "browse-title";
     title.className = "title";
-    title.textContent = gStringBundle.GetStringFromName("addons.browseAll");;
+    title.textContent = gStringBundle.GetStringFromName("addons.browseAll");
     inner.appendChild(title);
 
     outer.appendChild(inner);
@@ -238,7 +245,7 @@ var Addons = {
     return element;
   },
 
-  getAddons: function getAddons() {
+  init: function init() {
     let self = this;
     AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(aAddons) {
       // Clear all content before filling the addons
@@ -254,6 +261,11 @@ var Addons = {
       let browseItem = self._createBrowseItem();
       list.appendChild(browseItem);
     });
+
+    document.getElementById("uninstall-btn").addEventListener("click", Addons.uninstallCurrent.bind(this), false);
+    document.getElementById("cancel-btn").addEventListener("click", Addons.cancelUninstall.bind(this), false);
+    document.getElementById("disable-btn").addEventListener("click", Addons.disable.bind(this), false);
+    document.getElementById("enable-btn").addEventListener("click", Addons.enable.bind(this), false);
   },
 
   _getOpTypeForOperations: function _getOpTypeForOperations(aOperations) {
@@ -421,24 +433,33 @@ var Addons = {
     this.setEnabled(false);
   },
 
-  uninstall: function uninstall(aAddon) {
-    let list = document.getElementById("addons-list");
+  uninstallCurrent: function uninstallCurrent() {
     let detailItem = document.querySelector("#addons-details > .addon-item");
 
-    let addon = aAddon || detailItem.addon;
+    let addon = detailItem.addon;
     if (!addon)
       return;
 
-    let listItem = this._getElementForAddon(addon.id);
+    this.uninstall(addon);
+  },
 
-    addon.uninstall();
-    if (addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+  uninstall: function uninstall(aAddon) {
+    let list = document.getElementById("addons-list");
+
+    if (!aAddon) {
+        return;
+    }
+
+    let listItem = this._getElementForAddon(aAddon.id);
+
+    aAddon.uninstall();
+    if (aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
       this.showRestart();
 
       // A disabled addon doesn't need a restart so it has no pending ops and
       // can't be cancelled
-      let opType = this._getOpTypeForOperations(addon.pendingOperations);
-      if (!addon.isActive && opType == "")
+      let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
+      if (!aAddon.isActive && opType == "")
         opType = "needs-uninstall";
 
       detailItem.setAttribute("opType", opType);
@@ -518,3 +539,6 @@ var Addons = {
   onDownloadCancelled: function(aInstall) {
   }
 }
+
+window.addEventListener("load", init, false);
+window.addEventListener("unload", uninit, false);
