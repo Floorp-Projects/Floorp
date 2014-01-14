@@ -10,12 +10,6 @@
 
 namespace mozilla {
 
-/**
- * track type from spec 8.4.3.3
- */
-#define Audio_Track 0x01
-#define Video_Track 0x02
-
 class AACTrackMetadata : public TrackMetadataBase {
 public:
   uint32_t SampleRate;     // From 14496-3 table 1.16, it could be 7350 ~ 96000.
