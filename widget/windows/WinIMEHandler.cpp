@@ -118,15 +118,15 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
       if (aWParam) {
         aLParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
       }
-      return false;
-    }
-
-    if (aMessage == WM_USER_TSF_TEXTCHANGE) {
+    } else if (aMessage == WM_USER_TSF_TEXTCHANGE) {
       nsTextStore::OnTextChangeMsg();
       aResult.mConsumed = true;
       return true;
     }
-    return false;
+    // In pure TSF mode, nsIMM32Handler shouldn't handle any messages.
+    if (!sIsIMMEnabled) {
+      return false;
+    }
   }
 #endif // #ifdef NS_ENABLE_TSF
 
