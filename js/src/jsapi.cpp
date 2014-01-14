@@ -1129,16 +1129,14 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
  * the inner window and global object.
  */
 JS_PUBLIC_API(bool)
-JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *objArg)
+JS_RefreshCrossCompartmentWrappers(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     return RemapAllWrappersForObject(cx, obj, obj);
 }
 
 JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
+JS_InitStandardClasses(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2275,20 +2273,13 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(bool)
-JS_DefaultValue(JSContext *cx, JSObject *objArg, JSType hint, jsval *vp)
+JS_DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JS_ASSERT(obj != nullptr);
     JS_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
-
-    RootedValue value(cx);
-    if (!JSObject::defaultValue(cx, obj, hint, &value))
-        return false;
-
-    *vp = value;
-    return true;
+    return JSObject::defaultValue(cx, obj, hint, vp);
 }
 
 JS_PUBLIC_API(bool)
