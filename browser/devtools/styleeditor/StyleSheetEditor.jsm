@@ -197,10 +197,6 @@ StyleSheetEditor.prototype = {
     let sourceEditor = new Editor(config);
 
     sourceEditor.appendTo(inputElement).then(() => {
-      sourceEditor.on("save", () => {
-        this.saveToFile();
-      });
-
       sourceEditor.on("change", () => {
         this.updateStyleSheet();
       });
