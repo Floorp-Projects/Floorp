@@ -52,9 +52,9 @@ var gcPointers = {};
 
 text = snarf(gcTypesFile).split("\n");
 for (var line of text) {
-    if (match = /GCThing: (.*)/.exec(line))
+    if (match = /^GCThing: (.*)/.exec(line))
         gcThings[match[1]] = true;
-    if (match = /GCPointer: (.*)/.exec(line))
+    if (match = /^GCPointer: (.*)/.exec(line))
         gcPointers[match[1]] = true;
 }
 text = null;
