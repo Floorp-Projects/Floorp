@@ -216,7 +216,7 @@ DnsContinueVerifier.prototype = {
     // x1000 on the Date object value.
     var tstamp = (new Date().valueOf() * 1000) - (10 * 86400 * 1000000);
 
-    var dbfile = FileUtils.getFile("ProfD", ["seer.sqlite"]);
+    var dbfile = FileUtils.getFile("ProfD", ["netpredictions.sqlite"]);
     var dbconn = Services.storage.openDatabase(dbfile);
     // We also need to update hits, since the toplevel has been "loaded" a
     // second time (from the prediction that kicked off this callback) to ensure
