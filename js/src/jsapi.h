@@ -3435,7 +3435,7 @@ namespace JS {
  * is protected anyway); instead, create instances only of the derived classes:
  * CompileOptions and OwningCompileOptions.
  */
-class JS_PUBLIC_API(ReadOnlyCompileOptions)
+class JS_FRIEND_API(ReadOnlyCompileOptions)
 {
   protected:
     JSPrincipals *principals_;
@@ -3522,7 +3522,7 @@ class JS_PUBLIC_API(ReadOnlyCompileOptions)
  * comes to refer to the object that owns this, then the whole cycle, and
  * anything else it entrains, will never be freed.
  */
-class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
+class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 {
     JSRuntime *runtime;
     PersistentRootedObject elementRoot;
@@ -3583,7 +3583,7 @@ class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
  * create an instance of this type, it's up to you to guarantee that
  * everything you store in it will outlive it.
  */
-class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) : public ReadOnlyCompileOptions
+class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOptions
 {
     RootedObject elementRoot;
     RootedString elementPropertyRoot;
