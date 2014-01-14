@@ -65,8 +65,8 @@ var FindHelper = {
     this._viewportChanged = false;
   },
 
-  onFindResult: function(aResult, aFindBackwards, aLinkURL) {
-    if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+  onFindResult: function(aData) {
+    if (aData.result == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
       if (this._viewportChanged) {
         if (this._targetTab != BrowserApp.selectedTab) {
           // this should never happen

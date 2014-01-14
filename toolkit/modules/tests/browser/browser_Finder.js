@@ -34,14 +34,14 @@ function startTests () {
   };
   finder.addResultListener(listener);
 
-  listener.onFindResult = function (result) {
+  listener.onFindResult = function ({result}) {
     ok(result == Ci.nsITypeAheadFind.FIND_FOUND, "should find string");
 
-    listener.onFindResult = function (result) {
+    listener.onFindResult = function ({result}) {
       ok(result == Ci.nsITypeAheadFind.FIND_NOTFOUND, "should not find string");
 
       let first = true;
-      listener.onFindResult = function (result) {
+      listener.onFindResult = function ({result}) {
         ok(result == Ci.nsITypeAheadFind.FIND_FOUND, "should find link");
 
         browser.messageManager.addMessageListener("OutlineTest", function f(aMessage) {

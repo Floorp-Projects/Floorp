@@ -1126,15 +1126,13 @@
         -   when not in FIND_LINKS mode.
         -->
       <method name="onFindResult">
-        <parameter name="aResult"/>
-        <parameter name="aFindBackwards"/>
-        <parameter name="aLinkURL" />
+        <parameter name="aData"/>
         <body><![CDATA[
-          this._updateStatusUI(aResult, aFindBackwards);
-          this._updateStatusUIBar(aLinkURL);
+          this._updateStatusUI(aData.result, aData.findBackwards);
+          this._updateStatusUIBar(aData.linkURL);
 
-          if (aResult == this.nsITypeAheadFind.FIND_NOTFOUND)
-            this._findFailedString = this.browser.finder.searchString;
+          if (aData.result == this.nsITypeAheadFind.FIND_NOTFOUND)
+            this._findFailedString = aData.searchString;
           else
             this._findFailedString = null;
 
