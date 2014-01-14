@@ -119,13 +119,17 @@ GlobalPCList.prototype = {
   },
 
   getStatsForEachPC: function(callback, errorCallback) {
+    function getStatsFromPC(pcref) {
+      if (pcref.get()) {
+        pcref.get().getStatsInternal(null, callback, errorCallback);
+      }
+    }
+
     for (let winId in this._list) {
       if (this._list.hasOwnProperty(winId)) {
         this.removeNullRefs(winId);
         if (this._list[winId]) {
-          this._list[winId].forEach(function(pcref) {
-            pcref.get().getStatsInternal(null, callback, errorCallback);
-          });
+          this._list[winId].forEach(getStatsFromPC);
         }
       }
     }
