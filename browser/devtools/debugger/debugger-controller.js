@@ -235,7 +235,7 @@ let DebuggerController = {
       if (target.chrome) {
         this._startChromeDebugging(chromeDebugger, startedDebugging.resolve);
       } else {
-        this._startDebuggingTab(threadActor, startedDebugging.resolve);
+        this._startDebuggingTab(startedDebugging.resolve);
         const startedTracing = promise.defer();
         this._startTracingTab(traceActor, startedTracing.resolve);
 
@@ -339,13 +339,13 @@ let DebuggerController = {
   /**
    * Sets up a debugging session.
    *
-   * @param string aThreadActor
-   *        The remote protocol grip of the tab.
    * @param function aCallback
    *        A function to invoke once the client attaches to the active thread.
    */
-  _startDebuggingTab: function(aThreadActor, aCallback) {
-    this.client.attachThread(aThreadActor, (aResponse, aThreadClient) => {
+  _startDebuggingTab: function(aCallback) {
+    this._target.activeTab.attachThread({
+      useSourceMaps: Prefs.sourceMapsEnabled
+    }, (aResponse, aThreadClient) => {
       if (!aThreadClient) {
         Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
@@ -355,12 +355,14 @@ let DebuggerController = {
       this.ThreadState.connect();
       this.StackFrames.connect();
       this.SourceScripts.connect();
-      aThreadClient.resume(this._ensureResumptionOrder);
+      if (aThreadClient.paused) {
+        aThreadClient.resume(this._ensureResumptionOrder);
+      }
 
       if (aCallback) {
         aCallback();
       }
-    }, { useSourceMaps: Prefs.sourceMapsEnabled });
+    });
   },
 
   /**
@@ -382,7 +384,9 @@ let DebuggerController = {
       this.ThreadState.connect();
       this.StackFrames.connect();
       this.SourceScripts.connect();
-      aThreadClient.resume(this._ensureResumptionOrder);
+      if (aThreadClient.paused) {
+        aThreadClient.resume(this._ensureResumptionOrder);
+      }
 
       if (aCallback) {
         aCallback();
@@ -419,7 +423,7 @@ let DebuggerController = {
    * away old sources and get them again.
    */
   reconfigureThread: function(aUseSourceMaps) {
-    this.client.reconfigureThread({ useSourceMaps: aUseSourceMaps }, aResponse => {
+    this.activeThread.reconfigure({ useSourceMaps: aUseSourceMaps }, aResponse => {
       if (aResponse.error) {
         let msg = "Couldn't reconfigure thread: " + aResponse.message;
         Cu.reportError(msg);
@@ -432,8 +436,10 @@ let DebuggerController = {
       this.SourceScripts.handleTabNavigation();
 
       // Update the stack frame list.
-      this.activeThread._clearFrames();
-      this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+      if (this.activeThread.paused) {
+        this.activeThread._clearFrames();
+        this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+      }
     });
   },
 

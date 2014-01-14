@@ -20,21 +20,21 @@ function run_test()
 
 function test_attach(aResponse, aTabClient)
 {
-  gClient.attachThread(aResponse.threadActor, function(aResponse, aThreadClient) {
+  aTabClient.attachThread({}, function(aResponse, aThreadClient) {
     do_check_eq(aThreadClient.paused, true);
     aThreadClient.resume(function() {
-      test_interrupt();
+      test_interrupt(aThreadClient);
     });
   });
 }
 
-function test_interrupt()
+function test_interrupt(aThreadClient)
 {
-  do_check_eq(gClient.activeThread.paused, false);
-  gClient.activeThread.interrupt(function(aResponse) {
-    do_check_eq(gClient.activeThread.paused, true);
-    gClient.activeThread.resume(function() {
-      do_check_eq(gClient.activeThread.paused, false);
+  do_check_eq(aThreadClient.paused, false);
+  aThreadClient.interrupt(function(aResponse) {
+    do_check_eq(aThreadClient.paused, true);
+    aThreadClient.resume(function() {
+      do_check_eq(aThreadClient.paused, false);
       cleanup();
     });
   });

@@ -655,8 +655,6 @@ ThreadActor.prototype = {
       this.onResume();
     }
 
-    this._state = "exited";
-
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
@@ -682,6 +680,7 @@ ThreadActor.prototype = {
    */
   exit: function () {
     this.disconnect();
+    this._state = "exited";
   },
 
   // Request handlers
@@ -691,7 +690,8 @@ ThreadActor.prototype = {
     }
 
     if (this.state !== "detached") {
-      return { error: "wrongState" };
+      return { error: "wrongState",
+               message: "Current state is " + this.state };
     }
 
     this._state = "attached";
@@ -741,6 +741,8 @@ ThreadActor.prototype = {
 
   onDetach: function (aRequest) {
     this.disconnect();
+    this._state = "detached";
+
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
     return {
       type: "detached"
