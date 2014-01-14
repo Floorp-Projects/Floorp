@@ -49,8 +49,6 @@ const VULNERABILITYSTATUS_NONE             = 0;
 const VULNERABILITYSTATUS_UPDATE_AVAILABLE = 1;
 const VULNERABILITYSTATUS_NO_UPDATE        = 2;
 
-const EXTENSION_BLOCK_FILTERS = ["id", "name", "creator", "homepageURL", "updateURL"];
-
 var gLoggingEnabled = null;
 var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
@@ -319,16 +317,16 @@ Blocklist.prototype = {
   },
 
   /* See nsIBlocklistService */
-  isAddonBlocklisted: function Blocklist_isAddonBlocklisted(addon, appVersion, toolkitVersion) {
-    return this.getAddonBlocklistState(addon, appVersion, toolkitVersion) ==
+  isAddonBlocklisted: function Blocklist_isAddonBlocklisted(id, version, appVersion, toolkitVersion) {
+    return this.getAddonBlocklistState(id, version, appVersion, toolkitVersion) ==
                    Ci.nsIBlocklistService.STATE_BLOCKED;
   },
 
   /* See nsIBlocklistService */
-  getAddonBlocklistState: function Blocklist_getAddonBlocklistState(addon, appVersion, toolkitVersion) {
+  getAddonBlocklistState: function Blocklist_getAddonBlocklistState(id, version, appVersion, toolkitVersion) {
     if (!this._addonEntries)
       this._loadBlocklist();
-    return this._getAddonBlocklistState(addon, this._addonEntries,
+    return this._getAddonBlocklistState(id, version, this._addonEntries,
                                         appVersion, toolkitVersion);
   },
 
@@ -351,8 +349,8 @@ Blocklist.prototype = {
    * @returns The blocklist state for the item, one of the STATE constants as
    *          defined in nsIBlocklistService.
    */
-  _getAddonBlocklistState: function Blocklist_getAddonBlocklistStateCall(addon,
-                           addonEntries, appVersion, toolkitVersion) {
+  _getAddonBlocklistState: function Blocklist_getAddonBlocklistStateCall(id,
+                           version, addonEntries, appVersion, toolkitVersion) {
     if (!gBlocklistEnabled)
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
@@ -361,12 +359,12 @@ Blocklist.prototype = {
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
-    var blItem = this._findMatchingAddonEntry(addonEntries, addon);
+    var blItem = this._findMatchingAddonEntry(addonEntries, id);
     if (!blItem)
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
     for (let currentblItem of blItem.versions) {
-      if (currentblItem.includesItem(addon.version, appVersion, toolkitVersion))
+      if (currentblItem.includesItem(version, appVersion, toolkitVersion))
         return currentblItem.severity >= gBlocklistLevel ? Ci.nsIBlocklistService.STATE_BLOCKED :
                                                        Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
     }
@@ -376,63 +374,36 @@ Blocklist.prototype = {
   /**
    * Returns the set of prefs of the add-on stored in the blocklist file
    * (probably to revert them on disabling).
-   * @param addon
-   *        The add-on whose to-be-reset prefs are to be found.
+   * @param id
+   *        ID of the add-on.
    */
-  _getAddonPrefs: function Blocklist_getAddonPrefs(addon) {
-    let entry = this._findMatchingAddonEntry(this._addonEntries, addon);
+  _getAddonPrefs: function Blocklist_getAddonPrefs(id) {
+    let entry = this._findMatchingAddonEntry(this._addonEntries, id);
     return entry.prefs.slice(0);
   },
 
   _findMatchingAddonEntry: function Blocklist_findMatchingAddonEntry(aAddonEntries,
-                                                                     aAddon) {
-    if (!aAddon)
-      return null;
-    // Returns true if the params object passes the constraints set by entry.
-    // (For every non-null property in entry, the same key must exist in
-    // params and value must be the same)
-    function checkEntry(entry, params) {
-      for (let [key, value] of entry) {
-        if (value === null || value === undefined)
-          continue;
-        if (params[key]) {
-          if (value instanceof RegExp) {
-            if (!value.test(params[key])) {
-              return false;
-            }
-          } else if (value !== params[key]) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    let params = {};
-    for (let filter of EXTENSION_BLOCK_FILTERS) {
-      params[filter] = aAddon[filter];
-    }
-    if (params.creator)
-      params.creator = params.creator.name;
+                                                                     aId) {
     for (let entry of aAddonEntries) {
-      if (checkEntry(entry.attributes, params)) {
-         return entry;
-       }
-     }
-     return null;
+      if (entry.id instanceof RegExp) {
+        if (entry.id.test(aId))
+          return entry;
+      } else if (entry.id == aId) {
+        return entry;
+      }
+    }
+    return null;
   },
 
   /* See nsIBlocklistService */
-  getAddonBlocklistURL: function Blocklist_getAddonBlocklistURL(addon, appVersion, toolkitVersion) {
+  getAddonBlocklistURL: function Blocklist_getAddonBlocklistURL(id, version, appVersion, toolkitVersion) {
     if (!gBlocklistEnabled)
       return "";
 
     if (!this._addonEntries)
       this._loadBlocklist();
 
-    let blItem = this._findMatchingAddonEntry(this._addonEntries, addon);
+    let blItem = this._findMatchingAddonEntry(this._addonEntries, id);
     if (!blItem || !blItem.blockID)
       return null;
 
@@ -763,26 +734,18 @@ Blocklist.prototype = {
       return;
 
     let blockEntry = {
+      id: null,
       versions: [],
       prefs: [],
-      blockID: null,
-      attributes: new Map()
-      // Atleast one of EXTENSION_BLOCK_FILTERS must get added to attributes
+      blockID: null
     };
 
-    // Any filter starting with '/' is interpreted as a regex. So if an attribute
-    // starts with a '/' it must be checked via a regex.
-    function regExpCheck(attr) {
-      return attr.startsWith("/") ? parseRegExp(attr) : attr;
-    }
-
-    for (let filter of EXTENSION_BLOCK_FILTERS) {
-      let attr = blocklistElement.getAttribute(filter);
-      if (attr)
-        blockEntry.attributes.set(filter, regExpCheck(attr));
-    }
-
     var childNodes = blocklistElement.childNodes;
+    var id = blocklistElement.getAttribute("id");
+    // Add-on IDs cannot contain '/', so an ID starting with '/' must be a regex
+    if (id.startsWith("/"))
+      id = parseRegExp(id);
+    blockEntry.id = id;
 
     for (let x = 0; x < childNodes.length; x++) {
       var childElement = childNodes.item(x);
@@ -965,8 +928,9 @@ Blocklist.prototype = {
       for (let addon of addons) {
         let oldState = Ci.nsIBlocklistService.STATE_NOTBLOCKED;
         if (oldAddonEntries)
-          oldState = self._getAddonBlocklistState(addon, oldAddonEntries);
-        let state = self.getAddonBlocklistState(addon);
+          oldState = self._getAddonBlocklistState(addon.id, addon.version,
+                                                  oldAddonEntries);
+        let state = self.getAddonBlocklistState(addon.id, addon.version);
 
         LOG("Blocklist state for " + addon.id + " changed from " +
             oldState + " to " + state);
@@ -977,7 +941,7 @@ Blocklist.prototype = {
 
         if (state === Ci.nsIBlocklistService.STATE_BLOCKED) {
           // It's a hard block. We must reset certain preferences.
-          let prefs = self._getAddonPrefs(addon);
+          let prefs = self._getAddonPrefs(addon.id);
           resetPrefs(prefs);
          }
 
@@ -1009,7 +973,7 @@ Blocklist.prototype = {
           disable: false,
           blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
           item: addon,
-          url: self.getAddonBlocklistURL(addon),
+          url: self.getAddonBlocklistURL(addon.id),
         });
       }
 
@@ -1092,7 +1056,7 @@ Blocklist.prototype = {
             // This add-on is softblocked.
             addon.item.softDisabled = true;
             // We must revert certain prefs.
-            let prefs = self._getAddonPrefs(addon.item);
+            let prefs = self._getAddonPrefs(addon.item.id);
             resetPrefs(prefs);
           }
         }
