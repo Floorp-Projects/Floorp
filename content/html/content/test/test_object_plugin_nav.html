@@ -56,7 +56,7 @@ function checkFocus() {
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(function() {
+function doTest() {
   is(document.activeElement, document.body);
 
   // Preliminary check: tabindex should be -1 on the object.
@@ -83,6 +83,11 @@ SimpleTest.waitForFocus(function() {
   }, true);
 
   synthesizeKey("VK_TAB", {});
+}
+
+SimpleTest.waitForFocus(function () {
+  // Set the focus model so that links are focusable by the tab key even on Mac
+  SpecialPowers.pushPrefEnv({'set': [['accessibility.tabfocus', 7]]}, doTest);
 });
 
 </script>
