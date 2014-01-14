@@ -14,6 +14,7 @@
 #include "nsWindowBase.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TextRange.h"
+#include "mozilla/WindowsVersion.h"
 
 #include <msctf.h>
 #include <textstor.h>
@@ -47,7 +48,8 @@ class MetroWidget;
  */
 
 class nsTextStore MOZ_FINAL : public ITextStoreACP,
-                              public ITfContextOwnerCompositionSink
+                              public ITfContextOwnerCompositionSink,
+                              public ITfInputProcessorProfileActivationSink
 {
 public: /*IUnknown*/
   STDMETHODIMP_(ULONG)  AddRef(void);
@@ -91,6 +93,10 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnStartComposition(ITfCompositionView*, BOOL*);
   STDMETHODIMP OnUpdateComposition(ITfCompositionView*, ITfRange*);
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
+
+public: /*ITfInputProcessorProfileActivationSink*/
+  STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
+                           HKL, DWORD);
 
 protected:
   typedef mozilla::widget::IMEState IMEState;
@@ -190,6 +196,17 @@ public:
     return (IsComposing() && sTsfTextStore->mWidget == aWidget);
   }
 
+  static bool     IsIMM_IME()
+  {
+    return sTsfTextStore && mozilla::IsVistaOrLater() ?
+      sTsfTextStore->mIsIMM_IME : IsIMM_IME(::GetKeyboardLayout(0));
+  }
+
+  static bool     IsIMM_IME(HKL aHKL)
+  {
+     return (::ImmGetIMEFileNameW(aHKL, nullptr, 0) > 0);
+  }
+
 #ifdef DEBUG
   // Returns true when keyboard layout has IME (TIP).
   static bool     CurrentKeyboardLayoutHasIME();
@@ -258,6 +275,8 @@ protected:
   nsRefPtr<ITfDocumentMgr>     mDocumentMgr;
   // Edit cookie associated with the current editing context
   DWORD                        mEditCookie;
+  // Cookie of installing ITfInputProcessorProfileActivationSink
+  DWORD                        mIPProfileCookie;
   // Editing context at the bottom of mDocumentMgr's context stack
   nsRefPtr<ITfContext>         mContext;
   // Currently installed notification sink
@@ -632,6 +651,9 @@ protected:
   // mSink->OnSelectionChange().
   bool                         mNotifySelectionChange;
 
+  // True if current IME is implemented with IMM.
+  bool mIsIMM_IME;
+
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
   // sMessagePump is QI'ed from sTsfThreadMgr
@@ -653,6 +675,8 @@ protected:
   // For IME (keyboard) disabled state:
   static ITfDocumentMgr* sTsfDisabledDocumentMgr;
   static ITfContext* sTsfDisabledContext;
+
+  static ITfInputProcessorProfiles* sInputProcessorProfiles;
 
   // Message the Tablet Input Panel uses to flush text during blurring.
   // See comments in Destroy

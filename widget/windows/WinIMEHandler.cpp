@@ -123,8 +123,13 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
       aResult.mConsumed = true;
       return true;
     }
-    // In pure TSF mode, nsIMM32Handler shouldn't handle any messages.
+    // If we don't support IMM in TSF mode, we don't use nsIMM32Handler.
     if (!sIsIMMEnabled) {
+      return false;
+    }
+    // IME isn't implemented with IMM, nsIMM32Handler shouldn't handle any
+    // messages.
+    if (!nsTextStore::IsIMM_IME()) {
       return false;
     }
   }
