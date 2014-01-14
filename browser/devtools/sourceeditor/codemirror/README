@@ -39,8 +39,6 @@ in the LICENSE file:
  * comment.js
  * dialog/dialog.css
  * dialog/dialog.js
- * keymap/emacs.js
- * keymap/vim.js
  * xml.js
  * css.js
  * javascript.js
