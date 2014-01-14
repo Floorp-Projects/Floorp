@@ -1900,6 +1900,12 @@ MediaStream::ChangeExplicitBlockerCount(int32_t aDelta)
     }
     int32_t mDelta;
   };
+
+  // This can happen if this method has been called asynchronously, and the
+  // stream has been destroyed since then.
+  if (mMainThreadDestroyed) {
+    return;
+  }
   GraphImpl()->AppendMessage(new Message(this, aDelta));
 }
 
