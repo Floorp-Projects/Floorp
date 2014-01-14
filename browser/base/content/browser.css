@@ -7,9 +7,9 @@
 
 #main-window:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
-  min-width: 425px;
+  min-width: 335px;
 %else
-  min-width: 390px;
+  min-width: 300px;
 %endif
 }
 
@@ -284,7 +284,7 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 }
 
 #urlbar-container {
-  min-width: 50ch;
+  min-width: 30ch;
 }
 
 #search-container {
