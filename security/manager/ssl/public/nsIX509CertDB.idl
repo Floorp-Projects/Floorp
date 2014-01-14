@@ -31,7 +31,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(3c2a5658-466a-11e3-a244-180373d97f23)]
+[scriptable, uuid(6502291d-4477-43a3-9688-4b453d055c1d)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -300,6 +300,14 @@ interface nsIX509CertDB : nsISupports {
    */
   void addCert(in ACString certDER, in string aTrust, in string aName);
 
+  // Flags for verifyCertNow (these must match the values in CertVerifier.cpp):
+  // Prevent network traffic. Doesn't work with classic verification.
+  const uint32_t FLAG_LOCAL_ONLY = 1 << 0;
+  // Do not fall back to DV verification after attempting EV validation.
+  // Actually does prevent network traffic, but can cause a valid EV
+  // certificate to not be considered valid.
+  const uint32_t FLAG_NO_DV_FALLBACK_FOR_EV = 1 << 1;
+
   /** Warning: This interface is inteded to use only for testing only as:
    *    1. It can create IO on the main thread.
    *    2. It is in constant change, so in/out can change at any release.
@@ -311,7 +319,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aCert Obtain the stored trust of this certificate
    *  @param aUsage a integer representing the usage from NSS
-   *  @param aLocalOnly prevent network activity for revocation
+   *  @param aFlags flags as described above
    *  @param verifedChain chain of verification up to the root if success
    *  @param aHasEVPolicy bool that signified that the cert was an EV cert
    *  @return 0 if success or the value or the error code for the verification
@@ -320,7 +328,7 @@ interface nsIX509CertDB : nsISupports {
   int32_t /*PRErrorCode*/
     verifyCertNow(in nsIX509Cert aCert,
                   in int64_t /*SECCertificateUsage*/ aUsage,
-                  in bool aLocalOnly,
+                  in uint32_t aFlags,
                   out nsIX509CertList verifiedChain,
                   out bool aHasEVPolicy);
 
