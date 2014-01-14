@@ -121,7 +121,7 @@
 //
 // [1]: http://nodejs.org/api/https.html
 // [2]: http://nodejs.org/api/http.html
-// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-04#section-8.1.3
+// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-8.1.3.2
 // [expect-continue]: https://github.com/http2/http2-spec/issues/18
 // [connect]: https://github.com/http2/http2-spec/issues/230
 
@@ -153,9 +153,9 @@ var deprecatedHeaders = [
   'upgrade'
 ];
 
-// The implemented version of the HTTP/2 specification is [draft 04][1].
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-04
-var implementedVersion = 'HTTP-draft-08/2.0';
+// The implemented version of the HTTP/2 specification is [draft 09][1].
+// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-09
+var implementedVersion = 'HTTP-draft-09/2.0';
 
 // When doing NPN/ALPN negotiation, HTTP/1.1 is used as fallback
 var supportedProtocols = [implementedVersion, 'http/1.1', 'http/1.0'];
@@ -207,7 +207,7 @@ function IncomingMessage(stream) {
 }
 IncomingMessage.prototype = Object.create(PassThrough.prototype, { constructor: { value: IncomingMessage } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-05#section-8.1.2.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -403,6 +403,7 @@ Server.prototype._start = function _start(socket) {
   });
 
   endpoint.on('error', this.emit.bind(this, 'clientError'));
+  socket.on('error', this.emit.bind(this, 'clientError'));
 
   this.emit('connection', socket, endpoint);
 };
@@ -499,7 +500,7 @@ function IncomingRequest(stream) {
 }
 IncomingRequest.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingRequest } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-05#section-8.1.2.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -930,7 +931,7 @@ function IncomingResponse(stream) {
 }
 IncomingResponse.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingResponse } });
 
-// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-05#section-8.1.2.2)
+// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-8.1.3.2)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
