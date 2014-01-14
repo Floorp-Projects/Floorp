@@ -130,7 +130,7 @@ InternalMethods.prototype = {
    *          sessionToken: Session for the FxA server
    *          kA: An encryption key from the FxA server
    *          kB: An encryption key derived from the user's FxA password
-   *          isVerified: email verification status
+   *          verified: email verification status
    *        }
    *        or null if no user is signed in
    */
@@ -305,7 +305,7 @@ InternalMethods.prototype = {
   },
 
   isUserEmailVerified: function isUserEmailVerified(data) {
-    return !!(data && data.isVerified);
+    return !!(data && data.verified);
   },
 
   /**
@@ -334,7 +334,7 @@ InternalMethods.prototype = {
   },
 
   whenVerified: function(data) {
-    if (data.isVerified) {
+    if (data.verified) {
       log.debug("already verified");
       return Promise.resolve(data);
     }
@@ -388,7 +388,7 @@ InternalMethods.prototype = {
           // off or stop polling altogether
           this.getUserAccountData()
             .then((data) => {
-              data.isVerified = true;
+              data.verified = true;
               return this.setUserAccountData(data);
             })
             .then((data) => {
@@ -456,7 +456,7 @@ this.FxAccounts.prototype = Object.freeze({
 
   // set() makes sure that polling is happening, if necessary.
   // get() does not wait for verification, and returns an object even if
-  // unverified. The caller of get() must check .isVerified .
+  // unverified. The caller of get() must check .verified .
   // The "fxaccounts:onlogin" event will fire only when the verified state
   // goes from false to true, so callers must register their observer
   // and then call get(). In particular, it will not fire when the account
@@ -464,7 +464,7 @@ this.FxAccounts.prototype = Object.freeze({
   // the account is verified, the event will never fire. So callers must do:
   //   register notification observer (go)
   //   userdata = get()
-  //   if (userdata.isVerified()) {go()}
+  //   if (userdata.verified()) {go()}
 
   /**
    * Set the current user signed in to Firefox Accounts.
@@ -477,7 +477,7 @@ this.FxAccounts.prototype = Object.freeze({
    *          uid: The user's unique id
    *          sessionToken: Session for the FxA server
    *          keyFetchToken: an unused keyFetchToken
-   *          isVerified: true/false
+   *          verified: true/false
    *        }
    * @return Promise
    *         The promise resolves to null when the data is saved
@@ -512,7 +512,7 @@ this.FxAccounts.prototype = Object.freeze({
    *          sessionToken: Session for the FxA server
    *          kA: An encryption key from the FxA server
    *          kB: An encryption key derived from the user's FxA password
-   *          isVerified: email verification status
+   *          verified: email verification status
    *        }
    *        or null if no user is signed in.
    */
