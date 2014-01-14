@@ -143,6 +143,7 @@
         <parameter name="aTarget"/>
         <body><![CDATA[
           aTarget.setAttribute('label', this.contentDocument.title);
+          aTarget.src = this.src;
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
           this.content.socialErrorListener.remove();
@@ -192,7 +193,16 @@
           let win = findChromeWindowForChats();
           let chatbar = win.SocialChatBar.chatbar;
           chatbar.openChat(provider, "about:blank", win => {
-            this.swapDocShells(chatbar.selectedChat);
+            let cb = chatbar.selectedChat;
+            this.swapDocShells(cb);
+
+            // chatboxForURL is a map of URL -> chatbox used to avoid opening
+            // duplicate chat windows. Ensure reattached chat windows aren't
+            // registered with about:blank as their URL, otherwise reattaching
+            // more than one chat window isn't possible.
+            chatbar.chatboxForURL.delete("about:blank");
+            chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
+
             chatbar.focus();
             this.close();
           });
@@ -503,7 +513,7 @@
             this.menuitemMap.delete(aChatbox);
             this.menupopup.removeChild(menuitem);
           }
-          this.chatboxForURL.delete(aChatbox.getAttribute('src'));
+          this.chatboxForURL.delete(aChatbox.src);
         ]]></body>
       </method>
 
@@ -643,7 +653,8 @@
           for (let name in aOptions)
             options += "," + name + "=" + aOptions[name];
 
-          let otherWin = window.openDialog("chrome://browser/content/chatWindow.xul", null, "chrome,all,dialog=no" + options);
+          let otherWin = window.openDialog("chrome://browser/content/chatWindow.xul",
+                                           "_blank", "chrome,all,dialog=no" + options);
 
           otherWin.addEventListener("load", function _chatLoad(event) {
             if (event.target != otherWin.document)
