@@ -95,6 +95,12 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const CSSPoint& aPoint)
   // If the scrollable frame got a scroll request from something other than us
   // since the last layers update, then we don't want to push our scroll request
   // because we'll clobber that one, which is bad.
+  // Note that content may have just finished sending a layers update with a scroll
+  // offset update to the APZ, in which case the origin will be reset to null and we
+  // might actually be clobbering the content-side scroll offset with a stale APZ
+  // scroll offset. This is unavoidable because of the async communication between
+  // APZ and content; however the code in NotifyLayersUpdated should reissue a new
+  // repaint request to bring everything back into sync.
   if (!aFrame->OriginOfLastScroll() || aFrame->OriginOfLastScroll() == nsGkAtoms::apz) {
     aFrame->ScrollToCSSPixelsApproximate(aPoint, nsGkAtoms::apz);
   }
