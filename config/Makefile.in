@@ -27,19 +27,21 @@ nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
 	cp $^ $@.tmp
 	mv $@.tmp $@
 
-NSINSTALL_FILES := nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL_EXECUTABLES := nsinstall$(HOST_BIN_SUFFIX)
 NSINSTALL_DEST := $(DIST)/bin
 NSINSTALL_TARGET := export
 INSTALL_TARGETS += NSINSTALL
 endif
 endif
 
+ifndef BUILDING_JS
 HEADERS_FILES = \
 	$(DEPTH)/mozilla-config.h \
 	$(NULL)
 HEADERS_DEST := $(DIST)/include
 HEADERS_TARGET := export
 INSTALL_TARGETS += HEADERS
+endif
 
 PYTHON_UNIT_TESTS := $(wildcard $(srcdir)/tests/unit-*.py)
 
@@ -47,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
 
+ifndef BUILDING_JS
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!
 export::
@@ -54,6 +57,7 @@ ifdef MOZ_BUILD_DATE
 	printf '%s' $(MOZ_BUILD_DATE) > buildid
 else
 	$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid > buildid
+endif
 endif
 
 ifdef WRAP_SYSTEM_INCLUDES
@@ -108,10 +112,10 @@ GARBAGE += \
 
 FORCE:
 
-check-preqs = \
-  check-jar-mn \
-  check-makefiles \
-  $(NULL)
+ifndef BUILDING_JS
+check-preqs += check-jar-mn
+endif
+check-preqs += check-makefiles
 
 check:: $(check-preqs)
 

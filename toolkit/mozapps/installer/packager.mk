@@ -381,8 +381,11 @@ RELEASE_SIGN_ANDROID_APK = \
   $(RM) $(2)-unaligned.apk
 
 ROBOCOP_PATH = $(abspath $(_ABS_DIST)/../build/mobile/robocop)
+# Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
+# is used in a series of commands that run under a "cd something", while
+# $(NSINSTALL) is relative.
 INNER_ROBOCOP_PACKAGE= \
-  $(NSINSTALL) $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
+  cp $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk,$(_ABS_DIST)/robocop.apk)
 
 BACKGROUND_TESTS_PATH = $(abspath $(_ABS_DIST)/../mobile/android/tests/background/junit3)

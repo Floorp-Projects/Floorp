@@ -876,6 +876,9 @@ class IDLInterface(IDLObjectWithScope):
             if identifier == "TreatNonCallableAsNull":
                 raise WebIDLError("TreatNonCallableAsNull cannot be specified on interfaces",
                                   [attr.location, self.location])
+            if identifier == "TreatNonObjectAsNull":
+                raise WebIDLError("TreatNonObjectAsNull cannot be specified on interfaces",
+                                  [attr.location, self.location])
             elif identifier == "NoInterfaceObject":
                 if not attr.noArguments():
                     raise WebIDLError("[NoInterfaceObject] must take no arguments",
@@ -1410,6 +1413,10 @@ class IDLType(IDLObject):
     def treatNonCallableAsNull(self):
         assert self.tag() == IDLType.Tags.callback
         return self.nullable() and self.inner._treatNonCallableAsNull
+
+    def treatNonObjectAsNull(self):
+        assert self.tag() == IDLType.Tags.callback
+        return self.nullable() and self.inner._treatNonObjectAsNull
 
     def addExtendedAttributes(self, attrs):
         assert len(attrs) == 0
@@ -2690,10 +2697,7 @@ class IDLAttribute(IDLInterfaceMember):
 
     def handleExtendedAttribute(self, attr):
         identifier = attr.identifier()
-        if identifier == "TreatNonCallableAsNull":
-            raise WebIDLError("TreatNonCallableAsNull cannot be specified on attributes",
-                              [attr.location, self.location])
-        elif identifier == "SetterThrows" and self.readonly:
+        if identifier == "SetterThrows" and self.readonly:
             raise WebIDLError("Readonly attributes must not be flagged as "
                               "[SetterThrows]",
                               [self.location])
@@ -2937,6 +2941,7 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
                 argument.resolve(self)
 
         self._treatNonCallableAsNull = False
+        self._treatNonObjectAsNull = False
 
     def isCallback(self):
         return True
@@ -2982,8 +2987,13 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
+            elif attr.identifier() == "TreatNonObjectAsNull":
+                self._treatNonObjectAsNull = True
             else:
                 unhandledAttrs.append(attr)
+        if self._treatNonCallableAsNull and self._treatNonObjectAsNull:
+            raise WebIDLError("Cannot specify both [TreatNonCallableAsNull] "
+                              "and [TreatNonObjectAsNull]", [self.location])
         if len(unhandledAttrs) != 0:
             IDLType.addExtendedAttributes(self, unhandledAttrs)
 
