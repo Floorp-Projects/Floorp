@@ -954,8 +954,8 @@ mFailedLockCount(0)
   const char *trackedDBs[] = {
     "addons.sqlite", "content-prefs.sqlite", "cookies.sqlite",
     "downloads.sqlite", "extensions.sqlite", "formhistory.sqlite",
-    "index.sqlite", "healthreport.sqlite", "permissions.sqlite",
-    "places.sqlite", "search.sqlite", "seer.sqlite", "signons.sqlite",
+    "index.sqlite", "healthreport.sqlite", "netpredictions.sqlite",
+    "permissions.sqlite", "places.sqlite", "search.sqlite", "signons.sqlite",
     "urlclassifier3.sqlite", "webappsstore.sqlite"
   };
 
