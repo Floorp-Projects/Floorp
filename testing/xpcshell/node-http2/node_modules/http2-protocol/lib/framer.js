@@ -143,7 +143,7 @@ Deserializer.prototype._transform = function _transform(chunk, encoding, done) {
   done();
 };
 
-// [Frame Header](http://http2.github.io/http2-spec/#FrameHeader)
+// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-4.1)
 // --------------------------------------------------------------
 //
 // HTTP/2.0 frames share a common base format consisting of an 8-byte header followed by 0 to 65535
@@ -259,7 +259,7 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 // * `typeSpecificAttributes`: a register of frame specific frame object attributes (used by
 //   logging code and also serves as documentation for frame objects)
 
-// [DATA Frames](http://http2.github.io/http2-spec/#DataFrames)
+// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.1)
 // ------------------------------------------------------------
 //
 // DATA frames (type=0x0) convey arbitrary, variable-length sequences of octets associated with a
@@ -287,7 +287,7 @@ Deserializer.DATA = function readData(buffer, frame) {
   frame.data = buffer;
 };
 
-// [HEADERS](http://http2.github.io/http2-spec/#HEADERS)
+// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.2)
 // --------------------------------------------------------------
 //
 // The HEADERS frame (type=0x1) allows the sender to create a stream.
@@ -341,7 +341,7 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   }
 };
 
-// [PRIORITY](http://http2.github.io/http2-spec/#PRIORITY)
+// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.3)
 // -------------------------------------------------------
 //
 // The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream.
@@ -372,7 +372,7 @@ Deserializer.PRIORITY = function readPriority(buffer, frame) {
   frame.priority = buffer.readUInt32BE(0);
 };
 
-// [RST_STREAM](http://http2.github.io/http2-spec/#RST_STREAM)
+// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.4)
 // -----------------------------------------------------------
 //
 // The RST_STREAM frame (type=0x3) allows for abnormal termination of a stream.
@@ -406,7 +406,7 @@ Deserializer.RST_STREAM = function readRstStream(buffer, frame) {
   frame.error = errorCodes[buffer.readUInt32BE(0)];
 };
 
-// [SETTINGS](http://http2.github.io/http2-spec/#SETTINGS)
+// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.5)
 // -------------------------------------------------------
 //
 // The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
@@ -507,7 +507,7 @@ definedSettings[7] = { name: 'SETTINGS_INITIAL_WINDOW_SIZE', flag: false };
 //   bits are reserved.
 definedSettings[10] = { name: 'SETTINGS_FLOW_CONTROL_OPTIONS', flag: true };
 
-// [PUSH_PROMISE](http://http2.github.io/http2-spec/#PUSH_PROMISE)
+// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.6)
 // ---------------------------------------------------------------
 //
 // The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams the
@@ -553,7 +553,7 @@ Deserializer.PUSH_PROMISE = function readPushPromise(buffer, frame) {
   frame.data = buffer.slice(4);
 };
 
-// [PING](http://http2.github.io/http2-spec/#PING)
+// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.7)
 // -----------------------------------------------
 //
 // The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
@@ -583,7 +583,7 @@ Deserializer.PING = function readPing(buffer, frame) {
   frame.data = buffer;
 };
 
-// [GOAWAY](http://http2.github.io/http2-spec/#GOAWAY)
+// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.8)
 // ---------------------------------------------------
 //
 // The GOAWAY frame (type=0x7) informs the remote peer to stop creating streams on this connection.
@@ -630,7 +630,7 @@ Deserializer.GOAWAY = function readGoaway(buffer, frame) {
   frame.error = errorCodes[buffer.readUInt32BE(4)];
 };
 
-// [WINDOW_UPDATE](http://http2.github.io/http2-spec/#WINDOW_UPDATE)
+// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.9)
 // -----------------------------------------------------------------
 //
 // The WINDOW_UPDATE frame (type=0x9) is used to implement flow control.
@@ -662,7 +662,7 @@ Deserializer.WINDOW_UPDATE = function readWindowUpdate(buffer, frame) {
   frame.window_size = buffer.readUInt32BE(0) & 0x7fffffff;
 };
 
-// [CONTINUATION](http://http2.github.io/http2-spec/#CONTINUATION)
+// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.10)
 // ------------------------------------------------------------
 //
 // The CONTINUATION frame (type=0xA) is used to continue a sequence of header block fragments.
@@ -687,7 +687,7 @@ Deserializer.CONTINUATION = function readContinuation(buffer, frame) {
   frame.data = buffer;
 };
 
-// [Error Codes](http://http2.github.io/http2-spec/#ErrorCodes)
+// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-7)
 // ------------------------------------------------------------
 
 var errorCodes = [
