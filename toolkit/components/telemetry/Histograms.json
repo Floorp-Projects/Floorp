@@ -3408,13 +3408,6 @@
     "n_buckets": 30,
     "description": "The subset of sessionstore.js dealing with storing history (total size, in bytes)"
   },
-  "FX_SESSION_RESTORE_TOTAL_POSTDATA_SIZE_BYTES": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing POST data (total size, in bytes)"
-  },
   "FX_SESSION_RESTORE_INDIVIDUAL_OPEN_WINDOWS_SIZE_BYTES": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3463,13 +3456,6 @@
     "high": "5000000",
     "n_buckets": 30,
     "description": "The subset of sessionstore.js dealing with storing history (item size, in bytes)"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_POSTDATA_SIZE_BYTES": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing history POST data (item size, in bytes)"
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",

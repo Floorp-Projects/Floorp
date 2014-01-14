@@ -6,7 +6,7 @@
 
 /**
  * nsISessionStore keeps track of the current browsing state - i.e.
- * tab history, cookies, scroll state, form data, POSTDATA and window features
+ * tab history, cookies, scroll state, form data, and window features
  * - and allows to restore everything into one window.
  */
 
