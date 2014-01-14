@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/vtt.jsm");
 
 var Ci = Components.interfaces;
 
-var WEBVTTPARSERWRAPPER_CID = "{1604a67f-3b72-4027-bcba-6dddd5be6b10}";
+var WEBVTTPARSERWRAPPER_CID = "{acf6e493-0092-4b26-b172-241e375c57ab}";
 var WEBVTTPARSERWRAPPER_CONTRACTID = "@mozilla.org/webvttParserWrapper;1";
 
 function WebVTTParserWrapper()
