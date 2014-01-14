@@ -6,6 +6,7 @@ html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -17,7 +18,6 @@ body {
   background-repeat: repeat-x;
 
   background-color: #f1f1f1;
-  min-height: 100%;
   padding: 0 20px;
 
   font-weight: 300;
@@ -39,6 +39,7 @@ li:not(:last-of-type),
 #errorLongDesc,
 #errorLongContent {
   padding-bottom: 10px;
+  flex: 1;
 }
 
 h1 {
@@ -93,11 +94,11 @@ button + button {
   max-width: 550px;
   margin-left: auto;
   margin-right: auto;
-
   padding-top: 1rem;
-  /* Ensure that there's some space at the bottom of the page.
-   * On about:blocked we have an absolutely positioned link that should take this space */
-  padding-bottom: 5rem;
+
+  min-height: calc(100% - 1rem);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Expanders have a structure of
@@ -150,17 +151,15 @@ div[collapsed="true"] > .expander + * {
    since there is already a mechanism in browser.js for trapping
    oncommand events from unprivileged chrome pages (ErrorPageEventHandler).*/
 #ignoreWarningButton {
- width: 100%;
- -moz-appearance: none;
- background: #b14646;
- border: none;
- text-decoration: underline;
- margin: 0;
- font-size: smaller;
- border-bottom: none;
- position: absolute;
- bottom: 0;
- left: 0;
+  width: calc(100% + 40px);
+  -moz-appearance: none;
+  background: #b14646;
+  border: none;
+  text-decoration: underline;
+  margin: 0;
+  -moz-margin-start: -20px;
+  font-size: smaller;
+  border-radius: 0;
 }
 
 /* On large screen devices (hopefully a 7+ inch tablet, we already center content (see #errorPageContainer above).
@@ -179,6 +178,7 @@ div[collapsed="true"] > .expander + * {
   @media (min-height: 550px) {
     #errorPageContainer {
       padding-top: 64px;
+      min-height: calc(100% - 64px);
     }
   }
 
