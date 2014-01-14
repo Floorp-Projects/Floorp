@@ -52,7 +52,7 @@ add_task(function() {
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
-  window.resizeTo(390, window.outerHeight);
+  window.resizeTo(380, window.outerHeight);
   yield waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(!navbar.querySelector("#search-container"), "Search container should be overflowing");
   let searchbar = document.getElementById("searchbar");
