@@ -12,7 +12,7 @@ interface nsIVariant;
 /**
  * Interface for a wrapper of a JS WebVTT parser (vtt.js).
  */
-[scriptable, uuid(1604a67f-3b72-4027-bcba-6dddd5be6b10)]
+[scriptable, uuid(acf6e493-0092-4b26-b172-241e375c57ab)]
 interface nsIWebVTTParserWrapper : nsISupports
 {
   /**
