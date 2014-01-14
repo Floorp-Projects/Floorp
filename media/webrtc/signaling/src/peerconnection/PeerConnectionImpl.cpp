@@ -502,8 +502,14 @@ PeerConnectionImpl::~PeerConnectionImpl()
   CloseInt();
 
 #ifdef MOZILLA_INTERNAL_API
-  // Deregister as an NSS Shutdown Object
-  shutdown(calledFromObject);
+  {
+    // Deregister as an NSS Shutdown Object
+    nsNSSShutDownPreventionLock locker;
+    if (!isAlreadyShutDown()) {
+      destructorSafeDestroyNSSReference();
+      shutdown(calledFromObject);
+    }
+  }
 #endif
 
   // Since this and Initialize() occur on MainThread, they can't both be
@@ -1611,6 +1617,12 @@ PeerConnectionImpl::ShutdownMedia()
 // finally deallocate it in our destructor.
 void
 PeerConnectionImpl::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void
+PeerConnectionImpl::destructorSafeDestroyNSSReference()
 {
   MOZ_ASSERT(NS_IsMainThread());
   CSFLogDebug(logTag, "%s: NSS shutting down; freeing our DtlsIdentity.", __FUNCTION__);
