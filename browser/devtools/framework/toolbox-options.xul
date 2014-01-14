@@ -61,6 +61,12 @@
                     tooltiptext="&options.timestampMessages.tooltip;"
                     data-pref="devtools.webconsole.timestampMessages"/>
         </vbox>
+        <label value="&options.styleeditor.label;"/>
+        <vbox id="styleeditor-options" class="options-groupbox">
+          <checkbox label="&options.stylesheetSourceMaps.label;"
+                    tooltiptext="&options.stylesheetSourceMaps.tooltip;"
+                    data-pref="devtools.styleeditor.source-maps-enabled"/>
+        </vbox>
         <label value="&options.profiler.label;"/>
         <vbox id="profiler-options" class="options-groupbox">
           <checkbox label="&options.showPlatformData.label;"
