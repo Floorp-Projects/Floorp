@@ -1217,7 +1217,7 @@ Toolbox.prototype = {
         outstanding.push(panel.destroy());
       } catch (e) {
         // We don't want to stop here if any panel fail to close.
-        console.error(e);
+        console.error("Panel " + id + ":", e);
       }
     }
 
