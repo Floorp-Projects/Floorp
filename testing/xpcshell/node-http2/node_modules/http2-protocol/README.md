@@ -1,7 +1,7 @@
 node-http2-protocol
 ===================
 
-An HTTP/2 ([draft-ietf-httpbis-http2-07](http://tools.ietf.org/html/draft-ietf-httpbis-http2-07))
+An HTTP/2 ([draft-ietf-httpbis-http2-09](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09))
 framing layer implementaion for node.js.
 
 Installation
@@ -40,7 +40,7 @@ For pretty printing logs, you will also need a global install of bunyan (`npm in
 
 The developer documentation is located in the `doc` directory. The docs are usually updated only
 before releasing a new version. To regenerate them manually, run `npm run-script prepublish`.
-There's a hosted version which is located [here](http://molnarg.github.io/node-http2/doc/).
+There's a hosted version which is located [here](http://molnarg.github.io/node-http2-protocol/doc/).
 
 ### Running the tests ###
 
@@ -52,10 +52,10 @@ point to understand the code.
 To generate a code coverage report, run `npm test --coverage` (it may be slow, be patient).
 Code coverage summary as of version 0.6.0:
 ```
-Statements   : 92.39% ( 1165/1261 )
-Branches     : 86.57% ( 477/551 )
-Functions    : 91.22% ( 135/148 )
-Lines        : 92.35% ( 1159/1255 )
+Statements   : 92.43% ( 1257/1360 )
+Branches     : 86.36% ( 500/579 )
+Functions    : 90.12% ( 146/162 )
+Lines        : 92.39% ( 1251/1354 )
 ```
 
 There's a hosted version of the detailed (line-by-line) coverage report

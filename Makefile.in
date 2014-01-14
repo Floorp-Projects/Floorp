@@ -17,13 +17,17 @@ export TOPLEVEL_BUILD := 1
 
 default::
 
+ifdef MOZ_BUILD_APP
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
+endif
 
 include $(topsrcdir)/config/config.mk
 
 ifndef LIBXUL_SDK
 ifdef COMPILE_ENVIRONMENT
+ifndef BUILDING_JS
 BUILD_JS = 1
+endif
 endif
 endif
 
@@ -34,29 +38,40 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    .mozconfig.mk
 
+ifdef BUILDING_JS
+configure_dir = $(topsrcdir)/js/src
+else
+configure_dir = $(topsrcdir)
+endif
+
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
-libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend
+libs binaries export tools:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
 ifdef BUILD_JS
 libs binaries export tools:: js-config-status
 endif
 endif
 
+ifdef BUILDING_JS
+.PHONY: CLOBBER
+CLOBBER:
+else
 CLOBBER: $(topsrcdir)/CLOBBER
 	@echo 'STOP!  The CLOBBER file has changed.'
 	@echo 'Please run the build through a sanctioned build wrapper, such as'
 	@echo '"mach build" or client.mk.'
 	@exit 1
+endif
 
-$(topsrcdir)/configure: $(topsrcdir)/configure.in
+$(configure_dir)/configure: $(configure_dir)/configure.in
 	@echo 'STOP!  configure.in has changed, and your configure is out of date.'
 	@echo 'Please rerun autoconf and re-configure your build directory.'
 	@echo 'To ignore this message, touch "configure" in the source directory,'
 	@echo 'but your build might not succeed.'
 	@exit 1
 
-config.status: $(topsrcdir)/configure
+config.status: $(configure_dir)/configure
 	@echo 'STOP!  configure has changed and needs to be run in this build directory.'
 	@echo 'Please rerun configure.'
 	@echo 'To ignore this message, touch "config.status" in the build directory,'
@@ -90,7 +105,7 @@ endif
 install_manifests := bin idl include public private sdk
 install_manifest_depends = \
   CLOBBER \
-  $(topsrcdir)/configure \
+  $(configure_dir)/configure \
   config.status \
   backend.RecursiveMakeBackend \
   $(NULL)
@@ -101,6 +116,18 @@ endif
 
 .PHONY: install-manifests
 install-manifests: $(addprefix install-dist-,$(install_manifests))
+
+# process_install_manifest needs to be invoked with --no-remove when building
+# js as standalone because automated builds are building nspr separately and
+# that would remove the resulting files. It is also necessary when building
+# js as part of gecko because that would remove the files exported from gecko.
+# Eventually, a standalone js build would just be able to build nspr itself,
+# removing the need for the former. But that won't likely happen before
+# finishing to merge gecko and js build systems, removing the need for the
+# latter.
+ifdef BUILDING_JS
+NO_REMOVE=1
+endif
 
 .PHONY: $(addprefix install-dist-,$(install_manifests))
 $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manifest_depends)
@@ -139,9 +166,11 @@ endif
 # with no regard for PGO passes. This decision could probably be revisited.
 export:: install-dist-sdk
 
+ifndef BUILDING_JS
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
+endif
 endif
 
 default all::
@@ -181,6 +210,7 @@ endif
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
+ifndef BUILDING_JS
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
@@ -225,6 +255,7 @@ endif
 # so transform it to an immediate assignment.
 MOZ_SOURCE_STAMP := $(MOZ_SOURCE_STAMP)
 export MOZ_SOURCE_STAMP
+endif
 
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
@@ -250,6 +281,21 @@ check::
 	@relcount=`find $(DIST)/bin -name '*.so' | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo 'FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?'; exit 1; else echo 'PASSED'; fi
 endif
 
+ifdef BUILDING_JS
+# Delegate js-specific rules to js
+check-%:
+	$(MAKE) -C js/src $@
+
+source-package install:
+	$(MAKE) -C js/src $@
+
+# Every export rule depends on config/export, but the rule for config/export
+# doesn't exist when building js non-standalone.
+.PHONY: config/export
+config/export:
+
+else
+
 ifdef BUILD_JS
 js/src/Makefile: subsrcdir := js/src
 
@@ -260,6 +306,7 @@ accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
 ifdef ENABLE_CLANG_PLUGIN
 js/src/export config/export: build/clang-plugin/export
+endif
 endif
 endif
 endif

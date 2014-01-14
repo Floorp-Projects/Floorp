@@ -1,4 +1,4 @@
-// [node-http2-protocol][homepage] is an implementation of the [HTTP/2 (draft 06)][http2]
+// [node-http2-protocol][homepage] is an implementation of the [HTTP/2 (draft 09)][http2]
 // framing layer for [node.js][node].
 //
 // The main building blocks are [node.js streams][node-stream] that are connected through pipes.
@@ -28,10 +28,10 @@
 //   between the binary and the JavaScript object representation of HTTP/2 frames
 //
 // [homepage]:            https://github.com/molnarg/node-http2
-// [http2]:               http://tools.ietf.org/html/draft-ietf-httpbis-http2-06
-// [http2-connheader]:    http://tools.ietf.org/html/draft-ietf-httpbis-http2-06#section-3.5
-// [http2-stream]:        http://tools.ietf.org/html/draft-ietf-httpbis-http2-06#section-5
-// [http2-streamstate]:   http://tools.ietf.org/html/draft-ietf-httpbis-http2-06#section-5.1
+// [http2]:               http://tools.ietf.org/html/draft-ietf-httpbis-http2-09
+// [http2-connheader]:    http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-3.5
+// [http2-stream]:        http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-5
+// [http2-streamstate]:   http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-5.1
 // [node]:                http://nodejs.org/
 // [node-stream]:         http://nodejs.org/api/stream.html
 // [node-https]:          http://nodejs.org/api/https.html

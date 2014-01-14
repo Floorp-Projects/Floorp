@@ -837,7 +837,10 @@ SpdySession3::CleanupStream(SpdyStream3 *aStream, nsresult aResult,
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG3(("SpdySession3::CleanupStream %p %p 0x%X %X\n",
-        this, aStream, aStream->StreamID(), aResult));
+        this, aStream, aStream ? aStream->StreamID() : 0, aResult));
+  if (!aStream) {
+    return;
+  }
 
   SpdyPushedStream3 *pushSource = nullptr;
 

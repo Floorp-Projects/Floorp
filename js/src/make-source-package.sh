@@ -39,9 +39,17 @@ case $cmd in
 	${MKDIR} -p ${tgtpath}/intl
 	cp -t ${tgtpath}/intl -dRp ${SRCDIR}/../../intl/icu
 
-	# copy autoconf config directory.
+	# copy main moz.build and Makefile.in
+	cp -t ${tgtpath} -dRp ${SRCDIR}/../../Makefile.in ${SRCDIR}/../../moz.build
+
+	# copy a nspr file used by the build system
+	${MKDIR} -p ${tgtpath}/nsprpub/config
+	cp -t ${tgtpath}/nsprpub/config -dRp \
+		${SRCDIR}/../../nsprpub/config/make-system-wrappers.pl
+
+	# copy build and config directory.
 	${MKDIR} -p ${tgtpath}/build
-	cp -t ${tgtpath}/build -dRp ${SRCDIR}/../../build/autoconf
+	cp -t ${tgtpath} -dRp ${SRCDIR}/../../build ${SRCDIR}/../../config
 
 	# put in js itself
 	cp -t ${tgtpath} -dRp ${SRCDIR}/../../mfbt
@@ -54,22 +62,17 @@ case $cmd in
 		${MAKE} -C ${tgtpath}/js/src distclean
 	fi
 
-	# put in the virtualenv and supporting files if it doesnt already exist
-	if [ ! -e ${SRCDIR}/build/virtualenv_packages.txt ]; then
-		cp -t ${tgtpath}/js/src/build -dRp \
-			${SRCDIR}/../../build/virtualenv_packages.txt \
-			${SRCDIR}/../../build/buildconfig.py
-	fi
-	if [ ! -e ${SRCDIR}/python ]; then
-		cp -t ${tgtpath}/js/src -dRp \
-			${SRCDIR}/../../python
-	fi
-	if [ ! -e ${SRCDIR}/testing ]; then
-		${MKDIR} -p ${tgtpath}/js/src/testing
-		cp -t ${tgtpath}/js/src/testing -dRp \
-			${SRCDIR}/../../testing/mozbase
-	fi
-	# end of virtualenv injection
+	cp -t ${tgtpath} -dRp \
+		${SRCDIR}/../../python
+	${MKDIR} -p ${tgtpath}/dom/bindings
+	cp -t ${tgtpath}/dom/bindings -dRp \
+		${SRCDIR}/../../dom/bindings/mozwebidlcodegen
+	${MKDIR} -p ${tgtpath}/media/webrtc/trunk/tools
+	cp -t ${tgtpath}/media/webrtc/trunk/tools -dRp \
+		${SRCDIR}/../../media/webrtc/trunk/tools/gyp
+	${MKDIR} -p ${tgtpath}/testing
+	cp -t ${tgtpath}/testing -dRp \
+		${SRCDIR}/../../testing/mozbase
 
 	# remove *.pyc and *.pyo files if any
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f
