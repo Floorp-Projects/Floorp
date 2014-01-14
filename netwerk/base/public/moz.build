@@ -141,5 +141,10 @@ EXPORTS += [
     'nsURIHashKey.h',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    EXPORTS += [
+        'NetStatistics.h',
+    ]
+
 FAIL_ON_WARNINGS = True
 
