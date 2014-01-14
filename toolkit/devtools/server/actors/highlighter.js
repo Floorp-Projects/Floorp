@@ -164,6 +164,7 @@ let HighlighterActor = protocol.ActorClass({
       }
     };
 
+    this._tabActor.window.focus();
     this._startPickerListeners();
 
     return null;
@@ -445,7 +446,6 @@ BoxModelHighlighter.prototype = {
       this._hideOutline();
       this._hideInfobar();
       this._detachPageListeners();
-      this.chromeWin.focus();
     }
   },
 
