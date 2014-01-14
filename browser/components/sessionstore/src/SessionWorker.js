@@ -313,8 +313,6 @@ let Statistics = {
     subsets.DOM_STORAGE = [];
     // The subset of sessionstore.js storing form data
     subsets.FORMDATA = [];
-    // The subset of sessionstore.js storing POST data in history
-    subsets.POSTDATA = [];
     // The subset of sessionstore.js storing history
     subsets.HISTORY = [];
 
@@ -333,9 +331,6 @@ let Statistics = {
           subsets.FORMDATA.push(value);
           // Never visit formdata, it's full of weird stuff
           return false;
-        case "postdata_b64":
-          subsets.POSTDATA.push(value);
-          return false; // Nothing to visit anyway
         case "cookies": // Don't visit these places, they are full of weird stuff
         case "extData":
           return false;
