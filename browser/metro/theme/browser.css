@@ -788,6 +788,10 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/navbar-menu.png);
 }
 
+#close-button {
+  list-style-image: url(chrome://browser/skin/images/navbar-close.png);
+}
+
 @media (min-resolution: @min_res_140pc@) {
   #download-progress {
     list-style-image: url(chrome://browser/skin/images/navbar-download@1.4x.png);
@@ -803,6 +807,10 @@ documenttab[selected] .documenttab-selection {
 
   #menu-button {
     list-style-image: url(chrome://browser/skin/images/navbar-menu@1.4x.png);
+  }
+
+  #close-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-close@1.4x.png);
   }
 }
 
@@ -822,18 +830,10 @@ documenttab[selected] .documenttab-selection {
   #menu-button {
     list-style-image: url(chrome://browser/skin/images/navbar-menu@1.8x.png);
   }
-}
 
-#close-button {
-  -moz-image-region: rect(0px, 480px, 40px, 440px);
-}
-
-#close-button:hover:not(:active) {
-  -moz-image-region: rect(40px, 480px, 80px, 440px);
-}
-
-#close-button:active {
-  -moz-image-region: rect(80px, 480px, 120px, 440px);
+  #close-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-close@1.8x.png);
+  }
 }
 
 /* Panel UI ================================================================ */
