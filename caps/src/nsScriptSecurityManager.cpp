@@ -406,6 +406,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
                                  fileName,
                                  scriptSample,
                                  lineNum,
+                                 EmptyString(),
                                  EmptyString());
     }
 

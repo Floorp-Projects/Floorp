@@ -562,7 +562,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
 static uint32_t
 GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
-               bool aIsVertical)
+               bool aIsVertical, const nsStyleFont* aStyleFont)
 {
   uint32_t stretchHint = NS_STRETCH_NONE;
   // See if it is okay to stretch,
@@ -573,7 +573,7 @@ GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
     // stretchy are true or false (see bug 69325).
     // . largeopOnly is taken if largeop=true and stretchy=false
     // . largeop is taken if largeop=true and stretchy=true
-    if (NS_MATHML_IS_DISPLAYSTYLE(aPresentationData.flags) &&
+    if (aStyleFont->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK &&
         NS_MATHML_OPERATOR_IS_LARGEOP(aFlags)) {
       stretchHint = NS_STRETCH_LARGEOP; // (largeopOnly, not mask!)
       if (NS_MATHML_OPERATOR_IS_INTEGRAL(aFlags)) {
@@ -644,7 +644,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   }
 
   uint32_t stretchHint =
-    GetStretchHint(mFlags, mPresentationData, isVertical);
+    GetStretchHint(mFlags, mPresentationData, isVertical, StyleFont());
 
   if (useMathMLChar) {
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
@@ -1005,7 +1005,8 @@ nsMathMLmoFrame::GetIntrinsicWidthMetrics(nsRenderingContext *aRenderingContext,
 {
   ProcessOperatorData();
   if (UseMathMLChar()) {
-    uint32_t stretchHint = GetStretchHint(mFlags, mPresentationData, true);
+    uint32_t stretchHint = GetStretchHint(mFlags, mPresentationData, true,
+                                          StyleFont());
     aDesiredSize.Width() = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
                   stretchHint, mMaxSize,

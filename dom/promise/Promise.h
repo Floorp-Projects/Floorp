@@ -71,8 +71,16 @@ public:
           const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
+  Resolve(nsPIDOMWindow* aWindow, JSContext* aCx,
+          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
   Reject(const GlobalObject& aGlobal, JSContext* aCx,
          const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
+  Reject(nsPIDOMWindow* aWindow, JSContext* aCx,
+         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   Then(const Optional<nsRefPtr<AnyCallback>>& aResolveCallback,

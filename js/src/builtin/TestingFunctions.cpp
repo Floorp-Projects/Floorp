@@ -246,14 +246,14 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 MinorGC(JSContext *cx, unsigned argc, jsval *vp)
 {
-#ifdef JSGC_GENERATIONAL
     CallArgs args = CallArgsFromVp(argc, vp);
-
+#ifdef JSGC_GENERATIONAL
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gcStoreBuffer.setAboutToOverflow();
 
     MinorGC(cx, gcreason::API);
 #endif
+    args.rval().setUndefined();
     return true;
 }
 

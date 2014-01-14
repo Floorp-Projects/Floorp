@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <title>displaystyle</title>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+
+    <!-- Test dynamic change (see bug 832800) -->
+    <math>
+      <mstyle displaystyle="true">
+        <mfrac>
+          <mrow>
+            <mi>X</mi>
+            <mo id="mathOperator" mathbackground="red">+</mo>
+            <mfrac>
+              <mrow><mi>X</mi></mrow>
+              <mrow><mi>X</mi></mrow>
+            </mfrac>
+          </mrow>
+          <mrow>
+            <mi>X</mi>
+          </mrow>
+        </mfrac>
+      </mstyle>
+    </math>
+
+  </body>
+</html>
