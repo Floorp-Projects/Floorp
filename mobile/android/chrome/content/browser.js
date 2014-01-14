@@ -134,6 +134,22 @@ var LazyNotificationGetter = {
   });
 });
 
+// Lazily-loaded JS modules that use observer notifications
+[
+  ["Home", ["HomePanels:Get"], "resource://gre/modules/Home.jsm"],
+].forEach(module => {
+  let [name, notifications, resource] = module;
+  XPCOMUtils.defineLazyModuleGetter(this, name, resource);
+  notifications.forEach(notification => {
+    let o = {
+      notification: notification,
+      observe: (s, t, d) => this[name].observe(s, t, d)
+    };
+    Services.obs.addObserver(o, notification, false);
+    LazyNotificationGetter.observers.push(o);
+  });
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
   "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
 

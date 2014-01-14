@@ -145,25 +145,27 @@ function Panel(options) {
     this.title = options.title;
 }
 
-function HomePanels() {
-  // XXX: Not renaming this because it is going away in bug 958192
-  this.PREF_KEY = "home_lists";
+let HomePanels = {
+  // Holds the currrent set of registered panels.
+  _panels: {},
 
-  this._sharedPrefs = new SharedPreferences();
-  this._panels = {};
+  _handleGet: function(requestId) {
+    let panels = [];
+    for (let id in this._panels) {
+      let panel = this._panels[id];
+      panels.push({
+        id: panel.id,
+        title: panel.title
+      });
+    }
 
-  let prefValue = this._sharedPrefs.getCharPref(this.PREF_KEY);
-  if (!prefValue) {
-    return;
-  }
+    sendMessageToJava({
+      type: "HomePanels:Data",
+      panels: panels,
+      requestId: requestId
+    });
+  },
 
-  JSON.parse(prefValue).forEach(data => {
-    let panel = new Panel(data);
-    this._panels[panel.id] = panel;
-  });
-}
-
-HomePanels.prototype = {
   add: function(options) {
     let panel = new Panel(options);
     if (!panel.id || !panel.title) {
@@ -176,35 +178,29 @@ HomePanels.prototype = {
     }
 
     this._panels[panel.id] = panel;
-    this._updateSharedPref();
-
-    // Send a message to Java to update the home pager if it's currently showing
-    sendMessageToJava({
-      type: "HomePanels:Added",
-      id: panel.id,
-      title: panel.title
-    });
   },
 
   remove: function(id) {
     delete this._panels[id];
-    this._updateSharedPref();
-  },
 
-  // Set a shared pref so that Java can know about this panel before Gecko is running
-  _updateSharedPref: function() {
-    let panels = [];
-    for (let id in this._panels) {
-      let panel = this._panels[id];
-      panels.push({ id: panel.id, title: panel.title});
-    }
-    this._sharedPrefs.setCharPref(this.PREF_KEY, JSON.stringify(panels));
+    sendMessageToJava({
+      type: "HomePanels:Remove",
+      id: panel.id
+    });
   }
-
 };
 
 // Public API
 this.Home = {
   banner: HomeBanner,
-  panels: new HomePanels()
+  panels: HomePanels,
+
+  // Lazy notification observer registered in browser.js
+  observe: function(subject, topic, data) {
+    switch(topic) {
+      case "HomePanels:Get":
+        HomePanels._handleGet(data);
+        break;
+    }
+  }
 }
