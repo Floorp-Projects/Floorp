@@ -379,3 +379,41 @@ a {
   border-color: #ccc;
 }
 
+@media (max-width: 500px) {
+  .message > .timestamp {
+    display: none;
+  }
+  .toolbarbutton-text {
+    display: none;
+  }
+  .hud-console-filter-toolbar .webconsole-filter-button {
+    min-width: 40px;
+  }
+  .hud-console-filter-toolbar .webconsole-clear-console-button {
+    min-width: 25px;
+  }
+  .webconsole-filter-button > .toolbarbutton-menubutton-button:before {
+    width: 16px;
+    height: 16px;
+    margin-left: 1px;
+  }
+  .toolbarbutton-menubutton-dropmarker {
+    margin: 0px;
+  }
+}
+
+@media (max-width: 300px) {
+  .hud-console-filter-toolbar {
+    -moz-box-orient: vertical;
+  }
+  .toolbarbutton-text {
+    display: -moz-box;
+  }
+  .devtools-toolbarbutton {
+    margin-top: 3px;
+  }
+  .hud-console-filter-toolbar .hud-filter-box,
+  .hud-console-filter-toolbar .devtools-toolbarbutton {
+    margin-top: 5px;
+  }
+}
