@@ -449,7 +449,7 @@
     "Harness_sanity/test_sanityEventUtils.html": "bug 688052",
     "Harness_sanity/test_sanitySimpletest.html": "bug 688052",
 
-    "content/base/test/csp/test_CSP_evalscript_getCRMFRequest.html":"no window.crypto support in multiprocess"
+    "content/base/test/csp/test_CSP_evalscript_getCRMFRequest.html":"no window.crypto support in multiprocess",
     "content/base/test/csp/test_hash_source.html":"can't use nsICryptoHash in CSPUtils.jsm (child process)",
   }
 }
