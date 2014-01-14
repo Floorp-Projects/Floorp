@@ -7933,8 +7933,11 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
 
   // We only allow 'script-level' when unsafe rules are enabled, because
   // otherwise it could interfere with rulenode optimizations if used in
-  // a non-MathML-enabled document.
-  if (aPropID == eCSSProperty_script_level && !mUnsafeRulesEnabled)
+  // a non-MathML-enabled document. We also only allow math-display when
+  // unsafe rules are enabled.
+  if (!mUnsafeRulesEnabled &&
+      (aPropID == eCSSProperty_script_level ||
+       aPropID == eCSSProperty_math_display))
     return false;
 
   const int32_t *kwtable = nsCSSProps::kKeywordTableTable[aPropID];
