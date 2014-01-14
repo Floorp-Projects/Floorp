@@ -101,6 +101,11 @@ public:
                               const InputContextAction& aAction);
 
   /**
+   * Associate or disassociate IME context to/from the aWindow.
+   */
+  static void AssociateIMEContext(nsWindow* aWindow, bool aEnable);
+
+  /**
    * Called when the window is created.
    */
   static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
@@ -125,6 +130,9 @@ private:
   static void SetInputScopeForIMM32(nsWindow* aWindow,
                                     const nsAString& aHTMLInputType);
   static bool sIsInTSFMode;
+  // If sIMMEnabled is false, any IME messages are not handled in TSF mode.
+  // Additionally, IME context is always disassociated from focused window.
+  static bool sIsIMMEnabled;
   static bool sPluginHasFocus;
 
   static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }

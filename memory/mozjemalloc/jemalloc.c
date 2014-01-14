@@ -6600,7 +6600,7 @@ malloc_good_size_impl(size_t size)
 }
 
 
-#ifdef MOZ_MEMORY_ANDROID
+#if defined(MOZ_MEMORY_ANDROID) && (ANDROID_VERSION < 19)
 MOZ_MEMORY_API size_t
 malloc_usable_size_impl(void *ptr)
 #else
