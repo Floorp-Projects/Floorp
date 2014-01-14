@@ -37,12 +37,6 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   mPresentationData.baseFrame = mFrames.FirstChild();
   GetEmbellishDataFrom(mPresentationData.baseFrame, mEmbellishData);
 
-  // The REC says:
-  // The script element increments scriptlevel by 1, and sets
-  // displaystyle to "false", within each of its arguments except base
-  UpdatePresentationDataFromChildAt(1, -1,
-    ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
-
   // The TeXbook (Ch 17. p.141) says the superscript inherits the compression
   // while the subscript is compressed. So here we collect subscripts and set
   // the compression flag in them.
@@ -238,8 +232,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
   nsPresentationData presentationData;
   aFrame->GetPresentationData(presentationData);
   nscoord supScriptShift;
-  if ( font->mScriptLevel == 0 &&
-       NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags) &&
+  if (font->mScriptLevel == 0 &&
+      font->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK &&
       !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
     // Style D in TeXbook
     supScriptShift = supScriptShift1;
