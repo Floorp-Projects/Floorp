@@ -9143,6 +9143,11 @@ IonBuilder::jsop_setarg(uint32_t arg)
         return true;
     }
 
+    // :TODO: if hasArguments() is true, and the script has a JSOP_SETARG, then
+    // convert all arg accesses to go through the arguments object. (see Bug 957475)
+    if (info().hasArguments())
+	return abort("NYI: arguments & setarg.");
+
     // Otherwise, if a magic arguments is in use, and it aliases formals, and there exist
     // arguments[...] GETELEM expressions in the script, then SetFrameArgument must be used.
     // If no arguments[...] GETELEM expressions are in the script, and an argsobj is not

@@ -425,8 +425,13 @@ function isBidiEnabled() {
   if (getBoolPref("bidi.browser.ui", false))
     return true;
 
-  // if the pref isn't set, check for an RTL locale and force the pref to true
-  // if we find one.
+  // then check intl.uidirection.<locale>
+  var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
+                  getService(Components.interfaces.nsIXULChromeRegistry);
+  if (chromeReg.isLocaleRTL("global"))
+    return true;
+
+  // now see if the system locale is an RTL one.
   var rv = false;
 
   try {
@@ -438,6 +443,7 @@ function isBidiEnabled() {
       case "ar-":
       case "he-":
       case "fa-":
+      case "ug-":
       case "ur-":
       case "syr":
         rv = true;

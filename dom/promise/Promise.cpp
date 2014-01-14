@@ -410,10 +410,19 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
     }
   }
 
-  nsRefPtr<Promise> promise = new Promise(window);
+  return Resolve(window, aCx,
+                 aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
+                 aRv);
+}
 
-  promise->MaybeResolveInternal(aCx,
-    aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue);
+/* static */ already_AddRefed<Promise>
+Promise::Resolve(nsPIDOMWindow* aWindow, JSContext* aCx,
+                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+{
+  // aWindow may be null.
+  nsRefPtr<Promise> promise = new Promise(aWindow);
+
+  promise->MaybeResolveInternal(aCx, aValue);
   return promise.forget();
 }
 
@@ -430,10 +439,19 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
     }
   }
 
-  nsRefPtr<Promise> promise = new Promise(window);
+  return Reject(window, aCx,
+                aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
+                aRv);
+}
 
-  promise->MaybeRejectInternal(aCx,
-    aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue);
+/* static */ already_AddRefed<Promise>
+Promise::Reject(nsPIDOMWindow* aWindow, JSContext* aCx,
+                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+{
+  // aWindow may be null.
+  nsRefPtr<Promise> promise = new Promise(aWindow);
+
+  promise->MaybeRejectInternal(aCx, aValue);
   return promise.forget();
 }
 

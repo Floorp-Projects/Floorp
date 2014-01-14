@@ -468,63 +468,102 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
     return true;
   }
 
-  bool reportViolation;
+  // An inline style can be allowed because all inline styles are allowed,
+  // or else because it is whitelisted by a nonce-source or hash-source. This
+  // is a logical OR between whitelisting methods, so the allowInlineStyle
+  // outparam can be reused for each check as long as we stop checking as soon
+  // as it is set to true. This also optimizes performance by avoiding the
+  // overhead of unnecessary checks.
   bool allowInlineStyle = true;
-  rv = csp->GetAllowsInlineStyle(&reportViolation, &allowInlineStyle);
+  nsAutoTArray<unsigned short, 3> violations;
+
+  bool reportInlineViolation;
+  rv = csp->GetAllowsInlineStyle(&reportInlineViolation, &allowInlineStyle);
   if (NS_FAILED(rv)) {
     if (aRv)
       *aRv = rv;
     return false;
   }
+  if (reportInlineViolation) {
+    violations.AppendElement(static_cast<unsigned short>(
+          nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE));
+  }
 
-  bool foundNonce = false;
   nsAutoString nonce;
-  // If inline styles are allowed ('unsafe-inline'), skip the (irrelevant)
-  // nonce check
   if (!allowInlineStyle) {
     // We can only find a nonce if aContent is provided
-    foundNonce = !!aContent &&
+    bool foundNonce = !!aContent &&
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
     if (foundNonce) {
-      // We can overwrite the outparams from GetAllowsInlineStyle because
-      // if the nonce is correct, then we don't want to report the original
-      // inline violation (it has been whitelisted by the nonce), and if
-      // the nonce is incorrect, then we want to return just the specific
-      // "nonce violation" rather than both a "nonce violation" and
-      // a generic "inline violation".
+      bool reportNonceViolation;
       rv = csp->GetAllowsNonce(nonce, nsIContentPolicy::TYPE_STYLESHEET,
-                               &reportViolation, &allowInlineStyle);
+                               &reportNonceViolation, &allowInlineStyle);
       if (NS_FAILED(rv)) {
         if (aRv)
           *aRv = rv;
         return false;
       }
+
+      if (reportNonceViolation) {
+        violations.AppendElement(static_cast<unsigned short>(
+              nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_STYLE));
+      }
     }
-  }
-
-  if (reportViolation) {
-    // This inline style is not allowed by CSP, so report the violation
-    nsAutoCString asciiSpec;
-    aSourceURI->GetAsciiSpec(asciiSpec);
-    nsAutoString styleText(aStyleText);
-
-    // cap the length of the style sample at 40 chars.
-    if (styleText.Length() > 40) {
-      styleText.Truncate(40);
-      styleText.AppendLiteral("...");
-    }
-
-    // The type of violation to report is determined by whether there was
-    // a nonce present.
-    unsigned short violationType = foundNonce ?
-      nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_STYLE :
-      nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE;
-    csp->LogViolationDetails(violationType, NS_ConvertUTF8toUTF16(asciiSpec),
-                             styleText, aLineNumber, nonce);
   }
 
   if (!allowInlineStyle) {
-    NS_ASSERTION(reportViolation,
+    bool reportHashViolation;
+    rv = csp->GetAllowsHash(aStyleText, nsIContentPolicy::TYPE_STYLESHEET,
+                            &reportHashViolation, &allowInlineStyle);
+    if (NS_FAILED(rv)) {
+      if (aRv)
+        *aRv = rv;
+      return false;
+    }
+    if (reportHashViolation) {
+      violations.AppendElement(static_cast<unsigned short>(
+            nsIContentSecurityPolicy::VIOLATION_TYPE_HASH_STYLE));
+    }
+  }
+
+  // What violation(s) should be reported?
+  //
+  // 1. If the style tag has a nonce attribute, and the nonce does not match
+  // the policy, report VIOLATION_TYPE_NONCE_STYLE.
+  // 2. If the policy has at least one hash-source, and the hashed contents of
+  // the style tag did not match any of them, report VIOLATION_TYPE_HASH_STYLE
+  // 3. Otherwise, report VIOLATION_TYPE_INLINE_STYLE if appropriate.
+  //
+  // 1 and 2 may occur together, 3 should only occur by itself. Naturally,
+  // every VIOLATION_TYPE_NONCE_STYLE and VIOLATION_TYPE_HASH_STYLE are also
+  // VIOLATION_TYPE_INLINE_STYLE, but reporting the
+  // VIOLATION_TYPE_INLINE_STYLE is redundant and does not help the developer.
+  if (!violations.IsEmpty()) {
+    MOZ_ASSERT(violations[0] == nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE,
+               "How did we get any violations without an initial inline style violation?");
+    // This inline style is not allowed by CSP, so report the violation
+    nsAutoCString asciiSpec;
+    aSourceURI->GetAsciiSpec(asciiSpec);
+    nsAutoString styleSample(aStyleText);
+
+    // cap the length of the style sample at 40 chars.
+    if (styleSample.Length() > 40) {
+      styleSample.Truncate(40);
+      styleSample.AppendLiteral("...");
+    }
+
+    for (uint32_t i = 0; i < violations.Length(); i++) {
+      // Skip reporting the redundant inline style violation if there are
+      // other (nonce and/or hash violations) as well.
+      if (i > 0 || violations.Length() == 1) {
+        csp->LogViolationDetails(violations[i], NS_ConvertUTF8toUTF16(asciiSpec),
+                                 styleSample, aLineNumber, nonce, aStyleText);
+      }
+    }
+  }
+
+  if (!allowInlineStyle) {
+    NS_ASSERTION(!violations.IsEmpty(),
         "CSP blocked inline style but is not reporting a violation");
     // The inline style should be blocked.
     return false;

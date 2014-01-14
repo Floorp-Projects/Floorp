@@ -16,14 +16,6 @@
 var testsRun = 0;
 var totalTests = 20;
 
-var inlineScriptTestsRun = 0;
-var totalInlineScriptTests = 4;
-
-var scriptNonceViolations = 0;
-var expectedScriptNonceViolations = 2;
-var scriptInlineViolations = 0;
-var expectedScriptInlineViolations = 1;
-
 // This is used to watch the blocked data bounce off CSP
 function examiner() {
   SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
@@ -41,7 +33,7 @@ examiner.prototype = {
       var uri = data;
       if (!testid_re.test(uri)) return;
       var testid = testid_re.exec(uri)[1];
-      ok(/_good/.test(testid), "Allowed URI with testid " + testid);
+      ok(/_good/.test(testid), "should allow URI with good testid " + testid);
       ranTests(1);
     }
 
@@ -51,20 +43,11 @@ examiner.prototype = {
         var blocked_uri = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
         if (!testid_re.test(blocked_uri)) return;
         var testid = testid_re.exec(blocked_uri)[1];
-        ok(/_bad/.test(testid), "Blocked URI with testid " + testid);
+        ok(/_bad/.test(testid), "should block URI with bad testid " + testid);
         ranTests(1);
       } catch (e) {
-        // if the subject is blocked inline, data will be a violation msg (defined at the top of contentSecurityPolicy.js)
-        //dump("** exception in csp-on-violate-policy: " + e + "\n");
-        var violation_msg = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
-        if (/Inline Script/.test(violation_msg)) {
-          if (/Inline Script had invalid nonce/.test(violation_msg))
-            scriptNonceViolations++;
-          if (/Inline Scripts will not execute/.test(violation_msg))
-            scriptInlineViolations++;
-          window.inlineScriptTestResult("blocked", "blocked",
-                                        "Blocked because " + violation_msg);
-        }
+        // if the subject is blocked inline, data will be a violation message
+        // we can't distinguish which resources triggered these, so we ignore them
       }
     }
   },
@@ -72,24 +55,6 @@ examiner.prototype = {
   remove: function() {
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-  }
-}
-
-var inlineScriptTestResult = function(testIs, testShouldBe, description) {
-  if (testIs !== testShouldBe) {
-    ok(false, description);
-  } else {
-    ok(true, description);
-  }
-  ranTests(1)
-
-  inlineScriptTestsRun++;
-  if (inlineScriptTestsRun == totalInlineScriptTests) {
-    if (scriptNonceViolations != expectedScriptNonceViolations)
-      ok(false, "The number of reported script nonce violations does not match expected; got " + scriptNonceViolations + ", expected " + expectedScriptNonceViolations);
-    if (scriptInlineViolations != expectedScriptInlineViolations)
-      ok(false, "The number of reported inline script  violations does not match expected; got " + scriptInlineViolations + ", expected " + expectedScriptInlineViolations);
-    ranTests(2);
   }
 }
 
@@ -108,22 +73,38 @@ function ranTests(num) {
   cleanup();
 }
 
-function checkStyles () {
+function checkInlineScriptsAndStyles () {
   var cspframe = document.getElementById('cspframe');
   var getElementColorById = function (id) {
     return window.getComputedStyle(cspframe.contentDocument.getElementById(id), null).color;
   };
   // Inline style tries to change an element's color to green. If blocked, the
-  // element's color will be the default black.
+  // element's color will be the (unchanged) default black.
   var green = "rgb(0, 128, 0)";
+  var red = "rgb(255,0,0)";
   var black = "rgb(0, 0, 0)";
 
-  is(getElementColorById('inline-style-correct-nonce'), green, "Inline style with correct nonce allowed");
-  is(getElementColorById('inline-style-incorrect-nonce'), black, "Inline style with incorrect nonce blocked");
-  is(getElementColorById('inline-style-correct-script-nonce'), black, "Inline style with correct nonce for scripts (but incorrect nonce for styles) blocked");
-  is(getElementColorById('inline-style-no-nonce'), black, "Inline style with no nonce blocked");
+  // inline script tests
+  is(getElementColorById('inline-script-correct-nonce'), green,
+     "Inline script with correct nonce should execute");
+  is(getElementColorById('inline-script-incorrect-nonce'), black,
+     "Inline script with incorrect nonce should not execute");
+  is(getElementColorById('inline-script-correct-style-nonce'), black,
+     "Inline script with correct nonce for styles (but not for scripts) should not execute");
+  is(getElementColorById('inline-script-no-nonce'), black,
+     "Inline script with no nonce should not execute");
 
-  ranTests(4);
+  // inline style tests
+  is(getElementColorById('inline-style-correct-nonce'), green,
+     "Inline style with correct nonce should be allowed");
+  is(getElementColorById('inline-style-incorrect-nonce'), black,
+     "Inline style with incorrect nonce should be blocked");
+  is(getElementColorById('inline-style-correct-script-nonce'), black,
+     "Inline style with correct nonce for scripts (but incorrect nonce for styles) should be blocked");
+  is(getElementColorById('inline-style-no-nonce'), black,
+     "Inline style with no nonce should be blocked");
+
+  ranTests(8);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -138,7 +119,7 @@ SpecialPowers.pushPrefEnv(
     // save this for last so that our listeners are registered.
     // ... this loads the testbed of good and bad requests.
     document.getElementById('cspframe').src = 'file_nonce_source.html';
-    document.getElementById('cspframe').addEventListener('load', checkStyles, false);
+    document.getElementById('cspframe').addEventListener('load', checkInlineScriptsAndStyles, false);
   });
 </script>
 </pre>
