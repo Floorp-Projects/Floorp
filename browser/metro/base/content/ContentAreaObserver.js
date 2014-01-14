@@ -61,10 +61,6 @@ var ContentAreaObserver = {
     return this._getContentHeightForWindow(this.height);
   },
 
-  get contentTop () {
-    return Elements.toolbar.getBoundingClientRect().bottom;
-  },
-
   get viewableHeight() {
     return this._getViewableHeightForContent(this.contentHeight);
   },
@@ -136,12 +132,6 @@ var ContentAreaObserver = {
   },
 
   updateContentArea: function cao_updateContentArea (width, height) {
-    let oldHeight = parseInt(this.styles["content-height"].height);
-    let oldWidth = parseInt(this.styles["content-width"].width);
-
-    let newWidth = width || this.width;
-    let newHeight = height || this.contentHeight;
-
     if (Browser.selectedBrowser) {
       let notificationBox = Browser.getNotificationBox();
 
@@ -149,9 +139,18 @@ var ContentAreaObserver = {
       // make the notification appear above the navbar.
       if (ContextUI.navbarVisible && !notificationBox.notificationsHidden &&
           notificationBox.allNotifications.length != 0) {
-        newHeight -= Elements.navbar.getBoundingClientRect().height;
+        let navbarHeight = Elements.navbar.getBoundingClientRect().height;
+        notificationBox.style.paddingBottom = navbarHeight + "px";
+      } else {
+        notificationBox.style.paddingBottom = "";
       }
     }
+
+    let oldHeight = parseInt(this.styles["content-height"].height);
+    let oldWidth = parseInt(this.styles["content-width"].width);
+
+    let newWidth = width || this.width;
+    let newHeight = height || this.contentHeight;
 
     if (newHeight == oldHeight && newWidth == oldWidth)
       return;
