@@ -1,0 +1,35 @@
+{
+    "config_version": 2,
+    "tooltool_manifest": "releng-wasabi.tt",
+    "mock_target": "mozilla-centos6-i386",
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "java-1.6.0-openjdk-devel", "git"],
+    "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
+    "build_targets": [],
+    "upload_files": [
+        "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
+        "{objdir}/dist/b2g-*.tar.gz",
+        "{workdir}/sources.xml"
+    ],
+    "zip_files": [
+        ["{workdir}/out/target/product/wasabi/*.img", "out/target/product/wasabi/"],
+        ["{workdir}/boot.img", "out/target/product/wasabi/"],
+        "{workdir}/flash.sh",
+        "{workdir}/load-config.sh",
+        "{workdir}/.config",
+        "{workdir}/sources.xml"
+    ],
+    "env": {
+        "VARIANT": "user",
+        "MOZILLA_OFFICIAL": "1"
+    },
+    "b2g_manifest": "wasabi.xml",
+    "b2g_manifest_branch": "master",
+    "additional_source_tarballs": ["backup-wasabi.tar.gz"],
+    "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
+    "gaia": {
+        "l10n": {
+            "vcs": "hgtool",
+            "root": "http://hg.mozilla.org/gaia-l10n"
+        }
+    }
+}
