@@ -144,6 +144,7 @@ ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = nullptr;
 ITfCategoryMgr*         nsTextStore::sCategoryMgr    = nullptr;
 ITfDocumentMgr*         nsTextStore::sTsfDisabledDocumentMgr = nullptr;
 ITfContext*             nsTextStore::sTsfDisabledContext = nullptr;
+ITfInputProcessorProfiles* nsTextStore::sInputProcessorProfiles = nullptr;
 DWORD         nsTextStore::sTsfClientId  = 0;
 nsTextStore*  nsTextStore::sTsfTextStore = nullptr;
 
@@ -255,6 +256,18 @@ GetCLSIDNameStr(REFCLSID aCLSID)
   result = NS_ConvertUTF16toUTF8(str);
   ::CoTaskMemFree(str);
   return result;
+}
+
+static nsCString
+GetGUIDNameStr(REFGUID aGUID)
+{
+  OLECHAR str[40];
+  int len = ::StringFromGUID2(aGUID, str, ArrayLength(str));
+  if (!len || !str[0]) {
+    return EmptyCString();
+  }
+
+  return NS_ConvertUTF16toUTF8(str);
 }
 
 static nsCString
@@ -506,11 +519,9 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
 nsTextStore::nsTextStore()
  : mContent(mComposition, mSelection)
 {
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::nsTestStore(): instance is created", this));
-
   mRefCnt = 1;
   mEditCookie = 0;
+  mIPProfileCookie = TF_INVALID_COOKIE;
   mSinkMask = 0;
   mLock = 0;
   mLockQueued = 0;
@@ -520,16 +531,91 @@ nsTextStore::nsTextStore()
   mInputScopeRequested = false;
   mIsRecordingActionsWithoutLock = false;
   mNotifySelectionChange = false;
+  mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
   // We hope that 5 or more actions don't occur at once.
   mPendingActions.SetCapacity(5);
+
+  // On Vista or later, Windows let us know activate IME changed only with
+  // ITfInputProcessorProfileActivationSink.  However, there is no way to get
+  // it via TSF on XP. (NOTE: ITfLanguageProfileNotifySink works only when
+  // keyboard layout is changed to different language. So, its behavior is
+  // different from WM_INPUTLANGCHANGE on WinXP.  On WinXP, the message is
+  // delivered when active IME is changed without language change.)
+  if (IsVistaOrLater()) {
+    nsRefPtr<ITfSource> source;
+    HRESULT hr =
+      sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
+    if (SUCCEEDED(hr)) {
+      hr = source->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
+                     static_cast<ITfInputProcessorProfileActivationSink*>(this),
+                     &mIPProfileCookie);
+#ifdef PR_LOGGING
+      if (FAILED(hr) || mIPProfileCookie == TF_INVALID_COOKIE) {
+        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+          ("TSF: 0x%p   nsTextStore FAILED to install "
+           "ITfInputProcessorProfileActivationSink (0x%08X)", this, hr));
+      }
+    } else {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+        ("TSF: 0x%p   nsTextStore FAILED to get ITfSource instance "
+         "(0x%08X)", this, hr));
+#endif // #ifdef PR_LOGGING
+    }
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+    ("TSF: 0x%p nsTextStore::nsTestStore(): instance is created, "
+     "mIsIMM_IME=%s, mIPProfileCookie=%08X",
+     this, GetBoolName(mIsIMM_IME), mIPProfileCookie));
 }
 
 nsTextStore::~nsTextStore()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: 0x%p nsTextStore instance is destroyed, "
-     "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
-     this, mWidget.get(), mDocumentMgr.get(), mContext.get()));
+     "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p, mIPProfileCookie=0x%08X",
+     this, mWidget.get(), mDocumentMgr.get(), mContext.get(),
+     mIPProfileCookie));
+
+  if (mIPProfileCookie != TF_INVALID_COOKIE) {
+    if (IsVistaOrLater()) {
+      nsRefPtr<ITfSource> source;
+      HRESULT hr =
+        sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
+      if (FAILED(hr)) {
+        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+          ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
+           "(0x%08X)", this, hr));
+      } else {
+        hr = source->UnadviseSink(mIPProfileCookie);
+        if (FAILED(hr)) {
+          PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+            ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+             "ITfInputProcessorProfileActivationSink (0x%08X)",
+             this, hr));
+        }
+      }
+    } else {
+      nsRefPtr<ITfSource> source;
+      HRESULT hr =
+        sInputProcessorProfiles->QueryInterface(IID_ITfSource,
+                                                getter_AddRefs(source));
+      if (FAILED(hr)) {
+        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+          ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
+           "(0x%08X)", this, hr));
+      } else {
+        hr = source->UnadviseSink(mIPProfileCookie);
+        if (FAILED(hr)) {
+          PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+            ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+             "ITfLanguageProfileNotifySink (0x%08X)",
+             this, hr));
+        }
+      }
+      NS_RELEASE(sInputProcessorProfiles);
+    }
+  }
 
   mComposition.EnsureLayoutChangeTimerStopped();
 }
@@ -633,6 +719,8 @@ nsTextStore::QueryInterface(REFIID riid,
     *ppv = static_cast<ITextStoreACP*>(this);
   } else if (IID_ITfContextOwnerCompositionSink == riid) {
     *ppv = static_cast<ITfContextOwnerCompositionSink*>(this);
+  } else if (IID_ITfInputProcessorProfileActivationSink == riid) {
+    *ppv = static_cast<ITfInputProcessorProfileActivationSink*>(this);
   }
   if (*ppv) {
     AddRef();
@@ -2872,6 +2960,34 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
   return S_OK;
 }
 
+STDMETHODIMP
+nsTextStore::OnActivated(DWORD dwProfileType,
+                         LANGID langid,
+                         REFCLSID rclsid,
+                         REFGUID catid,
+                         REFGUID guidProfile,
+                         HKL hkl,
+                         DWORD dwFlags)
+{
+  // NOTE: This is installed only on Vista or later.
+  if (dwFlags & TF_IPSINK_FLAG_ACTIVE) {
+    mIsIMM_IME = IsIMM_IME(hkl);
+  }
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p nsTextStore::OnActivated(dwProfileType=%s (0x%08X), "
+          "langid=0x%08X, rclsid=%s, catid=%s, guidProfile=%s, hkl=0x%08X, "
+          "dwFlags=0x%08X (TF_IPSINK_FLAG_ACTIVE: %s)), mIsIMM_IME=%s",
+          this, dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR ?
+                  "TF_PROFILETYPE_INPUTPROCESSOR" :
+                dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT ?
+                  "TF_PROFILETYPE_KEYBOARDLAYOUT" : "Unknown", dwProfileType,
+          langid, GetCLSIDNameStr(rclsid).get(), GetGUIDNameStr(catid).get(),
+          GetGUIDNameStr(guidProfile).get(), hkl, dwFlags,
+          GetBoolName(dwFlags & TF_IPSINK_FLAG_ACTIVE),
+          GetBoolName(mIsIMM_IME)));
+  return S_OK;
+}
+
 // static
 nsresult
 nsTextStore::OnFocusChange(bool aGotFocus,
@@ -3263,6 +3379,22 @@ nsTextStore::Initialize(void)
     return;
   }
 
+  // XXX MSDN documents that ITfInputProcessorProfiles is available only on
+  //     desktop apps.  However, there is no known way to obtain
+  //     ITfInputProcessorProfileMgr instance without ITfInputProcessorProfiles
+  //     instance.
+  HRESULT hr =
+    ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr,
+                       CLSCTX_INPROC_SERVER,
+                       IID_ITfInputProcessorProfiles,
+                       reinterpret_cast<void**>(&sInputProcessorProfiles));
+  if (FAILED(hr) || !sInputProcessorProfiles) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to create input processor "
+       "profiles"));
+    return;
+  }
+
   if (!sTsfThreadMgr) {
     if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
           CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
@@ -3305,10 +3437,9 @@ nsTextStore::Initialize(void)
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
       ("TSF:   nsTextStore::Initialize() is creating "
        "a display attribute manager instance..."));
-    HRESULT hr =
-      ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
-                         CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
-                         reinterpret_cast<void**>(&sDisplayAttrMgr));
+    hr = ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
+                            CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
+                            reinterpret_cast<void**>(&sDisplayAttrMgr));
     if (FAILED(hr) || !sDisplayAttrMgr) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
         ("TSF:   nsTextStore::Initialize() FAILED to create "
@@ -3319,10 +3450,9 @@ nsTextStore::Initialize(void)
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
       ("TSF:   nsTextStore::Initialize() is creating "
        "a category manager instance..."));
-    HRESULT hr =
-      ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
-                         CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
-                         reinterpret_cast<void**>(&sCategoryMgr));
+    hr = ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
+                            CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
+                            reinterpret_cast<void**>(&sCategoryMgr));
     if (FAILED(hr) || !sCategoryMgr) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
         ("TSF:   nsTextStore::Initialize() FAILED to create "
@@ -3334,8 +3464,7 @@ nsTextStore::Initialize(void)
   }
 
   if (sTsfThreadMgr && sTsfTextStore) {
-    HRESULT hr =
-      sTsfThreadMgr->CreateDocumentMgr(&sTsfDisabledDocumentMgr);
+    hr = sTsfThreadMgr->CreateDocumentMgr(&sTsfDisabledDocumentMgr);
     if (FAILED(hr) || !sTsfDisabledDocumentMgr) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
         ("TSF:   nsTextStore::Initialize() FAILED to create "
@@ -3387,6 +3516,7 @@ nsTextStore::Terminate(void)
   NS_IF_RELEASE(sTsfTextStore);
   NS_IF_RELEASE(sTsfDisabledDocumentMgr);
   NS_IF_RELEASE(sTsfDisabledContext);
+  NS_IF_RELEASE(sInputProcessorProfiles);
   sTsfClientId = 0;
   if (sTsfThreadMgr) {
     sTsfThreadMgr->Deactivate();
@@ -3594,24 +3724,16 @@ nsTextStore::Content::EndComposition(const PendingAction& aCompEnd)
 bool
 nsTextStore::CurrentKeyboardLayoutHasIME()
 {
-  // XXX MSDN documents that ITfInputProcessorProfiles is available only on
-  //     desktop apps.  However, there is no known way to obtain
-  //     ITfInputProcessorProfileMgr instance without ITfInputProcessorProfiles
-  //     instance.
-  nsRefPtr<ITfInputProcessorProfiles> profiles;
-  HRESULT hr = ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr,
-                                  CLSCTX_INPROC_SERVER,
-                                  IID_ITfInputProcessorProfiles,
-                                  getter_AddRefs(profiles));
-  if (FAILED(hr) || !profiles) {
+  if (!sInputProcessorProfiles) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-      ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED to create "
-       "an input processor profiles instance"));
+      ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED due to there is "
+       "no input processor profiles instance"));
     return false;
   }
   nsRefPtr<ITfInputProcessorProfileMgr> profileMgr;
-  hr = profiles->QueryInterface(IID_ITfInputProcessorProfileMgr,
-                                getter_AddRefs(profileMgr));
+  HRESULT hr =
+    sInputProcessorProfiles->QueryInterface(IID_ITfInputProcessorProfileMgr,
+                                            getter_AddRefs(profileMgr));
   if (FAILED(hr) || !profileMgr) {
     // On Windows Vista or later, ImmIsIME() API always returns true.
     // If we failed to obtain the profile manager, we cannot know if current
