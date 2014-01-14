@@ -77,8 +77,13 @@
 #  define JS_PUBLIC_DATA(t)  MOZ_IMPORT_DATA t
 #endif
 
-#define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
-#define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
+#if defined(STATIC_JS_API) || defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
+#  define JS_FRIEND_API(t)    MOZ_EXPORT t
+#  define JS_FRIEND_DATA(t)   MOZ_EXPORT t
+#else
+#  define JS_FRIEND_API(t)   MOZ_IMPORT_API t
+#  define JS_FRIEND_DATA(t)  MOZ_IMPORT_DATA t
+#endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define JS_FASTCALL __fastcall
