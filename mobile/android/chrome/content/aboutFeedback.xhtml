@@ -22,19 +22,19 @@
   <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
 </head>
 
-<body dir="&locale.dir;" onload="init();" onunload="uninit();">
+<body dir="&locale.dir;">
 
   <section id="intro" active="true">
     <h1 class="header">&intro.header;</h1>
     <div class="message">&intro.message;</div>
-    <div class="link-box" onclick="switchSection('happy');">
+    <div id="happy-link" class="link-box">
       <a>&intro.happyLink;</a>
     </div>
-    <div class="link-box-bottom" onclick="switchSection('sad');">
+    <div id="sad-link" class="link-box-bottom">
       <a>&intro.sadLink;</a>
     </div>
     <div class="bottom-links">
-      <a onclick="maybeLater();">&intro.maybeLater;</a>
+      <a class="maybe-later">&intro.maybeLater;</a>
     </div>
   </section>
 
@@ -44,18 +44,18 @@
       <div class="message">&happy.message;</div>
       <div class="fine-print">&happy.finePrint;</div>
     </div>
-    <div class="link-box-bottom" onclick="openPlayStore();">
+    <div id="open-play-store" class="link-box-bottom">
       <div class="stars"/>
       <a>&happy.ratingLink;</a>
     </div>
     <div class="bottom-links">
-      <a onclick="maybeLater();">&happy.maybeLater2;</a>
-      <a onclick="window.close();">&happy.noThanks;</a>
+      <a class="maybe-later">&happy.maybeLater2;</a>
+      <a id="no-thanks">&happy.noThanks;</a>
     </div>
   </section>
 
   <section id="sad">
-    <form onsubmit="sendFeedback(event);">
+    <form>
       <div class="message">&sad.message;</div>
       <textarea class="description" placeholder="&sad.placeholder;" rows="8" required="true"/>
       <div class="message">&sad.lastSite;</div>
