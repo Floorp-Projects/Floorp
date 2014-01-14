@@ -2150,6 +2150,10 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     if (!script->compileAndGo() || !script->canBaselineCompile())
         return true;
 
+    static const uint32_t MAX_SCRIPT_SIZE = 2000;
+    if (script->length() > MAX_SCRIPT_SIZE)
+        return true;
+
     Vector<PropertyName *> accessedProperties(cx);
 
     LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
