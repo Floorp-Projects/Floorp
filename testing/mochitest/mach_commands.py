@@ -198,7 +198,7 @@ class MochitestRunner(MozbuildObject):
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
         debug_on_failure=False, start_at=None, end_at=None, e10s=False,
         dmd=False, dump_output_directory=None, dump_about_memory_after_test=False,
-        dump_dmd_after_test=False):
+        dump_dmd_after_test=False, **kwargs):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -312,6 +312,9 @@ class MochitestRunner(MozbuildObject):
         mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
+
+        for k, v in kwargs.iteritems():
+            setattr(options, k, v)
 
         if test_path:
             test_root = runner.getTestRoot(options)
@@ -445,6 +448,10 @@ def MochitestCommand(func):
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
 
+    hide_subtests = CommandArgument('--hide-subtests', action='store_true',
+        help='If specified, will only log subtest results on failure or timeout.')
+    func = hide_subtests(func)
+
     debug_on_failure = CommandArgument('--debug-on-failure', action='store_true',
         help='Breaks execution and enters the JS debugger on a test failure. ' \
              'Should be used together with --jsdebugger.')
@@ -527,6 +534,10 @@ def B2GCommand(func):
     this_chunk = CommandArgument('--this-chunk', type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
+
+    hide_subtests = CommandArgument('--hide-subtests', action='store_true',
+        help='If specified, will only log subtest results on failure or timeout.')
+    func = hide_subtests(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
