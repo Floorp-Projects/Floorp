@@ -71,9 +71,9 @@ function promiseFindFinished(searchText, highlightOn) {
     findbar._findField.value = searchText;
 
     let resultListener;
-    let findTimeout = setTimeout(() => foundOrTimedout(true), 2000);
-    let foundOrTimedout = function(timedOut) {
-      if (timedOut)
+    let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
+    let foundOrTimedout = function(aData) {
+      if (aData === null)
         info("Result listener not called, timeout reached.");
       clearTimeout(findTimeout);
       findbar.browser.finder.removeResultListener(resultListener);

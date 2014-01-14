@@ -81,7 +81,8 @@ ToolbarView.prototype = {
    */
   showResumeWarning: function(aPausedUrl) {
     let label = L10N.getFormatStr("resumptionOrderPanelTitle", aPausedUrl);
-    this._resumeOrderTooltip.setTextContent([label]);
+    let defaultStyle = "default-tooltip-simple-text-colors";
+    this._resumeOrderTooltip.setTextContent({ messages: [label], isAlertTooltip: true });
     this._resumeOrderTooltip.show(this._resumeButton);
   },
 
