@@ -717,7 +717,7 @@ else
 ifeq ($(HOST_OS_ARCH),WINNT)
 NSINSTALL = $(NSINSTALL_PY)
 else
-NSINSTALL = $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL = $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)
 endif # WINNT
 endif # OS2
 endif # NSINSTALL_BIN

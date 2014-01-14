@@ -2,7 +2,18 @@ includedir := $(includedir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 idldir = $(datadir)/idl/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 installdir = $(libdir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 sdkdir = $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
-DIST = $(DEPTH)/dist
+ifndef TOP_DIST
+TOP_DIST = dist
+endif
+ifneq (,$(filter /%,$(TOP_DIST)))
+DIST = $(TOP_DIST)
+else
+ifeq (.,$(DEPTH))
+DIST = $(TOP_DIST)
+else
+DIST = $(DEPTH)/$(TOP_DIST)
+endif
+endif
 
 # We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
 # manually use it before config.mk inclusion

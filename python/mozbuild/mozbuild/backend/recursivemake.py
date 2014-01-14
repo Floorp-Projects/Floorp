@@ -554,7 +554,8 @@ class RecursiveMakeBackend(CommonBackend):
                 if dirs:
                     # For build systems without tiers (js/src), output a list
                     # of directories for each tier.
-                    root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(dirs)))
+                    all_dirs = self._traversal.traverse('', filter)
+                    root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(all_dirs)))
                     continue
                 if subtiers:
                     # Output the list of filtered subtiers for the given tier.

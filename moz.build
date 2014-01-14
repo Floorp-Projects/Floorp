@@ -5,30 +5,40 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CONFIGURE_SUBST_FILES += [
-    'mozilla-config.h',
-    'tools/update-packaging/Makefile',
+    'config/autoconf.mk',
+    'config/emptyvars.mk',
 ]
 
-if CONFIG['ENABLE_CLANG_PLUGIN']:
-  add_tier_dir('base', 'build/clang-plugin', external=True)
+if CONFIG['BUILDING_JS']:
+    if CONFIG['JS_STANDALONE']:
+        DIRS += ['config']
+    DIRS += ['js/src']
+else:
+    CONFIGURE_SUBST_FILES += [
+        'mozilla-config.h',
+        'tools/update-packaging/Makefile',
+    ]
 
-add_tier_dir('base', ['config', 'build', 'probes', 'python'])
+    if CONFIG['ENABLE_CLANG_PLUGIN']:
+        add_tier_dir('base', 'build/clang-plugin', external=True)
 
-if not CONFIG['LIBXUL_SDK']:
-    add_tier_dir('base', ['mfbt'])
+    add_tier_dir('base', ['config', 'build', 'probes', 'python'])
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
-        add_tier_dir('base', ['other-licenses/android'])
+    if not CONFIG['LIBXUL_SDK']:
+        add_tier_dir('base', ['mfbt'])
 
-    if CONFIG['MOZ_MEMORY']:
-        add_tier_dir('base', ['memory'])
+        if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+            add_tier_dir('base', ['other-licenses/android'])
 
-    if not CONFIG['MOZ_NATIVE_ZLIB']:
-        add_tier_dir('base', ['modules/zlib'])
+        if CONFIG['MOZ_MEMORY']:
+            add_tier_dir('base', ['memory'])
 
-    add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
+        if not CONFIG['MOZ_NATIVE_ZLIB']:
+            add_tier_dir('base', ['modules/zlib'])
 
-add_tier_dir('precompile', 'xpcom/xpidl')
+        add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
 
-# Bring in the configuration for the configured application.
-include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
+    add_tier_dir('precompile', 'xpcom/xpidl')
+
+    # Bring in the configuration for the configured application.
+    include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')

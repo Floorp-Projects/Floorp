@@ -72,31 +72,6 @@ endif
 MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
-backend.RecursiveMakeBackend:
-	@echo 'Build configuration changed. Regenerating backend.'
-	$(PYTHON) config.status
-
-Makefile: backend.RecursiveMakeBackend
-	@$(TOUCH) $@
-
-include backend.RecursiveMakeBackend.pp
-
-default:: backend.RecursiveMakeBackend
-
-default::
-	$(call py_action,process_install_manifest,--no-remove $(DIST)/include _build_manifests/install/dist_include)
-
-ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-# nsinstall doesn't get built until we enter config/ in the exports phase,
-# so we'll have to manually ensure it gets built here if we want to use
-# $(EXPORTS)
-export:: config/nsinstall$(HOST_BIN_SUFFIX)
-$(PUBLIC) $(SDK_PUBLIC): config/nsinstall$(HOST_BIN_SUFFIX)
-
-config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/config/pathsub.c
-	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
-endif
-
 # Ensure symbol versions of shared library on Linux do not conflict
 # with those in libxul.
 ifeq (Linux,$(OS_TARGET))
@@ -135,16 +110,16 @@ ifdef ENABLE_INTL_API
     ifdef MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
         ifdef JS_SHARED_LIBRARY
-          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(libname)$(ICU_LIB_SUFFIX)$(MOZ_ICU_VERSION).dll)
+          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(libname)$(ICU_LIB_SUFFIX)$(MOZ_ICU_VERSION).dll)
         endif
       else # ! WINNT
         ifeq ($(OS_ARCH),Darwin)
           ifdef JS_SHARED_LIBRARY
-            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(DLL_PREFIX)$(libname).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))
+            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))
           endif
         else # ! Darwin
           ifdef JS_SHARED_LIBRARY
-            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(DLL_PREFIX)$(libname)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))
+            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))
           endif
         endif
       endif # WINNT
@@ -157,7 +132,7 @@ ifdef ENABLE_INTL_API
     else # !MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
         ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                             cp -p intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/target/lib/$(libname).lib;)
+                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname).lib;)
       endif
     endif # MOZ_SHARED_ICU
   endif # !MOZ_NATIVE_ICU
@@ -191,8 +166,8 @@ ifdef MOZ_NATIVE_ICU
 LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
 else
 LOCAL_INCLUDES += \
-  -I$(topsrcdir)/../../intl/icu/source/common \
-  -I$(topsrcdir)/../../intl/icu/source/i18n \
+  -I$(topsrcdir)/intl/icu/source/common \
+  -I$(topsrcdir)/intl/icu/source/i18n \
   $(NULL)
 endif
 
@@ -232,16 +207,16 @@ endif
 buildicu:
 # ICU's build system is full of races, so force non-parallel build.
 ifdef CROSS_COMPILE
-	+$(ICU_MAKE) -j1 -C intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+	+$(ICU_MAKE) -j1 -C $(DEPTH)/intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
 endif
-	+$(ICU_MAKE) -j1 -C intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+	+$(ICU_MAKE) -j1 -C $(DEPTH)/intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
 ifdef CROSS_COMPILE
-	$(call SUBMAKE,$@,intl/icu/host)
+	$(call SUBMAKE,$@,$(DEPTH)/intl/icu/host)
 endif
-	$(call SUBMAKE,$@,intl/icu/target)
+	$(call SUBMAKE,$@,$(DEPTH)/intl/icu/target)
 
 endif
 endif
@@ -254,12 +229,12 @@ endif
 # check_vanilla_allocations.py is tailored to Linux, so only run it there.
 # That should be enough to catch any problems.
 check-vanilla-allocations:
-	$(PYTHON) $(srcdir)/config/check_vanilla_allocations.py $(REAL_LIBRARY)
+	$(PYTHON) $(topsrcdir)/config/check_vanilla_allocations.py $(REAL_LIBRARY)
 
 # The "aggressive" variant will likely fail on some compiler/platform
 # combinations, but is worth running by hand every once in a while.
 check-vanilla-allocations-aggressive:
-	$(PYTHON) $(srcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
+	$(PYTHON) $(topsrcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
 
 ifeq ($(OS_ARCH),Linux)
 check:: check-vanilla-allocations
@@ -269,7 +244,7 @@ endif
 # If the number of OOM errors changes, update the number below. We intend this
 # number to go down over time, by fixing OOMs.
 check-ooms:
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 125
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(topsrcdir)/config/find_OOM_errors.py --regression 125
 
 ifeq ($(MOZ_DEBUG),1)
 #check:: check-ooms
@@ -289,7 +264,7 @@ endif
 endif
 
 check-style::
-	(cd $(srcdir) && $(PYTHON) config/check_spidermonkey_style.py);
+	(cd $(srcdir) && $(PYTHON) $(topsrcdir)/config/check_spidermonkey_style.py);
 
 check-jit-test::
 	$(JITTEST_ASAN_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \

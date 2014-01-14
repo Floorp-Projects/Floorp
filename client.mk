@@ -312,7 +312,6 @@ EXTRA_CONFIG_DEPS := \
   $(NULL)
 
 $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
-	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/build $(TOPSRCDIR)/build
 	@echo Generating $@ using autoconf
 	cd $(@D); $(AUTOCONF)
 
@@ -322,7 +321,6 @@ CONFIG_STATUS_DEPS := \
   $(TOPSRCDIR)/CLOBBER \
   $(TOPSRCDIR)/nsprpub/configure \
   $(TOPSRCDIR)/config/milestone.txt \
-  $(TOPSRCDIR)/js/src/config/milestone.txt \
   $(TOPSRCDIR)/browser/config/version.txt \
   $(TOPSRCDIR)/build/virtualenv_packages.txt \
   $(TOPSRCDIR)/python/mozbuild/mozbuild/virtualenv.py \
@@ -396,7 +394,7 @@ endif
 ####################################
 # Build it
 
-realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status check-sync-dirs-config
+realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE)
 
 ####################################
@@ -453,25 +451,6 @@ cleansrcdir:
 	          -o \( -name '*.[ao]' -o -name '*.so' \) -type f -print`; \
 	   build/autoconf/clean-config.sh; \
 	fi;
-
-# Because SpiderMonkey can be distributed and built independently
-# of the Mozilla source tree, it contains its own copies of many of
-# the files used by the top-level Mozilla build process, from the
-# 'config' and 'build' subtrees.
-#
-# To make it simpler to keep the copies in sync, we follow the policy
-# that the SpiderMonkey copies must always be exact copies of those in
-# the containing Mozilla tree.  If you've made a change in one, it
-# belongs in the other as well.  If the change isn't right for both
-# places, then that's something to bring up with the other developers.
-#
-# Some files are reasonable to diverge; for  example,
-# js/src/config/autoconf.mk.in doesn't need most of the stuff in
-# config/autoconf.mk.in.
-.PHONY: check-sync-dirs
-check-sync-dirs: check-sync-dirs-build check-sync-dirs-config
-check-sync-dirs-%:
-	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/$* $(TOPSRCDIR)/$*
 
 echo-variable-%:
 	@echo $($*)

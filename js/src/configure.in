@@ -8,8 +8,8 @@ dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
 
 AC_PREREQ(2.13)
-AC_INIT(jsapi.h)
-AC_CONFIG_AUX_DIR(${srcdir}/../../build/autoconf)
+AC_INIT(js/src/jsapi.h)
+AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
@@ -73,7 +73,7 @@ _PTHREAD_LDFLAGS=""
 
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
-_topsrcdir=`cd \`dirname $0\`; pwd`
+_topsrcdir=`cd $srcdir; pwd`
 _objdir=`pwd`
 
 if test "$_topsrcdir" != "$_objdir"
@@ -165,6 +165,8 @@ else
   AC_DEFINE(JS_STANDALONE)
 fi
 AC_SUBST(JS_STANDALONE)
+BUILDING_JS=1
+AC_SUBST(BUILDING_JS)
 
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
@@ -1157,7 +1159,7 @@ if test "$GNU_CC"; then
        esac
     fi
 
-    _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='-include $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 
 elif test "$SOLARIS_SUNPRO_CC"; then
@@ -1219,7 +1221,7 @@ if test "$GNU_CXX"; then
        esac
     fi
 
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js/src/js-confdefs.h'
     _USE_CPP_INCLUDE_FLAG=1
 
     # Recent clang and gcc support C++11 deleted functions without warnings if
@@ -1639,8 +1641,8 @@ ia64*-hpux*)
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+        _DEFINES_CXXFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         if test "$_CC_SUITE" -ge "12"; then
@@ -2252,7 +2254,7 @@ EOF
                        ])
         if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
                 "$ac_cv_have_visibility_class_bug" = "no"; then
-          VISIBILITY_FLAGS='-I$(DIST)/system_wrappers_js -include $(topsrcdir)/config/gcc_hidden.h'
+          VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
@@ -3866,7 +3868,7 @@ if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
   else
     dnl By default, we use editline
     JS_NATIVE_EDITLINE=1
-    EDITLINE_LIBS='$(DEPTH)/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
+    EDITLINE_LIBS='$(DEPTH)/js/src/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
   fi
 
   dnl Either way, we want to build with line editing support.
@@ -4277,7 +4279,7 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
     ICU_CROSS_BUILD_OPT=""
     ICU_SRCDIR=""
     if test "$HOST_OS_ARCH" = "WINNT"; then
-        ICU_SRCDIR="--srcdir=$(cd $srcdir/../../intl/icu/source; pwd -W)"
+        ICU_SRCDIR="--srcdir=$(cd $srcdir/intl/icu/source; pwd -W)"
     fi
 
     if test "$CROSS_COMPILE"; then
@@ -4326,7 +4328,7 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
          CPPFLAGS="$ICU_CPPFLAGS" \
          CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS" \
          LDFLAGS="$HOST_LDFLAGS" \
-                $SHELL $abs_srcdir/../../intl/icu/source/runConfigureICU \
+                $SHELL $abs_srcdir/intl/icu/source/runConfigureICU \
                 $HOST_ICU_BUILD_OPTS \
                 $ICU_TARGET \
         dnl Shell quoting is fun.
@@ -4436,7 +4438,7 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
        CFLAGS="$ICU_CFLAGS" \
        CXXFLAGS="$ICU_CXXFLAGS" \
        LDFLAGS="$ICU_LDFLAGS $LDFLAGS" \
-       $SHELL $_topsrcdir/../../intl/icu/source/configure \
+       $SHELL $_topsrcdir/intl/icu/source/configure \
                 $ICU_BUILD_OPTS \
                 $ICU_CROSS_BUILD_OPT \
                 $ICU_LINK_OPTS \
@@ -4468,7 +4470,7 @@ AC_OUTPUT()
 # Produce the js-config script at configure time; see the comments for
 # 'js*-config' in Makefile.in.
 AC_MSG_RESULT(invoking $MAKE to create $JS_CONFIG_NAME script)
-$MAKE $JS_CONFIG_NAME
+$MAKE -C js/src $JS_CONFIG_NAME
 
 # Build jsctypes if it's enabled.
 if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
@@ -4494,10 +4496,10 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
     case "${target_cpu}" in
     x86_64)
       # Need target since MSYS tools into mozilla-build may be 32bit
-      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
       ;;
     *)
-      ac_configure_args="$ac_configure_args CC=$_topsrcdir/ctypes/libffi/msvcc.sh"
+      ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/src/ctypes/libffi/msvcc.sh"
       ;;
     esac
   fi
@@ -4523,12 +4525,12 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
 
   # Use a separate cache file for libffi, since it does things differently
   # from our configure.
-  mkdir -p $_objdir/ctypes/libffi
+  mkdir -p $_objdir/js/src/ctypes/libffi
   old_cache_file=$cache_file
-  cache_file=$_objdir/ctypes/libffi/config.cache
+  cache_file=$_objdir/js/src/ctypes/libffi/config.cache
   old_config_files=$CONFIG_FILES
   unset CONFIG_FILES
-  AC_OUTPUT_SUBDIRS(ctypes/libffi)
+  AC_OUTPUT_SUBDIRS(js/src/ctypes/libffi)
   cache_file=$old_cache_file
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
   CONFIG_FILES=$old_config_files

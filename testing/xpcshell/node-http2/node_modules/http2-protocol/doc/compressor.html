@@ -73,7 +73,7 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
-              <p>The implementation of the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04">HTTP/2 Header Compression</a> spec is separated from
+              <p>The implementation of the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05">HTTP/2 Header Compression</a> spec is separated from
 the &#39;integration&#39; part which handles HEADERS and PUSH_PROMISE frames. The compression itself is
 implemented in the first part of the file, and consists of three classes: <code>HeaderTable</code>,
 <code>HeaderSetDecompressor</code> and <code>HeaderSetCompressor</code>. The two latter classes are
@@ -133,9 +133,9 @@ exports.Decompressor = Decompressor;
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
-              <p>The <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-3.1.2">Header Table</a> is a component used to associate headers to index values. It is basically an
+              <p>The <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.2">Header Table</a> is a component used to associate headers to index values. It is basically an
 ordered list of <code>[name, value]</code> pairs, so it&#39;s implemented as a subclass of <code>Array</code>.
-In this implementation, the Header Table and the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#appendix-B">Static Table</a> are handled as a single table.</p>
+In this implementation, the Header Table and the <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#appendix-B">Static Table</a> are handled as a single table.</p>
 
             </div>
             
@@ -163,7 +163,7 @@ In this implementation, the Header Table and the <a href="http://tools.ietf.org/
               <p>There are few more sets that are needed for the compression/decompression process that are all
 subsets of the Header Table, and are implemented as flags on header table entries:</p>
 <ul>
-<li><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-3.1.3">Reference Set</a>: contains a group of headers used as a reference for the
+<li><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.3">Reference Set</a>: contains a group of headers used as a reference for the
 differential encoding of a new set of headers. (<code>reference</code> flag)</li>
 <li>Emitted headers: the headers that are already emitted as part of the current decompression
 process (not part of the spec, <code>emitted</code> flag)</li>
@@ -231,7 +231,7 @@ length in bytes, of its value&#39;s length in bytes and of 32 bytes.</li>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
-              <p>The <code>add(index, entry)</code> can be used to <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-3.3">manage the header table</a>:</p>
+              <p>The <code>add(index, entry)</code> can be used to <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.3">manage the header table</a>:</p>
 <ul>
 <li>it pushes the new <code>entry</code> at the beggining of the table</li>
 <li><p>before doing such a modification, it has to be ensured that the header table size will stay
@@ -302,7 +302,7 @@ HeaderTable.prototype.add = <span class="function"><span class="keyword">functio
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <h2 id="-the-static-table-http-tools-ietf-org-html-draft-ietf-httpbis-header-compression-04-appendix-b-"><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#appendix-B">The Static Table</a></h2>
+              <h2 id="-the-static-table-http-tools-ietf-org-html-draft-ietf-httpbis-header-compression-05-appendix-b-"><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#appendix-B">The Static Table</a></h2>
 
             </div>
             
@@ -357,6 +357,7 @@ HeaderTable.prototype.add = <span class="function"><span class="keyword">functio
   [ <span class="string">'expect'</span>                      , <span class="string">''</span>            ],
   [ <span class="string">'expires'</span>                     , <span class="string">''</span>            ],
   [ <span class="string">'from'</span>                        , <span class="string">''</span>            ],
+  [ <span class="string">'host'</span>                        , <span class="string">''</span>            ],
   [ <span class="string">'if-match'</span>                    , <span class="string">''</span>            ],
   [ <span class="string">'if-modified-since'</span>           , <span class="string">''</span>            ],
   [ <span class="string">'if-none-match'</span>               , <span class="string">''</span>            ],
@@ -450,16 +451,18 @@ TransformStream class. It collects the data chunks for later processing.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <p><code>execute(rep)</code> executes the given <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-3.1.4">header representation</a>.</p>
+              <p><code>execute(rep)</code> executes the given <a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.1.4">header representation</a>.</p>
 <p>The <em>JavaScript object representation</em> of a header representation:</p>
 <pre><code>{
   name: String || Integer,  // string literal or index
   value: String || Integer, // string literal or index
   index: Boolean            // with or without indexing
 }</code></pre>
+<p><em>Important:</em> to ease the indexing of the header table, indexes start at 0 instead of 1.</p>
 <p>Examples:</p>
 <pre><code>Indexed:
 { name: 2  , value: 2  , index: false }
+{ name: -1 , value: -1 , index: false } // reference set emptying
 Literal:
 { name: 2  , value: &#39;X&#39;, index: false } // without indexing
 { name: 2  , value: &#39;Y&#39;, index: true  } // with indexing
@@ -483,6 +486,11 @@ Literal:
                 <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
               <ul>
+<li>An <em>indexed representation</em> with an index value of 0 (in our representation, it means -1)
+entails the following actions:<ul>
+<li>The reference set is emptied.</li>
+</ul>
+</li>
 <li>An <em>indexed representation</em> corresponding to an entry <em>present</em> in the reference set
 entails the following actions:<ul>
 <li>The entry is removed from the reference set.</li>
@@ -512,9 +520,17 @@ this new entry didn&#39;t fit in the header table)</li>
     <span class="keyword">var</span> index = rep.value;
     entry = <span class="keyword">this</span>._table[index];
 
-    <span class="keyword">if</span> (entry.reference) {
+    <span class="keyword">if</span> (index == -<span class="number">1</span>) {
+      <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="keyword">this</span>._table.length; i++) {
+        <span class="keyword">this</span>._table[i].reference = <span class="literal">false</span>;
+      }
+    }
+
+    <span class="keyword">else</span> <span class="keyword">if</span> (entry.reference) {
       entry.reference = <span class="literal">false</span>;
-    } <span class="keyword">else</span> {
+    }
+
+    <span class="keyword">else</span> {
       pair = entry.slice();
       <span class="keyword">this</span>.push(pair);
 
@@ -619,7 +635,7 @@ the input stream is over.</p>
                 <a class="pilcrow" href="#section-19">&#182;</a>
               </div>
               <ul>
-<li><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-3.2.2">emits the reference set</a></li>
+<li><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-3.2.2">emits the reference set</a></li>
 </ul>
 
             </div>
@@ -776,7 +792,7 @@ in the reference set (that means don&#39;t remove at the end of the encoding pro
             </div>
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (fullMatch !== -<span class="number">1</span>) {
-    rep = { name: fullMatch, value: fullMatch, index: -<span class="number">1</span> };
+    rep = { name: fullMatch, value: fullMatch, index: <span class="literal">false</span> };
 
     <span class="keyword">if</span> (!entry.reference) {
       <span class="keyword">if</span> (fullMatch &gt;= <span class="keyword">this</span>._table.length - <span class="keyword">this</span>._table._staticLength) {
@@ -881,7 +897,7 @@ TransformStream class. It gets called when there&#39;s no more header to compres
             <div class="content"><div class='highlight'><pre>  <span class="keyword">for</span> (<span class="keyword">var</span> index = <span class="number">0</span>; index &lt; <span class="keyword">this</span>._table.length; index++) {
     <span class="keyword">var</span> entry = <span class="keyword">this</span>._table[index];
     <span class="keyword">if</span> (entry.reference &amp;&amp; !entry.keep &amp;&amp; !entry.emitted) {
-      <span class="keyword">this</span>.send({ name: index, value: index, index: -<span class="number">1</span> });
+      <span class="keyword">this</span>.send({ name: index, value: index, index: <span class="literal">false</span> });
       entry.reference = <span class="literal">false</span>;
     }
     entry.keep = <span class="literal">false</span>;
@@ -900,7 +916,7 @@ TransformStream class. It gets called when there&#39;s no more header to compres
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-28">&#182;</a>
               </div>
-              <h2 id="-detailed-format-http-tools-ietf-org-html-draft-ietf-httpbis-header-compression-04-section-4-"><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-04#section-4">Detailed Format</a></h2>
+              <h2 id="-detailed-format-http-tools-ietf-org-html-draft-ietf-httpbis-header-compression-05-section-4-"><a href="http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-05#section-4">Detailed Format</a></h2>
 
             </div>
             
@@ -1807,16 +1823,16 @@ HeaderSetCompressor.header = <span class="function"><span class="keyword">functi
   }
 
   <span class="keyword">if</span> (representation === representations.indexed) {
-    buffers.push(HeaderSetCompressor.integer(header.value, representation.prefix));
+    buffers.push(HeaderSetCompressor.integer(header.value + <span class="number">1</span>, representation.prefix));
+  }
 
-  } <span class="keyword">else</span> {
+  <span class="keyword">else</span> {
     <span class="keyword">if</span> (<span class="keyword">typeof</span> header.name === <span class="string">'number'</span>) {
       buffers.push(HeaderSetCompressor.integer(header.name + <span class="number">1</span>, representation.prefix));
     } <span class="keyword">else</span> {
       buffers.push(HeaderSetCompressor.integer(<span class="number">0</span>, representation.prefix));
       buffers.push(HeaderSetCompressor.string(header.name, huffmanTable));
     }
-
     buffers.push(HeaderSetCompressor.string(header.value, huffmanTable));
   }
 
@@ -1838,17 +1854,16 @@ HeaderSetDecompressor.header = <span class="function"><span class="keyword">func
   }
 
   <span class="keyword">if</span> (representation === representations.indexed) {
-    header.value = header.name = HeaderSetDecompressor.integer(buffer, representation.prefix);
+    header.value = header.name = HeaderSetDecompressor.integer(buffer, representation.prefix) - <span class="number">1</span>;
     header.index = <span class="literal">false</span>;
+  }
 
-  } <span class="keyword">else</span> {
+  <span class="keyword">else</span> {
     header.name = HeaderSetDecompressor.integer(buffer, representation.prefix) - <span class="number">1</span>;
     <span class="keyword">if</span> (header.name === -<span class="number">1</span>) {
       header.name = HeaderSetDecompressor.string(buffer, huffmanTable);
     }
-
     header.value = HeaderSetDecompressor.string(buffer, huffmanTable);
-
     header.index = (representation === representations.literalIncremental);
   }
 
@@ -1972,12 +1987,63 @@ but the API becomes simpler.</p>
   <span class="keyword">var</span> compressor = <span class="keyword">new</span> HeaderSetCompressor(<span class="keyword">this</span>._log, <span class="keyword">this</span>._table, <span class="keyword">this</span>._huffmanTable);
   <span class="keyword">for</span> (<span class="keyword">var</span> name <span class="keyword">in</span> headers) {
     <span class="keyword">var</span> value = headers[name];
+    name = String(name).toLowerCase();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <ul>
+<li>To allow for better compression efficiency, the Cookie header field MAY be split into
+separate header fields, each with one or more cookie-pairs.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> (name == <span class="string">'cookie'</span>) {
+      <span class="keyword">if</span> (!(value <span class="keyword">instanceof</span> Array)) {
+        value = [value]
+      }
+      value = Array.prototype.concat.apply([], value.map(<span class="function"><span class="keyword">function</span><span class="params">(cookie)</span> {</span>
+        <span class="keyword">return</span> String(cookie).split(<span class="string">';'</span>).map(trim)
+      }));
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <ul>
+<li>To preserve the order of a comma-separated list, the ordered values for a single header
+field name appearing in different header fields are concatenated into a single value.
+A zero-valued octet (0x0) is used to delimit multiple values.</li>
+<li>Header fields containing multiple values MUST be concatenated into a single value unless
+the ordering of that header field is known to be not significant.</li>
+<li>Currently, only the Cookie header is considered to be order-insensitive.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> ((value <span class="keyword">instanceof</span> Array) &amp;&amp; (name !== <span class="string">'cookie'</span>)) {
+      value = value.join(<span class="string">'\0'</span>);
+    }
+
     <span class="keyword">if</span> (value <span class="keyword">instanceof</span> Array) {
-      <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i&lt; value.length; i++) {
-        compressor.write([String(name), String(value[i])]);
+      <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; value.length; i++) {
+        compressor.write([name, String(value[i])]);
       }
     } <span class="keyword">else</span> {
-      compressor.write([String(name), String(value)]);
+      compressor.write([name, String(value)]);
     }
   }
   compressor.end();
@@ -1992,11 +2058,11 @@ but the API becomes simpler.</p>
         </li>
         
         
-        <li id="section-41">
+        <li id="section-43">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-41">&#182;</a>
+                <a class="pilcrow" href="#section-43">&#182;</a>
               </div>
               <p>When a <code>frame</code> arrives</p>
 
@@ -2007,11 +2073,11 @@ but the API becomes simpler.</p>
         </li>
         
         
-        <li id="section-42">
+        <li id="section-44">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-42">&#182;</a>
+                <a class="pilcrow" href="#section-44">&#182;</a>
               </div>
               <ul>
 <li>and it is a HEADERS or PUSH_PROMISE frame<ul>
@@ -2057,11 +2123,11 @@ marks the last frame and the END_STREAM flag which is always false before the en
         </li>
         
         
-        <li id="section-43">
+        <li id="section-45">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-43">&#182;</a>
+                <a class="pilcrow" href="#section-45">&#182;</a>
               </div>
               <ul>
 <li>otherwise, the frame is forwarded without taking any action</li>
@@ -2079,11 +2145,11 @@ marks the last frame and the END_STREAM flag which is always false before the en
         </li>
         
         
-        <li id="section-44">
+        <li id="section-46">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-44">&#182;</a>
+                <a class="pilcrow" href="#section-46">&#182;</a>
               </div>
               <h2 id="the-decompressor-class">The Decompressor class</h2>
 
@@ -2092,11 +2158,11 @@ marks the last frame and the END_STREAM flag which is always false before the en
         </li>
         
         
-        <li id="section-45">
+        <li id="section-47">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-45">&#182;</a>
+                <a class="pilcrow" href="#section-47">&#182;</a>
               </div>
               <p>The Decompressor is a stateful transform stream, since it has to collect multiple frames first,
 and the decoding comes after unifying the payload of those frames.</p>
@@ -2124,11 +2190,11 @@ and <code>this._stream</code> respectively.</p>
         </li>
         
         
-        <li id="section-46">
+        <li id="section-48">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-46">&#182;</a>
+                <a class="pilcrow" href="#section-48">&#182;</a>
               </div>
               <p>Changing the header table size</p>
 
@@ -2141,11 +2207,11 @@ and <code>this._stream</code> respectively.</p>
         </li>
         
         
-        <li id="section-47">
+        <li id="section-49">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-47">&#182;</a>
+                <a class="pilcrow" href="#section-49">&#182;</a>
               </div>
               <p><code>decompress</code> takes a full header block, and decompresses it using a new <code>HeaderSetDecompressor</code>
 stream instance. This means that from now on, the advantages of streaming header decoding are
@@ -2160,17 +2226,58 @@ lost, but the API becomes simpler.</p>
   <span class="keyword">var</span> headers = {};
   <span class="keyword">var</span> pair;
   <span class="keyword">while</span> (pair = decompressor.read()) {
-    <span class="keyword">var</span> name = pair[<span class="number">0</span>];
-    <span class="keyword">var</span> value = pair[<span class="number">1</span>];
-    <span class="keyword">if</span> (name <span class="keyword">in</span> headers) {
-      <span class="keyword">if</span> (headers[name] <span class="keyword">instanceof</span> Array) {
-        headers[name].push(value);
+    <span class="keyword">var</span> name = pair[<span class="number">0</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <ul>
+<li>After decompression, header fields that have values containing zero octets (0x0) MUST be
+split into multiple header fields before being processed.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> values = pair[<span class="number">1</span>].split(<span class="string">'\0'</span>);
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; values.length; i++) {
+      <span class="keyword">var</span> value = values[i];
+      <span class="keyword">if</span> (name <span class="keyword">in</span> headers) {
+        <span class="keyword">if</span> (headers[name] <span class="keyword">instanceof</span> Array) {
+          headers[name].push(value);
+        } <span class="keyword">else</span> {
+          headers[name] = [headers[name], value];
+        }
       } <span class="keyword">else</span> {
-        headers[name] = [headers[name], value];
+        headers[name] = value;
       }
-    } <span class="keyword">else</span> {
-      headers[name] = value;
     }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <ul>
+<li>If there are multiple Cookie header fields after decompression, these MUST be concatenated
+into a single octet string using the two octet delimiter of 0x3B, 0x20 (the ASCII
+string &quot;; &quot;).</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> ((<span class="string">'cookie'</span> <span class="keyword">in</span> headers) &amp;&amp; (headers[<span class="string">'cookie'</span>] <span class="keyword">instanceof</span> Array)) {
+    headers[<span class="string">'cookie'</span>] = headers[<span class="string">'cookie'</span>].join(<span class="string">'; '</span>)
   }
 
   <span class="keyword">return</span> headers;
@@ -2179,11 +2286,11 @@ lost, but the API becomes simpler.</p>
         </li>
         
         
-        <li id="section-48">
+        <li id="section-52">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-48">&#182;</a>
+                <a class="pilcrow" href="#section-52">&#182;</a>
               </div>
               <p>When a <code>frame</code> arrives</p>
 
@@ -2194,11 +2301,11 @@ lost, but the API becomes simpler.</p>
         </li>
         
         
-        <li id="section-49">
+        <li id="section-53">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-49">&#182;</a>
+                <a class="pilcrow" href="#section-53">&#182;</a>
               </div>
               <ul>
 <li>and the collection process is already <code>_inProgress</code>, the frame is simply stored, except if
@@ -2219,11 +2326,11 @@ it&#39;s an illegal frame</li>
         </li>
         
         
-        <li id="section-50">
+        <li id="section-54">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-50">&#182;</a>
+                <a class="pilcrow" href="#section-54">&#182;</a>
               </div>
               <ul>
 <li>and the collection process is not <code>_inProgress</code>, but the new frame&#39;s type is HEADERS or
@@ -2234,18 +2341,18 @@ PUSH_PROMISE, a new collection process begins</li>
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">else</span> <span class="keyword">if</span> ((frame.type === <span class="string">'HEADERS'</span>) || (frame.type === <span class="string">'PUSH_PROMISE'</span>)) {
     <span class="keyword">this</span>._inProgress = <span class="literal">true</span>;
-    <span class="keyword">this</span>._base = frame;
+    <span class="keyword">this</span>._base = util._extend({}, frame);
     <span class="keyword">this</span>._frames = [frame];
   }</pre></div></div>
             
         </li>
         
         
-        <li id="section-51">
+        <li id="section-55">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-51">&#182;</a>
+                <a class="pilcrow" href="#section-55">&#182;</a>
               </div>
               <ul>
 <li>otherwise, the frame is forwarded without taking any action</li>
@@ -2260,11 +2367,11 @@ PUSH_PROMISE, a new collection process begins</li>
         </li>
         
         
-        <li id="section-52">
+        <li id="section-56">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-52">&#182;</a>
+                <a class="pilcrow" href="#section-56">&#182;</a>
               </div>
               <ul>
 <li>When the frame signals that it&#39;s the last in the series, the header block chunks are
@@ -2285,7 +2392,7 @@ decompressed headers.</li>
       <span class="keyword">this</span>.emit(<span class="string">'error'</span>, <span class="string">'COMPRESSION_ERROR'</span>);
       <span class="keyword">return</span>;
     }
-    <span class="keyword">this</span>.push(util._extend({ headers: headers }, <span class="keyword">this</span>._base));
+    <span class="keyword">this</span>.push(util._extend(<span class="keyword">this</span>._base, { headers: headers }));
     <span class="keyword">this</span>._inProgress = <span class="literal">false</span>;
   }
 
@@ -2295,11 +2402,11 @@ decompressed headers.</li>
         </li>
         
         
-        <li id="section-53">
+        <li id="section-57">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-53">&#182;</a>
+                <a class="pilcrow" href="#section-57">&#182;</a>
               </div>
               <h1 id="helper-functions">Helper functions</h1>
 
@@ -2308,11 +2415,11 @@ decompressed headers.</li>
         </li>
         
         
-        <li id="section-54">
+        <li id="section-58">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-54">&#182;</a>
+                <a class="pilcrow" href="#section-58">&#182;</a>
               </div>
               <p>Concatenate an array of buffers into a new buffer</p>
 
@@ -2335,11 +2442,11 @@ decompressed headers.</li>
         </li>
         
         
-        <li id="section-55">
+        <li id="section-59">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-55">&#182;</a>
+                <a class="pilcrow" href="#section-59">&#182;</a>
               </div>
               <p>Cut <code>buffer</code> into chunks not larger than <code>size</code></p>
 
@@ -2354,6 +2461,10 @@ decompressed headers.</li>
     cursor += chunkSize;
   } <span class="keyword">while</span>(cursor &lt; buffer.length);
   <span class="keyword">return</span> chunks;
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">trim</span><span class="params">(string)</span> {</span>
+  <span class="keyword">return</span> string.trim()
 }</pre></div></div>
             
         </li>
