@@ -43,6 +43,8 @@ browser.jar:
     content/browser/devtools/codemirror/search.js                      (sourceeditor/codemirror/search/search.js)
     content/browser/devtools/codemirror/dialog.js                      (sourceeditor/codemirror/dialog/dialog.js)
     content/browser/devtools/codemirror/dialog.css                     (sourceeditor/codemirror/dialog/dialog.css)
+    content/browser/devtools/codemirror/emacs.js                       (sourceeditor/codemirror/keymap/emacs.js)
+    content/browser/devtools/codemirror/vim.js                         (sourceeditor/codemirror/keymap/vim.js)
     content/browser/devtools/codemirror/mozilla.css                    (sourceeditor/codemirror/mozilla.css)
     content/browser/devtools/debugger.xul                              (debugger/debugger.xul)
     content/browser/devtools/debugger.css                              (debugger/debugger.css)
