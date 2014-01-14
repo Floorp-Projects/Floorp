@@ -1457,6 +1457,17 @@ RadioInterface.prototype = {
                                                  this.clientId, message);
         break;
       case "datacallstatechange":
+        message.ip = null;
+        message.netmask = null;
+        message.broadcast = null;
+        if (message.ipaddr) {
+          message.ip = message.ipaddr.split("/")[0];
+          let ip_value = netHelpers.stringToIP(message.ip);
+          let prefix_len = message.ipaddr.split("/")[1];
+          let mask_value = netHelpers.makeMask(prefix_len);
+          message.netmask = netHelpers.ipToString(mask_value);
+          message.broadcast = netHelpers.ipToString((ip_value & mask_value) + ~mask_value);
+        }
         this.handleDataCallState(message);
         break;
       case "datacalllist":
