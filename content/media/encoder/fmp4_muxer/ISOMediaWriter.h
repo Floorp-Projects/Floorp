@@ -81,7 +81,7 @@ private:
   // A flag to indicate the output buffer is ready to blob out.
   bool mBlobReady;
 
-  // Combination of HAS_AUDIO or HAS_VIDEO.
+  // Combination of Audio_Track or Video_Track.
   uint32_t mType;
 };
 
