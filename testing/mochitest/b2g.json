@@ -88,7 +88,6 @@
 
     "content/base/test/test_XHRSendData.html":"seems to stall",
     "content/base/test/test_XHR_parameters.html":"86 total, 4 failing - testing mozAnon - got false, expected true",
-    "content/base/test/test_XHR_system.html":"12 total, 2 failing - .mozSystem == true - got false, expected true + ",
 
     "content/base/test/test_bug431701.html":"xmlhttprequest causes crash, bug 902271",
     "content/base/test/test_bug422537.html":"xmlhttprequest causes crash, bug 902271",
