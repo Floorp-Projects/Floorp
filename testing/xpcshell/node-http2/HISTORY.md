@@ -1,6 +1,18 @@
 Version history
 ===============
 
+### 2.2.0 (2013-12-25) ###
+
+* Upgrade to the latest draft: [draft-ietf-httpbis-http2-09]
+* [Tarball](https://github.com/molnarg/node-http2/archive/node-http2-2.2.0.tar.gz)
+
+[draft-ietf-httpbis-http2-09]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-09
+
+### 2.1.1 (2013-12-21) ###
+
+* Minor bugfix
+* [Tarball](https://github.com/molnarg/node-http2/archive/node-http2-2.1.1.tar.gz)
+
 ### 2.1.0 (2013-11-10) ###
 
 * Upgrade to the latest draft: [draft-ietf-httpbis-http2-07][draft-07]

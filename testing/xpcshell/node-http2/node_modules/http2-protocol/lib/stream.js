@@ -322,7 +322,7 @@ Stream.prototype._finishing = function _finishing() {
   }
 };
 
-// [Stream States](http://tools.ietf.org/id/draft-unicorn-httpbis-http2-01.html#StreamStates)
+// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-5.1)
 // ----------------
 //
 //                           +--------+
