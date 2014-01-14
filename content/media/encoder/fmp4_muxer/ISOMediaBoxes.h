@@ -20,6 +20,12 @@
 
 namespace mozilla {
 
+/**
+ * track type from spec 8.4.3.3
+ */
+#define Audio_Track 0x01
+#define Video_Track 0x02
+
 class AACTrackMetadata;
 class AVCTrackMetadata;
 class ES_Descriptor;

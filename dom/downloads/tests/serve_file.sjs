@@ -53,8 +53,14 @@ function handleResponse() {
 function handleRequest(request, response) {
   var query = getQuery(request);
 
+  // Default status when responding.
+  var version = "1.1";
+  var statusCode = 200;
+  var description = "OK";
+
   // Default values for content type, size and rate.
   var contentType = "text/plain";
+  var contentRange = null;
   var size = 1024;
   var rate = 0;
 
@@ -66,6 +72,39 @@ function handleRequest(request, response) {
   // optional size (in bytes) for generated file.
   if ("size" in query) {
     size = parseInt(query["size"]);
+  }
+
+  // optional range request check.
+  if (request.hasHeader("range")) {
+    version = "1.1";
+    statusCode = 206;
+    description = "Partial Content";
+
+    // We'll only support simple range byte style requests.
+    var [offset, total] = request.getHeader("range").slice("bytes=".length).split("-");
+    // Enforce valid Number values.
+    offset = parseInt(offset);
+    offset = isNaN(offset) ? 0 : offset;
+    // Same.
+    total = parseInt(total);
+    total = isNaN(total) ? 0 : total;
+
+    // We'll need to original total size as part of the Content-Range header
+    // value in our response.
+    var originalSize = size;
+
+    // If we have a total size requested, we must make sure to send that number
+    // of bytes only (minus the start offset).
+    if (total && total < size) {
+      size = total - offset;
+    } else if (offset) {
+      // Looks like we just have a byte offset to deal with.
+      size = size - offset;
+    }
+
+    // We specifically need to add a Content-Range header to all responses for
+    // requests that include a range request header.
+    contentRange = "bytes " + offset + "-" + (size - 1) + "/" + originalSize;
   }
 
   // optional rate (in bytes/s) at which to send the file.
@@ -96,7 +135,11 @@ function handleRequest(request, response) {
   response.processAsync();
 
   // generate the content.
+  response.setStatusLine(version, statusCode, description);
   response.setHeader("Content-Type", contentType, false);
+  if (contentRange) {
+    response.setHeader("Content-Range", contentRange, false);
+  }
   response.setHeader("Content-Length", size.toString(), false);
 
   // initialize the timer and start writing out the response.
