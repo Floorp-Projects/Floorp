@@ -81,3 +81,10 @@ selector in floating-scrollbar-light.css across all platforms. */
 .CodeMirror-gutter-elt {
   transform: translate(0,-50%);
 }
+
+.cm-trailingspace {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
+  opacity: 0.75;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
