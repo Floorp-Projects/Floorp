@@ -147,7 +147,8 @@ const char *gInaccessibleProperties[] = {
     "-moz-script-level", // parsed by UA sheets only
     "-moz-script-size-multiplier",
     "-moz-script-min-size",
-    "-moz-math-variant"
+    "-moz-math-variant",
+    "-moz-math-display" // parsed by UA sheets only
 };
 
 inline int
