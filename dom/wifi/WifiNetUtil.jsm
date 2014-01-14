@@ -11,16 +11,23 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/systemlibs.js");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
-                                   "@mozilla.org/network/manager;1",
-                                   "nsINetworkManager");
+XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
+                                   "@mozilla.org/network/service;1",
+                                   "nsINetworkService");
 
 this.EXPORTED_SYMBOLS = ["WifiNetUtil"];
 
 const DHCP_PROP = "init.svc.dhcpcd";
 const DHCP      = "dhcpcd";
+const DEBUG     = false;
 
 this.WifiNetUtil = function(controlMessage) {
+  function debug(msg) {
+    if (DEBUG) {
+      dump('-------------- NetUtil: ' + msg);
+    }
+  }
+
   var util = {};
 
   util.configureInterface = function(cfg, callback) {
@@ -67,14 +74,14 @@ this.WifiNetUtil = function(controlMessage) {
     });
   };
 
-  util.startDhcpServer = function (range, callback) {
-    gNetworkManager.setDhcpServer(true, range, function (error) {
+  util.startDhcpServer = function (config, callback) {
+    gNetworkService.setDhcpServer(true, config, function (error) {
       callback(!error);
     });
   };
 
   util.stopDhcpServer = function (callback) {
-    gNetworkManager.setDhcpServer(false, null, function (error) {
+    gNetworkService.setDhcpServer(false, null, function (error) {
       callback(!error);
     });
   };
@@ -135,6 +142,7 @@ this.WifiNetUtil = function(controlMessage) {
 
   util.runIpConfig = function (name, data, callback) {
     if (!data) {
+      debug("IP config failed to run");
       callback({ info: data });
       return;
     }
@@ -142,16 +150,19 @@ this.WifiNetUtil = function(controlMessage) {
     setProperty("net." + name + ".dns1", ipToString(data.dns1),
                 function(ok) {
       if (!ok) {
+        debug("Unable to set net.<ifname>.dns1");
         return;
       }
       setProperty("net." + name + ".dns2", ipToString(data.dns2),
                   function(ok) {
         if (!ok) {
+          debug("Unable to set net.<ifname>.dns2");
           return;
         }
         setProperty("net." + name + ".gw", ipToString(data.gateway),
                     function(ok) {
           if (!ok) {
+            debug("Unable to set net.<ifname>.gw");
             return;
           }
           callback({ info: data });
