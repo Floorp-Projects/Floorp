@@ -424,54 +424,95 @@ CSPAllowsInlineScript(nsIScriptElement *aElement, nsIDocument *aDocument)
     return true;
   }
 
-  bool reportViolation = false;
+  // An inline script can be allowed because all inline scripts are allowed,
+  // or else because it is whitelisted by a nonce-source or hash-source. This
+  // is a logical OR between whitelisting methods, so the allowInlineScript
+  // outparam can be reused for each check as long as we stop checking as soon
+  // as it is set to true. This also optimizes performance by avoiding the
+  // overhead of unnecessary checks.
   bool allowInlineScript = true;
-  rv = csp->GetAllowsInlineScript(&reportViolation, &allowInlineScript);
-  NS_ENSURE_SUCCESS(rv, false);
+  nsAutoTArray<unsigned short, 3> violations;
 
-  bool foundNonce = false;
+  bool reportInlineViolation = false;
+  rv = csp->GetAllowsInlineScript(&reportInlineViolation, &allowInlineScript);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (reportInlineViolation) {
+    violations.AppendElement(static_cast<unsigned short>(
+          nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT));
+  }
+
   nsAutoString nonce;
   if (!allowInlineScript) {
     nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
-    foundNonce = scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+    bool foundNonce = scriptContent->GetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::nonce, nonce);
     if (foundNonce) {
-      // We can overwrite the outparams from GetAllowsInlineScript because
-      // if the nonce is correct, then we don't want to report the original
-      // inline violation (it has been whitelisted by the nonce), and if
-      // the nonce is incorrect, then we want to return just the specific
-      // "nonce violation" rather than both a "nonce violation" and
-      // a generic "inline violation".
+      bool reportNonceViolation;
       rv = csp->GetAllowsNonce(nonce, nsIContentPolicy::TYPE_SCRIPT,
-                               &reportViolation, &allowInlineScript);
+                               &reportNonceViolation, &allowInlineScript);
       NS_ENSURE_SUCCESS(rv, false);
+      if (reportNonceViolation) {
+        violations.AppendElement(static_cast<unsigned short>(
+              nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_SCRIPT));
+      }
     }
   }
 
-  if (reportViolation) {
+  if (!allowInlineScript) {
+    bool reportHashViolation;
+    nsAutoString scriptText;
+    aElement->GetScriptText(scriptText);
+    rv = csp->GetAllowsHash(scriptText, nsIContentPolicy::TYPE_SCRIPT,
+                            &reportHashViolation, &allowInlineScript);
+    NS_ENSURE_SUCCESS(rv, false);
+    if (reportHashViolation) {
+      violations.AppendElement(static_cast<unsigned short>(
+            nsIContentSecurityPolicy::VIOLATION_TYPE_HASH_SCRIPT));
+    }
+  }
+
+  // What violation(s) should be reported?
+  //
+  // 1. If the script tag has a nonce attribute, and the nonce does not match
+  // the policy, report VIOLATION_TYPE_NONCE_SCRIPT.
+  // 2. If the policy has at least one hash-source, and the hashed contents of
+  // the script tag did not match any of them, report VIOLATION_TYPE_HASH_SCRIPT
+  // 3. Otherwise, report VIOLATION_TYPE_INLINE_SCRIPT if appropriate.
+  //
+  // 1 and 2 may occur together, 3 should only occur by itself. Naturally,
+  // every VIOLATION_TYPE_NONCE_SCRIPT and VIOLATION_TYPE_HASH_SCRIPT are also
+  // VIOLATION_TYPE_INLINE_SCRIPT, but reporting the
+  // VIOLATION_TYPE_INLINE_SCRIPT is redundant and does not help the developer.
+  if (!violations.IsEmpty()) {
+    MOZ_ASSERT(violations[0] == nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
+               "How did we get any violations without an initial inline script violation?");
     // gather information to log with violation report
     nsIURI* uri = aDocument->GetDocumentURI();
     nsAutoCString asciiSpec;
     uri->GetAsciiSpec(asciiSpec);
     nsAutoString scriptText;
     aElement->GetScriptText(scriptText);
+    nsAutoString scriptSample(scriptText);
 
     // cap the length of the script sample at 40 chars
-    if (scriptText.Length() > 40) {
-      scriptText.Truncate(40);
-      scriptText.AppendLiteral("...");
+    if (scriptSample.Length() > 40) {
+      scriptSample.Truncate(40);
+      scriptSample.AppendLiteral("...");
     }
 
-    // The type of violation to report is determined by whether there was
-    // a nonce present.
-    unsigned short violationType = foundNonce ?
-      nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_SCRIPT :
-      nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT;
-    csp->LogViolationDetails(violationType, NS_ConvertUTF8toUTF16(asciiSpec),
-                             scriptText, aElement->GetScriptLineNumber(), nonce);
+    for (uint32_t i = 0; i < violations.Length(); i++) {
+      // Skip reporting the redundant inline script violation if there are
+      // other (nonce and/or hash violations) as well.
+      if (i > 0 || violations.Length() == 1) {
+        csp->LogViolationDetails(violations[i], NS_ConvertUTF8toUTF16(asciiSpec),
+                                 scriptSample, aElement->GetScriptLineNumber(),
+                                 nonce, scriptText);
+      }
+    }
   }
 
   if (!allowInlineScript) {
-    NS_ASSERTION(reportViolation,
+    NS_ASSERTION(!violations.IsEmpty(),
         "CSP blocked inline script but is not reporting a violation");
    return false;
   }

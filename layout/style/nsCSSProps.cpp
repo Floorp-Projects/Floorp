@@ -1356,6 +1356,12 @@ const int32_t nsCSSProps::kMathVariantKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kMathDisplayKTable[] = {
+  eCSSKeyword_inline, NS_MATHML_DISPLAYSTYLE_INLINE,
+  eCSSKeyword_block, NS_MATHML_DISPLAYSTYLE_BLOCK,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kContextOpacityKTable[] = {
   eCSSKeyword_context_fill_opacity, NS_STYLE_CONTEXT_FILL_OPACITY,
   eCSSKeyword_context_stroke_opacity, NS_STYLE_CONTEXT_STROKE_OPACITY,

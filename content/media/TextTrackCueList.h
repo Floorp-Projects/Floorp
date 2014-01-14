@@ -41,9 +41,6 @@ public:
     return mList.Length();
   }
 
-  // Time is in seconds.
-  void Update(double aTime);
-
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrackCue* operator[](uint32_t aIndex);
   TextTrackCue* GetCueById(const nsAString& aId);
@@ -56,6 +53,7 @@ public:
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
+  void GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
 private:
   nsCOMPtr<nsISupports> mParent;

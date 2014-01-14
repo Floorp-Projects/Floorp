@@ -185,6 +185,10 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
     mRedirectChannelId = 0;
   }
 
+  if (!redirectChannel) {
+    succeeded = false;
+  }
+
   nsCOMPtr<nsIParentRedirectingChannel> activeRedirectingChannel =
       do_QueryInterface(mActiveChannel);
   MOZ_ASSERT(activeRedirectingChannel,

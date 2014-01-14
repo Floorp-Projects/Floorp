@@ -1763,6 +1763,10 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
                                 "ui.click_hold_context_menus.delay", 500);
   }
 
+  if (aEvent.touches.Length() == 0) {
+    return;
+  }
+
   bool currentlyTrackingTouch = (mActivePointerId >= 0);
   if (aEvent.message == NS_TOUCH_START) {
     if (currentlyTrackingTouch || aEvent.touches.Length() > 1) {

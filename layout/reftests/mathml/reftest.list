@@ -8,6 +8,10 @@ fails == dir-6.html dir-6-ref.html
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
+== displaystyle-1.html displaystyle-1-ref.html
+== displaystyle-2.html displaystyle-2-ref.html
+== displaystyle-3.html displaystyle-3-ref.html
+== displaystyle-4.html displaystyle-4-ref.html
 skip-if(B2G) fails-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
@@ -98,6 +102,7 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == mpadded-8.html mpadded-8-ref.html
 == mpadded-9.html mpadded-9-ref.html
 == math-display.html math-display-ref.html
+== scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html
 == munderover-align-accent-true.html munderover-align-accent-true-ref.html
