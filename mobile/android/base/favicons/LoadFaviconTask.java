@@ -88,7 +88,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
     }
 
     // Runs in background thread
-    private Bitmap loadFaviconFromDb() {
+    private Bitmap loadFaviconFromDB() {
         ContentResolver resolver = sContext.getContentResolver();
         return BrowserDB.getFaviconForFaviconUrl(resolver, mFaviconUrl);
     }
@@ -240,14 +240,14 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         // If favicon is empty, fall back to the stored one.
         if (TextUtils.isEmpty(mFaviconUrl)) {
             // Try to get the favicon URL from the memory cache.
-            storedFaviconUrl = Favicons.getFaviconUrlForPageUrlFromCache(mPageUrl);
+            storedFaviconUrl = Favicons.getFaviconURLForPageURLFromCache(mPageUrl);
 
             // If that failed, try to get the URL from the database.
             if (storedFaviconUrl == null) {
-                storedFaviconUrl = Favicons.getFaviconUrlForPageUrl(mPageUrl);
+                storedFaviconUrl = Favicons.getFaviconURLForPageURL(mPageUrl);
                 if (storedFaviconUrl != null) {
                     // If that succeeded, cache the URL loaded from the database in memory.
-                    Favicons.putFaviconUrlForPageUrlInCache(mPageUrl, storedFaviconUrl);
+                    Favicons.putFaviconURLForPageURLInCache(mPageUrl, storedFaviconUrl);
                 }
             }
 
@@ -256,7 +256,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
                 mFaviconUrl = storedFaviconUrl;
             } else {
                 // If we don't have a stored one, fall back to the default.
-                mFaviconUrl = Favicons.guessDefaultFaviconUrl(mPageUrl);
+                mFaviconUrl = Favicons.guessDefaultFaviconURL(mPageUrl);
 
                 if (TextUtils.isEmpty(mFaviconUrl)) {
                     return null;
@@ -299,7 +299,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
             return null;
         }
 
-        image = loadFaviconFromDb();
+        image = loadFaviconFromDB();
         if (imageIsValid(image)) {
             return image;
         }
@@ -335,7 +335,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         }
 
         // If we're not already trying the default URL, try it now.
-        final String guessed = Favicons.guessDefaultFaviconUrl(mPageUrl);
+        final String guessed = Favicons.guessDefaultFaviconURL(mPageUrl);
         if (guessed == null) {
             Favicons.putFaviconInFailedCache(mFaviconUrl);
             return null;
