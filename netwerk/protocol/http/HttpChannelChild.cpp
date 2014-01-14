@@ -744,13 +744,15 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
   mRedirectChannelChild = do_QueryInterface(newChannel);
   if (mRedirectChannelChild) {
     mRedirectChannelChild->ConnectParent(newChannelId);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this,
+                                              newChannel,
+                                              redirectFlags);
   } else {
-    NS_ERROR("Redirecting to a protocol that doesn't support universal protocol redirect");
+    LOG(("  redirecting to a protocol that doesn't implement"
+         " nsIChildChannel"));
+    rv = NS_ERROR_FAILURE;
   }
 
-  rv = gHttpHandler->AsyncOnChannelRedirect(this,
-                                            newChannel,
-                                            redirectFlags);
   if (NS_FAILED(rv))
     OnRedirectVerifyCallback(rv);
 }
