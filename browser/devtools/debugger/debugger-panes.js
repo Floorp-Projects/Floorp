@@ -1868,7 +1868,11 @@ VariableBubbleView.prototype = {
     if (VariablesView.isPrimitive({ value: objectActor })) {
       let className = VariablesView.getClass(objectActor);
       let textContent = VariablesView.getString(objectActor);
-      this._tooltip.setTextContent([textContent], className, "plain");
+      this._tooltip.setTextContent({
+        messages: [textContent],
+        messagesClass: className,
+        containerClass: "plain"
+      });
     } else {
       this._tooltip.setVariableContent(objectActor, {
         searchPlaceholder: L10N.getStr("emptyPropertiesFilterText"),
