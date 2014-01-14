@@ -117,10 +117,7 @@ function runTest(aCallback) {
     // Running as a Mochitest.
     SimpleTest.waitForExplicitFinish();
     SpecialPowers.pushPrefEnv({'set': [
-      ['dom.messageChannel.enabled', true],
       ['media.peerconnection.enabled', true],
-      ['media.peerconnection.identity.enabled', true],
-      ['media.peerconnection.identity.timeout', 1000],
       ['media.navigator.permission.disabled', true]]
     }, function () {
       try {

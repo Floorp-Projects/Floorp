@@ -168,8 +168,6 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_rtcp_mux_attr, sdp_build_attr_rtcp_mux_attr},
     {"fingerprint", sizeof("fingerprint"),
       sdp_parse_attr_fingerprint_attr, sdp_build_attr_simple_string},
-    {"identity", sizeof("identity"),
-      sdp_parse_attr_simple_string, sdp_build_attr_simple_string},
     {"maxptime", sizeof("maxptime"),
       sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32},
     {"rtcp-fb", sizeof("rtcp-fb"),
