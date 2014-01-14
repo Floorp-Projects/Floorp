@@ -152,13 +152,13 @@ fails-if(Android&&AndroidVersion==17) HTTP == background-referrer.html backgroun
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
 == attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
-== attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
-== attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html  # Same ref as the previous test.
-fuzzy(50,500) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
+fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html #Bug 959165
+fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html  # Same ref as the previous test. #Bug 959165
+fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),50,500) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html #Bug 959165
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
 == attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-image-3.html attachment-local-clipping-image-3-ref.html
-== attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
-== attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html  # Same ref as the previous test.
-fuzzy(80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
+fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html #Bug 959165
+fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html  # Same ref as the previous test. #Bug 959165
+fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html #Bug 959165
