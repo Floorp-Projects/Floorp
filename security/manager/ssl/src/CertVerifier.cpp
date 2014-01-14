@@ -19,6 +19,7 @@ extern SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag);
 extern CERTCertList* getRootsForOid(SECOidTag oid_tag);
 
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
+const CertVerifier::Flags CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV = 2;
 
 CertVerifier::CertVerifier(missing_cert_download_config mcdc,
                            crl_download_config cdc,
@@ -158,6 +159,9 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
   SECOidTag evPolicy = SEC_OID_UNKNOWN;
 
 #ifdef NSS_NO_LIBPKIX
+  if (flags & FLAG_NO_DV_FALLBACK_FOR_EV) {
+    return SECSuccess;
+  }
   return ClassicVerifyCert(cert, usage, time, pinArg, validationChain,
                            verifyLog);
 #else
@@ -315,6 +319,12 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
       verifyLog->tail = nullptr;
     }
 
+  }
+
+  // If we're here, PKIX EV verification failed.
+  // If requested, don't do DV fallback.
+  if (flags & FLAG_NO_DV_FALLBACK_FOR_EV) {
+    return SECSuccess;
   }
 
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification){
