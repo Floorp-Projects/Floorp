@@ -102,6 +102,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   , mGenericID(aSrc.mGenericID)
   , mScriptLevel(aSrc.mScriptLevel)
   , mMathVariant(aSrc.mMathVariant)
+  , mMathDisplay(aSrc.mMathDisplay)
   , mExplicitLanguage(aSrc.mExplicitLanguage)
   , mAllowZoom(aSrc.mAllowZoom)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
@@ -133,6 +134,7 @@ nsStyleFont::Init(nsPresContext* aPresContext)
   mScriptLevel = 0;
   mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
   mMathVariant = NS_MATHML_MATHVARIANT_NONE;
+  mMathDisplay = NS_MATHML_DISPLAYSTYLE_INLINE;
   mAllowZoom = true;
 
   nsAutoString language;
@@ -194,7 +196,8 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
   if (mSize != aOther.mSize ||
       mLanguage != aOther.mLanguage ||
       mExplicitLanguage != aOther.mExplicitLanguage ||
-      mMathVariant != aOther.mMathVariant) {
+      mMathVariant != aOther.mMathVariant ||
+      mMathDisplay != aOther.mMathDisplay) {
     return NS_STYLE_HINT_REFLOW;
   }
   return CalcFontDifference(mFont, aOther.mFont);
