@@ -101,6 +101,11 @@ public:
                               const InputContextAction& aAction);
 
   /**
+   * Associate or disassociate IME context to/from the aWindow.
+   */
+  static void AssociateIMEContext(nsWindow* aWindow, bool aEnable);
+
+  /**
    * Called when the window is created.
    */
   static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
