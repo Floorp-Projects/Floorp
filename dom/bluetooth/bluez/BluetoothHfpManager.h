@@ -8,7 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 
 #include "BluetoothCommon.h"
-#include "BluetoothProfileManagerBase.h"
+#include "BluetoothHfpManagerBase.h"
 #ifdef MOZ_B2G_RIL
 #include "BluetoothRilListener.h"
 #endif
@@ -75,13 +75,13 @@ public:
 #endif // MOZ_B2G_RIL
 
 class BluetoothHfpManager : public BluetoothSocketObserver
-                          , public BluetoothProfileManagerBase
+                          , public BluetoothHfpManagerBase
                           , public BatteryObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  BT_DECL_PROFILE_MGR_BASE
+  BT_DECL_HFP_MGR_BASE
   virtual void GetName(nsACString& aName)
   {
     aName.AssignLiteral("HFP/HSP");
@@ -114,7 +114,6 @@ public:
   bool ConnectSco(BluetoothReplyRunnable* aRunnable = nullptr);
   bool DisconnectSco();
   bool ListenSco();
-  bool IsScoConnected();
 
 #ifdef MOZ_B2G_RIL
   /**
