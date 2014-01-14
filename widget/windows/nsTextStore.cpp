@@ -28,6 +28,12 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+static const char* kPrefNameTSFEnabled = "intl.tsf.enable";
+static const char* kPrefNameLayoutChangeInternal =
+                     "intl.tsf.on_layout_change_interval";
+
+static const char* kLegacyPrefNameTSFEnabled = "intl.enable_tsf_support";
+
 #ifdef PR_LOGGING
 /**
  * TSF related code should log its behavior even on release build especially
@@ -3242,7 +3248,14 @@ nsTextStore::Initialize(void)
   }
 #endif
 
-  bool enableTsf = Preferences::GetBool("intl.enable_tsf_support", false);
+  bool enableTsf = Preferences::GetBool(kPrefNameTSFEnabled, false);
+  // Migrate legacy TSF pref to new pref.  This should be removed in next
+  // release cycle or later.
+  if (!enableTsf && Preferences::GetBool(kLegacyPrefNameTSFEnabled, false)) {
+    enableTsf = true;
+    Preferences::SetBool(kPrefNameTSFEnabled, true);
+    Preferences::ClearUser(kLegacyPrefNameTSFEnabled);
+  }
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF: nsTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));
@@ -3470,7 +3483,7 @@ nsTextStore::Composition::GetLayoutChangeIntervalTime()
   }
 
   sTime = std::max(10,
-    Preferences::GetInt("intl.tsf.on_layout_change_interval", 100));
+    Preferences::GetInt(kPrefNameLayoutChangeInternal, 100));
   return static_cast<uint32_t>(sTime);
 }
 
