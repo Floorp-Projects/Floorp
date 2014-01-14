@@ -145,6 +145,9 @@ public:
 
     bool IsAlive();
     bool IsForApp();
+#ifdef MOZ_NUWA_PROCESS
+    bool IsNuwaProcess();
+#endif
 
     GeckoChildProcessHost* Process() {
         return mSubprocess;
@@ -560,6 +563,7 @@ private:
 
     bool mSendPermissionUpdates;
     bool mIsForBrowser;
+    bool mIsNuwaProcess;
 
     // These variables track whether we've called Close(), CloseWithError()
     // and KillHard() on our channel.
