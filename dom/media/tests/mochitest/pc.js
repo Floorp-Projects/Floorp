@@ -1488,8 +1488,17 @@ PeerConnectionWrapper.prototype = {
     ok(toNum(counters["inboundrtp"]) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
 
     is(toNum(counters["outboundrtp"]), nout, "Have " + nout + " outboundrtp stat(s)");
-    ok(toNum(counters["localcandidate"]), "Have localcandidate stat(s)");
-    ok(toNum(counters["remotecandidate"]), "Have remotecandidate stat(s)");
+
+    var numLocalCandidates  = toNum(counters["localcandidate"]);
+    var numRemoteCandidates = toNum(counters["remotecandidate"]);
+    // If there are no tracks, there will be no stats either.
+    if (nin + nout > 0) {
+      ok(numLocalCandidates, "Have localcandidate stat(s)");
+      ok(numRemoteCandidates, "Have remotecandidate stat(s)");
+    } else {
+      is(numLocalCandidates, 0, "Have no localcandidate stats");
+      is(numRemoteCandidates, 0, "Have no remotecandidate stats");
+    }
   },
 
   /**
