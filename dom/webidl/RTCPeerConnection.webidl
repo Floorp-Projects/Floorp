@@ -87,12 +87,6 @@ interface RTCDataChannel;
               optional object? constraints)]
 // moz-prefixed until sufficiently standardized.
 interface mozRTCPeerConnection : EventTarget  {
-  [Pref="media.peerconnection.identity.enabled"]
-  void setIdentityProvider (DOMString provider,
-                            optional DOMString protocol,
-                            optional DOMString username);
-  [Pref="media.peerconnection.identity.enabled"]
-  void getIdentityAssertion(optional RTCPeerConnectionErrorCallback failureCallback);
   void createOffer (RTCSessionDescriptionCallback successCallback,
                     RTCPeerConnectionErrorCallback failureCallback,
                     optional MediaConstraints constraints);
@@ -115,9 +109,6 @@ interface mozRTCPeerConnection : EventTarget  {
                         optional RTCPeerConnectionErrorCallback failureCallback);
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;
-  [Pref="media.peerconnection.identity.enabled"]
-  readonly attribute RTCIdentityAssertion? peerIdentity;
-
   sequence<MediaStream> getLocalStreams ();
   sequence<MediaStream> getRemoteStreams ();
   MediaStream? getStreamById (DOMString streamId);
@@ -146,10 +137,6 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute EventHandler ondatachannel;
   attribute EventHandler onconnection;
   attribute EventHandler onclosedconnection;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onidentityresult;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onpeeridentity;
 };
 
 callback RTCLogCallback = void (sequence<DOMString> logMessages);
@@ -164,3 +151,6 @@ interface WebrtcGlobalInformation {
                          RTCLogCallback callback,
                          RTCPeerConnectionErrorCallback errorCallback);
 };
+
+
+

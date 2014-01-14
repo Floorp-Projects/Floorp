@@ -1,4 +1,3 @@
-/* jshint moz:true, browser:true */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,10 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PopupNotifications.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PeerConnectionIdp",
-  "resource://gre/modules/media/PeerConnectionIdp.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const WEBRTC_GLOBAL_CONTRACT = "@mozilla.org/dom/webrtcglobalinformation1";
@@ -20,7 +16,6 @@ const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
-const PC_IDENTITY_CONTRACT = "@mozilla.org/dom/rtcidentityassertion;1";
 
 const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
 const WEBRTC_GLOBAL_CID = Components.ID("{f6063d11-f467-49ad-9765-e7923050dc08}");
@@ -29,7 +24,6 @@ const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
-const PC_IDENTITY_CID = Components.ID("{1abc7499-3c54-43e0-bd60-686e2703f072}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -105,7 +99,7 @@ GlobalPCList.prototype = {
                topic == "network:offline-about-to-go-offline") {
       // Delete all peerconnections on shutdown - mostly synchronously (we
       // need them to be done deleting transports and streams before we
-      // return)! All socket operations must be queued to STS thread
+      // return)!  All socket operations must be queued to STS thread
       // before we return to here.
       // Also kill them if "Work Offline" is selected - more can be created
       // while offline, but attempts to connect them should fail.
@@ -116,7 +110,7 @@ GlobalPCList.prototype = {
     }
     else if (topic == "network:offline-status-changed") {
       if (data == "offline") {
-        // this._list shold be empty here
+	// this._list shold be empty here
         this._networkdown = true;
       } else if (data == "online") {
         this._networkdown = false;
@@ -283,22 +277,6 @@ RTCStatsReport.prototype = {
   get mozPcid() { return this._pcid; }
 };
 
-function RTCIdentityAssertion() {}
-RTCIdentityAssertion.prototype = {
-  classDescription: "RTCIdentityAssertion",
-  classID: PC_IDENTITY_CID,
-  contractID: PC_IDENTITY_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(idp, name) {
-    this.idp = idp;
-    this.name  = name;
-  }
-};
-
 function RTCPeerConnection() {
   this._queue = [];
 
@@ -319,15 +297,14 @@ function RTCPeerConnection() {
   this._localType = null;
   this._remoteType = null;
   this._trickleIce = false;
-  this._peerIdentity = null;
 
   /**
-   * Everytime we get a request from content, we put it in the queue. If there
-   * are no pending operations though, we will execute it immediately. In
-   * PeerConnectionObserver, whenever we are notified that an operation has
-   * finished, we will check the queue for the next operation and execute if
-   * neccesary. The _pending flag indicates whether an operation is currently in
-   * progress.
+   * Everytime we get a request from content, we put it in the queue. If
+   * there are no pending operations though, we will execute it immediately.
+   * In PeerConnectionObserver, whenever we are notified that an operation
+   * has finished, we will check the queue for the next operation and execute
+   * if neccesary. The _pending flag indicates whether an operation is currently
+   * in progress.
    */
   this._pending = false;
 
@@ -365,17 +342,15 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("onconnection");
     this.makeGetterSetterEH("onclosedconnection");
     this.makeGetterSetterEH("oniceconnectionstatechange");
-    this.makeGetterSetterEH("onidentityresult");
-    this.makeGetterSetterEH("onpeeridentity");
 
     this._pc = new this._win.PeerConnectionImpl();
 
     this.__DOM_IMPL__._innerObject = this;
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
+    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
     // Add a reference to the PeerConnection to global list (before init).
-    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
     _globalPCList.addPC(this);
 
     this._queueOrRun({
@@ -387,12 +362,11 @@ RTCPeerConnection.prototype = {
   },
 
   _initialize: function(rtcConfig) {
-    this._impl.initialize(this._observer, this._win, rtcConfig,
-                          Services.tm.currentThread);
-    this._initIdp();
+    this._getPC().initialize(this._observer, this._win, rtcConfig,
+                             Services.tm.currentThread);
   },
 
-  get _impl() {
+  _getPC: function() {
     if (!this._pc) {
       throw new this._win.DOMError("",
           "RTCPeerConnection is gone (did you enter Offline mode?)");
@@ -400,19 +374,11 @@ RTCPeerConnection.prototype = {
     return this._pc;
   },
 
-  _initIdp: function() {
-    let prefName = "media.peerconnection.identity.timeout";
-    let idpTimeout = Services.prefs.getIntPref(prefName);
-    let warningFunc = this.reportWarning.bind(this);
-    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc);
-    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc);
-  },
-
   /**
    * Add a function to the queue or run it immediately if the queue is empty.
    * Argument is an object with the func, args and wait properties; wait should
-   * be set to true if the function has a success/error callback that will call
-   * _executeNext, false if it doesn't have a callback.
+   * be set to true if the function has a success/error callback that will
+   * call _executeNext, false if it doesn't have a callback.
    */
   _queueOrRun: function(obj) {
     this._checkClosed();
@@ -501,8 +467,8 @@ RTCPeerConnection.prototype = {
    * }
    *
    * WebIDL normalizes the top structure for us, but the mandatory constraints
-   * member comes in as a raw object so we can detect unknown constraints. We
-   * compare its members against ones we support, and fail if not found.
+   * member comes in as a raw object so we can detect unknown constraints.
+   * We compare its members against ones we support, and fail if not found.
    */
   _mustValidateConstraints: function(constraints, errorMsg) {
     if (constraints.mandatory) {
@@ -620,7 +586,7 @@ RTCPeerConnection.prototype = {
   _createOffer: function(onSuccess, onError, constraints) {
     this._onCreateOfferSuccess = onSuccess;
     this._onCreateOfferFailure = onError;
-    this._impl.createOffer(constraints);
+    this._getPC().createOffer(constraints);
   },
 
   _createAnswer: function(onSuccess, onError, constraints, provisional) {
@@ -643,7 +609,7 @@ RTCPeerConnection.prototype = {
 
     // TODO: Implement provisional answer.
 
-    this._impl.createAnswer(constraints);
+    this._getPC().createAnswer(constraints);
   },
 
   createAnswer: function(onSuccess, onError, constraints, provisional) {
@@ -691,7 +657,7 @@ RTCPeerConnection.prototype = {
   _setLocalDescription: function(type, sdp, onSuccess, onError) {
     this._onSetLocalDescriptionSuccess = onSuccess;
     this._onSetLocalDescriptionFailure = onError;
-    this._impl.setLocalDescription(type, sdp);
+    this._getPC().setLocalDescription(type, sdp);
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
@@ -710,16 +676,6 @@ RTCPeerConnection.prototype = {
             "Invalid type " + desc.type + " provided to setRemoteDescription");
     }
 
-    try {
-      let showUX = this._showIdentityUx.bind(this);
-      this._remoteIdp.verifyIdentityFromSDP(desc.sdp, showUX);
-    } catch (e) {
-      this.reportWarning(e.message, e.fileName, e.lineNumber);
-      // only happens if processing the SDP for identity doesn't work
-      this._showIdentityUx(null);
-      // let _setRemoteDescription do the error reporting
-    }
-
     this._queueOrRun({
       func: this._setRemoteDescription,
       args: [type, desc.sdp, onSuccess, onError],
@@ -728,89 +684,10 @@ RTCPeerConnection.prototype = {
     });
   },
 
-  _showIdentityUx: function(message) {
-    let browser = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShell)
-      .chromeEventHandler
-      .ownerDocument
-      .defaultView
-      .gBrowser;
-    let notificationBox = browser.getNotificationBox();
-
-    if (message) {
-      this._peerIdentity = new this._win.RTCIdentityAssertion(
-          this._remoteIdp.provider, message.identity.name);
-
-      // TODO (:mt) - ultimately, these notifications need to go away
-      // for one, they are highly spoofable, which is very bad
-      // but they are also ugly and unnecessary
-      // Bug 942372 should provide a better approach
-      notificationBox.appendNotification(
-          "Identity of your WebRTC peer is " + this._peerIdentity.name,
-          "webrtc-auth",
-          null,
-          notificationBox.PRIORITY_INFO_HIGH,
-          []
-      );
-
-      this.dispatchEvent(new this._win.Event("peeridentity"));
-    } else {
-      notificationBox.appendNotification(
-          "Identity of your WebRTC peer is not verified",
-          "webrtc-auth",
-          null,
-          notificationBox.PRIORITY_WARNING_HIGH,
-          []
-      );
-    }
-  },
-
   _setRemoteDescription: function(type, sdp, onSuccess, onError) {
     this._onSetRemoteDescriptionSuccess = onSuccess;
     this._onSetRemoteDescriptionFailure = onError;
-    this._impl.setRemoteDescription(type, sdp);
-  },
-
-  setIdentityProvider: function(provider, protocol, username) {
-    this._checkClosed();
-    this._localIdp.setIdentityProvider(provider, protocol, username);
-  },
-
-  _gotIdentityAssertion: function(assertion){
-    let args = { assertion: assertion };
-    let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult", args);
-    this.dispatchEvent(ev);
-  },
-
-  // we're going off spec with the error callback here.
-  getIdentityAssertion: function(errorCallback) {
-    this._checkClosed();
-    if (typeof errorCallback !== "function") {
-      if (errorCallback) {
-        let message ="getIdentityAssertion argument must be a function";
-        throw new this._win.DOMError("", message);
-      }
-      errorCallback = function() {
-        this.reportWarning("getIdentityAssertion: no error callback set");
-      }.bind(this);
-    }
-
-    function gotAssertion(assertion) {
-      if (assertion) {
-        this._gotIdentityAssertion(assertion);
-      } else {
-        errorCallback("IdP did not produce an assertion");
-      }
-    }
-
-    try {
-      this._localIdp.getIdentityAssertion(this._impl.fingerprint,
-          gotAssertion.bind(this));
-    }
-    catch (e) {
-      errorCallback("Could not get identity assertion: " + e.message);
-    }
+    this._getPC().setRemoteDescription(type, sdp);
   },
 
   updateIce: function(config, constraints) {
@@ -829,9 +706,9 @@ RTCPeerConnection.prototype = {
   },
 
   _addIceCandidate: function(cand) {
-    this._impl.addIceCandidate(cand.candidate, cand.sdpMid || "",
-                               (cand.sdpMLineIndex === null) ? 0 :
-                                 cand.sdpMLineIndex + 1);
+    this._getPC().addIceCandidate(cand.candidate, cand.sdpMid || "",
+                                  (cand.sdpMLineIndex === null)? 0 :
+                                      cand.sdpMLineIndex + 1);
   },
 
   addStream: function(stream, constraints) {
@@ -849,11 +726,11 @@ RTCPeerConnection.prototype = {
   },
 
   _addStream: function(stream, constraints) {
-    this._impl.addStream(stream, constraints);
+    this._getPC().addStream(stream, constraints);
   },
 
   removeStream: function(stream) {
-     // Bug 844295: Not implementing this functionality.
+     //Bug 844295: Not implementing this functionality.
      throw new this._win.DOMError("", "removeStream not yet implemented");
   },
 
@@ -868,36 +745,32 @@ RTCPeerConnection.prototype = {
   },
 
   _close: function() {
-    this._localIdp.close();
-    this._remoteIdp.close();
-    this._impl.close();
+    this._getPC().close();
   },
 
   getLocalStreams: function() {
     this._checkClosed();
-    return this._impl.getLocalStreams();
+    return this._getPC().getLocalStreams();
   },
 
   getRemoteStreams: function() {
     this._checkClosed();
-    return this._impl.getRemoteStreams();
+    return this._getPC().getRemoteStreams();
   },
 
   get localDescription() {
     this._checkClosed();
-    let sdp = this._impl.localDescription;
+    let sdp = this._getPC().localDescription;
     if (sdp.length == 0) {
       return null;
     }
-
-    sdp = this._localIdp.wrapSdp(sdp);
     return new this._win.mozRTCSessionDescription({ type: this._localType,
                                                     sdp: sdp });
   },
 
   get remoteDescription() {
     this._checkClosed();
-    let sdp = this._impl.remoteDescription;
+    let sdp = this._getPC().remoteDescription;
     if (sdp.length == 0) {
       return null;
     }
@@ -905,14 +778,13 @@ RTCPeerConnection.prototype = {
                                                     sdp: sdp });
   },
 
-  get peerIdentity() { return this._peerIdentity; },
   get iceGatheringState()  { return this._iceGatheringState; },
   get iceConnectionState() { return this._iceConnectionState; },
 
   get signalingState() {
     // checking for our local pc closed indication
     // before invoking the pc methods.
-    if (this._closed) {
+    if(this._closed) {
       return "closed";
     }
     return {
@@ -923,7 +795,7 @@ RTCPeerConnection.prototype = {
       "SignalingHaveLocalPranswer":  "have-local-pranswer",
       "SignalingHaveRemotePranswer": "have-remote-pranswer",
       "SignalingClosed":             "closed"
-    }[this._impl.signalingState];
+    }[this._getPC().signalingState];
   },
 
   changeIceGatheringState: function(state) {
@@ -955,7 +827,7 @@ RTCPeerConnection.prototype = {
     this._onGetStatsSuccess = onSuccess;
     this._onGetStatsFailure = onError;
 
-    this._impl.getStats(selector, internal);
+    this._getPC().getStats(selector, internal);
   },
 
   getLogging: function(pattern, onSuccess, onError) {
@@ -970,7 +842,7 @@ RTCPeerConnection.prototype = {
     this._onGetLoggingSuccess = onSuccess;
     this._onGetLoggingFailure = onError;
 
-    this._impl.getLogging(pattern);
+    this._getPC().getLogging(pattern);
   },
 
   createDataChannel: function(label, dict) {
@@ -983,8 +855,7 @@ RTCPeerConnection.prototype = {
       this.reportWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!", null, 0);
     }
     if (dict.outOfOrderAllowed != undefined) {
-      dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with
-                                              // the name change
+      dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with the name change
       this.reportWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!", null, 0);
     }
     if (dict.preset != undefined) {
@@ -1019,7 +890,7 @@ RTCPeerConnection.prototype = {
     }
 
     // Synchronous since it doesn't block.
-    let channel = this._impl.createDataChannel(
+    let channel = this._getPC().createDataChannel(
       label, protocol, type, !dict.ordered, dict.maxRetransmitTime,
       dict.maxRetransmits, dict.negotiated ? true : false,
       dict.id != undefined ? dict.id : 0xFFFF
@@ -1039,7 +910,7 @@ RTCPeerConnection.prototype = {
   },
 
   _connectDataConnection: function(localport, remoteport, numstreams) {
-    this._impl.connectDataConnection(localport, remoteport, numstreams);
+    this._getPC().connectDataConnection(localport, remoteport, numstreams);
   }
 };
 
@@ -1098,17 +969,10 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateOfferSuccess: function(sdp) {
-    let pc = this._dompc;
-    let fp = pc._impl.fingerprint;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
-      if (assertion) {
-        pc._gotIdentityAssertion(assertion);
-      }
-      this.callCB(pc._onCreateOfferSuccess,
-                  new pc._win.mozRTCSessionDescription({ type: "offer",
-                                                         sdp: sdp }));
-      pc._executeNext();
-    }.bind(this));
+    this.callCB(this._dompc._onCreateOfferSuccess,
+                new this._dompc._win.mozRTCSessionDescription({ type: "offer",
+                                                                sdp: sdp }));
+    this._dompc._executeNext();
   },
 
   onCreateOfferError: function(code, message) {
@@ -1117,17 +981,10 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateAnswerSuccess: function(sdp) {
-    let pc = this._dompc;
-    let fp = pc._impl.fingerprint;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
-      if (assertion) {
-        pc._gotIdentityAssertion(assertion);
-      }
-      this.callCB (pc._onCreateAnswerSuccess,
-                   new pc._win.mozRTCSessionDescription({ type: "answer",
-                                                          sdp: sdp }));
-      pc._executeNext();
-    }.bind(this));
+    this.callCB (this._dompc._onCreateAnswerSuccess,
+                 new this._dompc._win.mozRTCSessionDescription({ type: "answer",
+                                                                 sdp: sdp }));
+    this._dompc._executeNext();
   },
 
   onCreateAnswerError: function(code, message) {
@@ -1371,7 +1228,6 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
    RTCSessionDescription,
    RTCPeerConnection,
    RTCStatsReport,
-   RTCIdentityAssertion,
    PeerConnectionObserver,
    WebrtcGlobalInformation]
 );

@@ -243,11 +243,6 @@ pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
 pref("media.peerconnection.trickle_ice", true);
 pref("media.peerconnection.use_document_iceservers", true);
-// Do not enable identity before ensuring that the UX cannot be spoofed
-// see Bug 884573 for details
-// Do not enable identity before fixing domain comparison: see Bug 958741
-pref("media.peerconnection.identity.enabled", false);
-pref("media.peerconnection.identity.timeout", 5000);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.

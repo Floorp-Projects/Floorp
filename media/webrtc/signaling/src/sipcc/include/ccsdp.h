@@ -246,7 +246,6 @@ typedef enum {
     SDP_ATTR_RTCP_FB,  /* RFC 4585 */
     SDP_ATTR_SETUP,
     SDP_ATTR_CONNECTION,
-    SDP_ATTR_IDENTITY,
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;

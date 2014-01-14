@@ -40,13 +40,6 @@ EXTRA_COMPONENTS += [
     'PeerConnection.manifest',
 ]
 
-JS_MODULES_PATH = 'modules/media'
-
-EXTRA_JS_MODULES += [
-    'IdpProxy.jsm',
-    'PeerConnectionIdp.jsm',
-]
-
 if CONFIG['MOZ_B2G']:
     EXPORTS.mozilla += [
         'MediaPermissionGonk.h',
