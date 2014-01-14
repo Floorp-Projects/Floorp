@@ -21,8 +21,10 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CertVerifier)
 
   typedef unsigned int Flags;
+  // XXX: FLAG_LOCAL_ONLY is ignored in the classic verification case
   static const Flags FLAG_LOCAL_ONLY;
-  // XXX: The localonly flag is ignored in the classic verification case
+  // Don't perform fallback DV validation on EV validation failure.
+  static const Flags FLAG_NO_DV_FALLBACK_FOR_EV;
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
