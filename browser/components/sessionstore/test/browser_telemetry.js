@@ -9,7 +9,7 @@ let {SessionFile, TabStateCache} = tmp;
 
 // Shortcuts for histogram names
 let Keys = {};
-for (let k of ["HISTORY", "FORMDATA", "OPEN_WINDOWS", "CLOSED_WINDOWS", "CLOSED_TABS_IN_OPEN_WINDOWS", "DOM_STORAGE", "POSTDATA"]) {
+for (let k of ["HISTORY", "FORMDATA", "OPEN_WINDOWS", "CLOSED_WINDOWS", "CLOSED_TABS_IN_OPEN_WINDOWS", "DOM_STORAGE"]) {
   Keys[k] = "FX_SESSION_RESTORE_TOTAL_" + k + "_SIZE_BYTES";
 }
 
