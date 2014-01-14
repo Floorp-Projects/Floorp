@@ -1150,10 +1150,14 @@ pref("devtools.tilt.enabled", true);
 pref("devtools.tilt.intro_transition", true);
 pref("devtools.tilt.outro_transition", true);
 
-// The maximum number of recently-opened files stored.
-// Setting this preference to 0 will not clear any recent files, but rather hide
-// the 'Open Recent'-menu.
+// Scratchpad settings
+// - recentFileMax: The maximum number of recently-opened files
+//                  stored. Setting this preference to 0 will not
+//                  clear any recent files, but rather hide the
+//                  'Open Recent'-menu.
+// - showTrailingSpace: Whether to highlight trailing space or not.
 pref("devtools.scratchpad.recentFilesMax", 10);
+pref("devtools.scratchpad.showTrailingSpace", false);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);

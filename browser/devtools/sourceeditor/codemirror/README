@@ -45,6 +45,7 @@ in the LICENSE file:
  * clike.js
  * matchbrackets.js
  * closebrackets.js
+ * trailingspace.js
  * search/match-highlighter.js
  * search/search.js
  * search/searchcursor.js
