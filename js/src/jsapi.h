@@ -1670,7 +1670,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
 
 extern JS_PUBLIC_API(bool)
-JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *ob);
+JS_RefreshCrossCompartmentWrappers(JSContext *cx, JS::Handle<JSObject*> obj);
 
 /*
  * At any time, a JSContext has a current (possibly-nullptr) compartment.
@@ -1743,7 +1743,7 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
  * NB: This sets cx's global object to obj if it was null.
  */
 extern JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext *cx, JSObject *obj);
+JS_InitStandardClasses(JSContext *cx, JS::Handle<JSObject*> obj);
 
 /*
  * Resolve id, which must contain either a string or an int, to a standard
@@ -2328,7 +2328,8 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
  * success the resulting value is stored in *vp.
  */
 extern JS_PUBLIC_API(bool)
-JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
+JS_DefaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint,
+                JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(bool)
 JS_PropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,

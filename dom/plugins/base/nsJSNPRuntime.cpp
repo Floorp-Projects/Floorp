@@ -2003,8 +2003,9 @@ NPObjectMember_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS
   case JSTYPE_STRING:
   case JSTYPE_NUMBER:
     vp.set(memberPrivate->fieldValue);
-    if (!JSVAL_IS_PRIMITIVE(vp)) {
-      return JS_DefaultValue(cx, JSVAL_TO_OBJECT(vp), type, vp.address());
+    if (vp.isObject()) {
+      JS::Rooted<JSObject*> objVal(cx, &vp.toObject());
+      return JS_DefaultValue(cx, objVal, type, vp);
     }
     return true;
   case JSTYPE_BOOLEAN:
