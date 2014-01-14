@@ -53,7 +53,8 @@ pref("apz.axis_lock_mode", 2);
 pref("apz.cross_slide.enabled", true);
 
 // Enable Microsoft TSF support by default for imes.
-pref("intl.enable_tsf_support", true);
+pref("intl.tsf.enable", true);
+pref("intl.tsf.support_imm", false);
 
 pref("general.autoScroll", true);
 pref("general.smoothScroll", true);
