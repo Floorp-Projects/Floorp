@@ -57,6 +57,9 @@
           key="key_gotoLine"
           command="cmd_gotoLine"/>
     </xul:menupopup>
+    <xul:menupopup id="sidebar-context">
+      <xul:menuitem id="context-origsources"/>
+    </xul:menupopup>
   </xul:popupset>
 
   <xul:commandset id="editMenuCommands"/>
@@ -69,7 +72,8 @@
 
   <xul:keyset id="sourceEditorKeys"/>
 
-  <xul:box id="style-editor-chrome" class="splitview-root loading">
+  <xul:box id="style-editor-chrome" class="splitview-root loading"
+           context="sidebar-context">
     <xul:box class="splitview-controller">
       <xul:box class="splitview-main">
         <xul:toolbar class="devtools-toolbar">

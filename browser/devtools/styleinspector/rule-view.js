@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
+const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
 
 /**
  * These regular expressions are adapted from firebug's css.js, and are
@@ -1087,11 +1087,16 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle)
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
   this._onCopy = this._onCopy.bind(this);
+  this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
 
   this.element.addEventListener("copy", this._onCopy);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
   gDevTools.on("pref-changed", this._handlePrefChange);
+
+  this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
+  this._prefObserver = new PrefObserver("devtools.");
+  this._prefObserver.on(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
 
   let options = {
     fixedWidth: true,
@@ -1138,6 +1143,11 @@ CssRuleView.prototype = {
       label: "ruleView.contextmenu.copy",
       accesskey: "ruleView.contextmenu.copy.accessKey",
       command: this._onCopy
+    });
+    this.menuitemSources= createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.showOrigSources",
+      accesskey: "ruleView.contextmenu.showOrigSources.accessKey",
+      command: this._onToggleOrigSources
     });
 
     let popupset = doc.documentElement.querySelector("popupset");
@@ -1210,6 +1220,17 @@ CssRuleView.prototype = {
     }
 
     this.menuitemCopy.disabled = !copy;
+
+    let label = "ruleView.contextmenu.showOrigSources";
+    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+      label = "ruleView.contextmenu.showCSSSources";
+    }
+    this.menuitemSources.setAttribute("label",
+                                      _strings.GetStringFromName(label));
+
+    let accessKey = label + ".accessKey";
+    this.menuitemSources.setAttribute("accesskey",
+                                      _strings.GetStringFromName(accessKey));
   },
 
   /**
@@ -1266,6 +1287,15 @@ CssRuleView.prototype = {
     }
   },
 
+  /**
+   *  Toggle the original sources pref.
+   */
+  _onToggleOrigSources: function()
+  {
+    let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
+  },
+
   setPageStyle: function(aPageStyle) {
     this.pageStyle = aPageStyle;
   },
@@ -1286,12 +1316,30 @@ CssRuleView.prototype = {
     }
   },
 
+  _onSourcePrefChanged: function()
+  {
+    if (this.menuitemSources) {
+      let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+      this.menuitemSources.setAttribute("checked", isEnabled);
+    }
+
+    // update text of source links
+    for (let rule of this._elementStyle.rules) {
+      if (rule.editor) {
+        rule.editor.updateSourceLink();
+      }
+    }
+  },
+
   destroy: function CssRuleView_destroy()
   {
     this.clear();
 
     gDummyPromise = null;
     gDevTools.off("pref-changed", this._handlePrefChange);
+
+    this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
+    this._prefObserver.destroy();
 
     this.element.removeEventListener("copy", this._onCopy);
     delete this._onCopy;
@@ -1307,6 +1355,9 @@ CssRuleView.prototype = {
       // Destroy the Copy menuitem.
       this.menuitemCopy.removeEventListener("command", this._onCopy);
       this.menuitemCopy = null;
+
+      this.menuitemSources.removeEventListener("command", this._onToggleOrigSources);
+      this.menuitemSources = null;
 
       // Destroy the context menu.
       this._contextmenu.removeEventListener("popupshowing", this._contextMenuUpdate);
@@ -1619,17 +1670,10 @@ RuleEditor.prototype = {
     }.bind(this));
     let sourceLabel = this.doc.createElementNS(XUL_NS, "label");
     sourceLabel.setAttribute("crop", "center");
-    sourceLabel.setAttribute("value", this.rule.title);
-    sourceLabel.setAttribute("tooltiptext", this.rule.title);
+    sourceLabel.classList.add("source-link-label");
     source.appendChild(sourceLabel);
 
-    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
-    if (showOrig && this.rule.domRule.type != ELEMENT_STYLE) {
-      this.rule.getOriginalSourceString().then((string) => {
-        sourceLabel.setAttribute("value", string);
-        sourceLabel.setAttribute("tooltiptext", string);
-      })
-    }
+    this.updateSourceLink();
 
     let code = createChild(this.element, "div", {
       class: "ruleview-code"
@@ -1689,6 +1733,21 @@ RuleEditor.prototype = {
     editableItem({ element: this.closeBrace }, function(aElement) {
       this.newProperty();
     }.bind(this));
+  },
+
+  updateSourceLink: function RuleEditor_updateSourceLink()
+  {
+    let sourceLabel = this.element.querySelector(".source-link-label");
+    sourceLabel.setAttribute("value", this.rule.title);
+    sourceLabel.setAttribute("tooltiptext", this.rule.title);
+
+    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    if (showOrig && this.rule.domRule.type != ELEMENT_STYLE) {
+      this.rule.getOriginalSourceString().then((string) => {
+        sourceLabel.setAttribute("value", string);
+        sourceLabel.setAttribute("tooltiptext", string);
+      })
+    }
   },
 
   /**

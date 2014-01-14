@@ -16,7 +16,7 @@ function test()
   addTabAndOpenStyleEditor(function(panel) {
     let UI = panel.UI;
     UI.on("editor-added", (event, editor) => {
-      if (++count >= 3) {
+      if (++count == 3) {
         // wait for 3 editors - 1 for first style sheet, 1 for the
         // generated style sheet, and 1 for original source after it
         // loads and replaces the generated style sheet.
@@ -43,8 +43,35 @@ function runTests(UI)
   ScssEditor.getSourceEditor().then(() => {
     testScssEditor(ScssEditor);
 
-    finishUp();
+    togglePref(UI);
   });
+}
+
+function togglePref(UI) {
+  let count = 0;
+
+  UI.on("editor-added", (event, editor) => {
+    if (++count == 2) {
+      testTogglingPref(UI);
+    }
+  })
+
+  Services.prefs.setBoolPref(PREF, false);
+}
+
+function testTogglingPref(UI) {
+  is(UI.editors.length, 2, "correct number of editors after pref toggled");
+
+  let CSSEditor = UI.editors[1];
+
+  let link = getStylesheetNameLinkFor(CSSEditor);
+  link.click();
+
+  CSSEditor.getSourceEditor().then(() => {
+    testCSSEditor(CSSEditor);
+
+    finishUp();
+  })
 }
 
 function testFirstEditor(editor) {
@@ -68,6 +95,21 @@ div {\n\
 span {\n\
   background-color: #EEE;\n\
 }", "Original source text is correct");
+}
+
+function testCSSEditor(editor) {
+  let name = getStylesheetNameFor(editor);
+  is(name, "sourcemaps.css", "CSS source display name is correct");
+
+  let text = editor.sourceEditor.getText();
+
+  is(text, "div {\n\
+  color: #ff0066; }\n\
+\n\
+span {\n\
+  background-color: #EEE; }\n\
+\n\
+/*# sourceMappingURL=sourcemaps.css.map */", "CSS text is correct");
 }
 
 /* Helpers */
