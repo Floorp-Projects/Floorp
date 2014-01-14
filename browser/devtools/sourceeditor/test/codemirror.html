@@ -14,11 +14,16 @@
     <script src="chrome://browser/content/devtools/codemirror/comment.js"></script>
     <script src="chrome://browser/content/devtools/codemirror/javascript.js"></script>
 
+    <!-- These tests are too slow, unfortunately. We need to break this file down
+         into multiples.
+
+    <script src="chrome://browser/content/devtools/codemirror/vim.js"></script>
+    <script src="chrome://browser/content/devtools/codemirror/emacs.js"></script>
+    -->
+
     <!--<script src="../addon/mode/overlay.js"></script>
     <script src="../addon/mode/multiplex.js"></script>
-    <script src="../mode/xml/xml.js"></script>
-    <script src="../keymap/vim.js"></script>
-    <script src="../keymap/emacs.js"></script>-->
+    <script src="../mode/xml/xml.js"></script>-->
 
     <style type="text/css">
       .ok {color: #090;}
@@ -62,6 +67,8 @@
     <script src="cm_comment_test.js"></script>
     <script src="cm_mode_test.js"></script>
     <script src="cm_mode_javascript_test.js"></script>
+    <script src="cm_vim_test.js"></script>
+    <script src="cm_emacs_test.js"></script>
 
     <!--<script src="doc_test.js"></script>
     <script src="../mode/css/css.js"></script>
@@ -80,9 +87,7 @@
     <script src="../mode/stex/test.js"></script>
     <script src="../mode/xquery/xquery.js"></script>
     <script src="../mode/xquery/test.js"></script>
-    <script src="../addon/mode/multiplex_test.js"></script>
-    <script src="vim_test.js"></script>
-    <script src="emacs_test.js"></script>-->
+    <script src="../addon/mode/multiplex_test.js"></script>-->
 
     <script>
       window.onload = runHarness;
