@@ -1272,6 +1272,15 @@ nsNSSComponent::InitializeNSS()
                          Preferences::GetBool("security.ssl.enable_false_start",
                                               FALSE_START_ENABLED_DEFAULT));
 
+    /* SSL_ENABLE_NPN and SSL_ENABLE_ALPN also require calling
+       SSL_SetNextProtoNego in order for the extensions to be negotiated.
+       WebRTC does not do that so it will not use NPN or ALPN even when these
+       preferences are true. */
+    SSL_OptionSetDefault(SSL_ENABLE_NPN,
+                         Preferences::GetBool("security.ssl.enable_npn", true));
+    SSL_OptionSetDefault(SSL_ENABLE_ALPN,
+                         Preferences::GetBool("security.ssl.enable_alpn", false));
+
     if (NS_FAILED(InitializeCipherSuite())) {
       PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
       return NS_ERROR_FAILURE;
