@@ -7,7 +7,3 @@ ifdef MOZ_WEBRTC_LEAKING_TESTS
 MOCHITEST_FILES += \
   $(NULL)
 endif
-
-INSTALL_TARGETS += idpproxy
-idpproxy_FILES := idp.html idp-proxy.js
-idpproxy_DEST := $(DEPTH)/_tests/testing/mochitest/.well-known/idp-proxy/
