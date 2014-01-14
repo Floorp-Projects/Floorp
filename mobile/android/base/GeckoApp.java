@@ -2087,7 +2087,6 @@ public abstract class GeckoApp
         unregisterEventListener("ToggleChrome:Show");
         unregisterEventListener("ToggleChrome:Focus");
         unregisterEventListener("Permissions:Data");
-        unregisterEventListener("Tab:ViewportMetadata");
         unregisterEventListener("Session:StatePurged");
         unregisterEventListener("Bookmark:Insert");
         unregisterEventListener("Accessibility:Event");
@@ -2109,6 +2108,7 @@ public abstract class GeckoApp
         unregisterEventListener("Contact:Add");
         unregisterEventListener("Intent:Open");
         unregisterEventListener("Intent:GetHandlers");
+        unregisterEventListener("Locale:Set");
 
         deleteTempFiles();
 
