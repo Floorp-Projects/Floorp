@@ -177,7 +177,7 @@
       <menuitem id="auto-pretty-print"
                 type="checkbox"
                 label="&debuggerUI.autoPrettyPrint;"
-                accesskey="&debuggerUI.autoPrettyPrint.key;"
+                accesskey="&debuggerUI.autoPrettyPrint.accesskey;"
                 command="toggleAutoPrettyPrint"/>
       <menuitem id="pause-on-exceptions"
                 type="checkbox"
