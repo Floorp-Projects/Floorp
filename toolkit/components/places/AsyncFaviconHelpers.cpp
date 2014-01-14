@@ -18,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
 #include "nsIPrivateBrowsingChannel.h"
+#include "nsISupportsPriority.h"
 #include <algorithm>
 
 using namespace mozilla::places;
@@ -552,6 +553,12 @@ AsyncFetchAndSetIconFromNetwork::Run()
     rv = pbChannel->SetPrivate(mFaviconLoadPrivate);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(channel);
+  if (priorityChannel) {
+    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+
   return channel->AsyncOpen(this, nullptr);
 }
 
