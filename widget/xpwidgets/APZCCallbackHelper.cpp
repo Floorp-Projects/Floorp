@@ -68,7 +68,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
   // Correct the display-port by the difference between the requested scroll
   // offset and the resulting scroll offset after setting the requested value.
   CSSRect& displayPort = aFrameMetrics.mDisplayPort;
-  displayPort += aActualScrollOffset - aFrameMetrics.mScrollOffset;
+  displayPort += aFrameMetrics.mScrollOffset - aActualScrollOffset;
 
   // Expand the display port to the next tile boundaries, if tiled thebes layers
   // are enabled.
