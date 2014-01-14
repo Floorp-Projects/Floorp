@@ -88,7 +88,7 @@ this.FxAccountsClient.prototype = {
    *        {
    *          uid: the user's unique ID
    *          sessionToken: a session token
-   *          isVerified: flag indicating verification status of the email
+   *          verified: flag indicating verification status of the email
    *        }
    */
   signIn: function signIn(email, password) {
