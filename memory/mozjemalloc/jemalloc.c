@@ -2698,137 +2698,85 @@ RETURN:
 
 #else /* ! (defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE)) */
 
-/*
- * Used by chunk_alloc_mmap() to decide whether to attempt the fast path and
- * potentially avoid some system calls.
- */
-#ifndef NO_TLS
-static __thread bool	mmap_unaligned_tls __attribute__((tls_model("initial-exec")));
-#define	MMAP_UNALIGNED_GET()	mmap_unaligned_tls
-#define	MMAP_UNALIGNED_SET(v)	do {					\
-	mmap_unaligned_tls = (v);					\
-} while (0)
-#else
-#define NEEDS_PTHREAD_MMAP_UNALIGNED_TSD
-static pthread_key_t	mmap_unaligned_tsd;
-#define	MMAP_UNALIGNED_GET()	((bool)pthread_getspecific(mmap_unaligned_tsd))
-#define	MMAP_UNALIGNED_SET(v)	do {					\
-	pthread_setspecific(mmap_unaligned_tsd, (void *)(v));		\
-} while (0)
-#endif
+/* pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
+ * from upstream jemalloc 3.4.1 to fix Mozilla bug 956501. */
 
-/* chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked from upstream
- * jemalloc 2.2.3 to fix Mozilla bug 694896, enable jemalloc on Mac 10.7. */
+/* Return the offset between a and the nearest aligned address at or below a. */
+#define        ALIGNMENT_ADDR2OFFSET(a, alignment)                                \
+        ((size_t)((uintptr_t)(a) & (alignment - 1)))
+
+/* Return the smallest alignment multiple that is >= s. */
+#define        ALIGNMENT_CEILING(s, alignment)                                        \
+        (((s) + (alignment - 1)) & (-(alignment)))
 
 static void *
-chunk_alloc_mmap_slow(size_t size, bool unaligned)
+pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
 {
-	void *ret;
-	size_t offset;
+        void *ret = (void *)((uintptr_t)addr + leadsize);
 
-	/* Beware size_t wrap-around. */
-	if (size + chunksize <= size)
-		return (NULL);
+        assert(alloc_size >= leadsize + size);
+        size_t trailsize = alloc_size - leadsize - size;
 
-	ret = pages_map(NULL, size + chunksize, -1);
-	if (ret == NULL)
-		return (NULL);
+        if (leadsize != 0)
+                pages_unmap(addr, leadsize);
+        if (trailsize != 0)
+                pages_unmap((void *)((uintptr_t)ret + size), trailsize);
+        return (ret);
+}
 
-	/* Clean up unneeded leading/trailing space. */
-	offset = CHUNK_ADDR2OFFSET(ret);
-	if (offset != 0) {
-		/* Note that mmap() returned an unaligned mapping. */
-		unaligned = true;
+static void *
+chunk_alloc_mmap_slow(size_t size, size_t alignment)
+{
+        void *ret, *pages;
+        size_t alloc_size, leadsize;
 
-		/* Leading space. */
-		pages_unmap(ret, chunksize - offset);
+        alloc_size = size + alignment - pagesize;
+        /* Beware size_t wrap-around. */
+        if (alloc_size < size)
+                return (NULL);
+        do {
+                pages = pages_map(NULL, alloc_size, -1);
+                if (pages == NULL)
+                        return (NULL);
+                leadsize = ALIGNMENT_CEILING((uintptr_t)pages, alignment) -
+                        (uintptr_t)pages;
+                ret = pages_trim(pages, alloc_size, leadsize, size);
+        } while (ret == NULL);
 
-		ret = (void *)((uintptr_t)ret +
-		    (chunksize - offset));
-
-		/* Trailing space. */
-		pages_unmap((void *)((uintptr_t)ret + size),
-		    offset);
-	} else {
-		/* Trailing space only. */
-		pages_unmap((void *)((uintptr_t)ret + size),
-		    chunksize);
-	}
-
-	/*
-	 * If mmap() returned an aligned mapping, reset mmap_unaligned so that
-	 * the next chunk_alloc_mmap() execution tries the fast allocation
-	 * method.
-	 */
-	if (unaligned == false)
-		MMAP_UNALIGNED_SET(false);
-
-	return (ret);
+        assert(ret != NULL);
+        return (ret);
 }
 
 static void *
 chunk_alloc_mmap(size_t size, bool pagefile)
 {
-	void *ret;
+        void *ret;
+        size_t offset;
 
-	/*
-	 * Ideally, there would be a way to specify alignment to mmap() (like
-	 * NetBSD has), but in the absence of such a feature, we have to work
-	 * hard to efficiently create aligned mappings.  The reliable, but
-	 * slow method is to create a mapping that is over-sized, then trim the
-	 * excess.  However, that always results in at least one call to
-	 * pages_unmap().
-	 *
-	 * A more optimistic approach is to try mapping precisely the right
-	 * amount, then try to append another mapping if alignment is off.  In
-	 * practice, this works out well as long as the application is not
-	 * interleaving mappings via direct mmap() calls.  If we do run into a
-	 * situation where there is an interleaved mapping and we are unable to
-	 * extend an unaligned mapping, our best option is to switch to the
-	 * slow method until mmap() returns another aligned mapping.  This will
-	 * tend to leave a gap in the memory map that is too small to cause
-	 * later problems for the optimistic method.
-	 *
-	 * Another possible confounding factor is address space layout
-	 * randomization (ASLR), which causes mmap(2) to disregard the
-	 * requested address.  mmap_unaligned tracks whether the previous
-	 * chunk_alloc_mmap() execution received any unaligned or relocated
-	 * mappings, and if so, the current execution will immediately fall
-	 * back to the slow method.  However, we keep track of whether the fast
-	 * method would have succeeded, and if so, we make a note to try the
-	 * fast method next time.
-	 */
+        /*
+         * Ideally, there would be a way to specify alignment to mmap() (like
+         * NetBSD has), but in the absence of such a feature, we have to work
+         * hard to efficiently create aligned mappings. The reliable, but
+         * slow method is to create a mapping that is over-sized, then trim the
+         * excess. However, that always results in one or two calls to
+         * pages_unmap().
+         *
+         * Optimistically try mapping precisely the right amount before falling
+         * back to the slow method, with the expectation that the optimistic
+         * approach works most of the time.
+         */
 
-	if (MMAP_UNALIGNED_GET() == false) {
-		size_t offset;
+        ret = pages_map(NULL, size, -1);
+        if (ret == NULL)
+                return (NULL);
+        offset = ALIGNMENT_ADDR2OFFSET(ret, chunksize);
+        if (offset != 0) {
+                pages_unmap(ret, size);
+                return (chunk_alloc_mmap_slow(size, chunksize));
+        }
 
-		ret = pages_map(NULL, size, -1);
-		if (ret == NULL)
-			return (NULL);
-
-		offset = CHUNK_ADDR2OFFSET(ret);
-		if (offset != 0) {
-			MMAP_UNALIGNED_SET(true);
-			/* Try to extend chunk boundary. */
-			if (pages_map((void *)((uintptr_t)ret + size),
-			    chunksize - offset, -1) == NULL) {
-				/*
-				 * Extension failed.  Clean up, then revert to
-				 * the reliable-but-expensive method.
-				 */
-				pages_unmap(ret, size);
-				ret = chunk_alloc_mmap_slow(size, true);
-			} else {
-				/* Clean up unneeded leading space. */
-				pages_unmap(ret, chunksize - offset);
-				ret = (void *)((uintptr_t)ret + (chunksize -
-				    offset));
-			}
-		}
-	} else
-		ret = chunk_alloc_mmap_slow(size, false);
-
-	return (ret);
+        assert(ret != NULL);
+        return (ret);
 }
 
 #endif /* defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE) */
