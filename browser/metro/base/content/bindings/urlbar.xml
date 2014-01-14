@@ -504,7 +504,7 @@
       <xul:vbox class="meta-section" anonid="results-container" flex="1">
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
-        <richgrid anonid="results" rows="3" flex="1"
+        <richgrid anonid="results" rows="3" flex="1" minSlots="1"
                   seltype="single" nocontext="true" deferlayout="true"/>
       </xul:vbox>
 
