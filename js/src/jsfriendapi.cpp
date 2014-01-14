@@ -749,7 +749,7 @@ FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)
 }
 
 static char *
-FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
+FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             bool showArgs, bool showLocals, bool showThisProps)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
@@ -921,7 +921,7 @@ JS::FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bo
 {
     int num = 0;
 
-    for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
+    for (AllFramesIter i(cx); !i.done(); ++i) {
         buf = FormatFrame(cx, i, buf, num, showArgs, showLocals, showThisProps);
         num++;
     }
