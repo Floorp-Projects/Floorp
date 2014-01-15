@@ -544,17 +544,30 @@ interface nsIXPCComponents_Utils : nsISupports
 };
 
 /**
-* interface of JavaScript's 'Components' object
+* Interface for the 'Components' object.
+*
+* The first interface contains things that are available to non-chrome XBL code
+* that runs in a scope with an nsExpandedPrincipal. The second interface
+* includes members that are only exposed to chrome.
 */
-[scriptable, uuid(e270f35d-dc63-42ed-9c8b-12ed14917c2c)]
-interface nsIXPCComponents : nsISupports
+
+[scriptable, uuid(eeeada2f-86c0-4609-b2bf-4bf2351b1ce6)]
+interface nsIXPCComponentsBase : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
     readonly attribute nsIXPCComponents_InterfacesByID  interfacesByID;
+    readonly attribute nsIXPCComponents_Results         results;
+
+    boolean isSuccessCode(in nsresult result);
+
+};
+
+[scriptable, uuid(aa28aaf6-70ce-4b03-9514-afe43c7dfda8)]
+interface nsIXPCComponents : nsIXPCComponentsBase
+{
     readonly attribute nsIXPCComponents_Classes         classes;
     readonly attribute nsIXPCComponents_ClassesByID     classesByID;
     readonly attribute nsIStackFrame                    stack;
-    readonly attribute nsIXPCComponents_Results         results;
     readonly attribute nsIComponentManager              manager;
     readonly attribute nsIXPCComponents_Utils           utils;
 
@@ -566,8 +579,6 @@ interface nsIXPCComponents : nsISupports
     readonly attribute jsval                            lastResult;
     [implicit_jscontext]
     attribute jsval                                     returnCode;
-
-    boolean isSuccessCode(in nsresult result);
 
     /* @deprecated Use Components.utils.reportError instead. */
     [deprecated, implicit_jscontext] void reportError(in jsval error);

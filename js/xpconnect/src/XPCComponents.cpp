@@ -3466,47 +3466,55 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *
 /***************************************************************************/
 /***************************************************************************/
 
-nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
+
+nsXPCComponentsBase::nsXPCComponentsBase(XPCWrappedNativeScope* aScope)
     :   mScope(aScope),
         mInterfaces(nullptr),
         mInterfacesByID(nullptr),
+        mResults(nullptr)
+{
+    MOZ_ASSERT(aScope, "aScope must not be null");
+}
+
+nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
+    :   nsXPCComponentsBase(aScope),
         mClasses(nullptr),
         mClassesByID(nullptr),
-        mResults(nullptr),
         mID(nullptr),
         mException(nullptr),
         mConstructor(nullptr),
         mUtils(nullptr)
 {
-    MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
-nsXPCComponents::~nsXPCComponents()
+void
+nsXPCComponentsBase::ClearMembers()
 {
-    ClearMembers();
+    NS_IF_RELEASE(mInterfaces);
+    NS_IF_RELEASE(mInterfacesByID);
+    NS_IF_RELEASE(mResults);
 }
 
 void
 nsXPCComponents::ClearMembers()
 {
-    NS_IF_RELEASE(mInterfaces);
-    NS_IF_RELEASE(mInterfacesByID);
     NS_IF_RELEASE(mClasses);
     NS_IF_RELEASE(mClassesByID);
-    NS_IF_RELEASE(mResults);
     NS_IF_RELEASE(mID);
     NS_IF_RELEASE(mException);
     NS_IF_RELEASE(mConstructor);
     NS_IF_RELEASE(mUtils);
+
+    nsXPCComponentsBase::ClearMembers();
 }
 
 /*******************************************/
-#define XPC_IMPL_GET_OBJ_METHOD(_n)                                           \
-NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) {      \
+#define XPC_IMPL_GET_OBJ_METHOD(_class, _n)                                   \
+NS_IMETHODIMP _class::Get##_n(nsIXPCComponents_##_n * *a##_n) {               \
     NS_ENSURE_ARG_POINTER(a##_n);                                             \
     if (!m##_n) {                                                             \
         if (!(m##_n = new nsXPCComponents_##_n())) {                          \
-            *a##_n = nullptr;                                                  \
+            *a##_n = nullptr;                                                 \
             return NS_ERROR_OUT_OF_MEMORY;                                    \
         }                                                                     \
         NS_ADDREF(m##_n);                                                     \
@@ -3516,21 +3524,21 @@ NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) {      \
     return NS_OK;                                                             \
 }
 
-XPC_IMPL_GET_OBJ_METHOD(Interfaces)
-XPC_IMPL_GET_OBJ_METHOD(InterfacesByID)
-XPC_IMPL_GET_OBJ_METHOD(Classes)
-XPC_IMPL_GET_OBJ_METHOD(ClassesByID)
-XPC_IMPL_GET_OBJ_METHOD(Results)
-XPC_IMPL_GET_OBJ_METHOD(ID)
-XPC_IMPL_GET_OBJ_METHOD(Exception)
-XPC_IMPL_GET_OBJ_METHOD(Constructor)
-XPC_IMPL_GET_OBJ_METHOD(Utils)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Interfaces)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, InterfacesByID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Classes)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, ClassesByID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Results)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, ID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Exception)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Constructor)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Utils)
 
 #undef XPC_IMPL_GET_OBJ_METHOD
 /*******************************************/
 
 NS_IMETHODIMP
-nsXPCComponents::IsSuccessCode(nsresult result, bool *out)
+nsXPCComponentsBase::IsSuccessCode(nsresult result, bool *out)
 {
     *out = NS_SUCCEEDED(result);
     return NS_OK;
@@ -3638,12 +3646,27 @@ NS_INTERFACE_MAP_BEGIN(ComponentsSH)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+#define NSXPCCOMPONENTSBASE_CID \
+{ 0xc62998e5, 0x95f1, 0x4058, \
+  { 0xa5, 0x09, 0xec, 0x21, 0x66, 0x18, 0x92, 0xb9 } }
+
 #define NSXPCCOMPONENTS_CID \
 { 0x3649f405, 0xf0ec, 0x4c28, \
     { 0xae, 0xb0, 0xaf, 0x9a, 0x51, 0xe4, 0x4c, 0x81 } }
 
+NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTSBASE_CID)
+NS_IMPL_ISUPPORTS1_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
+
 NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTS_CID)
-NS_IMPL_ISUPPORTS1_CI(nsXPCComponents, nsIXPCComponents)
+// Below is more or less what NS_IMPL_ISUPPORTS_CI_INHERITED1 would look like
+// if it existed.
+NS_IMPL_ADDREF_INHERITED(nsXPCComponents, nsXPCComponentsBase)
+NS_IMPL_RELEASE_INHERITED(nsXPCComponents, nsXPCComponentsBase)
+NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
+    NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
+    NS_IMPL_QUERY_CLASSINFO(nsXPCComponents)
+NS_INTERFACE_MAP_END_INHERITING(nsXPCComponentsBase)
+NS_IMPL_CI_INTERFACE_GETTER1(nsXPCComponents, nsIXPCComponents)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us
 #define XPC_MAP_CLASSNAME           ComponentsSH
@@ -3654,7 +3677,7 @@ NS_IMPL_ISUPPORTS1_CI(nsXPCComponents, nsIXPCComponents)
 NS_IMETHODIMP
 ComponentsSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
 {
-  nsXPCComponents *self = static_cast<nsXPCComponents*>(nativeObj);
+  nsXPCComponentsBase *self = static_cast<nsXPCComponentsBase*>(nativeObj);
   // this should never happen
   if (!self->GetScope()) {
       NS_WARNING("mScope must not be null when nsXPCComponents::PreCreate is called");
