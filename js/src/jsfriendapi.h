@@ -1529,6 +1529,7 @@ struct JSJitInfo {
                                   not AliasEverything, but even that might
                                   not be enough (e.g. in cases when it can
                                   throw). */
+    // XXXbz should we have a JSValueType for the type of the member?
     uint16_t isInSlot : 1;     /* True if this is a getter that can get a member
                                   from a slot of the "this" object directly. */
     uint16_t isTypedMethod : 1; /* True if this is an instance of
@@ -1541,8 +1542,6 @@ struct JSJitInfo {
                                include whatever argument conversions might do.
                                That's covered by argTypes and runtime analysis
                                of the actual argument types being passed in. */
-    // XXXbz should we have a JSGetterJitInfo subclass or something?
-    // XXXbz should we have a JSValueType for the type of the member?
 
 private:
     static void staticAsserts()
