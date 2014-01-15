@@ -138,6 +138,7 @@ public:
 
   virtual bool GetLocalSSRC(unsigned int* ssrc) = 0;
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
+  virtual bool GetReceivedJitter(unsigned int* jitterMs) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 

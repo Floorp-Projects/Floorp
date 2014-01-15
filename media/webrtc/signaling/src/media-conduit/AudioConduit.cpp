@@ -145,6 +145,13 @@ bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
 }
 
+bool WebrtcAudioConduit::GetReceivedJitter(unsigned int* jitterMs) {
+  unsigned int maxJitterMs;
+  unsigned int discardedPackets;
+  return !mPtrRTP->GetRTPStatistics(mChannel, *jitterMs, maxJitterMs,
+                                    discardedPackets);
+}
+
 /*
  * WebRTCAudioConduit Implementation
  */
