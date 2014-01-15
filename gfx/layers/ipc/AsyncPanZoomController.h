@@ -65,6 +65,7 @@ class AsyncPanZoomController {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomController)
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
+  typedef uint32_t TouchBehaviorFlags;
 
 public:
   enum GestureBehavior {
@@ -293,6 +294,24 @@ public:
                      uint32_t aOverscrollHandoffChainIndex = 0);
 
   /**
+   * Returns allowed touch behavior for the given point on the scrollable layer.
+   * Internally performs a kind of hit testing based on the regions constructed
+   * on the main thread and attached to the current scrollable layer. Each of such regions
+   * contains info about allowed touch behavior. If regions info isn't enough it returns
+   * UNKNOWN value and we should switch to the fallback approach - asking content.
+   * TODO: for now it's only a stub and returns hardcoded magic value. As soon as bug 928833
+   * is done we should integrate its logic here.
+   */
+  TouchBehaviorFlags GetAllowedTouchBehavior(ScreenIntPoint& aPoint);
+
+  /**
+   * Sets allowed touch behavior for current touch session.
+   * This method is invoked by the APZCTreeManager which in its turn invoked by
+   * the widget after performing touch-action values retrieving.
+   */
+  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
+
+  /**
    * A helper function for calling APZCTreeManager::DispatchScroll().
    * Guards against the case where the APZC is being concurrently destroyed
    * (and thus mTreeManager is being nulled out).
@@ -423,6 +442,16 @@ protected:
   ScreenIntPoint& GetFirstTouchScreenPoint(const MultiTouchInput& aEvent);
 
   /**
+   * Sets the panning state basing on the pan direction angle and current touch-action value.
+   */
+  void HandlePanningWithTouchAction(double angle, TouchBehaviorFlags value);
+
+  /**
+   * Sets the panning state ignoring the touch action value.
+   */
+  void HandlePanning(double angle);
+
+  /**
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
    * state and starts actually panning us.
    */
@@ -508,6 +537,13 @@ private:
                     prevented the default actions yet. we still need to abort animations. */
   };
 
+  /*
+   * Returns allowed touch behavior from the mAllowedTouchBehavior array.
+   * In case apzc didn't receive touch behavior values within the timeout
+   * it returns default value.
+   */
+  TouchBehaviorFlags GetTouchBehavior(uint32_t touchIndex);
+
   /**
    * Helper to set the current state. Holds the monitor before actually setting
    * it and fires content controller events based on state changes. Always set
@@ -564,6 +600,12 @@ protected:
   // function can be used, or the monitor can be held and then |mState| updated.
   ReentrantMonitor mMonitor;
 
+  // Specifies whether we should use touch-action css property. Initialized from
+  // the preferences. This property (in comparison with the global one) simplifies
+  // testing apzc with (and without) touch-action property enabled concurrently
+  // (e.g. with the gtest framework).
+  bool mTouchActionPropertyEnabled;
+
 private:
   // Metrics of the container layer corresponding to this APZC. This is
   // stored here so that it is accessible from the UI/controller thread.
@@ -583,6 +625,10 @@ private:
 
   AxisX mX;
   AxisY mY;
+
+  // This flag is set to true when we are in a axis-locked pan as a result of
+  // the touch-action CSS property.
+  bool mPanDirRestricted;
 
   // Most up-to-date constraints on zooming. These should always be reasonable
   // values; for example, allowing a min zoom of 0.0 can cause very bad things
@@ -621,6 +667,12 @@ private:
   // queued up event block. If set, this means that we are handling this queue
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
+
+  // Values of allowed touch behavior for current touch points.
+  // Since there are maybe a few current active touch points per time (multitouch case)
+  // and each touch point should have its own value of allowed touch behavior- we're
+  // keeping an array of allowed touch behavior values, not the single value.
+  nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
