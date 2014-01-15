@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 // This file implements a Linux-specific, system-wide memory reporter.  It
 // gathers all the useful memory measurements obtainable from the OS in a
@@ -113,7 +114,7 @@ class SystemReporter MOZ_FINAL : public nsIMemoryReporter
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-#define REPORT(_path, _amount, _desc)                                         \
+#define REPORT_WITH_CLEANUP(_path, _amount, _desc, _cleanup)                  \
   do {                                                                        \
     size_t amount = _amount;  /* evaluate _amount only once */                \
     if (amount > 0) {                                                         \
@@ -122,10 +123,14 @@ public:
                                    KIND_NONHEAP, UNITS_BYTES, amount, _desc,  \
                                    aData);                                    \
       if (NS_WARN_IF(NS_FAILED(rv))) {                                        \
+        _cleanup;                                                             \
         return rv;                                                            \
       }                                                                       \
     }                                                                         \
   } while (0)
+
+#define REPORT(_path, _amount, _desc) \
+    REPORT_WITH_CLEANUP(_path, _amount, _desc, (void)0)
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
@@ -153,7 +158,10 @@ public:
     REPORT(NS_LITERAL_CSTRING("mem/free"), memFree, NS_LITERAL_CSTRING(
 "Memory which is free and not being used for any purpose."));
 
-    return NS_OK;
+    // Report reserved memory not included in memTotal.
+    rv = CollectPmemReports(aHandleReport, aData);
+
+    return rv;
   }
 
 private:
@@ -498,6 +506,107 @@ private:
       *aPss = 0;
     }
 
+    return NS_OK;
+  }
+
+  nsresult CollectPmemReports(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData)
+  {
+    // The pmem subsystem allocates physically contiguous memory for
+    // interfacing with hardware.  In order to ensure availability,
+    // this memory is reserved during boot, and allocations are made
+    // within these regions at runtime.
+    //
+    // There are typically several of these pools allocated at boot.
+    // The /sys/kernel/pmem_regions directory contains a subdirectory
+    // for each one.  Within each subdirectory, the files we care
+    // about are "size" (the total amount of physical memory) and
+    // "mapped_regions" (a list of the current allocations within that
+    // area).
+    DIR* d = opendir("/sys/kernel/pmem_regions");
+    if (!d) {
+      if (NS_WARN_IF(errno != ENOENT)) {
+        return NS_ERROR_FAILURE;
+      }
+      // If ENOENT, system doesn't use pmem.
+      return NS_OK;
+    }
+
+    struct dirent* ent;
+    while ((ent = readdir(d))) {
+      const char* name = ent->d_name;
+      uint64_t size;
+      int scanned;
+
+      // Skip "." and ".." (and any other dotfiles).
+      if (name[0] == '.') {
+        continue;
+      }
+
+      // Read the total size.  The file gives the size in decimal and
+      // hex, in the form "13631488(0xd00000)"; we parse the former.
+      nsPrintfCString sizePath("/sys/kernel/pmem_regions/%s/size", name);
+      FILE* sizeFile = fopen(sizePath.get(), "r");
+      if (NS_WARN_IF(!sizeFile)) {
+        continue;
+      }
+      scanned = fscanf(sizeFile, "%" SCNu64, &size);
+      if (NS_WARN_IF(scanned != 1)) {
+        continue;
+      }
+      fclose(sizeFile);
+
+      // Read mapped regions; format described below.
+      uint64_t freeSize = size;
+      nsPrintfCString regionsPath("/sys/kernel/pmem_regions/%s/mapped_regions",
+                                  name);
+      FILE* regionsFile = fopen(regionsPath.get(), "r");
+      if (regionsFile) {
+        static const size_t bufLen = 4096;
+        char buf[bufLen];
+        while (fgets(buf, bufLen, regionsFile)) {
+          int pid;
+
+          // Skip header line.
+          if (strncmp(buf, "pid #", 5) == 0) {
+            continue;
+          }
+          // Line format: "pid N:" + zero or more "(Start,Len) ".
+          // N is decimal; Start and Len are in hex.
+          scanned = sscanf(buf, "pid %d", &pid);
+          if (NS_WARN_IF(scanned != 1)) {
+            continue;
+          }
+          for (const char* nextParen = strchr(buf, '(');
+               nextParen != nullptr;
+               nextParen = strchr(nextParen + 1, '(')) {
+            uint64_t mapStart, mapLen;
+
+            scanned = sscanf(nextParen + 1, "%" SCNx64 ",%" SCNx64,
+                             &mapStart, &mapLen);
+            if (NS_WARN_IF(scanned != 2)) {
+              break;
+            }
+
+            nsPrintfCString path("mem/pmem/used/%s/segment(pid=%d, "
+                                 "offset=0x%" PRIx64 ")", name, pid, mapStart);
+            nsPrintfCString desc("Physical memory reserved for the \"%s\" pool "
+                                 "and allocated to a buffer.", name);
+            REPORT_WITH_CLEANUP(path, mapLen, desc,
+                                (fclose(regionsFile), closedir(d)));
+            freeSize -= mapLen;
+          }
+        }
+        fclose(regionsFile);
+      }
+
+      nsPrintfCString path("mem/pmem/free/%s", name);
+      nsPrintfCString desc("Physical memory reserved for the \"%s\" pool and "
+                           "unavailable to the rest of the system, but not "
+                           "currently allocated.", name);
+      REPORT_WITH_CLEANUP(path, freeSize, desc, closedir(d));
+    }
+    closedir(d);
     return NS_OK;
   }
 

@@ -126,12 +126,20 @@ const OTHER_MOUSEUP_MONITORED_ITEMS = [
   "PlacesToolbarItems",
 ];
 
+// Weakly maps browser windows to objects whose keys are relative
+// timestamps for when some kind of session started. For example,
+// when a customization session started. That way, when the window
+// exits customization mode, we can determine how long the session
+// lasted.
+const WINDOW_DURATION_MAP = new WeakMap();
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
                                          this.getToolbarMeasures.bind(this));
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+    CustomizableUI.addListener(this);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -195,13 +203,17 @@ this.BrowserUITelemetry = {
   },
 
   _countableEvents: {},
+  _countEvent: function(aKeyArray) {
+    let countObject = this._ensureObjectChain(aKeyArray, 0);
+    let lastItemKey = aKeyArray[aKeyArray.length - 1];
+    countObject[lastItemKey]++;
+  },
+
   _countMouseUpEvent: function(aCategory, aAction, aButton) {
     const BUTTONS = ["left", "middle", "right"];
     let buttonKey = BUTTONS[aButton];
     if (buttonKey) {
-      let countObject =
-        this._ensureObjectChain([aCategory, aAction, buttonKey], 0);
-      countObject[buttonKey]++;
+      this._countEvent([aCategory, aAction, buttonKey]);
     }
   },
 
@@ -239,6 +251,8 @@ this.BrowserUITelemetry = {
         item.addEventListener("mouseup", this);
       }
     }
+
+    WINDOW_DURATION_MAP.set(aWindow, {});
   },
 
   _unregisterWindow: function(aWindow) {
@@ -411,13 +425,56 @@ this.BrowserUITelemetry = {
     result.nondefaultAdded = nondefaultAdded;
     result.defaultRemoved = defaultRemoved;
 
+    // Find out how many open tabs we have in each window
+    let winEnumerator = Services.wm.getEnumerator("navigator:browser");
+    let visibleTabs = [];
+    let hiddenTabs = [];
+    while (winEnumerator.hasMoreElements()) {
+      let someWin = winEnumerator.getNext();
+      if (someWin.gBrowser) {
+        let visibleTabsNum = someWin.gBrowser.visibleTabs.length;
+        visibleTabs.push(visibleTabsNum);
+        hiddenTabs.push(someWin.gBrowser.tabs.length - visibleTabsNum);
+      }
+    }
+    result.visibleTabs = visibleTabs;
+    result.hiddenTabs = hiddenTabs;
+
     return result;
   },
 
   getToolbarMeasures: function() {
     let result = this._firstWindowMeasurements || {};
     result.countableEvents = this._countableEvents;
+    result.durations = this._durations;
     return result;
+  },
+
+  countCustomizationEvent: function(aEventType) {
+    this._countEvent(["customize", aEventType]);
+  },
+
+  _durations: {
+    customization: [],
+  },
+
+  onCustomizeStart: function(aWindow) {
+    this._countEvent(["customize", "start"]);
+    let durationMap = WINDOW_DURATION_MAP.get(aWindow);
+    if (!durationMap) {
+      durationMap = {};
+      WINDOW_DURATION_MAP.set(aWindow, durationMap);
+    }
+    durationMap.customization = aWindow.performance.now();
+  },
+
+  onCustomizeEnd: function(aWindow) {
+    let durationMap = WINDOW_DURATION_MAP.get(aWindow);
+    if (durationMap && "customization" in durationMap) {
+      let duration = aWindow.performance.now() - durationMap.customization;
+      this._durations.customization.push(duration);
+      delete durationMap.customization;
+    }
   },
 };
 

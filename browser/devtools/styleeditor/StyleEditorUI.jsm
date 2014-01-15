@@ -20,12 +20,11 @@ Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 Cu.import("resource:///modules/devtools/SplitView.jsm");
 Cu.import("resource:///modules/devtools/StyleSheetEditor.jsm");
 
+const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
 
 const LOAD_ERROR = "error-load";
-
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
-
-const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
 
 /**
  * StyleEditorUI is controls and builds the UI of the Style Editor, including
@@ -55,6 +54,7 @@ function StyleEditorUI(debuggee, target, panelDoc) {
   this.editors = [];
   this.selectedEditor = null;
 
+  this._updateSourcesLabel = this._updateSourcesLabel.bind(this);
   this._onStyleSheetCreated = this._onStyleSheetCreated.bind(this);
   this._onNewDocument = this._onNewDocument.bind(this);
   this._clear = this._clear.bind(this);
@@ -67,7 +67,10 @@ function StyleEditorUI(debuggee, target, panelDoc) {
 
     this._target.on("will-navigate", this._clear);
     this._target.on("navigate", this._onNewDocument);
-  })
+  });
+
+  this._prefObserver = new PrefObserver("devtools.styleeditor.");
+  this._prefObserver.on(PREF_ORIG_SOURCES, this._onNewDocument);
 }
 
 StyleEditorUI.prototype = {
@@ -116,6 +119,27 @@ StyleEditorUI.prototype = {
     wire(this._view.rootElement, ".style-editor-importButton", function onImport() {
       this._importFromFile(this._mockImportFile || null, this._window);
     }.bind(this));
+
+    this._contextMenu = this._panelDoc.getElementById("sidebar-context");
+    this._contextMenu.addEventListener("popupshowing",
+                                       this._updateSourcesLabel);
+
+    this._sourcesItem = this._panelDoc.getElementById("context-origsources");
+    this._sourcesItem.addEventListener("command",
+                                       this._toggleOrigSources);
+  },
+
+  /**
+   * Update text of context menu option to reflect whether we're showing
+   * original sources (e.g. Sass files) or not.
+   */
+  _updateSourcesLabel: function() {
+    let string = "showOriginalSources";
+    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+      string = "showCSSSources";
+    }
+    this._sourcesItem.setAttribute("label", _(string + ".label"));
+    this._sourcesItem.setAttribute("accesskey", _(string + ".accesskey"));
   },
 
   /**
@@ -280,6 +304,14 @@ StyleEditorUI.prototype = {
    */
   _onError: function(event, errorCode, message) {
     this.emit("error", errorCode, message);
+  },
+
+  /**
+   *  Toggle the original sources pref.
+   */
+  _toggleOrigSources: function() {
+    let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
   /**
@@ -474,30 +506,11 @@ StyleEditorUI.prototype = {
    */
   selectStyleSheet: function(href, line, col)
   {
-    let alreadyCalled = !!this._styleSheetToSelect;
-    let originalHref;
-
-    if (alreadyCalled) {
-      originalHref = this._styleSheetToSelect.href;
-    }
-
     this._styleSheetToSelect = {
       href: href,
       line: line,
       col: col,
     };
-
-    if (alreadyCalled) {
-      // Just switch to the correct line and columns if the editor is already
-      // selected for the requested stylesheet.
-      for each (let editor in this.editors) {
-        if (editor.styleSheet.href == originalHref) {
-          editor.sourceEditor.setCursor({line: line, ch: col})
-          break;
-        }
-      }
-      return;
-    }
 
     /* Switch to the editor for this sheet, if it exists yet.
        Otherwise each editor will be checked when it's created. */
@@ -554,5 +567,8 @@ StyleEditorUI.prototype = {
 
   destroy: function() {
     this._clearStyleSheetEditors();
+
+    this._prefObserver.off(PREF_ORIG_SOURCES, this._onNewDocument);
+    this._prefObserver.destroy();
   }
 }

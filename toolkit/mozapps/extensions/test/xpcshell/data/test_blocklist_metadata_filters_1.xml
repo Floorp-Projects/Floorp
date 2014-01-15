@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem name="/^Mozilla Corp\.$/">
+      <versionRange severity="1">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="/block2/" name="/^Moz/" creator="Dangerous"
+      homepageURL="/\.dangerous\.com/" updateURL="/\.dangerous\.com/">
+      <versionRange severity="3">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+  </emItems>
+</blocklist>

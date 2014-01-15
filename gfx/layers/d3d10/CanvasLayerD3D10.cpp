@@ -166,25 +166,17 @@ CanvasLayerD3D10::UpdateSurface()
         }
 
         DataSourceSurface* frameData = shareSurf->GetData();
-        // Scope for gfxContext, so it's destroyed before Unmap.
+        // Scope for DrawTarget, so it's destroyed before Unmap.
         {
           RefPtr<DrawTarget> mapDt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                                                       (uint8_t*)map.pData,
-                                                                      shareSurf->Size(),
+                                                                      frameData->GetSize(),
                                                                       map.RowPitch,
                                                                       SurfaceFormat::B8G8R8A8);
 
-          nsRefPtr<gfxImageSurface> thebesFrameData =
-              new gfxImageSurface(frameData->GetData(),
-                                  ThebesIntSize(frameData->GetSize()),
-                                  frameData->Stride(),
-                                  SurfaceFormatToImageFormat(frameData->GetFormat()));
-
-          nsRefPtr<gfxContext> ctx = new gfxContext(mapDt);
-          ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-          ctx->SetSource(thebesFrameData);
-          ctx->Paint();
-
+          Rect drawRect(0, 0, frameData->GetSize().width, frameData->GetSize().height);
+          mapDt->DrawSurface(frameData, drawRect, drawRect,
+                             DrawSurfaceOptions(),  DrawOptions(1.0F, CompositionOp::OP_SOURCE));
           mapDt->Flush();
         }
 
