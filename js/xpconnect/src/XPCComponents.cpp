@@ -3707,22 +3707,6 @@ nsXPCComponents::SetReturnCode(JSContext *aCx, const Value &aCode)
 #include "xpc_map_end.h" /* This will #undef the above */
 
 // static
-bool
-nsXPCComponents::AttachComponentsObject(JSContext* aCx,
-                                        XPCWrappedNativeScope* aScope)
-{
-    RootedObject components(aCx, aScope->GetComponentsJSObject());
-    if (!components)
-        return false;
-
-    RootedObject global(aCx, aScope->GetGlobalJSObject());
-    MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
-
-    RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
-    return JS_DefinePropertyById(aCx, global, id, ObjectValue(*components),
-                                 nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
-}
-
 /* void reportError (); */
 NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
 {
