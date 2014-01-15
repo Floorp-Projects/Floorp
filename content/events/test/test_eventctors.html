@@ -724,6 +724,32 @@ while (testWheelProps.length) {
   }
 }
 
+// TransitionEvent
+e = new TransitionEvent("hello", { propertyName: "color", elapsedTime: 3.5, pseudoElement: "", foobar: "baz" })
+is("propertyName" in e, true, "Transition events have propertyName property");
+is("foobar" in e, false, "Transition events do not copy random properties from event init");
+is(e.propertyName, "color", "Transition event copies propertyName from TransitionEventInit");
+is(e.elapsedTime, 3.5, "Transition event copies elapsedTime from TransitionEventInit");
+is(e.pseudoElement, "", "Transition event copies pseudoElement from TransitionEventInit");
+is(e.bubbles, false, "Lack of bubbles property in TransitionEventInit");
+is(e.cancelable, false, "Lack of cancelable property in TransitionEventInit");
+is(e.type, "hello", "Wrong event type!");
+is(e.isTrusted, false, "Event shouldn't be trusted!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+
+// AnimationEvent
+e = new AnimationEvent("hello", { animationName: "bounce3", elapsedTime: 3.5, pseudoElement: "", foobar: "baz" })
+is("animationName" in e, true, "Animation events have animationName property");
+is("foobar" in e, false, "Animation events do not copy random properties from event init");
+is(e.animationName, "bounce3", "Animation event copies animationName from AnimationEventInit");
+is(e.elapsedTime, 3.5, "Animation event copies elapsedTime from AnimationEventInit");
+is(e.pseudoElement, "", "Animation event copies pseudoElement from AnimationEventInit");
+is(e.bubbles, false, "Lack of bubbles property in AnimationEventInit");
+is(e.cancelable, false, "Lack of cancelable property in AnimationEventInit");
+is(e.type, "hello", "Wrong event type!");
+is(e.isTrusted, false, "Event shouldn't be trusted!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+
 </script>
 </pre>
 </body>
