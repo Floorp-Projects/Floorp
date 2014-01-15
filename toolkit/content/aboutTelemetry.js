@@ -410,6 +410,55 @@ let ChromeHangs = {
   }
 };
 
+let ThreadHangStats = {
+
+  /**
+   * Renders raw thread hang stats data
+   */
+  render: function() {
+    let div = document.getElementById("thread-hang-stats");
+    clearDivData(div);
+
+    let stats = Telemetry.threadHangStats;
+    stats.forEach((thread) => {
+      div.appendChild(this.renderThread(thread));
+    });
+    if (stats.length) {
+      setHasData("thread-hang-stats-section", true);
+    }
+  },
+
+  /**
+   * Creates and fills data corresponding to a thread
+   */
+  renderThread: function(aThread) {
+    let div = document.createElement("div");
+
+    let title = document.createElement("h2");
+    title.textContent = aThread.name;
+    div.appendChild(title);
+
+    // Don't localize the histogram name, because the
+    // name is also used as the div element's ID
+    Histogram.render(div, aThread.name + "-Activity",
+                     aThread.activity, {exponential: true});
+    aThread.hangs.forEach((hang, index) => {
+      let hangName = aThread.name + "-Hang-" + (index + 1);
+      let hangDiv = Histogram.render(
+        div, hangName, hang.histogram, {exponential: true});
+      let stackDiv = document.createElement("div");
+      hang.stack.forEach((frame) => {
+        stackDiv.appendChild(document.createTextNode(frame));
+        // Leave an extra <br> at the end of the stack listing
+        stackDiv.appendChild(document.createElement("br"));
+      });
+      // Insert stack after the histogram title
+      hangDiv.insertBefore(stackDiv, hangDiv.childNodes[1]);
+    });
+    return div;
+  },
+};
+
 let Histogram = {
 
   hgramSamplesCaption: bundle.GetStringFromName("histogramSamples"),
@@ -468,6 +517,7 @@ let Histogram = {
     outerDiv.appendChild(copyButton);
 
     aParent.appendChild(outerDiv);
+    return outerDiv;
   },
 
   /**
@@ -883,6 +933,9 @@ function onLoad() {
 
   // Show chrome hang stacks
   ChromeHangs.render();
+
+  // Show thread hang stats
+  ThreadHangStats.render();
 
   // Show histogram data
   let histograms = Telemetry.histogramSnapshots;
