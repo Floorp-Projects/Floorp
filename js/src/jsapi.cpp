@@ -3986,7 +3986,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
 
     if (!funobj->is<JSFunction>()) {
         AutoCompartment ac(cx, funobj);
-        ReportIsNotFunction(cx, ObjectValue(*funobj));
+        RootedValue v(cx, ObjectValue(*funobj));
+        ReportIsNotFunction(cx, v);
         return nullptr;
     }
 

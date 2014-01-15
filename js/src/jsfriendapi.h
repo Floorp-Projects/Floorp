@@ -1782,7 +1782,7 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
                      JS::Handle<JSPropertyDescriptor> descriptor, bool *bp);
 
 extern JS_FRIEND_API(bool)
-js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
+js_ReportIsNotFunction(JSContext *cx, JS::HandleValue v);
 
 #ifdef JSGC_GENERATIONAL
 extern JS_FRIEND_API(void)
