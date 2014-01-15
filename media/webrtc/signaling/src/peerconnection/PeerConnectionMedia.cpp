@@ -396,6 +396,40 @@ PeerConnectionMedia::GetRemoteStream(int aIndex)
   return mRemoteSourceStreams[aIndex];
 }
 
+bool
+PeerConnectionMedia::SetUsingBundle_m(int level, bool decision)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
+    if (mRemoteSourceStreams[i]->SetUsingBundle_m(level, decision)) {
+      // Found the MediaPipeline for |level|
+      return true;
+    }
+  }
+  CSFLogWarn(logTag, "Could not locate level %d to set bundle flag to %s",
+                     static_cast<int>(level),
+                     decision ? "true" : "false");
+  return false;
+}
+
+bool
+PeerConnectionMedia::UpdateFilterFromRemoteDescription_m(
+    int level,
+    nsAutoPtr<mozilla::MediaPipelineFilter> filter)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
+    if (mRemoteSourceStreams[i]->UpdateFilterFromRemoteDescription_m(level,
+                                                                     filter)) {
+      // Found the MediaPipeline for |level|
+      return true;
+    }
+  }
+  CSFLogWarn(logTag, "Could not locate level %d to update filter",
+                     static_cast<int>(level));
+  return false;
+}
+
 nsresult
 PeerConnectionMedia::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo,
   int *aIndex)
@@ -503,5 +537,68 @@ RemoteSourceStreamInfo::StorePipeline(int aTrack,
   mTypes[aTrack] = aIsVideo;
 }
 
+RefPtr<MediaPipeline> RemoteSourceStreamInfo::GetPipelineByLevel_m(int level) {
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+  for (auto p = mPipelines.begin(); p != mPipelines.end(); ++p) {
+    if (p->second->level() == level) {
+      return p->second;
+    }
+  }
+  return nullptr;
+}
+
+bool RemoteSourceStreamInfo::UpdateFilterFromRemoteDescription_m(
+    int aLevel,
+    nsAutoPtr<mozilla::MediaPipelineFilter> aFilter) {
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+
+  if (!mMediaStream) {
+    // Guard against dispatching once we've started teardown, since we don't
+    // want the RefPtr<MediaPipeline> being the last one standing on the call
+    // to MediaPipeline::UpdateFilterFromRemoteDescription_s; it is not safe
+    // to delete a MediaPipeline anywhere other than the main thread.
+    return false;
+  }
+
+  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
+
+  if (pipeline) {
+    RUN_ON_THREAD(mParent->GetSTSThread(),
+                  WrapRunnable(
+                      pipeline,
+                      &MediaPipeline::UpdateFilterFromRemoteDescription_s,
+                      aFilter
+                  ),
+                  NS_DISPATCH_NORMAL);
+    return true;
+  }
+  return false;
+}
+
+bool RemoteSourceStreamInfo::SetUsingBundle_m(int aLevel, bool decision) {
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+
+  if (!mMediaStream) {
+    // Guard against dispatching once we've started teardown, since we don't
+    // want the RefPtr<MediaPipeline> being the last one standing on the call
+    // to MediaPipeline::SetUsingBundle_s; it is not safe
+    // to delete a MediaPipeline anywhere other than the main thread.
+    return false;
+  }
+
+  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
+
+  if (pipeline) {
+    RUN_ON_THREAD(mParent->GetSTSThread(),
+                  WrapRunnable(
+                      pipeline,
+                      &MediaPipeline::SetUsingBundle_s,
+                      decision
+                  ),
+                  NS_DISPATCH_NORMAL);
+    return true;
+  }
+  return false;
+}
 
 }  // namespace sipcc
