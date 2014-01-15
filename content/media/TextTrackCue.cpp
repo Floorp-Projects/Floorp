@@ -8,9 +8,6 @@
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 
-// Alternate value for the 'auto' keyword.
-#define WEBVTT_AUTO -1
-
 namespace mozilla {
 namespace dom {
 
@@ -38,7 +35,7 @@ TextTrackCue::SetDefaultCueSettings()
   mSize = 100;
   mPauseOnExit = false;
   mSnapToLines = true;
-  mLine = WEBVTT_AUTO;
+  mLineIsAutoKeyword = true;
   mAlign = AlignSetting::Middle;
   mLineAlign = AlignSetting::Start;
   mVertical = DirectionSetting::_empty;

@@ -130,6 +130,13 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       cue.positionAlign = "end";
       is(cue.positionAlign, "end", "Cue's position align should be end.");
 
+      // Check cue.line
+      is(cue.line, "auto", "Cue's line value should initially be auto.");
+      cue.line = 12410
+      is(cue.line, 12410, "Cue's line value should now be 12410.");
+      cue.line = "auto";
+      is(cue.line, "auto", "Cue's line value should now be auto.");
+
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
       trackElement.track.addCue(vttCue);
