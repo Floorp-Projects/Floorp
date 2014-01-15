@@ -9,9 +9,6 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
-
 let WebProgressListener = {
   _lastLocation: null,
   _firstPaint: false,
@@ -263,7 +260,7 @@ let WebNavigation =  {
       // start might already be in use)
       let id = aIdMap[aEntry.ID] || 0;
       if (!id) {
-        id = gUUIDGenerator.generateUUID();
+        for (id = Date.now(); id in aIdMap.used; id++);
         aIdMap[aEntry.ID] = id;
         aIdMap.used[id] = true;
       }
@@ -298,7 +295,7 @@ let WebNavigation =  {
         matchingEntry = {shEntry: shEntry, childDocIdents: childDocIdents};
         aDocIdentMap[aEntry.docIdentifier] = matchingEntry;
       } else {
-        shEntry.adoptBFCacheEntry(matchingEntry);
+        shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
         childDocIdents = matchingEntry.childDocIdents;
       }
     }
