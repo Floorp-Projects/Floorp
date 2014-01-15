@@ -1,15 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
+const promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+const EventEmitter = Cu.import("resource:///modules/devtools/shared/event-emitter.js", {}).EventEmitter;
+
 function test() {
+  waitForExplicitFinish();
+
   testEmitter();
   testEmitter({});
+
+  Task.spawn(testPromise).then(null, ok.bind(null, false)).then(finish);
 }
 
-
 function testEmitter(aObject) {
-  Cu.import("resource:///modules/devtools/shared/event-emitter.js", this);
-
   let emitter;
 
   if (aObject) {
@@ -90,8 +96,59 @@ function testEmitter(aObject) {
     emitter.emit("oao");
 
     ok(!enteredC1, "c1 should not be called");
-
-    delete emitter;
-    finish();
   }
+}
+
+function testPromise() {
+  let emitter = new EventEmitter();
+  let p = emitter.once("thing");
+
+  // Check that the promise is only resolved once event though we
+  // emit("thing") more than once
+  let firstCallbackCalled = false;
+  let check1 = p.then(arg => {
+    is(firstCallbackCalled, false, "first callback called only once");
+    firstCallbackCalled = true;
+    is(arg, "happened", "correct arg in promise");
+    return "rval from c1";
+  });
+
+  emitter.emit("thing", "happened", "ignored");
+
+  // Check that the promise is resolved asynchronously
+  let secondCallbackCalled = false;
+  let check2 = p.then(arg => {
+    ok(true, "second callback called");
+    is(arg, "happened", "correct arg in promise");
+    secondCallbackCalled = true;
+    is(arg, "happened", "correct arg in promise (a second time)");
+    return "rval from c2";
+  });
+
+  // Shouldn't call any of the above listeners
+  emitter.emit("thing", "trashinate");
+
+  // Check that we can still separate events with different names
+  // and that it works with no parameters
+  let pfoo = emitter.once("foo");
+  let pbar = emitter.once("bar");
+
+  let check3 = pfoo.then(arg => {
+    ok(arg === undefined, "no arg for foo event");
+    return "rval from c3";
+  });
+
+  pbar.then(() => {
+    ok(false, "pbar should not be called");
+  });
+
+  emitter.emit("foo");
+
+  is(secondCallbackCalled, false, "second callback not called yet");
+
+  return promise.all([ check1, check2, check3 ]).then(args => {
+    is(args[0], "rval from c1", "callback 1 done good");
+    is(args[1], "rval from c2", "callback 2 done good");
+    is(args[2], "rval from c3", "callback 3 done good");
+  });
 }
