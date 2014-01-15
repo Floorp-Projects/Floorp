@@ -410,7 +410,12 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
 
-  if (mMuted || IsFinishedOnGraphThread()) {
+  // Consider this stream blocked if it has already finished output. Normally
+  // mBlocked would reflect this, but due to rounding errors our audio track may
+  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
+  bool blocked = mFinished || mBlocked.GetAt(aFrom);
+  // If the stream has finished at this time, it will be blocked.
+  if (mMuted || blocked) {
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
@@ -442,16 +447,16 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     if (finished) {
       mMarkAsFinishedAfterThisBlock = true;
     }
-  }
 
-  if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
-    for (uint32_t i = 0; i < mLastChunks.Length(); ++i) {
-      mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
+    if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
+      for (uint32_t i = 0; i < outputCount; ++i) {
+        mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
+      }
     }
   }
 
-  if (!IsFinishedOnGraphThread()) {
-    // Don't output anything after we've finished!
+  if (!blocked) {
+    // Don't output anything while blocked
     AdvanceOutputSegment();
     if (mMarkAsFinishedAfterThisBlock && (aFlags & ALLOW_FINISH)) {
       // This stream was finished the last time that we looked at it, and all
