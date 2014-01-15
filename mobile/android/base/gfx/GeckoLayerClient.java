@@ -292,6 +292,15 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         float maxMarginWidth = Math.max(0, metrics.getPageWidth() - metrics.getWidthWithoutMargins());
         float maxMarginHeight = Math.max(0, metrics.getPageHeight() - metrics.getHeightWithoutMargins());
 
+        // If the margins can't fully hide, they're pinned on - in which case,
+        // fixed margins should always be zero.
+        if (maxMarginWidth < metrics.marginLeft + metrics.marginRight) {
+          maxMarginWidth = 0;
+        }
+        if (maxMarginHeight < metrics.marginTop + metrics.marginBottom) {
+          maxMarginHeight = 0;
+        }
+
         PointF offset = metrics.getMarginOffset();
         RectF overscroll = metrics.getOverscroll();
         if (offset.x >= 0) {
