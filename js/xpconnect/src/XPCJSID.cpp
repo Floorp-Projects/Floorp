@@ -210,7 +210,7 @@ nsJSID::NewID(const nsID& id)
 class SharedScriptableHelperForJSIID MOZ_FINAL : public nsIXPCScriptable
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
     SharedScriptableHelperForJSIID() {}
 };
@@ -218,7 +218,7 @@ public:
 NS_INTERFACE_MAP_BEGIN(SharedScriptableHelperForJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(SharedScriptableHelperForJSIID)
 NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
@@ -261,12 +261,14 @@ NS_METHOD GetSharedScriptableHelperForJSIID(uint32_t language,
 { 0x00000000, 0x0000, 0x0000,                                                 \
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
 
+// We pass nsIClassInfo::DOM_OBJECT so that nsJSIID instances may be created
+// in unprivileged scopes.
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
 NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID,
-                  nsIClassInfo::THREADSAFE, NULL_CID)
+                  nsIClassInfo::DOM_OBJECT, NULL_CID)
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSCID)
-NS_IMPL_CLASSINFO(nsJSCID, nullptr, nsIClassInfo::THREADSAFE, NULL_CID)
+NS_IMPL_CLASSINFO(nsJSCID, nullptr, 0, NULL_CID)
 
 void xpc_DestroyJSxIDClassObjects()
 {
@@ -285,10 +287,9 @@ NS_INTERFACE_MAP_BEGIN(nsJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIJSID)
   NS_INTERFACE_MAP_ENTRY(nsIJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
   NS_IMPL_QUERY_CLASSINFO(nsJSIID)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsJSIID)
 NS_IMPL_RELEASE(nsJSIID)
@@ -561,43 +562,6 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return xpc::HasInstance(cx, obj, iid, bp);
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = xpc::CloneAllAccess();
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsJSIID::CanCallMethod(const nsIID * iid, const char16_t *methodName, char **_retval)
-{
-    static const char* const allowed[] = {"equals", "toString", nullptr};
-
-    *_retval = xpc::CheckAccessList(methodName, allowed);
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsJSIID::CanGetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    static const char* const allowed[] = {"name", "number", "valid", nullptr};
-    *_retval = xpc::CheckAccessList(propertyName, allowed);
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsJSIID::CanSetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
 /***************************************************************************/
 
 NS_INTERFACE_MAP_BEGIN(nsJSCID)
@@ -606,7 +570,7 @@ NS_INTERFACE_MAP_BEGIN(nsJSCID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
   NS_IMPL_QUERY_CLASSINFO(nsJSCID)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsJSCID)
 NS_IMPL_RELEASE(nsJSCID)
