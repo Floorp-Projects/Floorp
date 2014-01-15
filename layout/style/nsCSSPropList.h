@@ -3035,6 +3035,17 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Top)
+ CSS_PROP_DISPLAY(
+    touch-action,
+    touch_action,
+    TouchAction,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    "layout.css.touch_action.enabled",
+    VARIANT_HK,
+    kTouchActionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     transition,
     transition,
