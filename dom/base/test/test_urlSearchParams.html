@@ -45,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     is(u.getAll('foo').length, 1, 'URLSearchParams.getAll(foo)');
     is(u.size, 1, 'URLSearchParams.size()');
 
+    is(u + "", "foo=bar2", "stringifier");
+
     u.delete('foo');
     is(u.size, 0, 'URLSearchParams.size()');
 
