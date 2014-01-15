@@ -339,6 +339,11 @@ public:
                                        uint32_t        aFlagsValues,
                                        uint32_t        aFlagsToUpdate);
 
+  // Sets flags on aFrame and all descendant frames
+  static void
+  PropagateFrameFlagFor(nsIFrame* aFrame,
+                        uint64_t  aFlags);
+
   // helper to let the rebuild of automatic data (presentation data
   // and embellishement data) walk through a subtree that may contain
   // non-MathML container frames. Note that this method re-builds the

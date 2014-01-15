@@ -43,6 +43,17 @@ nsMathMLmfracFrame::GetMathMLFrameType()
   return eMathMLFrameType_Inner;
 }
 
+uint8_t
+nsMathMLmfracFrame::ScriptIncrement(nsIFrame* aFrame)
+{
+  if (!StyleFont()->mMathDisplay &&
+      aFrame && (mFrames.FirstChild() == aFrame ||
+                 mFrames.LastChild() == aFrame)) {
+    return 1;
+  }
+  return 0;
+}
+
 NS_IMETHODIMP
 nsMathMLmfracFrame::TransmitAutomaticData()
 {
@@ -51,6 +62,15 @@ nsMathMLmfracFrame::TransmitAutomaticData()
   UpdatePresentationDataFromChildAt(1,  1,
      NS_MATHML_COMPRESSED,
      NS_MATHML_COMPRESSED);
+
+  // If displaystyle is false, then scriptlevel is incremented, so notify the
+  // children of this.
+  if (!StyleFont()->mMathDisplay) {
+    PropagateFrameFlagFor(mFrames.FirstChild(),
+                          NS_FRAME_MATHML_SCRIPT_DESCENDANT);
+    PropagateFrameFlagFor(mFrames.LastChild(),
+                          NS_FRAME_MATHML_SCRIPT_DESCENDANT);
+  }
 
   // if our numerator is an embellished operator, let its state bubble to us
   GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);

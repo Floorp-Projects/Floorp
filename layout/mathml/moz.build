@@ -29,6 +29,11 @@ UNIFIED_SOURCES += [
     'nsMathMLTokenFrame.cpp',
 ]
 
+EXPORTS += [
+    'nsIMathMLFrame.h',
+    'nsMathMLOperators.h'
+]
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
