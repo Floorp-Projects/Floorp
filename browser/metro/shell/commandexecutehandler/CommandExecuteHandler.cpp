@@ -269,8 +269,8 @@ public:
   /**
    * Choose the appropriate launch type based on the user's previously chosen
    * host environment, along with system constraints.
-   * AHE_DESKTOP	= 0
-   * AHE_IMMERSIVE	= 1
+   *
+   * AHE_DESKTOP = 0, AHE_IMMERSIVE = 1
    */
   AHE_TYPE GetLaunchType() {
     AHE_TYPE ahe = GetLastAHE();
@@ -564,7 +564,8 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
  * Desktop launch - Launch the destop browser to display the current
  * target using shellexecute.
  */
-void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb, CStringW& aTarget, CStringW& aParameters,
+void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb,
+                                    CStringW& aTarget, CStringW& aParameters,
                                     bool aTargetIsDefaultBrowser, bool aTargetIsBrowser)
 {
   // If a taskbar shortcut, link or local file is clicked, the target will
@@ -589,21 +590,38 @@ void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb, CSt
 
   Log(L"Desktop Launch: verb:%s exe:%s params:%s", aVerb, aBrowserPath, params);
 
-  SHELLEXECUTEINFOW seinfo;
-  memset(&seinfo, 0, sizeof(seinfo));
-  seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-  seinfo.fMask  = SEE_MASK_FLAG_LOG_USAGE;
-  seinfo.lpVerb = aVerb;
-  seinfo.lpFile = aBrowserPath;
-  seinfo.nShow  = SW_SHOWNORMAL;
-
   // Relaunch in Desktop mode uses a special URL to trick Windows into
-  // switching environments. We shouldn't actually try to open this URL
-  if (_wcsicmp(aTarget, L"http://-desktop/") != 0) {
-    seinfo.lpParameters = params;
+  // switching environments. We shouldn't actually try to open this URL.
+  if (!_wcsicmp(aTarget, L"http://-desktop/")) {
+    // Ignore any params and just launch on desktop
+    params.Empty();
   }
 
-  ShellExecuteEx(&seinfo);
+  PROCESS_INFORMATION procInfo;
+  STARTUPINFO startInfo;
+  memset(&procInfo, 0, sizeof(PROCESS_INFORMATION));
+  memset(&startInfo, 0, sizeof(STARTUPINFO));
+
+  startInfo.cb = sizeof(STARTUPINFO);
+  startInfo.dwFlags = STARTF_USESHOWWINDOW;
+  startInfo.wShowWindow = SW_SHOWNORMAL;
+
+  BOOL result =
+    CreateProcessW(aBrowserPath, static_cast<LPWSTR>(params.GetBuffer()),
+                   NULL, NULL, FALSE, 0, NULL, NULL, &startInfo, &procInfo);
+  if (!result) {
+    Log(L"CreateProcess failed! (%d)", GetLastError());
+    return;
+  }
+  // Hand off foreground/focus rights to the browser we create. If we don't
+  // do this the ceh will keep ownership causing desktop firefox to launch
+  // deactivated.
+  if (!AllowSetForegroundWindow(procInfo.dwProcessId)) {
+    Log(L"AllowSetForegroundWindow failed! (%d)", GetLastError());
+  }
+  CloseHandle(procInfo.hThread);
+  CloseHandle(procInfo.hProcess);
+  Log(L"Desktop browser process id: %d", procInfo.dwProcessId);
 }
 
 void CExecuteCommandVerb::LaunchDesktopBrowser()
@@ -613,7 +631,8 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
     return;
   }
 
-  LaunchDesktopBrowserWithParams(browserPath, mVerb, mTarget, mParameters, mTargetIsDefaultBrowser, mTargetIsBrowser);
+  LaunchDesktopBrowserWithParams(browserPath, mVerb, mTarget, mParameters,
+                                 mTargetIsDefaultBrowser, mTargetIsBrowser);
 }
 
 class AutoSetRequestMet
