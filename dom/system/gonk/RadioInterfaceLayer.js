@@ -3318,6 +3318,15 @@ RadioInterface.prototype = {
   _fragmentText7Bit: function(text, langTable, langShiftTable, segmentSeptets, strict7BitEncoding) {
     let ret = [];
     let body = "", len = 0;
+    // If the message is empty, we only push the empty message to ret.
+    if (text.length == 0) {
+      ret.push({
+        body: text,
+        encodedBodyLength: text.length,
+      });
+      return ret;
+    }
+
     for (let i = 0, inc = 0; i < text.length; i++) {
       let c = text.charAt(i);
       if (strict7BitEncoding) {
@@ -3387,6 +3396,15 @@ RadioInterface.prototype = {
    */
   _fragmentTextUCS2: function(text, segmentChars) {
     let ret = [];
+    // If the message is empty, we only push the empty message to ret.
+    if (text.length == 0) {
+      ret.push({
+        body: text,
+        encodedBodyLength: text.length,
+      });
+      return ret;
+    }
+
     for (let offset = 0; offset < text.length; offset += segmentChars) {
       let str = text.substr(offset, segmentChars);
       ret.push({
