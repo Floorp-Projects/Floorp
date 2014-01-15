@@ -250,13 +250,9 @@ struct nsPresentationData {
   // pick a particular child in their child list to be the base)
   nsIFrame* baseFrame;
 
-  // up-pointer on the mstyle frame, if any, that defines the scope
-  nsIFrame* mstyle;
-
   nsPresentationData() {
     flags = 0;
     baseFrame = nullptr;
-    mstyle = nullptr;
   }
 };
 
