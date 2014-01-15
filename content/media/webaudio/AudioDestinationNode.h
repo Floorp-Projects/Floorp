@@ -70,11 +70,21 @@ public:
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
   void FireOfflineCompletionEvent();
 
+  // An amount that should be added to the MediaStream's current time to
+  // get the AudioContext.currentTime.
+  double ExtraCurrentTime();
+
+  // When aIsOnlyNode is true, this is the only node for the AudioContext.
+  void SetIsOnlyNodeForContext(bool aIsOnlyNode);
+
 private:
   bool CheckAudioChannelPermissions(AudioChannel aValue);
   void CreateAudioChannelAgent();
 
   void SetCanPlay(bool aCanPlay);
+
+  void NotifyStableState();
+  void ScheduleStableStateNotification();
 
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
@@ -83,8 +93,16 @@ private:
 
   // Audio Channel Type.
   AudioChannel mAudioChannel;
+<<<<<<< /home/roc/mozilla-central/content/media/webaudio/AudioDestinationNode.h
   bool mIsOffline;
   bool mHasFinished;
+=======
+
+  TimeStamp mStartedBlockingDueToBeingOnlyNode;
+  double mExtraCurrentTime;
+  double mExtraCurrentTimeSinceLastStartedBlocking;
+  bool mExtraCurrentTimeUpdatedSinceLastStableState;
+>>>>>>> /tmp/AudioDestinationNode.h~other.MvuUBx
 };
 
 }
