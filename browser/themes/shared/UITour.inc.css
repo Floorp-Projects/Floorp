@@ -8,6 +8,7 @@
 
 #UITourHighlightContainer {
   -moz-appearance: none;
+  border: none;
   background-color: transparent;
   /* This is a buffer to compensate for the movement in the "wobble" effect */
   padding: 4px;
