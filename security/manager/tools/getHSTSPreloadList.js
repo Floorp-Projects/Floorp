@@ -137,6 +137,10 @@ function processStsHeader(host, header, status) {
     }
   }
 
+  if (error == ERROR_NONE && maxAge.value < MINIMUM_REQUIRED_MAX_AGE) {
+    error = ERROR_MAX_AGE_TOO_LOW;
+  }
+
   return { name: host.name,
            maxAge: maxAge.value,
            includeSubdomains: includeSubdomains.value,
@@ -203,6 +207,12 @@ function getExpirationTimeString() {
   return "const PRTime gPreloadListExpirationTime = INT64_C(" + expirationMicros + ");\n";
 }
 
+function errorToString(status) {
+  return (status.error == ERROR_MAX_AGE_TOO_LOW
+          ? status.error + status.maxAge
+          : status.error);
+}
+
 function output(sortedStatuses, currentList) {
   try {
     var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
@@ -219,9 +229,10 @@ function output(sortedStatuses, currentList) {
       // (given that it was already on the list).
       if (status.error != ERROR_NONE &&
           status.error != ERROR_NO_HSTS_HEADER &&
+          status.error != ERROR_MAX_AGE_TOO_LOW &&
           status.name in currentList) {
         dump("INFO: error connecting to or processing " + status.name + " - using previous status on list\n");
-        writeTo(status.name + ": " + status.error + "\n", eos);
+        writeTo(status.name + ": " + errorToString(status) + "\n", eos);
         status.maxAge = MINIMUM_REQUIRED_MAX_AGE;
         status.includeSubdomains = currentList[status.name];
       }
@@ -233,10 +244,7 @@ function output(sortedStatuses, currentList) {
       }
       else {
         dump("INFO: " + status.name + " NOT ON the preload list\n");
-        if (status.maxAge != 0) {
-          status.error = ERROR_MAX_AGE_TOO_LOW + status.maxAge;
-        }
-        writeTo(status.name + ": " + status.error + "\n", eos);
+        writeTo(status.name + ": " + errorToString(status) + "\n", eos);
       }
     }
     writeTo(POSTFIX, fos);
@@ -250,6 +258,7 @@ function output(sortedStatuses, currentList) {
 
 function shouldRetry(response) {
   return (response.error != ERROR_NO_HSTS_HEADER &&
+          response.error != ERROR_MAX_AGE_TOO_LOW &&
           response.error != ERROR_NONE && response.retries > 0);
 }
 
