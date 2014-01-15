@@ -352,6 +352,27 @@
      };
 
      /**
+      * Gets the number of bytes available on disk to the current user.
+      *
+      * @param {string} sourcePath Platform-specific path to a directory on 
+      * the disk to query for free available bytes.
+      *
+      * @return {number} The number of bytes available for the current user.
+      * @throws {OS.File.Error} In case of any error.
+      */
+     File.getAvailableFreeSpace = function Unix_getAvailableFreeSpace(sourcePath) {
+       let fileSystemInfo = new Type.statvfs.implementation();
+       let fileSystemInfoPtr = fileSystemInfo.address();
+
+       throw_on_negative("statvfs",  UnixFile.statvfs(sourcePath, fileSystemInfoPtr));
+
+       let bytes = new Type.uint64_t.implementation(
+                        fileSystemInfo.f_bsize * fileSystemInfo.f_bavail);
+
+       return bytes.value;
+     };
+
+     /**
       * Default mode for opening directories.
       */
      const DEFAULT_UNIX_MODE_DIR = Const.S_IRWXU;
