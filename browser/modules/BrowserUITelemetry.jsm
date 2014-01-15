@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "find-button",
       "preferences-button",
       "add-ons-button",
-      "developer-button",
     ],
     "nav-bar": [
       "urlbar-container",
