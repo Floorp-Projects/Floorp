@@ -217,12 +217,12 @@ static const CSSToScreenScale MAX_ZOOM(8.0f);
 static const CSSToScreenScale MIN_ZOOM(0.125f);
 
 /**
- * Amount of time before we timeout touch event listeners. For example, if
+ * Amount of time before we timeout response from content. For example, if
  * content is being unruly/slow and we don't get a response back within this
  * time, we will just pretend that content did not preventDefault any touch
  * events we dispatched to it.
  */
-static int gTouchListenerTimeout = 300;
+static int gContentResponseTimeout = 300;
 
 /**
  * Number of samples to store of how long it took to paint after the previous
@@ -385,7 +385,7 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddIntVarCache(&gPanRepaintInterval, "apz.pan_repaint_interval", gPanRepaintInterval);
   Preferences::AddIntVarCache(&gFlingRepaintInterval, "apz.fling_repaint_interval", gFlingRepaintInterval);
   Preferences::AddFloatVarCache(&gMinSkateSpeed, "apz.min_skate_speed", gMinSkateSpeed);
-  Preferences::AddIntVarCache(&gTouchListenerTimeout, "apz.touch_listener_timeout", gTouchListenerTimeout);
+  Preferences::AddIntVarCache(&gContentResponseTimeout, "apz.content_response_timeout", gContentResponseTimeout);
   Preferences::AddIntVarCache(&gNumPaintDurationSamples, "apz.num_paint_duration_samples", gNumPaintDurationSamples);
   Preferences::AddFloatVarCache(&gTouchStartTolerance, "apz.touch_start_tolerance", gTouchStartTolerance);
   Preferences::AddFloatVarCache(&gXSkateSizeMultiplier, "apz.x_skate_size_multiplier", gXSkateSizeMultiplier);
@@ -415,7 +415,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mRefPtrMonitor("RefPtrMonitor"),
      mMonitor("AsyncPanZoomController"),
      mTouchActionPropertyEnabled(gTouchActionPropertyEnabled),
-     mTouchListenerTimeoutTask(nullptr),
+     mContentResponseTimeoutTask(nullptr),
      mX(MOZ_THIS_IN_INITIALIZER_LIST()),
      mY(MOZ_THIS_IN_INITIALIZER_LIST()),
      mPanDirRestricted(false),
@@ -427,6 +427,9 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mCurrentAsyncScrollOffset(0, 0),
      mAsyncScrollTimeoutTask(nullptr),
      mHandlingTouchQueue(false),
+     mAllowedTouchBehaviorSet(false),
+     mPreventDefault(false),
+     mPreventDefaultSet(false),
      mTreeManager(aTreeManager),
      mAPZCId(sAsyncPanZoomControllerCount++),
      mSharedFrameMetricsBuffer(nullptr),
@@ -501,30 +504,35 @@ AsyncPanZoomController::GetTouchStartTolerance()
 }
 
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
-  // If we may have touch listeners, we enable the machinery that allows touch
-  // listeners to preventDefault any touch inputs. This should not happen unless
-  // there are actually touch listeners as it introduces potentially unbounded
-  // lag because it causes a round-trip through content.  Usually, if content is
-  // responding in a timely fashion, this only introduces a nearly constant few
-  // hundred ms of lag.
+  // If we may have touch listeners and touch action property is enabled, we
+  // enable the machinery that allows touch listeners to preventDefault any touch inputs
+  // and also waits for the allowed touch behavior values to be received from the outside.
+  // This should not happen unless there are actually touch listeners and touch-action property
+  // enable as it introduces potentially unbounded lag because it causes a round-trip through
+  // content.  Usually, if content is responding in a timely fashion, this only introduces a
+  // nearly constant few hundred ms of lag.
   if (mFrameMetrics.mMayHaveTouchListeners && aEvent.mInputType == MULTITOUCH_INPUT &&
       (mState == NOTHING || mState == TOUCHING || IsPanningState(mState))) {
     const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
     if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
-      SetState(WAITING_LISTENERS);
+      mAllowedTouchBehaviors.Clear();
+      mAllowedTouchBehaviorSet = false;
+      mPreventDefault = false;
+      mPreventDefaultSet = false;
+      SetState(WAITING_CONTENT_RESPONSE);
     }
   }
 
-  if (mState == WAITING_LISTENERS || mHandlingTouchQueue) {
+  if (mState == WAITING_CONTENT_RESPONSE || mHandlingTouchQueue) {
     if (aEvent.mInputType == MULTITOUCH_INPUT) {
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
       mTouchQueue.AppendElement(multiTouchInput);
 
-      if (!mTouchListenerTimeoutTask) {
-        mTouchListenerTimeoutTask =
-          NewRunnableMethod(this, &AsyncPanZoomController::TimeoutTouchListeners);
+      if (!mContentResponseTimeoutTask) {
+        mContentResponseTimeoutTask =
+          NewRunnableMethod(this, &AsyncPanZoomController::TimeoutContentResponse);
 
-        PostDelayedTask(mTouchListenerTimeoutTask, gTouchListenerTimeout);
+        PostDelayedTask(mContentResponseTimeoutTask, gContentResponseTimeout);
       }
     }
     return nsEventStatus_eIgnore;
@@ -616,7 +624,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case CROSS_SLIDING_X:
     case CROSS_SLIDING_Y:
     case PINCHING:
-    case WAITING_LISTENERS:
+    case WAITING_CONTENT_RESPONSE:
       NS_WARNING("Received impossible touch in OnTouchStart");
       break;
     default:
@@ -676,7 +684,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       NS_WARNING("Gesture listener should have handled pinching in OnTouchMove.");
       return nsEventStatus_eIgnore;
 
-    case WAITING_LISTENERS:
+    case WAITING_CONTENT_RESPONSE:
       NS_WARNING("Received impossible touch in OnTouchMove");
       break;
   }
@@ -734,7 +742,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     NS_WARNING("Gesture listener should have handled pinching in OnTouchEnd.");
     return nsEventStatus_eIgnore;
 
-  case WAITING_LISTENERS:
+  case WAITING_CONTENT_RESPONSE:
     NS_WARNING("Received impossible touch in OnTouchEnd");
     break;
   }
@@ -1668,25 +1676,40 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
 }
 
 void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
-  if (!mFrameMetrics.mMayHaveTouchListeners) {
-    mTouchQueue.Clear();
+  mPreventDefaultSet = true;
+  mPreventDefault = aPreventDefault;
+  CheckContentResponse();
+}
+
+void AsyncPanZoomController::CheckContentResponse() {
+  bool canProceedToTouchState = true;
+
+  if (mFrameMetrics.mMayHaveTouchListeners) {
+    canProceedToTouchState &= mPreventDefaultSet;
+  }
+
+  if (mTouchActionPropertyEnabled) {
+    canProceedToTouchState &= mAllowedTouchBehaviorSet;
+  }
+
+  if (!canProceedToTouchState) {
     return;
   }
 
-  if (mTouchListenerTimeoutTask) {
-    mTouchListenerTimeoutTask->Cancel();
-    mTouchListenerTimeoutTask = nullptr;
+  if (mContentResponseTimeoutTask) {
+    mContentResponseTimeoutTask->Cancel();
+    mContentResponseTimeoutTask = nullptr;
   }
 
-  if (mState == WAITING_LISTENERS) {
-    if (!aPreventDefault) {
+  if (mState == WAITING_CONTENT_RESPONSE) {
+    if (!mPreventDefault) {
       SetState(NOTHING);
     }
 
     mHandlingTouchQueue = true;
 
     while (!mTouchQueue.IsEmpty()) {
-      if (!aPreventDefault) {
+      if (!mPreventDefault) {
         HandleInputEvent(mTouchQueue[0]);
       }
 
@@ -1722,6 +1745,8 @@ AsyncPanZoomController::GetAllowedTouchBehavior(ScreenIntPoint& aPoint) {
 void AsyncPanZoomController::SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors) {
   mAllowedTouchBehaviors.Clear();
   mAllowedTouchBehaviors.AppendElements(aBehaviors);
+  mAllowedTouchBehaviorSet = true;
+  CheckContentResponse();
 }
 
 void AsyncPanZoomController::SetState(PanZoomState aNewState) {
@@ -1747,15 +1772,15 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
 }
 
 bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
-  return !(aState == NOTHING || aState == TOUCHING || aState == WAITING_LISTENERS);
+  return !(aState == NOTHING || aState == TOUCHING || aState == WAITING_CONTENT_RESPONSE);
 }
 
 bool AsyncPanZoomController::IsPanningState(PanZoomState aState) {
   return (aState == PANNING || aState == PANNING_LOCKED_X || aState == PANNING_LOCKED_Y);
 }
 
-void AsyncPanZoomController::TimeoutTouchListeners() {
-  mTouchListenerTimeoutTask = nullptr;
+void AsyncPanZoomController::TimeoutContentResponse() {
+  mContentResponseTimeoutTask = nullptr;
   ContentReceivedTouch(false);
 }
 
