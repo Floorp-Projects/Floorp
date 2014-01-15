@@ -94,7 +94,7 @@ h2 {
   text-decoration: underline;
 }
 
-#histograms, #addon-histograms {
+#histograms, #addon-histograms, #thread-hang-stats>div {
   overflow: hidden;
 }
 
