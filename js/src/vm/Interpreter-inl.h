@@ -637,7 +637,7 @@ UrshOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *out)
 #undef RELATIONAL_OP
 
 inline JSFunction *
-ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO_CONSTRUCT)
+ReportIfNotFunction(JSContext *cx, HandleValue v, MaybeConstruct construct = NO_CONSTRUCT)
 {
     if (v.isObject() && v.toObject().is<JSFunction>())
         return &v.toObject().as<JSFunction>();
