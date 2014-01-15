@@ -46,6 +46,11 @@ function debug(s) {
 let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
   libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true";
 
+// Ril quirk to always turn the radio off for the client without SIM card
+// except hw default client.
+let RILQUIRKS_RADIO_OFF_WO_CARD =
+  libcutils.property_get("ro.moz.ril.radio_off_wo_card", "false") == "true";
+
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 const RADIOINTERFACE_CID =
@@ -90,6 +95,7 @@ const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
 
 const RADIO_POWER_OFF_TIMEOUT = 30000;
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
+const HW_DEFAULT_CLIENT_ID = 0;
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetRilContext",
@@ -502,6 +508,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
 XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
   return {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
     ril: null,
     pendingMessages: [],  // For queueing "RIL:SetRadioEnabled" messages.
     timer: null,
@@ -510,6 +518,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
 
     init: function(ril) {
       this.ril = ril;
+      Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
     },
 
     receiveMessage: function(msg) {
@@ -541,9 +550,47 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       this._handleMessage(msg);
     },
 
+    _getNumCards: function() {
+      let numCards = 0;
+      for (let i = 0, N = this.ril.numRadioInterfaces; i < N; ++i) {
+        if (this._isCardPresentAtClient(i)) {
+          numCards++;
+        }
+      }
+      return numCards;
+    },
+
+    _isCardPresentAtClient: function(clientId) {
+      let cardState = this.ril.getRadioInterface(clientId).rilContext.cardState;
+      return cardState !== RIL.GECKO_CARDSTATE_UNDETECTED &&
+        cardState !== RIL.GECKO_CARDSTATE_UNKNOWN;
+    },
+
+    _isRadioAbleToEnableAtClient: function(clientId, numCards) {
+      if (!RILQUIRKS_RADIO_OFF_WO_CARD) {
+        return true;
+      }
+
+      // We could only turn on the radio for clientId if
+      // 1. a SIM card is presented or
+      // 2. it is the default clientId and there is no any SIM card at any client.
+
+      if (this._isCardPresentAtClient(clientId)) {
+        return true;
+      }
+
+      numCards = numCards == null ? this._getNumCards() : numCards;
+      if (clientId === HW_DEFAULT_CLIENT_ID && numCards === 0) {
+        return true;
+      }
+
+      return false;
+    },
+
     _handleMessage: function(msg) {
       if (DEBUG) debug("setRadioEnabled: handleMessage: " + JSON.stringify(msg));
-      let radioInterface = this.ril.getRadioInterface(msg.json.clientId || 0);
+      let clientId = msg.json.clientId || 0;
+      let radioInterface = this.ril.getRadioInterface(clientId);
 
       if (!radioInterface.isValidStateForSetRadioEnabled()) {
         radioInterface.setRadioEnabledResponse(msg.target, msg.json.data,
@@ -559,7 +606,13 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       }
 
       if (msg.json.data.enabled) {
-        radioInterface.receiveMessage(msg);
+        if (this._isRadioAbleToEnableAtClient(clientId)) {
+          radioInterface.receiveMessage(msg);
+        } else {
+          // Not really do it but respond success.
+          radioInterface.setRadioEnabledResponse(msg.target, msg.json.data);
+        }
+
         this._processNextMessage();
       } else {
         this.request = (function() {
@@ -620,6 +673,27 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
         this.request = null;
       }
       this._processNextMessage();
+    },
+
+    /**
+     * nsIObserver interface methods.
+     */
+    observe: function observe(subject, topic, data) {
+      switch (topic) {
+        case kSysMsgListenerReadyObserverTopic:
+          Services.obs.removeObserver(this, kSysMsgListenerReadyObserverTopic);
+
+          let numCards = this._getNumCards();
+          for (let i = 0, N = this.ril.numRadioInterfaces; i < N; ++i) {
+            if (this._isRadioAbleToEnableAtClient(i, numCards)) {
+              let radioInterface = this.ril.getRadioInterface(i);
+              radioInterface.setRadioEnabledInternal({enabled: true}, null);
+            }
+          }
+          break;
+        default:
+          break;
+      }
     }
   };
 });
@@ -1181,7 +1255,6 @@ function RadioInterface(options) {
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
-  Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
   Services.obs.addObserver(this, kSysClockChangeObserverTopic, false);
   Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
@@ -2659,9 +2732,6 @@ RadioInterface.prototype = {
 
   observe: function(subject, topic, data) {
     switch (topic) {
-      case kSysMsgListenerReadyObserverTopic:
-        this.setRadioEnabledInternal({enabled: true}, null);
-        break;
       case kMozSettingsChangedObserverTopic:
         let setting = JSON.parse(data);
         this.handleSettingsChange(setting.key, setting.value, setting.message);

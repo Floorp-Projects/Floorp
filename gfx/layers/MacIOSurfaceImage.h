@@ -28,7 +28,7 @@ public:
 
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() {
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() {
     mSurface->Lock();
     size_t bytesPerRow = mSurface->GetBytesPerRow();
     size_t ioWidth = mSurface->GetDevicePixelWidth();

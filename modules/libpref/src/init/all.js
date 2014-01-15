@@ -272,6 +272,12 @@ pref("media.mediasource.enabled", false);
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
 #endif
+#ifdef MOZ_WEBM_ENCODER
+pref("media.encoder.webm.enabled", true);
+#endif
+#ifdef MOZ_OMX_ENCODER
+pref("media.encoder.omx.enabled", true);
+#endif
 
 // Whether to enable Web Audio support
 pref("media.webaudio.enabled", true);
@@ -4240,6 +4246,9 @@ pref("dom.w3c_touch_events.enabled", 2);
 
 // W3C draft pointer events
 pref("dom.w3c_pointer_events.enabled", false);
+
+// W3C touch-action css property (related to touch and pointer events)
+pref("layout.css.touch_action.enabled", false);
 
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);

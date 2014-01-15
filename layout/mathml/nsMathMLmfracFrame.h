@@ -85,6 +85,9 @@ public:
                     nscoord          onePixel,
                     nscoord          aDefaultRuleThickness);
 
+  uint8_t
+  ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE;
+
 protected:
   nsMathMLmfracFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmfracFrame();

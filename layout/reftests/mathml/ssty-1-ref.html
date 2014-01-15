@@ -1,0 +1,337 @@
+<!doctype html>
+<head>
+
+  <!-- This font only has glyphs defined for 'A', 'B', 'C' and 'D', and is
+       designed purely for testing ssty functionality 
+       The glyphs for 'A' and 'D' are identical, the difference between them is
+       that 'A' supports the ssty font feature. 
+       'A' with ssty = 1 maps to 'B'
+       'A' with ssty = 2 maps to 'C'-->
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "sstyfont";
+      src: url("ssty.woff");
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Test whether the ssty font feature setting is used appropriately for
+       supscripts et al. 
+       Assumes NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER is 0.71-->
+
+  <math>
+    <mstyle style="font-family: 'sstyfont';">
+      <msup>
+        <mo>D</mo>
+        <msup>
+          <mo>B</mo>
+          <msup>
+            <mo>C</mo>
+            <mo>C</mo> <!-- ssty value capped at 2 -->
+          </msup>
+        </msup>
+      </msup>
+
+      <msub>
+        <mo>D</mo>
+        <msub>
+          <mo>B</mo>
+          <msub>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msub>
+        </msub>
+      </msub>
+
+      <msubsup>
+        <mo>D</mo>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+      </msubsup>
+
+      <mmultiscripts>
+        <mo>D</mo>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+      </mmultiscripts>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <!-- Automatically set ssty ignores user set scriptlevel -->
+  <math>
+    <mstyle style="font-family: 'sstyfont';" scriptlevel="-3">
+      <msup>
+        <mo>D</mo>
+        <msup>
+          <mo>B</mo>
+          <msup>
+            <mo>C</mo>
+            <mo>C</mo> <!-- ssty value capped at 2 -->
+          </msup>
+        </msup>
+      </msup>
+
+      <msub>
+        <mo>D</mo>
+        <msub>
+          <mo>B</mo>
+          <msub>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msub>
+        </msub>
+      </msub>
+
+      <msubsup>
+        <mo>D</mo>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+      </msubsup>
+
+      <mmultiscripts>
+        <mo>D</mo>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+      </mmultiscripts>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <!-- Automatically set ssty ignores user set scriptlevel -->
+  <math>
+    <mstyle style="font-family: 'sstyfont';" scriptlevel="1">
+      <msup>
+        <mo>D</mo>
+        <msup>
+          <mo>B</mo>
+          <msup>
+            <mo>C</mo>
+            <mo>C</mo> <!-- ssty value capped at 2 -->
+          </msup>
+        </msup>
+      </msup>
+
+      <msub>
+        <mo>D</mo>
+        <msub>
+          <mo>B</mo>
+          <msub>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msub>
+        </msub>
+      </msub>
+
+      <msubsup>
+        <mo>D</mo>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+        <msubsup>
+          <mo>B</mo>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+          <msubsup>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </msubsup>
+        </msubsup>
+      </msubsup>
+
+      <mmultiscripts>
+        <mo>D</mo>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+        <mmultiscripts>
+          <mo>B</mo>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+          <mmultiscripts>
+            <mo>C</mo>
+            <mo>C</mo>
+            <mo>C</mo>
+          </mmultiscripts>
+        </mmultiscripts>
+      </mmultiscripts>
+    </mstyle>
+  </math>
+
+  <p>
+
+  <!-- User set ssty font feature setting overrides automatically set ssty, but
+       only for affected elements -->
+  <math>
+    <mstyle style="font-family: 'sstyfont';">
+      <msup>
+        <mo>D</mo>
+        <msup>
+          <mo>D</mo>
+          <mo>C</mo>
+        </msup>
+      </msup>
+
+      <msub>
+        <mo>D</mo>
+        <msub>
+          <mo>D</mo>
+          <mo>C</mo>
+        </msub>
+      </msub>
+
+      <msubsup>
+        <mo>D</mo>
+        <msubsup>
+          <mo>D</mo>
+          <mo>C</mo>
+          <mo>C</mo>
+        </msubsup>
+        <msubsup>
+          <mo>D</mo>
+          <mo>C</mo>
+          <mo>C</mo>
+        </msubsup>
+      </msubsup>
+
+      <mmultiscripts>
+        <mo>D</mo>
+        <mmultiscripts>
+          <mo>D</mo>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mmultiscripts>
+        <mmultiscripts>
+          <mo>D</mo>
+          <mo>C</mo>
+          <mo>C</mo>
+        </mmultiscripts>
+      </mmultiscripts>
+    </mstyle>
+  </math>

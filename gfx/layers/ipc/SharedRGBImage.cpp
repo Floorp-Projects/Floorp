@@ -131,7 +131,7 @@ DeprecatedSharedRGBImage::AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageF
 }
 
 already_AddRefed<gfxASurface>
-DeprecatedSharedRGBImage::GetAsSurface()
+DeprecatedSharedRGBImage::DeprecatedGetAsSurface()
 {
   return nullptr;
 }
@@ -235,7 +235,7 @@ SharedRGBImage::GetTextureClient()
 }
 
 already_AddRefed<gfxASurface>
-SharedRGBImage::GetAsSurface()
+SharedRGBImage::DeprecatedGetAsSurface()
 {
   return nullptr;
 }
