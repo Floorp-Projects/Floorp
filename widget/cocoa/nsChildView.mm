@@ -1580,6 +1580,18 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void
+nsChildView::Update()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!ShouldUseOffMainThreadCompositing() && mView) {
+    [mView displayIfNeeded];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 bool
 nsChildView::ComputeShouldAccelerate(bool aDefault)
 {
