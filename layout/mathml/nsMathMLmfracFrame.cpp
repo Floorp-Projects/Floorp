@@ -227,15 +227,12 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   // see if the linethickness attribute is there 
   nsAutoString value;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::linethickness_,
-               value);
-
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::linethickness_, value);
   mLineThickness = CalcLineThickness(presContext, mStyleContext, value,
                                      onePixel, defaultRuleThickness);
 
   // bevelled attribute
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::bevelled_,
-               value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_, value);
   mIsBevelled = value.EqualsLiteral("true");
 
   if (!mIsBevelled) {
@@ -334,16 +331,14 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     width += leftSpace + rightSpace;
 
     // see if the numalign attribute is there 
-    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::numalign_,
-                 value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::numalign_, value);
     if (value.EqualsLiteral("left"))
       dxNum = leftSpace;
     else if (value.EqualsLiteral("right"))
       dxNum = width - rightSpace - sizeNum.Width();
 
     // see if the denomalign attribute is there 
-    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::denomalign_,
-                 value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::denomalign_, value);
     if (value.EqualsLiteral("left"))
       dxDen = leftSpace;
     else if (value.EqualsLiteral("right"))
