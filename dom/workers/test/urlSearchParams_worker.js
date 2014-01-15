@@ -42,6 +42,8 @@ onmessage = function() {
     is(u.getAll('foo').length, 1, 'URLSearchParams.getAll(foo)');
     is(u.size, 1, 'URLSearchParams.size()');
 
+    is(u + "", "foo=bar2", "stringify");
+
     u.delete('foo');
     is(u.size, 0, 'URLSearchParams.size()');
 
