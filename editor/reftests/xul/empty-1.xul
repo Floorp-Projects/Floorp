@@ -8,6 +8,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <textbox placeholder="test"/>
+  <textbox placeholder=" test"/>
       
 </window>
