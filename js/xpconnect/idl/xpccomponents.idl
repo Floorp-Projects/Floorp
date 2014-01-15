@@ -546,7 +546,7 @@ interface nsIXPCComponents_Utils : nsISupports
 /**
 * interface of JavaScript's 'Components' object
 */
-[scriptable, uuid(4229848f-f49e-40e5-90cc-66968aaf4e1b)]
+[scriptable, uuid(e270f35d-dc63-42ed-9c8b-12ed14917c2c)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
@@ -562,11 +562,13 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIXPCComponents_Exception       Exception;
     readonly attribute nsIXPCComponents_Constructor     Constructor;
 
+    [implicit_jscontext]
+    readonly attribute jsval                            lastResult;
+    [implicit_jscontext]
+    attribute jsval                                     returnCode;
+
     boolean isSuccessCode(in nsresult result);
 
     /* @deprecated Use Components.utils.reportError instead. */
     [deprecated, implicit_jscontext] void reportError(in jsval error);
-
-    /* 'lastResult' is accessible via JavaScript only */
-    /* 'returnCode' is accessible via JavaScript only */
 };
