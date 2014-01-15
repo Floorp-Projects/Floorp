@@ -292,17 +292,21 @@ public class HomePager extends ViewPager {
 
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
-        // Disable loading until the final current item is defined
-        // after loading the panel configs. This is to stop any temporary
-        // active item from loading.
-        boolean originalCanLoadHint = adapter.getCanLoadHint();
-        adapter.setCanLoadHint(false);
+        // Destroy any existing panels currently loaded
+        // in the pager.
+        setAdapter(null);
 
         // Update the adapter with the new panel configs
         adapter.update(panelConfigs);
 
+        // Hide the tab strip if the new configuration contains
+        // no panels for some reason.
         final int count = (panelConfigs != null ? panelConfigs.size() : 0);
         mTabStrip.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
+
+        // Re-install the adapter with the final state
+        // in the pager.
+        setAdapter(adapter);
 
         // Use the default panel as defined in the HomePager's configuration
         // if the initial panel wasn't explicitly set by the show() caller.
@@ -319,10 +323,6 @@ public class HomePager extends ViewPager {
                 }
             }
         }
-
-        // Restore canLoadHint now that we have the final
-        // state in HomePager.
-        adapter.setCanLoadHint(originalCanLoadHint);
     }
 
     private class ConfigLoaderCallbacks implements LoaderCallbacks<List<PanelConfig>> {
@@ -338,7 +338,6 @@ public class HomePager extends ViewPager {
 
         @Override
         public void onLoaderReset(Loader<List<PanelConfig>> loader) {
-            updateUiFromPanelConfigs(null);
         }
     }
 }
