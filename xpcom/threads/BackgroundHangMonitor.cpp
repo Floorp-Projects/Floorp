@@ -147,7 +147,7 @@ public:
   // Report a hang; aManager->mLock IS locked
   void ReportHang(PRIntervalTime aHangTime);
   // Report a permanent hang; aManager->mLock IS locked
-  void ReportPermaHang() const;
+  void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
   void NotifyActivity();
   // Called by BackgroundHangMonitor::NotifyWait
@@ -265,6 +265,7 @@ BackgroundHangManager::RunMonitorThread()
         // A permahang started
         // Skip subsequent iterations and tolerate a race on mWaiting here
         currentThread->mWaiting = true;
+        currentThread->mHanging = false;
         currentThread->ReportPermaHang();
         continue;
       }
@@ -376,12 +377,13 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
 }
 
 void
-BackgroundHangThread::ReportPermaHang() const
+BackgroundHangThread::ReportPermaHang()
 {
   // Permanently hanged; called on the monitor thread
   // mManager->mLock IS locked
 
-  // TODO: Add telemetry reporting for perma-hangs
+  // TODO: Add more detailed analysis for perma-hangs
+  ReportHang(mMaxTimeout);
 }
 
 MOZ_ALWAYS_INLINE void

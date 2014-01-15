@@ -522,6 +522,7 @@ public:
   static const int32_t kListStyleKTable[];
   static const int32_t kMaskTypeKTable[];
   static const int32_t kMathVariantKTable[];
+  static const int32_t kMathDisplayKTable[];
   static const int32_t kContextOpacityKTable[];
   static const int32_t kContextPatternKTable[];
   static const int32_t kOrientKTable[];

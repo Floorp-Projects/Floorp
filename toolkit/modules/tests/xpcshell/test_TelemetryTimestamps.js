@@ -13,10 +13,8 @@ Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
 function getSimpleMeasurementsFromTelemetryPing() {
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
-  let ping = TelemetryPing.getPayload();
-
-  return ping.simpleMeasurements;
+  return Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).
+    TelemetryPing.getPayload().simpleMeasurements;
 }
 
 function run_test() {

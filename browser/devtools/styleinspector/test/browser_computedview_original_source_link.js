@@ -11,6 +11,9 @@ let toolbox;
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
 
+const SCSS_LOC = "sourcemaps.scss:4";
+const CSS_LOC = "sourcemaps.css:1";
+
 function test()
 {
   waitForExplicitFinish();
@@ -46,19 +49,20 @@ function highlightNode(aInspector, aComputedView)
 }
 
 function testComputedViewLink() {
-  let link = getLinkByIndex(0);
-  waitForSuccess({
-    name: "link text changed to display original source location",
-    validatorFn: function()
-    {
-      return link.textContent == "sourcemaps.scss:4";
-    },
-    successFn: linkChanged,
-    failureFn: linkChanged,
-  });
+  verifyLinkText(SCSS_LOC, testTogglePref);
 }
 
-function linkChanged() {
+function testTogglePref() {
+  Services.prefs.setBoolPref(PREF, false);
+
+  verifyLinkText(CSS_LOC, () => {
+    Services.prefs.setBoolPref(PREF, true);
+
+    testClickingLink();
+  })
+}
+
+function testClickingLink() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
 
@@ -108,6 +112,20 @@ function getLinkByIndex(aIndex)
   let contentDoc = computedView.styleDocument;
   let links = contentDoc.querySelectorAll(".rule-link .link");
   return links[aIndex];
+}
+
+function verifyLinkText(text, callback) {
+  let link = getLinkByIndex(0);
+
+  waitForSuccess({
+    name: "link text changed to display correct location: " + text,
+    validatorFn: function()
+    {
+      return link.textContent == text;
+    },
+    successFn: callback,
+    failureFn: callback,
+  });
 }
 
 function finishUp()

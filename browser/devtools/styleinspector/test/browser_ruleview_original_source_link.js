@@ -11,6 +11,9 @@ let toolbox;
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
 
+const SCSS_LOC = "sourcemaps.scss:4";
+const CSS_LOC = "sourcemaps.css:1";
+
 function test()
 {
   waitForExplicitFinish();
@@ -52,20 +55,20 @@ function highlightNode()
 }
 
 function testRuleViewLink() {
-  let label = getLinkByIndex(1).querySelector("label");
-
-  waitForSuccess({
-    name: "link text changed to display original source location",
-    validatorFn: function()
-    {
-      return label.getAttribute("value") == "sourcemaps.scss:4";
-    },
-    successFn: linkChanged,
-    failureFn: linkChanged,
-  });
+  verifyLinkText(SCSS_LOC, testTogglePref);
 }
 
-function linkChanged() {
+function testTogglePref() {
+  Services.prefs.setBoolPref(PREF, false);
+
+  verifyLinkText(CSS_LOC, () => {
+    Services.prefs.setBoolPref(PREF, true);
+
+    testClickingLink();
+  })
+}
+
+function testClickingLink() {
   toolbox.once("styleeditor-ready", function(id, aToolbox) {
     let panel = toolbox.getCurrentPanel();
     panel.UI.on("editor-selected", (event, editor) => {
@@ -93,6 +96,22 @@ function editorSelected(editor) {
   is(line, 3, "cursor is at correct line number in original source");
 
   finishUp();
+}
+
+/* Helpers */
+
+function verifyLinkText(text, callback) {
+  let label = getLinkByIndex(1).querySelector("label");
+
+  waitForSuccess({
+    name: "link text changed to display correct location: " + text,
+    validatorFn: function()
+    {
+      return label.getAttribute("value") == text;
+    },
+    successFn: callback,
+    failureFn: callback,
+  });
 }
 
 function getLinkByIndex(aIndex)
