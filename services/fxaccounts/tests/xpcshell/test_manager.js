@@ -121,6 +121,7 @@ FxAccountsManager._fxAccounts = {
   signOut: function() {
     let deferred = Promise.defer();
     this._signedInUser = null;
+    Services.obs.notifyObservers(null, ONLOGOUT_NOTIFICATION, null);
     deferred.resolve();
     return deferred.promise;
   }
@@ -580,4 +581,14 @@ add_test(function(test_queryAccount_no_accountId) {
       run_next_test();
     }
   );
+});
+
+add_test(function() {
+  do_print("= Test 23 | fxaccounts:onlogout notification =");
+  do_check_true(FxAccountsManager._activeSession != null);
+  Services.obs.notifyObservers(null, ONLOGOUT_NOTIFICATION, null);
+  do_execute_soon(function() {
+    do_check_null(FxAccountsManager._activeSession);
+    run_next_test();
+  });
 });
