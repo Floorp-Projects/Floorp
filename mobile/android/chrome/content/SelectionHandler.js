@@ -410,7 +410,7 @@ var SelectionHandler = {
         SelectionHandler.selectAll(aElement);
       },
       selector: ClipboardHelper.selectAllContext,
-      order: 1,
+      order: 5,
     },
 
     CUT: {
@@ -427,7 +427,7 @@ var SelectionHandler = {
         // copySelection closes the selection. Show a caret where we just cut the text.
         SelectionHandler.attachCaret(aElement);
       },
-      order: 1,
+      order: 4,
       selector: ClipboardHelper.cutContext,
     },
 
@@ -438,7 +438,7 @@ var SelectionHandler = {
       action: function() {
         SelectionHandler.copySelection();
       },
-      order: 1,
+      order: 3,
       selector: ClipboardHelper.getCopyContext(false)
     },
 
@@ -451,7 +451,7 @@ var SelectionHandler = {
         SelectionHandler._positionHandles();
         SelectionHandler._updateMenu();
       },
-      order: 1,
+      order: 2,
       selector: ClipboardHelper.pasteContext,
     },
 
@@ -475,6 +475,7 @@ var SelectionHandler = {
         SelectionHandler.searchSelection();
         SelectionHandler._closeSelection();
       },
+      order: 1,
       selector: ClipboardHelper.searchWithContext,
     },
 
