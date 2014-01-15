@@ -151,8 +151,8 @@ JSID_IS_EMPTY(const jsid id)
 extern JS_PUBLIC_DATA(const jsid) JSID_VOID;
 extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
 
-extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_VOIDHANDLE;
-extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_EMPTYHANDLE;
+extern JS_PUBLIC_DATA(const JS::HandleId) JSID_VOIDHANDLE;
+extern JS_PUBLIC_DATA(const JS::HandleId) JSID_EMPTYHANDLE;
 
 namespace js {
 

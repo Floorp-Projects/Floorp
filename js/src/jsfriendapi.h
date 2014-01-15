@@ -549,7 +549,7 @@ JS_FRIEND_API(void)
 SetFunctionNativeReserved(JSObject *fun, size_t which, const JS::Value &val);
 
 JS_FRIEND_API(bool)
-GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto);
+GetObjectProto(JSContext *cx, JS::HandleObject obj, JS::MutableHandleObject proto);
 
 JS_FRIEND_API(bool)
 GetOriginalEval(JSContext *cx, JS::HandleObject scope,
@@ -1360,7 +1360,7 @@ class JSJitGetterCallArgs : protected JS::MutableHandleValue
       : JS::MutableHandleValue(args.rval())
     {}
 
-    explicit JSJitGetterCallArgs(JS::Rooted<JS::Value>* rooted)
+    explicit JSJitGetterCallArgs(JS::RootedValue* rooted)
       : JS::MutableHandleValue(rooted)
     {}
 

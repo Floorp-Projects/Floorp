@@ -43,7 +43,7 @@ typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReade
 //
 // Return true on success, false on error/exception.
 typedef bool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w,
-                                         JS::Handle<JSObject*> obj, void *closure);
+                                         JS::HandleObject obj, void *closure);
 
 // This is called when JS_WriteStructuredClone is given an invalid transferable.
 // To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
