@@ -18,7 +18,7 @@ public:
 
   // Initializes the module, loads required dynamic libraries, etc.
   // Main thread only.
-  nsresult Init();
+  nsresult Startup();
 
   // Called when the decoders have shutdown. Main thread only.
   // Does this really need to be main thread only????
@@ -26,21 +26,22 @@ public:
 
   // Decode thread.
   virtual MediaDataDecoder*
-  CreateH264Decoder(mozilla::layers::LayersBackend aLayersBackend,
+  CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                    mozilla::layers::LayersBackend aLayersBackend,
                     mozilla::layers::ImageContainer* aImageContainer) MOZ_OVERRIDE;
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(uint32_t aChannelCount,
-                                             uint32_t aSampleRate,
-                                             uint16_t aBitsPerSample,
-                                             const uint8_t* aUserData,
-                                             uint32_t aUserDataLength) MOZ_OVERRIDE;
+  virtual MediaDataDecoder* CreateAACDecoder(
+    const mp4_demuxer::AudioDecoderConfig& aConfig) MOZ_OVERRIDE;
 
   // Platform decoders can override these. Base implementation does nothing.
   virtual void OnDecodeThreadStart() MOZ_OVERRIDE;
   virtual void OnDecodeThreadFinish() MOZ_OVERRIDE;
+
+  static void Init();
 private:
-  const bool mDXVAEnabled;
+  static bool sIsWMFEnabled;
+  static bool sDXVAEnabled;
 };
 
 } // namespace mozilla
