@@ -531,7 +531,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok, Value val,
+    bool receiveCompletionValue(mozilla::Maybe<AutoCompartment> &ac, bool ok,
+                                HandleValue val,
                                 MutableHandleValue vp);
 
     /*
