@@ -341,9 +341,19 @@ toolbarbutton.bookmark-item > menupopup {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar-menuPanel.png") !important;
+}
+
 @media (min-resolution: 2dppx) {
   #bookmarks-toolbar-placeholder {
     list-style-image: url("chrome://browser/skin/places/bookmarksToolbar@2x.png") !important;
+  }
+
+  toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+  #personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
+    list-style-image: url("chrome://browser/skin/places/bookmarksToolbar-menuPanel@2x.png") !important;
   }
 
   #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
