@@ -237,11 +237,19 @@ public:
     AllocPContentPermissionRequestParent(const nsCString& aType, const nsCString& aAccess, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor);
 
-    virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdateParent(
-            const URIParams& aManifestURI,
-            const URIParams& aDocumentURI,
-            const bool& stickDocument) MOZ_OVERRIDE;
-    virtual bool DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* actor);
+    virtual POfflineCacheUpdateParent*
+    AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
+                                   const URIParams& aDocumentURI,
+                                   const bool& aStickDocument) MOZ_OVERRIDE;
+    virtual bool
+    RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
+                                       const URIParams& aManifestURI,
+                                       const URIParams& aDocumentURI,
+                                       const bool& stickDocument) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor)
+                                     MOZ_OVERRIDE;
+
     virtual bool RecvSetOfflinePermission(const IPC::Principal& principal);
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
