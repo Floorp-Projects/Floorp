@@ -2387,7 +2387,7 @@ TabChild::DispatchMouseEvent(const nsString&       aType,
   
   bool defaultPrevented = false;
   utils->SendMouseEvent(aType, aPoint.x, aPoint.y, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame, 0, aInputSourceArg, &defaultPrevented);
+                        aIgnoreRootScrollFrame, 0, aInputSourceArg, false, 4, &defaultPrevented);
   return defaultPrevented;
 }
 

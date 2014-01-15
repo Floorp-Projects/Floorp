@@ -46,7 +46,8 @@ protected:
                                   float aPressure,
                                   unsigned short aInputSourceArg,
                                   bool aToWindow,
-                                  bool *aPreventDefault);
+                                  bool *aPreventDefault,
+                                  bool aIsSynthesized);
 
   NS_IMETHOD SendTouchEventCommon(const nsAString& aType,
                                   uint32_t* aIdentifiers,
