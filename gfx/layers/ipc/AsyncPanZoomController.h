@@ -499,13 +499,13 @@ protected:
   const FrameMetrics& GetFrameMetrics();
 
   /**
-   * Timeout function for touch listeners. This should be called on a timer
+   * Timeout function for content response. This should be called on a timer
    * after we get our first touch event in a batch, under the condition that we
-   * have touch listeners. If a notification comes indicating whether or not
-   * content preventDefaulted a series of touch events before the timeout, the
-   * timeout should be cancelled.
+   * waiting for response from content. If a notification comes indicating whether or not
+   * content preventDefaulted a series of touch events and touch behavior values are
+   * set before the timeout, the timeout should be cancelled.
    */
-  void TimeoutTouchListeners();
+  void TimeoutContentResponse();
 
   /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
@@ -517,24 +517,25 @@ protected:
 
 private:
   enum PanZoomState {
-    NOTHING,        /* no touch-start events received */
-    FLING,          /* all touches removed, but we're still scrolling page */
-    TOUCHING,       /* one touch-start event received */
+    NOTHING,                  /* no touch-start events received */
+    FLING,                    /* all touches removed, but we're still scrolling page */
+    TOUCHING,                 /* one touch-start event received */
 
-    PANNING,           /* panning the frame */
-    PANNING_LOCKED_X,  /* touch-start followed by move (i.e. panning with axis lock) X axis */
-    PANNING_LOCKED_Y,  /* as above for Y axis */
+    PANNING,                  /* panning the frame */
+    PANNING_LOCKED_X,         /* touch-start followed by move (i.e. panning with axis lock) X axis */
+    PANNING_LOCKED_Y,         /* as above for Y axis */
 
-    CROSS_SLIDING_X,   /* Panning disabled while user does a horizontal gesture
-                          on a vertically-scrollable view. This used for the
-                          Windows Metro "cross-slide" gesture. */
-    CROSS_SLIDING_Y,   /* as above for Y axis */
+    CROSS_SLIDING_X,          /* Panning disabled while user does a horizontal gesture
+                                 on a vertically-scrollable view. This used for the
+                                 Windows Metro "cross-slide" gesture. */
+    CROSS_SLIDING_Y,          /* as above for Y axis */
 
-    PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
-    ANIMATING_ZOOM, /* animated zoom to a new rect */
-    WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
-                    put a finger down, but we don't yet know if a touch listener has
-                    prevented the default actions yet. we still need to abort animations. */
+    PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
+    ANIMATING_ZOOM,           /* animated zoom to a new rect */
+    WAITING_CONTENT_RESPONSE, /* a state halfway between NOTHING and TOUCHING - the user has
+                                 put a finger down, but we don't yet know if a touch listener has
+                                 prevented the default actions yet and the allowed touch behavior
+                                 was not set yet. we still need to abort animations. */
   };
 
   /*
@@ -543,6 +544,15 @@ private:
    * it returns default value.
    */
   TouchBehaviorFlags GetTouchBehavior(uint32_t touchIndex);
+
+  /**
+   * To move from the WAITING_CONTENT_RESPONSE state to TOUCHING one we need two
+   * conditions set: get content listeners response (whether they called preventDefault)
+   * and get allowed touch behaviors.
+   * This method checks both conditions and changes (or not changes) state
+   * appropriately.
+   */
+  void CheckContentResponse();
 
   /**
    * Helper to set the current state. Holds the monitor before actually setting
@@ -621,7 +631,7 @@ private:
 
   nsTArray<MultiTouchInput> mTouchQueue;
 
-  CancelableTask* mTouchListenerTimeoutTask;
+  CancelableTask* mContentResponseTimeoutTask;
 
   AxisX mX;
   AxisY mY;
@@ -673,6 +683,16 @@ private:
   // and each touch point should have its own value of allowed touch behavior- we're
   // keeping an array of allowed touch behavior values, not the single value.
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
+
+  // Specifies whether mAllowedTouchBehaviors is set for current touch events block.
+  bool mAllowedTouchBehaviorSet;
+
+  // Flag used to specify that content prevented the default behavior of the current
+  // touch events block.
+  bool mPreventDefault;
+
+  // Specifies whether mPreventDefault property is set for current touch events block.
+  bool mPreventDefaultSet;
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
