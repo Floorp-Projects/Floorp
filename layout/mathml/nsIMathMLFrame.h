@@ -7,6 +7,7 @@
 #define nsIMathMLFrame_h___
 
 #include "nsQueryFrame.h"
+#include "nsMathMLOperators.h"
 
 struct nsPresentationData;
 struct nsEmbellishData;
@@ -192,6 +193,13 @@ public:
                                     int32_t         aLastIndex,
                                     uint32_t        aFlagsValues,
                                     uint32_t        aWhichFlags) = 0;
+
+  // If aFrame is a child frame, returns the script increment which this frame
+  // imposes on the specified frame, ignoring any artificial adjustments to
+  // scriptlevel.
+  // Returns 0 if the specified frame isn't a child frame.
+  virtual uint8_t
+  ScriptIncrement(nsIFrame* aFrame) = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.
