@@ -8,6 +8,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <html:input class="ac" value="test"/>
+  <html:input class="ac" value=" test"/>
       
 </window>

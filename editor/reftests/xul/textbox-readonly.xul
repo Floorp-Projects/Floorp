@@ -7,6 +7,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <textbox value="test" readonly="true"/>
+  <textbox value=" test" readonly="true"/>
       
 </window>
