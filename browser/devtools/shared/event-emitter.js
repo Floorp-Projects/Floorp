@@ -16,6 +16,8 @@ if (typeof(require) === "function") {
   var Cu = this["Components"].utils;
 }
 
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+
 /**
  * Decorate an object with event emitter functionality.
  *
@@ -55,15 +57,29 @@ EventEmitter.prototype = {
    * @param string aEvent
    *        The event name to which we're connecting.
    * @param function aListener
-   *        Called when the event is fired.  Will be called at most one time.
+   *        (Optional) Called when the event is fired. Will be called at most
+   *        one time.
+   * @return promise
+   *        A promise which is resolved when the event next happens. The
+   *        resolution value of the promise is the first event argument. If
+   *        you need access to second or subsequent event arguments (it's rare
+   *        that this is needed) then use aListener
    */
   once: function EventEmitter_once(aEvent, aListener) {
-    let handler = function() {
+    let deferred = promise.defer();
+
+    let handler = function(aEvent, aFirstArg) {
       this.off(aEvent, handler);
-      aListener.apply(null, arguments);
+      if (aListener) {
+        aListener.apply(null, arguments);
+      }
+      deferred.resolve(aFirstArg);
     }.bind(this);
+
     handler._originalListener = aListener;
     this.on(aEvent, handler);
+
+    return deferred.promise;
   },
 
   /**
