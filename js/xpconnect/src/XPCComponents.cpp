@@ -3466,115 +3466,6 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *
 /***************************************************************************/
 /***************************************************************************/
 
-// XXXjband We ought to cache the wrapper in the object's slots rather than
-// re-wrapping on demand
-
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-NS_IMPL_ADDREF(nsXPCComponents)
-NS_IMPL_RELEASE(nsXPCComponents)
-
-/* void getInterfaces (out uint32_t count, [array, size_is (count), retval]
-                       out nsIIDPtr array); */
-NS_IMETHODIMP
-nsXPCComponents::GetInterfaces(uint32_t *aCount, nsIID * **aArray)
-{
-    const uint32_t count = 3;
-    *aCount = count;
-    nsIID **array;
-    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
-    if (!array)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    uint32_t index = 0;
-    nsIID* clone;
-#define PUSH_IID(id)                                                          \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                 sizeof(nsIID)));             \
-    if (!clone)                                                               \
-        goto oom;                                                             \
-    array[index++] = clone;
-
-    PUSH_IID(nsIXPCComponents)
-    PUSH_IID(nsIXPCScriptable)
-    PUSH_IID(nsISecurityCheckedComponent)
-#undef PUSH_IID
-
-    return NS_OK;
-oom:
-    while (index)
-        nsMemory::Free(array[--index]);
-    nsMemory::Free(array);
-    *aArray = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* nsISupports getHelperForLanguage (in uint32_t language); */
-NS_IMETHODIMP
-nsXPCComponents::GetHelperForLanguage(uint32_t language,
-                                      nsISupports **retval)
-{
-    nsCOMPtr<nsISupports> supports =
-        do_QueryInterface(static_cast<nsIXPCComponents *>(this));
-    supports.forget(retval);
-    return NS_OK;
-}
-
-/* readonly attribute string contractID; */
-NS_IMETHODIMP
-nsXPCComponents::GetContractID(char * *aContractID)
-{
-    *aContractID = nullptr;
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-/* readonly attribute string classDescription; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassDescription(char * *aClassDescription)
-{
-    static const char classDescription[] = "XPCComponents";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassID(nsCID * *aClassID)
-{
-    *aClassID = nullptr;
-    return NS_OK;
-}
-
-/* readonly attribute uint32_t implementationLanguage; */
-NS_IMETHODIMP
-nsXPCComponents::GetImplementationLanguage(uint32_t *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
-}
-
-/* readonly attribute uint32_t flags; */
-NS_IMETHODIMP
-nsXPCComponents::GetFlags(uint32_t *aFlags)
-{
-    // Mark ourselves as a DOM object so that instances may be created in
-    // unprivileged scopes.
-    *aFlags = nsIClassInfo::DOM_OBJECT;
-    return NS_OK;
-}
-
-/* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
 nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
     :   mScope(aScope),
         mInterfaces(nullptr),
@@ -3698,14 +3589,6 @@ nsXPCComponents::SetReturnCode(JSContext *aCx, const Value &aCode)
     return NS_OK;
 }
 
-/**********************************************/
-
-// The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           nsXPCComponents
-#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents"
-#define                             XPC_MAP_WANT_PRECREATE
-#include "xpc_map_end.h" /* This will #undef the above */
-
 // static
 /* void reportError (); */
 NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
@@ -3720,14 +3603,63 @@ NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
     return utils->ReportError(error, cx);
 }
 
-NS_IMETHODIMP
-nsXPCComponents::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
+/**********************************************/
+
+class ComponentsSH : public nsIXPCScriptable
 {
+public:
+    ComponentsSH(unsigned dummy)
+    {
+    }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCSCRIPTABLE
+    // The NS_IMETHODIMP isn't really accurate here, but NS_CALLBACK requires
+    // the referent to be declared __stdcall on Windows, and this is the only
+    // macro that does that.
+    static NS_IMETHODIMP Get(uint32_t aLangId, nsISupports **helper)
+    {
+        *helper = &singleton;
+        return NS_OK;
+    }
+
+private:
+    static ComponentsSH singleton;
+};
+
+ComponentsSH ComponentsSH::singleton(0);
+
+// Singleton refcounting.
+NS_IMETHODIMP_(nsrefcnt) ComponentsSH::AddRef(void) { return 1; }
+NS_IMETHODIMP_(nsrefcnt) ComponentsSH::Release(void) { return 1; }
+
+NS_INTERFACE_MAP_BEGIN(ComponentsSH)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+#define NSXPCCOMPONENTS_CID \
+{ 0x3649f405, 0xf0ec, 0x4c28, \
+    { 0xae, 0xb0, 0xaf, 0x9a, 0x51, 0xe4, 0x4c, 0x81 } }
+
+NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTS_CID)
+NS_IMPL_ISUPPORTS1_CI(nsXPCComponents, nsIXPCComponents)
+
+// The nsIXPCScriptable map declaration that will generate stubs for us
+#define XPC_MAP_CLASSNAME           ComponentsSH
+#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents"
+#define                             XPC_MAP_WANT_PRECREATE
+#include "xpc_map_end.h" /* This will #undef the above */
+
+NS_IMETHODIMP
+ComponentsSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
+{
+  nsXPCComponents *self = static_cast<nsXPCComponents*>(nativeObj);
   // this should never happen
-  if (!mScope) {
+  if (!self->GetScope()) {
       NS_WARNING("mScope must not be null when nsXPCComponents::PreCreate is called");
       return NS_ERROR_FAILURE;
   }
-  *parentObj = mScope->GetGlobalJSObject();
+  *parentObj = self->GetScope()->GetGlobalJSObject();
   return NS_OK;
 }
