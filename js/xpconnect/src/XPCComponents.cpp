@@ -2356,9 +2356,9 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
     XPCWrappedNativeScope* scope = GetObjectScope(obj);
-    nsXPCComponents* comp;
+    nsCOMPtr<nsIXPCComponents> comp;
 
-    if (!xpc || !scope || !(comp = scope->GetComponents()))
+    if (!xpc || !scope || !(comp = do_QueryInterface(scope->GetComponents())))
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     // Do the security check if necessary
