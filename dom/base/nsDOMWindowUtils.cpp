@@ -604,11 +604,14 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  bool aIgnoreRootScrollFrame,
                                  float aPressure,
                                  unsigned short aInputSourceArg,
+                                 bool aIsSynthesized,
+                                 uint8_t aOptionalArgCount,
                                  bool *aPreventDefault)
 {
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
-                              aInputSourceArg, false, aPreventDefault);
+                              aInputSourceArg, false, aPreventDefault,
+                              aOptionalArgCount >= 4 ? aIsSynthesized : true);
 }
 
 NS_IMETHODIMP
@@ -620,12 +623,15 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          int32_t aModifiers,
                                          bool aIgnoreRootScrollFrame,
                                          float aPressure,
-                                         unsigned short aInputSourceArg)
+                                         unsigned short aInputSourceArg,
+                                         bool aIsSynthesized,
+                                         uint8_t aOptionalArgCount)
 {
   PROFILER_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
-                              aInputSourceArg, true, nullptr);
+                              aInputSourceArg, true, nullptr,
+                              aOptionalArgCount >= 4 ? aIsSynthesized : true);
 }
 
 static LayoutDeviceIntPoint
@@ -668,7 +674,8 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        float aPressure,
                                        unsigned short aInputSourceArg,
                                        bool aToWindow,
-                                       bool *aPreventDefault)
+                                       bool *aPreventDefault,
+                                       bool aIsSynthesized)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -715,7 +722,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   event.inputSource = aInputSourceArg;
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
-  event.mFlags.mIsSynthesizedForTests = true;
+  event.mFlags.mIsSynthesizedForTests = aIsSynthesized;
 
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
