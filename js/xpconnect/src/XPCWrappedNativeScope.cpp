@@ -134,22 +134,21 @@ XPCWrappedNativeScope::GetComponentsJSObject()
     if (!mComponents)
         mComponents = new nsXPCComponents(this);
 
-    AutoMarkingNativeInterfacePtr iface(cx);
-    iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsIXPCComponents));
-    if (!iface)
+    RootedValue val(cx);
+    xpcObjectHelper helper(mComponents);
+    bool ok = XPCConvert::NativeInterface2JSObject(&val, nullptr, helper,
+                                                   nullptr, nullptr, false,
+                                                   nullptr);
+    if (NS_WARN_IF(!ok))
         return nullptr;
 
-    nsCOMPtr<nsIXPCComponents> cholder(mComponents);
-    xpcObjectHelper helper(cholder);
-    nsCOMPtr<XPCWrappedNative> wrapper;
-    XPCWrappedNative::GetNewOrUsed(helper, this, iface, getter_AddRefs(wrapper));
-    if (!wrapper)
+    if (NS_WARN_IF(!val.isObject()))
         return nullptr;
 
     // The call to wrap() here is necessary even though the object is same-
     // compartment, because it applies our security wrapper.
-    JS::RootedObject obj(cx, wrapper->GetFlatJSObject());
-    if (!JS_WrapObject(cx, &obj))
+    JS::RootedObject obj(cx, &val.toObject());
+    if (NS_WARN_IF(!JS_WrapObject(cx, &obj)))
         return nullptr;
     return obj;
 }
