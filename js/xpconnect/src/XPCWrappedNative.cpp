@@ -1709,10 +1709,6 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
         wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
         if (!wrapper)
             return nullptr;
-    } else if (xpc::WrapperFactory::IsComponentsObject(flat)) {
-        wrapper = xpc::WrapperFactory::WrapComponentsObject(cx, flat);
-        if (!wrapper)
-            return nullptr;
     }
 
     // If we made a wrapper, cache it and return it.

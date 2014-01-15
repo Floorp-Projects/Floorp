@@ -21,9 +21,9 @@ nsNSSCertCache::nsNSSCertCache()
 nsNSSCertCache::~nsNSSCertCache()
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return;
-
+  }
   destructorSafeDestroyNSSReference();
   shutdown(calledFromObject);
 }
@@ -35,8 +35,7 @@ void nsNSSCertCache::virtualDestroyNSSReference()
 
 void nsNSSCertCache::destructorSafeDestroyNSSReference()
 {
-  if (isAlreadyShutDown())
-    return;
+  mCertList = nullptr;
 }
 
 NS_IMETHODIMP

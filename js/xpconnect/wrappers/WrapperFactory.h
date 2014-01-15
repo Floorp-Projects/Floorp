@@ -69,12 +69,6 @@ class WrapperFactory {
     // Wrap a (same compartment) object in a SOW.
     static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
 
-    // Return true if this is a Components object.
-    static bool IsComponentsObject(JSObject *obj);
-
-    // Wrap a (same compartment) Components object.
-    static JSObject *WrapComponentsObject(JSContext *cx, JS::HandleObject obj);
-
     // Returns true if the wrapper is in not shadowing mode for the id.
     static bool XrayWrapperNotShadowing(JSObject *wrapper, jsid id);
 };

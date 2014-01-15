@@ -86,9 +86,9 @@ public:
                  const Optional<JS::Handle<JS::Value> >& aParams,
                  nsAString& aDataURL, ErrorResult& aRv)
   {
-    JS::Value params = aParams.WasPassed()
-                     ? aParams.Value()
-                     : JS::UndefinedValue();
+    JS::Handle<JS::Value> params = aParams.WasPassed()
+                                 ? aParams.Value()
+                                 : JS::UndefinedHandleValue;
     aRv = ToDataURL(aType, params, aCx, aDataURL);
   }
   void ToBlob(JSContext* aCx,

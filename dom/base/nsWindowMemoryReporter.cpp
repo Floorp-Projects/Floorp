@@ -172,6 +172,46 @@ MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf)
 typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 
 static nsresult
+ReportAmount(const nsCString& aBasePath, const char* aPathTail,
+             size_t aAmount, const nsCString& aDescription,
+             uint32_t aKind, uint32_t aUnits,
+             nsIMemoryReporterCallback* aCb,
+             nsISupports* aClosure)
+{
+  if (aAmount == 0) {
+    return NS_OK;
+  }
+
+  nsAutoCString path(aBasePath);
+  path += aPathTail;
+
+  return aCb->Callback(EmptyCString(), path, aKind, aUnits,
+                       aAmount, aDescription, aClosure);
+}
+
+static nsresult
+ReportSize(const nsCString& aBasePath, const char* aPathTail,
+           size_t aAmount, const nsCString& aDescription,
+           nsIMemoryReporterCallback* aCb,
+           nsISupports* aClosure)
+{
+  return ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
+                      nsIMemoryReporter::KIND_HEAP,
+                      nsIMemoryReporter::UNITS_BYTES, aCb, aClosure);
+}
+
+static nsresult
+ReportCount(const nsCString& aBasePath, const char* aPathTail,
+            size_t aAmount, const nsCString& aDescription,
+            nsIMemoryReporterCallback* aCb,
+            nsISupports* aClosure)
+{
+  return ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
+                      nsIMemoryReporter::KIND_OTHER,
+                      nsIMemoryReporter::UNITS_COUNT, aCb, aClosure);
+}
+
+static nsresult
 CollectWindowReports(nsGlobalWindow *aWindow,
                      amIAddonManager *addonManager,
                      nsWindowSizes *aWindowTotalSizes,
@@ -242,28 +282,16 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 
 #define REPORT_SIZE(_pathTail, _amount, _desc)                                \
   do {                                                                        \
-    if (_amount > 0) {                                                        \
-      nsAutoCString path(windowPath);                                         \
-      path += _pathTail;                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,  \
-                    nsIMemoryReporter::UNITS_BYTES, _amount,                  \
-                    NS_LITERAL_CSTRING(_desc), aClosure);                     \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    }                                                                         \
+    nsresult rv = ReportSize(windowPath, _pathTail, _amount,                  \
+                             NS_LITERAL_CSTRING(_desc), aCb, aClosure);       \
+    NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
 #define REPORT_COUNT(_pathTail, _amount, _desc)                               \
   do {                                                                        \
-    if (_amount > 0) {                                                        \
-      nsAutoCString path(censusWindowPath);                                   \
-      path += _pathTail;                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_OTHER, \
-                    nsIMemoryReporter::UNITS_COUNT, _amount,                  \
-                    NS_LITERAL_CSTRING(_desc), aClosure);                     \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    }                                                                         \
+    nsresult rv = ReportCount(censusWindowPath, _pathTail, _amount,           \
+                              NS_LITERAL_CSTRING(_desc), aCb, aClosure);      \
+    NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
   nsWindowSizes windowSizes(WindowsMallocSizeOf);

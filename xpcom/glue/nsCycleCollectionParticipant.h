@@ -101,6 +101,8 @@ public:
     NS_IMETHOD_(void) Unlink(void *p) = 0;
     NS_IMETHOD_(void) Unroot(void *p) = 0;
 
+    NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) {};
+
     // If CanSkip returns true, p is removed from the purple buffer during
     // a call to nsCycleCollector_forgetSkippable().
     // Note, calling CanSkip may remove objects from the purple buffer!

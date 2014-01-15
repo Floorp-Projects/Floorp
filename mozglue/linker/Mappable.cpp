@@ -14,6 +14,7 @@
 #include <linux/ashmem.h>
 #endif
 #include <sys/stat.h>
+#include <errno.h>
 #include "ElfLoader.h"
 #include "SeekableZStream.h"
 #include "Logging.h"
@@ -556,10 +557,13 @@ MappableSeekableZStream::ensure(const void *addr)
   length = reinterpret_cast<uintptr_t>(end)
            - reinterpret_cast<uintptr_t>(start);
 
-  DEBUG_LOG("mprotect @%p, 0x%" PRIxSize ", 0x%x", start, length, map->prot);
-  if (mprotect(const_cast<void *>(start), length, map->prot) == 0)
+  if (mprotect(const_cast<void *>(start), length, map->prot) == 0) {
+    DEBUG_LOG("mprotect @%p, 0x%" PRIxSize ", 0x%x", start, length, map->prot);
     return true;
+  }
 
+  LOG("mprotect @%p, 0x%" PRIxSize ", 0x%x failed with errno %d",
+      start, length, map->prot, errno);
   LOG("mprotect failed");
   return false;
 }

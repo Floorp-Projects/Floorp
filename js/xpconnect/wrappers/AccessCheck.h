@@ -98,18 +98,6 @@ struct ExposedPropertiesOnly : public Policy {
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl);
 };
 
-// Components specific policy
-struct ComponentsObjectPolicy : public Policy {
-    static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
-
-    static bool deny(js::Wrapper::Action act, JS::HandleId id) {
-        return false;
-    }
-    static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
-        return false;
-    }
-};
-
 }
 
 #endif /* __AccessCheck_h__ */
