@@ -21,7 +21,7 @@ BEGIN_TEST(testStringBuffer_finishString)
     js::StringBuffer buffer(cx);
     CHECK(buffer.append("foopy"));
 
-    JSAtom *finishedAtom = buffer.finishAtom();
+    JS::Rooted<JSAtom*> finishedAtom(cx, buffer.finishAtom());
     CHECK(finishedAtom);
     CHECK_EQUAL(atom, finishedAtom);
     return true;
