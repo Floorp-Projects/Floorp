@@ -93,14 +93,6 @@ final class HomeConfig {
             mFlags = (EnumSet<Flags>) in.readSerializable();
         }
 
-        public PanelConfig(PanelType type, String title) {
-            this(type, title, EnumSet.noneOf(Flags.class));
-        }
-
-        public PanelConfig(PanelType type, String title, EnumSet<Flags> flags) {
-            this(type, title, type.toString(), flags);
-        }
-
         public PanelConfig(PanelType type, String title, String id) {
             this(type, title, id, EnumSet.noneOf(Flags.class));
         }
