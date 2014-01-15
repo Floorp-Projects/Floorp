@@ -249,9 +249,13 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
     var modifiers = _parseModifiers(aEvent);
     var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
     var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource : 0;
+    var synthesized = ("isSynthesized" in aEvent) ? aEvent.isSynthesized : true;
 
     if (("type" in aEvent) && aEvent.type) {
-      defaultPrevented = utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers, false, pressure, inputSource);
+      defaultPrevented = utils.sendMouseEvent(aEvent.type, left, top, button,
+                                              clickCount, modifiers, false,
+                                              pressure, inputSource,
+                                              synthesized);
     }
     else {
       utils.sendMouseEvent("mousedown", left, top, button, clickCount, modifiers, false, pressure, inputSource);
