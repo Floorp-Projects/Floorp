@@ -172,6 +172,7 @@ public:
   webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
   bool GetLocalSSRC(unsigned int* ssrc);
   bool GetRemoteSSRC(unsigned int* ssrc);
+  bool GetReceivedJitter(unsigned int* jitterMs);
 
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) MOZ_DELETE;
