@@ -4682,7 +4682,11 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     // instructions could potentially bailout, thus leaking the dynamic slots
     // pointer. Run-once scripts need a singleton type, so always do a VM call
     // in such cases.
-    MNewCallObject *callObj = MNewCallObject::New(alloc(), templateObj, script()->treatAsRunOnce(), slots);
+    MUnaryInstruction *callObj;
+    if (script()->treatAsRunOnce())
+        callObj = MNewRunOnceCallObject::New(alloc(), templateObj, slots);
+    else
+        callObj = MNewCallObject::New(alloc(), templateObj, slots);
     current->add(callObj);
 
     // Initialize the object's reserved slots. No post barrier is needed here,
