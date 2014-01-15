@@ -255,7 +255,7 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
   check_events([], "before start in test_fill_mode");
   advance_clock(1000);
   check_events([{ type: 'animationstart', target: div,
-                  bubbles: true, cancelable: true,
+                  bubbles: true, cancelable: false,
                   animationName: 'anim1', elapsedTime: 0.0,
                   pseudoElement: "" }],
                "right after start in test_fill_mode");
@@ -274,7 +274,7 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
   check_events([], "before end in test_fill_mode");
   advance_clock(125);
   check_events([{ type: 'animationend', target: div,
-                  bubbles: true, cancelable: true,
+                  bubbles: true, cancelable: false,
                   animationName: 'anim1', elapsedTime: 10.0,
                   pseudoElement: "" }],
                "right after end in test_fill_mode");

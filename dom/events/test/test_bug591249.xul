@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=591249
   <img id="image"
        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"
        ondragstart="event.preventDefault();"/>
-  <iframe id="iframe" src="chrome://mochitests/content/chrome/content/events/test/bug591249_iframe.xul" style="height: 300px; width: 100%;"></iframe>
+  <iframe id="iframe" src="chrome://mochitests/content/chrome/dom/events/test/bug591249_iframe.xul" style="height: 300px; width: 100%;"></iframe>
 </body>
 
 <script class="testbody" type="application/javascript;version=1.8"><![CDATA[

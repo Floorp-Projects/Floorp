@@ -1116,7 +1116,7 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
         bool allowComponents = nsContentUtils::IsSystemPrincipal(principal) ||
                                nsContentUtils::IsExpandedPrincipal(principal);
         if (options.wantComponents && allowComponents &&
-            !nsXPCComponents::AttachComponentsObject(cx, GetObjectScope(sandbox)))
+            !GetObjectScope(sandbox)->AttachComponentsObject(cx))
             return NS_ERROR_XPC_UNEXPECTED;
 
         if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox))

@@ -168,7 +168,7 @@
     _(GuardObjectType)              \
     _(GuardObjectIdentity)          \
     _(GuardClass)                   \
-    _(GuardThreadLocalObject)       \
+    _(GuardThreadExclusive)         \
     _(TypeBarrierV)                 \
     _(TypeBarrierO)                 \
     _(MonitorTypes)                 \

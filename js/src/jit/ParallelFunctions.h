@@ -11,11 +11,15 @@
 #include "vm/ForkJoin.h"
 
 namespace js {
+
+class TypedDatum; // subclass of JSObject* defined in builtin/TypedObject.h
+
 namespace jit {
 
 ForkJoinSlice *ForkJoinSlicePar();
 JSObject *NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind);
-bool IsThreadLocalObject(ForkJoinSlice *slice, JSObject *object);
+bool ParallelWriteGuard(ForkJoinSlice *slice, JSObject *object);
+bool IsInTargetRegion(ForkJoinSlice *slice, TypedDatum *object);
 bool CheckOverRecursedPar(ForkJoinSlice *slice);
 bool CheckInterruptPar(ForkJoinSlice *slice);
 

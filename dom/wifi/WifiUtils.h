@@ -90,10 +90,10 @@ public:
   virtual ~WpaSupplicantImpl() {}
 
   virtual int32_t
-  do_wifi_wait_for_event(const char *iface, char *buf, size_t len) = 0; // ICS != JB
+  do_wifi_wait_for_event(const char *iface, char *buf, size_t len) = 0; // KK == ICS != JB
 
   virtual int32_t
-  do_wifi_command(const char* iface, const char* cmd, char* buff, size_t* len) = 0; // ICS != JB
+  do_wifi_command(const char* iface, const char* cmd, char* buff, size_t* len) = 0; // KK == ICS != JB
 
   virtual int32_t
   do_wifi_load_driver() = 0;
@@ -102,16 +102,16 @@ public:
   do_wifi_unload_driver() = 0;
 
   virtual int32_t
-  do_wifi_start_supplicant(int32_t) = 0; // ICS != JB
+  do_wifi_start_supplicant(int32_t) = 0; // ICS != JB == KK
 
   virtual int32_t
-  do_wifi_stop_supplicant() = 0;
+  do_wifi_stop_supplicant(int32_t) = 0; //ICS != JB == KK
 
   virtual int32_t
-  do_wifi_connect_to_supplicant(const char* iface) = 0; // ICS != JB
+  do_wifi_connect_to_supplicant(const char* iface) = 0; // KK == ICS != JB
 
   virtual void
-  do_wifi_close_supplicant_connection(const char* iface) = 0; // ICS != JB
+  do_wifi_close_supplicant_connection(const char* iface) = 0; // KK == ICS != JB
 };
 
 // Concrete class to use to access the wpa supplicant.

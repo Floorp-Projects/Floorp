@@ -502,7 +502,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!nsXPCComponents::AttachComponentsObject(aJSContext, wrappedGlobal->GetScope()))
+        if (!wrappedGlobal->GetScope()->AttachComponentsObject(aJSContext))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
         if (!XPCNativeWrapper::AttachNewConstructorObject(aJSContext, global))

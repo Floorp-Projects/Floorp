@@ -1207,7 +1207,7 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 }
 
 JS_FRIEND_API(bool)
-js_ReportIsNotFunction(JSContext *cx, const JS::Value& v)
+js_ReportIsNotFunction(JSContext *cx, JS::HandleValue v)
 {
     return ReportIsNotFunction(cx, v);
 }

@@ -55,8 +55,8 @@ class nsPresState;
 
 // Drop down list event management.
 // The combo box uses the following strategy for managing the drop-down list.
-// If the combo box or it's arrow button is clicked on the drop-down list is displayed
-// If mouse exit's the combo box with the drop-down list displayed the drop-down list
+// If the combo box or its arrow button is clicked on the drop-down list is displayed
+// If mouse exits the combo box with the drop-down list displayed the drop-down list
 // is asked to capture events
 // The drop-down list will capture all events including mouse down and up and will always
 // return with ListWasSelected method call regardless of whether an item in the list was
@@ -445,7 +445,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                             kidReflowState, rect.x, rect.y, flags,
                             ignoredStatus);
 
-   // Set the child's width and height to it's desired size
+   // Set the child's width and height to its desired size
   FinishReflowChild(mDropdownFrame, aPresContext, &kidReflowState,
                     desiredSize, rect.x, rect.y, flags);
   return rv;
@@ -1138,7 +1138,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   // The frames used to display the combo box and the button used to popup the dropdown list
   // are created through anonymous content. The dropdown list is not created through anonymous
-  // content because it's frame is initialized specifically for the drop-down case and it is placed
+  // content because its frame is initialized specifically for the drop-down case and it is placed
   // a special list referenced through NS_COMBO_FRAME_POPUP_LIST_INDEX to keep separate from the
   // layout of the display and button.
   //

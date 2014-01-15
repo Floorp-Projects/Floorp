@@ -23,12 +23,12 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/events/src',
     '/content/xml/document/src',
     '/content/xul/content/src',
     '/content/xul/templates/src',
     '/docshell/base',
     '/dom/base',
+    '/dom/events',
     '/dom/xbl',
     '/layout/base',
     '/layout/generic',
