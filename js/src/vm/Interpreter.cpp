@@ -84,8 +84,8 @@ static bool
 #endif
 LooseEqualityOp(JSContext *cx, FrameRegs &regs)
 {
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
+    HandleValue rval = regs.stackHandleAt(-1);
+    HandleValue lval = regs.stackHandleAt(-2);
     bool cond;
     if (!LooselyEqual(cx, lval, rval, &cond))
         return false;
