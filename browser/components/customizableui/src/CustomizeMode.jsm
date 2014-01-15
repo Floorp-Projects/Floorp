@@ -915,6 +915,7 @@ CustomizeMode.prototype = {
     let dt = aEvent.dataTransfer;
     let documentId = aEvent.target.ownerDocument.documentElement.id;
     let draggedItem = item.firstChild;
+    let isInToolbar = CustomizableUI.getPlaceForItem(item) == "toolbar";
 
     dt.mozSetDataAt(kDragDataTypePrefix + documentId, draggedItem.id, 0);
     dt.effectAllowed = "move";
@@ -935,6 +936,9 @@ CustomizeMode.prototype = {
         item.hidden = true;
         this._showPanelCustomizationPlaceholders();
         DragPositionManager.start(this.window);
+        if (!isInToolbar && item.nextSibling) {
+          this._setDragActive(item.nextSibling, "before", draggedItem.id, false);
+        }
       }
       this._initializeDragAfterMove = null;
       this.window.clearTimeout(this._dragInitializeTimeout);
@@ -1284,7 +1288,7 @@ CustomizeMode.prototype = {
       let window = aItem.ownerDocument.defaultView;
       let draggedItem = window.document.getElementById(aDraggedItemId);
       if (!aInToolbar) {
-        this._setPanelDragActive(aItem, draggedItem, aValue);
+        this._setGridDragActive(aItem, draggedItem, aValue);
       } else {
         // Calculate width of the item when it'd be dropped in this position
         let width = this._getDragItemSize(aItem, draggedItem).width;
@@ -1330,7 +1334,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _setPanelDragActive: function(aDragOverNode, aDraggedItem, aValue) {
+  _setGridDragActive: function(aDragOverNode, aDraggedItem, aValue) {
     let targetArea = this._getCustomizableParent(aDragOverNode);
     let positionManager = DragPositionManager.getManagerForArea(targetArea);
     let draggedSize = this._getDragItemSize(aDragOverNode, aDraggedItem);
