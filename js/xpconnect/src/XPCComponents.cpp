@@ -3408,8 +3408,8 @@ nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
 
     // Invoke the callback, if passed.
     if (aCallback.isObject()) {
-        Value ignored;
-        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), &ignored))
+        RootedValue ignored(aCx);
+        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), ignored.address()))
             return NS_ERROR_FAILURE;
     }
 

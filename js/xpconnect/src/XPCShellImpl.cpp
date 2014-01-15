@@ -1134,14 +1134,15 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
             break;
         case 'e':
         {
-            jsval rval;
+            RootedValue rval(cx);
 
             if (++i == argc) {
                 return usage();
             }
 
             JS_EvaluateScriptForPrincipals(cx, obj, gJSPrincipals, argv[i],
-                                           strlen(argv[i]), "-e", 1, &rval);
+                                           strlen(argv[i]), "-e", 1,
+                                           rval.address());
 
             isInteractive = false;
             break;
