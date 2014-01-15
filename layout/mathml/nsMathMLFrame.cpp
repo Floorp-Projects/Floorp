@@ -156,41 +156,6 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
                    "bad MathML markup - could not find the top <math> element");
 }
 
-// helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-/* static */ bool
-nsMathMLFrame::GetAttribute(nsIContent* aContent,
-                            nsIFrame*   aMathMLmstyleFrame,
-                            nsIAtom*    aAttributeAtom,
-                            nsString&   aValue)
-{
-  // see if we can get the attribute from the content
-  if (aContent && aContent->GetAttr(kNameSpaceID_None, aAttributeAtom,
-                                    aValue)) {
-    return true;
-  }
-
-  // see if we can get the attribute from the mstyle frame
-  if (!aMathMLmstyleFrame) {
-    return false;
-  }
-
-  nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
-
-  nsPresentationData mstyleParentData;
-  mstyleParentData.mstyle = nullptr;
-
-  if (mstyleParent) {
-    nsIMathMLFrame* mathMLFrame = do_QueryFrame(mstyleParent);
-    if (mathMLFrame) {
-      mathMLFrame->GetPresentationData(mstyleParentData);
-    }
-  }
-
-  // recurse all the way up into the <mstyle> hierarchy
-  return GetAttribute(aMathMLmstyleFrame->GetContent(),
-                      mstyleParentData.mstyle, aAttributeAtom, aValue);
-}
-
 /* static */ void
 nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
                                 nsFontMetrics*      aFontMetrics,
