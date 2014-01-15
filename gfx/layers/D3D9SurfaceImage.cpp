@@ -117,7 +117,7 @@ D3D9SurfaceImage::GetSize()
 }
 
 already_AddRefed<gfxASurface>
-D3D9SurfaceImage::GetAsSurface()
+D3D9SurfaceImage::DeprecatedGetAsSurface()
 {
   NS_ENSURE_TRUE(mTexture, nullptr);
 

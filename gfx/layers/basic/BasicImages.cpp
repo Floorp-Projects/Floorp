@@ -52,7 +52,7 @@ public:
   virtual void SetData(const Data& aData);
   virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
 private:
   nsAutoArrayPtr<uint8_t> mDecodedBuffer;
@@ -133,7 +133,7 @@ DestroyBuffer(void* aBuffer)
 }
 
 already_AddRefed<gfxASurface>
-BasicPlanarYCbCrImage::GetAsSurface()
+BasicPlanarYCbCrImage::DeprecatedGetAsSurface()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
 
@@ -143,7 +143,7 @@ BasicPlanarYCbCrImage::GetAsSurface()
   }
 
   if (!mDecodedBuffer) {
-    return PlanarYCbCrImage::GetAsSurface();
+    return PlanarYCbCrImage::DeprecatedGetAsSurface();
   }
 
   gfxImageFormat format = GetOffscreenFormat();
