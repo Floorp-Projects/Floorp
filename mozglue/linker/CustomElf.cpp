@@ -64,6 +64,11 @@ void debug_phdr(const char *type, const Phdr *phdr)
             phdr->p_flags & PF_W ? 'w' : '-', phdr->p_flags & PF_X ? 'x' : '-');
 }
 
+void
+__void_stub(void)
+{
+}
+
 } /* anonymous namespace */
 
 /**
@@ -319,6 +324,16 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
     if (strcmp(symbol + 2, "gnu_Unwind_Find_exidx") == 0)
       return FunctionPtr(__wrap___gnu_Unwind_Find_exidx);
 #endif
+  }
+
+#define MISSING_FLASH_SYMNAME_START "_ZN7android10VectorImpl19reservedVectorImpl"
+
+  // Android changed some symbols that Flash depended on in 4.4,
+  // so stub those out here
+  if (strncmp(symbol,
+              MISSING_FLASH_SYMNAME_START,
+              sizeof(MISSING_FLASH_SYMNAME_START) - 1) == 0) {
+    return FunctionPtr(__void_stub);
   }
 
   void *sym;
