@@ -8689,6 +8689,10 @@ class CGDescriptor(CGThing):
                     else:
                         hasMethod = True
             elif m.isAttr():
+                if m.stringifier:
+                    raise TypeError("Stringifier attributes not supported yet. "
+                                    "See bug 824857.\n"
+                                    "%s" % m.location);
                 if m.isStatic():
                     assert descriptor.interface.hasInterfaceObject
                     cgThings.append(CGStaticGetter(descriptor, m))
