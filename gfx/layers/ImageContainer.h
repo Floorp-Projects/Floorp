@@ -27,6 +27,7 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gfx/2D.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -146,7 +147,7 @@ public:
   ImageFormat GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() = 0;
   virtual gfx::IntSize GetSize() = 0;
   virtual nsIntRect GetPictureRect()
   {
@@ -162,6 +163,8 @@ public:
 
   void MarkSent() { mSent = true; }
   bool IsSentToCompositor() { return mSent; }
+
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -841,7 +844,7 @@ protected:
    */
   virtual uint8_t* AllocateBuffer(uint32_t aSize);
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   gfxImageFormat GetOffscreenFormat();
@@ -879,7 +882,7 @@ public:
   }
 
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface()
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface()
   {
     nsRefPtr<gfxASurface> surface = mSurface.get();
     return surface.forget();
@@ -897,7 +900,7 @@ class RemoteBitmapImage : public Image {
 public:
   RemoteBitmapImage() : Image(nullptr, REMOTE_IMAGE_BITMAP) {}
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   gfx::IntSize GetSize() { return mSize; }
 

@@ -21,6 +21,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif
+#include "gfx2DGlue.h"
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/QuartzSupport.h"
@@ -48,6 +49,13 @@ class DataSourceSurface;
 class SourceSurface;
 
 Atomic<int32_t> Image::sSerialCounter(0);
+
+TemporaryRef<gfx::SourceSurface>
+Image::GetAsSourceSurface()
+{
+  nsRefPtr<gfxASurface> surface = DeprecatedGetAsSurface();
+  return gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
+}
 
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
@@ -323,7 +331,7 @@ ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
     }
 
     *aSize = mActiveImage->GetSize();
-    return mActiveImage->GetAsSurface();
+    return mActiveImage->DeprecatedGetAsSurface();
   }
 
   if (aCurrentImage) {
@@ -336,7 +344,7 @@ ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
   }
 
   *aSize = mActiveImage->GetSize();
-  return mActiveImage->GetAsSurface();
+  return mActiveImage->DeprecatedGetAsSurface();
 }
 
 void
@@ -365,7 +373,7 @@ ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
       return nullptr;
     *aSize = mActiveImage->GetSize();
   }
-  return mActiveImage->GetAsSurface();
+  return mActiveImage->DeprecatedGetAsSurface();
 }
 
 gfx::IntSize
@@ -553,7 +561,7 @@ PlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 }
 
 already_AddRefed<gfxASurface>
-PlanarYCbCrImage::GetAsSurface()
+PlanarYCbCrImage::DeprecatedGetAsSurface()
 {
   if (mSurface) {
     nsRefPtr<gfxASurface> result = mSurface.get();
@@ -580,7 +588,7 @@ PlanarYCbCrImage::GetAsSurface()
 }
 
 already_AddRefed<gfxASurface>
-RemoteBitmapImage::GetAsSurface()
+RemoteBitmapImage::DeprecatedGetAsSurface()
 {
   nsRefPtr<gfxImageSurface> newSurf =
     new gfxImageSurface(ThebesIntSize(mSize),
