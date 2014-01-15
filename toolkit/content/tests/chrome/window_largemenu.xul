@@ -43,6 +43,16 @@ function getScreenXY(element)
   return [screenX, screenY];
 }
 
+function hidePopup() {
+  window.requestAnimationFrame(
+    function() {
+      setTimeout(
+        function() {
+          document.getElementById("popup").hidePopup();
+        }, 0);
+    });
+}
+
 function runTests()
 {
   [, gScreenY] = getScreenXY(document.documentElement);
@@ -73,7 +83,12 @@ function nextTest()
       popup.removeChild(popup.lastChild);
   }
 
-  popup.openPopupAtScreen(100, y, false);
+  window.requestAnimationFrame(function() {
+    setTimeout(
+      function() {
+        popup.openPopupAtScreen(100, y, false);
+      }, 0);
+  });
 }
 
 function popupShown()
@@ -134,7 +149,7 @@ function popupShown()
   sbo.getPosition(sx, sy);
   is(sy.value, expectedScrollPos, "menu scroll position");
 
-  popup.hidePopup();
+  hidePopup();
 }
 
 function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
@@ -224,7 +239,7 @@ function contextMenuPopupShown()
       break;
   }
 
-  popup.hidePopup();
+  hidePopup();
 }
 
 function contextMenuPopupHidden()
