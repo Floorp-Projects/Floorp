@@ -421,55 +421,6 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
-{
-  // XXX the REC says that by default, displaystyle=false in <mtable>
-
-  // let the base class inherit the displaystyle from our parent
-  nsMathMLFrame::InheritAutomaticData(aParent);
-
-  // see if the displaystyle attribute is there and let it override what we inherited
-  if (mContent->Tag() == nsGkAtoms::mtable_)
-    nsMathMLFrame::FindAttrDisplaystyle(mContent, mPresentationData);
-
-  return NS_OK;
-}
-
-// displaystyle is special in mtable...
-// Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
-// by a parent, ensure that the displaystyle attribute of mtable takes precedence
-NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationData(uint32_t aFlagsValues,
-                                                 uint32_t aWhichFlags)
-{
-  if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
-    // our current state takes precedence, disallow updating the displastyle
-    aWhichFlags &= ~NS_MATHML_DISPLAYSTYLE;
-    aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
-  }
-
-  return nsMathMLFrame::UpdatePresentationData(aFlagsValues, aWhichFlags);
-}
-
-NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(int32_t  aFirstIndex,
-                                                            int32_t  aLastIndex,
-                                                            uint32_t aFlagsValues,
-                                                            uint32_t aWhichFlags)
-{
-  if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
-    // our current state takes precedence, disallow updating the displastyle
-    aWhichFlags &= ~NS_MATHML_DISPLAYSTYLE;
-    aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
-  }
-
-  nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
-    aFirstIndex, aLastIndex, aFlagsValues, aWhichFlags);
-
-  return NS_OK; 
-}
-
-NS_IMETHODIMP
 nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
                                            nsIAtom* aAttribute,
                                            int32_t  aModType)
@@ -480,7 +431,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
   // groupalign    : not yet supported
   // equalrows     : not yet supported 
   // equalcolumns  : not yet supported 
-  // displaystyle  : here 
+  // displaystyle  : here and in mathml.css
   // align         : in reflow 
   // rowalign      : here
   // rowlines      : here 

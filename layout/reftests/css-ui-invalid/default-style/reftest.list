@@ -4,8 +4,7 @@
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html
 == output.html output-ref.html
-needs-focus == input-focus.html input-focus-ref.html
+random-if(winWidget) needs-focus == input-focus.html input-focus-ref.html # Intermittent failures, bug 660224
 needs-focus == button-focus.html button-focus-ref.html
 needs-focus == textarea-focus.html textarea-focus-ref.html
-needs-focus == select-focus.html select-focus-ref.html
-
+random-if(winWidget) needs-focus == select-focus.html select-focus-ref.html # Intermittent failures, bug 660224
