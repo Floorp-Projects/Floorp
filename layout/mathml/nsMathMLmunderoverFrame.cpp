@@ -70,6 +70,27 @@ nsMathMLmunderoverFrame::InheritAutomaticData(nsIFrame* aParent)
   return NS_OK;
 }
 
+uint8_t
+nsMathMLmunderoverFrame::ScriptIncrement(nsIFrame* aFrame)
+{
+  nsIFrame* child = mFrames.FirstChild();
+  if (!aFrame || aFrame == child) {
+    return 0;
+  }
+  child = child->GetNextSibling();
+  if (aFrame == child) {
+    if (mContent->Tag() == nsGkAtoms::mover_) {
+      return mIncrementOver ? 1 : 0;
+    }
+    return mIncrementUnder ? 1 : 0;
+  }
+  if (child && aFrame == child->GetNextSibling()) {
+    // must be a over frame of munderover
+    return mIncrementOver ? 1 : 0;
+  }
+  return 0;  // frame not found
+}
+
 NS_IMETHODIMP
 nsMathMLmunderoverFrame::TransmitAutomaticData()
 {
@@ -144,8 +165,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }    
 
     // if we have an accentunder attribute, it overrides what the underscript said
-    if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::accentunder_,
-                     value)) {
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accentunder_, value)) {
       if (value.EqualsLiteral("true")) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
       } else if (value.EqualsLiteral("false")) {
@@ -166,8 +186,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }
 
     // if we have an accent attribute, it overrides what the overscript said
-    if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::accent_,
-                     value)) {
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accent_, value)) {
       if (value.EqualsLiteral("true")) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
       } else if (value.EqualsLiteral("false")) {
@@ -209,8 +228,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
       tag == nsGkAtoms::munderover_) {
     uint32_t compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
       ? NS_MATHML_COMPRESSED : 0;
-    SetIncrementScriptLevel(tag == nsGkAtoms::mover_ ? 1 : 2,
-                            !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) || subsupDisplay);
+    mIncrementOver =
+      !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) ||
+      subsupDisplay;
+    SetIncrementScriptLevel(tag == nsGkAtoms::mover_ ? 1 : 2, mIncrementOver);
+    if (mIncrementOver) {
+      PropagateFrameFlagFor(overscriptFrame,
+                            NS_FRAME_MATHML_SCRIPT_DESCENDANT);
+    }
     PropagatePresentationDataFor(overscriptFrame, compress, compress);
   }
   /*
@@ -219,7 +244,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
   */
   if (tag == nsGkAtoms::munder_ ||
       tag == nsGkAtoms::munderover_) {
-    SetIncrementScriptLevel(1, !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags) || subsupDisplay);
+    mIncrementUnder =
+      !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags) ||
+      subsupDisplay;
+    SetIncrementScriptLevel(1, mIncrementUnder);
+    if (mIncrementUnder) {
+      PropagateFrameFlagFor(underscriptFrame,
+                            NS_FRAME_MATHML_SCRIPT_DESCENDANT);
+    }
     PropagatePresentationDataFor(underscriptFrame,
                                  NS_MATHML_COMPRESSED,
                                  NS_MATHML_COMPRESSED);
@@ -456,8 +488,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     right
   } alignPosition = center;
 
-  if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::align,
-                   valueAlign)) {
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::align, valueAlign)) {
     if (valueAlign.EqualsLiteral("left")) {
       alignPosition = left;
     } else if (valueAlign.EqualsLiteral("right")) {

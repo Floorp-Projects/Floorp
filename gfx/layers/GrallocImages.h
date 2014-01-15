@@ -109,7 +109,7 @@ public:
     HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS     = 0x7FA30C04,
   };
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   void* GetNativeBuffer()
   {

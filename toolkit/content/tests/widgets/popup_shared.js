@@ -210,6 +210,17 @@ function goNextStep()
 
 function goNext()
 {
+  // We want to continue after the next animation frame so that
+  // we're in a stable state and don't get spurious mouse events at unexpected targets.
+  window.requestAnimationFrame(
+    function() {
+      setTimeout(goNextStepSync, 0);
+    }
+  );
+}
+
+function goNextStepSync()
+{
   if (gTestIndex >= 0 && "end" in gPopupTests[gTestIndex] && gPopupTests[gTestIndex].end) {
     finish();
     return;

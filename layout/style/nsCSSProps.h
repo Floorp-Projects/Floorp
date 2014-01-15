@@ -560,6 +560,7 @@ public:
   static const int32_t kTextOrientationKTable[];
   static const int32_t kTextOverflowKTable[];
   static const int32_t kTextTransformKTable[];
+  static const int32_t kTouchActionKTable[];
   static const int32_t kTransitionTimingFunctionKTable[];
   static const int32_t kUnicodeBidiKTable[];
   static const int32_t kUserFocusKTable[];

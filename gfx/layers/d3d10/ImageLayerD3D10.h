@@ -60,7 +60,7 @@ class RemoteDXGITextureImage : public Image {
 public:
   RemoteDXGITextureImage() : Image(nullptr, REMOTE_IMAGE_DXGI_TEXTURE) {}
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   IntSize GetSize() { return mSize; }
 

@@ -104,6 +104,7 @@ enum RTCStatsIceCandidateType {
 };
 
 dictionary RTCIceCandidateStats : RTCStats {
+  DOMString componentId;
   DOMString candidateId;
   DOMString ipAddress;
   long portNumber;

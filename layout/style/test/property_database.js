@@ -4330,6 +4330,19 @@ function get_computed_value(cs, property)
 	return cs.getPropertyValue(property);
 }
 
+if (SpecialPowers.getBoolPref("layout.css.touch_action.enabled")) {
+    gCSSProperties["touch-action"] = {
+        domProp: "touchAction",
+        inherited: false,
+        type: CSS_TYPE_LONGHAND,
+        initial_values: ["auto"],
+        other_values: ["none", "pan-x", "pan-y", "pan-x pan-y", "pan-y pan-x"],
+        invalid_values: ["zoom", "pinch", "tap", "10px", "2", "auto pan-x", "pan-x auto", "none pan-x", "pan-x none",
+        				 "auto pan-y", "pan-y auto", "none pan-y", "pan-y none",
+        				 "pan-x pan-y none", "none pan-x pan-y", "pan-x pan-y auto", "auto pan-x pan-y"]
+    };
+}
+
 if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
 	var verticalTextProperties = {
 		"writing-mode": {

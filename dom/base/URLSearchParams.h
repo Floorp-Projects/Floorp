@@ -71,7 +71,7 @@ public:
     return mValid;
   }
 
-  void Serialize(nsAString& aValue);
+  void Serialize(nsAString& aValue) const;
 
   void Get(const nsAString& aName, nsString& aRetval);
 
@@ -85,7 +85,11 @@ public:
 
   void Delete(const nsAString& aName);
 
-  uint32_t Size();
+  void Stringify(nsString& aRetval)
+  {
+    Validate();
+    Serialize(aRetval);
+  }
 
 private:
   void AppendInternal(const nsAString& aName, const nsAString& aValue);

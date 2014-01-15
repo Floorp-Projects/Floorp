@@ -13,7 +13,7 @@ interface nsIVisualEventTracerLog;
  * instrumentation around the mozilla code base.
  */
 
-[scriptable, uuid(D51F7867-42F3-4029-8C4E-C00676253A8E)]
+[builtinclass, scriptable, uuid(713ee3ca-95e0-4085-8616-f6d64a9508ad)]
 interface nsIVisualEventTracer : nsISupports
 {
   /**
@@ -43,11 +43,17 @@ interface nsIVisualEventTracer : nsISupports
   nsIVisualEventTracerLog snapshot();
 };
 
-[scriptable, uuid(52EC8962-F67C-4f49-A9D6-89B8EBDA2649)]
+[builtinclass, scriptable, uuid(8ec6e36d-6cba-400b-bcd6-454679f5f75a)]
 interface nsIVisualEventTracerLog : nsISupports
 {
   /**
    * JSON string of the log.  Use JSON.parse to get it as an object.
    */
   readonly attribute ACString JSONString;
+
+  /**
+   * Write the JSON string returned by JSONString to the log defined by
+   * the environment variable MOZ_PROFILING_FILE.
+   */
+  void writeToProfilingFile();
 };

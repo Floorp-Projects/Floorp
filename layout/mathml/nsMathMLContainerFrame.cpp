@@ -1530,6 +1530,21 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
   return NS_OK;
 }
 
+/*static*/ void
+nsMathMLContainerFrame::PropagateFrameFlagFor(nsIFrame* aFrame,
+                                              uint64_t  aFlags)
+{
+  if (!aFrame || !aFlags)
+    return;
+
+  aFrame->AddStateBits(aFlags);
+  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
+  while (childFrame) {
+    PropagateFrameFlagFor(childFrame, aFlags);
+    childFrame = childFrame->GetNextSibling();
+  }
+}
+
 nsresult
 nsMathMLContainerFrame::ReportErrorToConsole(const char*       errorMsgId,
                                              const char16_t** aParams,

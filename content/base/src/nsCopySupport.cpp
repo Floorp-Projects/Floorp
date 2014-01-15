@@ -67,7 +67,7 @@ static nsresult AppendString(nsITransferable *aTransferable,
 
 // copy HTML node data
 static nsresult AppendDOMNode(nsITransferable *aTransferable,
-                              nsIDOMNode *aDOMNode);
+                              nsINode* aDOMNode);
 
 // Helper used for HTMLCopy and GetTransferableForSelection since both routines
 // share common code.
@@ -421,7 +421,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
 
   if (aCopyFlags & nsIContentViewerEdit::COPY_IMAGE_HTML) {
     // append HTML data to the transferable
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aImageElement, &rv));
+    nsCOMPtr<nsINode> node(do_QueryInterface(aImageElement, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AppendDOMNode(trans, node);
@@ -486,37 +486,33 @@ static nsresult AppendString(nsITransferable *aTransferable,
 }
 
 static nsresult AppendDOMNode(nsITransferable *aTransferable,
-                              nsIDOMNode *aDOMNode)
+                              nsINode *aDOMNode)
 {
   nsresult rv;
-  
+
   // selializer
   nsCOMPtr<nsIDocumentEncoder>
     docEncoder(do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get document for the encoder
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = aDOMNode->GetOwnerDocument(getter_AddRefs(domDocument));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> document = aDOMNode->OwnerDoc();
 
   // Note that XHTML is not counted as HTML here, because we can't copy it
   // properly (all the copy code for non-plaintext assumes using HTML
   // serializers and parsers is OK, and those mess up XHTML).
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDocument, &rv);
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document, &rv);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   NS_ENSURE_TRUE(document->IsHTML(), NS_OK);
 
   // init encoder with document and node
-  rv = docEncoder->Init(domDocument, NS_LITERAL_STRING(kHTMLMime),
-                        nsIDocumentEncoder::OutputAbsoluteLinks |
-                        nsIDocumentEncoder::OutputEncodeW3CEntities);
+  rv = docEncoder->NativeInit(document, NS_LITERAL_STRING(kHTMLMime),
+                              nsIDocumentEncoder::OutputAbsoluteLinks |
+                              nsIDocumentEncoder::OutputEncodeW3CEntities);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = docEncoder->SetNode(aDOMNode);
+  rv = docEncoder->SetNativeNode(aDOMNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // serialize to string
