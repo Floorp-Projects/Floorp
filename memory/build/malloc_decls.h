@@ -15,7 +15,7 @@
 
 #  include "jemalloc_types.h"
 
-#  if defined(__linux__) || (defined(MOZ_MEMORY_ANDROID) && (ANDROID_VERSION < 19))
+#  ifdef __linux__
 typedef void * usable_ptr_t;
 #  else
 typedef const void * usable_ptr_t;
