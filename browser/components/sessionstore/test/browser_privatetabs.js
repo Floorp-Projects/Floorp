@@ -64,6 +64,28 @@ add_task(function() {
   }
 });
 
+add_task(function () {
+  const FRAME_SCRIPT = "data:," +
+    "docShell.QueryInterface%28Ci.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
+
+  // Create a new window to attach our frame script to.
+  let win = yield promiseNewWindowLoaded();
+  win.messageManager.loadFrameScript(FRAME_SCRIPT, true);
+
+  // Create a new tab in the new window that will load the frame script.
+  let tab = win.gBrowser.addTab("about:mozilla");
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+  SyncHandlers.get(browser).flush();
+
+  // Check that we consider the tab as private.
+  let state = JSON.parse(ss.getTabState(tab));
+  ok(state.isPrivate, "tab considered private");
+
+  // Cleanup.
+  yield promiseWindowClosed(win);
+});
+
 function setUsePrivateBrowsing(browser, val) {
   return sendMessage(browser, "ss-test:setUsePrivateBrowsing", val);
 }

@@ -380,6 +380,12 @@ let SessionStorageListener = {
 let PrivacyListener = {
   init: function() {
     docShell.addWeakPrivacyTransitionObserver(this);
+
+    // Check that value at startup as it might have
+    // been set before the frame script was loaded.
+    if (docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing) {
+      MessageQueue.push("isPrivate", () => true);
+    }
   },
 
   // Ci.nsIPrivacyTransitionObserver
