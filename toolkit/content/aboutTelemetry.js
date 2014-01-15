@@ -426,9 +426,12 @@ let Histogram = {
    * @param aParent Parent element
    * @param aName Histogram name
    * @param aHgram Histogram information
+   * @param aOptions Object with render options
+   *                 * exponential: bars follow logarithmic scale
    */
-  render: function Histogram_render(aParent, aName, aHgram) {
+  render: function Histogram_render(aParent, aName, aHgram, aOptions) {
     let hgram = this.unpack(aHgram);
+    let options = aOptions || {};
 
     let outerDiv = document.createElement("div");
     outerDiv.className = "histogram";
@@ -450,7 +453,8 @@ let Histogram = {
     if (isRTL())
       hgram.values.reverse();
 
-    let textData = this.renderValues(outerDiv, hgram.values, hgram.max, hgram.sample_count);
+    let textData = this.renderValues(outerDiv, hgram.values, hgram.max,
+                                     hgram.sample_count, options);
 
     // The 'Copy' button contains the textual data, copied to clipboard on click
     let copyButton = document.createElement("button");
@@ -515,6 +519,16 @@ let Histogram = {
   },
 
   /**
+   * Return a non-negative, logarithmic representation of a non-negative number.
+   * e.g. 0 => 0, 1 => 1, 10 => 2, 100 => 3
+   *
+   * @param aNumber Non-negative number
+   */
+  getLogValue: function(aNumber) {
+    return Math.max(0, Math.log10(aNumber) + 1);
+  },
+
+  /**
    * Create histogram HTML bars, also returns a textual representation
    * Both aMaxValue and aSumValues must be positive.
    * Values are assumed to use 0 as baseline.
@@ -523,21 +537,26 @@ let Histogram = {
    * @param aValues Histogram values
    * @param aMaxValue Value of the longest bar (length, not label)
    * @param aSumValues Sum of all bar values
+   * @param aOptions Object with render options (@see #render)
    */
-  renderValues: function Histogram_renderValues(aDiv, aValues, aMaxValue, aSumValues) {
+  renderValues: function Histogram_renderValues(aDiv, aValues, aMaxValue, aSumValues, aOptions) {
     let text = "";
     // If the last label is not the longest string, alignment will break a little
     let labelPadTo = String(aValues[aValues.length -1][0]).length;
+    let maxBarValue = aOptions.exponential ? this.getLogValue(aMaxValue) : aMaxValue;
 
     for (let [label, value] of aValues) {
+      let barValue = aOptions.exponential ? this.getLogValue(value) : value;
+
       // Create a text representation: <right-aligned-label> |<bar-of-#><value>  <percentage>
       text += EOL
               + " ".repeat(Math.max(0, labelPadTo - String(label).length)) + label // Right-aligned label
-              + " |" + "#".repeat(Math.round(MAX_BAR_CHARS * value / aMaxValue)) + value // Bars and value
+              + " |" + "#".repeat(Math.round(MAX_BAR_CHARS * barValue / maxBarValue)) // Bar
+              + "  " + value // Value
               + "  " + Math.round(100 * value / aSumValues) + "%"; // Percentage
 
       // Construct the HTML labels + bars
-      let belowEm = Math.round(MAX_BAR_HEIGHT * (value / aMaxValue) * 10) / 10;
+      let belowEm = Math.round(MAX_BAR_HEIGHT * (barValue / maxBarValue) * 10) / 10;
       let aboveEm = MAX_BAR_HEIGHT - belowEm;
 
       let barDiv = document.createElement("div");
