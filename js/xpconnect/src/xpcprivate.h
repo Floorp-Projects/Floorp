@@ -2922,15 +2922,13 @@ private:
 
 class nsXPCComponents : public nsIXPCComponents,
                         public nsIXPCScriptable,
-                        public nsIClassInfo,
-                        public nsISecurityCheckedComponent
+                        public nsIClassInfo
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
     static bool
