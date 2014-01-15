@@ -842,7 +842,7 @@ GetErrorMessage(void* userRef, const char* locale, const unsigned errorNumber)
 }
 
 static bool
-TypeError(JSContext* cx, const char* expected, jsval actual)
+TypeError(JSContext* cx, const char* expected, HandleValue actual)
 {
   JSString* str = JS_ValueToSource(cx, actual);
   JSAutoByteString bytes;
@@ -3010,7 +3010,8 @@ BuildDataSource(JSContext* cx,
       return false;
 
     // Escape characters, and quote as necessary.
-    JSString* src = JS_ValueToSource(cx, STRING_TO_JSVAL(str));
+    RootedValue valStr(cx, StringValue(str));
+    JSString* src = JS_ValueToSource(cx, valStr);
     if (!src)
       return false;
 
@@ -6902,7 +6903,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
     return false;
   }
 
-  JS::Value valCodePtr = args[1];
+  JS::HandleValue valCodePtr = args[1];
   if (!valCodePtr.isObject()) {
     return TypeError(cx, "_a CData object_ of a function pointer type",
                      valCodePtr);
@@ -6918,12 +6919,13 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
                      valCodePtr);
   }
   RootedObject objCodePtrType(cx, CData::GetCType(objCodePtr));
+  RootedValue valCodePtrType(cx, ObjectValue(*objCodePtrType));
   MOZ_ASSERT(objCodePtrType);
 
   TypeCode typCodePtr = CType::GetTypeCode(objCodePtrType);
   if (typCodePtr != TYPE_pointer) {
     return TypeError(cx, "a CData object of a function _pointer_ type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
+                     valCodePtrType);
   }
 
   JSObject *objCodeType = PointerType::GetBaseType(objCodePtrType);
@@ -6932,12 +6934,12 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
   TypeCode typCode = CType::GetTypeCode(objCodeType);
   if (typCode != TYPE_function) {
     return TypeError(cx, "a CData object of a _function_ pointer type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
+                     valCodePtrType);
   }
   uintptr_t code = *reinterpret_cast<uintptr_t*>(CData::GetData(objCodePtr));
   if (!code) {
     return TypeError(cx, "a CData object of a _non-NULL_ function pointer type",
-                     OBJECT_TO_JSVAL(objCodePtrType));
+                     valCodePtrType);
   }
 
   FunctionInfo* funInfoFinalizer =
@@ -6946,8 +6948,9 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   if ((funInfoFinalizer->mArgTypes.length() != 1)
       || (funInfoFinalizer->mIsVariadic)) {
+    RootedValue valCodeType(cx, ObjectValue(*objCodeType));
     return TypeError(cx, "a function accepting exactly one argument",
-                     OBJECT_TO_JSVAL(objCodeType));
+                     valCodeType);
   }
   RootedObject objArgType(cx, funInfoFinalizer->mArgTypes[0]);
   RootedObject returnType(cx, funInfoFinalizer->mReturnType);
@@ -6969,8 +6972,9 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   if (!ImplicitConvert(cx, valData, objArgType, cargs.get(),
                        false, &freePointer)) {
+    RootedValue valArgType(cx, ObjectValue(*objArgType));
     return TypeError(cx, "(an object that can be converted to the following type)",
-                     OBJECT_TO_JSVAL(objArgType));
+                     valArgType);
   }
   if (freePointer) {
     // Note: We could handle that case, if necessary.
@@ -7116,7 +7120,8 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, jsval *vp)
   if (!obj)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(obj)) {
-    return TypeError(cx, "a CDataFinalizer", OBJECT_TO_JSVAL(obj));
+    RootedValue val(cx, ObjectValue(*obj));
+    return TypeError(cx, "a CDataFinalizer", val);
   }
 
   CDataFinalizer::Private *p = (CDataFinalizer::Private *)
@@ -7163,7 +7168,8 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval *vp)
   if (!obj)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(obj)) {
-    return TypeError(cx, "a CDataFinalizer", OBJECT_TO_JSVAL(obj));
+    RootedValue val(cx, ObjectValue(*obj));
+    return TypeError(cx, "a CDataFinalizer", val);
   }
 
   CDataFinalizer::Private *p = (CDataFinalizer::Private *)

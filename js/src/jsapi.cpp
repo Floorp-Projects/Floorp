@@ -411,9 +411,8 @@ JS_ValueToConstructor(JSContext *cx, HandleValue value)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_ValueToSource(JSContext *cx, jsval valueArg)
+JS_ValueToSource(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -439,9 +438,8 @@ JS_DoubleToUint32(double d)
 }
 
 JS_PUBLIC_API(JSType)
-JS_TypeOfValue(JSContext *cx, jsval valueArg)
+JS_TypeOfValue(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -470,18 +468,13 @@ JS_StrictlyEqual(JSContext *cx, jsval value1, jsval value2, bool *equal)
 }
 
 JS_PUBLIC_API(bool)
-JS_LooselyEqual(JSContext *cx, jsval value1Arg, jsval value2Arg, bool *equal)
+JS_LooselyEqual(JSContext *cx, HandleValue value1, HandleValue value2, bool *equal)
 {
-    RootedValue value1(cx, value1Arg);
-    RootedValue value2(cx, value2Arg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value1, value2);
-    bool eq;
-    if (!LooselyEqual(cx, value1, value2, &eq))
-        return false;
-    *equal = eq;
-    return true;
+    JS_ASSERT(equal);
+    return LooselyEqual(cx, value1, value2, equal);
 }
 
 JS_PUBLIC_API(bool)
@@ -1369,29 +1362,20 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
 }
 
 JS_PUBLIC_API(bool)
-JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objpArg)
+JS_GetClassObject(JSContext *cx, HandleObject obj, JSProtoKey key, MutableHandleObject objp)
 {
-    RootedObject objp(cx, *objpArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-
     assertSameCompartment(cx, obj);
-    if (!js_GetClassObject(cx, obj, key, &objp))
-        return false;
-    *objpArg = objp;
-    return true;
+    return js_GetClassObject(cx, obj, key, objp);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp_)
+JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-
-    RootedObject objp(cx);
-    bool result = js_GetClassPrototype(cx, key, &objp);
-    *objp_ = objp;
-    return result;
+    return js_GetClassPrototype(cx, key, objp);
 }
 
 JS_PUBLIC_API(JSProtoKey)

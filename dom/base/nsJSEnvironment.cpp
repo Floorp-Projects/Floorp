@@ -1053,8 +1053,8 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
 #ifdef DEBUG
   {
     JSAutoCompartment ac(cx, aHandler);
-    NS_ASSERTION(JS_TypeOfValue(cx,
-                                OBJECT_TO_JSVAL(aHandler)) == JSTYPE_FUNCTION,
+    JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*aHandler));
+    NS_ASSERTION(JS_TypeOfValue(cx, val) == JSTYPE_FUNCTION,
                  "Event handler object not a function");
   }
 #endif

@@ -823,7 +823,7 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         if (key != JSProto_Null) {
             MOZ_ASSERT(key < JSProto_LIMIT);
             RootedObject constructor(cx);
-            if (!JS_GetClassObject(cx, target, key, constructor.address()))
+            if (!JS_GetClassObject(cx, target, key, &constructor))
                 return false;
             MOZ_ASSERT(constructor);
             desc.value().set(ObjectValue(*constructor));
