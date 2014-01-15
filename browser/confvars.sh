@@ -64,6 +64,7 @@ MOZ_PAY=1
 # Enable activities. These are used for FxOS developers currently.
 MOZ_ACTIVITIES=1
 MOZ_JSDOWNLOADS=1
+MOZ_WEBM_ENCODER=1
 # Enable exact rooting on desktop.
 JSGC_USE_EXACT_ROOTING=1
 
