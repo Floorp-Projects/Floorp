@@ -773,7 +773,9 @@ SessionStore.prototype = {
 
         let window = Services.wm.getMostRecentWindow("navigator:browser");
 
-        this._selectedWindow = data.selectedWindow;
+        if (typeof data.selectedWindow == "number") {
+          this._selectedWindow = data.selectedWindow;
+        }
         let windowIndex = this._selectedWindow - 1;
         let tabs = data.windows[windowIndex].tabs;
         let selected = data.windows[windowIndex].selected;
