@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>CodeMirror: Basic Tests</title>
+    <title>CodeMirror: VIM/Emacs tests</title>
     <link rel="stylesheet" href="chrome://browser/content/devtools/codemirror/codemirror.css">
     <link rel="stylesheet" href="cm_mode_test.css">
     <!--<link rel="stylesheet" href="../doc/docs.css">-->
@@ -45,7 +45,7 @@
     </style>
   </head>
   <body>
-    <h1>CodeMirror: Basic Tests</h1>
+    <h1>CodeMirror: VIM/Emacs tests</h1>
 
     <p>A limited set of programmatic sanity tests for CodeMirror.</p>
 
@@ -58,14 +58,14 @@
     <div id=testground></div>
 
     <script src="cm_driver.js"></script>
+    <script src="cm_vim_test.js"></script>
+    <script src="cm_emacs_test.js"></script>
+
+    <!-- Basic tests are in codemirror.html
     <script src="cm_test.js"></script>
     <script src="cm_comment_test.js"></script>
     <script src="cm_mode_test.js"></script>
     <script src="cm_mode_javascript_test.js"></script>
-
-    <!-- VIM and Emacs mode tests are in vimemacs.html
-    <script src="cm_vim_test.js"></script>
-    <script src="cm_emacs_test.js"></script>
     -->
 
     <!-- These modes/addons are not used by Editor
@@ -104,8 +104,9 @@
           failed = 0,
           bad = "",
           running = false, // Flag that states tests are running
-         quit = false, // Flag to quit tests ASAP
-         verbose = false; // Adds message for *every* test to output
+          quit = false, // Flag to quit tests ASAP
+          verbose = false, // Adds message for *every* test to output
+          phantom = false;
 
       function runHarness(){
         if (running) {
