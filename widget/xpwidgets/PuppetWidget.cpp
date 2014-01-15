@@ -273,24 +273,25 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   if (event->message == NS_COMPOSITION_START) {
     mIMEComposing = true;
   }
+  uint32_t seqno = kLatestSeqno;
   switch (event->eventStructType) {
   case NS_COMPOSITION_EVENT:
-    mIMELastReceivedSeqno = event->AsCompositionEvent()->seqno;
-    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-      return NS_OK;
+    seqno = event->AsCompositionEvent()->mSeqno;
     break;
   case NS_TEXT_EVENT:
-    mIMELastReceivedSeqno = event->AsTextEvent()->seqno;
-    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-      return NS_OK;
+    seqno = event->AsTextEvent()->mSeqno;
     break;
   case NS_SELECTION_EVENT:
-    mIMELastReceivedSeqno = event->AsSelectionEvent()->seqno;
-    if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
-      return NS_OK;
+    seqno = event->AsSelectionEvent()->mSeqno;
     break;
   default:
     break;
+  }
+  if (seqno != kLatestSeqno) {
+    mIMELastReceivedSeqno = seqno;
+    if (mIMELastReceivedSeqno < mIMELastBlurSeqno) {
+      return NS_OK;
+    }
   }
 
   if (mAttachedWidgetListener) {
@@ -352,7 +353,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
   nsEventStatus status;
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
   InitEvent(textEvent, nullptr);
-  textEvent.seqno = mIMELastReceivedSeqno;
+  textEvent.mSeqno = mIMELastReceivedSeqno;
   // SendEndIMEComposition is always called since ResetInputState
   // should always be called even if we aren't composing something.
   if (!mTabChild ||
@@ -367,7 +368,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 
   WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
   InitEvent(compEvent, nullptr);
-  compEvent.seqno = mIMELastReceivedSeqno;
+  compEvent.mSeqno = mIMELastReceivedSeqno;
   DispatchEvent(&compEvent, status);
   return NS_OK;
 }

@@ -1116,7 +1116,7 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
   mIMECompositionStart = std::min(mIMESelectionAnchor, mIMESelectionFocus);
   if (mIMECompositionEnding)
     return true;
-  event.seqno = ++mIMESeqno;
+  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -1147,7 +1147,7 @@ TabParent::SendTextEvent(WidgetTextEvent& event)
   mIMESelectionAnchor = mIMESelectionFocus =
       mIMECompositionStart + event.theText.Length();
 
-  event.seqno = ++mIMESeqno;
+  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendTextEvent(event);
 }
 
@@ -1159,7 +1159,7 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   }
   mIMESelectionAnchor = event.mOffset + (event.mReversed ? event.mLength : 0);
   mIMESelectionFocus = event.mOffset + (!event.mReversed ? event.mLength : 0);
-  event.seqno = ++mIMESeqno;
+  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendSelectionEvent(event);
 }
 
