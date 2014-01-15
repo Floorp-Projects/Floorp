@@ -486,7 +486,7 @@ public:
    * the lock methods should be used to avoid the copy, however this should be
    * avoided if the surface is required for a long period of time.
    */
-  already_AddRefed<gfxASurface> GetCurrentAsSurface(gfx::IntSize* aSizeResult);
+  already_AddRefed<gfxASurface> DeprecatedGetCurrentAsSurface(gfx::IntSize* aSizeResult);
 
   /**
    * This is similar to GetCurrentAsSurface, however this does not make a copy
@@ -496,8 +496,19 @@ public:
    * type of image. Optionally a pointer can be passed to receive the current
    * image.
    */
-  already_AddRefed<gfxASurface> LockCurrentAsSurface(gfx::IntSize* aSizeResult,
-                                                     Image** aCurrentImage = nullptr);
+  already_AddRefed<gfxASurface> DeprecatedLockCurrentAsSurface(gfx::IntSize* aSizeResult,
+                                                               Image** aCurrentImage = nullptr);
+
+  /**
+   * Same as GetCurrentAsSurface but for Moz2D
+   */
+  TemporaryRef<gfx::SourceSurface> GetCurrentAsSourceSurface(gfx::IntSize* aSizeResult);
+
+  /**
+   * Same as LockCurrentAsSurface but for Moz2D
+   */
+  TemporaryRef<gfx::SourceSurface> LockCurrentAsSourceSurface(gfx::IntSize* aSizeResult,
+                                                              Image** aCurrentImage = nullptr);
 
   /**
    * Returns the size of the image in pixels.
@@ -671,7 +682,7 @@ class AutoLockImage
 public:
   AutoLockImage(ImageContainer *aContainer) : mContainer(aContainer) { mImage = mContainer->LockCurrentImage(); }
   AutoLockImage(ImageContainer *aContainer, gfxASurface **aSurface) : mContainer(aContainer) {
-    *aSurface = mContainer->LockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
+    *aSurface = mContainer->DeprecatedLockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
   }
   ~AutoLockImage() { if (mContainer) { mContainer->UnlockCurrentImage(); } }
 
