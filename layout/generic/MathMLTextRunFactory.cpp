@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MathVariantTextRunFactory.h"
+#include "MathMLTextRunFactory.h"
 
 #include "mozilla/ArrayUtils.h"
  
@@ -517,8 +517,8 @@ MathVariant(uint32_t aCh, uint8_t aMathVar)
 }
 
 void
-nsMathVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-                                            gfxContext* aRefContext)
+MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
+                                     gfxContext* aRefContext)
 {
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
   gfxFontStyle fontStyle = *fontGroup->GetStyle();
@@ -536,6 +536,56 @@ nsMathVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   uint32_t length = aTextRun->GetLength();
   const char16_t* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
+
+  if (mSSTYScriptLevel && length) {
+    bool found = false;
+    // We respect ssty settings explicitly set by the user
+    for (uint32_t i = 0; i < fontStyle.featureSettings.Length(); i++) {
+      if (fontStyle.featureSettings[i].mTag == TRUETYPE_TAG('s','s','t','y')) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      uint8_t sstyLevel = 0;
+      float scriptScaling = pow(styles[0]->StyleFont()->mScriptSizeMultiplier,
+                                mSSTYScriptLevel);
+      static_assert(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER < 1,
+                    "Shouldn't it make things smaller?");
+      /*
+        An SSTY level of 2 is set if the scaling factor is less than or equal
+        to halfway between that for a scriptlevel of 1 (0.71) and that of a
+        scriptlevel of 2 (0.71^2), assuming the default script size multiplier.
+        An SSTY level of 1 is set if the script scaling factor is less than 
+        or equal that for a scriptlevel of 1 assuming the default script size
+        multiplier.
+
+        User specified values of script size multiplier will change the scaling
+        factor which mSSTYScriptLevel values correspond to.
+
+        In the event that the script size multiplier actually makes things
+        larger, no change is made.
+
+        If the user doesn't want this to happen, all they need to do is set
+        style="-moz-font-feature-settings: 'ssty' 0"
+      */
+      if (scriptScaling <= (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER +
+                            (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER*
+                             NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER))/2) {
+        // Currently only the first two ssty settings are used, so two is large
+        // as we go
+        sstyLevel = 2;
+      } else if (scriptScaling <= NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER) {
+        sstyLevel = 1;
+      }
+      if (sstyLevel) {
+        gfxFontFeature settingSSTY;
+        settingSSTY.mTag = TRUETYPE_TAG('s','s','t','y');
+        settingSSTY.mValue = sstyLevel;
+        fontStyle.featureSettings.AppendElement(settingSSTY);
+      }
+    }
+  }
 
   uint8_t mathVar;
   bool doMathvariantStyling = true;
@@ -613,8 +663,10 @@ nsMathVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
              doMathvariantStyling) {
     fontStyle.style = NS_FONT_STYLE_ITALIC;
     fontStyle.weight = NS_FONT_WEIGHT_BOLD;
-  } else {
+  } else if (mathVar != NS_MATHML_MATHVARIANT_NONE) {
     // Mathvariant overrides fontstyle and fontweight
+    // Need to check to see if mathvariant is actually applied as this function
+    // is used for other purposes.
     fontStyle.style = NS_FONT_STYLE_NORMAL;
     fontStyle.weight = NS_FONT_WEIGHT_NORMAL;
   }

@@ -151,7 +151,7 @@ public:
   //    2b. If the automatic data to update affects us in some way, we ask our parent
   //        to re-layout its children using ReLayoutChildren(mParent);
   //        Therefore, there is an overhead here in that our siblings are re-laid
-  //        too (e.g., this happens with <mstyle>, <munder>, <mover>, <munderover>). 
+  //        too (e.g., this happens with <munder>, <mover>, <munderover>). 
   NS_IMETHOD
   AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
@@ -338,6 +338,11 @@ public:
                                        int32_t         aLastChildIndex,
                                        uint32_t        aFlagsValues,
                                        uint32_t        aFlagsToUpdate);
+
+  // Sets flags on aFrame and all descendant frames
+  static void
+  PropagateFrameFlagFor(nsIFrame* aFrame,
+                        uint64_t  aFlags);
 
   // helper to let the rebuild of automatic data (presentation data
   // and embellishement data) walk through a subtree that may contain

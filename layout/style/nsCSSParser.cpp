@@ -651,6 +651,7 @@ protected:
   bool ParseTextDecorationLine(nsCSSValue& aValue);
   bool ParseTextCombineHorizontal(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
+  bool ParseTouchAction(nsCSSValue& aValue);
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
   bool ParseShadowList(nsCSSProperty aProperty);
@@ -7919,6 +7920,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseTextCombineHorizontal(aValue);
       case eCSSProperty_text_overflow:
         return ParseTextOverflow(aValue);
+      case eCSSProperty_touch_action:
+        return ParseTouchAction(aValue);
       default:
         NS_ABORT_IF_FALSE(false, "should not reach here");
         return false;
@@ -11084,6 +11087,36 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
   else {
     aValue = left;
   }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTouchAction(nsCSSValue& aValue)
+{
+  if (!ParseVariant(aValue, VARIANT_HK | VARIANT_NONE | VARIANT_AUTO,
+                    nsCSSProps::kTouchActionKTable)) {
+    return false;
+  }
+
+  // Auto and None keywords aren't allowed in conjunction with others.
+  // Also inherit, initial and unset values are available.
+  if (eCSSUnit_Enumerated != aValue.GetUnit()) {
+    return true;
+  }
+
+  int32_t intValue = aValue.GetIntValue();
+  nsCSSValue nextValue;
+  if (ParseEnum(nextValue, nsCSSProps::kTouchActionKTable)) {
+    int32_t nextIntValue = nextValue.GetIntValue();
+
+    // duplicates aren't allowed.
+    if (nextIntValue & intValue) {
+      return false;
+    }
+
+    aValue.SetIntValue(nextIntValue | intValue, eCSSUnit_Enumerated);
+  }
+
   return true;
 }
 

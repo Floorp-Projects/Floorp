@@ -21,18 +21,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1; user-scalable=no"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
-    <script type="application/javascript;version=1.7"><![CDATA[
-      const Ci = Components.interfaces;
-      const Cu = Components.utils;
-
-      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-      if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-        document.addEventListener("DOMContentLoaded", function () {
-          document.body.setAttribute("class", "normal");
-        }, false);
-      }
-    ]]></script>
   </head>
 
   <body class="private">
@@ -46,5 +34,7 @@
 
       <p>&privatebrowsingpage.moreInfo;</p>
     </div>
+
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
   </body>
 </html>

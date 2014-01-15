@@ -347,11 +347,15 @@ else:
     ]
 
 if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
-    SOURCES += [
-        'assembler/assembler/ARMAssembler.cpp',
-        'assembler/assembler/MacroAssemblerARM.cpp',
-        'assembler/assembler/MacroAssemblerX86Common.cpp',
-    ]
+    if '86' in CONFIG['TARGET_CPU']:
+        SOURCES += [
+            'assembler/assembler/MacroAssemblerX86Common.cpp',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'assembler/assembler/ARMAssembler.cpp',
+            'assembler/assembler/MacroAssemblerARM.cpp',
+        ]
 
 if CONFIG['ENABLE_YARR_JIT']:
     SOURCES += [

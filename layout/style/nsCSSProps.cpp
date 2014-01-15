@@ -1596,6 +1596,12 @@ const int32_t nsCSSProps::kTextTransformKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kTouchActionKTable[] = {
+  eCSSKeyword_pan_x, NS_STYLE_TOUCH_ACTION_PAN_X,
+  eCSSKeyword_pan_y, NS_STYLE_TOUCH_ACTION_PAN_Y,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const int32_t nsCSSProps::kTransitionTimingFunctionKTable[] = {
   eCSSKeyword_ease, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
   eCSSKeyword_linear, NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR,
