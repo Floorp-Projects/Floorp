@@ -313,6 +313,11 @@ toolbarbutton.bookmark-item[open="true"] {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar-menuPanel.png") !important;
+}
+
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,

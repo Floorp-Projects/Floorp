@@ -582,6 +582,9 @@ CustomizeMode.prototype = {
 
     if (aNode.hasAttribute("flex")) {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
+      if (aPlace == "palette") {
+        aNode.removeAttribute("flex");
+      }
     }
 
 
@@ -646,6 +649,10 @@ CustomizeMode.prototype = {
 
     if (aWrapper.hasAttribute("itemchecked")) {
       toolbarItem.checked = true;
+    }
+
+    if (aWrapper.hasAttribute("flex") && !toolbarItem.hasAttribute("flex")) {
+      toolbarItem.setAttribute("flex", aWrapper.getAttribute("flex"));
     }
 
     if (aWrapper.hasAttribute("itemcommand")) {
