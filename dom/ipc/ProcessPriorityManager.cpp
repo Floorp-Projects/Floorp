@@ -807,7 +807,16 @@ ParticularProcessPriorityManager::ResetPriority()
   ProcessPriority processPriority = ComputePriority();
   if (mPriority == PROCESS_PRIORITY_UNKNOWN ||
       mPriority > processPriority) {
-    ScheduleResetPriority("backgroundGracePeriodMS");
+    // Apps set at a perceivable background priority are often playing media.
+    // Most media will have short gaps while changing tracks between songs,
+    // switching videos, etc.  Give these apps a longer grace period so they
+    // can get their next track started, if there is one, before getting
+    // downgraded.
+    if (mPriority == PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE) {
+      ScheduleResetPriority("backgroundPerceivableGracePeriodMS");
+    } else {
+      ScheduleResetPriority("backgroundGracePeriodMS");
+    }
     return;
   }
 
