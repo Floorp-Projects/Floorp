@@ -508,13 +508,16 @@ class Marionette(object):
                                 gecko_path=gecko_path,
                                 busybox=busybox)
 
-    def __del__(self):
+    def cleanup(self):
         if self.emulator:
             self.emulator.close()
         if self.instance:
             self.instance.close()
         for qemu in self.extra_emulators:
             qemu.emulator.close()
+
+    def __del__(self):
+        self.cleanup()
 
     @staticmethod
     def is_port_available(port, host=''):
