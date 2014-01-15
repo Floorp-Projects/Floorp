@@ -1,6 +1,6 @@
 import lldb
 
-__all__ = ['content', 'layout', 'utils']
+__all__ = ['content', 'general', 'layout', 'utils']
 
 def init():
     for name in __all__:
