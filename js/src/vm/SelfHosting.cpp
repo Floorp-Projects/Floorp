@@ -626,6 +626,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
+    JS_FNINFO("SetForkJoinTargetRegion",
+              intrinsic_SetForkJoinTargetRegion,
+              &intrinsic_SetForkJoinTargetRegionInfo, 2, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewTypedHandle",

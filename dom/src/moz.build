@@ -6,7 +6,6 @@
 
 DIRS += [
     'jsurl',
-    'events',
     'storage',
     'offline',
     'json',

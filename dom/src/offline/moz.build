@@ -15,8 +15,8 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     "/content/base/src",
-    "/content/events/src",
     "/dom/base",
+    "/dom/events",
 ]
 
 FINAL_LIBRARY = 'gklayout'

@@ -290,7 +290,8 @@ BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned inden
 {
     if (proxy->isCallable())
         return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
-    ReportIsNotFunction(cx, ObjectValue(*proxy));
+    RootedValue v(cx, ObjectValue(*proxy));
+    ReportIsNotFunction(cx, v);
     return nullptr;
 }
 
@@ -3300,27 +3301,28 @@ proxy_create(JSContext *cx, unsigned argc, Value *vp)
 static bool
 proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc < 2) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "createFunction", "1", "");
         return false;
     }
-    RootedObject handler(cx, NonNullObject(cx, vp[2]));
+    RootedObject handler(cx, NonNullObject(cx, args[0]));
     if (!handler)
         return false;
     RootedObject proto(cx), parent(cx);
-    parent = vp[0].toObject().getParent();
+    parent = args.callee().getParent();
     proto = parent->global().getOrCreateFunctionPrototype(cx);
     if (!proto)
         return false;
     parent = proto->getParent();
 
-    RootedObject call(cx, ValueToCallable(cx, vp[3], argc - 2));
+    RootedObject call(cx, ValueToCallable(cx, args[1], args.length() - 2));
     if (!call)
         return false;
     RootedObject construct(cx, nullptr);
-    if (argc > 2) {
-        construct = ValueToCallable(cx, vp[4], argc - 3);
+    if (args.length() > 2) {
+        construct = ValueToCallable(cx, args[2], args.length() - 3);
         if (!construct)
             return false;
     } else {

@@ -123,11 +123,9 @@ nsresult
 MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+  PlatformDecoderModule::Init();
   mMP4Stream = new MP4Stream(mDecoder->GetResource());
   mDemuxer = new MP4Demuxer(mMP4Stream);
-
-  mPlatform = PlatformDecoderModule::Create();
-  NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
 
   InitLayersBackendType();
 
@@ -157,25 +155,28 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
+  mPlatform = PlatformDecoderModule::Create();
+  NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
+
   if (mHasAudio) {
     mInfo.mAudio.mRate = audio.samples_per_second();
     mInfo.mAudio.mChannels = ChannelLayoutToChannelCount(audio.channel_layout());
-    mAudioDecoder = mPlatform->CreateAACDecoder(mInfo.mAudio.mChannels,
-                                                mInfo.mAudio.mRate,
-                                                audio.bits_per_channel(),
-                                                audio.extra_data(),
-                                                audio.extra_data_size());
+    mAudioDecoder = mPlatform->CreateAACDecoder(audio);
     NS_ENSURE_TRUE(mAudioDecoder != nullptr, NS_ERROR_FAILURE);
+    nsresult rv = mAudioDecoder->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mInfo.mVideo.mHasVideo = mHasVideo = mDemuxer->HasVideo();
   if (mHasVideo) {
-    const VideoDecoderConfig& config = mDemuxer->VideoConfig();
-    IntSize sz = config.natural_size();
+    IntSize sz = video.natural_size();
     mInfo.mVideo.mDisplay = nsIntSize(sz.width(), sz.height());
-    mVideoDecoder = mPlatform->CreateH264Decoder(mLayersBackendType,
+    mVideoDecoder = mPlatform->CreateH264Decoder(video,
+                                                 mLayersBackendType,
                                                  mDecoder->GetImageContainer());
     NS_ENSURE_TRUE(mVideoDecoder != nullptr, NS_ERROR_FAILURE);
+    nsresult rv = mVideoDecoder->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Get the duration, and report it to the decoder if we have it.
@@ -282,16 +283,15 @@ MP4Reader::Decode(TrackType aTrack, nsAutoPtr<MediaData>& aOutData)
           // frames coming.
           return false;
         }
-        const std::vector<uint8_t>* data = compressed->data;
-        status = decoder->Input(&data->front(),
-                                data->size(),
-                                compressed->decode_timestamp,
-                                compressed->composition_timestamp,
-                                compressed->byte_offset);
+        status = decoder->Input(compressed);
       } while (status == DECODE_STATUS_OK);
       if (status == DECODE_STATUS_NOT_ACCEPTING) {
         // Decoder should now be able to produce an output.
-        SampleQueue(aTrack).push_front(compressed.forget());
+        if (compressed != nullptr) {
+          // Decoder didn't consume data, attempt to decode the same
+          // sample next time.
+          SampleQueue(aTrack).push_front(compressed.forget());
+        }
         continue;
       }
       LOG("MP4Reader decode failure. track=%d status=%d\n", aTrack, status);
@@ -401,8 +401,9 @@ MP4Reader::OnDecodeThreadStart()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Must not be on main thread.");
   MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  MOZ_ASSERT(mPlatform);
-  mPlatform->OnDecodeThreadStart();
+  if (mPlatform) {
+    mPlatform->OnDecodeThreadStart();
+  }
 }
 
 void
@@ -410,8 +411,9 @@ MP4Reader::OnDecodeThreadFinish()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Must not be on main thread.");
   MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  MOZ_ASSERT(mPlatform);
-  mPlatform->OnDecodeThreadFinish();
+  if (mPlatform) {
+    mPlatform->OnDecodeThreadFinish();
+  }
 }
 
 } // namespace mozilla

@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
   <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="setTimeout(runTests, 0);">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=864040">Mozilla Bug 864040</a>
 <div id="display">
   <textarea id="ta" rows="5" cols="20"></textarea>
@@ -79,6 +79,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
     }
 
     SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.waitForFocus(runTests);
   </script>
 </pre>
 </body>
