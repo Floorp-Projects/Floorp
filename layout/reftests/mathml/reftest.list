@@ -8,6 +8,7 @@ fails == dir-6.html dir-6-ref.html
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
+== dir-11.html dir-11-ref.html
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
@@ -82,14 +83,13 @@ fails-if((OSX&&(OSX<10.8))||/^Windows\x20NT\x206\.[^0]/.test(http.oscpu)||Androi
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 == mstyle-3.xhtml mstyle-3-ref.xhtml
 == mstyle-4.xhtml mstyle-4-ref.xhtml
-fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
+== mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
 == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 != stretchy-1.html stretchy-1-ref.html
-== math-as-mstyle-1.xhtml math-as-mstyle-1-ref.xhtml
 == mspace-1.html mspace-1-ref.html
 == mpadded-1.html mpadded-1-ref.html
 == mpadded-2.html mpadded-2-ref.html
@@ -163,3 +163,7 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
+== ssty-1.html ssty-1-ref.html
+== ssty-2.html ssty-2-ref.html
+== ssty-3.html ssty-3-ref.html
+== ssty-4.html ssty-4-ref.html

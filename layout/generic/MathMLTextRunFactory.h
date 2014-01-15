@@ -3,23 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MATHVARIANTTEXTRUNFACTORY_H_
-#define MATHVARIANTTEXTRUNFACTORY_H_
+#ifndef MATHMLTEXTRUNFACTORY_H_
+#define MATHMLTEXTRUNFACTORY_H_
 
 #include "nsTextRunTransformations.h"
 
 /**
- * Builds textruns that render their text using a mathvariant
+ * Builds textruns that render their text with MathML specific renderings.
  */
-class nsMathVariantTextRunFactory : public nsTransformingTextRunFactory {
+class MathMLTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  nsMathVariantTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory)
-    : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory) {}
+  MathMLTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+                       uint8_t aSSTYScriptLevel)
+    : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
+      mSSTYScriptLevel(aSSTYScriptLevel) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               gfxContext* aRefContext) MOZ_OVERRIDE;
 protected:
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+  uint8_t mSSTYScriptLevel;
 };
 
-#endif /*MATHVARIANTTEXTRUNFACTORY_H_*/
+#endif /*MATHMLTEXTRUNFACTORY_H_*/

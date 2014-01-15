@@ -39,13 +39,13 @@ public:
     return this;
   }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() MOZ_OVERRIDE
   {
     if (!mAllocated) {
       NS_WARNING("Can't get as surface");
       return nullptr;
     }
-    return PlanarYCbCrImage::GetAsSurface();
+    return PlanarYCbCrImage::DeprecatedGetAsSurface();
   }
 
   virtual void SetData(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
@@ -100,7 +100,7 @@ public:
   virtual TextureClient* GetTextureClient() MOZ_OVERRIDE;
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() MOZ_OVERRIDE;
   virtual void SetData(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
   virtual void SetDataNoCopy(const Data &aData) MOZ_OVERRIDE;
 

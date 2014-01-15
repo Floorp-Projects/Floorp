@@ -41,12 +41,10 @@ nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent)
 
   mPresentationData.flags = 0;
   mPresentationData.baseFrame = nullptr;
-  mPresentationData.mstyle = nullptr;
 
   // by default, just inherit the display of our parent
   nsPresentationData parentData;
   GetPresentationDataFrom(aParent, parentData);
-  mPresentationData.mstyle = parentData.mstyle;
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
@@ -124,7 +122,6 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
   // initialize OUT params
   aPresentationData.flags = 0;
   aPresentationData.baseFrame = nullptr;
-  aPresentationData.mstyle = nullptr;
 
   nsIFrame* frame = aFrame;
   while (frame) {
@@ -147,48 +144,12 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       break;
 
     if (content->Tag() == nsGkAtoms::math) {
-      aPresentationData.mstyle = frame->FirstContinuation();
       break;
     }
     frame = frame->GetParent();
   }
   NS_WARN_IF_FALSE(frame && frame->GetContent(),
                    "bad MathML markup - could not find the top <math> element");
-}
-
-// helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-/* static */ bool
-nsMathMLFrame::GetAttribute(nsIContent* aContent,
-                            nsIFrame*   aMathMLmstyleFrame,
-                            nsIAtom*    aAttributeAtom,
-                            nsString&   aValue)
-{
-  // see if we can get the attribute from the content
-  if (aContent && aContent->GetAttr(kNameSpaceID_None, aAttributeAtom,
-                                    aValue)) {
-    return true;
-  }
-
-  // see if we can get the attribute from the mstyle frame
-  if (!aMathMLmstyleFrame) {
-    return false;
-  }
-
-  nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
-
-  nsPresentationData mstyleParentData;
-  mstyleParentData.mstyle = nullptr;
-
-  if (mstyleParent) {
-    nsIMathMLFrame* mathMLFrame = do_QueryFrame(mstyleParent);
-    if (mathMLFrame) {
-      mathMLFrame->GetPresentationData(mstyleParentData);
-    }
-  }
-
-  // recurse all the way up into the <mstyle> hierarchy
-  return GetAttribute(aMathMLmstyleFrame->GetContent(),
-                      mstyleParentData.mstyle, aAttributeAtom, aValue);
 }
 
 /* static */ void

@@ -197,6 +197,7 @@ class TestAgentSend : public TestAgent {
         test_utils->sts_target(),
         audio_,
         1,
+        1,
         audio_conduit_,
         audio_rtp_transport_.flow_,
         audio_rtcp_transport_.flow_);
@@ -246,7 +247,7 @@ class TestAgentReceive : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        audio_->GetStream(), 1,
+        audio_->GetStream(), 1, 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_rtp_transport_.flow_, audio_rtcp_transport_.flow_);
 

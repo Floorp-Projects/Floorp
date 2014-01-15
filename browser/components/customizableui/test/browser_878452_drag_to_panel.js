@@ -4,8 +4,6 @@
 
 "use strict";
 
-Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
-
 // Dragging an item from the palette to another button in the panel should work.
 add_task(function() {
   yield startCustomizing();
@@ -64,6 +62,5 @@ add_task(function() {
 
 add_task(function asyncCleanup() {
   yield endCustomizing();
-  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 });

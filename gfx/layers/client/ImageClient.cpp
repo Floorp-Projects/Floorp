@@ -221,7 +221,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     GetForwarder()->UseTexture(this, mFrontBuffer);
   } else {
-    nsRefPtr<gfxASurface> surface = image->GetAsSurface();
+    nsRefPtr<gfxASurface> surface = image->DeprecatedGetAsSurface();
     MOZ_ASSERT(surface);
 
     gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
@@ -435,7 +435,7 @@ DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
     mDeprecatedTextureClient->SetDescriptor(desc);
 #endif
   } else {
-    nsRefPtr<gfxASurface> surface = image->GetAsSurface();
+    nsRefPtr<gfxASurface> surface = image->DeprecatedGetAsSurface();
     MOZ_ASSERT(surface);
 
     EnsureDeprecatedTextureClient(TEXTURE_SHMEM);

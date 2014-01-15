@@ -17,10 +17,6 @@ EXPORTS += [
 
 EXPORTS.mozilla.ipc += [
     'DocumentRendererChild.h',
-    'DocumentRendererNativeIDChild.h',
-    'DocumentRendererNativeIDParent.h',
     'DocumentRendererParent.h',
-    'DocumentRendererShmemChild.h',
-    'DocumentRendererShmemParent.h',
 ]
 

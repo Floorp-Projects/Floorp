@@ -30,7 +30,7 @@ function test_drawCustomFocusRing_canvas() {
 }
 </script>
 
-<p>Canvas test: drawSystemFocusRing</p>
+<p>Canvas test: drawFocusIfNeeded</p>
 <canvas id="c689" class="output" width="50" height="25">
     <input id="button3" type="range" min="1" max="12"></input>
     <input id="button4" type="range" min="1" max="12"></input>
@@ -44,7 +44,7 @@ function isEmptyCanvas(ctx, w, h) {
   return true;
 }
 
-function test_drawSystemFocusRing_canvas() {
+function test_drawFocusIfNeeded_canvas() {
   var c = document.getElementById("c689");
   var ctx = c.getContext("2d");
   var b1 = document.getElementById('button3');
@@ -52,22 +52,22 @@ function test_drawSystemFocusRing_canvas() {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.beginPath();
   ctx.rect(10, 10, 30, 30);
-  ctx.drawSystemFocusRing(b1);
+  ctx.drawFocusIfNeeded(b1);
   ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 1 is drawn");
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.beginPath();
   ctx.rect(50, 10, 30, 30);
-  ctx.drawSystemFocusRing(b2);
+  ctx.drawFocusIfNeeded(b2);
   ctx.rect(50, 10, 30, 30);
-  ctx.drawSystemFocusRing(b2);
+  ctx.drawFocusIfNeeded(b2);
   ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 2 is drawn");
 
   b1.focus();
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.beginPath();
   ctx.rect(10, 10, 30, 30);
-  ctx.drawSystemFocusRing(b1);
+  ctx.drawFocusIfNeeded(b1);
   ok(!isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height) , "focus of button 1 is not drawn");
 }
 </script>
@@ -83,10 +83,10 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_drawCustomFocusRing_canvas");
  }
   try {
-  test_drawSystemFocusRing_canvas();
+  test_drawFocusIfNeeded_canvas();
  } catch(e) {
   throw e;
-  ok(false, "unexpected exception thrown in: test_drawSystemFocusRing_canvas");
+  ok(false, "unexpected exception thrown in: test_drawFocusIfNeeded_canvas");
  }
 
  SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
