@@ -118,11 +118,8 @@ function test_setComposition() {
 
 function test_endComposition() {
   gContext.endComposition('2013').then(function() {
-    if (gContext.textBeforeCursor + gContext.textAfterCursor == 'Xulei2013') {
-      ok(true, 'endComposition changed the input field correctly.');
-    } else {
-      todo(false, 'endComposition changed the input field incorrectly.');
-    }
+    is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Xulei2013',
+       'endComposition changed the input field correctly.');
     test_onSelectionChange();
   }, function (e) {
     ok(false, 'endComposition failed: ' + e.name);
