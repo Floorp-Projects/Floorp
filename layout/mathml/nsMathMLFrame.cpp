@@ -41,12 +41,10 @@ nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent)
 
   mPresentationData.flags = 0;
   mPresentationData.baseFrame = nullptr;
-  mPresentationData.mstyle = nullptr;
 
   // by default, just inherit the display of our parent
   nsPresentationData parentData;
   GetPresentationDataFrom(aParent, parentData);
-  mPresentationData.mstyle = parentData.mstyle;
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
@@ -124,7 +122,6 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
   // initialize OUT params
   aPresentationData.flags = 0;
   aPresentationData.baseFrame = nullptr;
-  aPresentationData.mstyle = nullptr;
 
   nsIFrame* frame = aFrame;
   while (frame) {
@@ -147,7 +144,6 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       break;
 
     if (content->Tag() == nsGkAtoms::math) {
-      aPresentationData.mstyle = frame->FirstContinuation();
       break;
     }
     frame = frame->GetParent();
