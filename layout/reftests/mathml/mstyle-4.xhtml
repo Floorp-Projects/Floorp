@@ -12,11 +12,14 @@
 
 <body>
 
+<!-- The attributes below should no longer have effect on <mstyle>/<math>
+     elements. See bug 838509 -->
+
 <table>
   <tbody>
     <tr>
       <td>mover: accent</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false">
           <mstyle accent="false">
             <mover>
               <!-- We assume &#x23de; is accent in the operator dictionary -->
@@ -34,7 +37,7 @@
     </tr>
     <tr>
       <td>munder: accentunder</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accentunder="false">
           <mstyle accentunder="false">
             <munder>
               <!-- We assume &#x23df; is accent in the operator dictionary -->
@@ -52,7 +55,7 @@
     </tr>
     <tr>
       <td>munderover: accent, accentunder</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false" accentunder="false">
           <mstyle accent="false" accentunder="false">
             <munderover>
               <!-- We assume &#x23de; and &#x23df; are accents in the operator dictionary -->
@@ -68,14 +71,6 @@
             </munderover>
           </mstyle>
         </math></td>
-    </tr>
-    <tr>
-      <td>mi: mathvariant</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-        <mstyle mathvariant="normal"><mi>a</mi><mi>bb</mi></mstyle><mo>,</mo>
-        <mstyle mathvariant="bold"><mi>a</mi><mi>bb</mi></mstyle><mo>,</mo>
-        <mstyle mathvariant="italic"><mi>a</mi><mi>bb</mi></mstyle>
-      </math></td>
     </tr>
   </tbody>
 </table>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="reftest-wait">
   <head>
     <title>Dynamic mathvariant tests</title>
   </head>
@@ -35,7 +35,21 @@
         </mstyle>
       </mrow>
     </math>
+
+    <p>
+
+    <math id="Math0">
+      <mtext>Hello</mtext>
+    </math>
+    <math id="Math1" mathvariant="fraktur">
+      <mtext>Hello</mtext>
+    </math>
+    <math id="Math2" mathvariant="bold">
+      <mtext>Hello</mtext>
+    </math>
     <script>
+      function doTest()
+      {
       document.getElementById("Mi0").setAttribute("mathvariant", "script");
       document.getElementById("Mi1").innerHTML = "BB";
       document.getElementById("Mi2").innerHTML = "B";
@@ -50,6 +64,13 @@
       document.getElementById("Mstyle0").setAttribute("mathvariant", "fraktur");
       document.getElementById("Mstyle1").setAttribute("mathvariant", "monospace");
       document.getElementById("Mstyle2").removeAttribute("mathvariant");
+      document.getElementById("Math0").setAttribute("mathvariant", "fraktur");
+      document.getElementById("Math1").setAttribute("mathvariant", "monospace");
+      document.getElementById("Math2").removeAttribute("mathvariant");
+
+      document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", doTest, false);
     </script>
   </body>
 </html>
