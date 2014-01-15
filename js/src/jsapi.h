@@ -1051,7 +1051,7 @@ extern JS_PUBLIC_API(JSFunction *)
 JS_ValueToConstructor(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSString *)
-JS_ValueToSource(JSContext *cx, jsval v);
+JS_ValueToSource(JSContext *cx, JS::Handle<JS::Value> v);
 
 namespace js {
 /*
@@ -1226,7 +1226,7 @@ ToUint64(JSContext *cx, JS::HandleValue v, uint64_t *out)
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSType)
-JS_TypeOfValue(JSContext *cx, jsval v);
+JS_TypeOfValue(JSContext *cx, JS::Handle<JS::Value> v);
 
 extern JS_PUBLIC_API(const char *)
 JS_GetTypeName(JSContext *cx, JSType type);
@@ -1235,7 +1235,7 @@ extern JS_PUBLIC_API(bool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, bool *equal);
 
 extern JS_PUBLIC_API(bool)
-JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, bool *equal);
+JS_LooselyEqual(JSContext *cx, JS::Handle<JS::Value> v1, JS::Handle<JS::Value> v2, bool *equal);
 
 extern JS_PUBLIC_API(bool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, bool *same);
@@ -1766,10 +1766,11 @@ extern JS_PUBLIC_API(bool)
 JS_EnumerateStandardClasses(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(bool)
-JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp);
+JS_GetClassObject(JSContext *cx, JS::Handle<JSObject*> obj, JSProtoKey key,
+                  JS::MutableHandle<JSObject*> objp);
 
 extern JS_PUBLIC_API(bool)
-JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp);
+JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JS::MutableHandle<JSObject*> objp);
 
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj);
