@@ -83,7 +83,10 @@ function start_test() {
   SimpleTest.finish();
 }
 
-start_test(); // XXXdholbert (next patch makes this async, after pref-tweak)
+// Turn off CSS error reporting for this test, since it's a bit expensive,
+// and we're expecting to generate tons and tons of parse errors here.
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.report_errors", false]] },
+                          start_test);
 
 </script>
 </pre>
