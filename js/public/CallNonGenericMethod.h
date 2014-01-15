@@ -14,7 +14,7 @@
 namespace JS {
 
 // Returns true if |v| is considered an acceptable this-value.
-typedef bool (*IsAcceptableThis)(Handle<Value> v);
+typedef bool (*IsAcceptableThis)(HandleValue v);
 
 // Implements the guts of a method; guaranteed to be provided an acceptable
 // this-value, as determined by a corresponding IsAcceptableThis method.
