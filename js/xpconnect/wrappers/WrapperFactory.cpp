@@ -316,9 +316,6 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
         MOZ_ASSERT(handler->isSafeToUnwrap());
-    } else if (WrapperFactory::IsComponentsObject(obj)) {
-        // The Components object that is restricted regardless of origin.
-        MOZ_ASSERT(!handler->isSafeToUnwrap());
     } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
         // The rules for SOWs are complicated enough. Just skip double-checking them here.
     } else if (handler == &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton) {
@@ -412,12 +409,9 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     } else if (originIsChrome && !targetIsChrome && xrayType == NotXray) {
         wrapper = &ChromeObjectWrapper::singleton;
 
-    // If content is accessing a Components object or NAC, we need a special filter,
-    // even if the object is same origin. Note that we allow access to NAC for
-    // remote-XUL whitelisted domains, since they don't have XBL scopes.
-    } else if (IsComponentsObject(obj) && !AccessCheck::isChrome(target)) {
-        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                    ComponentsObjectPolicy>::singleton;
+    // If content is accessing NAC, we need a special filter, even if the
+    // object is same origin. Note that we allow access to NAC for remote-XUL
+    // whitelisted domains, since they don't have XBL scopes.
     } else if (AccessCheck::needsSystemOnlyWrapper(obj) &&
                xpc::AllowXBLScope(target) &&
                !(targetIsChrome || (targetSubsumesOrigin && nsContentUtils::IsCallerXBL())))
@@ -516,8 +510,6 @@ WrapperFactory::WrapForSameCompartment(JSContext *cx, HandleObject objArg)
 
     // The WN knows what to do.
     RootedObject wrapper(cx, wn->GetSameCompartmentSecurityWrapper(cx));
-    MOZ_ASSERT_IF(wrapper != obj && IsComponentsObject(js::UncheckedUnwrap(obj)),
-                  !Wrapper::wrapperHandler(wrapper)->isSafeToUnwrap());
     return wrapper;
 }
 
@@ -583,23 +575,6 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
         Wrapper::New(cx, obj, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
                      Opaque>::singleton);
-    return wrapperObj;
-}
-
-bool
-WrapperFactory::IsComponentsObject(JSObject *obj)
-{
-    const char *name = js::GetObjectClass(obj)->name;
-    return name[0] == 'n' && !strcmp(name, "nsXPCComponents");
-}
-
-JSObject *
-WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
-{
-    JSObject *wrapperObj =
-        Wrapper::New(cx, obj, JS_GetGlobalForObject(cx, obj),
-                     &FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>::singleton);
-
     return wrapperObj;
 }
 

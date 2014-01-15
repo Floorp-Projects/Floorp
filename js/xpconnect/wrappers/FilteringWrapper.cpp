@@ -194,16 +194,11 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
 #define XOW FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>
 #define DXOW   FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
-#define CW FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>
-#define XCW FilteringWrapper<CrossCompartmentSecurityWrapper, ComponentsObjectPolicy>
 #define GO FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
 template<> SCSOW SCSOW::singleton(0);
 template<> XOW XOW::singleton(0);
 template<> DXOW DXOW::singleton(0);
 template<> NNXOW NNXOW::singleton(0);
-
-template<> CW CW::singleton(0);
-template<> XCW XCW::singleton(0);
 
 template<> GO GO::singleton(0);
 
