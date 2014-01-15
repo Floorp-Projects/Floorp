@@ -111,8 +111,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
   //
   nsAutoString value;
   if (tag != nsGkAtoms::msup_) {
-    GetAttribute(mContent, mPresentationData.mstyle,
-                 nsGkAtoms::subscriptshift_, value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::subscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &subScriptShift, 0, PresContext(),
                         mStyleContext);
@@ -130,8 +129,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
   // As a minimum, negative values can be ignored.
   //
   if (tag != nsGkAtoms::msub_) {
-    GetAttribute(mContent, mPresentationData.mstyle,
-                 nsGkAtoms::superscriptshift_, value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::superscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &supScriptShift, 0, PresContext(),
                         mStyleContext);

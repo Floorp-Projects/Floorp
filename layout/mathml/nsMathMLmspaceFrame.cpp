@@ -49,8 +49,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   // as an example. Hence we allow negative values.
   //
   mWidth = 0;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::width,
-               value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mWidth,
                       nsMathMLElement::PARSE_ALLOW_NEGATIVE,
@@ -68,8 +67,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   // We do not allow negative values. See bug 716349.
   //
   mHeight = 0;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::height,
-               value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mHeight, 0,
                       aPresContext, mStyleContext);
@@ -86,8 +84,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   // We do not allow negative values. See bug 716349.
   //
   mDepth = 0;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::depth_,
-               value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mDepth, 0,
                       aPresContext, mStyleContext);

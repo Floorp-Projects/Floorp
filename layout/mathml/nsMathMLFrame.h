@@ -134,16 +134,6 @@ public:
                           nsPresentationData& aPresentationData,
                           bool                aClimbTree = true);
 
-  // helper to check if a content has an attribute. If content is nullptr or if
-  // the attribute is not there, check if the attribute is on the mstyle hierarchy
-  // @return true     --if attribute exists
-  //         false --if attribute doesn't exist
-  static bool
-  GetAttribute(nsIContent* aContent,
-               nsIFrame*   aMathMLmstyleFrame,          
-               nsIAtom*    aAttributeAtom,
-               nsString&   aValue);
-
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
   // @pre  aLengthValue is the default length value of the attribute.
