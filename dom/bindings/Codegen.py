@@ -8701,6 +8701,12 @@ class CGDescriptor(CGThing):
                     else:
                         hasGetter = True
                 if not m.readonly:
+                    for extAttr in ["PutForwards", "Replaceable"]:
+                        if m.getExtendedAttribute(extAttr):
+                            raise TypeError("Writable attributes should not "
+                                            "have %s specified.\n"
+                                            "%s" %
+                                            (extAttr, m.location))
                     if m.isStatic():
                         assert descriptor.interface.hasInterfaceObject
                         cgThings.append(CGStaticSetter(descriptor, m))
