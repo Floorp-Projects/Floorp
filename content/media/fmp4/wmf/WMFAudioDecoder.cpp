@@ -21,17 +21,6 @@ PRLogModuleInfo* GetDemuxerLog();
 
 namespace mozilla {
 
-WMFAudioDecoder::WMFAudioDecoder()
-  : mAudioChannels(0),
-    mAudioBytesPerSample(0),
-    mAudioRate(0),
-    mLastStreamOffset(0),
-    mAudioFrameOffset(0),
-    mAudioFrameSum(0),
-    mMustRecaptureAudioPosition(true)
-{
-}
-
 static void
 AACAudioSpecificConfigToUserData(const uint8_t* aAudioSpecConfig,
                                  uint32_t aConfigLength,
@@ -77,12 +66,26 @@ AACAudioSpecificConfigToUserData(const uint8_t* aAudioSpecConfig,
   aOutUserData.AppendElements(aAudioSpecConfig, aConfigLength);
 }
 
+WMFAudioDecoder::WMFAudioDecoder(uint32_t aChannelCount,
+                                 uint32_t aSampleRate,
+                                 uint16_t aBitsPerSample,
+                                 const uint8_t* aAudioSpecConfig,
+                                 uint32_t aConfigLength)
+  : mAudioChannels(aChannelCount),
+    mAudioBytesPerSample(aBitsPerSample / 8),
+    mAudioRate(aSampleRate),
+    mLastStreamOffset(0),
+    mAudioFrameOffset(0),
+    mAudioFrameSum(0),
+    mMustRecaptureAudioPosition(true)
+{
+  AACAudioSpecificConfigToUserData(aAudioSpecConfig,
+                                   aConfigLength,
+                                   mUserData);
+}
+
 nsresult
-WMFAudioDecoder::Init(uint32_t aChannelCount,
-                      uint32_t aSampleRate,
-                      uint16_t aBitsPerSample,
-                      const uint8_t* aAudioSpecConfig,
-                      uint32_t aConfigLength)
+WMFAudioDecoder::Init()
 {
   mDecoder = new MFTDecoder();
 
@@ -101,31 +104,23 @@ WMFAudioDecoder::Init(uint32_t aChannelCount,
   hr = type->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  hr = type->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, aSampleRate);
+  hr = type->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, mAudioRate);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  hr = type->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, aChannelCount);
+  hr = type->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mAudioChannels);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   hr = type->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x1); // ADTS
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  nsTArray<BYTE> userData;
-  AACAudioSpecificConfigToUserData(aAudioSpecConfig,
-                                   aConfigLength,
-                                   userData);
-
   hr = type->SetBlob(MF_MT_USER_DATA,
-                     userData.Elements(),
-                     userData.Length());
+                     mUserData.Elements(),
+                     mUserData.Length());
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   hr = mDecoder->SetMediaTypes(type, MFAudioFormat_PCM);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  mAudioChannels = aChannelCount;
-  mAudioBytesPerSample = aBitsPerSample / 8;
-  mAudioRate = aSampleRate;
   return NS_OK;
 }
 
@@ -136,14 +131,12 @@ WMFAudioDecoder::Shutdown()
 }
 
 DecoderStatus
-WMFAudioDecoder::Input(const uint8_t* aData,
-                       uint32_t aLength,
-                       Microseconds aDTS,
-                       Microseconds aPTS,
-                       int64_t aOffsetInStream)
+WMFAudioDecoder::Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample)
 {
-  mLastStreamOffset = aOffsetInStream;
-  HRESULT hr = mDecoder->Input(aData, aLength, aPTS);
+  mLastStreamOffset = aSample->byte_offset;
+  const uint8_t* data = &aSample->data->front();
+  uint32_t length = aSample->data->size();
+  HRESULT hr = mDecoder->Input(data, length, aSample->composition_timestamp);
   if (hr == MF_E_NOTACCEPTING) {
     return DECODE_STATUS_NOT_ACCEPTING;
   }

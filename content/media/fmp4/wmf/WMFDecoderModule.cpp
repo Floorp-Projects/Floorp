@@ -11,36 +11,46 @@
 #include "WMFAudioDecoder.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
+#include "mp4_demuxer/audio_decoder_config.h"
 
 namespace mozilla {
 
+bool WMFDecoderModule::sIsWMFEnabled = false;
+bool WMFDecoderModule::sDXVAEnabled = false;
+
 WMFDecoderModule::WMFDecoderModule()
-  : mDXVAEnabled(Preferences::GetBool("media.windows-media-foundation.use-dxva", false))
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 }
 
 WMFDecoderModule::~WMFDecoderModule()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 }
 
-nsresult
+/* static */
+void
 WMFDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  if (!Preferences::GetBool("media.windows-media-foundation.enabled", false)) {
+  sIsWMFEnabled = Preferences::GetBool("media.windows-media-foundation.enabled", false);
+  if (!sIsWMFEnabled) {
+    return;
+  }
+  if (NS_FAILED(WMFDecoder::LoadDLLs())) {
+    sIsWMFEnabled = false;
+  }
+  sDXVAEnabled = Preferences::GetBool("media.windows-media-foundation.use-dxva", false);
+}
+
+nsresult
+WMFDecoderModule::Startup()
+{
+  if (!sIsWMFEnabled) {
     return NS_ERROR_FAILURE;
   }
-
-  nsresult rv = WMFDecoder::LoadDLLs();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (FAILED(wmf::MFStartup())) {
     NS_WARNING("Failed to initialize Windows Media Foundation");
     return NS_ERROR_FAILURE;
   }
-
   return NS_OK;
 }
 
@@ -56,30 +66,23 @@ WMFDecoderModule::Shutdown()
 }
 
 MediaDataDecoder*
-WMFDecoderModule::CreateH264Decoder(mozilla::layers::LayersBackend aLayersBackend,
+WMFDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                                    mozilla::layers::LayersBackend aLayersBackend,
                                     mozilla::layers::ImageContainer* aImageContainer)
 {
-  nsAutoPtr<WMFVideoDecoder> decoder(new WMFVideoDecoder(mDXVAEnabled));
-  nsresult rv = decoder->Init(aLayersBackend, aImageContainer);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return decoder.forget();
+  return new WMFVideoDecoder(aLayersBackend,
+                             aImageContainer,
+                             sDXVAEnabled);
 }
 
 MediaDataDecoder*
-WMFDecoderModule::CreateAACDecoder(uint32_t aChannelCount,
-                                   uint32_t aSampleRate,
-                                   uint16_t aBitsPerSample,
-                                   const uint8_t* aUserData,
-                                   uint32_t aUserDataLength)
+WMFDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig)
 {
-  nsAutoPtr<WMFAudioDecoder> decoder(new WMFAudioDecoder());
-  nsresult rv = decoder->Init(aChannelCount,
-                              aSampleRate,
-                              aBitsPerSample,
-                              aUserData,
-                              aUserDataLength);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return decoder.forget();
+  return new WMFAudioDecoder(ChannelLayoutToChannelCount(aConfig.channel_layout()),
+                             aConfig.samples_per_second(),
+                             aConfig.bits_per_channel(),
+                             aConfig.extra_data(),
+                             aConfig.extra_data_size());
 }
 
 void
