@@ -114,10 +114,20 @@ class TestAgent {
       audio_pipeline_() {
   }
 
-  void ConnectSocket(PRFileDesc *fd, bool client, bool isRtcp) {
+  void ConnectRtpSocket(PRFileDesc *fd, bool client) {
+    ConnectSocket(&audio_rtp_transport_, fd, client);
+  }
+
+  void ConnectRtcpSocket(PRFileDesc *fd, bool client) {
+    ConnectSocket(&audio_rtcp_transport_, fd, client);
+  }
+
+  void ConnectBundleSocket(PRFileDesc *fd, bool client) {
+    ConnectSocket(&bundle_transport_, fd, client);
+  }
+
+  void ConnectSocket(TransportInfo *transport, PRFileDesc *fd, bool client) {
     nsresult res;
-    TransportInfo *transport = isRtcp ?
-      &audio_rtcp_transport_ : &audio_rtp_transport_;
 
     transport->Init(client);
 
@@ -150,6 +160,7 @@ class TestAgent {
     audio_->GetStream()->Stop();
     audio_rtp_transport_.Stop();
     audio_rtcp_transport_.Stop();
+    bundle_transport_.Stop();
     if (audio_pipeline_)
       audio_pipeline_->ShutdownTransport_s();
   }
@@ -176,10 +187,13 @@ class TestAgent {
   mozilla::RefPtr<mozilla::MediaPipeline> audio_pipeline_;
   TransportInfo audio_rtp_transport_;
   TransportInfo audio_rtcp_transport_;
+  TransportInfo bundle_transport_;
 };
 
 class TestAgentSend : public TestAgent {
  public:
+  TestAgentSend() : use_bundle_(false) {}
+
   virtual void CreatePipelines_s(bool aIsRtcpMux) {
     audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
 
@@ -194,6 +208,14 @@ class TestAgentSend : public TestAgent {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
     }
 
+    RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
+    RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
+
+    if (use_bundle_) {
+      rtp = bundle_transport_.flow_;
+      rtcp = nullptr;
+    }
+
     audio_pipeline_ = new mozilla::MediaPipelineTransmit(
         test_pc,
         nullptr,
@@ -202,8 +224,8 @@ class TestAgentSend : public TestAgent {
         1,
         1,
         audio_conduit_,
-        audio_rtp_transport_.flow_,
-        audio_rtcp_transport_.flow_);
+        rtp,
+        rtcp);
 
     audio_pipeline_->Init();
   }
@@ -216,7 +238,12 @@ class TestAgentSend : public TestAgent {
     return audio_pipeline_->rtcp_packets_received();
   }
 
+  void SetUsingBundle(bool use_bundle) {
+    use_bundle_ = use_bundle;
+  }
+
  private:
+  bool use_bundle_;
 };
 
 
@@ -246,13 +273,24 @@ class TestAgentReceive : public TestAgent {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
     }
 
+    // For now, assume bundle always uses rtcp mux
+    RefPtr<TransportFlow> dummy;
+    RefPtr<TransportFlow> bundle_transport;
+    if (bundle_filter_) {
+      bundle_transport = bundle_transport_.flow_;
+    }
+
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
         test_pc,
         nullptr,
         test_utils->sts_target(),
         audio_->GetStream(), 1, 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
-        audio_rtp_transport_.flow_, audio_rtcp_transport_.flow_);
+        audio_rtp_transport_.flow_,
+        audio_rtcp_transport_.flow_,
+        bundle_transport,
+        dummy,
+        bundle_filter_);
 
     audio_pipeline_->Init();
   }
@@ -265,7 +303,20 @@ class TestAgentReceive : public TestAgent {
     return audio_pipeline_->rtcp_packets_sent();
   }
 
+  void SetBundleFilter(nsAutoPtr<MediaPipelineFilter> filter) {
+    bundle_filter_ = filter;
+  }
+
+  void SetUsingBundle_s(bool decision) {
+    audio_pipeline_->SetUsingBundle_s(decision);
+  }
+
+  void UpdateFilterFromRemoteDescription_s(
+      nsAutoPtr<MediaPipelineFilter> filter) {
+    audio_pipeline_->UpdateFilterFromRemoteDescription_s(filter);
+  }
  private:
+  nsAutoPtr<MediaPipelineFilter> bundle_filter_;
 };
 
 
@@ -274,6 +325,7 @@ class MediaPipelineTest : public ::testing::Test {
   MediaPipelineTest() : p1_() {
     rtp_fds_[0] = rtp_fds_[1] = nullptr;
     rtcp_fds_[0] = rtcp_fds_[1] = nullptr;
+    bundle_fds_[0] = bundle_fds_[1] = nullptr;
   }
 
   // Setup transport.
@@ -285,12 +337,12 @@ class MediaPipelineTest : public ::testing::Test {
     // RTP, DTLS server
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p1_, &TestAgent::ConnectSocket, rtp_fds_[0], false, false));
+      WrapRunnable(&p1_, &TestAgent::ConnectRtpSocket, rtp_fds_[0], false));
 
     // RTP, DTLS client
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::ConnectSocket, rtp_fds_[1], true, false));
+      WrapRunnable(&p2_, &TestAgent::ConnectRtpSocket, rtp_fds_[1], true));
 
     // Create RTCP flows separately if we are not muxing them.
     if(!aIsRtcpMux) {
@@ -300,17 +352,48 @@ class MediaPipelineTest : public ::testing::Test {
       // RTCP, DTLS server
       mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnable(&p1_, &TestAgent::ConnectSocket, rtcp_fds_[0], false, true));
+        WrapRunnable(&p1_, &TestAgent::ConnectRtcpSocket, rtcp_fds_[0], false));
 
       // RTCP, DTLS client
       mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnable(&p2_, &TestAgent::ConnectSocket, rtcp_fds_[1], true, true));
+        WrapRunnable(&p2_, &TestAgent::ConnectRtcpSocket, rtcp_fds_[1], true));
     }
+
+    status = PR_NewTCPSocketPair(bundle_fds_);
+    // BUNDLE, DTLS server
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p1_,
+                   &TestAgent::ConnectBundleSocket,
+                   bundle_fds_[0],
+                   false));
+
+    // BUNDLE, DTLS client
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p2_,
+                   &TestAgent::ConnectBundleSocket,
+                   bundle_fds_[1],
+                   true));
+
   }
 
   // Verify RTP and RTCP
-  void TestAudioSend(bool aIsRtcpMux) {
+  void TestAudioSend(bool aIsRtcpMux,
+                     bool bundle = false,
+                     nsAutoPtr<MediaPipelineFilter> localFilter =
+                        nsAutoPtr<MediaPipelineFilter>(nullptr),
+                     nsAutoPtr<MediaPipelineFilter> remoteFilter =
+                        nsAutoPtr<MediaPipelineFilter>(nullptr)) {
+
+    // We do not support testing bundle without rtcp mux, since that doesn't
+    // make any sense.
+    ASSERT_FALSE(!aIsRtcpMux && bundle);
+
+    p1_.SetUsingBundle(bundle);
+    p2_.SetBundleFilter(localFilter);
+
     // Setup transport flows
     InitTransports(aIsRtcpMux);
 
@@ -325,22 +408,51 @@ class MediaPipelineTest : public ::testing::Test {
     p2_.Start();
     p1_.Start();
 
+    // Simulate pre-answer traffic
+    PR_Sleep(500);
+
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p2_, &TestAgentReceive::SetUsingBundle_s, bundle));
+
+    if (bundle) {
+      if (!remoteFilter) {
+        remoteFilter = new MediaPipelineFilter;
+      }
+      mozilla::SyncRunnable::DispatchToThread(
+          test_utils->sts_target(),
+          WrapRunnable(&p2_,
+                       &TestAgentReceive::UpdateFilterFromRemoteDescription_s,
+                       remoteFilter));
+    }
+
+
     // wait for some RTP/RTCP tx and rx to happen
     PR_Sleep(10000);
 
-    ASSERT_GE(p1_.GetAudioRtpCount(), 40);
+    if (bundle) {
+      // Filter should have eaten everything, so no RTCP
+    } else {
+      ASSERT_GE(p1_.GetAudioRtpCount(), 40);
 // TODO: Fix to not fail or crash (Bug 947663)
 //    ASSERT_GE(p2_.GetAudioRtpCount(), 40);
-    ASSERT_GE(p1_.GetAudioRtcpCount(), 1);
-    ASSERT_GE(p2_.GetAudioRtcpCount(), 1);
+      ASSERT_GE(p2_.GetAudioRtcpCount(), 1);
+    }
 
     p1_.Stop();
     p2_.Stop();
   }
 
+  void TestAudioReceiverOffersBundle(bool bundle_accepted,
+      nsAutoPtr<MediaPipelineFilter> localFilter,
+      nsAutoPtr<MediaPipelineFilter> remoteFilter =
+          nsAutoPtr<MediaPipelineFilter>(nullptr)) {
+    TestAudioSend(true, bundle_accepted, localFilter, remoteFilter);
+  }
 protected:
   PRFileDesc *rtp_fds_[2];
   PRFileDesc *rtcp_fds_[2];
+  PRFileDesc *bundle_fds_[2];
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };
@@ -713,7 +825,7 @@ TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithCorrelator) {
 
 TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
   // If the remote SDP doesn't have SSRCs, right now this is a no-op and
-  // there is no point of even incorporating a filter, but we make the 
+  // there is no point of even incorporating a filter, but we make the
   // behavior consistent to avoid confusion.
   MediaPipelineFilter filter;
   filter.SetCorrelator(7777);
@@ -734,6 +846,16 @@ TEST_F(MediaPipelineTest, TestAudioSendNoMux) {
 
 TEST_F(MediaPipelineTest, TestAudioSendMux) {
   TestAudioSend(true);
+}
+
+TEST_F(MediaPipelineTest, TestAudioSendBundleOfferedAndDeclined) {
+  nsAutoPtr<MediaPipelineFilter> filter(new MediaPipelineFilter);
+  TestAudioReceiverOffersBundle(false, filter);
+}
+
+TEST_F(MediaPipelineTest, TestAudioSendBundleOfferedAndAccepted) {
+  nsAutoPtr<MediaPipelineFilter> filter(new MediaPipelineFilter);
+  TestAudioReceiverOffersBundle(true, filter);
 }
 
 }  // end namespace

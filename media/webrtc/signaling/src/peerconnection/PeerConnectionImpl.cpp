@@ -1327,9 +1327,11 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector, bool internalStats) {
     if (temp.get()) {
       streams.push_back(temp);
     } else {
-       CSFLogError(logTag, "Failed to get NrIceMediaStream for level %u "
+       CSFLogError(logTag, "Failed to get NrIceMediaStream for level %zu "
                            "in %s:  %s",
-                           uint32_t(level), __FUNCTION__, mHandle.c_str());
+                           static_cast<size_t>(level),
+                           __FUNCTION__,
+                           mHandle.c_str());
        MOZ_CRASH();
     }
   }
