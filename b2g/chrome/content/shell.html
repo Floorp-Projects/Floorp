@@ -19,7 +19,9 @@
           src="chrome://browser/content/shell.js"> </script>
 
 #ifndef MOZ_WIDGET_GONK
-
+  <!-- various task that has to happen only on desktop -->
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/desktop.js"> </script>
   <!-- this script handles the screen argument for desktop builds -->
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/screen.js"> </script>

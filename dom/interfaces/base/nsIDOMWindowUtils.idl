@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(c6efd629-7282-4f0d-9db8-0fa59c191dd5)]
+[scriptable, uuid(fa0fe174-7c07-11e3-a5ba-000c290c393e)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -249,9 +249,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aPressure touch input pressure: 0.0 -> 1.0
    * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
    *        defaults to mouse input.
+   * @param aIsSynthesized controls nsIDOMEvent.isSynthesized value
+   *                       that helps identifying test related events,
+   *                       defaults to true
    *
    * returns true if the page called prevent default on this event
    */
+  [optional_argc]
   boolean sendMouseEvent(in AString aType,
                          in float aX,
                          in float aY,
@@ -260,7 +264,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          in long aModifiers,
                          [optional] in boolean aIgnoreRootScrollFrame,
                          [optional] in float aPressure,
-                         [optional] in unsigned short aInputSourceArg);
+                         [optional] in unsigned short aInputSourceArg,
+                         [optional] in boolean aIsSynthesized);
 
   /** Synthesize a touch event. The event types supported are:
    *    touchstart, touchend, touchmove, and touchcancel
@@ -303,6 +308,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /** The same as sendMouseEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
    */
+  [optional_argc]
   void sendMouseEventToWindow(in AString aType,
                               in float aX,
                               in float aY,
@@ -311,7 +317,8 @@ interface nsIDOMWindowUtils : nsISupports {
                               in long aModifiers,
                               [optional] in boolean aIgnoreRootScrollFrame,
                               [optional] in float aPressure,
-                              [optional] in unsigned short aInputSourceArg);
+                              [optional] in unsigned short aInputSourceArg,
+                              [optional] in boolean aIsSynthesized);
 
   /** The same as sendTouchEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
