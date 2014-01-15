@@ -26,6 +26,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
 
 this.FxAccountsManager = {
 
+  init: function() {
+    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic !== ONLOGOUT_NOTIFICATION) {
+      return;
+    }
+
+    // Remove the cached session if we get a logout notification.
+    this._activeSession = null;
+  },
+
   // We don't really need to save fxAccounts instance but this way we allow
   // to mock FxAccounts from tests.
   _fxAccounts: fxAccounts,
@@ -156,22 +169,25 @@ this.FxAccountsManager = {
       return Promise.resolve();
     }
 
-    return this._fxAccounts.signOut(this._activeSession.sessionToken).then(
+    // We clear the local session cache as soon as we get the onlogout
+    // notification triggered within FxAccounts.signOut, so we save the
+    // session token value to be able to remove the remote server session
+    // in case that we have network connection.
+    let sessionToken = this._activeSession.sessionToken;
+
+    return this._fxAccounts.signOut(sessionToken).then(
       () => {
-        // If there is no connection, removing the local session should be
-        // enough. The client can create new sessions up to the limit (100?).
+        // At this point the local session should already be removed.
+
+        // The client can create new sessions up to the limit (100?).
         // Orphaned tokens on the server will eventually be garbage collected.
         if (Services.io.offline) {
-          this._activeSession = null;
           return Promise.resolve();
         }
         // Otherwise, we try to remove the remote session.
         let client = this._createFxAccountsClient();
-        return client.signOut(this._activeSession.sessionToken).then(
+        return client.signOut(sessionToken).then(
           result => {
-            // Even if there is a remote server error, we remove the local
-            // session.
-            this._activeSession = null;
             let error = this._getError(result);
             if (error) {
               return Promise.reject({
@@ -183,9 +199,6 @@ this.FxAccountsManager = {
             return Promise.resolve();
           },
           reason => {
-            // Even if there is a remote server error, we remove the local
-            // session.
-            this._activeSession = null;
             return this._serverError(reason);
           }
         );
@@ -413,3 +426,5 @@ this.FxAccountsManager = {
     );
   }
 };
+
+FxAccountsManager.init();

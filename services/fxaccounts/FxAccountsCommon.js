@@ -41,6 +41,10 @@ this.KEY_LIFETIME       = 1000 * 3600 * 12; // 12 hours
 this.POLL_SESSION       = 1000 * 60 * 5;    // 5 minutes
 this.POLL_STEP          = 1000 * 3;         // 3 seconds
 
+// Observer notifications.
+this.ONLOGIN_NOTIFICATION = "fxaccounts:onlogin";
+this.ONLOGOUT_NOTIFICATION = "fxaccounts:onlogout";
+
 // Server errno.
 // From https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format
 this.ERRNO_ACCOUNT_ALREADY_EXISTS     = 101;
