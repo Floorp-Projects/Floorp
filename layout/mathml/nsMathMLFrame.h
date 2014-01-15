@@ -92,6 +92,12 @@ public:
     return NS_OK;
   }
 
+  uint8_t
+  ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE
+  {
+    return 0;
+  }
+
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
   // accessible to the Style System via Get/Set AdditionalStyleContext.
