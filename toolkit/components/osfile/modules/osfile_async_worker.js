@@ -324,6 +324,10 @@ const EXCEPTION_NAMES = {
      return File.move(Type.path.fromMsg(sourcePath),
        Type.path.fromMsg(destPath), options);
    },
+   getAvailableFreeSpace: function getAvailableFreeSpace(sourcePath) {
+     return Type.uint64_t.toMsg(
+       File.getAvailableFreeSpace(Type.path.fromMsg(sourcePath)));
+   },
    makeDir: function makeDir(path, options) {
      return File.makeDir(Type.path.fromMsg(path), options);
    },
