@@ -1180,7 +1180,7 @@ public abstract class GeckoApp
                     if (profileName == null) {
                         profileName = getDefaultProfileName();
                         if (profileName == null)
-                            profileName = "default";
+                            profileName = GeckoProfile.DEFAULT_PROFILE;
                     }
                     GeckoProfile.sIsUsingCustomProfile = true;
                 }

@@ -9,32 +9,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.setup.Constants;
 
 import android.net.Uri;
 
 public class BrowserContractHelpers extends BrowserContract {
 
-  protected static Uri withSyncAndDeleted(Uri u) {
+  protected static Uri withSyncAndDeletedAndProfile(Uri u) {
     return u.buildUpon()
+            .appendQueryParameter(PARAM_PROFILE, Constants.DEFAULT_PROFILE)
             .appendQueryParameter(PARAM_IS_SYNC, "true")
             .appendQueryParameter(PARAM_SHOW_DELETED, "true")
             .build();
   }
-  protected static Uri withSync(Uri u) {
+  protected static Uri withSyncAndProfile(Uri u) {
     return u.buildUpon()
+        .appendQueryParameter(PARAM_PROFILE, Constants.DEFAULT_PROFILE)
         .appendQueryParameter(PARAM_IS_SYNC, "true")
         .build();
   }
 
-  public static final Uri BOOKMARKS_CONTENT_URI            = withSyncAndDeleted(Bookmarks.CONTENT_URI);
-  public static final Uri BOOKMARKS_PARENTS_CONTENT_URI    = withSyncAndDeleted(Bookmarks.PARENTS_CONTENT_URI);
-  public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeleted(Bookmarks.POSITIONS_CONTENT_URI);
-  public static final Uri HISTORY_CONTENT_URI              = withSyncAndDeleted(History.CONTENT_URI);
-  public static final Uri SCHEMA_CONTENT_URI               = withSyncAndDeleted(Schema.CONTENT_URI);
-  public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeleted(Passwords.CONTENT_URI);
-  public static final Uri DELETED_PASSWORDS_CONTENT_URI    = withSyncAndDeleted(DeletedPasswords.CONTENT_URI);
-  public static final Uri FORM_HISTORY_CONTENT_URI         = withSync(FormHistory.CONTENT_URI);
-  public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSync(DeletedFormHistory.CONTENT_URI);
+  public static final Uri BOOKMARKS_CONTENT_URI            = withSyncAndDeletedAndProfile(Bookmarks.CONTENT_URI);
+  public static final Uri BOOKMARKS_PARENTS_CONTENT_URI    = withSyncAndDeletedAndProfile(Bookmarks.PARENTS_CONTENT_URI);
+  public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeletedAndProfile(Bookmarks.POSITIONS_CONTENT_URI);
+  public static final Uri HISTORY_CONTENT_URI              = withSyncAndDeletedAndProfile(History.CONTENT_URI);
+  public static final Uri SCHEMA_CONTENT_URI               = withSyncAndDeletedAndProfile(Schema.CONTENT_URI);
+  public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeletedAndProfile(Passwords.CONTENT_URI);
+  public static final Uri DELETED_PASSWORDS_CONTENT_URI    = withSyncAndDeletedAndProfile(DeletedPasswords.CONTENT_URI);
+  public static final Uri FORM_HISTORY_CONTENT_URI         = withSyncAndProfile(FormHistory.CONTENT_URI);
+  public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSyncAndProfile(DeletedFormHistory.CONTENT_URI);
 
   public static final String[] PasswordColumns = new String[] {
     Passwords.ID,
