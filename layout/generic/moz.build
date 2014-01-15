@@ -44,7 +44,7 @@ EXPORTS.mozilla.layout += [
 
 UNIFIED_SOURCES += [
     'FrameChildList.cpp',
-    'MathVariantTextRunFactory.cpp',
+    'MathMLTextRunFactory.cpp',
     'nsAbsoluteContainingBlock.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
