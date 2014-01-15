@@ -208,7 +208,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_SetVisibleFrames.html \
 		test_browserElement_oop_SetVisibleFrames2.html \
-		test_browserElement_oop_FirstPaint.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_TargetTop.html \
@@ -239,6 +238,18 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_VisibilityChange.html \
 		test_browserElement_oop_BrowserWindowResize.html \
 	$(NULL)
+	
+# Disabled on OSX debug for frequent crashes.
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ifdef MOZ_DEBUG
+SKIP_THIS_TEST=1
+endif
+endif
+ifndef SKIP_THIS_TEST
+MOCHITEST_FILES += \
+		test_browserElement_oop_FirstPaint.html \
+	$(NULL)
+endif
 
 # Disabled until bug 930449 makes it stop timing out
 #		test_browserElement_oop_ContextmenuEvents.html \
