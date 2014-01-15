@@ -279,6 +279,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mTabs = (ShapedButton) findViewById(R.id.tabs);
         mTabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
+        if (Build.VERSION.SDK_INT >= 11) {
+            mTabsCounter.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        }
 
         mBack = (ImageButton) findViewById(R.id.back);
         setButtonEnabled(mBack, false);
