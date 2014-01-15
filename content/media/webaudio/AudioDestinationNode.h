@@ -93,16 +93,12 @@ private:
 
   // Audio Channel Type.
   AudioChannel mAudioChannel;
-<<<<<<< /home/roc/mozilla-central/content/media/webaudio/AudioDestinationNode.h
   bool mIsOffline;
   bool mHasFinished;
-=======
-
   TimeStamp mStartedBlockingDueToBeingOnlyNode;
   double mExtraCurrentTime;
   double mExtraCurrentTimeSinceLastStartedBlocking;
   bool mExtraCurrentTimeUpdatedSinceLastStableState;
->>>>>>> /tmp/AudioDestinationNode.h~other.MvuUBx
 };
 
 }
