@@ -257,9 +257,9 @@ const PING_BGUC_ADDON_UPDATES_FOR_INCOMPAT   = 29;
 // Incompatible add-ons found (update notification)
 const PING_BGUC_ADDON_HAVE_INCOMPAT          = 30;
 
-var gLocale     = null;
+var gLocale = null;
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
     return Services.env.get("EXTERNAL_STORAGE");
 });
