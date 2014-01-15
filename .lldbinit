@@ -14,3 +14,9 @@ settings set target.prefer-dynamic-value run-target
 # than do any kind of searching, this assumes that you are running lldb from
 # the top level source directory.
 script sys.path.append('python/lldbutils'); import lldbutils; lldbutils.init()
+
+# Show the string value in atoms.
+type summary add nsIAtom --summary-string "${var.mString}"
+
+# Show the value of text nodes.
+type summary add nsTextNode --summary-string "${var.mText}"
