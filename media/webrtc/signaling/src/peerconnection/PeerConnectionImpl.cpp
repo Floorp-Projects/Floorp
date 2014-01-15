@@ -2004,6 +2004,10 @@ PeerConnectionImpl::GetStatsImpl_s(
           str.AppendInt(ssrc);
           s.mSsrc.Construct(str);
         }
+        unsigned int jitterMs;
+        if (mp.Conduit()->GetReceivedJitter(&jitterMs)) {
+          s.mJitter.Construct(double(jitterMs)/1000);
+        }
         s.mPacketsReceived.Construct(mp.rtp_packets_received());
         s.mBytesReceived.Construct(mp.rtp_bytes_received());
         report->mInboundRTPStreamStats.Value().AppendElement(s);
