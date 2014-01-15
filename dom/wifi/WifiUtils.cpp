@@ -5,7 +5,6 @@
 #include "WifiUtils.h"
 #include <dlfcn.h>
 #include <errno.h>
-#include <cutils/properties.h>
 #include "prinit.h"
 #include "js/CharacterEncoding.h"
 #include "NetUtils.h"
@@ -33,14 +32,6 @@ GetSharedLibrary()
 {
   PR_CallOnce(&sInitWifiLib, InitWifiLib);
   return sWifiLib;
-}
-
-static bool
-GetWifiP2pSupported()
-{
-  char propP2pSupported[PROPERTY_VALUE_MAX];
-  property_get("ro.moz.wifi.p2p_supported", propP2pSupported, "0");
-  return (0 == strcmp(propP2pSupported, "1"));
 }
 
 // This is the same algorithm as in InflateUTF8StringToBuffer with Copy and
@@ -316,7 +307,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
   } else if (aOptions.mCmd.EqualsLiteral("unload_driver")) {
     aResult.mStatus = mImpl->do_wifi_unload_driver();
   } else if (aOptions.mCmd.EqualsLiteral("start_supplicant")) {
-    aResult.mStatus = mImpl->do_wifi_start_supplicant(GetWifiP2pSupported() ? 1 : 0);
+    aResult.mStatus = mImpl->do_wifi_start_supplicant(0);
   } else if (aOptions.mCmd.EqualsLiteral("stop_supplicant")) {
     aResult.mStatus = mImpl->do_wifi_stop_supplicant(0);
   } else if (aOptions.mCmd.EqualsLiteral("connect_to_supplicant")) {
