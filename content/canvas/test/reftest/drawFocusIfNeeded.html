@@ -10,10 +10,10 @@ var in2=document.getElementById("in2");
 in1.onfocus=function(){
 c.beginPath();
 c.rect(10, 10, 200, 200);
-c.drawSystemFocusRing(in1);
+c.drawFocusIfNeeded(in1);
 c.beginPath();
 c.rect(10, 220, 200, 200);
-c.drawSystemFocusRing(in2);
+c.drawFocusIfNeeded(in2);
 }
 in1.focus();
 }
