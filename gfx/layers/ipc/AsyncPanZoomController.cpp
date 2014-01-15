@@ -758,6 +758,11 @@ nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEven
 
 nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale-begin in state %d\n", this, mState);
+
+  if (!TouchActionAllowZoom()) {
+    return nsEventStatus_eIgnore;
+  }
+
   if (!mZoomConstraints.mAllowZoom) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -1724,6 +1729,22 @@ void AsyncPanZoomController::CheckContentResponse() {
 
     mHandlingTouchQueue = false;
   }
+}
+
+bool AsyncPanZoomController::TouchActionAllowZoom() {
+  if (!mTouchActionPropertyEnabled) {
+    return true;
+  }
+
+  // Pointer events specification implies all touch points to allow zoom
+  // to perform it.
+  for (size_t i = 0; i < mAllowedTouchBehaviors.Length(); i++) {
+    if (!(mAllowedTouchBehaviors[i] & AllowedTouchBehavior::ZOOM)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 AsyncPanZoomController::TouchBehaviorFlags
