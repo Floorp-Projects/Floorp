@@ -30,10 +30,10 @@ import android.widget.ListView;
 import java.util.EnumSet;
 
 /**
- * Fragment that displays custom lists.
+ * Fragment that displays dynamic content specified by a PanelConfig.
  */
-public class ListPanel extends HomeFragment {
-    private static final String LOGTAG = "GeckoListPanel";
+public class DynamicPanel extends HomeFragment {
+    private static final String LOGTAG = "GeckoDynamicPanel";
 
     // Cursor loader ID for the lists
     private static final int LOADER_ID_LIST = 0;
@@ -41,10 +41,9 @@ public class ListPanel extends HomeFragment {
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
 
-    // Adapter for the list
+    // XXX: Right now DynamicPanel is hard-coded to show a single ListView,
+    // but it should dynamically build views from mPanelConfig (bug 959777).
     private HomeListAdapter mAdapter;
-
-    // The view shown by the fragment
     private ListView mList;
 
     // Callbacks used for the list loader
@@ -82,12 +81,13 @@ public class ListPanel extends HomeFragment {
         }
 
         if (mPanelConfig == null) {
-            throw new IllegalStateException("Can't create a ListPanel without a PanelConfig");
+            throw new IllegalStateException("Can't create a DynamicPanel without a PanelConfig");
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // XXX: Dynamically build views from mPanelConfig (bug 959777).
         mList = new HomeListView(getActivity());
         return mList;
     }
@@ -122,6 +122,7 @@ public class ListPanel extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        // XXX: Dynamically set adapters from mPanelConfig (bug 959777).
         mAdapter = new HomeListAdapter(getActivity(), null);
         mList.setAdapter(mAdapter);
 
