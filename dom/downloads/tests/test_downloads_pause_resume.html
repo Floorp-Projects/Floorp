@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=938023
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
-<a href="serve_file.sjs?contentType=application/octet-stream&size=102400&rate=1024" download="test.bin" id="download1">Large Download</a>
+<a href="serve_file.sjs?contentType=application/octet-stream&size=102400&rate=10240" download="test.bin" id="download1">Large Download</a>
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
 
@@ -52,10 +52,10 @@ function checkDownloadList(downloads) {
   SimpleTest.finish();
 }
 
-function checkResumedFailed(download) {
-  ok(download.state == "stopped", "Download fails to resume.");
+function checkResumeSucceeded(download) {
+  ok(download.state == "succeeded", "Download resumed successfully.");
   navigator.mozDownloadManager.clearAllDone()
-           .then(checkDownloadList, error);
+             .then(checkDownloadList, error);
 }
 
 function downloadChange(evt) {
@@ -67,9 +67,8 @@ function downloadChange(evt) {
   } else if (download.state == "stopped" && !resuming) {
     resuming = true;
     ok(pausing, "Download stopped by pause()");
-    // serve_file.sjs does not support resuming, so that should fail.
     download.resume()
-            .then(error, function() { checkResumedFailed(download); });
+            .then(function() { checkResumeSucceeded(download); }, error);
   }
 }
 

@@ -728,25 +728,9 @@ audio:not([controls]) {
 
 video > .caption-box {
   position: relative;
-  pointer-events: none;
-}
-
-video > div .caption-text {
-  position: absolute;
-  bottom: 24px;
-  padding: 5px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  pointer-events: auto;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 20px;
-  color: white;
-  text-shadow:
-    -2px -2px 1px #000,
-    2px -2px 1px #000,
-    -2px 2px 1px #000,
-    2px 2px 1px #000;
+  overflow: hidden;
+  padding: 1.5%;
+  box-sizing: border-box;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
