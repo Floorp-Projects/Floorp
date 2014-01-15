@@ -239,3 +239,35 @@ setting[type="menulist"] {
   display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
 }
+
+.hide-on-enable,
+.show-on-error,
+.show-on-uninstall,
+.show-on-install,
+.show-on-restart,
+div[isDisabled="true"] .hide-on-disable {
+  display: none;
+}
+
+div[error] .show-on-error,
+div[opType="needs-restart"] .show-on-restart,
+div[opType="needs-uninstall"] .show-on-uninstall,
+div[opType="needs-install"] .show-on-install,
+div[opType="needs-enable"] .show-on-enable,
+div[opType="needs-disable"] .show-on-disable,
+div[isDisabled="true"] .show-on-disable {
+  display: -moz-box;
+}
+
+div[opType="needs-restart"] .hide-on-restart,
+div[opType="needs-uninstall"] .hide-on-uninstall,
+div[isDisabled="true"][opType="needs-uninstall"],
+div[opType="needs-install"] .hide-on-install,
+div[opType="needs-enable"] .hide-on-enable,
+div[opType="needs-disable"] .hide-on-disable {
+  display: none;
+}
+
+#addons-list, #addons-details {
+  display: none;
+}
