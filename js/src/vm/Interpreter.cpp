@@ -355,7 +355,7 @@ js::ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip, MaybeConst
 }
 
 JSObject *
-js::ValueToCallable(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct construct)
+js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct construct)
 {
     if (v.isObject()) {
         JSObject *callable = &v.toObject();
