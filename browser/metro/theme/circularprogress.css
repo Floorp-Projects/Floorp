@@ -26,6 +26,8 @@
 }
 
 .circularprogressindicator-progressRing:not([progress]),
-.circularprogressindicator-progressTrack:not([progress]) {
+.circularprogressindicator-progressRing[progress="100"],
+.circularprogressindicator-progressTrack:not([progress]),
+.circularprogressindicator-progressTrack[progress="100"] {
   visibility: hidden;
 }
