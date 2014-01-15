@@ -15,7 +15,6 @@
 #include "nsIDocument.h"
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMDocument.h"
 
 NS_IMPL_ISUPPORTS1(nsDataDocumentContentPolicy, nsIContentPolicy)
 
@@ -50,11 +49,9 @@ nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
   if (node) {
     doc = node->OwnerDoc();
   } else {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aRequestingContext);
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aRequestingContext);
     if (window) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      window->GetDocument(getter_AddRefs(domDoc));
-      doc = do_QueryInterface(domDoc);
+      doc = window->GetDoc();
     }
   }
 
