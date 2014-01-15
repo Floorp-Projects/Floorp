@@ -108,7 +108,7 @@ enum MaybeConstruct {
  * before it reaches |v|. If it's -1, the decompiler will search the stack.
  */
 extern bool
-ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip = -1,
+ReportIsNotFunction(JSContext *cx, HandleValue v, int numToSkip = -1,
                     MaybeConstruct construct = NO_CONSTRUCT);
 
 /* See ReportIsNotFunction comment for the meaning of numToSkip. */

@@ -290,7 +290,8 @@ BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned inden
 {
     if (proxy->isCallable())
         return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
-    ReportIsNotFunction(cx, ObjectValue(*proxy));
+    RootedValue v(cx, ObjectValue(*proxy));
+    ReportIsNotFunction(cx, v);
     return nullptr;
 }
 

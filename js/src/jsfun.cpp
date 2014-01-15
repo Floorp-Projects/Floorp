@@ -1305,7 +1305,8 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
          * So before anything else, if we are an arrow function, make sure we
          * don't even get here. You never saw me. Burn this comment.
          */
-        return ReportIsNotFunction(cx, ObjectValue(*fun), -1, CONSTRUCT);
+        RootedValue v(cx, ObjectValue(*fun));
+        return ReportIsNotFunction(cx, v, -1, CONSTRUCT);
     }
 
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
