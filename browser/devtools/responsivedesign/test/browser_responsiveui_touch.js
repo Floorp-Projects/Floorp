@@ -25,11 +25,11 @@ function test() {
   function testWithNoTouch() {
     let div = content.document.querySelector("div");
     let x = 2, y = 2;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown", isSynthesized: false}, content);
     x += 20; y += 10;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove", isSynthesized: false}, content);
     is(div.style.transform, "", "touch didn't work");
-    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup", isSynthesized: false}, content);
     testWithTouch();
   }
 
@@ -37,11 +37,11 @@ function test() {
     gBrowser.selectedTab.__responsiveUI.enableTouch();
     let div = content.document.querySelector("div");
     let x = 2, y = 2;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown", isSynthesized: false}, content);
     x += 20; y += 10;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove", isSynthesized: false}, content);
     is(div.style.transform, "translate(20px, 10px)", "touch worked");
-    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup", isSynthesized: false}, content);
     is(div.style.transform, "none", "end event worked");
     mgr.toggle(window, gBrowser.selectedTab);
   }
@@ -50,11 +50,11 @@ function test() {
     gBrowser.selectedTab.__responsiveUI.disableTouch();
     let div = content.document.querySelector("div");
     let x = 2, y = 2;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousedown", isSynthesized: false}, content);
     x += 20; y += 10;
-    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mousemove", isSynthesized: false}, content);
     is(div.style.transform, "", "touch didn't work");
-    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup"}, content);
+    EventUtils.synthesizeMouse(div, x, y, {type: "mouseup", isSynthesized: false}, content);
     finishUp();
   }
 
