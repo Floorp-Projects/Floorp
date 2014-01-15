@@ -16,11 +16,11 @@
 [Constructor(optional DOMString init = ""),
  Constructor(URLSearchParams init)]
 interface URLSearchParams {
+  void append(DOMString name, DOMString value);
+  void delete(DOMString name);
   DOMString? get(DOMString name);
   sequence<DOMString> getAll(DOMString name);
-  void set(DOMString name, DOMString value);
-  void append(DOMString name, DOMString value);
   boolean has(DOMString name);
-  void delete(DOMString name);
-  readonly attribute unsigned long size;
+  void set(DOMString name, DOMString value);
+  stringifier;
 };
