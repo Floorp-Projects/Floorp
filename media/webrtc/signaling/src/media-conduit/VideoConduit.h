@@ -208,6 +208,8 @@ public:
 
   int GetChannel() { return mChannel; }
   webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
+  bool GetLocalSSRC(unsigned int* ssrc);
+  bool GetRemoteSSRC(unsigned int* ssrc);
 
 private:
 

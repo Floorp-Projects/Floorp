@@ -137,6 +137,14 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   }
 }
 
+bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
+}
+
 /**
  * Peforms intialization of the MANDATORY components of the Video Engine
  */
