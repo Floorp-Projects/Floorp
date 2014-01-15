@@ -21,7 +21,7 @@ parent:
 child:
   NotifyStateEvent(uint32_t stateEvent, uint64_t byteProgress);
   AssociateDocuments(nsCString cacheGroupId, nsCString cacheClientId);
-  Finish(bool succeded, bool isUpgrate);
+  Finish(bool succeeded, bool isUpgrade);
 };
 
 }
