@@ -128,11 +128,6 @@ public:
                           nsPresentationData& aPresentationData,
                           bool                aClimbTree = true);
 
-  // helper used by <mstyle> and <mtable> to see if they have a displaystyle attribute 
-  static void
-  FindAttrDisplaystyle(nsIContent*         aContent,
-                       nsPresentationData& aPresentationData);
-
   // helper to check if a content has an attribute. If content is nullptr or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
   // @return true     --if attribute exists

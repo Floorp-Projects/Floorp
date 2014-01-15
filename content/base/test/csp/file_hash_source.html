@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <body>
+    <!-- inline scripts -->
+    <p id="inline-script-valid-hash">blocked</p>
+    <p id="inline-script-invalid-hash">blocked</p>
+    <p id="inline-script-invalid-hash-valid-nonce">blocked</p>
+    <p id="inline-script-valid-hash-invalid-nonce">blocked</p>
+    <p id="inline-script-invalid-hash-invalid-nonce">blocked</p>
+    <p id="inline-script-valid-sha512-hash">blocked</p>
+    <p id="inline-script-valid-sha384-hash">blocked</p>
+    <p id="inline-script-valid-sha1-hash">blocked</p>
+    <p id="inline-script-valid-md5-hash">blocked</p>
+
+    <!-- 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI=' (in policy) -->
+    <script>document.getElementById("inline-script-valid-hash").innerHTML = "allowed";</script>
+    <!-- 'sha256-cYPTF2pm0QeyDtbmJ3+xi00o2Rxrw7vphBoHgOg9EnQ=' (not in policy) -->
+    <script>document.getElementById("inline-script-invalid-hash").innerHTML = "allowed";</script>
+    <!-- 'sha256-SKtBKyfeMjBpOujES0etR9t/cklbouJu/3T4PXnjbIo=' (not in policy) -->
+    <script nonce="jPRxvuRHbiQnCWVuoCMAvQ==">document.getElementById("inline-script-invalid-hash-valid-nonce").innerHTML = "allowed";</script>
+    <!-- 'sha256-z7rzCkbOJqi08lga3CVQ3b+3948ZbJWaSxsBs8zPliE=' -->
+    <script nonce="foobar">document.getElementById("inline-script-valid-hash-invalid-nonce").innerHTML = "allowed";</script>
+    <!-- 'sha256-E5TX2PmYZ4YQOK/F3XR1wFcvFjbO7QHMmxHTT/18LbE=' (not in policy) -->
+    <script nonce="foobar">document.getElementById("inline-script-invalid-hash-invalid-nonce").innerHTML = "allowed";</script>
+    <!-- 'sha512-tMLuv22jJ5RHkvLNlv0otvA2fgw6PF16HKu6wy0ZDQ3M7UKzoygs1uxIMSfjMttgWrB5WRvIr35zrTZppMYBVw==' (in policy) -->
+    <script>document.getElementById("inline-script-valid-sha512-hash").innerHTML = "allowed";</script>
+    <!-- 'sha384-XjAD+FxZfipkxna4id1JrR2QP6OYUZfAxpn9+yHOmT1VSLVa9SQR/dz7CEb7jw7w' (in policy) -->
+    <script>document.getElementById("inline-script-valid-sha384-hash").innerHTML = "allowed";</script>
+    <!-- 'sha1-LHErkMxKGcSpa/znpzmKYkKnI30=' (in policy) -->
+    <script>document.getElementById("inline-script-valid-sha1-hash").innerHTML = "allowed";</script>
+    <!-- 'md5-/m4wX3YU+IHs158KwKOBWg==' (in policy) -->
+    <script>document.getElementById("inline-script-valid-md5-hash").innerHTML = "allowed";</script>
+
+    <!-- inline styles -->
+    <p id="inline-style-valid-hash"></p>
+    <p id="inline-style-invalid-hash"></p>
+    <p id="inline-style-invalid-hash-valid-nonce"></p>
+    <p id="inline-style-valid-hash-invalid-nonce"></p>
+    <p id="inline-style-invalid-hash-invalid-nonce"></p>
+    <p id="inline-style-valid-sha512-hash"></p>
+    <p id="inline-style-valid-sha384-hash"></p>
+    <p id="inline-style-valid-sha1-hash"></p>
+    <p id="inline-style-valid-md5-hash"></p>
+
+    <!-- 'sha256-UpNH6x+Ux99QTW1fJikQsVbBERJruIC98et0YDVKKHQ=' (in policy) -->
+    <style>p#inline-style-valid-hash { color: green; }</style>
+    <!-- 'sha256-+TYxTx+bsfTDdivWLZUwScEYyxuv6lknMbNjrgGBRZo=' (not in policy) -->
+    <style>p#inline-style-invalid-hash { color: red; }</style>
+    <!-- 'sha256-U+9UPC/CFzz3QuOrl5q3KCVNngOYWuIkE2jK6Ir0Mbs=' (not in policy) -->
+    <style nonce="ftL2UbGHlSEaZTLWMwtA5Q==">p#inline-style-invalid-hash-valid-nonce { color: green; }</style>
+    <!-- 'sha256-0IPbWW5IDJ/juvETq60oTnhC+XzOqdYp5/UBsBKCaOY=' (in policy) -->
+    <style nonce="foobar">p#inline-style-valid-hash-invalid-nonce { color: green; }</style>
+    <!-- 'sha256-KaHZgPd4nC4S8BVLT/9WjzdPDtunGWojR83C2whbd50=' (not in policy) -->
+    <style nonce="foobar">p#inline-style-invalid-hash-invalid-nonce { color: red; }</style>
+    <!-- 'sha512-EpcDbSuvFv0HIyKtU5tQMN7UtBMeEbljz1dWPfy7PNCa1RYdHKwdJWT1tie41evq/ZUL1rzadSVdEzq3jl6Twg==' (in policy) -->
+    <style>p#inline-style-valid-sha512-hash { color: green; }</style>
+    <!-- 'sha384-c5W8ON4WyeA2zEOGdrOGhRmRYI8+2UzUUmhGQFjUFP6yiPZx9FGEV3UOiQ+tIshF' (in policy) -->
+    <style>p#inline-style-valid-sha384-hash { color: green; }</style>
+    <!-- 'sha1-T/+b4sxCIiJxDr6XS9dAEyHKt2M=' (in policy) -->
+    <style>p#inline-style-valid-sha1-hash { color: red; }</style>
+    <!-- 'md5-oNrgrtzOZduwDYYi1yo12g==' (in policy) -->
+    <style>p#inline-style-valid-md5-hash { color: red; }</style>
+
+  </body>
+</html>

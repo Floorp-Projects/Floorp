@@ -26,21 +26,6 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  // Overloaded nsIMathMLFrame methods
-
-  NS_IMETHOD
-  InheritAutomaticData(nsIFrame* aParent) MOZ_OVERRIDE;
-
-  NS_IMETHOD
-  UpdatePresentationData(uint32_t aFlagsValues,
-                         uint32_t aWhichFlags) MOZ_OVERRIDE;
-
-  NS_IMETHOD
-  UpdatePresentationDataFromChildAt(int32_t         aFirstIndex,
-                                    int32_t         aLastIndex,
-                                    uint32_t        aFlagsValues,
-                                    uint32_t        aWhichFlags) MOZ_OVERRIDE;
-
   // overloaded nsTableOuterFrame methods
 
   NS_IMETHOD

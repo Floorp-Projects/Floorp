@@ -77,16 +77,25 @@ elif sys.platform == "darwin":
 <string>$version</string>
 <key>CFBundleVersion</key>
 <string>$version.$buildID</string>
+<key>CFBundleIdentifier</key>
+<string>$reverseVendor</string>
 </dict>
 </plist>
 """
         version = iniparser.get("App", "Version")
         buildID = iniparser.get("App", "BuildID")
         infoString = appName + " " + version
+        reverseVendor = "com.vendor.unknown"
+        appID = iniparser.get("App", "ID")
+        colonIndex = appID.find("@") + 1
+        if (colonIndex != 0):
+            vendor = appID[colonIndex:]
+            reverseVendor = ".".join(vendor.split(".")[::-1])
         contents = contents.replace("$infoString", infoString)
         contents = contents.replace("$appName", appName)
         contents = contents.replace("$version", version)
         contents = contents.replace("$buildID", buildID)
+        contents = contents.replace("$reverseVendor", reverseVendor)
         infoPList = open(os.path.join(installDir, "Contents/Info.plist"), "w+b")
         infoPList.write(contents)
         infoPList.close()

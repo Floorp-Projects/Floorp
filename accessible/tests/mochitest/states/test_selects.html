@@ -73,6 +73,19 @@
       testStates(opt2, STATE_SELECTABLE | STATE_FOCUSABLE, 0, STATE_SELECTED, 0,
                  STATE_FOCUSED, EXT_STATE_ACTIVE);
 
+      // collapsed combobox
+      testStates("collapsedcombobox",
+                 STATE_COLLAPSED | STATE_FOCUSABLE, 0,
+                 STATE_FOCUSED, 0);
+
+      testStates("collapsed-1",
+                 STATE_FOCUSABLE | STATE_SELECTABLE, 0,
+                 STATE_OFFSCREEN | STATE_INVISIBLE, 0);
+
+      testStates("collapsed-2",
+                 STATE_OFFSCREEN, 0,
+                 STATE_INVISIBLE, 0);
+
       // listbox
       testStates("listbox",
                  STATE_FOCUSABLE, 0,
@@ -150,6 +163,11 @@
      title="Isolate focusable and unavailable states from State()">
     Mozilla Bug 756983
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=907682"
+     title=" HTML:option group position is not correct when select is collapsed">
+    Mozilla Bug 907682
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -158,6 +176,11 @@
   <select id="combobox">
     <option>item 1</option>
     <option>item 2</option>
+  </select>
+
+  <select id="collapsedcombobox">
+    <option id="collapsed-1">item 1</option>
+    <option id="collapsed-2">item 2</option>
   </select>
 
   <select id="listbox" name="component" size="3">
