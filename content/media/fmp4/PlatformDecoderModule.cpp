@@ -14,34 +14,16 @@ namespace mozilla {
 
 extern PlatformDecoderModule* CreateBlankDecoderModule();
 
-bool PlatformDecoderModule::sUseBlankDecoder = false;
-
-/* static */
-void
-PlatformDecoderModule::Init()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  static bool alreadyInitialized = false;
-  if (alreadyInitialized) {
-    return;
-  }
-  alreadyInitialized = true;
-  sUseBlankDecoder = Preferences::GetBool("media.fragmented-mp4.use-blank-decoder");
-#ifdef XP_WIN
-  WMFDecoderModule::Init();
-#endif
-}
-
 /* static */
 PlatformDecoderModule*
 PlatformDecoderModule::Create()
 {
-  if (sUseBlankDecoder) {
+  if (Preferences::GetBool("media.fragmented-mp4.use-blank-decoder")) {
     return CreateBlankDecoderModule();
   }
 #ifdef XP_WIN
   nsAutoPtr<WMFDecoderModule> m(new WMFDecoderModule());
-  if (NS_SUCCEEDED(m->Startup())) {
+  if (NS_SUCCEEDED(m->Init())) {
     return m.forget();
   }
 #endif

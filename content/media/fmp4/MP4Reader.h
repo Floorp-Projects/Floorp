@@ -14,7 +14,6 @@
 #include "mp4_demuxer/box_definitions.h"
 
 #include <deque>
-#include "mozilla/Monitor.h"
 
 namespace mozilla {
 
@@ -83,6 +82,7 @@ private:
 
   bool mHasAudio;
   bool mHasVideo;
+
 };
 
 } // namespace mozilla
