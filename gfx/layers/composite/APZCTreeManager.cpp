@@ -18,7 +18,6 @@
 #include "mozilla/TouchEvents.h"
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 
 #include <algorithm>                    // for std::stable_sort
@@ -41,6 +40,38 @@ APZCTreeManager::APZCTreeManager()
 
 APZCTreeManager::~APZCTreeManager()
 {
+}
+
+void
+APZCTreeManager::GetAllowedTouchBehavior(WidgetInputEvent* aEvent,
+                                         nsTArray<TouchBehaviorFlags>& aOutValues)
+{
+  WidgetTouchEvent *touchEvent = aEvent->AsTouchEvent();
+
+  aOutValues.Clear();
+
+  for (size_t i = 0; i < touchEvent->touches.Length(); i++) {
+    // If aEvent wasn't transformed previously we might need to
+    // add transforming of the spt here.
+    mozilla::ScreenIntPoint spt;
+    spt.x = touchEvent->touches[i]->mRefPoint.x;
+    spt.y = touchEvent->touches[i]->mRefPoint.y;
+
+    nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(spt);
+    aOutValues.AppendElement(apzc
+      ? apzc->GetAllowedTouchBehavior(spt)
+      : AllowedTouchBehavior::UNKNOWN);
+  }
+}
+
+void
+APZCTreeManager::SetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
+                                         const nsTArray<TouchBehaviorFlags> &aValues)
+{
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  if (apzc) {
+    apzc->SetAllowedTouchBehavior(aValues);
+  }
 }
 
 void
