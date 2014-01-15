@@ -348,7 +348,7 @@ public:
 };
 
 void
-URLSearchParams::Serialize(nsAString& aValue)
+URLSearchParams::Serialize(nsAString& aValue) const
 {
   MOZ_ASSERT(mValid);
 
