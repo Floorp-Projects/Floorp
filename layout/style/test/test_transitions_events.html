@@ -212,6 +212,10 @@ $("two").addEventListener("transitionend",
        "propertyName for transitionend on two");
     is(event.elapsedTime, 1,
        "elapsedTime for transitionend on two");
+    is(event.bubbles, true,
+       "transitionend events should bubble");
+    is(event.cancelable, false,
+       "transitionend events should not be cancelable");
     is(cs("two").marginLeft, "10px",
        "computed style for transitionend on two");
     got_two_target = true;
