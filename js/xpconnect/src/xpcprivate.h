@@ -2922,19 +2922,17 @@ private:
 /***************************************************************************/
 // 'Components' object
 
-class nsXPCComponents : public nsIXPCComponents,
-                        public nsIXPCScriptable,
-                        public nsIClassInfo
+class nsXPCComponents : public nsIXPCComponents
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
-    NS_DECL_NSIXPCSCRIPTABLE
-    NS_DECL_NSICLASSINFO
 
 public:
     void SystemIsBeingShutDown() { ClearMembers(); }
     virtual ~nsXPCComponents();
+
+    XPCWrappedNativeScope *GetScope() { return mScope; }
 
 private:
     nsXPCComponents(XPCWrappedNativeScope* aScope);
