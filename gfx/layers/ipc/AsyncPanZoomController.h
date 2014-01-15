@@ -539,6 +539,11 @@ private:
   };
 
   /*
+   * Returns whether current touch behavior values allow zooming.
+   */
+  bool TouchActionAllowZoom();
+
+  /*
    * Returns allowed touch behavior from the mAllowedTouchBehavior array.
    * In case apzc didn't receive touch behavior values within the timeout
    * it returns default value.
