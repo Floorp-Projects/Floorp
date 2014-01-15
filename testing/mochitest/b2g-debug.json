@@ -438,6 +438,8 @@
     "Harness_sanity/test_sanityEventUtils.html": "bug 688052",
     "Harness_sanity/test_sanitySimpletest.html": "bug 688052",
 
+    "content/base/test/csp/test_hash_source.html":"can't use nsICryptoHash in CSPUtils.jsm (child process)",
+
     "content/base/test/csp/test_CSP_bug909029.html": "debug-only failure",
     "content/base/test/test_bug578096.html": "debug-only failure; crash",
     "content/base/test/test_bug827160.html": "debug-only failure",
