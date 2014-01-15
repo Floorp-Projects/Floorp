@@ -127,20 +127,7 @@ public:
   }
 
   static void GetDOMKeyName(mozilla::KeyNameIndex aKeyNameIndex,
-                            nsAString& aKeyName)
-  {
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) \
-      case KEY_NAME_INDEX_##aCPPName: \
-        aKeyName.Assign(NS_LITERAL_STRING(aDOMKeyName)); return;
-    switch (aKeyNameIndex) {
-#include "nsDOMKeyNameList.h"
-      case KEY_NAME_INDEX_USE_STRING:
-      default:
-        aKeyName.Truncate();
-        return;
-    }
-#undef NS_DEFINE_KEYNAME
-  }
+                            nsAString& aKeyName);
 
   void AssignKeyEventData(const WidgetKeyboardEvent& aEvent, bool aCopyTargets)
   {

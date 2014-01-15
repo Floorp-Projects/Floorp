@@ -1337,7 +1337,7 @@ pref("browser.uiCustomization.debug", false);
 
 // The URL where remote content that composes the UI for Firefox Accounts should
 // be fetched. Must use HTTPS.
-pref("firefox.accounts.remoteUrl", "https://accounts.dev.lcip.org/flow?moar_native=true");
+pref("firefox.accounts.remoteUrl", "https://accounts.dev.lcip.org/?service=sync");
 
 // The URL of the Firefox Accounts auth server backend
 pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");

@@ -207,7 +207,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStringSplit(LStringSplit *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
     bool visitForkJoinSlice(LForkJoinSlice *lir);
-    bool visitGuardThreadLocalObject(LGuardThreadLocalObject *lir);
+    bool visitGuardThreadExclusive(LGuardThreadExclusive *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);

@@ -1475,14 +1475,14 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
     return static_cast<TypedDatum*>(&*obj);
 }
 
-/*static*/ void
+void
 TypedDatum::attach(uint8_t *memory)
 {
     setPrivate(memory);
     setReservedSlot(JS_DATUM_SLOT_OWNER, ObjectValue(*this));
 }
 
-/*static*/ void
+void
 TypedDatum::attach(JSObject &datum, uint32_t offset)
 {
     JS_ASSERT(IsTypedDatum(datum));
@@ -2242,6 +2242,15 @@ uint8_t *
 TypedDatum::typedMem() const
 {
     return TypedMem(*this);
+}
+
+TypedDatum *
+TypedDatum::owner() const
+{
+    JSObject *owner = getReservedSlot(JS_DATUM_SLOT_OWNER).toObjectOrNull();
+    if (!owner)
+        return nullptr;
+    return &AsTypedDatum(*owner);
 }
 
 /******************************************************************************

@@ -41,6 +41,6 @@ LOCAL_INCLUDES += [
     '../../generic',
     '../../style',
     '/content/base/src',
-    '/content/events/src',
+    '/dom/events',
 ]
 

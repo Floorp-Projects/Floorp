@@ -1496,7 +1496,7 @@ CodeGenerator::visitForkJoinSlice(LForkJoinSlice *lir)
 }
 
 bool
-CodeGenerator::visitGuardThreadLocalObject(LGuardThreadLocalObject *lir)
+CodeGenerator::visitGuardThreadExclusive(LGuardThreadExclusive *lir)
 {
     JS_ASSERT(gen->info().executionMode() == ParallelExecution);
 
@@ -1504,7 +1504,7 @@ CodeGenerator::visitGuardThreadLocalObject(LGuardThreadLocalObject *lir)
     masm.setupUnalignedABICall(2, tempReg);
     masm.passABIArg(ToRegister(lir->forkJoinSlice()));
     masm.passABIArg(ToRegister(lir->object()));
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, IsThreadLocalObject));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParallelWriteGuard));
 
     OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutIllegalWrite, lir);
     if (!bail)

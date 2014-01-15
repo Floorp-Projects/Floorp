@@ -1013,8 +1013,8 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
         if (script) {
             ok = JS_ExecuteScriptVersion(cx, obj, script, nullptr, JSVERSION_LATEST);
         } else {
-            jsval rval;
-            ok = JS_CallFunction(cx, obj, function, 0, nullptr, &rval);
+            RootedValue rval(cx);
+            ok = JS_CallFunction(cx, obj, function, 0, nullptr, rval.address());
         }
      }
 

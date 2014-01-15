@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=720130
   <title>Test for Bug 720130</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="enableTestPlugin.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -55,7 +56,7 @@ function checkFocus() {
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(function() {
+function doTest() {
   is(document.activeElement, document.body);
 
   // Preliminary check: tabindex should be -1 on the object.
@@ -82,6 +83,11 @@ SimpleTest.waitForFocus(function() {
   }, true);
 
   synthesizeKey("VK_TAB", {});
+}
+
+SimpleTest.waitForFocus(function () {
+  // Set the focus model so that links are focusable by the tab key even on Mac
+  SpecialPowers.pushPrefEnv({'set': [['accessibility.tabfocus', 7]]}, doTest);
 });
 
 </script>

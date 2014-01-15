@@ -10,6 +10,11 @@
         "{objdir}/dist/b2g-*.tar.gz",
         "{workdir}/sources.xml"
     ],
+    "public_upload_files": [
+        "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
+        "{objdir}/dist/b2g-*.tar.gz",
+        "{workdir}/sources.xml"
+    ],
     "zip_files": [
         ["{workdir}/out/target/product/inari/*.img", "out/target/product/inari/"],
         ["{workdir}/boot.img", "out/target/product/inari/"],
