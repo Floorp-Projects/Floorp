@@ -9,6 +9,7 @@ interface nsIDOMMozMobileCFInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMWindow;
+interface nsIVariant;
 
 [scriptable, uuid(5013f5cc-24f9-45dc-ba03-f5dc031a3a6b)]
 interface nsIMobileConnectionListener : nsISupports
@@ -35,7 +36,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(55b8d918-8631-4d72-a9d7-f8c9536d6e6f)]
+[scriptable, uuid(987fc93a-e538-4fd3-9e4d-0e0f0934f019)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -62,6 +63,7 @@ interface nsIMobileConnectionProvider : nsISupports
   DOMString getIccId(in unsigned long clientId);
   DOMString getNetworkSelectionMode(in unsigned long clientId);
   DOMString getRadioState(in unsigned long clientId);
+  nsIVariant getSupportedNetworkTypes(in unsigned long clientId);
 
   nsIDOMDOMRequest getNetworks(in unsigned long clientId,
                                in nsIDOMWindow window);

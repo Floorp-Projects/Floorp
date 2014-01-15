@@ -677,6 +677,12 @@ RILContentHelper.prototype = {
     return context && context.radioState;
   },
 
+  getSupportedNetworkTypes: function(clientId) {
+    return cpmm.sendSyncMessage("RIL:GetSupportedNetworkTypes", {
+      clientId: clientId
+    })[0];
+  },
+
   /**
    * The networks that are currently trying to be selected (or "automatic").
    * This helps ensure that only one network per client is selected at a time.

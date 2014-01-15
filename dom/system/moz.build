@@ -53,9 +53,9 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'gklayout'
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += [
-    '/content/events/src',
     '/dom/base',
     '/dom/bindings',
+    '/dom/events',
     '/js/xpconnect/loader',
 ]
 

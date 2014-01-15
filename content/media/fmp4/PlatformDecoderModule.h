@@ -9,6 +9,13 @@
 
 #include "MediaDecoderReader.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "nsTArray.h"
+
+namespace mp4_demuxer {
+class VideoDecoderConfig;
+class AudioDecoderConfig;
+struct MP4Sample;
+}
 
 namespace mozilla {
 
@@ -35,6 +42,9 @@ typedef int64_t Microseconds;
 // "media.fragmented-mp4.use-blank-decoder" is true.
 class PlatformDecoderModule {
 public:
+  // Call on the main thread to initialize the static state
+  // needed by Create().
+  static void Init();
 
   // Factory method that creates the appropriate PlatformDecoderModule for
   // the platform we're running on. Caller is responsible for deleting this
@@ -56,7 +66,8 @@ public:
   // decoding can be used. Returns nullptr if the decoder can't be
   // initialized.
   // Called on decode thread.
-  virtual MediaDataDecoder* CreateH264Decoder(layers::LayersBackend aLayersBackend,
+  virtual MediaDataDecoder* CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                                              layers::LayersBackend aLayersBackend,
                                               layers::ImageContainer* aImageContainer) = 0;
 
   // Creates and initializes an AAC decoder with the specified properties.
@@ -65,11 +76,7 @@ public:
   // so it must be copied if it is to be retained by the decoder.
   // Returns nullptr if the decoder can't be initialized.
   // Called on decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(uint32_t aChannelCount,
-                                             uint32_t aSampleRate,
-                                             uint16_t aBitsPerSample,
-                                             const uint8_t* aAACConfig,
-                                             uint32_t aAACConfigLength) = 0;
+  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig) = 0;
 
   // Called when a decode thread is started. Called on decode thread.
   virtual void OnDecodeThreadStart() {}
@@ -80,6 +87,8 @@ public:
   virtual ~PlatformDecoderModule() {}
 protected:
   PlatformDecoderModule() {}
+  // Caches pref media.fragmented-mp4.use-blank-decoder
+  static bool sUseBlankDecoder;
 };
 
 // Return value of the MediaDataDecoder functions.
@@ -102,10 +111,29 @@ class MediaDataDecoder {
 public:
   virtual ~MediaDataDecoder() {};
 
+  // Initialize the decoder. The decoder should be ready to decode after
+  // this returns. The decoder should do any initialization here, rather
+  // than in its constructor, so that if the MP4Reader needs to Shutdown()
+  // during initialization it can call Shutdown() to cancel this.
+  // Any initialization that requires blocking the calling thread *must*
+  // be done here so that it can be canceled by calling Shutdown()!
+  virtual nsresult Init() = 0;
+
   // Inserts aData into the decoding pipeline. Decoding may begin
-  // asynchronously. The caller owns aData, so it may need to be copied.
-  // The MP4Reader calls Input() with new input in a loop until Input()
-  // stops returning DECODE_STATUS_OK.
+  // asynchronously.
+  //
+  // If the decoder needs to assume ownership of the sample it may do so by
+  // calling forget() on aSample.
+  //
+  // If Input() returns DECODE_STATUS_NOT_ACCEPTING without forget()ing
+  // aSample, then the next call will have the same aSample. Otherwise
+  // the caller will delete aSample after Input() returns.
+  //
+  // The MP4Reader calls Input() in a loop until Input() stops returning
+  // DECODE_STATUS_OK. Input() should return DECODE_STATUS_NOT_ACCEPTING
+  // once the underlying decoder should have enough data to output decoded
+  // data.
+  //
   // Called on the media decode thread.
   // Returns:
   //  - DECODE_STATUS_OK if input was successfully inserted into
@@ -114,15 +142,13 @@ public:
   //    at this time. The MP4Reader will assume that the decoder can now
   //    produce one or more output samples, and call the Output() function.
   //    The MP4Reader will call Input() again with the same data later,
-  //    after the decoder's Output() function has stopped producing output.
+  //    after the decoder's Output() function has stopped producing output,
+  //    except if Input() called forget() on aSample, whereupon a new sample
+  //    will come in next call.
   //  - DECODE_STATUS_ERROR if the decoder has been shutdown, or some
   //    unspecified error.
   // This function should not return DECODE_STATUS_NEED_MORE_INPUT.
-  virtual DecoderStatus Input(const uint8_t* aData,
-                              uint32_t aLength,
-                              Microseconds aDTS,
-                              Microseconds aPTS,
-                              int64_t aOffsetInStream) = 0;
+  virtual DecoderStatus Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample) = 0;
 
   // Blocks until a decoded sample is produced by the deoder. The MP4Reader
   // calls this until it stops returning DECODE_STATUS_OK.

@@ -105,9 +105,9 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    '/content/events/src',
     '/dom/base',
     '/dom/bluetooth',
+    '/dom/events',
     '/dom/nfc',
     '/dom/src/geolocation',
     '/dom/wifi',

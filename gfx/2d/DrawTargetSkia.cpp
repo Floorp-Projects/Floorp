@@ -381,17 +381,8 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   MarkChanged();
 
-  IntRect sourceIntRect;
-  bool integerAligned = aSource.ToIntRect(&sourceIntRect);
-
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
-
-  Rect boundingSource = aSource;
-  boundingSource.RoundOut();
-
-  SkRect sourceBoundingRect = RectToSkRect(boundingSource);
-  SkIRect sourceBoundingIRect = RectToSkIRect(boundingSource);
 
   TempBitmap bitmap = GetBitmapForSurface(aSurface);
  
@@ -400,24 +391,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
     paint.mPaint.setFilterBitmap(false);
   }
 
-  if (!integerAligned) {
-    // We need to inflate our destRect by the same amount we inflated sourceRect
-    // by when we rounded up to the nearest integer size to ensure we interpolate
-    // the edge pixels properly, but clip to the true destination rect first so
-    // we don't draw outside our designated area.
-    mCanvas->save();
-    mCanvas->clipRect(destRect);
-
-    SkMatrix rectTransform;
-    rectTransform.setRectToRect(sourceRect, sourceBoundingRect, SkMatrix::kFill_ScaleToFit);
-    rectTransform.mapRect(&destRect);
-  }
-
-  mCanvas->drawBitmapRect(bitmap.mBitmap, &sourceBoundingIRect, destRect, &paint.mPaint);
-
-  if (!integerAligned) {
-    mCanvas->restore();
-  }
+  mCanvas->drawBitmapRectToRect(bitmap.mBitmap, &sourceRect, destRect, &paint.mPaint);
 }
 
 void

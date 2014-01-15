@@ -122,18 +122,31 @@ void DBusWatcher::StartWatching()
   int fd = dbus_watch_get_unix_fd(mWatch);
 
   MessageLoopForIO* ioLoop = MessageLoopForIO::current();
-  ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_READ,
-                              &mReadWatcher, this);
-  ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_WRITE,
-                              &mWriteWatcher, this);
+
+  unsigned int flags = dbus_watch_get_flags(mWatch);
+
+  if (flags & DBUS_WATCH_READABLE) {
+    ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_READ,
+                                &mReadWatcher, this);
+  }
+  if (flags & DBUS_WATCH_WRITABLE) {
+    ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_WRITE,
+                                &mWriteWatcher, this);
+  }
 }
 
 void DBusWatcher::StopWatching()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  mReadWatcher.StopWatchingFileDescriptor();
-  mWriteWatcher.StopWatchingFileDescriptor();
+  unsigned int flags = dbus_watch_get_flags(mWatch);
+
+  if (flags & DBUS_WATCH_READABLE) {
+    mReadWatcher.StopWatchingFileDescriptor();
+  }
+  if (flags & DBUS_WATCH_WRITABLE) {
+    mWriteWatcher.StopWatchingFileDescriptor();
+  }
 }
 
 // DBus utility functions, used as function pointers in DBus setup

@@ -23,7 +23,9 @@ interface MozNfc : EventTarget {
     */
    DOMRequest checkP2PRegistration(DOMString manifestUrl);
 
+   [Func="Navigator::HasNfcPeerSupport"]
    attribute EventHandler onpeerready;
+   [Func="Navigator::HasNfcPeerSupport"]
    attribute EventHandler onpeerlost;
    [ChromeOnly]
    void eventListenerWasAdded(DOMString aType);

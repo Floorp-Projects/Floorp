@@ -19,6 +19,34 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+/**
+ * The purpose of this test is to test that nsRuleNode::Compute*Data
+ * functions are written correctly.  In particular, in these functions,
+ * when the specified value of a property has unit eCSSUnit_Null,
+ * touching the computed data is forbidden.  This is because we
+ * sometimes stop walking up the rule tree when we find computed data
+ * for an initial subsequence of our rules (i.e., an ancestor rule node)
+ * that we can use as a starting point (aStartStruct) for the
+ * computation for the current rule node.
+ *
+ * If one of these tests fails, you should look for a case where the
+ * property's code in nsRuleNode::Compute*Data touches the computed
+ * value when the specified value has eCSSUnit_Null, and fix it.
+ *
+ * The test works by maintaining one style rule that has every CSS
+ * property specified, and a second style rule that has different values
+ * for every property, an element that matches only the first rule (so
+ * that we'll have a cached struct), and *later* an element that matches
+ * both rules (for whose computation we'll find the struct cached from
+ * the first element).  (It does this twice, once with the overriding in
+ * each direction, because one of the cases might match the incorrect
+ * overwriting.)  Then, in the second style rule, it unsets each
+ * property, one at a time, and checks that the computation works
+ * correctly.  (The reason to want every property set is to hit a case
+ * where we can store the data in the rule tree... though this isn't
+ * guaranteed.)
+ */
+
 function xfail_computecheck(prop, roundnum) {
     return false;
 }

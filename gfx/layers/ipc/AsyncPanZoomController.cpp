@@ -1470,6 +1470,17 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
         aLayerMetrics.mScrollOffset.x, aLayerMetrics.mScrollOffset.y);
 
       mFrameMetrics.mScrollOffset = aLayerMetrics.mScrollOffset;
+
+      // It is possible that when we receive this mUpdateScrollOffset flag, we have
+      // just sent a content repaint request, and it is pending inflight. That repaint
+      // request would have our old scroll offset, and will get processed on the content
+      // thread as we're processing this mUpdateScrollOffset flag. This would leave
+      // things in a state where content has the old APZC scroll offset and the APZC
+      // has the new content-specified scroll offset. In such a case we want to trigger
+      // another repaint request to bring things back in sync. In most cases this repaint
+      // request will be a no-op and get filtered out in RequestContentRepaint, so it
+      // shouldn't have bad performance implications.
+      needContentRepaint = true;
     }
   }
 

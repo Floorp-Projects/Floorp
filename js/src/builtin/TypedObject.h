@@ -400,6 +400,7 @@ class TypedDatum : public JSObject
 
     TypeRepresentation *datumTypeRepresentation() const;
     uint8_t *typedMem() const;
+    TypedDatum *owner() const;
 };
 
 class TypedObject : public TypedDatum

@@ -152,8 +152,8 @@ typedef JS::Handle<SpecialId> HandleSpecialId;
 // be a string (Unicode property identifier) or an int (element index).  The
 // *vp out parameter, on success, is the new property value after the action.
 typedef bool
-(* JSPropertyOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                 JS::MutableHandle<JS::Value> vp);
+(* JSPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                 JS::MutableHandleValue vp);
 
 // Set a property named by id in obj, treating the assignment as strict
 // mode code if strict is true. Note the jsid id type -- id may be a string
@@ -161,8 +161,8 @@ typedef bool
 // parameter, on success, is the new property value after the
 // set.
 typedef bool
-(* JSStrictPropertyOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       bool strict, JS::MutableHandle<JS::Value> vp);
+(* JSStrictPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                       bool strict, JS::MutableHandleValue vp);
 
 // Delete a property named by id in obj.
 //
@@ -178,7 +178,7 @@ typedef bool
 // property, or an inherited property, is allowed -- it's just pointless),
 // set *succeeded to true and return true.
 typedef bool
-(* JSDeletePropertyOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+(* JSDeletePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                        bool *succeeded);
 
 // This function type is used for callbacks that enumerate the properties of
@@ -212,13 +212,13 @@ typedef bool
 // The return value is used to indicate success, with a value of false
 // indicating failure.
 typedef bool
-(* JSNewEnumerateOp)(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp enum_op,
-                     JS::MutableHandle<JS::Value> statep, JS::MutableHandle<jsid> idp);
+(* JSNewEnumerateOp)(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
+                     JS::MutableHandleValue statep, JS::MutableHandleId idp);
 
 // The old-style JSClass.enumerate op should define all lazy properties not
 // yet reflected in obj.
 typedef bool
-(* JSEnumerateOp)(JSContext *cx, JS::Handle<JSObject*> obj);
+(* JSEnumerateOp)(JSContext *cx, JS::HandleObject obj);
 
 // Resolve a lazy property named by id in obj by defining it directly in obj.
 // Lazy properties are those reflected from some peer native property space
@@ -231,7 +231,7 @@ typedef bool
 //
 // NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
 typedef bool
-(* JSResolveOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id);
+(* JSResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
 // Like JSResolveOp, but flags provide contextual information as follows:
 //
@@ -244,14 +244,14 @@ typedef bool
 // This hook instead of JSResolveOp is called via the JSClass.resolve member
 // if JSCLASS_NEW_RESOLVE is set in JSClass.flags.
 typedef bool
-(* JSNewResolveOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, unsigned flags,
-                   JS::MutableHandle<JSObject*> objp);
+(* JSNewResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
+                   JS::MutableHandleObject objp);
 
 // Convert obj to the given type, returning true with the resulting value in
 // *vp on success, and returning false on error or exception.
 typedef bool
-(* JSConvertOp)(JSContext *cx, JS::Handle<JSObject*> obj, JSType type,
-                JS::MutableHandle<JS::Value> vp);
+(* JSConvertOp)(JSContext *cx, JS::HandleObject obj, JSType type,
+                JS::MutableHandleValue vp);
 
 // Finalize obj, which the garbage collector has determined to be unreachable
 // from other live objects or from GC roots.  Obviously, finalizers must never
@@ -269,8 +269,8 @@ struct JSStringFinalizer {
 // value in *vp, and its attributes in *attrsp.  As for JSPropertyOp above, id
 // is either a string or an int jsval.
 typedef bool
-(* JSCheckAccessOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                    JSAccessMode mode, JS::MutableHandle<JS::Value> vp);
+(* JSCheckAccessOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                    JSAccessMode mode, JS::MutableHandleValue vp);
 
 // Return whether the first principal subsumes the second. The exact meaning of
 // 'subsumes' is left up to the browser. Subsumption is checked inside the JS
@@ -282,7 +282,7 @@ typedef bool
 // true on success with true in *bp if v is an instance of obj, false in
 // *bp otherwise.
 typedef bool
-(* JSHasInstanceOp)(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JS::Value> vp,
+(* JSHasInstanceOp)(JSContext *cx, JS::HandleObject obj, JS::MutableHandleValue vp,
                     bool *bp);
 
 // Function type for trace operation of the class called to enumerate all
@@ -303,7 +303,7 @@ typedef void
 // A generic type for functions mapping an object to another object, or null
 // if an error or exception was thrown on cx.
 typedef JSObject *
-(* JSObjectOp)(JSContext *cx, JS::Handle<JSObject*> obj);
+(* JSObjectOp)(JSContext *cx, JS::HandleObject obj);
 
 // Hook that creates an iterator object for a given object. Returns the
 // iterator object or null if an error or exception was thrown on cx.

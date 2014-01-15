@@ -83,9 +83,9 @@ nsPK11Token::refreshTokenInfo()
 nsPK11Token::~nsPK11Token()
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return;
-
+  }
   destructorSafeDestroyNSSReference();
   shutdown(calledFromObject);
 }
@@ -97,9 +97,6 @@ void nsPK11Token::virtualDestroyNSSReference()
 
 void nsPK11Token::destructorSafeDestroyNSSReference()
 {
-  if (isAlreadyShutDown())
-    return;
-
   if (mSlot) {
     PK11_FreeSlot(mSlot);
     mSlot = nullptr;

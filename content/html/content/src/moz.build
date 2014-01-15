@@ -168,11 +168,11 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/canvas/src',
-    '/content/events/src',
     '/content/html/document/src',
     '/content/media/',
     '/content/xul/content/src',
     '/dom/base',
+    '/dom/events',
     '/dom/xbl',
     '/editor/libeditor/base',
     '/editor/libeditor/text',
