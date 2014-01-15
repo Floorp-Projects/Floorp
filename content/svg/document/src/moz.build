@@ -16,10 +16,10 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/events/src',
     '/content/html/document/src',
     '/content/svg/content/src',
     '/content/xml/document/src',
+    '/dom/events',
     '/layout/style',
     '/xpcom/ds',
 ]

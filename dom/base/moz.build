@@ -29,7 +29,6 @@ EXPORTS += [
     'nsIDOMClassInfo.h',
     'nsIDOMScriptObjectFactory.h',
     'nsIGlobalObject.h',
-    'nsIJSEventListener.h',
     'nsIJSNativeInitializer.h',
     'nsIScriptContext.h',
     'nsIScriptExternalNameSet.h',
@@ -138,6 +137,7 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '../battery',
     '../bluetooth',
+    '../events',
     '../media',
     '../network/src',
     '../src/geolocation',
@@ -145,7 +145,6 @@ LOCAL_INCLUDES += [
     '../time',
     '../xbl',
     '/content/base/src',
-    '/content/events/src',
     '/content/html/document/src',
     '/content/xul/document/src',
     '/layout/generic',

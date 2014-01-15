@@ -90,8 +90,7 @@ xpc::CheckAccessList(const char16_t *wideName, const char *const list[])
 class nsXPCComponents_Interfaces :
             public nsIXPCComponents_Interfaces,
             public nsIXPCScriptable,
-            public nsIClassInfo,
-            public nsISecurityCheckedComponent
+            public nsIClassInfo
 {
 public:
     // all the interface method declarations...
@@ -99,7 +98,6 @@ public:
     NS_DECL_NSIXPCCOMPONENTS_INTERFACES
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
     nsXPCComponents_Interfaces();
@@ -190,7 +188,9 @@ nsXPCComponents_Interfaces::GetImplementationLanguage(uint32_t *aImplementationL
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    // Mark ourselves as a DOM object so that instances may be created in
+    // unprivileged scopes.
+    *aFlags = nsIClassInfo::DOM_OBJECT;
     return NS_OK;
 }
 
@@ -215,7 +215,6 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Interfaces)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Interfaces)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -333,42 +332,6 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = CloneAllAccess();
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsXPCComponents_Interfaces::CanCallMethod(const nsIID * iid, const char16_t *methodName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_Interfaces::CanGetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -376,8 +339,7 @@ nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const char16_t *pr
 class nsXPCComponents_InterfacesByID :
             public nsIXPCComponents_InterfacesByID,
             public nsIXPCScriptable,
-            public nsIClassInfo,
-            public nsISecurityCheckedComponent
+            public nsIClassInfo
 {
 public:
     // all the interface method declarations...
@@ -385,7 +347,6 @@ public:
     NS_DECL_NSIXPCCOMPONENTS_INTERFACESBYID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
     nsXPCComponents_InterfacesByID();
@@ -477,7 +438,9 @@ nsXPCComponents_InterfacesByID::GetImplementationLanguage(uint32_t *aImplementat
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    // Mark ourselves as a DOM object so that instances may be created in
+    // unprivileged scopes.
+    *aFlags = nsIClassInfo::DOM_OBJECT;
     return NS_OK;
 }
 
@@ -501,7 +464,6 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_InterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_InterfacesByID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -626,42 +588,6 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = CloneAllAccess();
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::CanCallMethod(const nsIID * iid, const char16_t *methodName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::CanGetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::CanSetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
-
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -766,7 +692,7 @@ nsXPCComponents_Classes::GetImplementationLanguage(uint32_t *aImplementationLang
 NS_IMETHODIMP
 nsXPCComponents_Classes::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -1007,7 +933,7 @@ nsXPCComponents_ClassesByID::GetImplementationLanguage(uint32_t *aImplementation
 NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -1270,7 +1196,9 @@ nsXPCComponents_Results::GetImplementationLanguage(uint32_t *aImplementationLang
 NS_IMETHODIMP
 nsXPCComponents_Results::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    // Mark ourselves as a DOM object so that instances may be created in
+    // unprivileged scopes.
+    *aFlags = nsIClassInfo::DOM_OBJECT;
     return NS_OK;
 }
 
@@ -1492,7 +1420,7 @@ nsXPCComponents_ID::GetImplementationLanguage(uint32_t *aImplementationLanguage)
 NS_IMETHODIMP
 nsXPCComponents_ID::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -1711,7 +1639,7 @@ nsXPCComponents_Exception::GetImplementationLanguage(uint32_t *aImplementationLa
 NS_IMETHODIMP
 nsXPCComponents_Exception::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -2100,7 +2028,7 @@ nsXPCConstructor::GetImplementationLanguage(uint32_t *aImplementationLanguage)
 NS_IMETHODIMP
 nsXPCConstructor::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -2355,7 +2283,7 @@ nsXPCComponents_Constructor::GetImplementationLanguage(uint32_t *aImplementation
 NS_IMETHODIMP
 nsXPCComponents_Constructor::GetFlags(uint32_t *aFlags)
 {
-    *aFlags = nsIClassInfo::THREADSAFE;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -2428,9 +2356,9 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
     XPCWrappedNativeScope* scope = GetObjectScope(obj);
-    nsXPCComponents* comp;
+    nsCOMPtr<nsIXPCComponents> comp;
 
-    if (!xpc || !scope || !(comp = scope->GetComponents()))
+    if (!xpc || !scope || !(comp = do_QueryInterface(scope->GetComponents())))
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     // Do the security check if necessary
@@ -2577,14 +2505,12 @@ nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
 class nsXPCComponents_Utils :
             public nsIXPCComponents_Utils,
-            public nsIXPCScriptable,
-            public nsISecurityCheckedComponent
+            public nsIXPCScriptable
 {
 public:
     // all the interface method declarations...
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
     NS_DECL_NSIXPCCOMPONENTS_UTILS
 
 public:
@@ -2598,7 +2524,6 @@ private:
 NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Utils)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -3273,6 +3198,19 @@ nsXPCComponents_Utils::SetWantXrays(const jsval &vscope, JSContext *cx)
     return NS_OK;
 }
 
+/* jsval forcePrivilegedComponentsForScope(jsval vscope); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(const jsval &vscope,
+                                                         JSContext *cx)
+{
+    if (!vscope.isObject())
+        return NS_ERROR_INVALID_ARG;
+    JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
+    XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
+    scope->ForcePrivilegedComponents();
+    return NS_OK;
+}
+
 /* jsval getComponentsForScope(jsval vscope); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
@@ -3320,41 +3258,6 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
 
     // Dispatch.
     return NS_DispatchToMainThread(run);
-}
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = CloneAllAccess();
-    return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CanCallMethod(const nsIID * iid, const char16_t *methodName, char **_retval)
-{
-    static const char* const allowed[] = { "evalInSandbox", nullptr };
-    *_retval = CheckAccessList(methodName, allowed);
-    return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CanGetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    *_retval = nullptr;
-    return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
 }
 
 #define GENERATE_JSOPTION_GETTER_SETTER(_attr, _getter, _setter)    \
@@ -3505,8 +3408,8 @@ nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
 
     // Invoke the callback, if passed.
     if (aCallback.isObject()) {
-        Value ignored;
-        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), &ignored))
+        RootedValue ignored(aCx);
+        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), ignored.address()))
             return NS_ERROR_FAILURE;
     }
 
@@ -3576,155 +3479,55 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *
 /***************************************************************************/
 /***************************************************************************/
 
-// XXXjband We ought to cache the wrapper in the object's slots rather than
-// re-wrapping on demand
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-NS_IMPL_ADDREF(nsXPCComponents)
-NS_IMPL_RELEASE(nsXPCComponents)
-
-/* void getInterfaces (out uint32_t count, [array, size_is (count), retval]
-                       out nsIIDPtr array); */
-NS_IMETHODIMP
-nsXPCComponents::GetInterfaces(uint32_t *aCount, nsIID * **aArray)
-{
-    const uint32_t count = 3;
-    *aCount = count;
-    nsIID **array;
-    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
-    if (!array)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    uint32_t index = 0;
-    nsIID* clone;
-#define PUSH_IID(id)                                                          \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                 sizeof(nsIID)));             \
-    if (!clone)                                                               \
-        goto oom;                                                             \
-    array[index++] = clone;
-
-    PUSH_IID(nsIXPCComponents)
-    PUSH_IID(nsIXPCScriptable)
-    PUSH_IID(nsISecurityCheckedComponent)
-#undef PUSH_IID
-
-    return NS_OK;
-oom:
-    while (index)
-        nsMemory::Free(array[--index]);
-    nsMemory::Free(array);
-    *aArray = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* nsISupports getHelperForLanguage (in uint32_t language); */
-NS_IMETHODIMP
-nsXPCComponents::GetHelperForLanguage(uint32_t language,
-                                      nsISupports **retval)
-{
-    nsCOMPtr<nsISupports> supports =
-        do_QueryInterface(static_cast<nsIXPCComponents *>(this));
-    supports.forget(retval);
-    return NS_OK;
-}
-
-/* readonly attribute string contractID; */
-NS_IMETHODIMP
-nsXPCComponents::GetContractID(char * *aContractID)
-{
-    *aContractID = nullptr;
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-/* readonly attribute string classDescription; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassDescription(char * *aClassDescription)
-{
-    static const char classDescription[] = "XPCComponents";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassID(nsCID * *aClassID)
-{
-    *aClassID = nullptr;
-    return NS_OK;
-}
-
-/* readonly attribute uint32_t implementationLanguage; */
-NS_IMETHODIMP
-nsXPCComponents::GetImplementationLanguage(uint32_t *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
-}
-
-/* readonly attribute uint32_t flags; */
-NS_IMETHODIMP
-nsXPCComponents::GetFlags(uint32_t *aFlags)
-{
-    *aFlags = nsIClassInfo::THREADSAFE;
-    return NS_OK;
-}
-
-/* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP
-nsXPCComponents::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
+nsXPCComponentsBase::nsXPCComponentsBase(XPCWrappedNativeScope* aScope)
     :   mScope(aScope),
         mInterfaces(nullptr),
         mInterfacesByID(nullptr),
+        mResults(nullptr)
+{
+    MOZ_ASSERT(aScope, "aScope must not be null");
+}
+
+nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
+    :   nsXPCComponentsBase(aScope),
         mClasses(nullptr),
         mClassesByID(nullptr),
-        mResults(nullptr),
         mID(nullptr),
         mException(nullptr),
         mConstructor(nullptr),
         mUtils(nullptr)
 {
-    MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
-nsXPCComponents::~nsXPCComponents()
+void
+nsXPCComponentsBase::ClearMembers()
 {
-    ClearMembers();
+    NS_IF_RELEASE(mInterfaces);
+    NS_IF_RELEASE(mInterfacesByID);
+    NS_IF_RELEASE(mResults);
 }
 
 void
 nsXPCComponents::ClearMembers()
 {
-    NS_IF_RELEASE(mInterfaces);
-    NS_IF_RELEASE(mInterfacesByID);
     NS_IF_RELEASE(mClasses);
     NS_IF_RELEASE(mClassesByID);
-    NS_IF_RELEASE(mResults);
     NS_IF_RELEASE(mID);
     NS_IF_RELEASE(mException);
     NS_IF_RELEASE(mConstructor);
     NS_IF_RELEASE(mUtils);
+
+    nsXPCComponentsBase::ClearMembers();
 }
 
 /*******************************************/
-#define XPC_IMPL_GET_OBJ_METHOD(_n)                                           \
-NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) {      \
+#define XPC_IMPL_GET_OBJ_METHOD(_class, _n)                                   \
+NS_IMETHODIMP _class::Get##_n(nsIXPCComponents_##_n * *a##_n) {               \
     NS_ENSURE_ARG_POINTER(a##_n);                                             \
     if (!m##_n) {                                                             \
         if (!(m##_n = new nsXPCComponents_##_n())) {                          \
-            *a##_n = nullptr;                                                  \
+            *a##_n = nullptr;                                                 \
             return NS_ERROR_OUT_OF_MEMORY;                                    \
         }                                                                     \
         NS_ADDREF(m##_n);                                                     \
@@ -3734,21 +3537,21 @@ NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) {      \
     return NS_OK;                                                             \
 }
 
-XPC_IMPL_GET_OBJ_METHOD(Interfaces)
-XPC_IMPL_GET_OBJ_METHOD(InterfacesByID)
-XPC_IMPL_GET_OBJ_METHOD(Classes)
-XPC_IMPL_GET_OBJ_METHOD(ClassesByID)
-XPC_IMPL_GET_OBJ_METHOD(Results)
-XPC_IMPL_GET_OBJ_METHOD(ID)
-XPC_IMPL_GET_OBJ_METHOD(Exception)
-XPC_IMPL_GET_OBJ_METHOD(Constructor)
-XPC_IMPL_GET_OBJ_METHOD(Utils)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Interfaces)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, InterfacesByID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Classes)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, ClassesByID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponentsBase, Results)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, ID)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Exception)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Constructor)
+XPC_IMPL_GET_OBJ_METHOD(nsXPCComponents, Utils)
 
 #undef XPC_IMPL_GET_OBJ_METHOD
 /*******************************************/
 
 NS_IMETHODIMP
-nsXPCComponents::IsSuccessCode(nsresult result, bool *out)
+nsXPCComponentsBase::IsSuccessCode(nsresult result, bool *out)
 {
     *out = NS_SUCCEEDED(result);
     return NS_OK;
@@ -3770,121 +3573,44 @@ nsXPCComponents::GetManager(nsIComponentManager * *aManager)
     return NS_GetComponentManager(aManager);
 }
 
-/**********************************************/
-
-// The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           nsXPCComponents
-#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents"
-#define                             XPC_MAP_WANT_NEWRESOLVE
-#define                             XPC_MAP_WANT_GETPROPERTY
-#define                             XPC_MAP_WANT_SETPROPERTY
-#define                             XPC_MAP_WANT_PRECREATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
-#include "xpc_map_end.h" /* This will #undef the above */
-
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
-nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                            JSContext *cx, JSObject *objArg,
-                            jsid idArg, uint32_t flags,
-                            JSObject **objp, bool *_retval)
+nsXPCComponents::GetLastResult(JSContext *aCx, Value *aOut)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (!rt)
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
+    if (!xpcc)
         return NS_ERROR_FAILURE;
-
-    unsigned attrs = 0;
-
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT))
-        attrs = JSPROP_READONLY;
-    else if (id != rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE))
-        return NS_OK;
-
-    *objp = obj;
-    *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr, nullptr,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                                     attrs);
+    nsresult res = xpcc->GetLastResult();
+    *aOut = JS_NumberValue(static_cast<double>(static_cast<uint32_t>(res)));
     return NS_OK;
 }
 
-/* bool getProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in JSValPtr vp); */
 NS_IMETHODIMP
-nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                             JSContext * cx, JSObject * obj,
-                             jsid id, jsval * vp, bool *_retval)
+nsXPCComponents::GetReturnCode(JSContext *aCx, Value *aOut)
 {
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
     if (!xpcc)
         return NS_ERROR_FAILURE;
-
-    bool doResult = false;
-    nsresult res;
-    XPCJSRuntime* rt = xpcc->GetRuntime();
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT)) {
-        res = xpcc->GetLastResult();
-        doResult = true;
-    } else if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
-        res = xpcc->GetPendingResult();
-        doResult = true;
-    }
-
-    nsresult rv = NS_OK;
-    if (doResult) {
-        *vp = JS_NumberValue((double)(uint32_t) res);
-        rv = NS_SUCCESS_I_DID_SOMETHING;
-    }
-
-    return rv;
+    nsresult res = xpcc->GetPendingResult();
+    *aOut = JS_NumberValue(static_cast<double>(static_cast<uint32_t>(res)));
+    return NS_OK;
 }
 
-/* bool setProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsid id, in JSValPtr vp); */
 NS_IMETHODIMP
-nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
-                             JSContext * cx, JSObject * obj, jsid id,
-                             jsval * vp, bool *_retval)
+nsXPCComponents::SetReturnCode(JSContext *aCx, const Value &aCode)
 {
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
     if (!xpcc)
         return NS_ERROR_FAILURE;
-
-    XPCJSRuntime* rt = xpcc->GetRuntime();
-    if (!rt)
+    RootedValue code(aCx, aCode);
+    nsresult rv;
+    if (!ToUint32(aCx, code, (uint32_t*)&rv))
         return NS_ERROR_FAILURE;
-
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
-        RootedValue v(cx, *vp);
-        nsresult rv;
-        if (ToUint32(cx, v, (uint32_t*)&rv)) {
-            xpcc->SetPendingResult(rv);
-            xpcc->SetLastResult(rv);
-            return NS_SUCCESS_I_DID_SOMETHING;
-        }
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
+    xpcc->SetPendingResult(rv);
+    xpcc->SetLastResult(rv);
+    return NS_OK;
 }
 
 // static
-bool
-nsXPCComponents::AttachComponentsObject(JSContext* aCx,
-                                        XPCWrappedNativeScope* aScope)
-{
-    RootedObject components(aCx, aScope->GetComponentsJSObject());
-    if (!components)
-        return false;
-
-    RootedObject global(aCx, aScope->GetGlobalJSObject());
-    MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
-
-    RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
-    return JS_DefinePropertyById(aCx, global, id, ObjectValue(*components),
-                                 nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
-}
-
 /* void reportError (); */
 NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
 {
@@ -3898,50 +3624,78 @@ NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
     return utils->ReportError(error, cx);
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP
-nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-    // We let anyone do this...
-    *_retval = CloneAllAccess();
-    return NS_OK;
-}
+/**********************************************/
 
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP
-nsXPCComponents::CanCallMethod(const nsIID * iid, const char16_t *methodName, char **_retval)
+class ComponentsSH : public nsIXPCScriptable
 {
-    static const char* const allowed[] = { "isSuccessCode", nullptr };
-    *_retval = CheckAccessList(methodName, allowed);
-    return NS_OK;
-}
+public:
+    ComponentsSH(unsigned dummy)
+    {
+    }
 
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents::CanGetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    static const char* const allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
-    *_retval = CheckAccessList(propertyName, allowed);
-    return NS_OK;
-}
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCSCRIPTABLE
+    // The NS_IMETHODIMP isn't really accurate here, but NS_CALLBACK requires
+    // the referent to be declared __stdcall on Windows, and this is the only
+    // macro that does that.
+    static NS_IMETHODIMP Get(uint32_t aLangId, nsISupports **helper)
+    {
+        *helper = &singleton;
+        return NS_OK;
+    }
 
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP
-nsXPCComponents::CanSetProperty(const nsIID * iid, const char16_t *propertyName, char **_retval)
-{
-    // If you have to ask, then the answer is NO
-    *_retval = nullptr;
-    return NS_OK;
-}
+private:
+    static ComponentsSH singleton;
+};
+
+ComponentsSH ComponentsSH::singleton(0);
+
+// Singleton refcounting.
+NS_IMETHODIMP_(nsrefcnt) ComponentsSH::AddRef(void) { return 1; }
+NS_IMETHODIMP_(nsrefcnt) ComponentsSH::Release(void) { return 1; }
+
+NS_INTERFACE_MAP_BEGIN(ComponentsSH)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+#define NSXPCCOMPONENTSBASE_CID \
+{ 0xc62998e5, 0x95f1, 0x4058, \
+  { 0xa5, 0x09, 0xec, 0x21, 0x66, 0x18, 0x92, 0xb9 } }
+
+#define NSXPCCOMPONENTS_CID \
+{ 0x3649f405, 0xf0ec, 0x4c28, \
+    { 0xae, 0xb0, 0xaf, 0x9a, 0x51, 0xe4, 0x4c, 0x81 } }
+
+NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTSBASE_CID)
+NS_IMPL_ISUPPORTS1_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
+
+NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTS_CID)
+// Below is more or less what NS_IMPL_ISUPPORTS_CI_INHERITED1 would look like
+// if it existed.
+NS_IMPL_ADDREF_INHERITED(nsXPCComponents, nsXPCComponentsBase)
+NS_IMPL_RELEASE_INHERITED(nsXPCComponents, nsXPCComponentsBase)
+NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
+    NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
+    NS_IMPL_QUERY_CLASSINFO(nsXPCComponents)
+NS_INTERFACE_MAP_END_INHERITING(nsXPCComponentsBase)
+NS_IMPL_CI_INTERFACE_GETTER1(nsXPCComponents, nsIXPCComponents)
+
+// The nsIXPCScriptable map declaration that will generate stubs for us
+#define XPC_MAP_CLASSNAME           ComponentsSH
+#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents"
+#define                             XPC_MAP_WANT_PRECREATE
+#include "xpc_map_end.h" /* This will #undef the above */
 
 NS_IMETHODIMP
-nsXPCComponents::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
+ComponentsSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj, JSObject **parentObj)
 {
+  nsXPCComponentsBase *self = static_cast<nsXPCComponentsBase*>(nativeObj);
   // this should never happen
-  if (!mScope) {
+  if (!self->GetScope()) {
       NS_WARNING("mScope must not be null when nsXPCComponents::PreCreate is called");
       return NS_ERROR_FAILURE;
   }
-  *parentObj = mScope->GetGlobalJSObject();
+  *parentObj = self->GetScope()->GetGlobalJSObject();
   return NS_OK;
 }

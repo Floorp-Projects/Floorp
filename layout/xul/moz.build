@@ -87,10 +87,10 @@ MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
-    '../../content/base/src',
-    '../../content/events/src',
     '../base',
     '../generic',
     '../style',
+    '/content/base/src',
+    '/dom/events',
 ]
 

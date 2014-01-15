@@ -36,10 +36,9 @@ nsCryptoHash::nsCryptoHash()
 nsCryptoHash::~nsCryptoHash()
 {
   nsNSSShutDownPreventionLock locker;
-
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return;
-
+  }
   destructorSafeDestroyNSSReference();
   shutdown(calledFromObject);
 }
@@ -51,9 +50,6 @@ void nsCryptoHash::virtualDestroyNSSReference()
 
 void nsCryptoHash::destructorSafeDestroyNSSReference()
 {
-  if (isAlreadyShutDown())
-    return;
-
   if (mHashContext)
     HASH_Destroy(mHashContext);
   mHashContext = nullptr;
@@ -222,10 +218,9 @@ nsCryptoHMAC::nsCryptoHMAC()
 nsCryptoHMAC::~nsCryptoHMAC()
 {
   nsNSSShutDownPreventionLock locker;
-
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return;
-
+  }
   destructorSafeDestroyNSSReference();
   shutdown(calledFromObject);
 }
@@ -237,9 +232,6 @@ void nsCryptoHMAC::virtualDestroyNSSReference()
 
 void nsCryptoHMAC::destructorSafeDestroyNSSReference()
 {
-  if (isAlreadyShutDown())
-    return;
-
   if (mHMACContext)
     PK11_DestroyContext(mHMACContext, true);
   mHMACContext = nullptr;

@@ -26,7 +26,7 @@ var oldWidth = 0, oldHeight = 0;
 var win = null;
 
 function openWindow() {
-  win = window.open("chrome://mochitests/content/chrome/content/events/test/bug602962.xul", "_blank", "width=600,height=600");
+  win = window.open("chrome://mochitests/content/chrome/dom/events/test/bug602962.xul", "_blank", "width=600,height=600");
 }
 
 function doTest() {

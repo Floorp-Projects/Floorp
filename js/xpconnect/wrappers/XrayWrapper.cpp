@@ -1118,7 +1118,8 @@ DOMXrayTraits::call(JSContext *cx, HandleObject wrapper,
     // call those on the content compartment.
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
         if (!clasp->call) {
-            js_ReportIsNotFunction(cx, JS::ObjectValue(*wrapper));
+            RootedValue v(cx, ObjectValue(*wrapper));
+            js_ReportIsNotFunction(cx, v);
             return false;
         }
         // call it on the Xray compartment
@@ -1143,7 +1144,8 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
     // See comments in DOMXrayTraits::call() explaining what's going on here.
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
         if (!clasp->construct) {
-            js_ReportIsNotFunction(cx, JS::ObjectValue(*wrapper));
+            RootedValue v(cx, ObjectValue(*wrapper));
+            js_ReportIsNotFunction(cx, v);
             return false;
         }
         if (!clasp->construct(cx, args.length(), args.base()))

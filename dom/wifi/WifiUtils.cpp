@@ -141,7 +141,6 @@ class ICSWpaSupplicantImpl : public WpaSupplicantImpl
 public:
   DEFAULT_IMPL(wifi_load_driver, int32_t, )
   DEFAULT_IMPL(wifi_unload_driver, int32_t, )
-  DEFAULT_IMPL(wifi_stop_supplicant, int32_t, )
 
   DEFINE_DLFUNC(wifi_wait_for_event, int32_t, char*, size_t)
   int32_t do_wifi_wait_for_event(const char *iface, char *buf, size_t len) {
@@ -159,6 +158,12 @@ public:
   int32_t do_wifi_start_supplicant(int32_t) {
     USE_DLFUNC(wifi_start_supplicant)
     return wifi_start_supplicant();
+  }
+
+  DEFINE_DLFUNC(wifi_stop_supplicant, int32_t)
+  int32_t do_wifi_stop_supplicant(int32_t) {
+    USE_DLFUNC(wifi_stop_supplicant)
+    return wifi_stop_supplicant();
   }
 
   DEFINE_DLFUNC(wifi_connect_to_supplicant, int32_t, )
@@ -197,6 +202,12 @@ public:
     return wifi_start_supplicant(arg);
   }
 
+  DEFINE_DLFUNC(wifi_stop_supplicant, int32_t, int32_t)
+  int32_t do_wifi_stop_supplicant(int32_t arg) {
+    USE_DLFUNC(wifi_stop_supplicant)
+    return wifi_stop_supplicant(arg);
+  }
+
   DEFINE_DLFUNC(wifi_connect_to_supplicant, int32_t, const char*)
   int32_t do_wifi_connect_to_supplicant(const char* iface) {
     USE_DLFUNC(wifi_connect_to_supplicant)
@@ -210,13 +221,33 @@ public:
   }
 };
 
+// KK implementation.
+// We only redefine the methods that have a different signature than on ICS.
+class KKWpaSupplicantImpl : public ICSWpaSupplicantImpl
+{
+public:
+  DEFINE_DLFUNC(wifi_start_supplicant, int32_t, int32_t)
+  int32_t do_wifi_start_supplicant(int32_t arg) {
+    USE_DLFUNC(wifi_start_supplicant)
+    return wifi_start_supplicant(arg);
+  }
+
+  DEFINE_DLFUNC(wifi_stop_supplicant, int32_t, int32_t)
+  int32_t do_wifi_stop_supplicant(int32_t arg) {
+    USE_DLFUNC(wifi_stop_supplicant)
+    return wifi_stop_supplicant(arg);
+  }
+};
+
 // Concrete class to use to access the wpa supplicant.
 WpaSupplicant::WpaSupplicant()
 {
   if (NetUtils::SdkVersion() < 16) {
     mImpl = new ICSWpaSupplicantImpl();
-  } else {
+  } else if (NetUtils::SdkVersion() < 19) {
     mImpl = new JBWpaSupplicantImpl();
+  } else {
+    mImpl = new KKWpaSupplicantImpl();
   }
   mNetUtils = new NetUtils();
 };
@@ -278,7 +309,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
   } else if (aOptions.mCmd.EqualsLiteral("start_supplicant")) {
     aResult.mStatus = mImpl->do_wifi_start_supplicant(0);
   } else if (aOptions.mCmd.EqualsLiteral("stop_supplicant")) {
-    aResult.mStatus = mImpl->do_wifi_stop_supplicant();
+    aResult.mStatus = mImpl->do_wifi_stop_supplicant(0);
   } else if (aOptions.mCmd.EqualsLiteral("connect_to_supplicant")) {
     aResult.mStatus = mImpl->do_wifi_connect_to_supplicant(aInterface.get());
   } else if (aOptions.mCmd.EqualsLiteral("ifc_enable")) {
