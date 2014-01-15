@@ -178,6 +178,26 @@ function TouchEventHandler (window) {
       return timeout;
     },
     sendTouchEvent: function teh_sendTouchEvent(evt, target, name) {
+      // When running OOP b2g desktop, we need to send the touch events
+      // using the mozbrowser api on the unwrapped frame.
+      if (target.localName == "iframe" && target.mozbrowser === true) {
+        if (name == "touchstart") {
+          this.touchstartTime = Date.now();
+        } else if (name == "touchend") {
+          // If we have a 'fast' tap, don't send a click as both will be turned
+          // into a click and that breaks eg. checkboxes.
+          if (Date.now() - this.touchstartTime < delay) {
+            this.cancelClick = true;
+          }
+        }
+        let unwraped = XPCNativeWrapper.unwrap(target);
+        unwraped.sendTouchEvent(name, [0],                    // event type, id
+                                [evt.clientX], [evt.clientY], // x, y
+                                [1], [1],                     // rx, ry
+                                [0], [0],                     // rotation, force
+                                1);                           // count
+        return;
+      }
       let document = target.ownerDocument;
       let content = this.getContent(target);
 
