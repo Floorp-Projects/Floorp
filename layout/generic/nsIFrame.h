@@ -338,6 +338,10 @@ typedef uint64_t nsFrameState;
 // Frame has a LayerActivityProperty property
 #define NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY        NS_FRAME_STATE_BIT(54)
 
+// Set for all descendants of MathML sub/supscript elements (other than the
+// base frame) to indicate that the SSTY font feature should be used.
+#define NS_FRAME_MATHML_SCRIPT_DESCENDANT           NS_FRAME_STATE_BIT(58)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
