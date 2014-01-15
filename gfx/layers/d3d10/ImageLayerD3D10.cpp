@@ -421,7 +421,7 @@ ImageLayerD3D10::GetAsTexture(gfx::IntSize* aSize)
 }
 
 already_AddRefed<gfxASurface>
-RemoteDXGITextureImage::GetAsSurface()
+RemoteDXGITextureImage::DeprecatedGetAsSurface()
 {
   nsRefPtr<ID3D10Device1> device =
     gfxWindowsPlatform::GetPlatform()->GetD3D10Device();

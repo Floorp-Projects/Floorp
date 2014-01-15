@@ -27,6 +27,7 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gfx/2D.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -146,7 +147,7 @@ public:
   ImageFormat GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface() = 0;
   virtual gfx::IntSize GetSize() = 0;
   virtual nsIntRect GetPictureRect()
   {
@@ -162,6 +163,8 @@ public:
 
   void MarkSent() { mSent = true; }
   bool IsSentToCompositor() { return mSent; }
+
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -483,7 +486,7 @@ public:
    * the lock methods should be used to avoid the copy, however this should be
    * avoided if the surface is required for a long period of time.
    */
-  already_AddRefed<gfxASurface> GetCurrentAsSurface(gfx::IntSize* aSizeResult);
+  already_AddRefed<gfxASurface> DeprecatedGetCurrentAsSurface(gfx::IntSize* aSizeResult);
 
   /**
    * This is similar to GetCurrentAsSurface, however this does not make a copy
@@ -493,8 +496,19 @@ public:
    * type of image. Optionally a pointer can be passed to receive the current
    * image.
    */
-  already_AddRefed<gfxASurface> LockCurrentAsSurface(gfx::IntSize* aSizeResult,
-                                                     Image** aCurrentImage = nullptr);
+  already_AddRefed<gfxASurface> DeprecatedLockCurrentAsSurface(gfx::IntSize* aSizeResult,
+                                                               Image** aCurrentImage = nullptr);
+
+  /**
+   * Same as GetCurrentAsSurface but for Moz2D
+   */
+  TemporaryRef<gfx::SourceSurface> GetCurrentAsSourceSurface(gfx::IntSize* aSizeResult);
+
+  /**
+   * Same as LockCurrentAsSurface but for Moz2D
+   */
+  TemporaryRef<gfx::SourceSurface> LockCurrentAsSourceSurface(gfx::IntSize* aSizeResult,
+                                                              Image** aCurrentImage = nullptr);
 
   /**
    * Returns the size of the image in pixels.
@@ -668,7 +682,7 @@ class AutoLockImage
 public:
   AutoLockImage(ImageContainer *aContainer) : mContainer(aContainer) { mImage = mContainer->LockCurrentImage(); }
   AutoLockImage(ImageContainer *aContainer, gfxASurface **aSurface) : mContainer(aContainer) {
-    *aSurface = mContainer->LockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
+    *aSurface = mContainer->DeprecatedLockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
   }
   ~AutoLockImage() { if (mContainer) { mContainer->UnlockCurrentImage(); } }
 
@@ -841,7 +855,7 @@ protected:
    */
   virtual uint8_t* AllocateBuffer(uint32_t aSize);
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   gfxImageFormat GetOffscreenFormat();
@@ -879,7 +893,7 @@ public:
   }
 
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface()
+  virtual already_AddRefed<gfxASurface> DeprecatedGetAsSurface()
   {
     nsRefPtr<gfxASurface> surface = mSurface.get();
     return surface.forget();
@@ -897,7 +911,7 @@ class RemoteBitmapImage : public Image {
 public:
   RemoteBitmapImage() : Image(nullptr, REMOTE_IMAGE_BITMAP) {}
 
-  already_AddRefed<gfxASurface> GetAsSurface();
+  already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
   gfx::IntSize GetSize() { return mSize; }
 

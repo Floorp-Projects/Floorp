@@ -75,6 +75,9 @@ nsMathMLmrootFrame::TransmitAutomaticData()
   UpdatePresentationDataFromChildAt(0, 0,
      NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
 
+  PropagateFrameFlagFor(mFrames.LastChild(),
+                        NS_FRAME_MATHML_SCRIPT_DESCENDANT);
+
   return NS_OK;
 }
 

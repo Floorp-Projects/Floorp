@@ -12,12 +12,14 @@
 
 <body>
 
+<!-- The attributes below should no longer have effect on <mstyle>/<math>
+     elements. See bug 838509 -->
+
 <table>
   <tbody>
     <tr>
       <td>mpadded: width</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-          <!-- mpadded does not use attributes of mstyle -->
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" width="1em">
           <mstyle width="1em">
             <mtext>_</mtext>
             <mpadded/>
@@ -27,8 +29,7 @@
     </tr>
     <tr>
       <td>mpadded: lspace</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-          <!-- mpadded does not use attributes of mstyle -->
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" lspace="1em">
           <mstyle lspace="1em">
             <mtext>_</mtext>
             <mpadded/>
@@ -38,8 +39,7 @@
     </tr>
     <tr>
       <td>mpadded: height</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-          <!-- mpadded does not use attributes of mstyle -->
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" height="1em">
           <mstyle height="1em">
             <msup>
               <mrow>
@@ -54,8 +54,7 @@
     </tr>
     <tr>
       <td>mpadded: depth</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-          <!-- mpadded does not use attributes of mstyle -->
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" depth="1em">
           <mstyle depth="1em">
             <msub>
               <mrow>
@@ -70,7 +69,7 @@
     </tr>
     <tr>
       <td>mspace: width</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" width="1em">
           <mstyle width="1em">
             <mtext>_</mtext>
             <mspace/>
@@ -80,7 +79,7 @@
     </tr>
     <tr>
       <td>mspace: height</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" height="1em">
           <mstyle height="1em">
             <msup>
               <mrow>
@@ -95,7 +94,7 @@
     </tr>
     <tr>
       <td>mspace: depth</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" depth="1em">
           <mstyle depth="1em">
             <msub>
               <mrow>
@@ -108,10 +107,9 @@
           </mstyle>
         </math></td>
     </tr>
-    <!-- maction actiontype cannot be set on mstyle -->
     <tr>
       <td>maction: selection</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" selection="2">
           <mstyle selection="2">
             <maction actiontype="toggle">
               <mn>1</mn>
@@ -122,8 +120,7 @@
     </tr>
     <tr>
       <td>mtable: align</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
-          <!-- attribute align on mstyle does not apply to mtable -->
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" align="baseline">
           <mstyle align="baseline">
             <mrow>
               <mtext>_</mtext>

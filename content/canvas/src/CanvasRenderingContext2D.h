@@ -172,7 +172,7 @@ public:
   void BeginPath();
   void Fill(const CanvasWindingRule& winding);
   void Stroke();
-  void DrawSystemFocusRing(mozilla::dom::Element& element);
+  void DrawFocusIfNeeded(mozilla::dom::Element& element);
   bool DrawCustomFocusRing(mozilla::dom::Element& element);
   void Clip(const CanvasWindingRule& winding);
   bool IsPointInPath(double x, double y, const CanvasWindingRule& winding);

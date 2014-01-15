@@ -1007,6 +1007,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                          aResult);
       break;
 
+    case eCSSProperty_touch_action:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_STYLE_TOUCH_ACTION_PAN_X,
+                                         NS_STYLE_TOUCH_ACTION_PAN_Y,
+                                         aResult);
+      break;
+
     default:
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
       AppendASCIItoUTF16(name, aResult);
