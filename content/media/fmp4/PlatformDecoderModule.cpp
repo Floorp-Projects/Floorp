@@ -27,6 +27,9 @@ PlatformDecoderModule::Init()
   }
   alreadyInitialized = true;
   sUseBlankDecoder = Preferences::GetBool("media.fragmented-mp4.use-blank-decoder");
+#ifdef XP_WIN
+  WMFDecoderModule::Init();
+#endif
 }
 
 /* static */

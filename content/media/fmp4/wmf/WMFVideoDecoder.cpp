@@ -28,15 +28,20 @@ using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 
-WMFVideoDecoder::WMFVideoDecoder(bool aDXVAEnabled)
+WMFVideoDecoder::WMFVideoDecoder(mozilla::layers::LayersBackend aLayersBackend,
+                                 mozilla::layers::ImageContainer* aImageContainer,
+                                 bool aDXVAEnabled)
   : mVideoStride(0),
     mVideoWidth(0),
     mVideoHeight(0),
     mLastStreamOffset(0),
+    mImageContainer(aImageContainer),
     mDXVAEnabled(aDXVAEnabled),
+    mLayersBackend(aLayersBackend),
     mUseHwAccel(false)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Must be on main thread.");
+  NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
+  MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(WMFVideoDecoder);
 }
 
@@ -56,14 +61,14 @@ public:
 };
 
 bool
-WMFVideoDecoder::InitializeDXVA(mozilla::layers::LayersBackend aLayersBackend)
+WMFVideoDecoder::InitializeDXVA()
 {
   // If we use DXVA but aren't running with a D3D layer manager then the
   // readback of decoded video frames from GPU to CPU memory grinds painting
   // to a halt, and makes playback performance *worse*.
   if (!mDXVAEnabled ||
-      (aLayersBackend != LayersBackend::LAYERS_D3D9 &&
-       aLayersBackend != LayersBackend::LAYERS_D3D10)) {
+      (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
+       mLayersBackend != LayersBackend::LAYERS_D3D10)) {
     return false;
   }
 
@@ -76,12 +81,9 @@ WMFVideoDecoder::InitializeDXVA(mozilla::layers::LayersBackend aLayersBackend)
 }
 
 nsresult
-WMFVideoDecoder::Init(mozilla::layers::LayersBackend aLayersBackend,
-                      mozilla::layers::ImageContainer* aImageContainer)
+WMFVideoDecoder::Init()
 {
-  NS_ENSURE_ARG_POINTER(aImageContainer);
-
-  bool useDxva= InitializeDXVA(aLayersBackend);
+  bool useDxva = InitializeDXVA();
 
   mDecoder = new MFTDecoder();
 
@@ -125,8 +127,6 @@ WMFVideoDecoder::Init(mozilla::layers::LayersBackend aLayersBackend,
   GUID outputType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
   hr = mDecoder->SetMediaTypes(type, outputType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
-
-  mImageContainer = aImageContainer;
 
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
 
@@ -202,14 +202,12 @@ WMFVideoDecoder::Shutdown()
 
 // Inserts data into the decoder's pipeline.
 DecoderStatus
-WMFVideoDecoder::Input(const uint8_t* aData,
-                       uint32_t aLength,
-                       Microseconds aDTS,
-                       Microseconds aPTS,
-                       int64_t aOffsetInStream)
+WMFVideoDecoder::Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample)
 {
-  mLastStreamOffset = aOffsetInStream;
-  HRESULT hr = mDecoder->Input(aData, aLength, aPTS);
+  mLastStreamOffset = aSample->byte_offset;
+  const uint8_t* data = &aSample->data->front();
+  uint32_t length = aSample->data->size();
+  HRESULT hr = mDecoder->Input(data, length, aSample->composition_timestamp);
   if (hr == MF_E_NOTACCEPTING) {
     return DECODE_STATUS_NOT_ACCEPTING;
   }
