@@ -7,6 +7,7 @@
 /* Class used to manage the wrapped native objects within a JS scope. */
 
 #include "xpcprivate.h"
+#include "XPCWrapper.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsPrincipal.h"
@@ -132,8 +133,12 @@ JSObject*
 XPCWrappedNativeScope::GetComponentsJSObject()
 {
     AutoJSContext cx;
-    if (!mComponents)
-        mComponents = new nsXPCComponents(this);
+    if (!mComponents) {
+        nsIPrincipal *p = GetPrincipal();
+        bool system = XPCWrapper::GetSecurityManager()->IsSystemPrincipal(p);
+        mComponents = system ? new nsXPCComponents(this)
+                             : new nsXPCComponentsBase(this);
+    }
 
     RootedValue val(cx);
     xpcObjectHelper helper(mComponents);
