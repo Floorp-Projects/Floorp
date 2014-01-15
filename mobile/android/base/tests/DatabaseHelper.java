@@ -34,7 +34,7 @@ class DatabaseHelper {
         } else {
            mAsserter.ok(false, "The wrong data type has been provided = " + dataType.toString(), "Please provide the correct data type");
         }
-        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+        uri = uri.buildUpon().appendQueryParameter("profile", GeckoProfile.DEFAULT_PROFILE)
                              .appendQueryParameter("sync", "true").build();
         return uri;
     }
