@@ -200,12 +200,12 @@ class BaselineFrame
     bool hasReturnValue() const {
         return flags_ & HAS_RVAL;
     }
-    Value *returnValue() {
-        return reinterpret_cast<Value *>(&loReturnValue_);
+    MutableHandleValue returnValue() {
+        return MutableHandleValue::fromMarkedLocation(reinterpret_cast<Value *>(&loReturnValue_));
     }
     void setReturnValue(const Value &v) {
         flags_ |= HAS_RVAL;
-        *returnValue() = v;
+        returnValue().set(v);
     }
     inline Value *addressOfReturnValue() {
         return reinterpret_cast<Value *>(&loReturnValue_);
