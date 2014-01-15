@@ -17,6 +17,8 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
 
 namespace mozilla {
 namespace dom {
@@ -217,6 +219,9 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
   , mHasFinished(false)
+  , mExtraCurrentTime(0)
+  , mExtraCurrentTimeSinceLastStartedBlocking(0)
+  , mExtraCurrentTimeUpdatedSinceLastStableState(false)
 {
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance() :
@@ -486,6 +491,76 @@ AudioDestinationNode::CreateAudioChannelAgent()
   mAudioChannelAgent->StartPlaying(&state);
   SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
 }
+
+void
+AudioDestinationNode::NotifyStableState()
+{
+  mExtraCurrentTimeUpdatedSinceLastStableState = false;
+}
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+void
+AudioDestinationNode::ScheduleStableStateNotification()
+{
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell) {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
+    appShell->RunInStableState(event);
+  }
+}
+
+double
+AudioDestinationNode::ExtraCurrentTime()
+{
+  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() &&
+      !mExtraCurrentTimeUpdatedSinceLastStableState) {
+    mExtraCurrentTimeUpdatedSinceLastStableState = true;
+    mExtraCurrentTimeSinceLastStartedBlocking =
+      (TimeStamp::Now() - mStartedBlockingDueToBeingOnlyNode).ToSeconds();
+    ScheduleStableStateNotification();
+  }
+  return mExtraCurrentTime + mExtraCurrentTimeSinceLastStartedBlocking;
+}
+
+void
+AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
+{
+  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() == aIsOnlyNode) {
+    // Nothing changed.
+    return;
+  }
+
+  if (!mStream) {
+    // DestroyMediaStream has been called, presumably during CC Unlink().
+    return;
+  }
+
+  if (mIsOffline) {
+    // Don't block the destination stream for offline AudioContexts, since
+    // we expect the zero data produced when there are no other nodes to
+    // show up in its result buffer. Also, we would get confused by adding
+    // ExtraCurrentTime before StartRendering has even been called.
+    return;
+  }
+
+  if (aIsOnlyNode) {
+    mStream->ChangeExplicitBlockerCount(1);
+    mStartedBlockingDueToBeingOnlyNode = TimeStamp::Now();
+    mExtraCurrentTimeSinceLastStartedBlocking = 0;
+    // Don't do an update of mExtraCurrentTimeSinceLastStartedBlocking until the next stable state.
+    mExtraCurrentTimeUpdatedSinceLastStableState = true;
+    ScheduleStableStateNotification();
+  } else {
+    // Force update of mExtraCurrentTimeSinceLastStartedBlocking if necessary
+    ExtraCurrentTime();
+    mExtraCurrentTime += mExtraCurrentTimeSinceLastStartedBlocking;
+    mStream->ChangeExplicitBlockerCount(-1);
+    mStartedBlockingDueToBeingOnlyNode = TimeStamp();
+  }
+}
+
 }
 
 }
