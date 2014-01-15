@@ -1075,6 +1075,11 @@ public:
     nsXPCComponentsBase*
     GetComponents() const {return mComponents;}
 
+    // Forces the creation of a privileged |Components| object, even in
+    // content scopes. This will crash if used outside of automation.
+    void
+    ForcePrivilegedComponents();
+
     bool AttachComponentsObject(JSContext *aCx);
 
     // Returns the JS object reflection of the Components object.
