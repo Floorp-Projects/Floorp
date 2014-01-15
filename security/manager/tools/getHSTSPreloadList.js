@@ -100,6 +100,7 @@ function getHosts(rawdata) {
     if (entry.mode && entry.mode == "force-https") {
       if (entry.name) {
         entry.retries = MAX_RETRIES;
+        entry.originalIncludeSubdomains = entry.include_subdomains;
         hosts.push(entry);
       } else {
         throw "ERROR: entry not formatted correctly: no name found";
@@ -137,6 +138,9 @@ function processStsHeader(host, header, status) {
     }
   }
 
+  let forceInclude = (host.forceInclude ||
+                      (host.pins == "google" && !host.snionly));
+
   if (error == ERROR_NONE && maxAge.value < MINIMUM_REQUIRED_MAX_AGE) {
     error = ERROR_MAX_AGE_TOO_LOW;
   }
@@ -145,7 +149,9 @@ function processStsHeader(host, header, status) {
            maxAge: maxAge.value,
            includeSubdomains: includeSubdomains.value,
            error: error,
-           retries: host.retries - 1 };
+           retries: host.retries - 1,
+           forceInclude: forceInclude,
+           originalIncludeSubdomains: host.originalIncludeSubdomains };
 }
 
 function RedirectStopper() {};
@@ -213,6 +219,15 @@ function errorToString(status) {
           : status.error);
 }
 
+function writeEntry(status, outputStream) {
+  let incSubdomainsBool = (status.forceInclude && status.error != ERROR_NONE
+                           ? status.originalIncludeSubdomains
+                           : status.includeSubdomains);
+  let includeSubdomains = (incSubdomainsBool ? "true" : "false");
+  writeTo("  { \"" + status.name + "\", " + includeSubdomains + " },\n",
+          outputStream);
+}
+
 function output(sortedStatuses, currentList) {
   try {
     var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
@@ -237,10 +252,13 @@ function output(sortedStatuses, currentList) {
         status.includeSubdomains = currentList[status.name];
       }
 
-      if (status.maxAge >= MINIMUM_REQUIRED_MAX_AGE) {
-        writeTo("  { \"" + status.name + "\", " +
-                 (status.includeSubdomains ? "true" : "false") + " },\n", fos);
+      if (status.maxAge >= MINIMUM_REQUIRED_MAX_AGE || status.forceInclude) {
+        writeEntry(status, fos);
         dump("INFO: " + status.name + " ON the preload list\n");
+        if (status.forceInclude && status.error != ERROR_NONE) {
+          writeTo(status.name + ": " + errorToString(status) + " (error "
+                  + "ignored - included regardless)\n", eos);
+        }
       }
       else {
         dump("INFO: " + status.name + " NOT ON the preload list\n");
