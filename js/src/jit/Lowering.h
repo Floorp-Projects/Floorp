@@ -71,6 +71,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewObject(MNewObject *ins);
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
+    bool visitNewRunOnceCallObject(MNewRunOnceCallObject *ins);
     bool visitNewStringObject(MNewStringObject *ins);
     bool visitNewDerivedTypedObject(MNewDerivedTypedObject *ins);
     bool visitNewPar(MNewPar *ins);

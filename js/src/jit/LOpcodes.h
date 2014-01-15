@@ -28,6 +28,7 @@
     _(NewSlots)                     \
     _(NewDeclEnvObject)             \
     _(NewCallObject)                \
+    _(NewSingletonCallObject)       \
     _(NewStringObject)              \
     _(NewPar)                       \
     _(NewDenseArrayPar)             \
