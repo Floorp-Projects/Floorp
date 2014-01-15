@@ -297,7 +297,7 @@ ImageContainer::LockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
+ImageContainer::DeprecatedLockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -347,6 +347,58 @@ ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
   return mActiveImage->DeprecatedGetAsSurface();
 }
 
+TemporaryRef<gfx::SourceSurface>
+ImageContainer::LockCurrentAsSourceSurface(gfx::IntSize *aSize, Image** aCurrentImage)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (mRemoteData) {
+    NS_ASSERTION(mRemoteDataMutex, "Should have remote data mutex when having remote data!");
+    mRemoteDataMutex->Lock();
+
+    EnsureActiveImage();
+
+    if (aCurrentImage) {
+      NS_IF_ADDREF(mActiveImage);
+      *aCurrentImage = mActiveImage.get();
+    }
+
+    if (!mActiveImage) {
+      return nullptr;
+    }
+
+    if (mActiveImage->GetFormat() == REMOTE_IMAGE_BITMAP) {
+      gfxImageFormat fmt = mRemoteData->mFormat == RemoteImageData::BGRX32
+                           ? gfxImageFormatARGB32
+                           : gfxImageFormatRGB24;
+
+      RefPtr<gfx::DataSourceSurface> newSurf
+        = gfx::Factory::CreateWrappingDataSourceSurface(mRemoteData->mBitmap.mData,
+                                                        mRemoteData->mBitmap.mStride,
+                                                        mRemoteData->mSize,
+                                                        gfx::ImageFormatToSurfaceFormat(fmt));
+      *aSize = newSurf->GetSize();
+
+      return newSurf;
+    }
+
+    *aSize = mActiveImage->GetSize();
+    return mActiveImage->GetAsSourceSurface();
+  }
+
+  if (aCurrentImage) {
+    NS_IF_ADDREF(mActiveImage);
+    *aCurrentImage = mActiveImage.get();
+  }
+
+  if (!mActiveImage) {
+    return nullptr;
+  }
+
+  *aSize = mActiveImage->GetSize();
+  return mActiveImage->GetAsSourceSurface();
+}
+
 void
 ImageContainer::UnlockCurrentImage()
 {
@@ -357,7 +409,7 @@ ImageContainer::UnlockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
+ImageContainer::DeprecatedGetCurrentAsSurface(gfx::IntSize *aSize)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -374,6 +426,26 @@ ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
     *aSize = mActiveImage->GetSize();
   }
   return mActiveImage->DeprecatedGetAsSurface();
+}
+
+TemporaryRef<gfx::SourceSurface>
+ImageContainer::GetCurrentAsSourceSurface(gfx::IntSize *aSize)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (mRemoteData) {
+    CrossProcessMutexAutoLock autoLock(*mRemoteDataMutex);
+    EnsureActiveImage();
+
+    if (!mActiveImage)
+      return nullptr;
+    *aSize = mRemoteData->mSize;
+  } else {
+    if (!mActiveImage)
+      return nullptr;
+    *aSize = mActiveImage->GetSize();
+  }
+  return mActiveImage->GetAsSourceSurface();
 }
 
 gfx::IntSize
