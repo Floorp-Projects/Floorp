@@ -386,7 +386,7 @@ struct ParamTraits<mozilla::WidgetTextEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.seqno);
+    WriteParam(aMsg, aParam.mSeqno);
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.rangeCount);
@@ -398,7 +398,7 @@ struct ParamTraits<mozilla::WidgetTextEvent>
   {
     if (!ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
-        !ReadParam(aMsg, aIter, &aResult->seqno) ||
+        !ReadParam(aMsg, aIter, &aResult->mSeqno) ||
         !ReadParam(aMsg, aIter, &aResult->theText) ||
         !ReadParam(aMsg, aIter, &aResult->isChar) ||
         !ReadParam(aMsg, aIter, &aResult->rangeCount))
@@ -436,7 +436,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.seqno);
+    WriteParam(aMsg, aParam.mSeqno);
     WriteParam(aMsg, aParam.data);
   }
 
@@ -444,7 +444,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
   {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->seqno) &&
+           ReadParam(aMsg, aIter, &aResult->mSeqno) &&
            ReadParam(aMsg, aIter, &aResult->data);
   }
 };
@@ -493,7 +493,7 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.seqno);
+    WriteParam(aMsg, aParam.mSeqno);
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mLength);
     WriteParam(aMsg, aParam.mReversed);
@@ -505,7 +505,7 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
   {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->seqno) &&
+           ReadParam(aMsg, aIter, &aResult->mSeqno) &&
            ReadParam(aMsg, aIter, &aResult->mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mLength) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&

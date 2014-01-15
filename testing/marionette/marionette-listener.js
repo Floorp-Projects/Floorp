@@ -40,6 +40,7 @@ let curFrame = content;
 let previousFrame = null;
 let elementManager = new ElementManager([]);
 let importedScripts = null;
+let inputSource = null;
 
 // The sandbox we execute test scripts in. Gets lazily created in
 // createExecuteContentSandbox().
@@ -189,6 +190,12 @@ function newSession(msg) {
   resetValues();
   if (isB2G) {
     readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    // We have to set correct mouse event source to MOZ_SOURCE_TOUCH
+    // to offer a way for event listeners to differentiate
+    // events being the result of a physical mouse action.
+    // This is especially important for the touch event shim,
+    // in order to prevent creating touch event for these fake mouse events.
+    inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
   }
 }
  
@@ -664,7 +671,7 @@ function emitTouchEvent(type, touch) {
     marionetteLogObj.clearLogs();
     */
     let domWindowUtils = curFrame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
-    domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
+    domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.clientX], [touch.clientY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
   }
 }
 
@@ -672,10 +679,10 @@ function emitTouchEvent(type, touch) {
  * This function emit mouse event
  *   @param: doc is the current document
  *           type is the type of event to dispatch
- *           detail is the number of clicks, button notes the mouse button
+ *           clickCount is the number of clicks, button notes the mouse button
  *           elClientX and elClientY are the coordinates of the mouse relative to the viewport
  */
-function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
+function emitMouseEvent(doc, type, elClientX, elClientY, clickCount, button) {
   if (!wasInterrupted()) {
     let loggingInfo = "emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
     dumpLog(loggingInfo);
@@ -686,11 +693,9 @@ function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
                     {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
     marionetteLogObj.clearLogs();
     */
-    detail = detail || 1;
-    button = button || 0;
     let win = doc.defaultView;
-    // Figure out the element the mouse would be over at (x, y)
-    utils.synthesizeMouseAtPoint(elClientX, elClientY, {type: type, button: button, clickCount: detail}, win);
+    let domUtils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+    domUtils.sendMouseEvent(type, elClientX, elClientY, button || 0, clickCount || 1, 0, false, 0, inputSource);
   }
 }
 
@@ -1029,7 +1034,7 @@ function emitMultiEvents(type, touch, touches) {
   // Create changed touches
   let changedTouches = doc.createTouchList(touch);
   // Create the event object
-  let event = curFrame.document.createEvent('TouchEvent');
+  let event = doc.createEvent('TouchEvent');
   event.initTouchEvent(type,
                        true,
                        true,

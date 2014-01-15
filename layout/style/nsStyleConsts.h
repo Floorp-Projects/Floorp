@@ -747,6 +747,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TEXT_TRANSFORM_FULLWIDTH       4
 
 // See nsStyleDisplay
+#define NS_STYLE_TOUCH_ACTION_NONE            (1 << 0)
+#define NS_STYLE_TOUCH_ACTION_AUTO            (1 << 1)
+#define NS_STYLE_TOUCH_ACTION_PAN_X           (1 << 2)
+#define NS_STYLE_TOUCH_ACTION_PAN_Y           (1 << 3)
+
+// See nsStyleDisplay
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE         0
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR       1
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN      2

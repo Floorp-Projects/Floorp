@@ -12,11 +12,14 @@
 
 <body>
 
+<!-- The attributes below (except math@display) should no longer have effect on
+     <mstyle>/<math> elements. See bug 838509 -->
+
 <table>
   <tbody>
     <tr>
       <td>mo: form</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" form="postfix">
           <mstyle form="postfix">
             <mrow>
               <!-- We assume that the infix/postfix forms of _ do -->
@@ -30,7 +33,7 @@
     </tr>
     <tr>
       <td>mo: lspace, rspace</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" lspace="0" rspace="0">
           <mstyle lspace="0" rspace="0">
             <mrow>
               <!-- We assume that the infix form of _ has -->
@@ -44,7 +47,7 @@
     </tr>
     <tr>
       <td>mo: stretchy</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" stretchy="false">
           <mstyle stretchy="false">
             <mover>
               <!-- We assume that the arrow has stretchy=true in the operator dictionary -->
@@ -56,7 +59,7 @@
     </tr>
     <tr>
       <td>mo: accent</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" accent="false">
           <mstyle accent="false">
             <mover>
               <!-- We assume &#x23de; has accent=true in the operator dictionary -->
@@ -74,7 +77,7 @@
     </tr>
     <tr>
       <td>mo: maxsize</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" maxsize="1">
           <mstyle maxsize="1">
             <mo>(</mo>
             <mspace height="3em"/>
@@ -83,7 +86,7 @@
     </tr>
     <tr>
       <td>mo: minsize</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" minsize="3">
           <mstyle minsize="3">
             <mo>(</mo>
             <mspace height="1em"/>
@@ -92,7 +95,7 @@
     </tr>
     <tr>
       <td>mo: symmetric</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" symmetric="false">
           <!-- We assume that ( has symmetric=true in the operator dictionary -->
           <mstyle symmetric="false">
             <mtext>_</mtext>
@@ -103,7 +106,7 @@
     </tr>
     <tr>
       <td>mo: movablelimits</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" movablelimits="false">
           <!-- We assume that &#x2211; has movablelimits=true in the operator dictionary -->
           <mstyle movablelimits="false">
             <munderover>
@@ -116,7 +119,7 @@
     </tr>
     <tr>
       <td>mo: largeop</td>
-      <td><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" largeop="false">
           <!-- We assume that &#x2211; has largeop=true in the operator dictionary -->
           <mstyle largeop="false">
             <mo>&#x2211;</mo>
