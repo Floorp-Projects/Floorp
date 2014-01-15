@@ -254,7 +254,7 @@ MetroInput::InputPrecisionLevel MetroInput::sCurrentInputLevel =
 MetroInput::MetroInput(MetroWidget* aWidget,
                        UI::Core::ICoreWindow* aWindow)
               : mWidget(aWidget),
-                mChromeHitTestCacheForTouch(false),
+                mNonApzTargetForTouch(false),
                 mWindow(aWindow)
 {
   LogFunction();
@@ -1318,9 +1318,9 @@ MetroInput::DeliverNextQueuedTouchEvent()
   /*
    * We go through states here and make different decisions in each:
    *
-   * 1) Hit test chrome on first touchstart
-   *  If chrome is the target simplify event delivery from that point
-   *  on by directing all input to chrome, bypassing the apz.
+   * 1) Hit test for apz on first touchstart
+   *  If non-apzc content/chrome is the target simplify event delivery from
+   *  that point on by directing all input to chrome, bypassing the apz.
    * 2) Process first touchstart and touchmove events
    *  If touch behavior value associated with the TouchStart's touches doesn't
    *  allow zooming or panning we explicitly set mContentConsumingTouch to true.
@@ -1347,19 +1347,22 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
   AutoDeleteEvent wrap(event);
 
-  // Test for chrome vs. content target. To do this we only use the first touch
+  // Test for non-apz vs. apz target. To do this we only use the first touch
   // point since that will be the input batch target. Cache this for touch events
   // since HitTestChrome has to send a dom event.
   if (mCancelable && event->message == NS_TOUCH_START) {
     nsRefPtr<Touch> touch = event->touches[0];
     LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(touch->mRefPoint);
+    // This is currently a general contained rect hit test, it may produce a false
+    // positive for overlay chrome elements. Also, some content pages won't support
+    // apzc, so this may be false for content as well.
     bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenIntPoint(pt.x, pt.y));
-    mChromeHitTestCacheForTouch = (apzIntersect && HitTestChrome(pt));
+    mNonApzTargetForTouch = (!apzIntersect || HitTestChrome(pt));
   }
 
-  // If this event is destined for chrome, deliver it directly there bypassing
+  // If this event is destined for dom, deliver it directly there bypassing
   // the apz.
-  if (mChromeHitTestCacheForTouch) {
+  if (mNonApzTargetForTouch) {
     DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
     if (mCancelable) {
