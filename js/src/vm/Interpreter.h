@@ -113,7 +113,7 @@ ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip = -1,
 
 /* See ReportIsNotFunction comment for the meaning of numToSkip. */
 extern JSObject *
-ValueToCallable(JSContext *cx, const Value &vp, int numToSkip = -1,
+ValueToCallable(JSContext *cx, HandleValue v, int numToSkip = -1,
                 MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
