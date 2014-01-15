@@ -8,6 +8,7 @@ import android.os.SystemClock;
 import java.util.UUID;
 import java.util.Random;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
 
 /*
@@ -241,7 +242,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     }
 
     public void testBrowserProviderPerf() throws Exception {
-        BrowserDB.initialize("default");
+        BrowserDB.initialize(GeckoProfile.DEFAULT_PROFILE);
 
         loadMobileFolderId();
         addTonsOfUrls();
