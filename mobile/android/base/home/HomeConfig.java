@@ -14,12 +14,18 @@ import java.util.EnumSet;
 import java.util.List;
 
 final class HomeConfig {
+    /**
+     * Used to determine what type of HomeFragment subclass to use when creating
+     * a given panel. With the exception of DYNAMIC, all of these types correspond
+     * to a default set of built-in panels. The DYNAMIC panel type is used by
+     * third-party services to create panels with varying types of content.
+     */
     public static enum PanelType implements Parcelable {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         HISTORY("history", HistoryPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
-        LIST("list", ListPanel.class);
+        DYNAMIC("dynamic", DynamicPanel.class);
 
         private final String mId;
         private final Class<?> mPanelClass;
