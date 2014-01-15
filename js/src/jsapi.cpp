@@ -228,7 +228,8 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
         }
         if (sp == argv + argc) {
             if (required) {
-                if (JSFunction *fun = ReportIfNotFunction(cx, argv[-2])) {
+                HandleValue callee = HandleValue::fromMarkedLocation(&argv[-2]);
+                if (JSFunction *fun = ReportIfNotFunction(cx, callee)) {
                     char numBuf[12];
                     JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
                     JSAutoByteString funNameBytes;
@@ -298,7 +299,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            obj = ReportIfNotFunction(cx, *sp);
+              obj = ReportIfNotFunction(cx, HandleValue::fromMarkedLocation(sp));
             if (!obj)
                 return false;
             *sp = OBJECT_TO_JSVAL(obj);
