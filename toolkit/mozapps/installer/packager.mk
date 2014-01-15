@@ -406,6 +406,17 @@ endif
 OMNIJAR_DIR := $(dir $(OMNIJAR_NAME))
 OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
 
+# A note on the res/ directory.  We unzip the ap_ during packaging,
+# which produces the res/ directory.  This directory is then included
+# in the final package.  When we unpack (during locale repacks), we
+# need to remove the res/ directory because these resources confuse
+# the l10n packaging script that updates omni.ja: the script tries to
+# localize the contents of the res/ directory, which fails.  Instead,
+# after the l10n packaging script completes, we build the ap_
+# described above (which includes freshly localized Android resources)
+# and the res/ directory is taken from the ap_ as part of the regular
+# packaging.
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) \
@@ -443,7 +454,8 @@ INNER_UNMAKE_PACKAGE	= \
     $(UNZIP) $(UNPACKAGE) && \
     mv lib/$(ABI_DIR)/libmozglue.so . && \
     mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
-    rm -rf lib/$(ABI_DIR) \
+    rm -rf lib/$(ABI_DIR) && \
+    rm -rf res \
     $(if $(filter-out ./,$(OMNIJAR_DIR)), \
       && mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME)) )
 endif
