@@ -69,14 +69,7 @@ var ConsoleAPI = {
         output = type;
         break;
       default:
-        if (aResult.toSource) {
-          try {
-            output = aResult.toSource();
-          } catch (ex) { }
-        }
-        if (!output || output == "({})") {
-          output = aResult.toString();
-        }
+        output = aResult.toString();
         break;
     }
 
