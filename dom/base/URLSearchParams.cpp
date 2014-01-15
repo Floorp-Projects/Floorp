@@ -301,13 +301,6 @@ URLSearchParams::Delete(const nsAString& aName)
   NotifyObserver();
 }
 
-uint32_t
-URLSearchParams::Size()
-{
-  Validate();
-  return mSearchParams.Count();
-}
-
 void
 URLSearchParams::DeleteAll()
 {

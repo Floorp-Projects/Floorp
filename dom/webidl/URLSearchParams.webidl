@@ -22,6 +22,5 @@ interface URLSearchParams {
   sequence<DOMString> getAll(DOMString name);
   boolean has(DOMString name);
   void set(DOMString name, DOMString value);
-  readonly attribute unsigned long size;
   stringifier;
 };

@@ -85,8 +85,6 @@ public:
 
   void Delete(const nsAString& aName);
 
-  uint32_t Size();
-
   void Stringify(nsString& aRetval)
   {
     Validate();
