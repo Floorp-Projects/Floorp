@@ -264,6 +264,8 @@ public:
                                   JSObject* aGlobal);
   static bool HasIccManagerSupport(JSContext* /* unused */,
                                    JSObject* aGlobal);
+  static bool HasWifiManagerSupport(JSContext* /* unused */,
+                                    JSObject* aGlobal);
 #endif // MOZ_B2G_RIL
 #ifdef MOZ_B2G_BT
   static bool HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal);
