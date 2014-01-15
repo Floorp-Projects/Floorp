@@ -14,15 +14,8 @@ Cu.import("resource://gre/modules/systemlibs.js");
 
 const SUPP_PROP = "init.svc.wpa_supplicant";
 const WPA_SUPPLICANT = "wpa_supplicant";
-const DEBUG = false;
 
 this.WifiCommand = function(aControlMessage, aInterface) {
-  function debug(msg) {
-    if (DEBUG) {
-      dump('-------------- WifiCommand: ' + msg);
-    }
-  }
-
   var command = {};
 
   //-------------------------------------------------
@@ -142,16 +135,14 @@ this.WifiCommand = function(aControlMessage, aInterface) {
     doStringCommand("LOG_LEVEL", callback);
   };
 
-  command.wpsPbc = function (iface, callback) {
-    doBooleanCommand("WPS_PBC" + (iface ? (" interface=" + iface) : ""),
-                     "OK", callback);
+  command.wpsPbc = function (callback) {
+    doBooleanCommand("WPS_PBC", "OK", callback);
   };
 
   command.wpsPin = function (detail, callback) {
     doStringCommand("WPS_PIN " +
                     (detail.bssid === undefined ? "any" : detail.bssid) +
-                    (detail.pin === undefined ? "" : (" " + detail.pin)) +
-                    (detail.iface ? (" interface=" + detail.iface) : ""),
+                    (detail.pin === undefined ? "" : (" " + detail.pin)),
                     callback);
   };
 
@@ -346,89 +337,9 @@ this.WifiCommand = function(aControlMessage, aInterface) {
     });
   };
 
-  command.setDeviceName = function(deviceName, callback) {
-    doBooleanCommand("SET device_name " + deviceName, "OK", callback);
-  };
-
-  //-------------------------------------------------
-  // P2P commands.
-  //-------------------------------------------------
-
-  command.p2pProvDiscovery = function(address, wpsMethod, callback) {
-    var command = "P2P_PROV_DISC " + address + " " + wpsMethod;
-    doBooleanCommand(command, "OK", callback);
-  };
-
-  command.p2pConnect = function(config, callback) {
-    var command = "P2P_CONNECT " + config.address + " " + config.wpsMethodWithPin + " ";
-    if (config.joinExistingGroup) {
-      command += "join";
-    } else {
-      command += "go_intent=" + config.goIntent;
-    }
-
-    debug('P2P connect command: ' + command);
-    doBooleanCommand(command, "OK", callback);
-  };
-
-  command.p2pGroupRemove = function(iface, callback) {
-    debug("groupRemove()");
-    doBooleanCommand("P2P_GROUP_REMOVE " + iface, "OK", callback);
-  };
-
-  command.p2pEnable = function(detail, callback) {
-    var commandChain = ["SET device_name "    + detail.deviceName,
-                        "SET device_type "    + detail.deviceType,
-                        "SET config_methods " + detail.wpsMethods,
-                        "P2P_SET conc_pref sta",
-                        "P2P_FLUSH"];
-
-    doBooleanCommandChain(commandChain, callback);
-  };
-
-  command.p2pDisable = function(callback) {
-    doBooleanCommand("P2P_SET disabled 1", "OK", callback);
-  };
-
-  command.p2pEnableScan = function(timeout, callback) {
-    doBooleanCommand("P2P_FIND " + timeout, "OK", callback);
-  };
-
-  command.p2pDisableScan = function(callback) {
-    doBooleanCommand("P2P_STOP_FIND", "OK", callback);
-  };
-
-  command.p2pGetGroupCapab = function(address, callback) {
-    command.p2pPeer(address, function(reply) {
-      debug('p2p_peer reply: ' + reply);
-      if (!reply) {
-        callback(0);
-        return;
-      }
-      var capab = /group_capab=0x([0-9a-fA-F]+)/.exec(reply)[1];
-      if (!capab) {
-        callback(0);
-      } else {
-        callback(parseInt(capab, 16));
-      }
-    });
-  };
-
-  command.p2pPeer = function(address, callback) {
-    doStringCommand("P2P_PEER " + address, callback);
-  };
-
-  command.p2pGroupAdd = function(netId, callback) {
-    doBooleanCommand("P2P_GROUP_ADD persistent=" + netId, callback);
-  };
-
-  command.p2pReinvoke = function(netId, address, callback) {
-    doBooleanCommand("P2P_INVITE persistent=" + netId + " peer=" + address, "OK", callback);
-  };
-
-  //----------------------------------------------------------
-  // Private stuff.
-  //----------------------------------------------------------
+  //--------------------------------------------------
+  // Helper functions.
+  //--------------------------------------------------
 
   function voidControlMessage(cmd, callback) {
     aControlMessage({ cmd: cmd, iface: aInterface }, function (data) {
@@ -479,10 +390,6 @@ this.WifiCommand = function(aControlMessage, aInterface) {
       doBooleanCommandChain(commandChain, callback, i);
     });
   }
-
-  //--------------------------------------------------
-  // Helper functions.
-  //--------------------------------------------------
 
   function stopProcess(service, process, callback) {
     var count = 0;

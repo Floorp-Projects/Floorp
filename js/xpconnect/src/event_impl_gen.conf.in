@@ -24,7 +24,6 @@ simple_events = [
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',
 #ifdef MOZ_WIDGET_GONK
-    'MozWifiP2pStatusChangeEvent',
     'MozWifiStatusChangeEvent',
     'MozWifiConnectionInfoEvent',
 #endif

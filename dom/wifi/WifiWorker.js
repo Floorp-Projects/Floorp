@@ -13,8 +13,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/WifiCommand.jsm");
 Cu.import("resource://gre/modules/WifiNetUtil.jsm");
-Cu.import("resource://gre/modules/WifiP2pManager.jsm");
-Cu.import("resource://gre/modules/WifiP2pWorkerObserver.jsm");
 
 var DEBUG = false; // set to true to show debug messages.
 
@@ -110,30 +108,16 @@ var WifiManager = (function() {
       unloadDriverEnabled: libcutils.property_get("ro.moz.wifi.unloaddriver") === "1",
       schedScanRecovery: libcutils.property_get("ro.moz.wifi.sched_scan_recover") === "false" ? false : true,
       driverDelay: libcutils.property_get("ro.moz.wifi.driverDelay"),
-      p2pSupported: libcutils.property_get("ro.moz.wifi.p2p_supported") === "1",
       ifname: libcutils.property_get("wifi.interface")
     };
   }
 
-  let {sdkVersion, unloadDriverEnabled, schedScanRecovery, driverDelay, p2pSupported, ifname} = getStartupPrefs();
+  let {sdkVersion, unloadDriverEnabled, schedScanRecovery, driverDelay, ifname} = getStartupPrefs();
 
   let wifiListener = {
     onWaitEvent: function(event, iface) {
       if (manager.ifname === iface && handleEvent(event)) {
         waitForEvent(iface);
-      } else if (p2pSupported) {
-        if (WifiP2pManager.INTERFACE_NAME === iface) {
-          // If the connection is closed, wifi.c::wifi_wait_for_event()
-          // will still return 'CTRL-EVENT-TERMINATING  - connection closed'
-          // rather than blocking. So when we see this special event string,
-          // just return immediately.
-          const TERMINATED_EVENT = 'CTRL-EVENT-TERMINATING  - connection closed';
-          if (-1 !== event.indexOf(TERMINATED_EVENT)) {
-            return;
-          }
-          p2pManager.handleEvent(event);
-          waitForEvent(iface);
-        }
       }
     },
 
@@ -151,28 +135,17 @@ var WifiManager = (function() {
   manager.schedScanRecovery = schedScanRecovery;
   manager.driverDelay = driverDelay ? parseInt(driverDelay, 10) : DRIVER_READY_WAIT;
 
-  // Regular Wifi stuff.
-  var netUtil = WifiNetUtil(controlMessage);
-  var wifiCommand = WifiCommand(controlMessage, manager.ifname);
-
-  // Wifi P2P stuff
-  var p2pManager;
-  if (p2pSupported) {
-    let p2pCommand = WifiCommand(controlMessage, WifiP2pManager.INTERFACE_NAME);
-    p2pManager = WifiP2pManager(p2pCommand, netUtil);
-  }
-
   let wifiService = Cc["@mozilla.org/wifi/service;1"];
   if (wifiService) {
     wifiService = wifiService.getService(Ci.nsIWifiProxyService);
     let interfaces = [manager.ifname];
-    if (p2pSupported) {
-      interfaces.push(WifiP2pManager.INTERFACE_NAME);
-    }
     wifiService.start(wifiListener, interfaces, interfaces.length);
   } else {
     debug("No wifi service component available!");
   }
+
+  var wifiCommand = WifiCommand(controlMessage, manager.ifname);
+  var netUtil = WifiNetUtil(controlMessage);
 
   // Callbacks to invoke when a reply arrives from the wifi service.
   var controlCallbacks = Object.create(null);
@@ -271,7 +244,6 @@ var WifiManager = (function() {
       wifiCommand.doSetScanMode(true, function(ignore) {
         setBackgroundScan("OFF", function(turned, ignore) {
           reEnableBackgroundScan = turned;
-          manager.handlePreWifiScan();
           wifiCommand.scan(function(ok) {
             wifiCommand.doSetScanMode(false, function(ignore) {
               // The result of scanCommand is the result of the actual SCAN
@@ -283,7 +255,6 @@ var WifiManager = (function() {
       });
       return;
     }
-    manager.handlePreWifiScan();
     wifiCommand.scan(callback);
   }
 
@@ -296,7 +267,6 @@ var WifiManager = (function() {
         if (ok)
           debugEnabled = wanted;
       });
-      p2pManager.setDebug(DEBUG);
     }
   }
 
@@ -785,7 +755,6 @@ var WifiManager = (function() {
         reEnableBackgroundScan = false;
         setBackgroundScan("ON", function() {});
       }
-      manager.handlePostWifiScan();
       notify("scanresultsavailable");
       return true;
     }
@@ -817,10 +786,6 @@ var WifiManager = (function() {
       notify("supplicantconnection");
       callback();
     });
-
-    if (p2pSupported) {
-      manager.enableP2p(function(success) {});
-    }
   }
 
   function prepareForStartup(callback) {
@@ -946,27 +911,19 @@ var WifiManager = (function() {
       // Note these following calls ignore errors. If we fail to kill the
       // supplicant gracefully, then we need to continue telling it to die
       // until it does.
-      let doDisableWifi = function() {
-        manager.state = "DISABLING";
-        wifiCommand.terminateSupplicant(function (ok) {
-          manager.connectionDropped(function () {
-            wifiCommand.stopSupplicant(function (status) {
-              wifiCommand.closeSupplicantConnection(function () {
-                manager.state = "UNINITIALIZED";
-                netUtil.disableInterface(manager.ifname, function (ok) {
-                  unloadDriver(WIFI_FIRMWARE_STATION, callback);
-                });
+      manager.state = "DISABLING";
+      wifiCommand.terminateSupplicant(function (ok) {
+        manager.connectionDropped(function () {
+          wifiCommand.stopSupplicant(function (status) {
+            wifiCommand.closeSupplicantConnection(function () {
+              manager.state = "UNINITIALIZED";
+              netUtil.disableInterface(manager.ifname, function (ok) {
+                unloadDriver(WIFI_FIRMWARE_STATION, callback);
               });
             });
           });
         });
-      }
-
-      if (p2pSupported) {
-        p2pManager.setEnabled(false, { onDisabled: doDisableWifi });
-      } else {
-        doDisableWifi();
-      }
+      });
     }
   }
 
@@ -1178,11 +1135,6 @@ var WifiManager = (function() {
     wifiCommand.saveConfig(callback);
   }
   manager.enableNetwork = function(netId, disableOthers, callback) {
-    if (p2pSupported) {
-      // We have to stop wifi direct scan before associating to an AP.
-      // Otherwise we will get a "REJECT" wpa supplicant event.
-      p2pManager.setScanEnabled(false, function(success) {});
-    }
     wifiCommand.enableNetwork(netId, disableOthers, callback);
   }
   manager.disableNetwork = function(netId, callback) {
@@ -1262,46 +1214,6 @@ var WifiManager = (function() {
       }
     }
   }
-
-  manager.handlePreWifiScan = function() {
-    if (p2pSupported) {
-      // Before doing regular wifi scan, we have to disable wifi direct
-      // scan first. Otherwise we will never get the scan result.
-      p2pManager.blockScan();
-    }
-  };
-
-  manager.handlePostWifiScan = function() {
-    if (p2pSupported) {
-      // After regular wifi scanning, we should restore the restricted
-      // wifi direct scan.
-      p2pManager.unblockScan();
-    }
-  };
-
-  //
-  // Public APIs for P2P.
-  //
-
-  manager.p2pSupported = function() {
-    return p2pSupported;
-  };
-
-  manager.getP2pManager = function() {
-    return p2pManager;
-  };
-
-  manager.enableP2p = function(callback) {
-    p2pManager.setEnabled(true, {
-      onSupplicantConnected: function() {
-        wifiService.waitForEvent(WifiP2pManager.INTERFACE_NAME);
-      },
-
-      onEnabled: function(success) {
-        callback(success);
-      }
-    });
-  };
 
   return manager;
 })();
@@ -1585,17 +1497,6 @@ function WifiWorker() {
   this._connectionInfoTimer = null;
   this._reconnectOnDisconnect = false;
 
-  // Create p2pObserver and assign to p2pManager.
-  if (WifiManager.p2pSupported()) {
-    this._p2pObserver = WifiP2pWorkerObserver(WifiManager.getP2pManager());
-    WifiManager.getP2pManager().setObserver(this._p2pObserver);
-
-    // Add DOM message observerd by p2pObserver to the message listener as well.
-    this._p2pObserver.getObservedDOMMessages().forEach((function(msgName) {
-      this._mm.addMessageListener(msgName, this);
-    }).bind(this));
-  }
-
   // Users of instances of nsITimer should keep a reference to the timer until
   // it is no longer needed in order to assure the timer is fired.
   this._callbackTimer = null;
@@ -1628,7 +1529,6 @@ function WifiWorker() {
     // wait for our next command) ensure that background scanning is on and
     // then try again.
     debug("Determined that scanning is stuck, turning on background scanning!");
-    WifiManager.handlePostWifiScan();
     WifiManager.disconnect(function(ok) {});
     self._turnOnBackgroundScan = true;
   }
@@ -2404,15 +2304,6 @@ WifiWorker.prototype = {
     let msg = aMessage.data || {};
     msg.manager = aMessage.target;
 
-    if (WifiManager.p2pSupported()) {
-      // If p2pObserver returns something truthy, return it!
-      // Otherwise, continue to do the rest of tasks.
-      var p2pRet = this._p2pObserver.onDOMMessage(aMessage);
-      if (p2pRet) {
-        return p2pRet;
-      }
-    }
-
     // Note: By the time we receive child-process-shutdown, the child process
     // has already forgotten its permissions so we do this before the
     // permissions check.
@@ -2500,6 +2391,79 @@ WifiWorker.prototype = {
       sent = true;
       this._sendMessage(message, false, "ScanFailed", msg);
     }).bind(this));
+  },
+
+  getWifiScanResults: function(callback) {
+    var count = 0;
+    var timer = null;
+    var self = this;
+
+    self.waitForScan(waitForScanCallback);
+    doScan();
+    function doScan() {
+      WifiManager.scan(true, function (ok) {
+        if (!ok) {
+          if (!timer) {
+            count = 0;
+            timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          }
+
+          if (count++ >= 3) {
+            timer = null;
+            this.wantScanResults.splice(this.wantScanResults.indexOf(waitForScanCallback), 1);
+            callback.onfailure();
+            return;
+          }
+
+          // Else it's still running, continue waiting.
+          timer.initWithCallback(doScan, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
+          return;
+        }
+      });
+    }
+
+    function waitForScanCallback(networks) {
+      if (networks === null) {
+        callback.onfailure();
+        return;
+      }
+
+      var wifiScanResults = new Array();
+      var net;
+      for (let net in networks) {
+        let value = networks[net];
+        wifiScanResults.push(transformResult(value));
+      }
+      callback.onready(wifiScanResults.length, wifiScanResults);
+    }
+
+    function transformResult(element) {
+      var result = new WifiScanResult();
+      result.connected = false;
+      for (let id in element) {
+        if (id === "__exposedProps__") {
+          continue;
+        }
+        if (id === "security") {
+          result[id] = 0;
+          var security = element[id];
+          for (let j = 0; j < security.length; j++) {
+            if (security[j] === "WPA-PSK") {
+              result[id] |= Ci.nsIWifiScanResult.WPA_PSK;
+            } else if (security[j] === "WPA-EAP") {
+              result[id] |= Ci.nsIWifiScanResult.WPA_EAP;
+            } else if (security[j] === "WEP") {
+              result[id] |= Ci.nsIWifiScanResult.WEP;
+            } else {
+             result[id] = 0;
+            }
+          }
+        } else {
+          result[id] = element[id];
+        }
+      }
+      return result;
+    }
   },
 
   getKnownNetworks: function(msg) {
@@ -2758,7 +2722,7 @@ WifiWorker.prototype = {
     let self = this;
     let detail = msg.data;
     if (detail.method === "pbc") {
-      WifiManager.wpsPbc(WifiManager.ifname, function(ok) {
+      WifiManager.wpsPbc(function(ok) {
         if (ok)
           self._sendMessage(message, true, true, msg);
         else

@@ -1778,26 +1778,6 @@ Navigator::HasIccManagerSupport(JSContext* /* unused */,
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && CheckPermission(win, "mobileconnection");
 }
-
-/* static */
-bool
-Navigator::HasWifiManagerSupport(JSContext* /* unused */,
-                                 JSObject* aGlobal)
-{
-  // On XBL scope, the global object is NOT |window|. So we have
-  // to use nsContentUtils::GetObjectPrincipal to get the principal
-  // and test directly with permission manager.
-
-  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal);
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromPrincipal(principal, "wifi-manage", &permission);
-  return nsIPermissionManager::ALLOW_ACTION == permission;
-}
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
