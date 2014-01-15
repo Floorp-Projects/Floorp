@@ -2523,7 +2523,7 @@ LogViolationDetailsRunnable::Run()
     if (mWorkerPrivate->GetReportCSPViolations()) {
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                mFileName, scriptSample, mLineNum,
-                               EmptyString());
+                               EmptyString(), EmptyString());
     }
   }
 

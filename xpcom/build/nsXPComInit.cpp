@@ -146,6 +146,7 @@ static AtExitManager* sExitManager;
 static MessageLoop* sMessageLoop;
 static bool sCommandLineWasInitialized;
 static BrowserProcessSubThread* sIOThread;
+static BackgroundHangMonitor* sMainHangMonitor;
 
 } /* anonymous namespace */
 
@@ -431,6 +432,10 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     if (!MessageLoop::current()) {
         sMessageLoop = new MessageLoopForUI(MessageLoop::TYPE_MOZILLA_UI);
+        sMessageLoop->set_thread_name("Gecko");
+        // Set experimental values for main thread hangs:
+        // 512ms for transient hangs and 8192ms for permanent hangs
+        sMessageLoop->set_hang_timeouts(512, 8192);
     }
 
     if (XRE_GetProcessType() == GeckoProcessType_Default &&
@@ -609,6 +614,12 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     mozilla::HangMonitor::Startup();
     mozilla::BackgroundHangMonitor::Startup();
+
+    const MessageLoop* const loop = MessageLoop::current();
+    sMainHangMonitor = new mozilla::BackgroundHangMonitor(
+        loop->thread_name().c_str(),
+        loop->transient_hang_timeout(),
+        loop->permanent_hang_timeout());
 
 #ifdef MOZ_VISUAL_EVENT_TRACER
     mozilla::eventtracer::Init();
@@ -854,6 +865,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     Omnijar::CleanUp();
 
     HangMonitor::Shutdown();
+
+    if (sMainHangMonitor) {
+        delete sMainHangMonitor;
+        sMainHangMonitor = nullptr;
+    }
     BackgroundHangMonitor::Shutdown();
 
 #ifdef MOZ_VISUAL_EVENT_TRACER

@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test CSP 1.1 hash-source for inline scripts and styles</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="visibility:hidden">
+  <iframe style="width:100%;" id='cspframe'></iframe>
+</div>
+<script class="testbody" type="text/javascript">
+
+function cleanup() {
+  // finish the tests
+  SimpleTest.finish();
+}
+
+function checkInline () {
+  var cspframe = document.getElementById('cspframe').contentDocument;
+
+  var inlineScriptTests = {
+    'inline-script-valid-hash': {
+      shouldBe: 'allowed',
+      message:  'Inline script with valid hash should be allowed'
+    },
+    'inline-script-invalid-hash': {
+      shouldBe: 'blocked',
+      message: 'Inline script with invalid hash should be blocked'
+    },
+    'inline-script-invalid-hash-valid-nonce': {
+      shouldBe: 'allowed',
+      message: 'Inline script with invalid hash and valid nonce should be allowed'
+    },
+    'inline-script-valid-hash-invalid-nonce': {
+      shouldBe: 'allowed',
+      message: 'Inline script with valid hash and invalid nonce should be allowed'
+    },
+    'inline-script-invalid-hash-invalid-nonce': {
+      shouldBe: 'blocked',
+      message: 'Inline script with invalid hash and invalid nonce should be blocked'
+    },
+    'inline-script-valid-sha512-hash': {
+      shouldBe: 'allowed',
+      message: 'Inline script with a valid sha512 hash should be allowed'
+    },
+    'inline-script-valid-sha384-hash': {
+      shouldBe: 'allowed',
+      message: 'Inline script with a valid sha384 hash should be allowed'
+    },
+    'inline-script-valid-sha1-hash': {
+      shouldBe: 'blocked',
+      message: 'Inline script with a valid sha1 hash should be blocked, because sha1 is not a valid hash function'
+    },
+    'inline-script-valid-md5-hash': {
+      shouldBe: 'blocked',
+      message: 'Inline script with a valid md5 hash should be blocked, because md5 is not a valid hash function'
+    }
+  }
+
+  for (testId in inlineScriptTests) {
+    var test = inlineScriptTests[testId];
+    is(cspframe.getElementById(testId).innerHTML, test.shouldBe, test.message);
+  }
+
+  // Inline style tries to change an element's color to green. If blocked, the
+  // element's color will be the default black.
+  var green = "rgb(0, 128, 0)";
+  var black = "rgb(0, 0, 0)";
+
+  var getElementColorById = function (id) {
+    return window.getComputedStyle(cspframe.getElementById(id), null).color;
+  };
+
+  var inlineStyleTests = {
+    'inline-style-valid-hash': {
+      shouldBe: green,
+      message: 'Inline style with valid hash should be allowed'
+    },
+    'inline-style-invalid-hash': {
+      shouldBe: black,
+      message: 'Inline style with invalid hash should be blocked'
+    },
+    'inline-style-invalid-hash-valid-nonce': {
+      shouldBe: green,
+      message: 'Inline style with invalid hash and valid nonce should be allowed'
+    },
+    'inline-style-valid-hash-invalid-nonce': {
+      shouldBe: green,
+      message: 'Inline style with valid hash and invalid nonce should be allowed'
+    },
+    'inline-style-invalid-hash-invalid-nonce' : {
+      shouldBe: black,
+      message: 'Inline style with invalid hash and invalid nonce should be blocked'
+    },
+    'inline-style-valid-sha512-hash': {
+      shouldBe: green,
+      message: 'Inline style with a valid sha512 hash should be allowed'
+    },
+    'inline-style-valid-sha384-hash': {
+      shouldBe: green,
+      message: 'Inline style with a valid sha384 hash should be allowed'
+    },
+    'inline-style-valid-sha1-hash': {
+      shouldBe: black,
+      message: 'Inline style with a valid sha1 hash should be blocked, because sha1 is not a valid hash function'
+    },
+    'inline-style-valid-md5-hash': {
+      shouldBe: black,
+      message: 'Inline style with a valid md5 hash should be blocked, because md5 is not a valid hash function'
+    }
+  }
+
+  for (testId in inlineStyleTests) {
+    var test = inlineStyleTests[testId];
+    is(getElementColorById(testId), test.shouldBe, test.message);
+  }
+
+  cleanup();
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true],
+          ["security.csp.experimentalEnabled", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById('cspframe').src = 'file_hash_source.html';
+    document.getElementById('cspframe').addEventListener('load', checkInline, false);
+  });
+</script>
+</pre>
+</body>
+</html>
