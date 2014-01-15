@@ -360,7 +360,7 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
             return false;
         case JSD_ERROR_REPORTER_DEBUG:
         {
-            jsval rval;
+            JS::RootedValue rval(cx);
             JSD_ExecutionHookProc   hook;
             void*                   hookData;
 
@@ -371,7 +371,7 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
             JSD_UNLOCK();
 
             jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_DEBUG_REQUESTED,
-                                  hook, hookData, &rval);
+                                  hook, hookData, rval.address());
             /* XXX Should make this dependent on ExecutionHook retval */
             return true;
         }

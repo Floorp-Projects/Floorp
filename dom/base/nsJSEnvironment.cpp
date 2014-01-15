@@ -3305,7 +3305,9 @@ NS_IMETHODIMP nsJSArgArray::QueryElementAt(uint32_t index, const nsIID & uuid, v
     return NS_ERROR_INVALID_ARG;
 
   if (uuid.Equals(NS_GET_IID(nsIVariant)) || uuid.Equals(NS_GET_IID(nsISupports))) {
-    return nsContentUtils::XPConnect()->JSToVariant(mContext, mArgv[index],
+    // Have to copy a Heap into a Rooted to work with it.
+    JS::Rooted<JS::Value> val(mContext, mArgv[index]);
+    return nsContentUtils::XPConnect()->JSToVariant(mContext, val,
                                                     (nsIVariant **)result);
   }
   NS_WARNING("nsJSArgArray only handles nsIVariant");
