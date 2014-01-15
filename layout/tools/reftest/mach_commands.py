@@ -138,7 +138,7 @@ class ReftestRunner(MozbuildObject):
         return reftest.run_remote_reftests(parser, options, args)
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,
-            debugger=None):
+            debugger=None, parallel=False):
         """Runs a reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -153,6 +153,8 @@ class ReftestRunner(MozbuildObject):
 
         debugger is the program name (in $PATH) or the full path of the
         debugger to run.
+
+        parallel indicates whether tests should be run in parallel or not.
         """
 
         if suite not in ('reftest', 'reftest-ipc', 'crashtest', 'crashtest-ipc'):
@@ -174,6 +176,9 @@ class ReftestRunner(MozbuildObject):
         if debugger:
             extra_args.append('--debugger=%s' % debugger)
             pass_thru = True
+
+        if parallel:
+            extra_args.append('--run-tests-in-parallel')
 
         if extra_args:
             args = [os.environ.get(b'EXTRA_TEST_ARGS', '')]
@@ -201,6 +206,10 @@ def ReftestCommand(func):
         help='Reftest manifest file, or a directory in which to select '
              'reftest.list. If omitted, the entire test suite is executed.')
     func = path(func)
+
+    parallel = CommandArgument('--parallel', action='store_true',
+        help='Run tests in parallel.')
+    func = parallel(func)
 
     return func
 
