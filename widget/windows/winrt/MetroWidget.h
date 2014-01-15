@@ -49,6 +49,8 @@ class DispatchMsg;
 class MetroWidget : public nsWindowBase,
                     public nsIObserver
 {
+  typedef uint32_t TouchBehaviorFlags;
+
   typedef mozilla::widget::WindowHook WindowHook;
   typedef mozilla::widget::TaskbarWindowPreview TaskbarWindowPreview;
   typedef ABI::Windows::UI::Input::IPointerPoint IPointerPoint;
@@ -167,7 +169,7 @@ public:
   // FrameworkView helpers
   void SizeModeChanged();
   void Activated(bool aActiveated);
-  void Paint(const nsIntRegion& aInvalidRegion); 
+  void Paint(const nsIntRegion& aInvalidRegion);
 
   MetroWidget* MetroWidget::GetTopLevelWindow(bool aStopOnDialogOrPopup) { return this; }
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
@@ -203,7 +205,11 @@ public:
   virtual void SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
 
+  TouchBehaviorFlags ContentGetAllowedTouchBehavior(const nsIntPoint& aPoint);
+
   // apzc controller related api
+  void ApzcGetAllowedTouchBehavior(mozilla::WidgetInputEvent* aTransformedEvent, nsTArray<TouchBehaviorFlags>& aOutBehaviors);
+  void ApzcSetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid, nsTArray<TouchBehaviorFlags>& aBehaviors);
 
   // Hit test a point to see if an apzc would consume input there
   bool ApzHitTest(mozilla::ScreenIntPoint& pt);

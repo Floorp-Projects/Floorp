@@ -580,6 +580,33 @@ VisualEventTracerLog::GetJSONString(nsACString & _retval)
   return NS_OK;
 }
 
+nsresult
+VisualEventTracerLog::WriteToProfilingFile()
+{
+  const char* filename = PR_GetEnv("MOZ_TRACE_FILE");
+  if (!filename) {
+    return NS_OK;
+  }
+
+  PRFileDesc* fd = PR_Open(filename, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+			   0644);
+  if (!fd) {
+    return NS_ERROR_FILE_ACCESS_DENIED;
+  }
+
+  nsCString json;
+  GetJSONString(json);
+
+  int32_t bytesWritten = PR_Write(fd, json.get(), json.Length());
+  PR_Close(fd);
+
+  if (bytesWritten < json.Length()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS1(VisualEventTracer, nsIVisualEventTracer)
 
 NS_IMETHODIMP
@@ -622,7 +649,16 @@ VisualEventTracer::Stop()
 
   gCapture = false;
 
-  return NS_OK;
+  nsresult rv = NS_OK;
+  if (PR_GetEnv("MOZ_TRACE_FILE")) {
+    nsCOMPtr<nsIVisualEventTracerLog> tracelog;
+    rv = Snapshot(getter_AddRefs(tracelog));
+    if (NS_SUCCEEDED(rv)) {
+      rv = tracelog->WriteToProfilingFile();
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

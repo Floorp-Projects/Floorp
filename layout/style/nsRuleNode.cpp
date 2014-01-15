@@ -5240,6 +5240,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               parentDisplay->mBreakInside,
               NS_STYLE_PAGE_BREAK_AUTO, 0, 0, 0, 0);
 
+  // touch-action: none, auto, enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTouchAction(), display->mTouchAction,
+              canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_AUTO | SETDSC_NONE |
+                SETDSC_UNSET_INITIAL,
+              parentDisplay->mTouchAction,
+              NS_STYLE_TOUCH_ACTION_AUTO,
+              NS_STYLE_TOUCH_ACTION_AUTO,
+              NS_STYLE_TOUCH_ACTION_NONE, 0, 0);
+
   // float: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForFloat(),
               display->mFloats, canStoreInRuleTree,

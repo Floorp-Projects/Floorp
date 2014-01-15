@@ -2337,6 +2337,7 @@ nsStyleDisplay::nsStyleDisplay()
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mOrient = NS_STYLE_ORIENT_AUTO;
   mMixBlendMode = NS_STYLE_BLEND_NORMAL;
+  mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
 
   mTransitions.AppendElement();
   NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
@@ -2381,6 +2382,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mClipFlags(aSource.mClipFlags)
   , mOrient(aSource.mOrient)
   , mMixBlendMode(aSource.mMixBlendMode)
+  , mTouchAction(aSource.mTouchAction)
   , mBackfaceVisibility(aSource.mBackfaceVisibility)
   , mTransformStyle(aSource.mTransformStyle)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)

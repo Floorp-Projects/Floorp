@@ -82,12 +82,7 @@ static const nsCursor sCustomCursor = eCursorCount;
     case eCursor_wait:
     case eCursor_spinning:
     {
-      NSCursor* cursor1 = [nsMacCursor cocoaCursorWithImageNamed:@"spin1" hotSpot:NSMakePoint(1.0, 1.0)];
-      NSCursor* cursor2 = [nsMacCursor cocoaCursorWithImageNamed:@"spin2" hotSpot:NSMakePoint(1.0, 1.0)];
-      NSCursor* cursor3 = [nsMacCursor cocoaCursorWithImageNamed:@"spin3" hotSpot:NSMakePoint(1.0, 1.0)];
-      NSCursor* cursor4 = [nsMacCursor cocoaCursorWithImageNamed:@"spin4" hotSpot:NSMakePoint(1.0, 1.0)];
-      NSArray* spinCursorFrames = [[[NSArray alloc] initWithObjects:cursor1, cursor2, cursor3, cursor4, nil] autorelease];
-      return [nsMacCursor cursorWithFrames:spinCursorFrames type:aCursor];
+      return [nsMacCursor cursorWithCursor:[NSCursor busyButClickableCursor] type:aCursor];
     }
     case eCursor_select:
       return [nsMacCursor cursorWithCursor:[NSCursor IBeamCursor] type:aCursor];
