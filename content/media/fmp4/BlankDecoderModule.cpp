@@ -11,6 +11,8 @@
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
+#include "mp4_demuxer/mp4_demuxer.h"
+#include "mp4_demuxer/audio_decoder_config.h"
 
 namespace mozilla {
 
@@ -22,33 +24,36 @@ public:
 
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator)
     : mCreator(aCreator),
-      mNextDTS(-1),
+      mNextTimeStamp(-1),
       mNextOffset(-1)
   {
+  }
+
+  virtual nsresult Init() MOZ_OVERRIDE {
+    return NS_OK;
   }
 
   virtual nsresult Shutdown() MOZ_OVERRIDE {
     return NS_OK;
   }
 
-  virtual DecoderStatus Input(const uint8_t* aData,
-                              uint32_t aLength,
-                              Microseconds aDTS,
-                              Microseconds aPTS,
-                              int64_t aOffsetInStream) MOZ_OVERRIDE
+  virtual DecoderStatus Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample) MOZ_OVERRIDE
   {
     // Accepts input, and outputs on the second input, using the difference
     // in DTS as the duration.
     if (mOutput) {
       return DECODE_STATUS_NOT_ACCEPTING;
     }
-    if (mNextDTS != -1 && mNextOffset != -1) {
-      Microseconds duration = aDTS - mNextDTS;
-      mOutput = mCreator->Create(mNextDTS, duration, mNextOffset);
+
+    Microseconds timestamp = aSample->composition_timestamp;
+    if (mNextTimeStamp != -1 && mNextOffset != -1) {
+      Microseconds duration = timestamp - mNextTimeStamp;
+      mOutput = mCreator->Create(mNextTimeStamp, duration, mNextOffset);
     }
 
-    mNextDTS = aDTS;
-    mNextOffset = aOffsetInStream;
+    mNextTimeStamp = timestamp;
+    mNextOffset = aSample->byte_offset;
+
     return DECODE_STATUS_OK;
   }
 
@@ -66,7 +71,7 @@ public:
   }
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  Microseconds mNextDTS;
+  Microseconds mNextTimeStamp;
   int64_t mNextOffset;
   nsAutoPtr<MediaData> mOutput;
   bool mHasInput;
@@ -198,21 +203,19 @@ public:
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateH264Decoder(layers::LayersBackend aLayersBackend,
+  virtual MediaDataDecoder* CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                                              layers::LayersBackend aLayersBackend,
                                               layers::ImageContainer* aImageContainer) MOZ_OVERRIDE {
     BlankVideoDataCreator* decoder = new BlankVideoDataCreator(aImageContainer);
     return new BlankMediaDataDecoder<BlankVideoDataCreator>(decoder);
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(uint32_t aChannelCount,
-                                             uint32_t aSampleRate,
-                                             uint16_t aBitsPerSample,
-                                             const uint8_t* aUserData,
-                                             uint32_t aUserDataLength) MOZ_OVERRIDE {
-    BlankAudioDataCreator* decoder = new BlankAudioDataCreator(aChannelCount,
-                                                               aSampleRate,
-                                                               aBitsPerSample);
+  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig) MOZ_OVERRIDE {
+    BlankAudioDataCreator* decoder =
+      new BlankAudioDataCreator(ChannelLayoutToChannelCount(aConfig.channel_layout()),
+                                aConfig.samples_per_second(),
+                                aConfig.bits_per_channel());
     return new BlankMediaDataDecoder<BlankAudioDataCreator>(decoder);
   }
 };
