@@ -1074,6 +1074,8 @@ public:
     nsXPCComponents*
     GetComponents() const {return mComponents;}
 
+    bool AttachComponentsObject(JSContext *aCx);
+
     // Returns the JS object reflection of the Components object.
     JSObject*
     GetComponentsJSObject();
@@ -2931,11 +2933,7 @@ public:
     NS_DECL_NSICLASSINFO
 
 public:
-    static bool
-    AttachComponentsObject(JSContext* aCx, XPCWrappedNativeScope* aScope);
-
-    void SystemIsBeingShutDown() {ClearMembers();}
-
+    void SystemIsBeingShutDown() { ClearMembers(); }
     virtual ~nsXPCComponents();
 
 private:

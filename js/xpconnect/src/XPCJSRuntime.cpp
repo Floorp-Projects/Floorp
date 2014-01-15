@@ -561,7 +561,7 @@ EnableUniversalXPConnect(JSContext *cx)
     XPCWrappedNativeScope *scope = priv->scope;
     if (!scope)
         return true;
-    return nsXPCComponents::AttachComponentsObject(cx, scope);
+    return scope->AttachComponentsObject(cx);
 }
 
 JSObject *

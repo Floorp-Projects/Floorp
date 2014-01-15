@@ -154,6 +154,21 @@ XPCWrappedNativeScope::GetComponentsJSObject()
     return obj;
 }
 
+bool
+XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
+{
+    RootedObject components(aCx, GetComponentsJSObject());
+    if (!components)
+        return false;
+
+    RootedObject global(aCx, GetGlobalJSObject());
+    MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
+
+    RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
+    return JS_DefinePropertyById(aCx, global, id, ObjectValue(*components),
+                                 nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
+}
+
 JSObject*
 XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
 {
