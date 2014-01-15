@@ -246,6 +246,12 @@ public:
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
+  void UpdateNodeCount(int32_t aDelta);
+
+  // Returns the difference between CurrentTime() and the current time of the
+  // AudioDestinationNode's MediaStream.
+  double ExtraCurrentTime() const;
+
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
   void ShutdownDecoder();
@@ -272,6 +278,8 @@ private:
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
+  // Number of nodes that currently exist for this AudioContext
+  int32_t mNodeCount;
   bool mIsOffline;
   bool mIsStarted;
   bool mIsShutDown;
