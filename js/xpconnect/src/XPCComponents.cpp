@@ -3770,103 +3770,50 @@ nsXPCComponents::GetManager(nsIComponentManager * *aManager)
     return NS_GetComponentManager(aManager);
 }
 
+NS_IMETHODIMP
+nsXPCComponents::GetLastResult(JSContext *aCx, Value *aOut)
+{
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
+    if (!xpcc)
+        return NS_ERROR_FAILURE;
+    nsresult res = xpcc->GetLastResult();
+    *aOut = JS_NumberValue(static_cast<double>(static_cast<uint32_t>(res)));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents::GetReturnCode(JSContext *aCx, Value *aOut)
+{
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
+    if (!xpcc)
+        return NS_ERROR_FAILURE;
+    nsresult res = xpcc->GetPendingResult();
+    *aOut = JS_NumberValue(static_cast<double>(static_cast<uint32_t>(res)));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents::SetReturnCode(JSContext *aCx, const Value &aCode)
+{
+    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
+    if (!xpcc)
+        return NS_ERROR_FAILURE;
+    RootedValue code(aCx, aCode);
+    nsresult rv;
+    if (!ToUint32(aCx, code, (uint32_t*)&rv))
+        return NS_ERROR_FAILURE;
+    xpcc->SetPendingResult(rv);
+    xpcc->SetLastResult(rv);
+    return NS_OK;
+}
+
 /**********************************************/
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsXPCComponents
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents"
-#define                             XPC_MAP_WANT_NEWRESOLVE
-#define                             XPC_MAP_WANT_GETPROPERTY
-#define                             XPC_MAP_WANT_SETPROPERTY
 #define                             XPC_MAP_WANT_PRECREATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
-
-/* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
-NS_IMETHODIMP
-nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                            JSContext *cx, JSObject *objArg,
-                            jsid idArg, uint32_t flags,
-                            JSObject **objp, bool *_retval)
-{
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (!rt)
-        return NS_ERROR_FAILURE;
-
-    unsigned attrs = 0;
-
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT))
-        attrs = JSPROP_READONLY;
-    else if (id != rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE))
-        return NS_OK;
-
-    *objp = obj;
-    *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nullptr, nullptr,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                                     attrs);
-    return NS_OK;
-}
-
-/* bool getProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in JSValPtr vp); */
-NS_IMETHODIMP
-nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                             JSContext * cx, JSObject * obj,
-                             jsid id, jsval * vp, bool *_retval)
-{
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
-    if (!xpcc)
-        return NS_ERROR_FAILURE;
-
-    bool doResult = false;
-    nsresult res;
-    XPCJSRuntime* rt = xpcc->GetRuntime();
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT)) {
-        res = xpcc->GetLastResult();
-        doResult = true;
-    } else if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
-        res = xpcc->GetPendingResult();
-        doResult = true;
-    }
-
-    nsresult rv = NS_OK;
-    if (doResult) {
-        *vp = JS_NumberValue((double)(uint32_t) res);
-        rv = NS_SUCCESS_I_DID_SOMETHING;
-    }
-
-    return rv;
-}
-
-/* bool setProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsid id, in JSValPtr vp); */
-NS_IMETHODIMP
-nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
-                             JSContext * cx, JSObject * obj, jsid id,
-                             jsval * vp, bool *_retval)
-{
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
-    if (!xpcc)
-        return NS_ERROR_FAILURE;
-
-    XPCJSRuntime* rt = xpcc->GetRuntime();
-    if (!rt)
-        return NS_ERROR_FAILURE;
-
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
-        RootedValue v(cx, *vp);
-        nsresult rv;
-        if (ToUint32(cx, v, (uint32_t*)&rv)) {
-            xpcc->SetPendingResult(rv);
-            xpcc->SetLastResult(rv);
-            return NS_SUCCESS_I_DID_SOMETHING;
-        }
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
-}
 
 // static
 bool
