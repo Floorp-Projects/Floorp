@@ -138,7 +138,7 @@ add_task(function test_get_signed_in_user_initially_unset() {
     sessionToken: "dead",
     kA: "beef",
     kB: "cafe",
-    isVerified: true
+    verified: true
   };
 
   let result = yield account.getSignedInUser();
@@ -203,7 +203,7 @@ add_test(function test_verification_poll() {
     // Once email verification is complete, we will observe onlogin
     fxa.internal.getUserAccountData().then(user => {
       // And confirm that the user's state has changed
-      do_check_eq(user.isVerified, true);
+      do_check_eq(user.verified, true);
       do_check_eq(user.email, test_user.email);
       do_test_finished();
       run_next_test();
@@ -213,7 +213,7 @@ add_test(function test_verification_poll() {
   fxa.setSignedInUser(test_user).then(() => {
     fxa.internal.getUserAccountData().then(user => {
       // The user is signing in, but email has not been verified yet
-      do_check_eq(user.isVerified, false);
+      do_check_eq(user.verified, false);
       do_timeout(200, function() {
         // Mock email verification ...
         fxa.internal.fxAccountsClient._email = test_user.email;
@@ -268,7 +268,7 @@ add_test(function test_getKeys() {
   let user = getTestUser("eusebius");
 
   // Once email has been verified, we will be able to get keys
-  user.isVerified = true;
+  user.verified = true;
 
   fxa.setSignedInUser(user).then(() => {
     fxa.getSignedInUser().then((user) => {
@@ -282,7 +282,7 @@ add_test(function test_getKeys() {
         fxa.getSignedInUser().then((user) => {
           // Now we should have keys
           do_check_eq(fxa.internal.isUserEmailVerified(user), true);
-          do_check_eq(!!user.isVerified, true);
+          do_check_eq(!!user.verified, true);
           do_check_eq(user.kA, expandHex("11"));
           do_check_eq(user.kB, expandHex("66"));
           do_check_eq(user.keyFetchToken, undefined);
@@ -334,7 +334,7 @@ add_test(function test_overlapping_signins() {
     // Once email verification is complete, we will observe onlogin
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user.email, bob.email);
-      do_check_eq(user.isVerified, true);
+      do_check_eq(user.verified, true);
       do_test_finished();
       run_next_test();
     });
@@ -345,7 +345,7 @@ add_test(function test_overlapping_signins() {
     log.debug("Alice signing in ...");
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user.email, alice.email);
-      do_check_eq(user.isVerified, false);
+      do_check_eq(user.verified, false);
       log.debug("Alice has not verified her email ...");
 
       // Now Bob signs in instead and actually verifies his email
@@ -372,9 +372,9 @@ add_task(function test_getAssertion() {
     sessionToken: "sessionToken",
     kA: expandHex("11"),
     kB: expandHex("66"),
-    isVerified: true
+    verified: true
   };
-  // By putting kA/kB/isVerified in "creds", we skip ahead
+  // By putting kA/kB/verified in "creds", we skip ahead
   // to the "we're ready" stage.
   yield fxa.setSignedInUser(creds);
 
@@ -471,7 +471,7 @@ function getTestUser(name) {
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
-    isVerified: false
+    verified: false
   };
 }
 

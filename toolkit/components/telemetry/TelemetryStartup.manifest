@@ -1,0 +1,3 @@
+component {117b219f-92fe-4bd2-a21b-95a342a9d474} TelemetryStartup.js
+contract @mozilla.org/base/telemetry-startup;1 {117b219f-92fe-4bd2-a21b-95a342a9d474}
+category profile-after-change TelemetryStartup @mozilla.org/base/telemetry-startup;1

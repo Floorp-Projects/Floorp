@@ -1080,9 +1080,9 @@ let RemoteDebugger = {
       DebuggerServer.init(this.prompt.bind(this));
       DebuggerServer.chromeWindowType = "navigator:browser";
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
-      // Until we implement unix domain socket, we enable content actors
-      // only on development devices
-      if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
+      // Prevent tab actors to be loaded in parent process,
+      // unless we enable certified apps debugging
+      if (!Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps")) {
         DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
         DebuggerServer.addGlobalActor(DebuggerServer.ChromeDebuggerActor, "chromeDebugger");
         DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
@@ -1093,7 +1093,6 @@ let RemoteDebugger = {
         DebuggerServer.registerModule("devtools/server/actors/inspector");
         DebuggerServer.registerModule("devtools/server/actors/styleeditor");
         DebuggerServer.registerModule("devtools/server/actors/stylesheets");
-        DebuggerServer.enableWebappsContentActor = true;
       }
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
