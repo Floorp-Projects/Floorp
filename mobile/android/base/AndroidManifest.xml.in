@@ -236,7 +236,7 @@
         </activity>
 
 #include ../services/manifests/AnnouncementsAndroidManifest_activities.xml.in
-#include ../services/manifests/FxAccountAndroidManifest_services.xml.in
+#include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_activities.xml.in
 
@@ -315,6 +315,7 @@
 
 
 #include ../services/manifests/AnnouncementsAndroidManifest_services.xml.in
+#include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
 
