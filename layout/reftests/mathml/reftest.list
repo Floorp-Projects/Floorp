@@ -163,3 +163,7 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
+== ssty-1.html ssty-1-ref.html
+== ssty-2.html ssty-2-ref.html
+== ssty-3.html ssty-3-ref.html
+== ssty-4.html ssty-4-ref.html
