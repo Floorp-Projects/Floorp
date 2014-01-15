@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -151,6 +152,19 @@ XPCWrappedNativeScope::GetComponentsJSObject()
     if (NS_WARN_IF(!JS_WrapObject(cx, &obj)))
         return nullptr;
     return obj;
+}
+
+void
+XPCWrappedNativeScope::ForcePrivilegedComponents()
+{
+    // This may only be called on unprivileged scopes during automation where
+    // we allow insecure things.
+    MOZ_RELEASE_ASSERT(Preferences::GetBool("security.turn_off_all_security_so_"
+                                            "that_viruses_can_take_over_this_"
+                                            "computer"));
+    nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
+    if (!c)
+        mComponents = new nsXPCComponents(this);
 }
 
 bool

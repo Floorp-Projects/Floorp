@@ -561,6 +561,7 @@ EnableUniversalXPConnect(JSContext *cx)
     XPCWrappedNativeScope *scope = priv->scope;
     if (!scope)
         return true;
+    scope->ForcePrivilegedComponents();
     return scope->AttachComponentsObject(cx);
 }
 

@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(ae292d08-cfb0-4862-a2b6-4779e5ef7e72)]
+[scriptable, uuid(1b981569-2b21-4702-a01a-81ffdb5d3d4c)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -411,6 +411,13 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void setWantXrays(in jsval vscope);
+
+    /*
+     * Forces the usage of a privileged |Components| object for a potentially-
+     * unprivileged scope. This will crash if used outside of automation.
+     */
+    [implicit_jscontext]
+    void forcePrivilegedComponentsForScope(in jsval vscope);
 
     /*
      * This seemingly-paradoxical API allows privileged code to explicitly give
