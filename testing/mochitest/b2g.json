@@ -249,18 +249,13 @@
     "content/base/test/test_bug424359-2.html":"",
     "content/base/test/test_mixed_content_blocker_bug803225.html":"",
     "content/html/document/test/test_non-ascii-cookie.html":"",
-    "content/html/document/test/test_document.watch.html":"expects document.cookie setting to work",
 
     "docshell/test/navigation/test_bug13871.html":"",
     "docshell/test/navigation/test_bug270414.html":"",
-    "docshell/test/navigation/test_bug344861.html":"",
-    "docshell/test/navigation/test_bug386782.html":"",
     "docshell/test/navigation/test_not-opener.html":"",
-    "docshell/test/navigation/test_reserved.html":"",
     "docshell/test/test_bug413310.html":"",
 
     "dom/imptests/html/webgl":"",
-    "dom/battery/test/test_battery_basics.html":"",
 
     "dom/browser-element/mochitest/test_browserElement_inproc_Alert.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_AppFramePermission.html":"",
@@ -345,16 +340,10 @@
     "dom/media/tests/mochitest/test_peerConnection_throwInCallbacks.html":"",
     "dom/media/tests/ipc/test_ipc.html":"nested ipc not working",
 
-    "dom/network/tests/test_networkstats_basics.html":"Will be fixed in bug 858005",
     "dom/permission/tests/test_permission_basics.html":"https not working, bug 907770",
 
-    "dom/tests/mochitest/bugs/test_bug335976.xhtml":"",
-    "dom/tests/mochitest/bugs/test_bug369306.html":"test timed out, can't focus back from popup window to opener?",
-    "dom/tests/mochitest/bugs/test_bug396843.html":"",
     "dom/tests/mochitest/bugs/test_bug406375.html":"",
-
     "dom/tests/mochitest/bugs/test_bug427744.html":"",
-    "dom/tests/mochitest/bugs/test_bug641552.html":"",
     "dom/tests/mochitest/bugs/test_sizetocontent_clamp.html": "Windows can't change size on B2G",
     "dom/tests/mochitest/bugs/test_resize_move_windows.html": "Windows can't change size and position on B2G",
     "dom/tests/mochitest/bugs/test_window_bar.html":"",
@@ -402,12 +391,10 @@
 
     "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"window.open focus issues (using fullscreen)",
     "dom/tests/mochitest/webapps/test_bug_779982.html":"",
-    "dom/tests/mochitest/whatwg/test_postMessage_closed.html":"bug 894914 - wrong data - got FAIL, expected message",
 
     "dom/workers/test/test_suspend.html":"test timed out, might need more time",
     "dom/workers/test/test_xhr_parameters.html":"",
     "dom/workers/test/test_xhr_system.html":"",
-    "dom/workers/test/test_closeOnGC.html": "times out",
     "dom/workers/test/test_errorPropagation.html":"times out",
     "dom/workers/test/test_errorwarning.html":"Failed to load script: errorwarning_worker.js",
     "dom/workers/test/test_fibonacci.html":"Failed to load script: fibonacci_worker.js",
@@ -419,22 +406,16 @@
     "layout/base/tests/test_mozPaintCount.html":"depends on plugins support",
     "layout/forms/test/test_bug348236.html":"select form control popup",
     "layout/forms/test/test_bug446663.html":"needs copy support",
-    "layout/forms/test/test_bug564115.html":"times out on window.open and focus event",
     "layout/forms/test/test_bug571352.html":"shift-click multi-select not working?",
     "layout/forms/test/test_textarea_resize.html":"resizing textarea not available in b2g",
     "layout/forms/test/test_bug903715.html":"select elements don't use an in-page popup in B2G",
-    "layout/forms/test/test_listcontrol_search.html" : "select elements don't use an in-page popup in B2G",
     "layout/generic/test/test_bug392746.html":"ctrl mouse select not working in b2g",
-    "layout/generic/test/test_bug470212.html":"shift mouse select not working in b2g",
-    "layout/generic/test/test_bug514732.html":"times out, also on Android",
     "layout/generic/test/test_bug791616.html":"Target should not have scrolled - got 114.10000610351562, expected 115.39999389648438",
     "layout/generic/test/test_invalidate_during_plugin_paint.html":"plugins not supported",
-    "layout/generic/test/test_page_scroll_with_fixed_pos.html":"opened window too small?",
     "layout/generic/test/test_plugin_focus.html":"plugins not supported",
     "layout/generic/test/test_plugin_mouse_coords.html":"plugins not supported",
     "layout/generic/test/test_selection_expanding.html":"mouse selection not working",
 
-    "layout/style/test/test_rule_insertion.html":"monospace and serif text have sufficiently different widths",
     "layout/style/test/test_transitions_per_property.html":"times out, needs more time + various failures",
 
     "content/html/content/test/test_bug209275.xhtml":"timed out, 47 tests, bug 870262, :visited support",
