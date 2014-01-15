@@ -17,7 +17,7 @@ loader.lazyGetter(this, "ComputedView", () => require("devtools/styleinspector/c
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 
-const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
+const { PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.

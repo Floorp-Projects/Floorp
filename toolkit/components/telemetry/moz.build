@@ -24,11 +24,10 @@ SOURCES += [
 ]
 
 EXTRA_COMPONENTS += [
-    'TelemetryPing.manifest',
-]
-
-EXTRA_PP_COMPONENTS += [
     'TelemetryPing.js',
+    'TelemetryPing.manifest',
+    'TelemetryStartup.js',
+    'TelemetryStartup.manifest'
 ]
 
 EXTRA_JS_MODULES += [
@@ -38,6 +37,7 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_PP_JS_MODULES += [
+    'TelemetryPing.jsm',
     'UITelemetry.jsm',
 ]
 

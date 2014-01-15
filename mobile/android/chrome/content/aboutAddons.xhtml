@@ -21,52 +21,23 @@
   <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
   <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/aboutAddons.css" type="text/css"/>
-  <style>
-    .hide-on-enable,
-    .show-on-error,
-    .show-on-uninstall,
-    .show-on-install,
-    .show-on-restart,
-    div[isDisabled="true"] .hide-on-disable {
-      display: none;
-    }
-    
-    div[error] .show-on-error,
-    div[opType="needs-restart"] .show-on-restart,
-    div[opType="needs-uninstall"] .show-on-uninstall,
-    div[opType="needs-install"] .show-on-install,
-    div[opType="needs-enable"] .show-on-enable,
-    div[opType="needs-disable"] .show-on-disable,
-    div[isDisabled="true"] .show-on-disable {
-      display: -moz-box;
-    }
-    
-    div[opType="needs-restart"] .hide-on-restart,
-    div[opType="needs-uninstall"] .hide-on-uninstall,
-    div[isDisabled="true"][opType="needs-uninstall"],
-    div[opType="needs-install"] .hide-on-install,
-    div[opType="needs-enable"] .hide-on-enable,
-    div[opType="needs-disable"] .hide-on-disable {
-      display: none;
-    }
-  </style>
 </head>
 
-<body dir="&locale.dir;" onload="init();" onunload="uninit();">
+<body dir="&locale.dir;">
   <menu type="context" id="addonmenu">
-    <menuitem id="contextmenu-enable" label="&addonAction.enable;" onclick="ContextMenus.enable();"></menuitem>
-    <menuitem id="contextmenu-disable" label="&addonAction.disable;" onclick="ContextMenus.disable();"></menuitem>
-    <menuitem id="contextmenu-uninstall" label="&addonAction.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
+    <menuitem id="contextmenu-enable" label="&addonAction.enable;"></menuitem>
+    <menuitem id="contextmenu-disable" label="&addonAction.disable;" ></menuitem>
+    <menuitem id="contextmenu-uninstall" label="&addonAction.uninstall;" ></menuitem>
   </menu>
 
   <div id="addons-header" class="header">
     <div>&aboutAddons.header2;</div>
-    <div id="header-button" role="button" aria-label="&aboutAddons.browseAll;" pref="extensions.getAddons.browseAddons" onclick="openLink(this);"/>
+    <div id="header-button" role="button" aria-label="&aboutAddons.browseAll;" pref="extensions.getAddons.browseAddons" />
   </div>
-  <div id="addons-list" class="list" style="display: none;">
+  <div id="addons-list" class="list">
   </div>
 
-  <div id="addons-details" class="list" style="display: none">
+  <div id="addons-details" class="list">
     <div class="addon-item list-item">
       <img class="icon"/>
       <div class="inner">
@@ -79,10 +50,10 @@
       </div>
       <div class="status status-uninstalled show-on-uninstall"></div>
       <div class="buttons">
-        <button id="enable-btn" class="show-on-disable hide-on-enable hide-on-uninstall" onclick="Addons.enable();">&addonAction.enable;</button>
-        <button id="disable-btn" class="show-on-enable hide-on-disable hide-on-uninstall" onclick="Addons.disable();">&addonAction.disable;</button>
-        <button id="uninstall-btn" class="hide-on-uninstall" onclick="Addons.uninstall();">&addonAction.uninstall;</button>
-        <button id="cancel-btn" class="show-on-uninstall" onclick="Addons.cancelUninstall();">&addonAction.undo;</button>
+        <button id="enable-btn" class="show-on-disable hide-on-enable hide-on-uninstall" >&addonAction.enable;</button>
+        <button id="disable-btn" class="show-on-enable hide-on-disable hide-on-uninstall" >&addonAction.disable;</button>
+        <button id="uninstall-btn" class="hide-on-uninstall" >&addonAction.uninstall;</button>
+        <button id="cancel-btn" class="show-on-uninstall" >&addonAction.undo;</button>
       </div>
       <div class="options-header">&aboutAddons.options;</div>
       <div class="options-box"></div>
