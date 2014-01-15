@@ -20,18 +20,21 @@ class DXVA2Manager;
 
 class WMFVideoDecoder : public MediaDataDecoder {
 public:
-  WMFVideoDecoder(mozilla::layers::LayersBackend aLayersBackend,
-                  mozilla::layers::ImageContainer* aImageContainer,
-                  bool aDXVAEnabled);
+  WMFVideoDecoder(bool aDXVAEnabled);
   ~WMFVideoDecoder();
 
   // Decode thread.
-  virtual nsresult Init() MOZ_OVERRIDE;
+  nsresult Init(mozilla::layers::LayersBackend aLayersBackend,
+                mozilla::layers::ImageContainer* aImageContainer);
 
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
   // Inserts data into the decoder's pipeline.
-  virtual DecoderStatus Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample) MOZ_OVERRIDE;
+  virtual DecoderStatus Input(const uint8_t* aData,
+                              uint32_t aLength,
+                              Microseconds aDTS,
+                              Microseconds aPTS,
+                              int64_t aOffsetInStream) MOZ_OVERRIDE;
 
   // Blocks until a decoded sample is produced by the decoder.
   virtual DecoderStatus Output(nsAutoPtr<MediaData>& aOutData) MOZ_OVERRIDE;
@@ -40,7 +43,7 @@ public:
 
 private:
 
-  bool InitializeDXVA();
+  bool InitializeDXVA(mozilla::layers::LayersBackend aLayersBackend);
 
   HRESULT ConfigureVideoFrameGeometry();
 
@@ -65,7 +68,6 @@ private:
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   const bool mDXVAEnabled;
-  const layers::LayersBackend mLayersBackend;
   bool mUseHwAccel;
 };
 
