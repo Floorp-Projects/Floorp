@@ -658,7 +658,7 @@ void nsExternalHelperAppService::LaunchVideoAppForRtsp(nsIURI* aURI)
     do_GetService("@mozilla.org/childprocessmessagemanager;1");
   NS_ENSURE_TRUE_VOID(cpmm);
   cpmm->SendAsyncMessage(NS_LITERAL_STRING("content-handler"),
-    jsVal, JSVAL_NULL, principal, cx, 2);
+                         jsVal, JS::NullHandleValue, principal, cx, 2);
 }
 #endif
 

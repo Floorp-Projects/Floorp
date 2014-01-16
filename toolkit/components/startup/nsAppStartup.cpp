@@ -716,10 +716,10 @@ nsAppStartup::Observe(nsISupports *aSubject,
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
+nsAppStartup::GetStartupInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval)
 {
   JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
-  *aRetval = OBJECT_TO_JSVAL(obj);
+  aRetval.setObject(*obj);
 
   TimeStamp procTime = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
   TimeStamp now = TimeStamp::Now();

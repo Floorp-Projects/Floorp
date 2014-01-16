@@ -130,7 +130,7 @@ IccManager::Unroot()
 // nsIDOMMozIccManager
 
 NS_IMETHODIMP
-IccManager::GetIccIds(JS::Value* aIccIds)
+IccManager::GetIccIds(JS::MutableHandle<JS::Value> aIccIds)
 {
   if (!mJsIccIds) {
     nsTArray<nsString> iccIds;
@@ -154,7 +154,7 @@ IccManager::GetIccIds(JS::Value* aIccIds)
     Root();
   }
 
-  aIccIds->setObject(*mJsIccIds);
+  aIccIds.setObject(*mJsIccIds);
   return NS_OK;
 }
 

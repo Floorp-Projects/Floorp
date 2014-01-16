@@ -112,7 +112,7 @@ public:
 
 
   virtual void EndFrame() MOZ_OVERRIDE;
-  virtual void EndFrameForExternalComposition(const gfxMatrix& aTransform) MOZ_OVERRIDE;
+  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) MOZ_OVERRIDE;
   virtual void AbortFrame() MOZ_OVERRIDE;
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE;
@@ -257,8 +257,8 @@ private:
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect *aClipRectIn,
-                          const gfxMatrix& aTransform,
-                          const gfx::Rect& aRenderBounds, 
+                          const gfx::Matrix& aTransform,
+                          const gfx::Rect& aRenderBounds,
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) MOZ_OVERRIDE;
 

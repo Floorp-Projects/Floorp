@@ -116,6 +116,11 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     mPtrVoEBase->Release();
   }
 
+  if (mPtrRTP)
+  {
+    mPtrRTP->Release();
+  }
+
   if (mOtherDirection)
   {
     // mOtherDirection owns these now!
@@ -130,6 +135,21 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
       webrtc::VoiceEngine::Delete(mVoiceEngine);
     }
   }
+}
+
+bool WebrtcAudioConduit::GetLocalSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcAudioConduit::GetReceivedJitter(unsigned int* jitterMs) {
+  unsigned int maxJitterMs;
+  unsigned int discardedPackets;
+  return !mPtrRTP->GetRTPStatistics(mChannel, *jitterMs, maxJitterMs,
+                                    discardedPackets);
 }
 
 /*
@@ -217,6 +237,13 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
   if(!(mPtrVoEVideoSync = VoEVideoSync::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoEVideoSync", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if (!(mPtrRTP = webrtc::VoERTP_RTCP::GetInterface(mVoiceEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to get audio RTP/RTCP interface ",
+                __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 

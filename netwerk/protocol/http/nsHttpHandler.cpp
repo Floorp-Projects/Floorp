@@ -12,7 +12,6 @@
 #include "nsHttpChannel.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
-#include "nsIDOMConnection.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
 #include "nsIMozNavigatorNetwork.h"
@@ -2052,7 +2051,7 @@ nsHttpHandler::GetNetworkInfoInner(nsIInterfaceRequestor *cb,
     if (!networkNavigator)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMMozConnection> mozConnection;
+    nsCOMPtr<nsISupports> mozConnection;
     networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
     nsCOMPtr<nsINetworkProperties> networkProperties =
         do_QueryInterface(mozConnection);
@@ -2105,7 +2104,7 @@ nsHttpHandler::GetNetworkEthernetInfoInner(nsIInterfaceRequestor *cb,
     if (!networkNavigator)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMMozConnection> mozConnection;
+    nsCOMPtr<nsISupports> mozConnection;
     networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
     nsCOMPtr<nsINetworkProperties> networkProperties =
         do_QueryInterface(mozConnection);

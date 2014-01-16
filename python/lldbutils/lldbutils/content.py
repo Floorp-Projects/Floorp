@@ -12,5 +12,10 @@ def summarize_text_fragment(valobj, internal_dict):
     ptr = content_union.GetChildMemberWithName(field)
     return utils.format_string(ptr, length)
 
+def ptag(debugger, command, result, dict):
+    """Displays the tag name of a content node."""
+    debugger.HandleCommand("expr (" + command + ")->mNodeInfo.mRawPtr->mInner.mName")
+
 def init(debugger):
     debugger.HandleCommand("type summary add nsTextFragment -F lldbutils.content.summarize_text_fragment")
+    debugger.HandleCommand("command script add -f lldbutils.content.ptag ptag")
