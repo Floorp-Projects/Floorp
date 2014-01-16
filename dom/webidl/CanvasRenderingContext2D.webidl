@@ -84,7 +84,7 @@ interface CanvasRenderingContext2D {
 // NOT IMPLEMENTED  void stroke(Path path);
   [Pref="canvas.focusring.enabled"] void drawFocusIfNeeded(Element element);
 // NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
-  [Pref="canvas.focusring.enabled"] boolean drawCustomFocusRing(Element element);
+  [Pref="canvas.customfocusring.enabled"] boolean drawCustomFocusRing(Element element);
 // NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
 // NOT IMPLEMENTED  void scrollPathIntoView();
 // NOT IMPLEMENTED  void scrollPathIntoView(Path path);

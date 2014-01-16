@@ -436,6 +436,7 @@ pref("accessibility.tabfocus_applies_to_xul", true);
 
 // provide ability to turn on support for canvas focus rings
 pref("canvas.focusring.enabled", false);
+pref("canvas.customfocusring.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
