@@ -633,6 +633,16 @@ SpecialPowersAPI.prototype = {
     return crashDumpFiles;
   },
 
+  _delayCallbackTwice: function(callback) {
+    function delayedCallback() {
+      function delayAgain() {
+	content.window.setTimeout(callback, 0);
+      }
+      content.window.setTimeout(delayAgain, 0);
+    }
+    return delayedCallback;
+  },
+
   /* apply permissions to the system and when the test case is finished (SimpleTest.finish())
      we will revert the permission back to the original.
 
@@ -705,14 +715,9 @@ SpecialPowersAPI.prototype = {
       // that the callback checks for. The second delay is because pref
       // observers often defer making their changes by posting an event to the
       // event loop.
-      function delayedCallback() {
-        function delayAgain() {
-          content.window.setTimeout(callback, 0);
-        }
-        content.window.setTimeout(delayAgain, 0);
-      }
       this._permissionsUndoStack.push(cleanupPermissions);
-      this._pendingPermissions.push([pendingPermissions, delayedCallback]);
+      this._pendingPermissions.push([pendingPermissions,
+				     this._delayCallbackTwice(callback)]);
       this._applyPermissions();
     } else {
       content.window.setTimeout(callback, 0);
@@ -722,13 +727,7 @@ SpecialPowersAPI.prototype = {
   popPermissions: function(callback) {
     if (this._permissionsUndoStack.length > 0) {
       // See pushPermissions comment regarding delay.
-      function delayedCallback() {
-        function delayAgain() {
-          content.window.setTimeout(callback, 0);
-        }
-        content.window.setTimeout(delayAgain, 0);
-      }
-      let cb = callback ? delayedCallback : null;
+      let cb = callback ? this._delayCallbackTwice(callback) : null;
       /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInBrowserElement} or null */
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
@@ -905,14 +904,9 @@ SpecialPowersAPI.prototype = {
       // that the callback checks for. The second delay is because pref
       // observers often defer making their changes by posting an event to the
       // event loop.
-      function delayedCallback() {
-        function delayAgain() {
-          content.window.setTimeout(callback, 0);
-        }
-        content.window.setTimeout(delayAgain, 0);
-      }
       this._prefEnvUndoStack.push(cleanupActions);
-      this._pendingPrefs.push([pendingActions, delayedCallback]);
+      this._pendingPrefs.push([pendingActions,
+			       this._delayCallbackTwice(callback)]);
       this._applyPrefs();
     } else {
       content.window.setTimeout(callback, 0);
@@ -922,13 +916,7 @@ SpecialPowersAPI.prototype = {
   popPrefEnv: function(callback) {
     if (this._prefEnvUndoStack.length > 0) {
       // See pushPrefEnv comment regarding delay.
-      function delayedCallback() {
-        function delayAgain() {
-          content.window.setTimeout(callback, 0);
-        }
-        content.window.setTimeout(delayAgain, 0);
-      }
-      let cb = callback ? delayedCallback : null;
+      let cb = callback ? this._delayCallbackTwice(callback) : null;
       /* Each pop will have a valid block of preferences */
       this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
       this._applyPrefs();
