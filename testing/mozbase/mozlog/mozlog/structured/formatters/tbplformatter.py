@@ -48,7 +48,7 @@ class TbplFormatter(BaseMachFormatter):
         time = data["time"] - start_time
 
         if "expected" in data:
-            return "TEST-END UNEXPECTED-%s | %s | expected %s | %s | took %ims\n" % (
+            return "TEST-UNEXPECTED-%s TEST-END | %s | expected %s | %s | took %ims\n" % (
                 data["status"], self.id_str(data["test"]), data["expected"],
                 data.get("message", ""), time)
         else:

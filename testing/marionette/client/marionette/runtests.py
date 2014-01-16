@@ -5,6 +5,7 @@
 import sys
 
 from marionette_test import MarionetteTestCase, MarionetteJSTestCase
+from mozlog import structured
 from runner import BaseMarionetteTestRunner, BaseMarionetteOptions
 
 
@@ -13,17 +14,21 @@ class MarionetteTestRunner(BaseMarionetteTestRunner):
         BaseMarionetteTestRunner.__init__(self, **kwargs)
         self.test_handlers = [MarionetteTestCase, MarionetteJSTestCase]
 
-
 def startTestRunner(runner_class, options, tests):
+
     runner = runner_class(**vars(options))
     runner.run_tests(tests)
     return runner
 
-
 def cli(runner_class=MarionetteTestRunner, parser_class=BaseMarionetteOptions):
     parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
+    structured.commandline.add_logging_group(parser)
     options, tests = parser.parse_args()
     parser.verify_usage(options, tests)
+
+    options.logger = structured.commandline.setup_logging("Marionette Unit Tests",
+                                                          options,
+                                                          {"tbpl": sys.stdout})
 
     runner = startTestRunner(runner_class, options, tests)
     if runner.failed > 0:
@@ -31,4 +36,3 @@ def cli(runner_class=MarionetteTestRunner, parser_class=BaseMarionetteOptions):
 
 if __name__ == "__main__":
     cli()
-
