@@ -249,9 +249,6 @@ NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers, DestroyGlyphObserverList);
 // nsTextFrame.h has
 // #define TEXT_IS_IN_TOKEN_MATHML          NS_FRAME_STATE_BIT(32)
 
-// nsTextFrame.h has
-// #define TEXT_IS_IN_SINGLE_CHAR_MI        NS_FRAME_STATE_BIT(59)
-
 // Set when this text frame is mentioned in the userdata for the
 // uninflated textrun property
 #define TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA NS_FRAME_STATE_BIT(60)
@@ -1327,8 +1324,8 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
                  "Wrong line container hint");
   }
 
-  if (aForFrame && aForFrame->HasAnyStateBits(TEXT_IS_IN_SINGLE_CHAR_MI)) {
-    aLineContainer->AddStateBits(TEXT_IS_IN_SINGLE_CHAR_MI);
+  if (aForFrame && aForFrame->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
+    aLineContainer->AddStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI);
   }
   if (aForFrame && aForFrame->HasAnyStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT)) {
     aLineContainer->AddStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT);
@@ -1978,7 +1975,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     }
     if (NS_MATHML_MATHVARIANT_NONE != fontStyle->mMathVariant) {
       anyMathMLStyling = true;
-    } else if (mLineContainer->GetStateBits() & TEXT_IS_IN_SINGLE_CHAR_MI) {
+    } else if (mLineContainer->GetStateBits() & NS_FRAME_IS_IN_SINGLE_CHAR_MI) {
       textFlags |= nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
       anyMathMLStyling = true;
     }

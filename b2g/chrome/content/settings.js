@@ -637,3 +637,17 @@ SettingsListener.observe("accessibility.screenreader", false, function(value) {
     AccessFu.attach(window);
   }
 });
+
+// ================ Theming ============
+(function themingSettingsListener() {
+  let themingPrefs = ['ui.menu', 'ui.menutext', 'ui.infobackground', 'ui.infotext',
+                      'ui.window', 'ui.windowtext', 'ui.highlight'];
+
+  themingPrefs.forEach(function(pref) {
+    SettingsListener.observe('gaia.' + pref, null, function(value) {
+      if (value) {
+        Services.prefs.setCharPref(pref, value);
+      }
+    });
+  });
+})();

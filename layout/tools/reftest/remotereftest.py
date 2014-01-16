@@ -28,6 +28,7 @@ class RemoteOptions(ReftestOptions):
         defaults["app"] = ""
         defaults["xrePath"] = ""
         defaults["utilityPath"] = ""
+        defaults["runTestsInParallel"] = False
 
         self.add_option("--remote-app-path", action="store",
                     type = "string", dest = "remoteAppPath",
@@ -102,6 +103,9 @@ class RemoteOptions(ReftestOptions):
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options):
+        if options.runTestsInParallel:
+            self.error("Cannot run parallel tests here")
+
         # Ensure our defaults are set properly for everything we can infer
         if not options.remoteTestRoot:
             options.remoteTestRoot = self._automation._devicemanager.getDeviceRoot() + '/reftest'
@@ -349,7 +353,6 @@ class RemoteReftest(RefTest):
 
         # Point the url-classifier to the local testing server for fast failures
         prefs["browser.safebrowsing.gethashURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/gethash"
-        prefs["browser.safebrowsing.keyURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/newkey"
         prefs["browser.safebrowsing.updateURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/update"
         # Point update checks to the local testing server for fast failures
         prefs["extensions.update.url"] = "http://127.0.0.1:8888/extensions-dummy/updateURL"

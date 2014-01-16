@@ -8,8 +8,6 @@
 
 #include "nsQueryFrame.h"
 
-class nsIDOMHTMLOptionElement;
-
 /** 
   * nsISelectControlFrame is the interface for combo boxes and listboxes
   */

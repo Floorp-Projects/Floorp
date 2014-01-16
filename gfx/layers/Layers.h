@@ -1255,7 +1255,7 @@ public:
    * aWorldTransform is non-null.
    */
   nsIntRect CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
-                                 const gfxMatrix* aWorldTransform);
+                                 const gfx::Matrix* aWorldTransform);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;

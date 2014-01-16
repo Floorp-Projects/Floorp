@@ -200,7 +200,6 @@ nsContentSink::Init(nsIDocument* aDoc,
 
   if (sEnablePerfMode != 0) {
     mDynamicLowerValue = sEnablePerfMode == 1;
-    FavorPerformanceHint(!mDynamicLowerValue, 0);
   }
 
   return NS_OK;
@@ -1377,15 +1376,6 @@ nsContentSink::DidProcessATokenImpl()
 //----------------------------------------------------------------------
 
 void
-nsContentSink::FavorPerformanceHint(bool perfOverStarvation, uint32_t starvationDelay)
-{
-  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell)
-    appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
-}
-
-void
 nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   // Remember nested updates from updates that we started.
@@ -1462,12 +1452,6 @@ nsContentSink::DropParserAndPerfHint(void)
   // reference.
   nsRefPtr<nsParserBase> kungFuDeathGrip(mParser.forget());
 
-  if (mDynamicLowerValue) {
-    // Reset the performance hint which was set to FALSE
-    // when mDynamicLowerValue was set.
-    FavorPerformanceHint(true, 0);
-  }
-
   if (!mRunsToCompletion) {
     mDocument->UnblockOnload(true);
   }
@@ -1505,7 +1489,6 @@ nsContentSink::WillParseImpl(void)
        (currentTime - lastEventTime) < uint32_t(sInteractiveTime));
     
     if (mDynamicLowerValue != newDynLower) {
-      FavorPerformanceHint(!newDynLower, 0);
       mDynamicLowerValue = newDynLower;
     }
   }

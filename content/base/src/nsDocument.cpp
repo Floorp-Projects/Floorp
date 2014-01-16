@@ -2591,15 +2591,16 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     cspROHeaderValue.Truncate();
   }
 
-  // If the old header is present, warn that it will be deprecated.
-  if (!cspOldHeaderValue.IsEmpty() || !cspOldROHeaderValue.IsEmpty()) {
-    mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
+  // If both the new header AND the old header are present, warn that
+  // the old header will be ignored. Otherwise, if the old header is
+  // present, warn that it will be deprecated.
+  bool oldHeaderIsPresent = !cspOldHeaderValue.IsEmpty() || !cspOldROHeaderValue.IsEmpty();
+  bool newHeaderIsPresent = !cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty();
 
-    // Also, if the new headers AND the old headers were present, warn
-    // that the old headers will be ignored.
-    if (!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty()) {
-      mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
-    }
+  if (oldHeaderIsPresent && newHeaderIsPresent) {
+    mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
+  } else if (oldHeaderIsPresent) {
+    mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
   }
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest

@@ -436,6 +436,7 @@ pref("accessibility.tabfocus_applies_to_xul", true);
 
 // provide ability to turn on support for canvas focus rings
 pref("canvas.focusring.enabled", false);
+pref("canvas.customfocusring.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
@@ -4293,6 +4294,9 @@ pref("memory.free_dirty_pages", false);
 #ifdef XP_LINUX
 pref("memory.system_memory_reporter", false);
 #endif
+
+// Number of stack frames to capture in createObjectURL for about:memory.
+pref("memory.blob_report.stack_frames", 0);
 
 pref("social.enabled", false);
 // comma separated list of domain origins (e.g. https://domain.com) for

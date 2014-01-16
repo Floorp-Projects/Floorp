@@ -685,7 +685,13 @@ Desktop browser's sync prefs.
                   command="cmd_reportingCrashesSubmitURLs"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
+        <setting
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+          pref="toolkit.telemetry.enabledPreRelease"
+#else
+          pref="toolkit.telemetry.enabled"
+#endif
+          type="bool" title="&optionsHeader.telemetry.label;"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >

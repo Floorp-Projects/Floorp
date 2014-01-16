@@ -19,6 +19,8 @@
 #include "mozilla/TextEvents.h"
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
+#include "nsIMEStateManager.h"
+#include "TextComposition.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -388,6 +390,8 @@ PuppetWidget::NotifyIME(NotificationToIME aNotification)
       return NotifyIMEOfFocusChange(false);
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       return NotifyIMEOfSelectionChange();
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      return NotifyIMEOfUpdateComposition();
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -474,6 +478,39 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
   } else {
     mIMELastBlurSeqno = chromeSeqno;
   }
+  return NS_OK;
+}
+
+nsresult
+PuppetWidget::NotifyIMEOfUpdateComposition()
+{
+#ifndef MOZ_CROSS_PROCESS_IME
+  return NS_OK;
+#endif
+
+  NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
+
+  mozilla::TextComposition* textComposition =
+    nsIMEStateManager::GetTextComposition(this);
+  NS_ENSURE_TRUE(textComposition, NS_ERROR_FAILURE);
+
+  nsEventStatus status;
+  uint32_t offset = textComposition->OffsetOfTargetClause();
+  WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
+  InitEvent(textRect, nullptr);
+  textRect.InitForQueryTextRect(offset, 1);
+  DispatchEvent(&textRect, status);
+  NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
+
+  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
+  InitEvent(caretRect, nullptr);
+  caretRect.InitForQueryCaretRect(offset);
+  DispatchEvent(&caretRect, status);
+  NS_ENSURE_TRUE(caretRect.mSucceeded, NS_ERROR_FAILURE);
+
+  mTabChild->SendNotifyIMESelectedCompositionRect(offset,
+                                                  textRect.mReply.mRect,
+                                                  caretRect.mReply.mRect);
   return NS_OK;
 }
 
