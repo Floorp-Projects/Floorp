@@ -68,6 +68,8 @@ public:
   virtual SurfaceFormat GetFormat() const;
   virtual uint8_t *GetData();
   virtual int32_t Stride();
+  virtual bool Map(MapType, MappedSurface *aMappedSurface);
+  virtual void Unmap();
 
 private:
   friend class SourceSurfaceD2DTarget;
