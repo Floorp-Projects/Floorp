@@ -9,7 +9,6 @@
 #include "nsIFormControlFrame.h"
 
 class nsIEditor;
-class nsIDocShell;
 class nsISelectionController;
 class nsFrameSelection;
 
