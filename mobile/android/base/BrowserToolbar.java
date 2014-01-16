@@ -300,6 +300,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mTabs = (ShapedButton) findViewById(R.id.tabs);
         mTabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
+        if (Build.VERSION.SDK_INT >= 11) {
+            mTabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
         mBack = (ImageButton) findViewById(R.id.back);
         mForward = (ImageButton) findViewById(R.id.forward);
         mForward.setEnabled(false); // initialize the forward button to not be enabled
