@@ -170,7 +170,7 @@ DOMCameraCapabilities::StringListToNewObject(JSContext* aCx,
   nsresult rv = ParameterListToNewArray(aCx, &array, aKey, ParseStringItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aArray.setObject(*array);
+  aArray.setObjectOrNull(array);
   return NS_OK;
 }
 
@@ -184,7 +184,7 @@ DOMCameraCapabilities::DimensionListToNewObject(JSContext* aCx,
   nsresult rv = ParameterListToNewArray(aCx, &array, aKey, ParseDimensionItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aArray.setObject(*array);
+  aArray.setObjectOrNull(array);
   return NS_OK;
 }
 
@@ -363,7 +363,7 @@ DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::MutableHandle<JS::Value>
   nsresult rv = ParameterListToNewArray(cx, &array, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, ParseZoomRatioItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aZoomRatios.setObject(*array);
+  aZoomRatios.setObjectOrNull(array);
   return NS_OK;
 }
 
