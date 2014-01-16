@@ -5,6 +5,7 @@ mozinfo >= 0.7
 mozprocess >= 0.9
 mozrunner >= 6.0
 mozdevice >= 0.37
+mozlog >= 2.0
 moznetwork >= 0.21
 mozcrash >= 0.5
 mozprofile >= 0.7
