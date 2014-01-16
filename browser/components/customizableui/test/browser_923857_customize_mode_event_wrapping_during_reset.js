@@ -4,6 +4,8 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
+
 // Customize mode reset button should revert correctly
 add_task(function() {
   yield startCustomizing();
@@ -21,5 +23,6 @@ add_task(function() {
 });
 
 add_task(function asyncCleanup() {
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 });

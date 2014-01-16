@@ -73,13 +73,8 @@ CustomizeMode.prototype = {
     return this.document.getElementById("PanelUI-contents");
   },
 
-  get _handler() {
-    return this.window.CustomizationHandler;
-  },
-
   toggle: function() {
-    if (this._handler.isEnteringCustomizeMode || this._handler.isExitingCustomizeMode) {
-      this._wantToBeInCustomizeMode = !this._wantToBeInCustomizeMode;
+    if (this._transitioning) {
       return;
     }
     if (this._customizing) {
@@ -90,19 +85,9 @@ CustomizeMode.prototype = {
   },
 
   enter: function() {
-    this._wantToBeInCustomizeMode = true;
-
-    if (this._customizing || this._handler.isEnteringCustomizeMode) {
+    if (this._customizing || this._transitioning) {
       return;
     }
-
-    // Exiting; want to re-enter once we've done that.
-    if (this._handler.isExitingCustomizeMode) {
-      LOG("Attempted to enter while we're in the middle of exiting. " +
-          "We'll exit after we've entered");
-      return;
-    }
-
 
     // We don't need to switch to kAboutURI, or open a new tab at
     // kAboutURI if we're already on it.
@@ -113,8 +98,6 @@ CustomizeMode.prototype = {
 
     let window = this.window;
     let document = this.document;
-
-    this._handler.isEnteringCustomizeMode = true;
 
     Task.spawn(function() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
@@ -218,34 +201,18 @@ CustomizeMode.prototype = {
       // Show the palette now that the transition has finished.
       this.visiblePalette.hidden = false;
 
-      this._handler.isEnteringCustomizeMode = false;
       this.dispatchToolboxEvent("customizationready");
-      if (!this._wantToBeInCustomizeMode) {
-        this.exit();
-      }
     }.bind(this)).then(null, function(e) {
       ERROR(e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
-      this._handler.isEnteringCustomizeMode = false;
-    }.bind(this));
+    });
   },
 
   exit: function() {
-    this._wantToBeInCustomizeMode = false;
-
-    if (!this._customizing || this._handler.isExitingCustomizeMode) {
+    if (!this._customizing || this._transitioning) {
       return;
     }
-
-    // Entering; want to exit once we've done that.
-    if (this._handler.isEnteringCustomizeMode) {
-      LOG("Attempted to exit while we're in the middle of entering. " +
-          "We'll exit after we've entered");
-      return;
-    }
-
-    this._handler.isExitingCustomizeMode = true;
 
     CustomizableUI.removeListener(this);
 
@@ -329,13 +296,7 @@ CustomizeMode.prototype = {
         let custBrowser = this.browser.selectedBrowser;
         if (custBrowser.canGoBack) {
           // If there's history to this tab, just go back.
-          // Note that this throws an exception if the previous document has a
-          // problematic URL (e.g. about:idontexist)
-          try {
-            custBrowser.goBack();
-          } catch (ex) {
-            ERROR(ex);
-          }
+          custBrowser.goBack();
         } else {
           // If we can't go back, we're removing the about:customization tab.
           // We only do this if we're the top window for this window (so not
@@ -360,19 +321,13 @@ CustomizeMode.prototype = {
       this.window.PanelUI.endBatchUpdate();
       this._changed = false;
       this._transitioning = false;
-      this._handler.isExitingCustomizeMode = false;
       this.dispatchToolboxEvent("aftercustomization");
       CustomizableUI.notifyEndCustomizing(this.window);
-
-      if (this._wantToBeInCustomizeMode) {
-        this.enter();
-      }
     }.bind(this)).then(null, function(e) {
       ERROR(e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
-      this._handler.isExitingCustomizeMode = false;
-    }.bind(this));
+    });
   },
 
   /**
