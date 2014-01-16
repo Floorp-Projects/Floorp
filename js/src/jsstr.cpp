@@ -2945,7 +2945,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
         return true;
     ScopeCoordinate sc(pc);
     ScopeObject *scope = &fun->environment()->as<ScopeObject>();
-    for (unsigned i = 0; i < sc.hops; ++i)
+    for (unsigned i = 0; i < sc.hops(); ++i)
         scope = &scope->enclosingScope().as<ScopeObject>();
     Value b = scope->aliasedVar(sc);
     pc += JSOP_GETALIASEDVAR_LENGTH;

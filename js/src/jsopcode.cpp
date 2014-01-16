@@ -942,12 +942,12 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
 
       case JOF_SCOPECOORD: {
         RootedValue v(cx,
-                      StringValue(ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc)));
+            StringValue(ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc)));
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
         ScopeCoordinate sc(pc);
-        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops, sc.slot);
+        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops(), sc.slot());
         break;
       }
 

@@ -310,10 +310,10 @@ OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  JOF_BYTE)
  * own the aliased variable.
  *
  * An ALIASEDVAR opcode contains the following immediates:
- *  uint16 hops:  the number of scope objects to skip to find the ScopeObject
- *                containing the variable being accessed
- *  uint16 slot:  the slot containing the variable in the ScopeObject (this
- *                'slot' does not include RESERVED_SLOTS).
+ *  uint8 hops:  the number of scope objects to skip to find the ScopeObject
+ *               containing the variable being accessed
+ *  uint24 slot: the slot containing the variable in the ScopeObject (this
+ *               'slot' does not include RESERVED_SLOTS).
  */
 OPDEF(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,   5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)
 OPDEF(JSOP_CALLALIASEDVAR,137,"callaliasedvar",NULL,  5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)

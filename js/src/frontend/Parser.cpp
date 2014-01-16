@@ -1278,7 +1278,7 @@ ConvertDefinitionToNamedLambdaUse(TokenStream &ts, ParseContext<FullParseHandler
                                   FunctionBox *funbox, Definition *dn)
 {
     dn->setOp(JSOP_CALLEE);
-    if (!dn->pn_cookie.set(ts, pc->staticLevel, UpvarCookie::CALLEE_SLOT))
+    if (!dn->pn_cookie.set(ts, pc->staticLevel, 0))
         return false;
     dn->pn_dflags |= PND_BOUND;
     JS_ASSERT(dn->kind() == Definition::NAMED_LAMBDA);
@@ -2669,8 +2669,8 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
     ExclusiveContext *cx = parser->context;
 
     Rooted<StaticBlockObject *> blockObj(cx, data->let.blockObj);
-    unsigned blockCount = blockObj->slotCount();
-    if (blockCount == JS_BIT(16)) {
+    unsigned index = blockObj->slotCount();
+    if (index >= StaticBlockObject::VAR_INDEX_LIMIT) {
         parser->report(ParseError, false, pn, data->let.overflow);
         return false;
     }
@@ -2682,7 +2682,7 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
      * and eval code, js::frontend::CompileScript will adjust the slot
      * again to include script->nfixed.
      */
-    if (!pn->pn_cookie.set(parser->tokenStream, pc->staticLevel, uint16_t(blockCount)))
+    if (!pn->pn_cookie.set(parser->tokenStream, pc->staticLevel, index))
         return false;
 
     /*
@@ -2698,13 +2698,9 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
             return false;
     }
 
-    /*
-     * Define the let binding's property before storing pn in the the binding's
-     * slot indexed by blockCount off the class-reserved slot base.
-     */
     bool redeclared;
     RootedId id(cx, NameToId(name));
-    RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id, blockCount, &redeclared));
+    RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id, index, &redeclared));
     if (!shape) {
         if (redeclared)
             parser->reportRedeclaration(pn, false, name);
@@ -2712,7 +2708,7 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
     }
 
     /* Store pn in the static block object. */
-    blockObj->setDefinitionParseNode(blockCount, reinterpret_cast<Definition *>(pn));
+    blockObj->setDefinitionParseNode(index, reinterpret_cast<Definition *>(pn));
     return true;
 }
 

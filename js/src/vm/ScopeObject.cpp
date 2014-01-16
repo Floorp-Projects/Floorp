@@ -48,13 +48,13 @@ Shape *
 js::ScopeCoordinateToStaticScopeShape(JSScript *script, jsbytecode *pc)
 {
     StaticScopeIter<NoGC> ssi(InnermostStaticScope(script, pc));
-    ScopeCoordinate sc(pc);
+    uint32_t hops = ScopeCoordinate(pc).hops();
     while (true) {
         JS_ASSERT(!ssi.done());
         if (ssi.hasDynamicScopeObject()) {
-            if (!sc.hops)
+            if (!hops)
                 break;
-            sc.hops--;
+            hops--;
         }
         ssi++;
     }
@@ -93,11 +93,11 @@ js::ScopeCoordinateName(ScopeCoordinateNameCache &cache, JSScript *script, jsbyt
     jsid id;
     ScopeCoordinate sc(pc);
     if (shape == cache.shape) {
-        ScopeCoordinateNameCache::Map::Ptr p = cache.map.lookup(sc.slot);
+        ScopeCoordinateNameCache::Map::Ptr p = cache.map.lookup(sc.slot());
         id = p->value();
     } else {
         Shape::Range<NoGC> r(shape);
-        while (r.front().slot() != sc.slot)
+        while (r.front().slot() != sc.slot())
             r.popFront();
         id = r.front().propidRaw();
     }
@@ -112,12 +112,12 @@ JSScript *
 js::ScopeCoordinateFunctionScript(JSScript *script, jsbytecode *pc)
 {
     StaticScopeIter<NoGC> ssi(InnermostStaticScope(script, pc));
-    ScopeCoordinate sc(pc);
+    uint32_t hops = ScopeCoordinate(pc).hops();
     while (true) {
         if (ssi.hasDynamicScopeObject()) {
-            if (!sc.hops)
+            if (!hops)
                 break;
-            sc.hops--;
+            hops--;
         }
         ssi++;
     }
@@ -655,9 +655,10 @@ StaticBlockObject::create(ExclusiveContext *cx)
 
 /* static */ Shape *
 StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
-                          int index, bool *redeclared)
+                          unsigned index, bool *redeclared)
 {
-    JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == index));
+    JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == (int)index));
+    JS_ASSERT(index < VAR_INDEX_LIMIT);
 
     *redeclared = false;
 

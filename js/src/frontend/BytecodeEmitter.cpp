@@ -663,7 +663,7 @@ AdjustBlockSlot(ExclusiveContext *cx, BytecodeEmitter *bce, uint32_t *slot)
     JS_ASSERT(*slot < bce->maxStackDepth);
     if (bce->sc->isFunctionBox()) {
         *slot += bce->script->bindings.numVars();
-        if ((unsigned) *slot >= SLOTNO_LIMIT) {
+        if (*slot >= StaticBlockObject::VAR_INDEX_LIMIT) {
             bce->reportError(nullptr, JSMSG_TOO_MANY_LOCALS);
             return false;
         }
@@ -699,10 +699,11 @@ ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlo
         }
 
         JS_ASSERT(dn->isDefn());
-        JS_ASSERT(dn->frameSlot() + depthPlusFixed < JS_BIT(16));
         if (!dn->pn_cookie.set(bce->parser->tokenStream, dn->pn_cookie.level(),
-                               uint16_t(dn->frameSlot() + depthPlusFixed)))
+                               dn->frameSlot() + depthPlusFixed))
+        {
             return false;
+        }
 
 #ifdef DEBUG
         for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
@@ -964,7 +965,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmit
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
 
-    unsigned n = 2 * sizeof(uint16_t);
+    unsigned n = SCOPECOORD_HOPS_LEN + SCOPECOORD_SLOT_LEN;
     JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
@@ -972,10 +973,10 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmit
         return false;
 
     jsbytecode *pc = bce->code(off);
-    SET_UINT16(pc, sc.hops);
-    pc += sizeof(uint16_t);
-    SET_UINT16(pc, sc.slot);
-    pc += sizeof(uint16_t);
+    SET_SCOPECOORD_HOPS(pc, sc.hops());
+    pc += SCOPECOORD_HOPS_LEN;
+    SET_SCOPECOORD_SLOT(pc, sc.slot());
+    pc += SCOPECOORD_SLOT_LEN;
     CheckTypeSet(cx, bce, op);
     return true;
 }
@@ -993,13 +994,13 @@ ClonedBlockDepth(BytecodeEmitter *bce)
 }
 
 static bool
-LookupAliasedName(HandleScript script, PropertyName *name, uint16_t *pslot)
+LookupAliasedName(HandleScript script, PropertyName *name, uint32_t *pslot)
 {
     /*
      * Beware: BindingIter may contain more than one Binding for a given name
      * (in the case of |function f(x,x) {}|) but only one will be aliased.
      */
-    unsigned slot = CallObject::RESERVED_SLOTS;
+    uint32_t slot = CallObject::RESERVED_SLOTS;
     for (BindingIter bi(script); !bi.done(); bi++) {
         if (bi->aliased()) {
             if (bi->name() == name) {
@@ -1013,8 +1014,44 @@ LookupAliasedName(HandleScript script, PropertyName *name, uint16_t *pslot)
 }
 
 static bool
+LookupAliasedNameSlot(HandleScript script, PropertyName *name, ScopeCoordinate *sc)
+{
+    uint32_t slot;
+    if (!LookupAliasedName(script, name, &slot))
+        return false;
+
+    sc->setSlot(slot);
+    return true;
+}
+
+/*
+ * Use this function instead of assigning directly to 'hops' to guard for
+ * uint8_t overflows.
+ */
+static bool
+AssignHops(BytecodeEmitter *bce, ParseNode *pn, unsigned src, ScopeCoordinate *dst)
+{
+    if (src > UINT8_MAX) {
+        bce->reportError(pn, JSMSG_TOO_DEEP, js_function_str);
+        return false;
+    }
+
+    dst->setHops(src);
+    return true;
+}
+
+static bool
 EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 {
+    /*
+     * While pn->pn_cookie tells us how many function scopes are between the use and the def this
+     * is not the same as how many hops up the dynamic scope chain are needed. In particular:
+     *  - a lexical function scope only contributes a hop if it is "heavyweight" (has a dynamic
+     *    scope object).
+     *  - a heavyweight named function scope contributes an extra scope to the scope chain (a
+     *    DeclEnvObject that holds just the name).
+     *  - all the intervening let/catch blocks must be counted.
+     */
     unsigned skippedScopes = 0;
     BytecodeEmitter *bceOfDef = bce;
     if (pn->isUsed()) {
@@ -1038,26 +1075,35 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
         JS_ASSERT(pn->pn_cookie.level() == bce->script->staticLevel());
     }
 
+    /*
+     * The final part of the skippedScopes computation depends on the type of variable. An arg or
+     * local variable is at the outer scope of a function and so includes the full
+     * ClonedBlockDepth. A let/catch-binding requires a search of the block chain to see how many
+     * (dynamic) block objects to skip.
+     */
     ScopeCoordinate sc;
     if (IsArgOp(pn->getOp())) {
-        sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-        JS_ALWAYS_TRUE(LookupAliasedName(bceOfDef->script, pn->name(), &sc.slot));
+        if (!AssignHops(bce, pn, skippedScopes + ClonedBlockDepth(bceOfDef), &sc))
+            return false;
+        JS_ALWAYS_TRUE(LookupAliasedNameSlot(bceOfDef->script, pn->name(), &sc));
     } else {
         JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
-        unsigned local = pn->pn_cookie.slot();
+        uint32_t local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
-            sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-            JS_ALWAYS_TRUE(LookupAliasedName(bceOfDef->script, pn->name(), &sc.slot));
+            if (!AssignHops(bce, pn, skippedScopes + ClonedBlockDepth(bceOfDef), &sc))
+                return false;
+            JS_ALWAYS_TRUE(LookupAliasedNameSlot(bceOfDef->script, pn->name(), &sc));
         } else {
-            unsigned depth = local - bceOfDef->script->bindings.numVars();
-            StaticBlockObject *b = bceOfDef->blockChain;
+            uint32_t depth = local - bceOfDef->script->bindings.numVars();
+            Rooted<StaticBlockObject*> b(cx, bceOfDef->blockChain);
             while (!b->containsVarAtDepth(depth)) {
                 if (b->needsClone())
                     skippedScopes++;
                 b = b->enclosingBlock();
             }
-            sc.hops = skippedScopes;
-            sc.slot = b->localIndexToSlot(bceOfDef->script->bindings, local);
+            if (!AssignHops(bce, pn, skippedScopes, &sc))
+                return false;
+            sc.setSlot(b->localIndexToSlot(bceOfDef->script->bindings, local));
         }
     }
 
@@ -1072,8 +1118,8 @@ EmitVarOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 
     if (IsAliasedVarOp(op)) {
         ScopeCoordinate sc;
-        sc.hops = pn->pn_cookie.level();
-        sc.slot = pn->pn_cookie.slot();
+        sc.setHops(pn->pn_cookie.level());
+        sc.setSlot(pn->pn_cookie.slot());
         return EmitAliasedVarOp(cx, op, sc, bce);
     }
 
@@ -1262,7 +1308,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
             if (script->functionNonDelazifying()->atom() == pn->pn_atom)
                 return false;
             if (ssi.hasDynamicScopeObject()) {
-                uint16_t slot;
+                uint32_t slot;
                 if (LookupAliasedName(script, pn->pn_atom->asPropertyName(), &slot)) {
                     JSOp op;
                     switch (pn->getOp()) {
@@ -2698,8 +2744,8 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
         unsigned varIndex = Bindings::argumentsVarIndex(cx, bindings);
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
-            sc.hops = 0;
-            JS_ALWAYS_TRUE(LookupAliasedName(bce->script, cx->names().arguments, &sc.slot));
+            sc.setHops(0);
+            JS_ALWAYS_TRUE(LookupAliasedNameSlot(bce->script, cx->names().arguments, &sc));
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
