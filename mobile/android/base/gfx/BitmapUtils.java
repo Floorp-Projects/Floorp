@@ -240,7 +240,7 @@ public final class BitmapUtils {
       int width = source.getWidth();
       int[] pixels = new int[width * height];
       source.getPixels(pixels, 0, width, 0, 0, width, height);
-      for (int row = 0; row < height row++) {
+      for (int row = 0; row < height; row++) {
         for (int col = 0; col < width; col++) {
           int c = pixels[col + row * width];
           // Ignore pixels with a certain transparency.
