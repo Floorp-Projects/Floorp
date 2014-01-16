@@ -99,7 +99,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
     gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
     JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
     RootedShape initial(cx,
-        EmptyShape::getInitialShape(cx, &CallObject::class_, nullptr, cx->global(), nullptr,
+        EmptyShape::getInitialShape(cx, &CallObject::class_, nullptr, nullptr, nullptr,
                                     allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE));
     if (!initial)
         return false;
@@ -134,8 +134,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
         RootedId id(cx, NameToId(bi->name()));
         unsigned attrs = JSPROP_PERMANENT | JSPROP_ENUMERATE |
                          (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
-        unsigned frameIndex = bi.frameIndex();
-        StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
+        StackShape child(nbase, id, slot++, 0, attrs, 0, 0);
 
         Shape *shape = self->callObjShape_->getChildBinding(cx, child);
         if (!shape)
