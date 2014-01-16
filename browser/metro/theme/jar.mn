@@ -21,7 +21,7 @@ chrome.jar:
 * skin/platform.css                         (platform.css)
 * skin/tiles.css                            (tiles.css)
   skin/touchcontrols.css                    (touchcontrols.css)
-  skin/netError.css                         (netError.css)
+* skin/netError.css                         (netError.css)
   skin/firstrun.css                         (firstrun.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
@@ -116,7 +116,8 @@ chrome.jar:
   skin/images/arrowbox-down-blue-filled.png (images/arrowbox-down-blue-filled.png)
   skin/images/favicon-default-32.png        (images/favicon-default-32.png)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
-  skin/images/errorpage-warning.png         (images/errorpage-warning.png)
+  skin/images/errorpage-warning@1.4x.png    (images/errorpage-warning@1.4x.png)
+  skin/images/errorpage-warning@1.8x.png    (images/errorpage-warning@1.8x.png)
   skin/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
   skin/images/alert-downloads-30.png        (images/alert-downloads-30.png)
