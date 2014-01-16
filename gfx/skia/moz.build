@@ -238,10 +238,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     ]
     # left out of UNIFIED_SOURCES for now to avoid having to patch skia. Should revisit eventually.
     SOURCES += [
+        'src/ports/SkFontHost_android_old.cpp',
         'src/ports/SkFontHost_cairo.cpp',
         'src/ports/SkFontHost_FreeType.cpp',
         'src/ports/SkFontHost_FreeType_common.cpp',
-        'src/ports/SkFontHost_linux.cpp',
     ]
     DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 else:
