@@ -243,20 +243,22 @@ pref("ui.buttonshadow", "#aea194");
 pref("ui.buttontext", "#101010");
 pref("ui.captiontext", "#101010");
 pref("ui.graytext", "#b1a598");
-pref("ui.highlight", "#fad184");
 pref("ui.highlighttext", "#1a1a1a");
-pref("ui.infobackground", "#f5f5b5");
-pref("ui.infotext", "#000");
-pref("ui.menu", "#f7f5f3");
-pref("ui.menutext", "#101010");
 pref("ui.threeddarkshadow", "#000");
 pref("ui.threedface", "#ece7e2");
 pref("ui.threedhighlight", "#fff");
 pref("ui.threedlightshadow", "#ece7e2");
 pref("ui.threedshadow", "#aea194");
-pref("ui.window", "#efebe7");
-pref("ui.windowtext", "#101010");
 pref("ui.windowframe", "#efebe7");
+
+// Themable via mozSettings
+pref("ui.menu", "#f97c17");
+pref("ui.menutext", "#ffffff");
+pref("ui.infobackground", "#343e40");
+pref("ui.infotext", "#686868");
+pref("ui.window", "#ffffff");
+pref("ui.windowtext", "#000000");
+pref("ui.highlight", "#b2f2ff");
 
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);
