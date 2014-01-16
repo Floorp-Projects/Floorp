@@ -1679,7 +1679,8 @@ SpecialPowersAPI.prototype = {
       throw new Error("Can't send subject to another process!");
     }
     if (this.isMainProcess()) {
-      return this.notifyObservers(subject, topic, data);
+      this.notifyObservers(subject, topic, data);
+      return;
     }
     var msg = {
       'op': 'notify',
