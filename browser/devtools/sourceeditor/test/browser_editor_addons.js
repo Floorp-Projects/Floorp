@@ -5,6 +5,7 @@
 
 function test() {
   waitForExplicitFinish();
+
   setup((ed, win) => {
     let doc = win.document.querySelector("iframe").contentWindow.document;
 
@@ -15,6 +16,19 @@ function test() {
     ed.setOption("showTrailingSpace", true);
     ok(doc.querySelector(".cm-trailingspace"));
 
-    teardown(ed, win);
+    // foldcode.js and foldgutter.js
+    ed.setMode(Editor.modes.js);
+    ed.setText("function main() {\nreturn 'Hello, World!';\n}");
+    executeSoon(() => testFold(doc, ed, win));
   });
+}
+
+function testFold(doc, ed, win) {
+  // Wait until folding arrow is there.
+  if (!doc.querySelector(".CodeMirror-foldgutter-open")) {
+    executeSoon(() => testFold(doc, ed, win));
+    return;
+  }
+
+  teardown(ed, win);
 }
