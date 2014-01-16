@@ -59,7 +59,6 @@ this.SafeBrowsing = {
   malwareEnabled:  false,
 
   updateURL:             null,
-  keyURL:                null,
   gethashURL:            null,
 
   reportURL:             null,
@@ -111,21 +110,15 @@ this.SafeBrowsing = {
 
     // Urls used to update DB
     this.updateURL  = Services.urlFormatter.formatURLPref(basePref + "updateURL");
-    this.keyURL     = Services.urlFormatter.formatURLPref(basePref + "keyURL");
     this.gethashURL = Services.urlFormatter.formatURLPref(basePref + "gethashURL");
 
     this.updateURL  = this.updateURL.replace("SAFEBROWSING_ID", clientID);
-    this.keyURL     = this.keyURL.replace("SAFEBROWSING_ID", clientID);
     this.gethashURL = this.gethashURL.replace("SAFEBROWSING_ID", clientID);
 
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
 
     listManager.setUpdateUrl(this.updateURL);
-    // XXX Bug 779317 - setKeyUrl has the side effect of fetching a key from the server.
-    // This shouldn't happen if anti-phishing/anti-malware is disabled.
-    if (this.phishingEnabled || this.malwareEnabled)
-      listManager.setKeyUrl(this.keyURL);
     listManager.setGethashUrl(this.gethashURL);
   },
 

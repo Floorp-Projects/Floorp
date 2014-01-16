@@ -1220,6 +1220,14 @@ MetroWidget::Invalidate(const nsIntRect & aRect)
   return NS_OK;
 }
 
+void
+MetroWidget::Update()
+{
+    if (!ShouldUseOffMainThreadCompositing() && mWnd) {
+        ::UpdateWindow(mWnd);
+    }
+}
+
 nsTransparencyMode
 MetroWidget::GetTransparencyMode()
 {

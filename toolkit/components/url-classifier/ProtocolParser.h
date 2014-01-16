@@ -20,7 +20,6 @@ public:
   struct ForwardedUpdate {
     nsCString table;
     nsCString url;
-    nsCString mac;
   };
 
   ProtocolParser();
@@ -29,10 +28,6 @@ public:
   nsresult Status() const { return mUpdateStatus; }
 
   nsresult Init(nsICryptoHash* aHasher);
-
-  nsresult InitHMAC(const nsACString& aClientKey,
-                    const nsACString& aServerMAC);
-  nsresult FinishHMAC();
 
   void SetCurrentTable(const nsACString& aTable);
 
@@ -49,15 +44,13 @@ public:
   const nsTArray<ForwardedUpdate> &Forwards() const { return mForwards; }
   int32_t UpdateWait() { return mUpdateWait; }
   bool ResetRequested() { return mResetRequested; }
-  bool RekeyRequested() { return mRekeyRequested; }
 
 private:
   nsresult ProcessControl(bool* aDone);
-  nsresult ProcessMAC(const nsCString& aLine);
   nsresult ProcessExpirations(const nsCString& aLine);
   nsresult ProcessChunkControl(const nsCString& aLine);
   nsresult ProcessForward(const nsCString& aLine);
-  nsresult AddForward(const nsACString& aUrl, const nsACString& aMac);
+  nsresult AddForward(const nsACString& aUrl);
   nsresult ProcessChunk(bool* done);
   // Remove this, it's only used for testing
   nsresult ProcessPlaintextChunk(const nsACString& aChunk);
@@ -110,12 +103,8 @@ private:
   nsresult mUpdateStatus;
   nsCString mPending;
 
-  nsCOMPtr<nsICryptoHMAC> mHMAC;
-  nsCString mServerMAC;
-
   uint32_t mUpdateWait;
   bool mResetRequested;
-  bool mRekeyRequested;
 
   nsTArray<ForwardedUpdate> mForwards;
   // Keep track of updates to apply before passing them to the DBServiceWorkers.

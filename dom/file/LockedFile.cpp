@@ -491,34 +491,33 @@ LockedFile::GetActive(bool* aActive)
 
 NS_IMETHODIMP
 LockedFile::GetLocation(JSContext* aCx,
-                        JS::Value* aLocation)
+                        JS::MutableHandle<JS::Value> aLocation)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (mLocation == UINT64_MAX) {
-    *aLocation = JSVAL_NULL;
+    aLocation.setNull();
   }
   else {
-    *aLocation = JS_NumberValue(double(mLocation));
+    aLocation.setDouble(double(mLocation));
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 LockedFile::SetLocation(JSContext* aCx,
-                        const JS::Value& aLocation)
+                        JS::Handle<JS::Value> aLocation)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Null means the end-of-file.
-  if (JSVAL_IS_NULL(aLocation)) {
+  if (aLocation.isNull()) {
     mLocation = UINT64_MAX;
     return NS_OK;
   }
 
   uint64_t location;
-  JS::Rooted<JS::Value> value(aCx, aLocation);
-  if (!JS::ToUint64(aCx, value, &location)) {
+  if (!JS::ToUint64(aCx, aLocation, &location)) {
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -527,7 +526,7 @@ LockedFile::SetLocation(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-LockedFile::GetMetadata(const JS::Value& aParameters,
+LockedFile::GetMetadata(JS::Handle<JS::Value> aParameters,
                         JSContext* aCx,
                         nsISupports** _retval)
 {
@@ -546,7 +545,7 @@ LockedFile::GetMetadata(const JS::Value& aParameters,
 
   // Get optional arguments.
   if (!JSVAL_IS_VOID(aParameters) && !JSVAL_IS_NULL(aParameters)) {
-    nsresult rv = params->Init(aCx, &aParameters);
+    nsresult rv = params->Init(aCx, aParameters);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
 
     if (!params->IsConfigured()) {
@@ -658,7 +657,7 @@ LockedFile::ReadAsText(uint64_t aSize,
 }
 
 NS_IMETHODIMP
-LockedFile::Write(const JS::Value& aValue,
+LockedFile::Write(JS::Handle<JS::Value> aValue,
                   JSContext* aCx,
                   nsISupports** _retval)
 {
@@ -668,7 +667,7 @@ LockedFile::Write(const JS::Value& aValue,
 }
 
 NS_IMETHODIMP
-LockedFile::Append(const JS::Value& aValue,
+LockedFile::Append(JS::Handle<JS::Value> aValue,
                    JSContext* aCx,
                    nsISupports** _retval)
 {

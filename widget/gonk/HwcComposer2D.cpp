@@ -26,6 +26,7 @@
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"
+#include "gfx2DGlue.h"
 
 #if ANDROID_VERSION >= 18
 #include "libdisplay/FramebufferSurface.h"
@@ -648,8 +649,9 @@ HwcComposer2D::Reset()
 
 bool
 HwcComposer2D::TryRender(Layer* aRoot,
-                         const gfxMatrix& aGLWorldTransform)
+                         const gfx::Matrix& GLWorldTransform)
 {
+    gfxMatrix aGLWorldTransform = ThebesMatrix(GLWorldTransform);
     if (!aGLWorldTransform.PreservesAxisAlignedRectangles()) {
         LOGD("Render aborted. World transform has non-square angle rotation");
         return false;

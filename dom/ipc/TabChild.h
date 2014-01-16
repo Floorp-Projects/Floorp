@@ -62,12 +62,12 @@ public:
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
-                             const JS::Value& aObject,
-                             const JS::Value& aRemote,
+                             JS::Handle<JS::Value> aObject,
+                             JS::Handle<JS::Value> aRemote,
                              nsIPrincipal* aPrincipal,
                              JSContext* aCx,
                              uint8_t aArgc,
-                             JS::Value* aRetval)
+                             JS::MutableHandle<JS::Value> aRetval)
   {
     return mMessageManager
       ? mMessageManager->SendSyncMessage(aMessageName, aObject, aRemote,
@@ -75,12 +75,12 @@ public:
       : NS_ERROR_NULL_POINTER;
   }
   NS_IMETHOD SendRpcMessage(const nsAString& aMessageName,
-                            const JS::Value& aObject,
-                            const JS::Value& aRemote,
+                            JS::Handle<JS::Value> aObject,
+                            JS::Handle<JS::Value> aRemote,
                             nsIPrincipal* aPrincipal,
                             JSContext* aCx,
                             uint8_t aArgc,
-                            JS::Value* aRetval)
+                            JS::MutableHandle<JS::Value> aRetval)
   {
     return mMessageManager
       ? mMessageManager->SendRpcMessage(aMessageName, aObject, aRemote,
@@ -367,9 +367,7 @@ public:
     }
 
 protected:
-    virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
-                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                      uint64_t* aLayersId) MOZ_OVERRIDE;
+    virtual PRenderFrameChild* AllocPRenderFrameChild() MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
     virtual bool RecvDestroy() MOZ_OVERRIDE;
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
