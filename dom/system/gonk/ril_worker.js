@@ -254,7 +254,6 @@ let RIL = {
      * One of the RADIO_STATE_* constants.
      */
     this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
-    this._isInitialRadioState = true;
 
     /**
      * True if we are on CDMA network.
@@ -5256,13 +5255,7 @@ RIL[REQUEST_RADIO_POWER] = function(length, options) {
         this.cachedDialRequest.onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
         this.cachedDialRequest = null;
       }
-      return;
     }
-
-    if (this._isInitialRadioState) {
-      this._isInitialRadioState = false;
-    }
-
     return;
   }
 
@@ -6081,14 +6074,6 @@ RIL[RIL_REQUEST_GPRS_ATTACH] = null;
 RIL[RIL_REQUEST_GPRS_DETACH] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function() {
   let radioState = Buf.readInt32();
-
-  // Ensure radio state at boot time.
-  if (this._isInitialRadioState) {
-    // Even radioState is RADIO_STATE_OFF, we still have to maually turn radio off,
-    // otherwise REQUEST_GET_SIM_STATUS will still report CARD_STATE_PRESENT.
-    this.setRadioEnabled({enabled: false});
-  }
-
   let newState;
   if (radioState == RADIO_STATE_UNAVAILABLE) {
     newState = GECKO_RADIOSTATE_UNAVAILABLE;
@@ -6403,6 +6388,8 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function(length) {
   this.initRILState();
   // Always ensure that we are not in emergency callback mode when init.
   this.exitEmergencyCbMode();
+  // Reset radio in the case that b2g restart (or crash).
+  this.setRadioEnabled({enabled: false});
 };
 
 /**
