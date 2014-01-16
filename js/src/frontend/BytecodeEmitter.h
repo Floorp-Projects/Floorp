@@ -53,7 +53,7 @@ struct CGTryNoteList {
     Vector<JSTryNote> list;
     CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
 
-    bool append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end);
+    bool append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
     void finish(TryNoteArray *array);
 };

@@ -6913,16 +6913,15 @@ CGObjectList::find(uint32_t index)
 }
 
 bool
-CGTryNoteList::append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end)
+CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end)
 {
-    JS_ASSERT(unsigned(uint16_t(stackDepth)) == stackDepth);
     JS_ASSERT(start <= end);
     JS_ASSERT(size_t(uint32_t(start)) == start);
     JS_ASSERT(size_t(uint32_t(end)) == end);
 
     JSTryNote note;
     note.kind = kind;
-    note.stackDepth = uint16_t(stackDepth);
+    note.stackDepth = stackDepth;
     note.start = uint32_t(start);
     note.length = uint32_t(end - start);
 

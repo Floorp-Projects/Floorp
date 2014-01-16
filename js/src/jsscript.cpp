@@ -798,32 +798,16 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     }
 
     if (ntrynotes != 0) {
-        /*
-         * We combine tn->kind and tn->stackDepth when serializing as XDR is not
-         * efficient when serializing small integer types.
-         */
-        JSTryNote *tn, *tnfirst;
-        uint32_t kindAndDepth;
-        JS_STATIC_ASSERT(sizeof(tn->kind) == sizeof(uint8_t));
-        JS_STATIC_ASSERT(sizeof(tn->stackDepth) == sizeof(uint16_t));
-
-        tnfirst = script->trynotes()->vector;
+        JSTryNote *tnfirst = script->trynotes()->vector;
         JS_ASSERT(script->trynotes()->length == ntrynotes);
-        tn = tnfirst + ntrynotes;
+        JSTryNote *tn = tnfirst + ntrynotes;
         do {
             --tn;
-            if (mode == XDR_ENCODE) {
-                kindAndDepth = (uint32_t(tn->kind) << 16)
-                               | uint32_t(tn->stackDepth);
-            }
-            if (!xdr->codeUint32(&kindAndDepth) ||
+            if (!xdr->codeUint8(&tn->kind) ||
+                !xdr->codeUint32(&tn->stackDepth) ||
                 !xdr->codeUint32(&tn->start) ||
                 !xdr->codeUint32(&tn->length)) {
                 return false;
-            }
-            if (mode == XDR_DECODE) {
-                tn->kind = uint8_t(kindAndDepth >> 16);
-                tn->stackDepth = uint16_t(kindAndDepth);
             }
         } while (tn != tnfirst);
     }
