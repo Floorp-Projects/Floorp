@@ -26,6 +26,7 @@ SimpleTest.waitForExplicitFinish();
 var index = -1;
 var todayDate = new Date();
 var baseServeURL = "http://mochi.test:8888/tests/dom/downloads/tests/";
+var baseDownloadPath = "/mnt/sdcard/downloads/";
 var lastKnownCurrentBytes = 0;
 
 function next() {
@@ -44,12 +45,11 @@ function next() {
 function checkConsistentDownloadAttributes(download) {
   var href = document.getElementById("download1").getAttribute("href");
   var expectedServeURL = baseServeURL + href;
-  var destinationRegEx = /test\(?[0-9]*\)?\.bin$/;
+  var expectedDownloadPath = baseDownloadPath + "test.bin";
 
   // bug 945323: Download path isn't honoring download attribute
-  ok(destinationRegEx.test(download.path),
-     "Download path '" + download.path +
-     "' should match '" + destinationRegEx + "' regexp.");
+  todo(download.path === expectedDownloadPath,
+       "Download path = " + expectedDownloadPath);
 
   ok(download.startTime >= todayDate,
      "Download start time should be greater than or equal to today");
