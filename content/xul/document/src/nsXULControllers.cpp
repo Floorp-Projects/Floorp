@@ -83,7 +83,6 @@ DOMCI_DATA(XULControllers, nsXULControllers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULControllers)
   NS_INTERFACE_MAP_ENTRY(nsIControllers)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllers)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULControllers)
 NS_INTERFACE_MAP_END
@@ -255,53 +254,3 @@ nsXULControllers::GetControllerCount(uint32_t *_retval)
   return NS_OK;
 }
 
-// nsISecurityCheckedComponent implementation
-
-static char* cloneAllAccess()
-{
-  static const char allAccess[] = "AllAccess";
-  return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
-}
-
-static char* cloneUniversalXPConnect()
-{
-  static const char universalXPConnect[] = "UniversalXPConnect";
-  return (char*)nsMemory::Clone(universalXPConnect, sizeof(universalXPConnect));
-}
-
-NS_IMETHODIMP
-nsXULControllers::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  *_retval = cloneAllAccess();
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsXULControllers::CanCallMethod(const nsIID * iid, const char16_t *methodName,
-                                char **_retval)
-{
-  // OK if you're cool enough
-  *_retval = cloneUniversalXPConnect();
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsXULControllers::CanGetProperty(const nsIID * iid,
-                                 const char16_t *propertyName,
-                                 char **_retval)
-{
-  // OK if you're cool enough
-  *_retval = cloneUniversalXPConnect();
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-
-NS_IMETHODIMP
-nsXULControllers::CanSetProperty(const nsIID * iid,
-                                 const char16_t *propertyName,
-                                 char **_retval)
-{
-  // OK if you're cool enough
-  *_retval = cloneUniversalXPConnect();
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}

@@ -18,8 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912322
     ok(f in SpecialPowers.wrap(document), f + " should be available to chrome via Xray");
   }
 
-
-
+  // Test window.controllers.
+  ok(typeof window.controllers, 'undefined', "controllers should not be available to content");
+  ok(typeof SpecialPowers.wrap(window).controllers, 'object', "controllers should be available over Xray");
 
   </script>
 </head>
