@@ -128,9 +128,9 @@ BroadcastSystemMessage(const nsAString& aType,
     do_GetService("@mozilla.org/system-message-internal;1");
   NS_ENSURE_TRUE(systemMessenger, false);
 
-  systemMessenger->BroadcastMessage(aType,
-                                    OBJECT_TO_JSVAL(obj),
-                                    JS::UndefinedValue());
+  JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*obj));
+  systemMessenger->BroadcastMessage(aType, value,
+                                    JS::UndefinedHandleValue);
 
   return true;
 }

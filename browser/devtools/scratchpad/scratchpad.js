@@ -30,6 +30,7 @@ const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties"
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
+const ENABLE_CODE_FOLDING = "devtools.scratchpad.enableCodeFolding";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
@@ -1484,18 +1485,25 @@ var Scratchpad = {
       this._instanceId = ScratchpadManager.createUid();
     }
 
-    this.editor = new Editor({
+    let config = {
       mode: Editor.modes.js,
       value: initialText,
       lineNumbers: true,
       showTrailingSpace: Services.prefs.getBoolPref(SHOW_TRAILING_SPACE),
       contextMenu: "scratchpad-text-popup"
-    });
+    };
 
+    if (Services.prefs.getBoolPref(ENABLE_CODE_FOLDING)) {
+      config.foldGutter = true;
+      config.gutters = ["CodeMirror-linenumbers", "CodeMirror-foldgutter"];
+    }
+
+    this.editor = new Editor(config);
     this.editor.appendTo(document.querySelector("#scratchpad-editor")).then(() => {
       var lines = initialText.split("\n");
 
       this.editor.on("change", this._onChanged);
+      this.editor.on("save", () => this.saveFile());
       this.editor.focus();
       this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
 

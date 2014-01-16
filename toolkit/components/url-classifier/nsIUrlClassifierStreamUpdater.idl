@@ -11,7 +11,7 @@
  * downloading the whole update and then updating the sqlite database, we
  * update tables as the data is streaming in.
  */
-[scriptable, uuid(daf3038a-556c-47d3-a3d2-36caa9a762a0)]
+[scriptable, uuid(79e6b710-ce68-4639-ac6b-7d293af424a1)]
 interface nsIUrlClassifierStreamUpdater : nsISupports
 {
   /**
@@ -27,7 +27,6 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    * @param aRequestTables Comma-separated list of tables included in this
    *        update.
    * @param aRequestBody The body for the request.
-   * @param aClientKey The client key for checking the update's MAC.
    * @param aSuccessCallback Called after a successful update.
    * @param aUpdateErrorCallback Called for problems applying the update
    * @param aDownloadErrorCallback Called if we get an http error or a
@@ -35,7 +34,6 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    */
   boolean downloadUpdates(in ACString aRequestTables,
                           in ACString aRequestBody,
-                          in ACString aClientKey,
                           in nsIUrlClassifierCallback aSuccessCallback,
                           in nsIUrlClassifierCallback aUpdateErrorCallback,
                           in nsIUrlClassifierCallback aDownloadErrorCallback);

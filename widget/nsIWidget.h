@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x67da44c4, 0xe21b, 0x4742, \
-  { 0x9c, 0x2b, 0x26, 0xc7, 0x70, 0x21, 0xde, 0x87 } }
+{ 0x7a4ece50, 0x5c52, 0x47c2, \
+  { 0x8c, 0x9e, 0x32, 0xd2, 0x5a, 0x27, 0x53, 0x34 } }
 
 /*
  * Window shadow styles
@@ -450,7 +450,9 @@ enum NotificationToIME {
   // Selection in the focused editable content is changed
   NOTIFY_IME_OF_SELECTION_CHANGE,
   REQUEST_TO_COMMIT_COMPOSITION,
-  REQUEST_TO_CANCEL_COMPOSITION
+  REQUEST_TO_CANCEL_COMPOSITION,
+  // Composition string has been updated
+  NOTIFY_IME_OF_COMPOSITION_UPDATE
 };
 
 } // namespace widget
@@ -1176,6 +1178,11 @@ class nsIWidget : public nsISupports {
      * later.
      */
     NS_IMETHOD Invalidate(const nsIntRect & aRect) = 0;
+
+    /**
+     * Widget implementation may support synchronous painting.
+     */
+   virtual void Update() { }
 
     enum LayerManagerPersistence
     {

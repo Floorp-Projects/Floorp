@@ -1617,6 +1617,14 @@ nsWindow::Invalidate(const nsIntRect &aRect)
     return NS_OK;
 }
 
+void
+nsWindow::Update()
+{
+    if (!ShouldUseOffMainThreadCompositing() && mGdkWindow) {
+        gdk_window_process_updates(mGdkWindow, true);
+    }
+}
+
 void*
 nsWindow::GetNativeData(uint32_t aDataType)
 {
@@ -5876,6 +5884,9 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
             return NS_OK;
         case NOTIFY_IME_OF_BLUR:
             mIMModule->OnFocusChangeInGecko(false);
+            return NS_OK;
+        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+            mIMModule->OnUpdateComposition();
             return NS_OK;
         default:
             return NS_ERROR_NOT_IMPLEMENTED;

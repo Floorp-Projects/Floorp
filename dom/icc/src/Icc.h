@@ -51,30 +51,31 @@ public:
   GetCardState(nsString& aCardState) const;
 
   void
-  SendStkResponse(const JSContext* aCx, const JS::Value& aCommand,
-                  const JS::Value& aResponse, ErrorResult& aRv);
+  SendStkResponse(const JSContext* aCx, JS::Handle<JS::Value> aCommand,
+                  JS::Handle<JS::Value> aResponse, ErrorResult& aRv);
 
   void
   SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested,
                        ErrorResult& aRv);
 
   void
-  SendStkTimerExpiration(const JSContext* aCx, const JS::Value& aTimer,
+  SendStkTimerExpiration(const JSContext* aCx, JS::Handle<JS::Value> aTimer,
                          ErrorResult& aRv);
 
   void
-  SendStkEventDownload(const JSContext* aCx, const JS::Value& aEvent,
+  SendStkEventDownload(const JSContext* aCx, JS::Handle<JS::Value> aEvent,
                        ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
   GetCardLock(const nsAString& aLockType, ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
-  UnlockCardLock(const JSContext* aCx, const JS::Value& aInfo,
+  UnlockCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
                  ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
-  SetCardLock(const JSContext* aCx, const JS::Value& aInfo, ErrorResult& aRv);
+  SetCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
+              ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
   GetCardLockRetryCount(const nsAString& aLockType, ErrorResult& aRv);
@@ -84,15 +85,15 @@ public:
 
   already_AddRefed<nsISupports>
   UpdateContact(const JSContext* aCx, const nsAString& aContactType,
-                const JS::Value& aContact, const nsAString& aPin2,
+                JS::Handle<JS::Value> aContact, const nsAString& aPin2,
                 ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
   IccOpenChannel(const nsAString& aAid, ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
-  IccExchangeAPDU(const JSContext* aCx, int32_t aChannel, const jsval& aApdu,
-                  ErrorResult& aRv);
+  IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
+                  JS::Handle<JS::Value> aApdu, ErrorResult& aRv);
 
   already_AddRefed<nsISupports>
   IccCloseChannel(int32_t aChannel, ErrorResult& aRv);
