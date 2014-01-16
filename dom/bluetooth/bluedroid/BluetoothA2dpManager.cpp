@@ -816,8 +816,8 @@ void
 BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
                                      const nsAString& aArtist,
                                      const nsAString& aAlbum,
-                                     uint32_t aMediaNumber,
-                                     uint32_t aTotalMediaCount,
+                                     uint64_t aMediaNumber,
+                                     uint64_t aTotalMediaCount,
                                      uint32_t aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -905,7 +905,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
 /*
  * This function handles RegisterNotification request from
  * AvrcpRegisterNotificationCallback, which updates current
- * track/status/position status.
+ * track/status/position status in the INTERRIM response.
  *
  * aParam is only valid when position changed
  */
@@ -925,16 +925,34 @@ BluetoothA2dpManager::UpdateRegisterNotification(int aEventId, int aParam)
       param.play_status = (btrc_play_status_t)mPlayStatus;
       break;
     case BTRC_EVT_TRACK_CHANGE:
+      // In AVRCP 1.3 and 1.4, the identifier parameter of EVENT_TRACK_CHANGED
+      // is different.
+      // AVRCP 1.4: If no track is selected, we shall return 0xFFFFFFFFFFFFFFFF,
+      // otherwise return 0x0 in the INTERRIM response. The expanded text in
+      // version 1.4 is to allow for new UID feature. As for AVRCP 1.3, we shall
+      // return 0xFFFFFFFF. Since PTS enforces to check this part to comply with
+      // the most updated spec.
       mTrackChangedNotifyType = BTRC_NOTIFICATION_TYPE_INTERIM;
       // needs to convert to network big endian format since track stores
-      // as uint8[8]. 56 = 8 * (BTRC_UID_SIZE -1)
-      for (int i = 0; i < BTRC_UID_SIZE; ++i) {
-        param.track[i] = (mMediaNumber >> (56 - 8 * i));
+      // as uint8[8]. 56 = 8 * (BTRC_UID_SIZE -1).
+      for (int index = 0; index < BTRC_UID_SIZE; ++index) {
+        // We cannot easily check if a track is selected, so whenever A2DP is
+        // streaming, we assume a track is selected.
+        if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
+          param.track[index] = 0x0;
+        } else {
+          param.track[index] = 0xFF;
+        }
       }
       break;
     case BTRC_EVT_PLAY_POS_CHANGED:
+      // If no track is selected, return 0xFFFFFFFF in the INTERIM response
       mPlayPosChangedNotifyType = BTRC_NOTIFICATION_TYPE_INTERIM;
-      param.song_pos = mPosition;
+      if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
+        param.song_pos = mPosition;
+      } else {
+        param.song_pos = 0xFFFFFFFF;
+      }
       mPlaybackInterval = aParam;
       break;
     default:
@@ -971,13 +989,13 @@ BluetoothA2dpManager::GetPosition()
   return mPosition;
 }
 
-uint32_t
+uint64_t
 BluetoothA2dpManager::GetMediaNumber()
 {
   return mMediaNumber;
 }
 
-uint32_t
+uint64_t
 BluetoothA2dpManager::GetTotalMediaNumber()
 {
   return mTotalMediaCount;
