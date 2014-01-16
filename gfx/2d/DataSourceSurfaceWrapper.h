@@ -27,7 +27,6 @@ public:
   virtual IntSize GetSize() const MOZ_OVERRIDE { return mSurface->GetSize(); }
   virtual SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mSurface->GetFormat(); }
   virtual bool IsValid() const MOZ_OVERRIDE { return mSurface->IsValid(); }
-  virtual void MarkDirty() { mSurface->MarkDirty(); }
 
 private:
   RefPtr<DataSourceSurface> mSurface;

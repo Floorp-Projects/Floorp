@@ -369,12 +369,6 @@ public:
    */
   virtual int32_t Stride() = 0;
 
-  /*
-   * This function is called after modifying the data on the source surface
-   * directly through the data pointer.
-   */
-  virtual void MarkDirty() {}
-
   virtual bool Map(MapType, MappedSurface *aMappedSurface)
   {
     aMappedSurface->mData = GetData();
