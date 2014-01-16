@@ -349,11 +349,11 @@ public:
     int32_t mStride;
   };
 
-  MOZ_BEGIN_ENUM_CLASS(MapType)
+  enum MapType {
     READ,
     WRITE,
     READ_WRITE
-  MOZ_END_ENUM_CLASS(MapType)
+  };
 
   virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   /* [DEPRECATED]
