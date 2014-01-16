@@ -28,7 +28,7 @@ public:
     virtual ~mozJSSubScriptLoader();
 
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_MOZIJSSUBSCRIPTLOADER
 
 private:
