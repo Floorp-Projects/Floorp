@@ -607,122 +607,123 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(uint32_t aAction,
         return rv;
     }
 
-    rv = CheckXPCPermissions(cx, aObj, jsObject, subjectPrincipal);
 
-    if (NS_FAILED(rv)) //-- Security tests failed, access is denied, report error
+    if (SubjectIsPrivileged())
     {
-        nsAutoString stringName;
-        switch(aAction)
-        {
-        case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-            stringName.AssignLiteral("GetPropertyDeniedOrigins");
-            break;
-        case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-            stringName.AssignLiteral("SetPropertyDeniedOrigins");
-            break;
-        case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-            stringName.AssignLiteral("CallMethodDeniedOrigins");
-        }
-
-        // Null out objectPrincipal for now, so we don't leak information about
-        // it.  Whenever we can report different error strings to content and
-        // the UI we can take this out again.
-        objectPrincipal = nullptr;
-
-        NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
-        nsAutoCString subjectOrigin;
-        nsAutoCString subjectDomain;
-        if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin) {
-            nsCOMPtr<nsIURI> uri, domain;
-            subjectPrincipal->GetURI(getter_AddRefs(uri));
-            if (uri) { // Object principal might be expanded
-                GetOriginFromURI(uri, subjectOrigin);
-            }
-            subjectPrincipal->GetDomain(getter_AddRefs(domain));
-            if (domain) {
-                GetOriginFromURI(domain, subjectDomain);
-            }
-        } else {
-            subjectOrigin.AssignLiteral("the security manager");
-        }
-        NS_ConvertUTF8toUTF16 subjectOriginUnicode(subjectOrigin);
-        NS_ConvertUTF8toUTF16 subjectDomainUnicode(subjectDomain);
-
-        nsAutoCString objectOrigin;
-        nsAutoCString objectDomain;
-        if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin &&
-            objectPrincipal) {
-            nsCOMPtr<nsIURI> uri, domain;
-            objectPrincipal->GetURI(getter_AddRefs(uri));
-            if (uri) { // Object principal might be system
-                GetOriginFromURI(uri, objectOrigin);
-            }
-            objectPrincipal->GetDomain(getter_AddRefs(domain));
-            if (domain) {
-                GetOriginFromURI(domain, objectDomain);
-            }
-        }
-        NS_ConvertUTF8toUTF16 objectOriginUnicode(objectOrigin);
-        NS_ConvertUTF8toUTF16 objectDomainUnicode(objectDomain);
-
-        nsXPIDLString errorMsg;
-        const char16_t *formatStrings[] =
-        {
-            subjectOriginUnicode.get(),
-            className.get(),
-            IDToString(cx, property),
-            objectOriginUnicode.get(),
-            subjectDomainUnicode.get(),
-            objectDomainUnicode.get()
-        };
-
-        uint32_t length = ArrayLength(formatStrings);
-
-        // XXXbz Our localization system is stupid and can't handle not showing
-        // some strings that get passed in.  Which means that we have to get
-        // our length precisely right: it has to be exactly the number of
-        // strings our format string wants.  This means we'll have to move
-        // strings in the array as needed, sadly...
-        if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin ||
-            !objectPrincipal) {
-            stringName.AppendLiteral("OnlySubject");
-            length -= 3;
-        } else {
-            // default to a length that doesn't include the domains, then
-            // increase it as needed.
-            length -= 2;
-            if (!subjectDomainUnicode.IsEmpty()) {
-                stringName.AppendLiteral("SubjectDomain");
-                length += 1;
-            }
-            if (!objectDomainUnicode.IsEmpty()) {
-                stringName.AppendLiteral("ObjectDomain");
-                length += 1;
-                if (length != ArrayLength(formatStrings)) {
-                    // We have an object domain but not a subject domain.
-                    // Scoot our string over one slot.  See the XXX comment
-                    // above for why we need to do this.
-                    formatStrings[length-1] = formatStrings[length];
-                }
-            }
-        }
-        
-        // We need to keep our existing failure rv and not override it
-        // with a likely success code from the following string bundle
-        // call in order to throw the correct security exception later.
-        nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
-                                                        formatStrings,
-                                                        length,
-                                                        getter_Copies(errorMsg));
-        if (NS_FAILED(rv2)) {
-            // Might just be missing the string...  Do our best
-            errorMsg = stringName;
-        }
-
-        SetPendingException(cx, errorMsg.get());
+        return NS_OK;
     }
 
-    return rv;
+    //-- Security tests failed, access is denied, report error
+    nsAutoString stringName;
+    switch(aAction)
+    {
+    case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
+        stringName.AssignLiteral("GetPropertyDeniedOrigins");
+        break;
+    case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
+        stringName.AssignLiteral("SetPropertyDeniedOrigins");
+        break;
+    case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
+        stringName.AssignLiteral("CallMethodDeniedOrigins");
+    }
+
+    // Null out objectPrincipal for now, so we don't leak information about
+    // it.  Whenever we can report different error strings to content and
+    // the UI we can take this out again.
+    objectPrincipal = nullptr;
+
+    NS_ConvertUTF8toUTF16 classInfoName(classInfoData.GetName());
+    nsAutoCString subjectOrigin;
+    nsAutoCString subjectDomain;
+    if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin) {
+        nsCOMPtr<nsIURI> uri, domain;
+        subjectPrincipal->GetURI(getter_AddRefs(uri));
+        if (uri) { // Object principal might be expanded
+            GetOriginFromURI(uri, subjectOrigin);
+        }
+        subjectPrincipal->GetDomain(getter_AddRefs(domain));
+        if (domain) {
+            GetOriginFromURI(domain, subjectDomain);
+        }
+    } else {
+        subjectOrigin.AssignLiteral("the security manager");
+    }
+    NS_ConvertUTF8toUTF16 subjectOriginUnicode(subjectOrigin);
+    NS_ConvertUTF8toUTF16 subjectDomainUnicode(subjectDomain);
+
+    nsAutoCString objectOrigin;
+    nsAutoCString objectDomain;
+    if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin &&
+        objectPrincipal) {
+        nsCOMPtr<nsIURI> uri, domain;
+        objectPrincipal->GetURI(getter_AddRefs(uri));
+        if (uri) { // Object principal might be system
+            GetOriginFromURI(uri, objectOrigin);
+        }
+        objectPrincipal->GetDomain(getter_AddRefs(domain));
+        if (domain) {
+            GetOriginFromURI(domain, objectDomain);
+        }
+    }
+    NS_ConvertUTF8toUTF16 objectOriginUnicode(objectOrigin);
+    NS_ConvertUTF8toUTF16 objectDomainUnicode(objectDomain);
+
+    nsXPIDLString errorMsg;
+    const char16_t *formatStrings[] =
+    {
+        subjectOriginUnicode.get(),
+        classInfoName.get(),
+        IDToString(cx, property),
+        objectOriginUnicode.get(),
+        subjectDomainUnicode.get(),
+        objectDomainUnicode.get()
+    };
+
+    uint32_t length = ArrayLength(formatStrings);
+
+    // XXXbz Our localization system is stupid and can't handle not showing
+    // some strings that get passed in.  Which means that we have to get
+    // our length precisely right: it has to be exactly the number of
+    // strings our format string wants.  This means we'll have to move
+    // strings in the array as needed, sadly...
+    if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin ||
+        !objectPrincipal) {
+        stringName.AppendLiteral("OnlySubject");
+        length -= 3;
+    } else {
+        // default to a length that doesn't include the domains, then
+        // increase it as needed.
+        length -= 2;
+        if (!subjectDomainUnicode.IsEmpty()) {
+            stringName.AppendLiteral("SubjectDomain");
+            length += 1;
+        }
+        if (!objectDomainUnicode.IsEmpty()) {
+            stringName.AppendLiteral("ObjectDomain");
+            length += 1;
+            if (length != ArrayLength(formatStrings)) {
+                // We have an object domain but not a subject domain.
+                // Scoot our string over one slot.  See the XXX comment
+                // above for why we need to do this.
+                formatStrings[length-1] = formatStrings[length];
+            }
+        }
+    }
+    
+    // We need to keep our existing failure rv and not override it
+    // with a likely success code from the following string bundle
+    // call in order to throw the correct security exception later.
+    nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
+                                                    formatStrings,
+                                                    length,
+                                                    getter_Copies(errorMsg));
+    if (NS_FAILED(rv2)) {
+        // Might just be missing the string...  Do our best
+        errorMsg = stringName;
+    }
+
+    SetPendingException(cx, errorMsg.get());
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 /* static */
@@ -1493,78 +1494,77 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
         return NS_OK;
     }
 
-    nsresult rv = CheckXPCPermissions(cx, aObj, nullptr, nullptr);
-    if (NS_FAILED(rv))
+    if (SubjectIsPrivileged())
     {
-        //-- Access denied, report an error
-        NS_ConvertUTF8toUTF16 strName("CreateWrapperDenied");
-        nsAutoCString origin;
-        nsresult rv2;
-        nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv2);
-        if (NS_SUCCEEDED(rv2) && subjectPrincipal) {
-            GetPrincipalDomainOrigin(subjectPrincipal, origin);
-        }
-        NS_ConvertUTF8toUTF16 originUnicode(origin);
-        NS_ConvertUTF8toUTF16 className(objClassInfo.GetName());
-        const char16_t* formatStrings[] = {
-            className.get(),
-            originUnicode.get()
-        };
-        uint32_t length = ArrayLength(formatStrings);
-        if (originUnicode.IsEmpty()) {
-            --length;
-        } else {
-            strName.AppendLiteral("ForOrigin");
-        }
-        nsXPIDLString errorMsg;
-        // We need to keep our existing failure rv and not override it
-        // with a likely success code from the following string bundle
-        // call in order to throw the correct security exception later.
-        rv2 = sStrBundle->FormatStringFromName(strName.get(),
-                                               formatStrings,
-                                               length,
-                                               getter_Copies(errorMsg));
-        NS_ENSURE_SUCCESS(rv2, rv2);
-
-        SetPendingException(cx, errorMsg.get());
+        return NS_OK;
     }
 
-    return rv;
+    //-- Access denied, report an error
+    NS_ConvertUTF8toUTF16 strName("CreateWrapperDenied");
+    nsAutoCString origin;
+    nsresult rv2;
+    nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv2);
+    if (NS_SUCCEEDED(rv2) && subjectPrincipal) {
+        GetPrincipalDomainOrigin(subjectPrincipal, origin);
+    }
+    NS_ConvertUTF8toUTF16 originUnicode(origin);
+    NS_ConvertUTF8toUTF16 classInfoName(objClassInfo.GetName());
+    const char16_t* formatStrings[] = {
+        classInfoName.get(),
+        originUnicode.get()
+    };
+    uint32_t length = ArrayLength(formatStrings);
+    if (originUnicode.IsEmpty()) {
+        --length;
+    } else {
+        strName.AppendLiteral("ForOrigin");
+    }
+    nsXPIDLString errorMsg;
+    // We need to keep our existing failure rv and not override it
+    // with a likely success code from the following string bundle
+    // call in order to throw the correct security exception later.
+    rv2 = sStrBundle->FormatStringFromName(strName.get(),
+                                           formatStrings,
+                                           length,
+                                           getter_Copies(errorMsg));
+    NS_ENSURE_SUCCESS(rv2, rv2);
+
+    SetPendingException(cx, errorMsg.get());
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
                                            const nsCID &aCID)
 {
-    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv))
-    {
-        //-- Access denied, report an error
-        nsAutoCString errorMsg("Permission denied to create instance of class. CID=");
-        char cidStr[NSID_LENGTH];
-        aCID.ToProvidedString(cidStr);
-        errorMsg.Append(cidStr);
-        SetPendingException(cx, errorMsg.get());
+    if (SubjectIsPrivileged()) {
+        return NS_OK;
     }
-    return rv;
+
+    //-- Access denied, report an error
+    nsAutoCString errorMsg("Permission denied to create instance of class. CID=");
+    char cidStr[NSID_LENGTH];
+    aCID.ToProvidedString(cidStr);
+    errorMsg.Append(cidStr);
+    SetPendingException(cx, errorMsg.get());
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanGetService(JSContext *cx,
                                        const nsCID &aCID)
 {
-    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv))
-    {
-        //-- Access denied, report an error
-        nsAutoCString errorMsg("Permission denied to get service. CID=");
-        char cidStr[NSID_LENGTH];
-        aCID.ToProvidedString(cidStr);
-        errorMsg.Append(cidStr);
-        SetPendingException(cx, errorMsg.get());
+    if (SubjectIsPrivileged()) {
+        return NS_OK;
     }
 
-    return rv;
+    //-- Access denied, report an error
+    nsAutoCString errorMsg("Permission denied to get service. CID=");
+    char cidStr[NSID_LENGTH];
+    aCID.ToProvidedString(cidStr);
+    errorMsg.Append(cidStr);
+    SetPendingException(cx, errorMsg.get());
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 
@@ -1580,21 +1580,6 @@ nsScriptSecurityManager::CanAccess(uint32_t aAction,
     return CheckPropertyAccessImpl(aAction, aCallContext, cx,
                                    aJSObject, aObj, aClassInfo,
                                    nullptr, aPropertyName);
-}
-
-nsresult
-nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
-                                             nsISupports* aObj, JSObject* aJSObject,
-                                             nsIPrincipal* aSubjectPrincipal)
-{
-    MOZ_ASSERT(cx);
-    JS::RootedObject jsObject(cx, aJSObject);
-    // Check if the subject is privileged.
-    if (SubjectIsPrivileged())
-        return NS_OK;
-
-    //-- Access tests failed
-    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 /////////////////////////////////////////////
