@@ -1410,6 +1410,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
   JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
   if (global) {
     JSAutoCompartment ac(cx, global);
+    bool ok = true;
     if (funobj) {
       JS::Rooted<JSObject*> method(cx, JS_CloneFunctionObject(cx, funobj, global));
       if (!method) {
@@ -1417,10 +1418,14 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
       }
       JS::Rooted<JS::Value> rval(cx);
       JS::Rooted<JS::Value> methodVal(cx, JS::ObjectValue(*method));
-      (void) JS_CallFunctionValue(cx, global, methodVal,
-                                  0, nullptr, rval.address());
+      ok = JS_CallFunctionValue(cx, global, methodVal,
+                                0, nullptr, rval.address());
     } else if (script) {
-      (void) JS_ExecuteScript(cx, global, script, nullptr);
+      ok = JS_ExecuteScript(cx, global, script, nullptr);
+    }
+
+    if (!ok) {
+      nsJSUtils::ReportPendingException(cx);
     }
   }
 }
