@@ -69,17 +69,17 @@ function parseKeyValuePairsFromFile(file) {
 SpecialPowersObserverAPI.prototype = {
 
   _observe: function(aSubject, aTopic, aData) {
+    function addDumpIDToMessage(propertyName) {
+      var id = aSubject.getPropertyAsAString(propertyName);
+      if (id) {
+        message.dumpIDs.push({id: id, extension: "dmp"});
+        message.dumpIDs.push({id: id, extension: "extra"});
+      }
+    }
+
     switch(aTopic) {
       case "plugin-crashed":
       case "ipc:content-shutdown":
-        function addDumpIDToMessage(propertyName) {
-          var id = aSubject.getPropertyAsAString(propertyName);
-          if (id) {
-            message.dumpIDs.push({id: id, extension: "dmp"});
-            message.dumpIDs.push({id: id, extension: "extra"});
-          }
-        }
-
         var message = { type: "crash-observed", dumpIDs: [] };
         aSubject = aSubject.QueryInterface(Ci.nsIPropertyBag2);
         if (aTopic == "plugin-crashed") {
