@@ -353,7 +353,6 @@ class RemoteReftest(RefTest):
 
         # Point the url-classifier to the local testing server for fast failures
         prefs["browser.safebrowsing.gethashURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/gethash"
-        prefs["browser.safebrowsing.keyURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/newkey"
         prefs["browser.safebrowsing.updateURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/update"
         # Point update checks to the local testing server for fast failures
         prefs["extensions.update.url"] = "http://127.0.0.1:8888/extensions-dummy/updateURL"
