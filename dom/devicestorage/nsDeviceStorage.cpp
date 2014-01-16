@@ -894,16 +894,6 @@ DeviceStorageFile::AppendRelativePath(const nsAString& aPath) {
   if (!mFile) {
     return;
   }
-  if (!IsSafePath(aPath)) {
-    // All of the APIs (in the child) do checks to verify that the path is
-    // valid and return PERMISSION_DENIED if a non-safe path is entered.
-    // This check is done in the parent and prevents a compromised
-    // child from bypassing the check. It shouldn't be possible for this
-    // code path to be taken with a non-compromised child.
-    NS_WARNING("Unsafe path detected - ignoring");
-    NS_WARNING(NS_LossyConvertUTF16toASCII(aPath).get());
-    return;
-  }
 #if defined(XP_WIN)
   // replace forward slashes with backslashes,
   // since nsLocalFileWin chokes on them
