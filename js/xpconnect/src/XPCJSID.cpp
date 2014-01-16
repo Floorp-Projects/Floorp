@@ -173,11 +173,9 @@ nsJSID::NewID(const char* str)
     }
 
     nsJSID* idObj = new nsJSID();
-    if (idObj) {
-        NS_ADDREF(idObj);
-        if (NS_FAILED(idObj->Initialize(str)))
-            NS_RELEASE(idObj);
-    }
+    NS_ADDREF(idObj);
+    if (NS_FAILED(idObj->Initialize(str)))
+        NS_RELEASE(idObj);
     return idObj;
 }
 
@@ -186,12 +184,10 @@ nsJSID*
 nsJSID::NewID(const nsID& id)
 {
     nsJSID* idObj = new nsJSID();
-    if (idObj) {
-        NS_ADDREF(idObj);
-        idObj->mID = id;
-        idObj->mName = nullptr;
-        idObj->mNumber = nullptr;
-    }
+    NS_ADDREF(idObj);
+    idObj->mID = id;
+    idObj->mName = nullptr;
+    idObj->mNumber = nullptr;
     return idObj;
 }
 
@@ -625,27 +621,25 @@ nsJSCID::NewID(const char* str)
     }
 
     nsJSCID* idObj = new nsJSCID();
-    if (idObj) {
-        bool success = false;
-        NS_ADDREF(idObj);
+    bool success = false;
+    NS_ADDREF(idObj);
 
-        if (str[0] == '{') {
-            if (NS_SUCCEEDED(idObj->Initialize(str)))
-                success = true;
-        } else {
-            nsCOMPtr<nsIComponentRegistrar> registrar;
-            NS_GetComponentRegistrar(getter_AddRefs(registrar));
-            if (registrar) {
-                nsCID *cid;
-                if (NS_SUCCEEDED(registrar->ContractIDToCID(str, &cid))) {
-                    success = idObj->mDetails.InitWithName(*cid, str);
-                    nsMemory::Free(cid);
-                }
+    if (str[0] == '{') {
+        if (NS_SUCCEEDED(idObj->Initialize(str)))
+            success = true;
+    } else {
+        nsCOMPtr<nsIComponentRegistrar> registrar;
+        NS_GetComponentRegistrar(getter_AddRefs(registrar));
+        if (registrar) {
+            nsCID *cid;
+            if (NS_SUCCEEDED(registrar->ContractIDToCID(str, &cid))) {
+                success = idObj->mDetails.InitWithName(*cid, str);
+                nsMemory::Free(cid);
             }
         }
-        if (!success)
-            NS_RELEASE(idObj);
     }
+    if (!success)
+        NS_RELEASE(idObj);
     return idObj;
 }
 
