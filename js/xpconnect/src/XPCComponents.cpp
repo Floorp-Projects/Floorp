@@ -304,8 +304,7 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
         if (!info)
             return NS_OK;
 
-        nsCOMPtr<nsIJSIID> nsid =
-            dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
+        nsCOMPtr<nsIJSIID> nsid = nsJSIID::NewID(info);
 
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
@@ -558,8 +557,7 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
         if (!info)
             return NS_OK;
 
-        nsCOMPtr<nsIJSIID> nsid =
-            dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
+        nsCOMPtr<nsIJSIID> nsid = nsJSIID::NewID(info);
 
         if (!nsid)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -2423,8 +2421,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         xpc->GetInfoForIID(&NS_GET_IID(nsISupports), getter_AddRefs(info));
 
         if (info) {
-            cInterfaceID =
-                dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
+            cInterfaceID = nsJSIID::NewID(info);
         }
         if (!cInterfaceID)
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
