@@ -195,7 +195,7 @@ public:
                              ErrorResult& aRv);
   nsIDOMMozMobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
-  nsIDOMMozConnection* GetMozConnection();
+  network::Connection* GetMozConnection();
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   void MozSetMessageHandler(const nsAString& aType,
                             systemMessageCallback* aCallback,
