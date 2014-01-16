@@ -3454,42 +3454,41 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *
 
 
 nsXPCComponentsBase::nsXPCComponentsBase(XPCWrappedNativeScope* aScope)
-    :   mScope(aScope),
-        mInterfaces(nullptr),
-        mInterfacesByID(nullptr),
-        mResults(nullptr)
+    :   mScope(aScope)
 {
     MOZ_ASSERT(aScope, "aScope must not be null");
 }
 
 nsXPCComponents::nsXPCComponents(XPCWrappedNativeScope* aScope)
-    :   nsXPCComponentsBase(aScope),
-        mClasses(nullptr),
-        mClassesByID(nullptr),
-        mID(nullptr),
-        mException(nullptr),
-        mConstructor(nullptr),
-        mUtils(nullptr)
+    :   nsXPCComponentsBase(aScope)
+{
+}
+
+nsXPCComponentsBase::~nsXPCComponentsBase()
+{
+}
+
+nsXPCComponents::~nsXPCComponents()
 {
 }
 
 void
 nsXPCComponentsBase::ClearMembers()
 {
-    NS_IF_RELEASE(mInterfaces);
-    NS_IF_RELEASE(mInterfacesByID);
-    NS_IF_RELEASE(mResults);
+    mInterfaces = nullptr;
+    mInterfacesByID = nullptr;
+    mResults = nullptr;
 }
 
 void
 nsXPCComponents::ClearMembers()
 {
-    NS_IF_RELEASE(mClasses);
-    NS_IF_RELEASE(mClassesByID);
-    NS_IF_RELEASE(mID);
-    NS_IF_RELEASE(mException);
-    NS_IF_RELEASE(mConstructor);
-    NS_IF_RELEASE(mUtils);
+    mClasses = nullptr;
+    mClassesByID = nullptr;
+    mID = nullptr;
+    mException = nullptr;
+    mConstructor = nullptr;
+    mUtils = nullptr;
 
     nsXPCComponentsBase::ClearMembers();
 }
@@ -3499,9 +3498,9 @@ nsXPCComponents::ClearMembers()
 NS_IMETHODIMP _class::Get##_n(nsIXPCComponents_##_n * *a##_n) {               \
     NS_ENSURE_ARG_POINTER(a##_n);                                             \
     if (!m##_n)                                                               \
-        NS_ADDREF(m##_n = new nsXPCComponents_##_n());                        \
-    NS_ADDREF(m##_n);                                                         \
-    *a##_n = m##_n;                                                           \
+        m##_n = new nsXPCComponents_##_n();                                   \
+    nsRefPtr<nsXPCComponents_##_n> ret = m##_n;                               \
+    ret.forget(a##_n);                                                        \
     return NS_OK;                                                             \
 }
 
