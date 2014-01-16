@@ -5,6 +5,7 @@
 "use strict";
 
 const kTestToolbarId = "test-empty-drag";
+Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
 
 // Attempting to drag an item to an empty container should work.
 add_task(function() {
@@ -22,5 +23,6 @@ add_task(function() {
 
 add_task(function asyncCleanup() {
   yield endCustomizing();
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 });
