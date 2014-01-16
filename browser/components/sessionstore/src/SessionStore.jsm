@@ -2929,9 +2929,7 @@ let SessionStoreInternal = {
     }
 
     let frameList = this.getFramesToRestore(aBrowser);
-    if (aBrowser.__SS_restore_pageStyle) {
-      PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
-    }
+    PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
     TextAndScrollData.restore(frameList);
 
     let tab = aBrowser.__SS_restore_tab;
