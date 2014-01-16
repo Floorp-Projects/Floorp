@@ -671,13 +671,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     // 16-bit fields.
 
-    uint16_t        PADDING16;
     uint16_t        version;    /* JS version under which script was compiled */
 
     uint16_t        funLength_; /* ES6 function length */
-
-    uint16_t        nfixed_;    /* number of slots besides stack operands in
-                                   slot array */
 
     uint16_t        nTypeSets_; /* number of type sets used in this script for
                                    dynamic type monitoring */
@@ -876,7 +872,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     size_t nfixed() const {
         js::AutoThreadSafeAccess ts(this);
-        return nfixed_;
+        return function_ ? bindings.numVars() : 0;
     }
 
     size_t nslots() const {
