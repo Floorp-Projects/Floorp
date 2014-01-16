@@ -149,6 +149,10 @@ ParseContext<FullParseHandler>::define(TokenStream &ts,
             return false;
         if (!args_.append(dn))
             return false;
+        if (args_.length() >= ARGNO_LIMIT) {
+            ts.reportError(JSMSG_TOO_MANY_FUN_ARGS);
+            return false;
+        }
         if (name == ts.names().empty)
             break;
         if (!decls_.addUnique(name, dn))
@@ -164,6 +168,10 @@ ParseContext<FullParseHandler>::define(TokenStream &ts,
                 return false;
             if (!vars_.append(dn))
                 return false;
+            if (vars_.length() >= SLOTNO_LIMIT) {
+                ts.reportError(JSMSG_TOO_MANY_LOCALS);
+                return false;
+            }
         }
         if (!decls_.addUnique(name, dn))
             return false;
@@ -195,8 +203,14 @@ ParseContext<SyntaxParseHandler>::define(TokenStream &ts, HandlePropertyName nam
         lexdeps->remove(name);
 
     // Keep track of the number of arguments in args_, for fun->nargs.
-    if (kind == Definition::ARG && !args_.append((Definition *) nullptr))
-        return false;
+    if (kind == Definition::ARG) {
+        if (!args_.append((Definition *) nullptr))
+            return false;
+        if (args_.length() >= ARGNO_LIMIT) {
+            ts.reportError(JSMSG_TOO_MANY_FUN_ARGS);
+            return false;
+        }
+    }
 
     return decls_.addUnique(name, kind);
 }
@@ -291,6 +305,8 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, LifoA
                                                      InternalHandle<Bindings*> bindings) const
 {
     JS_ASSERT(sc->isFunctionBox());
+    JS_ASSERT(args_.length() < ARGNO_LIMIT);
+    JS_ASSERT(vars_.length() < SLOTNO_LIMIT);
 
     unsigned count = args_.length() + vars_.length();
     Binding *packedBindings = alloc.newArrayUninitialized<Binding>(count);
