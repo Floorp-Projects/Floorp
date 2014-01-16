@@ -1517,8 +1517,8 @@ struct JSJitInfo {
         JSParallelNative parallelNative;
     };
 
-    uint32_t protoID;
-    uint32_t depth;
+    uint16_t protoID;
+    uint16_t depth;
     // type not being ParallelNative means this is a DOM method.  If you
     // change that, come up with a different way of implementing
     // isDOMJitInfo().
