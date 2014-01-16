@@ -30,10 +30,10 @@ function consoleOpened(HUD) {
 
   function performTest(node) {
     let scrollNode = HUD.outputNode.parentNode;
-    isnot(scrollNode.scrollTop, 0, "scroll location is not at the top");
-
     let rectNode = node.getBoundingClientRect();
     let rectOutput = scrollNode.getBoundingClientRect();
+
+    isnot(scrollNode.scrollTop, 0, "scroll location is not at the top");
 
     // Visible scroll viewport.
     let height = scrollNode.scrollHeight - scrollNode.scrollTop;
