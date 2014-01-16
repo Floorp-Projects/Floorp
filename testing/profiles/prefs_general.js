@@ -70,7 +70,6 @@ user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 user_pref("urlclassifier.updateinterval", 172800);
 // Point the url-classifier to the local testing server for fast failures
 user_pref("browser.safebrowsing.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.keyURL", "http://%(server)s/safebrowsing-dummy/newkey");
 user_pref("browser.safebrowsing.updateURL", "http://%(server)s/safebrowsing-dummy/update");
 // Point update checks to the local testing server for fast failures
 user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
