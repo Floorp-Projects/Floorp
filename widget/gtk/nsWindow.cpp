@@ -1617,6 +1617,14 @@ nsWindow::Invalidate(const nsIntRect &aRect)
     return NS_OK;
 }
 
+void
+nsWindow::Update()
+{
+    if (!ShouldUseOffMainThreadCompositing() && mGdkWindow) {
+        gdk_window_process_updates(mGdkWindow, true);
+    }
+}
+
 void*
 nsWindow::GetNativeData(uint32_t aDataType)
 {
