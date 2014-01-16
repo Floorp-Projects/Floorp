@@ -14,6 +14,7 @@
 #include "nsIDOMMediaStream.h"
 #include "mozilla/dom/MediaSource.h"
 #include "nsIMemoryReporter.h"
+#include "mozilla/Preferences.h"
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -22,6 +23,7 @@ struct DataInfo
   // mObject is expected to be an nsIDOMBlob, nsIDOMMediaStream, or MediaSource
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCString mStack;
 };
 
 static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
@@ -47,6 +49,190 @@ class HostObjectURLsReporter MOZ_FINAL : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS1(HostObjectURLsReporter, nsIMemoryReporter)
 
+class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
+{
+ public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aCallback,
+                            nsISupports* aData)
+  {
+    EnumArg env;
+    env.mCallback = aCallback;
+    env.mData = aData;
+
+    if (gDataTable) {
+      gDataTable->EnumerateRead(CountCallback, &env);
+      gDataTable->EnumerateRead(ReportCallback, &env);
+    }
+    return NS_OK;
+  }
+
+  // Initialize info->mStack to record JS stack info, if enabled.
+  // The string generated here is used in ReportCallback, below.
+  static void GetJSStackForBlob(DataInfo* aInfo)
+  {
+    nsCString& stack = aInfo->mStack;
+    MOZ_ASSERT(stack.IsEmpty());
+    const uint32_t maxFrames = Preferences::GetUint("memory.blob_report.stack_frames");
+
+    if (maxFrames == 0) {
+      return;
+    }
+
+    nsresult rv;
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
+    nsCOMPtr<nsIStackFrame> frame;
+    rv = xpc->GetCurrentJSStack(getter_AddRefs(frame));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    nsAutoCString origin;
+    nsCOMPtr<nsIURI> principalURI;
+    if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI)))
+        && principalURI) {
+      principalURI->GetPrePath(origin);
+    }
+
+    for (uint32_t i = 0; i < maxFrames && frame; ++i) {
+      nsAutoCString fileNameEscaped;
+      char* fileName = nullptr;
+      int32_t lineNumber = 0;
+
+      frame->GetFilename(&fileName);
+      frame->GetLineNumber(&lineNumber);
+
+      if (fileName != nullptr && fileName[0] != '\0') {
+        stack += "js(";
+        fileNameEscaped = fileName;
+        if (!origin.IsEmpty()) {
+          // Make the file name root-relative for conciseness if possible.
+          const char* originData;
+          uint32_t originLen;
+
+          originLen = origin.GetData(&originData);
+          // If fileName starts with origin + "/", cut up to that "/".
+          if (strlen(fileName) >= originLen + 1 &&
+              memcmp(fileName, originData, originLen) == 0 &&
+              fileName[originLen] == '/') {
+            fileNameEscaped.Cut(0, originLen);
+          }
+        }
+        fileNameEscaped.ReplaceChar('/', '\\');
+        stack += fileNameEscaped;
+        if (lineNumber > 0) {
+          stack += ", line=";
+          stack.AppendInt(lineNumber);
+        }
+        stack += ")/";
+      }
+
+      rv = frame->GetCaller(getter_AddRefs(frame));
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+  }
+
+ private:
+  struct EnumArg {
+    nsIHandleReportCallback* mCallback;
+    nsISupports* mData;
+    nsDataHashtable<nsPtrHashKey<nsIDOMBlob>, uint32_t> mRefCounts;
+  };
+
+  // Determine number of URLs per blob, to handle the case where it's > 1.
+  static PLDHashOperator CountCallback(nsCStringHashKey::KeyType aKey,
+                                       DataInfo* aInfo,
+                                       void* aUserArg)
+  {
+    EnumArg* envp = static_cast<EnumArg*>(aUserArg);
+    nsCOMPtr<nsIDOMBlob> blob;
+
+    blob = do_QueryInterface(aInfo->mObject);
+    if (blob) {
+      envp->mRefCounts.Put(blob, envp->mRefCounts.Get(blob) + 1);
+    }
+    return PL_DHASH_NEXT;
+  }
+
+  static PLDHashOperator ReportCallback(nsCStringHashKey::KeyType aKey,
+                                        DataInfo* aInfo,
+                                        void* aUserArg)
+  {
+    EnumArg* envp = static_cast<EnumArg*>(aUserArg);
+    nsCOMPtr<nsIDOMBlob> blob;
+
+    blob = do_QueryInterface(aInfo->mObject);
+    if (blob) {
+      NS_NAMED_LITERAL_CSTRING
+        (desc, "A blob URL allocated with URL.createObjectURL; the referenced "
+         "blob cannot be freed until all URLs for it have been explicitly "
+         "invalidated with URL.revokeObjectURL.");
+      nsAutoCString path, url, owner, specialDesc;
+      nsCOMPtr<nsIURI> principalURI;
+      uint64_t size;
+      uint32_t refCount = 1;
+      DebugOnly<bool> blobWasCounted;
+
+      blobWasCounted = envp->mRefCounts.Get(blob, &refCount);
+      MOZ_ASSERT(blobWasCounted);
+      MOZ_ASSERT(refCount > 0);
+
+      if (NS_FAILED(blob->GetSize(&size))) {
+        size = 0;
+      }
+
+      path = "blob-urls/";
+      if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
+          principalURI != nullptr &&
+          NS_SUCCEEDED(principalURI->GetSpec(owner)) &&
+          !owner.IsEmpty()) {
+        owner.ReplaceChar('/', '\\');
+        path += "owner(";
+        path += owner;
+        path += ")";
+      } else {
+        path += "owner unknown";
+      }
+      path += "/";
+      path += aInfo->mStack;
+      url = aKey;
+      url.ReplaceChar('/', '\\');
+      path += url;
+      if (refCount > 1) {
+        nsAutoCString addrStr;
+
+        addrStr = "0x";
+        addrStr.AppendInt((uint64_t)(nsIDOMBlob*)blob, 16);
+
+        path += " ";
+        path.AppendInt(refCount);
+        path += "@";
+        path += addrStr;
+
+        specialDesc = desc;
+        specialDesc += "\n\nNOTE: This blob (address ";
+        specialDesc += addrStr;
+        specialDesc += ") has ";
+        specialDesc.AppendInt(refCount);
+        specialDesc += " URLs; its size is divided ";
+        specialDesc += refCount > 2 ? "among" : "between";
+        specialDesc += " them in this report.";
+      }
+      envp->mCallback->Callback(EmptyCString(),
+                                path,
+                                KIND_OTHER,
+                                UNITS_BYTES,
+                                size / refCount,
+                                (specialDesc.IsEmpty()
+                                 ? static_cast<const nsACString&>(desc)
+                                 : static_cast<const nsACString&>(specialDesc)),
+                                envp->mData);
+    }
+    return PL_DHASH_NEXT;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(BlobURLsReporter, nsIMemoryReporter)
+
 }
 
 nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
@@ -56,8 +242,10 @@ nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
   if (!initialized) {
     initialized = true;
     RegisterStrongMemoryReporter(new mozilla::HostObjectURLsReporter());
+    RegisterStrongMemoryReporter(new mozilla::BlobURLsReporter());
   }
 }
+
 
 nsresult
 nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
@@ -76,6 +264,7 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
 
   info->mObject = aObject;
   info->mPrincipal = aPrincipal;
+  mozilla::BlobURLsReporter::GetJSStackForBlob(info);
 
   gDataTable->Put(aUri, info);
   return NS_OK;
