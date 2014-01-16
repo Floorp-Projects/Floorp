@@ -275,7 +275,7 @@ class nsXPConnect : public nsIXPConnect,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
@@ -2364,7 +2364,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_IMETHOD DebugDump(int16_t depth);
 public:
 
@@ -2562,7 +2562,7 @@ class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
 
     // non-interface implementation
