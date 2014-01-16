@@ -885,7 +885,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       nsIPrincipal* aPrincipal,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {
-  AutoSafeJSContext ctx;
+  AutoSafeJSContext cx;
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
     mListeners.Get(aMessage);
   if (listeners) {
@@ -916,98 +916,98 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       if (!wrappedJS) {
         continue;
       }
-      JS::Rooted<JSObject*> object(ctx, wrappedJS->GetJSObject());
+      JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
       if (!object) {
         continue;
       }
-      JSAutoCompartment ac(ctx, object);
+      JSAutoCompartment ac(cx, object);
 
       // The parameter for the listener function.
-      JS::Rooted<JSObject*> param(ctx,
-        JS_NewObject(ctx, nullptr, nullptr, nullptr));
+      JS::Rooted<JSObject*> param(cx,
+        JS_NewObject(cx, nullptr, nullptr, nullptr));
       NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
-      JS::Rooted<JS::Value> targetv(ctx);
-      JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
-      nsresult rv = nsContentUtils::WrapNative(ctx, global, aTarget, &targetv, true);
+      JS::Rooted<JS::Value> targetv(cx);
+      JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, object));
+      nsresult rv = nsContentUtils::WrapNative(cx, global, aTarget, &targetv, true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      JS::Rooted<JSObject*> cpows(ctx);
+      JS::Rooted<JSObject*> cpows(cx);
       if (aCpows) {
-        if (!aCpows->ToObject(ctx, &cpows)) {
+        if (!aCpows->ToObject(cx, &cpows)) {
           return NS_ERROR_UNEXPECTED;
         }
       }
 
       if (!cpows) {
-        cpows = JS_NewObject(ctx, nullptr, nullptr, nullptr);
+        cpows = JS_NewObject(cx, nullptr, nullptr, nullptr);
         if (!cpows) {
           return NS_ERROR_UNEXPECTED;
         }
       }
 
-      JS::Rooted<JS::Value> cpowsv(ctx, JS::ObjectValue(*cpows));
+      JS::Rooted<JS::Value> cpowsv(cx, JS::ObjectValue(*cpows));
 
-      JS::Rooted<JS::Value> json(ctx, JS::NullValue());
+      JS::Rooted<JS::Value> json(cx, JS::NullValue());
       if (aCloneData && aCloneData->mDataLength &&
-          !ReadStructuredClone(ctx, *aCloneData, &json)) {
-        JS_ClearPendingException(ctx);
+          !ReadStructuredClone(cx, *aCloneData, &json)) {
+        JS_ClearPendingException(cx);
         return NS_OK;
       }
-      JS::Rooted<JSString*> jsMessage(ctx,
-        JS_NewUCStringCopyN(ctx,
+      JS::Rooted<JSString*> jsMessage(cx,
+        JS_NewUCStringCopyN(cx,
                             static_cast<const jschar*>(aMessage.BeginReading()),
                             aMessage.Length()));
       NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
-      JS_DefineProperty(ctx, param, "target", targetv, nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(ctx, param, "name",
+      JS_DefineProperty(cx, param, "target", targetv, nullptr, nullptr, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "name",
                         STRING_TO_JSVAL(jsMessage), nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(ctx, param, "sync",
+      JS_DefineProperty(cx, param, "sync",
                         BOOLEAN_TO_JSVAL(aIsSync), nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(ctx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
-      JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
-      JS_DefineProperty(ctx, param, "objects", cpowsv, nullptr, nullptr, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
+      JS_DefineProperty(cx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, param, "objects", cpowsv, nullptr, nullptr, JSPROP_ENUMERATE);
 
       // message.principal == null
       if (!aPrincipal) {
-        JS::Rooted<JS::Value> nullValue(ctx);
-        JS_DefineProperty(ctx, param, "principal", nullValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> nullValue(cx);
+        JS_DefineProperty(cx, param, "principal", nullValue, nullptr, nullptr, JSPROP_ENUMERATE);
       }
 
       // message.principal = { appId: <id>, origin: <origin>, isInBrowserElement: <something> }
       else {
-        JS::Rooted<JSObject*> principalObj(ctx,
-          JS_NewObject(ctx, nullptr, nullptr, nullptr));
+        JS::Rooted<JSObject*> principalObj(cx,
+          JS_NewObject(cx, nullptr, nullptr, nullptr));
 
         uint32_t appId;
         nsresult rv = aPrincipal->GetAppId(&appId);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JS::Value> appIdValue(ctx, INT_TO_JSVAL(appId));
-        JS_DefineProperty(ctx, principalObj, "appId", appIdValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> appIdValue(cx, INT_TO_JSVAL(appId));
+        JS_DefineProperty(cx, principalObj, "appId", appIdValue, nullptr, nullptr, JSPROP_ENUMERATE);
 
         nsCString origin;
         rv = aPrincipal->GetOrigin(getter_Copies(origin));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JSString*> originValue(ctx, JS_InternString(ctx, origin.get()));
-        JS_DefineProperty(ctx, principalObj, "origin", STRING_TO_JSVAL(originValue), nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JSString*> originValue(cx, JS_InternString(cx, origin.get()));
+        JS_DefineProperty(cx, principalObj, "origin", STRING_TO_JSVAL(originValue), nullptr, nullptr, JSPROP_ENUMERATE);
 
         bool browser;
         rv = aPrincipal->GetIsInBrowserElement(&browser);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JS::Value> browserValue(ctx, BOOLEAN_TO_JSVAL(browser));
-        JS_DefineProperty(ctx, principalObj, "isInBrowserElement", browserValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> browserValue(cx, BOOLEAN_TO_JSVAL(browser));
+        JS_DefineProperty(cx, principalObj, "isInBrowserElement", browserValue, nullptr, nullptr, JSPROP_ENUMERATE);
 
-        JS::Rooted<JS::Value> principalValue(ctx, JS::ObjectValue(*principalObj));
-        JS_DefineProperty(ctx, param, "principal", principalValue, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> principalValue(cx, JS::ObjectValue(*principalObj));
+        JS_DefineProperty(cx, param, "principal", principalValue, nullptr, nullptr, JSPROP_ENUMERATE);
       }
 
-      JS::Rooted<JS::Value> thisValue(ctx, JS::UndefinedValue());
+      JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
 
-      JS::Rooted<JS::Value> funval(ctx);
-      if (JS_ObjectIsCallable(ctx, object)) {
+      JS::Rooted<JS::Value> funval(cx);
+      if (JS_ObjectIsCallable(cx, object)) {
         // If the listener is a JS function:
         funval.setObject(*object);
 
@@ -1019,36 +1019,36 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         } else {
           defaultThisValue = aTarget;
         }
-        JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
-        nsresult rv = nsContentUtils::WrapNative(ctx, global, defaultThisValue, &thisValue, true);
+        JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, object));
+        nsresult rv = nsContentUtils::WrapNative(cx, global, defaultThisValue, &thisValue, true);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // If the listener is a JS object which has receiveMessage function:
-        if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
+        if (!JS_GetProperty(cx, object, "receiveMessage", &funval) ||
             !funval.isObject())
           return NS_ERROR_UNEXPECTED;
 
         // Check if the object is even callable.
-        NS_ENSURE_STATE(JS_ObjectIsCallable(ctx, &funval.toObject()));
+        NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
         thisValue.setObject(*object);
       }
 
-      JS::Rooted<JS::Value> rval(ctx, JSVAL_VOID);
-      JS::Rooted<JS::Value> argv(ctx, JS::ObjectValue(*param));
+      JS::Rooted<JS::Value> rval(cx, JSVAL_VOID);
+      JS::Rooted<JS::Value> argv(cx, JS::ObjectValue(*param));
 
       {
-        JS::Rooted<JSObject*> thisObject(ctx, thisValue.toObjectOrNull());
+        JS::Rooted<JSObject*> thisObject(cx, thisValue.toObjectOrNull());
 
-        JSAutoCompartment tac(ctx, thisObject);
-        if (!JS_WrapValue(ctx, &argv)) {
+        JSAutoCompartment tac(cx, thisObject);
+        if (!JS_WrapValue(cx, &argv)) {
           return NS_ERROR_UNEXPECTED;
         }
 
-        JS_CallFunctionValue(ctx, thisObject,
+        JS_CallFunctionValue(cx, thisObject,
                              funval, 1, argv.address(), rval.address());
         if (aJSONRetVal) {
           nsString json;
-          if (JS_Stringify(ctx, &rval, JS::NullPtr(), JS::NullHandleValue,
+          if (JS_Stringify(cx, &rval, JS::NullPtr(), JS::NullHandleValue,
                            JSONCreator, &json)) {
             aJSONRetVal->AppendElement(json);
           }
