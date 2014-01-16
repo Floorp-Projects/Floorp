@@ -73,12 +73,12 @@ function countTabs() {
 
 let TabsProgressListener = {
   init: function () {
-    gBrowser.addTabsProgressListener(this);
+    Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
   },
 
   uninit: function () {
+    Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     this.unsetCallback();
-    gBrowser.removeTabsProgressListener(this);
  },
 
   setCallback: function (callback) {
@@ -89,11 +89,13 @@ let TabsProgressListener = {
     delete this.callback;
   },
 
-  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (this.callback && aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+  observe: function (browser, topic, data) {
+    TabsProgressListener.onRestored(browser);
+  },
+
+  onRestored: function (browser) {
+    if (this.callback && browser.__SS_restoreState == TAB_STATE_RESTORING) {
       this.callback.apply(null, countTabs());
+    }
   }
 }
