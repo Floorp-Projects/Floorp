@@ -361,7 +361,7 @@ NS_IMETHODIMP nsJSIID::ToString(char **_retval)
 }
 
 // static
-nsJSIID*
+already_AddRefed<nsJSIID>
 nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 {
     if (!aInfo) {
@@ -373,9 +373,8 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
     if (NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nullptr;
 
-    nsJSIID* idObj = new nsJSIID(aInfo);
-    NS_IF_ADDREF(idObj);
-    return idObj;
+    nsRefPtr<nsJSIID> idObj = new nsJSIID(aInfo);
+    return idObj.forget();
 }
 
 
