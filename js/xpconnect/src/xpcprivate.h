@@ -2790,8 +2790,8 @@ public:
     const nsID& ID() const {return mID;}
     bool IsValid() const {return !mID.Equals(GetInvalidIID());}
 
-    static nsJSID* NewID(const char* str);
-    static nsJSID* NewID(const nsID& id);
+    static already_AddRefed<nsJSID> NewID(const char* str);
+    static already_AddRefed<nsJSID> NewID(const nsID& id);
 
     nsJSID();
     virtual ~nsJSID();
