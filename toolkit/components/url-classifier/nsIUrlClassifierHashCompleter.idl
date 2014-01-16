@@ -7,7 +7,7 @@
 /**
  * This interface is implemented by nsIUrlClassifierHashCompleter clients.
  */
-[scriptable, uuid(bbd6c954-7cb4-4447-bc55-8cefd1ceed89)]
+[scriptable, uuid(da16de40-df26-414d-bde7-c4faf4504868)]
 interface nsIUrlClassifierHashCompleterCallback : nsISupports
 {
   /**
@@ -21,13 +21,10 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
    *        The name of the table that this hash belongs to.
    * @param chunkId
    *        The database chunk that this hash belongs to.
-   * @param trusted
-   *        The completion was verified with a MAC and can be cached.
    */
   void completion(in ACString hash,
                   in ACString table,
-                  in uint32_t chunkId,
-                  in boolean trusted);
+                  in uint32_t chunkId);
 
   /**
    * The completion is complete.  This method is called once per
@@ -62,12 +59,6 @@ interface nsIUrlClassifierHashCompleter : nsISupports
    */
   void complete(in ACString partialHash,
                 in nsIUrlClassifierHashCompleterCallback callback);
-
-  /**
-   * Set the client and wrapped key for verified updates.
-   */
-  void setKeys(in ACString clientKey, in ACString wrappedKey);
-
   /**
    * The URL for the gethash request
    */
