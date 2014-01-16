@@ -164,7 +164,7 @@ nsJSID::GetInvalidIID() const
 }
 
 //static
-nsJSID*
+already_AddRefed<nsJSID>
 nsJSID::NewID(const char* str)
 {
     if (!str) {
@@ -172,23 +172,20 @@ nsJSID::NewID(const char* str)
         return nullptr;
     }
 
-    nsJSID* idObj = new nsJSID();
-    NS_ADDREF(idObj);
-    if (NS_FAILED(idObj->Initialize(str)))
-        NS_RELEASE(idObj);
-    return idObj;
+    nsRefPtr<nsJSID> idObj = new nsJSID();
+    NS_ENSURE_SUCCESS(idObj->Initialize(str), nullptr);
+    return idObj.forget();
 }
 
 //static
-nsJSID*
+already_AddRefed<nsJSID>
 nsJSID::NewID(const nsID& id)
 {
-    nsJSID* idObj = new nsJSID();
-    NS_ADDREF(idObj);
+    nsRefPtr<nsJSID> idObj = new nsJSID();
     idObj->mID = id;
     idObj->mName = nullptr;
     idObj->mNumber = nullptr;
-    return idObj;
+    return idObj.forget();
 }
 
 
@@ -832,8 +829,7 @@ xpc_NewIDObject(JSContext *cx, HandleObject jsobj, const nsID& aID)
 {
     RootedObject obj(cx);
 
-    nsCOMPtr<nsIJSID> iid =
-            dont_AddRef(static_cast<nsIJSID*>(nsJSID::NewID(aID)));
+    nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aID);
     if (iid) {
         nsXPConnect* xpc = nsXPConnect::XPConnect();
         if (xpc) {
