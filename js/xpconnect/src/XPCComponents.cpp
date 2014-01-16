@@ -1941,9 +1941,9 @@ private:
                              JSContext *cx, HandleObject obj,
                              const CallArgs &args, bool *_retval);
 private:
-    nsIJSCID* mClassID;
-    nsIJSIID* mInterfaceID;
-    char*     mInitializer;
+    nsRefPtr<nsIJSCID> mClassID;
+    nsRefPtr<nsIJSIID> mInterfaceID;
+    char*              mInitializer;
 };
 
 /***************************************************************************/
@@ -2041,9 +2041,9 @@ nsXPCConstructor::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 nsXPCConstructor::nsXPCConstructor(nsIJSCID* aClassID,
                                    nsIJSIID* aInterfaceID,
                                    const char* aInitializer)
+    : mClassID(aClassID),
+      mInterfaceID(aInterfaceID)
 {
-    NS_IF_ADDREF(mClassID = aClassID);
-    NS_IF_ADDREF(mInterfaceID = aInterfaceID);
     mInitializer = aInitializer ?
         (char*) nsMemory::Clone(aInitializer, strlen(aInitializer)+1) :
         nullptr;
@@ -2051,8 +2051,6 @@ nsXPCConstructor::nsXPCConstructor(nsIJSCID* aClassID,
 
 nsXPCConstructor::~nsXPCConstructor()
 {
-    NS_IF_RELEASE(mClassID);
-    NS_IF_RELEASE(mInterfaceID);
     if (mInitializer)
         nsMemory::Free(mInitializer);
 }
@@ -2061,7 +2059,8 @@ nsXPCConstructor::~nsXPCConstructor()
 NS_IMETHODIMP
 nsXPCConstructor::GetClassID(nsIJSCID * *aClassID)
 {
-    NS_IF_ADDREF(*aClassID = mClassID);
+    nsRefPtr<nsIJSCID> rval = mClassID;
+    rval.forget(aClassID);
     return NS_OK;
 }
 
@@ -2069,7 +2068,8 @@ nsXPCConstructor::GetClassID(nsIJSCID * *aClassID)
 NS_IMETHODIMP
 nsXPCConstructor::GetInterfaceID(nsIJSIID * *aInterfaceID)
 {
-    NS_IF_ADDREF(*aInterfaceID = mInterfaceID);
+    nsRefPtr<nsIJSIID> rval = mInterfaceID;
+    rval.forget(aInterfaceID);
     return NS_OK;
 }
 
