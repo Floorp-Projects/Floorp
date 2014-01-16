@@ -95,6 +95,8 @@ if CONFIG['ARM_ARCH']:
         # CPU detection for ARM works on Android only.  armv7 always uses CPU
         # detection, so we have to set armv7=0 for non-Android target
         gyp_vars['armv7'] = 0
+    # For libyuv
+    gyp_vars['arm_version'] = CONFIG['ARM_ARCH']
 
 # Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
 if CONFIG['INTEL_ARCHITECTURE']:
