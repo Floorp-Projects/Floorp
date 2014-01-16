@@ -730,6 +730,7 @@ SimpleTest.executeSoon = function(aFunc) {
         return SpecialPowers.executeSoon(aFunc, window);
     }
     setTimeout(aFunc, 0);
+    return null;		// Avoid warning.
 };
 
 SimpleTest.registerCleanupFunction = function(aFunc) {
