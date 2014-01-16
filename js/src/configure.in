@@ -4266,6 +4266,8 @@ AC_SUBST(MOZILLA_VERSION)
 
 AC_SUBST(ac_configure_args)
 
+AC_SUBST(TOOLCHAIN_PREFIX)
+
 dnl Spit out some output
 dnl ========================================================
 
