@@ -1824,6 +1824,14 @@ Navigator::HasNfcPeerSupport(JSContext* /* unused */, JSObject* aGlobal)
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && CheckPermission(win, "nfc-write");
 }
+
+/* static */
+bool
+Navigator::HasNfcManagerSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "nfc-manager");
+}
 #endif // MOZ_NFC
 
 #ifdef MOZ_TIME_MANAGER
