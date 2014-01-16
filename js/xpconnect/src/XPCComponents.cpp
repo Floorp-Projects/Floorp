@@ -2469,12 +2469,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         }
     }
 
-    nsCOMPtr<nsIXPCConstructor> ctor =
-        static_cast<nsIXPCConstructor*>
-                   (new nsXPCConstructor(cClassID, cInterfaceID, cInitializer));
-    if (!ctor)
-        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
-
+    nsCOMPtr<nsIXPCConstructor> ctor = new nsXPCConstructor(cClassID, cInterfaceID, cInitializer);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder2;
     RootedObject newObj(cx);
 
