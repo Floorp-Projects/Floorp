@@ -24,6 +24,7 @@
     },
     "b2g_manifest": "wasabi.xml",
     "b2g_manifest_branch": "master",
+    "b2g_manifest_intree": true,
     "additional_source_tarballs": ["backup-wasabi.tar.gz"],
     "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
