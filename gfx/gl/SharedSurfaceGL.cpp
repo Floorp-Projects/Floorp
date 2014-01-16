@@ -304,13 +304,16 @@ SharedSurface_Basic::Fence()
     MOZ_ASSERT(mData->GetSize() == mGL->OffscreenSize());
 
     mGL->MakeCurrent();
+
+    DataSourceSurface::MappedSurface map;
+    mData->Map(DataSourceSurface::MapType::WRITE, &map);
     nsRefPtr<gfxImageSurface> wrappedData =
-      new gfxImageSurface(mData->GetData(),
+      new gfxImageSurface(map.mData,
                           ThebesIntSize(mData->GetSize()),
-                          mData->Stride(),
+                          map.mStride,
                           SurfaceFormatToImageFormat(mData->GetFormat()));
     ReadScreenIntoImageSurface(mGL, wrappedData);
-    mData->MarkDirty();
+    mData->Unmap();
 }
 
 
