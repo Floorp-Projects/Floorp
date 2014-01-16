@@ -81,19 +81,23 @@
     </style>
 
     <style name="GeckoActionBar.Title" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
-        <item name="android:drawableLeft">?android:attr/actionModeCloseDrawable</item>
+        <item name="android:drawableLeft">@drawable/ab_done</item>
         <item name="android:background">@android:color/transparent</item>
         <item name="android:paddingLeft">15dp</item>
         <item name="android:paddingRight">15dp</item>
     </style>
 
     <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
-        <item name="android:padding">12dp</item>
+        <item name="android:padding">8dip</item>
+        <!-- The default implementation doesn't do any image scaling. Our custom menus mean we can't just use the same image
+             in both menus and the actionbar without doing some scaling though. -->
+        <item name="android:scaleType">centerInside</item>
     </style>
 
     <style name="GeckoActionBar.Button.MenuButton" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
         <item name="android:scaleType">center</item>
         <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/menu_light</item>
     </style>
 
 </resources>
