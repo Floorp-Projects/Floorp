@@ -55,7 +55,7 @@ class nsXPCComponents_utils_Sandbox : public nsIXPCComponents_utils_Sandbox,
 {
 public:
     // Aren't macros nice?
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_UTILS_SANDBOX
     NS_DECL_NSIXPCSCRIPTABLE
 
@@ -693,7 +693,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_utils_Sandbox)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_utils_Sandbox)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_utils_Sandbox)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsXPCComponents_utils_Sandbox)
 NS_IMPL_RELEASE(nsXPCComponents_utils_Sandbox)
