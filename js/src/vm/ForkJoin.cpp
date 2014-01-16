@@ -2146,8 +2146,7 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinSlice *slice, unsigned argc, Value 
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL(intrinsic_SetForkJoinTargetRegionInfo,
-                           intrinsic_SetForkJoinTargetRegionInfo,
-                           intrinsic_SetForkJoinTargetRegionPar);
+const JSJitInfo js::intrinsic_SetForkJoinTargetRegionInfo =
+    JS_JITINFO_NATIVE_PARALLEL(intrinsic_SetForkJoinTargetRegionPar);
 
 #endif // JS_THREADSAFE && JS_ION
