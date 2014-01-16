@@ -5877,6 +5877,9 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
         case NOTIFY_IME_OF_BLUR:
             mIMModule->OnFocusChangeInGecko(false);
             return NS_OK;
+        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+            mIMModule->OnUpdateComposition();
+            return NS_OK;
         default:
             return NS_ERROR_NOT_IMPLEMENTED;
     }
