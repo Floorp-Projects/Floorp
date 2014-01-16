@@ -19,7 +19,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta name="viewport" content="width=device-width; user-scalable=false;" /> 
+    <meta name="viewport" content="width=device-width; user-scalable=false;" />
     <title>&loadError.label;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
     <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
@@ -95,7 +95,7 @@
       function initPage()
       {
         var err = getErrorCode();
-        
+
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
         var errTitle = document.getElementById("et_" + err);
@@ -106,7 +106,7 @@
           errDesc  = document.getElementById("ed_generic");
         }
 
-        var title = document.getElementsByClassName("errorTitleText")[0];
+        var title = document.querySelector(".errorTitleText");
         if (title)
         {
           title.parentNode.replaceChild(errTitle, title);
@@ -139,7 +139,7 @@
 
           // Also, if they specified a CSS class, they must supply their own
           // favicon.  In order to trigger the browser to repaint though, we
-          // need to remove/add the link element. 
+          // need to remove/add the link element.
           var favicon = document.getElementById("favicon");
           var faviconParent = favicon.parentNode;
           faviconParent.removeChild(favicon);
@@ -176,13 +176,13 @@
           secOverride.parentNode.removeChild(secOverride);
         }
       }
-      
+
       function showSecuritySection() {
         // Swap link out, content in
         document.getElementById('securityOverrideContent').style.display = '';
         document.getElementById('securityOverrideLink').style.display = 'none';
       }
-      
+
       /* In the case of SSL error pages about domain mismatch, see if
          we can hyperlink the user to the correct site.  We don't want
          to do this generically since it allows MitM attacks to redirect
@@ -194,29 +194,29 @@
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
           var desc = getDescription();
-          
+
           // sanitize description text - see bug 441169
-          
+
           // First, find the index of the <a> tag we care about, being careful not to
           // use an over-greedy regex
           var re = /<a id="cert_domain_link" title="([^"]+)">/;
           var result = re.exec(desc);
           if(!result)
             return;
-          
+
           // Remove sd's existing children
           sd.textContent = "";
 
           // Everything up to the link should be text content
           sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
-          
+
           // Now create the link itself
           var anchorEl = document.createElement("a");
           anchorEl.setAttribute("id", "cert_domain_link");
           anchorEl.setAttribute("title", result[1]);
           anchorEl.appendChild(document.createTextNode(result[1]));
           sd.appendChild(anchorEl);
-          
+
           // Finally, append text for anything after the closing </a>
           sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
         }
@@ -224,7 +224,7 @@
         var link = document.getElementById('cert_domain_link');
         if (!link)
           return;
-        
+
         var okHost = link.getAttribute("title");
         var thisHost = document.location.hostname;
         var proto = document.location.protocol;
@@ -234,7 +234,7 @@
         // get anyone anywhere useful. bug 432491
         okHost = okHost.replace(/^\*\./, "www.");
 
-        /* case #1: 
+        /* case #1:
          * example.com uses an invalid security certificate.
          *
          * The certificate is only valid for www.example.com
@@ -258,7 +258,7 @@
         if (endsWith(thisHost, "." + okHost))
           link.href = proto + okHost;
       }
-      
+
       function endsWith(haystack, needle) {
         return haystack.slice(-needle.length) == needle;
       }
@@ -322,17 +322,18 @@
       </div>
     </div>
 
-    <!-- Error Title -->
-    <div id="errorTitle">
-      <h1 class="errorTitleText" />
-    </div>
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+    <div id="errorPageContainer" class="section">
+
+      <!-- Error Title -->
+      <div id="errorTitle" class="section-header">
+        <span id="errorTitleIcon"></span>
+        <h1 class="errorTitleText" />
+      </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
-      <div id="errorLongContent">
-      
+      <div id="errorLongContent" class="section-details">
+
         <!-- Short Description -->
         <div id="errorShortDesc">
           <p id="errorShortDescText" />
@@ -349,8 +350,10 @@
         </div>
       </div>
 
-      <!-- Retry Button -->
-      <button id="errorTryAgain" onclick="retryThis(this);">&retry.label;</button>
+      <div class="section-footer">
+        <!-- Retry Button -->
+        <button id="errorTryAgain" onclick="retryThis(this);">&retry.label;</button>
+      </div>
 
     </div>
 
