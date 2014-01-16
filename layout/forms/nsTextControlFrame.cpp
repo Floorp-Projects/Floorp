@@ -45,6 +45,7 @@
 #include "nsTextNode.h"
 #include "nsStyleSet.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/MathAlgorithms.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -169,11 +170,10 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
 
   // To better match IE, take the maximum character width(in twips) and remove
   // 4 pixels add this on as additional padding(internalPadding). But only do
-  // this if charMaxAdvance != charWidth; if they are equal, this is almost
-  // certainly a fixed-width font.
-  if (charWidth != charMaxAdvance) {
-    nscoord internalPadding = std::max(0, charMaxAdvance -
-                                        nsPresContext::CSSPixelsToAppUnits(4));
+  // this if we think we have a fixed-width font.
+  if (std::abs(charWidth - charMaxAdvance) > nsPresContext::CSSPixelsToAppUnits(1)) {
+    nscoord internalPadding =
+      std::max(0, charMaxAdvance - nsPresContext::CSSPixelsToAppUnits(4));
     nscoord t = nsPresContext::CSSPixelsToAppUnits(1); 
    // Round to a multiple of t
     nscoord rest = internalPadding % t; 
