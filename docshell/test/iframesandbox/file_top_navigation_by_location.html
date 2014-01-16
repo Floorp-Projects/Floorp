@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test window for top navigation by location tests</title>
+<script>
+  function onNav() {
+    opener.postMessage(window.name, "*");
+  }
+
+  window.onload = onNav;
+  window.onhashchange = onNav;
+</script>
+</head>
+<body>
+  <iframe name="if1" sandbox="allow-scripts allow-same-origin"></iframe>
+  <iframe name="if2" sandbox="allow-scripts allow-same-origin allow-top-navigation"></iframe>
+  <iframe name="if3" sandbox="allow-scripts allow-top-navigation"></iframe>
+</body>
+</html>
