@@ -234,15 +234,19 @@ public final class BitmapUtils {
       float[] sumHue = new float[36];
       float[] sumSat = new float[36];
       float[] sumVal = new float[36];
+      float[] hsv = new float[3];
 
-      for (int row = 0; row < source.getHeight(); row++) {
-        for (int col = 0; col < source.getWidth(); col++) {
-          int c = source.getPixel(col, row);
+      int height = source.getHeight();
+      int width = source.getWidth();
+      int[] pixels = new int[width * height];
+      source.getPixels(pixels, 0, width, 0, 0, width, height);
+      for (int row = 0; row < height row++) {
+        for (int col = 0; col < width; col++) {
+          int c = pixels[col + row * width];
           // Ignore pixels with a certain transparency.
           if (Color.alpha(c) < 128)
             continue;
 
-          float[] hsv = new float[3];
           Color.colorToHSV(c, hsv);
 
           // If a threshold is applied, ignore arbitrarily chosen values for "white" and "black".
@@ -271,7 +275,6 @@ public final class BitmapUtils {
         return Color.argb(255,255,255,255);
 
       // Return a color with the average hue/saturation/value of the bin with the most colors.
-      float[] hsv = new float[3];
       hsv[0] = sumHue[maxBin]/colorBins[maxBin];
       hsv[1] = sumSat[maxBin]/colorBins[maxBin];
       hsv[2] = sumVal[maxBin]/colorBins[maxBin];
