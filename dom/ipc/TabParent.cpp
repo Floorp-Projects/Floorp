@@ -995,11 +995,13 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
 
 bool
 TabParent::RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
-                                                const nsIntRect& aRect)
+                                                const nsIntRect& aRect,
+                                                const nsIntRect& aCaretRect)
 {
   // add rect to cache for another query
   mIMECompositionRectOffset = aOffset;
   mIMECompositionRect = aRect;
+  mIMECaretRect = aCaretRect;
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1101,6 +1103,8 @@ TabParent::GetChildProcessOffset()
  *
  * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
  *   Cocoa widget always queries selected offset, so it works on it.
+ *
+ * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
  */
 bool
 TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
@@ -1160,6 +1164,17 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
 
       aEvent.mReply.mOffset = mIMECompositionRectOffset;
       aEvent.mReply.mRect = mIMECompositionRect - GetChildProcessOffset();
+      aEvent.mSucceeded = true;
+    }
+    break;
+  case NS_QUERY_CARET_RECT:
+    {
+      if (aEvent.mInput.mOffset != mIMECompositionRectOffset) {
+        break;
+      }
+
+      aEvent.mReply.mOffset = mIMECompositionRectOffset;
+      aEvent.mReply.mRect = mIMECaretRect - GetChildProcessOffset();
       aEvent.mSucceeded = true;
     }
     break;
