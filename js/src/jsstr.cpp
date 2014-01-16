@@ -2951,7 +2951,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
     pc += JSOP_GETALIASEDVAR_LENGTH;
 
     /* Look for 'a' to be the lambda's first argument. */
-    if (JSOp(*pc) != JSOP_GETARG || GET_SLOTNO(pc) != 0)
+    if (JSOp(*pc) != JSOP_GETARG || GET_ARGNO(pc) != 0)
         return true;
     pc += JSOP_GETARG_LENGTH;
 

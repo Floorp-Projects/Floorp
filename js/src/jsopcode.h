@@ -201,10 +201,11 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 #define ARGNO_LEN               2
 #define ARGNO_LIMIT             UINT16_LIMIT
 
-#define GET_SLOTNO(pc)          GET_UINT16(pc)
-#define SET_SLOTNO(pc,varno)    SET_UINT16(pc,varno)
-#define SLOTNO_LEN              2
-#define SLOTNO_LIMIT            UINT16_LIMIT
+#define GET_LOCALNO(pc)         GET_UINT24(pc)
+#define SET_LOCALNO(pc,varno)   SET_UINT24(pc,varno)
+#define LOCALNO_LEN             3
+#define LOCALNO_BITS            24
+#define LOCALNO_LIMIT           (1 << LOCALNO_BITS)
 
 /*
  * Describes the 'hops' component of a JOF_SCOPECOORD opcode.

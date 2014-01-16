@@ -153,8 +153,8 @@ UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
          * An opcode may temporarily consume stack space during execution.
          * Account for this in maxStackDepth separately from uses/defs here.
          */
-        unsigned depth = (unsigned) bce->stackDepth +
-                      ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT);
+        uint32_t depth = (uint32_t) bce->stackDepth +
+                         ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT);
         if (depth > bce->maxStackDepth)
             bce->maxStackDepth = depth;
     }
@@ -165,7 +165,7 @@ UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
     bce->stackDepth -= nuses;
     JS_ASSERT(bce->stackDepth >= 0);
     bce->stackDepth += ndefs;
-    if ((unsigned)bce->stackDepth > bce->maxStackDepth)
+    if ((uint32_t)bce->stackDepth > bce->maxStackDepth)
         bce->maxStackDepth = bce->stackDepth;
 }
 
@@ -950,13 +950,25 @@ EmitRegExp(ExclusiveContext *cx, uint32_t index, BytecodeEmitter *bce)
  * used as a non-asserting version of EMIT_UINT16_IMM_OP.
  */
 static bool
-EmitUnaliasedVarOp(ExclusiveContext *cx, JSOp op, uint16_t slot, BytecodeEmitter *bce)
+EmitUnaliasedVarOp(ExclusiveContext *cx, JSOp op, uint32_t slot, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) != JOF_SCOPECOORD);
-    ptrdiff_t off = EmitN(cx, bce, op, sizeof(uint16_t));
+
+    if (IsLocalOp(op)) {
+        ptrdiff_t off = EmitN(cx, bce, op, LOCALNO_LEN);
+        if (off < 0)
+            return false;
+
+        SET_LOCALNO(bce->code(off), slot);
+        return true;
+    }
+
+    JS_ASSERT(IsArgOp(op));
+    ptrdiff_t off = EmitN(cx, bce, op, ARGNO_LEN);
     if (off < 0)
         return false;
-    SET_UINT16(bce->code(off), slot);
+
+    SET_ARGNO(bce->code(off), slot);
     return true;
 }
 
@@ -2741,7 +2753,7 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
         InternalBindingsHandle bindings(bce->script, &bce->script->bindings);
-        unsigned varIndex = Bindings::argumentsVarIndex(cx, bindings);
+        uint32_t varIndex = Bindings::argumentsVarIndex(cx, bindings);
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.setHops(0);
@@ -3150,7 +3162,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         } else {
-            int depthBefore = bce->stackDepth;
+            int32_t depthBefore = bce->stackDepth;
             if (!EmitDestructuringLHS(cx, bce, pn3, emitOption))
                 return false;
 
@@ -3166,7 +3178,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                  * the to-be-destructured-value is always on top of the stack.
                  */
                 JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
-                unsigned pickDistance = (unsigned)((bce->stackDepth + 1) - depthBefore);
+                uint32_t pickDistance = (uint32_t)((bce->stackDepth + 1) - depthBefore);
                 if (pickDistance > 0) {
                     if (pickDistance > UINT8_MAX) {
                         bce->reportError(pn3, JSMSG_TOO_MANY_LOCALS);
@@ -3208,10 +3220,10 @@ static bool
 EmitGroupAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp,
                     ParseNode *lhs, ParseNode *rhs)
 {
-    unsigned depth, limit, i, nslots;
+    uint32_t depth, limit, i, nslots;
     ParseNode *pn;
 
-    depth = limit = (unsigned) bce->stackDepth;
+    depth = limit = (uint32_t) bce->stackDepth;
     for (pn = rhs->pn_head; pn; pn = pn->pn_next) {
         if (limit == JS_BIT(16)) {
             bce->reportError(rhs, JSMSG_ARRAY_INIT_TOO_BIG);
@@ -3247,7 +3259,7 @@ EmitGroupAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp,
 
     nslots = limit - depth;
     EMIT_UINT16_IMM_OP(JSOP_POPN, nslots);
-    bce->stackDepth = (unsigned) depth;
+    bce->stackDepth = (uint32_t) depth;
     return true;
 }
 
@@ -4251,7 +4263,7 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
         return false;
 
     /* Push storage for hoisted let decls (e.g. 'let (x) { let y }'). */
-    uint32_t alreadyPushed = unsigned(bce->stackDepth - letHeadDepth);
+    uint32_t alreadyPushed = bce->stackDepth - letHeadDepth;
     uint32_t blockObjCount = blockObj->slotCount();
     for (uint32_t i = alreadyPushed; i < blockObjCount; ++i) {
         if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
@@ -5208,7 +5220,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
 
     // Catch location.
     // THROW? = 'throw' in ITER                                  // ITER
-    bce->stackDepth = (unsigned) depth;
+    bce->stackDepth = (uint32_t) depth;
     if (Emit1(cx, bce, JSOP_EXCEPTION) < 0)                      // ITER EXCEPTION
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // EXCEPTION ITER
@@ -5232,7 +5244,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
 
     SetJumpOffsetAt(bce, checkThrow);                            // delegate:
     // RESULT = ITER.throw(EXCEPTION)                            // EXCEPTION ITER
-    bce->stackDepth = (unsigned) depth + 1;
+    bce->stackDepth = (uint32_t) depth + 1;
     if (Emit1(cx, bce, JSOP_DUP) < 0)                            // EXCEPTION ITER ITER
         return false;
     if (Emit1(cx, bce, JSOP_DUP) < 0)                            // EXCEPTION ITER ITER ITER
@@ -6012,7 +6024,7 @@ EmitArrayComp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * its kids under pn2 to generate this comprehension.
      */
     JS_ASSERT(bce->stackDepth > 0);
-    unsigned saveDepth = bce->arrayCompDepth;
+    uint32_t saveDepth = bce->arrayCompDepth;
     bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
     if (!EmitTree(cx, bce, pn->pn_head))
         return false;
