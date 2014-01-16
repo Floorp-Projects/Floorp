@@ -55,11 +55,11 @@ typedef enum JSOp {
                                      atom index */
 #define JOF_INT32         14      /* int32_t immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object index */
-#define JOF_SLOTOBJECT    16      /* uint16_t slot index + object index */
+/* 16 is unused */
 #define JOF_REGEXP        17      /* unsigned 32-bit regexp index */
 #define JOF_INT8          18      /* int8_t immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
-#define JOF_UINT16PAIR    20      /* pair of uint16_t immediates */
+/* 20 is unused */
 #define JOF_SCOPECOORD    21      /* pair of uint16_t immediates followed by block index */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
