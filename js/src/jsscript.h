@@ -74,8 +74,7 @@ typedef enum JSTryNoteKind {
  */
 struct JSTryNote {
     uint8_t         kind;       /* one of JSTryNoteKind */
-    uint8_t         padding;    /* explicit padding on uint16_t boundary */
-    uint16_t        stackDepth; /* stack depth upon exception handler entry */
+    uint32_t        stackDepth; /* stack depth upon exception handler entry */
     uint32_t        start;      /* start of the try statement or loop
                                    relative to script->main */
     uint32_t        length;     /* length of the try statement or loop */
