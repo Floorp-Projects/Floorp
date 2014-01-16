@@ -136,7 +136,7 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
         return false;
 
     if (!success) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL);
+        js_ReportValueError(cx, JSMSG_SETPROTOTYPEOF_FAIL, JSDVG_IGNORE_STACK, thisv, js::NullPtr());
         return false;
     }
 
