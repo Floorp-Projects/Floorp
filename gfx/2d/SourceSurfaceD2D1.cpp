@@ -141,6 +141,35 @@ DataSourceSurfaceD2D1::GetData()
   return mMap.bits;
 }
 
+bool
+DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
+{
+  // DataSourceSurfaces used with the new Map API should not be used with GetData!!
+  MOZ_ASSERT(!mMapped);
+  MOZ_ASSERT(!mIsMapped);
+
+  D2D1_MAP_OPTIONS options;
+  if (aMapType == MapType::READ) {
+    options = D2D1_MAP_OPTIONS_READ;
+  } else {
+    MOZ_CRASH("No support for Write maps on D2D1 DataSourceSurfaces yet!");
+  }
+
+  D2D1_MAPPED_RECT map;
+  mBitmap->Map(D2D1_MAP_OPTIONS_READ, &map);
+  aMappedSurface->mData = map.bits;
+  aMappedSurface->mStride = map.pitch;
+
+  mIsMapped = true;
+  return true;
+}
+
+void
+DataSourceSurfaceD2D1::Unmap()
+{
+  mBitmap->Unmap();
+}
+
 int32_t
 DataSourceSurfaceD2D1::Stride()
 {
@@ -152,6 +181,8 @@ DataSourceSurfaceD2D1::Stride()
 void
 DataSourceSurfaceD2D1::EnsureMapped()
 {
+  // Do not use GetData() after having used Map!
+  MOZ_ASSERT(!mIsMapped);
   if (mMapped) {
     return;
   }
