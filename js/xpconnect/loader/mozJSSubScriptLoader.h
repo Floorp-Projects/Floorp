@@ -28,7 +28,7 @@ public:
     virtual ~mozJSSubScriptLoader();
 
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_MOZIJSSUBSCRIPTLOADER
 
 private:
@@ -40,7 +40,8 @@ private:
 
     nsresult DoLoadSubScriptWithOptions(const nsAString& url,
                                         LoadSubScriptOptions& options,
-                                        JSContext* cx, JS::Value* retval);
+                                        JSContext* cx,
+                                        JS::MutableHandle<JS::Value> retval);
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };

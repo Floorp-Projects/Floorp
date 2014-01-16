@@ -132,6 +132,15 @@ parent:
     NotifyIMETextChange(uint32_t offset, uint32_t end, uint32_t newEnd);
 
     /**
+     * Notifies chrome that there is a IME compostion rect updated
+     *
+     *  offset       The starting offset of this rect
+     *  rect         The rect of first character of selected IME composition
+     *  caretRect    The rect of IME caret
+     */
+    NotifyIMESelectedCompositionRect(uint32_t offset, nsIntRect rect, nsIntRect caretRect);
+
+    /**
      * Notifies chrome that there has been a change in selection
      * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
      *
@@ -227,9 +236,12 @@ parent:
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
-    sync PRenderFrame()
+    sync PRenderFrame();
+
+    sync InitRenderFrame(PRenderFrame aFrame)
         returns (ScrollingBehavior scrolling,
-                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId);
+                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId,
+                 bool success);
 
     /** 
      * Starts an offline application cache update.

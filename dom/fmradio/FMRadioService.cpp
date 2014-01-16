@@ -137,7 +137,7 @@ public:
     : mPendingRequest(aPendingRequest) { }
 
   NS_IMETHOD
-  Handle(const nsAString& aName, const JS::Value& aResult)
+  Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
     FMRadioService* fmRadioService = FMRadioService::Singleton();
     MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);

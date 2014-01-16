@@ -137,6 +137,27 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   }
 }
 
+bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
+  return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcVideoConduit::GetReceivedJitter(unsigned int* jitterMs) {
+  unsigned short fractionLost;
+  unsigned int cumulativeLost;
+  unsigned extendedMax;
+  int rttMs;
+  return !mPtrRTP->GetReceivedRTCPStatistics(mChannel,
+                                             fractionLost,
+                                             cumulativeLost,
+                                             extendedMax,
+                                             *jitterMs,
+                                             rttMs);
+}
+
 /**
  * Peforms intialization of the MANDATORY components of the Video Engine
  */

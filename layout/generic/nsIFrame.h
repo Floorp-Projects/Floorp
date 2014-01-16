@@ -256,7 +256,7 @@ typedef uint64_t nsFrameState;
 // split, and this piece is the continuation, or (2) the entire float
 // didn't fit on the page.
 // Note that this bit is also shared by text frames for
-// TEXT_FORCE_TRIM_WHITESPACE.  That's OK because we only check the
+// TEXT_IS_IN_TOKEN_MATHML.  That's OK because we only check the
 // NS_FRAME_IS_PUSHED_FLOAT bit on frames which we already know are
 // out-of-flow.
 #define NS_FRAME_IS_PUSHED_FLOAT                    NS_FRAME_STATE_BIT(32)
@@ -341,6 +341,11 @@ typedef uint64_t nsFrameState;
 // Set for all descendants of MathML sub/supscript elements (other than the
 // base frame) to indicate that the SSTY font feature should be used.
 #define NS_FRAME_MATHML_SCRIPT_DESCENDANT           NS_FRAME_STATE_BIT(58)
+
+// This state bit is set on token MathML elements if the token represents an
+// <mi> tag whose inner HTML consists of a single non-whitespace character
+// to allow special rendering behaviour.
+#define NS_FRAME_IS_IN_SINGLE_CHAR_MI               NS_FRAME_STATE_BIT(59)
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)

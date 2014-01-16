@@ -20,7 +20,6 @@
 #include "Units.h"                      // for ScreenIntRect
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
@@ -416,7 +415,7 @@ LayerManagerComposite::Render()
 }
 
 void
-LayerManagerComposite::SetWorldTransform(const gfxMatrix& aMatrix)
+LayerManagerComposite::SetWorldTransform(const gfx::Matrix& aMatrix)
 {
   NS_ASSERTION(aMatrix.PreservesAxisAlignedRectangles(),
                "SetWorldTransform only accepts matrices that satisfy PreservesAxisAlignedRectangles");
@@ -426,7 +425,7 @@ LayerManagerComposite::SetWorldTransform(const gfxMatrix& aMatrix)
   mWorldMatrix = aMatrix;
 }
 
-gfxMatrix&
+gfx::Matrix&
 LayerManagerComposite::GetWorldTransform(void)
 {
   return mWorldMatrix;
@@ -435,7 +434,7 @@ LayerManagerComposite::GetWorldTransform(void)
 void
 LayerManagerComposite::WorldTransformRect(nsIntRect& aRect)
 {
-  gfxRect grect(aRect.x, aRect.y, aRect.width, aRect.height);
+  gfx::Rect grect(aRect.x, aRect.y, aRect.width, aRect.height);
   grect = mWorldMatrix.TransformBounds(grect);
   aRect.SetRect(grect.X(), grect.Y(), grect.Width(), grect.Height());
 }

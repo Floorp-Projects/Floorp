@@ -59,7 +59,7 @@ WarnDeprecatedMethod(DeprecationWarning warning)
 }
 
 NS_IMETHODIMP
-nsJSON::Encode(const JS::Value& aValue, JSContext* cx, uint8_t aArgc,
+nsJSON::Encode(JS::Handle<JS::Value> aValue, JSContext* cx, uint8_t aArgc,
                nsAString &aJSON)
 {
   // This function should only be called from JS.
@@ -112,7 +112,7 @@ NS_IMETHODIMP
 nsJSON::EncodeToStream(nsIOutputStream *aStream,
                        const char* aCharset,
                        const bool aWriteBOM,
-                       const JS::Value& val,
+                       JS::Handle<JS::Value> val,
                        JSContext* cx,
                        uint8_t aArgc)
 {
@@ -359,7 +359,8 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
 }
 
 NS_IMETHODIMP
-nsJSON::Decode(const nsAString& json, JSContext* cx, JS::Value* aRetval)
+nsJSON::Decode(const nsAString& json, JSContext* cx,
+               JS::MutableHandle<JS::Value> aRetval)
 {
   nsresult rv = WarnDeprecatedMethod(DecodeWarning);
   if (NS_FAILED(rv))
@@ -378,21 +379,19 @@ nsJSON::Decode(const nsAString& json, JSContext* cx, JS::Value* aRetval)
 
 NS_IMETHODIMP
 nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
-                         JSContext* cx, JS::Value* aRetval)
+                         JSContext* cx, JS::MutableHandle<JS::Value> aRetval)
 {
   return DecodeInternal(cx, aStream, aContentLength, true, aRetval);
 }
 
 NS_IMETHODIMP
-nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
+nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx,
+                      JS::MutableHandle<JS::Value> result)
 {
-  JS::Rooted<JS::Value> value(cx);
   if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
-                    str.Length(), &value)) {
+                    str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  *result = value;
   return NS_OK;
 }
 
@@ -401,7 +400,7 @@ nsJSON::DecodeInternal(JSContext* cx,
                        nsIInputStream *aStream,
                        int32_t aContentLength,
                        bool aNeedsConverter,
-                       JS::Value* aRetval)
+                       JS::MutableHandle<JS::Value> aRetval)
 {
   // Consume the stream
   nsCOMPtr<nsIChannel> jsonChannel;
@@ -418,7 +417,7 @@ nsJSON::DecodeInternal(JSContext* cx,
     return NS_ERROR_FAILURE;
 
   nsRefPtr<nsJSONListener> jsonListener =
-    new nsJSONListener(cx, aRetval, aNeedsConverter);
+    new nsJSONListener(cx, aRetval.address(), aNeedsConverter);
 
   //XXX this stream pattern should be consolidated in netwerk
   rv = jsonListener->OnStartRequest(jsonChannel, nullptr);

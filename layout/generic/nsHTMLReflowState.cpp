@@ -2204,7 +2204,8 @@ nsCSSOffsetState::InitOffsets(nscoord aHorizontalPercentBasis,
   }
   else if (aPadding) { // padding is an input arg
     ComputedPhysicalPadding() = *aPadding;
-    needPaddingProp = frame->StylePadding()->IsWidthDependent();
+    needPaddingProp = frame->StylePadding()->IsWidthDependent() ||
+	  (frame->GetStateBits() & NS_FRAME_REFLOW_ROOT);
   }
   else {
     needPaddingProp = ComputePadding(aHorizontalPercentBasis,

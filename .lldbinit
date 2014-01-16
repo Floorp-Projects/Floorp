@@ -1,5 +1,10 @@
 # .lldbinit file for debugging Mozilla
 
+# -----------------------------------------------------------------------------
+# For documentation on all of the commands and type summaries defined here
+# and in the accompanying Python scripts, see python/lldbutils/README.txt.
+# -----------------------------------------------------------------------------
+
 # Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
 # single compiled file breaks lldb breakpoint setting. This works around that.
 # See http://lldb.llvm.org/troubleshooting.html for more info.
@@ -20,3 +25,6 @@ type summary add nsIAtom --summary-string "${var.mString}"
 
 # Show the value of text nodes.
 type summary add nsTextNode --summary-string "${var.mText}"
+
+# Dump the current JS stack.
+command alias js expr DumpJSStack()

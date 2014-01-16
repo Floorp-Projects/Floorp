@@ -64,14 +64,13 @@ function resizeWindow(win, diffX, diffY, callback) {
   let targetWidth = win.outerWidth + diffX;
   let targetHeight = win.outerHeight + diffY;
 
-  win.addEventListener("resize", function onResize() {
+  (function tryResize() {
     let {outerWidth: width, outerHeight: height} = win;
-    if (width != targetWidth || height != targetHeight)
-      return;
-
-    win.removeEventListener("resize", onResize, false);
-    executeSoon(callback);
-  }, false);
-
-  win.resizeBy(diffX, diffY);
+    if (width != targetWidth || height != targetHeight) {
+      win.resizeTo(targetWidth, targetHeight);
+      executeSoon(tryResize);
+    } else {
+      callback();
+    }
+  })();
 }
