@@ -717,7 +717,17 @@ this.EncodedStringValue = {
   encode: function(data, str) {
     let begin = data.offset;
     try {
-      WSP.TextString.encode(data, str);
+      // Quoted from OMA-TS-MMS-CONF-V1_3-20110913-A:
+      // Some of the MMS headers have been defined as "Encoded-string-value".
+      // The character set IANA MIBEnum value in these headers SHALL be
+      // encoded as Integer-value ([WAPWSP] section 8.4.2.3). The character
+      // set us-ascii (IANA MIBenum 3) SHALL always be accepted. If the
+      // character set is not specified (simple Text-string encoding) the
+      // character set SHALL be identified as us-ascii (lower half of ISO
+      // 8859-1 [ISO8859-1]). When the text string cannot be represented as
+      // us-ascii, the character set SHALL be encoded as utf-8 (IANA MIBenum
+      // 106) which has unique byte ordering.
+      WSP.TextString.encode(data, str, true);
     } catch (e) {
       data.offset = begin;
       this.encodeCharsetEncodedString(data, str);
