@@ -5,7 +5,8 @@
 
 #include <limits>
 #include "mozilla/Hal.h"
-#include "Connection.h"
+#include "mozilla/dom/network/Connection.h"
+#include "mozilla/dom/MozConnectionBinding.h"
 #include "nsIDOMClassInfo.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMEvent.h"
@@ -17,8 +18,6 @@
  */
 #define CHANGE_EVENT_NAME NS_LITERAL_STRING("change")
 
-DOMCI_DATA(MozConnection, mozilla::dom::network::Connection)
-
 namespace mozilla {
 namespace dom {
 namespace network {
@@ -26,18 +25,13 @@ namespace network {
 const char* Connection::sMeteredPrefName     = "dom.network.metered";
 const bool  Connection::sMeteredDefaultValue = false;
 
-NS_INTERFACE_MAP_BEGIN(Connection)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozConnection)
-  NS_INTERFACE_MAP_ENTRY(nsINetworkProperties)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozConnection)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(Connection, nsDOMEventTargetHelper,
+                                   nsINetworkProperties)
 
 // Don't use |Connection| alone, since that confuses nsTraceRefcnt since
 // we're not the only class with that name.
 NS_IMPL_ADDREF_INHERITED(dom::network::Connection, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(dom::network::Connection, nsDOMEventTargetHelper)
-
-NS_IMPL_EVENT_HANDLER(Connection, change)
 
 Connection::Connection()
   : mCanBeMetered(kDefaultCanBeMetered)
@@ -45,6 +39,7 @@ Connection::Connection()
   , mIsWifi(kDefaultIsWifi)
   , mDHCPGateway(kDefaultDHCPGateway)
 {
+  SetIsDOMBinding();
 }
 
 void
@@ -66,29 +61,24 @@ Connection::Shutdown()
   hal::UnregisterNetworkObserver(this);
 }
 
-NS_IMETHODIMP
-Connection::GetBandwidth(double* aBandwidth)
+double
+Connection::Bandwidth() const
 {
   if (mBandwidth == kDefaultBandwidth) {
-    *aBandwidth = std::numeric_limits<double>::infinity();
-    return NS_OK;
+    return std::numeric_limits<double>::infinity();
   }
 
-  *aBandwidth = mBandwidth;
-  return NS_OK;
+  return mBandwidth;
 }
 
-NS_IMETHODIMP
-Connection::GetMetered(bool* aMetered)
+bool
+Connection::Metered() const
 {
   if (!mCanBeMetered) {
-    *aMetered = false;
-    return NS_OK;
+    return false;
   }
 
-  *aMetered = Preferences::GetBool(sMeteredPrefName,
-                                   sMeteredDefaultValue);
-  return NS_OK;
+  return Preferences::GetBool(sMeteredPrefName, sMeteredDefaultValue);
 }
 
 NS_IMETHODIMP
@@ -130,7 +120,12 @@ Connection::Notify(const hal::NetworkInformation& aNetworkInfo)
   DispatchTrustedEvent(CHANGE_EVENT_NAME);
 }
 
+JSObject*
+Connection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MozConnectionBinding::Wrap(aCx, aScope, this);
+}
+
 } // namespace network
 } // namespace dom
 } // namespace mozilla
-

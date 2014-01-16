@@ -8,6 +8,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <html:input class="empty" value="test"/>
+  <html:input class="empty" value=" test"/>
       
 </window>

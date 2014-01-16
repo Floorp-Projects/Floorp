@@ -36,7 +36,7 @@ BaselineFrame::trace(JSTracer *trc)
 
     // Mark return value.
     if (hasReturnValue())
-        gc::MarkValueRoot(trc, returnValue(), "baseline-rval");
+        gc::MarkValueRoot(trc, returnValue().address(), "baseline-rval");
 
     if (isEvalFrame())
         gc::MarkScriptRoot(trc, &evalScript_, "baseline-evalscript");

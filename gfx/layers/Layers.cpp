@@ -559,7 +559,7 @@ Layer::MayResample()
 
 nsIntRect
 Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
-                            const gfxMatrix* aWorldTransform)
+                            const gfx::Matrix* aWorldTransform)
 {
   ContainerLayer* container = GetParent();
   NS_ASSERTION(container, "This can't be called on the root!");
@@ -605,10 +605,10 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
   if (container) {
     scissor.MoveBy(-container->GetIntermediateSurfaceRect().TopLeft());
   } else if (aWorldTransform) {
-    gfxRect r(scissor.x, scissor.y, scissor.width, scissor.height);
-    gfxRect trScissor = aWorldTransform->TransformBounds(r);
+    gfx::Rect r(scissor.x, scissor.y, scissor.width, scissor.height);
+    gfx::Rect trScissor = aWorldTransform->TransformBounds(r);
     trScissor.Round();
-    if (!gfxUtils::GfxRectToIntRect(trScissor, &scissor))
+    if (!gfxUtils::GfxRectToIntRect(ThebesRect(trScissor), &scissor))
       return nsIntRect(currentClip.TopLeft(), nsIntSize(0, 0));
   }
   return currentClip.Intersect(scissor);

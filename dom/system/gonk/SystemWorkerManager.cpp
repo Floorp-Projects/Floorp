@@ -343,15 +343,15 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 
 nsresult
 SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
-                                       const JS::Value& aWorker,
+                                       JS::Handle<JS::Value> aWorker,
                                        JSContext *aCx)
 {
 #ifndef MOZ_B2G_RIL
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aWorker.isObject(), NS_ERROR_UNEXPECTED);
 
-  JSAutoCompartment ac(aCx, JSVAL_TO_OBJECT(aWorker));
+  JSAutoCompartment ac(aCx, &aWorker.toObject());
 
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(aCx, aWorker);
@@ -365,15 +365,15 @@ SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
 }
 
 nsresult
-SystemWorkerManager::RegisterNfcWorker(const JS::Value& aWorker,
+SystemWorkerManager::RegisterNfcWorker(JS::Handle<JS::Value> aWorker,
                                        JSContext* aCx)
 {
 #ifndef MOZ_NFC
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aWorker.isObject(), NS_ERROR_UNEXPECTED);
 
-  JSAutoCompartment ac(aCx, JSVAL_TO_OBJECT(aWorker));
+  JSAutoCompartment ac(aCx, &aWorker.toObject());
 
   WorkerCrossThreadDispatcher* wctd =
     GetWorkerCrossThreadDispatcher(aCx, aWorker);
@@ -392,12 +392,12 @@ SystemWorkerManager::InitNetd(JSContext *cx)
   nsCOMPtr<nsIWorkerHolder> worker = do_GetService(kNetworkServiceCID);
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
-  JS::Value workerval;
+  JS::Rooted<JS::Value> workerval(cx);
   nsresult rv = worker->GetWorker(&workerval);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(workerval), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(workerval.isObject(), NS_ERROR_UNEXPECTED);
 
-  JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(workerval));
+  JSAutoCompartment ac(cx, &workerval.toObject());
 
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(cx, workerval);

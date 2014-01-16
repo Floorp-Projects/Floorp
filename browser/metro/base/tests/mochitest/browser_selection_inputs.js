@@ -187,7 +187,7 @@ gTests.push({
     is(getTrimmedSelection(gInput).toString(), "straight on like a tunnel for some way and then dipped suddenly down", "selection test");
 
     // left and up with no scrolling - selection should shrink
-    yield touchdrag.move(130, ystartpos);
+    yield touchdrag.move(135, ystartpos);
     touchdrag.end();
 
     yield SelectionHelperUI.pingSelectionHandler();
