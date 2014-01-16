@@ -18,19 +18,13 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(5b4645b6-f9ca-4cb1-a821-2bdb3c3902f8)]
+[scriptable, uuid(62484bb5-bf7e-4988-9055-8803b16b48a1)]
 interface nsIUrlListManager : nsISupports
 {
     /**
      * Set the URL we check for updates.
      */
     void setUpdateUrl(in ACString url);
-
-    /**
-     * Set the URL we use to get keys used to decrypt URLs in
-     * enchash tables.
-     */
-    void setKeyUrl(in ACString url);
 
     /**
      * Set the URL that we will query for complete hashes after a partial
@@ -43,8 +37,7 @@ interface nsIUrlListManager : nsISupports
      * string of the format provider_name-semantic_type-table_type.  For
      * example, goog-white-enchash or goog-black-url.
      */
-    boolean registerTable(in ACString tableName,
-                          in boolean requireMac);
+    boolean registerTable(in ACString tableName);
 
     /**
      * Turn on update checking for a table.  I.e., during the next server

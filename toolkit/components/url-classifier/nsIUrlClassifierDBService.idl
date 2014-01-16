@@ -27,7 +27,7 @@ interface nsIUrlClassifierCallback : nsISupports {
  * clients streaming updates to the url-classifier (usually
  * nsUrlClassifierStreamUpdater.
  */
-[scriptable, uuid(bbb33c65-e783-476c-8db0-6ddb91826c07)]
+[scriptable, uuid(9fa11561-5816-4e1b-bcc9-b629ca05cce6)]
 interface nsIUrlClassifierUpdateObserver : nsISupports {
   /**
    * The update requested a new URL whose contents should be downloaded
@@ -36,18 +36,9 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
    * @param url The url that was requested.
    * @param table The table name that this URL's contents will be associated
    *              with.  This should be passed back to beginStream().
-   * @param serverMAC The server-supplied MAC of the data at this URL.  This
-   *                  should be passed back to beginStream().
    */
   void updateUrlRequested(in ACString url,
-                          in ACString table,
-                          in ACString serverMAC);
-
-  /**
-   * The server has requested that the client get a new client key for
-   * MAC requests.
-   */
-  void rekeyRequested();
+                          in ACString table);
 
   /**
    * A stream update has completed.
@@ -75,7 +66,7 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(e326ec41-46fd-4127-ad3c-3c58b2cdf196)]
+[scriptable, uuid(8a389f21-f821-4e29-9c6b-3de6f33cd7cf)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -134,12 +125,9 @@ interface nsIUrlClassifierDBService : nsISupports
    *
    * @param updater The update observer tied to this update.
    * @param tables A comma-separated list of tables included in this update.
-   * @param clientKey The client key for calculating an update's MAC,
-   *        or empty to ignore MAC.
    */
   void beginUpdate(in nsIUrlClassifierUpdateObserver updater,
-                   in ACString tables,
-                   in ACString clientKey);
+                   in ACString tables);
 
   /**
    * Begin a stream update.  This should be called once per url being
@@ -147,12 +135,8 @@ interface nsIUrlClassifierDBService : nsISupports
    *
    * @param table The table the contents of this stream will be associated
    *              with, or empty for the initial stream.
-   * @param serverMAC The MAC specified by the update server for this stream.
-   *                  If the server has not specified a MAC (which is the case
-   *                  for the initial stream), this will be empty.
    */
-  void beginStream(in ACString table,
-                   in ACString serverMAC);
+  void beginStream(in ACString table);
 
   /**
    * Update the table incrementally.

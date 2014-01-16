@@ -5,7 +5,6 @@
 
 #include "ProtocolParser.h"
 #include "LookupCache.h"
-#include "nsIKeyModule.h"
 #include "nsNetCID.h"
 #include "prlog.h"
 #include "prnetdb.h"
@@ -70,7 +69,6 @@ ProtocolParser::ProtocolParser()
   , mUpdateStatus(NS_OK)
   , mUpdateWait(0)
   , mResetRequested(false)
-  , mRekeyRequested(false)
 {
 }
 
@@ -86,81 +84,6 @@ ProtocolParser::Init(nsICryptoHash* aHasher)
   return NS_OK;
 }
 
-/**
- * Initialize HMAC for the stream.
- *
- * If serverMAC is empty, the update stream will need to provide a
- * server MAC.
- */
-nsresult
-ProtocolParser::InitHMAC(const nsACString& aClientKey,
-                         const nsACString& aServerMAC)
-{
-  mServerMAC = aServerMAC;
-
-  nsresult rv;
-  nsCOMPtr<nsIKeyObjectFactory> keyObjectFactory(
-    do_GetService("@mozilla.org/security/keyobjectfactory;1", &rv));
-
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get nsIKeyObjectFactory service");
-    mUpdateStatus = rv;
-    return mUpdateStatus;
-  }
-
-  nsCOMPtr<nsIKeyObject> keyObject;
-  rv = keyObjectFactory->KeyFromString(nsIKeyObject::HMAC, aClientKey,
-                                       getter_AddRefs(keyObject));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to create key object, maybe not FIPS compliant?");
-    mUpdateStatus = rv;
-    return mUpdateStatus;
-  }
-
-  mHMAC = do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to create nsICryptoHMAC instance");
-    mUpdateStatus = rv;
-    return mUpdateStatus;
-  }
-
-  rv = mHMAC->Init(nsICryptoHMAC::SHA1, keyObject);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to initialize nsICryptoHMAC instance");
-    mUpdateStatus = rv;
-    return mUpdateStatus;
-  }
-  return NS_OK;
-}
-
-nsresult
-ProtocolParser::FinishHMAC()
-{
-  if (NS_FAILED(mUpdateStatus)) {
-    return mUpdateStatus;
-  }
-
-  if (mRekeyRequested) {
-    mUpdateStatus = NS_ERROR_FAILURE;
-    return mUpdateStatus;
-  }
-
-  if (!mHMAC) {
-    return NS_OK;
-  }
-
-  nsAutoCString clientMAC;
-  mHMAC->Finish(true, clientMAC);
-
-  if (clientMAC != mServerMAC) {
-    NS_WARNING("Invalid update MAC!");
-    LOG(("Invalid update MAC: expected %s, got %s",
-         clientMAC.get(), mServerMAC.get()));
-    mUpdateStatus = NS_ERROR_FAILURE;
-  }
-  return mUpdateStatus;
-}
-
 void
 ProtocolParser::SetCurrentTable(const nsACString& aTable)
 {
@@ -174,17 +97,6 @@ ProtocolParser::AppendStream(const nsACString& aData)
     return mUpdateStatus;
 
   nsresult rv;
-
-  // Digest the data if we have a server MAC.
-  if (mHMAC && !mServerMAC.IsEmpty()) {
-    rv = mHMAC->Update(reinterpret_cast<const uint8_t*>(aData.BeginReading()),
-                       aData.Length());
-    if (NS_FAILED(rv)) {
-      mUpdateStatus = rv;
-      return rv;
-    }
-  }
-
   mPending.Append(aData);
 
   bool done = false;
@@ -215,13 +127,7 @@ ProtocolParser::ProcessControl(bool* aDone)
   while (NextLine(line)) {
     //LOG(("Processing %s\n", line.get()));
 
-    if (line.EqualsLiteral("e:pleaserekey")) {
-      mRekeyRequested = true;
-      return NS_OK;
-    } else if (mHMAC && mServerMAC.IsEmpty()) {
-      rv = ProcessMAC(line);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
+    if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
       // Set the table name from the table header line.
       SetCurrentTable(Substring(line, 2));
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
@@ -249,28 +155,6 @@ ProtocolParser::ProcessControl(bool* aDone)
 
   *aDone = true;
   return NS_OK;
-}
-
-
-nsresult
-ProtocolParser::ProcessMAC(const nsCString& aLine)
-{
-  nsresult rv;
-
-  LOG(("line: %s", aLine.get()));
-
-  if (StringBeginsWith(aLine, NS_LITERAL_CSTRING("m:"))) {
-    mServerMAC = Substring(aLine, 2);
-    nsUrlClassifierUtils::UnUrlsafeBase64(mServerMAC);
-
-    // The remainder of the pending update wasn't digested, digest it now.
-    rv = mHMAC->Update(reinterpret_cast<const uint8_t*>(mPending.BeginReading()),
-                       mPending.Length());
-    return rv;
-  }
-
-  LOG(("No MAC specified!"));
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -364,29 +248,11 @@ nsresult
 ProtocolParser::ProcessForward(const nsCString& aLine)
 {
   const nsCSubstring &forward = Substring(aLine, 2);
-  if (mHMAC) {
-    // We're expecting MACs alongside any url forwards.
-    nsCSubstring::const_iterator begin, end, sepBegin, sepEnd;
-    forward.BeginReading(begin);
-    sepBegin = begin;
-
-    forward.EndReading(end);
-    sepEnd = end;
-
-    if (!RFindInReadable(NS_LITERAL_CSTRING(","), sepBegin, sepEnd)) {
-      NS_WARNING("No MAC specified for a redirect in a request that expects a MAC");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCString serverMAC(Substring(sepEnd, end));
-    nsUrlClassifierUtils::UnUrlsafeBase64(serverMAC);
-    return AddForward(Substring(begin, sepBegin), serverMAC);
-  }
-  return AddForward(forward, mServerMAC);
+  return AddForward(forward);
 }
 
 nsresult
-ProtocolParser::AddForward(const nsACString& aUrl, const nsACString& aMac)
+ProtocolParser::AddForward(const nsACString& aUrl)
 {
   if (!mTableUpdate) {
     NS_WARNING("Forward without a table name.");
@@ -396,7 +262,6 @@ ProtocolParser::AddForward(const nsACString& aUrl, const nsACString& aMac)
   ForwardedUpdate *forward = mForwards.AppendElement();
   forward->table = mTableUpdate->TableName();
   forward->url.Assign(aUrl);
-  forward->mac.Assign(aMac);
 
   return NS_OK;
 }

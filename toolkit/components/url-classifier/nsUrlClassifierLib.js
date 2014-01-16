@@ -21,7 +21,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 #include ./content/moz/protocol4.js
 
 #include ./content/request-backoff.js
-#include ./content/url-crypto-key-manager.js
 #include ./content/xml-fetcher.js
 
 // Expose this whole component.
