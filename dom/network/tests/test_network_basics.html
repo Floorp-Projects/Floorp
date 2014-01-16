@@ -19,26 +19,33 @@ function checkInterface(aInterface) {
   ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
 }
 
-ok('mozConnection' in navigator, "navigator.mozConnection should exist");
+function test() {
+  ok('mozConnection' in navigator, "navigator.mozConnection should exist");
 
-ok(navigator.mozConnection, "navigator.mozConnection returns an object");
+  ok(navigator.mozConnection, "navigator.mozConnection returns an object");
 
-ok(navigator.mozConnection instanceof MozConnection,
-   "navigator.mozConnection is a MozConnection object");
-ok(navigator.mozConnection instanceof EventTarget,
-   "navigator.mozConnection is a EventTarget object");
+  ok(navigator.mozConnection instanceof MozConnection,
+     "navigator.mozConnection is a MozConnection object");
+  ok(navigator.mozConnection instanceof EventTarget,
+     "navigator.mozConnection is a EventTarget object");
 
-checkInterface("Connection");
+  checkInterface("Connection");
 
-ok('bandwidth' in navigator.mozConnection,
-   "bandwidth should be a Connection attribute");
-is(navigator.mozConnection.bandwidth, Infinity,
-   "By default connection.bandwidth is equals to Infinity");
+  ok('bandwidth' in navigator.mozConnection,
+     "bandwidth should be a Connection attribute");
+  is(navigator.mozConnection.bandwidth, Infinity,
+     "By default connection.bandwidth is equals to Infinity");
 
-ok('metered' in navigator.mozConnection,
-   "metered should be a Connection attribute");
-is(navigator.mozConnection.metered, false,
-   "By default the connection is not metered");
+  ok('metered' in navigator.mozConnection,
+     "metered should be a Connection attribute");
+  is(navigator.mozConnection.metered, false,
+     "By default the connection is not metered");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.network.enabled", true]]}, test);
 
 </script>
 </pre>
