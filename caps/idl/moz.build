@@ -8,7 +8,6 @@ XPIDL_SOURCES += [
     'nsIDomainPolicy.idl',
     'nsIPrincipal.idl',
     'nsIScriptSecurityManager.idl',
-    'nsISecurityCheckedComponent.idl',
 ]
 
 XPIDL_MODULE = 'caps'
