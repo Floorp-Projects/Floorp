@@ -250,10 +250,14 @@ nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
       StringBeginsWith(aUrl, NS_LITERAL_CSTRING("file:"))) {
     update->mUrl = aUrl;
   } else {
-    // This must be fixed when bug 783047 is fixed. However, for unittesting
-    // update urls to localhost should use http, not https (otherwise the
-    // connection will fail silently, since there will be no cert available).
-    update->mUrl = NS_LITERAL_CSTRING("http://") + aUrl;
+    // For unittesting update urls to localhost should use http, not https
+    // (otherwise the connection will fail silently, since there will be no
+    // cert available).
+    if (!StringBeginsWith(aUrl, NS_LITERAL_CSTRING("localhost"))) {
+      update->mUrl = NS_LITERAL_CSTRING("https://") + aUrl;
+    } else {
+      update->mUrl = NS_LITERAL_CSTRING("http://") + aUrl;
+    }
   }
   update->mTable = aTable;
 
