@@ -776,6 +776,10 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/navbar-download.png);
 }
 
+#download-progress[progress="100"] {
+  list-style-image: url(chrome://browser/skin/images/navbar-download-finished.png);
+}
+
 #pin-button {
   list-style-image: url(chrome://browser/skin/images/navbar-pin.png);
 }
@@ -795,6 +799,10 @@ documenttab[selected] .documenttab-selection {
 @media (min-resolution: @min_res_140pc@) {
   #download-progress {
     list-style-image: url(chrome://browser/skin/images/navbar-download@1.4x.png);
+  }
+
+  #download-progress[progress="100"] {
+    list-style-image: url(chrome://browser/skin/images/navbar-download-finished@1.4x.png);
   }
 
   #pin-button {
@@ -817,6 +825,10 @@ documenttab[selected] .documenttab-selection {
 @media (min-resolution: @min_res_180pc@) {
   #download-progress {
     list-style-image: url(chrome://browser/skin/images/navbar-download@1.8x.png);
+  }
+
+  #download-progress[progress="100"] {
+    list-style-image: url(chrome://browser/skin/images/navbar-download-finished@1.8x.png);
   }
 
   #pin-button {

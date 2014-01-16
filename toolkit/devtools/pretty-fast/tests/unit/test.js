@@ -218,13 +218,16 @@ var testCases = [
 
   {
     name: "Continue/break statements",
-    input: "while(1){if(x){continue}if(y){break}}",
+    input: "while(1){if(x){continue}if(y){break}if(z){break foo}}",
     output: "while (1) {\n" +
             "  if (x) {\n" +
             "    continue\n" +
             "  }\n" +
             "  if (y) {\n" +
             "    break\n" +
+            "  }\n" +
+            "  if (z) {\n" +
+            "    break foo\n" +
             "  }\n" +
             "}\n"
   },
