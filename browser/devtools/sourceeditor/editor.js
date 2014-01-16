@@ -31,7 +31,8 @@ const CM_STYLES   = [
   "chrome://browser/skin/devtools/common.css",
   "chrome://browser/content/devtools/codemirror/codemirror.css",
   "chrome://browser/content/devtools/codemirror/dialog.css",
-  "chrome://browser/content/devtools/codemirror/mozilla.css"
+  "chrome://browser/content/devtools/codemirror/mozilla.css",
+  "chrome://browser/content/devtools/codemirror/foldgutter.css"
 ];
 
 const CM_SCRIPTS  = [
@@ -51,7 +52,12 @@ const CM_SCRIPTS  = [
   "chrome://browser/content/devtools/codemirror/activeline.js",
   "chrome://browser/content/devtools/codemirror/trailingspace.js",
   "chrome://browser/content/devtools/codemirror/emacs.js",
-  "chrome://browser/content/devtools/codemirror/vim.js"
+  "chrome://browser/content/devtools/codemirror/vim.js",
+  "chrome://browser/content/devtools/codemirror/foldcode.js",
+  "chrome://browser/content/devtools/codemirror/brace-fold.js",
+  "chrome://browser/content/devtools/codemirror/comment-fold.js",
+  "chrome://browser/content/devtools/codemirror/xml-fold.js",
+  "chrome://browser/content/devtools/codemirror/foldgutter.js"
 ];
 
 const CM_IFRAME   =

@@ -1156,8 +1156,10 @@ pref("devtools.tilt.outro_transition", true);
 //                  clear any recent files, but rather hide the
 //                  'Open Recent'-menu.
 // - showTrailingSpace: Whether to highlight trailing space or not.
+// - enableCodeFolding: Whether to enable code folding or not.
 pref("devtools.scratchpad.recentFilesMax", 10);
 pref("devtools.scratchpad.showTrailingSpace", false);
+pref("devtools.scratchpad.enableCodeFolding", true);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
