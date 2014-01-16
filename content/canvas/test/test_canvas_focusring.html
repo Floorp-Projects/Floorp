@@ -9,6 +9,7 @@ SimpleTest.waitForExplicitFinish();
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
 SpecialPowers.setBoolPref("canvas.focusring.enabled", true);
+SpecialPowers.setBoolPref("canvas.customfocusring.enabled", true);
 </script>
 
 <p>Canvas test: drawCustomFocusRing</p>
@@ -90,6 +91,7 @@ function runTests() {
  }
 
  SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
+ SpecialPowers.setBoolPref("canvas.customfocusring.enabled", false);
  SimpleTest.finish();
 }
 
