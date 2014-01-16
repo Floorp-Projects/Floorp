@@ -41,6 +41,8 @@ function failingOCSPResponder() {
   httpServer.registerPrefixHandler("/", function(request, response) {
     do_check_true(false);
   });
+  httpServer.identity.setPrimary("http", "www.example.com", SERVER_PORT);
+  httpServer.identity.add("http", "crl.example.com", SERVER_PORT);
   httpServer.start(SERVER_PORT);
   return httpServer;
 }
@@ -134,7 +136,10 @@ add_test(function() {
 
 add_test(function() {
   clearOCSPCache();
-  let ocspResponder = failingOCSPResponder();
+  // libpkix will attempt to validate the intermediate, which does have an
+  // OCSP URL.
+  let ocspResponder = isDebugBuild ? start_ocsp_responder(["int-ev-valid"])
+                                   : failingOCSPResponder();
   check_ee_for_ev("no-ocsp-url-cert", false);
   ocspResponder.stop(run_next_test);
 });
