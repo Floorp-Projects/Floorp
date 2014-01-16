@@ -1044,14 +1044,19 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           return NS_ERROR_UNEXPECTED;
         }
 
-        JS_CallFunctionValue(cx, thisObject,
-                             funval, 1, argv.address(), rval.address());
+        if (!JS_CallFunctionValue(cx, thisObject,
+                                  funval, 1, argv.address(), rval.address())) {
+          nsJSUtils::ReportPendingException(cx);
+          continue;
+        }
         if (aJSONRetVal) {
           nsString json;
-          if (JS_Stringify(cx, &rval, JS::NullPtr(), JS::NullHandleValue,
+          if (!JS_Stringify(cx, &rval, JS::NullPtr(), JS::NullHandleValue,
                            JSONCreator, &json)) {
-            aJSONRetVal->AppendElement(json);
+            nsJSUtils::ReportPendingException(cx);
+            continue;
           }
+          aJSONRetVal->AppendElement(json);
         }
       }
     }
