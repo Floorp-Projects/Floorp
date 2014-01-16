@@ -1265,13 +1265,14 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
+Navigator::GetMozConnection(nsISupports** aConnection)
 {
-  NS_IF_ADDREF(*aConnection = GetMozConnection());
+  nsCOMPtr<nsINetworkProperties> properties = GetMozConnection();
+  properties.forget(aConnection);
   return NS_OK;
 }
 
-nsIDOMMozConnection*
+network::Connection*
 Navigator::GetMozConnection()
 {
   if (!mConnection) {
