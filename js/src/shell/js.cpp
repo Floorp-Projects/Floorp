@@ -4833,14 +4833,14 @@ static const JSJitInfo dom_x_getterinfo = {
     { (JSJitGetterOp)dom_get_x },
     0,        /* protoID */
     0,        /* depth */
+    JSJitInfo::AliasNone, /* aliasSet */
     JSJitInfo::Getter,
     JSVAL_TYPE_UNKNOWN, /* returnType */
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
     false,    /* isInSlot */
     false,    /* isTypedMethod */
-    0,        /* slotIndex */
-    JSJitInfo::AliasNone /* aliasSet */
+    0         /* slotIndex */
 };
 
 static const JSJitInfo dom_x_setterinfo = {
@@ -4848,13 +4848,13 @@ static const JSJitInfo dom_x_setterinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Setter,
+    JSJitInfo::AliasEverything, /* aliasSet */
     JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
     false,    /* isInSlot */
     false,    /* isTypedMethod */
-    0,        /* slotIndex */
-    JSJitInfo::AliasEverything /* aliasSet */
+    0         /* slotIndex */
 };
 
 static const JSJitInfo doFoo_methodinfo = {
@@ -4862,13 +4862,13 @@ static const JSJitInfo doFoo_methodinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Method,
+    JSJitInfo::AliasEverything, /* aliasSet */
     JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
     false,    /* isInSlot */
     false,    /* isTypedMethod */
-    0,        /* slotIndex */
-    JSJitInfo::AliasEverything /* aliasSet */
+    0         /* slotIndex */
 };
 
 static const JSPropertySpec dom_props[] = {
@@ -4925,7 +4925,7 @@ dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
     JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
-    MOZ_ASSERT(info->type == JSJitInfo::Getter);
+    MOZ_ASSERT(info->type() == JSJitInfo::Getter);
     JSJitGetterOp getter = info->getter;
     return getter(cx, obj, val.toPrivate(), JSJitGetterCallArgs(args));
 }
@@ -4948,7 +4948,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
-    MOZ_ASSERT(info->type == JSJitInfo::Setter);
+    MOZ_ASSERT(info->type() == JSJitInfo::Setter);
     JSJitSetterOp setter = info->setter;
     if (!setter(cx, obj, val.toPrivate(), JSJitSetterCallArgs(args)))
         return false;
@@ -4972,7 +4972,7 @@ dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
     JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
-    MOZ_ASSERT(info->type == JSJitInfo::Method);
+    MOZ_ASSERT(info->type() == JSJitInfo::Method);
     JSJitMethodOp method = info->method;
     return method(cx, obj, val.toPrivate(), JSJitMethodCallArgs(args));
 }

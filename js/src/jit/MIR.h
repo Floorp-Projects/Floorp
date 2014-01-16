@@ -7918,7 +7918,7 @@ class MGetDOMProperty
       : info_(jitinfo)
     {
         JS_ASSERT(jitinfo);
-        JS_ASSERT(jitinfo->type == JSJitInfo::Getter);
+        JS_ASSERT(jitinfo->type() == JSJitInfo::Getter);
 
         setOperand(0, obj);
 
@@ -7927,7 +7927,7 @@ class MGetDOMProperty
 
         // We are movable iff the jitinfo says we can be.
         if (isDomMovable()) {
-            JS_ASSERT(jitinfo->aliasSet != JSJitInfo::AliasEverything);
+            JS_ASSERT(jitinfo->aliasSet() != JSJitInfo::AliasEverything);
             setMovable();
         }
 
@@ -7957,7 +7957,7 @@ class MGetDOMProperty
         return info_->isMovable;
     }
     JSJitInfo::AliasSet domAliasSet() const {
-        return info_->aliasSet;
+        return info_->aliasSet();
     }
     size_t domMemberSlotIndex() const {
         MOZ_ASSERT(info_->isInSlot);
