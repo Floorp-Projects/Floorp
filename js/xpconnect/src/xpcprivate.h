@@ -2822,7 +2822,7 @@ public:
     NS_DECL_NSIJSIID
     NS_DECL_NSIXPCSCRIPTABLE
 
-    static nsJSIID* NewID(nsIInterfaceInfo* aInfo);
+    static already_AddRefed<nsJSIID> NewID(nsIInterfaceInfo* aInfo);
 
     nsJSIID(nsIInterfaceInfo* aInfo);
     nsJSIID(); // not implemented
