@@ -1,0 +1,2 @@
+Content-Security-Policy: default-src 'self' 'unsafe-inline';
+X-Content-Security-Policy: allow 'self' 'inline-script';
