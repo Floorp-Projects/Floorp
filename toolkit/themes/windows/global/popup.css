@@ -75,29 +75,18 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  padding: 4px;
-  color: -moz-FieldText;
-  background: -moz-field;
+  border-radius: 4px;
+  padding: 10px;
+  color: -moz-DialogText;
+  background: -moz-Dialog;
   background-clip: padding-box;
   border: 1px solid ThreeDShadow;
   margin: 4px;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-%endif
-/* < Win8 */
-.panel-arrowcontent {
-  border-radius: 4px;
-}
-%ifdef WINDOWS_AERO
-}
-%endif
-
 .panel-arrow[side="top"],
 .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   position: relative;
   margin-left: 10px;
   margin-right: 10px;
@@ -114,7 +103,7 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrow[side="left"],
 .panel-arrow[side="right"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal-themed.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   position: relative;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -132,19 +121,34 @@ panel[type="arrow"][side="right"] {
 %ifdef XP_WIN
 @media (-moz-windows-default-theme) {
   .panel-arrowcontent {
-    border-color: hsla(210,4%,10%,.2);
-    box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
-                0 0 7px hsla(210,4%,10%,.1);
+    border-color: rgba(0,0,0,.3);
+    box-shadow: 0 0 4px rgba(0,0,0,.3);
+  }
+
+  .panel-arrowcontent[side="top"] {
+    background-image: linear-gradient(white 1px, rgba(255,255,255,0) 15px);
+  }
+
+  .panel-arrowcontent[side="bottom"] {
+    background-image: linear-gradient(to top, white 1px, rgba(255,255,255,0) 15px);
+  }
+
+  .panel-arrowcontent[side="left"] {
+    background-image: linear-gradient(to right, white 1px, rgba(255,255,255,0) 15px);
+  }
+
+  .panel-arrowcontent[side="right"] {
+    background-image: linear-gradient(to left, white 1px, rgba(255,255,255,0) 15px);
   }
 
   .panel-arrow[side="top"],
   .panel-arrow[side="bottom"] {
-    list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical-white.png");
   }
 
   .panel-arrow[side="left"],
   .panel-arrow[side="right"] {
-    list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal-white.png");
   }
 }
 %endif
