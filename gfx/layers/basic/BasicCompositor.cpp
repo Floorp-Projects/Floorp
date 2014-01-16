@@ -530,7 +530,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 void
 BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const gfx::Rect *aClipRectIn,
-                            const gfxMatrix& aTransform,
+                            const gfx::Matrix& aTransform,
                             const gfx::Rect& aRenderBounds,
                             gfx::Rect *aClipRectOut /* = nullptr */,
                             gfx::Rect *aRenderBoundsOut /* = nullptr */)
