@@ -191,4 +191,4 @@ skip-if(!winWidget) pref(webgl.prefer-native-gl,true) pref(webgl.prefer-16bpp,tr
 
 # focus rings
 pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidVersion<15,8,500) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
-pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidVersion<15,8,500) skip-if(winWidget) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
+pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidVersion<15,8,500) skip-if(winWidget) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
