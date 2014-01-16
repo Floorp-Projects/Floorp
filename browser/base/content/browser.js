@@ -3710,11 +3710,11 @@ var XULBrowserWindow = {
       // Try not to instantiate gCustomizeMode as much as possible,
       // so don't use CustomizeMode.jsm to check for URI or customizing.
       let customizingURI = "about:customizing";
-      if (location == customizingURI) {
+      if (location == customizingURI &&
+          !CustomizationHandler.isCustomizing()) {
         gCustomizeMode.enter();
       } else if (location != customizingURI &&
-                 (CustomizationHandler.isEnteringCustomizeMode ||
-                  CustomizationHandler.isCustomizing())) {
+                 CustomizationHandler.isCustomizing()) {
         gCustomizeMode.exit();
       }
     }
