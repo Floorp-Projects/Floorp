@@ -1660,7 +1660,7 @@ class InitialShapeSetRef : public BufferableRef
     }
 };
 
-#ifdef DEBUG
+#ifdef JS_GC_ZEAL
 void
 JSCompartment::checkInitialShapesTableAfterMovingGC()
 {
