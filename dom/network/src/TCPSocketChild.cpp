@@ -80,7 +80,7 @@ NS_IMETHODIMP
 TCPSocketChild::SendOpen(nsITCPSocketInternal* aSocket,
                          const nsAString& aHost, uint16_t aPort,
                          bool aUseSSL, const nsAString& aBinaryType,
-                         nsIDOMWindow* aWindow, const JS::Value& aWindowObj,
+                         nsIDOMWindow* aWindow, JS::Handle<JS::Value> aWindowObj,
                          JSContext* aCx)
 {
   mSocket = aSocket;
@@ -198,7 +198,7 @@ TCPSocketChild::SendClose()
 }
 
 NS_IMETHODIMP
-TCPSocketChild::SendSend(const JS::Value& aData,
+TCPSocketChild::SendSend(JS::Handle<JS::Value> aData,
                          uint32_t aByteOffset,
                          uint32_t aByteLength,
                          uint32_t aTrackingNumber,
@@ -234,7 +234,7 @@ TCPSocketChild::SendSend(const JS::Value& aData,
 
 NS_IMETHODIMP
 TCPSocketChild::SetSocketAndWindow(nsITCPSocketInternal *aSocket,
-                                   const JS::Value& aWindowObj,
+                                   JS::Handle<JS::Value> aWindowObj,
                                    JSContext* aCx)
 {
   mSocket = aSocket;

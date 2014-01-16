@@ -67,7 +67,7 @@ public class UpgradeReceiver extends BroadcastReceiver {
           final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
           final String username = params.username;
           final String serverURL = params.serverURL;
-          final String profile = Constants.DEFAULT_PROFILE;
+          final String profile = "default";
           try {
             ConfigurationMigrator.ensurePrefsAreVersion(SyncConfiguration.CURRENT_PREFS_VERSION, context, accountManager, account,
                 product, username, serverURL, profile);

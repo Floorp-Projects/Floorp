@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Webrtc Internals</title>
+  </head>
+  <script>
+
+
+function getCandPairLogs(id) {
+  try {
+    var wg = new WebrtcGlobalInformation();
+    wg.getCandPairLogs(id, displayLogs, console.log);
+  } catch (e) {
+    console.log("Exception while creating WebrtcGlobalInformation" + e.toString());
+  }
+}
+
+function getAllLogs() {
+  try {
+    var wg = new WebrtcGlobalInformation();
+    wg.getLogs('', displayLogs, console.log);
+  } catch(e) {
+    console.log("Exception while creating WebrtcGlobalInformation" + e.toString());
+  }
+}
+
+function displayLogs(logs) {
+  var logsDiv = document.getElementById('logs');
+  while (logsDiv.lastChild) {
+    logsDiv.removeChild(logsDiv.lastChild);
+  }
+  logsDiv.appendChild(document.createElement('h3'))
+         .appendChild(document.createTextNode('Logging:'));
+  logs.forEach(function(logLine){
+    logsDiv.appendChild(document.createElement('div'))
+           .appendChild(document.createTextNode(logLine));
+  });
+}
+
+function buildCandPairTableRow(candPair, stats) {
+  var row = document.createElement('tr');
+  row.onclick = function() {
+    getCandPairLogs(candPair.id);
+  }
+
+  if (stats.has(candPair.localCandidateId)) {
+    // TODO: Might have collisions; we either need to be able to supply
+    // desired type to get(), or do the ugly business of putting the type
+    // in the id as well as the type field.
+    var localCand = stats.get(candPair.localCandidateId);
+    row.appendChild(document.createElement('td'))
+       .appendChild(document.createTextNode(localCand.ipAddress + ':' +
+                                            localCand.portNumber + '/' +
+                                            localCand.candidateType));
+  } else {
+    row.appendChild(document.createElement('td'))
+       .appendChild(document.createTextNode(candPair.localCandidateId));
+  }
+
+  if (stats.has(candPair.remoteCandidateId)) {
+    // TODO: Might have collisions; we either need to be able to supply
+    // desired type to get(), or do the ugly business of putting the type
+    // in the id as well as the type field.
+    var remoteCand = stats.get(candPair.remoteCandidateId);
+    row.appendChild(document.createElement('td'))
+       .appendChild(document.createTextNode(remoteCand.ipAddress + ':' +
+                                            remoteCand.portNumber + '/' +
+                                            remoteCand.candidateType));
+  } else {
+    row.appendChild(document.createElement('td'))
+       .appendChild(document.createTextNode(candPair.remoteCandidateId));
+  }
+
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(candPair.state));
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(candPair.mozPriority));
+
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(candPair.nominated ? '*' : ''));
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(candPair.selected ? '*' : ''));
+  return row;
+}
+
+function buildCandTableRow(cand, stats) {
+  var row = document.createElement('tr');
+
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(cand.ipAddress + ':' +
+                                          cand.portNumber));
+
+  row.appendChild(document.createElement('td'))
+     .appendChild(document.createTextNode(cand.candidateType));
+  return row;
+}
+
+function buildCandPairTableHeader() {
+  var headerRow = document.createElement('tr');
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Local candidate'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Remote candidate'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('ICE State'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Priority'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Nominated'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Selected'));
+  return headerRow;
+}
+
+function buildCandTableHeader(isLocal) {
+  var headerRow = document.createElement('tr');
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode(isLocal ?
+                                                'Local candidate addr' :
+                                                'Remote candidate addr'));
+  headerRow.appendChild(document.createElement('th'))
+           .appendChild(document.createTextNode('Type'));
+  return headerRow;
+}
+
+function buildEmptyCandPairTable() {
+  var candPairTable = document.createElement('table');
+  candPairTable.appendChild(buildCandPairTableHeader());
+  return candPairTable;
+}
+
+function buildEmptyCandTable(local) {
+  var candTable = document.createElement('table');
+  candTable.appendChild(buildCandTableHeader(local));
+  return candTable;
+}
+
+function buildPcDiv(stats, pcDivId) {
+  var newPcDiv = document.createElement('div');
+
+  var heading = document.createElement('h3');
+  heading.appendChild(document.createTextNode(pcDivId));
+  newPcDiv.appendChild(heading);
+
+  var subDivs = {};
+
+  stats.forEach(function(stat) {
+    if (!stat.componentId) {
+      return;
+    }
+
+    if (!subDivs[stat.componentId]) {
+      subDivs[stat.componentId] = {
+        candPairTable: buildEmptyCandPairTable(),
+        localCandTable: buildEmptyCandTable(true),
+        remoteCandTable: buildEmptyCandTable(false)
+      };
+    }
+
+    var subDiv = subDivs[stat.componentId];
+
+    if (stat.type == 'candidatepair') {
+      subDiv.candPairTable.appendChild(buildCandPairTableRow(stat, stats));
+    } else if (stat.type == 'localcandidate') {
+      subDiv.localCandTable.appendChild(buildCandTableRow(stat, stats));
+    } else if (stat.type == 'remotecandidate') {
+      subDiv.remoteCandTable.appendChild(buildCandTableRow(stat, stats));
+    }
+  });
+
+  for (var cid in subDivs) {
+    if (subDivs.hasOwnProperty(cid)) {
+      var subDiv = subDivs[cid];
+      newPcDiv.appendChild(document.createElement('h4'))
+              .appendChild(document.createTextNode(cid));
+      newPcDiv.appendChild(subDiv.candPairTable);
+      newPcDiv.appendChild(subDiv.localCandTable);
+      newPcDiv.appendChild(subDiv.remoteCandTable);
+    }
+  }
+
+  return newPcDiv;
+}
+
+function displayStats(obj) {
+  console.log("Got stats callback.");
+  var pcid = obj.mozPcid;
+  var pcDivId = 'PeerConnection:' + pcid;
+
+  var pcDiv = document.getElementById(pcDivId);
+  var newPcDiv = buildPcDiv(obj, pcDivId);
+  newPcDiv.id = pcDivId;
+
+  if (!pcDiv) {
+    document.getElementById('stats').appendChild(newPcDiv);
+  } else {
+    document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
+  }
+}
+
+function refreshStats() {
+  try {
+    var wg = new WebrtcGlobalInformation();
+    wg.getAllStats(displayStats, console.log);
+  } catch(e) {
+    console.log("Exception while creating WebrtcGlobalInformation:" + e.toString());
+  }
+}
+
+  </script>
+
+  <body id="body" onload="refreshStats()">
+    <div id="stats">
+    </div>
+    <button onclick="getAllLogs()">Show/refresh logging</button>
+    <div id="logs">
+    </div>
+  </body>
+</html>
+<!-- vim: softtabstop=2:shiftwidth=2:expandtab
+-->

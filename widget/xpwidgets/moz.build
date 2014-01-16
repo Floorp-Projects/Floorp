@@ -65,6 +65,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
         'nsNativeTheme.cpp',
     ]
 
+if not CONFIG['MOZ_B2G']:
+    DEFINES['MOZ_CROSS_PROCESS_IME'] = True
+
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpwidgets_s'
@@ -73,6 +76,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '../shared',
+    '/dom/events',
     '/layout/base',
     '/layout/forms',
     '/layout/generic',

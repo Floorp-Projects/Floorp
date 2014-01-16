@@ -207,6 +207,7 @@ TabParent::TabParent(ContentParent* aManager, const TabContext& aContext, uint32
   , mIMECompositionEnding(false)
   , mIMECompositionStart(0)
   , mIMESeqno(0)
+  , mIMECompositionRectOffset(0)
   , mEventCaptureDepth(0)
   , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
@@ -997,6 +998,24 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
 }
 
 bool
+TabParent::RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
+                                                const nsIntRect& aRect,
+                                                const nsIntRect& aCaretRect)
+{
+  // add rect to cache for another query
+  mIMECompositionRectOffset = aOffset;
+  mIMECompositionRect = aRect;
+  mIMECaretRect = aCaretRect;
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+  widget->NotifyIME(NOTIFY_IME_OF_COMPOSITION_UPDATE);
+  return true;
+}
+
+bool
 TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
                                   const uint32_t& aAnchor,
                                   const uint32_t& aFocus)
@@ -1043,6 +1062,35 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
   return true;
 }
 
+nsIntPoint
+TabParent::GetChildProcessOffset()
+{
+  // The "toplevel widget" in child processes is always at position
+  // 0,0.  Map the event coordinates to match that.
+
+  nsIntPoint offset(0, 0);
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return offset;
+  }
+  nsIFrame* targetFrame = frameLoader->GetPrimaryFrameOfOwningContent();
+  if (!targetFrame) {
+    return offset;
+  }
+
+  // Find out how far we're offset from the nearest widget.
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return offset;
+  }
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(widget,
+                                                            nsIntPoint(0, 0),
+                                                            targetFrame);
+
+  return LayoutDeviceIntPoint::ToUntyped(LayoutDeviceIntPoint::FromAppUnitsToNearest(
+           pt, targetFrame->PresContext()->AppUnitsPerDevPixel()));
+}
+
 /**
  * Try to answer query event using cached text.
  *
@@ -1056,6 +1104,11 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
  *  have out-of-bounds offsets, so that widget can request content without
  *  knowing the exact length of text. It's up to widget to handle cases when
  *  the returned offset/length are different from the queried offset/length.
+ *
+ * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
+ *   Cocoa widget always queries selected offset, so it works on it.
+ *
+ * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
  */
 bool
 TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
@@ -1103,6 +1156,29 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       aEvent.mReply.mString = Substring(mIMECacheText,
                                         inputOffset,
                                         inputEnd - inputOffset);
+      aEvent.mSucceeded = true;
+    }
+    break;
+  case NS_QUERY_TEXT_RECT:
+    {
+      if (aEvent.mInput.mOffset != mIMECompositionRectOffset ||
+          aEvent.mInput.mLength != 1) {
+        break;
+      }
+
+      aEvent.mReply.mOffset = mIMECompositionRectOffset;
+      aEvent.mReply.mRect = mIMECompositionRect - GetChildProcessOffset();
+      aEvent.mSucceeded = true;
+    }
+    break;
+  case NS_QUERY_CARET_RECT:
+    {
+      if (aEvent.mInput.mOffset != mIMECompositionRectOffset) {
+        break;
+      }
+
+      aEvent.mReply.mOffset = mIMECompositionRectOffset;
+      aEvent.mReply.mRect = mIMECaretRect - GetChildProcessOffset();
       aEvent.mSucceeded = true;
     }
     break;
@@ -1529,23 +1605,36 @@ TabParent::HandleDelayedDialogs()
   }
 }
 
-PRenderFrameParent*
-TabParent::AllocPRenderFrameParent(ScrollingBehavior* aScrolling,
-                                   TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                   uint64_t* aLayersId)
+bool
+TabParent::RecvInitRenderFrame(PRenderFrameParent* aFrame,
+                               ScrollingBehavior* aScrolling,
+                               TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                               uint64_t* aLayersId,
+                               bool *aSuccess)
 {
-  MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
+  *aScrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
+  *aTextureFactoryIdentifier = TextureFactoryIdentifier();
+  *aLayersId = 0;
 
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
-    NS_WARNING("Can't allocate graphics resources, aborting subprocess");
-    return nullptr;
+    NS_WARNING("Can't allocate graphics resources. May already be shutting down.");
+    *aSuccess = false;
+    return true;
   }
 
-  *aScrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
-  return new RenderFrameParent(frameLoader,
-                               *aScrolling,
-                               aTextureFactoryIdentifier, aLayersId);
+  static_cast<RenderFrameParent*>(aFrame)->Init(frameLoader, *aScrolling,
+                                                aTextureFactoryIdentifier, aLayersId);
+
+  *aSuccess = true;
+  return true;
+}
+
+PRenderFrameParent*
+TabParent::AllocPRenderFrameParent()
+{
+  MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
+  return new RenderFrameParent();
 }
 
 bool
@@ -1696,10 +1785,7 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 }
 
 bool
-TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
-                                       ScrollingBehavior* scrolling,
-                                       TextureFactoryIdentifier* factoryIdentifier,
-                                       uint64_t* layersId)
+TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor)
 {
   return true;
 }

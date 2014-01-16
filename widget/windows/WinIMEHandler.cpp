@@ -194,6 +194,9 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
     case REQUEST_TO_CANCEL_COMPOSITION:
       nsIMM32Handler::CancelComposition(aWindow);
       return NS_OK;
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      nsIMM32Handler::OnUpdateComposition(aWindow);
+      return NS_OK;
 #ifdef NS_ENABLE_TSF
     case NOTIFY_IME_OF_BLUR:
       // If a plugin gets focus while TSF has focus, we need to notify TSF of

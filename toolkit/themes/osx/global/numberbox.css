@@ -16,6 +16,7 @@ textbox[type="number"] {
 
 html|*.numberbox-input {
   text-align: right;
+  padding: 0 1px !important;
 }
 
 .numberbox-input-box {

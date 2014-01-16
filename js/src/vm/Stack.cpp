@@ -375,7 +375,7 @@ StackFrame::mark(JSTracer *trc)
     }
     if (IS_GC_MARKING_TRACER(trc))
         script()->compartment()->zone()->active = true;
-    gc::MarkValueUnbarriered(trc, &returnValue(), "rval");
+    gc::MarkValueUnbarriered(trc, returnValue().address(), "rval");
 }
 
 void
@@ -1140,7 +1140,7 @@ ScriptFrameIter::returnValue() const
       case JIT:
 #ifdef JS_ION
         if (data_.ionFrames_.isBaselineJS())
-            return *data_.ionFrames_.baselineFrame()->returnValue();
+            return data_.ionFrames_.baselineFrame()->returnValue();
 #endif
         break;
       case SCRIPTED:

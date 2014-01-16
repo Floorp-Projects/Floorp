@@ -35,8 +35,7 @@ interface VTTCue : EventTarget {
   attribute DOMString regionId;
   attribute DirectionSetting vertical;
   attribute boolean snapToLines;
-  // XXXhumph: https://www.w3.org/Bugs/Public/show_bug.cgi?id=20651
-  // attribute (long or AutoKeyword) line;
+  attribute (long or AutoKeyword) line;
   [SetterThrows]
   attribute AlignSetting lineAlign;
   [SetterThrows]

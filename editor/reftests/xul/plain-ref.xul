@@ -8,6 +8,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <html:div class="plainfield">test</html:div>
+  <html:div class="plainfield"> test</html:div>
       
 </window>
