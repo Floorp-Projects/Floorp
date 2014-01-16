@@ -3498,13 +3498,8 @@ nsXPCComponents::ClearMembers()
 #define XPC_IMPL_GET_OBJ_METHOD(_class, _n)                                   \
 NS_IMETHODIMP _class::Get##_n(nsIXPCComponents_##_n * *a##_n) {               \
     NS_ENSURE_ARG_POINTER(a##_n);                                             \
-    if (!m##_n) {                                                             \
-        if (!(m##_n = new nsXPCComponents_##_n())) {                          \
-            *a##_n = nullptr;                                                 \
-            return NS_ERROR_OUT_OF_MEMORY;                                    \
-        }                                                                     \
-        NS_ADDREF(m##_n);                                                     \
-    }                                                                         \
+    if (!m##_n)                                                               \
+        NS_ADDREF(m##_n = new nsXPCComponents_##_n());                        \
     NS_ADDREF(m##_n);                                                         \
     *a##_n = m##_n;                                                           \
     return NS_OK;                                                             \
