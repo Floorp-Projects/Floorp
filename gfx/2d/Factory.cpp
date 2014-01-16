@@ -51,6 +51,8 @@
 
 #include "Logging.h"
 
+#include "mozilla/CheckedInt.h"
+
 #ifdef PR_LOGGING
 PRLogModuleInfo *
 GetGFX2DLog()
@@ -181,9 +183,58 @@ Factory::HasSSE2()
 #endif
 }
 
+bool
+Factory::CheckSurfaceSize(const IntSize &sz, int32_t limit)
+{
+  if (sz.width < 0 || sz.height < 0) {
+    gfxDebug() << "Surface width or height < 0!";
+    return false;
+  }
+
+  // reject images with sides bigger than limit
+  if (limit && (sz.width > limit || sz.height > limit)) {
+    gfxDebug() << "Surface size too large (exceeds caller's limit)!";
+    return false;
+  }
+
+  // make sure the surface area doesn't overflow a int32_t
+  CheckedInt<int32_t> tmp = sz.width;
+  tmp *= sz.height;
+  if (!tmp.isValid()) {
+    gfxDebug() << "Surface size too large (would overflow)!";
+    return false;
+  }
+
+  // assuming 4 bytes per pixel, make sure the allocation size
+  // doesn't overflow a int32_t either
+  CheckedInt<int32_t> stride = sz.width;
+  stride *= 4;
+
+  // When aligning the stride to 16 bytes, it can grow by up to 15 bytes.
+  stride += 16 - 1;
+
+  if (!stride.isValid()) {
+    gfxDebug() << "Surface size too large (stride overflows int32_t)!";
+    return false;
+  }
+
+  CheckedInt<int32_t> numBytes = GetAlignedStride<16>(sz.width * 4);
+  numBytes *= aSize.height;
+  if (!numBytes.isValid()) {
+    gfxDebug() << "Surface size too large (allocation size would overflow int32_t)!";
+    return false;
+  }
+
+  return true;
+}
+
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat)
 {
+  if (!CheckSurfaceSize(aSize)) {
+    return nullptr;
+  }
+
   RefPtr<DrawTarget> retVal;
   switch (aBackend) {
 #ifdef WIN32
@@ -273,6 +324,10 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
                                  int32_t aStride, 
                                  SurfaceFormat aFormat)
 {
+  if (!CheckSurfaceSize(aSize)) {
+    return nullptr;
+  }
+
   RefPtr<DrawTarget> retVal;
 
   switch (aBackend) {
@@ -643,6 +698,10 @@ TemporaryRef<DataSourceSurface>
 Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  SurfaceFormat aFormat)
 {
+  if (!CheckSurfaceSize(aSize)) {
+    return nullptr;
+  }
+
   RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
   if (newSurf->Init(aSize, aFormat)) {
     return newSurf;
