@@ -4,6 +4,7 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
 requestLongerTimeout(5);
 
 // Dragging the zoom controls to be before the print button should not move any controls.
@@ -461,5 +462,6 @@ add_task(function() {
 
 add_task(function asyncCleanup() {
   yield endCustomizing();
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 });
