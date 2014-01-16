@@ -176,16 +176,13 @@ SharedSurface_EGLImage::Fence()
             mPixels = Factory::CreateDataSourceSurface(Size(), format);
         }
 
-        DataSourceSurface::MappedSurface map;
-        mPixels->Map(DataSourceSurface::MapType::WRITE, &map);
-
         nsRefPtr<gfxImageSurface> wrappedData =
-            new gfxImageSurface(map.mData,
+            new gfxImageSurface(mPixels->GetData(),
                                 ThebesIntSize(mPixels->GetSize()),
-                                map.mStride,
+                                mPixels->Stride(),
                                 SurfaceFormatToImageFormat(mPixels->GetFormat()));
         ReadScreenIntoImageSurface(mGL, wrappedData);
-        mPixels->Unmap();
+        mPixels->MarkDirty();
         return;
     }
     MOZ_ASSERT(mPipeActive);

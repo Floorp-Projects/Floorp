@@ -15,9 +15,6 @@
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
 
 namespace mozilla {
-
-using namespace gfx;
-
 namespace layers {
 
 // The Data is layed out as follows:
@@ -249,23 +246,20 @@ YCbCrImageDataSerializer::CopyData(const uint8_t* aYData,
   return true;
 }
 
-TemporaryRef<DataSourceSurface>
+TemporaryRef<gfx::DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
-  RefPtr<DataSourceSurface> result =
-    Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::R8G8B8X8);
-
-  DataSourceSurface::MappedSurface map;
-  result->Map(DataSourceSurface::MapType::WRITE, &map);
+  RefPtr<gfx::DataSourceSurface> result =
+    gfx::Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::R8G8B8X8);
 
   gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
-                           map.mData,
+                           result->GetData(),
                            0, 0, //pic x and y
                            GetYSize().width, GetYSize().height,
                            GetYStride(), GetCbCrStride(),
-                           map.mStride,
+                           result->Stride(),
                            gfx::YV12);
-  result->Unmap();
+  result->MarkDirty();
   return result.forget();
 }
 
