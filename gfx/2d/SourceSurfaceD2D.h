@@ -62,6 +62,8 @@ public:
   virtual int32_t Stride();
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
+  virtual bool Map(MapType, MappedSurface *aMappedSurface);
+  virtual void Unmap();
 
   bool IsValid()
   {

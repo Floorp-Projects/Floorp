@@ -236,9 +236,55 @@ DataSourceSurfaceD2DTarget::Stride()
   return mMap.RowPitch;
 }
 
+bool
+DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
+{
+  // DataSourceSurfaces used with the new Map API should not be used with GetData!!
+  MOZ_ASSERT(!mMapped);
+  MOZ_ASSERT(!mIsMapped);
+
+  if (!mTexture) {
+    return false;
+  }
+
+  D3D10_MAP mapType;
+
+  if (aMapType == MapType::READ) {
+    mapType = D3D10_MAP_READ;
+  } else if (aMapType == MapType::WRITE) {
+    mapType = D3D10_MAP_WRITE;
+  } else {
+    mapType = D3D10_MAP_READ_WRITE;
+  }
+
+  D3D10_MAPPED_TEXTURE2D map;
+
+  HRESULT hr = mTexture->Map(0, mapType, 0, &map);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Texture map failed with code: " << hr;
+    return false;
+  }
+
+  aMappedSurface->mData = (uint8_t*)map.pData;
+  aMappedSurface->mStride = map.RowPitch;
+
+  return true;
+}
+
+void
+DataSourceSurfaceD2DTarget::Unmap()
+{
+  MOZ_ASSERT(mIsMapped);
+
+  mTexture->Unmap(0);
+}
+
 void
 DataSourceSurfaceD2DTarget::EnsureMapped()
 {
+  // Do not use GetData() after having used Map!
+  MOZ_ASSERT(!mIsMapped);
   if (!mMapped) {
     HRESULT hr = mTexture->Map(0, D3D10_MAP_READ, 0, &mMap);
     if (FAILED(hr)) {
