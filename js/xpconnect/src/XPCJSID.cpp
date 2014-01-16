@@ -608,7 +608,7 @@ nsJSCID::ResolveName()
 }
 
 //static
-nsJSCID*
+already_AddRefed<nsJSCID>
 nsJSCID::NewID(const char* str)
 {
     if (!str) {
@@ -616,9 +616,8 @@ nsJSCID::NewID(const char* str)
         return nullptr;
     }
 
-    nsJSCID* idObj = new nsJSCID();
+    nsRefPtr<nsJSCID> idObj = new nsJSCID();
     bool success = false;
-    NS_ADDREF(idObj);
 
     if (str[0] == '{') {
         if (NS_SUCCEEDED(idObj->Initialize(str)))
@@ -635,8 +634,8 @@ nsJSCID::NewID(const char* str)
         }
     }
     if (!success)
-        NS_RELEASE(idObj);
-    return idObj;
+        return nullptr;
+    return idObj.forget();
 }
 
 static const nsID*
