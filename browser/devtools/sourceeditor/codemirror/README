@@ -39,6 +39,13 @@ in the LICENSE file:
  * comment.js
  * dialog/dialog.css
  * dialog/dialog.js
+ * keymap/emacs.js
+ * keymap/vim.js
+ * fold/foldcode.js
+ * fold/brace-fold.js
+ * fold/comment-fold.js
+ * fold/xml-fold.js
+ * fold/foldgutter.js
  * xml.js
  * css.js
  * javascript.js

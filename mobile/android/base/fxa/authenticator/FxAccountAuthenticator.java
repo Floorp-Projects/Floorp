@@ -43,9 +43,6 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   protected static void enableSyncing(Context context, Account account) {
     for (String authority : new String[] {
         AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.formhistory",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.tabs",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.passwords",
     }) {
       ContentResolver.setSyncAutomatically(account, authority, true);
       ContentResolver.setIsSyncable(account, authority, 1);

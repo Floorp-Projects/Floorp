@@ -812,6 +812,10 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
   ScrollableLayerGuid guid;
   MaybeForwardEventToRenderFrame(event, &guid, &e);
 
+  if (mIsDestroyed) {
+    return false;
+  }
+
   MapEventCoordinatesForChildProcess(mChildProcessOffsetAtTouchStart, &e);
 
   return (e.message == NS_TOUCH_MOVE) ?

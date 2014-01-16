@@ -8,7 +8,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-public abstract class FxAccountSyncService extends Service {
+public class FxAccountSyncService extends Service {
   private static final Object syncAdapterLock = new Object();
   private static FxAccountSyncAdapter syncAdapter = null;
 
