@@ -87,7 +87,11 @@ pref("browser.chromeURL", "chrome://browser/content/");
 pref("browser.tabs.remote", false);
 
 // Telemetry
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+pref("toolkit.telemetry.enabledPreRelease", true);
+#else
 pref("toolkit.telemetry.enabled", true);
+#endif
 pref("toolkit.telemetry.prompted", 2);
 
 pref("toolkit.screen.lock", false);
