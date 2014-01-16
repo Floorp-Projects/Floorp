@@ -2342,7 +2342,7 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     RootedValue alias(cx);
 
     for (uint32_t i = 0; i < pda.length; i++, pd++) {
-        pdobj = JS_NewObject(cx, nullptr, nullptr, nullptr);
+        pdobj = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
         if (!pdobj) {
             ok = false;
             break;
@@ -3884,7 +3884,7 @@ ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
         JS_ConvertStub
     };
 
-    RootedObject obj(cx, JS_NewObject(cx, &cls, nullptr, nullptr));
+    RootedObject obj(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
     if (!obj)
         return false;
     JS_SET_RVAL(cx, vp, ObjectValue(*obj));
@@ -5002,7 +5002,8 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value *vp)
         return false;
     }
 
-    RootedObject domObj(cx, JS_NewObject(cx, &dom_class, &protov.toObject(), nullptr));
+    RootedObject proto(cx, &protov.toObject());
+    RootedObject domObj(cx, JS_NewObject(cx, &dom_class, proto, JS::NullPtr()));
     if (!domObj)
         return false;
 

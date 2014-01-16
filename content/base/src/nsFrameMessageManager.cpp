@@ -923,7 +923,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
       // The parameter for the listener function.
       JS::Rooted<JSObject*> param(ctx,
-        JS_NewObject(ctx, nullptr, nullptr, nullptr));
+        JS_NewObject(ctx, nullptr, JS::NullPtr(), JS::NullPtr()));
       NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
       JS::Rooted<JS::Value> targetv(ctx);
@@ -939,7 +939,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
 
       if (!cpows) {
-        cpows = JS_NewObject(ctx, nullptr, nullptr, nullptr);
+        cpows = JS_NewObject(ctx, nullptr, JS::NullPtr(), JS::NullPtr());
         if (!cpows) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -976,7 +976,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       // message.principal = { appId: <id>, origin: <origin>, isInBrowserElement: <something> }
       else {
         JS::Rooted<JSObject*> principalObj(ctx,
-          JS_NewObject(ctx, nullptr, nullptr, nullptr));
+          JS_NewObject(ctx, nullptr, JS::NullPtr(), JS::NullPtr()));
 
         uint32_t appId;
         nsresult rv = aPrincipal->GetAppId(&appId);

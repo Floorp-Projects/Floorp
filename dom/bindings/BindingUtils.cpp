@@ -1727,7 +1727,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 
     JS::Rooted<JSObject*> copyFrom(aCx, isProxy ? expandoObject : aObj);
     if (copyFrom) {
-      propertyHolder = JS_NewObjectWithGivenProto(aCx, nullptr, nullptr,
+      propertyHolder = JS_NewObjectWithGivenProto(aCx, nullptr, JS::NullPtr(),
                                                   newParent);
       if (!propertyHolder) {
         return NS_ERROR_OUT_OF_MEMORY;

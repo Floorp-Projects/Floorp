@@ -492,7 +492,7 @@ DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandle
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     bool b;
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!JS_HasInstance(cx, target, v, &b))
+    if (!HasInstance(cx, target, v, &b))
         return false;
     *bp = !!b;
     return true;
@@ -3332,7 +3332,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     // Stash the call and construct traps on a holder object that we can stick
     // in a slot on the proxy.
     RootedObject ccHolder(cx, JS_NewObjectWithGivenProto(cx, Jsvalify(&CallConstructHolder),
-                                                         nullptr, cx->global()));
+                                                         NullPtr(), cx->global()));
     if (!ccHolder)
         return false;
     ccHolder->setReservedSlot(0, ObjectValue(*call));

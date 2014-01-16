@@ -47,7 +47,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
   JS::RootedObject globalA(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
   CHECK(globalA);
 
-  JS::RootedObject customA(cx, JS_NewObject(cx, &CustomClass, nullptr, nullptr));
+  JS::RootedObject customA(cx, JS_NewObject(cx, &CustomClass, JS::NullPtr(), JS::NullPtr()));
   CHECK(customA);
   JS_SetReservedSlot(customA, CUSTOM_SLOT, Int32Value(17));
 
@@ -65,7 +65,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 
     // ...and enter it.
     JSAutoCompartment enter(cx, globalB);
-    JS::RootedObject customB(cx, JS_NewObject(cx, &CustomClass, nullptr, nullptr));
+    JS::RootedObject customB(cx, JS_NewObject(cx, &CustomClass, JS::NullPtr(), JS::NullPtr()));
     CHECK(customB);
     JS_SetReservedSlot(customB, CUSTOM_SLOT, Int32Value(42));
 

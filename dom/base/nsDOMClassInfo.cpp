@@ -3293,14 +3293,14 @@ DefineComponentsShim(JSContext *cx, JS::Handle<JSObject*> global, nsPIDOMWindow 
   }
 
   // Create a fake Components object.
-  JS::Rooted<JSObject*> components(cx, JS_NewObject(cx, nullptr, nullptr, global));
+  JS::Rooted<JSObject*> components(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
   NS_ENSURE_TRUE(components, NS_ERROR_OUT_OF_MEMORY);
   bool ok = JS_DefineProperty(cx, global, "Components", JS::ObjectValue(*components),
                               JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   // Create a fake interfaces object.
-  JS::Rooted<JSObject*> interfaces(cx, JS_NewObject(cx, nullptr, nullptr, global));
+  JS::Rooted<JSObject*> interfaces(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
   NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
   ok = JS_DefineProperty(cx, components, "interfaces", JS::ObjectValue(*interfaces),
                          JS_PropertyStub, JS_StrictPropertyStub,
