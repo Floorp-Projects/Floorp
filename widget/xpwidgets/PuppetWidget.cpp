@@ -502,8 +502,15 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
   DispatchEvent(&textRect, status);
   NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
 
+  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
+  InitEvent(caretRect, nullptr);
+  caretRect.InitForQueryCaretRect(offset);
+  DispatchEvent(&caretRect, status);
+  NS_ENSURE_TRUE(caretRect.mSucceeded, NS_ERROR_FAILURE);
+
   mTabChild->SendNotifyIMESelectedCompositionRect(offset,
-                                                  textRect.mReply.mRect);
+                                                  textRect.mReply.mRect,
+                                                  caretRect.mReply.mRect);
   return NS_OK;
 }
 
