@@ -441,7 +441,8 @@ CheckTypeSet(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 
 /*
  * Macro to emit a bytecode followed by a uint16_t immediate operand stored in
- * big-endian order, used for arg and var numbers as well as for atomIndexes.
+ * big-endian order.
+ *
  * NB: We use cx and bce from our caller's lexical environment, and return
  * false on error.
  */
@@ -450,33 +451,6 @@ CheckTypeSet(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
         if (Emit3(cx, bce, op, UINT16_HI(i), UINT16_LO(i)) < 0)               \
             return false;                                                     \
         CheckTypeSet(cx, bce, op);                                            \
-    JS_END_MACRO
-
-#define EMIT_UINT16PAIR_IMM_OP(op, i, j)                                      \
-    JS_BEGIN_MACRO                                                            \
-        ptrdiff_t off_ = EmitN(cx, bce, op, 2 * UINT16_LEN);                  \
-        if (off_ < 0)                                                         \
-            return false;                                                     \
-        jsbytecode *pc_ = bce->code(off_);                                    \
-        SET_UINT16(pc_, i);                                                   \
-        pc_ += UINT16_LEN;                                                    \
-        SET_UINT16(pc_, j);                                                   \
-    JS_END_MACRO
-
-#define EMIT_UINT16_IN_PLACE(offset, op, i)                                   \
-    JS_BEGIN_MACRO                                                            \
-        bce->code(offset)[0] = op;                                            \
-        bce->code(offset)[1] = UINT16_HI(i);                                  \
-        bce->code(offset)[2] = UINT16_LO(i);                                  \
-    JS_END_MACRO
-
-#define EMIT_UINT32_IN_PLACE(offset, op, i)                                   \
-    JS_BEGIN_MACRO                                                            \
-        bce->code(offset)[0] = op;                                            \
-        bce->code(offset)[1] = jsbytecode(i >> 24);                           \
-        bce->code(offset)[2] = jsbytecode(i >> 16);                           \
-        bce->code(offset)[3] = jsbytecode(i >> 8);                            \
-        bce->code(offset)[4] = jsbytecode(i);                                 \
     JS_END_MACRO
 
 static bool
@@ -5964,10 +5938,17 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
             return false;
-        unsigned index = bce->objectList.add(objbox);
+
         static_assert(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
                       "newinit and newobject must have equal length to edit in-place");
-        EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
+
+        uint32_t index = bce->objectList.add(objbox);
+        jsbytecode *code = bce->code(offset);
+        code[0] = JSOP_NEWOBJECT;
+        code[1] = jsbytecode(index >> 24);
+        code[2] = jsbytecode(index >> 16);
+        code[3] = jsbytecode(index >> 8);
+        code[4] = jsbytecode(index);
     }
 
     return true;
