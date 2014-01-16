@@ -20,3 +20,6 @@ type summary add nsIAtom --summary-string "${var.mString}"
 
 # Show the value of text nodes.
 type summary add nsTextNode --summary-string "${var.mText}"
+
+# Dump the current JS stack.
+command alias js expr DumpJSStack()
