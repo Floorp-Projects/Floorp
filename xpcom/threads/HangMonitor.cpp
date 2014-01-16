@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/HangMonitor.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -347,10 +346,6 @@ NotifyActivity(ActivityType activityType)
     }
     cumulativeUILagMS = 0;
   }
-
-  if (gThread && !gShutdown) {
-    mozilla::BackgroundHangMonitor().NotifyActivity();
-  }
 }
 
 void
@@ -361,10 +356,6 @@ Suspend()
 
   // Because gTimestamp changes this resets the wait count.
   gTimestamp = PR_INTERVAL_NO_WAIT;
-
-  if (gThread && !gShutdown) {
-    mozilla::BackgroundHangMonitor().NotifyWait();
-  }
 }
 
 } } // namespace mozilla::HangMonitor
