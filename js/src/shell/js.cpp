@@ -4834,13 +4834,14 @@ static const JSJitInfo dom_x_getterinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Getter,
-    JSVAL_TYPE_UNKNOWN, /* returnType */
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
+    JSJitInfo::AliasNone, /* aliasSet */
     false,    /* isInSlot */
-    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasNone /* aliasSet */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
+    nullptr   /* parallelNative */
 };
 
 static const JSJitInfo dom_x_setterinfo = {
@@ -4848,13 +4849,14 @@ static const JSJitInfo dom_x_setterinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Setter,
-    JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
+    JSJitInfo::AliasEverything, /* aliasSet */
     false,    /* isInSlot */
-    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasEverything /* aliasSet */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
+    nullptr   /* parallelNative */
 };
 
 static const JSJitInfo doFoo_methodinfo = {
@@ -4862,13 +4864,14 @@ static const JSJitInfo doFoo_methodinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Method,
-    JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
+    JSJitInfo::AliasEverything, /* aliasSet */
     false,    /* isInSlot */
-    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasEverything /* aliasSet */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
+    nullptr   /* parallelNative */
 };
 
 static const JSPropertySpec dom_props[] = {

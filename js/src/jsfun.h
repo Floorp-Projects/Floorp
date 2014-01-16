@@ -179,7 +179,7 @@ class JSFunction : public JSObject
         return isLambda() && displayAtom() && !hasGuessedAtom();
     }
     bool hasParallelNative() const {
-        return isNative() && jitInfo() && jitInfo()->hasParallelNative();
+        return isNative() && jitInfo() && !!jitInfo()->parallelNative;
     }
 
     bool isBuiltinFunctionConstructor();

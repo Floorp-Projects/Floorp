@@ -266,7 +266,8 @@ intrinsic_Dump(ThreadSafeContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL(intrinsic_Dump_jitInfo, intrinsic_Dump_jitInfo, intrinsic_Dump);
+const JSJitInfo intrinsic_Dump_jitInfo =
+    JS_JITINFO_NATIVE_PARALLEL(JSParallelNativeThreadSafeWrapper<intrinsic_Dump>);
 
 bool
 intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
@@ -286,7 +287,8 @@ intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL(intrinsic_ParallelSpew_jitInfo, intrinsic_ParallelSpew_jitInfo, intrinsic_ParallelSpew);
+const JSJitInfo intrinsic_ParallelSpew_jitInfo =
+    JS_JITINFO_NATIVE_PARALLEL(JSParallelNativeThreadSafeWrapper<intrinsic_ParallelSpew>);
 #endif
 
 /*
