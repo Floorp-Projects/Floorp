@@ -1155,8 +1155,10 @@ pref("devtools.tilt.outro_transition", true);
 //                  clear any recent files, but rather hide the
 //                  'Open Recent'-menu.
 // - showTrailingSpace: Whether to highlight trailing space or not.
+// - enableCodeFolding: Whether to enable code folding or not.
 pref("devtools.scratchpad.recentFilesMax", 10);
 pref("devtools.scratchpad.showTrailingSpace", false);
+pref("devtools.scratchpad.enableCodeFolding", true);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
@@ -1234,8 +1236,10 @@ pref("devtools.hud.loglimit.console", 200);
 // The developer tools editor configuration:
 // - tabsize: how many spaces to use when a Tab character is displayed.
 // - expandtab: expand Tab characters to spaces.
+// - keymap: which keymap to use (can be 'default', 'emacs' or 'vim')
 pref("devtools.editor.tabsize", 4);
 pref("devtools.editor.expandtab", true);
+pref("devtools.editor.keymap", "default");
 
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
