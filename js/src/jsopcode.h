@@ -60,7 +60,7 @@ typedef enum JSOp {
 #define JOF_INT8          18      /* int8_t immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
 /* 20 is unused */
-#define JOF_SCOPECOORD    21      /* pair of uint16_t immediates followed by block index */
+#define JOF_SCOPECOORD    21      /* embedded ScopeCoordinate immediate */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -207,6 +207,28 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 #define SET_SLOTNO(pc,varno)    SET_UINT16(pc,varno)
 #define SLOTNO_LEN              2
 #define SLOTNO_LIMIT            UINT16_LIMIT
+
+/*
+ * Describes the 'hops' component of a JOF_SCOPECOORD opcode.
+ *
+ * Note: this component is only 8 bits wide, limiting the maximum number of
+ * scopes between a use and def to roughly 255. This is a pretty small limit but
+ * note that SpiderMonkey's recursive descent parser can only parse about this
+ * many functions before hitting the C-stack recursion limit so this shouldn't
+ * be a significant limitation in practice.
+ */
+#define GET_SCOPECOORD_HOPS(pc) GET_UINT8(pc)
+#define SET_SCOPECOORD_HOPS(pc,hops) SET_UINT8(pc,hops)
+#define SCOPECOORD_HOPS_LEN     1
+#define SCOPECOORD_HOPS_BITS    8
+#define SCOPECOORD_HOPS_LIMIT   (1 << SCOPECOORD_HOPS_BITS)
+
+/* Describes the 'slot' component of a JOF_SCOPECOORD opcode. */
+#define GET_SCOPECOORD_SLOT(pc) GET_UINT24(pc)
+#define SET_SCOPECOORD_SLOT(pc,slot) SET_UINT24(pc,slot)
+#define SCOPECOORD_SLOT_LEN     3
+#define SCOPECOORD_SLOT_BITS    24
+#define SCOPECOORD_SLOT_LIMIT   (1 << SCOPECOORD_SLOT_BITS)
 
 struct JSCodeSpec {
     int8_t              length;         /* length including opcode byte */

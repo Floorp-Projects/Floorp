@@ -31,33 +31,30 @@ class ObjectBox;
  */
 class UpvarCookie
 {
-    uint16_t level_;
-    uint16_t slot_;
+    uint32_t level_ : SCOPECOORD_HOPS_BITS;
+    uint32_t slot_ : SCOPECOORD_SLOT_BITS;
 
     void checkInvariants() {
-        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
+        static_assert(sizeof(UpvarCookie) == sizeof(uint32_t),
+                      "Not necessary for correctness, but good for ParseNode memory use");
     }
 
   public:
-    // FREE_LEVEL is a distinguished value used to indicate the cookie is free.
-    static const uint16_t FREE_LEVEL = 0xffff;
-
-    static const uint16_t CALLEE_SLOT = 0xffff;
-
-    static bool isLevelReserved(uint16_t level) { return level == FREE_LEVEL; }
-
+    // Steal one value to represent the sentinel value for UpvarCookie.
+    static const uint32_t FREE_LEVEL = SCOPECOORD_HOPS_LIMIT - 1;
     bool isFree() const { return level_ == FREE_LEVEL; }
-    uint16_t level() const { JS_ASSERT(!isFree()); return level_; }
-    uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
 
-    // This fails and issues an error message if newLevel is too large.
-    bool set(TokenStream &ts, unsigned newLevel, uint16_t newSlot) {
-        // This is an unsigned-to-uint16_t conversion, test for too-high
-        // values.  In practice, recursion in Parser and/or BytecodeEmitter
-        // will blow the stack if we nest functions more than a few hundred
-        // deep, so this will never trigger.  Oh well.
+    uint32_t level() const { JS_ASSERT(!isFree()); return level_; }
+    uint32_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
+
+    // This fails and issues an error message if newLevel or newSlot are too large.
+    bool set(TokenStream &ts, unsigned newLevel, uint32_t newSlot) {
         if (newLevel >= FREE_LEVEL)
-            return ts.reportError(JSMSG_TOO_DEEP);
+            return ts.reportError(JSMSG_TOO_DEEP, js_function_str);
+
+        if (newSlot >= SCOPECOORD_SLOT_LIMIT)
+            return ts.reportError(JSMSG_TOO_MANY_LOCALS);
+
         level_ = newLevel;
         slot_ = newSlot;
         return true;
@@ -680,7 +677,7 @@ class ParseNode
         return pn_cookie.level();
     }
 
-    unsigned frameSlot() const {
+    uint32_t frameSlot() const {
         JS_ASSERT(pn_arity == PN_CODE || pn_arity == PN_NAME);
         return pn_cookie.slot();
     }

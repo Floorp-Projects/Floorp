@@ -1893,7 +1893,7 @@ BaselineCompiler::getScopeCoordinateObject(Register reg)
     ScopeCoordinate sc(pc);
 
     masm.loadPtr(frame.addressOfScopeChain(), reg);
-    for (unsigned i = sc.hops; i; i--)
+    for (unsigned i = sc.hops(); i; i--)
         masm.extractObject(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 }
 
@@ -1904,12 +1904,12 @@ BaselineCompiler::getScopeCoordinateAddressFromObject(Register objReg, Register 
     Shape *shape = ScopeCoordinateToStaticScopeShape(script, pc);
 
     Address addr;
-    if (shape->numFixedSlots() <= sc.slot) {
+    if (shape->numFixedSlots() <= sc.slot()) {
         masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), reg);
-        return Address(reg, (sc.slot - shape->numFixedSlots()) * sizeof(Value));
+        return Address(reg, (sc.slot() - shape->numFixedSlots()) * sizeof(Value));
     }
 
-    return Address(objReg, JSObject::getFixedSlotOffset(sc.slot));
+    return Address(objReg, JSObject::getFixedSlotOffset(sc.slot()));
 }
 
 Address

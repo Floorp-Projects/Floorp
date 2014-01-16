@@ -177,7 +177,7 @@ inline ScopeObject &
 StackFrame::aliasedVarScope(ScopeCoordinate sc) const
 {
     JSObject *scope = &scopeChain()->as<ScopeObject>();
-    for (unsigned i = sc.hops; i; i--)
+    for (unsigned i = sc.hops(); i; i--)
         scope = &scope->as<ScopeObject>().enclosingScope();
     return scope->as<ScopeObject>();
 }
