@@ -396,6 +396,7 @@ bool UIShowCrashUI(const string& dumpfile,
   gtk_window_set_position(GTK_WINDOW(gWindow), GTK_WIN_POS_CENTER);
   gtk_container_set_border_width(GTK_CONTAINER(gWindow), 12);
   g_signal_connect(gWindow, "delete-event", G_CALLBACK(WindowDeleted), 0);
+  g_signal_connect(gWindow, "key_press_event", G_CALLBACK(check_escape), nullptr);
 
   GtkWidget* vbox = gtk_vbox_new(FALSE, 6);
   gtk_container_add(GTK_CONTAINER(gWindow), vbox);

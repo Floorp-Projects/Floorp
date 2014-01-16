@@ -88,3 +88,33 @@ selector in floating-scrollbar-light.css across all platforms. */
   background-position: left bottom;
   background-repeat: repeat-x;
 }
+
+/* Fold addon */
+
+.CodeMirror-foldmarker {
+  color: blue;
+  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  font-family: sans-serif;
+  line-height: .3;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter {
+  width: 16px; /* Same as breakpoints gutter above */
+}
+
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: #555;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter-open:after {
+  font-size: 120%;
+  content: "\25BE";
+}
+
+.CodeMirror-foldgutter-folded:after {
+  font-size: 120%;
+  content: "\25B8";
+}
