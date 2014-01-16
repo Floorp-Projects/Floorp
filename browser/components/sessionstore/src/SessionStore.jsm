@@ -370,10 +370,6 @@ let SessionStoreInternal = {
   // Whether session has been initialized
   _sessionInitialized: false,
 
-  // True if session store is disabled by multi-process browsing.
-  // See bug 516755.
-  _disabledForMultiProcess: false,
-
   // Promise that is resolved when we're ready to initialize
   // and restore the session.
   _promiseReadyForInitialization: null,
@@ -402,12 +398,6 @@ let SessionStoreInternal = {
   init: function () {
     if (this._initialized) {
       throw new Error("SessionStore.init() must only be called once!");
-    }
-
-    this._disabledForMultiProcess = Services.appinfo.browserTabsRemote;
-    if (this._disabledForMultiProcess) {
-      this._deferredInitialized.resolve();
-      return;
     }
 
     TelemetryTimestamps.add("sessionRestoreInitialized");
@@ -726,9 +716,6 @@ let SessionStoreInternal = {
    * Implement nsIDOMEventListener for handling various window and tab events
    */
   handleEvent: function ssi_handleEvent(aEvent) {
-    if (this._disabledForMultiProcess)
-      return;
-
     var win = aEvent.currentTarget.ownerDocument.defaultView;
     let browser;
     switch (aEvent.type) {
@@ -1805,10 +1792,6 @@ let SessionStoreInternal = {
   },
 
   getWindowValue: function ssi_getWindowValue(aWindow, aKey) {
-    if (this._disabledForMultiProcess) {
-      return "";
-    }
-
     if ("__SSi" in aWindow) {
       var data = this._windows[aWindow.__SSi].extData || {};
       return data[aKey] || "";
