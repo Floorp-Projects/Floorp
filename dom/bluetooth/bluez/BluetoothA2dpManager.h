@@ -46,8 +46,8 @@ public:
   void UpdateMetaData(const nsAString& aTitle,
                       const nsAString& aArtist,
                       const nsAString& aAlbum,
-                      uint32_t aMediaNumber,
-                      uint32_t aTotalMediaCount,
+                      uint64_t aMediaNumber,
+                      uint64_t aTotalMediaCount,
                       uint32_t aDuration);
   void UpdatePlayStatus(uint32_t aDuration,
                         uint32_t aPosition,
@@ -56,7 +56,7 @@ public:
   uint32_t GetDuration();
   ControlPlayStatus GetPlayStatus();
   uint32_t GetPosition();
-  uint32_t GetMediaNumber();
+  uint64_t GetMediaNumber();
   void GetTitle(nsAString& aTitle);
 
 private:
@@ -79,8 +79,8 @@ private:
   nsString mArtist;
   nsString mTitle;
   uint32_t mDuration;
-  uint32_t mMediaNumber;
-  uint32_t mTotalMediaCount;
+  uint64_t mMediaNumber;
+  uint64_t mTotalMediaCount;
   uint32_t mPosition;
   ControlPlayStatus mPlayStatus;
 };
