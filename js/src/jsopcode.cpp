@@ -1025,25 +1025,8 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
         Sprint(sp, " %u", GET_SLOTNO(pc));
         break;
 
-      case JOF_SLOTOBJECT: {
-        Sprint(sp, " %u", GET_SLOTNO(pc));
-        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + SLOTNO_LEN));
-        JSAutoByteString bytes;
-        RootedValue v(cx, ObjectValue(*obj));
-        if (!ToDisassemblySource(cx, v, &bytes))
-            return 0;
-        Sprint(sp, " %s", bytes.ptr());
-        break;
-      }
-
       {
         int i;
-
-      case JOF_UINT16PAIR:
-        i = (int)GET_UINT16(pc);
-        Sprint(sp, " %d", i);
-        pc += UINT16_LEN;
-        /* FALL THROUGH */
 
       case JOF_UINT16:
         i = (int)GET_UINT16(pc);
