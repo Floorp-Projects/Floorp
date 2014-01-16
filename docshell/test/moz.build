@@ -12,5 +12,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-
+MOCHITEST_MANIFESTS += [
+    'iframesandbox/mochitest.ini',
+    'mochitest.ini'
+]
