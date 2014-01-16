@@ -216,10 +216,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     SOURCES += [
         'src/images/SkImageRef_ashmem.cpp',
         'src/ports/SkDebug_android.cpp',
+        'src/ports/SkFontHost_android_old.cpp',
         'src/ports/SkFontHost_cairo.cpp',
         'src/ports/SkFontHost_FreeType.cpp',
         'src/ports/SkFontHost_FreeType_common.cpp',
-        'src/ports/SkFontHost_linux.cpp',
         'src/ports/SkThread_pthread.cpp',
         'src/ports/SkTime_Unix.cpp',
         'src/utils/android/ashmem.cpp',
