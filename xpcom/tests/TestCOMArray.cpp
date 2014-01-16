@@ -180,10 +180,10 @@ int main(int argc, char **argv)
   {
     Array2 arr2;
 
-    IBar *thirdObject,
-         *fourthObject,
-         *fifthObject,
-         *ninthObject;
+    IBar *thirdObject = nullptr,
+         *fourthObject = nullptr,
+         *fifthObject = nullptr,
+         *ninthObject = nullptr;
     for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar = new Bar(arr2);
       switch (i) {
@@ -261,10 +261,10 @@ int main(int argc, char **argv)
   {
     Array2 arr2;
 
-    IBar *thirdElement,
-         *fourthElement,
-         *fifthElement,
-         *ninthElement;
+    IBar *thirdElement = nullptr,
+         *fourthElement = nullptr,
+         *fifthElement = nullptr,
+         *ninthElement = nullptr;
     for (int32_t i = 0; i < 20; ++i) {
       nsCOMPtr<IBar> bar = new Bar(arr2);
       switch (i) {

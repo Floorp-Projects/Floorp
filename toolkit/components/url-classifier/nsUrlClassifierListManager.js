@@ -24,7 +24,6 @@ function Init() {
   modScope.G_Alarm = jslib.G_Alarm;
   modScope.BindToObject = jslib.BindToObject;
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
-  modScope.PROT_UrlCryptoKeyManager = jslib.PROT_UrlCryptoKeyManager;
   modScope.RequestBackoff = jslib.RequestBackoff;
 
   // We only need to call Init once.

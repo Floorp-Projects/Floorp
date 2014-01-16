@@ -223,7 +223,7 @@ class AbstractFramePtr
 
     inline void *maybeHookData() const;
     inline void setHookData(void *data) const;
-    inline Value returnValue() const;
+    inline HandleValue returnValue() const;
     inline void setReturnValue(const Value &rval) const;
 
     bool hasPushedSPSFrame() const;
@@ -773,10 +773,10 @@ class StackFrame
         return !!(flags_ & HAS_RVAL);
     }
 
-    Value &returnValue() {
+    MutableHandleValue returnValue() {
         if (!(flags_ & HAS_RVAL))
             rval_.setUndefined();
-        return rval_;
+        return MutableHandleValue::fromMarkedLocation(&rval_);
     }
 
     void markReturnValue() {

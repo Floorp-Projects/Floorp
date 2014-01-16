@@ -243,20 +243,22 @@ pref("ui.buttonshadow", "#aea194");
 pref("ui.buttontext", "#101010");
 pref("ui.captiontext", "#101010");
 pref("ui.graytext", "#b1a598");
-pref("ui.highlight", "#fad184");
 pref("ui.highlighttext", "#1a1a1a");
-pref("ui.infobackground", "#f5f5b5");
-pref("ui.infotext", "#000");
-pref("ui.menu", "#f7f5f3");
-pref("ui.menutext", "#101010");
 pref("ui.threeddarkshadow", "#000");
 pref("ui.threedface", "#ece7e2");
 pref("ui.threedhighlight", "#fff");
 pref("ui.threedlightshadow", "#ece7e2");
 pref("ui.threedshadow", "#aea194");
-pref("ui.window", "#efebe7");
-pref("ui.windowtext", "#101010");
 pref("ui.windowframe", "#efebe7");
+
+// Themable via mozSettings
+pref("ui.menu", "#f97c17");
+pref("ui.menutext", "#ffffff");
+pref("ui.infobackground", "#343e40");
+pref("ui.infotext", "#686868");
+pref("ui.window", "#ffffff");
+pref("ui.windowtext", "#000000");
+pref("ui.highlight", "#b2f2ff");
 
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);
@@ -280,7 +282,6 @@ pref("layers.offmainthreadcomposition.async-animations", true);
 pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 pref("gfx.content.azure.backends", "cairo");
-pref("layers.composer2d.enabled", true);
 #endif
 
 // Web Notifications
@@ -320,15 +321,14 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.updateURL", "https://safebrowsing.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2&key=%GOOGLE_API_KEY%");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
-pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
-pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
-pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.reportURL", "https://safebrowsing.google.com/safebrowsing/report?");
+pref("browser.safebrowsing.provider.0.gethashURL", "https://safebrowsing.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 
 // HTML report pages
 pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
@@ -353,7 +353,7 @@ pref("urlclassifier.gethashnoise", 4);
 pref("urlclassifier.max-complete-age", 2700);
 
 // URL for checking the reason for a malware warning.
-pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
+pref("browser.safebrowsing.malware.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 #endif
 
 // True if this is the first time we are showing about:firstrun
@@ -619,9 +619,11 @@ pref("ui.useOverlayScrollbars", 1);
 
 // Enable the ProcessPriorityManager, and give processes with no visible
 // documents a 1s grace period before they're eligible to be marked as
-// background.
+// background. Background processes that are perceivable due to playing
+// media are given a longer grace period to accomodate changing tracks, etc.
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
+pref("dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS", 5000);
 pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 
 // Number of different background levels for background processes.  We use

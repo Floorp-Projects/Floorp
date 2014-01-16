@@ -62,7 +62,6 @@ DEFAULT_FIREFOX_PREFS = {
     'urlclassifier.updateinterval' : 172800,
     # Point the url-classifier to a nonexistent local URL for fast failures.
     'browser.safebrowsing.provider.0.gethashURL' : 'http://localhost/safebrowsing-dummy/gethash',
-    'browser.safebrowsing.provider.0.keyURL' : 'http://localhost/safebrowsing-dummy/newkey',
     'browser.safebrowsing.provider.0.updateURL' : 'http://localhost/safebrowsing-dummy/update',
     }
 

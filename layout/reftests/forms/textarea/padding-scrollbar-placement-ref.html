@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>Padding and Scrollbar Placement Test Reference</title>
+	<style>input, textarea { border-radius:0; background:none; border:none; }</style>
+        <style type="text/css">
+            #t {
+                display: block;
+                position: absolute;
+                left: 50px;
+                top: 50px;
+                padding: 50px;
+                width: 300px;
+                height: 100px;
+                border: 5px solid red;
+                margin: 10px;
+                overflow: scroll;
+                font-family: verdana;
+                white-space: pre-wrap;
+                z-index: 0; /* force a stacking context */
+            }
+            #cover {
+                position: absolute;
+                left: 400px;
+                top: 50px;
+                width: 100px;
+                height: 300px;
+                background: black;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+        var ss = [];
+        for (var i = 0; i < 1000; ++i) {
+          ss.push(i);
+        }
+        document.write("<div id='t'>" + ss.join(" ") + "</div>");
+        </script>
+        <div id="cover"></div>
+    </body>
+</html>

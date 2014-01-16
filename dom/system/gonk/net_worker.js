@@ -142,19 +142,6 @@ function usbTetheringSuccess(params) {
   return true;
 }
 
-function networkInterfaceStatsFail(params) {
-  // Notify the main thread.
-  postMessage(params);
-  return true;
-}
-
-function networkInterfaceStatsSuccess(params) {
-  // Notify the main thread.
-  params.txBytes = parseFloat(params.resultReason);
-  postMessage(params);
-  return true;
-}
-
 function networkInterfaceAlarmFail(params) {
   // Notify the main thread.
   postMessage(params);
@@ -607,18 +594,6 @@ function stopSoftAP(params, callback) {
   return doCommand(command, callback);
 }
 
-function getRxBytes(params, callback) {
-  let command = "interface readrxcounter " + params.ifname;
-  return doCommand(command, callback);
-}
-
-function getTxBytes(params, callback) {
-  params.rxBytes = parseFloat(params.resultReason);
-
-  let command = "interface readtxcounter " + params.ifname;
-  return doCommand(command, callback);
-}
-
 function enableAlarm(params, callback) {
   let command = "bandwidth enable";
   return doCommand(command, callback);
@@ -930,24 +905,6 @@ function setUSBTethering(params) {
            params.internalIfname + "<->" + params.externalIfname);
     chain(params, gUSBDisableChain, usbTetheringFail);
   }
-  return true;
-}
-
-let gNetworkInterfaceStatsChain = [getRxBytes,
-                                   getTxBytes,
-                                   networkInterfaceStatsSuccess];
-
-/**
- * handling main thread's get network interface stats request
- */
-function getNetworkInterfaceStats(params) {
-  debug("getNetworkInterfaceStats: " + params.ifname);
-
-  params.rxBytes = -1;
-  params.txBytes = -1;
-  params.date = new Date();
-
-  chain(params, gNetworkInterfaceStatsChain, networkInterfaceStatsFail);
   return true;
 }
 

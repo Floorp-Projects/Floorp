@@ -28,7 +28,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
-[scriptable, builtinclass, uuid(1b22be51-efe8-42ac-a9a0-06f50f39beee)]
+[scriptable, builtinclass, uuid(a73d693a-6260-468a-ae64-d64237f0858c)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -57,6 +57,12 @@ interface nsIContentViewer : nsISupports
    */
   [noscript,nostdcall] boolean permitUnloadInternal(in boolean aCallerClosesWindow,
                                                     inout boolean aShouldPrompt);
+
+  /**
+   * Exposes whether we're in the process of firing the beforeunload event.
+   * In this case, the corresponding docshell will not allow navigation.
+   */
+  readonly attribute boolean beforeUnloadFiring;
 
   /**
    * Works in tandem with permitUnload, if the caller decides not to close the
