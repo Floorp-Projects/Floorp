@@ -2242,7 +2242,7 @@ BaselineCompiler::emit_JSOP_INITELEM_SETTER()
 bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
-    uint32_t local = GET_SLOTNO(pc);
+    uint32_t local = GET_LOCALNO(pc);
 
     if (local >= frame.nlocals()) {
         // Destructuring assignments may use GETLOCAL to access stack values.
@@ -2269,7 +2269,7 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
     // This also allows us to use R0 as scratch below.
     frame.syncStack(1);
 
-    uint32_t local = GET_SLOTNO(pc);
+    uint32_t local = GET_LOCALNO(pc);
     storeValue(frame.peek(-1), frame.addressOfLocal(local), R0);
     return true;
 }
@@ -2352,7 +2352,7 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 bool
 BaselineCompiler::emit_JSOP_GETARG()
 {
-    uint32_t arg = GET_SLOTNO(pc);
+    uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ true);
 }
 
@@ -2371,7 +2371,7 @@ BaselineCompiler::emit_JSOP_SETARG()
 
     modifiesArguments_ = true;
 
-    uint32_t arg = GET_SLOTNO(pc);
+    uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ false);
 }
 

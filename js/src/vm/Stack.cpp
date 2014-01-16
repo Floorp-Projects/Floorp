@@ -1257,7 +1257,7 @@ AbstractFramePtr::hasPushedSPSFrame() const
 
 #ifdef DEBUG
 void
-js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i)
+js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint32_t i)
 {
     if (!checkAliasing)
         return;

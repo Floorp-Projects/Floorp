@@ -149,7 +149,7 @@ class BaselineFrame
         return (Value *)this - (slot + 1);
     }
 
-    Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
+    Value &unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
         JS_ASSERT(i < script()->nfixed());
         return *valueSlot(i);
@@ -169,7 +169,7 @@ class BaselineFrame
         return argv()[i];
     }
 
-    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
+    Value &unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
 #ifdef DEBUG
         CheckLocalUnaliased(checkAliasing, script(), i);
 #endif

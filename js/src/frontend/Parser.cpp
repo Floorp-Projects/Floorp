@@ -168,7 +168,7 @@ ParseContext<FullParseHandler>::define(TokenStream &ts,
                 return false;
             if (!vars_.append(dn))
                 return false;
-            if (vars_.length() >= SLOTNO_LIMIT) {
+            if (vars_.length() >= LOCALNO_LIMIT) {
                 ts.reportError(JSMSG_TOO_MANY_LOCALS);
                 return false;
             }
@@ -242,12 +242,12 @@ ParseContext<ParseHandler>::updateDecl(JSAtom *atom, Node pn)
     JS_ASSERT(!oldDecl->pn_cookie.isFree());
     newDecl->pn_cookie = oldDecl->pn_cookie;
     newDecl->pn_dflags |= PND_BOUND;
-    if (JOF_OPTYPE(oldDecl->getOp()) == JOF_QARG) {
+    if (IsArgOp(oldDecl->getOp())) {
         newDecl->setOp(JSOP_GETARG);
         JS_ASSERT(args_[oldDecl->pn_cookie.slot()] == oldDecl);
         args_[oldDecl->pn_cookie.slot()] = newDecl;
     } else {
-        JS_ASSERT(JOF_OPTYPE(oldDecl->getOp()) == JOF_LOCAL);
+        JS_ASSERT(IsLocalOp(oldDecl->getOp()));
         newDecl->setOp(JSOP_GETLOCAL);
         JS_ASSERT(vars_[oldDecl->pn_cookie.slot()] == oldDecl);
         vars_[oldDecl->pn_cookie.slot()] = newDecl;
@@ -266,7 +266,7 @@ template <typename ParseHandler>
 static void
 AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec, Binding *dst)
 {
-    for (unsigned i = 0; i < vec.length(); ++i, ++dst) {
+    for (size_t i = 0; i < vec.length(); ++i, ++dst) {
         Definition *dn = vec[i];
         PropertyName *name = dn->name();
 
@@ -301,14 +301,22 @@ AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec
 
 template <typename ParseHandler>
 bool
-ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, LifoAlloc &alloc,
+ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, TokenStream &ts,
+                                                     LifoAlloc &alloc,
                                                      InternalHandle<Bindings*> bindings) const
 {
     JS_ASSERT(sc->isFunctionBox());
     JS_ASSERT(args_.length() < ARGNO_LIMIT);
-    JS_ASSERT(vars_.length() < SLOTNO_LIMIT);
+    JS_ASSERT(vars_.length() < LOCALNO_LIMIT);
 
-    unsigned count = args_.length() + vars_.length();
+    /*
+     * Avoid pathological edge cases by explicitly limiting the total number of
+     * bindings to what will fit in a uint32_t.
+     */
+    if (UINT32_MAX - args_.length() <= vars_.length())
+        return ts.reportError(JSMSG_TOO_MANY_LOCALS);
+
+    uint32_t count = args_.length() + vars_.length();
     Binding *packedBindings = alloc.newArrayUninitialized<Binding>(count);
     if (!packedBindings) {
         js_ReportOutOfMemory(cx);
@@ -325,7 +333,7 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, LifoA
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
-                             unsigned errorNumber, va_list args)
+                                   unsigned errorNumber, va_list args)
 {
     bool result = false;
     switch (kind) {
@@ -890,7 +898,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
 
     InternalHandle<Bindings*> funboxBindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
-    if (!funpc.generateFunctionBindings(context, alloc, funboxBindings))
+    if (!funpc.generateFunctionBindings(context, tokenStream, alloc, funboxBindings))
         return null();
 
     JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
@@ -1417,7 +1425,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHan
 
     InternalHandle<Bindings*> bindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
-    return pc->generateFunctionBindings(context, alloc, bindings);
+    return pc->generateFunctionBindings(context, tokenStream, alloc, bindings);
 }
 
 template <>
@@ -2251,7 +2259,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
 
     InternalHandle<Bindings*> bindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
-    if (!pc->generateFunctionBindings(context, alloc, bindings))
+    if (!pc->generateFunctionBindings(context, tokenStream, alloc, bindings))
         return null();
 
     if (!FoldConstants(context, &pn, this))
