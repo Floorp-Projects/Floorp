@@ -64,12 +64,16 @@ this.WindowsPrefSync = {
    *
    * browser.sessionstore.resume_session_once is mainly for the switch to Metro
    * and switch to Desktop feature.
+   *
+   * browser.startup.page - if a desktop Firefox user wants her/his sessions
+   * to always restore, we need to honor that in metro Firefox as well.
    */
   desktopControlledPrefs: ["app.update.auto",
     "app.update.enabled",
     "app.update.service.enabled",
     "app.update.metro.enabled",
-    "browser.sessionstore.resume_session_once"],
+    "browser.sessionstore.resume_session_once",
+    "browser.startup.page"],
 
   /**
    * Returns the base path where registry sync prefs are stored.
