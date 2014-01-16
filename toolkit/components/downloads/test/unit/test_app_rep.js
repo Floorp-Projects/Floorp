@@ -227,7 +227,7 @@ add_test(function test_local_list() {
   }
   streamUpdater.downloadUpdates(
     "goog-downloadwhite-digest256",
-    "goog-downloadwhite-digest256;\n", "",
+    "goog-downloadwhite-digest256;\n",
     updateSuccess, handleError, handleError);
 });
 
