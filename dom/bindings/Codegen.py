@@ -1874,7 +1874,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         if UseHolderForUnforgeable(self.descriptor):
             createUnforgeableHolder = CGGeneric("""JS::Rooted<JSObject*> unforgeableHolder(aCx,
-  JS_NewObjectWithGivenProto(aCx, nullptr, nullptr, nullptr));
+  JS_NewObjectWithGivenProto(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
 if (!unforgeableHolder) {
   return;
 }""")
@@ -5937,7 +5937,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
         CGSpecializedMethod.__init__(self, descriptor, method)
 
     def definition_body(self):
-        ret = ('JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n'
+        ret = ('JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));\n'
                'if (!result) {\n'
                '  return false;\n'
                '}\n')
@@ -9089,7 +9089,7 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
                 "\n") % self.makeClassName(self.dictionary.parent)
         else:
             body += (
-                "JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
+                "JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));\n"
                 "if (!obj) {\n"
                 "  return false;\n"
                 "}\n"

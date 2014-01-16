@@ -903,7 +903,7 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
 static JSObject*
 InitABIClass(JSContext* cx, JSObject* parent)
 {
-  RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  RootedObject obj(cx, JS_NewObject(cx, nullptr, NullPtr(), NullPtr()));
 
   if (!obj)
     return nullptr;
@@ -933,7 +933,7 @@ InitCDataClass(JSContext* cx, HandleObject parent, HandleObject CTypeProto)
     return nullptr;
 
   // Set up ctypes.CData.prototype.
-  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, nullptr, parent));
+  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, NullPtr(), parent));
   if (!prototype)
     return nullptr;
 
@@ -1327,7 +1327,7 @@ JS_InitCTypesClass(JSContext* cx, JSObject *globalArg)
   RootedObject global(cx, globalArg);
 
   // attach ctypes property to global object
-  RootedObject ctypes(cx, JS_NewObject(cx, &sCTypesGlobalClass, nullptr, nullptr));
+  RootedObject ctypes(cx, JS_NewObject(cx, &sCTypesGlobalClass, NullPtr(), NullPtr()));
   if (!ctypes)
     return false;
 
@@ -1349,7 +1349,7 @@ JS_InitCTypesClass(JSContext* cx, JSObject *globalArg)
   if (!GetObjectProperty(cx, ctypes, "CDataFinalizer", &ctor))
     return false;
 
-  RootedObject prototype(cx, JS_NewObject(cx, &sCDataFinalizerProtoClass, nullptr, ctypes));
+  RootedObject prototype(cx, JS_NewObject(cx, &sCDataFinalizerProtoClass, NullPtr(), ctypes));
   if (!prototype)
     return false;
 
@@ -4701,7 +4701,7 @@ AddFieldToArray(JSContext* cx,
 {
   RootedObject typeObj(cx, typeObj_);
   Rooted<JSFlatString*> name(cx, name_);
-  RootedObject fieldObj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  RootedObject fieldObj(cx, JS_NewObject(cx, nullptr, NullPtr(), NullPtr()));
   if (!fieldObj)
     return false;
 
@@ -4793,7 +4793,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   // Set up the 'prototype' and 'prototype.constructor' properties.
   // The prototype will reflect the struct fields as properties on CData objects
   // created from this type.
-  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, dataProto, nullptr));
+  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, dataProto, NullPtr()));
   if (!prototype)
     return false;
 
@@ -6007,7 +6007,7 @@ CClosure::Create(JSContext* cx,
   RootedValue errVal(cx, errVal_);
   JS_ASSERT(fnObj);
 
-  RootedObject result(cx, JS_NewObject(cx, &sCClosureClass, nullptr, nullptr));
+  RootedObject result(cx, JS_NewObject(cx, &sCClosureClass, NullPtr(), NullPtr()));
   if (!result)
     return nullptr;
 
@@ -6893,7 +6893,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   // Get arguments
   if (args.length() == 0) { // Special case: the empty (already finalized) object
-    JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, nullptr);
+    JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, NullPtr());
     args.rval().setObject(*objResult);
     return true;
   }
@@ -6992,7 +6992,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   // 5. Create |objResult|
 
-  JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, nullptr);
+  JSObject *objResult = JS_NewObject(cx, &sCDataFinalizerClass, objProto, NullPtr());
   if (!objResult) {
     return false;
   }

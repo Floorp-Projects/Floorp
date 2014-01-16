@@ -19,7 +19,7 @@ IterNext(JSContext *cx, unsigned argc, jsval *vp)
 static JSObject *
 IterHook(JSContext *cx, JS::HandleObject obj, bool keysonly)
 {
-    JS::RootedObject iterObj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::RootedObject iterObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!iterObj)
         return nullptr;
     if (!JS_DefineFunction(cx, iterObj, "next", IterNext, 0, 0))

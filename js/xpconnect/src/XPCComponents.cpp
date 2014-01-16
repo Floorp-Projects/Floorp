@@ -2935,7 +2935,7 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
-        obj = JS_NewObject(cx, nullptr, nullptr, scope);
+        obj = JS_NewObject(cx, nullptr, JS::NullPtr(), scope);
         if (!obj)
             return false;
 
