@@ -41,7 +41,7 @@ else
 	_CC_BUILD   := $(word 4,$(_CC_VERSION_WORDS))
 	_MSC_VER     = $(_CC_VMAJOR)$(_CC_VMINOR)
 	_MSC_VER_6   = 1200
-	_MSC_VER_GTE18 := $(shell expr $(_MSC_VER) \>= 1800)
+	_MSC_VER_GE_18 := $(shell expr $(_MSC_VER) \>= 1800)
 	ifeq ($(_CC_VMAJOR),14)
 	    # -DYNAMICBASE is only supported on VC8SP1 or newer,
 	    # so be very specific here!
@@ -173,9 +173,9 @@ ifneq ($(_MSC_VER),$(_MSC_VER_6))
      -we4015 -we4028 -we4033 -we4035 -we4045 -we4047 -we4053 -we4054 -we4063 \
      -we4064 -we4078 -we4087 -we4090 -we4098 -we4390 -we4551 -we4553 -we4715
 
-	ifeq ($(_MSC_VER_GTE18),1)
-		OS_CFLAGS += -FS
-	endif
+    ifeq ($(_MSC_VER_GE_18),1)
+	OS_CFLAGS += -FS
+    endif
 endif # !MSVC6
 endif # NS_USE_GCC
 

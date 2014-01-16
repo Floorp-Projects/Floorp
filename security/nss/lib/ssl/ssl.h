@@ -162,6 +162,25 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_CBC_RANDOM_IV 23
 #define SSL_ENABLE_OCSP_STAPLING       24 /* Request OCSP stapling (client) */
 
+/* SSL_ENABLE_NPN controls whether the NPN extension is enabled for the initial
+ * handshake when protocol negotiation is used. SSL_SetNextProtoCallback
+ * or SSL_SetNextProtoNego must be used to control the protocol negotiation;
+ * otherwise, the NPN extension will not be negotiated. SSL_ENABLE_NPN is
+ * currently enabled by default but this may change in future versions.
+ */
+#define SSL_ENABLE_NPN 25
+
+/* SSL_ENABLE_ALPN controls whether the ALPN extension is enabled for the
+ * initial handshake when protocol negotiation is used. SSL_SetNextProtoNego
+ * (not SSL_SetNextProtoCallback) must be used to control the protocol
+ * negotiation; otherwise, the ALPN extension will not be negotiated. ALPN is
+ * not negotiated for renegotiation handshakes, even though the ALPN
+ * specification defines a way to use ALPN during renegotiations.
+ * SSL_ENABLE_ALPN is currently disabled by default, but this may change in
+ * future versions.
+ */
+#define SSL_ENABLE_ALPN 26
+
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
@@ -206,6 +225,16 @@ SSL_IMPORT SECStatus SSL_SetNextProtoCallback(PRFileDesc *fd,
  * protocol in server-preference order. If no matching protocol is found it
  * selects the first supported protocol.
  *
+ * Using this function also allows the client to transparently support ALPN.
+ * The same set of protocols will be advertised via ALPN and, if the server
+ * uses ALPN to select a protocol, SSL_GetNextProto will return
+ * SSL_NEXT_PROTO_SELECTED as the state.
+ *
+ * Since NPN uses the first protocol as the fallback protocol, when sending an
+ * ALPN extension, the first protocol is moved to the end of the list. This
+ * indicates that the fallback protocol is the least preferred. The other
+ * protocols should be in preference order.
+ *
  * The supported protocols are specified in |data| in wire-format (8-bit
  * length-prefixed). For example: "\010http/1.1\006spdy/2". */
 SSL_IMPORT SECStatus SSL_SetNextProtoNego(PRFileDesc *fd,
@@ -215,7 +244,8 @@ SSL_IMPORT SECStatus SSL_SetNextProtoNego(PRFileDesc *fd,
 typedef enum SSLNextProtoState { 
   SSL_NEXT_PROTO_NO_SUPPORT = 0, /* No peer support                */
   SSL_NEXT_PROTO_NEGOTIATED = 1, /* Mutual agreement               */
-  SSL_NEXT_PROTO_NO_OVERLAP = 2  /* No protocol overlap found      */
+  SSL_NEXT_PROTO_NO_OVERLAP = 2, /* No protocol overlap found      */
+  SSL_NEXT_PROTO_SELECTED   = 3  /* Server selected proto (ALPN)   */
 } SSLNextProtoState;
 
 /* SSL_GetNextProto can be used in the HandshakeCallback or any time after
