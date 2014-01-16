@@ -41,7 +41,7 @@ this.DownloadPaths = {
    *        provided object is not modified.
    * @returns A new instance of an nsILocalFile object pointing to the newly
    *          created empty file. On platforms that support permission bits, the
-   *          file is created with permissions 600.
+   *          file is created with permissions 644.
    */
   createNiceUniqueFile: function DP_createNiceUniqueFile(aTemplateFile) {
     // Work on a clone of the provided template file object.
@@ -58,7 +58,7 @@ this.DownloadPaths = {
     // that can't be created on some platforms, and for which a normal call to
     // nsIFile.create would result in NS_ERROR_FILE_NOT_FOUND. This can result
     // very rarely in strange names like "base(9999).tar-1.gz" or "ba-1.gz".
-    curFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    curFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
     return curFile;
   },
 
