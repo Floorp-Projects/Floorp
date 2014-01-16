@@ -12,6 +12,7 @@
   ],
   'variables': {
     'use_system_libjpeg%': 0,
+    'yuv_disable_asm%': 0,
     'build_neon': 0,
     'conditions': [
        ['target_arch == "arm" and arm_version >= 7 and (arm_neon == 1 or arm_neon_optional == 1)', {
@@ -67,10 +68,10 @@
       # Change type to 'shared_library' to build .so or .dll files.
       'type': 'static_library',
       # Allows libyuv.a redistributable library without external dependencies.
-      'standalone_static_library': 1,
+      # 'standalone_static_library': 1,
       'conditions': [
         # TODO(fbarchard): Use gyp define to enable jpeg.
-        [ 'OS != "ios"', {
+        [ 'OS != "ios" and build_with_mozilla!=1', {
           'defines': [
             'HAVE_JPEG'
           ],
@@ -101,6 +102,24 @@
           'defines': [
             'LIBYUV_NEON',
           ]
+        }],
+        [ 'yuv_disable_asm!=0', {
+          'defines': [
+            # Enable the following 3 macros to turn off assembly for specified CPU.
+            'LIBYUV_DISABLE_X86',
+            'LIBYUV_DISABLE_NEON',
+            'LIBYUV_DISABLE_MIPS',
+          ],
+        }],
+        ['build_with_mozilla==1', {
+          'include_dirs': [
+            '$(DEPTH)/dist/include',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              '$(DEPTH)/dist/include',
+            ],
+          },
         }],
       ],
       'defines': [
