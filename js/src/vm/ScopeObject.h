@@ -356,12 +356,12 @@ class BlockObject : public NestedScopeObject
      * range [0, slotCount()) and the return local index is in the range
      * [script->nfixed, script->nfixed + script->nslots).
      */
-    unsigned slotToLocalIndex(const Bindings &bindings, unsigned slot) {
+    uint32_t slotToLocalIndex(const Bindings &bindings, uint32_t slot) {
         JS_ASSERT(slot < RESERVED_SLOTS + slotCount());
         return bindings.numVars() + stackDepth() + (slot - RESERVED_SLOTS);
     }
 
-    unsigned localIndexToSlot(const Bindings &bindings, uint32_t i) {
+    uint32_t localIndexToSlot(const Bindings &bindings, uint32_t i) {
         return RESERVED_SLOTS + (i - (bindings.numVars() + stackDepth()));
     }
 

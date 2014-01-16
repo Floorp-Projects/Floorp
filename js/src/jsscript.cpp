@@ -53,7 +53,7 @@ using mozilla::PodZero;
 
 typedef Rooted<GlobalObject *> RootedGlobalObject;
 
-/* static */ unsigned
+/* static */ uint32_t
 Bindings::argumentsVarIndex(ExclusiveContext *cx, InternalBindingsHandle bindings)
 {
     HandlePropertyName arguments = cx->names().arguments;
@@ -65,14 +65,14 @@ Bindings::argumentsVarIndex(ExclusiveContext *cx, InternalBindingsHandle binding
 
 bool
 Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle self,
-                                   unsigned numArgs, unsigned numVars,
+                                   unsigned numArgs, uint32_t numVars,
                                    Binding *bindingArray)
 {
     JS_ASSERT(!self->callObjShape_);
     JS_ASSERT(self->bindingArrayAndFlag_ == TEMPORARY_STORAGE_BIT);
     JS_ASSERT(!(uintptr_t(bindingArray) & TEMPORARY_STORAGE_BIT));
     JS_ASSERT(numArgs <= ARGC_LIMIT);
-    JS_ASSERT(numVars <= SLOTNO_LIMIT);
+    JS_ASSERT(numVars <= LOCALNO_LIMIT);
     JS_ASSERT(UINT32_MAX - numArgs >= numVars);
 
     self->bindingArrayAndFlag_ = uintptr_t(bindingArray) | TEMPORARY_STORAGE_BIT;
@@ -105,8 +105,8 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
 #endif
 
     BindingIter bi(self);
-    unsigned slot = CallObject::RESERVED_SLOTS;
-    for (unsigned i = 0, n = self->count(); i < n; i++, bi++) {
+    uint32_t slot = CallObject::RESERVED_SLOTS;
+    for (uint32_t i = 0, n = self->count(); i < n; i++, bi++) {
         if (!bi->aliased())
             continue;
 
@@ -180,7 +180,7 @@ GCMethods<Bindings>::initial()
 
 template<XDRMode mode>
 static bool
-XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, unsigned numVars,
+XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, uint32_t numVars,
                   HandleScript script)
 {
     JSContext *cx = xdr->cx();
@@ -198,12 +198,12 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
                 return false;
         }
     } else {
-        unsigned nameCount = numArgs + numVars;
+        uint32_t nameCount = numArgs + numVars;
 
         AutoValueVector atoms(cx);
         if (!atoms.resize(nameCount))
             return false;
-        for (unsigned i = 0; i < nameCount; i++) {
+        for (uint32_t i = 0; i < nameCount; i++) {
             RootedAtom atom(cx);
             if (!XDRAtom(xdr, &atom))
                 return false;
@@ -213,7 +213,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
         Binding *bindingArray = las.alloc().newArrayUninitialized<Binding>(nameCount);
         if (!bindingArray)
             return false;
-        for (unsigned i = 0; i < nameCount; i++) {
+        for (uint32_t i = 0; i < nameCount; i++) {
             uint8_t u8;
             if (!xdr->codeUint8(&u8))
                 return false;
@@ -234,7 +234,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
 }
 
 bool
-Bindings::bindingIsAliased(unsigned bindingIndex)
+Bindings::bindingIsAliased(uint32_t bindingIndex)
 {
     JS_ASSERT(bindingIndex < count());
     return bindingArray()[bindingIndex].aliased();
@@ -2033,7 +2033,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     }
 
     // The call to nfixed() depends on the above setFunction() call.
-    if (script->nfixed() + bce->maxStackDepth >= JS_BIT(16)) {
+    if (UINT32_MAX - script->nfixed() < bce->maxStackDepth) {
         bce->reportError(nullptr, JSMSG_NEED_DIET, "script");
         return false;
     }
@@ -2974,7 +2974,7 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
      */
 
     InternalBindingsHandle bindings(script, &script->bindings);
-    const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
+    const uint32_t var = Bindings::argumentsVarIndex(cx, bindings);
 
     if (script->varIsAliased(var)) {
         /*
@@ -3075,7 +3075,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 }
 
 bool
-JSScript::varIsAliased(unsigned varSlot)
+JSScript::varIsAliased(uint32_t varSlot)
 {
     AutoThreadSafeAccess ts(this);
     return bindings.bindingIsAliased(bindings.numArgs() + varSlot);

@@ -1149,7 +1149,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (bi->kind() == VARIABLE || bi->kind() == CONSTANT) {
-                unsigned i = bi.frameIndex();
+                uint32_t i = bi.frameIndex();
                 if (script->varIsAliased(i))
                     return false;
 
@@ -1220,7 +1220,7 @@ class DebugScopeProxy : public BaseProxyHandler
             if (maybeLiveScope) {
                 AbstractFramePtr frame = maybeLiveScope->frame();
                 JSScript *script = frame.script();
-                unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
+                uint32_t local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     vp.set(frame.unaliasedLocal(local));
                 else

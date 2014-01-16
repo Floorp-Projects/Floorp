@@ -113,10 +113,10 @@ struct BytecodeEmitter
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
 
-    int             stackDepth;     /* current stack depth in script frame */
-    unsigned        maxStackDepth;  /* maximum stack depth so far */
+    int32_t         stackDepth;     /* current stack depth in script frame */
+    uint32_t        maxStackDepth;  /* maximum stack depth so far */
 
-    unsigned        arrayCompDepth; /* stack depth of array in comprehension */
+    uint32_t        arrayCompDepth; /* stack depth of array in comprehension */
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
 
