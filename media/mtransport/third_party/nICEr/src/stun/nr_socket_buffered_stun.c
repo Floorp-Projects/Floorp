@@ -377,6 +377,9 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
     }
 
     n1->r_offset += written;
+    assert(sock->pending >= written);
+    sock->pending -= written;
+
     if (n1->r_offset < n1->length) {
       /* We wrote something, but not everything */
       ABORT(R_WOULDBLOCK);
@@ -387,6 +390,7 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
     nr_p_buf_free(sock->p_bufs, n1);
   }
 
+  assert(!sock->pending);
   _status=0;
 abort:
   if (_status && _status != R_WOULDBLOCK) {
