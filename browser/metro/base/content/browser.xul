@@ -97,6 +97,7 @@
     <command id="cmd_history" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_contextUI" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_reportingCrashesSubmitURLs" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -678,13 +679,19 @@ Desktop browser's sync prefs.
         <setting pref="app.crashreporter.autosubmit"
                  type="bool"
                  title="&optionsHeader.reporting.crashes.label;" />
-        <setting pref="app.crashreporter.submitURLs"
-                 id="prefs-reporting-submitURLs"
-                 type="bool"
-                 title="&optionsHeader.reporting.crashes.submitURLs;" />
+        <checkbox id="prefs-reporting-submitURLs"
+                  cropped="end"
+                  label="&optionsHeader.reporting.crashes.submitURLs;"
+                  command="cmd_reportingCrashesSubmitURLs"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
+        <setting
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+          pref="toolkit.telemetry.enabledPreRelease"
+#else
+          pref="toolkit.telemetry.enabled"
+#endif
+          type="bool" title="&optionsHeader.telemetry.label;"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >

@@ -6,7 +6,6 @@
 function DummyCompleter() {
   this.fragments = {};
   this.queries = [];
-  this.cachable = true;
   this.tableName = "test-phish-simple";
 }
 
@@ -36,7 +35,7 @@ complete: function(partialHash, cb)
         for (var i = 0; i < fragments[partialHash].length; i++) {
           var chunkId = fragments[partialHash][i][0];
           var hash = fragments[partialHash][i][1];
-          cb.completion(hash, self.tableName, chunkId, self.cachable);
+          cb.completion(hash, self.tableName, chunkId);
         }
       }
     cb.completionFinished(0);
@@ -128,13 +127,6 @@ function installCompleter(table, fragments, conflictFragments)
 function installFailingCompleter(table) {
   var completer = setupCompleter(table, [], []);
   completer.alwaysFail = true;
-  return completer;
-}
-
-function installUncachableCompleter(table, fragments, conflictFragments)
-{
-  var completer = setupCompleter(table, fragments, conflictFragments);
-  completer.cachable = false;
   return completer;
 }
 
@@ -646,48 +638,6 @@ function testCachedResultsFailure()
   });
 }
 
-function setupUncachedResults(addUrls, part2)
-{
-  var update = buildPhishingUpdate(
-        [
-          { "chunkNum" : 1,
-            "urls" : addUrls
-          }],
-        4);
-
-  var completer = installUncachableCompleter('test-phish-simple', [[1, addUrls]], []);
-
-  var assertions = {
-    "tableData" : "test-phish-simple;a:1",
-    // Request the add url.  This should cause the completion to be cached.
-    "urlsExist" : addUrls,
-    // Make sure the completer was actually queried.
-    "completerQueried" : [completer, addUrls]
-  };
-
-  doUpdateTest([update], assertions,
-               function() {
-                 // Give the dbservice a chance to cache the result.
-                 var timer = new Timer(3000, part2);
-               }, updateError);
-}
-
-function testUncachedResults()
-{
-  setupUncachedResults(["foo.com/a"], function(add) {
-      // This is called after setupCachedResults().  Verify that
-      // checking the url again does not cause a completer request.
-
-      // install a new completer, this one should be queried.
-      var newCompleter = installCompleter('test-phish-simple', [[1, ["foo.com/a"]]], []);
-      var assertions = {
-        "urlsExist" : ["foo.com/a"],
-        "completerQueried" : [newCompleter, ["foo.com/a"]]
-      };
-      checkAssertions(assertions, runNextTest);
-    });
-}
-
 function testErrorList()
 {
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
@@ -865,7 +815,6 @@ function run_test()
       testCachedResultsWithExpire,
       testCachedResultsUpdate,
       testCachedResultsFailure,
-      testUncachedResults,
       testStaleList,
       testStaleListEmpty,
       testErrorList,

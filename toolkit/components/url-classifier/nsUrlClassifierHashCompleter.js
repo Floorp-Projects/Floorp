@@ -30,21 +30,12 @@ const BACKOFF_TIME = 5 * 60;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let keyFactory = Cc["@mozilla.org/security/keyobjectfactory;1"]
-                   .getService(Ci.nsIKeyObjectFactory);
 
 function HashCompleter() {
   // This is a HashCompleterRequest and is used by multiple calls to |complete|
   // in succession to avoid unnecessarily creating requests. Once it has been
   // started, this is set to null again.
   this._currentRequest = null;
-
-  // Key used in the HMAC process by the client to verify the request has not
-  // been tampered with. It is stored as a binary blob.
-  this._clientKey = "";
-  // Key used in the HMAC process and sent remotely to the server in the URL
-  // of the request. It is stored as a base64 string.
-  this._wrappedKey = "";
 
   // Whether we have been informed of a shutdown by the xpcom-shutdown event.
   this._shuttingDown = false;
@@ -110,10 +101,6 @@ HashCompleter.prototype = {
     }
 
     let url = this._getHashUrl;
-    if (this._clientKey) {
-      this._currentRequest.clientKey = this._clientKey;
-      url += "&wrkey=" + this._wrappedKey;
-    }
 
     let uri = Services.io.newURI(url, null, null);
     this._currentRequest.setURI(uri);
@@ -125,32 +112,6 @@ HashCompleter.prototype = {
     finally {
       this._currentRequest = null;
     }
-  },
-
-  // When a rekey has been requested, we can only clear our keys and make
-  // unauthenticated requests.
-  // The HashCompleter does not handle the rekeying but instead sends a
-  // notification to have listeners do the work.
-  rekeyRequested: function HC_rekeyRequested() {
-    this.setKeys("", "");
-
-    Services.obs.notifyObservers(this, "url-classifier-rekey-requested", null);
-  },
-
-  // setKeys expects clientKey and wrappedKey to be url safe, base64 strings.
-  // When called with an empty client string, setKeys resets both the client
-  // key and wrapped key.
-  setKeys: function HC_setKeys(aClientKey, aWrappedKey) {
-    if (aClientKey == "") {
-      this._clientKey = "";
-      this._wrappedKey = "";
-      return;
-    }
-
-    // The decoding of clientKey was originally done by using
-    // nsUrlClassifierUtils::DecodeClientKey.
-    this._clientKey = atob(unUrlsafeBase64(aClientKey));
-    this._wrappedKey = aWrappedKey;
   },
 
   get gethashUrl() {
@@ -232,14 +193,6 @@ function HashCompleterRequest(aCompleter) {
   this._channel = null;
   // Response body of hash completion. Created in onDataAvailable.
   this._response = "";
-  // Client key when HMAC is used.
-  this._clientKey = "";
-  // Request was rescheduled, possibly due to a "e:pleaserekey" request from
-  // the server.
-  this._rescheduled = false;
-  // Whether the request was encrypted. This is also used as the |trusted|
-  // parameter to the nsIUrlClassifierHashCompleterCallback.
-  this._verified = false;
   // Whether we have been informed of a shutdown by the xpcom-shutdown event.
   this._shuttingDown = false;
 }
@@ -351,73 +304,18 @@ HashCompleterRequest.prototype = {
     }
 
     let start = 0;
-    if (this._clientKey) {
-      start = this.handleMAC(start);
-
-      if (this._rescheduled) {
-        return;
-      }
-    }
 
     let length = this._response.length;
     while (start != length)
       start = this.handleTable(start);
   },
 
-  // This parses and confirms that the MAC in the response matches the expected
-  // value. This throws an error if the MAC does not match or otherwise, returns
-  // the index after the MAC header.
-  handleMAC: function HCR_handleMAC(aStart) {
-    this._verified = false;
-
-    let body = this._response.substring(aStart);
-
-    // We have to deal with the index of the new line character instead of
-    // splitting the string as there could be new line characters in the data
-    // parts.
-    let newlineIndex = body.indexOf("\n");
-    if (newlineIndex == -1) {
-      throw errorWithStack();
-    }
-
-    let serverMAC = body.substring(0, newlineIndex);
-    if (serverMAC == "e:pleaserekey") {
-      this.rescheduleItems();
-
-      this._completer.rekeyRequested();
-      return this._response.length;
-    }
-
-    serverMAC = unUrlsafeBase64(serverMAC);
-
-    let keyObject = keyFactory.keyFromString(Ci.nsIKeyObject.HMAC,
-                                             this._clientKey);
-
-    let data = body.substring(newlineIndex + 1).split("")
-                                              .map(function(x) x.charCodeAt(0));
-
-    let hmac = Cc["@mozilla.org/security/hmac;1"]
-                 .createInstance(Ci.nsICryptoHMAC);
-    hmac.init(Ci.nsICryptoHMAC.SHA1, keyObject);
-    hmac.update(data, data.length);
-    let clientMAC = hmac.finish(true);
-
-    if (clientMAC != serverMAC) {
-      throw errorWithStack();
-    }
-
-    this._verified = true;
-
-    return aStart + newlineIndex + 1;
-  },
-
   // This parses a table entry in the response body and calls |handleItem|
-  // for complete hash in the table entry. Like |handleMAC|, it returns the
-  // index in |_response| right after the table it parsed.
+  // for complete hash in the table entry. 
   handleTable: function HCR_handleTable(aStart) {
     let body = this._response.substring(aStart);
 
-    // Like in handleMAC, we deal with new line indexes as there could be
+    // deal with new line indexes as there could be
     // new line characters in the data parts.
     let newlineIndex = body.indexOf("\n");
     if (newlineIndex == -1) {
@@ -473,7 +371,7 @@ HashCompleterRequest.prototype = {
       for (let j = 0; j < request.responses.length; j++) {
         let response = request.responses[j];
         request.callback.completion(response.completeHash, response.tableName,
-                                    response.chunkId, this._verified);
+                                    response.chunkId);
       }
 
       request.callback.completionFinished(Cr.NS_OK);
@@ -484,23 +382,6 @@ HashCompleterRequest.prototype = {
       let request = this._requests[i];
       request.callback.completionFinished(aStatus);
     }
-  },
-
-  // rescheduleItems is called after a "e:pleaserekey" response. It is meant
-  // to be called after |rekeyRequested| has been called as it re-calls
-  // the HashCompleter with |complete| for all the items on this request.
-  rescheduleItems: function HCR_rescheduleItems() {
-    for (let i = 0; i < this._requests[i]; i++) {
-      let request = this._requests[i];
-      try {
-        this._completer.complete(request.partialHash, request.callback);
-      }
-      catch (err) {
-        request.callback.completionFinished(err);
-      }
-    }
-
-    this._rescheduled = true;
   },
 
   onDataAvailable: function HCR_onDataAvailable(aRequest, aContext,
@@ -545,17 +426,11 @@ HashCompleterRequest.prototype = {
       }
     }
 
-    if (!this._rescheduled) {
-      if (success) {
-        this.notifySuccess();
-      } else {
-        this.notifyFailure(aStatusCode);
-      }
+    if (success) {
+      this.notifySuccess();
+    } else {
+      this.notifyFailure(aStatusCode);
     }
-  },
-
-  set clientKey(aVal) {
-    this._clientKey = aVal;
   },
 
   observe: function HCR_observe(aSubject, aTopic, aData) {

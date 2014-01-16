@@ -1265,13 +1265,14 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
+Navigator::GetMozConnection(nsISupports** aConnection)
 {
-  NS_IF_ADDREF(*aConnection = GetMozConnection());
+  nsCOMPtr<nsINetworkProperties> properties = GetMozConnection();
+  properties.forget(aConnection);
   return NS_OK;
 }
 
-nsIDOMMozConnection*
+network::Connection*
 Navigator::GetMozConnection()
 {
   if (!mConnection) {
@@ -1321,7 +1322,7 @@ Navigator::EnsureMessagesManager()
   // We don't do anything with the return value.
   AutoJSContext cx;
   JS::Rooted<JS::Value> prop_val(cx);
-  rv = gpi->Init(mWindow, prop_val.address());
+  rv = gpi->Init(mWindow, &prop_val);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMessagesManager = messageManager.forget();
@@ -1578,7 +1579,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       return Throw(aCx, NS_ERROR_UNEXPECTED);
     }
 
-    rv = gpi->Init(mWindow, prop_val.address());
+    rv = gpi->Init(mWindow, &prop_val);
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
     }

@@ -161,89 +161,101 @@ DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx,
 }
 
 nsresult
-DOMCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey)
+DOMCameraCapabilities::StringListToNewObject(JSContext* aCx,
+                                             JS::MutableHandle<JS::Value> aArray,
+                                             uint32_t aKey)
 {
   JS::Rooted<JSObject*> array(aCx);
 
   nsresult rv = ParameterListToNewArray(aCx, &array, aKey, ParseStringItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aArray = OBJECT_TO_JSVAL(array);
+  aArray.setObjectOrNull(array);
   return NS_OK;
 }
 
 nsresult
-DOMCameraCapabilities::DimensionListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey)
+DOMCameraCapabilities::DimensionListToNewObject(JSContext* aCx,
+                                                JS::MutableHandle<JS::Value> aArray,
+                                                uint32_t aKey)
 {
   JS::Rooted<JSObject*> array(aCx);
-  nsresult rv;
 
-  rv = ParameterListToNewArray(aCx, &array, aKey, ParseDimensionItemAndAdd);
+  nsresult rv = ParameterListToNewArray(aCx, &array, aKey, ParseDimensionItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aArray = OBJECT_TO_JSVAL(array);
+  aArray.setObjectOrNull(array);
   return NS_OK;
 }
 
 /* readonly attribute jsval previewSizes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetPreviewSizes(JSContext* cx, JS::Value* aPreviewSizes)
+DOMCameraCapabilities::GetPreviewSizes(JSContext* cx,
+                                       JS::MutableHandle<JS::Value> aPreviewSizes)
 {
   return DimensionListToNewObject(cx, aPreviewSizes, CAMERA_PARAM_SUPPORTED_PREVIEWSIZES);
 }
 
 /* readonly attribute jsval pictureSizes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetPictureSizes(JSContext* cx, JS::Value* aPictureSizes)
+DOMCameraCapabilities::GetPictureSizes(JSContext* cx,
+                                       JS::MutableHandle<JS::Value> aPictureSizes)
 {
   return DimensionListToNewObject(cx, aPictureSizes, CAMERA_PARAM_SUPPORTED_PICTURESIZES);
 }
 
 /* readonly attribute jsval thumbnailSizes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetThumbnailSizes(JSContext* cx, JS::Value* aThumbnailSizes)
+DOMCameraCapabilities::GetThumbnailSizes(JSContext* cx,
+                                         JS::MutableHandle<JS::Value> aThumbnailSizes)
 {
   return DimensionListToNewObject(cx, aThumbnailSizes, CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES);
 }
 
 /* readonly attribute jsval fileFormats; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetFileFormats(JSContext* cx, JS::Value* aFileFormats)
+DOMCameraCapabilities::GetFileFormats(JSContext* cx,
+                                      JS::MutableHandle<JS::Value> aFileFormats)
 {
   return StringListToNewObject(cx, aFileFormats, CAMERA_PARAM_SUPPORTED_PICTUREFORMATS);
 }
 
 /* readonly attribute jsval whiteBalanceModes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetWhiteBalanceModes(JSContext* cx, JS::Value* aWhiteBalanceModes)
+DOMCameraCapabilities::GetWhiteBalanceModes(JSContext* cx,
+                                            JS::MutableHandle<JS::Value> aWhiteBalanceModes)
 {
   return StringListToNewObject(cx, aWhiteBalanceModes, CAMERA_PARAM_SUPPORTED_WHITEBALANCES);
 }
 
 /* readonly attribute jsval sceneModes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetSceneModes(JSContext* cx, JS::Value* aSceneModes)
+DOMCameraCapabilities::GetSceneModes(JSContext* cx,
+                                     JS::MutableHandle<JS::Value> aSceneModes)
 {
   return StringListToNewObject(cx, aSceneModes, CAMERA_PARAM_SUPPORTED_SCENEMODES);
 }
 
 /* readonly attribute jsval effects; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetEffects(JSContext* cx, JS::Value* aEffects)
+DOMCameraCapabilities::GetEffects(JSContext* cx,
+                                  JS::MutableHandle<JS::Value> aEffects)
 {
   return StringListToNewObject(cx, aEffects, CAMERA_PARAM_SUPPORTED_EFFECTS);
 }
 
 /* readonly attribute jsval flashModes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetFlashModes(JSContext* cx, JS::Value* aFlashModes)
+DOMCameraCapabilities::GetFlashModes(JSContext* cx,
+                                     JS::MutableHandle<JS::Value> aFlashModes)
 {
   return StringListToNewObject(cx, aFlashModes, CAMERA_PARAM_SUPPORTED_FLASHMODES);
 }
 
 /* readonly attribute jsval focusModes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetFocusModes(JSContext* cx, JS::Value* aFocusModes)
+DOMCameraCapabilities::GetFocusModes(JSContext* cx,
+                                     JS::MutableHandle<JS::Value> aFocusModes)
 {
   return StringListToNewObject(cx, aFocusModes, CAMERA_PARAM_SUPPORTED_FOCUSMODES);
 }
@@ -335,14 +347,14 @@ DOMCameraCapabilities::GetMaxMeteringAreas(JSContext* cx, int32_t* aMaxMeteringA
 
 /* readonly attribute jsval zoomRatios; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
+DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::MutableHandle<JS::Value> aZoomRatios)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
   const char* value = mCamera->GetParameterConstChar(CAMERA_PARAM_SUPPORTED_ZOOM);
   if (!value || strcmp(value, "true") != 0) {
     // if zoom is not supported, return a null object
-    *aZoomRatios = JSVAL_NULL;
+    aZoomRatios.setNull();
     return NS_OK;
   }
 
@@ -351,13 +363,13 @@ DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
   nsresult rv = ParameterListToNewArray(cx, &array, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, ParseZoomRatioItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aZoomRatios = OBJECT_TO_JSVAL(array);
+  aZoomRatios.setObjectOrNull(array);
   return NS_OK;
 }
 
 /* readonly attribute jsval videoSizes; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
+DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::MutableHandle<JS::Value> aVideoSizes)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
@@ -365,8 +377,8 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
   nsresult rv = mCamera->GetVideoSizes(sizes);
   NS_ENSURE_SUCCESS(rv, rv);
   if (sizes.Length() == 0) {
-    // video recording not supported, return a null object
-    *aVideoSizes = JSVAL_NULL;
+    // video recording not supported, return null
+    aVideoSizes.setNull();
     return NS_OK;
   }
 
@@ -392,19 +404,19 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
     }
   }
 
-  *aVideoSizes = OBJECT_TO_JSVAL(array);
+  aVideoSizes.setObject(*array);
   return NS_OK;
 }
 
 /* readonly attribute jsval recorderProfiles; */
 NS_IMETHODIMP
-DOMCameraCapabilities::GetRecorderProfiles(JSContext* cx, JS::Value* aRecorderProfiles)
+DOMCameraCapabilities::GetRecorderProfiles(JSContext* cx, JS::MutableHandle<JS::Value> aRecorderProfiles)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<RecorderProfileManager> profileMgr = mCamera->GetRecorderProfileManager();
   if (!profileMgr) {
-    *aRecorderProfiles = JSVAL_NULL;
+    aRecorderProfiles.setNull();
     return NS_OK;
   }
 
@@ -412,6 +424,6 @@ DOMCameraCapabilities::GetRecorderProfiles(JSContext* cx, JS::Value* aRecorderPr
   nsresult rv = profileMgr->GetJsObject(cx, o.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aRecorderProfiles = OBJECT_TO_JSVAL(o);
+  aRecorderProfiles.setObject(*o);
   return NS_OK;
 }

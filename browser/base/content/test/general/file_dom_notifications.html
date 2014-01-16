@@ -1,0 +1,23 @@
+<html>
+<head>
+<script>
+"use strict";
+
+function showNotification() {
+  var options = {
+      dir: undefined,
+      lang: undefined,
+      body: "Test body",
+      tag: "Test tag",
+      icon: undefined,
+  };
+  return new Notification("Test title", options);
+}
+</script>
+</head>
+<body>
+<form id="notificationForm" onsubmit="showNotification();">
+  <input type="submit" value="Show notification" id="submit"/>
+</form>
+</body>
+</html>

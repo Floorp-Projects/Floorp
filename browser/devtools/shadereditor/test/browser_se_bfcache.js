@@ -10,18 +10,19 @@ function ifWebGLSupported() {
   let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   let reloaded = reload(target);
-  yield once(gFront, "program-linked");
+  let firstProgram = yield once(gFront, "program-linked");
   yield reloaded;
 
   let navigated = navigate(target, MULTIPLE_CONTEXTS_URL);
-  yield getPrograms(gFront, 2);
+  let [secondProgram, thirdProgram] = yield getPrograms(gFront, 2);
   yield navigated;
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
   let fsEditor = yield ShadersEditorsView._getEditor("fs");
 
   yield navigateInHistory(target, "back", "will-navigate");
-  yield waitForSources();
+  yield once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
+  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
   is($("#content").hidden, false,
     "The tool's content should not be hidden.");
@@ -36,7 +37,8 @@ function ifWebGLSupported() {
     "The fragment shader editor contains the correct text.");
 
   yield navigateInHistory(target, "forward", "will-navigate");
-  yield waitForSources();
+  yield once(panel.panelWin, EVENTS.PROGRAMS_ADDED);
+  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
   is($("#content").hidden, false,
     "The tool's content should not be hidden.");
@@ -52,18 +54,4 @@ function ifWebGLSupported() {
 
   yield teardown(panel);
   finish();
-
-  function waitForSources() {
-    let deferred = promise.defer();
-    let win = panel.panelWin;
-    // These events must fire in this in order and the second event fires
-    // synchronously after the first event, so we can't use Promise.all and the
-    // `once` helper.
-    win.once(win.EVENTS.PROGRAMS_ADDED, () => {
-      win.once(win.EVENTS.SOURCES_SHOWN, () => {
-        deferred.resolve();
-      });
-    });
-    return deferred.promise;
-  }
 }

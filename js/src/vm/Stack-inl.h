@@ -363,13 +363,13 @@ AbstractFramePtr::setHookData(void *data) const
 #endif
 }
 
-inline Value
+inline HandleValue
 AbstractFramePtr::returnValue() const
 {
     if (isStackFrame())
         return asStackFrame()->returnValue();
 #ifdef JS_ION
-    return *asBaselineFrame()->returnValue();
+    return asBaselineFrame()->returnValue();
 #else
     MOZ_ASSUME_UNREACHABLE("Invalid frame");
 #endif

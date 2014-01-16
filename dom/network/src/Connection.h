@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_network_Connection_h
 #define mozilla_dom_network_Connection_h
 
-#include "nsIDOMConnection.h"
 #include "nsINetworkProperties.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
@@ -22,14 +21,12 @@ class NetworkInformation;
 namespace dom {
 namespace network {
 
-class Connection : public nsDOMEventTargetHelper
-                 , public nsIDOMMozConnection
-                 , public NetworkObserver
-                 , public nsINetworkProperties
+class Connection MOZ_FINAL : public nsDOMEventTargetHelper
+                           , public NetworkObserver
+                           , public nsINetworkProperties
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMMOZCONNECTION
   NS_DECL_NSINETWORKPROPERTIES
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
@@ -41,6 +38,17 @@ public:
 
   // For IObserver
   void Notify(const hal::NetworkInformation& aNetworkInfo);
+
+  // WebIDL
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  double Bandwidth() const;
+
+  bool Metered() const;
+
+  IMPL_EVENT_HANDLER(change)
 
 private:
   /**

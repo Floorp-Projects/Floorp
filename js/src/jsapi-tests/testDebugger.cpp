@@ -123,8 +123,8 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
     char text[] = "new Error()";
-    jsval _;
-    JS_EvaluateScript(cx, global, text, strlen(text), "", 0, &_);
+    JS::RootedValue _(cx);
+    JS_EvaluateScript(cx, global, text, strlen(text), "", 0, _.address());
 
     return JSTRAP_CONTINUE;
 }
@@ -226,8 +226,8 @@ bool testIndirectEval(JS::HandleObject scope, const char *code)
         CHECK(codestr);
         jsval argv[1] = { STRING_TO_JSVAL(codestr) };
         JS::AutoArrayRooter rooter(cx, 1, argv);
-        jsval v;
-        CHECK(JS_CallFunctionName(cx, scope, "eval", 1, argv, &v));
+        JS::RootedValue v(cx);
+        CHECK(JS_CallFunctionName(cx, scope, "eval", 1, argv, v.address()));
     }
 
     JS::RootedValue hitsv(cx);

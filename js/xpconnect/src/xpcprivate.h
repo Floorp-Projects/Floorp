@@ -275,7 +275,7 @@ class nsXPConnect : public nsIXPConnect,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
@@ -2364,7 +2364,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_IMETHOD DebugDump(int16_t depth);
 public:
 
@@ -2562,7 +2562,7 @@ class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
 {
 public:
     // all the interface method declarations...
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
 
     // non-interface implementation
@@ -2790,8 +2790,8 @@ public:
     const nsID& ID() const {return mID;}
     bool IsValid() const {return !mID.Equals(GetInvalidIID());}
 
-    static nsJSID* NewID(const char* str);
-    static nsJSID* NewID(const nsID& id);
+    static already_AddRefed<nsJSID> NewID(const char* str);
+    static already_AddRefed<nsJSID> NewID(const nsID& id);
 
     nsJSID();
     virtual ~nsJSID();
@@ -2822,7 +2822,7 @@ public:
     NS_DECL_NSIJSIID
     NS_DECL_NSIXPCSCRIPTABLE
 
-    static nsJSIID* NewID(nsIInterfaceInfo* aInfo);
+    static already_AddRefed<nsJSIID> NewID(nsIInterfaceInfo* aInfo);
 
     nsJSIID(nsIInterfaceInfo* aInfo);
     nsJSIID(); // not implemented
@@ -2846,7 +2846,7 @@ public:
     NS_DECL_NSIJSCID
     NS_DECL_NSIXPCSCRIPTABLE
 
-    static nsJSCID* NewID(const char* str);
+    static already_AddRefed<nsJSCID> NewID(const char* str);
 
     nsJSCID();
     virtual ~nsJSCID();
@@ -2937,7 +2937,7 @@ public:
 
 public:
     void SystemIsBeingShutDown() { ClearMembers(); }
-    virtual ~nsXPCComponentsBase() { ClearMembers(); }
+    virtual ~nsXPCComponentsBase();
 
     XPCWrappedNativeScope *GetScope() { return mScope; }
 
@@ -2945,12 +2945,12 @@ protected:
     nsXPCComponentsBase(XPCWrappedNativeScope* aScope);
     virtual void ClearMembers();
 
-    XPCWrappedNativeScope*          mScope;
+    XPCWrappedNativeScope*                   mScope;
 
     // Unprivileged members from nsIXPCComponentsBase.
-    nsXPCComponents_Interfaces*     mInterfaces;
-    nsXPCComponents_InterfacesByID* mInterfacesByID;
-    nsXPCComponents_Results*        mResults;
+    nsRefPtr<nsXPCComponents_Interfaces>     mInterfaces;
+    nsRefPtr<nsXPCComponents_InterfacesByID> mInterfacesByID;
+    nsRefPtr<nsXPCComponents_Results>        mResults;
 
     friend class XPCWrappedNativeScope;
 };
@@ -2965,22 +2965,16 @@ public:
 
 protected:
     nsXPCComponents(XPCWrappedNativeScope* aScope);
-
-    // One might think we could rely on the superclass destructor invoking
-    // the virtual cleanup function. But by the time we hit the superclass
-    // destructor, the derived class will be gone and the vtable pointer
-    // will be updated to point to that of the superclass, giving us only
-    // the superclass' cleanup.
-    virtual ~nsXPCComponents() { ClearMembers(); }
+    virtual ~nsXPCComponents();
     virtual void ClearMembers() MOZ_OVERRIDE;
 
     // Privileged members added by nsIXPCComponents.
-    nsXPCComponents_Classes*        mClasses;
-    nsXPCComponents_ClassesByID*    mClassesByID;
-    nsXPCComponents_ID*             mID;
-    nsXPCComponents_Exception*      mException;
-    nsXPCComponents_Constructor*    mConstructor;
-    nsXPCComponents_Utils*          mUtils;
+    nsRefPtr<nsXPCComponents_Classes>     mClasses;
+    nsRefPtr<nsXPCComponents_ClassesByID> mClassesByID;
+    nsRefPtr<nsXPCComponents_ID>          mID;
+    nsRefPtr<nsXPCComponents_Exception>   mException;
+    nsRefPtr<nsXPCComponents_Constructor> mConstructor;
+    nsRefPtr<nsXPCComponents_Utils>       mUtils;
 
     friend class XPCWrappedNativeScope;
 };
