@@ -184,20 +184,11 @@ private:
      * @param aSubjectPrincipal The nominal subject principal used when
      *                          aObjectSecurityLevel is "sameOrigin". If null,
      *                          this is calculated if it's needed.
-     * @param aObjectSecurityLevel Can be one of three values:
-     *                  - allAccess: Allow access no matter what.
-     *                  - noAccess: Deny access no matter what.
-     *                  - sameOrigin: If |cx| is null, behave like noAccess.
-     *                                Otherwise, possibly compute a subject
-     *                                and object principal and return true if
-     *                                and only if the subject has greater than
-     *                                or equal privileges to the object.
      */
     nsresult
     CheckXPCPermissions(JSContext* cx,
                         nsISupports* aObj, JSObject* aJSObject,
-                        nsIPrincipal* aSubjectPrincipal,
-                        const char* aObjectSecurityLevel);
+                        nsIPrincipal* aSubjectPrincipal);
 
     nsresult
     Init();

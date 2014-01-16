@@ -44,7 +44,6 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsIConsoleService.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIObserverService.h"
 #include "nsIContent.h"
@@ -608,45 +607,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(uint32_t aAction,
         return rv;
     }
 
-    //--See if the object advertises a non-default level of access
-    //  using nsISecurityCheckedComponent
-    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
-        do_QueryInterface(aObj);
-
-    nsXPIDLCString objectSecurityLevel;
-    if (checkedComponent)
-    {
-        nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-        nsCOMPtr<nsIInterfaceInfo> interfaceInfo;
-        const nsIID* objIID = nullptr;
-        rv = aCallContext->GetCalleeWrapper(getter_AddRefs(wrapper));
-        if (NS_SUCCEEDED(rv) && wrapper)
-            rv = wrapper->FindInterfaceWithMember(property, getter_AddRefs(interfaceInfo));
-        if (NS_SUCCEEDED(rv) && interfaceInfo)
-            rv = interfaceInfo->GetIIDShared(&objIID);
-        if (NS_SUCCEEDED(rv) && objIID)
-        {
-            switch (aAction)
-            {
-            case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-                checkedComponent->CanGetProperty(objIID,
-                                                 IDToString(cx, property),
-                                                 getter_Copies(objectSecurityLevel));
-                break;
-            case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-                checkedComponent->CanSetProperty(objIID,
-                                                 IDToString(cx, property),
-                                                 getter_Copies(objectSecurityLevel));
-                break;
-            case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-                checkedComponent->CanCallMethod(objIID,
-                                                IDToString(cx, property),
-                                                getter_Copies(objectSecurityLevel));
-            }
-        }
-    }
-    rv = CheckXPCPermissions(cx, aObj, jsObject, subjectPrincipal,
-                             objectSecurityLevel);
+    rv = CheckXPCPermissions(cx, aObj, jsObject, subjectPrincipal);
 
     if (NS_FAILED(rv)) //-- Security tests failed, access is denied, report error
     {
@@ -1532,16 +1493,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
         return NS_OK;
     }
 
-    //--See if the object advertises a non-default level of access
-    //  using nsISecurityCheckedComponent
-    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
-        do_QueryInterface(aObj);
-
-    nsXPIDLCString objectSecurityLevel;
-    if (checkedComponent)
-        checkedComponent->CanCreateWrapper((nsIID *)&aIID, getter_Copies(objectSecurityLevel));
-
-    nsresult rv = CheckXPCPermissions(cx, aObj, nullptr, nullptr, objectSecurityLevel);
+    nsresult rv = CheckXPCPermissions(cx, aObj, nullptr, nullptr);
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
@@ -1584,7 +1536,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
                                            const nsCID &aCID)
 {
-    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr, nullptr);
+    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr);
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
@@ -1601,7 +1553,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanGetService(JSContext *cx,
                                        const nsCID &aCID)
 {
-    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr, nullptr);
+    nsresult rv = CheckXPCPermissions(cx, nullptr, nullptr, nullptr);
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
@@ -1633,62 +1585,13 @@ nsScriptSecurityManager::CanAccess(uint32_t aAction,
 nsresult
 nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
                                              nsISupports* aObj, JSObject* aJSObject,
-                                             nsIPrincipal* aSubjectPrincipal,
-                                             const char* aObjectSecurityLevel)
+                                             nsIPrincipal* aSubjectPrincipal)
 {
     MOZ_ASSERT(cx);
     JS::RootedObject jsObject(cx, aJSObject);
     // Check if the subject is privileged.
     if (SubjectIsPrivileged())
         return NS_OK;
-
-    //-- If the object implements nsISecurityCheckedComponent, it has a non-default policy.
-    if (aObjectSecurityLevel)
-    {
-        if (PL_strcasecmp(aObjectSecurityLevel, "allAccess") == 0)
-            return NS_OK;
-        if (cx && PL_strcasecmp(aObjectSecurityLevel, "sameOrigin") == 0)
-        {
-            nsresult rv;
-            if (!jsObject)
-            {
-                nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs =
-                    do_QueryInterface(aObj);
-                if (xpcwrappedjs)
-                {
-                    jsObject = xpcwrappedjs->GetJSObject();
-                    NS_ENSURE_STATE(jsObject);
-                }
-            }
-
-            if (!aSubjectPrincipal)
-            {
-                // No subject principal passed in. Compute it.
-                aSubjectPrincipal = GetSubjectPrincipal(cx, &rv);
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
-            if (aSubjectPrincipal && jsObject)
-            {
-                nsIPrincipal* objectPrincipal = doGetObjectPrincipal(jsObject);
-
-                // Only do anything if we have both a subject and object
-                // principal.
-                if (objectPrincipal)
-                {
-                    bool subsumes;
-                    rv = aSubjectPrincipal->Subsumes(objectPrincipal, &subsumes);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    if (subsumes)
-                        return NS_OK;
-                }
-            }
-        }
-        else if (PL_strcasecmp(aObjectSecurityLevel, "noAccess") != 0)
-        {
-            if (SubjectIsPrivileged())
-                return NS_OK;
-        }
-    }
 
     //-- Access tests failed
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
