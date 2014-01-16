@@ -974,6 +974,7 @@ var BrowserUI = {
       case "cmd_undoCloseTab":
       case "cmd_actions":
       case "cmd_panel":
+      case "cmd_reportingCrashesSubmitURLs":
       case "cmd_flyout_back":
       case "cmd_sanitize":
       case "cmd_volumeLeft":
@@ -1080,6 +1081,10 @@ var BrowserUI = {
         break;
       case "cmd_flyout_back":
         FlyoutPanelsUI.onBackButton();
+        break;
+      case "cmd_reportingCrashesSubmitURLs":
+        let urlCheckbox = document.getElementById("prefs-reporting-submitURLs");
+        Services.prefs.setBoolPref('app.crashreporter.submitURLs', urlCheckbox.checked);
         break;
       case "cmd_panel":
         PanelUI.toggle();

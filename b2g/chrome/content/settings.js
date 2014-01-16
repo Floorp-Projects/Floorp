@@ -597,9 +597,38 @@ SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) 
 SettingsListener.observe("layers.draw-borders", false, function(value) {
   Services.prefs.setBoolPref("layers.draw-borders", value);
 });
-SettingsListener.observe("layers.composer2d.enabled", true, function(value) {
-  Services.prefs.setBoolPref("layers.composer2d.enabled", value);
-});
+
+(function Composer2DSettingToPref() {
+  //layers.composer.enabled can be enabled in three ways
+  //In order of precedence they are:
+  //
+  //1. mozSettings "layers.composer.enabled"
+  //2. a gecko pref "layers.composer.enabled"
+  //3. presence of ro.display.colorfill at the Gonk level
+
+  var req = navigator.mozSettings.createLock().get('layers.composer2d.enabled');
+  req.onsuccess = function() {
+    if (typeof(req.result['layers.composer2d.enabled']) === 'undefined') {
+      var enabled = false;
+      if (Services.prefs.getPrefType('layers.composer2d.enabled') == Ci.nsIPrefBranch.PREF_BOOL) {
+        enabled = Services.prefs.getBoolPref('layers.composer2d.enabled');
+      } else {
+#ifdef MOZ_WIDGET_GONK
+        enabled = (libcutils.property_get('ro.display.colorfill') === '1');
+#endif
+      }
+      navigator.mozSettings.createLock().set({'layers.composer2d.enabled': enabled });
+    }
+
+    SettingsListener.observe("layers.composer2d.enabled", true, function(value) {
+      Services.prefs.setBoolPref("layers.composer2d.enabled", value);
+    });
+  };
+  req.onerror = function() {
+    dump("Error configuring layers.composer2d.enabled setting");
+  };
+
+})();
 
 // ================ Accessibility ============
 SettingsListener.observe("accessibility.screenreader", false, function(value) {

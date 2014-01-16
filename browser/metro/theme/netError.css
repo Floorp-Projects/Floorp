@@ -10,18 +10,49 @@
  *  Updated for mobile by: Wes Johnston <wjohnston@mozilla.com>
  */
 
+%filter substitution
+%include defines.inc
+%include platform.css
+
+/*
+ * In-browser content styles,
+ * XXX: should be extracted and consolidated into a shared stylesheet for all in-browser content
+ */
 body {
-  margin: 0;
-  padding: 0 8px 8px;
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  background-color: #F4F4F4;
+  color: rgb(51,51,51);
+  font-family: "Segoe UI", sans-serif;
+  font-size: @font_normal@;
+  line-height: 23px;
 }
 
 h1 {
-  font-size: 22px;
+  font-size: @metro_font_xlarge@;
+  font-weight: normal;
+  line-height: @metro_spacing_large@;
+}
+h2 {
+  font-size: @metro_font_large@;
+  line-height: @metro_spacing_xxxnormal@;
+  font-weight: normal;
+}
+h3 {
+  font-size: @font_normal@;
+  line-height: @metro_spacing_xxnormal@;
+}
+h4 {
+  font-size: @font_normal@;
+  line-height: @metro_spacing_xxnormal@;
+  font-style: italic;
+  display: inline;
 }
 
-h2 {
-  font-size: 16px;
+/*
+ * Net error page styles
+ */
+
+a {
+  text-decoration: none;
 }
 
 ul {
@@ -34,55 +65,88 @@ li {
   padding: 8px 0px;
 }
 
-#errorPage {
-  background-color: #CEE6F4;
-}
-
 #errorPage.certerror {
   background-color: #EFD400;
 }
 
 #errorPage.blockedsite {
   background-color: #BF0000;
+  color: #fff;
+}
+
+#errorPage.certerror #errorPageContainer > .section-header,
+#errorPage.blockedsite #errorPageContainer > .section-header {
+  border-bottom: @metro_border_thin@ solid rgb(133,137,140);
+}
+
+#errorPageContainer {
+  max-width: 628px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 60px;
+  -moz-padding-start: 40px;
+  -moz-padding-end: 24px;
 }
 
 #errorTitle {
-  background: url("chrome://browser/skin/images/errorpage-warning.png") left center no-repeat;
-  /* Scaled by .666 of their actual size */
-  background-size: 40px 40px;
-  background-origin: content-box;
-  min-height: 60px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
-#errorPage.certerror #errorTitle {
+#errorTitleIcon {
+  background-image: url("chrome://browser/skin/images/errorpage-warning.png");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 40px 40px;
+  background-origin: content-box;
+  display: inline-block;
+  -moz-margin-start: -64px;
+  -moz-margin-end: 24px;
+  height: 40px;
+  vertical-align: middle;
+  width: 40px;
+}
+
+@media (min-resolution: @min_res_140pc@) {
+  /* Load 140% image when scaled by 140% */
+  #errorTitleIcon {
+    background-image: url("chrome://browser/skin/images/errorpage-warning@1.4x.png");
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  /* Load 180% image when scaled by 180% */
+  #errorTitleIcon {
+    background-image: url("chrome://browser/skin/images/errorpage-warning@1.8x.png");
+  }
+}
+
+#errorPage.certerror #errorTitleIcon {
   background-image: url("chrome://browser/skin/images/errorpage-larry-black.png");
 }
 
-#errorPage.blockedsite #errorTitle {
+#errorPage.blockedsite #errorTitleIcon {
   background-image: url("chrome://browser/skin/images/errorpage-larry-white.png");
   color: white;
 }
 
 .errorTitleText {
-  padding: 0px 0px 0px 50px;
+  padding: 0;
   display: inline-block;
-  vertical-align: middle
+  vertical-align: middle;
 }
 
-#errorPageContainer {
-  background-color: white;
-  border: 1px solid #999999;
-  border-radius: 6px;
-  padding: 6px 20px 20px;
-  font-size: 14px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
+#errorPageContainer > .section-header {
+  border-bottom: @metro_border_thin@ solid @border_color@;
+  margin-top: @metro_spacing_xxxnormal@;
+  padding-bottom: @metro_spacing_snormal@;
+}
+
+#errorPageContainer > .section-details {
+  margin-top: @metro_spacing_xxxnormal@;
+  padding-bottom: @metro_spacing_xxxnormal@;
+}
+
+#errorPageContainer > .section-footer {
+  padding-bottom: @metro_spacing_xxxnormal@;
 }
 
 #errorShortDesc > p:empty {
@@ -91,8 +155,8 @@ li {
 
 #errorShortDesc > p {
   overflow: auto;
-  border-bottom: 1px solid #999999;
   padding-bottom: 1em;
+  margin: 0;
 }
 
 #errorPage.blockedsite #errorShortDesc > p {
@@ -100,6 +164,30 @@ li {
   border-bottom: none;
   padding-bottom: 0px;
 }
+
+
+#detailsLink {
+  color: black;
+  display: table-row;
+}
+
+#detailsGrid {
+  display: table;
+}
+
+#detailsContainer {
+  display: table-row;
+}
+
+#detailsLinkLabel {
+  display: table-cell;
+}
+
+.detailsSpacer {
+  display: table-cell;
+  padding-right: 8px;
+}
+
 
 #securityOverrideDiv {
   padding-top: 10px;
@@ -110,7 +198,7 @@ div[collapsed] {
   background-image: url("chrome://browser/skin/images/arrowright-16.png");
   background-size: 11px 11px;
   background-repeat: no-repeat;
-  background-position: left 0.3em;  
+  background-position: left 0.6em;
 }
 
 div[collapsed="true"] {
@@ -124,8 +212,4 @@ div[collapsed="false"] {
 div[collapsed="true"] > p,
 div[collapsed="true"] > div {
   display: none;
-}
-
-button {
-  padding: 0.3em !important;
 }

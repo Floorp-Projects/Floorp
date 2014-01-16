@@ -29,7 +29,8 @@ let PrefsFlyoutPanel = {
       });
     });
 
-    this._prefObserver(null, null, "privacy.donottrackheader.value");
+    this.observe(null, null, "privacy.donottrackheader.value");
+    this._updateSubmitURLs();
     this._topmostElement = this._elements.PrefsFlyoutPanel;
   },
 
@@ -39,23 +40,23 @@ let PrefsFlyoutPanel = {
       this._hasShown = true;
 
       Services.prefs.addObserver("privacy.donottrackheader.value",
-                                 this._prefObserver,
+                                 this,
                                  false);
       Services.prefs.addObserver("privacy.donottrackheader.enabled",
-                                 this._prefObserver,
+                                 this,
                                  false);
       Services.prefs.addObserver("app.crashreporter.autosubmit",
-                                 this._prefObserver,
+                                 this,
                                  false);
       Services.prefs.addObserver("app.crashreporter.submitURLs",
-                                 this._prefObserver,
+                                 this,
                                  false);
     }
 
     this._topmostElement.show();
   },
 
-  _prefObserver: function(subject, topic, data) {
+  observe: function(subject, topic, data) {
     let value = -1;
     try {
       value = Services.prefs.getIntPref("privacy.donottrackheader.value");
@@ -90,26 +91,30 @@ let PrefsFlyoutPanel = {
 
       case "app.crashreporter.autosubmit":
         let autosubmit = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
+        let urlCheckbox = document.getElementById("prefs-reporting-submitURLs");
         if (!autosubmit) {
-          // If the user has selected not to submit crash reports, the UI
-          // should reflect also that URLs will not be included.
-          // TODO: Ideally we would grey out the text and the toggle for
-          // the "include URLs" pref, but the |setting| binding doesn't
-          // appear to support enabling/disabling. In the meantime, we just
-          // set the "include URLs" pref to false if the "send crash reports"
-          // pref has been set to false.
-          Services.prefs.setBoolPref('app.crashreporter.submitURLs', false);
+          // disables the submitURLs ui if no crashreports will be submited, but doesn't change the pref 
+          urlCheckbox.setAttribute("disabled", true);
+        }
+        else {
+          urlCheckbox.setAttribute("disabled", false);
         }
         break;
 
       case "app.crashreporter.submitURLs":
-        let submitURLs = Services.prefs.getBoolPref("app.crashreporter.submitURLs");
-        if (submitURLs) {
-          // If the user has selected to submit URLs, they are implicitly also
-          // selecting to submit crash reports. Let's update the autosubmit pref
-          Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
-        }
-      break;
+        this._updateSubmitURLs();
+        break;
+    }
+  },
+
+  _updateSubmitURLs: function() {
+    let submitURLs = Services.prefs.getBoolPref("app.crashreporter.submitURLs");
+    let urlCheckbox = document.getElementById("prefs-reporting-submitURLs");
+    if (submitURLs) {
+      urlCheckbox.checked = true; 
+    }
+    else {
+      urlCheckbox.checked = false;
     }
   },
 };

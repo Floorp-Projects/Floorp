@@ -730,7 +730,7 @@ video > .caption-box {
   position: relative;
   overflow: hidden;
   padding: 1.5%;
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
