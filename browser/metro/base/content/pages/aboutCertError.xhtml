@@ -189,16 +189,17 @@
 
   <body id="errorPage" class="certerror" dir="&locale.dir;">
 
-   <!-- Error Title -->
-   <div id="errorTitle">
-     <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
-   </div>
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+    <div id="errorPageContainer" class="section">
+
+      <!-- Error Title -->
+      <div id="errorTitle" class="section-header">
+        <span id="errorTitleIcon"></span>
+        <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
+      </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
-      <div id="errorLongContent">
+      <div id="errorLongContent" class="section-details">
         <div id="introContent">
           <p id="introContentP1">&certerror.introPara1;</p>
         </div>
@@ -228,8 +229,8 @@
           </div>
         </div>
       </div>
-    </div>
 
+    </div>
     <!--
     - Note: It is important to run the script this way, instead of using
     - an onload handler. This is because error pages are loaded as
