@@ -4132,7 +4132,16 @@ nsDocShell::IsPrintingOrPP(bool aDisplayErrorDialog)
 bool
 nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog)
 {
-    return !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+  bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+  if (!isAllowed) {
+    return false;
+  }
+  if (!mContentViewer) {
+    return true;
+  }
+  bool firingBeforeUnload;
+  mContentViewer->GetBeforeUnloadFiring(&firingBeforeUnload);
+  return !firingBeforeUnload;
 }
 
 //*****************************************************************************
