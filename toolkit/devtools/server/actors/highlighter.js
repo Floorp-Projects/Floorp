@@ -180,26 +180,39 @@ let HighlighterActor = protocol.ActorClass({
     return this._walker.attachElement(node);
   },
 
+  /**
+   * Get the right target for listening to mouse events while in pick mode.
+   * - On a firefox desktop content page: tabActor is a BrowserTabActor from
+   *   which the browser property will give us a target we can use to listen to
+   *   events, even in nested iframes.
+   * - On B2G: tabActor is a ContentAppActor which doesn't have a browser but
+   *   since it overrides BrowserTabActor, it does get a browser property
+   *   anyway, which points to its window object.
+   * - When using the Browser Toolbox (to inspect firefox desktop): tabActor is
+   *   the RootActor, in which case, the window property can be used to listen
+   *   to events
+   */
+  _getPickerListenerTarget: function() {
+    let actor = this._tabActor;
+    return actor.isRootActor ? actor.window : actor.browser;
+  },
+
   _startPickerListeners: function() {
-    // Note that on b2g devices, tabActor.browser actually returns a window
-    // object since the browser is in a separate process anyway.
-    // In any case, adding the event listener will work, although it won't
-    // fire for elements nested inside iframes
-    let browser = this._tabActor.browser;
-    browser.addEventListener("mousemove", this._onHovered, true);
-    browser.addEventListener("click", this._onPick, true);
-    browser.addEventListener("mousedown", this._preventContentEvent, true);
-    browser.addEventListener("mouseup", this._preventContentEvent, true);
-    browser.addEventListener("dblclick", this._preventContentEvent, true);
+    let target = this._getPickerListenerTarget();
+    target.addEventListener("mousemove", this._onHovered, true);
+    target.addEventListener("click", this._onPick, true);
+    target.addEventListener("mousedown", this._preventContentEvent, true);
+    target.addEventListener("mouseup", this._preventContentEvent, true);
+    target.addEventListener("dblclick", this._preventContentEvent, true);
   },
 
   _stopPickerListeners: function() {
-    let browser = this._tabActor.browser;
-    browser.removeEventListener("mousemove", this._onHovered, true);
-    browser.removeEventListener("click", this._onPick, true);
-    browser.removeEventListener("mousedown", this._preventContentEvent, true);
-    browser.removeEventListener("mouseup", this._preventContentEvent, true);
-    browser.removeEventListener("dblclick", this._preventContentEvent, true);
+    let target = this._getPickerListenerTarget();
+    target.removeEventListener("mousemove", this._onHovered, true);
+    target.removeEventListener("click", this._onPick, true);
+    target.removeEventListener("mousedown", this._preventContentEvent, true);
+    target.removeEventListener("mouseup", this._preventContentEvent, true);
+    target.removeEventListener("dblclick", this._preventContentEvent, true);
   },
 
   cancelPick: method(function() {
