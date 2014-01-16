@@ -57,8 +57,8 @@ HTMLAllCollection::GetObject(JSContext* aCx, ErrorResult& aRv)
     MOZ_ASSERT(wrapper);
 
     JSAutoCompartment ac(aCx, wrapper);
-    mObject = JS_NewObject(aCx, &sHTMLDocumentAllClass, nullptr,
-                           JS_GetGlobalForObject(aCx, wrapper));
+    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, wrapper));
+    mObject = JS_NewObject(aCx, &sHTMLDocumentAllClass, JS::NullPtr(), global);
     if (!mObject) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;

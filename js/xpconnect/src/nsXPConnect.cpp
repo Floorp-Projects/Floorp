@@ -1407,7 +1407,7 @@ nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 NS_IMETHODIMP
 nsXPConnect::GetTelemetryValue(JSContext *cx, MutableHandleValue rval)
 {
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!obj)
         return NS_ERROR_OUT_OF_MEMORY;
 

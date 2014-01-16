@@ -36,7 +36,7 @@ BEGIN_TEST(testAddPropertyHook)
      */
     static const int ExpectedCount = 100;
 
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
     JS::RootedValue proto(cx, OBJECT_TO_JSVAL(obj));
     JS_InitClass(cx, global, obj, &AddPropertyClass, nullptr, 0, nullptr, nullptr, nullptr,
@@ -51,7 +51,7 @@ BEGIN_TEST(testAddPropertyHook)
                             JSPROP_ENUMERATE));
 
     for (int i = 0; i < ExpectedCount; ++i) {
-        obj = JS_NewObject(cx, &AddPropertyClass, nullptr, nullptr);
+        obj = JS_NewObject(cx, &AddPropertyClass, JS::NullPtr(), JS::NullPtr());
         CHECK(obj);
         JS::RootedValue vobj(cx, OBJECT_TO_JSVAL(obj));
         JS::RootedObject arrObj(cx, JSVAL_TO_OBJECT(arr));
