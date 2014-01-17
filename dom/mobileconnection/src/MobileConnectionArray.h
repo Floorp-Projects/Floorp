@@ -8,12 +8,13 @@
 #define mozilla_dom_network_MobileConnectionArray_h__
 
 #include "nsWrapperCache.h"
-#include "mozilla/dom/MobileConnection.h"
+#include "mozilla/dom/network/MobileConnection.h"
 
 class nsIDOMMozMobileConnection;
 
 namespace mozilla {
 namespace dom {
+namespace network {
 
 class MobileConnectionArray MOZ_FINAL : public nsISupports,
                                         public nsWrapperCache
@@ -56,6 +57,7 @@ private:
   nsTArray<nsRefPtr<MobileConnection>> mMobileConnections;
 };
 
+} // namespace network
 } // namespace dom
 } // namespace mozilla
 
