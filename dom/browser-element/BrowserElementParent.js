@@ -114,9 +114,6 @@ BrowserElementParentFactory.prototype = {
     case 'in-process-browser-or-app-frame-shown':
       this._observeInProcessBrowserFrameShown(subject);
       break;
-    case 'content-document-global-created':
-      this._observeContentGlobalCreated(subject);
-      break;
     }
   },
 };
