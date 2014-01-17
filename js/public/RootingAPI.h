@@ -557,8 +557,8 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 };
 
 #ifdef JSGC_GENERATIONAL
-JS_PUBLIC_API(void) HeapCellPostBarrier(js::gc::Cell **cellp);
-JS_PUBLIC_API(void) HeapCellRelocate(js::gc::Cell **cellp);
+JS_FRIEND_API(void) HeapCellPostBarrier(js::gc::Cell **cellp);
+JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell **cellp);
 #endif
 
 } /* namespace JS */
