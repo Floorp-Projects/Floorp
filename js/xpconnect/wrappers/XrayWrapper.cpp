@@ -10,6 +10,7 @@
 #include "WrapperFactory.h"
 
 #include "nsIContent.h"
+#include "nsIControllers.h"
 #include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
@@ -711,6 +712,32 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     if (!JSID_IS_STRING(id)) {
         /* Not found */
         return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
+    }
+
+
+    // The |controllers| property is accessible as a [ChromeOnly] property on
+    // Window.WebIDL, and [noscript] in XPIDL. Chrome needs to see this over
+    // Xray, so we need to special-case it until we move |Window| to WebIDL.
+    nsGlobalWindow *win = nullptr;
+    if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_CONTROLLERS) &&
+        AccessCheck::isChrome(wrapper) &&
+        (win = static_cast<nsGlobalWindow*>(As<nsPIDOMWindow>(wrapper))))
+    {
+        nsCOMPtr<nsIControllers> c;
+        nsresult rv = win->GetControllers(getter_AddRefs(c));
+        if (NS_SUCCEEDED(rv) && c) {
+            rv = nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, CurrentGlobalOrNull(cx),
+                                                             c, nullptr, nullptr, true,
+                                                             desc.value());
+        }
+
+        if (NS_FAILED(rv) || !c) {
+            JS_ReportError(cx, "Failed to invoke GetControllers via Xrays");
+            return false;
+        }
+
+        desc.object().set(wrapper);
+        return true;
     }
 
     XPCNativeInterface *iface;

@@ -873,12 +873,6 @@ JS::ContextOptionsRef(JSContext *cx)
     return cx->options();
 }
 
-JS_PUBLIC_API(void)
-JS_SetJitHardening(JSRuntime *rt, bool enabled)
-{
-    rt->setJitHardening(!!enabled);
-}
-
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
@@ -2822,7 +2816,7 @@ JS_LookupPropertyWithFlags(JSContext *cx, HandleObject obj, const char *name, un
     RootedObject obj2(cx);
     JSAtom *atom = Atomize(cx, name, strlen(name));
     if (!atom)
-        false;
+        return false;
 
     RootedId id(cx, AtomToId(atom));
     return JS_LookupPropertyWithFlagsById(cx, obj, id, flags, &obj2, vp);
