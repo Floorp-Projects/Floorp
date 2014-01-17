@@ -56,10 +56,8 @@ BrowserToolboxProcess.prototype = {
       // Create a separate loader instance, so that we can be sure to receive a
       // separate instance of the DebuggingServer from the rest of the devtools.
       // This allows us to safely use the tools against even the actors and
-      // DebuggingServer itself, especially since we can mark this loader as
-      // invisible to the debugger (unlike the usual loader settings).
+      // DebuggingServer itself.
       this.loader = new DevToolsLoader();
-      this.loader.invisibleToDebugger = true;
       this.loader.main("devtools/server/main");
       this.debuggerServer = this.loader.DebuggerServer;
       dumpn("Created a separate loader instance for the DebuggerServer.");
