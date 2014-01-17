@@ -601,6 +601,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 612px, 54px, 594px);
   }
 
+  #tabview-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(18px, 648px, 36px, 630px);
+  }
+
   #email-link-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 306px, 36px, 288px);
   }
@@ -924,8 +928,16 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(72px, 1224px, 108px, 1188px);
   }
 
-  :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  #tabview-button {
+    -moz-image-region: rect(0, 1296px, 36px, 1260px);
+  }
+
+  #tabview-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(36px, 1296px, 72px, 1260px);
+  }
+
+  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     width: 18px;
   }
 
@@ -1008,6 +1020,11 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   #privatebrowsing-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #privatebrowsing-button {
     -moz-image-region: rect(0px, 1152px, 64px, 1088px);
+  }
+
+  #tabview-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #tabview-button {
+    -moz-image-region: rect(0px, 1216px, 64px, 1152px);
   }
 
   #find-button[cui-areatype="menu-panel"],
@@ -1348,31 +1365,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   -moz-margin-end: 3px;
 }
 
-/* tabview button */
+/* tabview menu item */
 
-#tabview-button,
 #menu_tabview {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
-}
-
-#tabview-button {
-  -moz-image-region: rect(0, 100px, 20px, 80px);
-}
-
-#tabview-button[groups="0"] {
-  -moz-image-region: rect(0, 20px, 20px, 0);
-}
-
-#tabview-button[groups="1"] {
-  -moz-image-region: rect(0, 40px, 20px, 20px);
-}
-
-#tabview-button[groups="2"] {
-  -moz-image-region: rect(0, 60px, 20px, 40px);
-}
-
-#tabview-button[groups="3"] {
-  -moz-image-region: rect(0, 80px, 20px, 60px);
 }
 
 #menu_tabview {

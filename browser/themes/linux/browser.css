@@ -575,30 +575,25 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   transform: scaleX(-1);
 }
 
-/* tabview button */
+/* tabview menu item */
 
-#tabview-button,
 #menu_tabview {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
   -moz-image-region: rect(0, 80px, 16px, 64px);
 }
 
-#tabview-button[groups="0"],
 #menu_tabview[groups="0"] {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#tabview-button[groups="1"],
 #menu_tabview[groups="1"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-#tabview-button[groups="2"],
 #menu_tabview[groups="2"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-#tabview-button[groups="3"],
 #menu_tabview[groups="3"] {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
