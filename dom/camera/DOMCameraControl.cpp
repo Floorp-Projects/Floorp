@@ -8,6 +8,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsThread.h"
 #include "DeviceStorage.h"
+#include "DeviceStorageFileDescriptor.h"
 #include "mozilla/dom/CameraControlBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/MediaManager.h"
@@ -349,13 +350,12 @@ nsDOMCameraControl::StartRecording(JSContext* aCx,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(onSuccess, "no onSuccess handler passed");
-  mozilla::idl::CameraStartRecordingOptions options;
 
   // Default values, until the dictionary parser can handle them.
-  options.rotation = 0;
-  options.maxFileSizeBytes = 0;
-  options.maxVideoLengthMs = 0;
-  aRv = options.Init(aCx, aOptions.address());
+  mOptions.rotation = 0;
+  mOptions.maxFileSizeBytes = 0;
+  mOptions.maxVideoLengthMs = 0;
+  aRv = mOptions.Init(aCx, aOptions.address());
   if (aRv.Failed()) {
     return;
   }
@@ -375,13 +375,53 @@ nsDOMCameraControl::StartRecording(JSContext* aCx,
   }
   #endif
 
-  nsCOMPtr<nsIFile> folder;
-  aRv = storageArea.GetRootDirectoryForFile(filename, getter_AddRefs(folder));
+  nsCOMPtr<nsIDOMDOMRequest> request;
+  mDSFileDescriptor = new DeviceStorageFileDescriptor();
+  aRv = storageArea.CreateFileDescriptor(filename, mDSFileDescriptor.get(),
+                                         getter_AddRefs(request));
   if (aRv.Failed()) {
     return;
   }
-  aRv = mCameraControl->StartRecording(&options, folder, filename, onSuccess,
-                                       onError.WasPassed() ? onError.Value() : nullptr);
+
+  mOnSuccessCb = onSuccess;
+  mOnErrorCb = onError.WasPassed() ? onError.Value() : nullptr;
+
+  request->AddEventListener(NS_LITERAL_STRING("success"), this, false);
+  request->AddEventListener(NS_LITERAL_STRING("error"), this, false);
+}
+
+NS_IMETHODIMP
+nsDOMCameraControl::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsString  eventType;
+  aEvent->GetType(eventType);
+  ErrorResult rv;
+
+  if ((eventType.EqualsLiteral("success")) &&
+      mDSFileDescriptor->mFileDescriptor.IsValid()) {
+
+    rv = mCameraControl->StartRecording(&mOptions,
+                                        mDSFileDescriptor.get(),
+                                        mOnSuccessCb.get(),
+                                        mOnErrorCb.get());
+    if (!rv.Failed()) {
+      return rv.ErrorCode();
+    }
+
+    // An error happened. Fall through and call the error callback.
+  }
+
+  // We're already be on the main thread, so go ahead and call the
+  // error callback directly.
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mOnErrorCb &&
+      nsDOMCameraManager::IsWindowStillActive(mWindow->WindowID())) {
+    mOnErrorCb->HandleEvent(NS_LITERAL_STRING("FAILURE"));
+  }
+
+  return NS_OK;
 }
 
 void
