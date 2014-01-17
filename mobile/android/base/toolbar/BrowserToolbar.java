@@ -123,7 +123,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private ImageButton mBack;
     private ImageButton mForward;
 
-    private ToolbarProgressView mProgressBar;
     private TabCounter mTabsCounter;
     private GeckoImageButton mMenu;
     private GeckoImageView mMenuIcon;
@@ -204,8 +203,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mMenuIcon = (GeckoImageView) findViewById(R.id.menu_icon);
         mActionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         mHasSoftMenuButton = !HardwareUtils.hasMenuButton();
-
-        mProgressBar = (ToolbarProgressView) findViewById(R.id.progress);
 
         // We use different layouts on phones and tablets, so adjust the focus
         // order appropriately.
@@ -447,32 +444,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 mUrlDisplayLayout.dismissSiteIdentityPopup();
                 updateTabCount(tabs.getDisplayCount());
                 mSwitchingTabs = true;
-                break;
+                // Fall through.
         }
 
         if (tabs.isSelectedTab(tab)) {
             final EnumSet<UpdateFlags> flags = EnumSet.noneOf(UpdateFlags.class);
-
-            // Progress-related handling
-            switch (msg) {
-                case START:
-                    updateProgressVisibility(tab, 0);
-                    // Fall through.
-                case LOCATION_CHANGE:
-                case LOAD_ERROR:
-                case LOADED:
-                    flags.add(UpdateFlags.PROGRESS);
-                    if (mProgressBar.getVisibility() == View.VISIBLE) {
-                        mProgressBar.animateProgress(tab.getLoadProgress());
-                    }
-                    break;
-
-                case STOP:
-                case SELECTED:
-                    flags.add(UpdateFlags.PROGRESS);
-                    updateProgressVisibility();
-                    break;
-            }
 
             switch (msg) {
                 case TITLE:
@@ -482,11 +458,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case START:
                     updateBackButton(tab);
                     updateForwardButton(tab);
+
+                    flags.add(UpdateFlags.PROGRESS);
                     break;
 
                 case STOP:
                     updateBackButton(tab);
                     updateForwardButton(tab);
+
+                    flags.add(UpdateFlags.PROGRESS);
 
                     // Reset the title in case we haven't navigated
                     // to a new page yet.
@@ -528,20 +508,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             case LOAD_ERROR:
             case LOCATION_CHANGE:
                 mSwitchingTabs = false;
-        }
-    }
-
-    private void updateProgressVisibility() {
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        updateProgressVisibility(selectedTab, selectedTab.getLoadProgress());
-    }
-
-    private void updateProgressVisibility(Tab selectedTab, int progress) {
-        if (!mIsEditing && selectedTab.getState() == Tab.STATE_LOADING) {
-            mProgressBar.setProgress(progress);
-            mProgressBar.setVisibility(View.VISIBLE);
-        } else {
-            mProgressBar.setVisibility(View.GONE);
         }
     }
 
@@ -904,8 +870,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setIsEditing(true);
         updateChildrenForEditing();
 
-        updateProgressVisibility();
-
         if (mStartEditingListener != null) {
             mStartEditingListener.onStartEditing();
         }
@@ -1025,8 +989,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (mStopEditingListener != null) {
             mStopEditingListener.onStopEditing();
         }
-
-        updateProgressVisibility();
 
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
             hideUrlEditLayout();
@@ -1252,6 +1214,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (tab != null) {
             updateDisplayLayout(tab, EnumSet.of(UpdateFlags.FAVICON,
                                                 UpdateFlags.SITE_IDENTITY,
+                                                UpdateFlags.PROGRESS,
                                                 UpdateFlags.PRIVATE_MODE));
             updateBackButton(tab);
             updateForwardButton(tab);

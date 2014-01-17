@@ -69,7 +69,6 @@ public class Tab {
     private Context mAppContext;
     private ErrorType mErrorType = ErrorType.NONE;
     private static final int MAX_HISTORY_LIST_SIZE = 50;
-    private int mLoadProgress;
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
@@ -764,23 +763,5 @@ public class Tab {
 
     public boolean isPrivate() {
         return false;
-    }
-
-    /**
-     * Sets the tab load progress to the given percentage.
-     *
-     * @param progressPercentage Percentage to set progress to (0-100)
-     */
-    void setLoadProgress(int progressPercentage) {
-        mLoadProgress = progressPercentage;
-    }
-
-    /**
-     * Gets the tab load progress percentage.
-     *
-     * @return Current progress percentage
-     */
-    public int getLoadProgress() {
-        return mLoadProgress;
     }
 }

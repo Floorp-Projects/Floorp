@@ -117,6 +117,8 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
     private PageActionLayout mPageActionLayout;
 
+    private Animation mProgressSpinner;
+
     private AlphaAnimation mLockFadeIn;
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
@@ -163,6 +165,8 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
         mSiteIdentityPopup.setAnchor(mSiteSecurity);
+
+        mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
@@ -353,9 +357,12 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
             return;
         }
 
-        Bitmap image = tab.getFavicon();
+        if (tab.getState() == Tab.STATE_LOADING) {
+            return;
+        }
 
-        if (image != null && image == mLastFavicon) {
+        Bitmap image = tab.getFavicon();
+        if (image == mLastFavicon) {
             Log.d(LOGTAG, "Ignoring favicon: new image is identical to previous one.");
             return;
         }
@@ -369,7 +376,7 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
             image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
         } else {
-            mFavicon.setImageResource(R.drawable.favicon);
+            mFavicon.setImageDrawable(null);            
         }
     }
 
@@ -415,8 +422,17 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
         // See discussion in Bug 804457. Bug 805124 tracks paring these down.
         if (mUiMode == UIMode.PROGRESS) {
+            mLastFavicon = null;
+            mFavicon.setImageResource(R.drawable.progress_spinner);
+            mFavicon.setAnimation(mProgressSpinner);
+            mProgressSpinner.start();
+
             Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
         } else {
+            updateFavicon(tab);
+            mFavicon.setAnimation(null);
+            mProgressSpinner.cancel();
+
             Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
 
