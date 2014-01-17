@@ -1,43 +1,42 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  /** Test for Bug 466937 **/
+"use strict";
 
-  waitForExplicitFinish();
+const URL = ROOT + "browser_466937_sample.html";
 
-  var file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsILocalFile);
+/**
+ * Bug 466937 - Prevent file stealing with sessionstore.
+ */
+add_task(function test_prevent_file_stealing() {
+  // Add a tab with some file input fields.
+  let tab = gBrowser.addTab(URL);
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+
+  // Generate a path to a 'secret' file.
+  let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
   file.append("466937_test.file");
-  file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
   let testPath = file.path;
 
-  let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser_466937_sample.html";
+  // Fill in form values.
+  yield setInputValue(browser, {id: "reverse_thief", value: "/home/user/secret2"});
+  yield setInputValue(browser, {id: "bystander", value: testPath});
 
-  let tab = gBrowser.addTab(testURL);
-  whenBrowserLoaded(tab.linkedBrowser, function() {
-    let doc = tab.linkedBrowser.contentDocument;
-    doc.getElementById("reverse_thief").value = "/home/user/secret2";
-    doc.getElementById("bystander").value = testPath;
+  // Duplicate and check form values.
+  let tab2 = gBrowser.duplicateTab(tab);
+  let browser2 = tab2.linkedBrowser;
+  yield promiseTabRestored(tab2);
 
-    let tab2 = gBrowser.duplicateTab(tab);
-    whenTabRestored(tab2, function() {
-      doc = tab2.linkedBrowser.contentDocument;
-      is(doc.getElementById("thief").value, "",
-         "file path wasn't set to text field value");
-      is(doc.getElementById("reverse_thief").value, "",
-         "text field value wasn't set to full file path");
-      is(doc.getElementById("bystander").value, testPath,
-         "normal case: file path was correctly preserved");
+  let thief = yield getInputValue(browser2, {id: "thief"});
+  is(thief, "", "file path wasn't set to text field value");
+  let reverse_thief = yield getInputValue(browser2, {id: "reverse_thief"});
+  is(reverse_thief, "", "text field value wasn't set to full file path");
+  let bystander = yield getInputValue(browser2, {id: "bystander"});
+  is(bystander, testPath, "normal case: file path was correctly preserved");
 
-      // clean up
-      gBrowser.removeTab(tab2);
-      gBrowser.removeTab(tab);
-
-      finish();
-    });
-  });
-}
+  // Cleanup.
+  gBrowser.removeTab(tab);
+  gBrowser.removeTab(tab2);
+});

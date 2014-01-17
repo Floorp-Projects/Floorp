@@ -96,9 +96,6 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("xhr"),
                require("sdk/net/xhr"), "sdk/io/xhr -> xhr");
 
-  assert.equal(require("observer-service"),
-               require("sdk/deprecated/observer-service"), "sdk/deprecated/observer-service -> observer-service");
-
   assert.equal(require("private-browsing"),
                require("sdk/private-browsing"), "sdk/private-browsing -> private-browsing");
 
@@ -146,9 +143,6 @@ exports["test compatibility"] = function(assert) {
 
   assert.equal(require("tabs/utils"),
                require("sdk/tabs/utils"), "sdk/tabs/utils -> tabs/utils");
-
-  assert.equal(require("app-strings"),
-               require("sdk/deprecated/app-strings"), "sdk/deprecated/app-strings -> app-strings");
 
   assert.equal(require("dom/events"),
                require("sdk/dom/events"), "sdk/dom/events -> dom/events");
