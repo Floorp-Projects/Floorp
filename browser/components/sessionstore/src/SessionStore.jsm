@@ -15,9 +15,6 @@ const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = -1;
 
-const STATE_STOPPED_STR = "stopped";
-const STATE_RUNNING_STR = "running";
-
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
@@ -404,7 +401,10 @@ let SessionStoreInternal = {
     this._initialized = true;
   },
 
-  initSession: function ssi_initSession() {
+  /**
+   * Initialize the session using the state provided by SessionStartup
+   */
+  initSession: function () {
     let state;
     let ss = gSessionStartup;
 
@@ -437,10 +437,7 @@ let SessionStoreInternal = {
           // restore it
           LastSession.setState(state.lastSessionState);
 
-          let lastSessionCrashed =
-            state.session && state.session.state &&
-            state.session.state == STATE_RUNNING_STR;
-          if (lastSessionCrashed) {
+          if (ss.previousSessionCrashed) {
             this._recentCrashes = (state.session &&
                                    state.session.recentCrashes || 0) + 1;
 
@@ -829,11 +826,6 @@ let SessionStoreInternal = {
           let overwrite = this._isCmdLineEmpty(aWindow, aInitialState);
           let options = {firstWindow: true, overwriteTabs: overwrite};
           this.restoreWindow(aWindow, aInitialState, options);
-
-          // _loadState changed from "stopped" to "running". Save the session's
-          // load state immediately so that crashes happening during startup
-          // are correctly counted.
-          SessionFile.writeLoadStateOnceAfterStartup(STATE_RUNNING_STR);
         }
       }
       else {
@@ -2230,7 +2222,6 @@ let SessionStoreInternal = {
       ix = -1;
 
     let session = {
-      state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
       lastUpdate: Date.now(),
       startTime: this._sessionStartTime,
       recentCrashes: this._recentCrashes

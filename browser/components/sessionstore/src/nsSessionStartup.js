@@ -14,12 +14,10 @@
  * mode is active, however, the session is never restored.
  *
  * Crash Detection
- * The session file stores a session.state property, that
- * indicates whether the browser is currently running. When the browser shuts
- * down, the field is changed to "stopped". At startup, this field is read, and
- * if its value is "running", then it's assumed that the browser had previously
- * crashed, or at the very least that something bad happened, and that we should
- * restore the session.
+ * The CrashMonitor is used to check if the final session state was successfully
+ * written at shutdown of the last session. If we did not reach
+ * 'sessionstore-final-state-write-complete', then it's assumed that the browser
+ * has previously crashed and we should restore the session.
  *
  * Forced Restarts
  * In the event that a restart is required due to application update or extension
@@ -47,6 +45,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CrashMonitor",
+  "resource://gre/modules/CrashMonitor.jsm");
 
 const STATE_RUNNING_STR = "running";
 
@@ -71,6 +71,9 @@ SessionStartup.prototype = {
   _initialState: null,
   _sessionType: Ci.nsISessionStartup.NO_SESSION,
   _initialized: false,
+
+  // Stores whether the previous session crashed.
+  _previousSessionCrashed: null,
 
 /* ........ Global Event Handlers .............. */
 
@@ -99,71 +102,78 @@ SessionStartup.prototype = {
     return string;
   },
 
-  _onSessionFileRead: function sss_onSessionFileRead(aStateString) {
-    if (this._initialized) {
-      // Initialization is complete, nothing else to do
+  /**
+   * Complete initialization once the Session File has been read
+   *
+   * @param stateString
+   *        string The Session State string read from disk
+   */
+  _onSessionFileRead: function (stateString) {
+    this._initialized = true;
+
+    // Let observers modify the state before it is used
+    let supportsStateString = this._createSupportsString(stateString);
+    Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read", "");
+    stateString = supportsStateString.data;
+
+    // No valid session found.
+    if (!stateString) {
+      this._sessionType = Ci.nsISessionStartup.NO_SESSION;
+      Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
+      gOnceInitializedDeferred.resolve();
       return;
     }
-    try {
-      this._initialized = true;
 
-      // Let observers modify the state before it is used
-      let supportsStateString = this._createSupportsString(aStateString);
-      Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read", "");
-      aStateString = supportsStateString.data;
+    this._initialState =  this._parseStateString(stateString);
 
-      // No valid session found.
-      if (!aStateString) {
-        this._sessionType = Ci.nsISessionStartup.NO_SESSION;
-        return;
+    let shouldResumeSessionOnce = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
+    let shouldResumeSession = shouldResumeSessionOnce ||
+          Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION;
+
+    // If this is a normal restore then throw away any previous session
+    if (!shouldResumeSessionOnce)
+      delete this._initialState.lastSessionState;
+
+    let resumeFromCrash = Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash");
+
+    CrashMonitor.previousCheckpoints.then(checkpoints => {
+      if (checkpoints) {
+        // If the previous session finished writing the final state, we'll
+        // assume there was no crash.
+        this._previousSessionCrashed = !checkpoints["sessionstore-final-state-write-complete"];
+      } else {
+        // If the Crash Monitor could not load a checkpoints file it will
+        // provide null. This could occur on the first run after updating to
+        // a version including the Crash Monitor, or if the checkpoints file
+        // was removed.
+        //
+        // If this is the first run after an update, sessionstore.js should
+        // still contain the session.state flag to indicate if the session
+        // crashed. If it is not present, we will assume this was not the first
+        // run after update and the checkpoints file was somehow corrupted or
+        // removed by a crash.
+        //
+        // If the session.state flag is present, we will fallback to using it
+        // for crash detection - If the last write of sessionstore.js had it
+        // set to "running", we crashed.
+        let stateFlagPresent = (this._initialState &&
+                                this._initialState.session &&
+                                this._initialState.session.state);
+
+
+        this._previousSessionCrashed = !stateFlagPresent ||
+                                       (this._initialState.session.state == STATE_RUNNING_STR);
       }
-
-      // parse the session state into a JS object
-      // remove unneeded braces (added for compatibility with Firefox 2.0 and 3.0)
-      if (aStateString.charAt(0) == '(')
-        aStateString = aStateString.slice(1, -1);
-      let corruptFile = false;
-      try {
-        this._initialState = JSON.parse(aStateString);
-      }
-      catch (ex) {
-        debug("The session file contained un-parse-able JSON: " + ex);
-        // This is not valid JSON, but this might still be valid JavaScript,
-        // as used in FF2/FF3, so we need to eval.
-        // evalInSandbox will throw if aStateString is not parse-able.
-        try {
-          var s = new Cu.Sandbox("about:blank", {sandboxName: 'nsSessionStartup'});
-          this._initialState = Cu.evalInSandbox("(" + aStateString + ")", s);
-        } catch(ex) {
-          debug("The session file contained un-eval-able JSON: " + ex);
-          corruptFile = true;
-        }
-      }
-      Services.telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(corruptFile);
-
-      let doResumeSessionOnce = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-      let doResumeSession = doResumeSessionOnce ||
-            Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION;
-
-      // If this is a normal restore then throw away any previous session
-      if (!doResumeSessionOnce)
-        delete this._initialState.lastSessionState;
-
-      let resumeFromCrash = Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash");
-      let lastSessionCrashed =
-        this._initialState && this._initialState.session &&
-        this._initialState.session.state &&
-        this._initialState.session.state == STATE_RUNNING_STR;
 
       // Report shutdown success via telemetry. Shortcoming here are
       // being-killed-by-OS-shutdown-logic, shutdown freezing after
       // session restore was written, etc.
-      Services.telemetry.getHistogramById("SHUTDOWN_OK").add(!lastSessionCrashed);
+      Services.telemetry.getHistogramById("SHUTDOWN_OK").add(!this._previousSessionCrashed);
 
       // set the startup type
-      if (lastSessionCrashed && resumeFromCrash)
+      if (this._previousSessionCrashed && resumeFromCrash)
         this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
-      else if (!lastSessionCrashed && doResumeSession)
+      else if (!this._previousSessionCrashed && shouldResumeSession)
         this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
       else if (this._initialState)
         this._sessionType = Ci.nsISessionStartup.DEFER_SESSION;
@@ -175,11 +185,33 @@ SessionStartup.prototype = {
       if (this._sessionType != Ci.nsISessionStartup.NO_SESSION)
         Services.obs.addObserver(this, "browser:purge-session-history", true);
 
-    } finally {
       // We're ready. Notify everyone else.
       Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
       gOnceInitializedDeferred.resolve();
+    });
+  },
+
+
+  /**
+   * Convert the Session State string into a state object
+   *
+   * @param stateString
+   *        string The Session State string read from disk
+   * @returns {State} a Session State object
+   */
+  _parseStateString: function (stateString) {
+    let state = null;
+    let corruptFile = false;
+
+    try {
+      state = JSON.parse(stateString);
+    } catch (ex) {
+      debug("The session file contained un-parse-able JSON: " + ex);
+      corruptFile = true;
     }
+    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(corruptFile);
+
+    return state;
   },
 
   /**
@@ -290,6 +322,14 @@ SessionStartup.prototype = {
   get sessionType() {
     this._ensureInitialized();
     return this._sessionType;
+  },
+
+  /**
+   * Get whether the previous session crashed.
+   */
+  get previousSessionCrashed() {
+    this._ensureInitialized();
+    return this._previousSessionCrashed;
   },
 
   // Ensure that initialization is complete. If initialization is not complete
