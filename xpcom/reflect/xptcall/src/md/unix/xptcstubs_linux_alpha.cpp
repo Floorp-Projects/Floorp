@@ -11,7 +11,7 @@
 /* Prototype specifies unmangled function name and disables unused warning */
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
-__asm__("PrepareAndDispatch") __attribute__((used));
+__asm__("PrepareAndDispatch") ATTRIBUTE_USED;
 
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
