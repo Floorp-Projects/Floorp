@@ -155,6 +155,7 @@ UNIFIED_SOURCES += [
     'vm/ArgumentsObject.cpp',
     'vm/CallNonGenericMethod.cpp',
     'vm/CharacterEncoding.cpp',
+    'vm/Compression.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
     'vm/ErrorObject.cpp',
