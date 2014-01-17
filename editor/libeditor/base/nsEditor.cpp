@@ -392,15 +392,9 @@ nsEditor::GetDesiredSpellCheckState()
   }
 
   // Check DOM state
-  nsCOMPtr<nsIContent> content = GetRoot();
+  nsCOMPtr<nsIContent> content = GetExposedRoot();
   if (!content) {
     return false;
-  }
-
-  // For plaintext editors, we just want to check whether the textarea/input
-  // itself is editable.
-  if (content->IsRootOfNativeAnonymousSubtree()) {
-    content = content->GetParent();
   }
 
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(content);
@@ -1857,6 +1851,12 @@ void nsEditor::NotifyEditorObservers(void)
     return;
   }
 
+  FireInputEvent();
+}
+
+void
+nsEditor::FireInputEvent()
+{
   // We don't need to dispatch multiple input events if there is a pending
   // input event.  However, it may have different event target.  If we resolved
   // this issue, we need to manage the pending events in an array.  But it's
@@ -5007,11 +5007,24 @@ nsEditor::GetEditorRoot()
   return GetRoot();
 }
 
+Element*
+nsEditor::GetExposedRoot()
+{
+  Element* rootElement = GetRoot();
+
+  // For plaintext editors, we need to ask the input/textarea element directly.
+  if (rootElement && rootElement->IsRootOfNativeAnonymousSubtree()) {
+    rootElement = rootElement->GetParent()->AsElement();
+  }
+
+  return rootElement;
+}
+
 nsresult
 nsEditor::DetermineCurrentDirection()
 {
   // Get the current root direction from its frame
-  dom::Element *rootElement = GetRoot();
+  nsIContent* rootElement = GetExposedRoot();
 
   // If we don't have an explicit direction, determine our direction
   // from the content's direction
@@ -5037,7 +5050,8 @@ NS_IMETHODIMP
 nsEditor::SwitchTextDirection()
 {
   // Get the current root direction from its frame
-  dom::Element *rootElement = GetRoot();
+  nsIContent* rootElement = GetExposedRoot();
+
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5056,6 +5070,10 @@ nsEditor::SwitchTextDirection()
     rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
   }
 
+  if (NS_SUCCEEDED(rv)) {
+    FireInputEvent();
+  }
+
   return rv;
 }
 
@@ -5063,7 +5081,8 @@ void
 nsEditor::SwitchTextDirectionTo(uint32_t aDirection)
 {
   // Get the current root direction from its frame
-  dom::Element *rootElement = GetRoot();
+  nsIContent* rootElement = GetExposedRoot();
+
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS_VOID(rv);
 
@@ -5074,14 +5093,18 @@ nsEditor::SwitchTextDirectionTo(uint32_t aDirection)
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
   } else if (aDirection == nsIPlaintextEditor::eEditorRightToLeft &&
              (mFlags & nsIPlaintextEditor::eEditorLeftToRight)) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
     mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    FireInputEvent();
   }
 }
 

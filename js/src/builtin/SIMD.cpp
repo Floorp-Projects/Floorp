@@ -35,48 +35,6 @@ extern const JSFunctionSpec Int32x4Methods[];
 ///////////////////////////////////////////////////////////////////////////
 // X4
 
-namespace js {
-struct Float32x4 {
-    typedef float Elem;
-    static const int32_t lanes = 4;
-    static const X4TypeRepresentation::Type type =
-        X4TypeRepresentation::TYPE_FLOAT32;
-
-    static JSObject &GetTypeObject(GlobalObject &global) {
-        return global.float32x4TypeObject();
-    }
-    static Elem toType(Elem a) {
-        return a;
-    }
-    static void toType2(JSContext *cx, JS::Handle<JS::Value> v, Elem *out) {
-        *out = v.toNumber();
-    }
-    static void setReturn(CallArgs &args, float value) {
-        args.rval().setDouble(JS::CanonicalizeNaN(value));
-    }
-};
-
-struct Int32x4 {
-    typedef int32_t Elem;
-    static const int32_t lanes = 4;
-    static const X4TypeRepresentation::Type type =
-        X4TypeRepresentation::TYPE_INT32;
-
-    static JSObject &GetTypeObject(GlobalObject &global) {
-        return global.int32x4TypeObject();
-    }
-    static Elem toType(Elem a) {
-        return ToInt32(a);
-    }
-    static void toType2(JSContext *cx, JS::Handle<JS::Value> v, Elem *out) {
-        ToInt32(cx,v,out);
-    }
-    static void setReturn(CallArgs &args, int32_t value) {
-        args.rval().setInt32(value);
-    }
-};
-} // namespace js
-
 #define LANE_ACCESSOR(Type32x4, lane) \
     bool Type32x4##Lane##lane(JSContext *cx, unsigned argc, Value *vp) { \
         static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"}; \
@@ -424,8 +382,8 @@ ObjectIsVector(JSObject &obj) {
 }
 
 template<typename V>
-static JSObject *
-Create(JSContext *cx, typename V::Elem *data)
+JSObject *
+js::Create(JSContext *cx, typename V::Elem *data)
 {
     RootedObject typeObj(cx, &V::GetTypeObject(*cx->global()));
     JS_ASSERT(typeObj);
@@ -438,6 +396,9 @@ Create(JSContext *cx, typename V::Elem *data)
     memcpy(resultMem, data, sizeof(typename V::Elem) * V::lanes);
     return result;
 }
+
+template JSObject *js::Create<Float32x4>(JSContext *cx, Float32x4::Elem *data);
+template JSObject *js::Create<Int32x4>(JSContext *cx, Int32x4::Elem *data);
 
 namespace js {
 template<typename T, typename V>
