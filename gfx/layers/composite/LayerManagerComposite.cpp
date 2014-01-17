@@ -773,6 +773,7 @@ LayerComposite::LayerComposite(LayerManagerComposite *aManager)
   , mShadowTransformSetByAnimation(false)
   , mDestroyed(false)
   , mLayerComposited(false)
+  , mClearFB(false)
 { }
 
 LayerComposite::~LayerComposite()
