@@ -20,7 +20,7 @@
  * they are stored on the stack at address "args".
  *
  */
-extern "C" nsresult
+extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
                    uint64_t *gprData, double *fprData)
 {

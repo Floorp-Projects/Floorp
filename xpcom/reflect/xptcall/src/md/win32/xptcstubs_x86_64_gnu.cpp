@@ -16,7 +16,7 @@
 #  error xptcstubs_x86_64_gnu.cpp being used unexpectedly
 #endif
 
-extern "C" nsresult
+extern "C" nsresult __attribute__((__used__))
 PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
                    uint64_t * args, uint64_t * gprData, double *fprData)
 {
