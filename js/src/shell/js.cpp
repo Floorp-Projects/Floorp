@@ -2535,7 +2535,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  script->filename(),
                                  lineno,
-                                 rval.address())) {
+                                 &rval)) {
             return false;
         }
     }
