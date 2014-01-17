@@ -337,39 +337,64 @@ function BrowserWindowIterator() {
   }
 }
 
-let gProgressListener = {
+let gWebProgressListener = {
   _callback: null,
-  _checkRestoreState: true,
 
-  setCallback: function gProgressListener_setCallback(aCallback, aCheckRestoreState = true) {
+  setCallback: function (aCallback) {
     if (!this._callback) {
       window.gBrowser.addTabsProgressListener(this);
     }
     this._callback = aCallback;
-    this._checkRestoreState = aCheckRestoreState;
   },
 
-  unsetCallback: function gProgressListener_unsetCallback() {
+  unsetCallback: function () {
     if (this._callback) {
       this._callback = null;
       window.gBrowser.removeTabsProgressListener(this);
     }
   },
 
-  onStateChange:
-  function gProgressListener_onStateChange(aBrowser, aWebProgress, aRequest,
-                                           aStateFlags, aStatus) {
-    if ((!this._checkRestoreState ||
-         (aBrowser.__SS_restoreState && aBrowser.__SS_restoreState == TAB_STATE_RESTORING)) &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+  onStateChange: function (aBrowser, aWebProgress, aRequest,
+                           aStateFlags, aStatus) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-      let args = [aBrowser].concat(this._countTabs());
-      this._callback.apply(this, args);
+      this._callback(aBrowser);
+    }
+  }
+};
+
+registerCleanupFunction(function () {
+  gWebProgressListener.unsetCallback();
+});
+
+let gProgressListener = {
+  _callback: null,
+
+  setCallback: function (callback) {
+    Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
+    this._callback = callback;
+  },
+
+  unsetCallback: function () {
+    if (this._callback) {
+      this._callback = null;
+    Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     }
   },
 
-  _countTabs: function gProgressListener_countTabs() {
+  observe: function (browser, topic, data) {
+    gProgressListener.onRestored(browser);
+  },
+
+  onRestored: function (browser) {
+    if (browser.__SS_restoreState == TAB_STATE_RESTORING) {
+      let args = [browser].concat(gProgressListener._countTabs());
+      gProgressListener._callback.apply(gProgressListener, args);
+    }
+  },
+
+  _countTabs: function () {
     let needsRestore = 0, isRestoring = 0, wasRestored = 0;
 
     for (let win in BrowserWindowIterator()) {

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={757226}
+-->
+<head>
+  <title>Test for Bug {757226} Implement mozApps app.replaceReceipt</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={757226}">Mozilla Bug {757226}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+function debug(aMsg) {
+  //dump("== Tests debug == " + aMsg + "\n");
+}
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e) {
+    dump("Got exception: " + e + "\n");
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aError) {
+  ok(false, "Error callback invoked " + aError);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  var request = navigator.mozApps.install(gManifestURL);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App is non-null");
+  ok(app.receipts.length == 0, "No receipts");
+
+  let receipt1 = 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJwcm9kdWN0IjogeyJ1cmwiOiAiaHR0cHM6Ly93d3cubW96aWxsYS5vcmciLCAic3RvcmVkYXRhIjogIjUxNjkzMTQzNTYifSwgInJlaXNzdWUiOiAiaHR0cDovL21vY2hpLnRlc3Q6ODg4OC9yZWlzc3VlLzUxNjkzMTQzNTYiLCAidXNlciI6IHsidHlwZSI6ICJkaXJlY3RlZC1pZGVudGlmaWVyIiwgInZhbHVlIjogIjRmYjM1MTUxLTJiOWItNGJhMi04MjgzLWM0OWQzODE2NDBiZCJ9LCAidmVyaWZ5IjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgvdmVyaWZ5LzUxNjkzMTQzNTYiLCAiaXNzIjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgiLCAiaWF0IjogMTMxMzYwMTg4LCAidHlwIjogInB1cmNoYXNlLXJlY2VpcHQiLCAibmJmIjogMTMxMzYwMTg1LCAiZGV0YWlsIjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgvcmVjZWlwdC81MTY5MzE0MzU2In0.eZpTEnCLUR3iP3rm9WyJOqx1k66mQaAxqcrvX11r5E0';
+
+  let receipt2 = 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJwcm9kdWN0IjogeyJ1cmwiOiAiaHR0cHM6Ly93d3cubW96aWxsYS5vcmciLCAic3RvcmVkYXRhIjogIjUxNjkzMTQzNTcifSwgInJlaXNzdWUiOiAiaHR0cDovL21vY2hpLnRlc3Q6ODg4OC9yZWlzc3VlLzUxNjkzMTQzNTYiLCAidXNlciI6IHsidHlwZSI6ICJkaXJlY3RlZC1pZGVudGlmaWVyIiwgInZhbHVlIjogIjRmYjM1MTUxLTJiOWItNGJhMi04MjgzLWM0OWQzODE2NDBiZCJ9LCAidmVyaWZ5IjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgvdmVyaWZ5LzUxNjkzMTQzNTYiLCAiaXNzIjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgiLCAiaWF0IjogMTMxMzYwMTg4LCAidHlwIjogInB1cmNoYXNlLXJlY2VpcHQiLCAibmJmIjogMTMxMzYwMTg1LCAiZGV0YWlsIjogImh0dHA6Ly9tb2NoaS50ZXN0Ojg4ODgvcmVjZWlwdC81MTY5MzE0MzU2In0.k7tI0PTaMJf0w0keAHJR6couypGY-EtA38q2xOtSv6k';
+
+  let receipt3 = 'eyJhbGciOiAiUlMyNTYiLCAidHlwIjogIkpXVCIsICJqa3UiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5jZG4ubW96aWxsYS5uZXQvcHVibGljX2tleXMvbWFya2V0cGxhY2Utcm9vdC1wdWIta2V5Lmp3ayJ9.eyJpc3MiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5jZG4ubW96aWxsYS5uZXQvcHVibGljX2tleXMvbWFya2V0cGxhY2Utcm9vdC1wdWIta2V5Lmp3ayIsICJwcmljZV9saW1pdCI6IDEwMCwgImp3ayI6IFt7ImFsZyI6ICJSU0EiLCAibW9kIjogIkFMYkszek5VQ0lFTEJRZ1QycGUzTEkwdC1sR0w5OElFTnBWOUtuX0F4VGxjLXZzX0ZFMlVyNzU2Z012bHA3a3BWVmFEWVNCdnVCQjgtZEZpU3VJbHdCUFB2bWFIaTFhd0xJMjRRY2JOMVJrN3pZS01SclVfSzdkVEN6MEh6VHoza01YVXp1ci1ySTIxS3BKb0NSZFNxeUl4bHpnUWFna1dUUWxIYUI2VzkzUjBacUxlQk9lUzhjbzNOUlczdjFfY0h4VTE1d0k4T0JHY0tRSXB3VHpONUVfRFdNZ0F1MGFQMHlWY3EzT0FwXy1fa1pjYXBtQnpSTmVMOHBxMjZXN01jMUpJZVBnZVZ5SXExcFBLMU9ldGhmdF9KeTk5R19EWWxQNW15YjFEY1VpbHE3RVNKc1UyeUZPUjJhWmkyYU1lTkRZekwyUmdZSGt2RWxyNDRMM2NZM0UiLCAiZXhwIjogIkFRQUIiLCAia2lkIjogImFwcHN0b3JlLm1vemlsbGEuY29tLTIwMTMtMTEtMjcifV0sICJleHAiOiAxMzg2Nzg4NDAxLCAiaWF0IjogMTM4NTU3ODgwMSwgInR5cCI6ICJjZXJ0aWZpZWQta2V5IiwgIm5iZiI6IDEzODU1Nzg4MDF9.Ne5AffwNIjbQmwY_dSKVXR0R0wdB92sW_BWQWbN2WKa_Ep6V0Fwr2pfcv0KenZcYKdxhhSPBrs5R38EcIqTYYrgIeeJyM_gGzv-ESsUsqbFejAbVH2xfwATZ1lXNPh0VSt33Drf2RY5jeU5PD3usXgOPr8RYAGkMxz_0SUay5WCBVRLkrgtrCUNyIKBwuHlxKK1JkncVXsN0mr_gwbm0EpBgIOEZQj75TE0KcviMUvYn8uhVYEwYMLzMQmUbI5quxH2z5mcK2DDNQGgT6ABJljKWCY-PPuMo9tsgXe6L7MTafulBuSIjs1ztAl4ZnwZjKmxWmhdeiaT41tCFlr4K8Q~eyJqa3UiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5jZG4ubW96aWxsYS5uZXQvcHVibGljX2tleXMvbWFya2V0cGxhY2Utcm9vdC1wdWIta2V5Lmp3ayIsICJ0eXAiOiAiSldUIiwgImFsZyI6ICJSUzI1NiJ9.eyJwcm9kdWN0IjogeyJ1cmwiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5maXJlZm94LmNvbSIsICJzdG9yZWRhdGEiOiAiaWQ9NDM4OTc4In0sICJpc3MiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5maXJlZm94LmNvbSIsICJ2ZXJpZnkiOiAiaHR0cHM6Ly9yZWNlaXB0Y2hlY2subWFya2V0cGxhY2UuZmlyZWZveC5jb20vdmVyaWZ5LyIsICJkZXRhaWwiOiAiaHR0cHM6Ly9tYXJrZXRwbGFjZS5maXJlZm94LmNvbS9hcGkvdjEvcmVjZWlwdHMvcmVpc3N1ZS8iLCAicmVpc3N1ZSI6ICJodHRwczovL21hcmtldHBsYWNlLmZpcmVmb3guY29tL2FwaS92MS9yZWNlaXB0cy9yZWlzc3VlLyIsICJ1c2VyIjogeyJ0eXBlIjogImRpcmVjdGVkLWlkZW50aWZpZXIiLCAidmFsdWUiOiAiMTkzMzI2LTVjMTUzNmQ1LWUxMDQtNDAzYy04NDBlLTQ5YjMyMmQ5Yjg4NSJ9LCAiZXhwIjogMTQwMTgyNTEyOCwgImlhdCI6IDEzODYxMDAzMjgsICJ0eXAiOiAicHVyY2hhc2UtcmVjZWlwdCIsICJuYmYiOiAxMzg2MTAwMzI4fQ.r2DVUpouRDJYqZe61LJBcIwmeF2mI8FmbGMRlfNFcinKAIs8nMVVNX8xSWJ6jXXgZ62VfHJCLHapADX8rCg6NgxFV_FdP7j2H_2Ufo0E0TREifTN6V4v1dCnzDulNhZmO8G-nQJUVOAtNfNC95PY7tVa8WC7dYXnKZsD6NhIxxVEtBGuiiySpWArI-g3pcl41rXNHHpJbRfrOD4QgVNrsV83TWILYRr6PWr3aqOM2XT_x2SzEfhBNvdG8AJmR0MKQytvfcgz3Vt1hMak88nFrzTLiKkuuPAXpwB5q83LZIl4EYG3UAnte4-XWlLb-NJ78vgXa64myy-3fPr7EO6LaQ';
+
+  // Test removeReceipt or replaceReceipt when there the app doesn't have any receipt
+  request = app.replaceReceipt(receipt1, receipt3);
+  request.onsuccess = function() {
+    ok(false, "replaceReceipt should fail if the app doesn't have any receipt");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "NO_SUCH_RECEIPT",
+       "Request failed because there isn't any receipt");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.removeReceipt(receipt1);
+  request.onsuccess = function() {
+    ok(false, "removeReceipt should fail if the app doesn't have any receipt");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "NO_SUCH_RECEIPT",
+       "Request failed because there isn't any receipt");
+    continueTest();
+  }
+  yield undefined;
+
+  // Test addReceipt
+  request = app.addReceipt(null);
+  request.onsuccess = function() {
+    ok(false, "Call with missing parameter should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "INVALID_PARAMETERS",
+       "Request failed because of a missing parameter");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.addReceipt(receipt1);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    ok(app.receipts.length == 1, "One receipt");
+    ok(app.receipts[0] == receipt1, "Receipt correctly added");
+    continueTest();
+  };
+  yield undefined;
+
+  request = app.addReceipt(receipt1);
+  request.onerror = function() {
+    ok(this.error.name == "RECEIPT_ALREADY_EXISTS",
+        "Request failed because the receipt already exists");
+    continueTest();
+  };
+  request.onsuccess = function() {
+    ok(false, "addReceipt should fail if the receipt already exists");
+  };
+  yield undefined;
+
+  request = app.addReceipt(receipt2);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    ok(app.receipts.length == 2, "Two receipts");
+    ok(app.receipts[0] == receipt1, "First receipt is still there");
+    ok(app.receipts[1] == receipt2, "Second receipt correctly added");
+    continueTest();
+  }
+  yield undefined;
+
+  // Test replace receipts
+  request = app.replaceReceipt(null, null);
+  request.onsuccess = function() {
+    ok(false, "Call with missing parameters should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "INVALID_PARAMETERS",
+       "Request failed because of missing parameters");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.replaceReceipt(null, receipt1);
+  request.onsuccess = function() {
+    ok(false, "Call with missing parameter should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "INVALID_PARAMETERS",
+       "Request failed because of a missing parameter");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.replaceReceipt(receipt1, null);
+  request.onsuccess = function() {
+    ok(false, "Call with missing parameter should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "INVALID_PARAMETERS",
+       "Request failed because of a missing parameter");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.replaceReceipt(receipt3, receipt1);
+  request.onsuccess = function() {
+    ok(false, "Call with non-existent receipt should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "NO_SUCH_RECEIPT",
+       "Exception thrown because of a non-existent receipt");
+    ok(app.receipts.length == 2, "Two receipts");
+    ok(app.receipts[0] == receipt1 && app.receipts[1] == receipt2,
+       "No receipt was replaced");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.replaceReceipt(receipt1, receipt3);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    ok(app.receipts.length == 2, "Two receipts");
+    ok(app.receipts[0] == receipt3, "First receipt was replaced");
+    ok(app.receipts[1] == receipt2, "Second receipt wasn't replaced");
+    continueTest();
+  }
+  yield undefined;
+
+  // Test remove receipt
+  request = app.removeReceipt(null);
+  request.onsuccess = function() {
+    ok(false, "Call with missing parameter should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "INVALID_PARAMETERS",
+       "Request failed because of a missing parameter");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.removeReceipt(receipt1);
+  request.onsuccess = function() {
+    ok(false, "Call with non-existent receipt should've failed");
+  }
+  request.onerror = function() {
+    ok(this.error.name == "NO_SUCH_RECEIPT",
+       "Exception thrown because of a non-existent receipt");
+    ok(app.receipts.length == 2, "Two receipts");
+    ok(app.receipts[0] == receipt3 && app.receipts[1] == receipt2,
+       "No receipt was removed");
+    continueTest();
+  }
+  yield undefined;
+
+  request = app.removeReceipt(receipt3);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    ok(app.receipts.length == 1, "One receipt");
+    ok(app.receipts[0] == receipt2, "The receipt is still alive");
+    continueTest();
+  }
+  yield undefined;
+
+  // Uninstall the app.
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  ok(true, "App uninstalled");
+
+  // All done.
+  ok(true, "All done");
+  finish();
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>
