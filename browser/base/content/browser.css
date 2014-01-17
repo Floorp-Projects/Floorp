@@ -903,6 +903,7 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 #customization-panelWrapper > .panel-arrowcontent {
   padding: 0 !important;
+  overflow: hidden;
 }
 
 #customization-panelHolder > #PanelUI-mainView {
