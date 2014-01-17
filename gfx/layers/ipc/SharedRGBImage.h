@@ -119,6 +119,8 @@ public:
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
 
+  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
+
   bool Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 private:
   gfx::IntSize mSize;
