@@ -55,12 +55,14 @@ SimpleTest.waitForFocus(function() {
        "Textarea should appear correctly before switching the direction (" + initialDir + ")");
     t.focus();
     synthesizeKey("x", {accelKey: true, shiftKey: true});
+    is(t.getAttribute("dir"), initialDir == "ltr" ? "rtl" : "ltr", "The dir attribute must be correctly updated");
     t.blur();
     var s2 = snapshotWindow(window);
     ok(compareSnapshots(s2, Screenshots.get(initialDir, true), true)[0],
        "Textarea should appear correctly after switching the direction (" + initialDir + ")");
     t.focus();
     synthesizeKey("x", {accelKey: true, shiftKey: true});
+    is(t.getAttribute("dir"), initialDir == "ltr" ? "ltr" : "rtl", "The dir attribute must be correctly updated");
     t.blur();
     var s3 = snapshotWindow(window);
     ok(compareSnapshots(s3, Screenshots.get(initialDir, false), true)[0],
