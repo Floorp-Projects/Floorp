@@ -626,7 +626,7 @@ void nsExternalHelperAppService::LaunchVideoAppForRtsp(nsIURI* aURI)
   // Construct the message in jsVal format.
   AutoSafeJSContext cx;
   AutoClearPendingException helper(cx);
-  JS::Rooted<JSObject*> msgObj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  JS::Rooted<JSObject*> msgObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
   NS_ENSURE_TRUE_VOID(msgObj);
   JS::Rooted<JS::Value> jsVal(cx);
 

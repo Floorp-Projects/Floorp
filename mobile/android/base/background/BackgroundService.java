@@ -40,6 +40,7 @@ public abstract class BackgroundService extends IntentService {
    * Returns true if the OS will allow us to perform background
    * data operations. This logic varies by OS version.
    */
+  @SuppressWarnings("deprecation")
   protected boolean backgroundDataIsEnabled() {
     ConnectivityManager connectivity = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {

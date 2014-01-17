@@ -260,7 +260,7 @@ partial interface Window {
   readonly attribute Pkcs11?                      pkcs11;
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
-  [Replaceable, Throws] readonly attribute MozControllers controllers;
+  [ChromeOnly, Replaceable, Throws] readonly attribute MozControllers controllers;
 
   [Throws] readonly attribute float               mozInnerScreenX;
   [Throws] readonly attribute float               mozInnerScreenY;

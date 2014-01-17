@@ -144,7 +144,7 @@ nsMathMLSelectedFrame::Place(nsRenderingContext& aRenderingContext,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, PresContext(), nullptr, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(childFrame, PresContext(), aDesiredSize, nullptr, 0, 0, 0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.TopAscent();

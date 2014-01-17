@@ -1770,7 +1770,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   // No existing JSObject, create one.
 
-  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, &sNPObjectJSWrapperClass, nullptr, nullptr));
+  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, &sNPObjectJSWrapperClass, JS::NullPtr(),
+                                               JS::NullPtr()));
 
   if (generation != sNPObjWrappers.generation) {
       // Reload entry if the JS_NewObject call caused a GC and reallocated
@@ -1932,7 +1933,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   // during initialization.
   memset(memberPrivate, 0, sizeof(NPObjectMemberPrivate));
 
-  JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass, nullptr, nullptr);
+  JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass, JS::NullPtr(), JS::NullPtr());
   if (!memobj) {
     PR_Free(memberPrivate);
     return false;
@@ -2003,8 +2004,9 @@ NPObjectMember_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS
   case JSTYPE_STRING:
   case JSTYPE_NUMBER:
     vp.set(memberPrivate->fieldValue);
-    if (!JSVAL_IS_PRIMITIVE(vp)) {
-      return JS_DefaultValue(cx, JSVAL_TO_OBJECT(vp), type, vp.address());
+    if (vp.isObject()) {
+      JS::Rooted<JSObject*> objVal(cx, &vp.toObject());
+      return JS_DefaultValue(cx, objVal, type, vp);
     }
     return true;
   case JSTYPE_BOOLEAN:
@@ -2035,7 +2037,7 @@ NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj)
 static bool
 NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *memobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JS::Rooted<JSObject*> memobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
   NS_ENSURE_TRUE(memobj, false);
 
   NPObjectMemberPrivate *memberPrivate =

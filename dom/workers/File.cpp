@@ -48,7 +48,7 @@ public:
   {
     JS_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aBlob), aBlob));
 
-    JSObject* obj = JS_NewObject(aCx, &sClass, nullptr, nullptr);
+    JSObject* obj = JS_NewObject(aCx, &sClass, JS::NullPtr(), JS::NullPtr());
     if (obj) {
       JS_SetPrivate(obj, aBlob);
       NS_ADDREF(aBlob);
@@ -248,7 +248,7 @@ public:
   {
     JS_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aFile), aFile));
 
-    JSObject* obj = JS_NewObject(aCx, &sClass, nullptr, nullptr);
+    JSObject* obj = JS_NewObject(aCx, &sClass, JS::NullPtr(), JS::NullPtr());
     if (obj) {
       JS_SetPrivate(obj, aFile);
       NS_ADDREF(aFile);

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test window for sibling navigation by location tests</title>
+<script>
+  function onNav() {
+    parent.postMessage(window.name, "*");
+  }
+
+  window.onload = onNav;
+  window.onhashchange = onNav;
+</script>
+</head>
+</html>

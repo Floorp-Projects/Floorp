@@ -243,12 +243,12 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_GETARG:
       case JSOP_CALLARG:
       case JSOP_SETARG:
-        return ArgSlot(GET_SLOTNO(pc));
+        return ArgSlot(GET_ARGNO(pc));
 
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL:
       case JSOP_SETLOCAL:
-        return LocalSlot(script, GET_SLOTNO(pc));
+        return LocalSlot(script, GET_LOCALNO(pc));
 
       case JSOP_THIS:
         return ThisSlot();

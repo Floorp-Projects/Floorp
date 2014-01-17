@@ -1587,7 +1587,9 @@ class MethodDefiner(PropertyDefiner):
                 selfHostedName = "nullptr";
                 accessor = m.get("nativeName", m["name"])
                 if m.get("methodInfo", True):
-                    jitinfo = ("&%s_methodinfo" % accessor)
+                    # Cast this in case the methodInfo is a
+                    # JSTypedMethodJitInfo.
+                    jitinfo = ("reinterpret_cast<const JSJitInfo*>(&%s_methodinfo)" % accessor)
                     if m.get("allowCrossOriginThis", False):
                         accessor = "genericCrossOriginMethod"
                     else:
@@ -1874,7 +1876,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         if UseHolderForUnforgeable(self.descriptor):
             createUnforgeableHolder = CGGeneric("""JS::Rooted<JSObject*> unforgeableHolder(aCx,
-  JS_NewObjectWithGivenProto(aCx, nullptr, nullptr, nullptr));
+  JS_NewObjectWithGivenProto(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
 if (!unforgeableHolder) {
   return;
 }""")
@@ -5937,7 +5939,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
         CGSpecializedMethod.__init__(self, descriptor, method)
 
     def definition_body(self):
-        ret = ('JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n'
+        ret = ('JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));\n'
                'if (!result) {\n'
                '  return false;\n'
                '}\n')
@@ -6348,6 +6350,23 @@ class CGMemberJITInfo(CGThing):
         slotStr = toStringBool(hasSlot)
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
+        def jitInfoInitializer(isTypedMethod):
+            typedMethodStr = toStringBool(isTypedMethod)
+            return ("{\n"
+                    " { %s },\n"
+                    "  %s,\n"
+                    "  %s,\n"
+                    "  JSJitInfo::%s,\n"
+                    "  %s,  /* returnType.  Not relevant for setters. */\n"
+                    "  %s,  /* isInfallible. False in setters. */\n"
+                    "  %s,  /* isMovable.  Not relevant for setters. */\n"
+                    "  %s,  /* isInSlot.  Only relevant for getters. */\n"
+                    "  %s,  /* isTypedMethod.  Only relevant for methods. */\n"
+                    "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                    "  JSJitInfo::%s  /* aliasSet.  Not relevant for setters. */\n"
+                    "}" % (opName, protoID, depth, opType,
+                           returnType, failstr, movablestr, slotStr,
+                           typedMethodStr, slotIndex, aliasSet))
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
@@ -6355,27 +6374,17 @@ class CGMemberJITInfo(CGThing):
             argTypesDecl = (
                 "static const JSJitInfo::ArgType %s[] = { %s };\n" %
                 (argTypes, ", ".join(args)))
-        else:
-            argTypes = "nullptr"
-            argTypesDecl = ""
+            return ("\n"
+                    "%s"
+                    "static const JSTypedMethodJitInfo %s = {\n"
+                    "  %s,\n"
+                    "  %s\n"
+                    "};\n" % (argTypesDecl, infoName,
+                              jitInfoInitializer(True), argTypes))
+
         return ("\n"
-                "%s"
-                "static const JSJitInfo %s = {\n"
-                "  { %s },\n"
-                "  %s,\n"
-                "  %s,\n"
-                "  JSJitInfo::%s,\n"
-                "  %s,  /* isInfallible. False in setters. */\n"
-                "  %s,  /* isMovable.  Not relevant for setters. */\n"
-                "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
-                "  %s,  /* hasSlot.  Only relevant for getters. */\n"
-                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
-                "  %s,  /* returnType.  Not relevant for setters. */\n"
-                "  %s,  /* argTypes.  Only relevant for methods */\n"
-                "  nullptr /* parallelNative */\n"
-                "};\n" % (argTypesDecl, infoName, opName, protoID, depth,
-                          opType, failstr, movablestr, aliasSet, slotStr,
-                          slotIndex, returnType, argTypes))
+                "static const JSJitInfo %s = %s;\n"
+                % (infoName, jitInfoInitializer(False)))
 
     def define(self):
         if self.member.isAttr():
@@ -9089,7 +9098,7 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
                 "\n") % self.makeClassName(self.dictionary.parent)
         else:
             body += (
-                "JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
+                "JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));\n"
                 "if (!obj) {\n"
                 "  return false;\n"
                 "}\n"
@@ -11497,6 +11506,14 @@ class GlobalGenRoots():
 
         idEnum.append(ifaceChainMacro(1))
 
+        def fieldSizeAssert(amount, jitInfoField, message):
+            maxFieldValue = "(uint64_t(1) << (sizeof(((JSJitInfo*)nullptr)->%s) * 8))" % jitInfoField
+            return CGGeneric(declare="static_assert(%s < %s, \"%s\");\n\n"
+                             % (amount, maxFieldValue, message))
+
+        idEnum.append(fieldSizeAssert("id::_ID_Count", "protoID",
+                                      "Too many prototypes!"));
+
         # Wrap all of that in our namespaces.
         idEnum = CGNamespace.build(['mozilla', 'dom', 'prototypes'],
                                    CGWrapper(idEnum, pre='\n'))
@@ -11505,8 +11522,11 @@ class GlobalGenRoots():
         curr = CGList([idEnum])
 
         # Let things know the maximum length of the prototype chain.
-        maxMacro = CGGeneric(declare="#define MAX_PROTOTYPE_CHAIN_LENGTH " + str(config.maxProtoChainLength))
+        maxMacroName = "MAX_PROTOTYPE_CHAIN_LENGTH"
+        maxMacro = CGGeneric(declare="#define " + maxMacroName + " " + str(config.maxProtoChainLength))
         curr.append(CGWrapper(maxMacro, post='\n\n'))
+        curr.append(fieldSizeAssert(maxMacroName, "depth",
+                                    "Some inheritance chain is too long!"));
 
         # Constructor ID enum.
         constructors = [d.name for d in config.getDescriptors(hasInterfaceObject=True)]

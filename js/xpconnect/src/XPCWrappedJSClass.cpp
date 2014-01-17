@@ -492,64 +492,6 @@ GetContextFromObjectOrDefault(nsXPCWrappedJS* wrapper)
     return stack->GetSafeJSContext();
 }
 
-class SameOriginCheckedComponent MOZ_FINAL : public nsISecurityCheckedComponent
-{
-public:
-    SameOriginCheckedComponent(nsXPCWrappedJS* delegate)
-        : mDelegate(delegate)
-    {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
-private:
-    nsRefPtr<nsXPCWrappedJS> mDelegate;
-};
-
-NS_IMPL_ADDREF(SameOriginCheckedComponent)
-NS_IMPL_RELEASE(SameOriginCheckedComponent)
-
-NS_INTERFACE_MAP_BEGIN(SameOriginCheckedComponent)
-    NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-NS_INTERFACE_MAP_END_AGGREGATED(mDelegate)
-
-NS_IMETHODIMP
-SameOriginCheckedComponent::CanCreateWrapper(const nsIID * iid,
-                                             char **_retval)
-{
-    // XXX This doesn't actually work because nsScriptSecurityManager doesn't
-    // know what to do with "sameOrigin" for canCreateWrapper.
-    *_retval = NS_strdup("sameOrigin");
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-SameOriginCheckedComponent::CanCallMethod(const nsIID * iid,
-                                          const char16_t *methodName,
-                                          char **_retval)
-{
-    *_retval = NS_strdup("sameOrigin");
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-SameOriginCheckedComponent::CanGetProperty(const nsIID * iid,
-                                           const char16_t *propertyName,
-                                           char **_retval)
-{
-    *_retval = NS_strdup("sameOrigin");
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-SameOriginCheckedComponent::CanSetProperty(const nsIID * iid,
-                                           const char16_t *propertyName,
-                                           char **_retval)
-{
-    *_retval = NS_strdup("sameOrigin");
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
 NS_IMETHODIMP
 nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
@@ -625,46 +567,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     }
 
     // else we do the more expensive stuff...
-
-    // Before calling out, ensure that we're not about to claim to implement
-    // nsISecurityCheckedComponent for an untrusted object. Doing so causes
-    // problems. See bug 352882.
-    // But if this is a content object, then we might be wrapping it for
-    // content. If our JS object isn't a double-wrapped object (that is, we
-    // don't have XPCWrappedJS(XPCWrappedNative(some C++ object))), then it
-    // definitely will not have classinfo (and therefore won't be a DOM
-    // object). Since content wants to be able to use these objects (directly
-    // or indirectly, see bug 483672), we implement nsISecurityCheckedComponent
-    // for them and tell caps that they are also bound by the same origin
-    // model.
-
-    if (aIID.Equals(NS_GET_IID(nsISecurityCheckedComponent))) {
-        // XXX This code checks to see if the given object has chrome (also
-        // known as system) principals. It really wants to do a
-        // UniversalXPConnect type check.
-
-        *aInstancePtr = nullptr;
-
-        nsXPConnect *xpc = nsXPConnect::XPConnect();
-        nsCOMPtr<nsIScriptSecurityManager> secMan =
-            do_QueryInterface(xpc->GetDefaultSecurityManager());
-        if (!secMan)
-            return NS_NOINTERFACE;
-
-        RootedObject selfObj(ccx, self->GetJSObject());
-        nsCOMPtr<nsIPrincipal> objPrin = GetObjectPrincipal(selfObj);
-        bool isSystem;
-        nsresult rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
-        if ((NS_FAILED(rv) || !isSystem) && !IS_WN_REFLECTOR(selfObj)) {
-            // A content object.
-            nsRefPtr<SameOriginCheckedComponent> checked =
-                new SameOriginCheckedComponent(self);
-            if (!checked)
-                return NS_ERROR_OUT_OF_MEMORY;
-            *aInstancePtr = checked.forget().get();
-            return NS_OK;
-        }
-    }
 
     // check if the JSObject claims to implement this interface
     RootedObject jsobj(ccx, CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
@@ -1171,9 +1073,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // a callable object then the JS engine will throw an error and we'll
         // pass this along to the caller as an exception/result code.
 
+        fval = ObjectValue(*obj);
         if (isFunction &&
-            JS_TypeOfValue(ccx, OBJECT_TO_JSVAL(obj)) == JSTYPE_FUNCTION) {
-            fval = OBJECT_TO_JSVAL(obj);
+            JS_TypeOfValue(ccx, fval) == JSTYPE_FUNCTION) {
 
             // We may need to translate the 'this' for the function object.
 
@@ -1638,7 +1540,8 @@ xpc::IsOutObject(JSContext* cx, JSObject* obj)
 JSObject*
 xpc::NewOutObject(JSContext* cx, JSObject* scope)
 {
-    return JS_NewObject(cx, nullptr, nullptr, JS_GetGlobalForObject(cx, scope));
+    RootedObject global(cx, JS_GetGlobalForObject(cx, scope));
+    return JS_NewObject(cx, nullptr, NullPtr(), global);
 }
 
 

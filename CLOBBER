@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 897735 requires a clobber due to mass mochitest bustage otherwise
+Updates to NSS seem to require a clobber due bug 959928.

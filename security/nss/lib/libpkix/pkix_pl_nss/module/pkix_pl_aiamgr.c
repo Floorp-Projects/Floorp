@@ -131,6 +131,8 @@ pkix_pl_AIAMgr_RegisterSelf(void *plContext)
  *      non-NULL.
  *  "domainName"
  *      Address of a string pointing to a server name. Must be non-NULL.
+ *      An empty string (which means no <host> is given in the LDAP URL) is
+ *      not supported.
  *  "pClient"
  *      Address at which the returned LDAPClient is stored. Must be non-NULL.
  *  "plContext"
@@ -154,6 +156,17 @@ pkix_pl_AiaMgr_FindLDAPClient(
 
         PKIX_ENTER(AIAMGR, "pkix_pl_AiaMgr_FindLDAPClient");
         PKIX_NULLCHECK_THREE(aiaMgr, domainName, pClient);
+
+        /*
+         * An LDAP URL may not have a <host> part, for example,
+         *     ldap:///o=University%20of%20Michigan,c=US
+         * PKIX_PL_LdapDefaultClient doesn't know how to discover the default
+         * LDAP server, so we don't support this kind of LDAP URL.
+         */
+        if (*domainName == '\0') {
+                /* Simulate a PKIX_PL_LdapDefaultClient_CreateByName failure. */
+                PKIX_ERROR(PKIX_LDAPDEFAULTCLIENTCREATEBYNAMEFAILED);
+        }
 
         /* create PKIX_PL_String from domain name */
         PKIX_CHECK(PKIX_PL_String_Create

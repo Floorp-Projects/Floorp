@@ -44,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(e3ea830d-2614-4aeb-9ec3-b8f744b03b80)]
+[scriptable, builtinclass, uuid(24732b66-e37e-444e-96a2-8b8d1fa292fc)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -138,6 +138,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aSrcdoc           When INTERNAL_LOAD_FLAGS_IS_SRCDOC is set, the
    *                          contents of this parameter will be loaded instead
    *                          of aURI.
+   * @param aSourceDocShell - The source browsing context for the navigation.
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
@@ -152,6 +153,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in nsISHEntry aSHEntry,
                               in boolean firstParty,
                               in AString aSrcdoc,
+                              in nsIDocShell aSourceDocShell,
                               out nsIDocShell aDocShell,
                               out nsIRequest aRequest);
 
@@ -784,6 +786,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    * navigated by it.  This is the "one permitted sandboxed navigator".
    */
   attribute nsIDocShell onePermittedSandboxedNavigator;
+
+  /**
+   * Returns true if we are sandboxed from aTargetDocShell.
+   * aTargetDocShell - the browsing context we are attempting to navigate.
+   */
+  [noscript,notxpcom,nostdcall] bool isSandboxedFrom(in nsIDocShell aTargetDocShell);
 
   /**
    * This member variable determines whether a document has Mixed Active Content that
