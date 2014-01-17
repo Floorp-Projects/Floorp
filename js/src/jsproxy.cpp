@@ -355,7 +355,8 @@ BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool
     // Disallow sets of protos on proxies with lazy protos, but no hook.
     // This keeps us away from the footgun of having the first proto set opt
     // you out of having dynamic protos altogether.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+                         "incompatible Proxy");
     return false;
 }
 
@@ -492,7 +493,7 @@ DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandle
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     bool b;
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!JS_HasInstance(cx, target, v, &b))
+    if (!HasInstance(cx, target, v, &b))
         return false;
     *bp = !!b;
     return true;
@@ -3250,15 +3251,12 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject handler(cx, NonNullObject(cx, args[1]));
     if (!handler)
         return false;
-    RootedObject proto(cx);
-    if (!JSObject::getProto(cx, target, &proto))
-        return false;
     RootedValue priv(cx, ObjectValue(*target));
     ProxyOptions options;
     options.setCallable(target->isCallable());
     ProxyObject *proxy =
         ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                         priv, TaggedProto(proto), cx->global(),
+                         priv, TaggedProto(TaggedProto::LazyProto), cx->global(),
                          options);
     if (!proxy)
         return false;
@@ -3332,7 +3330,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     // Stash the call and construct traps on a holder object that we can stick
     // in a slot on the proxy.
     RootedObject ccHolder(cx, JS_NewObjectWithGivenProto(cx, Jsvalify(&CallConstructHolder),
-                                                         nullptr, cx->global()));
+                                                         NullPtr(), cx->global()));
     if (!ccHolder)
         return false;
     ccHolder->setReservedSlot(0, ObjectValue(*call));

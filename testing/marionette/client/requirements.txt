@@ -1,5 +1,6 @@
 manifestdestiny
 mozhttpd >= 0.5
+mozinfo >= 0.7
 mozprocess >= 0.9
 mozrunner >= 5.15
 mozdevice >= 0.22

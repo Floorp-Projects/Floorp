@@ -97,7 +97,7 @@ window.opener.SimpleTest.waitForFocus(function () {
 function pressF10Events()
 {
   return navigator.platform.indexOf("Linux") >= 0 ?
-    [ "DOMMenuBarActive menubar", "popupshowing filepopup", "DOMMenuItemActive item1", "popupshown filepopup"] :
+    [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "popupshowing filepopup", "DOMMenuItemActive item1", "popupshown filepopup"] :
     [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
 }
 
@@ -365,10 +365,9 @@ var popupTests = [
   result: function(testname) { checkClosed("viewmenu", testname); },
 },
 {
-  // on Windows, pressing Alt should highlight the first menu but not open it,
+  // Pressing Alt should highlight the first menu but not open it,
   // but it should be ignored if the alt keydown event is consumed.
   testname: "alt shouldn't activate menubar if keydown event is consumed",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   test: function() {
     document.addEventListener("keydown", function (aEvent) {
       document.removeEventListener("keydown", arguments.callee, true);
@@ -382,10 +381,9 @@ var popupTests = [
   },
 },
 {
-  // on Windows, pressing Alt should highlight the first menu but not open it,
+  // Pressing Alt should highlight the first menu but not open it,
   // but it should be ignored if the alt keyup event is consumed.
   testname: "alt shouldn't activate menubar if keyup event is consumed",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   test: function() {
     document.addEventListener("keyup", function (aEvent) {
       document.removeEventListener("keyup", arguments.callee, true);
@@ -399,9 +397,8 @@ var popupTests = [
   },
 },
 {
-  // on Windows, pressing Alt should highlight the first menu but not open it
+  // Pressing Alt should highlight the first menu but not open it.
   testname: "alt to activate menubar",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
   test: function() { sendKey("ALT"); },
   result: function(testname) {
@@ -412,7 +409,6 @@ var popupTests = [
 {
   // pressing cursor left should select the previous menu but not open it
   testname: "cursor left on active menubar",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu" ],
   test: function() { sendKey("LEFT"); },
   result: function(testname) { checkClosed("helpmenu", testname); },
@@ -420,7 +416,6 @@ var popupTests = [
 {
   // pressing cursor right should select the previous menu but not open it
   testname: "cursor right on active menubar",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuItemInactive helpmenu", "DOMMenuItemActive filemenu" ],
   test: function() { sendKey("RIGHT"); },
   result: function(testname) { checkClosed("filemenu", testname); },
@@ -428,23 +423,10 @@ var popupTests = [
 {
   // pressing a character should act as an accelerator and open the menu
   testname: "accelerator on active menubar",
-  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "popupshowing helppopup",
             "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu",
             "DOMMenuItemActive contents", "popupshown helppopup" ],
   test: function() { sendChar("h"); },
-  result: function(testname) {
-    checkOpen("helpmenu", testname);
-    is(document.getElementById("helpmenu").openedWithKey, true, testname + " openedWithKey");
-  },
-},
-{
-  testname: "open with accelerator again",
-  condition: function() { return (navigator.platform.indexOf("Win") == -1) },
-  events: [ "DOMMenuBarActive menubar", "popupshowing helppopup",
-            "DOMMenuItemActive helpmenu", "DOMMenuItemActive contents",
-            "popupshown helppopup" ],
-  test: function() { synthesizeKey("H", { altKey: true }); },
   result: function(testname) {
     checkOpen("helpmenu", testname);
     is(document.getElementById("helpmenu").openedWithKey, true, testname + " openedWithKey");
@@ -659,7 +641,7 @@ var popupTests = [
 },
 {
   testname: "F10 to activate menubar for tab deactivation",
-  events: pressF10Events(true) ,
+  events: pressF10Events(),
   test: function() { sendKey("F10"); },
 },
 {

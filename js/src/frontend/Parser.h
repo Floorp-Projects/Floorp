@@ -199,7 +199,8 @@ struct ParseContext : public GenericParseContext
      *  - Sometimes a script's bindings are accessed at runtime to retrieve the
      *    contents of the lexical scope (e.g., from the debugger).
      */
-    bool generateFunctionBindings(ExclusiveContext *cx, LifoAlloc &alloc,
+    bool generateFunctionBindings(ExclusiveContext *cx, TokenStream &ts,
+                                  LifoAlloc &alloc,
                                   InternalHandle<Bindings*> bindings) const;
 
   private:

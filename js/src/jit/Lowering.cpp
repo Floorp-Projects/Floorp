@@ -404,7 +404,6 @@ LIRGenerator::visitCall(MCall *call)
         return false;
 
     // Height of the current argument vector.
-    uint32_t argslot = call->numStackArgs();
     JSFunction *target = call->getSingleTarget();
 
     // Call DOM functions.
@@ -416,10 +415,9 @@ LIRGenerator::visitCall(MCall *call)
         GetTempRegForIntArg(2, 0, &privReg);
         mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &argsReg);
         MOZ_ASSERT(ok, "How can we not have four temp registers?");
-        LCallDOMNative *lir = new(alloc()) LCallDOMNative(argslot, tempFixed(cxReg),
-                                                          tempFixed(objReg), tempFixed(privReg),
-                                                          tempFixed(argsReg));
-        return (defineReturn(lir, call) && assignSafepoint(lir, call));
+        LCallDOMNative *lir = new(alloc()) LCallDOMNative(tempFixed(cxReg), tempFixed(objReg),
+                                                          tempFixed(privReg), tempFixed(argsReg));
+        return defineReturn(lir, call) && assignSafepoint(lir, call);
     }
 
     // Call known functions.
@@ -435,21 +433,20 @@ LIRGenerator::visitCall(MCall *call)
             mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &tmpReg);
             MOZ_ASSERT(ok, "How can we not have four temp registers?");
 
-            LCallNative *lir = new(alloc()) LCallNative(argslot, tempFixed(cxReg),
-                                                        tempFixed(numReg),
-                                                        tempFixed(vpReg),
-                                                        tempFixed(tmpReg));
+            LCallNative *lir = new(alloc()) LCallNative(tempFixed(cxReg), tempFixed(numReg),
+                                                        tempFixed(vpReg), tempFixed(tmpReg));
             return (defineReturn(lir, call) && assignSafepoint(lir, call));
         }
 
         LCallKnown *lir = new(alloc()) LCallKnown(useFixed(call->getFunction(), CallTempReg0),
-                                                  argslot, tempFixed(CallTempReg2));
-        return (defineReturn(lir, call) && assignSafepoint(lir, call));
+                                                  tempFixed(CallTempReg2));
+        return defineReturn(lir, call) && assignSafepoint(lir, call);
     }
 
     // Call anything, using the most generic code.
     LCallGeneric *lir = new(alloc()) LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
-        argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));
+                                                  tempFixed(ArgumentsRectifierReg),
+                                                  tempFixed(CallTempReg2));
     return defineReturn(lir, call) && assignSafepoint(lir, call);
 }
 

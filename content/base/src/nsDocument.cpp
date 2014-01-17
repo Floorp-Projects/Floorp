@@ -5287,7 +5287,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
 
   JS::Rooted<JSObject*> protoObject(aCx);
   if (!aOptions.mPrototype) {
-    protoObject = JS_NewObject(aCx, nullptr, htmlProto, nullptr);
+    protoObject = JS_NewObject(aCx, nullptr, htmlProto, JS::NullPtr());
     if (!protoObject) {
       rv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;

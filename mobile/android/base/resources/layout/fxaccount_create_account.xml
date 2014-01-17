@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <LinearLayout
+        android:id="@+id/create_account_view"
+        style="@style/FxAccountMiddle" >
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/firefox_accounts" />
+
+        <TextView
+            style="@style/FxAccountSubHeaderItem"
+            android:text="@string/fxaccount_create_account" />
+
+        <include layout="@layout/fxaccount_email_password_view" />
+
+        <TextView
+            style="@style/FxAccountLinkifiedItem"
+            android:layout_marginTop="10dp"
+            android:text="@string/fxaccount_password_length_restriction" />
+
+        <TextView
+            style="@style/FxAccountTextItem"
+            android:layout_marginTop="15dp"
+            android:text="@string/fxaccount_when_were_you_born"
+            android:textSize="18sp" />
+
+        <!-- Per http://stackoverflow.com/questions/2359176/android-edittext-onclicklistener, not allowing focus allows us to highjack the click. -->
+
+        <EditText
+            android:id="@+id/year_edit"
+            style="@style/FxAccountEditItem"
+            android:layout_marginTop="15dp"
+            android:drawableRight="@drawable/fxaccount_ddarrow_inactive"
+            android:focusable="false"
+            android:hint="@string/fxaccount_year_of_birth"
+            android:inputType="none" />
+
+        <TextView
+            android:id="@+id/local_error"
+            style="@style/FxAccountErrorItem" />
+
+        <Button
+            android:id="@+id/create_account_button"
+            style="@style/FxAccountButton"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="45dp"
+            android:text="@string/fxaccount_create_account_button_label" />
+
+        <TextView
+            android:id="@+id/sign_in_instead_link"
+            style="@style/FxAccountLinkItem"
+            android:layout_marginBottom="20dp"
+            android:focusable="true"
+            android:text="@string/fxaccount_sign_in_instead" />
+
+        <TextView
+            android:id="@+id/policy"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_policy" />
+
+        <LinearLayout style="@style/FxAccountSpacer" />
+
+        <ImageView
+            style="@style/FxAccountIcon"
+            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+    </LinearLayout>
+
+</ScrollView>

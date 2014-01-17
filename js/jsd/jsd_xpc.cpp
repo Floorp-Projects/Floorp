@@ -978,7 +978,7 @@ jsdScript::CreatePPLineMap()
 {
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, JSD_GetDefaultGlobal (mCx)); // Just in case.
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!obj)
         return nullptr;
     JS::RootedFunction fun(cx, JSD_GetJSFunction (mCx, mScript));

@@ -490,7 +490,7 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDelive
     const MmsDeliveryInfo &info = mDeliveryInfo[i];
 
     JS::Rooted<JSObject*> infoJsObj(
-      aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
+      aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
     NS_ENSURE_TRUE(infoJsObj, NS_ERROR_OUT_OF_MEMORY);
 
     JS::Rooted<JS::Value> tmpJsVal(aCx);
@@ -622,7 +622,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
     const MmsAttachment &attachment = mAttachments[i];
 
     JS::Rooted<JSObject*> attachmentObj(
-      aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
+      aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
     NS_ENSURE_TRUE(attachmentObj, NS_ERROR_OUT_OF_MEMORY);
 
     JS::Rooted<JS::Value> tmpJsVal(aCx);

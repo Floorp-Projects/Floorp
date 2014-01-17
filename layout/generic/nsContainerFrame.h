@@ -227,8 +227,8 @@ public:
    */
   static nsresult FinishReflowChild(nsIFrame*                  aKidFrame,
                                     nsPresContext*             aPresContext,
-                                    const nsHTMLReflowState*   aReflowState,
                                     const nsHTMLReflowMetrics& aDesiredSize,
+                                    const nsHTMLReflowState*   aReflowState,
                                     nscoord                    aX,
                                     nscoord                    aY,
                                     uint32_t                   aFlags);

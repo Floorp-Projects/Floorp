@@ -49,7 +49,7 @@ InfoObject::DefineProperty(const char *name, const char *value)
 
 InfoObject::InfoObject(JSContext *aCx) : mCx(aCx), mObj(aCx), mOk(true)
 {
-  mObj = JS_NewObject(mCx, nullptr, nullptr, nullptr);
+  mObj = JS_NewObject(mCx, nullptr, JS::NullPtr(), JS::NullPtr());
   if (!mObj)
     mOk = false;
 }

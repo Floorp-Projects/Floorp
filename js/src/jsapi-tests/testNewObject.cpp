@@ -14,7 +14,7 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
 
     // Check that arguments were passed properly from JS_New.
 
-    JS::RootedObject obj(cx, JS_NewObject(cx, js::Jsvalify(&JSObject::class_), nullptr, nullptr));
+    JS::RootedObject obj(cx, JS_NewObject(cx, js::Jsvalify(&JSObject::class_), JS::NullPtr(), JS::NullPtr()));
     if (!obj) {
         JS_ReportError(cx, "test failed, could not construct object");
         return false;
@@ -103,7 +103,7 @@ BEGIN_TEST(testNewObject_1)
         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr,
         nullptr, nullptr, nullptr, constructHook
     };
-    JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, nullptr, nullptr));
+    JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
     CHECK(ctor);
     JS::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
     obj = JS_New(cx, ctor, 3, argv);

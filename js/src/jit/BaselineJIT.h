@@ -100,6 +100,11 @@ struct BaselineScript
   public:
     static const uint32_t MAX_JSSCRIPT_LENGTH = 0x0fffffffu;
 
+    // Limit the locals on a given script so that stack check on baseline frames
+    // doesn't overflow a uint32_t value.
+    // (MAX_JSSCRIPT_SLOTS * sizeof(Value)) must fit within a uint32_t.
+    static const uint32_t MAX_JSSCRIPT_SLOTS = 0xffffu;
+
   private:
     // Code pointer containing the actual method.
     HeapPtr<JitCode> method_;

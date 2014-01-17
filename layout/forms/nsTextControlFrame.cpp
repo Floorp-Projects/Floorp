@@ -171,7 +171,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
   // To better match IE, take the maximum character width(in twips) and remove
   // 4 pixels add this on as additional padding(internalPadding). But only do
   // this if we think we have a fixed-width font.
-  if (std::abs(charWidth - charMaxAdvance) > nsPresContext::CSSPixelsToAppUnits(1)) {
+  if (mozilla::Abs(charWidth - charMaxAdvance) > (unsigned)nsPresContext::CSSPixelsToAppUnits(1)) {
     nscoord internalPadding =
       std::max(0, charMaxAdvance - nsPresContext::CSSPixelsToAppUnits(4));
     nscoord t = nsPresContext::CSSPixelsToAppUnits(1); 
@@ -549,8 +549,8 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
               xOffset, yOffset, 0, aStatus);
 
   // place the child
-  FinishReflowChild(aKid, aPresContext, &kidReflowState, 
-                    desiredSize, xOffset, yOffset, 0);
+  FinishReflowChild(aKid, aPresContext, desiredSize,
+                    &kidReflowState, xOffset, yOffset, 0);
 
   // consider the overflow
   aParentDesiredSize.mOverflowAreas.UnionWith(desiredSize.mOverflowAreas);

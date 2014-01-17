@@ -591,8 +591,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       *aBottomMarginCarriedOut = kidDesiredSize.mCarriedOutBottomMargin;
       
-      FinishReflowChild(child, PresContext(), &kidReflowState, 
-                        kidDesiredSize, childOrigin.x, childOrigin.y, 0);
+      FinishReflowChild(child, PresContext(), kidDesiredSize,
+                        &kidReflowState, childOrigin.x, childOrigin.y, 0);
 
       childContentBottom = nsLayoutUtils::CalculateContentBottom(child);
       if (childContentBottom > aConfig.mColMaxHeight) {
