@@ -27,6 +27,18 @@ toolbarbutton:not([disabled="true"]):active:hover {
   vertical-align: middle;
 }
 
+.toolbarbutton-multiline-text {
+  display: none;
+}
+
+toolbarbutton[wrap="true"] > .toolbarbutton-text {
+  display: none;
+}
+
+toolbarbutton[wrap="true"] > .toolbarbutton-multiline-text {
+  display: -moz-box;
+}
+
 toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
