@@ -318,12 +318,6 @@ ContainerRender(ContainerT* aContainer,
       // Composer2D will compose this layer so skip GPU composition
       // this time & reset composition flag for next composition phase
       layerToRender->SetLayerComposited(false);
-      if (layerToRender->GetClearFB()) {
-        // Clear layer's visible rect on FrameBuffer with transparent pixels
-        gfx::Rect aRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-        compositor->clearFBRect(&aRect);
-        layerToRender->SetClearFB(false);
-      }
     } else {
       layerToRender->RenderLayer(clipRect);
     }

@@ -304,11 +304,6 @@ public:
                          gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform)
   { /* Should turn into pure virtual once implemented in D3D */ }
 
-  /*
-   * Clear aRect on FrameBuffer.
-   */
-  virtual void clearFBRect(const gfx::Rect* aRect) { }
-
   /**
    * Start a new frame.
    *

@@ -768,20 +768,6 @@ CalculatePOTSize(const IntSize& aSize, GLContext* gl)
 }
 
 void
-CompositorOGL::clearFBRect(const gfx::Rect* aRect)
-{
-  if (!aRect) {
-    return;
-  }
-
-  mGLContext->fScissor(aRect->x, aRect->y, aRect->width, aRect->height);
-  mGLContext->PushScissorRect();
-  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
-  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-  mGLContext->PopScissorRect();
-}
-
-void
 CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                           const Rect *aClipRectIn,
                           const gfx::Matrix& aTransform,
