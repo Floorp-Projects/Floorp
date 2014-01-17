@@ -5,23 +5,33 @@
 package org.mozilla.gecko.fxa.sync;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.browserid.BrowserIDKeyPair;
-import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
+import org.mozilla.gecko.fxa.authenticator.FxAccountLoginDelegate;
+import org.mozilla.gecko.fxa.authenticator.FxAccountLoginException;
+import org.mozilla.gecko.fxa.authenticator.FxAccountLoginPolicy;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.BaseGlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.mozilla.gecko.tokenserver.TokenServerClient;
+import org.mozilla.gecko.tokenserver.TokenServerClientDelegate;
+import org.mozilla.gecko.tokenserver.TokenServerException;
+import org.mozilla.gecko.tokenserver.TokenServerToken;
 
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
@@ -113,47 +123,71 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final CountDownLatch latch = new CountDownLatch(1);
     try {
-      final BrowserIDKeyPair keyPair = RSACryptoImplementation.generateKeyPair(1024);
-      Logger.info(LOG_TAG, "Generated keypair. ");
+      final String authEndpoint = FxAccountConstants.DEFAULT_AUTH_ENDPOINT;
+      final String tokenServerEndpoint = authEndpoint + (authEndpoint.endsWith("/") ? "" : "/") + "1.0/sync/1.1";
+      final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
 
-      final FxAccount fxAccount = FxAccountAuthenticator.fromAndroidAccount(getContext(), account);
-      final String tokenServerEndpoint = fxAccount.authEndpoint + (fxAccount.authEndpoint.endsWith("/") ? "" : "/") + "1.0/sync/1.1";
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(getContext(), account);
 
-      fxAccount.login(getContext(), tokenServerEndpoint, keyPair, new FxAccount.Delegate() {
+      if (Logger.LOG_PERSONAL_INFORMATION) {
+        ExtendedJSONObject o = new AndroidFxAccount(getContext(), account).toJSONObject();
+        ArrayList<String> list = new ArrayList<String>(o.keySet());
+        Collections.sort(list);
+        for (String key : list) {
+          Logger.pii(LOG_TAG, key + ": " + o.getString(key));
+        }
+      }
+
+      final FxAccountLoginPolicy loginPolicy = new FxAccountLoginPolicy(getContext(), fxAccount, executor);
+
+      loginPolicy.login(authEndpoint, new FxAccountLoginDelegate() {
         @Override
-        public void handleSuccess(final String uid, final String endpoint, final AuthHeaderProvider authHeaderProvider) {
-          Logger.pii(LOG_TAG, "Got token! uid is " + uid + " and endpoint is " + endpoint + ".");
-
-          final BaseGlobalSessionCallback callback = new SessionCallback(latch);
-
-          Executors.newSingleThreadExecutor().execute(new Runnable() {
+        public void handleSuccess(final String assertion) {
+          TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
+          tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
             @Override
-            public void run() {
+            public void handleSuccess(final TokenServerToken token) {
+              Logger.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+
+              final BaseGlobalSessionCallback callback = new SessionCallback(latch);
               FxAccountGlobalSession globalSession = null;
               try {
                 SharedPreferences sharedPrefs = getContext().getSharedPreferences(FxAccountConstants.PREFS_PATH, Context.MODE_PRIVATE);
                 ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
-                final KeyBundle syncKeyBundle = FxAccountUtils.generateSyncKeyBundle(fxAccount.kB);
-                globalSession = new FxAccountGlobalSession(endpoint, uid, authHeaderProvider, FxAccountConstants.PREFS_PATH, syncKeyBundle, callback, getContext(), extras, clientsDataDelegate);
+                final KeyBundle syncKeyBundle = FxAccountUtils.generateSyncKeyBundle(fxAccount.getKb()); // TODO Document this choice for deriving from kB.
+                AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false);
+                globalSession = new FxAccountGlobalSession(token.endpoint, token.uid, authHeaderProvider, FxAccountConstants.PREFS_PATH, syncKeyBundle, callback, getContext(), extras, clientsDataDelegate);
                 globalSession.start();
               } catch (Exception e) {
                 callback.handleError(globalSession, e);
                 return;
               }
             }
+
+            @Override
+            public void handleFailure(TokenServerException e) {
+              handleError(e);
+            }
+
+            @Override
+            public void handleError(Exception e) {
+              Logger.error(LOG_TAG, "Failed to get token.", e);
+              latch.countDown();
+            }
           });
         }
 
         @Override
-        public void handleError(Exception e) {
-          Logger.info(LOG_TAG, "Failed to get token.", e);
+        public void handleError(FxAccountLoginException e) {
+          Logger.error(LOG_TAG, "Got error logging in.", e);
           latch.countDown();
         }
       });
 
       latch.await();
     } catch (Exception e) {
-      Logger.error(LOG_TAG, "Got error logging in.", e);
+      Logger.error(LOG_TAG, "Got error syncing.", e);
+      latch.countDown();
     }
   }
 }

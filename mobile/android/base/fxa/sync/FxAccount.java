@@ -10,7 +10,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient10;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
@@ -59,7 +59,7 @@ public class FxAccount {
     this.executor = Executors.newSingleThreadExecutor();
   }
 
-  protected static class InnerFxAccountClientRequestDelegate implements FxAccountClient.RequestDelegate<String> {
+  protected static class InnerFxAccountClientRequestDelegate implements FxAccountClient10.RequestDelegate<String> {
     protected final Executor executor;
     protected final String audience;
     protected final String tokenServerEndpoint;
@@ -167,7 +167,7 @@ public class FxAccount {
     // the delegates, we can guarantee that there is no dead-lock between the
     // inner FxAccountClient delegate, the outer TokenServerClient delegate, and
     // the user supplied delegate.
-    FxAccountClient fxAccountClient = new FxAccountClient(idpEndpoint, executor);
+    FxAccountClient10 fxAccountClient = new FxAccountClient10(idpEndpoint, executor);
     fxAccountClient.sign(sessionTokenBytes, publicKeyObject,
         JSONWebTokenUtils.DEFAULT_CERTIFICATE_DURATION_IN_MILLISECONDS,
         new InnerFxAccountClientRequestDelegate(executor, authEndpoint, tokenServerEndpoint, keyPair, delegate));
