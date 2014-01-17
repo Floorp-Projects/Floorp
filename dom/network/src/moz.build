@@ -26,16 +26,6 @@ UNIFIED_SOURCES += [
     'UDPSocketParent.cpp',
 ]
 
-if CONFIG['MOZ_B2G_RIL']:
-    EXPORTS.mozilla.dom.network += [
-        'MobileConnection.h',
-        'MobileConnectionArray.h',
-    ]
-    UNIFIED_SOURCES += [
-        'MobileConnection.cpp',
-        'MobileConnectionArray.cpp',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXTRA_JS_MODULES = [
         'NetworkStatsDB.jsm',
@@ -71,7 +61,7 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'
+
 LOCAL_INCLUDES += [
     '/dom/events',
 ]
-
