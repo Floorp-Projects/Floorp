@@ -914,13 +914,27 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
 }
 
 JSString *
-regexp_replace(JSContext *cx, HandleString string, HandleObject regexp, HandleString repl)
+RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp, HandleString repl)
 {
-    JS_ASSERT(!!string);
-    JS_ASSERT(!!repl);
+    JS_ASSERT(string);
+    JS_ASSERT(repl);
 
     RootedValue rval(cx);
     if (!str_replace_regexp_raw(cx, string, regexp, repl, &rval))
+        return nullptr;
+
+    return rval.toString();
+}
+
+JSString *
+StringReplace(JSContext *cx, HandleString string, HandleString pattern, HandleString repl)
+{
+    JS_ASSERT(string);
+    JS_ASSERT(pattern);
+    JS_ASSERT(repl);
+
+    RootedValue rval(cx);
+    if (!str_replace_string_raw(cx, string, pattern, repl, &rval))
         return nullptr;
 
     return rval.toString();
