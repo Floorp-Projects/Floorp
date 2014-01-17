@@ -365,7 +365,7 @@ AboutReader.prototype = {
     if (!this._article || this._readingListCount < 1)
       return;
 
-    gChromeWin.BrowserApp.loadURI("about:home?page=" + READING_LIST_PANEL_ID);
+    gChromeWin.BrowserApp.loadURI("about:home?panel=" + READING_LIST_PANEL_ID);
   },
 
   _onShare: function Reader_onShare() {
