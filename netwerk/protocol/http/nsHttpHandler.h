@@ -345,7 +345,7 @@ private:
     nsHttpAuthCache mPrivateAuthCache;
 
     // the connection manager
-    nsHttpConnectionMgr *mConnMgr;
+    nsRefPtr<nsHttpConnectionMgr> mConnMgr;
 
     //
     // prefs
