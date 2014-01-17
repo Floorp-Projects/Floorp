@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -12,16 +11,24 @@ const { Cc, Ci, Cu } = require("chrome");
 const { Loader } = require('./loader');
 const { serializeStack, parseStack  } = require("toolkit/loader");
 const { setTimeout } = require('../timers');
-const memory = require('../deprecated/memory');
 const { PlainTextConsole } = require("../console/plain-text");
 const { when: unload } = require("../system/unload");
 const { format, fromException }  = require("../console/traceback");
 const system = require("../system");
+const memory = require('../deprecated/memory');
+const { gc: gcPromise } = require('./memory');
+const { defer } = require('../core/promise');
 
 // Trick manifest builder to make it think we need these modules ?
 const unit = require("../deprecated/unit-test");
 const test = require("../../test");
 const url = require("../url");
+
+function emptyPromise() {
+  let { promise, resolve } = defer();
+  resolve();
+  return promise;
+}
 
 var cService = Cc['@mozilla.org/consoleservice;1'].getService()
                .QueryInterface(Ci.nsIConsoleService);
@@ -143,36 +150,30 @@ function dictDiff(last, curr) {
 }
 
 function reportMemoryUsage() {
-  memory.gc();
-
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
-            .getService(Ci.nsIMemoryReporterManager);
-
-  // Bug 916501: this code is *so* bogus -- nsIMemoryReporter changed its |memoryUsed|
-  // field to |amount| *years* ago, and even bigger changes have happened
-  // since -- that it must just never be run.
-  var reporters = mgr.enumerateReporters();
-  if (reporters.hasMoreElements())
-    print("\n");
-
-  while (reporters.hasMoreElements()) {
-    var reporter = reporters.getNext();
-    reporter.QueryInterface(Ci.nsIMemoryReporter);
-    print(reporter.description + ": " + reporter.memoryUsed + "\n");
+  if (!profileMemory) {
+    return emptyPromise();
   }
 
-  var weakrefs = [info.weakref.get()
-                  for each (info in memory.getObjects())];
-  weakrefs = [weakref for each (weakref in weakrefs) if (weakref)];
-  print("Tracked memory objects in testing sandbox: " +
-        weakrefs.length + "\n");
+  return gcPromise().then((function () {
+    var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
+              .getService(Ci.nsIMemoryReporterManager);
+    let count = 0;
+    function logReporter(process, path, kind, units, amount, description) {
+      print(((++count == 1) ? "\n" : "") + description + ": " + amount + "\n");
+    }
+    mgr.getReportsForThisProcess(logReporter, null);
+
+    var weakrefs = [info.weakref.get()
+                    for each (info in memory.getObjects())];
+    weakrefs = [weakref for each (weakref in weakrefs) if (weakref)];
+    print("Tracked memory objects in testing sandbox: " + weakrefs.length + "\n");
+  }));
 }
 
 var gWeakrefInfo;
 
 function checkMemory() {
-  memory.gc();
-  Cu.schedulePreciseGC(function () {
+  return gcPromise().then(_ => {
     let leaks = getPotentialLeaks();
 
     let compartmentURLs = Object.keys(leaks.compartments).filter(function(url) {
@@ -188,12 +189,12 @@ function checkMemory() {
 
     for (let url of windowURLs)
       console.warn("LEAKED", leaks.windows[url]);
-
-    showResults();
-  });
+  }).then(showResults);
 }
 
 function showResults() {
+  let { promise, resolve } = defer();
+
   if (gWeakrefInfo) {
     gWeakrefInfo.forEach(
       function(info) {
@@ -211,6 +212,9 @@ function showResults() {
   }
 
   onDone(results);
+
+  resolve();
+  return promise;
 }
 
 function cleanup() {
@@ -250,7 +254,8 @@ function cleanup() {
     loader = null;
 
     memory.gc();
-  } catch (e) {
+  }
+  catch (e) {
     results.failed++;
     console.error("unload.send() threw an exception.");
     console.exception(e);
@@ -333,7 +338,7 @@ function getPotentialLeaks() {
         console.error("Unable to parse compartment detail " + matches[1]);
         return;
       }
- 
+
       let item = {
         path: matches[1],
         principal: details[1],
@@ -349,8 +354,7 @@ function getPotentialLeaks() {
       return;
     }
 
-    matches = windowRegexp.exec(path);
-    if (matches) {
+    if (matches = windowRegexp.exec(path)) {
       if (matches[1] in windows)
         return;
 
@@ -374,10 +378,9 @@ function getPotentialLeaks() {
     }
   }
 
-  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
-            getService(Ci.nsIMemoryReporterManager);
-
-  mgr.getReportsForThisProcess(logReporter, null);
+  Cc["@mozilla.org/memory-reporter-manager;1"]
+    .getService(Ci.nsIMemoryReporterManager)
+    .getReportsForThisProcess(logReporter, null);
 
   return { compartments: compartments, windows: windows };
 }
@@ -387,22 +390,28 @@ function nextIteration(tests) {
     results.passed += tests.passed;
     results.failed += tests.failed;
 
-    if (profileMemory)
-      reportMemoryUsage();
-
-    let testRun = [];
-    for each (let test in tests.testRunSummary) {
-      let testCopy = {};
-      for (let info in test) {
-        testCopy[info] = test[info];
+    reportMemoryUsage().then(_ => {
+      let testRun = [];
+      for each (let test in tests.testRunSummary) {
+        let testCopy = {};
+        for (let info in test) {
+          testCopy[info] = test[info];
+        }
+        testRun.push(testCopy);
       }
-      testRun.push(testCopy);
-    }
 
-    results.testRuns.push(testRun);
-    iterationsLeft--;
+      results.testRuns.push(testRun);
+      iterationsLeft--;
+
+      checkForEnd();
+    })
   }
+  else {
+    checkForEnd();
+  }
+}
 
+function checkForEnd() {
   if (iterationsLeft && (!stopOnError || results.failed == 0)) {
     // Pass the loader which has a hooked console that doesn't dispatch
     // errors to the JS console and avoid firing false alarm in our

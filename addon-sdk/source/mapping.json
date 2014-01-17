@@ -15,7 +15,6 @@
   "loader": "sdk/loader/loader",
   "memory": "sdk/deprecated/memory",
   "namespace": "sdk/core/namespace",
-  "observer-service": "sdk/deprecated/observer-service",
   "preferences-service": "sdk/preferences/service",
   "promise": "sdk/core/promise",
   "system": "sdk/system",
