@@ -38,7 +38,7 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   protected final String email;
   protected final byte[] emailUTF8;
   protected final String password;
-  protected final byte[] quickStretchedPW;
+  public final byte[] quickStretchedPW;
   protected final FxAccountClient20 client;
 
   protected ProgressDialog progressDialog = null;
