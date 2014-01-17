@@ -29,14 +29,12 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(
 
   DebugOnly<DeviceStorageUsedSpaceCache*> usedSpaceCache
     = DeviceStorageUsedSpaceCache::CreateOrGet();
-  NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+  MOZ_ASSERT(usedSpaceCache);
 }
 
 void
 DeviceStorageRequestParent::Dispatch()
 {
-  nsresult rv;
-
   switch (mParams.type()) {
     case DeviceStorageParams::TDeviceStorageAddParams:
     {
@@ -55,7 +53,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -71,7 +69,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -86,7 +84,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -101,7 +99,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -116,7 +114,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -125,7 +123,7 @@ DeviceStorageRequestParent::Dispatch()
     {
       DeviceStorageUsedSpaceCache* usedSpaceCache
         = DeviceStorageUsedSpaceCache::CreateOrGet();
-      NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+      MOZ_ASSERT(usedSpaceCache);
 
       DeviceStorageUsedSpaceParams p = mParams;
 
@@ -145,7 +143,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName());
       nsRefPtr<PostAvailableResultEvent> r
         = new PostAvailableResultEvent(this, dsf);
-      rv = NS_DispatchToMainThread(r);
+      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       break;
     }
@@ -158,7 +156,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName());
       nsRefPtr<PostFormatResultEvent> r
         = new PostFormatResultEvent(this, dsf);
-      rv = NS_DispatchToMainThread(r);
+      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       break;
     }
@@ -174,7 +172,7 @@ DeviceStorageRequestParent::Dispatch()
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
+      MOZ_ASSERT(target);
       target->Dispatch(r, NS_DISPATCH_NORMAL);
       break;
     }
@@ -340,7 +338,7 @@ DeviceStorageRequestParent::PostFreeSpaceResultEvent::
 
 nsresult
 DeviceStorageRequestParent::PostFreeSpaceResultEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   FreeSpaceStorageResponse response(mFreeSpace);
   unused << mParent->Send__delete__(mParent, response);
@@ -362,7 +360,7 @@ DeviceStorageRequestParent::PostUsedSpaceResultEvent::
 
 nsresult
 DeviceStorageRequestParent::PostUsedSpaceResultEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   UsedSpaceStorageResponse response(mUsedSpace);
   unused << mParent->Send__delete__(mParent, response);
@@ -380,7 +378,7 @@ DeviceStorageRequestParent::PostErrorEvent::~PostErrorEvent() {}
 
 nsresult
 DeviceStorageRequestParent::PostErrorEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   ErrorResponse response(mError);
   unused << mParent->Send__delete__(mParent, response);
@@ -397,7 +395,7 @@ DeviceStorageRequestParent::PostSuccessEvent::~PostSuccessEvent() {}
 
 nsresult
 DeviceStorageRequestParent::PostSuccessEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   SuccessResponse response;
   unused << mParent->Send__delete__(mParent, response);
@@ -422,7 +420,7 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::~PostBlobSuccessEvent() {}
 
 nsresult
 DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsString mime;
   CopyASCIItoUTF16(mMimeType, mime);
@@ -465,7 +463,7 @@ DeviceStorageRequestParent::PostEnumerationSuccessEvent::
 
 nsresult
 DeviceStorageRequestParent::PostEnumerationSuccessEvent::CancelableRun() {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   EnumerationResponse response(mStorageType, mRelPath, mPaths);
   unused << mParent->Send__delete__(mParent, response);
@@ -487,7 +485,7 @@ DeviceStorageRequestParent::CreateFdEvent::~CreateFdEvent()
 nsresult
 DeviceStorageRequestParent::CreateFdEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsRefPtr<nsRunnable> r;
 
@@ -501,8 +499,9 @@ DeviceStorageRequestParent::CreateFdEvent::CancelableRun()
 
   FileDescriptor fileDescriptor;
   nsresult rv = mFile->CreateFileDescriptor(fileDescriptor);
-
   if (NS_FAILED(rv)) {
+    NS_WARNING("CreateFileDescriptor failed");
+    mFile->Dump("CreateFileDescriptor failed");
     r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
   }
   else {
@@ -529,7 +528,7 @@ DeviceStorageRequestParent::WriteFileEvent::~WriteFileEvent()
 nsresult
 DeviceStorageRequestParent::WriteFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsRefPtr<nsRunnable> r;
 
@@ -572,7 +571,7 @@ DeviceStorageRequestParent::DeleteFileEvent::~DeleteFileEvent()
 nsresult
 DeviceStorageRequestParent::DeleteFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   mFile->Remove();
 
@@ -605,7 +604,7 @@ DeviceStorageRequestParent::FreeSpaceFileEvent::~FreeSpaceFileEvent()
 nsresult
 DeviceStorageRequestParent::FreeSpaceFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   int64_t freeSpace = 0;
   if (mFile) {
@@ -632,7 +631,7 @@ DeviceStorageRequestParent::UsedSpaceFileEvent::~UsedSpaceFileEvent()
 nsresult
 DeviceStorageRequestParent::UsedSpaceFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   uint64_t picturesUsage = 0, videosUsage = 0, musicUsage = 0, totalUsage = 0;
   mFile->AccumDiskUsage(&picturesUsage, &videosUsage,
@@ -675,7 +674,7 @@ DeviceStorageRequestParent::ReadFileEvent::~ReadFileEvent()
 nsresult
 DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<nsIRunnable> r;
   bool check = false;
@@ -722,7 +721,7 @@ DeviceStorageRequestParent::EnumerateFileEvent::~EnumerateFileEvent()
 nsresult
 DeviceStorageRequestParent::EnumerateFileEvent::CancelableRun()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<nsIRunnable> r;
   if (mFile->mFile) {
@@ -766,7 +765,7 @@ DeviceStorageRequestParent::PostPathResultEvent::~PostPathResultEvent()
 nsresult
 DeviceStorageRequestParent::PostPathResultEvent::CancelableRun()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   SuccessResponse response;
   unused << mParent->Send__delete__(mParent, response);
@@ -789,7 +788,7 @@ DeviceStorageRequestParent::PostFileDescriptorResultEvent::
 nsresult
 DeviceStorageRequestParent::PostFileDescriptorResultEvent::CancelableRun()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   FileDescriptorResponse response(mFileDescriptor);
   unused << mParent->Send__delete__(mParent, response);
@@ -812,7 +811,7 @@ DeviceStorageRequestParent::PostAvailableResultEvent::
 nsresult
 DeviceStorageRequestParent::PostAvailableResultEvent::CancelableRun()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsString state = NS_LITERAL_STRING("unavailable");
   if (mFile) {
@@ -840,7 +839,7 @@ DeviceStorageRequestParent::PostFormatResultEvent::
 nsresult
 DeviceStorageRequestParent::PostFormatResultEvent::CancelableRun()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsString state = NS_LITERAL_STRING("unavailable");
   if (mFile) {
