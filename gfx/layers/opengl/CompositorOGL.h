@@ -252,11 +252,6 @@ private:
    */
   bool mFrameInProgress;
 
-  /*
-   * Clear aRect on FrameBuffer.
-   */
-  virtual void clearFBRect(const gfx::Rect* aRect);
-
   /* Start a new frame. If aClipRectIn is null and aClipRectOut is non-null,
    * sets *aClipRectOut to the screen dimensions.
    */
