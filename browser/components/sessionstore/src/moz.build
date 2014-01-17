@@ -17,6 +17,7 @@ EXTRA_JS_MODULES = [
     'DocShellCapabilities.jsm',
     'FormData.jsm',
     'FrameTree.jsm',
+    'GlobalState.jsm',
     'Messenger.jsm',
     'PageStyle.jsm',
     'PrivacyLevel.jsm',
