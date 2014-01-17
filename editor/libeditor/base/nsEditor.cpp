@@ -1851,6 +1851,12 @@ void nsEditor::NotifyEditorObservers(void)
     return;
   }
 
+  FireInputEvent();
+}
+
+void
+nsEditor::FireInputEvent()
+{
   // We don't need to dispatch multiple input events if there is a pending
   // input event.  However, it may have different event target.  If we resolved
   // this issue, we need to manage the pending events in an array.  But it's
@@ -5064,6 +5070,10 @@ nsEditor::SwitchTextDirection()
     rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
   }
 
+  if (NS_SUCCEEDED(rv)) {
+    FireInputEvent();
+  }
+
   return rv;
 }
 
@@ -5083,14 +5093,18 @@ nsEditor::SwitchTextDirectionTo(uint32_t aDirection)
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
   } else if (aDirection == nsIPlaintextEditor::eEditorRightToLeft &&
              (mFlags & nsIPlaintextEditor::eEditorLeftToRight)) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
     mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    FireInputEvent();
   }
 }
 
