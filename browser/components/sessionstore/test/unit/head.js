@@ -17,6 +17,13 @@ let afterSessionStartupInitialization =
         do_throw(ex);
       }
     };
+
+    // We need the Crash Monitor initialized for sessionstartup to run
+    // successfully.
+    Components.utils.import("resource://gre/modules/CrashMonitor.jsm");
+    CrashMonitor.init();
+
+    // Start sessionstartup initialization.
     let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
       getService(Ci.nsIObserver);
     Services.obs.addObserver(startup, "final-ui-startup", false);
