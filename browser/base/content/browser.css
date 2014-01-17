@@ -903,6 +903,7 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 #customization-panelWrapper > .panel-arrowcontent {
   padding: 0 !important;
+  overflow: hidden;
 }
 
 #customization-panelHolder > #PanelUI-mainView {
@@ -934,6 +935,10 @@ toolbarpaletteitem[dragover] {
   display: block;
   overflow: auto;
   min-height: 3em;
+}
+
+#customization-toolbar-visibility-button > .box-inherit > .button-menu-dropmarker {
+  display: -moz-box;
 }
 
 toolbarpaletteitem[place="palette"] {

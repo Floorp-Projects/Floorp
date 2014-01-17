@@ -5,11 +5,7 @@
 
 const { Loader } = require('sdk/test/loader');
 const { browserWindows } = require('sdk/windows');
-const { viewFor } = require('sdk/view/core');
 const { Ci } = require("chrome");
-const { isBrowser, getWindowTitle } = require("sdk/window/utils");
-const { defer } = require("sdk/lang/functional");
-
 
 // TEST: browserWindows Iterator
 exports.testBrowserWindowsIterator = function(assert) {
@@ -59,28 +55,6 @@ exports.testWindowActivateMethod_simple = function(assert) {
                'Active window is active after window.activate() call');
   assert.equal(window.tabs.activeTab, tab,
                'Active tab is active after window.activate() call');
-};
-
-
-exports["test getView(window)"] = function(assert, done) {
-  browserWindows.once("open", window => {
-    const view = viewFor(window);
-
-    assert.ok(view instanceof Ci.nsIDOMWindow, "view is a window");
-    assert.ok(isBrowser(view), "view is a browser window");
-    assert.equal(getWindowTitle(view), window.title,
-                 "window has a right title");
-
-    window.close();
-    // Defer handler cause window is destroyed after event is dispatched.
-    browserWindows.once("close", defer(_ => {
-      assert.equal(viewFor(window), null, "window view is gone");
-      done();
-    }));
-  });
-
-
-  browserWindows.open({ url: "data:text/html,<title>yo</title>" });
 };
 
 require('sdk/test').run(exports);
