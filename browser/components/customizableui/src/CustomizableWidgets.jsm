@@ -376,7 +376,6 @@ const CustomizableWidgets = [{
       // Register ourselves with the service so we know when the zoom prefs change.
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
-      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:location-change", false);
 
       if (inPanel) {
         let panel = aDocument.getElementById(kPanelId);
