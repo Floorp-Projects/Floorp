@@ -28,6 +28,10 @@ class CacheObserver : public nsIObserver
   static uint32_t const MemoryLimit() // <0.5MB,1024MB>, result in bytes.
     { return std::max(512U, std::min(1048576U, sMemoryLimit)) << 10; }
   static bool const UseNewCache();
+  static uint32_t const HalfLifeSeconds()
+    { return sHalfLifeHours * 60 * 60; }
+  static int32_t const HalfLifeExperiment()
+    { return sHalfLifeExperiment; }
 
 private:
   static CacheObserver* sSelf;
@@ -36,6 +40,8 @@ private:
 
   static uint32_t sMemoryLimit;
   static uint32_t sUseNewCache;
+  static uint32_t sHalfLifeHours;
+  static int32_t sHalfLifeExperiment;
 };
 
 } // net
