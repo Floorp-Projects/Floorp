@@ -3631,7 +3631,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
     app.receipts.push(receipt);
 
-    this._saveApps(function() {
+    this._saveApps().then(() => {
       aData.receipts = app.receipts;
       aMm.sendAsyncMessage("Webapps:AddReceipt:Return:OK", aData);
     });
@@ -3666,7 +3666,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
     app.receipts.splice(index, 1);
 
-    this._saveApps(function() {
+    this._saveApps().then(() => {
       aData.receipts = app.receipts;
       aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:OK", aData);
     });
@@ -3709,7 +3709,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
     app.receipts[oldIndex] = newReceipt;
 
-    this._saveApps(function() {
+    this._saveApps().then(() => {
       aData.receipts = app.receipts;
       aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:OK", aData);
     });
