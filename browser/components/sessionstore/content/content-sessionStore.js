@@ -208,18 +208,20 @@ let ProgressListener = {
  */
 let PageStyleListener = {
   init: function () {
-    Services.obs.addObserver(this, "author-style-disabled-changed", true);
-    Services.obs.addObserver(this, "style-sheet-applicable-state-changed", true);
+    Services.obs.addObserver(this, "author-style-disabled-changed", false);
+    Services.obs.addObserver(this, "style-sheet-applicable-state-changed", false);
+  },
+
+  uninit: function () {
+    Services.obs.removeObserver(this, "author-style-disabled-changed");
+    Services.obs.removeObserver(this, "style-sheet-applicable-state-changed");
   },
 
   observe: function (subject, topic) {
     if (subject.defaultView && subject.defaultView.top == content) {
       MessageQueue.push("pageStyle", () => PageStyle.collect(docShell) || null);
     }
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  }
 };
 
 /**
@@ -283,8 +285,13 @@ let DocShellCapabilitiesListener = {
 let SessionStorageListener = {
   init: function () {
     addEventListener("MozStorageChanged", this);
-    Services.obs.addObserver(this, "browser:purge-domain-data", true);
-    Services.obs.addObserver(this, "browser:purge-session-history", true);
+    Services.obs.addObserver(this, "browser:purge-domain-data", false);
+    Services.obs.addObserver(this, "browser:purge-session-history", false);
+  },
+
+  uninit: function () {
+    Services.obs.removeObserver(this, "browser:purge-domain-data");
+    Services.obs.removeObserver(this, "browser:purge-session-history");
   },
 
   handleEvent: function (event) {
@@ -302,10 +309,7 @@ let SessionStorageListener = {
 
   collect: function () {
     MessageQueue.push("storage", () => SessionStorage.collect(docShell));
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  }
 };
 
 /**
@@ -461,3 +465,13 @@ ProgressListener.init();
 PageStyleListener.init();
 SessionStorageListener.init();
 DocShellCapabilitiesListener.init();
+
+addEventListener("unload", () => {
+  // Remove all registered nsIObservers.
+  PageStyleListener.uninit();
+  SessionStorageListener.uninit();
+
+  // We don't need to take care of any gFrameTree observers as the gFrameTree
+  // will die with the content script. The same goes for the privacy transition
+  // observer that will die with the docShell when the tab is closed.
+});
