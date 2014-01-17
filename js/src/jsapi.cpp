@@ -2225,28 +2225,22 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 }
 
 JS_PUBLIC_API(bool)
-JS_ValueToId(JSContext *cx, jsval valueArg, jsid *idp)
+JS_ValueToId(JSContext *cx, jsval valueArg, MutableHandleId idp)
 {
     RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, value, &id))
-        return false;
-
-    *idp = id;
-    return true;
+    return ValueToId<CanGC>(cx, value, idp);
 }
 
 JS_PUBLIC_API(bool)
-JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
+JS_IdToValue(JSContext *cx, jsid id, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    *vp = IdToJsval(id);
-    assertSameCompartment(cx, *vp);
+    vp.set(IdToJsval(id));
+    assertSameCompartment(cx, vp);
     return true;
 }
 
@@ -2661,20 +2655,17 @@ JS_GetObjectRuntime(JSObject *obj)
 }
 
 JS_PUBLIC_API(bool)
-JS_FreezeObject(JSContext *cx, JSObject *objArg)
+JS_FreezeObject(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-
     return JSObject::freeze(cx, obj);
 }
 
 JS_PUBLIC_API(bool)
-JS_DeepFreezeObject(JSContext *cx, JSObject *objArg)
+JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3685,10 +3676,8 @@ static const Class prop_iter_class = {
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewPropertyIterator(JSContext *cx, JSObject *objArg)
+JS_NewPropertyIterator(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3717,10 +3706,8 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
+JS_NextProperty(JSContext *cx, HandleObject iterobj, jsid *idp)
 {
-    RootedObject iterobj(cx, iterobjArg);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, iterobj);
@@ -3789,9 +3776,8 @@ JS_IsArrayObject(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(bool)
-JS_GetArrayLength(JSContext *cx, JSObject *objArg, uint32_t *lengthp)
+JS_GetArrayLength(JSContext *cx, HandleObject obj, uint32_t *lengthp)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3799,9 +3785,8 @@ JS_GetArrayLength(JSContext *cx, JSObject *objArg, uint32_t *lengthp)
 }
 
 JS_PUBLIC_API(bool)
-JS_SetArrayLength(JSContext *cx, JSObject *objArg, uint32_t length)
+JS_SetArrayLength(JSContext *cx, HandleObject obj, uint32_t length)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3809,19 +3794,13 @@ JS_SetArrayLength(JSContext *cx, JSObject *objArg, uint32_t length)
 }
 
 JS_PUBLIC_API(bool)
-JS_CheckAccess(JSContext *cx, JSObject *objArg, jsid idArg, JSAccessMode mode,
-               jsval *vp, unsigned *attrsp)
+JS_CheckAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
+               MutableHandleValue vp, unsigned *attrsp)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-    RootedValue value(cx, *vp);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    bool status = CheckAccess(cx, obj, id, mode, &value, attrsp);
-    *vp = value;
-    return status;
+    return CheckAccess(cx, obj, id, mode, vp, attrsp);
 }
 
 JS_PUBLIC_API(void)
