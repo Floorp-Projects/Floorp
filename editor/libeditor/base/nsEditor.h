@@ -251,7 +251,6 @@ public:
 
 protected:
   nsresult DetermineCurrentDirection();
-  void FireInputEvent();
 
   /** create a transaction for setting aAttribute to aValue on aElement
     */
