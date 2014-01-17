@@ -973,6 +973,7 @@ public:
   RemoteBitmapImage() : Image(nullptr, REMOTE_IMAGE_BITMAP) {}
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
+  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   gfx::IntSize GetSize() { return mSize; }
 

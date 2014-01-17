@@ -675,5 +675,22 @@ RemoteBitmapImage::DeprecatedGetAsSurface()
   return newSurf.forget();
 }
 
+TemporaryRef<gfx::SourceSurface>
+RemoteBitmapImage::GetAsSourceSurface()
+{
+  gfx::SurfaceFormat fmt = mFormat == RemoteImageData::BGRX32
+                         ? gfx::SurfaceFormat::B8G8R8X8
+                         : gfx::SurfaceFormat::B8G8R8A8;
+  RefPtr<gfx::DataSourceSurface> newSurf = gfx::Factory::CreateDataSourceSurface(mSize, fmt);
+
+  for (int y = 0; y < mSize.height; y++) {
+    memcpy(newSurf->GetData() + newSurf->Stride() * y,
+           mData + mStride * y,
+           mSize.width * 4);
+  }
+
+  return newSurf;
+}
+
 } // namespace
 } // namespace
