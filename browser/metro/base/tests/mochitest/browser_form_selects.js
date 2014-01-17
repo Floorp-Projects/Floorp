@@ -35,7 +35,9 @@ gTests.push({
       sendNativeTap(node);
     }
 
-    yield waitForMs(100);
+    yield waitForCondition2(function () {
+      return Browser.selectedTab.browser.contentWindow.document.getElementById("opt9").selected;
+      }, "waiting for last option to select");
 
     // check the menu state
     for (let node of SelectHelperUI._listbox.childNodes) {
@@ -53,7 +55,9 @@ gTests.push({
       sendNativeTap(node);
     }
 
-    yield waitForMs(100);
+    yield waitForCondition2(function () {
+      return !Browser.selectedTab.browser.contentWindow.document.getElementById("opt9").selected;
+      }, "waiting for last option to deselect");
 
     // check the menu state
     for (let node of SelectHelperUI._listbox.childNodes) {
