@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMEventListener.h"
 #include "DictionaryHelpers.h"
 #include "ICameraControl.h"
 #include "DOMCameraPreview.h"
@@ -17,7 +16,6 @@
 #include "AudioChannelAgent.h"
 #include "nsProxyRelease.h"
 #include "nsHashPropertyBag.h"
-#include "DeviceStorage.h"
 
 class nsDOMDeviceStorage;
 class nsPIDOMWindow;
@@ -30,12 +28,11 @@ template<typename T> class Optional;
 class ErrorResult;
 
 // Main camera control.
-class nsDOMCameraControl MOZ_FINAL : public nsIDOMEventListener,
+class nsDOMCameraControl MOZ_FINAL : public nsISupports,
                                      public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCameraControl)
 
   nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread,
@@ -109,11 +106,6 @@ private:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   nsresult NotifyRecordingStatusChange(const nsString& aMsg);
-
-  mozilla::idl::CameraStartRecordingOptions mOptions;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
-  nsCOMPtr<nsICameraStartRecordingCallback> mOnSuccessCb;
-  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
 
 protected:
   /* additional members */
