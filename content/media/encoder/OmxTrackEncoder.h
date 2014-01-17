@@ -10,12 +10,13 @@
 
 namespace android {
 class OMXVideoEncoder;
+class OMXAudioEncoder;
 }
 
 /**
  * There are two major classes defined in file OmxTrackEncoder;
  * OmxVideoTrackEncoder and OmxAudioTrackEncoder, the video and audio track
- * encoder for media type AVC/h.264 and AAC. OMXCodecWrapper wraps and controls
+ * encoder for media type AVC/H.264 and AAC. OMXCodecWrapper wraps and controls
  * an instance of MediaCodec, defined in libstagefright, runs on Android Jelly
  * Bean platform.
  */
@@ -38,6 +39,27 @@ protected:
 
 private:
   nsAutoPtr<android::OMXVideoEncoder> mEncoder;
+};
+
+class OmxAudioTrackEncoder MOZ_FINAL : public AudioTrackEncoder
+{
+public:
+  OmxAudioTrackEncoder()
+    : AudioTrackEncoder()
+  {}
+
+  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
+
+protected:
+  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+
+private:
+  // Append encoded frames to aContainer.
+  nsresult AppendEncodedFrames(EncodedFrameContainer& aContainer);
+
+  nsAutoPtr<android::OMXAudioEncoder> mEncoder;
 };
 
 }
