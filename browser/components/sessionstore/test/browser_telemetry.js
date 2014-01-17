@@ -9,7 +9,7 @@ let {SessionFile, TabStateCache} = tmp;
 
 // Shortcuts for histogram names
 let Keys = {};
-for (let k of ["HISTORY", "FORMDATA", "OPEN_WINDOWS", "CLOSED_WINDOWS", "CLOSED_TABS_IN_OPEN_WINDOWS", "DOM_STORAGE", "POSTDATA"]) {
+for (let k of ["HISTORY", "FORMDATA", "OPEN_WINDOWS", "CLOSED_WINDOWS", "CLOSED_TABS_IN_OPEN_WINDOWS", "DOM_STORAGE"]) {
   Keys[k] = "FX_SESSION_RESTORE_TOTAL_" + k + "_SIZE_BYTES";
 }
 
@@ -222,7 +222,7 @@ add_task(function formdata() {
 
     info("Now changing form data");
 
-    yield modifyFormData(tab.linkedBrowser, {input: "This is some form data "});
+    yield setInputValue(tab.linkedBrowser, {id: "input", value: "This is some form data"});
     SyncHandlers.get(tab.linkedBrowser).flush();
     TabStateCache.delete(tab.linkedBrowser);
 
@@ -259,8 +259,6 @@ function modifySessionStorage(browser, data) {
   return promiseContentMessage(browser, "ss-test:MozStorageChanged");
 }
 
-function modifyFormData(browser, data) {
-  browser.messageManager.sendAsyncMessage("ss-test:modifyFormData", data);
-  return promiseContentMessage(browser, "ss-test:modifyFormData:done");
+function setInputValue(browser, data) {
+  return sendMessage(browser, "ss-test:setInputValue", data);
 }
-

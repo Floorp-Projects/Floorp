@@ -613,8 +613,20 @@ const Require = iced(function Require(loader, requirer) {
     // We also freeze module to prevent it from further changes
     // at runtime.
     if (!(uri in modules)) {
+      // Many of the loader's functionalities are dependent
+      // on modules[uri] being set before loading, so we set it and 
+      // remove it if we have any errors.
       module = modules[uri] = Module(requirement, uri);
-      freeze(load(loader, module));
+      try {
+        freeze(load(loader, module));
+      }
+      catch (e) {
+        // Clear out modules cache so we can throw on a second invalid require
+        delete modules[uri];
+        // Also clear out the Sandbox that was created
+        delete loader.sandboxes[uri];
+        throw e;
+      }
     }
 
     return module.exports;

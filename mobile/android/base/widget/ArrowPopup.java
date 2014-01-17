@@ -46,7 +46,7 @@ public class ArrowPopup extends PopupWindow {
 
         final Resources res = activity.getResources();
         mArrowWidth = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = res.getDimensionPixelSize(R.dimen.menu_popup_offset);
+        mYOffset = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_offset);
 
         setAnimationStyle(R.style.PopupAnimation);
     }

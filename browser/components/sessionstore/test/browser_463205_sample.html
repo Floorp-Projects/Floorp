@@ -1,24 +1,7 @@
-<!-- Testcase originally by <moz_bug_r_a4@yahoo.com> -->
-
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Test for bug 463205</title>
+<title>bug 463205</title>
 
-<body onload="onLoad()">
-<iframe src="data:text/html;charset=utf-8,<input%20id='original'>"></iframe>
-<iframe src="browser_463205_helper.html"></iframe>
-<iframe src="data:text/html;charset=utf-8,mark1"></iframe>
-
-<script type="application/javascript">
-  function onLoad() {
-    if (frames[2].document.location.href == "data:text/html;charset-utf-8,mark1") {
-      frames[2].document.location = "data:text/html;charset=utf-8,mark2";
-    }
-    else {
-      frames[1].document.location.hash = "#original";
-      frames[0].document.location = "http://mochi.test:8888/browser/" +
-        "browser/components/sessionstore/test/browser_463205_helper.html";
-    }
-  }
-</script>
+<body>
+  <input type="text" id="text" />
 </body>

@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cc, Ci } = require('chrome');
-const { Symbiont } = require('sdk/content/symbiont');
+const { Symbiont } = require('sdk/deprecated/symbiont');
 const self = require('sdk/self');
 const fixtures = require("./fixtures");
 const { close } = require('sdk/window/helpers');
