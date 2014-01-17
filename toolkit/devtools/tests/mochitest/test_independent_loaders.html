@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      const { utils: Cu } = Components;
+
+      const { DevToolsLoader } =
+        Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+
+      /**
+       * Ensure that each instance of the Dev Tools loader contains its own
+       * loader instance, and also returns unique objects.  This ensures there
+       * is no sharing in place between loaders.
+       */
+      let loader1 = new DevToolsLoader();
+      let loader2 = new DevToolsLoader();
+
+      let color1 = loader1.require("devtools/css-color");
+      let color2 = loader2.require("devtools/css-color");
+
+      ok(color1 !== color2, "Loaded objects should be unique");
+
+      ok(loader1._provider !== loader2._provider,
+        "Providers should be unique");
+      ok(loader1._provider.loader !== loader2._provider.loader,
+        "Loaders should be unique");
+    </script>
+  </body>
+</html>
