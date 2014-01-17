@@ -14,7 +14,7 @@ import org.mozilla.gecko.sync.net.BaseResource;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
 
-public class FxAccountClient20 extends FxAccountClient10 {
+public class FxAccountClient20 extends FxAccountClient10 implements FxAccountClient {
   protected static final String[] LOGIN_RESPONSE_REQUIRED_STRING_FIELDS = new String[] { JSON_KEY_UID, JSON_KEY_SESSIONTOKEN };
   protected static final String[] LOGIN_RESPONSE_REQUIRED_STRING_FIELDS_KEYS = new String[] { JSON_KEY_UID, JSON_KEY_SESSIONTOKEN, JSON_KEY_KEYFETCHTOKEN, };
   protected static final String[] LOGIN_RESPONSE_REQUIRED_BOOLEAN_FIELDS = new String[] { JSON_KEY_VERIFIED };

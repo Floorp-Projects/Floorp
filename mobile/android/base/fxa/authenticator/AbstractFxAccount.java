@@ -40,11 +40,14 @@ public interface AbstractFxAccount {
    */
   public String getServerURI();
 
+  public boolean isValid();
+  public void setInvalid();
+
   public byte[] getSessionToken();
   public byte[] getKeyFetchToken();
 
-  public void invalidateSessionToken();
-  public void invalidateKeyFetchToken();
+  public void setSessionToken(byte[] token);
+  public void setKeyFetchToken(byte[] token);
 
   /**
    * Return true if and only if this account is guaranteed to be verified. This
@@ -77,4 +80,13 @@ public interface AbstractFxAccount {
   public void setWrappedKb(byte[] wrappedKb);
 
   BrowserIDKeyPair getAssertionKeyPair() throws GeneralSecurityException;
+
+  public String getCertificate();
+  public void setCertificate(String certificate);
+
+  public String getAssertion();
+  public void setAssertion(String assertion);
+
+  public byte[] getEmailUTF8();
+  public byte[] getQuickStretchedPW();
 }

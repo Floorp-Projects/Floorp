@@ -5,14 +5,14 @@
 package org.mozilla.gecko.fxa.sync;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
+import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
@@ -129,16 +129,16 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
       final AndroidFxAccount fxAccount = new AndroidFxAccount(getContext(), account);
 
-      if (Logger.LOG_PERSONAL_INFORMATION) {
-        ExtendedJSONObject o = new AndroidFxAccount(getContext(), account).toJSONObject();
-        ArrayList<String> list = new ArrayList<String>(o.keySet());
-        Collections.sort(list);
-        for (String key : list) {
-          Logger.pii(LOG_TAG, key + ": " + o.getString(key));
-        }
+      if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+        fxAccount.dump();
       }
 
+      final SharedPreferences sharedPrefs = getContext().getSharedPreferences(FxAccountConstants.PREFS_PATH, Context.MODE_PRIVATE); // TODO Ensure preferences are per-Account.
+
       final FxAccountLoginPolicy loginPolicy = new FxAccountLoginPolicy(getContext(), fxAccount, executor);
+      loginPolicy.certificateDurationInMilliseconds = 20 * 60 * 1000;
+      loginPolicy.assertionDurationInMilliseconds = 15 * 60 * 1000;
+      Logger.info(LOG_TAG, "Asking for certificates to expire after 20 minutes and assertions to expire after 15 minutes.");
 
       loginPolicy.login(authEndpoint, new FxAccountLoginDelegate() {
         @Override
@@ -147,12 +147,12 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
             @Override
             public void handleSuccess(final TokenServerToken token) {
-              Logger.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+              FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+              sharedPrefs.edit().putLong("tokenFailures", 0).commit();
 
               final BaseGlobalSessionCallback callback = new SessionCallback(latch);
               FxAccountGlobalSession globalSession = null;
               try {
-                SharedPreferences sharedPrefs = getContext().getSharedPreferences(FxAccountConstants.PREFS_PATH, Context.MODE_PRIVATE);
                 ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
                 final KeyBundle syncKeyBundle = FxAccountUtils.generateSyncKeyBundle(fxAccount.getKb()); // TODO Document this choice for deriving from kB.
                 AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false);
@@ -166,6 +166,21 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
             @Override
             public void handleFailure(TokenServerException e) {
+              // This is tricky since the token server fairly
+              // consistently rejects a token the first time it sees it
+              // before accepting it for the rest of its lifetime.
+              long MAX_TOKEN_FAILURES_PER_TOKEN = 2;
+              long tokenFailures = 1 + sharedPrefs.getLong("tokenFailures", 0);
+              if (tokenFailures > MAX_TOKEN_FAILURES_PER_TOKEN) {
+                fxAccount.setCertificate(null);
+                tokenFailures = 0;
+                Logger.warn(LOG_TAG, "Seen too many failures with this token; resetting: " + tokenFailures);
+                Logger.warn(LOG_TAG, "To aid debugging, synchronously sending assertion to remote verifier for second look.");
+                debugAssertion(tokenServerEndpoint, assertion);
+              } else {
+                Logger.info(LOG_TAG, "Seen " + tokenFailures + " failures with this token so far.");
+              }
+              sharedPrefs.edit().putLong("tokenFailures", tokenFailures).commit();
               handleError(e);
             }
 
@@ -188,6 +203,36 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Got error syncing.", e);
       latch.countDown();
+    }
+  }
+
+  protected void debugAssertion(String audience, String assertion) {
+    final CountDownLatch verifierLatch = new CountDownLatch(1);
+    BrowserIDRemoteVerifierClient client = new BrowserIDRemoteVerifierClient(URI.create(BrowserIDRemoteVerifierClient.DEFAULT_VERIFIER_URL));
+    client.verify(audience, assertion, new BrowserIDVerifierDelegate() {
+      @Override
+      public void handleSuccess(ExtendedJSONObject response) {
+        Logger.info(LOG_TAG, "Remote verifier returned success: " + response.toJSONString());
+        verifierLatch.countDown();
+      }
+
+      @Override
+      public void handleFailure(ExtendedJSONObject response) {
+        Logger.warn(LOG_TAG, "Remote verifier returned failure: " + response.toJSONString());
+        verifierLatch.countDown();
+      }
+
+      @Override
+      public void handleError(Exception e) {
+        Logger.error(LOG_TAG, "Remote verifier returned error.", e);
+        verifierLatch.countDown();
+      }
+    });
+
+    try {
+      verifierLatch.await();
+    } catch (InterruptedException e) {
+      Logger.error(LOG_TAG, "Got error.", e);
     }
   }
 }
