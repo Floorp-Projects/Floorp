@@ -212,17 +212,12 @@ void StopSSLServerCertVerificationThreads()
 namespace {
 
 void
-LogInvalidCertError(TransportSecurityInfo *socketInfo, 
-                    const nsACString &host, 
-                    const nsACString &hostWithPort,
-                    int32_t port,
+LogInvalidCertError(TransportSecurityInfo *socketInfo,
                     PRErrorCode errorCode,
-                    ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                    nsIX509Cert* ix509)
+                    ::mozilla::psm::SSLErrorMessageType errorMessageType)
 {
   nsString message;
   socketInfo->GetErrorLogMessage(errorCode, errorMessageType, message);
-  
   if (!message.IsEmpty()) {
     nsContentUtils::LogSimpleConsoleError(message, "SSL");
   }
@@ -424,12 +419,8 @@ CertErrorRunnable::CheckCertOverrides()
                                         OverridableCertErrorMessage);
 
   LogInvalidCertError(mInfoObject,
-                      mInfoObject->GetHostName(),
-                      hostWithPortString,
-                      port,
                       result->mErrorCode,
-                      result->mErrorMessageType,
-                      mCert);
+                      result->mErrorMessageType);
 
   return result;
 }
