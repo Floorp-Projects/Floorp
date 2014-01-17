@@ -54,13 +54,6 @@ self.onmessage = function (msg) {
 };
 
 let Agent = {
-  // The initial session string as read from disk.
-  initialState: null,
-
-  // Boolean that tells whether we already wrote
-  // the loadState to disk once after startup.
-  hasWrittenLoadStateOnce: false,
-
   // Boolean that tells whether we already made a
   // call to write(). We will only attempt to move
   // sessionstore.js to sessionstore.bak on the
@@ -83,10 +76,9 @@ let Agent = {
         let durationMs = Date.now();
         let bytes = File.read(path);
         durationMs = Date.now() - durationMs;
-        this.initialState = Decoder.decode(bytes);
 
         return {
-          result: this.initialState,
+          result: Decoder.decode(bytes),
           telemetry: {FX_SESSION_RESTORE_READ_FILE_MS: durationMs,
                       FX_SESSION_RESTORE_FILE_SIZE_BYTES: bytes.byteLength}
         };
@@ -138,37 +130,6 @@ let Agent = {
    */
   gatherTelemetry: function (stateString) {
     return Statistics.collect(stateString);
-  },
-
-  /**
-   * Writes the session state to disk again but changes session.state to
-   * 'running' before doing so. This is intended to be called only once, shortly
-   * after startup so that we detect crashes on startup correctly.
-   */
-  writeLoadStateOnceAfterStartup: function (loadState) {
-    if (this.hasWrittenLoadStateOnce) {
-      throw new Error("writeLoadStateOnceAfterStartup() must only be called once.");
-    }
-
-    if (!this.initialState) {
-      throw new Error("writeLoadStateOnceAfterStartup() must not be called " +
-                      "without a valid session state or before it has been " +
-                      "read from disk.");
-    }
-
-    // Make sure we can't call this function twice.
-    this.hasWrittenLoadStateOnce = true;
-
-    let state;
-    try {
-      state = JSON.parse(this.initialState);
-    } finally {
-      this.initialState = null;
-    }
-
-    state.session = state.session || {};
-    state.session.state = loadState;
-    return this._write(JSON.stringify(state));
   },
 
   /**
