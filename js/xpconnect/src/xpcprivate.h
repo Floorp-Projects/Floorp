@@ -345,9 +345,6 @@ protected:
     nsXPConnect();
 
 private:
-    static PRThread* FindMainThread();
-
-private:
     // Singleton instance
     static nsXPConnect*      gSelf;
     static bool              gOnceAliveNowDead;
