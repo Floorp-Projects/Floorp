@@ -3846,9 +3846,8 @@ JS_InitDestroyPrincipalsCallback(JSRuntime *rt, JSDestroyPrincipalsOp destroyPri
 
 JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
-               JSObject *parentArg, const char *name)
+               HandleObject parent, const char *name)
 {
-    RootedObject parent(cx, parentArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     AssertHeapIsIdle(cx);
@@ -3867,10 +3866,9 @@ JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parentArg,
-                   jsid id)
+JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
+                   HandleObject parent, HandleId id)
 {
-    RootedObject parent(cx, parentArg);
     JS_ASSERT(JSID_IS_STRING(id));
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     JS_ASSERT(native);
@@ -3884,7 +3882,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS::GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, jsid id, unsigned nargs)
+JS::GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, HandleId id, unsigned nargs)
 {
     JS_ASSERT(JSID_IS_STRING(id));
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -3902,10 +3900,10 @@ JS::GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, jsid id, un
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
+JS_CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject parentArg)
 {
-    RootedObject funobj(cx, funobjArg);
     RootedObject parent(cx, parentArg);
+
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
@@ -4003,9 +4001,8 @@ JS_IsConstructor(JSFunction *fun)
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_BindCallable(JSContext *cx, JSObject *targetArg, JSObject *newThis)
+JS_BindCallable(JSContext *cx, HandleObject target, HandleObject newThis)
 {
-    RootedObject target(cx, targetArg);
     RootedValue thisArg(cx, ObjectValue(*newThis));
     return js_fun_bind(cx, target, thisArg, nullptr, 0);
 }
@@ -4039,14 +4036,13 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
+JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, objArg);
+    assertSameCompartment(cx, obj);
 
-    RootedObject obj(cx, objArg);
     RootedObject ctor(cx);
 
     for (; fs->name; fs++) {
@@ -4491,9 +4487,8 @@ JS_CompileUCScript(JSContext *cx, JS::HandleObject obj, const jschar *chars,
 }
 
 JS_PUBLIC_API(bool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, size_t length)
+JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, size_t length)
 {
-    RootedObject obj(cx, objArg);
     bool result;
     JSExceptionState *exnState;
     JSErrorReporter older;
@@ -4621,13 +4616,12 @@ JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileScript(JSContext *cx, JSScript *scriptArg, const char *name, unsigned indent)
+JS_DecompileScript(JSContext *cx, HandleScript script, const char *name, unsigned indent)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    RootedScript script(cx, scriptArg);
     script->ensureNonLazyCanonicalFunction(cx);
     RootedFunction fun(cx, script->functionNonDelazifying());
     if (fun)
@@ -4639,24 +4633,22 @@ JS_DecompileScript(JSContext *cx, JSScript *scriptArg, const char *name, unsigne
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunction(JSContext *cx, JSFunction *funArg, unsigned indent)
+JS_DecompileFunction(JSContext *cx, HandleFunction fun, unsigned indent)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, funArg);
-    RootedFunction fun(cx, funArg);
+    assertSameCompartment(cx, fun);
     return FunctionToString(cx, fun, false, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunctionBody(JSContext *cx, JSFunction *funArg, unsigned indent)
+JS_DecompileFunctionBody(JSContext *cx, HandleFunction fun, unsigned indent)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, funArg);
-    RootedFunction fun(cx, funArg);
+    assertSameCompartment(cx, fun);
     return FunctionToString(cx, fun, true, !(indent & JS_DONT_PRETTY_PRINT));
 }
 

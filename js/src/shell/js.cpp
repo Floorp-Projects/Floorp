@@ -3675,14 +3675,15 @@ NestedShell(JSContext *cx, unsigned argc, jsval *vp)
 
 static bool
 DecompileFunctionSomehow(JSContext *cx, unsigned argc, Value *vp,
-                         JSString *(*decompiler)(JSContext *, JSFunction *, unsigned))
+                         JSString *(*decompiler)(JSContext *, HandleFunction, unsigned))
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
-    JSString *result = decompiler(cx, &args[0].toObject().as<JSFunction>(), 0);
+    RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
+    JSString *result = decompiler(cx, fun, 0);
     if (!result)
         return false;
     args.rval().setString(result);
