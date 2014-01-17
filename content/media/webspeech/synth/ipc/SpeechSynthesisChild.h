@@ -58,8 +58,6 @@ protected:
 
   virtual bool RecvOnResume(const float& aElapsedTime, const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
-  virtual bool RecvOnError(const float& aElapsedTime, const uint32_t& aCharIndex);
-
   virtual bool RecvOnBoundary(const nsString& aName, const float& aElapsedTime,
                               const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
