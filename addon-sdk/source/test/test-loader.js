@@ -218,4 +218,36 @@ exports['test require .json, .json.js'] = function (assert) {
     'js modules are cached whether access via .json.js or .json');
 };
 
+exports['test invisibleToDebugger: false'] = function (assert) {
+  let uri = root + '/fixtures/loader/cycles/';
+  let loader = Loader({ paths: { '': uri } });
+  main(loader, 'main');
+
+  let dbg = new Debugger();
+  let sandbox = loader.sandboxes[uri + 'main.js'];
+
+  try {
+    dbg.addDebuggee(sandbox);
+    assert.ok(true, 'debugger added visible value');
+  } catch(e) {
+    assert.fail('debugger could not add visible value');
+  }
+};
+
+exports['test invisibleToDebugger: true'] = function (assert) {
+  let uri = root + '/fixtures/loader/cycles/';
+  let loader = Loader({ paths: { '': uri }, invisibleToDebugger: true });
+  main(loader, 'main');
+
+  let dbg = new Debugger();
+  let sandbox = loader.sandboxes[uri + 'main.js'];
+
+  try {
+    dbg.addDebuggee(sandbox);
+    assert.fail('debugger added invisible value');
+  } catch(e) {
+    assert.ok(true, 'debugger did not add invisible value');
+  }
+};
+
 require('test').run(exports);
