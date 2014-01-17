@@ -1235,6 +1235,20 @@ org.mozilla.sysinfo.sysinfo
 This measurement contains basic information about the system the application
 is running on.
 
+Version 2
+^^^^^^^^^
+
+This version debuted with Firefox 29 on desktop.
+
+A single property was introduced.
+
+isWow64
+   If present, this property indicates whether the machine supports WoW64.
+   This property can be used to identify whether the host machine is 64-bit.
+
+   This property is only present on Windows machines. It is the preferred way
+   to identify 32- vs 64-bit support in that environment.
+
 Version 1
 ^^^^^^^^^
 
@@ -1255,7 +1269,8 @@ name
 version
     OS version.
 architecture
-    OS architecture.
+    OS architecture that the application is built for. This is not the
+    actual system architecture.
 
 Example
 ^^^^^^^
