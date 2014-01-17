@@ -12,9 +12,9 @@ interface nsIXPCException : nsIException
 {
     // inherits methods from nsIException
 
-    void initialize(in AUTF8String      aMessage,
+    void initialize(in string           aMessage,
                     in nsresult         aResult,
-                    in AUTF8String      aName,
+                    in string           aName,
                     in nsIStackFrame    aLocation,
                     in nsISupports      aData,
                     in nsIException     aInner);

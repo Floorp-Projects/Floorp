@@ -29,11 +29,11 @@ DOMError::DOMError(nsPIDOMWindow* aWindow)
 DOMError::DOMError(nsPIDOMWindow* aWindow, nsresult aValue)
   : mWindow(aWindow)
 {
-  nsCString name, message;
-  NS_GetNameAndMessageForDOMNSResult(aValue, name, message);
+  const char *name, *message;
+  NS_GetNameAndMessageForDOMNSResult(aValue, &name, &message);
 
-  CopyUTF8toUTF16(name, mName);
-  CopyUTF8toUTF16(message, mMessage);
+  mName = NS_ConvertASCIItoUTF16(name);
+  mMessage = NS_ConvertASCIItoUTF16(message);
 
   SetIsDOMBinding();
 }
