@@ -265,10 +265,10 @@ private:
         nsConnectionEntry(nsHttpConnectionInfo *ci);
         ~nsConnectionEntry();
 
-        nsHttpConnectionInfo        *mConnInfo;
-        nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
-        nsTArray<nsHttpConnection*>  mActiveConns; // active connections
-        nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
+        nsRefPtr<nsHttpConnectionInfo> mConnInfo;
+        nsTArray<nsRefPtr<nsHttpTransaction> > mPendingQ;    // pending transaction queue
+        nsTArray<nsRefPtr<nsHttpConnection> >  mActiveConns; // active connections
+        nsTArray<nsRefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
 
         // calculate the number of half open sockets that have not had at least 1
@@ -379,16 +379,18 @@ private:
     // need for consumer code to know when to give the connection back to the
     // connection manager.
     //
-    class nsConnectionHandle : public nsAHttpConnection
+    class nsConnectionHandle MOZ_FINAL : public nsAHttpConnection
     {
     public:
         NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSAHTTPCONNECTION(mConn)
 
-        nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
+        nsConnectionHandle(nsHttpConnection *conn) : mConn(conn) { }
         virtual ~nsConnectionHandle();
+        void Reset() { mConn = nullptr; }
 
-        nsHttpConnection *mConn;
+    private:
+        nsRefPtr<nsHttpConnection> mConn;
     };
 
     // nsHalfOpenSocket is used to hold the state of an opening TCP socket
@@ -520,6 +522,8 @@ private:
     void     StartedConnect();
     void     RecvdConnect();
 
+    static void InsertTransactionSorted(nsTArray<nsRefPtr<nsHttpTransaction> > &,
+                                        nsHttpTransaction *);
     nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *);
 
     nsresult MakeNewConnection(nsConnectionEntry *ent,

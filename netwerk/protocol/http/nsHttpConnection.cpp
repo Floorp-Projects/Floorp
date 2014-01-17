@@ -80,12 +80,12 @@ nsHttpConnection::nsHttpConnection()
     , mResponseTimeoutEnabled(false)
     , mTCPKeepaliveConfig(kTCPKeepaliveDisabled)
 {
-    LOG(("Creating nsHttpConnection @%x\n", this));
+    LOG(("Creating nsHttpConnection @%p\n", this));
 }
 
 nsHttpConnection::~nsHttpConnection()
 {
-    LOG(("Destroying nsHttpConnection @%x\n", this));
+    LOG(("Destroying nsHttpConnection @%p\n", this));
 
     ReportDataUsage(false);
     if (!mEverUsedSpdy) {
@@ -313,7 +313,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     nsresult rv;
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    LOG(("nsHttpConnection::Activate [this=%p trans=%x caps=%x]\n",
+    LOG(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
          this, trans, caps));
 
     if (!trans->IsNullTransaction())
@@ -1247,7 +1247,7 @@ nsHttpConnection::EndIdleMonitoring()
 void
 nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%x reason=%x]\n",
+    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%p reason=%x]\n",
         this, trans, reason));
 
     MOZ_ASSERT(trans == mTransaction, "wrong transaction");
@@ -1810,6 +1810,7 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 
         if (!CanReuse()) {
             LOG(("Server initiated close of idle conn %p\n", this));
+            // CloseIdleConnection may delete "this" - return immediately
             gHttpHandler->ConnMgr()->CloseIdleConnection(this);
             return NS_OK;
         }
