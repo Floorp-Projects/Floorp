@@ -20,11 +20,6 @@ struct SuccessResponse
 {
 };
 
-struct FileDescriptorResponse
-{
-  FileDescriptor fileDescriptor;
-};
-
 struct BlobResponse
 {
   PBlob blob;
@@ -67,7 +62,6 @@ union DeviceStorageResponseValue
 {
   ErrorResponse;
   SuccessResponse;
-  FileDescriptorResponse;
   BlobResponse;
   EnumerationResponse;
   FreeSpaceStorageResponse;

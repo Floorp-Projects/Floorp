@@ -7,15 +7,12 @@
 #define mozilla_dom_devicestorage_DeviceStorageRequestChild_h
 
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
+#include "DOMRequest.h"
 
 class DeviceStorageFile;
-class DeviceStorageFileDescriptor;
 
 namespace mozilla {
 namespace dom {
-
-class DOMRequest;
-
 namespace devicestorage {
 
 class DeviceStorageRequestChildCallback
@@ -29,8 +26,6 @@ class DeviceStorageRequestChild : public PDeviceStorageRequestChild
 public:
   DeviceStorageRequestChild();
   DeviceStorageRequestChild(DOMRequest* aRequest, DeviceStorageFile* aFile);
-  DeviceStorageRequestChild(DOMRequest* aRequest, DeviceStorageFile* aFile,
-                            DeviceStorageFileDescriptor* aFileDescrptor);
   ~DeviceStorageRequestChild();
 
   void SetCallback(class DeviceStorageRequestChildCallback *aCallback);
@@ -39,8 +34,7 @@ public:
 
 private:
   nsRefPtr<DOMRequest> mRequest;
-  nsRefPtr<DeviceStorageFile> mDSFile;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
+  nsRefPtr<DeviceStorageFile> mFile;
 
   DeviceStorageRequestChildCallback* mCallback;
 };
