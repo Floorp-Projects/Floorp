@@ -111,6 +111,7 @@
 #define MULTIPART_ALTERNATIVE               "multipart/alternative"
 #define MULTIPART_APPLEDOUBLE               "multipart/appledouble"
 #define MULTIPART_DIGEST                    "multipart/digest"
+#define MULTIPART_FORM_DATA                 "multipart/form-data"
 #define MULTIPART_HEADER_SET                "multipart/header-set"
 #define MULTIPART_MIXED                     "multipart/mixed"
 #define MULTIPART_PARALLEL                  "multipart/parallel"
