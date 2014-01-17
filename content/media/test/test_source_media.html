@@ -32,9 +32,11 @@
     SimpleTest.finish();
   } else {
     var v = document.createElement('video');
+    v.preload = "auto";
     v.innerHTML = "<source src=\"" + media.name + "?fail\" media=\"not all\">" +
                   "<source src=\""+ media.name + "?pass\" media=\"all\">";
     var v2 = document.createElement("video");
+    v2.preload = "auto";
     v2.innerHTML = "<source src=\""+ media.name +"?pass\">" +
                    "<source src=\""+ media.name + "?fail\" media=\"all\">";
     document.body.appendChild(v);
