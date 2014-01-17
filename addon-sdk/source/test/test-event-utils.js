@@ -5,7 +5,7 @@
 'use strict';
 
 const { on, emit } = require("sdk/event/core");
-const { filter, map, merge, expand, pipe } = require("sdk/event/utils");
+const { filter, map, merge, expand, pipe, stripListeners } = require("sdk/event/utils");
 const $ = require("./event/helpers");
 
 function isEven(x) !(x % 2)
@@ -168,7 +168,7 @@ exports["test expand"] = function(assert) {
 exports["test pipe"] = function (assert, done) {
   let src = {};
   let dest = {};
-  
+
   let aneventCount = 0, multiargsCount = 0;
   let wildcardCount = {};
 
@@ -184,7 +184,7 @@ exports["test pipe"] = function (assert, done) {
     ++multiargsCount;
     check();
   });
-  
+
   on(dest, '*', (name, ...data) => {
     wildcardCount[name] = (wildcardCount[name] || 0) + 1;
     if (name === 'multiargs') {
@@ -201,12 +201,12 @@ exports["test pipe"] = function (assert, done) {
 
   for (let i = 0; i < 3; i++)
     emit(src, 'an-event', 'my-arg');
-  
+
   emit(src, 'multiargs', 'a', 'b', 'c');
 
   function check () {
     if (aneventCount === 3 && multiargsCount === 1 &&
-        wildcardCount['an-event'] === 3 && 
+        wildcardCount['an-event'] === 3 &&
         wildcardCount['multiargs'] === 1)
       done();
   }
@@ -237,7 +237,7 @@ exports["test pipe multiple targets"] = function (assert) {
   assert.equal(middleFired, 1, 'event passes through the middle of pipe chain');
   assert.equal(destFired, 1, 'event propagates to end of pipe chain');
   assert.equal(src2Fired, 0, 'event does not fire on alternative chain routes');
-  
+
   emit(src2, 'ev');
   assert.equal(src2Fired, 1, 'event triggers in source in pipe chain');
   assert.equal(middleFired, 2,
@@ -245,7 +245,7 @@ exports["test pipe multiple targets"] = function (assert) {
   assert.equal(destFired, 2,
     'event propagates to end of pipe chain from different src');
   assert.equal(src1Fired, 1, 'event does not fire on alternative chain routes');
-  
+
   emit(middle, 'ev');
   assert.equal(middleFired, 3,
     'event triggers in source of pipe chain');
@@ -253,6 +253,30 @@ exports["test pipe multiple targets"] = function (assert) {
     'event propagates to end of pipe chain from middle src');
   assert.equal(src1Fired, 1, 'event does not fire on alternative chain routes');
   assert.equal(src2Fired, 1, 'event does not fire on alternative chain routes');
+};
+
+exports['test stripListeners'] = function (assert) {
+  var options = {
+    onAnEvent: noop1,
+    onMessage: noop2,
+    verb: noop1,
+    value: 100
+  };
+
+  var stripped = stripListeners(options);
+  assert.ok(stripped !== options, 'stripListeners should return a new object');
+  assert.equal(options.onAnEvent, noop1, 'stripListeners does not affect original');
+  assert.equal(options.onMessage, noop2, 'stripListeners does not affect original');
+  assert.equal(options.verb, noop1, 'stripListeners does not affect original');
+  assert.equal(options.value, 100, 'stripListeners does not affect original');
+
+  assert.ok(!stripped.onAnEvent, 'stripListeners removes `on*` values');
+  assert.ok(!stripped.onMessage, 'stripListeners removes `on*` values');
+  assert.equal(stripped.verb, noop1, 'stripListeners leaves not `on*` values');
+  assert.equal(stripped.value, 100, 'stripListeners leaves not `on*` values');
+
+  function noop1 () {}
+  function noop2 () {}
 };
 
 require('test').run(exports);

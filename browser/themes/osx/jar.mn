@@ -152,6 +152,8 @@ browser.jar:
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar@2x.png       (places/bookmarksToolbar@2x.png)
+  skin/classic/browser/places/bookmarksToolbar-menuPanel.png    (places/bookmarksToolbar-menuPanel.png)
+  skin/classic/browser/places/bookmarksToolbar-menuPanel@2x.png (places/bookmarksToolbar-menuPanel@2x.png)
   skin/classic/browser/places/history.png                   (places/history.png)
   skin/classic/browser/places/history@2x.png                (places/history@2x.png)
   skin/classic/browser/places/star-icons.png                (places/star-icons.png)

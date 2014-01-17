@@ -1,50 +1,53 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  /** Test for Bug 454908 **/
+"use strict";
 
-  waitForExplicitFinish();
+let tmp = {};
+Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
+let {SessionSaver} = tmp;
 
-  let fieldValues = {
-    username: "User " + Math.random(),
-    passwd:   "pwd" + Date.now()
-  };
+const URL = ROOT + "browser_454908_sample.html";
+const PASS = "pwd-" + Math.random();
 
-  // make sure we do save form data
-  gPrefService.setIntPref("browser.sessionstore.privacy_level", 0);
+/**
+ * Bug 454908 - Don't save/restore values of password fields.
+ */
+add_task(function test_dont_save_passwords() {
+  // Make sure we do save form data.
+  Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
 
-  let rootDir = getRootDirectory(gTestPath);
-  let testURL = rootDir + "browser_454908_sample.html";
-  let tab = gBrowser.addTab(testURL);
-  whenBrowserLoaded(tab.linkedBrowser, function() {
-    let doc = tab.linkedBrowser.contentDocument;
-    for (let id in fieldValues)
-      doc.getElementById(id).value = fieldValues[id];
+  // Add a tab with a password field.
+  let tab = gBrowser.addTab(URL);
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
 
-    gBrowser.removeTab(tab);
+  // Fill in some values.
+  let usernameValue = "User " + Math.random();
+  yield setInputValue(browser, {id: "username", value: usernameValue});
+  yield setInputValue(browser, {id: "passwd", value: PASS});
 
-    tab = undoCloseTab();
-    whenTabRestored(tab, function() {
-      let doc = tab.linkedBrowser.contentDocument;
-      for (let id in fieldValues) {
-        let node = doc.getElementById(id);
-        if (node.type == "password")
-          is(node.value, "", "password wasn't saved/restored");
-        else
-          is(node.value, fieldValues[id], "username was saved/restored");
-      }
+  // Close and restore the tab.
+  gBrowser.removeTab(tab);
+  tab = ss.undoCloseTab(window, 0);
+  browser = tab.linkedBrowser;
+  yield promiseTabRestored(tab);
 
-      // clean up
-      if (gPrefService.prefHasUserValue("browser.sessionstore.privacy_level"))
-        gPrefService.clearUserPref("browser.sessionstore.privacy_level");
-      // undoCloseTab can reuse a single blank tab, so we have to
-      // make sure not to close the window when closing our last tab
-      if (gBrowser.tabs.length == 1)
-        gBrowser.addTab();
-      gBrowser.removeTab(tab);
-      finish();
-    });
-  });
-}
+  // Check that password fields aren't saved/restored.
+  let username = yield getInputValue(browser, {id: "username"});
+  is(username, usernameValue, "username was saved/restored");
+  let passwd = yield getInputValue(browser, {id: "passwd"});
+  is(passwd, "", "password wasn't saved/restored");
+
+  // Write to disk and read our file.
+  yield SessionSaver.run();
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
+  let data = yield OS.File.read(path);
+  let state = new TextDecoder().decode(data);
+
+  // Ensure that sessionstore.js doesn't contain our password.
+  is(state.indexOf(PASS), -1, "password has not been written to disk");
+
+  // Cleanup.
+  gBrowser.removeTab(tab);
+});

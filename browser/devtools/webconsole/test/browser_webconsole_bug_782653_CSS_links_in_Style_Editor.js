@@ -107,24 +107,15 @@ function onStyleEditorReady(aPanel)
 function checkStyleEditorForSheetAndLine(aHref, aLine, aCallback)
 {
   let foundEditor = null;
-  waitForSuccess({
-    name: "style editor for stylesheet",
-    validatorFn: function()
-    {
-      for (let editor of StyleEditorUI.editors) {
-        if (editor.styleSheet.href == aHref) {
-          foundEditor = editor;
-          return true;
-        }
-      }
-      return false;
-    },
-    successFn: function()
-    {
-      performLineCheck(foundEditor, aLine, aCallback);
-    },
-    failureFn: finishTest,
-  });
+  for (let editor of StyleEditorUI.editors) {
+    if (editor.styleSheet.href == aHref) {
+      foundEditor = editor;
+      break;
+    }
+  }
+
+  ok(foundEditor, "found style editor for " + aHref);
+  performLineCheck(foundEditor, aLine, aCallback);
 }
 
 function performLineCheck(aEditor, aLine, aCallback)
@@ -139,17 +130,13 @@ function performLineCheck(aEditor, aLine, aCallback)
     aCallback && executeSoon(aCallback);
   }
 
-  waitForSuccess({
-    name: "source editor load",
-    validatorFn: function()
-    {
-      return aEditor.sourceEditor;
-    },
-    successFn: checkForCorrectState,
-    failureFn: function() {
-      info("selectedStyleSheetIndex " + StyleEditorUI.selectedStyleSheetIndex
-           + " expected " + aEditor.styleSheet.styleSheetIndex);
-      finishTest();
-    },
+  info("wait for source editor to load");
+
+  // Get out of the styleeditor-selected event loop.
+  executeSoon(() => {
+    aEditor.getSourceEditor().then(() => {
+      // Get out of the editor's source-editor-load event loop.
+      executeSoon(checkForCorrectState);
+    });
   });
 }

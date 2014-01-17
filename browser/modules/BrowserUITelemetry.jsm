@@ -121,6 +121,9 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
     "zoom-out-button",
     "zoom-reset-button",
     "zoom-in-button",
+    "BMB_bookmarksPopup",
+    "BMB_unsortedBookmarksPopup",
+    "BMB_bookmarksToolbarPopup",
   ]
   return DEFAULT_ITEMS.concat(PALETTE_ITEMS)
                       .concat(SPECIAL_CASES);

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=587377
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 587377</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=587377">Mozilla Bug 587377</a>
+<p id="display"></p>
+
+<iframe id="cspframe"></iframe>
+
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+// Load locale string during mochitest
+var stringBundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
+                          .getService(SpecialPowers.Ci.nsIStringBundleService);
+var localizer = stringBundleService.createBundle("chrome://global/locale/security/csp.properties");
+var confusionMsg = localizer.formatStringFromName("hostNameMightBeKeyword", ["SELF", "self"], 2);
+
+function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+  SimpleTest.finish();
+};
+
+// To prevent the test from asserting twice and calling SimpleTest.finish() twice,
+// startTest will be marked false as soon as the confusionMsg is detected.
+startTest = false;
+SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
+  if (startTest) {
+    if (aMsg.message.indexOf(confusionMsg) > -1) {
+      startTest = false;
+      ok(true, "CSP header with a hostname similar to keyword should be warned");
+      SimpleTest.executeSoon(cleanup);
+    } else {
+      // don't see the warning yet? wait.
+      return;
+    }
+  }
+});
+
+// set up and start testing
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {'set': [["security.csp.speccompliant", true]]},
+  function() {
+    document.getElementById('cspframe').src = 'file_self_none_as_hostname_confusion.html';
+    startTest = true;
+});
+</script>
+</pre>
+</body>
+</html>
