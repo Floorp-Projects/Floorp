@@ -251,6 +251,7 @@ public:
 
 protected:
   nsresult DetermineCurrentDirection();
+  void FireInputEvent();
 
   /** create a transaction for setting aAttribute to aValue on aElement
     */
@@ -669,6 +670,10 @@ public:
   // Likewise, but gets the editor's root instead, which is different for HTML
   // editors
   virtual mozilla::dom::Element* GetEditorRoot();
+
+  // Likewise, but gets the text control element instead of the root for
+  // plaintext editors
+  mozilla::dom::Element* GetExposedRoot();
 
   // Accessor methods to flags
   bool IsPlaintextEditor() const

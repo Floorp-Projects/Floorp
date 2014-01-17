@@ -144,6 +144,10 @@ function buildEmptyCandTable(local) {
   return candTable;
 }
 
+function round00(num) {
+  return Math.round(num * 100) / 100;
+}
+
 function buildPcDiv(stats, pcDivId) {
   var newPcDiv = document.createElement('div');
 
@@ -155,6 +159,26 @@ function buildPcDiv(stats, pcDivId) {
 
   stats.forEach(function(stat) {
     if (!stat.componentId) {
+      var statDiv = document.createElement('div');
+      statDiv.appendChild(document.createElement('strong'))
+             .appendChild(document.createTextNode(stat.id));
+
+      var statsString = " " + new Date(stat.timestamp).toTimeString() +
+                        " " + stat.type + " SSRC: " + stat.ssrc;
+      if (stat.packetsReceived !== undefined) {
+        statsString += " Received: " + stat.packetsReceived + " packets";
+        if (stat.bytesReceived !== undefined) {
+          statsString += " (" + round00(stat.bytesReceived/1024) + " Kb)";
+        }
+        statsString += " Jitter: " + stat.jitter;
+      } else if (stat.packetsSent !== undefined) {
+        statsString += " Sent: " + stat.packetsSent + " packets";
+        if (stat.bytesSent !== undefined) {
+          statsString += " (" + round00(stat.bytesSent/1024) + " Kb)";
+        }
+      }
+      statDiv.appendChild(document.createTextNode(statsString));
+      newPcDiv.appendChild(statDiv);
       return;
     }
 
