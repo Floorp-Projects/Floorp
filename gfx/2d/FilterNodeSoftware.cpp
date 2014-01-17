@@ -591,9 +591,19 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
   Point sourceToDestOffset = aDestPoint - aSourceRect.TopLeft();
   Rect renderedSourceRect = Rect(outputRect).Intersect(aSourceRect);
   Rect renderedDestRect = renderedSourceRect + sourceToDestOffset;
-  aDrawTarget->DrawSurface(result, renderedDestRect,
-                           renderedSourceRect - Point(outputRect.TopLeft()),
-                           DrawSurfaceOptions(), aOptions);
+  if (result->GetFormat() == SurfaceFormat::A8) {
+    // Interpret the result as having implicitly black color channels.
+    aDrawTarget->PushClipRect(renderedDestRect);
+    aDrawTarget->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)),
+                             result,
+                             Point(outputRect.TopLeft()) + sourceToDestOffset,
+                             aOptions);
+    aDrawTarget->PopClip();
+  } else {
+    aDrawTarget->DrawSurface(result, renderedDestRect,
+                             renderedSourceRect - Point(outputRect.TopLeft()),
+                             DrawSurfaceOptions(), aOptions);
+  }
 }
 
 TemporaryRef<DataSourceSurface>
