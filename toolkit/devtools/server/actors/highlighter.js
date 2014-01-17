@@ -85,6 +85,8 @@ let HighlighterActor = protocol.ActorClass({
   showBoxModel: method(function(node, options={}) {
     if (this._isNodeValidForHighlighting(node.rawNode)) {
       this._boxModelHighlighter.show(node.rawNode, options);
+    } else {
+      this._boxModelHighlighter.hide();
     }
   }, {
     request: {
