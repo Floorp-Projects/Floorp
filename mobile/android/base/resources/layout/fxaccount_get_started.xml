@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <LinearLayout
+        android:id="@+id/intro_view"
+        style="@style/FxAccountMiddle" >
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/firefox_accounts" >
+        </TextView>
+
+        <TextView
+            style="@style/FxAccountSubHeaderItem"
+            android:text="@string/fxaccount_get_started" >
+        </TextView>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@string/fxaccount_intro_contentDescription"
+            android:src="@drawable/fxaccount_intro" >
+        </ImageView>
+
+        <TextView
+            style="@style/FxAccountTextItem"
+            android:layout_marginBottom="45dp"
+            android:text="@string/fxaccount_description" >
+        </TextView>
+
+        <Button
+            android:id="@+id/get_started_button"
+            style="@style/FxAccountButton"
+            android:layout_marginBottom="20dp"
+            android:onClick="onClickGetStarted"
+            android:text="@string/fxaccount_get_started" />
+
+        <TextView
+            android:id="@+id/old_firefox"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_old_firefox" />
+
+        <LinearLayout style="@style/FxAccountSpacer" />
+
+        <ImageView
+            style="@style/FxAccountIcon"
+            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+    </LinearLayout>
+
+</ScrollView>

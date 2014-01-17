@@ -6,7 +6,7 @@
 const { Cc, Ci } = require('chrome');
 const { setTimeout } = require('sdk/timers');
 const { Loader } = require('sdk/test/loader');
-const { onFocus, getMostRecentWindow, windows } = require('sdk/window/utils');
+const { onFocus, getMostRecentWindow, windows, isBrowser, getWindowTitle } = require('sdk/window/utils');
 const { open, close, focus } = require('sdk/window/helpers');
 const { browserWindows } = require("sdk/windows");
 const tabs = require("sdk/tabs");
@@ -14,6 +14,8 @@ const winUtils = require("sdk/deprecated/window-utils");
 const { WindowTracker } = winUtils;
 const { isPrivate } = require('sdk/private-browsing');
 const { isWindowPBSupported } = require('sdk/private-browsing/utils');
+const { viewFor } = require("sdk/view/core");
+const { defer } = require("sdk/lang/functional");
 
 // TEST: open & close window
 exports.testOpenAndCloseWindow = function(assert, done) {
@@ -418,6 +420,26 @@ exports.testWindowIteratorPrivateDefault = function(assert, done) {
 
     close(window).then(done);
   });
-}
+};
+
+exports["test getView(window)"] = function(assert, done) {
+  browserWindows.once("open", window => {
+    const view = viewFor(window);
+
+    assert.ok(view instanceof Ci.nsIDOMWindow, "view is a window");
+    assert.ok(isBrowser(view), "view is a browser window");
+    assert.equal(getWindowTitle(view), window.title,
+                 "window has a right title");
+
+    window.close();
+    // Defer handler cause window is destroyed after event is dispatched.
+    browserWindows.once("close", defer(_ => {
+      assert.equal(viewFor(window), null, "window view is gone");
+      done();
+    }));
+  });
+
+  browserWindows.open({ url: "data:text/html,<title>yo</title>" });
+};
 
 require('sdk/test').run(exports);

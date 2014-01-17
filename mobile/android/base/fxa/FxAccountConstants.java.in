@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.fxa;
 
+import org.mozilla.gecko.background.common.log.Logger;
+
 public class FxAccountConstants {
   public static final String GLOBAL_LOG_TAG = "FxAccounts";
   public static final String ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
@@ -13,4 +15,14 @@ public class FxAccountConstants {
   public static final String DEFAULT_AUTH_ENDPOINT = "http://auth.oldsync.dev.lcip.org";
 
   public static final String PREFS_PATH = "fxa.v1";
+
+  // For extra debugging.  Not final so it can be changed from Fennec, or from
+  // an add-on.
+  public static boolean LOG_PERSONAL_INFORMATION = true;
+
+  public static void pii(String tag, String message) {
+    if (LOG_PERSONAL_INFORMATION) {
+      Logger.info(tag, "$$FxA PII$$: " + message);
+    }
+  }
 }

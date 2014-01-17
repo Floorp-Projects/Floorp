@@ -371,8 +371,15 @@ NS_IMETHODIMP CacheEntry::OnFileReady(nsresult aResult, bool aIsNew)
 
   mFileStatus = aResult;
 
-  if (mState == READY)
+  if (mState == READY) {
     mHasData = true;
+
+    uint32_t frecency;
+    mFile->GetFrecency(&frecency);
+    // mFrecency is held in a double to increase computance precision.
+    // It is ok to persist frecency only as a uint32 with some math involved.
+    mFrecency = INT2FRECENCY(frecency);
+  }
 
   InvokeCallbacks();
   return NS_OK;
@@ -1459,8 +1466,8 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
     #define M_LN2 0.69314718055994530942
     #endif
 
-    // Half-life is 90 days.
-    static double const half_life = 90.0 * (24 * 60 * 60);
+    // Half-life is dynamic, in seconds.
+     static double half_life = CacheObserver::HalfLifeSeconds();
     // Must convert from seconds to milliseconds since PR_Now() gives usecs.
     static double const decay = (M_LN2 / half_life) / static_cast<double>(PR_USEC_PER_SEC);
 
@@ -1475,6 +1482,12 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
       mFrecency = log(exp(mFrecency - now_decay) + 1) + now_decay;
     }
     LOG(("CacheEntry FRECENCYUPDATE [this=%p, frecency=%1.10f]", this, mFrecency));
+
+    // Because CacheFile::Set*() are not thread-safe to use (uses WeakReference that
+    // is not thread-safe) we must post to the main thread...
+    nsRefPtr<nsRunnableMethod<CacheEntry> > event =
+      NS_NewRunnableMethod(this, &CacheEntry::StoreFrecency);
+    NS_DispatchToMainThread(event);
   }
 
   if (aOperations & Ops::REGISTER) {
@@ -1495,6 +1508,14 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
     mozilla::MutexAutoLock lock(mLock);
     InvokeCallbacks();
   }
+}
+
+void CacheEntry::StoreFrecency()
+{
+  // No need for thread safety over mFrecency, it will be rewriten
+  // correctly on following invocation if broken by concurrency.
+  MOZ_ASSERT(NS_IsMainThread());
+  mFile->SetFrecency(FRECENCY2INT(mFrecency));
 }
 
 // CacheOutputCloseListener

@@ -1,8 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-  <style name="FxAccountTheme" parent="@style/Gecko" />
+
+    <style name="FxAccountTheme" parent="@style/Gecko" />
+
+    <style name="FxAccountMiddle">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:paddingTop">25dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingBottom">15dp</item>
+    </style>
+
+    <style name="FxAccountSpacer">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="FxAccountHeaderItem" parent="@style/FxAccountTextItem">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:layout_marginBottom">10dp</item>
+    </style>
+
+    <style name="FxAccountSubHeaderItem" parent="@style/FxAccountTextItem">
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginBottom">45dp</item>
+    </style>
+
+    <style name="FxAccountTextItem" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textColor">@color/fxaccount_textColor</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="FxAccountLinkItem" parent="@style/FxAccountTextItem">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">false</item>
+        <item name="android:textColor">@drawable/fxaccount_linkitem_textcolor</item>
+    </style>
+
+    <style name="FxAccountButton" parent="@android:style/Widget.Button">
+        <item name="android:background">@drawable/fxaccount_button_background</item>
+        <item name="android:textColor">@drawable/fxaccount_button_color</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:padding">20dp</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="FxAccountEditItem" parent="@android:style/Widget.EditText">
+        <item name="android:padding">@dimen/fxaccount_input_padding</item>
+        <item name="android:background">@drawable/fxaccount_textfield_background</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/fxaccount_input_textColor</item>
+        <item name="android:textColorHint">@color/fxaccount_input_textColorHint</item>
+    </style>
+
+    <style name="FxAccountLinkifiedItem" parent="@android:style/TextAppearance.Small">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textColor">@color/fxaccount_linkified_textColor</item>
+        <item name="android:textColorLink">@color/fxaccount_linkified_textColorLink</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="FxAccountIcon">
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:src">@drawable/fxaccount_icon</item>
+    </style>
+
+    <style name="FxAccountErrorItem">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">left</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:background">@drawable/fxaccount_textview_error_background</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:text">Error</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:visibility">invisible</item>
+    </style>
+
 </resources>

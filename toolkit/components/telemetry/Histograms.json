@@ -1448,6 +1448,12 @@
     "n_values": 5,
     "description": "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss"
   },
+  "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "HTTP Cache v2 Miss by half-life value (6h, 1d, 7d, 50d)"
+  },
   "HTTP_MEMORY_CACHE_DISPOSITION_2": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -3408,13 +3414,6 @@
     "n_buckets": 30,
     "description": "The subset of sessionstore.js dealing with storing history (total size, in bytes)"
   },
-  "FX_SESSION_RESTORE_TOTAL_POSTDATA_SIZE_BYTES": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing POST data (total size, in bytes)"
-  },
   "FX_SESSION_RESTORE_INDIVIDUAL_OPEN_WINDOWS_SIZE_BYTES": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3463,13 +3462,6 @@
     "high": "5000000",
     "n_buckets": 30,
     "description": "The subset of sessionstore.js dealing with storing history (item size, in bytes)"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_POSTDATA_SIZE_BYTES": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing history POST data (item size, in bytes)"
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",

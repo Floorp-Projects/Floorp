@@ -235,6 +235,15 @@ this.UITour = {
         this.endUrlbarCapture(window);
         break;
       }
+
+      case "getConfiguration": {
+        if (typeof data.configuration != "string") {
+          return false;
+        }
+
+        this.getConfiguration(contentDocument, data.configuration, data.callbackID);
+        break;
+      }
     }
 
     let tab = window.gBrowser._getTabForContentWindow(contentDocument.defaultView);
@@ -731,6 +740,21 @@ this.UITour = {
       relatedToCurrent: true
     });
     aWindow.gBrowser.selectedTab = tab;
+  },
+
+  getConfiguration: function(aContentDocument, aConfiguration, aCallbackId) {
+    let config = null;
+    switch (aConfiguration) {
+      case "sync":
+        config = {
+          setup: Services.prefs.prefHasUserValue("services.sync.username"),
+        };
+        break;
+      default:
+        Cu.reportError("getConfiguration: Unknown configuration requested: " + aConfiguration);
+        break;
+    }
+    this.sendPageCallback(aContentDocument, aCallbackId, config);
   },
 };
 
