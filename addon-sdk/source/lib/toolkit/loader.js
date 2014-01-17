@@ -200,6 +200,8 @@ const Sandbox = iced(function Sandbox(options) {
                           options.wantGlobalProperties : [],
     sandboxPrototype: 'prototype' in options ? options.prototype : {},
     sameGroupAs: 'sandbox' in options ? options.sandbox : null,
+    invisibleToDebugger: 'invisibleToDebugger' in options ?
+                         options.invisibleToDebugger : false,
     metadata: 'metadata' in options ? options.metadata : {}
   };
 
@@ -270,6 +272,7 @@ const load = iced(function load(loader, module) {
     prototype: create(globals, descriptors),
     wantXrays: false,
     wantGlobalProperties: module.id == "sdk/indexed-db" ? ["indexedDB"] : [],
+    invisibleToDebugger: loader.invisibleToDebugger,
     metadata: {
       addonID: loader.id,
       URI: module.uri
@@ -527,6 +530,9 @@ const Loader = iced(function Loader(options) {
     resolve: { enumerable: false, value: resolve },
     // ID of the addon, if provided.
     id: { enumerable: false, value: options.id },
+    // Whether the modules loaded should be ignored by the debugger
+    invisibleToDebugger: { enumerable: false,
+                           value: options.invisibleToDebugger || false },
     load: { enumerable: false, value: options.load || load },
     // Main (entry point) module, it can be set only once, since loader
     // instance can have only one main module.
