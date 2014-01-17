@@ -91,8 +91,8 @@ public:
 
   void Invalidate(const nsAString& aStorageName)
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mIOThread);
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    NS_ASSERTION(mIOThread, "Null mIOThread!");
 
     nsRefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
@@ -100,8 +100,8 @@ public:
 
   void Dispatch(nsIRunnable* aRunnable)
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mIOThread);
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    NS_ASSERTION(mIOThread, "Null mIOThread!");
 
     mIOThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   }
