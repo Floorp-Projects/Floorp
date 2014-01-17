@@ -13,6 +13,7 @@
 
 namespace mozilla {
 namespace dom {
+namespace network {
 
 class MobileConnection : public nsDOMEventTargetHelper
                        , public nsIDOMMozMobileConnection
@@ -52,6 +53,7 @@ private:
   bool CheckPermission(const char* aType);
 };
 
+} // namespace network
 } // namespace dom
 } // namespace mozilla
 
