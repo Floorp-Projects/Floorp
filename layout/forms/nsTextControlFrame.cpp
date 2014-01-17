@@ -549,8 +549,8 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
               xOffset, yOffset, 0, aStatus);
 
   // place the child
-  FinishReflowChild(aKid, aPresContext, &kidReflowState, 
-                    desiredSize, xOffset, yOffset, 0);
+  FinishReflowChild(aKid, aPresContext, desiredSize,
+                    &kidReflowState, xOffset, yOffset, 0);
 
   // consider the overflow
   aParentDesiredSize.mOverflowAreas.UnionWith(desiredSize.mOverflowAreas);

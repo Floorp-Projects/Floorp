@@ -52,8 +52,12 @@ static SECStatus ssl3_HandleRenegotiationInfoXtn(sslSocket *ss,
     PRUint16 ex_type, SECItem *data);
 static SECStatus ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss,
 			PRUint16 ex_type, SECItem *data);
+static SECStatus ssl3_ClientHandleAppProtoXtn(sslSocket *ss,
+			PRUint16 ex_type, SECItem *data);
 static SECStatus ssl3_ServerHandleNextProtoNegoXtn(sslSocket *ss,
 			PRUint16 ex_type, SECItem *data);
+static PRInt32 ssl3_ClientSendAppProtoXtn(sslSocket *ss, PRBool append,
+					  PRUint32 maxBytes);
 static PRInt32 ssl3_ClientSendNextProtoNegoXtn(sslSocket *ss, PRBool append,
 					       PRUint32 maxBytes);
 static PRInt32 ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append,
@@ -247,6 +251,7 @@ static const ssl3HelloExtensionHandler serverHelloHandlersTLS[] = {
     { ssl_session_ticket_xtn,     &ssl3_ClientHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ClientHandleNextProtoNegoXtn },
+    { ssl_app_layer_protocol_xtn, &ssl3_ClientHandleAppProtoXtn },
     { ssl_use_srtp_xtn,           &ssl3_HandleUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ClientHandleStatusRequestXtn },
     { -1, NULL }
@@ -273,6 +278,7 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
 #endif
     { ssl_session_ticket_xtn,     &ssl3_SendSessionTicketXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ClientSendNextProtoNegoXtn },
+    { ssl_app_layer_protocol_xtn, &ssl3_ClientSendAppProtoXtn },
     { ssl_use_srtp_xtn,           &ssl3_SendUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ClientSendStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn }
@@ -608,6 +614,16 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
 
     PORT_Assert(!ss->firstHsDone);
 
+    if (ssl3_ExtensionNegotiated(ss, ssl_app_layer_protocol_xtn)) {
+	/* If the server negotiated ALPN then it has already told us what protocol
+	 * to use, so it doesn't make sense for us to try to negotiate a different
+	 * one by sending the NPN handshake message. However, if we've negotiated
+	 * NPN then we're required to send the NPN handshake message. Thus, these
+	 * two extensions cannot both be negotiated on the same connection. */
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+
     rv = ssl3_ValidateNextProtoNego(data->data, data->len);
     if (rv != SECSuccess)
 	return rv;
@@ -641,6 +657,43 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
     return SECITEM_CopyItem(NULL, &ss->ssl3.nextProto, &result);
 }
 
+static SECStatus
+ssl3_ClientHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    const unsigned char* d = data->data;
+    PRUint16 name_list_len;
+    SECItem protocol_name;
+
+    if (ssl3_ExtensionNegotiated(ss, ssl_next_proto_nego_xtn)) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+
+    /* The extension data from the server has the following format:
+     *   uint16 name_list_len;
+     *   uint8 len;
+     *   uint8 protocol_name[len]; */
+    if (data->len < 4 || data->len > 2 + 1 + 255) {
+	PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+	return SECFailure;
+    }
+
+    name_list_len = ((PRUint16) d[0]) << 8 |
+	            ((PRUint16) d[1]);
+    if (name_list_len != data->len - 2 || d[2] != data->len - 3) {
+	PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+	return SECFailure;
+    }
+
+    protocol_name.data = data->data + 3;
+    protocol_name.len = data->len - 3;
+
+    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+    ss->ssl3.nextProtoState = SSL_NEXT_PROTO_SELECTED;
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
+    return SECITEM_CopyItem(NULL, &ss->ssl3.nextProto, &protocol_name);
+}
+
 static PRInt32
 ssl3_ClientSendNextProtoNegoXtn(sslSocket * ss, PRBool append,
 				PRUint32 maxBytes)
@@ -648,7 +701,7 @@ ssl3_ClientSendNextProtoNegoXtn(sslSocket * ss, PRBool append,
     PRInt32 extension_length;
 
     /* Renegotiations do not send this extension. */
-    if (!ss->nextProtoCallback || ss->firstHsDone) {
+    if (!ss->opt.enableNPN || !ss->nextProtoCallback || ss->firstHsDone) {
 	return 0;
     }
 
@@ -671,6 +724,74 @@ ssl3_ClientSendNextProtoNegoXtn(sslSocket * ss, PRBool append,
     return extension_length;
 
 loser:
+    return -1;
+}
+
+static PRInt32
+ssl3_ClientSendAppProtoXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
+{
+    PRInt32 extension_length;
+    unsigned char *alpn_protos = NULL;
+
+    /* Renegotiations do not send this extension. */
+    if (!ss->opt.enableALPN || !ss->opt.nextProtoNego.data || ss->firstHsDone) {
+	return 0;
+    }
+
+    extension_length = 2 /* extension type */ + 2 /* extension length */ +
+		       2 /* protocol name list length */ +
+		       ss->opt.nextProtoNego.len;
+
+    if (append && maxBytes >= extension_length) {
+	/* NPN requires that the client's fallback protocol is first in the
+	 * list. However, ALPN sends protocols in preference order. So we
+	 * allocate a buffer and move the first protocol to the end of the
+	 * list. */
+	SECStatus rv;
+	const unsigned int len = ss->opt.nextProtoNego.len;
+
+	alpn_protos = PORT_Alloc(len);
+	if (alpn_protos == NULL) {
+	    return SECFailure;
+	}
+	if (len > 0) {
+	    /* Each protocol string is prefixed with a single byte length. */
+	    unsigned int i = ss->opt.nextProtoNego.data[0] + 1;
+	    if (i <= len) {
+		memcpy(alpn_protos, &ss->opt.nextProtoNego.data[i], len - i);
+		memcpy(alpn_protos + len - i, ss->opt.nextProtoNego.data, i);
+	    } else {
+		/* This seems to be invalid data so we'll send as-is. */
+		memcpy(alpn_protos, ss->opt.nextProtoNego.data, len);
+	    }
+	}
+
+	rv = ssl3_AppendHandshakeNumber(ss, ssl_app_layer_protocol_xtn, 2);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
+	rv = ssl3_AppendHandshakeNumber(ss, extension_length - 4, 2);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
+	rv = ssl3_AppendHandshakeVariable(ss, alpn_protos, len, 2);
+	PORT_Free(alpn_protos);
+	alpn_protos = NULL;
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
+	ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
+		ssl_app_layer_protocol_xtn;
+    } else if (maxBytes < extension_length) {
+	return 0;
+    }
+
+    return extension_length;
+
+loser:
+    if (alpn_protos) {
+	PORT_Free(alpn_protos);
+    }
     return -1;
 }
 
@@ -2140,4 +2261,56 @@ ssl3_ClientSendSigAlgsXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
 
 loser:
     return -1;
+}
+
+unsigned int
+ssl3_CalculatePaddingExtensionLength(unsigned int clientHelloLength)
+{
+    unsigned int recordLength = 1 /* handshake message type */ +
+				3 /* handshake message length */ +
+				clientHelloLength;
+    unsigned int extensionLength;
+
+    if (recordLength < 256 || recordLength >= 512) {
+	return 0;
+    }
+
+    extensionLength = 512 - recordLength;
+    /* Extensions take at least four bytes to encode. */
+    if (extensionLength < 4) {
+	extensionLength = 4;
+    }
+
+    return extensionLength;
+}
+
+/* ssl3_AppendPaddingExtension possibly adds an extension which ensures that a
+ * ClientHello record is either < 256 bytes or is >= 512 bytes. This ensures
+ * that we don't trigger bugs in F5 products. */
+PRInt32
+ssl3_AppendPaddingExtension(sslSocket *ss, unsigned int extensionLen,
+			    PRUint32 maxBytes)
+{
+    unsigned int paddingLen = extensionLen - 4;
+    static unsigned char padding[256];
+
+    if (extensionLen == 0) {
+	return 0;
+    }
+
+    if (extensionLen < 4 ||
+	extensionLen > maxBytes ||
+	paddingLen > sizeof(padding)) {
+	PORT_Assert(0);
+	return -1;
+    }
+
+    if (SECSuccess != ssl3_AppendHandshakeNumber(ss, ssl_padding_xtn, 2))
+	return -1;
+    if (SECSuccess != ssl3_AppendHandshakeNumber(ss, paddingLen, 2))
+	return -1;
+    if (SECSuccess != ssl3_AppendHandshake(ss, padding, paddingLen))
+	return -1;
+
+    return extensionLen;
 }

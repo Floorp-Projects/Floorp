@@ -1647,8 +1647,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     size_t              noGCOrAllocationCheck;
 #endif
 
-    bool                jitHardening;
-
     bool                jitSupportsFloatingPoint;
 
     // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
@@ -1766,11 +1764,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     };
 
     void triggerOperationCallback(OperationCallbackTrigger trigger);
-
-    void setJitHardening(bool enabled);
-    bool getJitHardening() const {
-        return jitHardening;
-    }
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *runtime);
 

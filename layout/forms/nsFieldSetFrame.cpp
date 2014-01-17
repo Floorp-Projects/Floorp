@@ -512,8 +512,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       reflowInner = true;
     }
 
-    FinishReflowChild(legend, aPresContext, &legendReflowState.ref(), 
-                      legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
+    FinishReflowChild(legend, aPresContext, legendDesiredSize,
+                      &legendReflowState.ref(), 0, 0, NS_FRAME_NO_MOVE_FRAME);    
   } else if (!legend) {
     mLegendRect.SetEmpty();
     mLegendSpace = 0;
@@ -557,8 +557,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     ReflowChild(inner, aPresContext, kidDesiredSize, kidReflowState,
                 pt.x, pt.y, 0, aStatus);
 
-    FinishReflowChild(inner, aPresContext, &kidReflowState, 
-                      kidDesiredSize, pt.x, pt.y, 0);
+    FinishReflowChild(inner, aPresContext, kidDesiredSize,
+                      &kidReflowState, pt.x, pt.y, 0);
     NS_FRAME_TRACE_REFLOW_OUT("FieldSet::Reflow", aStatus);
   }
 
