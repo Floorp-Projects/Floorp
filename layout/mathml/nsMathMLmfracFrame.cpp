@@ -369,10 +369,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       nscoord dy;
       // place numerator
       dy = 0;
-      FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dxNum, dy, 0);
+      FinishReflowChild(frameNum, presContext, sizeNum, nullptr, dxNum, dy, 0);
       // place denominator
       dy = aDesiredSize.Height() - sizeDen.Height();
-      FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dxDen, dy, 0);
+      FinishReflowChild(frameDen, presContext, sizeDen, nullptr, dxDen, dy, 0);
       // place the fraction bar - dy is top of bar
       dy = aDesiredSize.TopAscent() - (axisHeight + actualRuleThickness/2);
       mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace),
@@ -483,7 +483,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dx = MirrorIfRTL(aDesiredSize.Width(), sizeNum.Width(),
                        leadingSpace);
       dy = aDesiredSize.TopAscent() - numShift - sizeNum.TopAscent();
-      FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dx, dy, 0);
+      FinishReflowChild(frameNum, presContext, sizeNum, nullptr, dx, dy, 0);
 
       // place the fraction bar
       dx = MirrorIfRTL(aDesiredSize.Width(), mLineRect.width,
@@ -496,7 +496,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dx = MirrorIfRTL(aDesiredSize.Width(), sizeDen.Width(),
                        leadingSpace + bmNum.width + mLineRect.width);
       dy = aDesiredSize.TopAscent() + denShift - sizeDen.TopAscent();
-      FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dx, dy, 0);
+      FinishReflowChild(frameDen, presContext, sizeDen, nullptr, dx, dy, 0);
     }
 
   }

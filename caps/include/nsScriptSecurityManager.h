@@ -162,43 +162,6 @@ private:
     nsIPrincipal*
     GetSubjectPrincipal(JSContext* cx, nsresult* rv);
 
-    /**
-     * Check capability levels for an |aObj| that implements
-     * nsISecurityCheckedComponent.
-     *
-     * NB: This function also checks to see if aObj is a plugin and the user
-     * has set the "security.xpconnect.plugin.unrestricted" pref to allow
-     * anybody to script plugin objects from anywhere.
-     *
-     * @param cx The context we're running on.
-     *           NB: If null, "sameOrigin" does not have any effect.
-     * @param aObj The nsISupports representation of the object in question
-     *             object, possibly null.
-     * @param aJSObject The JSObject representation of the object in question
-     *                  if |cx| is non-null and |aObjectSecurityLevel| is
-     *                  "sameOrigin". If null will be calculated from aObj (if
-     *                  non-null) if and only if aObj is an XPCWrappedJS. The
-     *                  rationale behind this is that if we're creating a JS
-     *                  wrapper for an XPCWrappedJS, this object definitely
-     *                  expects to be exposed to JS.
-     * @param aSubjectPrincipal The nominal subject principal used when
-     *                          aObjectSecurityLevel is "sameOrigin". If null,
-     *                          this is calculated if it's needed.
-     * @param aObjectSecurityLevel Can be one of three values:
-     *                  - allAccess: Allow access no matter what.
-     *                  - noAccess: Deny access no matter what.
-     *                  - sameOrigin: If |cx| is null, behave like noAccess.
-     *                                Otherwise, possibly compute a subject
-     *                                and object principal and return true if
-     *                                and only if the subject has greater than
-     *                                or equal privileges to the object.
-     */
-    nsresult
-    CheckXPCPermissions(JSContext* cx,
-                        nsISupports* aObj, JSObject* aJSObject,
-                        nsIPrincipal* aSubjectPrincipal,
-                        const char* aObjectSecurityLevel);
-
     nsresult
     Init();
 
