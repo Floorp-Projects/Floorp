@@ -39,12 +39,12 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void ReleaseIPDLReference();
 
  private:
-  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions);
-  bool RecvOnStop(const nsresult& aStatusCode);
-  bool RecvOnMessageAvailable(const nsCString& aMsg);
-  bool RecvOnBinaryMessageAvailable(const nsCString& aMsg);
-  bool RecvOnAcknowledge(const uint32_t& aSize);
-  bool RecvOnServerClose(const uint16_t& aCode, const nsCString &aReason);
+  bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions) MOZ_OVERRIDE;
+  bool RecvOnStop(const nsresult& aStatusCode) MOZ_OVERRIDE;
+  bool RecvOnMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
+  bool RecvOnBinaryMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
+  bool RecvOnAcknowledge(const uint32_t& aSize) MOZ_OVERRIDE;
+  bool RecvOnServerClose(const uint16_t& aCode, const nsCString &aReason) MOZ_OVERRIDE;
   bool RecvAsyncOpenFailed();
 
   void OnStart(const nsCString& aProtocol, const nsCString& aExtensions);

@@ -28,7 +28,7 @@ public:
   void DoAsyncResolve(const nsACString  &hostname, uint32_t flags);
 
 protected:
-  virtual void ActorDestroy(ActorDestroyReason why);
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 private:
   uint32_t mFlags;
   bool mIPCClosed;  // true if IPDL channel has been closed (child crash)
