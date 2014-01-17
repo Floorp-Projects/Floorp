@@ -5225,7 +5225,8 @@ if (!${obj}) {
             if self.idlNode.getExtendedAttribute("Frozen"):
                 assert self.idlNode.type.isSequence()
                 freezeValue = CGGeneric(
-                    "if (!JS_FreezeObject(cx, &args.rval().toObject())) {\n"
+                    "JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());\n"
+                    "if (!JS_FreezeObject(cx, rvalObj)) {\n"
                     "  return false;\n"
                     "}")
                 if self.idlNode.type.nullable():

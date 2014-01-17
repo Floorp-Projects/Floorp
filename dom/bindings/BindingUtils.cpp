@@ -1479,7 +1479,7 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
     }
 
     JS::Rooted<jsid> id(cx);
-    if (!JS_ValueToId(cx, v, id.address())) {
+    if (!JS_ValueToId(cx, v, &id)) {
       return false;
     }
 
