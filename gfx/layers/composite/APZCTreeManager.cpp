@@ -400,9 +400,6 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
     // Prepare for possible overscroll handoff.
     BuildOverscrollHandoffChain(apzc);
   }
-  gfx3DMatrix transformToApzc, transformToGecko;
-  // Reset the cached apz transform
-  mCachedTransformToApzcForInputBlock = transformToApzc;
   if (!apzc) {
     return apzc.forget();
   }
@@ -416,10 +413,6 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
     // when we find the common ancestor of multiple points, also walk up to the root APZC.
     apzc = RootAPZCForLayersId(apzc);
     APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
-  }
-  if (apzc) {
-    // Cache apz transform so it can be used for future events in this block.
-    GetInputTransforms(apzc, mCachedTransformToApzcForInputBlock, transformToGecko);
   }
   return apzc.forget();
 }
@@ -439,6 +432,14 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     mTouchCount++;
     ScreenPoint point = ScreenPoint(aEvent.touches[0]->mRefPoint.x, aEvent.touches[0]->mRefPoint.y);
     mApzcForInputBlock = GetTouchInputBlockAPZC(aEvent, point);
+    if (mApzcForInputBlock) {
+      // Cache apz transform so it can be used for future events in this block.
+      gfx3DMatrix transformToGecko;
+      GetInputTransforms(mApzcForInputBlock, mCachedTransformToApzcForInputBlock, transformToGecko);
+    } else {
+      // Reset the cached apz transform
+      mCachedTransformToApzcForInputBlock = gfx3DMatrix();
+    }
   }
 
   if (mApzcForInputBlock) {
