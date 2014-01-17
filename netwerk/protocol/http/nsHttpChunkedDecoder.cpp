@@ -121,21 +121,12 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
             }
         }
         else if (*buf) {
-            char *endptr;
-            unsigned long parsedval; // could be 64 bit, could be 32
-
             // ignore any chunk-extensions
             if ((p = PL_strchr(buf, ';')) != nullptr)
                 *p = 0;
 
-            // mChunkRemaining is an uint32_t!
-            parsedval = strtoul(buf, &endptr, 16);
-            mChunkRemaining = (uint32_t) parsedval;
-
-            if ((endptr == buf) ||
-                (errno == ERANGE) ||
-                (parsedval != mChunkRemaining) ) {
-                LOG(("failed parsing hex on string [%s]\n", buf));
+            if (!sscanf(buf, "%x", &mChunkRemaining)) {
+                LOG(("sscanf failed parsing hex on string [%s]\n", buf));
                 return NS_ERROR_UNEXPECTED;
             }
 
