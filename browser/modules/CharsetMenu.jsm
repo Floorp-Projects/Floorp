@@ -9,7 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
-  const kUrl = "chrome://global/locale/charsetMenu.properties";
+  const kUrl = "chrome://browser/locale/charsetMenu.properties";
   return Services.strings.createBundle(kUrl);
 });
 /**
@@ -81,7 +81,7 @@ const kPinned = [
 ];
 
 this.CharsetMenu = Object.freeze({
-  build: function BuildCharsetMenu(event, idPrefix="", showAccessKeys=true) {
+  build: function BuildCharsetMenu(event, idPrefix="", showAccessKeys=false) {
     let parent = event.target;
     if (parent.lastChild.localName != "menuseparator") {
       // Detector menu or charset menu already built
