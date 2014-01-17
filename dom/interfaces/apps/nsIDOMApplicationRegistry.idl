@@ -7,7 +7,7 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable, uuid(4081390c-08cf-11e3-9200-b3c0a8744b20)]
+[scriptable, uuid(f8cb08ed-588e-465f-b2b3-a4b0afde711a)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -100,6 +100,11 @@ interface mozIDOMApplication  : nsISupports
                       [optional] in jsval rules); // nsISupports is a Promise.
 
   nsISupports getConnections(); // nsISupports is a Promise.
+
+  /* Receipts handling functions */
+  nsIDOMDOMRequest addReceipt(in DOMString receipt);
+  nsIDOMDOMRequest removeReceipt(in DOMString receipt);
+  nsIDOMDOMRequest replaceReceipt(in DOMString oldReceipt, in DOMString newReceipt);
 };
 
 [scriptable, uuid(cf742022-5ba3-11e2-868f-03310341b006)]

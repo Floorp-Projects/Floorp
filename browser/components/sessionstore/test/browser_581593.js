@@ -26,12 +26,6 @@ function test() {
 function onSSTabRestored(aEvent) {
   info("SSTabRestored event");
   gBrowser.selectedTab.removeEventListener("SSTabRestored", onSSTabRestored, true);
-  gBrowser.selectedBrowser.addEventListener("input", onInput, true);
-}
-
-function onInput(aEvent) {
-  info("input event");
-  gBrowser.selectedBrowser.removeEventListener("input", onInput, true);
 
   // This is an ok way to check this because we will make sure that the text
   // field is parsable.
