@@ -45,7 +45,6 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   bool RecvOnBinaryMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
   bool RecvOnAcknowledge(const uint32_t& aSize) MOZ_OVERRIDE;
   bool RecvOnServerClose(const uint16_t& aCode, const nsCString &aReason) MOZ_OVERRIDE;
-  bool RecvAsyncOpenFailed();
 
   void OnStart(const nsCString& aProtocol, const nsCString& aExtensions);
   void OnStop(const nsresult& aStatusCode);
