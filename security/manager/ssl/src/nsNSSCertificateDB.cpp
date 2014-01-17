@@ -1679,7 +1679,7 @@ nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result
 NS_IMETHODIMP
 nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
                                   int64_t /*SECCertificateUsage*/ aUsage,
-                                  bool aLocalOnly,
+                                  uint32_t aFlags,
                                   nsIX509CertList** verifiedChain,
                                   bool* aHasEVPolicy,
                                   int32_t* /*PRErrorCode*/ _retval )
@@ -1716,7 +1716,6 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
-  CertVerifier::Flags flags = aLocalOnly ? CertVerifier::FLAG_LOCAL_ONLY : 0;
   CERTCertList* resultChain = nullptr;
   SECOidTag evOidPolicy;
   SECStatus srv;
@@ -1724,7 +1723,7 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   srv = certVerifier->VerifyCert(nssCert,
                                  aUsage, PR_Now(),
                                  nullptr, // Assume no context
-                                 flags,
+                                 aFlags,
                                  &resultChain,
                                  &evOidPolicy,
                                  nullptr);

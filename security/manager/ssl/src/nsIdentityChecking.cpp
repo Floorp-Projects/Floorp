@@ -1287,10 +1287,12 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
   validEV = false;
   resultOidTag = SEC_OID_UNKNOWN;
 
+  uint32_t flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY |
+                   mozilla::psm::CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV;
   SECStatus rv = certVerifier->VerifyCert(mCert,
                                           certificateUsageSSLServer, PR_Now(),
                                           nullptr /* XXX pinarg*/,
-                                          0, nullptr, &resultOidTag);
+                                          flags, nullptr, &resultOidTag);
 
   if (rv != SECSuccess) {
     resultOidTag = SEC_OID_UNKNOWN;
