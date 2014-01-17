@@ -634,50 +634,8 @@ class Automation(object):
       return
 
     self.haveDumpedScreen = True;
+    automationutils.dumpScreen(utilityPath)
 
-    # Need to figure out what tool and whether it write to a file or stdout
-    if self.UNIXISH:
-      utility = [os.path.join(utilityPath, "screentopng")]
-      imgoutput = 'stdout'
-    elif self.IS_MAC:
-      utility = ['/usr/sbin/screencapture', '-C', '-x', '-t', 'png']
-      imgoutput = 'file'
-    elif self.IS_WIN32:
-      utility = [os.path.join(utilityPath, "screenshot.exe")]
-      imgoutput = 'file'
-
-    # Run the capture correctly for the type of capture
-    try:
-      if imgoutput == 'file':
-        tmpfd, imgfilename = tempfile.mkstemp(prefix='mozilla-test-fail_')
-        os.close(tmpfd)
-        dumper = self.Process(utility + [imgfilename])
-      elif imgoutput == 'stdout':
-        dumper = self.Process(utility, bufsize=-1,
-                              stdout=subprocess.PIPE, close_fds=True)
-    except OSError, err:
-      self.log.info("Failed to start %s for screenshot: %s",
-                    utility[0], err.strerror)
-      return
-
-    # Check whether the capture utility ran successfully
-    dumper_out, dumper_err = dumper.communicate()
-    if dumper.returncode != 0:
-      self.log.info("%s exited with code %d", utility, dumper.returncode)
-      return
-
-    try:
-      if imgoutput == 'stdout':
-        image = dumper_out
-      elif imgoutput == 'file':
-        with open(imgfilename, 'rb') as imgfile:
-          image = imgfile.read()
-    except IOError, err:
-        self.log.info("Failed to read image from %s", imgoutput)
-
-    import base64
-    encoded = base64.b64encode(image)
-    self.log.info("SCREENSHOT: data:image/png;base64,%s", encoded)
 
   def killAndGetStack(self, processPID, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace.
