@@ -4,7 +4,9 @@
 
 <hbox id="customization-container" flex="1" hidden="true">
   <vbox flex="1" id="customization-palette-container">
-    <label id="customization-header" value="&customizeMode.menuAndToolbars.header;"/>
+    <label id="customization-header">
+      &customizeMode.menuAndToolbars.header;
+    </label>
     <vbox id="customization-palette" flex="1"/>
     <hbox>
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
