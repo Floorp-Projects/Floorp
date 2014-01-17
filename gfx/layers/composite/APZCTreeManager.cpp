@@ -327,10 +327,13 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
           APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", mApzcForInputBlock.get());
         }
 
-        // Cache transformToApzc so it can be used for future events in this block.
         if (mApzcForInputBlock) {
+          // Cache transformToApzc so it can be used for future events in this block.
           GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToGecko);
           mCachedTransformToApzcForInputBlock = transformToApzc;
+        } else {
+          // Reset the cached apz transform
+          mCachedTransformToApzcForInputBlock = gfx3DMatrix();
         }
       } else if (mApzcForInputBlock) {
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
