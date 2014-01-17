@@ -130,11 +130,11 @@ SN_IS_TERMINATOR(jssrcnote *sn)
 
 /*
  * Offset fields follow certain notes and are frequency-encoded: an offset in
- * [0,0x7f] consumes one byte, an offset in [0x80,0x7fffff] takes three, and
+ * [0,0x7f] consumes one byte, an offset in [0x80,0x7fffffff] takes four, and
  * the high bit of the first byte is set.
  */
-#define SN_3BYTE_OFFSET_FLAG    0x80
-#define SN_3BYTE_OFFSET_MASK    0x7f
+#define SN_4BYTE_OFFSET_FLAG    0x80
+#define SN_4BYTE_OFFSET_MASK    0x7f
 
 /*
  * Negative SRC_COLSPAN offsets are rare, but can arise with for(;;) loops and
@@ -143,13 +143,13 @@ SN_IS_TERMINATOR(jssrcnote *sn)
  * failures are bugs to fix.
  *
  * Source note offsets in general must be non-negative and less than 0x800000,
- * per the above SN_3BYTE_* definitions. To encode negative colspans, we bias
+ * per the above SN_4BYTE_* definitions. To encode negative colspans, we bias
  * them by the offset domain size and restrict non-negative colspans to less
  * than half this domain.
  */
-#define SN_COLSPAN_DOMAIN       ptrdiff_t(SN_3BYTE_OFFSET_FLAG << 16)
+#define SN_COLSPAN_DOMAIN       ptrdiff_t(1 << 23)
 
-#define SN_MAX_OFFSET ((size_t)((ptrdiff_t)SN_3BYTE_OFFSET_FLAG << 16) - 1)
+#define SN_MAX_OFFSET ((size_t)((ptrdiff_t)SN_4BYTE_OFFSET_FLAG << 24) - 1)
 
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
                                  : js_SrcNoteLength(sn))
