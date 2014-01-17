@@ -9,8 +9,9 @@ module.metadata = {
 
 const { Class } = require('./core/heritage');
 const { on, emit, off, setListeners } = require('./event/core');
-const { filter, pipe, map, merge: streamMerge } = require('./event/utils');
-const { WorkerHost, Worker, detach, attach, destroy } = require('./worker/utils');
+const { filter, pipe, map, merge: streamMerge, stripListeners } = require('./event/utils');
+const { detach, attach, destroy, WorkerHost } = require('./content/utils');
+const { Worker } = require('./content/worker');
 const { Disposable } = require('./core/disposable');
 const { EventTarget } = require('./event/target');
 const { unload } = require('./system/unload');
@@ -66,8 +67,8 @@ function disableScript (page) {
 
 function Allow (page) {
   return {
-    get script() getDocShell(viewFor(page)).allowJavascript,
-    set script(value) value ? enableScript(page) : disableScript(page)
+    get script() { return getDocShell(viewFor(page)).allowJavascript; },
+    set script(value) { return value ? enableScript(page) : disableScript(page); }
   };
 }
 
@@ -89,7 +90,6 @@ const Page = Class({
   setup: function Page(options) {
     let page = this;
     options = pageContract(options);
-    setListeners(this, options);
     let view = makeFrame(window.document, {
       nodeName: 'iframe',
       type: 'content',
@@ -100,12 +100,15 @@ const Page = Class({
     });
 
     ['contentScriptFile', 'contentScript', 'contentScriptWhen']
-      .forEach(function (prop) page[prop] = options[prop]);
+      .forEach(prop => page[prop] = options[prop]);
 
     views.set(this, view);
     pages.set(view, this);
 
-    let worker = new Worker(options);
+    // Set listeners on the {Page} object itself, not the underlying worker,
+    // like `onMessage`, as it gets piped
+    setListeners(this, options);
+    let worker = new Worker(stripListeners(options));
     workers.set(this, worker);
     pipe(worker, this);
 
@@ -114,7 +117,7 @@ const Page = Class({
       this.rules.add.apply(this.rules, [].concat(this.include || options.include));
     }
   },
-  get allow() Allow(this),
+  get allow() { return Allow(this); },
   set allow(value) {
     let allowJavascript = pageContract({ allow: value }).allow.script;
     return allowJavascript ? enableScript(this) : disableScript(this);
@@ -133,7 +136,7 @@ const Page = Class({
     views.delete(this);
     destroy(workers.get(this));
   },
-  toString: function () '[object Page]'
+  toString: function () { return '[object Page]' }
 });
 
 exports.Page = Page;

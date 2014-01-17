@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-let { emit, on, once, off } = require("./core");
+let { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
 
 // This module provides set of high order function for working with event
 // streams (streams in a NodeJS style that dispatch data, end and error
@@ -255,3 +255,21 @@ Reactor.prototype.run = function(input) {
   this.onStart(input.value);
 };
 exports.Reactor = Reactor;
+
+/**
+ * Takes an object used as options with potential keys like 'onMessage',
+ * used to be called `require('sdk/event/core').setListeners` on.
+ * This strips all keys that would trigger a listener to be set.
+ * 
+ * @params {Object} object
+ * @return {Object}
+ */
+
+function stripListeners (object) {
+  return Object.keys(object).reduce((agg, key) => {
+    if (!EVENT_TYPE_PATTERN.test(key))
+      agg[key] = object[key];
+    return agg;
+  }, {});
+}
+exports.stripListeners = stripListeners;

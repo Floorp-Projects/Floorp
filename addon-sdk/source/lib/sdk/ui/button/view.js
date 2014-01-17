@@ -14,7 +14,8 @@ const { Cu } = require('chrome');
 const { on, off, emit } = require('../../event/core');
 
 const { id: addonID, data } = require('sdk/self');
-const buttonPrefix = 'button--' + addonID.replace(/@/g, '-at-');
+const buttonPrefix =
+  'button--' + addonID.toLowerCase().replace(/[^a-z0-9-_]/g, '');
 
 const { isObject } = require('../../lang/type');
 
