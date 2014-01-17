@@ -392,9 +392,15 @@ nsEditor::GetDesiredSpellCheckState()
   }
 
   // Check DOM state
-  nsCOMPtr<nsIContent> content = GetExposedRoot();
+  nsCOMPtr<nsIContent> content = GetRoot();
   if (!content) {
     return false;
+  }
+
+  // For plaintext editors, we just want to check whether the textarea/input
+  // itself is editable.
+  if (content->IsRootOfNativeAnonymousSubtree()) {
+    content = content->GetParent();
   }
 
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(content);
@@ -5001,24 +5007,11 @@ nsEditor::GetEditorRoot()
   return GetRoot();
 }
 
-Element*
-nsEditor::GetExposedRoot()
-{
-  Element* rootElement = GetRoot();
-
-  // For plaintext editors, we need to ask the input/textarea element directly.
-  if (rootElement->IsRootOfNativeAnonymousSubtree()) {
-    rootElement = rootElement->GetParent()->AsElement();
-  }
-
-  return rootElement;
-}
-
 nsresult
 nsEditor::DetermineCurrentDirection()
 {
   // Get the current root direction from its frame
-  nsIContent* rootElement = GetExposedRoot();
+  dom::Element *rootElement = GetRoot();
 
   // If we don't have an explicit direction, determine our direction
   // from the content's direction
@@ -5044,8 +5037,7 @@ NS_IMETHODIMP
 nsEditor::SwitchTextDirection()
 {
   // Get the current root direction from its frame
-  nsIContent* rootElement = GetExposedRoot();
-
+  dom::Element *rootElement = GetRoot();
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5071,8 +5063,7 @@ void
 nsEditor::SwitchTextDirectionTo(uint32_t aDirection)
 {
   // Get the current root direction from its frame
-  nsIContent* rootElement = GetExposedRoot();
-
+  dom::Element *rootElement = GetRoot();
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS_VOID(rv);
 

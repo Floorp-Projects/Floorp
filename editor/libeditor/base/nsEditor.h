@@ -670,10 +670,6 @@ public:
   // editors
   virtual mozilla::dom::Element* GetEditorRoot();
 
-  // Likewise, but gets the text control element instead of the root for
-  // plaintext editors
-  mozilla::dom::Element* GetExposedRoot();
-
   // Accessor methods to flags
   bool IsPlaintextEditor() const
   {
