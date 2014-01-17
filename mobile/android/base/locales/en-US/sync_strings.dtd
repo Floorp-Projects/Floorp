@@ -108,4 +108,54 @@
 <!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>
 
 <!-- Firefox Account strings -->
+<!ENTITY firefox.accounts 'Firefox Accounts'>
 <!ENTITY fxaccount.label '&fxaccountBrand.fullName.label;'>
+<!ENTITY fxaccount.policy 'By proceeding you agree with the &lt;a
+         href="http://mozilla.com"&gt;Terms of Service&lt;/a&gt; and &lt;a
+         href="http://mozilla.com"&gt;Privacy Policy&lt;/a&gt;.'>
+<!ENTITY fxaccount.forgot.password 'Forgot password?'>
+<!ENTITY fxaccount.create.account.button.label 'Create Account'>
+<!ENTITY fxaccount.sign.in.button.label 'Sign In'>
+<!ENTITY fxaccount.email.hint 'Email'>
+<!ENTITY fxaccount.password.hint 'Password'>
+<!ENTITY fxaccount.password2.hint 'Confirm password'>
+<!ENTITY fxaccount.bad.email 'We need a real email address.'>
+<!ENTITY fxaccount.bad.passwords 'Your passwords must match.'>
+<!ENTITY fxaccount.sign.in.instead 'Already have an account? Sign in!'>
+<!ENTITY fxaccount.sign.up.instead 'Don\&apos;t have an account? Sign up instead.'>
+
+<!ENTITY fxaccount.sign.in 'Sign in'>
+<!ENTITY fxaccount.create.account 'Create an account'>
+
+<!ENTITY fxaccount.old.firefox '&lt;a href="http://mozilla.com"&gt;Using &syncBrand.shortName.label; with an older version of &brandShortName;?&lt;/a&gt;'>
+
+<!ENTITY fxaccount.when.were.you.born 'When were you born?'>
+<!ENTITY fxaccount.year.of.birth 'Year of birth'>
+
+<!ENTITY fxaccount.icon.contentDescription 'Firefox Accounts icon'>
+<!ENTITY fxaccount.password.hide 'Hide'>
+<!ENTITY fxaccount.password.show 'Show'>
+<!ENTITY fxaccount.get.started 'Get started'>
+<!ENTITY fxaccount.description 'Sign in to backup and sync all your settings and bookmarks!'>
+<!ENTITY fxaccount.sign.up 'Sign up'>
+
+<!-- Android > Accounts > [Firefox Account] Screen -->
+<!ENTITY fxaccount.options.title 'Options'>
+<!ENTITY fxaccount.options.configure.title 'Configure your Firefox Account'>
+<!ENTITY fxaccount.intro.contentDescription 'Firefox Accounts introduction graphics'>
+<!ENTITY fxaccount.confirmation.email.sent 'Confirmation email sent!'>
+<!ENTITY fxaccount.mail.contentDescription 'Firefox Accounts envelope graphic'>
+<!ENTITY fxaccount.confirmation.description 'Your confirmation link awaits at:'>
+<!ENTITY fxaccount.offer.resend.confirmation.email 'Don\&apos;t see an email? Resend.'>
+<!ENTITY fxaccount.password.length.restriction 'Must be at least 8 characters.'>
+<!ENTITY fxaccount.change.password 'Change password'>
+<!ENTITY fxaccount.status.needs.verification 'Your account needs to be verified. Tap here to verify and start syncing.'>
+<!ENTITY fxaccount.status.needs.credentials 'Your account details are out of date. Tap here to sign in again and resume syncing.'>
+<!ENTITY fxaccount.status.syncing 'Firefox is syncing...'>
+<!ENTITY fxaccount.status.sync 'Sync' >
+<!ENTITY fxaccount.status.bookmarks 'Bookmarks'>
+<!ENTITY fxaccount.status.history 'History'>
+<!ENTITY fxaccount.status.passwords 'Passwords'>
+<!ENTITY fxaccount.status.tabs 'Open tabs'>
+<!ENTITY fxaccount.update.credentials 'Update password'>
+<!ENTITY fxaccount.update.credentials.button.label 'Re-connect'>

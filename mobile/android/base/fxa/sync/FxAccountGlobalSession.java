@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 
 import org.json.simple.parser.ParseException;
-import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfigurationException;
@@ -39,7 +39,7 @@ public class FxAccountGlobalSession extends GlobalSession {
         callback, context, extras, clientsDelegate, null);
     URI uri = new URI(storageEndpoint);
     this.config.clusterURL = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), "/", null, null);
-    Logger.warn(LOG_TAG, "storageEndpoint is " + uri + " and clusterURL is " + config.clusterURL);
+    FxAccountConstants.pii(LOG_TAG, "storageEndpoint is " + uri + " and clusterURL is " + config.clusterURL);
   }
 
   @Override

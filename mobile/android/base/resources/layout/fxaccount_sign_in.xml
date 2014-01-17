@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <LinearLayout
+        android:id="@+id/sign_in_view"
+        style="@style/FxAccountMiddle" >
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/firefox_accounts" />
+
+        <TextView
+            style="@style/FxAccountSubHeaderItem"
+            android:text="@string/fxaccount_sign_in" />
+
+        <include layout="@layout/fxaccount_email_password_view" />
+
+        <Button
+            android:id="@+id/sign_in_button"
+            style="@style/FxAccountButton"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="45dp"
+            android:text="@string/fxaccount_sign_in_button_label" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp" >
+
+            <TextView
+                android:id="@+id/forgot_password_link"
+                style="@style/FxAccountLinkItem"
+                android:layout_gravity="left"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:text="@string/fxaccount_forgot_password" />
+
+            <TextView
+                android:id="@+id/create_account_link"
+                style="@style/FxAccountLinkItem"
+                android:layout_gravity="right"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:text="@string/fxaccount_create_account" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/FxAccountSpacer" />
+
+        <ImageView
+            style="@style/FxAccountIcon"
+            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+    </LinearLayout>
+
+</ScrollView>

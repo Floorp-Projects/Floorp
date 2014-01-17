@@ -23,6 +23,7 @@
 #include "nsIOutputStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
+#include "mozilla/DebugOnly.h"
 
 typedef mozilla::net::LoadContextInfo LoadContextInfo;
 
@@ -435,6 +436,23 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 // nsIWyciwygChannel
 //////////////////////////////////////////////////////////////////////////////
 
+nsresult
+nsWyciwygChannel::EnsureWriteCacheEntry()
+{
+  MOZ_ASSERT(mMode == WRITING, "nsWyciwygChannel not open for writing");
+
+  if (!mCacheEntry) {
+    // OPEN_TRUNCATE will give us the entry instantly
+    nsresult rv = OpenCacheEntry(mURI, nsICacheStorage::OPEN_TRUNCATE);
+    if (NS_FAILED(rv) || !mCacheEntry) {
+      LOG(("  could not synchronously open cache entry for write!"));
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
 {
@@ -445,6 +463,13 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
   }
 
   mMode = WRITING;
+
+  if (mozilla::net::CacheObserver::UseNewCache()) {
+    mozilla::DebugOnly<nsresult> rv = EnsureWriteCacheEntry();
+    // If this fails in release, that is not much of a deal. We try
+    // it once again on the IO thread.
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
   return mCacheIOTarget->Dispatch(new nsWyciwygWriteEvent(this, aData),
                                   NS_DISPATCH_NORMAL);
@@ -458,15 +483,11 @@ nsWyciwygChannel::WriteToCacheEntryInternal(const nsAString &aData)
 
   nsresult rv;
 
-  MOZ_ASSERT(mMode == WRITING, "nsWyciwygChannel not open for writing");
-
-  if (!mCacheEntry) {
-    // OPEN_TRUNCATE will give us the entry instantly
-    rv = OpenCacheEntry(mURI, nsICacheStorage::OPEN_TRUNCATE);
-    if (NS_FAILED(rv) || !mCacheEntry) {
-      LOG(("  could not synchronously open cache entry for write!"));
-      return NS_ERROR_FAILURE;
-    }
+  // With the new cache entry this will just pass as a no-op since we
+  // are opening the entry in WriteToCacheEntry.
+  rv = EnsureWriteCacheEntry();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {

@@ -7,9 +7,7 @@ package org.mozilla.gecko.fxa.authenticator;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountSetupActivity;
-import org.mozilla.gecko.fxa.sync.FxAccount;
-import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -83,7 +81,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
       return res;
     }
 
-    Intent intent = new Intent(context, FxAccountSetupActivity.class);
+    Intent intent = new Intent(context, FxAccountGetStartedActivity.class);
     res.putParcelable(AccountManager.KEY_INTENT, intent);
     return res;
   }
@@ -139,22 +137,12 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   }
 
   /**
-   * Extract an FxAccount from an Android Account object.
+   * Return Firefox Accounts.
    *
-   * @param context to use for AccountManager.
-   * @param account to extract FxAccount from.
-   * @return FxAccount instance.
+   * @param context Android context.
+   * @return Firefox Account objects.
    */
-  public static FxAccount fromAndroidAccount(Context context, Account account) {
-    AccountManager accountManager = AccountManager.get(context);
-
-    final byte[] sessionTokenBytes = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_SESSION_TOKEN));
-    final byte[] kA = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_KA), 16);
-    final byte[] kB = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_KB), 16);
-
-    final String idpEndpoint = accountManager.getUserData(account, JSON_KEY_IDP_ENDPOINT);
-    final String authEndpoint = accountManager.getUserData(account, JSON_KEY_AUTH_ENDPOINT);
-
-    return new FxAccount(account.name, sessionTokenBytes, kA, kB, idpEndpoint, authEndpoint);
+  public static Account[] getFirefoxAccounts(final Context context) {
+    return AccountManager.get(context).getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
   }
 }

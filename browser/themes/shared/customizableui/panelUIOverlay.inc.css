@@ -325,11 +325,15 @@ panelview toolbarbutton@buttonStateHover@,
 .customizationmode-button,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
-#edit-controls@inAnyPanel@@buttonStateHover@,
-#zoom-controls@inAnyPanel@@buttonStateHover@,
 #BMB_bookmarksPopup > menu@buttonStateHover@,
 #BMB_bookmarksPopup > menuitem@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
+  border-color: hsla(210,4%,10%,.1);
+}
+
+
+#edit-controls@inAnyPanel@@buttonStateHover@,
+#zoom-controls@inAnyPanel@@buttonStateHover@ {
   border-color: hsla(210,4%,10%,.1);
 }
 

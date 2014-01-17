@@ -8,6 +8,6 @@ module.metadata = {
 };
 
 exports.Loader = require('./loader').Loader;
-exports.Symbiont = require('./symbiont').Symbiont;
+exports.Symbiont = require('../deprecated/symbiont').Symbiont;
 exports.Worker = require('./worker').Worker;
 

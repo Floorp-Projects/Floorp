@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { on, once, off, emit, count, amass } = require('sdk/event/core');
+const { on, once, off, emit, count } = require('sdk/event/core');
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
 
 exports['test add a listener'] = function(assert) {
