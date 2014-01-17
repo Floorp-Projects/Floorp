@@ -138,3 +138,6 @@
   -moz-image-region: rect(0, 612px, 18px, 594px);
 }
 
+#tabview-button {
+  -moz-image-region: rect(0, 648px, 18px, 630px);
+}

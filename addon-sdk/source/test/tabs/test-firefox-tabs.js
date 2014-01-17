@@ -9,7 +9,6 @@ const timer = require('sdk/timers');
 const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 const { windows, onFocus, getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { open, focus, close } = require('sdk/window/helpers');
-const { StringBundle } = require('sdk/deprecated/app-strings');
 const tabs = require('sdk/tabs');
 const { browserWindows } = require('sdk/windows');
 const { set: setPref } = require("sdk/preferences/service");
@@ -19,13 +18,17 @@ const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAA
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
-  let tabStrings = StringBundle('chrome://browser/locale/tabbrowser.properties');
+  let url = 'chrome://browser/locale/tabbrowser.properties';
+  let stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService).
+                        createBundle(url);
+  let emptyTabTitle = stringBundle.GetStringFromName('tabs.emptyTabTitle');
 
   tabs.on('ready', function onReady(tab) {
     tabs.removeListener('ready', onReady);
 
     assert.equal(tab.title,
-                     tabStrings.get('tabs.emptyTabTitle'),
+                     emptyTabTitle,
                      "title of about: tab is not blank");
 
     tab.close(done);

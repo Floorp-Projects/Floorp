@@ -5,7 +5,7 @@
 "use strict";
 
 const { data } = require("sdk/self");
-const { Symbiont } = require("sdk/content/symbiont");
+const { Symbiont } = require("sdk/deprecated/symbiont");
 
 exports["test:direct communication with trusted document"] = function(assert, done) {
   let worker = Symbiont({

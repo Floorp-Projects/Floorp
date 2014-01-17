@@ -17,6 +17,8 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -88,7 +90,8 @@ public class HomeBanner extends LinearLayout
             // Store the current message id to pass back to JS in the view's OnClickListener.
             setTag(message.getString("id"));
 
-            final String text = message.getString("text");
+            // Display styled text from an HTML string.
+            final Spanned text = Html.fromHtml(message.getString("text"));
             final TextView textView = (TextView) findViewById(R.id.text);
 
             // Update the banner message on the UI thread.

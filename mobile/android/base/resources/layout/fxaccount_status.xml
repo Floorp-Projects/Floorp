@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <LinearLayout
+        android:id="@+id/existing_user"
+        style="@style/FxAccountMiddle" >
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/firefox_accounts" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/email"
+            style="@style/FxAccountSubHeaderItem" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/change_password"
+            style="@style/FxAccountLinkItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_change_password" >
+        </TextView>
+
+        <FrameLayout
+            android:id="@+id/connection_status_view"
+            style="@style/FxAccountTextItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp" >
+
+            <TextView
+                android:id="@+id/unverified_view"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:background="#fad4d2"
+                android:drawablePadding="10dp"
+                android:drawableStart="@drawable/fxaccount_sync_error"
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="@string/fxaccount_status_needs_verification"
+                android:visibility="gone" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/sign_in_view"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:background="#fad4d2"
+                android:drawablePadding="10dp"
+                android:drawableStart="@drawable/fxaccount_sync_error"
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="@string/fxaccount_status_needs_credentials"
+                android:visibility="gone" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/syncing_view"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:background="#d1e7fe"
+                android:drawablePadding="10dp"
+                android:drawableStart="@drawable/fxaccount_sync_icon"
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="@string/fxaccount_status_syncing"
+                android:visibility="visible" >
+            </TextView>
+        </FrameLayout>
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_status_sync" >
+        </TextView>
+
+        <CheckBox
+            android:id="@+id/bookmarks_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_status_bookmarks" />
+
+        <CheckBox
+            android:id="@+id/history_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_status_history" />
+
+        <CheckBox
+            android:id="@+id/passwords_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_status_passwords" />
+
+        <CheckBox
+            android:id="@+id/tabs_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/fxaccount_status_tabs" />
+
+        <LinearLayout
+            android:id="@+id/debug_buttons"
+            style="@style/FxAccountMiddle"
+            android:background="#7f7f7f" >
+
+            <Button
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:onClick="onClickRefresh"
+                android:text="Refresh" />
+
+            <Button
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:onClick="onClickDumpAccountDetails"
+                android:text="Dump Account Details" />
+
+            <Button
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:onClick="onClickForgetAccountTokens"
+                android:text="Forget sessionToken and keyFetchToken" />
+
+            <Button
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:onClick="onClickForgetPassword"
+                android:text="Forget password" />
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

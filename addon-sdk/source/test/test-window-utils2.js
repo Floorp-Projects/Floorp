@@ -11,7 +11,7 @@ module.metadata = {
 };
 
 const { Ci } = require('chrome');
-const { open, backgroundify, windows, isBrowser,
+const { open, windows, isBrowser,
         getXULWindow, getBaseWindow, getToplevelWindow, getMostRecentWindow,
         getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { close } = require('sdk/window/helpers');
@@ -78,7 +78,7 @@ exports['test new top window with various URIs'] = function(assert, done) {
   }, msg);
   assert.throws(function () {
     open('https://foo');
-  }, msg); 
+  }, msg);
   assert.throws(function () {
     open('ftp://foo');
   }, msg);
@@ -88,28 +88,12 @@ exports['test new top window with various URIs'] = function(assert, done) {
 
   let chromeWindow = open('chrome://foo/content/');
   assert.ok(~windows().indexOf(chromeWindow), 'chrome URI works');
-  
+
   let resourceWindow = open('resource://foo');
   assert.ok(~windows().indexOf(resourceWindow), 'resource URI works');
 
   // Wait for the window unload before ending test
   close(chromeWindow).then(close.bind(null, resourceWindow)).then(done);
-};
-
-exports.testBackgroundify = function(assert, done) {
-  let window = open('data:text/html;charset=utf-8,backgroundy');
-  assert.ok(~windows().indexOf(window),
-            'window is in the list of windows');
-  let backgroundy = backgroundify(window);
-  assert.equal(backgroundy, window, 'backgroundify returs give window back');
-  assert.ok(!~windows().indexOf(window),
-            'backgroundifyied window is in the list of windows');
-
-  // Wait for the window unload before ending test
-  // backgroundified windows doesn't dispatch domwindowclosed event
-  // so that we have to manually wait for unload event
-  window.onunload = done;
-  window.close();
 };
 
 exports.testIsBrowser = function(assert) {

@@ -138,8 +138,8 @@ pref("browser.backspace_action", 0);
 /* session history */
 pref("browser.sessionhistory.max_entries", 50);
 
-// On startup, automatically restore tabs from last time?
-pref("browser.startup.sessionRestore", false);
+// On startup, don't automatically restore tabs
+pref("browser.startup.page", 1);
 
 /* session store */
 pref("browser.sessionstore.resume_from_crash", true);
@@ -530,7 +530,6 @@ pref("editor.singleLine.pasteNewlines", 2);
 pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
 
 // prefs to sync by default
-pref("services.sync.prefs.sync.browser.startup.sessionRestore", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
 pref("services.sync.prefs.sync.devtools.errorconsole.enabled", true);
 pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);

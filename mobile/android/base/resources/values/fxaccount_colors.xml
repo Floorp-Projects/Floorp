@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+  <color name="fxaccount_error_dark">#FDEBE5</color>
+  <color name="fxaccount_error_light">#E24B03</color>
+
+  <color name="fxaccount_textColor">#3c454d</color>
+
+  <color name="fxaccount_linkified_textColor">#c0c9d0</color>
+  <color name="fxaccount_linkified_textColorLink">#0096dd</color>
+
+  <color name="fxaccount_error">#d63920</color>
+  <color name="fxaccount_button_textColor">#ffffff</color>
+  <color name="fxaccount_button_background_active">#e66000</color>
+  <color name="fxaccount_button_background_hit">#fd9500</color>
+  <color name="fxaccount_button_background_loading">#424f59</color>
+  <color name="fxaccount_button_background_inactive">#c0c9d0</color>
+  <color name="fxaccount_input_textColor">#424f59</color>
+  <color name="fxaccount_input_textColorHint">#c0c9d0</color>
+  <color name="fxaccount_link_textColor">#0096dd</color>
+  <color name="fxaccount_link_textColor_pressed">#00767d</color>
+  <color name="fxaccount_input_borderActive">#6a7b86</color>
+  <color name="fxaccount_input_borderInactive">#c0c9d0</color>
+</resources>

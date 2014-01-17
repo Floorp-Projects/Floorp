@@ -40,7 +40,7 @@
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/CellBroadcast.h"
-#include "mozilla/dom/network/MobileConnectionArray.h"
+#include "mozilla/dom/MobileConnectionArray.h"
 #include "mozilla/dom/Voicemail.h"
 #endif
 #include "nsIIdleObserver.h"
@@ -1180,7 +1180,7 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
 
 #ifdef MOZ_B2G_RIL
 
-network::MobileConnectionArray*
+MobileConnectionArray*
 Navigator::GetMozMobileConnections(ErrorResult& aRv)
 {
   if (!mMobileConnections) {
@@ -1188,7 +1188,7 @@ Navigator::GetMozMobileConnections(ErrorResult& aRv)
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    mMobileConnections = new network::MobileConnectionArray(mWindow);
+    mMobileConnections = new MobileConnectionArray(mWindow);
   }
 
   return mMobileConnections;

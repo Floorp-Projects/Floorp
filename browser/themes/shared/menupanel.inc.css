@@ -90,6 +90,11 @@ toolbarpaletteitem[place="palette"] > #privatebrowsing-button {
   -moz-image-region: rect(0px, 576px, 32px, 544px);
 }
 
+#tabview-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #tabview-button {
+  -moz-image-region: rect(0px, 608px, 32px, 576px);
+}
+
 #find-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #find-button {
   -moz-image-region: rect(0px, 640px, 32px, 608px);

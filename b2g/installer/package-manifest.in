@@ -166,6 +166,7 @@
 @BINPATH@/components/dom_icc.xpt
 @BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
+@BINPATH@/components/dom_mobileconnection.xpt
 #endif
 #ifdef MOZ_B2G_BT
 @BINPATH@/components/dom_bluetooth.xpt
