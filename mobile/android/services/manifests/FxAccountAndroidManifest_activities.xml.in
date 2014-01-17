@@ -1,14 +1,59 @@
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/icon"
-            android:label="@string/fxaccount_label"
+            android:icon="@drawable/fxaccount_icon"
+            android:label="Status"
             android:clearTaskOnLaunch="true"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountSetupActivity"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountStatusActivity"
             android:windowSoftInputMode="adjustResize">
             <!-- Adding a launcher will make this activity appear on the
                  Apps screen, which we only want when testing. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:label="Setup"
+            android:clearTaskOnLaunch="true"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Adding a launcher will make this activity appear on the
+                 Apps screen, which we only want when testing. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateSuccessActivity"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountSignInActivity"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>

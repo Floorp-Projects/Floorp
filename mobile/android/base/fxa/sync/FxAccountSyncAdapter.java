@@ -57,12 +57,17 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
    */
   protected static class SessionCallback implements BaseGlobalSessionCallback {
     protected final CountDownLatch latch;
+    protected final SyncResult syncResult;
 
-    public SessionCallback(CountDownLatch latch) {
+    public SessionCallback(CountDownLatch latch, SyncResult syncResult) {
       if (latch == null) {
         throw new IllegalArgumentException("latch must not be null");
       }
+      if (syncResult == null) {
+        throw new IllegalArgumentException("syncResult must not be null");
+      }
       this.latch = latch;
+      this.syncResult = syncResult;
     }
 
     @Override
@@ -86,20 +91,47 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     public void handleStageCompleted(Stage currentState, GlobalSession globalSession) {
     }
 
+    /**
+     * No error!  Say that we made progress.
+     */
+    protected void setSyncResultSuccess() {
+      syncResult.stats.numUpdates += 1;
+    }
+
+    /**
+     * Soft error. Say that we made progress, so that Android will sync us again
+     * after exponential backoff.
+     */
+    protected void setSyncResultSoftError() {
+      syncResult.stats.numUpdates += 1;
+      syncResult.stats.numIoExceptions += 1;
+    }
+
+    /**
+     * Hard error. We don't want Android to sync us again, even if we make
+     * progress, until the user intervenes.
+     */
+    protected void setSyncResultHardError() {
+      syncResult.stats.numAuthExceptions += 1;
+    }
+
     @Override
     public void handleSuccess(GlobalSession globalSession) {
-      Logger.info(LOG_TAG, "Successfully synced!");
+      setSyncResultSuccess();
+      Logger.info(LOG_TAG, "Sync succeeded.");
       latch.countDown();
     }
 
     @Override
-    public void handleError(GlobalSession globalSession, Exception ex) {
-      Logger.warn(LOG_TAG, "Sync failed.", ex);
+    public void handleError(GlobalSession globalSession, Exception e) {
+      setSyncResultSoftError();
+      Logger.warn(LOG_TAG, "Sync failed.", e);
       latch.countDown();
     }
 
     @Override
     public void handleAborted(GlobalSession globalSession, String reason) {
+      setSyncResultSoftError();
       Logger.warn(LOG_TAG, "Sync aborted: " + reason);
       latch.countDown();
     }
@@ -122,6 +154,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         " with instance " + this + ".");
 
     final CountDownLatch latch = new CountDownLatch(1);
+    final BaseGlobalSessionCallback callback = new SessionCallback(latch, syncResult);
+
+
     try {
       final String authEndpoint = FxAccountConstants.DEFAULT_AUTH_ENDPOINT;
       final String tokenServerEndpoint = authEndpoint + (authEndpoint.endsWith("/") ? "" : "/") + "1.0/sync/1.1";
@@ -150,7 +185,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
               FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
               sharedPrefs.edit().putLong("tokenFailures", 0).commit();
 
-              final BaseGlobalSessionCallback callback = new SessionCallback(latch);
               FxAccountGlobalSession globalSession = null;
               try {
                 ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
@@ -187,7 +221,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             @Override
             public void handleError(Exception e) {
               Logger.error(LOG_TAG, "Failed to get token.", e);
-              latch.countDown();
+              callback.handleError(null, e);
             }
           });
         }
@@ -195,15 +229,17 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         @Override
         public void handleError(FxAccountLoginException e) {
           Logger.error(LOG_TAG, "Got error logging in.", e);
-          latch.countDown();
+          callback.handleError(null, e);
         }
       });
 
       latch.await();
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Got error syncing.", e);
-      latch.countDown();
+      callback.handleError(null, e);
     }
+
+    Logger.error(LOG_TAG, "Syncing done.");
   }
 
   protected void debugAssertion(String audience, String assertion) {
