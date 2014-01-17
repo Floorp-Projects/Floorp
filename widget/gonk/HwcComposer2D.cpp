@@ -30,6 +30,9 @@
 
 #if ANDROID_VERSION >= 18
 #include "libdisplay/FramebufferSurface.h"
+#ifndef HWC_BLIT
+#define HWC_BLIT (HWC_FRAMEBUFFER_TARGET + 1)
+#endif
 #endif
 
 #define LOG_TAG "HWComposer"
@@ -470,34 +473,66 @@ HwcComposer2D::TryHwComposition()
 
     Prepare(fbsurface->lastHandle, -1);
 
-    bool fullHwcComposite = true;
-    for (int j = 0; j < idx; j++) {
-        if (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER) {
-            // After prepare, if there is an HWC_FRAMEBUFFER layer,
-            // it means full HWC Composition is not possible this time
-            LOGD("GPU or Partial HWC Composition");
-            fullHwcComposite = false;
+    /* Possible composition paths, after hwc prepare:
+    1. GPU Composition
+    2. BLIT Composition
+    3. Full OVERLAY Composition
+    4. Partial OVERLAY Composition (GPU + OVERLAY) */
+
+    bool gpuComposite = false;
+    bool blitComposite = false;
+    bool overlayComposite = true;
+
+    for (int j=0; j < idx; j++) {
+        if (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER ||
+            mList->hwLayers[j].compositionType == HWC_BLIT) {
+            // Full OVERLAY composition is not possible on this frame
+            // It is either GPU / BLIT / partial OVERLAY composition.
+            overlayComposite = false;
             break;
         }
     }
 
-    if (!fullHwcComposite) {
+    if (!overlayComposite) {
         for (int k=0; k < idx; k++) {
-            if (mList->hwLayers[k].compositionType == HWC_OVERLAY) {
-                // HWC will compose HWC_OVERLAY layers in partial
-                // HWC Composition, so set layer composition flag
-                // on mapped LayerComposite to skip GPU composition
-                mHwcLayerMap[k]->SetLayerComposited(true);
+            switch (mList->hwLayers[k].compositionType) {
+                case HWC_FRAMEBUFFER:
+                    gpuComposite = true;
+                    break;
+                case HWC_BLIT:
+                    blitComposite = true;
+                    break;
+                case HWC_OVERLAY:
+                    // HWC will compose HWC_OVERLAY layers in partial
+                    // Overlay Composition, set layer composition flag
+                    // on mapped LayerComposite to skip GPU composition
+                    mHwcLayerMap[k]->SetLayerComposited(true);
+                    break;
+                default:
+                    break;
             }
         }
-        return false;
+
+        if (gpuComposite) {
+            // GPU or partial OVERLAY Composition
+            return false;
+        } else if (blitComposite) {
+            // BLIT Composition, flip FB target
+            GetGonkDisplay()->UpdateFBSurface(mDpy, mSur);
+            FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
+            if (!fbsurface) {
+                LOGE("H/W Composition failed. NULL FBSurface.");
+                return false;
+            }
+            mList->hwLayers[idx].handle = fbsurface->lastHandle;
+            mList->hwLayers[idx].acquireFenceFd = fbsurface->lastFenceFD;
+        }
     }
 
-    // Full HWC Composition
+    // BLIT or full OVERLAY Composition
     Commit();
 
-    // No composition on FB layer, so closing releaseFenceFd
-    close(mList->hwLayers[idx].releaseFenceFd);
+    GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[idx].releaseFenceFd);
     return true;
 }
 

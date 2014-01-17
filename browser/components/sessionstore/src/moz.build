@@ -13,6 +13,7 @@ EXTRA_COMPONENTS += [
 JS_MODULES_PATH = 'modules/sessionstore'
 
 EXTRA_JS_MODULES = [
+    'ContentRestore.jsm',
     'DocShellCapabilities.jsm',
     'DocumentUtils.jsm',
     'FrameTree.jsm',
