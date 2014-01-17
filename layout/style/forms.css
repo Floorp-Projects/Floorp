@@ -16,7 +16,6 @@
   text-overflow: inherit;
   overflow: inherit;
   padding: inherit;
-  position: inherit;
   height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
