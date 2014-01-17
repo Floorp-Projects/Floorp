@@ -6,6 +6,8 @@ package org.mozilla.gecko.fxa.authenticator;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -31,6 +33,9 @@ import android.os.Bundle;
 public class AndroidFxAccount implements AbstractFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
+  public static final String ACCOUNT_KEY_ASSERTION = "assertion";
+  public static final String ACCOUNT_KEY_CERTIFICATE = "certificate";
+  public static final String ACCOUNT_KEY_INVALID = "invalid";
   public static final String ACCOUNT_KEY_SERVERURI = "serverURI";
   public static final String ACCOUNT_KEY_SESSION_TOKEN = "sessionToken";
   public static final String ACCOUNT_KEY_KEY_FETCH_TOKEN = "keyFetchToken";
@@ -67,6 +72,21 @@ public class AndroidFxAccount implements AbstractFxAccount {
   }
 
   @Override
+  public byte[] getEmailUTF8() {
+    try {
+      return account.name.getBytes("UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      // Ignore.
+      return null;
+    }
+  }
+
+  @Override
+  public byte[] getQuickStretchedPW() {
+    return Utils.hex2Byte(accountManager.getPassword(account));
+  }
+
+  @Override
   public String getServerURI() {
     return accountManager.getUserData(account, ACCOUNT_KEY_SERVERURI);
   }
@@ -90,13 +110,13 @@ public class AndroidFxAccount implements AbstractFxAccount {
   }
 
   @Override
-  public void invalidateSessionToken() {
-    accountManager.setUserData(account, ACCOUNT_KEY_SESSION_TOKEN, null);
+  public void setSessionToken(byte[] sessionToken) {
+    accountManager.setUserData(account, ACCOUNT_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
   }
 
   @Override
-  public void invalidateKeyFetchToken() {
-    accountManager.setUserData(account, ACCOUNT_KEY_KEY_FETCH_TOKEN, null);
+  public void setKeyFetchToken(byte[] keyFetchToken) {
+    accountManager.setUserData(account, ACCOUNT_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
   }
 
   @Override
@@ -155,6 +175,26 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return keyPair;
   }
 
+  @Override
+  public String getCertificate() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_CERTIFICATE);
+  }
+
+  @Override
+  public void setCertificate(String certificate) {
+    accountManager.setUserData(account, ACCOUNT_KEY_CERTIFICATE, certificate);
+  }
+
+  @Override
+  public String getAssertion() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_ASSERTION);
+  }
+
+  @Override
+  public void setAssertion(String assertion) {
+    accountManager.setUserData(account, ACCOUNT_KEY_ASSERTION, assertion);
+  }
+
   /**
    * Extract a JSON dictionary of the string values associated to this account.
    * <p>
@@ -167,16 +207,27 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public ExtendedJSONObject toJSONObject() {
     ExtendedJSONObject o = new ExtendedJSONObject();
     for (String key : new String[] {
+        ACCOUNT_KEY_ASSERTION,
+        ACCOUNT_KEY_CERTIFICATE,
         ACCOUNT_KEY_SERVERURI,
         ACCOUNT_KEY_SESSION_TOKEN,
+        ACCOUNT_KEY_INVALID,
         ACCOUNT_KEY_KEY_FETCH_TOKEN,
         ACCOUNT_KEY_VERIFIED,
         ACCOUNT_KEY_KA,
         ACCOUNT_KEY_KB,
         ACCOUNT_KEY_UNWRAPKB,
-        ACCOUNT_KEY_ASSERTION_KEY_PAIR }) {
+        ACCOUNT_KEY_ASSERTION_KEY_PAIR,
+    }) {
       o.put(key, accountManager.getUserData(account, key));
     }
+    o.put("email", account.name);
+    try {
+      o.put("emailUTF8", Utils.byte2Hex(account.name.getBytes("UTF-8")));
+    } catch (UnsupportedEncodingException e) {
+      // Ignore.
+    }
+    o.put("quickStretchedPW", accountManager.getPassword(account));
     return o;
   }
 
@@ -208,8 +259,8 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
     Bundle userdata = new Bundle();
     userdata.putString(AndroidFxAccount.ACCOUNT_KEY_SERVERURI, serverURI);
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_SESSION_TOKEN, Utils.byte2Hex(sessionToken));
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_KEY_FETCH_TOKEN, Utils.byte2Hex(keyFetchToken));
+    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
+    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
     userdata.putString(AndroidFxAccount.ACCOUNT_KEY_VERIFIED, Boolean.valueOf(verified).toString());
     userdata.putString(AndroidFxAccount.ACCOUNT_KEY_UNWRAPKB, Utils.byte2Hex(unwrapBkey));
 
@@ -221,5 +272,41 @@ public class AndroidFxAccount implements AbstractFxAccount {
     }
     FxAccountAuthenticator.enableSyncing(context, account);
     return account;
+  }
+
+  @Override
+  public boolean isValid() {
+    // Boolean.valueOf only returns true for the string "true"; this errors in
+    // the direction of marking accounts valid.
+    boolean invalid = Boolean.valueOf(accountManager.getUserData(account, ACCOUNT_KEY_INVALID)).booleanValue();
+    return !invalid;
+  }
+
+  @Override
+  public void setInvalid() {
+    accountManager.setUserData(account, ACCOUNT_KEY_INVALID, Boolean.valueOf(true).toString());
+  }
+
+  /**
+   * <b>For debugging only!</b>
+   */
+  public void dump() {
+    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      return;
+    }
+    ExtendedJSONObject o = toJSONObject();
+    ArrayList<String> list = new ArrayList<String>(o.keySet());
+    Collections.sort(list);
+    for (String key : list) {
+      FxAccountConstants.pii(LOG_TAG, key + ": " + o.getString(key));
+    }
+  }
+
+  /**
+   * <b>For debugging only!</b>
+   */
+  public void resetAccountTokens() {
+    accountManager.setUserData(account, ACCOUNT_KEY_SESSION_TOKEN, null);
+    accountManager.setUserData(account, ACCOUNT_KEY_KEY_FETCH_TOKEN, null);
   }
 }
