@@ -196,7 +196,7 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   nsHTMLReflowMetrics barDesiredSize(aReflowState.GetWritingMode());
   ReflowChild(aBarFrame, aPresContext, barDesiredSize, reflowState, xoffset,
               yoffset, 0, aStatus);
-  FinishReflowChild(aBarFrame, aPresContext, &reflowState, barDesiredSize,
+  FinishReflowChild(aBarFrame, aPresContext, barDesiredSize, &reflowState,
                     xoffset, yoffset, 0);
 }
 

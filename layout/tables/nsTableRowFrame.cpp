@@ -951,7 +951,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       // Place the child
       desiredSize.Width() = availCellWidth;
 
-      FinishReflowChild(kidFrame, aPresContext, nullptr, desiredSize, x, 0, 0);
+      FinishReflowChild(kidFrame, aPresContext, desiredSize, nullptr, x, 0, 0);
 
       nsTableFrame::InvalidateTableFrame(kidFrame, kidRect, kidVisualOverflow,
                                          firstReflow);
