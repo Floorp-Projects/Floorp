@@ -316,7 +316,6 @@ gbjar.sources += [
     'toolbar/ToolbarDisplayLayout.java',
     'toolbar/ToolbarEditLayout.java',
     'toolbar/ToolbarEditText.java',
-    'toolbar/ToolbarProgressView.java',
     'toolbar/ToolbarTitlePrefs.java',
     'TouchEventInterceptor.java',
     'updater/UpdateService.java',
