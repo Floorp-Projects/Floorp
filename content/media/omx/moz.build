@@ -17,8 +17,12 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_OMX_ENCODER']:
+    EXPORTS += [
+        'OMXCodecWrapper.h',
+    ]
     SOURCES += [
         'OMXCodecDescriptorUtil.cpp',
+        'OMXCodecWrapper.cpp',
     ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
