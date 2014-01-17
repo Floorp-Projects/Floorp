@@ -580,6 +580,7 @@ struct JSContext : public js::ExclusiveContext,
         return throwing;
     }
 
+    MOZ_WARN_UNUSED_RESULT
     bool getPendingException(JS::MutableHandleValue rval);
 
     void setPendingException(js::Value v);
