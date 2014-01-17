@@ -8,4 +8,4 @@
     android:icon="@drawable/icon"
     android:smallIcon="@drawable/icon"
     android:label="@string/fxaccount_label"
-/>
+    android:accountPreferences="@xml/fxaccount_options" />
