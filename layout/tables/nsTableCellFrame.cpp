@@ -948,7 +948,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   SetContentEmpty(isEmpty);
 
   // Place the child
-  FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,
+  FinishReflowChild(firstKid, aPresContext, kidSize, &kidReflowState,
                     kidOrigin.x, kidOrigin.y, 0);
 
   nsTableFrame::InvalidateTableFrame(firstKid, origRect, origVisualOverflow,

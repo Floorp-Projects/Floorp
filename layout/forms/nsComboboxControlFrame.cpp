@@ -446,8 +446,8 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                             ignoredStatus);
 
    // Set the child's width and height to its desired size
-  FinishReflowChild(mDropdownFrame, aPresContext, &kidReflowState,
-                    desiredSize, rect.x, rect.y, flags);
+  FinishReflowChild(mDropdownFrame, aPresContext, desiredSize,
+                    &kidReflowState, rect.x, rect.y, flags);
   return rv;
 }
 

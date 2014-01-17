@@ -1325,8 +1325,8 @@ nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
   while (child.Frame()) {
     nscoord dx = aOffsetX + child.X();
     nscoord dy = aBaseline - child.Ascent();
-    FinishReflowChild(child.Frame(), PresContext(), nullptr,
-                      child.ReflowMetrics(), dx, dy, 0);
+    FinishReflowChild(child.Frame(), PresContext(), child.ReflowMetrics(),
+                      nullptr, dx, dy, 0);
     ++child;
   }
 }

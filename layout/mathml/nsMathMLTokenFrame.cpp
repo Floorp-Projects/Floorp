@@ -215,7 +215,7 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
       dy = childSize.Height() == 0 ? 0 : aDesiredSize.TopAscent() - childSize.TopAscent();
-      FinishReflowChild(childFrame, PresContext(), nullptr, childSize, dx, dy, 0);
+      FinishReflowChild(childFrame, PresContext(), childSize, nullptr, dx, dy, 0);
       dx += childSize.Width();
     }
   }

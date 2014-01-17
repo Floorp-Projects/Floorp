@@ -1032,8 +1032,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     nsPoint captionOrigin;
     GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
-    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, captionRS,
-                      captionMet, captionOrigin.x, captionOrigin.y, 0);
+    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, captionMet,
+                      captionRS, captionOrigin.x, captionOrigin.y, 0);
     captionRS->~nsHTMLReflowState();
   }
   // XXX If the height is constrained then we need to check whether
@@ -1042,7 +1042,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsPoint innerOrigin;
   GetInnerOrigin(captionSide, containSize, captionSize, 
                  captionMargin, innerSize, innerMargin, innerOrigin);
-  FinishReflowChild(InnerTableFrame(), aPresContext, innerRS, innerMet,
+  FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRS,
                     innerOrigin.x, innerOrigin.y, 0);
   innerRS->~nsHTMLReflowState();
 

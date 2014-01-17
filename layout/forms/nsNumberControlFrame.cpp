@@ -150,7 +150,7 @@ nsNumberControlFrame::
   MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
              "We gave our child unconstrained height, so it should be complete");
   return FinishReflowChild(aOuterWrapperFrame, aPresContext,
-                           &wrapperReflowState, aWrappersDesiredSize,
+                           aWrappersDesiredSize, &wrapperReflowState,
                            xoffset, yoffset, 0);
 }
 
