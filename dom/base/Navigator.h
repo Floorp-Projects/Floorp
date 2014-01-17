@@ -72,9 +72,6 @@ class MozGetUserMediaDevicesSuccessCallback;
 
 namespace network {
 class Connection;
-#ifdef MOZ_B2G_RIL
-class MobileConnectionArray;
-#endif
 } // namespace Connection;
 
 #ifdef MOZ_B2G_BT
@@ -86,6 +83,7 @@ class BluetoothManager;
 #ifdef MOZ_B2G_RIL
 class CellBroadcast;
 class IccManager;
+class MobileConnectionArray;
 class Voicemail;
 #endif
 
@@ -202,7 +200,7 @@ public:
                             ErrorResult& aRv);
   bool MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv);
 #ifdef MOZ_B2G_RIL
-  network::MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
+  MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
   CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
   Voicemail* GetMozVoicemail(ErrorResult& aRv);
   nsIDOMMozIccManager* GetMozIccManager(ErrorResult& aRv);
@@ -318,7 +316,7 @@ private:
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
-  nsRefPtr<network::MobileConnectionArray> mMobileConnections;
+  nsRefPtr<MobileConnectionArray> mMobileConnections;
   nsRefPtr<CellBroadcast> mCellBroadcast;
   nsRefPtr<IccManager> mIccManager;
   nsRefPtr<Voicemail> mVoicemail;

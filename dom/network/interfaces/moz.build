@@ -15,12 +15,6 @@ XPIDL_SOURCES += [
     'nsIUDPSocketChild.idl',
 ]
 
-if CONFIG['MOZ_B2G_RIL']:
-    XPIDL_SOURCES += [
-        'nsIDOMMobileConnection.idl',
-        'nsIMobileConnectionProvider.idl',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     XPIDL_SOURCES += [
         'nsIDOMNetworkStats.idl',
