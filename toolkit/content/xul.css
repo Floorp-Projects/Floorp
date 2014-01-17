@@ -157,10 +157,6 @@ toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
 
-toolbarbutton[type="wrap"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-wrapping-label");
-}
-
 toolbar[mode="icons"] .toolbarbutton-text,
 toolbar[mode="text"] .toolbarbutton-icon {
   display: none;
@@ -694,7 +690,7 @@ label.text-link, label[onclick] {
   -moz-user-focus: normal;
 }
 
-label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-label {
+label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-multiline-text {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
