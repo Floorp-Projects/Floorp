@@ -101,7 +101,6 @@ namespace jit {
     _(RegExpExec)                                                           \
     _(RegExpTest)                                                           \
     _(RegExpReplace)                                                        \
-    _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(ImplicitThis)                                                         \
     _(Slots)                                                                \

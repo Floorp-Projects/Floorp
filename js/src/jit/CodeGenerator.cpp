@@ -789,7 +789,7 @@ CodeGenerator::visitRegExpTest(LRegExpTest *lir)
 }
 
 typedef JSString *(*RegExpReplaceFn)(JSContext *, HandleString, HandleObject, HandleString);
-static const VMFunction RegExpReplaceInfo = FunctionInfo<RegExpReplaceFn>(RegExpReplace);
+static const VMFunction RegExpReplaceInfo = FunctionInfo<RegExpReplaceFn>(regexp_replace);
 
 bool
 CodeGenerator::visitRegExpReplace(LRegExpReplace *lir)
@@ -799,7 +799,7 @@ CodeGenerator::visitRegExpReplace(LRegExpReplace *lir)
     else
         pushArg(ToRegister(lir->replacement()));
 
-    pushArg(ToRegister(lir->pattern()));
+    pushArg(ToRegister(lir->regexp()));
 
     if (lir->string()->isConstant())
         pushArg(ImmGCPtr(lir->string()->toConstant()->toString()));
@@ -808,31 +808,6 @@ CodeGenerator::visitRegExpReplace(LRegExpReplace *lir)
 
     return callVM(RegExpReplaceInfo, lir);
 }
-
-typedef JSString *(*StringReplaceFn)(JSContext *, HandleString, HandleString, HandleString);
-static const VMFunction StringReplaceInfo = FunctionInfo<StringReplaceFn>(StringReplace);
-
-bool
-CodeGenerator::visitStringReplace(LStringReplace *lir)
-{
-    if (lir->replacement()->isConstant())
-        pushArg(ImmGCPtr(lir->replacement()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->replacement()));
-
-    if (lir->pattern()->isConstant())
-        pushArg(ImmGCPtr(lir->pattern()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->pattern()));
-
-    if (lir->string()->isConstant())
-        pushArg(ImmGCPtr(lir->string()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->string()));
-
-    return callVM(StringReplaceInfo, lir);
-}
-
 
 typedef JSObject *(*LambdaFn)(JSContext *, HandleFunction, HandleObject);
 static const VMFunction LambdaInfo =

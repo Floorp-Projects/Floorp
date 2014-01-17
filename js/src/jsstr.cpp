@@ -1731,13 +1731,6 @@ class MOZ_STACK_CLASS StringRegExpGuard
         return true;
     }
 
-    bool init(JSContext *cx, HandleString pattern) {
-        fm.patstr = AtomizeString(cx, pattern);
-        if (!fm.patstr)
-            return false;
-        return true;
-    }
-
     /*
      * Attempt to match |patstr| to |textstr|. A flags argument, metachars in
      * the pattern string, or a lengthy pattern string can thwart this process.
@@ -2456,7 +2449,7 @@ ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
 
 static bool
 BuildFlatReplacement(JSContext *cx, HandleString textstr, HandleString repstr,
-                     const FlatMatch &fm, MutableHandleValue rval)
+                     const FlatMatch &fm, CallArgs *args)
 {
     RopeBuilder builder(cx);
     size_t match = fm.match();
@@ -2528,7 +2521,7 @@ BuildFlatReplacement(JSContext *cx, HandleString textstr, HandleString repstr,
         }
     }
 
-    rval.setString(builder.result());
+    args->rval().setString(builder.result());
     return true;
 }
 
@@ -2540,7 +2533,7 @@ BuildFlatReplacement(JSContext *cx, HandleString textstr, HandleString repstr,
  */
 static inline bool
 BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *repstr,
-                       const jschar *firstDollar, const FlatMatch &fm, MutableHandleValue rval)
+                       const jschar *firstDollar, const FlatMatch &fm, CallArgs *args)
 {
     Rooted<JSLinearString*> textstr(cx, textstrArg->ensureLinear(cx));
     if (!textstr)
@@ -2612,7 +2605,7 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
            builder.append(rightSide));
 #undef ENSURE
 
-    rval.setString(builder.result());
+    args->rval().setString(builder.result());
     return true;
 }
 
@@ -2868,46 +2861,10 @@ js::str_replace_regexp_raw(JSContext *cx, HandleString string, HandleObject rege
 }
 
 static inline bool
-StrReplaceString(JSContext *cx, ReplaceData &rdata, const FlatMatch &fm, MutableHandleValue rval)
-{
-    /*
-     * Note: we could optimize the text.length == pattern.length case if we wanted,
-     * even in the presence of dollar metachars.
-     */
-    if (rdata.dollar)
-        return BuildDollarReplacement(cx, rdata.str, rdata.repstr, rdata.dollar, fm, rval);
-    return BuildFlatReplacement(cx, rdata.str, rdata.repstr, fm, rval);
-}
-
-static const uint32_t ReplaceOptArg = 2;
-
-bool
-js::str_replace_string_raw(JSContext *cx, HandleString string, HandleString pattern,
-                          HandleString replacement, MutableHandleValue rval)
-{
-    ReplaceData rdata(cx);
-
-    rdata.str = string;
-    JSLinearString *repl = replacement->ensureLinear(cx);
-    if (!repl)
-        return false;
-    rdata.setReplacementString(repl);
-
-    if (!rdata.g.init(cx, pattern))
-        return false;
-    const FlatMatch *fm = rdata.g.tryFlatMatch(cx, rdata.str, ReplaceOptArg, ReplaceOptArg, false);
-
-    if (fm->match() < 0) {
-        rval.setString(string);
-        return true;
-    }
-
-    return StrReplaceString(cx, rdata, *fm, rval);
-}
-
-static inline bool
 str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, const FlatMatch &fm)
 {
+    JS_ASSERT(fm.match() >= 0);
+
     RootedString matchStr(cx, js_NewDependentString(cx, rdata.str, fm.match(), fm.patternLength()));
     if (!matchStr)
         return false;
@@ -2953,6 +2910,8 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
     outerArgs.rval().setString(builder.result());
     return true;
 }
+
+static const uint32_t ReplaceOptArg = 2;
 
 /*
  * Pattern match the script to check if it is is indexing into a particular
@@ -3058,7 +3017,6 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
      */
 
     const FlatMatch *fm = rdata.g.tryFlatMatch(cx, rdata.str, ReplaceOptArg, args.length(), false);
-
     if (!fm) {
         if (cx->isExceptionPending())  /* oom in RopeMatch in tryFlatMatch */
             return false;
@@ -3072,7 +3030,15 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
 
     if (rdata.lambda)
         return str_replace_flat_lambda(cx, args, rdata, *fm);
-    return StrReplaceString(cx, rdata, *fm, args.rval());
+
+    /*
+     * Note: we could optimize the text.length == pattern.length case if we wanted,
+     * even in the presence of dollar metachars.
+     */
+    if (rdata.dollar)
+        return BuildDollarReplacement(cx, rdata.str, rdata.repstr, rdata.dollar, *fm, &args);
+
+    return BuildFlatReplacement(cx, rdata.str, rdata.repstr, *fm, &args);
 }
 
 namespace {
