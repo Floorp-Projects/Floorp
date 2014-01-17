@@ -88,6 +88,55 @@ strdup_impl(const char *src)
 }
 #endif /* XP_DARWIN */
 
+#ifdef ANDROID
+#include <stdarg.h>
+
+MOZ_MEMORY_API int
+vasprintf_impl(char **str, const char *fmt, va_list ap)
+{
+  if (str == NULL || fmt == NULL) {
+    return -1;
+  }
+
+  char* ptr = (char*)malloc_impl(128);
+  if (ptr == NULL) {
+    *str = NULL;
+    return -1;
+  }
+
+  int ret = vsnprintf(ptr, 128, fmt, ap);
+  if (ret < 0) {
+    free_impl(ptr);
+    *str = NULL;
+    return -1;
+  }
+
+  char* _ptr = realloc_impl(ptr, ret + 1);
+  if (_ptr == NULL) {
+    free_impl(ptr);
+    *str = NULL;
+    return -1;
+  }
+
+  *str = _ptr;
+
+  return ret;
+}
+
+MOZ_MEMORY_API int
+asprintf_impl(char **str, const char *fmt, ...)
+ {
+   va_list ap;
+   va_start(ap, fmt);
+
+   int ret = vasprintf_impl(str, fmt, ap);
+
+   va_end(ap);
+
+   return ret;
+}
+#endif
+
 #ifdef XP_WIN
 /*
  *  There's a fun allocator mismatch in (at least) the VS 2010 CRT
