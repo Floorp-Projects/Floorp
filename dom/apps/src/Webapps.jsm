@@ -144,7 +144,8 @@ this.DOMApplicationRegistry = {
                      "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
                      "Webapps:Download", "Webapps:ApplyDownload",
-                     "Webapps:Install:Return:Ack",
+                     "Webapps:Install:Return:Ack", "Webapps:AddReceipt",
+                     "Webapps:RemoveReceipt", "Webapps:ReplaceReceipt",
                      "child-process-shutdown"];
 
     this.frameMessages = ["Webapps:ClearBrowserData"];
@@ -1174,6 +1175,15 @@ this.DOMApplicationRegistry = {
         break;
       case "Webapps:Install:Return:Ack":
         this.onInstallSuccessAck(msg.manifestURL);
+        break;
+      case "Webapps:AddReceipt":
+        this.addReceipt(msg, mm);
+        break;
+      case "Webapps:RemoveReceipt":
+        this.removeReceipt(msg, mm);
+        break;
+      case "Webapps:ReplaceReceipt":
+        this.replaceReceipt(msg, mm);
         break;
     }
   },
@@ -3515,6 +3525,193 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       for (let i = 0; i < aResult.length; i++)
         apps[i].manifest = aResult[i].manifest;
       aCallback(apps);
+    });
+  },
+
+  /* Check if |data| is actually a receipt */
+  isReceipt: function(data) {
+    try {
+      // The receipt data shouldn't be too big (allow up to 1 MiB of data)
+      const MAX_RECEIPT_SIZE = 1048576;
+
+      if (data.length > MAX_RECEIPT_SIZE) {
+        return "RECEIPT_TOO_BIG";
+      }
+
+      // Marketplace receipts are JWK + "~" + JWT
+      // Other receipts may contain only the JWT
+      let receiptParts = data.split('~');
+      let jwtData = null;
+      if (receiptParts.length == 2) {
+        jwtData = receiptParts[1];
+      } else {
+        jwtData = receiptParts[0];
+      }
+
+      let segments = jwtData.split('.');
+      if (segments.length != 3) {
+        return "INVALID_SEGMENTS_NUMBER";
+      }
+
+      // We need to translate the base64 alphabet used in JWT to our base64 alphabet
+      // before calling atob.
+      let decodedReceipt = JSON.parse(atob(segments[1].replace(/-/g, '+')
+                                                      .replace(/_/g, '/')));
+      if (!decodedReceipt) {
+        return "INVALID_RECEIPT_ENCODING";
+      }
+
+      // Required values for a receipt
+      if (!decodedReceipt.typ) {
+        return "RECEIPT_TYPE_REQUIRED";
+      }
+      if (!decodedReceipt.product) {
+        return "RECEIPT_PRODUCT_REQUIRED";
+      }
+      if (!decodedReceipt.user) {
+        return "RECEIPT_USER_REQUIRED";
+      }
+      if (!decodedReceipt.iss) {
+        return "RECEIPT_ISS_REQUIRED";
+      }
+      if (!decodedReceipt.nbf) {
+        return "RECEIPT_NBF_REQUIRED";
+      }
+      if (!decodedReceipt.iat) {
+        return "RECEIPT_IAT_REQUIRED";
+      }
+
+      let allowedTypes = [ "purchase-receipt", "developer-receipt",
+                           "reviewer-receipt", "test-receipt" ];
+      if (allowedTypes.indexOf(decodedReceipt.typ) < 0) {
+        return "RECEIPT_TYPE_UNSUPPORTED";
+      }
+    } catch (e) {
+      return "RECEIPT_ERROR";
+    }
+
+    return null;
+  },
+
+  addReceipt: function(aData, aMm) {
+    debug("addReceipt " + aData.manifestURL);
+
+    let receipt = aData.receipt;
+
+    if (!receipt) {
+      aData.error = "INVALID_PARAMETERS";
+      aMm.sendAsyncMessage("Webapps:AddReceipt:Return:KO", aData);
+      return;
+    }
+
+    let error = this.isReceipt(receipt);
+    if (error) {
+      aData.error = error;
+      aMm.sendAsyncMessage("Webapps:AddReceipt:Return:KO", aData);
+      return;
+    }
+
+    let id = this._appIdForManifestURL(aData.manifestURL);
+    let app = this.webapps[id];
+
+    if (!app.receipts) {
+      app.receipts = [];
+    } else if (app.receipts.length > 500) {
+      aData.error = "TOO_MANY_RECEIPTS";
+      aMm.sendAsyncMessage("Webapps:AddReceipt:Return:KO", aData);
+      return;
+    }
+
+    let index = app.receipts.indexOf(receipt);
+    if (index >= 0) {
+      aData.error = "RECEIPT_ALREADY_EXISTS";
+      aMm.sendAsyncMessage("Webapps:AddReceipt:Return:KO", aData);
+      return;
+    }
+
+    app.receipts.push(receipt);
+
+    this._saveApps(function() {
+      aData.receipts = app.receipts;
+      aMm.sendAsyncMessage("Webapps:AddReceipt:Return:OK", aData);
+    });
+  },
+
+  removeReceipt: function(aData, aMm) {
+    debug("removeReceipt " + aData.manifestURL);
+
+    let receipt = aData.receipt;
+
+    if (!receipt) {
+      aData.error = "INVALID_PARAMETERS";
+      aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:KO", aData);
+      return;
+    }
+
+    let id = this._appIdForManifestURL(aData.manifestURL);
+    let app = this.webapps[id];
+
+    if (!app.receipts) {
+      aData.error = "NO_SUCH_RECEIPT";
+      aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:KO", aData);
+      return;
+    }
+
+    let index = app.receipts.indexOf(receipt);
+    if (index == -1) {
+      aData.error = "NO_SUCH_RECEIPT";
+      aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:KO", aData);
+      return;
+    }
+
+    app.receipts.splice(index, 1);
+
+    this._saveApps(function() {
+      aData.receipts = app.receipts;
+      aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:OK", aData);
+    });
+  },
+
+  replaceReceipt: function(aData, aMm) {
+    debug("replaceReceipt " + aData.manifestURL);
+
+    let oldReceipt = aData.oldReceipt;
+    let newReceipt = aData.newReceipt;
+
+    if (!oldReceipt || !newReceipt) {
+      aData.error = "INVALID_PARAMETERS";
+      aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:KO", aData);
+      return;
+    }
+
+    let error = this.isReceipt(newReceipt);
+    if (error) {
+      aData.error = error;
+      aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:KO", aData);
+      return;
+    }
+
+    let id = this._appIdForManifestURL(aData.manifestURL);
+    let app = this.webapps[id];
+
+    if (!app.receipts) {
+      aData.error = "NO_SUCH_RECEIPT";
+      aMm.sendAsyncMessage("Webapps:RemoveReceipt:Return:KO", aData);
+      return;
+    }
+
+    let oldIndex = app.receipts.indexOf(oldReceipt);
+    if (oldIndex == -1) {
+      aData.error = "NO_SUCH_RECEIPT";
+      aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:KO", aData);
+      return;
+    }
+
+    app.receipts[oldIndex] = newReceipt;
+
+    this._saveApps(function() {
+      aData.receipts = app.receipts;
+      aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:OK", aData);
     });
   },
 
