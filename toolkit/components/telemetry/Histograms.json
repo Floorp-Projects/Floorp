@@ -1448,6 +1448,12 @@
     "n_values": 5,
     "description": "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss"
   },
+  "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "HTTP Cache v2 Miss by half-life value (6h, 1d, 7d, 50d)"
+  },
   "HTTP_MEMORY_CACHE_DISPOSITION_2": {
     "expires_in_version": "never",
     "kind": "enumerated",

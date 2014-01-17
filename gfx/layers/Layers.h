@@ -1104,12 +1104,6 @@ public:
   // quality.
   bool CanUseOpaqueSurface();
 
-  enum SurfaceMode {
-    SURFACE_NONE = 0,
-    SURFACE_OPAQUE,
-    SURFACE_SINGLE_CHANNEL_ALPHA,
-    SURFACE_COMPONENT_ALPHA
-  };
   SurfaceMode GetSurfaceMode()
   {
     if (CanUseOpaqueSurface())

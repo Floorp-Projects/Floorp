@@ -97,7 +97,7 @@ class MochitestRunner(MozbuildObject):
 
         self.tests_dir = os.path.join(self.topobjdir, '_tests')
         self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
-        self.lib_dir = os.path.join(self.topobjdir, 'dist', 'lib')
+        self.bin_dir = os.path.join(self.topobjdir, 'dist', 'bin')
 
     def run_b2g_test(self, test_file=None, b2g_home=None, xre_path=None,
                      total_chunks=None, this_chunk=None, no_window=None,
@@ -286,7 +286,7 @@ class MochitestRunner(MozbuildObject):
             raise Exception('None or unrecognized mochitest suite type.')
 
         if dmd:
-            options.dmdPath = self.lib_dir
+            options.dmdPath = self.bin_dir
 
         options.autorun = not no_autorun
         options.closeWhenDone = not keep_open

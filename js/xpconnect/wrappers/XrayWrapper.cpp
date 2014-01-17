@@ -10,6 +10,7 @@
 #include "WrapperFactory.h"
 
 #include "nsIContent.h"
+#include "nsIControllers.h"
 #include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
@@ -417,7 +418,7 @@ XrayTraits::attachExpandoObject(JSContext *cx, HandleObject target,
 
     // Create the expando object. We parent it directly to the target object.
     RootedObject expandoObject(cx, JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass,
-                                                              nullptr, target));
+                                                              JS::NullPtr(), target));
     if (!expandoObject)
         return nullptr;
 
@@ -713,6 +714,32 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
+
+    // The |controllers| property is accessible as a [ChromeOnly] property on
+    // Window.WebIDL, and [noscript] in XPIDL. Chrome needs to see this over
+    // Xray, so we need to special-case it until we move |Window| to WebIDL.
+    nsGlobalWindow *win = nullptr;
+    if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_CONTROLLERS) &&
+        AccessCheck::isChrome(wrapper) &&
+        (win = static_cast<nsGlobalWindow*>(As<nsPIDOMWindow>(wrapper))))
+    {
+        nsCOMPtr<nsIControllers> c;
+        nsresult rv = win->GetControllers(getter_AddRefs(c));
+        if (NS_SUCCEEDED(rv) && c) {
+            rv = nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, CurrentGlobalOrNull(cx),
+                                                             c, nullptr, nullptr, true,
+                                                             desc.value());
+        }
+
+        if (NS_FAILED(rv) || !c) {
+            JS_ReportError(cx, "Failed to invoke GetControllers via Xrays");
+            return false;
+        }
+
+        desc.object().set(wrapper);
+        return true;
+    }
+
     XPCNativeInterface *iface;
     XPCNativeMember *member;
     XPCWrappedNative *wn = getWN(wrapper);
@@ -823,7 +850,7 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         if (key != JSProto_Null) {
             MOZ_ASSERT(key < JSProto_LIMIT);
             RootedObject constructor(cx);
-            if (!JS_GetClassObject(cx, target, key, constructor.address()))
+            if (!JS_GetClassObject(cx, target, key, &constructor))
                 return false;
             MOZ_ASSERT(constructor);
             desc.value().set(ObjectValue(*constructor));
@@ -988,8 +1015,8 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
 JSObject *
 XPCWrappedNativeXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 {
-    JSObject *global = JS_GetGlobalForObject(cx, wrapper);
-    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr,
+    RootedObject global(cx, JS_GetGlobalForObject(cx, wrapper));
+    JSObject *holder = JS_NewObjectWithGivenProto(cx, &HolderClass, JS::NullPtr(),
                                                   global);
     if (!holder)
         return nullptr;
@@ -1174,8 +1201,8 @@ DOMXrayTraits::preserveWrapper(JSObject *target)
 JSObject*
 DOMXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 {
-    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                      JS_GetGlobalForObject(cx, wrapper));
+    RootedObject global(cx, JS_GetGlobalForObject(cx, wrapper));
+    return JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), global);
 }
 
 template <typename Base, typename Traits>

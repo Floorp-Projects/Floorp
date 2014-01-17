@@ -86,6 +86,8 @@ const R_SOURCEEXP  = new RegExp (R_SCHEMESRC.source + "|" +
                                   R_NONCESRC.source + "|" +
                                    R_HASHSRC.source,  'i');
 
+const R_QUOTELESS_KEYWORDS = new RegExp ("^(self|unsafe-inline|unsafe-eval|" +
+                                         "inline-script|eval-script|none)$", 'i');
 
 this.CSPPrefObserver = {
   get debugEnabled () {
@@ -1397,6 +1399,12 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     else {
       // strip the ':' from the port
       sObj._port = portMatch[0].substr(1);
+    }
+    // A CSP keyword without quotes is a valid hostname, but this can also be a mistake.
+    // Raise a CSP warning in the web console to developer to check his/her intent.
+    if (R_QUOTELESS_KEYWORDS.test(aStr)) {
+      cspWarn(aCSPRep, CSPLocalizer.getFormatStr("hostNameMightBeKeyword",
+                                                 [aStr, aStr.toLowerCase()]));
     }
     return sObj;
   }

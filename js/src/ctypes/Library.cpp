@@ -84,7 +84,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
 {
   RootedValue path(cx, path_);
   RootedObject libraryObj(cx,
-                          JS_NewObject(cx, &sLibraryClass, nullptr, nullptr));
+                          JS_NewObject(cx, &sLibraryClass, NullPtr(), NullPtr()));
   if (!libraryObj)
     return nullptr;
 

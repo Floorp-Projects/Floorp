@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785310
+html5 sandboxed iframe should not be able to perform top navigation with scripts allowed
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 785310 - iframe sandbox top navigation by location tests</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  var testWin;
+
+  function runScriptNavigationTest(testCase) {
+    window.onmessage = function(event) {
+      if (event.data != "newTop") {
+        ok(false, "event.data: got '" + event.data + "', expected 'newTop'");
+      }
+      ok(!testCase.shouldBeBlocked, testCase.desc, "top navigation was NOT blocked");
+      runNextTest();
+    };
+    try {
+      SpecialPowers.wrap(testWin[testCase.iframeName]).eval(testCase.script);
+    } catch(e) {
+      ok(testCase.shouldBeBlocked, testCase.desc, SpecialPowers.wrap(e).message);
+      runNextTest();
+    }
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: top.location.replace should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location.replace('file_top_navigation_by_location.html')",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 2: top.location.assign should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location.assign('file_top_navigation_by_location.html')",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 3: top.location.href should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location.href = 'file_top_navigation_by_location.html'",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 4: top.location.pathname should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location.pathname = top.location.pathname",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 5: top.location should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location = 'file_top_navigation_by_location.html'",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 6: top.location.hash should be blocked when sandboxed without allow-top-navigation",
+      script: "top.location.hash = 'wibble'",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 7: top.location.replace should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location.replace('file_top_navigation_by_location.html')",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 8: top.location.assign should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location.assign('file_top_navigation_by_location.html')",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 9: top.location.href should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location.href = 'file_top_navigation_by_location.html'",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 10: top.location.pathname should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location.pathname = top.location.pathname",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 11: top.location should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location = 'file_top_navigation_by_location.html'",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 12: top.location.hash should NOT be blocked when sandboxed with allow-same-origin allow-top-navigation",
+      script: "top.location.hash = 'wibble'",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 13: top.location.replace should NOT be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location.replace('file_top_navigation_by_location.html')",
+      iframeName: "if3",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 14: top.location.assign should be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location.assign('file_top_navigation_by_location.html')",
+      iframeName: "if3",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 15: top.location.href should NOT be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location.href = 'file_top_navigation_by_location.html'",
+      iframeName: "if3",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 16: top.location.pathname should be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location.pathname = top.location.pathname",
+      iframeName: "if3",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 17: top.location should NOT be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location = 'file_top_navigation_by_location.html'",
+      iframeName: "if3",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 18: top.location.hash should be blocked when sandboxed with allow-top-navigation, but without allow-same-origin",
+      script: "top.location.hash = 'wibble'",
+      iframeName: "if3",
+      shouldBeBlocked: true
+   }
+  ];
+
+  function runNextTest() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      testWin.close();
+      SimpleTest.finish();
+      return;
+    }
+
+    runScriptNavigationTest(testCases[testCaseIndex]);
+  }
+
+  window.onmessage = runNextTest;
+  testWin = window.open("file_top_navigation_by_location.html", "newTop");
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785310">Mozilla Bug 785310</a>
+<p id="display"></p>
+<div id="content">
+Tests for Bug 785310
+</div>
+</body>
+</html>

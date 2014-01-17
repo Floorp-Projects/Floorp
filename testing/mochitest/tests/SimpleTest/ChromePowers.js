@@ -61,8 +61,8 @@ ChromePowers.prototype._receiveMessage = function(aMessage) {
     default:
       // All calls go here, because we need to handle SPProcessCrashService calls as well
       return this.spObserver._receiveMessageAPI(aMessage);
-      break;
   }
+  return undefined;		// Avoid warning.
 };
 
 ChromePowers.prototype.quit = function() {

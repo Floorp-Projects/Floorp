@@ -90,7 +90,7 @@ ParseDimensionItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
   JS::Rooted<JS::Value> w(aCx, INT_TO_JSVAL(strtol(aStart, &x, 10)));
   JS::Rooted<JS::Value> h(aCx, INT_TO_JSVAL(strtol(x + 1, aEnd, 10)));
 
-  JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
+  JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
   if (!o) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -388,7 +388,7 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::MutableHandle<JS::Value>
   }
 
   for (uint32_t i = 0; i < sizes.Length(); ++i) {
-    JS::Rooted<JSObject*> o(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::Rooted<JSObject*> o(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     JS::Rooted<JS::Value> v(cx, INT_TO_JSVAL(sizes[i].width));
     if (!JS_SetProperty(cx, o, "width", v)) {
       return NS_ERROR_FAILURE;

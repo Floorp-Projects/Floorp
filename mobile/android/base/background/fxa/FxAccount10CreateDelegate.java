@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 
 import org.json.simple.JSONObject;
-import org.mozilla.gecko.background.fxa.FxAccountClient.CreateDelegate;
+import org.mozilla.gecko.background.fxa.FxAccountClient10.CreateDelegate;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.SRPConstants;
 

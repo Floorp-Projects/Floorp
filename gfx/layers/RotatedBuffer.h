@@ -19,7 +19,6 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
-#include "Layers.h"                     // for Layer::SurfaceMode
 #include "LayersTypes.h"
 
 struct gfxMatrix;
@@ -34,6 +33,7 @@ namespace layers {
 
 class DeprecatedTextureClient;
 class TextureClient;
+class ThebesLayer;
 
 /**
  * This is a cairo/Thebes surface, but with a literal twist. Scrolling
@@ -214,13 +214,13 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mMode(Layer::SURFACE_NONE)
+      : mMode(SURFACE_NONE)
       , mDidSelfCopy(false)
     {}
 
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
-    Layer::SurfaceMode mMode;
+    SurfaceMode mMode;
     DrawRegionClip mClip;
     bool mDidSelfCopy;
   };

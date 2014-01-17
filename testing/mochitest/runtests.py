@@ -1207,8 +1207,9 @@ class Mochitest(MochitestUtilsMixin):
     def record_last_test(self, line):
       """record last test on harness"""
       if "TEST-START" in line and "|" in line:
-        self.output_buffer = []
-        self.running_test = True
+        if not line.endswith('Shutdown'):
+          self.output_buffer = []
+          self.running_test = True
         self.harness.lastTestSeen = line.split("|")[1].strip()
       return line
 
