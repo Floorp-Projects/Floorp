@@ -64,7 +64,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned 
             return false;
         if (JS_FlatStringEqualsAscii(flatStr, "all")) {
             JS::Rooted<JSObject*> docAll(cx,
-                                         JS_NewObject(cx, &DocumentAllClass, nullptr, nullptr));
+                                         JS_NewObject(cx, &DocumentAllClass, JS::NullPtr(), JS::NullPtr()));
             if (!docAll)
                 return false;
             JS::Rooted<JS::Value> allValue(cx, ObjectValue(*docAll));
@@ -85,7 +85,7 @@ static const JSClass document_class = {
 
 BEGIN_TEST(testLookup_bug570195)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, nullptr, nullptr));
+    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
     CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), nullptr, nullptr, 0));
     JS::RootedValue v(cx);

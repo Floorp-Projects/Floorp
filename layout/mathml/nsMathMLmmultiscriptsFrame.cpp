@@ -565,7 +565,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         // place the base ...
         childFrame = baseFrame;
         dy = aDesiredSize.TopAscent() - baseSize.TopAscent();
-        FinishReflowChild (baseFrame, aPresContext, nullptr, baseSize,
+        FinishReflowChild (baseFrame, aPresContext, baseSize, nullptr,
                            aFrame->MirrorIfRTL(aDesiredSize.Width(),
                                                baseSize.Width(),
                                                dx),
@@ -598,8 +598,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
               x += width - subScriptSize.Width();
             dy = aDesiredSize.TopAscent() - subScriptSize.TopAscent() +
               maxSubScriptShift;
-            FinishReflowChild (subScriptFrame, aPresContext, nullptr,
-                               subScriptSize,
+            FinishReflowChild (subScriptFrame, aPresContext, subScriptSize,
+                               nullptr,
                                aFrame->MirrorIfRTL(aDesiredSize.Width(),
                                                    subScriptSize.Width(),
                                                    x),
@@ -612,8 +612,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
               x += width - supScriptSize.Width();
             dy = aDesiredSize.TopAscent() - supScriptSize.TopAscent() -
               maxSupScriptShift;
-            FinishReflowChild (supScriptFrame, aPresContext, nullptr,
-                               supScriptSize,
+            FinishReflowChild (supScriptFrame, aPresContext, supScriptSize,
+                               nullptr,
                                aFrame->MirrorIfRTL(aDesiredSize.Width(),
                                                    supScriptSize.Width(),
                                                    x),

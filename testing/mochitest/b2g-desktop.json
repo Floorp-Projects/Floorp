@@ -193,8 +193,14 @@
     "content/html/content/test/test_iframe_sandbox_plugins.html":"plugins not supported",
     "content/html/content/test/test_object_plugin_nav.html":"plugins not supported",
     "content/html/document/test/test_bug741266.html":"needs control of popup window size",
+
     "docshell/test/navigation/test_popup-navigates-children.html":"Needs multiple window.open support, also uses docshelltreenode",
     "docshell/test/test_bug590573.html":"queryinterfaces into webnavigation, might suffer from something similar as bug 823022",
+    "docshell/test/iframesandbox/test_other_auxiliary_navigation_by_location.html":"bug 948948, NS_ERROR_FAILURE from nsWindowWatcher::GetPrompt",
+    "docshell/test/iframesandbox/test_our_auxiliary_navigation_by_location.html":"bug 948948, NS_ERROR_FAILURE from nsWindowWatcher::GetPrompt",
+    "docshell/test/iframesandbox/test_top_navigation_by_location.html":"bug 948948, NS_ERROR_FAILURE from nsWindowWatcher::GetPrompt",
+    "docshell/test/iframesandbox/test_top_navigation_by_location_exotic.html":"bug 948948, NS_ERROR_FAILURE from nsWindowWatcher::GetPrompt",
+
     "dom/devicestorage/ipc/test_ipc.html":"nested ipc not working",
 
     "dom/indexedDB/ipc/test_ipc.html":"nested ipc not working",

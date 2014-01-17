@@ -160,7 +160,7 @@ nsDOMCameraControl::SetFocusAreas(JSContext* cx, JS::Handle<JS::Value> aFocusAre
 static nsresult
 GetSize(JSContext* aCx, JS::Value* aValue, const CameraSize& aSize)
 {
-  JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
+  JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
   if (!o) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

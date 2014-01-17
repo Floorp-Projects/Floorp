@@ -55,7 +55,7 @@ RunTest(JSRuntime* rt, JSContext* cx)
   const char* property = "foo";
   JS::shadow::Runtime* srt = reinterpret_cast<JS::shadow::Runtime*>(rt);
   for (int i = 0; i < elements; ++i) {
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
 #ifdef JSGC_GENERATIONAL
     ASSERT_TRUE(js::gc::IsInsideNursery(srt, obj));
 #else

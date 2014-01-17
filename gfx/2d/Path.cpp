@@ -267,7 +267,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
     Point cp21 = aControlPoints.mCP2 - aControlPoints.mCP1;
     Point cp41 = aControlPoints.mCP4 - aControlPoints.mCP1;
 
-    if (!cp21.x && !cp21.y) {
+    if (cp21.x == 0 && cp21.y == 0) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
       *aMin = aT - pow(aTolerance / (cp41.x - cp41.y), Float(1. / 3.));
       *aMax = aT + pow(aTolerance / (cp41.x - cp41.y), Float(1. / 3.));;
@@ -275,6 +275,15 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
     }
 
     Float s3 = (cp41.x * cp21.y - cp41.y * cp21.x) / hypotf(cp21.x, cp21.y);
+
+    if (s3 == 0) {
+      // This means within the precision we have it can be approximated
+      // infinitely by a linear segment. Deal with this by specifying the
+      // approximation range as extending beyond the entire curve.
+      *aMin = -1.0f;
+      *aMax = 2.0f;
+      return;
+    }
 
     Float tf = pow(abs(aTolerance / s3), Float(1. / 3.));
 
@@ -469,7 +478,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
       Float t2mina = (t2min - t1max) / (1 - t1max);
       SplitBezier(nextCPs, &prevCPs, &nextCPs, t2mina);
       FlattenBezierCurveSegment(prevCPs, aSink, aTolerance);
-    } else {
+    } else if (t2min > 0) {
       // We have nothing interesting before t2min, find that bit and flatten it.
       SplitBezier(aControlPoints, &prevCPs, &nextCPs, t2min);
       FlattenBezierCurveSegment(prevCPs, aSink, aTolerance);

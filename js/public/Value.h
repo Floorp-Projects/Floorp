@@ -896,7 +896,7 @@ CanonicalizeNaN(double d)
  *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
  *
  *   Also, to help prevent mistakenly boxing a nullable JSObject* as an object,
- *   Value::setObject takes a JSObject&. (Conversely, Value::asObject returns a
+ *   Value::setObject takes a JSObject&. (Conversely, Value::toObject returns a
  *   JSObject&.)  A convenience member Value::setObjectOrNull is provided.
  *
  * - JSVAL_VOID is the same as the singleton value of the Undefined type.

@@ -18,6 +18,7 @@
 class nsIInputStream;
 class nsISHEntry;
 class nsIURI;
+class nsIDocShell;
 
 class nsDocShellLoadInfo : public nsIDocShellLoadInfo
 {
@@ -43,6 +44,7 @@ protected:
   nsCOMPtr<nsIInputStream>         mHeadersStream;
   bool                             mIsSrcdocLoad;
   nsString                         mSrcdocData;
+  nsCOMPtr<nsIDocShell>            mSourceDocShell;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */
