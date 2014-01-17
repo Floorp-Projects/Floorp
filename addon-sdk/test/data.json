@@ -1,0 +1,6 @@
+{
+  "title": "jetpack mochitests",
+  "dependencies": {
+    "underscore": "1.0.0"
+  }
+}
