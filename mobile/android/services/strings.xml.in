@@ -18,7 +18,7 @@
   <string name="sync_link_advancedsetup"><u>&sync.link.advancedsetup.label;</u></string>
 
   <!-- J-PAKE Waiting Screen -->
-  
+
   <string name="sync_jpake_subtitle_waiting">&sync.jpake.subtitle.waiting.label;</string>
 
   <!-- Account Login Screen -->
@@ -28,7 +28,7 @@
   <string name="sync_input_key">&sync.input.key.label;</string>
   <string name="sync_checkbox_server">&sync.checkbox.server.label;</string>
   <string name="sync_input_server">&sync.input.server.label;</string>
-  
+
   <!-- Setup Fail -->
   <string name="sync_title_fail">&sync.title.fail.label;</string>
   <string name="sync_subtitle_fail">&sync.subtitle.fail.label;</string>
@@ -37,13 +37,13 @@
   <string name="sync_subtitle_nointernet">&sync.subtitle.nointernet.label;</string>
   <string name="sync_subtitle_failaccount">&sync.subtitle.failaccount.label;</string>
   <string name="sync_subtitle_failmultiple">&sync.subtitle.failmultiple.label;</string>
-  
+
   <!-- Setup Success -->
   <string name="sync_title_success">&sync.title.success.label;</string>
   <string name="sync_subtitle_success">&sync.subtitle.success.label1;</string>
   <string name="sync_settings">&sync.settings.label;</string>
   <string name="sync_subtitle_manage">&sync.subtitle.manage.label1;</string>
-  
+
   <!-- Pair Device -->
   <string name="sync_pair_tryagain">&sync.pair.tryagain.label;</string>
 
@@ -63,10 +63,10 @@
   <string name="sync_button_cancel">&sync.button.cancel.label;</string>
   <string name="sync_button_connect">&sync.button.connect.label;</string>
   <string name="sync_button_ok">&sync.button.ok.label;</string>
-  
+
   <!-- Account strings -->
   <string name="sync_account_label">&sync.account.label.label;</string>
-  
+
   <!-- Bookmark folder strings -->
   <string name="bookmarks_folder_menu">&bookmarks.folder.menu.label;</string>
   <string name="bookmarks_folder_places">&bookmarks.folder.places.label;</string>
@@ -99,4 +99,54 @@
   <string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
 
   <!-- Firefox Account strings -->
+  <string name="firefox_accounts">&firefox.accounts;</string>
+
   <string name="fxaccount_label">&fxaccount.label;</string>
+  <string name="fxaccount_policy">&fxaccount.policy;</string>
+  <string name="fxaccount_forgot_password">&fxaccount.forgot.password;</string>
+  <string name="fxaccount_create_account_button_label">&fxaccount.create.account.button.label;</string>
+  <string name="fxaccount_sign_in_button_label">&fxaccount.sign.in.button.label;</string>
+
+  <string name="fxaccount_when_were_you_born">&fxaccount.when.were.you.born;</string>
+  <string name="fxaccount_year_of_birth">&fxaccount.year.of.birth;</string>
+
+  <string name="fxaccount_email_hint">&fxaccount.email.hint;</string>
+  <string name="fxaccount_password_hint">&fxaccount.password.hint;</string>
+  <string name="fxaccount_password2_hint">&fxaccount.password2.hint;</string>
+
+  <string name="fxaccount_bad_email">&fxaccount.bad.email;</string>
+  <string name="fxaccount_bad_passwords">&fxaccount.bad.passwords;</string>
+
+  <string name="fxaccount_sign_in_instead">&fxaccount.sign.in.instead;</string>
+  <string name="fxaccount_sign_up_instead">&fxaccount.sign.up.instead;</string>
+
+  <string name="fxaccount_old_firefox">&fxaccount.old.firefox;</string>
+
+  <string name="fxaccount_options_title">&fxaccount.options.title;</string>
+  <string name="fxaccount_options_configure_title">&fxaccount.options.configure.title;</string>
+
+  <string name="fxaccount_sign_in">&fxaccount.sign.in;</string>
+  <string name="fxaccount_create_account">&fxaccount.create.account;</string>
+
+  <string name="fxaccount_icon_contentDescription">&fxaccount.icon.contentDescription;</string>
+  <string name="fxaccount_password_hide">&fxaccount.password.hide;</string>
+  <string name="fxaccount_password_show">&fxaccount.password.show;</string>
+
+  <string name="fxaccount_get_started">&fxaccount.get.started;</string>
+  <string name="fxaccount_description">&fxaccount.description;</string>
+  <string name="fxaccount_sign_up">&fxaccount.sign.up;</string>
+  <string name="fxaccount_intro_contentDescription">&fxaccount.intro.contentDescription;</string>
+  <string name="fxaccount_offer_resend_confirmation_email">&fxaccount.offer.resend.confirmation.email;</string>
+  <string name="fxaccount_confirmation_description">&fxaccount.confirmation.description;</string>
+  <string name="fxaccount_mail_contentDescription">&fxaccount.mail.contentDescription;</string>
+  <string name="fxaccount_confirmation_email_sent">&fxaccount.confirmation.email.sent;</string>
+  <string name="fxaccount_password_length_restriction">&fxaccount.password.length.restriction;</string>
+  <string name="fxaccount_change_password">&fxaccount.change.password;</string>
+  <string name="fxaccount_status_needs_verification">&fxaccount.status.needs.verification;</string>
+  <string name="fxaccount_status_needs_credentials">&fxaccount.status.needs.credentials;</string>
+  <string name="fxaccount_status_syncing">&fxaccount.status.syncing;</string>
+  <string name="fxaccount_status_sync">&fxaccount.status.sync;</string>
+  <string name="fxaccount_status_bookmarks">&fxaccount.status.bookmarks;</string>
+  <string name="fxaccount_status_history">&fxaccount.status.history;</string>
+  <string name="fxaccount_status_passwords">&fxaccount.status.passwords;</string>
+  <string name="fxaccount_status_tabs">&fxaccount.status.tabs;</string>

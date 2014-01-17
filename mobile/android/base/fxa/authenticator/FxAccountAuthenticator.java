@@ -7,7 +7,7 @@ package org.mozilla.gecko.fxa.authenticator;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountSetupActivity;
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -81,7 +81,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
       return res;
     }
 
-    Intent intent = new Intent(context, FxAccountSetupActivity.class);
+    Intent intent = new Intent(context, FxAccountGetStartedActivity.class);
     res.putParcelable(AccountManager.KEY_INTENT, intent);
     return res;
   }
