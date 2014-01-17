@@ -728,7 +728,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         if (NS_SUCCEEDED(rv) && c) {
             rv = nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, CurrentGlobalOrNull(cx),
                                                              c, nullptr, nullptr, true,
-                                                             desc.value().address());
+                                                             desc.value());
         }
 
         if (NS_FAILED(rv) || !c) {
