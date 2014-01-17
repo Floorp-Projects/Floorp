@@ -148,7 +148,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRegExpExec(MRegExpExec *ins);
     bool visitRegExpTest(MRegExpTest *ins);
     bool visitRegExpReplace(MRegExpReplace *ins);
-    bool visitStringReplace(MStringReplace *ins);
     bool visitLambda(MLambda *ins);
     bool visitLambdaPar(MLambdaPar *ins);
     bool visitImplicitThis(MImplicitThis *ins);

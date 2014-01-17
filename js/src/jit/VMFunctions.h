@@ -663,10 +663,8 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
                                 HandleObject owner, int32_t offset);
 
 bool Recompile(JSContext *cx);
-JSString *RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp,
-                        HandleString repl);
-JSString *StringReplace(JSContext *cx, HandleString string, HandleString pattern,
-                        HandleString repl);
+JSString *regexp_replace(JSContext *cx, HandleString string, HandleObject regexp,
+                         HandleString repl);
 
 #ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
