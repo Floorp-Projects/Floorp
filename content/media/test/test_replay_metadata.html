@@ -53,6 +53,16 @@ function playing(evt) {
   evt.target._playingCount++;
 }
 
+function removeNodeAndListener(n) {
+  n.removeEventListener("loadedmetadata", loadedMetaData, false);
+  n.removeEventListener("ended", playbackEnded, false);
+  n.removeEventListener("playing", playing, false);
+  n.removeEventListener("loadeddata", loadedData, false);
+  n.removeEventListener("seeking", seekStarted, false);
+  n.removeEventListener("seeked", seekEnded, false);
+  removeNodeAndSource(n);
+}
+
 function playbackEnded(evt) {
   var v = evt.target;
   v._endCount++;
@@ -72,13 +82,14 @@ function playbackEnded(evt) {
     is(v._endCount, 2, "Should have received two ended events for " + v._name);
     ok(v._playingCount > 0, "Should have at least one playing event for " + v._name);
     v._finished = true;
-    v.parentNode.removeChild(v);
+    removeNodeAndListener(v);
     manager.finished(v.token);
-  }  
+  }
 }
 
 function startTest(test, token) {
   var v = document.createElement('video');
+  v.preload = "auto";
   v.token = token;
   manager.started(token);
   v.src = test.name;
