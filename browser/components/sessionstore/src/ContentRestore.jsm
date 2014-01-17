@@ -142,7 +142,6 @@ ContentRestoreInternal.prototype = {
     SessionHistory.restore(this.docShell, tabData);
 
     // Add a listener to watch for reloads.
-    let webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
     let listener = new HistoryListener(this.docShell, reloadCallback);
     webNavigation.sessionHistory.addSHistoryListener(listener);
     this._historyListener = listener;
