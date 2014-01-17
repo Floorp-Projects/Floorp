@@ -721,7 +721,6 @@ static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequ
 #endif
 static const char js_typeinfer_content_str[]  = JS_OPTIONS_DOT_STR "typeinference.content";
 static const char js_typeinfer_chrome_str[]   = JS_OPTIONS_DOT_STR "typeinference.chrome";
-static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
@@ -758,7 +757,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   bool useTypeInference = Preferences::GetBool((chromeWindow || !contentWindow) ?
                                                js_typeinfer_chrome_str :
                                                js_typeinfer_content_str);
-  bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   bool useBaselineJIT = Preferences::GetBool((chromeWindow || !contentWindow) ?
                                                js_baselinejit_chrome_str :
                                                js_baselinejit_content_str);
@@ -776,7 +774,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
       useTypeInference = false;
-      useHardening = false;
       useBaselineJIT = false;
       useBaselineJITEager = false;
       useIon = false;
@@ -809,9 +806,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
                                   (useIonEager ? 0 : -1));
-
-  JSRuntime *rt = JS_GetRuntime(context->mContext);
-  JS_SetJitHardening(rt, useHardening);
 
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);

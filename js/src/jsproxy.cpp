@@ -355,7 +355,8 @@ BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool
     // Disallow sets of protos on proxies with lazy protos, but no hook.
     // This keeps us away from the footgun of having the first proto set opt
     // you out of having dynamic protos altogether.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+                         "incompatible Proxy");
     return false;
 }
 
@@ -3250,15 +3251,12 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject handler(cx, NonNullObject(cx, args[1]));
     if (!handler)
         return false;
-    RootedObject proto(cx);
-    if (!JSObject::getProto(cx, target, &proto))
-        return false;
     RootedValue priv(cx, ObjectValue(*target));
     ProxyOptions options;
     options.setCallable(target->isCallable());
     ProxyObject *proxy =
         ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                         priv, TaggedProto(proto), cx->global(),
+                         priv, TaggedProto(TaggedProto::LazyProto), cx->global(),
                          options);
     if (!proxy)
         return false;
