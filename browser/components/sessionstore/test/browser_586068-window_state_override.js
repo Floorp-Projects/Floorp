@@ -36,7 +36,7 @@ function runTests() {
   gProgressListener.setCallback(function (aBrowser, aNeedRestore, aRestoring, aRestored) {
     // When loadCount == 2, we'll also restore state2 into the window
     if (++loadCount == 2) {
-      ss.setWindowState(window, JSON.stringify(state2), true);
+      executeSoon(() => ss.setWindowState(window, JSON.stringify(state2), true));
     }
 
     if (loadCount < numTabs) {
@@ -46,10 +46,6 @@ function runTests() {
     // We don't actually care about load order in this test, just that they all
     // do load.
     is(loadCount, numTabs, "all tabs were restored");
-    // window.__SS_tabsToRestore isn't decremented until after the progress
-    // listener is called. Since we get in here before that, we still expect
-    // the count to be 1.
-    is(window.__SS_tabsToRestore, 1, "window doesn't think there are more tabs to restore");
     is(aNeedRestore, 0, "there are no tabs left needing restore");
 
     gProgressListener.unsetCallback();
