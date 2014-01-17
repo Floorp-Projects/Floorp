@@ -270,7 +270,7 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
     (aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
   // Place and size the child
-  FinishReflowChild(aKidFrame, aPresContext, nullptr, aDesiredSize, 0,
+  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr, 0,
                     aReflowState.y, 0);
 
   nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,

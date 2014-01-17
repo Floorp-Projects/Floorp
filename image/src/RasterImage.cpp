@@ -2601,7 +2601,7 @@ RasterImage::Draw(gfxContext *aContext,
 
   // We can only draw with the default decode flags
   if (mFrameDecodeFlags != DECODE_FLAGS_DEFAULT) {
-    if (!CanForciblyDiscard())
+    if (!CanForciblyDiscard() || mDecoder || mAnim)
       return NS_ERROR_NOT_AVAILABLE;
     ForceDiscard();
 
@@ -2724,7 +2724,7 @@ RasterImage::UnlockImage()
 NS_IMETHODIMP
 RasterImage::RequestDiscard()
 {
-  if (CanDiscard()) {
+  if (CanDiscard() && !mDecoder && !mAnim) {
     ForceDiscard();
   }
 

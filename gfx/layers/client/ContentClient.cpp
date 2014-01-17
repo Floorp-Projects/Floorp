@@ -630,6 +630,9 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 {
   DrawTarget* destDT =
     BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
+  if (!destDT) {
+    return;
+  }
 
   bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
   if (isClippingCheap) {
@@ -646,6 +649,9 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     MOZ_ASSERT(HaveBufferOnWhite());
     DrawTarget* destDT =
       BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    if (!destDT) {
+      return;
+    }
 
     bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
     if (isClippingCheap) {
@@ -882,6 +888,9 @@ DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer
     MOZ_ASSERT(HaveBufferOnWhite());
     DrawTarget* destDT =
       BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    if (!destDT) {
+      return;
+    }
 
     bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
     if (isClippingCheap) {

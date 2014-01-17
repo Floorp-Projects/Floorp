@@ -1893,7 +1893,7 @@ BaselineCompiler::getScopeCoordinateObject(Register reg)
     ScopeCoordinate sc(pc);
 
     masm.loadPtr(frame.addressOfScopeChain(), reg);
-    for (unsigned i = sc.hops; i; i--)
+    for (unsigned i = sc.hops(); i; i--)
         masm.extractObject(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 }
 
@@ -1904,12 +1904,12 @@ BaselineCompiler::getScopeCoordinateAddressFromObject(Register objReg, Register 
     Shape *shape = ScopeCoordinateToStaticScopeShape(script, pc);
 
     Address addr;
-    if (shape->numFixedSlots() <= sc.slot) {
+    if (shape->numFixedSlots() <= sc.slot()) {
         masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), reg);
-        return Address(reg, (sc.slot - shape->numFixedSlots()) * sizeof(Value));
+        return Address(reg, (sc.slot() - shape->numFixedSlots()) * sizeof(Value));
     }
 
-    return Address(objReg, JSObject::getFixedSlotOffset(sc.slot));
+    return Address(objReg, JSObject::getFixedSlotOffset(sc.slot()));
 }
 
 Address
@@ -2242,7 +2242,7 @@ BaselineCompiler::emit_JSOP_INITELEM_SETTER()
 bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
-    uint32_t local = GET_SLOTNO(pc);
+    uint32_t local = GET_LOCALNO(pc);
 
     if (local >= frame.nlocals()) {
         // Destructuring assignments may use GETLOCAL to access stack values.
@@ -2269,7 +2269,7 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
     // This also allows us to use R0 as scratch below.
     frame.syncStack(1);
 
-    uint32_t local = GET_SLOTNO(pc);
+    uint32_t local = GET_LOCALNO(pc);
     storeValue(frame.peek(-1), frame.addressOfLocal(local), R0);
     return true;
 }
@@ -2352,7 +2352,7 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 bool
 BaselineCompiler::emit_JSOP_GETARG()
 {
-    uint32_t arg = GET_SLOTNO(pc);
+    uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ true);
 }
 
@@ -2371,7 +2371,7 @@ BaselineCompiler::emit_JSOP_SETARG()
 
     modifiesArguments_ = true;
 
-    uint32_t arg = GET_SLOTNO(pc);
+    uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ false);
 }
 

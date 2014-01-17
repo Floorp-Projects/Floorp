@@ -132,9 +132,8 @@ function test_duplicateTab() {
     busyEventCount++;
   }
 
-  // duplicateTab is "synchronous" in tab creation. Since restoreHistory is called
-  // via setTimeout, newTab will be assigned before the SSWindowStateReady event
   function onSSWindowStateReady(aEvent) {
+    newTab = gBrowser.tabs[2];
     readyEventCount++;
     is(ss.getTabValue(newTab, "foo"), "bar");
     ss.setTabValue(newTab, "baz", "qux");
@@ -173,9 +172,8 @@ function test_undoCloseTab() {
     busyEventCount++;
   }
 
-  // undoCloseTab is "synchronous" in tab creation. Since restoreHistory is called
-  // via setTimeout, reopenedTab will be assigned before the SSWindowStateReady event
   function onSSWindowStateReady(aEvent) {
+    reopenedTab = gBrowser.tabs[1];
     readyEventCount++;
     is(ss.getTabValue(reopenedTab, "foo"), "bar");
     ss.setTabValue(reopenedTab, "baz", "qux");

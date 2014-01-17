@@ -9,7 +9,7 @@
 
 BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
     JS::RootedValue vobj(cx, OBJECT_TO_JSVAL(obj));
 

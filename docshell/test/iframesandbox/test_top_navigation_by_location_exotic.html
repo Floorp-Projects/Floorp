@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785310
+html5 sandboxed iframe should not be able to perform top navigation with scripts allowed
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 785310 - iframe sandbox top navigation by location via exotic means tests</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  var testWin;
+
+  function runScriptNavigationTest(testCase) {
+    window.onmessage = function(event) {
+      if (event.data.name != 'newWindow') {
+        ok(false, "event.data.name: got '" + event.data.name + "', expected 'newWindow'");
+      }
+      var diag = "top navigation was " + (event.data.blocked ? "" : "NOT ") + "blocked";
+      ok((testCase.shouldBeBlocked == event.data.blocked), testCase.desc, diag);
+      runNextTest();
+    };
+    try {
+      testWin[testCase.iframeName].eval(testCase.script);
+    } catch(e) {
+      ok(testCase.shouldBeBlocked, testCase.desc, e.message);
+      runNextTest();
+    }
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: location.replace.call(top.location, ...) should be blocked when sandboxed without allow-top-navigation",
+      script: "location.replace.call(top.location, 'file_top_navigation_by_location_exotic.html')",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 2: location.replace.bind(top.location, ...) should be blocked when sandboxed without allow-top-navigation",
+      script: "location.replace.bind(top.location, 'file_top_navigation_by_location_exotic.html')()",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 3: Function.bind.call(location.replace, top.location, ...) should be blocked when sandboxed without allow-top-navigation",
+      script: "Function.bind.call(location.replace, top.location, 'file_top_navigation_by_location_exotic.html')()",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 4: location.replace.call(top.location, ...) should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "location.replace.call(top.location, 'file_top_navigation_by_location_exotic.html')",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 5: location.replace.bind(top.location, ...) should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "location.replace.bind(top.location, 'file_top_navigation_by_location_exotic.html')()",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 6: Function.bind.call(location.replace, top.location, ...) should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "Function.bind.call(location.replace, top.location, 'file_top_navigation_by_location_exotic.html')()",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 7: top.location.href, via setTimeout, should be blocked when sandboxed without allow-top-navigation",
+      script: "setTimeout(function() { try { top.location.href = 'file_top_navigation_by_location_exotic.html' } catch (e) { top.onBlock() } }, 0)",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 8: top.location.href, via setTimeout, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "setTimeout(function() { try { top.location.href = 'file_top_navigation_by_location_exotic.html' } catch(e) { top.onBlock() } }, 0)",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 9: top.location.href, via eval, should be blocked when sandboxed without allow-top-navigation",
+      script: "eval('top.location.href = \"file_top_navigation_by_location_exotic.html\"')",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 10: top.location.href, via eval, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "eval('top.location.href = \"file_top_navigation_by_location_exotic.html\"')",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 11: top.location.href, via anonymous function, should be blocked when sandboxed without allow-top-navigation",
+      script: "(function() { top.location.href = 'file_top_navigation_by_location_exotic.html' })()",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 12: top.location.href, via anonymous function, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "(function() { top.location.href = 'file_top_navigation_by_location_exotic.html' })()",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 13: top.location.href, via function inserted in top, should be blocked when sandboxed without allow-top-navigation",
+      script: "top.doTest = function() { top.location.href = 'file_top_navigation_by_location_exotic.html' }; top.doTest();",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 14: top.location.href, via function inserted in top, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "top.doTest = function() { top.location.href = 'file_top_navigation_by_location_exotic.html' }; top.doTest();",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 15: top.location.href, via function inserted in us by top, should NOT be blocked when sandboxed without allow-top-navigation",
+      script: "top.eval('window[\"if1\"].doTest = function() { top.location.href = \"file_top_navigation_by_location_exotic.html\" };'), doTest();",
+      iframeName: "if1",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 16: top.location.href, via function inserted in top, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "top.eval('window[\"if2\"].doTest = function() { top.location.href = \"file_top_navigation_by_location_exotic.html\" };'), doTest();",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 17: top.location.href, via function in top, should NOT be blocked when sandboxed without allow-top-navigation",
+      script: "top.setOwnHref()",
+      iframeName: "if1",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 18: top.location.href, via function in top, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "top.setOwnHref()",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 19: top.location.href, via eval in top, should NOT be blocked when sandboxed without allow-top-navigation",
+      script: "top.eval('location.href = \"file_top_navigation_by_location_exotic.html\"')",
+      iframeName: "if1",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 20: top.location.href, via eval in top, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "top.eval('location.href = \"file_top_navigation_by_location_exotic.html\"')",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 21: top.location.href, via eval in top calling us, should be blocked when sandboxed without allow-top-navigation",
+      script: "function doTest() { top.location.href = 'file_top_navigation_by_location_exotic.html' } top.eval('window[\"if1\"].doTest()');",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 22: top.location.href, via eval in top calling us, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "function doTest() { top.location.href = 'file_top_navigation_by_location_exotic.html' } top.eval('window[\"if2\"].doTest()');",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 23: top.location.href, via function bound to top, should be blocked when sandboxed without allow-top-navigation",
+      script: "(function() { top.location.href = 'file_top_navigation_by_location_exotic.html' }).bind(top)();",
+      iframeName: "if1",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 24: top.location.href, via function bound to top, should NOT be blocked when sandboxed with allow-top-navigation",
+      script: "(function() { top.location.href = 'file_top_navigation_by_location_exotic.html' }).bind(top)();",
+      iframeName: "if2",
+      shouldBeBlocked: false
+    }
+  ];
+
+  function runNextTest() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      testWin.close();
+      SimpleTest.finish();
+      return;
+    }
+
+    runScriptNavigationTest(testCases[testCaseIndex]);
+  }
+
+  window.onmessage = runNextTest;
+  testWin = window.open('file_top_navigation_by_location_exotic.html', "newWindow");
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785310">Mozilla Bug 785310</a>
+<p id="display"></p>
+<div id="content">
+Tests for Bug 785310
+</div>
+</body>
+</html>

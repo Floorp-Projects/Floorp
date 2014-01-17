@@ -28,19 +28,20 @@ var SelectHelperUI = {
   },
 
   show: function selectHelperShow(aList, aTitle, aRect) {
-    if (this._list)
+    if (this._list) {
       this.reset();
+    }
 
     this._list = aList;
 
-    // The element label is used as a title to give more context
-    this._container.setAttribute("multiple", aList.multiple ? "true" : "false");
+    this._listbox.setAttribute("seltype", aList.multiple ? "multiple" : "single");
 
     let firstSelected = null;
 
     // Using a fragment prevent us to hang on huge list
     let fragment = document.createDocumentFragment();
     let choices = aList.choices;
+    let selectedItems = [];
     for (let i = 0; i < choices.length; i++) {
       let choice = choices[i];
       let item = document.createElement("richlistitem");
@@ -51,12 +52,10 @@ var SelectHelperUI = {
       item.setAttribute("crop", "center");
       label.setAttribute("value", choice.text);
       item.appendChild(label);
-
-      choice.selected ? item.setAttribute("selected", "true")
-                      : item.removeAttribute("selected");
-
+      item.setAttribute("oldstate", "false");
       choice.disabled ? item.setAttribute("disabled", "true")
                       : item.removeAttribute("disabled");
+
       fragment.appendChild(item);
 
       if (choice.group) {
@@ -67,18 +66,27 @@ var SelectHelperUI = {
       item.optionIndex = choice.optionIndex;
       item.choiceIndex = i;
 
-      if (choice.inGroup)
+      if (choice.inGroup) {
         item.classList.add("in-optgroup");
+      }
 
       if (choice.selected) {
-        item.classList.add("selected");
         firstSelected = firstSelected || item;
+        selectedItems.push(item);
       }
     }
     this._listbox.appendChild(fragment);
 
     this._container.addEventListener("click", this, false);
+    window.addEventListener("MozPrecisePointer", this, false);
     this._menuPopup.show(this._positionOptions(aRect));
+
+    // Setup pre-selected items. Note, this has to happen after show.
+    this._listbox.clearSelection();
+    for (let item of selectedItems) {
+      this._listbox.addItemToSelection(item);
+      item.setAttribute("oldstate", "true");
+    }
     this._listbox.ensureElementIsVisible(firstSelected);
   },
 
@@ -94,6 +102,7 @@ var SelectHelperUI = {
       return;
 
     this._container.removeEventListener("click", this, false);
+    window.removeEventListener("MozPrecisePointer", this, false);
     this._menuPopup.hide();
     this.reset();
   },
@@ -111,31 +120,38 @@ var SelectHelperUI = {
     };
   },
 
-  _forEachOption: function _selectHelperForEachOption(aCallback) {
-    let children = this._listbox.childNodes;
-    for (let i = 0; i < children.length; i++) {
-      let item = children[i];
-      if (!item.hasOwnProperty("optionIndex"))
-        continue;
-      aCallback(item, i);
-    }
-  },
-
   _updateControl: function _selectHelperUpdateControl() {
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceChange", { });
   },
 
   handleEvent: function selectHelperHandleEvent(aEvent) {
     switch (aEvent.type) {
+      case "MozPrecisePointer":
+        this.hide();
+      break;
       case "click":
         let item = aEvent.target;
         if (item && item.hasOwnProperty("optionIndex")) {
           if (this._list.multiple) {
-            item.classList.toggle("selected");
-          } else {
-            item.classList.add("selected");
+            // item.selected is always true here since that's how richlistbox handles
+            // mouse click events. We track our own state so that we can toggle here
+            // on click events. Iniial 'oldstate' values are setup in show above.
+            if (item.getAttribute("oldstate") == "true") {
+              item.setAttribute("oldstate", "false");
+            } else {
+              item.setAttribute("oldstate", "true");
+            }
+            // Fix up selected items - richlistbox will clear selection on click events
+            // so we need to set selection on the items the user has previously chosen.
+            this._listbox.clearSelection();
+            for (let node of this._listbox.childNodes) {
+              if (node.getAttribute("oldstate") == "true") {
+                this._listbox.addItemToSelection(node);
+              }
+            }
           }
-          this.onSelect(item.optionIndex, item.classList.contains("selected"));
+          // Let the form element know we've added or removed a selected item.
+          this.onSelect(item.optionIndex, item.selected);
         }
         break;
     }
