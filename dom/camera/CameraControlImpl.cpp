@@ -450,9 +450,12 @@ CameraControlImpl::TakePicture(const CameraSize& aSize, int32_t aRotation, const
 }
 
 nsresult
-CameraControlImpl::StartRecording(CameraStartRecordingOptions* aOptions, DeviceStorageFileDescriptor* aFileDescriptor, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::StartRecording(CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, *aOptions, aFileDescriptor, onSuccess, onError, mWindowId);
+  nsCOMPtr<nsIFile> clone;
+  aFolder->Clone(getter_AddRefs(clone));
+
+  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, *aOptions, clone, aFilename, onSuccess, onError, mWindowId);
   return mCameraThread->Dispatch(startRecordingTask, NS_DISPATCH_NORMAL);
 }
 
