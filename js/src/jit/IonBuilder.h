@@ -629,7 +629,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineStrCharCodeAt(CallInfo &callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo &callInfo);
     InliningStatus inlineStrCharAt(CallInfo &callInfo);
-    InliningStatus inlineStrReplaceRegExp(CallInfo &callInfo);
+    InliningStatus inlineStrReplace(CallInfo &callInfo);
 
     // RegExp natives.
     InliningStatus inlineRegExpExec(CallInfo &callInfo);

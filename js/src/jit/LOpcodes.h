@@ -152,6 +152,7 @@
     _(RegExpExec)                   \
     _(RegExpTest)                   \
     _(RegExpReplace)                \
+    _(StringReplace)                \
     _(Lambda)                       \
     _(LambdaForSingleton)           \
     _(LambdaPar)                    \
