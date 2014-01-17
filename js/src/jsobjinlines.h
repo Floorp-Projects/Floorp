@@ -429,6 +429,27 @@ JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, 
         return js::Proxy::setPrototypeOf(cx, obj, proto, succeeded);
     }
 
+    /*
+     * Disallow mutating the [[Prototype]] on ArrayBuffer objects, which
+     * due to their complicated delegate-object shenanigans can't easily
+     * have a mutable [[Prototype]].
+     */
+    if (obj->is<js::ArrayBufferObject>()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+                             "incompatible ArrayBuffer");
+        return false;
+    }
+
+    /*
+     * Explicityly disallow mutating the [[Prototype]] of Location objects
+     * for flash-related security reasons.
+     */
+    if (!strcmp(obj->getClass()->name, "Location")) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+                             "incompatible Location object");
+        return false;
+    }
+
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
     bool extensible;
     if (!JSObject::isExtensible(cx, obj, &extensible))

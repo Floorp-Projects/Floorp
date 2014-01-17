@@ -158,8 +158,8 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinSlice *slice, unsigned argc, Value 
     return true;
 }
 
-const JSJitInfo js::intrinsic_SetForkJoinTargetRegionInfo =
-    JS_JITINFO_NATIVE_PARALLEL(intrinsic_SetForkJoinTargetRegionPar);
+JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
+                           intrinsic_SetForkJoinTargetRegionPar);
 
 #endif // !JS_THREADSAFE || !JS_ION
 
@@ -2161,7 +2161,7 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinSlice *slice, unsigned argc, Value 
     return true;
 }
 
-const JSJitInfo js::intrinsic_SetForkJoinTargetRegionInfo =
-    JS_JITINFO_NATIVE_PARALLEL(intrinsic_SetForkJoinTargetRegionPar);
+JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
+                           intrinsic_SetForkJoinTargetRegionPar);
 
 #endif // JS_THREADSAFE && JS_ION
