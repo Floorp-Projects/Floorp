@@ -60,11 +60,11 @@ protected:
                           const int64_t& contentLength,
                           const int32_t& source,
                           const nsCString& charset,
-                          const nsCString& securityInfo);
+                          const nsCString& securityInfo) MOZ_OVERRIDE;
   bool RecvOnDataAvailable(const nsCString& data,
-                           const uint64_t& offset);
-  bool RecvOnStopRequest(const nsresult& statusCode);
-  bool RecvCancelEarly(const nsresult& statusCode);
+                           const uint64_t& offset) MOZ_OVERRIDE;
+  bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
+  bool RecvCancelEarly(const nsresult& statusCode) MOZ_OVERRIDE;
 
   void OnStartRequest(const nsresult& statusCode,
                       const int64_t& contentLength,

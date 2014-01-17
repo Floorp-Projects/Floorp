@@ -42,15 +42,15 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const uint32_t& aPingInterval,
                      const bool& aClientSetPingInterval,
                      const uint32_t& aPingTimeout,
-                     const bool& aClientSetPingTimeout);
-  bool RecvClose(const uint16_t & code, const nsCString & reason);
-  bool RecvSendMsg(const nsCString& aMsg);
-  bool RecvSendBinaryMsg(const nsCString& aMsg);
+                     const bool& aClientSetPingTimeout) MOZ_OVERRIDE;
+  bool RecvClose(const uint16_t & code, const nsCString & reason) MOZ_OVERRIDE;
+  bool RecvSendMsg(const nsCString& aMsg) MOZ_OVERRIDE;
+  bool RecvSendBinaryMsg(const nsCString& aMsg) MOZ_OVERRIDE;
   bool RecvSendBinaryStream(const InputStreamParams& aStream,
-                            const uint32_t& aLength);
-  bool RecvDeleteSelf();
+                            const uint32_t& aLength) MOZ_OVERRIDE;
+  bool RecvDeleteSelf() MOZ_OVERRIDE;
 
-  void ActorDestroy(ActorDestroyReason why);
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
   nsCOMPtr<nsIWebSocketChannel> mChannel;
