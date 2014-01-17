@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=960277
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 903715</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=960277">Mozilla Bug 960277</a>
+<p id="display"></p>
+<fieldset style="position:relative; height:100px; margin:50px; background:blue;">
+<legend style="background:purple">
+  <div id="d" style="position:absolute; background:yellow; top:0; left:0; width:50px; height:50px;"></div>
+</legend>
+</fieldset>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+var rect = d.getBoundingClientRect();
+is(document.elementFromPoint(rect.left + 10, rect.top + 10), d,
+   "Hit testing yellow div");
+</script>
+</body>
+</html>
