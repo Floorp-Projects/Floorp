@@ -358,11 +358,6 @@ public:
     mLayerComposited = value;
   }
 
-  void SetClearFB(bool value)
-  {
-    mClearFB = value;
-  }
-
   // These getters can be used anytime.
   float GetShadowOpacity() { return mShadowOpacity; }
   const nsIntRect* GetShadowClipRect() { return mUseShadowClipRect ? &mShadowClipRect : nullptr; }
@@ -370,7 +365,6 @@ public:
   const gfx3DMatrix& GetShadowTransform() { return mShadowTransform; }
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool HasLayerBeenComposited() { return mLayerComposited; }
-  bool GetClearFB() { return mClearFB; }
 
 protected:
   gfx3DMatrix mShadowTransform;
@@ -383,7 +377,6 @@ protected:
   bool mShadowTransformSetByAnimation;
   bool mDestroyed;
   bool mLayerComposited;
-  bool mClearFB;
 };
 
 
