@@ -2960,7 +2960,7 @@
           switch (aMessage.name) {
             case "DOMTitleChanged": {
               let tab = this._getTabForBrowser(browser);
-              if (!tab)
+              if (!tab || tab.hasAttribute("pending"))
                 return;
               let titleChanged = this.setTabTitle(tab);
               if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
@@ -3203,6 +3203,9 @@
             return;
 
           var tab = this._getTabForContentWindow(contentWin);
+          if (tab.hasAttribute("pending"))
+            return;
+
           var titleChanged = this.setTabTitle(tab);
           if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
             tab.setAttribute("titlechanged", "true");
