@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785310
+html5 sandboxed iframe should not be able to perform top navigation with scripts allowed
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 785310 - iframe sandbox child navigation by location tests</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  var testHtml = "<script>function onNav() { parent.parent.postMessage('childIframe', '*'); } window.onload = onNav; window.onhashchange = onNav;<\/script>";
+  var testDataUri = "data:text/html," + testHtml;
+
+  function runScriptNavigationTest(testCase) {
+    window.onmessage = function(event) {
+      if (event.data != 'childIframe') {
+        ok(false, "event.data: got '" + event.data + "', expected 'childIframe'");
+      }
+      ok(!testCase.shouldBeBlocked, testCase.desc, "child navigation was NOT blocked");
+      runNextTest();
+    };
+    try {
+      window["parentIframe"].eval(testCase.script);
+    } catch(e) {
+    ok(testCase.shouldBeBlocked, testCase.desc, e.message);
+      runNextTest();
+    }
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: cross origin child location.replace should NOT be blocked",
+      script: "window['crossOriginChildIframe'].location.replace(\"" + testDataUri + "\")",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 2: cross origin child location.assign should be blocked",
+      script: "window['crossOriginChildIframe'].location.assign(\"" + testDataUri + "\")",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 3: same origin child location.assign should NOT be blocked",
+      script: "window['sameOriginChildIframe'].location.assign(\"" + testDataUri + "\")",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 4: cross origin child location.href should NOT be blocked",
+      script: "window['crossOriginChildIframe'].location.href = \"" + testDataUri + "\"",
+      shouldBeBlocked: false
+    },
+    {
+      desc: "Test 5: cross origin child location.hash should be blocked",
+      script: "window['crossOriginChildIframe'].location.hash = 'wibble'",
+      shouldBeBlocked: true
+    },
+    {
+      desc: "Test 6: same origin child location.hash should NOT be blocked",
+      script: "window['sameOriginChildIframe'].location.hash = 'wibble'",
+      shouldBeBlocked: false
+    }
+  ];
+
+  function runNextTest() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    runScriptNavigationTest(testCases[testCaseIndex]);
+  }
+
+  addLoadEvent(runNextTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785310">Mozilla Bug 785310</a>
+<p id="display"></p>
+<div id="content">
+Tests for Bug 785310
+</div>
+
+<iframe name="parentIframe" sandbox="allow-scripts allow-same-origin" src="data:text/html,<iframe name='sameOriginChildIframe'></iframe><iframe name='crossOriginChildIframe' sandbox='allow-scripts'></iframe>"</iframe>
+
+</body>
+</html>

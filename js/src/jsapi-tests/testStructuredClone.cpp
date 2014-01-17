@@ -19,7 +19,7 @@ BEGIN_TEST(testStructuredClone_object)
         JSAutoCompartment ac(cx, g1);
         JS::RootedValue prop(cx, JS::Int32Value(1337));
 
-        v1 = JS::ObjectOrNullValue(JS_NewObject(cx, nullptr, nullptr, nullptr));
+        v1 = JS::ObjectOrNullValue(JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
         CHECK(v1.isObject());
         CHECK(JS_SetProperty(cx, &v1.toObject(), "prop", prop));
     }

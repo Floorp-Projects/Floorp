@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785310
+html5 sandboxed iframe should not be able to perform top navigation with scripts allowed
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 785310 - iframe sandbox sibling navigation by location tests</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function runScriptNavigationTest(testCase) {
+    window.onmessage = function(event) {
+      if (event.data != "siblingIframe") {
+        ok(false, "event.data: got '" + event.data + "', expected 'siblingIframe'");
+      }
+
+      ok(false, testCase.desc, "sibling navigation was NOT blocked");
+      runNextTest();
+    };
+
+    try {
+      window["testIframe"].eval(testCase.script);
+    } catch(e) {
+      ok(true, testCase.desc, e.message);
+      runNextTest();
+    }
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: sibling location.replace should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
+      script: "parent['siblingIframe'].location.replace('file_sibling_navigation_by_location.html')"
+    },
+    {
+      desc: "Test 2: sibling location.assign should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
+      script: "parent['siblingIframe'].location.assign('file_sibling_navigation_by_location.html')"
+    },
+    {
+      desc: "Test 3: sibling location.href should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
+      script: "parent['siblingIframe'].location.href = 'file_sibling_navigation_by_location.html'"
+    },
+    {
+      desc: "Test 4: sibling location.hash should be blocked even when sandboxed with allow-same-origin allow-top-navigation",
+      script: "parent['siblingIframe'].location.hash = 'wibble'"
+    }
+  ];
+
+  function runNextTest() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    runScriptNavigationTest(testCases[testCaseIndex]);
+  }
+
+  window.onmessage = runNextTest;
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785310">Mozilla Bug 785310</a>
+<p id="display"></p>
+<div id="content">
+Tests for Bug 785310
+</div>
+
+<iframe name="testIframe" sandbox="allow-scripts allow-same-origin allow-top-navigation"></iframe>
+<iframe name="siblingIframe" src="file_sibling_navigation_by_location.html"></iframe>
+
+</body>
+</html>

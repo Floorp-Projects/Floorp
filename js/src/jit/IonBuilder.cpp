@@ -464,9 +464,9 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
     for (jsbytecode *pc = start; pc != end; earlier = last, last = pc, pc += GetBytecodeLength(pc)) {
         uint32_t slot;
         if (*pc == JSOP_SETLOCAL)
-            slot = info().localSlot(GET_SLOTNO(pc));
+            slot = info().localSlot(GET_LOCALNO(pc));
         else if (*pc == JSOP_SETARG)
-            slot = info().argSlotUnchecked(GET_SLOTNO(pc));
+            slot = info().argSlotUnchecked(GET_ARGNO(pc));
         else
             continue;
         if (slot >= info().firstStackSlot())
@@ -487,8 +487,8 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
             }
         } else if (*last == JSOP_GETLOCAL || *last == JSOP_GETARG) {
             uint32_t slot = (*last == JSOP_GETLOCAL)
-                            ? info().localSlot(GET_SLOTNO(last))
-                            : info().argSlotUnchecked(GET_SLOTNO(last));
+                            ? info().localSlot(GET_LOCALNO(last))
+                            : info().argSlotUnchecked(GET_ARGNO(last));
             if (slot < info().firstStackSlot()) {
                 MPhi *otherPhi = entry->getSlot(slot)->toPhi();
                 if (otherPhi->hasBackedgeType())
@@ -1517,24 +1517,24 @@ IonBuilder::inspectOpcode(JSOp op)
         if (info().argsObjAliasesFormals()) {
             MGetArgumentsObjectArg *getArg = MGetArgumentsObjectArg::New(alloc(),
                                                                          current->argumentsObject(),
-                                                                         GET_SLOTNO(pc));
+                                                                         GET_ARGNO(pc));
             current->add(getArg);
             current->push(getArg);
         } else {
-            current->pushArg(GET_SLOTNO(pc));
+            current->pushArg(GET_ARGNO(pc));
         }
         return true;
 
       case JSOP_SETARG:
-        return jsop_setarg(GET_SLOTNO(pc));
+        return jsop_setarg(GET_ARGNO(pc));
 
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL:
-        current->pushLocal(GET_SLOTNO(pc));
+        current->pushLocal(GET_LOCALNO(pc));
         return true;
 
       case JSOP_SETLOCAL:
-        current->setLocal(GET_SLOTNO(pc));
+        current->setLocal(GET_LOCALNO(pc));
         return true;
 
       case JSOP_POP:
@@ -9139,7 +9139,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
         if (NeedsPostBarrier(info(), val))
             current->add(MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
         current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
-                                                 GET_SLOTNO(pc), val));
+                                                 GET_ARGNO(pc), val));
         return true;
     }
 
@@ -9467,18 +9467,18 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
             return true;
     }
 
-    MDefinition *obj = walkScopeChain(sc.hops);
+    MDefinition *obj = walkScopeChain(sc.hops());
 
     Shape *shape = ScopeCoordinateToStaticScopeShape(script(), pc);
 
     MInstruction *load;
-    if (shape->numFixedSlots() <= sc.slot) {
+    if (shape->numFixedSlots() <= sc.slot()) {
         MInstruction *slots = MSlots::New(alloc(), obj);
         current->add(slots);
 
-        load = MLoadSlot::New(alloc(), slots, sc.slot - shape->numFixedSlots());
+        load = MLoadSlot::New(alloc(), slots, sc.slot() - shape->numFixedSlots());
     } else {
-        load = MLoadFixedSlot::New(alloc(), obj, sc.slot);
+        load = MLoadFixedSlot::New(alloc(), obj, sc.slot());
     }
 
     current->add(load);
@@ -9511,14 +9511,14 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 
         // The call object has type information we need to respect but we
         // couldn't find it. Just do a normal property assign.
-        MDefinition *obj = walkScopeChain(sc.hops);
+        MDefinition *obj = walkScopeChain(sc.hops());
         current->push(obj);
         current->push(value);
         return jsop_setprop(name);
     }
 
     MDefinition *rval = current->peek(-1);
-    MDefinition *obj = walkScopeChain(sc.hops);
+    MDefinition *obj = walkScopeChain(sc.hops());
 
     Shape *shape = ScopeCoordinateToStaticScopeShape(script(), pc);
 
@@ -9526,13 +9526,13 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
         current->add(MPostWriteBarrier::New(alloc(), obj, rval));
 
     MInstruction *store;
-    if (shape->numFixedSlots() <= sc.slot) {
+    if (shape->numFixedSlots() <= sc.slot()) {
         MInstruction *slots = MSlots::New(alloc(), obj);
         current->add(slots);
 
-        store = MStoreSlot::NewBarriered(alloc(), slots, sc.slot - shape->numFixedSlots(), rval);
+        store = MStoreSlot::NewBarriered(alloc(), slots, sc.slot() - shape->numFixedSlots(), rval);
     } else {
-        store = MStoreFixedSlot::NewBarriered(alloc(), obj, sc.slot, rval);
+        store = MStoreFixedSlot::NewBarriered(alloc(), obj, sc.slot(), rval);
     }
 
     current->add(store);

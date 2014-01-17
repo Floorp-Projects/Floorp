@@ -310,15 +310,15 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     *aIsInterval = false;
   }
 
-  switch (::JS_TypeOfValue(cx, argv[0])) {
+  JS::Rooted<JS::Value> arg(cx, argv[0]);
+  switch (::JS_TypeOfValue(cx, arg)) {
   case JSTYPE_FUNCTION:
-    funobj = JSVAL_TO_OBJECT(argv[0]);
+    funobj = &arg.toObject();
     break;
 
   case JSTYPE_STRING:
   case JSTYPE_OBJECT:
     {
-      JS::Rooted<JS::Value> arg(cx, argv[0]);
       JSString *str = JS::ToString(cx, arg);
       if (!str)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -327,7 +327,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       if (!expr)
           return NS_ERROR_OUT_OF_MEMORY;
 
-      argv[0] = STRING_TO_JSVAL(str);
+      argv[0] = JS::StringValue(str);
     }
     break;
 

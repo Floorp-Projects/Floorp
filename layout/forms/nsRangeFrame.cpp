@@ -356,8 +356,8 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
-    rv = FinishReflowChild(trackFrame, aPresContext, &trackReflowState,
-                           trackDesiredSize, trackX, trackY, 0);
+    rv = FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
+                           &trackReflowState, trackX, trackY, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -378,8 +378,8 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
-    rv = FinishReflowChild(thumbFrame, aPresContext, &thumbReflowState,
-                           thumbDesiredSize, 0, 0, 0);
+    rv = FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
+                           &thumbReflowState, 0, 0, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     DoUpdateThumbPosition(thumbFrame, nsSize(aDesiredSize.Width(),
@@ -407,7 +407,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
                "We gave our child unconstrained height, so it should be complete");
     rv = FinishReflowChild(rangeProgressFrame, aPresContext,
-                           &progressReflowState, progressDesiredSize, 0, 0, 0);
+                           progressDesiredSize, &progressReflowState, 0, 0, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     DoUpdateRangeProgressFrame(rangeProgressFrame, nsSize(aDesiredSize.Width(),

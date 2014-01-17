@@ -144,7 +144,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
 
     RootedObject realObject(cx, GetDoubleWrappedJSObject(ccx, wrapper));
     if (!realObject) {
@@ -1278,8 +1278,9 @@ FixUpThisIfBroken(JSObject *obj, JSObject *funobj)
 bool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
-    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
-    RootedObject funobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
+    RootedObject funobj(cx, &args.callee());
 
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
@@ -1303,8 +1304,9 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 bool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
-    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
-    RootedObject funobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
+    RootedObject funobj(cx, &args.callee());
 
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
@@ -1326,7 +1328,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
         ccx.SetCallInfo(iface, member, true);
         bool retval = XPCWrappedNative::SetAttribute(ccx);
         if (retval)
-            *vp = JS_ARGV(cx, vp)[0];
+            args.rval().set(args[0]);
         return retval;
     }
     // else...

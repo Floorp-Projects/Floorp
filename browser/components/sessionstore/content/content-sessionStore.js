@@ -32,6 +32,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "TextAndScrollData",
 Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 let gFrameTree = new FrameTree(this);
 
+Cu.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
+XPCOMUtils.defineLazyGetter(this, 'gContentRestore',
+                            () => { return new ContentRestore(this) });
+
 /**
  * Returns a lazy function that will evaluate the given
  * function |fn| only once and cache its return value.
@@ -71,7 +75,7 @@ function isSessionStorageEvent(event) {
 let EventListener = {
 
   DOM_EVENTS: [
-    "pageshow", "change", "input"
+    "load", "pageshow", "change", "input"
   ],
 
   init: function () {
@@ -80,6 +84,24 @@ let EventListener = {
 
   handleEvent: function (event) {
     switch (event.type) {
+      case "load":
+        // Ignore load events from subframes.
+        if (event.target == content.document) {
+          // If we're in the process of restoring, this load may signal
+          // the end of the restoration.
+          let epoch = gContentRestore.getRestoreEpoch();
+          if (epoch) {
+            // Restore the form data and scroll position.
+            gContentRestore.restoreDocument();
+
+            // Ask SessionStore.jsm to trigger SSTabRestored.
+            sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
+          }
+
+          // Send a load message for all loads so we can invalidate the TabStateCache.
+          sendAsyncMessage("SessionStore:load");
+        }
+        break;
       case "pageshow":
         if (event.persisted && event.target == content.document)
           sendAsyncMessage("SessionStore:pageshow");
@@ -101,14 +123,19 @@ let EventListener = {
 let MessageListener = {
 
   MESSAGES: [
-    "SessionStore:collectSessionHistory"
+    "SessionStore:collectSessionHistory",
+
+    "SessionStore:restoreHistory",
+    "SessionStore:restoreTabContent",
+    "SessionStore:resetRestore",
   ],
 
   init: function () {
     this.MESSAGES.forEach(m => addMessageListener(m, this));
   },
 
-  receiveMessage: function ({name, data: {id}}) {
+  receiveMessage: function ({name, data}) {
+    let id = data ? data.id : 0;
     switch (name) {
       case "SessionStore:collectSessionHistory":
         let history = SessionHistory.collect(docShell);
@@ -121,6 +148,44 @@ let MessageListener = {
                                         docShell.isAppTab);
         }
         sendAsyncMessage(name, {id: id, data: history});
+        break;
+      case "SessionStore:restoreHistory":
+        let reloadCallback = () => {
+          // Inform SessionStore.jsm about the reload. It will send
+          // restoreTabContent in response.
+          sendAsyncMessage("SessionStore:reloadPendingTab", {epoch: data.epoch});
+        };
+        gContentRestore.restoreHistory(data.epoch, data.tabData, reloadCallback);
+
+        // When restoreHistory finishes, we send a synchronous message to
+        // SessionStore.jsm so that it can run SSTabRestoring. Users of
+        // SSTabRestoring seem to get confused if chrome and content are out of
+        // sync about the state of the restore (particularly regarding
+        // docShell.currentURI). Using a synchronous message is the easiest way
+        // to temporarily synchronize them.
+        sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch: data.epoch});
+        break;
+      case "SessionStore:restoreTabContent":
+        let epoch = gContentRestore.getRestoreEpoch();
+        let finishCallback = () => {
+          // Tell SessionStore.jsm that it may want to restore some more tabs,
+          // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
+          sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch: epoch});
+        };
+
+        // We need to pass the value of didStartLoad back to SessionStore.jsm.
+        let didStartLoad = gContentRestore.restoreTabContent(finishCallback);
+
+        sendAsyncMessage("SessionStore:restoreTabContentStarted", {epoch: epoch});
+
+        if (!didStartLoad) {
+          // Pretend that the load succeeded so that event handlers fire correctly.
+          sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch: epoch});
+          sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
+        }
+        break;
+      case "SessionStore:resetRestore":
+        gContentRestore.resetRestore();
         break;
       default:
         debug("received unknown message '" + name + "'");
