@@ -3682,6 +3682,7 @@ Editable.prototype = {
    */
   activate: function(e) {
     if (!this.shouldActivate) {
+      this._onCleanup && this._onCleanup();
       return;
     }
 
@@ -3739,6 +3740,7 @@ Editable.prototype = {
     this._variable.locked = false;
     this._variable.twisty = this._prevExpandable;
     this._variable.expanded = this._prevExpanded;
+    this._onCleanup && this._onCleanup();
   },
 
   /**
@@ -3867,9 +3869,6 @@ EditableNameAndValue.prototype = Heritage.extend(EditableName.prototype, {
     let valueEditable = EditableValue.create(this._variable, {
       onSave: aValue => {
         this._onSave([key, aValue]);
-      },
-      onCleanup: () => {
-        this._onCleanup();
       }
     });
     valueEditable._reset = () => {
