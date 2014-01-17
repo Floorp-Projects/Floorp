@@ -14,7 +14,7 @@ function test() {
   function doTestWhenReady(aIsZoomedWindow, aWindow, aCallback) {
     // Need to wait on two things, the ordering of which is not guaranteed:
     // (1) the page load, and (2) FullZoom's update to the new page's zoom
-    // level.  FullZoom broadcasts "browser-fullZoom:location-change" when its
+    // level.  FullZoom broadcasts "FullZoom:TESTS:location-change" when its
     // update is done.  (See bug 856366 for details.)
 
     let n = 0;
@@ -30,7 +30,7 @@ function test() {
       Services.obs.removeObserver(onLocationChange, topic);
       if (++n == 2)
         doTest(aIsZoomedWindow, aWindow, aCallback);
-    }, "browser-fullZoom:location-change", false);
+    }, "FullZoom:TESTS:location-change", false);
 
     browser.loadURI("about:blank");
   }
