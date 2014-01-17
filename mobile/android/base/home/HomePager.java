@@ -58,6 +58,9 @@ public class HomePager extends ViewPager {
     // Current load state of HomePager.
     private LoadState mLoadState;
 
+    // Listens for when the current panel changes.
+    private OnPanelChangeListener mPanelChangedListener;
+
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
     static final String LIST_TAG_HISTORY = "history";
@@ -79,6 +82,18 @@ public class HomePager extends ViewPager {
 
     public interface OnNewTabsListener {
         public void onNewTabs(String[] urls);
+    }
+
+    /**
+     * Interface for listening into ViewPager panel changes
+     */
+    public interface OnPanelChangeListener {
+        /**
+         * Called when a new panel is selected.
+         *
+         * @param panelId of the newly selected panel
+         */
+        public void onPanelSelected(String panelId);
     }
 
     interface OnTitleClickListener {
@@ -257,6 +272,40 @@ public class HomePager extends ViewPager {
         }
     }
 
+    /**
+     * Shows a home panel. If the given panelId is null,
+     * the default panel will be shown. No action will be taken if:
+     *  * HomePager has not loaded yet
+     *  * Panel with the given panelId cannot be found
+     *
+     * @param panelId of the home panel to be shown.
+     */
+    public void showPanel(String panelId) {
+        if (!mVisible) {
+            return;
+        }
+
+        switch (mLoadState) {
+            case LOADING:
+                mInitialPanelId = panelId;
+                break;
+
+            case LOADED:
+                int position = mDefaultPageIndex;
+                if (panelId != null) {
+                    position = ((HomeAdapter) getAdapter()).getItemPosition(panelId);
+                }
+
+                if (position > -1) {
+                    setCurrentItem(position);
+                }
+                break;
+
+            default:
+                // Do nothing.
+        }
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
@@ -382,6 +431,26 @@ public class HomePager extends ViewPager {
         }
     }
 
+    public void setOnPanelChangeListener(OnPanelChangeListener listener) {
+       mPanelChangedListener = listener;
+    }
+
+    /**
+     * Notify listeners of newly selected panel.
+     *
+     * @param position of the newly selected panel
+     */
+    private void notifyPanelSelected(int position) {
+        if (mDecor != null) {
+            mDecor.onPageSelected(position);
+        }
+
+        if (mPanelChangedListener != null) {
+            final String panelId = ((HomeAdapter) getAdapter()).getPanelIdAtPosition(position);
+            mPanelChangedListener.onPanelSelected(panelId);
+        }
+    }
+
     private class ConfigLoaderCallbacks implements LoaderCallbacks<HomeConfig.State> {
         @Override
         public Loader<HomeConfig.State> onCreateLoader(int id, Bundle args) {
@@ -403,9 +472,7 @@ public class HomePager extends ViewPager {
     private class PageChangeListener implements ViewPager.OnPageChangeListener {
         @Override
         public void onPageSelected(int position) {
-            if (mDecor != null) {
-                mDecor.onPageSelected(position);
-            }
+            notifyPanelSelected(position);
 
             if (mHomeBanner != null) {
                 mHomeBanner.setActive(position == mDefaultPageIndex);
