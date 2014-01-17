@@ -12,7 +12,7 @@
  */
 
 #include "mozilla/NullPtr.h"
- 
+
 #include "jsbytecode.h"
 
 #include "js/CallArgs.h"
@@ -143,7 +143,7 @@ extern JS_PUBLIC_API(JSCompartment *)
 JS_EnterCompartmentOfScript(JSContext *cx, JSScript *target);
 
 extern JS_PUBLIC_API(JSString *)
-JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned indent);
+JS_DecompileScript(JSContext *cx, JS::HandleScript script, const char *name, unsigned indent);
 
 /*
  * Currently, we only support runtime-wide debugging. In the future, we should

@@ -1609,7 +1609,8 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
           str = JS_NewStringCopyZ(cx, ifaceAndProtoJSClass->mToString);
         } else {
           MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
-          str = JS_DecompileFunction(cx, JS_GetObjectFunction(obj), 0);
+          JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(obj));
+          str = JS_DecompileFunction(cx, fun, 0);
         }
       }
       str = ConcatJSString(cx, pre, str, post);
