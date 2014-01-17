@@ -224,7 +224,7 @@ TokenServerClient.prototype = {
 
     let req = new RESTRequest(url);
     req.setHeader("Accept", "application/json");
-    req.setHeader("Authorization", "Browser-ID " + assertion);
+    req.setHeader("Authorization", "BrowserID " + assertion);
 
     if (conditionsAccepted) {
       // Value is irrelevant.

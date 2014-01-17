@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const TEST_URL = "data:text/html;charset=utf-8,<input%20id=txt>" +
                  "<input%20type=checkbox%20id=chk>";
 
@@ -30,11 +32,8 @@ function test() {
     let [txt, chk] = newWin.content.document.querySelectorAll("#txt, #chk");
     txt.value = uniqueText;
 
-    // Toggle the checkbox to cause a SessionStore:input message to be sent.
-    EventUtils.sendMouseEvent({type: "click"}, chk);
-
     let browser = newWin.gBrowser.selectedBrowser;
-    promiseContentMessage(browser, "SessionStore:input").then(() => {
+    setInputChecked(browser, {id: "chk", checked: true}).then(() => {
       newWin.close();
 
       // Now give it time to close
@@ -84,4 +83,8 @@ function test() {
       });
     });
   }, TEST_URL);
+}
+
+function setInputChecked(browser, data) {
+  return sendMessage(browser, "ss-test:setInputChecked", data);
 }

@@ -28,29 +28,6 @@ const VALID_TYPES = [
 const { isArray } = Array;
 
 /**
- * Returns a function C that creates instances of privateCtor.  C may be called
- * with or without the new keyword.  The prototype of each instance returned
- * from C is C.prototype, and C.prototype is an object whose prototype is
- * privateCtor.prototype.  Instances returned from C will therefore be instances
- * of both C and privateCtor.  Additionally, the constructor of each instance
- * returned from C is C.
- *
- * @param  privateCtor
- *         A constructor.
- * @return A function that makes new instances of privateCtor.
- */
-exports.publicConstructor = function publicConstructor(privateCtor) {
-  function PublicCtor() {
-    let obj = { constructor: PublicCtor, __proto__: PublicCtor.prototype };
-    memory.track(obj, privateCtor.name);
-    privateCtor.apply(obj, arguments);
-    return obj;
-  }
-  PublicCtor.prototype = { __proto__: privateCtor.prototype };
-  return PublicCtor;
-};
-
-/**
  * Returns a validated options dictionary given some requirements.  If any of
  * the requirements are not met, an exception is thrown.
  *

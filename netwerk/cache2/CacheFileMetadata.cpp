@@ -421,6 +421,24 @@ CacheFileMetadata::GetLastModified(uint32_t *_retval)
 }
 
 nsresult
+CacheFileMetadata::SetFrecency(uint32_t aFrecency)
+{
+  LOG(("CacheFileMetadata::SetFrecency() [this=%p, frecency=%f]",
+       this, (double)aFrecency));
+
+  MarkDirty();
+  mMetaHdr.mFrecency = aFrecency;
+  return NS_OK;
+}
+
+nsresult
+CacheFileMetadata::GetFrecency(uint32_t *_retval)
+{
+  *_retval = mMetaHdr.mFrecency;
+  return NS_OK;
+}
+
+nsresult
 CacheFileMetadata::GetLastFetched(uint32_t *_retval)
 {
   *_retval = mMetaHdr.mLastFetched;

@@ -13,7 +13,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.SRPConstants;
 
-public class FxAccount10AuthDelegate implements FxAccountClient.AuthDelegate {
+public class FxAccount10AuthDelegate implements FxAccountClient10.AuthDelegate {
   // Fixed by protocol.
   protected final BigInteger N;
   protected final BigInteger g;

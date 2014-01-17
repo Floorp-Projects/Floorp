@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
-  "resource:///modules/sessionstore/PrivacyLevel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevelFilter",
+  "resource:///modules/sessionstore/PrivacyLevelFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
@@ -166,8 +166,7 @@ let TabStateInternal = {
     let browser = tab.linkedBrowser;
 
     let promise = Task.spawn(function task() {
-      // Collect session history data asynchronously. Also collects
-      // text and scroll data.
+      // Collect session history data asynchronously.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
 
       // The tab could have been closed while waiting for a response.
@@ -354,33 +353,27 @@ let TabStateInternal = {
    */
   _copyFromPersistentCache: function (tab, tabData, options = {}) {
     let data = TabStateCache.getPersistent(tab.linkedBrowser);
-
-    // Nothing to do without any cached data.
     if (!data) {
       return;
     }
 
+    // The caller may explicitly request to omit privacy checks.
     let includePrivateData = options && options.includePrivateData;
 
     for (let key of Object.keys(data)) {
-      if (key != "storage" || includePrivateData) {
-        tabData[key] = data[key];
-      } else {
-        let storage = {};
-        let isPinned = tab.pinned;
+      let value = data[key];
 
-        // If we're not allowed to include private data, let's filter out hosts
-        // based on the given tab's pinned state and the privacy level.
-        for (let host of Object.keys(data.storage)) {
-          let isHttps = host.startsWith("https:");
-          if (PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
-            storage[host] = data.storage[host];
-          }
+      // Filter sensitive data according to the current privacy level.
+      if (!includePrivateData) {
+        if (key === "storage") {
+          value = PrivacyLevelFilter.filterSessionStorageData(value, tab.pinned);
+        } else if (key === "formdata") {
+          value = PrivacyLevelFilter.filterFormData(value, tab.pinned);
         }
+      }
 
-        if (Object.keys(storage).length) {
-          tabData.storage = storage;
-        }
+      if (value) {
+        tabData[key] = value;
       }
     }
   },
