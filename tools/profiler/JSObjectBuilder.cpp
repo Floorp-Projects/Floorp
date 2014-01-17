@@ -81,7 +81,7 @@ JSObjectBuilder::ArrayPush(JS::HandleObject aArray, int value)
     return;
 
   uint32_t length;
-  mOk = JS_GetArrayLength(mCx, (JSObject*)aArray, &length);
+  mOk = JS_GetArrayLength(mCx, aArray, &length);
 
   if (!mOk)
     return;
@@ -103,7 +103,7 @@ JSObjectBuilder::ArrayPush(JS::HandleObject aArray, const char *value)
   }
 
   uint32_t length;
-  mOk = JS_GetArrayLength(mCx, (JSObject*)aArray, &length);
+  mOk = JS_GetArrayLength(mCx, aArray, &length);
 
   if (!mOk)
     return;

@@ -2309,10 +2309,10 @@ class AutoIdArray : private AutoGCRooter
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
-JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
+JS_ValueToId(JSContext *cx, jsval v, JS::MutableHandle<jsid> idp);
 
 extern JS_PUBLIC_API(bool)
-JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
+JS_IdToValue(JSContext *cx, jsid id, JS::MutableHandle<JS::Value> vp);
 
 /*
  * JSNewResolveOp flag bits.
@@ -2745,13 +2745,13 @@ JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *clasp, JS::Handle<JSObj
  * deep-frozen.
  */
 extern JS_PUBLIC_API(bool)
-JS_DeepFreezeObject(JSContext *cx, JSObject *obj);
+JS_DeepFreezeObject(JSContext *cx, JS::Handle<JSObject*> obj);
 
 /*
  * Freezes an object; see ES5's Object.freeze(obj) method.
  */
 extern JS_PUBLIC_API(bool)
-JS_FreezeObject(JSContext *cx, JSObject *obj);
+JS_FreezeObject(JSContext *cx, JS::Handle<JSObject*> obj);
 
 extern JS_PUBLIC_API(bool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj);
@@ -3060,10 +3060,10 @@ extern JS_PUBLIC_API(bool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(bool)
-JS_GetArrayLength(JSContext *cx, JSObject *obj, uint32_t *lengthp);
+JS_GetArrayLength(JSContext *cx, JS::Handle<JSObject*> obj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(bool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, uint32_t length);
+JS_SetArrayLength(JSContext *cx, JS::Handle<JSObject*> obj, uint32_t length);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, jsval value,
@@ -3158,7 +3158,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj);
  * order, which uses order of property definition in obj.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
+JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
 
 /*
  * Return true on success with *idp containing the id of the next enumerable
@@ -3166,11 +3166,11 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
  * left to visit.  Return false on error.
  */
 extern JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp);
+JS_NextProperty(JSContext *cx, JS::Handle<JSObject*> iterobj, jsid *idp);
 
 extern JS_PUBLIC_API(bool)
-JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-               jsval *vp, unsigned *attrsp);
+JS_CheckAccess(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSAccessMode mode,
+               JS::MutableHandle<JS::Value> vp, unsigned *attrsp);
 
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
