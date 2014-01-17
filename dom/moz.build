@@ -95,7 +95,6 @@ if CONFIG['MOZ_B2G_RIL']:
     PARALLEL_DIRS += [
         'icc',
         'cellbroadcast',
-        'mobileconnection',
         'voicemail',
         'wappush',
     ]
