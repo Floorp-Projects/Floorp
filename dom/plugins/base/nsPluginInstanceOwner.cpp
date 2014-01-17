@@ -184,7 +184,7 @@ nsPluginInstanceOwner::GetImageContainer()
   nsRefPtr<Image> img = container->CreateImage(&format, 1);
 
   SharedTextureImage::Data data;
-  data.mSize = gfx::IntSize(r.width, r.height);
+  data.mSize = gfxIntSize(r.width, r.height);
   data.mHandle = mInstance->CreateSharedHandle();
   data.mShareType = mozilla::gl::SameProcess;
   data.mInverted = mInstance->Inverted();
