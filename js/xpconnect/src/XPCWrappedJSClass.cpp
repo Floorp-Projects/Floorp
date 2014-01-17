@@ -899,11 +899,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
                     fputs(line, stdout);
                     fputs(preamble, stdout);
-                    nsCString text;
-                    if (NS_SUCCEEDED(xpc_exception->ToString(text)) &&
-                        !text.IsEmpty()) {
-                        fputs(text.get(), stdout);
+                    char* text;
+                    if (NS_SUCCEEDED(xpc_exception->ToString(&text)) && text) {
+                        fputs(text, stdout);
                         fputs("\n", stdout);
+                        nsMemory::Free(text);
                     } else
                         fputs(cant_get_text, stdout);
                     fputs(line, stdout);
@@ -926,13 +926,17 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                         // try to cook one up.
                         scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
                         if (nullptr != scriptError) {
-                            nsCString newMessage;
-                            rv = xpc_exception->ToString(newMessage);
+                            char* exn_string;
+                            rv = xpc_exception->ToString(&exn_string);
                             if (NS_SUCCEEDED(rv)) {
+                                // use toString on the exception as the message
+                                NS_ConvertASCIItoUTF16 newMessage(exn_string);
+                                nsMemory::Free((void *) exn_string);
+
                                 // try to get filename, lineno from the first
                                 // stack frame location.
                                 int32_t lineNumber = 0;
-                                nsCString sourceName;
+                                nsXPIDLCString sourceName;
 
                                 nsCOMPtr<nsIStackFrame> location;
                                 xpc_exception->
@@ -942,11 +946,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     location->GetLineNumber(&lineNumber);
 
                                     // get a filename.
-                                    rv = location->GetFilename(sourceName);
+                                    rv = location->GetFilename(getter_Copies(sourceName));
                                 }
 
-                                rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
-                                                                   NS_ConvertUTF8toUTF16(sourceName),
+                                rv = scriptError->InitWithWindowID(newMessage,
+                                                                   NS_ConvertASCIItoUTF16(sourceName),
                                                                    EmptyString(),
                                                                    lineNumber, 0, 0,
                                                                    "XPConnect JavaScript",

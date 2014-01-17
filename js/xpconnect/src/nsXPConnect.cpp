@@ -898,14 +898,9 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char *filename,
         return NS_ERROR_INVALID_ARG;
 
     RootedObject sandbox(cx, sandboxArg);
-    nsCString filenameStr;
-    if (filename) {
-        filenameStr.Assign(filename);
-    } else {
-        filenameStr = NS_LITERAL_CSTRING("x-bogus://XPConnect/Sandbox");
-    }
-    return EvalInSandbox(cx, sandbox, source, filenameStr, 1,
-                         JSVERSION_DEFAULT, returnStringOnly, rval);
+    return EvalInSandbox(cx, sandbox, source, filename ? filename :
+                         "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
+                         returnStringOnly, rval);
 }
 
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
