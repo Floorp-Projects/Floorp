@@ -257,8 +257,9 @@ MediaEngineTabVideoSource::Draw() {
   NS_ENSURE_SUCCESS_VOID(rv);
 
   layers::CairoImage::Data cairoData;
-  cairoData.mSurface = surf;
+  cairoData.mDeprecatedSurface = surf;
   cairoData.mSize = size;
+  cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surf);
 
   nsRefPtr<layers::CairoImage> image = new layers::CairoImage();
 
