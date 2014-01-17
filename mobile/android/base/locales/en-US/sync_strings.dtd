@@ -157,3 +157,5 @@
 <!ENTITY fxaccount.status.history 'History'>
 <!ENTITY fxaccount.status.passwords 'Passwords'>
 <!ENTITY fxaccount.status.tabs 'Open tabs'>
+<!ENTITY fxaccount.update.credentials 'Update password'>
+<!ENTITY fxaccount.update.credentials.button.label 'Re-connect'>

@@ -57,3 +57,13 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>

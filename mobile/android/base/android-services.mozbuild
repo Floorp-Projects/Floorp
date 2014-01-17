@@ -550,6 +550,7 @@ sync_java_files = [
     'fxa/activities/FxAccountSetupTask.java',
     'fxa/activities/FxAccountSignInActivity.java',
     'fxa/activities/FxAccountStatusActivity.java',
+    'fxa/activities/FxAccountUpdateCredentialsActivity.java',
     'fxa/authenticator/AbstractFxAccount.java',
     'fxa/authenticator/AndroidFxAccount.java',
     'fxa/authenticator/FxAccountAuthenticator.java',

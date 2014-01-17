@@ -37,6 +37,8 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified view");
     connectionStatusSignInView = ensureFindViewById(null, R.id.sign_in_view, "sign in view");
     connectionStatusSyncingView = ensureFindViewById(null, R.id.syncing_view, "syncing view");
+
+    launchActivityOnClick(connectionStatusSignInView, FxAccountUpdateCredentialsActivity.class);
   }
 
   @Override
