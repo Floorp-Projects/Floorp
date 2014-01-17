@@ -31,7 +31,9 @@ function ended1(e) {
   if (v._endCount == 2) {
     ok(true, "Playing after pause while ended works for " + v._name);
     v._finished = true;
-    v.parentNode.removeChild(v);
+    v.removeEventListener("loadedmetadata", start, false);
+    v.removeEventListener("ended", ended1, false);
+    removeNodeAndSource(v);
     manager.finished(v.token);
     return;
   }
@@ -56,12 +58,16 @@ function seeked2(e) {
 
   ok(v.paused, "Paused after seek after pause while ended for " + v._name);
   v._finished = true;
-  v.parentNode.removeChild(v);
+  v.removeEventListener("loadedmetadata", start, false);
+  v.removeEventListener("ended", ended2, false);
+  v.removeEventListener("seeked", seeked2, false);
+  removeNodeAndSource(v);
   manager.finished(v.token);
 }
 
 function createVideo(test, x, token) {
   var v = document.createElement('video');
+  v.preload = "auto";
   v.token = token;
   manager.started(token);
   v.src = test.name;

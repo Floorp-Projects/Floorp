@@ -577,6 +577,15 @@ function getMajorMimeType(mimetype) {
   }
 }
 
+function removeNodeAndSource(n) {
+  n.remove();
+  // force release of underlying decoder
+  n.src = "";
+  while (n.firstChild) {
+    n.removeChild(n.firstChild);
+  }
+}
+
 // Number of tests to run in parallel. Warning: Each media element requires
 // at least 3 threads (4 on Linux), and on Linux each thread uses 10MB of
 // virtual address space. Beware!
@@ -700,12 +709,12 @@ function MediaTestManager() {
 function mediaTestCleanup() {
     var V = document.getElementsByTagName("video");
     for (i=0; i<V.length; i++) {
-      V[i].parentNode.removeChild(V[i]);
+      removeNodeAndSource(V[i]);
       V[i] = null;
     }
     var A = document.getElementsByTagName("audio");
     for (i=0; i<A.length; i++) {
-      A[i].parentNode.removeChild(A[i]);
+      removeNodeAndSource(A[i]);
       A[i] = null;
     }
     SpecialPowers.forceGC();
