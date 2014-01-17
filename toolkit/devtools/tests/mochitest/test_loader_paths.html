@@ -37,13 +37,11 @@
       const { BuiltinProvider, SrcdirProvider } =
         Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-      let builtin = new BuiltinProvider();
-      builtin.load();
-      let srcdir = new SrcdirProvider();
-      srcdir.load();
+      BuiltinProvider.load();
+      SrcdirProvider.load();
 
-      is(builtin.loader.mapping.length,
-         srcdir.loader.mapping.length + 1,
+      is(BuiltinProvider.loader.mapping.length,
+         SrcdirProvider.loader.mapping.length + 1,
          "The built-in loader should have only one more mapping for testing.");
 
       Services.prefs.clearUserPref(SRCDIR_PREF);
