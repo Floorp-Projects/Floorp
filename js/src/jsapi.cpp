@@ -4135,10 +4135,9 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs)
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineFunction(JSContext *cx, JSObject *objArg, const char *name, JSNative call,
+JS_DefineFunction(JSContext *cx, HandleObject obj, const char *name, JSNative call,
                   unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4151,11 +4150,10 @@ JS_DefineFunction(JSContext *cx, JSObject *objArg, const char *name, JSNative ca
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineUCFunction(JSContext *cx, JSObject *objArg,
+JS_DefineUCFunction(JSContext *cx, HandleObject obj,
                     const jschar *name, size_t namelen, JSNative call,
                     unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4168,11 +4166,9 @@ JS_DefineUCFunction(JSContext *cx, JSObject *objArg,
 }
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_DefineFunctionById(JSContext *cx, JSObject *objArg, jsid id_, JSNative call,
+JS_DefineFunctionById(JSContext *cx, HandleObject obj, HandleId id, JSNative call,
                       unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, id_);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4833,63 +4829,59 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipals(JSContext *cx, HandleObject obj,
                                  JSPrincipals *principals,
                                  const jschar *chars, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 jsval *rval)
+                                 MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, HandleObject obj,
                                         JSPrincipals *principals,
                                         const jschar *chars, unsigned length,
                                         const char *filename, unsigned lineno,
-                                        jsval *rval, JSVersion version)
+                                        MutableHandleValue rval, JSVersion version)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 extern JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, HandleObject obj,
                                               JSPrincipals *principals,
                                               JSPrincipals *originPrincipals,
                                               const jschar *chars, unsigned length,
                                               const char *filename, unsigned lineno,
-                                              jsval *rval, JSVersion version)
+                                              MutableHandleValue rval, JSVersion version)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setOriginPrincipals(originPrincipals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, JSObject *objArg, const jschar *chars, unsigned length,
-                    const char *filename, unsigned lineno, jsval *rval)
+JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsigned length,
+                    const char *filename, unsigned lineno, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 /* Ancient unsigned nbytes is part of API/ABI, so use size_t length local. */
