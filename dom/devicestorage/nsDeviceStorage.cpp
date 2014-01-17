@@ -251,7 +251,7 @@ DeviceStorageTypeChecker::InitFromBundle(nsIStringBundle* aBundle)
 bool
 DeviceStorageTypeChecker::Check(const nsAString& aType, nsIDOMBlob* aBlob)
 {
-  MOZ_ASSERT(aBlob);
+  NS_ASSERTION(aBlob, "Calling Check without a blob");
 
   nsString mimeType;
   if (NS_FAILED(aBlob->GetType(mimeType))) {
@@ -283,7 +283,7 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIDOMBlob* aBlob)
 bool
 DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
 {
-  MOZ_ASSERT(aFile);
+  NS_ASSERTION(aFile, "Calling Check without a file");
 
   if (aType.EqualsLiteral(DEVICESTORAGE_APPS) ||
       aType.EqualsLiteral(DEVICESTORAGE_SDCARD) ||
@@ -323,7 +323,7 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
 void
 DeviceStorageTypeChecker::GetTypeFromFile(nsIFile* aFile, nsAString& aType)
 {
-  MOZ_ASSERT(aFile);
+  NS_ASSERTION(aFile, "Calling Check without a file");
 
   nsString path;
   aFile->GetPath(path);
@@ -486,7 +486,7 @@ public:
 
     DeviceStorageUsedSpaceCache* usedSpaceCache
       = DeviceStorageUsedSpaceCache::CreateOrGet();
-    MOZ_ASSERT(usedSpaceCache);
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
     usedSpaceCache->Invalidate(mFile->mStorageName);
     return NS_OK;
   }
@@ -577,7 +577,7 @@ DeviceStorageFile::Init()
 
   DebugOnly<DeviceStorageTypeChecker*> typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
-  MOZ_ASSERT(typeChecker);
+  NS_ASSERTION(typeChecker, "DeviceStorageTypeChecker is null");
 }
 
 // Directories which don't depend on a volume should be calculated once
@@ -595,7 +595,7 @@ InitDirs()
 
   nsCOMPtr<nsIProperties> dirService
     = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-  MOZ_ASSERT(dirService);
+  NS_ASSERTION(dirService, "Must have directory service");
 
 #if !defined(MOZ_WIDGET_GONK)
 
@@ -792,7 +792,7 @@ DeviceStorageFile::CreateUnique(nsAString& aFileName,
 {
   DeviceStorageTypeChecker* typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
-  MOZ_ASSERT(typeChecker);
+  NS_ASSERTION(typeChecker, "DeviceStorageTypeChecker is null");
 
   nsString storageType;
   typeChecker->GetTypeFromFileName(aFileName, storageType);
@@ -1193,7 +1193,7 @@ DeviceStorageFile::AccumDiskUsage(uint64_t* aPicturesSoFar,
   if (DeviceStorageTypeChecker::IsVolumeBased(mStorageType)) {
     DeviceStorageUsedSpaceCache* usedSpaceCache =
       DeviceStorageUsedSpaceCache::CreateOrGet();
-    MOZ_ASSERT(usedSpaceCache);
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
     nsresult rv = usedSpaceCache->AccumUsedSizes(mStorageName,
                                                  aPicturesSoFar, aVideosSoFar,
                                                  aMusicSoFar, aTotalSoFar);
@@ -1235,7 +1235,8 @@ DeviceStorageFile::AccumDirectoryUsage(nsIFile* aFile,
   }
 
   nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
-  MOZ_ASSERT(files);
+  NS_ASSERTION(files,
+               "GetDirectoryEntries must return a nsIDirectoryEnumerator");
 
   nsCOMPtr<nsIFile> f;
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
@@ -1272,7 +1273,7 @@ DeviceStorageFile::AccumDirectoryUsage(nsIFile* aFile,
       }
       DeviceStorageTypeChecker* typeChecker
         = DeviceStorageTypeChecker::CreateOrGet();
-      MOZ_ASSERT(typeChecker);
+      NS_ASSERTION(typeChecker, "DeviceStorageTypeChecker is null");
       nsString type;
       typeChecker->GetTypeFromFile(f, type);
 
@@ -1468,7 +1469,7 @@ JS::Value
 nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
+  NS_ASSERTION(aWindow, "Null Window");
 
   if (!aFile) {
     return JSVAL_NULL;
@@ -1485,8 +1486,9 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
   // This check is useful to know if somewhere the DeviceStorageFile
   // has not been properly set. Mimetype is not checked because it can be
   // empty.
-  MOZ_ASSERT(aFile->mLength != UINT64_MAX);
-  MOZ_ASSERT(aFile->mLastModifiedDate != UINT64_MAX);
+  NS_ASSERTION(aFile->mLength != UINT64_MAX, "Size not set");
+  NS_ASSERTION(aFile->mLastModifiedDate != UINT64_MAX,
+               "LastModifiedDate not set");
 
   nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(fullPath, aFile->mMimeType,
                                                 aFile->mLength, aFile->mFile,
@@ -1497,7 +1499,7 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
 JS::Value StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
+  NS_ASSERTION(aWindow, "Null Window");
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
   if (!sgo) {
@@ -1645,8 +1647,10 @@ ContinueCursorEvent::~ContinueCursorEvent() {}
 void
 ContinueCursorEvent::Continue()
 {
+  nsresult rv;
+
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    DebugOnly<nsresult> rv = NS_DispatchToMainThread(this);
+    rv = NS_DispatchToMainThread(this);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return;
   }
@@ -1655,7 +1659,7 @@ ContinueCursorEvent::Continue()
 
   if (!file) {
     // done with enumeration.
-    DebugOnly<nsresult> rv = NS_DispatchToMainThread(this);
+    rv = NS_DispatchToMainThread(this);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return;
   }
@@ -1835,7 +1839,7 @@ nsDOMDeviceStorageCursor::Allow()
 
   nsCOMPtr<nsIEventTarget> target
     = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(target);
+  NS_ASSERTION(target, "Must have stream transport service");
 
   nsCOMPtr<InitCursorEvent> event = new InitCursorEvent(this, mFile);
   target->Dispatch(event, NS_DISPATCH_NORMAL);
@@ -1884,7 +1888,7 @@ nsDOMDeviceStorageCursor::IPDLRelease()
 void
 nsDOMDeviceStorageCursor::RequestComplete()
 {
-  MOZ_ASSERT(!mOkToCallContinue);
+  NS_ASSERTION(!mOkToCallContinue, "mOkToCallContinue must be false");
   mOkToCallContinue = true;
 }
 
@@ -2518,6 +2522,7 @@ public:
         }
 
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
+
           BlobChild* actor
             = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
           if (!actor) {
@@ -2637,7 +2642,7 @@ public:
         // thread or we will do more work than required.
         DeviceStorageUsedSpaceCache* usedSpaceCache
           = DeviceStorageUsedSpaceCache::CreateOrGet();
-        MOZ_ASSERT(usedSpaceCache);
+        NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
         r = new UsedSpaceFileEvent(mFile, mRequest.forget());
         usedSpaceCache->Dispatch(r);
         return NS_OK;
@@ -2684,7 +2689,7 @@ public:
     if (r) {
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      MOZ_ASSERT(target);
+      NS_ASSERTION(target, "Must have stream transport service");
       target->Dispatch(r, NS_DISPATCH_NORMAL);
     }
 
@@ -2762,9 +2767,9 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
 {
   DebugOnly<FileUpdateDispatcher*> observer
     = FileUpdateDispatcher::GetSingleton();
-  MOZ_ASSERT(observer);
+  NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 
-  MOZ_ASSERT(aWindow);
+  NS_ASSERTION(aWindow, "Must have a content dom");
 
   SetRootDirectoryForType(aType, aVolName);
   if (!mRootDirectory) {
@@ -3330,7 +3335,7 @@ nsDOMDeviceStorage::UsedSpace(ErrorResult& aRv)
 
   DebugOnly<DeviceStorageUsedSpaceCache*> usedSpaceCache
     = DeviceStorageUsedSpaceCache::CreateOrGet();
-  MOZ_ASSERT(usedSpaceCache);
+  NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
 
@@ -3434,11 +3439,8 @@ nsDOMDeviceStorage::CreateFileDescriptor(const nsAString& aPath,
       nsRefPtr<DOMRequest> request = new DOMRequest(win);
       r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       rv = NS_DispatchToCurrentThread(r);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
       request.forget(aRequest);
-      return NS_OK;
+      return rv;
     }
     return ds->CreateFileDescriptor(storagePath, aDSFileDescriptor, aRequest);
   }
@@ -3459,11 +3461,8 @@ nsDOMDeviceStorage::CreateFileDescriptor(const nsAString& aPath,
   }
 
   rv = NS_DispatchToCurrentThread(r);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   request.forget(aRequest);
-  return NS_OK;
+  return rv;
 }
 
 bool
@@ -3643,7 +3642,7 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject,
 
     DeviceStorageUsedSpaceCache* usedSpaceCache
       = DeviceStorageUsedSpaceCache::CreateOrGet();
-    MOZ_ASSERT(usedSpaceCache);
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
     usedSpaceCache->Invalidate(volName);
 
     if (!volName.Equals(mStorageName)) {
