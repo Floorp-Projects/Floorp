@@ -39,7 +39,7 @@ function test() {
 
     ok(gContextMenu,
       "The source editor's context menupopup is available.");
-    ok(gEditor.isReadOnly(),
+    ok(gEditor.getOption("readOnly"),
       "The source editor is read only.");
 
     gEditor.focus();
