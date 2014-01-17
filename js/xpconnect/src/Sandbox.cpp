@@ -1515,7 +1515,7 @@ AssembleSandboxMemoryReporterName(JSContext *cx, nsCString &sandboxName)
     if (frame) {
         nsCString location;
         int32_t lineNumber = 0;
-        frame->GetFilename(location);
+        frame->GetFilename(getter_Copies(location));
         frame->GetLineNumber(&lineNumber);
 
         sandboxName.AppendLiteral(" (from: ");
@@ -1634,7 +1634,7 @@ ContextHolder::~ContextHolder()
 
 nsresult
 xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& source,
-                   const nsACString& filename, int32_t lineNo,
+                   const char *filename, int32_t lineNo,
                    JSVersion jsVersion, bool returnStringOnly, MutableHandleValue rval)
 {
     JS_AbortIfWrongThread(JS_GetRuntime(cx));
@@ -1653,11 +1653,10 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
     NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
 
     nsAutoCString filenameBuf;
-    if (!filename.IsVoid()) {
-        filenameBuf.Assign(filename);
-    } else {
+    if (!filename) {
         // Default to the spec of the principal.
         nsJSPrincipals::get(prin)->GetScriptLocation(filenameBuf);
+        filename = filenameBuf.get();
         lineNo = 1;
     }
 
@@ -1681,7 +1680,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
 
         JS::CompileOptions options(sandcx);
         options.setPrincipals(nsJSPrincipals::get(prin))
-               .setFileAndLine(filenameBuf.get(), lineNo);
+               .setFileAndLine(filename, lineNo);
         if (jsVersion != JSVERSION_DEFAULT)
                options.setVersion(jsVersion);
         JS::RootedObject rootedSandbox(sandcx, sandbox);

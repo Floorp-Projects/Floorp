@@ -21,14 +21,13 @@
 #include "nsIDOMDOMException.h"
 #include "nsWrapperCache.h"
 #include "xpcexception.h"
-#include "nsString.h"
 
 class nsIStackFrame;
 class nsString;
 
 nsresult
-NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,
-                                   nsACString& aMessage,
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
+                                   const char** aMessage,
                                    uint16_t* aCode = nullptr);
 
 namespace mozilla {
@@ -86,21 +85,21 @@ public:
   // XPCOM factory ctor.
   Exception();
 
-  Exception(const nsACString& aMessage,
+  Exception(const char *aMessage,
             nsresult aResult,
-            const nsACString& aName,
+            const char *aName,
             nsIStackFrame *aLocation,
             nsISupports *aData);
 
 protected:
   virtual ~Exception();
 
-  nsCString       mMessage;
+  char*           mMessage;
   nsresult        mResult;
-  nsCString       mName;
+  char*           mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
-  nsCString       mFilename;
+  char*           mFilename;
   int             mLineNumber;
   nsCOMPtr<nsIException> mInner;
   bool            mInitialized;
@@ -118,14 +117,14 @@ class DOMException : public Exception,
                      public nsIDOMDOMException
 {
 public:
-  DOMException(nsresult aRv, const nsACString& aMessage,
-               const nsACString& aName, uint16_t aCode);
+  DOMException(nsresult aRv, const char* aMessage,
+               const char* aName, uint16_t aCode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDOMEXCEPTION
 
   // nsIException overrides
-  NS_IMETHOD ToString(nsACString& aReturn) MOZ_OVERRIDE;
+  NS_IMETHOD ToString(char **aReturn) MOZ_OVERRIDE;
 
   // nsWrapperCache overrides
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
@@ -146,8 +145,9 @@ protected:
 
   virtual ~DOMException() {}
 
-  nsCString mName;
-  nsCString mMessage;
+  // Intentionally shadow the nsXPCException version.
+  const char* mName;
+  const char* mMessage;
 
   uint16_t mCode;
 };

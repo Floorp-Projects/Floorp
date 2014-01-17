@@ -1070,6 +1070,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     static const char format[] = "\'%s\' when calling method: [%s::%s]";
     const char * msg = message;
+    char* sz = nullptr;
     nsXPIDLString xmsg;
     nsAutoCString sxmsg;
 
@@ -1083,18 +1084,19 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     if (!msg)
         if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &msg) || ! msg)
             msg = "<error>";
-
-    nsCString msgStr(msg);
     if (ifaceName && methodName)
-        msgStr.AppendPrintf(format, msg, ifaceName, methodName);
+        msg = sz = JS_smprintf(format, msg, ifaceName, methodName);
 
-    nsRefPtr<Exception> e = new Exception(msgStr, rv, EmptyCString(), nullptr, data);
+    nsRefPtr<Exception> e = new Exception(msg, rv, nullptr, nullptr, data);
 
     if (cx && jsExceptionPtr) {
         e->StowJSVal(*jsExceptionPtr);
     }
 
     e.forget(exceptn);
+
+    if (sz)
+        JS_smprintf_free(sz);
     return NS_OK;
 }
 

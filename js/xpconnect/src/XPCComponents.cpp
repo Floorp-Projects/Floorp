@@ -1861,10 +1861,8 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!parser.parse(args))
         return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-    nsCOMPtr<nsIException> e = new Exception(nsCString(parser.eMsg),
-                                             parser.eResult,
-                                             EmptyCString(),
-                                             parser.eStack,
+    nsCOMPtr<nsIException> e = new Exception(parser.eMsg, parser.eResult,
+                                             nullptr, parser.eStack,
                                              parser.eData);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
@@ -2584,10 +2582,10 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
     nsXPConnect *xpc = nsXPConnect::XPConnect();
     xpc->GetCurrentJSStack(getter_AddRefs(frame));
 
-    nsCString fileName;
+    nsXPIDLCString fileName;
     int32_t lineNo = 0;
     if (frame) {
-        frame->GetFilename(fileName);
+        frame->GetFilename(getter_Copies(fileName));
         frame->GetLineNumber(&lineNo);
     }
 
@@ -2597,8 +2595,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
 
     nsresult rv = scripterr->InitWithWindowID(
             nsDependentString(static_cast<const char16_t *>(msgchars)),
-            NS_ConvertUTF8toUTF16(fileName), EmptyString(), lineNo, 0, 0,
-            "XPConnect JavaScript", innerWindowID);
+            NS_ConvertUTF8toUTF16(fileName),
+            EmptyString(), lineNo, 0, 0, "XPConnect JavaScript", innerWindowID);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     console->LogMessage(scripterr);
@@ -2610,7 +2608,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
                                      HandleValue sandboxVal,
                                      HandleValue version,
-                                     const nsACString& filenameArg,
+                                     HandleValue filenameVal,
                                      int32_t lineNumber,
                                      JSContext *cx,
                                      uint8_t optionalArgc,
@@ -2644,10 +2642,17 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     }
 
     // Optional fourth and fifth arguments: filename and line number.
+    nsXPIDLCString filename;
     int32_t lineNo = (optionalArgc >= 3) ? lineNumber : 1;
-    nsCString filename;
-    if (!filenameArg.IsVoid()) {
-        filename.Assign(filenameArg);
+    if (optionalArgc >= 2) {
+        JSString *filenameStr = ToString(cx, filenameVal);
+        if (!filenameStr)
+            return NS_ERROR_INVALID_ARG;
+
+        JSAutoByteString filenameBytes;
+        if (!filenameBytes.encodeLatin1(cx, filenameStr))
+            return NS_ERROR_INVALID_ARG;
+        filename = filenameBytes.ptr();
     } else {
         // Get the current source info from xpc.
         nsresult rv;
@@ -2657,12 +2662,12 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         nsCOMPtr<nsIStackFrame> frame;
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
-            frame->GetFilename(filename);
+            frame->GetFilename(getter_Copies(filename));
             frame->GetLineNumber(&lineNo);
         }
     }
 
-    return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo,
+    return xpc::EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
                               jsVersion, false, retval);
 }
 
