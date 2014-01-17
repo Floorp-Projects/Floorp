@@ -150,3 +150,5 @@
   <string name="fxaccount_status_history">&fxaccount.status.history;</string>
   <string name="fxaccount_status_passwords">&fxaccount.status.passwords;</string>
   <string name="fxaccount_status_tabs">&fxaccount.status.tabs;</string>
+  <string name="fxaccount_update_credentials">&fxaccount.update.credentials;</string>
+  <string name="fxaccount_update_credentials_button_label">&fxaccount.update.credentials.button.label;</string>
