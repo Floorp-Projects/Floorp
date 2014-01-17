@@ -48,20 +48,26 @@ SimpleTest.waitForFocus(function() {
     var t = document.createElement("textarea");
     t.setAttribute("dir", initialDir);
     t.value = "test.";
+    var inputEventCount = 0;
+    t.oninput = function() { inputEventCount++; };
     document.getElementById("content").appendChild(t);
     document.body.clientWidth;
     var s1 = snapshotWindow(window);
     ok(compareSnapshots(s1, Screenshots.get(initialDir, false), true)[0],
        "Textarea should appear correctly before switching the direction (" + initialDir + ")");
     t.focus();
+    is(inputEventCount, 0, "input event count must be 0 before");
     synthesizeKey("x", {accelKey: true, shiftKey: true});
     is(t.getAttribute("dir"), initialDir == "ltr" ? "rtl" : "ltr", "The dir attribute must be correctly updated");
+    is(inputEventCount, 1, "input event count must be 1 after");
     t.blur();
     var s2 = snapshotWindow(window);
     ok(compareSnapshots(s2, Screenshots.get(initialDir, true), true)[0],
        "Textarea should appear correctly after switching the direction (" + initialDir + ")");
     t.focus();
+    is(inputEventCount, 1, "input event count must be 1 before");
     synthesizeKey("x", {accelKey: true, shiftKey: true});
+    is(inputEventCount, 2, "input event count must be 2 after");
     is(t.getAttribute("dir"), initialDir == "ltr" ? "ltr" : "rtl", "The dir attribute must be correctly updated");
     t.blur();
     var s3 = snapshotWindow(window);
