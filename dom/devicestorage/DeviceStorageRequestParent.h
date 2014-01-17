@@ -119,16 +119,6 @@ private:
       InfallibleTArray<DeviceStorageFileValue> mPaths;
   };
 
-  class CreateFdEvent : public CancelableRunnable
-  {
-    public:
-      CreateFdEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~CreateFdEvent();
-      virtual nsresult CancelableRun();
-    private:
-      nsRefPtr<DeviceStorageFile> mFile;
-  };
-
   class WriteFileEvent : public CancelableRunnable
   {
     public:
@@ -201,18 +191,6 @@ private:
     private:
       nsRefPtr<DeviceStorageFile> mFile;
       nsString mPath;
-  };
-
-  class PostFileDescriptorResultEvent : public CancelableRunnable
-  {
-    public:
-      PostFileDescriptorResultEvent(DeviceStorageRequestParent* aParent,
-                                    const FileDescriptor& aFileDescriptor);
-      virtual ~PostFileDescriptorResultEvent();
-      virtual nsresult CancelableRun();
-    private:
-      nsRefPtr<DeviceStorageFile> mFile;
-      FileDescriptor mFileDescriptor;
   };
 
  class PostFreeSpaceResultEvent : public CancelableRunnable
