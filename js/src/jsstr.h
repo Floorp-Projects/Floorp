@@ -370,10 +370,6 @@ bool
 str_replace_regexp_raw(JSContext *cx, HandleString string, HandleObject regexp,
                        HandleString replacement, MutableHandleValue rval);
 
-bool
-str_replace_string_raw(JSContext *cx, HandleString string, HandleString pattern,
-                       HandleString replacement, MutableHandleValue rval);
-
 } /* namespace js */
 
 extern bool

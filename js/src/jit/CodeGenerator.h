@@ -93,7 +93,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitRegExpExec(LRegExpExec *lir);
     bool visitRegExpTest(LRegExpTest *lir);
     bool visitRegExpReplace(LRegExpReplace *lir);
-    bool visitStringReplace(LStringReplace *lir);
     bool visitLambda(LLambda *lir);
     bool visitLambdaForSingleton(LLambdaForSingleton *lir);
     bool visitLambdaPar(LLambdaPar *lir);
