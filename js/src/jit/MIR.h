@@ -4885,29 +4885,26 @@ class MRegExpTest
     }
 };
 
-class MRegExpReplace
+template <class Policy1>
+class MStrReplace
   : public MTernaryInstruction,
-    public Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >
+    public Mix3Policy<StringPolicy<0>, Policy1, StringPolicy<2> >
 {
-  private:
+  protected:
 
-    MRegExpReplace(MDefinition *string, MDefinition *regexp, MDefinition *replacement)
-      : MTernaryInstruction(string, regexp, replacement)
+    MStrReplace(MDefinition *string, MDefinition *pattern, MDefinition *replacement)
+      : MTernaryInstruction(string, pattern, replacement)
     {
+        setMovable();
         setResultType(MIRType_String);
     }
 
   public:
-    INSTRUCTION_HEADER(RegExpReplace)
-
-    static MRegExpReplace *New(TempAllocator &alloc, MDefinition *string, MDefinition *regexp, MDefinition *replacement) {
-        return new(alloc) MRegExpReplace(string, regexp, replacement);
-    }
 
     MDefinition *string() const {
         return getOperand(0);
     }
-    MDefinition *regexp() const {
+    MDefinition *pattern() const {
         return getOperand(1);
     }
     MDefinition *replacement() const {
@@ -4920,6 +4917,46 @@ class MRegExpReplace
 
     bool possiblyCalls() const {
         return true;
+    }
+};
+
+class MRegExpReplace
+    : public MStrReplace< ObjectPolicy<1> >
+{
+  private:
+
+    MRegExpReplace(MDefinition *string, MDefinition *pattern, MDefinition *replacement)
+      :  MStrReplace(string, pattern, replacement)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpReplace);
+
+    static MRegExpReplace *New(TempAllocator &alloc, MDefinition *string, MDefinition *pattern, MDefinition *replacement) {
+        return new(alloc) MRegExpReplace(string, pattern, replacement);
+    }
+};
+
+class MStringReplace
+    : public MStrReplace< StringPolicy<1> >
+{
+  private:
+
+    MStringReplace(MDefinition *string, MDefinition *pattern, MDefinition *replacement)
+      :  MStrReplace(string, pattern, replacement)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(StringReplace);
+
+    static MStringReplace *New(TempAllocator &alloc, MDefinition *string, MDefinition *pattern, MDefinition *replacement) {
+        return new(alloc) MStringReplace(string, pattern, replacement);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
