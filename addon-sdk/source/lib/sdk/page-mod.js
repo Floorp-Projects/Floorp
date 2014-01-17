@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "stable"
 };
 
-const observers = require('./deprecated/observer-service');
+const observers = require('./system/events');
 const { Loader, validationAttributes } = require('./content/loader');
 const { Worker } = require('./content/worker');
 const { Registry } = require('./util/registry');
@@ -100,7 +100,7 @@ const PageMod = Loader.compose(EventEmitter, {
 
     let include = options.include;
     let rules = this.include = Rules();
-    
+
     if (!include)
       throw new Error('The `include` option must always contain atleast one rule');
 
@@ -217,13 +217,13 @@ const PageModManager = Registry.resolve({
 }).compose({
   constructor: function PageModRegistry(constructor) {
     this._init(PageMod);
-    observers.add(
+    observers.on(
       'document-element-inserted',
       this._onContentWindow = this._onContentWindow.bind(this)
     );
   },
   _destructor: function _destructor() {
-    observers.remove('document-element-inserted', this._onContentWindow);
+    observers.off('document-element-inserted', this._onContentWindow);
     this._removeAllListeners();
 
     // We need to do some cleaning er PageMods, like unregistering any
@@ -234,7 +234,7 @@ const PageModManager = Registry.resolve({
 
     this._registryDestructor();
   },
-  _onContentWindow: function _onContentWindow(document) {
+  _onContentWindow: function _onContentWindow({ subject: document }) {
     let window = document.defaultView;
     // XML documents don't have windows, and we don't yet support them.
     if (!window)

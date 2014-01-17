@@ -101,6 +101,13 @@ exports['test syntax errors'] = function(assert) {
   }
 }
 
+exports['test sandboxes are not added if error'] = function (assert) {
+  let uri = root + '/fixtures/loader/missing-twice/';
+  let loader = Loader({ paths: { '': uri } });
+  let program = main(loader, 'main');
+  assert.ok(!(uri + 'not-found.js' in loader.sandboxes), 'not-found.js not in loader.sandboxes');
+}
+
 exports['test missing module'] = function(assert) {
   let uri = root + '/fixtures/loader/missing/'
   let loader = Loader({ paths: { '': uri } });
@@ -127,6 +134,26 @@ exports['test missing module'] = function(assert) {
     unload(loader);
   }
 }
+
+exports["test invalid module not cached and throws everytime"] = function(assert) {
+  let uri = root + "/fixtures/loader/missing-twice/";
+  let loader = Loader({ paths: { "": uri } });
+
+  let { firstError, secondError, invalidJSON1, invalidJSON2 } = main(loader, "main");
+  assert.equal(firstError.message, "Module `not-found` is not found at " +
+    uri + "not-found.js", "throws on first invalid require");
+  assert.equal(firstError.lineNumber, 8, "first error is on line 7");
+  assert.equal(secondError.message, "Module `not-found` is not found at " +
+    uri + "not-found.js", "throws on second invalid require");
+  assert.equal(secondError.lineNumber, 14, "second error is on line 14");
+
+  assert.equal(invalidJSON1.message,
+    "JSON.parse: unexpected character at line 1 column 1 of the JSON data",
+    "throws on invalid JSON");
+  assert.equal(invalidJSON2.message,
+    "JSON.parse: unexpected character at line 1 column 1 of the JSON data",
+    "throws on invalid JSON second time");
+};
 
 exports['test exceptions in modules'] = function(assert) {
   let uri = root + '/fixtures/loader/exceptions/'
