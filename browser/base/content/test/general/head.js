@@ -317,7 +317,7 @@ let FullZoomHelper = {
     Services.obs.addObserver(function obs(subj, topic, data) {
       Services.obs.removeObserver(obs, topic);
       deferred.resolve();
-    }, "browser-fullZoom:location-change", false);
+    }, "FullZoom:TESTS:location-change", false);
     return deferred.promise;
   },
 
