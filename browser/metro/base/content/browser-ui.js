@@ -1089,6 +1089,9 @@ var BrowserUI = {
     let message = bundle.GetStringFromName("clearPrivateData.message");
     let clearbutton = bundle.GetStringFromName("clearPrivateData.clearButton");
 
+    let prefsClearButton = document.getElementById("prefs-clear-data");
+    prefsClearButton.disabled = true; 
+
     let buttonPressed = Services.prompt.confirmEx(
                           null,
                           title,
@@ -1105,6 +1108,8 @@ var BrowserUI = {
     if (buttonPressed === 0) {
       SanitizeUI.onSanitize();
     }
+
+    prefsClearButton.disabled = false;
   },
 };
 
