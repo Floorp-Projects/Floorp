@@ -177,6 +177,8 @@ function openConsole(aTab, aCallback = function() { })
  * @param function [aCallback]
  *        Optional function to invoke after the Web Console completes
  *        closing (web-console-destroyed).
+ * @return object
+ *         A promise that is resolved once the web console is closed.
  */
 function closeConsole(aTab, aCallback = function() { })
 {
@@ -186,15 +188,13 @@ function closeConsole(aTab, aCallback = function() { })
     let panel = toolbox.getPanel("webconsole");
     if (panel) {
       let hudId = panel.hud.hudId;
-      toolbox.destroy().then(aCallback.bind(null, hudId)).then(null, console.debug);
+      return toolbox.destroy().then(aCallback.bind(null, hudId)).then(null, console.debug);
     }
-    else {
-      toolbox.destroy().then(aCallback.bind(null));
-    }
+    return toolbox.destroy().then(aCallback.bind(null));
   }
-  else {
-    aCallback();
-  }
+
+  aCallback();
+  return promise.resolve(null);
 }
 
 /**
@@ -979,7 +979,7 @@ function waitForMessages(aOptions)
   {
     let elemText = aElement.textContent;
     let time = aRule.consoleTimeEnd;
-    let regex = new RegExp(time + ": -?\\d+ms");
+    let regex = new RegExp(time + ": -?\\d+([,.]\\d+)?ms");
 
     if (!checkText(regex, elemText)) {
       return false;

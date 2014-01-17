@@ -12,12 +12,6 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 let lastFinishedRequests = {};
 let webConsoleClient;
 
-function requestDoneCallback(aHttpRequest )
-{
-  let status = aHttpRequest.response.status;
-  lastFinishedRequests[status] = aHttpRequest;
-}
-
 function consoleOpened(hud)
 {
   webConsoleClient = hud.ui.webConsoleClient;
@@ -26,20 +20,18 @@ function consoleOpened(hud)
       "The saveRequestAndResponseBodies property was successfully set.");
 
     HUDService.lastFinishedRequest.callback = requestDoneCallback;
-    waitForSuccess(waitForResponses);
     content.location = TEST_URI;
   });
+}
 
-  let waitForResponses = {
-    name: "301 and 404 responses",
-    validatorFn: function()
-    {
-      return "301" in lastFinishedRequests &&
-             "404" in lastFinishedRequests;
-    },
-    successFn: getHeaders,
-    failureFn: finishTest,
-  };
+function requestDoneCallback(aHttpRequest)
+{
+  let status = aHttpRequest.response.status;
+  lastFinishedRequests[status] = aHttpRequest;
+  if ("301" in lastFinishedRequests &&
+      "404" in lastFinishedRequests) {
+    getHeaders();
+  }
 }
 
 function getHeaders()

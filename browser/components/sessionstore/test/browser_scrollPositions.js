@@ -3,7 +3,6 @@
 
 "use strict";
 
-const ROOT = getRootDirectory(gTestPath);
 const URL = ROOT + "browser_scrollPositions_sample.html";
 const URL_FRAMESET = ROOT + "browser_scrollPositions_sample_frameset.html";
 

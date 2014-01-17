@@ -4,13 +4,17 @@
 
 // Test nsISessionStartup.sessionType in the following scenario:
 // - valid sessionstore.js;
-// - the session store has been loaded, so no need to go
-//    through the synchronous fallback
+// - valid sessionCheckpoints.json with all checkpoints;
+// - the session store has been loaded
 
 function run_test() {
   let profd = do_get_profile();
-  let source = do_get_file("data/sessionstore_valid.js");
-  source.copyTo(profd, "sessionstore.js");
+
+  let sourceSession = do_get_file("data/sessionstore_valid.js");
+  sourceSession.copyTo(profd, "sessionstore.js");
+
+  let sourceCheckpoints = do_get_file("data/sessionCheckpoints_all.json");
+  sourceCheckpoints.copyTo(profd, "sessionCheckpoints.json");
 
   do_test_pending();
   let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
