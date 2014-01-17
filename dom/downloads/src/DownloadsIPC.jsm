@@ -27,7 +27,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
   */
 
 function debug(aStr) {
+#ifdef MOZ_DEBUG
   dump("-*- DownloadsIPC.jsm : " + aStr + "\n");
+#endif
 }
 
 const ipcMessages = ["Downloads:Added",
