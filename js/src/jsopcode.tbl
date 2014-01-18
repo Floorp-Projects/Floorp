@@ -439,7 +439,7 @@ OPDEF(JSOP_UNUSED201,     201,"unused201",  NULL,     1,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_GENERATOR,     202,"generator",   NULL,    1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         203,"yield",       NULL,    1,  1,  1,  JOF_BYTE)
-OPDEF(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    4,  1,  0,  JOF_LOCAL)
+OPDEF(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE)
 
 OPDEF(JSOP_UNUSED205,     205, "unused205",    NULL,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED206,     206, "unused206",    NULL,  1,  0,  0,  JOF_BYTE)

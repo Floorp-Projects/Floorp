@@ -6516,7 +6516,9 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         uint32_t slot = bce->arrayCompDepth;
         if (!AdjustBlockSlot(cx, bce, &slot))
             return false;
-        if (!EmitUnaliasedVarOp(cx, pn->getOp(), slot, bce))
+        if (!EmitUnaliasedVarOp(cx, JSOP_GETLOCAL, slot, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_ARRAYPUSH) < 0)
             return false;
         break;
       }
