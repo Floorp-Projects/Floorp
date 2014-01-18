@@ -75,6 +75,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     String stubName = null;
                     boolean isStaticStub = false;
                     boolean isMultithreadedStub = false;
+                    boolean noThrow = false;
                     try {
                         // Determine the explicitly-given name of the stub to generate, if any.
                         final Method stubNameMethod = annotationType.getDeclaredMethod("stubName");
@@ -90,6 +91,12 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                         final Method multithreadedStubMethod = annotationType.getDeclaredMethod("allowMultithread");
                         multithreadedStubMethod.setAccessible(true);
                         isMultithreadedStub = (Boolean) multithreadedStubMethod.invoke(annotation);
+
+                        // Determine if ignoring exceptions
+                        final Method noThrowMethod = annotationType.getDeclaredMethod("noThrow");
+                        noThrowMethod.setAccessible(true);
+                        noThrow = (Boolean) noThrowMethod.invoke(annotation);
+
                     } catch (NoSuchMethodException e) {
                         System.err.println("Unable to find expected field on WrapElementForJNI annotation. Did the signature change?");
                         e.printStackTrace(System.err);
@@ -110,7 +117,8 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                         stubName = aMethodName.substring(0, 1).toUpperCase() + aMethodName.substring(1);
                     }
 
-                    AnnotationInfo annotationInfo = new AnnotationInfo(stubName, isStaticStub, isMultithreadedStub);
+                    AnnotationInfo annotationInfo = new AnnotationInfo(
+                        stubName, isStaticStub, isMultithreadedStub, noThrow);
                     mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                     return;
                 }
@@ -119,7 +127,8 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             // If no annotation found, we might be expected to generate anyway using default arguments,
             // thanks to the "Generate everything" annotation.
             if (mIterateEveryEntry) {
-                AnnotationInfo annotationInfo = new AnnotationInfo(candidateElement.getName(), false, false);
+                AnnotationInfo annotationInfo = new AnnotationInfo(
+                    candidateElement.getName(), false, false, false);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }
