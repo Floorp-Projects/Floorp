@@ -70,11 +70,7 @@ public class CodeGenerator {
                 "    ").append(mCClassName).append("(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};\n");
 
         wrapperMethodBodies.append("\n").append(mCClassName).append("* ").append(mCClassName).append("::Wrap(jobject obj) {\n" +
-                "    JNIEnv *env = GetJNIForThread();\n\n" +
-                "    if (!env) {\n" +
-                "        ALOG_BRIDGE(\"Aborted: No env - %s\", __PRETTY_FUNCTION__);\n" +
-                "        return nullptr;\n" +
-                "    }\n\n" +
+                "    JNIEnv *env = GetJNIForThread();\n" +
                 "    ").append(mCClassName).append("* ret = new ").append(mCClassName).append("(obj, env);\n" +
                 "    env->DeleteLocalRef(obj);\n" +
                 "    return ret;\n" +
@@ -114,7 +110,10 @@ public class CodeGenerator {
         writeSignatureToHeader(headerSignature);
 
         // Use the implementation signature to generate the method body...
-        writeMethodBody(implementationSignature, CMethodName, theMethod, mClassToWrap, aMethodTuple.mAnnotationInfo.isStatic, aMethodTuple.mAnnotationInfo.isMultithreaded);
+        writeMethodBody(implementationSignature, CMethodName, theMethod, mClassToWrap,
+            aMethodTuple.mAnnotationInfo.isStatic,
+            aMethodTuple.mAnnotationInfo.isMultithreaded,
+            aMethodTuple.mAnnotationInfo.noThrow);
     }
 
     private void generateGetterOrSetterBody(Class<?> aFieldType, String aFieldName, boolean aIsFieldStatic, boolean isSetter) {
@@ -229,7 +228,9 @@ public class CodeGenerator {
         writeSignatureToHeader(headerSignature);
 
         // Use the implementation signature to generate the method body...
-        writeCtorBody(implementationSignature, theCtor, aCtorTuple.mAnnotationInfo.isMultithreaded);
+        writeCtorBody(implementationSignature, theCtor,
+            aCtorTuple.mAnnotationInfo.isMultithreaded,
+            aCtorTuple.mAnnotationInfo.noThrow);
 
         if (theCtor.getParameterTypes().length == 0) {
             mHasEncounteredDefaultConstructor = true;
@@ -286,10 +287,6 @@ public class CodeGenerator {
         } else {
             wrapperMethodBodies.append("GetJNIForThread();\n");
         }
-        wrapperMethodBodies.append("    if (!env) {\n" +
-                                   "        ALOG_BRIDGE(\"Aborted: No env - %s\", __PRETTY_FUNCTION__);\n" +
-                                   "        return").append(Utils.getFailureReturnForType(returnType)).append(";\n" +
-                "    }\n\n");
     }
 
     /**
@@ -299,7 +296,8 @@ public class CodeGenerator {
      * @param aMethod A constructor/method being wrapped.
      * @param aIsObjectReturningMethod Does the method being wrapped return an object?
      */
-    private void writeFramePushBoilerplate(Member aMethod, boolean aIsObjectReturningMethod) {
+    private void writeFramePushBoilerplate(Member aMethod,
+            boolean aIsObjectReturningMethod, boolean aNoThrow) {
         if (aMethod instanceof Field) {
             throw new IllegalArgumentException("Tried to push frame for a FIELD?!");
         }
@@ -325,13 +323,18 @@ public class CodeGenerator {
         if (aIsObjectReturningMethod) {
             localReferencesNeeded++;
         }
-        wrapperMethodBodies.append("    if (env->PushLocalFrame(").append(localReferencesNeeded).append(") != 0) {\n" +
-                "        ALOG_BRIDGE(\"Exceptional exit of: %s\", __PRETTY_FUNCTION__);\n" +
-                "        env->ExceptionDescribe();\n"+
-                "        env->ExceptionClear();\n" +
-                "        return").append(Utils.getFailureReturnForType(returnType)).append(";\n" +
+        wrapperMethodBodies.append(
+                "    if (env->PushLocalFrame(").append(localReferencesNeeded).append(") != 0) {\n");
+        if (!aNoThrow) {
+            wrapperMethodBodies.append(
+                "        AndroidBridge::HandleUncaughtException(env);\n" +
+                "        MOZ_ASSUME_UNREACHABLE(\"Exception should have caused crash.\");\n");
+        } else {
+            wrapperMethodBodies.append(
+                "        return").append(Utils.getFailureReturnForType(returnType)).append(";\n");
+        }
+        wrapperMethodBodies.append(
                 "    }\n\n");
-
     }
 
     private StringBuilder getArgumentMarshalling(Class<?>[] argumentTypes) {
@@ -376,12 +379,13 @@ public class CodeGenerator {
         return argumentContent;
     }
 
-    private void writeCtorBody(String implementationSignature, Constructor theCtor, boolean aIsThreaded) {
+    private void writeCtorBody(String implementationSignature, Constructor theCtor,
+            boolean aIsThreaded, boolean aNoThrow) {
         Class<?>[] argumentTypes = theCtor.getParameterTypes();
 
         writeFunctionStartupBoilerPlate(implementationSignature, Void.class, false, aIsThreaded);
 
-        writeFramePushBoilerplate(theCtor, false);
+        writeFramePushBoilerplate(theCtor, false, aNoThrow);
 
         // Marshall arguments for this constructor, if any...
         boolean hasArguments = argumentTypes.length != 0;
@@ -420,7 +424,9 @@ public class CodeGenerator {
      * @param aMethod         The Java method to be wrapped by the C++ method being generated.
      * @param aClass          The Java class to which the method belongs.
      */
-    private void writeMethodBody(String methodSignature, String aCMethodName, Method aMethod, Class<?> aClass, boolean aIsStaticBridgeMethod, boolean aIsMultithreaded) {
+    private void writeMethodBody(String methodSignature, String aCMethodName, Method aMethod,
+            Class<?> aClass, boolean aIsStaticBridgeMethod, boolean aIsMultithreaded,
+            boolean aNoThrow) {
         Class<?>[] argumentTypes = aMethod.getParameterTypes();
         Class<?> returnType = aMethod.getReturnType();
 
@@ -428,7 +434,7 @@ public class CodeGenerator {
 
         boolean isObjectReturningMethod = !returnType.getCanonicalName().equals("void") && Utils.isObjectType(returnType);
 
-        writeFramePushBoilerplate(aMethod, isObjectReturningMethod);
+        writeFramePushBoilerplate(aMethod, isObjectReturningMethod, aNoThrow);
 
         // Marshall arguments, if we have any.
         boolean hasArguments = argumentTypes.length != 0;
@@ -477,16 +483,12 @@ public class CodeGenerator {
 
         // Tack on the arguments, if any..
         wrapperMethodBodies.append(argumentContent)
-                           .append(");\n\n");
+                           .append(");\n");
 
-        // Check for exception and return the failure value..
-        wrapperMethodBodies.append("    if (env->ExceptionCheck()) {\n" +
-                                   "        ALOG_BRIDGE(\"Exceptional exit of: %s\", __PRETTY_FUNCTION__);\n" +
-                                   "        env->ExceptionDescribe();\n" +
-                                   "        env->ExceptionClear();\n" +
-                                   "        env->PopLocalFrame(nullptr);\n" +
-                                   "        return").append(Utils.getFailureReturnForType(returnType)).append(";\n" +
-                                   "    }\n\n");
+        // Check for exception and crash if any...
+        if (!aNoThrow) {
+            wrapperMethodBodies.append("    AndroidBridge::HandleUncaughtException(env);\n");
+        }
 
         // If we're returning an object, pop the callee's stack frame extracting our ref as the return
         // value.
