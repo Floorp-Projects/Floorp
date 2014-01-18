@@ -230,8 +230,8 @@
         <xul:description class="preferences-description" flex="1" xbl:inherits="xbl:text=desc"/>
       </xul:vbox>
       <xul:hbox class="preferences-alignment">
-        <xul:textbox type="number" anonid="input" flex="1" oninput="inputChanged();" onchange="inputChanged();"
-                     xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound"/>
+        <xul:textbox type="number" anonid="input" oninput="inputChanged();" onchange="inputChanged();"
+                     xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound,size"/>
       </xul:hbox>
     </content>
 
