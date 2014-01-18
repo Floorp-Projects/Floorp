@@ -25,7 +25,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class PasswordsProvider extends PerProfileContentProvider {
+public class PasswordsProvider extends SQLiteBridgeContentProvider {
     static final String TABLE_PASSWORDS = "moz_logins";
     static final String TABLE_DELETED_PASSWORDS = "moz_deleted_logins";
 
