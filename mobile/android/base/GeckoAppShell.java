@@ -219,34 +219,7 @@ public class GeckoAppShell
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable e) {
-                // If the uncaught exception was rethrown, walk the exception `cause` chain to find
-                // the original exception so Socorro can correctly collate related crash reports.
-                Throwable cause;
-                while ((cause = e.getCause()) != null) {
-                    e = cause;
-                }
-
-                try {
-                    Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
-                                  + thread.getId() + " (\"" + thread.getName() + "\")", e);
-
-                    Thread mainThread = ThreadUtils.getUiThread();
-                    if (mainThread != null && thread != mainThread) {
-                        Log.e(LOGTAG, "Main thread stack:");
-                        for (StackTraceElement ste : mainThread.getStackTrace()) {
-                            Log.e(LOGTAG, ste.toString());
-                        }
-                    }
-
-                    if (e instanceof OutOfMemoryError) {
-                        SharedPreferences prefs = getSharedPreferences();
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
-                        editor.commit();
-                    }
-                } finally {
-                    reportJavaCrash(getStackTraceString(e));
-                }
+                handleUncaughtException(thread, e);
             }
         });
     }
@@ -418,6 +391,42 @@ public class GeckoAppShell
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
+
+    @WrapElementForJNI(generateStatic = true, noThrow = true)
+    public static void handleUncaughtException(Thread thread, Throwable e) {
+        if (thread == null) {
+            thread = Thread.currentThread();
+        }
+        // If the uncaught exception was rethrown, walk the exception `cause` chain to find
+        // the original exception so Socorro can correctly collate related crash reports.
+        Throwable cause;
+        while ((cause = e.getCause()) != null) {
+            e = cause;
+        }
+
+        try {
+            Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
+                          + thread.getId() + " (\"" + thread.getName() + "\")", e);
+
+            Thread mainThread = ThreadUtils.getUiThread();
+            if (mainThread != null && thread != mainThread) {
+                Log.e(LOGTAG, "Main thread stack:");
+                for (StackTraceElement ste : mainThread.getStackTrace()) {
+                    Log.e(LOGTAG, ste.toString());
+                }
+            }
+
+            if (e instanceof OutOfMemoryError) {
+                SharedPreferences prefs = getSharedPreferences();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+                editor.commit();
+            }
+        } finally {
+            reportJavaCrash(getStackTraceString(e));
+        }
+    }
+
     @WrapElementForJNI(generateStatic = true)
     public static void notifyIME(int type) {
         if (mEditableListener != null) {
