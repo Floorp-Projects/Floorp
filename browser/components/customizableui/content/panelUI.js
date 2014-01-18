@@ -207,8 +207,6 @@ const PanelUI = {
       return this._readyPromise;
     }
     this._readyPromise = Task.spawn(function() {
-      this.contents.setAttributeNS("http://www.w3.org/XML/1998/namespace", "lang",
-                                   getLocale());
       if (!this._scrollWidth) {
         // In order to properly center the contents of the panel, while ensuring
         // that we have enough space on either side to show a scrollbar, we have to
@@ -414,25 +412,3 @@ const PanelUI = {
     this.removeEventListener("command", PanelUI.onCommandHandler);
   }
 };
-
-/**
- * Gets the currently selected locale for display.
- * @return  the selected locale or "en-US" if none is selected
- */
-function getLocale() {
-  try {
-    let locale = Services.prefs.getComplexValue(PREF_SELECTED_LOCALE,
-                                                Ci.nsIPrefLocalizedString);
-    if (locale)
-      return locale;
-  }
-  catch (e) { }
-
-  try {
-    return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
-  }
-  catch (e) { }
-
-  return "en-US";
-}
-
