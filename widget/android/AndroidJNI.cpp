@@ -781,11 +781,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jcla
 
       NS_IMETHODIMP Run() {
         JNIEnv* env = AndroidBridge::GetJNIEnv();
-        if (!env) {
-          NS_WARNING("Failed to acquire JNI env, can't exit plugin fullscreen mode");
-          return NS_OK;
-        }
-
         nsPluginInstanceOwner::ExitFullScreen(mView);
         env->DeleteGlobalRef(mView);
         return NS_OK;
