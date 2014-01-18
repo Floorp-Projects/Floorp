@@ -63,6 +63,7 @@ UNIFIED_SOURCES += [
     'nsFrame.cpp',
     'nsFrameList.cpp',
     'nsFrameSetFrame.cpp',
+    'nsFrameState.cpp',
     'nsFrameUtil.cpp',
     'nsGfxScrollFrame.cpp',
     'nsHTMLCanvasFrame.cpp',
