@@ -15,10 +15,12 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
+  "resource:///modules/sessionstore/PrivacyFilter.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
 
@@ -192,39 +194,7 @@ let SessionSaverInternal = {
 
     stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
-
-    // Forget about private windows and tabs.
-    for (let i = state.windows.length - 1; i >= 0; i--) {
-      let win = state.windows[i];
-      if (win.isPrivate || false) { // The whole window is private, remove it
-         state.windows.splice(i, 1);
-         if (state.selectedWindow >= i) {
-           state.selectedWindow--;
-         }
-        continue;
-      }
-      // The window is not private, but its tabs still might
-      for (let j = win.tabs.length - 1; j >= 0 ; --j) {
-        let tab = win.tabs[j];
-        if (tab.isPrivate || false) {
-          win.tabs.splice(j, 1);
-          if (win.selected >= j) {
-            win.selected--;
-          }
-        }
-      }
-    }
-
-    // Remove private windows from the list of closed windows.
-    for (let i = state._closedWindows.length - 1; i >= 0; i--) {
-      if (state._closedWindows[i].isPrivate) {
-        state._closedWindows.splice(i, 1);
-      }
-    }
-
-    // Note that closed private tabs are never stored (see
-    // SessionStoreInternal.onTabClose), so we do not need to remove
-    // them.
+    PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
     // Make sure that we keep the previous session if we started with a single
     // private window and no non-private windows have been opened, yet.
