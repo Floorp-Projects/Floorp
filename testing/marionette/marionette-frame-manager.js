@@ -95,7 +95,7 @@ FrameManager.prototype = {
     }
   },
 
-  //This is just 'switch to OOP frame'. We're handling this here so we can maintain a list of remoteFrames. 
+  //This is just 'switch to OOP frame'. We're handling this here so we can maintain a list of remoteFrames.
   switchToFrame: function FM_switchToFrame(message) {
     // Switch to a remote frame.
     let frameWindow = Services.wm.getOuterWindowWithId(message.json.win); //get the original frame window
@@ -126,7 +126,7 @@ FrameManager.prototype = {
       }
     }
 
-    // If we get here, then we need to load the frame script in this frame, 
+    // If we get here, then we need to load the frame script in this frame,
     // and set the frame's ChromeMessageSender as the active message manager the server will listen to
     this.addMessageManagerListeners(mm);
     logger.info("frame-manager load script: " + mm.toString());
