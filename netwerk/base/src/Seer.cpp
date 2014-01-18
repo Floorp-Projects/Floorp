@@ -100,6 +100,11 @@ const int REDIRECT_LIKELY_DEFAULT = 75;
 const char SEER_MAX_QUEUE_SIZE_PREF[] = "network.seer.max-queue-size";
 const uint32_t SEER_MAX_QUEUE_SIZE_DEFAULT = 50;
 
+const char SEER_MAX_DB_SIZE_PREF[] = "network.seer.max-db-size";
+const int32_t SEER_MAX_DB_SIZE_DEFAULT_BYTES = 150 * 1024 * 1024;
+const char SEER_PRESERVE_PERCENTAGE_PREF[] = "network.seer.preserve";
+const int32_t SEER_PRESERVE_PERCENTAGE_DEFAULT = 80;
+
 // All these time values are in usec
 const long long ONE_DAY = 86400LL * 1000000LL;
 const long long ONE_WEEK = 7LL * ONE_DAY;
@@ -192,6 +197,10 @@ Seer::Seer()
   ,mStartupCount(0)
   ,mQueueSize(0)
   ,mQueueSizeLock("Seer.mQueueSizeLock")
+  ,mCleanupScheduled(false)
+  ,mMaxDBSize(SEER_MAX_DB_SIZE_DEFAULT_BYTES)
+  ,mPreservePercentage(SEER_PRESERVE_PERCENTAGE_DEFAULT)
+  ,mLastCleanupTime(0)
 {
 #if defined(PR_LOGGING)
   gSeerLog = PR_NewLogModule("NetworkSeer");
@@ -276,6 +285,12 @@ Seer::InstallObserver()
   Preferences::AddIntVarCache(&mMaxQueueSize, SEER_MAX_QUEUE_SIZE_PREF,
                               SEER_MAX_QUEUE_SIZE_DEFAULT);
 
+  Preferences::AddIntVarCache(&mMaxDBSize, SEER_MAX_DB_SIZE_PREF,
+                              SEER_MAX_DB_SIZE_DEFAULT_BYTES);
+  Preferences::AddIntVarCache(&mPreservePercentage,
+                              SEER_PRESERVE_PERCENTAGE_PREF,
+                              SEER_PRESERVE_PERCENTAGE_DEFAULT);
+
   return rv;
 }
 
@@ -320,6 +335,7 @@ class SeerNewTransactionEvent : public nsRunnable
   {
     gSeer->CommitTransaction();
     gSeer->BeginTransaction();
+    gSeer->MaybeScheduleCleanup();
     nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
     NS_DispatchToMainThread(event);
     return NS_OK;
@@ -574,6 +590,11 @@ Seer::EnsureInitStorage()
                          "ON moz_hosts (origin);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS host_load_index "
+                         "ON moz_hosts (last_load);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // And this is the table that keeps track of the hosts for subresources of a
   // pageload.
   rv = mDB->ExecuteSimpleSQL(
@@ -673,6 +694,11 @@ Seer::EnsureInitStorage()
   rv = mDB->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS startup_page_uri_index "
                          "ON moz_startup_pages (uri);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS startup_page_hit_index "
+                         "ON moz_startup_pages (last_hit);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // This table is similar to moz_hosts above, but uses full URIs instead of
@@ -943,6 +969,8 @@ public:
 
     Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_WORK_TIME,
                                    startTime);
+
+    gSeer->MaybeScheduleCleanup();
 
     return rv;
   }
@@ -1725,6 +1753,8 @@ public:
 
     Telemetry::AccumulateTimeDelta(Telemetry::SEER_LEARN_WORK_TIME, startTime);
 
+    gSeer->MaybeScheduleCleanup();
+
     return rv;
   }
 private:
@@ -2232,6 +2262,347 @@ Seer::Reset()
 
   nsRefPtr<SeerResetEvent> event = new SeerResetEvent();
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+}
+
+class SeerCleanupEvent : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    gSeer->Cleanup();
+    gSeer->mCleanupScheduled = false;
+    return NS_OK;
+  }
+};
+
+// Returns the current size (in bytes) of the db file on disk
+int64_t
+Seer::GetDBFileSize()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "GetDBFileSize called on main thread!");
+
+  CommitTransaction();
+
+  nsCOMPtr<mozIStorageStatement> countStmt = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA page_count;"));
+  if (!countStmt) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedCount(countStmt);
+  bool hasRows;
+  nsresult rv = countStmt->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+  int64_t pageCount;
+  rv = countStmt->GetInt64(0, &pageCount);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  nsCOMPtr<mozIStorageStatement> sizeStmt = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA page_size;"));
+  if (!sizeStmt) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedSize(sizeStmt);
+  rv = sizeStmt->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+  int64_t pageSize;
+  rv = sizeStmt->GetInt64(0, &pageSize);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  BeginTransaction();
+
+  return pageCount * pageSize;
+}
+
+// Returns the size (in bytes) that the db file will consume on disk AFTER we
+// vacuum the db.
+int64_t
+Seer::GetDBFileSizeAfterVacuum()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "GetDBFileSizeAfterVacuum called on main thread!");
+
+  CommitTransaction();
+
+  nsCOMPtr<mozIStorageStatement> countStmt = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA page_count;"));
+  if (!countStmt) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedCount(countStmt);
+  bool hasRows;
+  nsresult rv = countStmt->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+  int64_t pageCount;
+  rv = countStmt->GetInt64(0, &pageCount);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  nsCOMPtr<mozIStorageStatement> sizeStmt = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA page_size;"));
+  if (!sizeStmt) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedSize(sizeStmt);
+  rv = sizeStmt->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+  int64_t pageSize;
+  rv = sizeStmt->GetInt64(0, &pageSize);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  nsCOMPtr<mozIStorageStatement> freeStmt = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA freelist_count;"));
+  if (!freeStmt) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedFree(freeStmt);
+  rv = freeStmt->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+  int64_t freelistCount;
+  rv = freeStmt->GetInt64(0, &freelistCount);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  BeginTransaction();
+
+  return (pageCount - freelistCount) * pageSize;
+}
+
+void
+Seer::MaybeScheduleCleanup()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "MaybeScheduleCleanup called on main thread!");
+
+  if (mCleanupScheduled) {
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+    return;
+  }
+
+  int64_t dbFileSize = GetDBFileSize();
+  if (dbFileSize < mMaxDBSize) {
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+    return;
+  }
+
+  mCleanupScheduled = true;
+
+  nsRefPtr<SeerCleanupEvent> event = new SeerCleanupEvent();
+  nsresult rv = mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    mCleanupScheduled = false;
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+  } else {
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, true);
+  }
+}
+
+#ifndef ANDROID
+static const long long CLEANUP_CUTOFF = ONE_MONTH;
+#else
+static const long long CLEANUP_CUTOFF = ONE_WEEK;
+#endif
+
+void
+Seer::CleanupOrigins(PRTime now)
+{
+  PRTime cutoff = now - CLEANUP_CUTOFF;
+
+  nsCOMPtr<mozIStorageStatement> deleteOrigins = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_hosts WHERE last_load <= :cutoff"));
+  if (!deleteOrigins) {
+    return;
+  }
+  mozStorageStatementScoper scopedOrigins(deleteOrigins);
+
+  nsresult rv = deleteOrigins->BindInt32ByName(NS_LITERAL_CSTRING("cutoff"),
+                                               cutoff);
+  RETURN_IF_FAILED(rv);
+
+  deleteOrigins->Execute();
+}
+
+void
+Seer::CleanupStartupPages(PRTime now)
+{
+  PRTime cutoff = now - ONE_WEEK;
+
+  nsCOMPtr<mozIStorageStatement> deletePages = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_startup_pages WHERE "
+                         "last_hit <= :cutoff"));
+  if (!deletePages) {
+    return;
+  }
+  mozStorageStatementScoper scopedPages(deletePages);
+
+  nsresult rv = deletePages->BindInt32ByName(NS_LITERAL_CSTRING("cutoff"),
+                                             cutoff);
+  RETURN_IF_FAILED(rv);
+
+  deletePages->Execute();
+}
+
+int32_t
+Seer::GetSubresourceCount()
+{
+  nsCOMPtr<mozIStorageStatement> count = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT COUNT(id) FROM moz_subresources"));
+  if (!count) {
+    return 0;
+  }
+  mozStorageStatementScoper scopedCount(count);
+
+  bool hasRows;
+  nsresult rv = count->ExecuteStep(&hasRows);
+  if (NS_FAILED(rv) || !hasRows) {
+    return 0;
+  }
+
+  int32_t subresourceCount = 0;
+  count->GetInt32(0, &subresourceCount);
+
+  return subresourceCount;
+}
+
+void
+Seer::Cleanup()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Seer::Cleanup called on main thread!");
+
+  nsresult rv = EnsureInitStorage();
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  int64_t dbFileSize = GetDBFileSize();
+  float preservePercentage = static_cast<float>(mPreservePercentage) / 100.0;
+  int64_t evictionCutoff = static_cast<int64_t>(mMaxDBSize) * preservePercentage;
+  if (dbFileSize < evictionCutoff) {
+    return;
+  }
+
+  CommitTransaction();
+  BeginTransaction();
+
+  PRTime now = PR_Now();
+  if (mLastCleanupTime) {
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_DELTA,
+                          (now - mLastCleanupTime) / 1000);
+  }
+  mLastCleanupTime = now;
+
+  CleanupOrigins(now);
+  CleanupStartupPages(now);
+
+  dbFileSize = GetDBFileSizeAfterVacuum();
+  if (dbFileSize < evictionCutoff) {
+    // We've deleted enough stuff, time to free up the disk space and be on
+    // our way.
+    VacuumDatabase();
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, true);
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_TIME,
+                          (PR_Now() - mLastCleanupTime) / 1000);
+    return;
+  }
+
+  bool canDelete = true;
+  while (canDelete && (dbFileSize >= evictionCutoff)) {
+    int32_t subresourceCount = GetSubresourceCount();
+    if (!subresourceCount) {
+      canDelete = false;
+      break;
+    }
+
+    // DB size scales pretty much linearly with the number of rows in
+    // moz_subresources, so we can guess how many rows we need to delete pretty
+    // accurately.
+    float percentNeeded = static_cast<float>(dbFileSize - evictionCutoff) /
+      static_cast<float>(dbFileSize);
+
+    int32_t subresourcesToDelete = static_cast<int32_t>(percentNeeded * subresourceCount);
+    if (!subresourcesToDelete) {
+      // We're getting pretty close to nothing here, anyway, so we may as well
+      // just trash it all. This delete cascades to moz_subresources, as well.
+      rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_pages;"));
+      if (NS_FAILED(rv)) {
+        canDelete = false;
+        break;
+      }
+    } else {
+      nsCOMPtr<mozIStorageStatement> deleteStatement = mStatements.GetCachedStatement(
+          NS_LITERAL_CSTRING("DELETE FROM moz_subresources WHERE id IN "
+                            "(SELECT id FROM moz_subresources ORDER BY "
+                            "last_hit ASC LIMIT :limit);"));
+      if (!deleteStatement) {
+        canDelete = false;
+        break;
+      }
+      mozStorageStatementScoper scopedDelete(deleteStatement);
+
+      rv = deleteStatement->BindInt32ByName(NS_LITERAL_CSTRING("limit"),
+                                            subresourcesToDelete);
+      if (NS_FAILED(rv)) {
+        canDelete = false;
+        break;
+      }
+
+      rv = deleteStatement->Execute();
+      if (NS_FAILED(rv)) {
+        canDelete = false;
+        break;
+      }
+
+      // Now we clean up pages that no longer reference any subresources
+      rv = mDB->ExecuteSimpleSQL(
+          NS_LITERAL_CSTRING("DELETE FROM moz_pages WHERE id NOT IN "
+                             "(SELECT DISTINCT(pid) FROM moz_subresources);"));
+      if (NS_FAILED(rv)) {
+        canDelete = false;
+        break;
+      }
+    }
+
+    if (canDelete) {
+      dbFileSize = GetDBFileSizeAfterVacuum();
+    }
+  }
+
+  if (!canDelete || (dbFileSize >= evictionCutoff)) {
+    // Last-ditch effort to free up space
+    ResetInternal();
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, false);
+  } else {
+    // We do this to actually free up the space on disk
+    VacuumDatabase();
+    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, true);
+  }
+  Telemetry::Accumulate(Telemetry::SEER_CLEANUP_TIME,
+                        (PR_Now() - mLastCleanupTime) / 1000);
+}
+
+void
+Seer::VacuumDatabase()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "VacuumDatabase called on main thread!");
+
+  CommitTransaction();
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+  BeginTransaction();
 }
 
 #ifdef SEER_TESTS
