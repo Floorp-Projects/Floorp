@@ -12,16 +12,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.simple.JSONArray;
+
 import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.mozilla.gecko.sync.setup.Constants;
 
 import android.content.Context;
 import android.database.Cursor;
 
 public class ClientsDatabaseAccessor {
 
-  public static final String PROFILE_ID = "default";     // Generic profile id for now, until multiple profiles are implemented.
   public static final String LOG_TAG = "ClientsDatabaseAccessor";
 
   private ClientsDatabase db;
@@ -147,7 +148,7 @@ public class ClientsDatabaseAccessor {
   }
 
   private String getProfileId() {
-    return ClientsDatabaseAccessor.PROFILE_ID;
+    return Constants.DEFAULT_PROFILE;
   }
 
   public void wipeDB() {
