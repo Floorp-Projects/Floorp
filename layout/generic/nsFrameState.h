@@ -63,4 +63,11 @@ inline nsFrameState& operator^=(nsFrameState& aLeft, nsFrameState aRight)
 #define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
 
+namespace mozilla {
+#ifdef DEBUG
+nsCString GetFrameState(nsIFrame* aFrame);
+void PrintFrameState(nsIFrame* aFrame);
+#endif
+}
+
 #endif /* nsFrameState_h_ */ 

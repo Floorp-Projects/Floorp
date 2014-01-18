@@ -30,6 +30,11 @@
     which group the bit belongs to, value_ is the bit number (0..63),
     and name_ is the name of the frame state bit constant.
 
+  Note that if you add a new frame state group, you'll need to #include
+  the header for its frame classes in nsFrameState.cpp and, if they don't
+  already, add nsQueryFrame implementations (which can be DEBUG-only) to
+  the frame classes.
+
  ******/
 
 #ifndef FRAME_STATE_GROUP
