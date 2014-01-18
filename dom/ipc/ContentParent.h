@@ -189,7 +189,7 @@ public:
 
     virtual PCrashReporterParent*
     AllocPCrashReporterParent(const NativeThreadId& tid,
-                        const uint32_t& processType) MOZ_OVERRIDE;
+                              const uint32_t& processType) MOZ_OVERRIDE;
     virtual bool
     RecvPCrashReporterConstructor(PCrashReporterParent* actor,
                                   const NativeThreadId& tid,
@@ -223,7 +223,7 @@ public:
                                            const bool& aIsVideo) MOZ_OVERRIDE;
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
     void OnNuwaForkTimeout();
 
     bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
@@ -331,34 +331,36 @@ private:
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline) MOZ_OVERRIDE;
 
-    virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
+    virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
-                                                const uint32_t& aChromeFlags);
-    virtual bool DeallocPBrowserParent(PBrowserParent* frame);
+                                                const uint32_t& aChromeFlags) MOZ_OVERRIDE;
+    virtual bool DeallocPBrowserParent(PBrowserParent* frame) MOZ_OVERRIDE;
 
-    virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequestParent(const DeviceStorageParams&);
-    virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*);
+    virtual PDeviceStorageRequestParent*
+    AllocPDeviceStorageRequestParent(const DeviceStorageParams&) MOZ_OVERRIDE;
+    virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*) MOZ_OVERRIDE;
 
-    virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
-    virtual bool DeallocPBlobParent(PBlobParent*);
+    virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+    virtual bool DeallocPBlobParent(PBlobParent*) MOZ_OVERRIDE;
 
-    virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter);
+    virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) MOZ_OVERRIDE;
 
     virtual bool RecvGetRandomValues(const uint32_t& length,
-                                     InfallibleTArray<uint8_t>* randomValues);
+                                     InfallibleTArray<uint8_t>* randomValues) MOZ_OVERRIDE;
 
     virtual bool DeallocPHalParent(PHalParent*) MOZ_OVERRIDE;
 
-    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor);
+    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
-    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent(const uint32_t& generation);
-    virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor);
+    virtual PMemoryReportRequestParent*
+    AllocPMemoryReportRequestParent(const uint32_t& generation) MOZ_OVERRIDE;
+    virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) MOZ_OVERRIDE;
 
-    virtual PTestShellParent* AllocPTestShellParent();
-    virtual bool DeallocPTestShellParent(PTestShellParent* shell);
+    virtual PTestShellParent* AllocPTestShellParent() MOZ_OVERRIDE;
+    virtual bool DeallocPTestShellParent(PTestShellParent* shell) MOZ_OVERRIDE;
 
-    virtual bool DeallocPNeckoParent(PNeckoParent* necko);
+    virtual bool DeallocPNeckoParent(PNeckoParent* necko) MOZ_OVERRIDE;
 
     virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
             const OptionalURIParams& aUri,
@@ -367,23 +369,23 @@ private:
             const bool& aForceSave,
             const int64_t& aContentLength,
             const OptionalURIParams& aReferrer,
-            PBrowserParent* aBrowser);
-    virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
+            PBrowserParent* aBrowser) MOZ_OVERRIDE;
+    virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService) MOZ_OVERRIDE;
 
-    virtual PSmsParent* AllocPSmsParent();
-    virtual bool DeallocPSmsParent(PSmsParent*);
+    virtual PSmsParent* AllocPSmsParent() MOZ_OVERRIDE;
+    virtual bool DeallocPSmsParent(PSmsParent*) MOZ_OVERRIDE;
 
-    virtual PTelephonyParent* AllocPTelephonyParent();
-    virtual bool DeallocPTelephonyParent(PTelephonyParent*);
+    virtual PTelephonyParent* AllocPTelephonyParent() MOZ_OVERRIDE;
+    virtual bool DeallocPTelephonyParent(PTelephonyParent*) MOZ_OVERRIDE;
 
-    virtual bool DeallocPStorageParent(PStorageParent* aActor);
+    virtual bool DeallocPStorageParent(PStorageParent* aActor) MOZ_OVERRIDE;
 
-    virtual PBluetoothParent* AllocPBluetoothParent();
-    virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor);
-    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
+    virtual PBluetoothParent* AllocPBluetoothParent() MOZ_OVERRIDE;
+    virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor) MOZ_OVERRIDE;
+    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) MOZ_OVERRIDE;
 
-    virtual PFMRadioParent* AllocPFMRadioParent();
-    virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor);
+    virtual PFMRadioParent* AllocPFMRadioParent() MOZ_OVERRIDE;
+    virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) MOZ_OVERRIDE;
 
     virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
                                  const asmjscache::OpenMode& aOpenMode,
@@ -392,32 +394,37 @@ private:
     virtual bool DeallocPAsmJSCacheEntryParent(
                                    PAsmJSCacheEntryParent* aActor) MOZ_OVERRIDE;
 
-    virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
-    virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
-    virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor);
+    virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() MOZ_OVERRIDE;
+    virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor) MOZ_OVERRIDE;
+    virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor) MOZ_OVERRIDE;
 
-    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
-    virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);
+    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs) MOZ_OVERRIDE;
+    virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) MOZ_OVERRIDE;
 
-    virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);
+    virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) MOZ_OVERRIDE;
 
-    virtual bool RecvSetClipboardText(const nsString& text, const bool& isPrivateData, const int32_t& whichClipboard);
-    virtual bool RecvGetClipboardText(const int32_t& whichClipboard, nsString* text);
-    virtual bool RecvEmptyClipboard();
-    virtual bool RecvClipboardHasText(bool* hasText);
+    virtual bool RecvSetClipboardText(const nsString& text,
+                                      const bool& isPrivateData,
+                                      const int32_t& whichClipboard) MOZ_OVERRIDE;
+    virtual bool RecvGetClipboardText(const int32_t& whichClipboard, nsString* text) MOZ_OVERRIDE;
+    virtual bool RecvEmptyClipboard() MOZ_OVERRIDE;
+    virtual bool RecvClipboardHasText(bool* hasText) MOZ_OVERRIDE;
 
-    virtual bool RecvGetSystemColors(const uint32_t& colorsCount, InfallibleTArray<uint32_t>* colors);
-    virtual bool RecvGetIconForExtension(const nsCString& aFileExt, const uint32_t& aIconSize, InfallibleTArray<uint8_t>* bits);
-    virtual bool RecvGetShowPasswordSetting(bool* showPassword);
+    virtual bool RecvGetSystemColors(const uint32_t& colorsCount,
+                                     InfallibleTArray<uint32_t>* colors) MOZ_OVERRIDE;
+    virtual bool RecvGetIconForExtension(const nsCString& aFileExt,
+                                         const uint32_t& aIconSize,
+                                         InfallibleTArray<uint8_t>* bits) MOZ_OVERRIDE;
+    virtual bool RecvGetShowPasswordSetting(bool* showPassword) MOZ_OVERRIDE;
 
-    virtual bool RecvStartVisitedQuery(const URIParams& uri);
+    virtual bool RecvStartVisitedQuery(const URIParams& uri) MOZ_OVERRIDE;
 
     virtual bool RecvVisitURI(const URIParams& uri,
                               const OptionalURIParams& referrer,
-                              const uint32_t& flags);
+                              const uint32_t& flags) MOZ_OVERRIDE;
 
     virtual bool RecvSetURITitle(const URIParams& uri,
-                                 const nsString& title);
+                                 const nsString& title) MOZ_OVERRIDE;
 
     virtual bool RecvShowFilePicker(const int16_t& mode,
                                     const int16_t& selectedType,
@@ -429,78 +436,78 @@ private:
                                     const InfallibleTArray<nsString>& filterNames,
                                     InfallibleTArray<nsString>* files,
                                     int16_t* retValue,
-                                    nsresult* result);
+                                    nsresult* result) MOZ_OVERRIDE;
 
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName,
                                            const nsString& aBidi, const nsString& aLang,
-                                           const IPC::Principal& aPrincipal);
+                                           const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
     virtual bool RecvCloseAlert(const nsString& aName,
-                                const IPC::Principal& aPrincipal);
+                                const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
-    virtual bool RecvLoadURIExternal(const URIParams& uri);
+    virtual bool RecvLoadURIExternal(const URIParams& uri) MOZ_OVERRIDE;
 
     virtual bool RecvSyncMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aRetvals);
+                                 InfallibleTArray<nsString>* aRetvals) MOZ_OVERRIDE;
     virtual bool AnswerRpcMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
                                   const IPC::Principal& aPrincipal,
-                                  InfallibleTArray<nsString>* aRetvals);
+                                  InfallibleTArray<nsString>* aRetvals) MOZ_OVERRIDE;
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
-                                  const IPC::Principal& aPrincipal);
+                                  const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
     virtual bool RecvFilePathUpdateNotify(const nsString& aType,
                                           const nsString& aStorageName,
                                           const nsString& aFilePath,
-                                          const nsCString& aReason);
+                                          const nsCString& aReason) MOZ_OVERRIDE;
 
     virtual bool RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
-                                            const bool& aHighAccuracy);
-    virtual bool RecvRemoveGeolocationListener();
-    virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable);
+                                            const bool& aHighAccuracy) MOZ_OVERRIDE;
+    virtual bool RecvRemoveGeolocationListener() MOZ_OVERRIDE;
+    virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable) MOZ_OVERRIDE;
 
-    virtual bool RecvConsoleMessage(const nsString& aMessage);
+    virtual bool RecvConsoleMessage(const nsString& aMessage) MOZ_OVERRIDE;
     virtual bool RecvScriptError(const nsString& aMessage,
                                  const nsString& aSourceName,
                                  const nsString& aSourceLine,
                                  const uint32_t& aLineNumber,
                                  const uint32_t& aColNumber,
                                  const uint32_t& aFlags,
-                                 const nsCString& aCategory);
+                                 const nsCString& aCategory) MOZ_OVERRIDE;
 
-    virtual bool RecvPrivateDocShellsExist(const bool& aExist);
+    virtual bool RecvPrivateDocShellsExist(const bool& aExist) MOZ_OVERRIDE;
 
-    virtual bool RecvFirstIdle();
+    virtual bool RecvFirstIdle() MOZ_OVERRIDE;
 
     virtual bool RecvAudioChannelGetState(const AudioChannelType& aType,
                                           const bool& aElementHidden,
                                           const bool& aElementWasHidden,
-                                          AudioChannelState* aValue);
+                                          AudioChannelState* aValue) MOZ_OVERRIDE;
 
     virtual bool RecvAudioChannelRegisterType(const AudioChannelType& aType,
-                                              const bool& aWithVideo);
+                                              const bool& aWithVideo) MOZ_OVERRIDE;
     virtual bool RecvAudioChannelUnregisterType(const AudioChannelType& aType,
                                                 const bool& aElementHidden,
-                                                const bool& aWithVideo);
+                                                const bool& aWithVideo) MOZ_OVERRIDE;
 
-    virtual bool RecvAudioChannelChangedNotification();
+    virtual bool RecvAudioChannelChangedNotification() MOZ_OVERRIDE;
 
-    virtual bool RecvAudioChannelChangeDefVolChannel(
-      const AudioChannelType& aType, const bool& aHidden);
+    virtual bool RecvAudioChannelChangeDefVolChannel(const AudioChannelType& aType,
+                                                     const bool& aHidden) MOZ_OVERRIDE;
 
-    virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
+    virtual bool RecvBroadcastVolume(const nsString& aVolumeName) MOZ_OVERRIDE;
 
-    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue);
+    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) MOZ_OVERRIDE;
 
-    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable);
+    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) MOZ_OVERRIDE;
 
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
 
@@ -514,16 +521,18 @@ private:
     virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) MOZ_OVERRIDE;
 
     virtual bool RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamParams* aPostData,
-                                  OptionalURIParams* aURI);
+                                  OptionalURIParams* aURI) MOZ_OVERRIDE;
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     virtual bool RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
                                               int32_t* aStatus,
-                                              bool* aSuccess);
+                                              bool* aSuccess) MOZ_OVERRIDE;
 
-    virtual bool RecvAddIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
-    virtual bool RecvRemoveIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
+    virtual bool RecvAddIdleObserver(const uint64_t& observerId,
+                                     const uint32_t& aIdleTimeInS) MOZ_OVERRIDE;
+    virtual bool RecvRemoveIdleObserver(const uint64_t& observerId,
+                                        const uint32_t& aIdleTimeInS) MOZ_OVERRIDE;
 
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more

@@ -172,3 +172,39 @@ add_test(function() {
   check_ee_for_ev("ev-valid", isDebugBuild);
   ocspResponder.stop(run_next_test);
 });
+
+// bug 950240: add FLAG_NO_DV_FALLBACK_FOR_EV to CertVerifier::VerifyCert
+// to prevent spurious OCSP requests that race with OCSP stapling.
+// This has the side-effect of saying an EV certificate is not EV if
+// it hasn't already been verified (e.g. on the verification thread when
+// connecting to a site).
+function check_no_ocsp_requests(cert_name) {
+  clearOCSPCache();
+  let ocspResponder = failingOCSPResponder();
+  let cert = certdb.findCertByNickname(null, cert_name);
+  let hasEVPolicy = {};
+  let verifiedChain = {};
+  let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
+              Ci.nsIX509CertDB.FLAG_NO_DV_FALLBACK_FOR_EV;
+  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, flags,
+                                   verifiedChain, hasEVPolicy);
+  // Since we're not doing OCSP requests, no certificate will be EV.
+  do_check_eq(hasEVPolicy.value, false);
+  do_check_eq(0, error);
+  // Also check that isExtendedValidation doesn't cause OCSP requests.
+  let identityInfo = cert.QueryInterface(Ci.nsIIdentityInfo);
+  do_check_eq(identityInfo.isExtendedValidation, false);
+  ocspResponder.stop(run_next_test);
+}
+
+add_test(function() {
+  check_no_ocsp_requests("ev-valid");
+});
+
+add_test(function() {
+  check_no_ocsp_requests("non-ev-root");
+});
+
+add_test(function() {
+  check_no_ocsp_requests("no-ocsp-url-cert");
+});

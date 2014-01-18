@@ -55,7 +55,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned 
 {
     // If id is "all", resolve document.all=true.
     JS::RootedValue v(cx);
-    if (!JS_IdToValue(cx, id, v.address()))
+    if (!JS_IdToValue(cx, id, &v))
         return false;
     if (JSVAL_IS_STRING(v)) {
         JSString *str = JSVAL_TO_STRING(v);

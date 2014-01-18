@@ -14,3 +14,6 @@ Applied Patches
 ===============
 r512.patch:
   Support VS2013 (from revision r512)
+
+vs2013.patch
+  Additional changes to support VS2013 missed from revision r512.

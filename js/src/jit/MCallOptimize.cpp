@@ -196,6 +196,7 @@ IonBuilder::inlineMathFunction(CallInfo &callInfo, MMathFunction::Function funct
     if (!cache)
         return InliningStatus_NotInlined;
 
+    callInfo.fun()->setImplicitlyUsedUnchecked();
     callInfo.thisArg()->setImplicitlyUsedUnchecked();
 
     MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), function, cache);
@@ -246,6 +247,9 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         initLength = arg->toConstant()->value().toInt32();
         if (initLength >= JSObject::NELEMENTS_LIMIT)
             return InliningStatus_NotInlined;
+
+        if (initLength <= ArrayObject::EagerAllocationMaxLength)
+            allocating = MNewArray::NewArray_Allocating;
     }
 
     callInfo.setImplicitlyUsedUnchecked();

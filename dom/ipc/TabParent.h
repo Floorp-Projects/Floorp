@@ -110,81 +110,82 @@ public:
 
     void Destroy();
 
-    virtual bool RecvMoveFocus(const bool& aForward);
-    virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
-    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor);
+    virtual bool RecvMoveFocus(const bool& aForward) MOZ_OVERRIDE;
+    virtual bool RecvEvent(const RemoteDOMEvent& aEvent) MOZ_OVERRIDE;
+    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor) MOZ_OVERRIDE;
     virtual bool RecvInitRenderFrame(PRenderFrameParent* aFrame,
                                      ScrollingBehavior* scrolling,
                                      TextureFactoryIdentifier* identifier,
                                      uint64_t* layersId,
-                                     bool *aSuccess);
+                                     bool *aSuccess) MOZ_OVERRIDE;
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
                                             const nsString& aName,
                                             const nsString& aFeatures,
-                                            bool* aOutWindowOpened);
-    virtual bool AnswerCreateWindow(PBrowserParent** retval);
+                                            bool* aOutWindowOpened) MOZ_OVERRIDE;
+    virtual bool AnswerCreateWindow(PBrowserParent** retval) MOZ_OVERRIDE;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aJSONRetVal);
+                                 InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
     virtual bool AnswerRpcMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
                                   const IPC::Principal& aPrincipal,
-                                  InfallibleTArray<nsString>* aJSONRetVal);
+                                  InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
-                                  const IPC::Principal& aPrincipal);
+                                  const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
                                     nsIMEUpdatePreference* aPreference,
-                                    uint32_t* aSeqno);
+                                    uint32_t* aSeqno) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
                                          const uint32_t& aEnd,
-                                         const uint32_t& aNewEnd);
+                                         const uint32_t& aNewEnd) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
                                                       const nsIntRect& aRect,
                                                       const nsIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
-                                        const uint32_t& aFocus);
-    virtual bool RecvNotifyIMETextHint(const nsString& aText);
+                                        const uint32_t& aFocus) MOZ_OVERRIDE;
+    virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
-                                       nsString* aComposition);
+                                       nsString* aComposition) MOZ_OVERRIDE;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
                                      int32_t* aIMEOpen,
-                                     intptr_t* aNativeIMEContext);
+                                     intptr_t* aNativeIMEContext) MOZ_OVERRIDE;
     virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
                                      const int32_t& aIMEOpen,
                                      const nsString& aType,
                                      const nsString& aInputmode,
                                      const nsString& aActionHint,
                                      const int32_t& aCause,
-                                     const int32_t& aFocusChange);
-    virtual bool RecvRequestFocus(const bool& aCanRaise);
-    virtual bool RecvSetCursor(const uint32_t& aValue);
-    virtual bool RecvSetBackgroundColor(const nscolor& aValue);
-    virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus);
-    virtual bool RecvGetDPI(float* aValue);
-    virtual bool RecvGetDefaultScale(double* aValue);
-    virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
+                                     const int32_t& aFocusChange) MOZ_OVERRIDE;
+    virtual bool RecvRequestFocus(const bool& aCanRaise) MOZ_OVERRIDE;
+    virtual bool RecvSetCursor(const uint32_t& aValue) MOZ_OVERRIDE;
+    virtual bool RecvSetBackgroundColor(const nscolor& aValue) MOZ_OVERRIDE;
+    virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) MOZ_OVERRIDE;
+    virtual bool RecvGetDPI(float* aValue) MOZ_OVERRIDE;
+    virtual bool RecvGetDefaultScale(double* aValue) MOZ_OVERRIDE;
+    virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) MOZ_OVERRIDE;
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
-                                const CSSRect& aRect);
+                                const CSSRect& aRect) MOZ_OVERRIDE;
     virtual bool RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
                                            const ViewID& aViewId,
                                            const bool& aIsRoot,
-                                           const ZoomConstraints& aConstraints);
+                                           const ZoomConstraints& aConstraints) MOZ_OVERRIDE;
     virtual bool RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
-                                          const bool& aPreventDefault);
-    virtual PContentDialogParent* AllocPContentDialogParent(const uint32_t& aType,
-                                                            const nsCString& aName,
-                                                            const nsCString& aFeatures,
-                                                            const InfallibleTArray<int>& aIntParams,
-                                                            const InfallibleTArray<nsString>& aStringParams);
-    virtual bool DeallocPContentDialogParent(PContentDialogParent* aDialog)
+                                          const bool& aPreventDefault) MOZ_OVERRIDE;
+    virtual PContentDialogParent*
+    AllocPContentDialogParent(const uint32_t& aType,
+                              const nsCString& aName,
+                              const nsCString& aFeatures,
+                              const InfallibleTArray<int>& aIntParams,
+                              const InfallibleTArray<nsString>& aStringParams) MOZ_OVERRIDE;
+    virtual bool DeallocPContentDialogParent(PContentDialogParent* aDialog) MOZ_OVERRIDE
     {
       delete aDialog;
       return true;
@@ -227,15 +228,20 @@ public:
     bool SendHandleDoubleTap(const CSSIntPoint& aPoint);
 
     virtual PDocumentRendererParent*
-    AllocPDocumentRendererParent(const nsRect& documentRect, const gfx::Matrix& transform,
+    AllocPDocumentRendererParent(const nsRect& documentRect,
+                                 const gfx::Matrix& transform,
                                  const nsString& bgcolor,
-                                 const uint32_t& renderFlags, const bool& flushLayout,
-                                 const nsIntSize& renderSize);
-    virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor);
+                                 const uint32_t& renderFlags,
+                                 const bool& flushLayout,
+                                 const nsIntSize& renderSize) MOZ_OVERRIDE;
+    virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor) MOZ_OVERRIDE;
 
     virtual PContentPermissionRequestParent*
-    AllocPContentPermissionRequestParent(const nsCString& aType, const nsCString& aAccess, const IPC::Principal& aPrincipal);
-    virtual bool DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor);
+    AllocPContentPermissionRequestParent(const nsCString& aType,
+                                         const nsCString& aAccess,
+                                         const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) MOZ_OVERRIDE;
 
     virtual POfflineCacheUpdateParent*
     AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
@@ -247,10 +253,9 @@ public:
                                        const URIParams& aDocumentURI,
                                        const bool& stickDocument) MOZ_OVERRIDE;
     virtual bool
-    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor)
-                                     MOZ_OVERRIDE;
+    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) MOZ_OVERRIDE;
 
-    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal);
+    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) MOZ_OVERRIDE;
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
@@ -292,15 +297,15 @@ protected:
     virtual PIndexedDBParent* AllocPIndexedDBParent(
                                                   const nsCString& aGroup,
                                                   const nsCString& aASCIIOrigin,
-                                                  bool* /* aAllowed */);
+                                                  bool* /* aAllowed */) MOZ_OVERRIDE;
 
-    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor);
+    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
     virtual bool
     RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
                               const nsCString& aGroup,
                               const nsCString& aASCIIOrigin,
-                              bool* aAllowed);
+                              bool* aAllowed) MOZ_OVERRIDE;
 
     Element* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;

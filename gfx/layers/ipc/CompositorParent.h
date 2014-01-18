@@ -86,7 +86,7 @@ public:
   virtual bool RecvResume() MOZ_OVERRIDE;
   virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                SurfaceDescriptor* aOutSnapshot);
+                                SurfaceDescriptor* aOutSnapshot) MOZ_OVERRIDE;
   virtual bool RecvFlushRendering() MOZ_OVERRIDE;
   virtual bool RecvForceComposite() MOZ_OVERRIDE;
 
@@ -239,8 +239,8 @@ protected:
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
                                  const uint64_t& aId,
                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                 bool* aSuccess);
-  virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers);
+                                 bool* aSuccess) MOZ_OVERRIDE;
+  virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
   virtual void ScheduleTask(CancelableTask*, int);
   void Composite();
   void CompositeInTransaction();

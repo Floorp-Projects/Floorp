@@ -80,7 +80,9 @@ Tickler::Init()
   MOZ_ASSERT(!mThread);
   MOZ_ASSERT(!mFD);
 
-  GeckoAppShell::EnableNetworkNotifications();
+  if (AndroidBridge::HasEnv()) {
+      GeckoAppShell::EnableNetworkNotifications();
+  }
 
   mFD = PR_OpenUDPSocket(PR_AF_INET);
   if (!mFD)

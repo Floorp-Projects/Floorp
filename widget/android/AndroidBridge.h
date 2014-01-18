@@ -141,24 +141,49 @@ public:
     }
 
     static JavaVM *GetVM() {
-        if (MOZ_LIKELY(sBridge))
-            return sBridge->mJavaVM;
-        return nullptr;
+        MOZ_ASSERT(sBridge);
+        return sBridge->mJavaVM;
     }
 
-    static JNIEnv *GetJNIEnv() {
-        if (MOZ_LIKELY(sBridge)) {
-            if (!pthread_equal(pthread_self(), sBridge->mThread)) {
-                __android_log_print(ANDROID_LOG_INFO, "AndroidBridge",
-                                    "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
-                                    (void*)pthread_self(), (void*)sBridge->mThread);
-                MOZ_ASSERT(false, "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread!");
-                return nullptr;
-            }
-            return sBridge->mJNIEnv;
 
+    static JNIEnv *GetJNIEnv() {
+        MOZ_ASSERT(sBridge);
+        if (MOZ_UNLIKELY(!pthread_equal(pthread_self(), sBridge->mThread))) {
+            MOZ_CRASH();
         }
-        return nullptr;
+        MOZ_ASSERT(sBridge->mJNIEnv);
+        return sBridge->mJNIEnv;
+    }
+
+    static bool HasEnv() {
+        return sBridge && sBridge->mJNIEnv;
+    }
+
+    static bool ThrowException(JNIEnv *aEnv, const char *aClass,
+                               const char *aMessage) {
+        MOZ_ASSERT(aEnv, "Invalid thread JNI env");
+        jclass cls = aEnv->FindClass(aClass);
+        MOZ_ASSERT(cls, "Cannot find exception class");
+        bool ret = !aEnv->ThrowNew(cls, aMessage);
+        aEnv->DeleteLocalRef(cls);
+        return ret;
+    }
+
+    static bool ThrowException(JNIEnv *aEnv, const char *aMessage) {
+        return ThrowException(aEnv, "java/lang/Exception", aMessage);
+    }
+
+    static void HandleUncaughtException(JNIEnv *aEnv) {
+        MOZ_ASSERT(aEnv);
+        if (!aEnv->ExceptionCheck()) {
+            return;
+        }
+        jthrowable e = aEnv->ExceptionOccurred();
+        MOZ_ASSERT(e);
+        aEnv->ExceptionClear();
+        GeckoAppShell::HandleUncaughtException(nullptr, e);
+        // Should be dead by now...
+        MOZ_CRASH("Failed to handle uncaught exception");
     }
 
     // The bridge needs to be constructed via ConstructBridge first,

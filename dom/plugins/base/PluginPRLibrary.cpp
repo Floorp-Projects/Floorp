@@ -38,8 +38,6 @@ PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
 			       NPPluginFuncs* pFuncs, NPError* error)
 {
   JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return NS_ERROR_FAILURE;
 
   mozilla::AutoLocalJNIFrame jniFrame(env);
 
