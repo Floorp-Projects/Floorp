@@ -35,6 +35,12 @@ NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nullptr)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 
+#ifdef DEBUG
+NS_QUERYFRAME_HEAD(nsBulletFrame)
+  NS_QUERYFRAME_ENTRY(nsBulletFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
+#endif
+
 nsBulletFrame::~nsBulletFrame()
 {
 }
