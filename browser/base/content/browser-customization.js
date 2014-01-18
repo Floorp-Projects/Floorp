@@ -59,6 +59,7 @@ let CustomizationHandler = {
   _customizationChange: function() {
     gHomeButton.updatePersonalToolbarStyle();
     BookmarkingUI.customizeChange();
+    PlacesToolbarHelper.customizeChange();
   },
 
   _customizationEnding: function(aDetails) {

@@ -311,6 +311,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   background-image: linear-gradient(rgb(38,115,191), rgb(38,125,191));
 }
 
+#customization-palette .toolbarbutton-multiline-text,
 #customization-palette .toolbarbutton-text {
   display: none;
 }

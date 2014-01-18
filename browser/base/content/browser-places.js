@@ -863,6 +863,10 @@ let PlacesToolbarHelper = {
     return document.getElementById("PlacesToolbar");
   },
 
+  get _placeholder() {
+    return document.getElementById("bookmarks-toolbar-placeholder");
+  },
+
   init: function PTH_init(forceToolbarOverflowCheck) {
     let viewElt = this._viewElt;
     if (!viewElt || viewElt._placesView)
@@ -883,6 +887,7 @@ let PlacesToolbarHelper = {
     if (forceToolbarOverflowCheck) {
       viewElt._placesView.updateOverflowStatus();
     }
+    this.customizeChange();
   },
 
   customizeStart: function PTH_customizeStart() {
@@ -893,11 +898,36 @@ let PlacesToolbarHelper = {
     } finally {
       this._isCustomizing = true;
     }
+    this._shouldWrap = this._getShouldWrap();
+  },
+
+  customizeChange: function PTH_customizeChange() {
+    let placeholder = this._placeholder;
+    if (!placeholder) {
+      return;
+    }
+    let shouldWrapNow = this._getShouldWrap();
+    if (this._shouldWrap != shouldWrapNow) {
+      if (shouldWrapNow) {
+        placeholder.setAttribute("wrap", "true");
+      } else {
+        placeholder.removeAttribute("wrap");
+      }
+      placeholder.classList.toggle("toolbarbutton-1", shouldWrapNow);
+      this._shouldWrap = shouldWrapNow;
+    }
   },
 
   customizeDone: function PTH_customizeDone() {
     this._isCustomizing = false;
     this.init(true);
+  },
+
+  _getShouldWrap: function PTH_getShouldWrap() {
+    let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
+    let area = placement && placement.area;
+    let areaType = area && CustomizableUI.getAreaType(area);
+    return !area || CustomizableUI.TYPE_MENU_PANEL == areaType;
   },
 
   onPlaceholderCommand: function () {
