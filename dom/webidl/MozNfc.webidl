@@ -13,11 +13,18 @@ interface MozNfcManager {
     *
     * Returns success if given manifestUrl is registered for 'onpeerready',
     * otherwise error
-    *
-    * Users of this API should have valid permissions 'nfc-manager'
-    * and 'nfc-write'
     */
    DOMRequest checkP2PRegistration(DOMString manifestUrl);
+
+   /**
+    * Notify that user has accepted to share nfc message on P2P UI
+    */
+   void notifyUserAcceptedP2P(DOMString manifestUrl);
+
+   /**
+    * Notify the status of sendFile operation
+    */
+   void notifySendFileStatus(octet status, DOMString requestId);
 };
 
 [JSImplementation="@mozilla.org/navigatorNfc;1",
