@@ -1295,7 +1295,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
         for (uint32_t i = 0; i < symbolCount; ++i) {
             if (!JS_GetElement(mContext, symbolsObj, i, &value) ||
                 !value.isString() ||
-                !JS_ValueToId(mContext, value, symbolId.address())) {
+                !JS_ValueToId(mContext, value, &symbolId)) {
                 return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
                                       PromiseFlatCString(aLocation).get(), i);
             }

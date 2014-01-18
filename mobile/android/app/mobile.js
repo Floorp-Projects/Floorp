@@ -102,6 +102,10 @@ pref("network.http.spdy.push-allowance", 32768);
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
+// predictive actions
+pref("network.seer.max-db-size", 2097152); // bytes
+pref("network.seer.preserve", 50); // percentage of seer data to keep when cleaning up
+
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
 
@@ -815,6 +819,6 @@ pref("browser.snippets.enabled", false);
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
 // The URL of the APK factory from which we obtain APKs for webapps.
-// XXX This currently points to jhugman's prototype server.
-pref("browser.webapps.apkFactoryUrl", "http://107.22.148.17:8080/application.apk");
+// This currently points to the development server.
+pref("browser.webapps.apkFactoryUrl", "http://dapk.net/application.apk");
 #endif

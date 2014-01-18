@@ -129,3 +129,6 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
     LOCAL_INCLUDES += [
         '/netwerk/system/qt',
     ]
+
+if CONFIG['ENABLE_TESTS']:
+    DEFINES['SEER_TESTS'] = True

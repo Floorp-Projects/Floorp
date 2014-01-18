@@ -524,6 +524,11 @@ public:
   // Invoke the copy-constructor in place.
   template<class A>
   static inline void Construct(E *e, const A &arg) {
+    typedef typename mozilla::RemoveCV<E>::Type E_NoCV;
+    typedef typename mozilla::RemoveCV<A>::Type A_NoCV;
+    static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
+                  "For safety, we disallow constructing nsTArray<E> elements "
+                  "from E* pointers. See bug 960591.");
     new (static_cast<void *>(e)) E(arg);
   }
   // Invoke the destructor in place.

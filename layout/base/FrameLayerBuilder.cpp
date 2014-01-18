@@ -3818,8 +3818,9 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
     nsRefPtr<Image> image = container->CreateImage(&format, 1);
     NS_ASSERTION(image, "Could not create image container for mask layer.");
     CairoImage::Data data;
-    data.mSurface = surface;
+    data.mDeprecatedSurface = surface;
     data.mSize = surfaceSizeInt;
+    data.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
     static_cast<CairoImage*>(image.get())->SetData(data);
     container->SetCurrentImageInTransaction(image);
 

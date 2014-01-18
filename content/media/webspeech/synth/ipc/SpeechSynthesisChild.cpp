@@ -112,14 +112,6 @@ SpeechSynthesisRequestChild::RecvOnResume(const float& aElapsedTime,
 }
 
 bool
-SpeechSynthesisRequestChild::RecvOnError(const float& aElapsedTime,
-                                         const uint32_t& aCharIndex)
-{
-  mTask->DispatchErrorImpl(aElapsedTime, aCharIndex);
-  return true;
-}
-
-bool
 SpeechSynthesisRequestChild::RecvOnBoundary(const nsString& aName,
                                             const float& aElapsedTime,
                                             const uint32_t& aCharIndex)

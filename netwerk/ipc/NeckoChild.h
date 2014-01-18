@@ -28,37 +28,40 @@ public:
 protected:
   virtual PHttpChannelChild*
     AllocPHttpChannelChild(PBrowserChild*, const SerializedLoadContext&,
-                           const HttpChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPHttpChannelChild(PHttpChannelChild*);
-  virtual PCookieServiceChild* AllocPCookieServiceChild();
-  virtual bool DeallocPCookieServiceChild(PCookieServiceChild*);
-  virtual PWyciwygChannelChild* AllocPWyciwygChannelChild();
-  virtual bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*);
+                           const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
+  virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) MOZ_OVERRIDE;
+  virtual PCookieServiceChild* AllocPCookieServiceChild() MOZ_OVERRIDE;
+  virtual bool DeallocPCookieServiceChild(PCookieServiceChild*) MOZ_OVERRIDE;
+  virtual PWyciwygChannelChild* AllocPWyciwygChannelChild() MOZ_OVERRIDE;
+  virtual bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*) MOZ_OVERRIDE;
   virtual PFTPChannelChild*
     AllocPFTPChannelChild(PBrowserChild* aBrowser,
                           const SerializedLoadContext& aSerialized,
-                          const FTPChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPFTPChannelChild(PFTPChannelChild*);
-  virtual PWebSocketChild* AllocPWebSocketChild(PBrowserChild*, const SerializedLoadContext&);
-  virtual bool DeallocPWebSocketChild(PWebSocketChild*);
-  virtual PTCPSocketChild* AllocPTCPSocketChild();
-  virtual bool DeallocPTCPSocketChild(PTCPSocketChild*);
-  virtual PTCPServerSocketChild* AllocPTCPServerSocketChild(const uint16_t& aLocalPort,
-                                                       const uint16_t& aBacklog,
-                                                       const nsString& aBinaryType);
-  virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
+                          const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
+  virtual bool DeallocPFTPChannelChild(PFTPChannelChild*) MOZ_OVERRIDE;
+  virtual PWebSocketChild*
+    AllocPWebSocketChild(PBrowserChild*, const SerializedLoadContext&) MOZ_OVERRIDE;
+  virtual bool DeallocPWebSocketChild(PWebSocketChild*) MOZ_OVERRIDE;
+  virtual PTCPSocketChild* AllocPTCPSocketChild() MOZ_OVERRIDE;
+  virtual bool DeallocPTCPSocketChild(PTCPSocketChild*) MOZ_OVERRIDE;
+  virtual PTCPServerSocketChild*
+    AllocPTCPServerSocketChild(const uint16_t& aLocalPort,
+                               const uint16_t& aBacklog,
+                               const nsString& aBinaryType) MOZ_OVERRIDE;
+  virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*) MOZ_OVERRIDE;
   virtual PUDPSocketChild* AllocPUDPSocketChild(const nsCString& aHost,
                                                 const uint16_t& aPort,
-                                                const nsCString& aFilter);
-  virtual bool DeallocPUDPSocketChild(PUDPSocketChild*);
+                                                const nsCString& aFilter) MOZ_OVERRIDE;
+  virtual bool DeallocPUDPSocketChild(PUDPSocketChild*) MOZ_OVERRIDE;
   virtual PDNSRequestChild* AllocPDNSRequestChild(const nsCString& aHost,
-                                                  const uint32_t& aFlags);
-  virtual bool DeallocPDNSRequestChild(PDNSRequestChild*);
-  virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
-                                                          const OptionalURIParams&);
-  virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);
-  virtual PRtspControllerChild* AllocPRtspControllerChild();
-  virtual bool DeallocPRtspControllerChild(PRtspControllerChild*);
+                                                  const uint32_t& aFlags) MOZ_OVERRIDE;
+  virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) MOZ_OVERRIDE;
+  virtual PRemoteOpenFileChild*
+    AllocPRemoteOpenFileChild(const URIParams&,
+                              const OptionalURIParams&) MOZ_OVERRIDE;
+  virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*) MOZ_OVERRIDE;
+  virtual PRtspControllerChild* AllocPRtspControllerChild() MOZ_OVERRIDE;
+  virtual bool DeallocPRtspControllerChild(PRtspControllerChild*) MOZ_OVERRIDE;
 };
 
 /**

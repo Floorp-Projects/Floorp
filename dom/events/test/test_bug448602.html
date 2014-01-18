@@ -61,6 +61,14 @@ function runTests() {
 */
 
   root.removeAttribute("onclick");
+  root.setAttribute("onclick", "...invalid script...");
+  SimpleTest.expectUncaughtException(true);
+  infos = els.getListenerInfoFor(root, {});
+  SimpleTest.expectUncaughtException(false);
+  is(infos.length, 1);
+  is(infos[0].listenerObject, null);
+
+  root.removeAttribute("onclick");
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 0, "Element shouldn't have listeners (2)");
 

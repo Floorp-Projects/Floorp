@@ -40,6 +40,7 @@
 #include "gfxImageSurface.h"
 #include "libyuv/convert.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Types.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -961,27 +962,25 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
     int cb_offset = size.width * size.height;
     int cr_offset = cb_offset + c_size;
-    nsRefPtr<gfxImageSurface> surf = rgb->mSurface->GetAsImageSurface();
+    RefPtr<gfx::SourceSurface> tempSurf = rgb->GetAsSourceSurface();
+    RefPtr<gfx::DataSourceSurface> surf = tempSurf->GetDataSurface();
 
-    switch (surf->Format()) {
-      case gfxImageFormatARGB32:
-      case gfxImageFormatRGB24:
-        libyuv::ARGBToI420(static_cast<uint8*>(surf->Data()), surf->Stride(),
+    switch (surf->GetFormat()) {
+      case gfx::SurfaceFormat::B8G8R8A8:
+      case gfx::SurfaceFormat::B8G8R8X8:
+        libyuv::ARGBToI420(static_cast<uint8*>(surf->GetData()), surf->Stride(),
                            yuv, size.width,
                            yuv + cb_offset, half_width,
                            yuv + cr_offset, half_width,
                            size.width, size.height);
         break;
-      case gfxImageFormatRGB16_565:
-        libyuv::RGB565ToI420(static_cast<uint8*>(surf->Data()), surf->Stride(),
+      case gfx::SurfaceFormat::R5G6B5:
+        libyuv::RGB565ToI420(static_cast<uint8*>(surf->GetData()), surf->Stride(),
                              yuv, size.width,
                              yuv + cb_offset, half_width,
                              yuv + cr_offset, half_width,
                              size.width, size.height);
         break;
-      case gfxImageFormatA1:
-      case gfxImageFormatA8:
-      case gfxImageFormatUnknown:
       default:
         MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format");
         MOZ_ASSERT(PR_FALSE);

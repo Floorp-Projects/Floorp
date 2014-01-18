@@ -964,6 +964,7 @@ class CallInfo
     }
 
     void setImplicitlyUsedUnchecked() {
+        fun_->setImplicitlyUsedUnchecked();
         thisArg_->setImplicitlyUsedUnchecked();
         for (uint32_t i = 0; i < argc(); i++)
             getArg(i)->setImplicitlyUsedUnchecked();

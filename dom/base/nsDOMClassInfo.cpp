@@ -590,7 +590,7 @@ IdToString(JSContext *cx, jsid id)
   if (JSID_IS_STRING(id))
     return JSID_TO_STRING(id);
   JS::Rooted<JS::Value> idval(cx);
-  if (!::JS_IdToValue(cx, id, idval.address()))
+  if (!::JS_IdToValue(cx, id, &idval))
     return nullptr;
   return JS::ToString(cx, idval);
 }
@@ -1311,7 +1311,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id, bool *aI
   } else {
       JS::Rooted<JS::Value> idval(cx);
       double array_index;
-      if (!::JS_IdToValue(cx, id, idval.address()) ||
+      if (!::JS_IdToValue(cx, id, &idval) ||
           !JS::ToNumber(cx, idval, &array_index) ||
           !::JS_DoubleIsInt32(array_index, &i)) {
         return -1;
@@ -4358,7 +4358,9 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JS_NewUCStringCopyN(cx, key.get(), key.Length());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-    JS_ValueToId(cx, STRING_TO_JSVAL(str), idp);
+    JS::Rooted<jsid> id(cx);
+    JS_ValueToId(cx, JS::StringValue(str), &id);
+    *idp = id;
 
     keys->RemoveElementAt(0);
 

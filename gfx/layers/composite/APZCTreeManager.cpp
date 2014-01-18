@@ -203,7 +203,17 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         apzc->NotifyLayersUpdated(container->GetFrameMetrics(),
                                   aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
 
+        // Use the composition bounds as the hit test region.
+        // Optionally, the GeckoContentController can provide a touch-sensitive
+        // region that constrains all frames associated with the controller.
+        // In this case we intersect the composition bounds with that region.
         ScreenRect visible(container->GetFrameMetrics().mCompositionBounds);
+        CSSRect touchSensitiveRegion;
+        if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
+          visible = visible.Intersect(touchSensitiveRegion
+                                      * container->GetFrameMetrics().LayersPixelsPerCSSPixel()
+                                      * LayerToScreenScale(1.0));
+        }
         apzc->SetLayerHitTestData(visible, aTransform, aLayer->GetTransform());
         APZC_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
                                                                               visible.width, visible.height,

@@ -82,6 +82,22 @@ public:
   }
 
   /**
+   * APZ uses |FrameMetrics::mCompositionBounds| for hit testing. Sometimes,
+   * widget code has knowledge of a touch-sensitive region that should
+   * additionally constrain hit testing for all frames associated with the
+   * controller. This method allows APZ to query the controller for such a
+   * region. A return value of true indicates that the controller has such a
+   * region, and it is returned in |aOutRegion|.
+   * TODO: once bug 928833 is implemented, this should be removed, as
+   * APZ can then get the correct touch-sensitive region for each frame
+   * directly from the layer.
+   */
+  virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion)
+  {
+    return false;
+  }
+
+  /**
    * General tranformation notices for consumers. These fire any time
    * the apzc is modifying the view, including panning, zooming, and
    * fling.

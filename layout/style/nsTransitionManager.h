@@ -91,11 +91,6 @@ struct ElementTransitions MOZ_FINAL
 
   // Either zero or one for each CSS property:
   nsTArray<ElementPropertyTransition> mPropertyTransitions;
-
-  // Generation counter for flushes of throttled transitions.
-  // Used to prevent updating the styles twice for a given element during
-  // UpdateAllThrottledStyles.
-  mozilla::TimeStamp mFlushGeneration;
 };
 
 
@@ -203,6 +198,10 @@ public:
   // other than primary frames.
   void UpdateAllThrottledStyles();
 
+  ElementTransitions* GetElementTransitions(mozilla::dom::Element *aElement,
+                                          nsCSSPseudoElements::Type aPseudoType,
+                                          bool aCreateIfNeeded);
+
 protected:
   virtual void ElementDataRemoved() MOZ_OVERRIDE;
   virtual void AddElementData(mozilla::css::CommonElementAnimationData* aData) MOZ_OVERRIDE;
@@ -216,24 +215,15 @@ private:
                                   nsStyleContext *aNewStyleContext,
                                   bool *aStartedAny,
                                   nsCSSPropertySet *aWhichStarted);
-  ElementTransitions* GetElementTransitions(mozilla::dom::Element *aElement,
-                                            nsCSSPseudoElements::Type aPseudoType,
-                                            bool aCreateIfNeeded);
   void WalkTransitionRule(ElementDependentRuleProcessorData* aData,
                           nsCSSPseudoElements::Type aPseudoType);
-
   // Update the animated styles of an element and its descendants.
   // If the element has a transition, it is flushed back to its primary frame.
   // If the element does not have a transition, then its style is reparented.
   void UpdateThrottledStylesForSubtree(nsIContent* aContent,
                                        nsStyleContext* aParentStyle,
                                        nsStyleChangeList &aChangeList);
-  // Update the style on aElement from the transition stored in this manager and
-  // the new parent style - aParentStyle. aElement must be transitioning or
-  // animated. Returns the updated style.
-  nsStyleContext* UpdateThrottledStyle(mozilla::dom::Element* aElement,
-                                       nsStyleContext* aParentStyle,
-                                       nsStyleChangeList &aChangeList);
+  void UpdateAllThrottledStylesInternal();
 };
 
 #endif /* !defined(nsTransitionManager_h_) */

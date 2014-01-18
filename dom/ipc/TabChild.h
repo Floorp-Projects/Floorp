@@ -209,45 +209,48 @@ public:
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
 
-    virtual bool RecvLoadURL(const nsCString& uri);
+    virtual bool RecvLoadURL(const nsCString& uri) MOZ_OVERRIDE;
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
-    virtual bool RecvShow(const nsIntSize& size);
-    virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
-    virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
-    virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint);
-    virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint);
-    virtual bool RecvHandleLongTap(const CSSIntPoint& aPoint);
-    virtual bool RecvHandleLongTapUp(const CSSIntPoint& aPoint);
-    virtual bool RecvNotifyTransformBegin(const ViewID& aViewId);
-    virtual bool RecvNotifyTransformEnd(const ViewID& aViewId);
-    virtual bool RecvActivate();
-    virtual bool RecvDeactivate();
+    virtual bool RecvShow(const nsIntSize& size) MOZ_OVERRIDE;
+    virtual bool RecvUpdateDimensions(const nsRect& rect,
+                                      const nsIntSize& size,
+                                      const ScreenOrientation& orientation) MOZ_OVERRIDE;
+    virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    virtual bool RecvHandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    virtual bool RecvHandleLongTapUp(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    virtual bool RecvNotifyTransformBegin(const ViewID& aViewId) MOZ_OVERRIDE;
+    virtual bool RecvNotifyTransformEnd(const ViewID& aViewId) MOZ_OVERRIDE;
+    virtual bool RecvActivate() MOZ_OVERRIDE;
+    virtual bool RecvDeactivate() MOZ_OVERRIDE;
     virtual bool RecvMouseEvent(const nsString& aType,
                                 const float&    aX,
                                 const float&    aY,
                                 const int32_t&  aButton,
                                 const int32_t&  aClickCount,
                                 const int32_t&  aModifiers,
-                                const bool&     aIgnoreRootScrollFrame);
-    virtual bool RecvRealMouseEvent(const mozilla::WidgetMouseEvent& event);
-    virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event);
-    virtual bool RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& event);
+                                const bool&     aIgnoreRootScrollFrame) MOZ_OVERRIDE;
+    virtual bool RecvRealMouseEvent(const mozilla::WidgetMouseEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& event) MOZ_OVERRIDE;
     virtual bool RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
-                                    const ScrollableLayerGuid& aGuid);
+                                    const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
-                                        const ScrollableLayerGuid& aGuid);
+                                        const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvKeyEvent(const nsString& aType,
                               const int32_t&  aKeyCode,
                               const int32_t&  aCharCode,
                               const int32_t&  aModifiers,
-                              const bool&     aPreventDefault);
-    virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event);
-    virtual bool RecvTextEvent(const mozilla::WidgetTextEvent& event);
-    virtual bool RecvSelectionEvent(const mozilla::WidgetSelectionEvent& event);
-    virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
-    virtual bool RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalScope);
+                              const bool&     aPreventDefault) MOZ_OVERRIDE;
+    virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvTextEvent(const mozilla::WidgetTextEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvSelectionEvent(const mozilla::WidgetSelectionEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture) MOZ_OVERRIDE;
+    virtual bool RecvLoadRemoteScript(const nsString& aURL,
+                                      const bool& aRunInGlobalScope) MOZ_OVERRIDE;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
@@ -257,22 +260,23 @@ public:
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfx::Matrix& transform,
                                 const nsString& bgcolor,
                                 const uint32_t& renderFlags, const bool& flushLayout,
-                                const nsIntSize& renderSize);
-    virtual bool DeallocPDocumentRendererChild(PDocumentRendererChild* actor);
+                                const nsIntSize& renderSize) MOZ_OVERRIDE;
+    virtual bool DeallocPDocumentRendererChild(PDocumentRendererChild* actor) MOZ_OVERRIDE;
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
                                                   const gfx::Matrix& transform,
                                                   const nsString& bgcolor,
                                                   const uint32_t& renderFlags,
                                                   const bool& flushLayout,
-                                                  const nsIntSize& renderSize);
+                                                  const nsIntSize& renderSize) MOZ_OVERRIDE;
 
     virtual PContentDialogChild* AllocPContentDialogChild(const uint32_t&,
                                                           const nsCString&,
                                                           const nsCString&,
                                                           const InfallibleTArray<int>&,
-                                                          const InfallibleTArray<nsString>&);
-    virtual bool DeallocPContentDialogChild(PContentDialogChild* aDialog);
+                                                          const InfallibleTArray<nsString>&)
+                                                          MOZ_OVERRIDE;
+    virtual bool DeallocPContentDialogChild(PContentDialogChild* aDialog) MOZ_OVERRIDE;
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                InfallibleTArray<int>& aIntParams,
                                InfallibleTArray<nsString>& aStringParams);
@@ -288,16 +292,19 @@ public:
                                              const IPC::Principal& aPrincipal);
 #endif /* DEBUG */
 
-    virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(const nsCString& aType,
-                                                                                const nsCString& aAccess,
-                                                                                const IPC::Principal& aPrincipal);
-    virtual bool DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor);
+    virtual PContentPermissionRequestChild*
+    AllocPContentPermissionRequestChild(const nsCString& aType,
+                                        const nsCString& aAccess,
+                                        const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor) MOZ_OVERRIDE;
 
     virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
             const URIParams& manifestURI,
             const URIParams& documentURI,
-            const bool& stickDocument);
-    virtual bool DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate);
+            const bool& stickDocument) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate) MOZ_OVERRIDE;
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 
@@ -376,9 +383,9 @@ protected:
 
     virtual PIndexedDBChild* AllocPIndexedDBChild(const nsCString& aGroup,
                                                   const nsCString& aASCIIOrigin,
-                                                  bool* /* aAllowed */);
+                                                  bool* /* aAllowed */) MOZ_OVERRIDE;
 
-    virtual bool DeallocPIndexedDBChild(PIndexedDBChild* aActor);
+    virtual bool DeallocPIndexedDBChild(PIndexedDBChild* aActor) MOZ_OVERRIDE;
 
 private:
     /**
@@ -402,7 +409,7 @@ private:
 
     bool UseDirectCompositor();
 
-    void ActorDestroy(ActorDestroyReason why);
+    void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };
     bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);

@@ -1735,6 +1735,12 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
                                          bool& aDrawBackgroundImage,
                                          bool& aDrawBackgroundColor)
 {
+  if (aFrame->IsThemed()) {
+    aDrawBackgroundColor = false;
+    aDrawBackgroundImage = false;
+    return NS_RGBA(0,0,0,0);
+  }
+
   aDrawBackgroundImage = true;
   aDrawBackgroundColor = true;
 
