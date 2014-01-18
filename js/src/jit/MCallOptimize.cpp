@@ -196,6 +196,7 @@ IonBuilder::inlineMathFunction(CallInfo &callInfo, MMathFunction::Function funct
     if (!cache)
         return InliningStatus_NotInlined;
 
+    callInfo.fun()->setImplicitlyUsedUnchecked();
     callInfo.thisArg()->setImplicitlyUsedUnchecked();
 
     MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), function, cache);
