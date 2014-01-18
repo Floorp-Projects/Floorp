@@ -2244,6 +2244,8 @@ Seer::ResetInternal()
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_pages;"));
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts;"));
 
+  VacuumDatabase();
+
   // Go ahead and ensure this is flushed to disk
   CommitTransaction();
   BeginTransaction();
