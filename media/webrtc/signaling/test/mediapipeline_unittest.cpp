@@ -25,7 +25,7 @@
 #include "MediaPipelineFilter.h"
 #include "runnable_utils.h"
 #include "transportflow.h"
-#include "transportlayerprsock.h"
+#include "transportlayerloopback.h"
 #include "transportlayerdtls.h"
 #include "mozilla/SyncRunnable.h"
 
@@ -50,17 +50,26 @@ class TransportInfo {
  public:
   TransportInfo() :
     flow_(nullptr),
-    prsock_(nullptr),
+    loopback_(nullptr),
     dtls_(nullptr) {}
+
+  static void InitAndConnect(TransportInfo &client, TransportInfo &server) {
+    client.Init(true);
+    server.Init(false);
+    client.PushLayers();
+    server.PushLayers();
+    client.Connect(&server);
+    server.Connect(&client);
+  }
 
   void Init(bool client) {
     nsresult res;
 
     flow_ = new TransportFlow();
-    prsock_ = new TransportLayerPrsock();
+    loopback_ = new TransportLayerLoopback();
     dtls_ = new TransportLayerDtls();
 
-    res = prsock_->Init();
+    res = loopback_->Init();
     if (res != NS_OK) {
       FreeLayers();
     }
@@ -80,7 +89,7 @@ class TransportInfo {
 
     nsAutoPtr<std::queue<TransportLayer *> > layers(
       new std::queue<TransportLayer *>);
-    layers->push(prsock_);
+    layers->push(loopback_);
     layers->push(dtls_);
     res = flow_->PushLayers(layers);
     if (res != NS_OK) {
@@ -89,19 +98,33 @@ class TransportInfo {
     ASSERT_EQ((nsresult)NS_OK, res);
   }
 
+  void Connect(TransportInfo* peer) {
+    MOZ_ASSERT(loopback_);
+    MOZ_ASSERT(peer->loopback_);
+
+    loopback_->Connect(peer->loopback_);
+  }
+
   // Free the memory allocated at the beginning of Init
   // if failure occurs before layers setup.
   void FreeLayers() {
-    delete prsock_;
+    delete loopback_;
+    loopback_ = nullptr;
     delete dtls_;
+    dtls_ = nullptr;
   }
 
   void Stop() {
+    if (loopback_) {
+      loopback_->Disconnect();
+    }
+    loopback_ = nullptr;
+    dtls_ = nullptr;
     flow_ = nullptr;
   }
 
   mozilla::RefPtr<TransportFlow> flow_;
-  TransportLayerPrsock *prsock_;
+  TransportLayerLoopback *loopback_;
   TransportLayerDtls *dtls_;
 };
 
@@ -114,32 +137,19 @@ class TestAgent {
       audio_pipeline_() {
   }
 
-  void ConnectRtpSocket(PRFileDesc *fd, bool client) {
-    ConnectSocket(&audio_rtp_transport_, fd, client);
+  static void ConnectRtp(TestAgent *client, TestAgent *server) {
+    TransportInfo::InitAndConnect(client->audio_rtp_transport_,
+                                  server->audio_rtp_transport_);
   }
 
-  void ConnectRtcpSocket(PRFileDesc *fd, bool client) {
-    ConnectSocket(&audio_rtcp_transport_, fd, client);
+  static void ConnectRtcp(TestAgent *client, TestAgent *server) {
+    TransportInfo::InitAndConnect(client->audio_rtcp_transport_,
+                                  server->audio_rtcp_transport_);
   }
 
-  void ConnectBundleSocket(PRFileDesc *fd, bool client) {
-    ConnectSocket(&bundle_transport_, fd, client);
-  }
-
-  void ConnectSocket(TransportInfo *transport, PRFileDesc *fd, bool client) {
-    nsresult res;
-
-    transport->Init(client);
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(transport->prsock_, &TransportLayerPrsock::Import, fd, &res));
-    if (!NS_SUCCEEDED(res)) {
-      transport->FreeLayers();
-    }
-    ASSERT_TRUE(NS_SUCCEEDED(res));
-
-    transport->PushLayers();
+  static void ConnectBundle(TestAgent *client, TestAgent *server) {
+    TransportInfo::InitAndConnect(client->bundle_transport_,
+                                  server->bundle_transport_);
   }
 
   virtual void CreatePipelines_s(bool aIsRtcpMux) = 0;
@@ -176,8 +186,6 @@ class TestAgent {
       WrapRunnable(this, &TestAgent::StopInt));
 
     audio_pipeline_ = nullptr;
-
-    PR_Sleep(1000); // Deal with race condition
   }
 
  protected:
@@ -322,61 +330,30 @@ class TestAgentReceive : public TestAgent {
 
 class MediaPipelineTest : public ::testing::Test {
  public:
-  MediaPipelineTest() : p1_() {
-    rtp_fds_[0] = rtp_fds_[1] = nullptr;
-    rtcp_fds_[0] = rtcp_fds_[1] = nullptr;
-    bundle_fds_[0] = bundle_fds_[1] = nullptr;
+  ~MediaPipelineTest() {
+    p1_.Stop();
+    p2_.Stop();
   }
 
   // Setup transport.
   void InitTransports(bool aIsRtcpMux) {
-    // Create RTP related transport.
-    PRStatus status =  PR_NewTCPSocketPair(rtp_fds_);
-    ASSERT_EQ(status, PR_SUCCESS);
-
-    // RTP, DTLS server
+    // RTP, p1_ is server, p2_ is client
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p1_, &TestAgent::ConnectRtpSocket, rtp_fds_[0], false));
-
-    // RTP, DTLS client
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::ConnectRtpSocket, rtp_fds_[1], true));
+      WrapRunnableNM(&TestAgent::ConnectRtp, &p2_, &p1_));
 
     // Create RTCP flows separately if we are not muxing them.
     if(!aIsRtcpMux) {
-      status = PR_NewTCPSocketPair(rtcp_fds_);
-      ASSERT_EQ(status, PR_SUCCESS);
-
-      // RTCP, DTLS server
+      // RTCP, p1_ is server, p2_ is client
       mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnable(&p1_, &TestAgent::ConnectRtcpSocket, rtcp_fds_[0], false));
-
-      // RTCP, DTLS client
-      mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnable(&p2_, &TestAgent::ConnectRtcpSocket, rtcp_fds_[1], true));
+        WrapRunnableNM(&TestAgent::ConnectRtcp, &p2_, &p1_));
     }
 
-    status = PR_NewTCPSocketPair(bundle_fds_);
-    // BUNDLE, DTLS server
+    // BUNDLE, p1_ is server, p2_ is client
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p1_,
-                   &TestAgent::ConnectBundleSocket,
-                   bundle_fds_[0],
-                   false));
-
-    // BUNDLE, DTLS client
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p2_,
-                   &TestAgent::ConnectBundleSocket,
-                   bundle_fds_[1],
-                   true));
-
+      WrapRunnableNM(&TestAgent::ConnectBundle, &p2_, &p1_));
   }
 
   // Verify RTP and RTCP
@@ -431,11 +408,11 @@ class MediaPipelineTest : public ::testing::Test {
     PR_Sleep(10000);
 
     if (bundle) {
-      // Filter should have eaten everything, so no RTCP
+      // Filter should have eaten everything
+      ASSERT_EQ(0, p2_.GetAudioRtpCount());
     } else {
       ASSERT_GE(p1_.GetAudioRtpCount(), 40);
-// TODO: Fix to not fail or crash (Bug 947663)
-//    ASSERT_GE(p2_.GetAudioRtpCount(), 40);
+      ASSERT_GE(p2_.GetAudioRtpCount(), 40);
       ASSERT_GE(p2_.GetAudioRtcpCount(), 1);
     }
 
@@ -450,9 +427,6 @@ class MediaPipelineTest : public ::testing::Test {
     TestAudioSend(true, bundle_accepted, localFilter, remoteFilter);
   }
 protected:
-  PRFileDesc *rtp_fds_[2];
-  PRFileDesc *rtcp_fds_[2];
-  PRFileDesc *bundle_fds_[2];
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };
