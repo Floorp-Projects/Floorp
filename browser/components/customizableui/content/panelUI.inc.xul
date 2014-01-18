@@ -11,7 +11,7 @@
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
     <panelview id="PanelUI-mainView" context="customizationPanelContextMenu">
       <vbox id="PanelUI-contents-scroller">
-        <vbox id="PanelUI-contents" class="panelUI-grid"/>
+        <vbox id="PanelUI-contents"/>
       </vbox>
 
       <footer id="PanelUI-footer">
@@ -178,6 +178,6 @@
        level="top"
        hidden="true">
   <vbox id="widget-overflow-scroller">
-    <vbox id="widget-overflow-list" class="widget-overflow-list"/>
+    <vbox id="widget-overflow-list"/>
   </vbox>
 </panel>
