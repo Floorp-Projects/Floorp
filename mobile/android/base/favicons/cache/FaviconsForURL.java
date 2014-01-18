@@ -110,8 +110,11 @@ public class FaviconsForURL {
 
             if (element.mIsPrimary) {
                 if (element.mInvalidated) {
-                    // TODO: Replace with `return null` when ICO decoder is introduced.
-                    break;
+                    // We return null here, despite the possible existence of other primaries,
+                    // because we know the most suitable primary for this request exists, but is
+                    // no longer in the cache. By returning null, we cause the caller to load the
+                    // missing primary from the database and call again.
+                    return null;
                 }
                 return element;
             }
