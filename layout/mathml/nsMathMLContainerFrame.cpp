@@ -1532,7 +1532,7 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
 
 /*static*/ void
 nsMathMLContainerFrame::PropagateFrameFlagFor(nsIFrame* aFrame,
-                                              nsFrameState  aFlags)
+                                              uint64_t  aFlags)
 {
   if (!aFrame || !aFlags)
     return;
@@ -1584,7 +1584,7 @@ nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
 
 nsIFrame*
 NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                           nsFrameState aFlags)
+                           uint32_t aFlags)
 {
   nsMathMLmathBlockFrame* it = new (aPresShell) nsMathMLmathBlockFrame(aContext);
   it->SetFlags(aFlags);

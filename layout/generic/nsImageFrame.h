@@ -54,6 +54,9 @@ private:
   nsImageFrame *mFrame;
 };
 
+#define IMAGE_SIZECONSTRAINED       NS_FRAME_STATE_BIT(20)
+#define IMAGE_GOTINITIALREFLOW      NS_FRAME_STATE_BIT(21)
+
 #define ImageFrameSuper nsSplittableFrame
 
 class nsImageFrame : public ImageFrameSuper,

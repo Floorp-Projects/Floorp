@@ -342,7 +342,7 @@ public:
   // Sets flags on aFrame and all descendant frames
   static void
   PropagateFrameFlagFor(nsIFrame* aFrame,
-                        nsFrameState aFlags);
+                        uint64_t  aFlags);
 
   // helper to let the rebuild of automatic data (presentation data
   // and embellishement data) walk through a subtree that may contain
@@ -411,7 +411,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
-          nsStyleContext* aContext, nsFrameState aFlags);
+          nsStyleContext* aContext, uint32_t aFlags);
 
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames

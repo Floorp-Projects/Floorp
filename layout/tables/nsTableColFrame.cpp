@@ -47,7 +47,7 @@ nsTableColFrame::SetColType(nsTableColType aType)
                 GetPrevContinuation()->GetNextSibling() == this),
                "spanned content cols must be continuations");
   uint32_t type = aType - eColContent;
-  mState |= nsFrameState(type << COL_TYPE_OFFSET);
+  mState |= (type << COL_TYPE_OFFSET);
 }
 
 /* virtual */ void

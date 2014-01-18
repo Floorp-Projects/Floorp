@@ -245,7 +245,7 @@ NS_DECLARE_FRAME_PROPERTY(InsideBulletProperty, nullptr)
 //----------------------------------------------------------------------
 
 nsIFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags)
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags)
 {
   nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
   it->SetFlags(aFlags);

@@ -13,6 +13,17 @@
 
 class nsLineLayout;
 
+/**  In Bidi left (or right) margin/padding/border should be applied to left
+ *  (or right) most frame (or a continuation frame).
+ *  This state value shows if this frame is left (or right) most continuation
+ *  or not.
+ */
+#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     NS_FRAME_STATE_BIT(21)
+
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     NS_FRAME_STATE_BIT(22)
+
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    NS_FRAME_STATE_BIT(23)
+
 typedef nsContainerFrame nsInlineFrameBase;
 
 /**

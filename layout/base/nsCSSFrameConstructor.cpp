@@ -885,7 +885,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
     mFrameState(aHistoryState),
-    mAdditionalStateBits(nsFrameState(0)),
+    mAdditionalStateBits(0),
     // If the fixed-pos containing block is equal to the abs-pos containing
     // block, use the abs-pos containing block's abs-pos list for fixed-pos
 	// frames.
@@ -919,7 +919,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
-    mAdditionalStateBits(nsFrameState(0)),
+    mAdditionalStateBits(0),
     // If the fixed-pos containing block is equal to the abs-pos containing
     // block, use the abs-pos containing block's abs-pos list for fixed-pos
 	// frames.
@@ -2875,7 +2875,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // a dropdown list. The display area and button are created through anonymous content.
     // The drop-down list's frame is created explicitly. The combobox frame shares its content
     // with the drop-down list.
-    nsFrameState flags = NS_BLOCK_FLOAT_MGR;
+    uint32_t flags = NS_BLOCK_FLOAT_MGR;
     nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, styleContext, flags);
 
     // Save the history state so we don't restore during construction
@@ -8051,7 +8051,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     newFrame->Init(content, aParentFrame, aFrame);
 #endif  
   } else if (nsGkAtoms::columnSetFrame == frameType) {
-    newFrame = NS_NewColumnSetFrame(shell, styleContext, nsFrameState(0));
+    newFrame = NS_NewColumnSetFrame(shell, styleContext, 0);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::pageFrame == frameType) {
     nsIFrame* canvasFrame;
@@ -10330,8 +10330,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO
       || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
     nsIFrame* columnSetFrame = nullptr;
-    columnSetFrame =
-      NS_NewColumnSetFrame(mPresShell, aStyleContext, nsFrameState(0));
+    columnSetFrame = NS_NewColumnSetFrame(mPresShell, aStyleContext, 0);
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
     blockStyle = mPresShell->StyleSet()->
