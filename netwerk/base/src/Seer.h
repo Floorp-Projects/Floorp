@@ -22,6 +22,7 @@
 class nsIDNSService;
 class nsINetworkSeerVerifier;
 class nsIThread;
+class nsITimer;
 
 class mozIStorageConnection;
 class mozIStorageService;
@@ -61,6 +62,8 @@ private:
   friend class SeerResetEvent;
   friend class SeerPredictionRunner;
   friend class SeerDBShutdownRunner;
+  friend class SeerCommitTimerInitEvent;
+  friend class SeerNewTransactionEvent;
 
   void CheckForAndDeleteOldDBFile();
   nsresult EnsureInitStorage();
@@ -152,6 +155,16 @@ private:
 
   void ResetInternal();
 
+  void BeginTransaction()
+  {
+    mDB->BeginTransaction();
+  }
+
+  void CommitTransaction()
+  {
+    mDB->CommitTransaction();
+  }
+
   // Observer-related stuff
   nsresult InstallObserver();
   void RemoveObserver();
@@ -200,6 +213,13 @@ private:
   nsAutoPtr<SeerTelemetryAccumulators> mAccumulators;
 
   nsRefPtr<SeerDNSListener> mDNSListener;
+
+  nsCOMPtr<nsITimer> mCommitTimer;
+
+#ifdef SEER_TESTS
+  friend class SeerPrepareForDnsTestEvent;
+  void PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri);
+#endif
 };
 
 } // ::mozilla::net
