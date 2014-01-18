@@ -33,18 +33,6 @@ toolbarbutton:-moz-lwtheme {
   text-align: center;
 }
 
-.toolbarbutton-multiline-text {
-  display: none;
-}
-
-toolbarbutton[wrap="true"] > .toolbarbutton-text {
-  display: none;
-}
-
-toolbarbutton[wrap="true"] > .toolbarbutton-multiline-text {
-  display: -moz-box;
-}
-
 toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }

@@ -65,18 +65,13 @@
   padding: .5em 0;
 }
 
-.panelUI-grid .panel-combined-button > .toolbarbutton-text,
-.widget-overflow-list .toolbarbutton-menubutton-button > .toolbarbutton-text,
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text {
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text,
+#bookmarks-menu-button > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbaritem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarbutton > .toolbarbutton-text {
   font-size: 10px;
-}
-
-toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-multiline-text,
-.panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  font-size: 10px;
-  margin: 2px 0 0;
-  text-align: center;
 }
 
 #wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,

@@ -479,7 +479,9 @@ let CustomizableUIInternal = {
         this.ensureButtonContextMenu(node, aAreaNode);
         if (node.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
           node.setAttribute("tabindex", "0");
-          node.setAttribute("wrap", "true");
+          if (!node.hasAttribute("type")) {
+            node.setAttribute("type", "wrap");
+          }
         }
 
         this.insertWidgetBefore(node, currentNode, container, aArea);
@@ -656,7 +658,9 @@ let CustomizableUIInternal = {
       }
       this.ensureButtonContextMenu(child, aPanel);
       child.setAttribute("tabindex", "0");
-      child.setAttribute("wrap", "true");
+      if (!child.hasAttribute("type")) {
+        child.setAttribute("type", "wrap");
+      }
     }
 
     this.registerBuildArea(CustomizableUI.AREA_PANEL, aPanel);
@@ -705,7 +709,9 @@ let CustomizableUIInternal = {
         container.removeChild(widgetNode);
       } else {
         widgetNode.removeAttribute("tabindex");
-        widgetNode.removeAttribute("wrap");
+        if (widgetNode.getAttribute("type") == "wrap") {
+          widgetNode.removeAttribute("type");
+        }
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
@@ -855,7 +861,9 @@ let CustomizableUIInternal = {
       this.ensureButtonContextMenu(widgetNode, aAreaNode);
       if (widgetNode.localName == "toolbarbutton" && areaId == CustomizableUI.AREA_PANEL) {
         widgetNode.setAttribute("tabindex", "0");
-        widgetNode.setAttribute("wrap", "true");
+        if (!widgetNode.hasAttribute("type")) {
+          widgetNode.setAttribute("type", "wrap");
+        }
       }
     }
 
