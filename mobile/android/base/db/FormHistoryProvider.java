@@ -20,7 +20,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
 
-public class FormHistoryProvider extends PerProfileContentProvider {
+public class FormHistoryProvider extends SQLiteBridgeContentProvider {
     static final String TABLE_FORM_HISTORY = "moz_formhistory";
     static final String TABLE_DELETED_FORM_HISTORY = "moz_deleted_formhistory";
 
