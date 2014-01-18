@@ -11,77 +11,91 @@ function test() {
          "test/test-bug-658368-time-methods.html");
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    Task.spawn(runner);
+    openConsole(null, consoleOpened);
   }, true);
+}
 
-  function* runner() {
-    let hud1 = yield openConsole();
+function consoleOpened(hud) {
+  outputNode = hud.outputNode;
 
-    yield waitForMessages({
-      webconsole: hud1,
-      messages: [{
-        name: "aTimer started",
-        consoleTime: "aTimer",
-      }, {
-        name: "aTimer end",
-        consoleTimeEnd: "aTimer",
-      }],
-    });
+  waitForSuccess({
+    name: "aTimer started",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("aTimer: timer started") > -1;
+    },
+    successFn: function()
+    {
+      findLogEntry("ms");
+      // The next test makes sure that timers with the same name but in separate
+      // tabs, do not contain the same value.
+      addTab("data:text/html;charset=utf-8,<script type='text/javascript'>" +
+             "console.timeEnd('bTimer');</script>");
+      browser.addEventListener("load", function onLoad() {
+        browser.removeEventListener("load", onLoad, true);
+        openConsole(null, testTimerIndependenceInTabs);
+      }, true);
+    },
+    failureFn: finishTest,
+  });
+}
 
-    let deferred = promise.defer();
+function testTimerIndependenceInTabs(hud) {
+  outputNode = hud.outputNode;
 
-    // The next test makes sure that timers with the same name but in separate
-    // tabs, do not contain the same value.
-    addTab("data:text/html;charset=utf-8,<script>" +
-           "console.timeEnd('bTimer');</script>");
-    browser.addEventListener("load", function onLoad() {
-      browser.removeEventListener("load", onLoad, true);
-      openConsole().then((hud) => {
-        deferred.resolve(hud);
-      });
-    }, true);
-
-    let hud2 = yield deferred.promise;
-
-    testLogEntry(hud2.outputNode, "bTimer: timer started",
-                 "bTimer was not started", false, true);
+  executeSoon(function() {
+    testLogEntry(outputNode, "bTimer: timer started", "bTimer was not started",
+                 false, true);
 
     // The next test makes sure that timers with the same name but in separate
     // pages, do not contain the same value.
-    content.location = "data:text/html;charset=utf-8,<script>" +
-                       "console.time('bTimer');</script>";
-
-    yield waitForMessages({
-      webconsole: hud2,
-      messages: [{
-        name: "bTimer started",
-        consoleTime: "bTimer",
-      }],
-    });
-
-    hud2.jsterm.clearOutput();
-
-    deferred = promise.defer();
-
-    // Now the following console.timeEnd() call shouldn't display anything,
-    // if the timers in different pages are not related.
     browser.addEventListener("load", function onLoad() {
       browser.removeEventListener("load", onLoad, true);
-      deferred.resolve(null);
+      executeSoon(testTimerIndependenceInSameTab);
     }, true);
+    content.location = "data:text/html;charset=utf-8,<script type='text/javascript'>" +
+           "console.time('bTimer');</script>";
+  });
+}
 
-    content.location = "data:text/html;charset=utf-8," +
-                       "<script>console.timeEnd('bTimer');</script>";
+function testTimerIndependenceInSameTab() {
+  let hud = HUDService.getHudByWindow(content);
+  outputNode = hud.outputNode;
 
-    yield deferred.promise;
+  waitForSuccess({
+    name: "bTimer started",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("bTimer: timer started") > -1;
+    },
+    successFn: function() {
+      hud.jsterm.clearOutput();
 
-    testLogEntry(hud2.outputNode, "bTimer: timer started",
-                 "bTimer was not started", false, true);
+      // Now the following console.timeEnd() call shouldn't display anything,
+      // if the timers in different pages are not related.
+      browser.addEventListener("load", function onLoad() {
+        browser.removeEventListener("load", onLoad, true);
+        executeSoon(testTimerIndependenceInSameTabAgain);
+      }, true);
+      content.location = "data:text/html;charset=utf-8," +
+        "<script type='text/javascript'>" +
+        "console.timeEnd('bTimer');</script>";
+    },
+    failureFn: finishTest,
+  });
+}
 
-    yield closeConsole(gBrowser.selectedTab);
+function testTimerIndependenceInSameTabAgain() {
+  let hud = HUDService.getHudByWindow(content);
+  outputNode = hud.outputNode;
 
-    gBrowser.removeCurrentTab();
+  executeSoon(function() {
+    testLogEntry(outputNode, "bTimer: timer started", "bTimer was not started",
+                 false, true);
 
-    executeSoon(finishTest);
-  }
+    closeConsole(gBrowser.selectedTab, function() {
+      gBrowser.removeCurrentTab();
+      executeSoon(finishTest);
+    });
+  });
 }
