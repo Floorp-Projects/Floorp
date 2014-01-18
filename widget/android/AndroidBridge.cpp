@@ -474,7 +474,9 @@ AndroidBridge::GetScreenDepth()
 
     const int DEFAULT_DEPTH = 16;
 
-    sDepth = GeckoAppShell::GetScreenDepthWrapper();
+    if (HasEnv()) {
+        sDepth = GeckoAppShell::GetScreenDepthWrapper();
+    }
     if (!sDepth)
         return DEFAULT_DEPTH;
 
@@ -699,6 +701,9 @@ AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, i
     ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
 
     if (!jEnv) {
+        if (!HasEnv()) {
+            return false;
+        }
         jEnv = GetJNIEnv();
     }
 
@@ -723,6 +728,9 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
     ALOG_BRIDGE("AndroidBridge::GetStaticStringField %s", fieldName);
 
     if (!jEnv) {
+        if (!HasEnv()) {
+            return false;
+        }
         jEnv = GetJNIEnv();
     }
 
@@ -1589,6 +1597,9 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
                               const int32_t      aPort,
                               nsACString & aResult)
 {
+    if (!HasEnv()) {
+        return NS_ERROR_FAILURE;
+    }
     JNIEnv* env = GetJNIEnv();
 
     AutoLocalJNIFrame jniFrame(env, 1);

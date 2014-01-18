@@ -155,6 +155,10 @@ public:
         return sBridge->mJNIEnv;
     }
 
+    static bool HasEnv() {
+        return sBridge && sBridge->mJNIEnv;
+    }
+
     // The bridge needs to be constructed via ConstructBridge first,
     // and then once the Gecko main thread is spun up (Gecko side),
     // SetMainThread should be called which will create the JNIEnv for
