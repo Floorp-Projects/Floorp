@@ -55,8 +55,8 @@ public:
   DeallocPGrallocBufferParent(PGrallocBufferParent* actor) MOZ_OVERRIDE;
 
   // PImageBridge
-  virtual bool RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply);
-  virtual bool RecvUpdateNoSwap(const EditArray& aEdits);
+  virtual bool RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply) MOZ_OVERRIDE;
+  virtual bool RecvUpdateNoSwap(const EditArray& aEdits) MOZ_OVERRIDE;
 
   virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
 

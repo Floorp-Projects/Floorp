@@ -22,12 +22,12 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     CHECK(obj);
     vobj = OBJECT_TO_JSVAL(obj);
 
-    JSFunction *funGet = JS_NewFunction(cx, NativeGetterSetter, 0, 0, nullptr, "get");
+    JSFunction *funGet = JS_NewFunction(cx, NativeGetterSetter, 0, 0, JS::NullPtr(), "get");
     CHECK(funGet);
     JS::RootedObject funGetObj(cx, JS_GetFunctionObject(funGet));
     JS::RootedValue vget(cx, OBJECT_TO_JSVAL(funGetObj));
 
-    JSFunction *funSet = JS_NewFunction(cx, NativeGetterSetter, 1, 0, nullptr, "set");
+    JSFunction *funSet = JS_NewFunction(cx, NativeGetterSetter, 1, 0, JS::NullPtr(), "set");
     CHECK(funSet);
     JS::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
     JS::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));

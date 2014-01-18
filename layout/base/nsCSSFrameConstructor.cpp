@@ -68,6 +68,7 @@
 #include "nsPageContentFrame.h"
 #include "RestyleManager.h"
 #include "StickyScrollContainer.h"
+#include "nsFieldSetFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -5650,21 +5651,32 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
         (aType == FIXED_POS && !frame->StyleDisplay()->HasTransform(frame))) {
       continue;
     }
-    nsIFrame* absPosCBCandidate = nullptr;
-    if (frame->GetType() == nsGkAtoms::scrollFrame) {
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-      absPosCBCandidate = scrollFrame->GetScrolledFrame();
-    } else {
-      // Only first continuations can be containing blocks.
-      absPosCBCandidate = frame->FirstContinuation();
+    nsIFrame* absPosCBCandidate = frame;
+    nsIAtom* type = absPosCBCandidate->GetType();
+    if (type == nsGkAtoms::fieldSetFrame) {
+      absPosCBCandidate = static_cast<nsFieldSetFrame*>(absPosCBCandidate)->GetInner();
+      if (!absPosCBCandidate) {
+        continue;
+      }
+      type = absPosCBCandidate->GetType();
     }
+    if (type == nsGkAtoms::scrollFrame) {
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(absPosCBCandidate);
+      absPosCBCandidate = scrollFrame->GetScrolledFrame();
+      if (!absPosCBCandidate) {
+        continue;
+      }
+      type = absPosCBCandidate->GetType();
+    }
+    // Only first continuations can be containing blocks.
+    absPosCBCandidate = absPosCBCandidate->FirstContinuation();
     // Is the frame really an absolute container?
-    if (!absPosCBCandidate || !absPosCBCandidate->IsAbsoluteContainer()) {
+    if (!absPosCBCandidate->IsAbsoluteContainer()) {
       continue;
     }
 
     // For tables, skip the inner frame and consider the outer table frame.
-    if (absPosCBCandidate->GetType() == nsGkAtoms::tableFrame) {
+    if (type == nsGkAtoms::tableFrame) {
       continue;
     }
     // For outer table frames, we can just return absPosCBCandidate.

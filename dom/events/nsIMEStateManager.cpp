@@ -68,6 +68,10 @@ public:
                 nsIContent* aContent);
   void     Destroy(void);
   bool     IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
+  bool     KeepAliveDuringDeactive() const
+  {
+    return !!(mObserving & nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
+  }
 
   nsCOMPtr<nsIWidget>            mWidget;
   nsCOMPtr<nsISelection>         mSel;
@@ -226,6 +230,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   }
 
   if (sTextStateObserver &&
+      (aPresContext || !sTextStateObserver->KeepAliveDuringDeactive()) &&
       !sTextStateObserver->IsManaging(aPresContext, aContent)) {
     DestroyTextStateManager();
   }

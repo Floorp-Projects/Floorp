@@ -1570,6 +1570,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mZoom.scale *= parentResolutionChange;
     mFrameMetrics.mResolution = aLayerMetrics.mResolution;
     mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
+    mFrameMetrics.mHasScrollgrab = aLayerMetrics.mHasScrollgrab;
 
     // If the layers update was not triggered by our own repaint request, then
     // we want to take the new scroll offset.

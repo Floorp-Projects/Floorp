@@ -70,32 +70,33 @@ public:
 protected:
   virtual PHttpChannelParent*
     AllocPHttpChannelParent(PBrowserParent*, const SerializedLoadContext&,
-                            const HttpChannelCreationArgs& aOpenArgs);
+                            const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool
     RecvPHttpChannelConstructor(
                       PHttpChannelParent* aActor,
                       PBrowserParent* aBrowser,
                       const SerializedLoadContext& aSerialized,
-                      const HttpChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPHttpChannelParent(PHttpChannelParent*);
-  virtual bool DeallocPCookieServiceParent(PCookieServiceParent*);
-  virtual PWyciwygChannelParent* AllocPWyciwygChannelParent();
-  virtual bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*);
+                      const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
+  virtual bool DeallocPHttpChannelParent(PHttpChannelParent*) MOZ_OVERRIDE;
+  virtual bool DeallocPCookieServiceParent(PCookieServiceParent*) MOZ_OVERRIDE;
+  virtual PWyciwygChannelParent* AllocPWyciwygChannelParent() MOZ_OVERRIDE;
+  virtual bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*) MOZ_OVERRIDE;
   virtual PFTPChannelParent*
     AllocPFTPChannelParent(PBrowserParent* aBrowser,
                            const SerializedLoadContext& aSerialized,
-                           const FTPChannelCreationArgs& aOpenArgs);
+                           const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool
     RecvPFTPChannelConstructor(
                       PFTPChannelParent* aActor,
                       PBrowserParent* aBrowser,
                       const SerializedLoadContext& aSerialized,
-                      const FTPChannelCreationArgs& aOpenArgs);
-  virtual bool DeallocPFTPChannelParent(PFTPChannelParent*);
-  virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
-                                                  const SerializedLoadContext& aSerialized);
-  virtual bool DeallocPWebSocketParent(PWebSocketParent*);
-  virtual PTCPSocketParent* AllocPTCPSocketParent();
+                      const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
+  virtual bool DeallocPFTPChannelParent(PFTPChannelParent*) MOZ_OVERRIDE;
+  virtual PWebSocketParent*
+    AllocPWebSocketParent(PBrowserParent* browser,
+                          const SerializedLoadContext& aSerialized) MOZ_OVERRIDE;
+  virtual bool DeallocPWebSocketParent(PWebSocketParent*) MOZ_OVERRIDE;
+  virtual PTCPSocketParent* AllocPTCPSocketParent() MOZ_OVERRIDE;
 
   virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI,
                                                             const OptionalURIParams& aAppURI)
@@ -107,40 +108,41 @@ protected:
   virtual bool DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* aActor)
                                             MOZ_OVERRIDE;
 
-  virtual bool DeallocPTCPSocketParent(PTCPSocketParent*);
-  virtual PTCPServerSocketParent* AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
-                                                        const uint16_t& aBacklog,
-                                                        const nsString& aBinaryType);
+  virtual bool DeallocPTCPSocketParent(PTCPSocketParent*) MOZ_OVERRIDE;
+  virtual PTCPServerSocketParent*
+    AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
+                                const uint16_t& aBacklog,
+                                const nsString& aBinaryType) MOZ_OVERRIDE;
   virtual bool RecvPTCPServerSocketConstructor(PTCPServerSocketParent*,
                                                const uint16_t& aLocalPort,
                                                const uint16_t& aBacklog,
-                                               const nsString& aBinaryType);
-  virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*);
+                                               const nsString& aBinaryType) MOZ_OVERRIDE;
+  virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*) MOZ_OVERRIDE;
   virtual PUDPSocketParent* AllocPUDPSocketParent(const nsCString& aHost,
                                                   const uint16_t& aPort,
-                                                  const nsCString& aFilter);
+                                                  const nsCString& aFilter) MOZ_OVERRIDE;
   virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*,
                                          const nsCString& aHost,
                                          const uint16_t& aPort,
-                                         const nsCString& aFilter);
-  virtual bool DeallocPUDPSocketParent(PUDPSocketParent*);
+                                         const nsCString& aFilter) MOZ_OVERRIDE;
+  virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) MOZ_OVERRIDE;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
-                                                    const uint32_t& aFlags);
+                                                    const uint32_t& aFlags) MOZ_OVERRIDE;
   virtual bool RecvPDNSRequestConstructor(PDNSRequestParent* actor,
                                           const nsCString& hostName,
-                                          const uint32_t& flags);
-  virtual bool DeallocPDNSRequestParent(PDNSRequestParent*);
+                                          const uint32_t& flags) MOZ_OVERRIDE;
+  virtual bool DeallocPDNSRequestParent(PDNSRequestParent*) MOZ_OVERRIDE;
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
-                                   const uint16_t& flags);
+                                   const uint16_t& flags) MOZ_OVERRIDE;
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,
                                          const uint16_t& flags,
-                                         const nsresult& reason);
+                                         const nsresult& reason) MOZ_OVERRIDE;
 
   virtual mozilla::ipc::IProtocol*
   CloneProtocol(Channel* aChannel,
                 mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
-  virtual PRtspControllerParent* AllocPRtspControllerParent();
-  virtual bool DeallocPRtspControllerParent(PRtspControllerParent*);
+  virtual PRtspControllerParent* AllocPRtspControllerParent() MOZ_OVERRIDE;
+  virtual bool DeallocPRtspControllerParent(PRtspControllerParent*) MOZ_OVERRIDE;
 
 private:
   nsCString mCoreAppsBasePath;

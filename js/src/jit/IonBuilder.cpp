@@ -5092,7 +5092,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
         compartment->runtime()->DOMcallbacks()->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
-    if (jinfo->type != opType)
+    if (jinfo->type() != opType)
         return false;
 
     for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
@@ -5243,16 +5243,16 @@ DOMCallNeedsBarrier(const JSJitInfo* jitinfo, types::TemporaryTypeSet *types)
 {
     // If the return type of our DOM native is in "types" already, we don't
     // actually need a barrier.
-    if (jitinfo->returnType == JSVAL_TYPE_UNKNOWN)
+    if (jitinfo->returnType() == JSVAL_TYPE_UNKNOWN)
         return true;
 
     // JSVAL_TYPE_OBJECT doesn't tell us much; we still have to barrier on the
     // actual type of the object.
-    if (jitinfo->returnType == JSVAL_TYPE_OBJECT)
+    if (jitinfo->returnType() == JSVAL_TYPE_OBJECT)
         return true;
 
     // No need for a barrier if we're already expecting the type we'll produce.
-    return jitinfo->returnType != types->getKnownTypeTag();
+    return jitinfo->returnType() != types->getKnownTypeTag();
 }
 
 bool
@@ -6225,12 +6225,12 @@ IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *obser
     // JSValueType than codegen can, short of jitinfo->returnType just being
     // JSVAL_TYPE_UNKNOWN.
     MDefinition* replace = ins;
-    if (jitinfo->returnType != JSVAL_TYPE_DOUBLE ||
+    if (jitinfo->returnType() != JSVAL_TYPE_DOUBLE ||
         observed->getKnownTypeTag() != JSVAL_TYPE_INT32) {
-        JS_ASSERT(jitinfo->returnType == JSVAL_TYPE_UNKNOWN ||
+        JS_ASSERT(jitinfo->returnType() == JSVAL_TYPE_UNKNOWN ||
                   observed->getKnownTypeTag() == JSVAL_TYPE_UNKNOWN ||
-                  jitinfo->returnType == observed->getKnownTypeTag());
-        replace = ensureDefiniteType(ins, jitinfo->returnType);
+                  jitinfo->returnType() == observed->getKnownTypeTag());
+        replace = ensureDefiniteType(ins, jitinfo->returnType());
         if (replace != ins) {
             current->pop();
             current->push(replace);
@@ -8835,7 +8835,7 @@ IonBuilder::setPropTryCommonDOMSetter(bool *emitted, MDefinition *obj,
         return true;
 
     // Emit SetDOMProperty.
-    JS_ASSERT(setter->jitInfo()->type == JSJitInfo::Setter);
+    JS_ASSERT(setter->jitInfo()->type() == JSJitInfo::Setter);
     MSetDOMProperty *set = MSetDOMProperty::New(alloc(), setter->jitInfo()->setter, obj, value);
 
     current->add(set);

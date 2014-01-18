@@ -2004,8 +2004,8 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
-NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
+bool
+js::NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &v)
 {
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
 
@@ -2022,12 +2022,6 @@ NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
     arr->setLengthInt32(length + 1);
     arr->initDenseElementWithType(cx, length, v);
     return true;
-}
-
-bool
-js_NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &vp)
-{
-    return NewbornArrayPushImpl(cx, obj, vp);
 }
 
 /* ES5 15.4.4.7 */
@@ -3052,10 +3046,8 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
      * Allocate dense elements eagerly for small arrays, to avoid reallocating
      * elements when filling the array.
      */
-    static const uint32_t ArrayEagerAllocationMaxLength = 2048;
-
     RootedObject obj(cx);
-    obj = (length <= ArrayEagerAllocationMaxLength)
+    obj = (length <= ArrayObject::EagerAllocationMaxLength)
           ? NewDenseAllocatedArray(cx, length)
           : NewDenseUnallocatedArray(cx, length);
     if (!obj)

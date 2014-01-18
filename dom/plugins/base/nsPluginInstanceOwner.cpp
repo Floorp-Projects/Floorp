@@ -1569,10 +1569,10 @@ void nsPluginInstanceOwner::ExitFullScreen() {
 void nsPluginInstanceOwner::ExitFullScreen(jobject view) {
   JNIEnv* env = AndroidBridge::GetJNIEnv();
 
-  if (env && sFullScreenInstance && sFullScreenInstance->mInstance &&
+  if (sFullScreenInstance && sFullScreenInstance->mInstance &&
       env->IsSameObject(view, (jobject)sFullScreenInstance->mInstance->GetJavaSurface())) {
     sFullScreenInstance->ExitFullScreen();
-  } 
+  }
 }
 
 #endif

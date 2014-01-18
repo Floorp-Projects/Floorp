@@ -23,7 +23,7 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
 
 public:
   bool RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
-                         InfallibleTArray<nsString>* aDefaults);
+                         InfallibleTArray<nsString>* aDefaults) MOZ_OVERRIDE;
 
 protected:
   SpeechSynthesisParent();
@@ -33,9 +33,10 @@ protected:
                                                                     const nsString& aUri,
                                                                     const float& aVolume,
                                                                     const float& aRate,
-                                                                    const float& aPitch);
+                                                                    const float& aPitch)
+                                                                    MOZ_OVERRIDE;
 
-  bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor);
+  bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) MOZ_OVERRIDE;
 
   bool RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
                                               const nsString& aText,
@@ -43,7 +44,7 @@ protected:
                                               const nsString& aUri,
                                               const float& aVolume,
                                               const float& aRate,
-                                              const float& aPitch);
+                                              const float& aPitch) MOZ_OVERRIDE;
 };
 
 class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
@@ -56,11 +57,11 @@ public:
 
 protected:
 
-  virtual bool RecvPause();
+  virtual bool RecvPause() MOZ_OVERRIDE;
 
-  virtual bool RecvResume();
+  virtual bool RecvResume() MOZ_OVERRIDE;
 
-  virtual bool RecvCancel();
+  virtual bool RecvCancel() MOZ_OVERRIDE;
 };
 
 class SpeechTaskParent : public nsSpeechTask

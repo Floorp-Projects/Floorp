@@ -16,6 +16,9 @@ function checkException(func, exc)
   catch (ex) {
     exceptionThrew = true;
     is(ex.name, exc, "Expected "+exc+" exception");
+    if (ex.name != exc) {
+      ok(true, "The exception which was thrown is: " + ex);
+    }
   }
   ok(exceptionThrew, "Exception "+exc+" threw");
 }

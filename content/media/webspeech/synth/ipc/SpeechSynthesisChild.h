@@ -22,11 +22,11 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild
   friend class nsSynthVoiceRegistry;
 
 public:
-  bool RecvVoiceAdded(const RemoteVoice& aVoice);
+  bool RecvVoiceAdded(const RemoteVoice& aVoice) MOZ_OVERRIDE;
 
-  bool RecvVoiceRemoved(const nsString& aUri);
+  bool RecvVoiceRemoved(const nsString& aUri) MOZ_OVERRIDE;
 
-  bool RecvSetDefaultVoice(const nsString& aUri, const bool& aIsDefault);
+  bool RecvSetDefaultVoice(const nsString& aUri, const bool& aIsDefault) MOZ_OVERRIDE;
 
 protected:
   SpeechSynthesisChild();
@@ -37,8 +37,8 @@ protected:
                                                                   const nsString& aText,
                                                                   const float& aVolume,
                                                                   const float& aPitch,
-                                                                  const float& aRate);
-  bool DeallocPSpeechSynthesisRequestChild(PSpeechSynthesisRequestChild* aActor);
+                                                                  const float& aRate) MOZ_OVERRIDE;
+  bool DeallocPSpeechSynthesisRequestChild(PSpeechSynthesisRequestChild* aActor) MOZ_OVERRIDE;
 };
 
 class SpeechSynthesisRequestChild : public PSpeechSynthesisRequestChild
@@ -48,23 +48,21 @@ public:
   virtual ~SpeechSynthesisRequestChild();
 
 protected:
-  virtual bool RecvOnStart();
+  virtual bool RecvOnStart() MOZ_OVERRIDE;
 
   virtual bool Recv__delete__(const bool& aIsError,
                               const float& aElapsedTime,
-                              const uint32_t& aCharIndex);
+                              const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
-  virtual bool RecvOnPause(const float& aElapsedTime, const uint32_t& aCharIndex);
+  virtual bool RecvOnPause(const float& aElapsedTime, const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
-  virtual bool RecvOnResume(const float& aElapsedTime, const uint32_t& aCharIndex);
-
-  virtual bool RecvOnError(const float& aElapsedTime, const uint32_t& aCharIndex);
+  virtual bool RecvOnResume(const float& aElapsedTime, const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
   virtual bool RecvOnBoundary(const nsString& aName, const float& aElapsedTime,
-                              const uint32_t& aCharIndex);
+                              const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
   virtual bool RecvOnMark(const nsString& aName, const float& aElapsedTime,
-                          const uint32_t& aCharIndex);
+                          const uint32_t& aCharIndex) MOZ_OVERRIDE;
 
   nsRefPtr<SpeechTaskChild> mTask;
 };

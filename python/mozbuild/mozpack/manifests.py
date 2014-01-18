@@ -5,12 +5,14 @@
 from __future__ import unicode_literals
 
 from contextlib import contextmanager
+import json
 
 from .files import (
     AbsoluteSymlinkFile,
     ExistingFile,
     File,
     FileFinder,
+    PreprocessedFile,
 )
 import mozpack.path as mozpath
 
@@ -69,10 +71,18 @@ class InstallManifest(object):
       patterncopy -- Similar to patternsymlink except files are copied, not
           symlinked.
 
+      preprocess -- The file specified at the source path will be run through
+          the preprocessor, and the output will be written to the destination
+          path.
+
     Version 1 of the manifest was the initial version.
     Version 2 added optional path support
     Version 3 added support for pattern entries.
+    Version 4 added preprocessed file support.
     """
+
+    CURRENT_VERSION = 4
+
     FIELD_SEPARATOR = '\x1f'
 
     SYMLINK = 1
@@ -81,6 +91,7 @@ class InstallManifest(object):
     OPTIONAL_EXISTS = 4
     PATTERN_SYMLINK = 5
     PATTERN_COPY = 6
+    PREPROCESS = 7
 
     def __init__(self, path=None, fileobj=None):
         """Create a new InstallManifest entry.
@@ -88,22 +99,22 @@ class InstallManifest(object):
         If path is defined, the manifest will be populated with data from the
         file path.
 
-        If fh is defined, the manifest will be populated with data read
+        If fileobj is defined, the manifest will be populated with data read
         from the specified file object.
 
         Both path and fileobj cannot be defined.
         """
         self._dests = {}
+        self._source_file = None
 
-        if not path and not fileobj:
-            return
-
-        with _auto_fileobj(path, fileobj, 'rb') as fh:
-            self._load_from_fileobj(fh)
+        if path or fileobj:
+            with _auto_fileobj(path, fileobj, 'rb') as fh:
+                self._source_file = fh.name
+                self._load_from_fileobj(fh)
 
     def _load_from_fileobj(self, fileobj):
         version = fileobj.readline().rstrip()
-        if version not in ('1', '2', '3'):
+        if version not in ('1', '2', '3', '4'):
             raise UnreadableInstallManifest('Unknown manifest version: ' %
                 version)
 
@@ -144,6 +155,12 @@ class InstallManifest(object):
                 self.add_pattern_copy(base, pattern, dest)
                 continue
 
+            if record_type == self.PREPROCESS:
+                dest, source, deps, marker, defines = fields[1:]
+                self.add_preprocess(source, dest, deps, marker,
+                    self._decode_field_entry(defines))
+                continue
+
             raise UnreadableInstallManifest('Unknown record type: %d' %
                 record_type)
 
@@ -168,6 +185,22 @@ class InstallManifest(object):
 
         return self
 
+    def _encode_field_entry(self, data):
+        """Converts an object into a format that can be stored in the manifest file.
+
+        Complex data types, such as ``dict``, need to be converted into a text
+        representation before they can be written to a file.
+        """
+        return json.dumps(data, sort_keys=True)
+
+    def _decode_field_entry(self, data):
+        """Restores an object from a format that can be stored in the manifest file.
+
+        Complex data types, such as ``dict``, need to be converted into a text
+        representation before they can be written to a file.
+        """
+        return json.loads(data)
+
     def write(self, path=None, fileobj=None):
         """Serialize this manifest to a file or file object.
 
@@ -177,7 +210,7 @@ class InstallManifest(object):
         It is an error if both are specified.
         """
         with _auto_fileobj(path, fileobj, 'wb') as fh:
-            fh.write('3\n')
+            fh.write('%d\n' % self.CURRENT_VERSION)
 
             for dest in sorted(self._dests):
                 entry = self._dests[dest]
@@ -240,11 +273,23 @@ class InstallManifest(object):
         self._add_entry(mozpath.join(base, pattern, dest),
             (self.PATTERN_COPY, base, pattern, dest))
 
+    def add_preprocess(self, source, dest, deps, marker='#', defines={}):
+        """Add a preprocessed file to this manifest.
+
+        ``source`` will be passed through preprocessor.py, and the output will be
+        written to ``dest``.
+        """
+        self._add_entry(dest,
+            (self.PREPROCESS, source, deps, marker, self._encode_field_entry(defines)))
+
     def _add_entry(self, dest, entry):
         if dest in self._dests:
             raise ValueError('Item already in manifest: %s' % dest)
 
         self._dests[dest] = entry
+
+    def _get_deps(self, dest):
+        return {self._source_file} if self._source_file else set()
 
     def populate_registry(self, registry):
         """Populate a mozpack.copier.FileRegistry instance with data from us.
@@ -286,6 +331,15 @@ class InstallManifest(object):
                 for path in paths:
                     source = mozpath.join(base, path)
                     registry.add(mozpath.join(dest, path), cls(source))
+
+                continue
+
+            if install_type == self.PREPROCESS:
+                registry.add(dest, PreprocessedFile(entry[1],
+                    depfile_path=entry[2],
+                    marker=entry[3],
+                    defines=self._decode_field_entry(entry[4]),
+                    extra_depends=self._get_deps(dest)))
 
                 continue
 

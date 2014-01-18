@@ -1550,50 +1550,6 @@ if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
 fi
 
 dnl ========================================================
-dnl = Use incremental GC
-dnl ========================================================
-JSGC_INCREMENTAL=1
-MOZ_ARG_DISABLE_BOOL(gcincremental,
-[  --disable-gcincremental Disable incremental GC],
-    JSGC_INCREMENTAL= )
-if test -n "$JSGC_INCREMENTAL"; then
-    AC_DEFINE(JSGC_INCREMENTAL)
-fi
-
-dnl ========================================================
-dnl = Use generational GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gcgenerational,
-[  --enable-gcgenerational Enable generational GC],
-    JSGC_GENERATIONAL=1,
-    JSGC_GENERATIONAL= )
-if test -n "$JSGC_GENERATIONAL"; then
-    AC_DEFINE(JSGC_GENERATIONAL)
-fi
-
-dnl ========================================================
-dnl = Perform moving GC stack rooting analysis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(root-analysis,
-[  --enable-root-analysis  Enable moving GC stack root analysis],
-    JSGC_ROOT_ANALYSIS=1,
-    JSGC_ROOT_ANALYSIS= )
-if test -n "$JSGC_ROOT_ANALYSIS"; then
-    AC_DEFINE(JSGC_ROOT_ANALYSIS)
-fi
-
-dnl ========================================================
-dnl = Use exact stack rooting for GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(exact-rooting,
-[  --enable-exact-rooting  Enable use of exact stack roots for GC],
-    JSGC_USE_EXACT_ROOTING=1,
-    JSGC_USE_EXACT_ROOTING= )
-if test -n "$JSGC_USE_EXACT_ROOTING"; then
-    AC_DEFINE(JSGC_USE_EXACT_ROOTING)
-fi
-
-dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -4064,6 +4020,7 @@ MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_CONTENT_SANDBOX_REPORTER=
+JSGC_USE_EXACT_ROOTING=
 
 case "$target_os" in
     mingw*)
@@ -4206,6 +4163,10 @@ WITH_APP_NAME=$withval,
 
 if test -n "$WITH_APP_NAME" ; then
     MOZ_APP_NAME="$WITH_APP_NAME"
+fi
+
+if test -z "$MOZ_APP_NAME"; then
+   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
 fi
 
 MOZ_ARG_WITH_STRING(app-basename,
@@ -7074,6 +7035,7 @@ if test -n "$_WRAP_MALLOC"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=vasprintf,--wrap=asprintf"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
         dnl Wrap operator new and operator delete on Android.
         if test "$OS_TARGET" = "Android"; then
@@ -7105,6 +7067,18 @@ if test -n "$MOZ_TRACE_JSCALLS"; then
 fi
 
 dnl ========================================================
+dnl JS opt-mode assertions and minidump instrumentation
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(js-diagnostics,
+[  --enable-js-diagnostics
+                          Enable JS diagnostic assertions and breakpad data],
+    JS_CRASH_DIAGNOSTICS=1,
+    JS_CRASH_DIAGNOSTICS= )
+if test -n "$JS_CRASH_DIAGNOSTICS"; then
+    AC_DEFINE(JS_CRASH_DIAGNOSTICS)
+fi
+
+dnl ========================================================
 dnl = Use incremental GC
 dnl ========================================================
 JSGC_INCREMENTAL=1
@@ -7113,6 +7087,28 @@ MOZ_ARG_DISABLE_BOOL(gcincremental,
     JSGC_INCREMENTAL= )
 if test -n "$JSGC_INCREMENTAL"; then
     AC_DEFINE(JSGC_INCREMENTAL)
+fi
+
+dnl ========================================================
+dnl = Use exact stack rooting for GC
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(exact-rooting,
+[  --disable-exact-rooting  Enable use of conservative stack scanning for GC],
+    JSGC_USE_EXACT_ROOTING= ,
+    JSGC_USE_EXACT_ROOTING=1 )
+if test -n "$JSGC_USE_EXACT_ROOTING"; then
+    AC_DEFINE(JSGC_USE_EXACT_ROOTING)
+fi
+
+dnl ========================================================
+dnl = Use generational GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gcgenerational,
+[  --enable-gcgenerational Enable generational GC],
+    JSGC_GENERATIONAL=1,
+    JSGC_GENERATIONAL= )
+if test -n "$JSGC_GENERATIONAL"; then
+    AC_DEFINE(JSGC_GENERATIONAL)
 fi
 
 dnl ========================================================
@@ -7127,15 +7123,14 @@ if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
-dnl JS opt-mode assertions and minidump instrumentation
+dnl = Perform moving GC stack rooting analysis
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-diagnostics,
-[  --enable-js-diagnostics
-                          Enable JS diagnostic assertions and breakpad data],
-    JS_CRASH_DIAGNOSTICS=1,
-    JS_CRASH_DIAGNOSTICS= )
-if test -n "$JS_CRASH_DIAGNOSTICS"; then
-    AC_DEFINE(JS_CRASH_DIAGNOSTICS)
+MOZ_ARG_ENABLE_BOOL(root-analysis,
+[  --enable-root-analysis  Enable moving GC stack root analysis],
+    JSGC_ROOT_ANALYSIS=1,
+    JSGC_ROOT_ANALYSIS= )
+if test -n "$JSGC_ROOT_ANALYSIS"; then
+    AC_DEFINE(JSGC_ROOT_ANALYSIS)
 fi
 
 MOZ_CHECK_CCACHE
@@ -8462,10 +8457,6 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 # - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
 # - MOZ_EXTENSION_MANAGER: When set, enabled extension manager.
 
-if test -z "$MOZ_APP_NAME"; then
-   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
-fi
-
 # For extensions and langpacks, we require a max version that is compatible
 # across security releases. MOZ_APP_MAXVERSION is our method for doing that.
 # 10.0a1 and 10.0a2 aren't affected
@@ -9113,6 +9104,9 @@ if test -z "$JS_SHARED_LIBRARY" ; then
     if test -n "$MOZ_DISABLE_EXPORT_JS"; then
         ac_configure_args="$ac_configure_args --disable-export-js"
     fi
+fi
+if test -z "$JSGC_USE_EXACT_ROOTING" ; then
+    ac_configure_args="$ac_configure_args --disable-exact-rooting"
 fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"

@@ -51,6 +51,7 @@ jmethodID GeckoAppShell::jGetScreenOrientationWrapper = 0;
 jmethodID GeckoAppShell::jGetShowPasswordSetting = 0;
 jmethodID GeckoAppShell::jGetSystemColoursWrapper = 0;
 jmethodID GeckoAppShell::jHandleGeckoMessageWrapper = 0;
+jmethodID GeckoAppShell::jHandleUncaughtException = 0;
 jmethodID GeckoAppShell::jHideProgressDialog = 0;
 jmethodID GeckoAppShell::jInitCameraWrapper = 0;
 jmethodID GeckoAppShell::jIsNetworkLinkKnown = 0;
@@ -132,6 +133,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
     jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
     jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
+    jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
     jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
     jInitCameraWrapper = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
     jIsNetworkLinkKnown = getStaticMethod("isNetworkLinkKnown", "()Z");
@@ -174,12 +176,6 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
 
 GeckoAppShell* GeckoAppShell::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     GeckoAppShell* ret = new GeckoAppShell(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -187,43 +183,21 @@ GeckoAppShell* GeckoAppShell::Wrap(jobject obj) {
 
 void GeckoAppShell::AcknowledgeEvent() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jAcknowledgeEvent);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, bool a5) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[6];
@@ -235,30 +209,15 @@ void GeckoAppShell::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloa
     args[5].z = a5;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jAddPluginViewWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::AlertsProgressListener_OnProgress(const nsAString& a0, int64_t a1, int64_t a2, const nsAString& a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -268,169 +227,79 @@ void GeckoAppShell::AlertsProgressListener_OnProgress(const nsAString& a0, int64
     args[3].l = AndroidBridge::NewJavaString(env, a3);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jAlertsProgressListener_OnProgress, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CancelVibrate() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCancelVibrate);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CheckURIVisited(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCheckURIVisited, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ClearMessageList(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jClearMessageList, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CloseCamera() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCloseCamera);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CloseNotification(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCloseNotification, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, int32_t a4, bool a5, int32_t a6) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[7];
@@ -443,30 +312,15 @@ void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArra
     args[6].i = a6;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jCreateMessageListWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CreateShortcut(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(4) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -476,673 +330,313 @@ void GeckoAppShell::CreateShortcut(const nsAString& a0, const nsAString& a1, con
     args[3].l = AndroidBridge::NewJavaString(env, a3);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jCreateShortcut, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DeleteMessageWrapper(int32_t a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDeleteMessageWrapper, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableBatteryNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableBatteryNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableNetworkNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableNetworkNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableScreenOrientationNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableScreenOrientationNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableSensor(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableBatteryNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableBatteryNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableLocation(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocation, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableLocationHighAccuracy(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocationHighAccuracy, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableNetworkNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableNetworkNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableScreenOrientationNotifications() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableScreenOrientationNotifications);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableSensor(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoAppShell::GetContext() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetContext);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jdoubleArray GeckoAppShell::GetCurrentBatteryInformationWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentBatteryInformationWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jdoubleArray ret = static_cast<jdoubleArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jdoubleArray GeckoAppShell::GetCurrentNetworkInformationWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentNetworkInformationWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jdoubleArray ret = static_cast<jdoubleArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jfloat GeckoAppShell::GetDensity() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0.0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jfloat temp = env->CallStaticFloatMethod(mGeckoAppShellClass, jGetDensity);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0.0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 int32_t GeckoAppShell::GetDpiWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     int32_t temp = env->CallStaticIntMethod(mGeckoAppShellClass, jGetDpiWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 jstring GeckoAppShell::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetExtensionFromMimeTypeWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jobjectArray GeckoAppShell::GetHandlersForMimeTypeWrapper(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(3) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetHandlersForMimeTypeWrapper, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jobjectArray GeckoAppShell::GetHandlersForURLWrapper(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(3) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetHandlersForURLWrapper, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jbyteArray GeckoAppShell::GetIconForExtensionWrapper(const nsAString& a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetIconForExtensionWrapper, j0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jbyteArray ret = static_cast<jbyteArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoAppShell::GetMessageWrapper(int32_t a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jGetMessageWrapper, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetMimeTypeFromExtensionsWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoAppShell::GetNextMessageInListWrapper(int32_t a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jGetNextMessageInListWrapper, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::GetProxyForURIWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, int32_t a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(4) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -1152,200 +646,105 @@ jstring GeckoAppShell::GetProxyForURIWrapper(const nsAString& a0, const nsAStrin
     args[3].i = a3;
 
     jobject temp = env->CallStaticObjectMethodA(mGeckoAppShellClass, jGetProxyForURIWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 int32_t GeckoAppShell::GetScreenDepthWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     int32_t temp = env->CallStaticIntMethod(mGeckoAppShellClass, jGetScreenDepthWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 int16_t GeckoAppShell::GetScreenOrientationWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     int16_t temp = env->CallStaticShortMethod(mGeckoAppShellClass, jGetScreenOrientationWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 bool GeckoAppShell::GetShowPasswordSetting() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jGetShowPasswordSetting);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 jintArray GeckoAppShell::GetSystemColoursWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetSystemColoursWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jintArray ret = static_cast<jintArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jstring GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void GeckoAppShell::HideProgressDialog() {
+void GeckoAppShell::HandleUncaughtException(jobject a0, jthrowable a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+    if (env->PushLocalFrame(2) != 0) {
         return;
     }
 
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleUncaughtException, a0, a1);
+    env->PopLocalFrame(nullptr);
+}
+
+void GeckoAppShell::HideProgressDialog() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jintArray GeckoAppShell::InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -1355,338 +754,158 @@ jintArray GeckoAppShell::InitCameraWrapper(const nsAString& a0, int32_t a1, int3
     args[3].i = a3;
 
     jobject temp = env->CallStaticObjectMethodA(mGeckoAppShellClass, jInitCameraWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jintArray ret = static_cast<jintArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 bool GeckoAppShell::IsNetworkLinkKnown() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsNetworkLinkKnown);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 bool GeckoAppShell::IsNetworkLinkUp() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsNetworkLinkUp);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 bool GeckoAppShell::IsTablet() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsTablet);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void GeckoAppShell::KillAnyZombies() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jKillAnyZombies);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jclass GeckoAppShell::LoadPluginClass(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(3) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jLoadPluginClass, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jclass ret = static_cast<jclass>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoAppShell::LockScreenOrientation(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jLockScreenOrientation, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::MarkURIVisited(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkURIVisited, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::MoveTaskToBack() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 int32_t GeckoAppShell::NetworkLinkType() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     int32_t temp = env->CallStaticIntMethod(mGeckoAppShellClass, jNetworkLinkType);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void GeckoAppShell::NotifyDefaultPrevented(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyDefaultPrevented, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIME(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyIME, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -1696,30 +915,15 @@ void GeckoAppShell::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2,
     args[3].i = a3;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jNotifyIMEChange, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(3) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -1729,87 +933,42 @@ void GeckoAppShell::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAS
     args[3].l = AndroidBridge::NewJavaString(env, a3);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jNotifyIMEContext, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyWakeLockChanged(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyWakeLockChanged, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyXreExit() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyXreExit);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::OpenUriExternal(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4, const nsAString& a5) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(6) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[6];
@@ -1821,197 +980,92 @@ bool GeckoAppShell::OpenUriExternal(const nsAString& a0, const nsAString& a1, co
     args[5].l = AndroidBridge::NewJavaString(env, a5);
 
     bool temp = env->CallStaticBooleanMethodA(mGeckoAppShellClass, jOpenUriExternal, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void GeckoAppShell::PerformHapticFeedback(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jPerformHapticFeedback, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::PumpMessageLoop() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jPumpMessageLoop);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void GeckoAppShell::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jRegisterSurfaceTextureFrameListener, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::RemovePluginView(jobject a0, bool a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jRemovePluginView, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ScheduleRestart() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jScheduleRestart);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[3];
@@ -2020,114 +1074,54 @@ void GeckoAppShell::SendMessageWrapper(const nsAString& a0, const nsAString& a1,
     args[2].i = a2;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jSendMessageWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetFullScreen(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetFullScreen, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetKeepScreenOn(bool a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetKeepScreenOn, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetURITitle(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
     jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetURITitle, j0, j1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(5) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[5];
@@ -2138,267 +1132,124 @@ void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAS
     args[4].l = AndroidBridge::NewJavaString(env, a4);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotificationWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowFilePickerAsyncWrapper, j0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForExtensionsWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jstring GeckoAppShell::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForMimeTypeWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoAppShell::ShowInputMethodPicker() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::UnlockProfile() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jUnlockProfile);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void GeckoAppShell::UnlockScreenOrientation() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jUnlockScreenOrientation);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::UnregisterSurfaceTextureFrameListener(jobject a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jUnregisterSurfaceTextureFrameListener, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::Vibrate1(int64_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jVibrate1, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::VibrateA(jlongArray a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jVibrateA, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 jclass JavaDomKeyLocation::mDomKeyLocationClass = 0;
@@ -2428,12 +1279,6 @@ void JavaDomKeyLocation::InitStubs(JNIEnv *jEnv) {
 
 JavaDomKeyLocation* JavaDomKeyLocation::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     JavaDomKeyLocation* ret = new JavaDomKeyLocation(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -2441,129 +1286,64 @@ JavaDomKeyLocation* JavaDomKeyLocation::Wrap(jobject obj) {
 
 jobject JavaDomKeyLocation::valueOf(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalueOf, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jobjectArray JavaDomKeyLocation::values() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalues);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_JOYSTICK() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_JOYSTICK));
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_LEFT() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_LEFT));
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_MOBILE() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_MOBILE));
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_NUMPAD() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_NUMPAD));
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_RIGHT() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_RIGHT));
 }
 
 jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_STANDARD() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_STANDARD));
 }
 
 int32_t JavaDomKeyLocation::getvalue() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     return env->GetIntField(wrapped_obj, jvalue);
 }
 jclass GeckoJavaSampler::mGeckoJavaSamplerClass = 0;
@@ -2589,12 +1369,6 @@ void GeckoJavaSampler::InitStubs(JNIEnv *jEnv) {
 
 GeckoJavaSampler* GeckoJavaSampler::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     GeckoJavaSampler* ret = new GeckoJavaSampler(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -2602,16 +1376,9 @@ GeckoJavaSampler* GeckoJavaSampler::Wrap(jobject obj) {
 
 jstring GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, int32_t a2) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[3];
@@ -2620,180 +1387,82 @@ jstring GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a
     args[2].i = a2;
 
     jobject temp = env->CallStaticObjectMethodA(mGeckoJavaSamplerClass, jGetFrameNameJavaProfilingWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jdouble GeckoJavaSampler::GetSampleTimeJavaProfiling(int32_t a0, int32_t a1) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return 0.0;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jdouble temp = env->CallStaticDoubleMethod(mGeckoJavaSamplerClass, jGetSampleTimeJavaProfiling, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return 0.0;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 jstring GeckoJavaSampler::GetThreadNameJavaProfilingWrapper(int32_t a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mGeckoJavaSamplerClass, jGetThreadNameJavaProfilingWrapper, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoJavaSampler::PauseJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoJavaSamplerClass, jPauseJavaProfiling);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::StartJavaProfiling(int32_t a0, int32_t a1) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoJavaSamplerClass, jStartJavaProfiling, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::StopJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoJavaSamplerClass, jStopJavaProfiling);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::UnpauseJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mGeckoJavaSamplerClass, jUnpauseJavaProfiling);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 jclass SurfaceBits::mSurfaceBitsClass = 0;
@@ -2815,12 +1484,6 @@ void SurfaceBits::InitStubs(JNIEnv *jEnv) {
 
 SurfaceBits* SurfaceBits::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     SurfaceBits* ret = new SurfaceBits(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -2828,16 +1491,9 @@ SurfaceBits* SurfaceBits::Wrap(jobject obj) {
 
 SurfaceBits::SurfaceBits() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     Init(env->NewObject(mSurfaceBitsClass, jSurfaceBits), env);
@@ -2846,81 +1502,41 @@ SurfaceBits::SurfaceBits() {
 
 jobject SurfaceBits::getbuffer() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetObjectField(wrapped_obj, jbuffer));
 }
 
 void SurfaceBits::setbuffer(jobject a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetObjectField(wrapped_obj, jbuffer, a0);
 }
 
 int32_t SurfaceBits::getformat() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     return env->GetIntField(wrapped_obj, jformat);
 }
 
 void SurfaceBits::setformat(int32_t a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetIntField(wrapped_obj, jformat, a0);
 }
 
 int32_t SurfaceBits::getheight() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     return env->GetIntField(wrapped_obj, jheight);
 }
 
 void SurfaceBits::setheight(int32_t a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetIntField(wrapped_obj, jheight, a0);
 }
 
 int32_t SurfaceBits::getwidth() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     return env->GetIntField(wrapped_obj, jwidth);
 }
 
 void SurfaceBits::setwidth(int32_t a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetIntField(wrapped_obj, jwidth, a0);
 }
 jclass ThumbnailHelper::mThumbnailHelperClass = 0;
@@ -2934,12 +1550,6 @@ void ThumbnailHelper::InitStubs(JNIEnv *jEnv) {
 
 ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     ThumbnailHelper* ret = new ThumbnailHelper(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -2947,16 +1557,9 @@ ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
 
 void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[3];
@@ -2965,15 +1568,7 @@ void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2) {
     args[2].z = a2;
 
     env->CallStaticVoidMethodA(mThumbnailHelperClass, jSendThumbnail, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 jclass DisplayPortMetrics::mDisplayPortMetricsClass = 0;
@@ -2991,12 +1586,6 @@ void DisplayPortMetrics::InitStubs(JNIEnv *jEnv) {
 
 DisplayPortMetrics* DisplayPortMetrics::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     DisplayPortMetrics* ret = new DisplayPortMetrics(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3004,16 +1593,9 @@ DisplayPortMetrics* DisplayPortMetrics::Wrap(jobject obj) {
 
 DisplayPortMetrics::DisplayPortMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[5];
@@ -3029,21 +1611,11 @@ DisplayPortMetrics::DisplayPortMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a
 
 jobject DisplayPortMetrics::getMPosition() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     return static_cast<jobject>(env->GetObjectField(wrapped_obj, jMPosition));
 }
 
 jfloat DisplayPortMetrics::getResolution() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jResolution);
 }
 jclass GLController::mGLControllerClass = 0;
@@ -3057,12 +1629,6 @@ void GLController::InitStubs(JNIEnv *jEnv) {
 
 GLController* GLController::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     GLController* ret = new GLController(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3070,28 +1636,13 @@ GLController* GLController::Wrap(jobject obj) {
 
 jobject GLController::CreateEGLSurfaceForCompositorWrapper() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallObjectMethod(wrapped_obj, jCreateEGLSurfaceForCompositorWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
@@ -3126,12 +1677,6 @@ void GeckoLayerClient::InitStubs(JNIEnv *jEnv) {
 
 GeckoLayerClient* GeckoLayerClient::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     GeckoLayerClient* ret = new GeckoLayerClient(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3139,125 +1684,58 @@ GeckoLayerClient* GeckoLayerClient::Wrap(jobject obj) {
 
 void GeckoLayerClient::ActivateProgram() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jActivateProgram);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoLayerClient::ContentDocumentChanged() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jContentDocumentChanged);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::CreateFrame() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallObjectMethod(wrapped_obj, jCreateFrame);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoLayerClient::DeactivateProgram() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jDeactivateProgram);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a3) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -3267,59 +1745,29 @@ jobject GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a
     args[3].l = a3;
 
     jobject temp = env->CallObjectMethodA(wrapped_obj, jGetDisplayPort, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 bool GeckoLayerClient::IsContentDocumentDisplayed() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallBooleanMethod(wrapped_obj, jIsContentDocumentDisplayed);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 jobject GeckoLayerClient::ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, bool a6) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[7];
@@ -3332,31 +1780,16 @@ jobject GeckoLayerClient::ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a
     args[6].z = a6;
 
     jobject temp = env->CallObjectMethodA(wrapped_obj, jProgressiveUpdateCallback, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 void GeckoLayerClient::SetFirstPaintViewport(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[7];
@@ -3369,30 +1802,15 @@ void GeckoLayerClient::SetFirstPaintViewport(jfloat a0, jfloat a1, jfloat a2, jf
     args[6].f = a6;
 
     env->CallVoidMethodA(wrapped_obj, jSetFirstPaintViewport, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void GeckoLayerClient::SetPageRect(jfloat a0, jfloat a1, jfloat a2, jfloat a3) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[4];
@@ -3402,30 +1820,15 @@ void GeckoLayerClient::SetPageRect(jfloat a0, jfloat a1, jfloat a2, jfloat a3) {
     args[3].f = a3;
 
     env->CallVoidMethodA(wrapped_obj, jSetPageRect, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::SyncFrameMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, bool a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, jfloat a12, bool a13) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[14];
@@ -3445,31 +1848,16 @@ jobject GeckoLayerClient::SyncFrameMetrics(jfloat a0, jfloat a1, jfloat a2, jflo
     args[13].z = a13;
 
     jobject temp = env->CallObjectMethodA(wrapped_obj, jSyncFrameMetrics, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
 jobject GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, jfloat a4, bool a5) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[6];
@@ -3481,15 +1869,7 @@ jobject GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, i
     args[5].z = a5;
 
     jobject temp = env->CallObjectMethodA(wrapped_obj, jSyncViewportInfo, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
@@ -3504,12 +1884,6 @@ void ImmutableViewportMetrics::InitStubs(JNIEnv *jEnv) {
 
 ImmutableViewportMetrics* ImmutableViewportMetrics::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     ImmutableViewportMetrics* ret = new ImmutableViewportMetrics(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3517,16 +1891,9 @@ ImmutableViewportMetrics* ImmutableViewportMetrics::Wrap(jobject obj) {
 
 ImmutableViewportMetrics::ImmutableViewportMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, jfloat a7, jfloat a8, jfloat a9, jfloat a10, jfloat a11, jfloat a12) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[13];
@@ -3558,12 +1925,6 @@ void LayerView::InitStubs(JNIEnv *jEnv) {
 
 LayerView* LayerView::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     LayerView* ret = new LayerView(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3571,28 +1932,13 @@ LayerView* LayerView::Wrap(jobject obj) {
 
 jobject LayerView::RegisterCompositorWrapper() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mLayerViewClass, jRegisterCompositorWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
@@ -3609,12 +1955,6 @@ void NativePanZoomController::InitStubs(JNIEnv *jEnv) {
 
 NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     NativePanZoomController* ret = new NativePanZoomController(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3622,43 +1962,21 @@ NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
 
 void NativePanZoomController::PostDelayedCallbackWrapper(int64_t a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jPostDelayedCallbackWrapper, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[5];
@@ -3669,15 +1987,7 @@ void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1,
     args[4].f = a4;
 
     env->CallVoidMethodA(wrapped_obj, jRequestContentRepaintWrapper, args);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 jclass ProgressiveUpdateData::mProgressiveUpdateDataClass = 0;
@@ -3705,12 +2015,6 @@ void ProgressiveUpdateData::InitStubs(JNIEnv *jEnv) {
 
 ProgressiveUpdateData* ProgressiveUpdateData::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     ProgressiveUpdateData* ret = new ProgressiveUpdateData(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3718,16 +2022,9 @@ ProgressiveUpdateData* ProgressiveUpdateData::Wrap(jobject obj) {
 
 ProgressiveUpdateData::ProgressiveUpdateData() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     Init(env->NewObject(mProgressiveUpdateDataClass, jProgressiveUpdateData), env);
@@ -3736,148 +2033,73 @@ ProgressiveUpdateData::ProgressiveUpdateData() {
 
 void ProgressiveUpdateData::setViewport(jobject a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jsetViewport, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 bool ProgressiveUpdateData::getabort() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     return env->GetBooleanField(wrapped_obj, jabort);
 }
 
 void ProgressiveUpdateData::setabort(bool a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetBooleanField(wrapped_obj, jabort, a0);
 }
 
 jfloat ProgressiveUpdateData::getheight() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jheight);
 }
 
 void ProgressiveUpdateData::setheight(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jheight, a0);
 }
 
 jfloat ProgressiveUpdateData::getscale() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jscale);
 }
 
 void ProgressiveUpdateData::setscale(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jscale, a0);
 }
 
 jfloat ProgressiveUpdateData::getwidth() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jwidth);
 }
 
 void ProgressiveUpdateData::setwidth(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jwidth, a0);
 }
 
 jfloat ProgressiveUpdateData::getx() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jx);
 }
 
 void ProgressiveUpdateData::setx(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jx, a0);
 }
 
 jfloat ProgressiveUpdateData::gety() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jy);
 }
 
 void ProgressiveUpdateData::sety(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jy, a0);
 }
 jclass ViewTransform::mViewTransformClass = 0;
@@ -3909,12 +2131,6 @@ void ViewTransform::InitStubs(JNIEnv *jEnv) {
 
 ViewTransform* ViewTransform::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     ViewTransform* ret = new ViewTransform(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -3922,16 +2138,9 @@ ViewTransform* ViewTransform::Wrap(jobject obj) {
 
 ViewTransform::ViewTransform(jfloat a0, jfloat a1, jfloat a2) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jvalue args[3];
@@ -3945,181 +2154,91 @@ ViewTransform::ViewTransform(jfloat a0, jfloat a1, jfloat a2) {
 
 jfloat ViewTransform::getfixedLayerMarginBottom() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jfixedLayerMarginBottom);
 }
 
 void ViewTransform::setfixedLayerMarginBottom(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jfixedLayerMarginBottom, a0);
 }
 
 jfloat ViewTransform::getfixedLayerMarginLeft() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jfixedLayerMarginLeft);
 }
 
 void ViewTransform::setfixedLayerMarginLeft(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jfixedLayerMarginLeft, a0);
 }
 
 jfloat ViewTransform::getfixedLayerMarginRight() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jfixedLayerMarginRight);
 }
 
 void ViewTransform::setfixedLayerMarginRight(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jfixedLayerMarginRight, a0);
 }
 
 jfloat ViewTransform::getfixedLayerMarginTop() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jfixedLayerMarginTop);
 }
 
 void ViewTransform::setfixedLayerMarginTop(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jfixedLayerMarginTop, a0);
 }
 
 jfloat ViewTransform::getoffsetX() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, joffsetX);
 }
 
 void ViewTransform::setoffsetX(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, joffsetX, a0);
 }
 
 jfloat ViewTransform::getoffsetY() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, joffsetY);
 }
 
 void ViewTransform::setoffsetY(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, joffsetY, a0);
 }
 
 jfloat ViewTransform::getscale() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jscale);
 }
 
 void ViewTransform::setscale(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jscale, a0);
 }
 
 jfloat ViewTransform::getx() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jx);
 }
 
 void ViewTransform::setx(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jx, a0);
 }
 
 jfloat ViewTransform::gety() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0.0;
-    }
-
     return env->GetFloatField(wrapped_obj, jy);
 }
 
 void ViewTransform::sety(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     env->SetFloatField(wrapped_obj, jy, a0);
 }
 jclass NativeZip::mNativeZipClass = 0;
@@ -4133,12 +2252,6 @@ void NativeZip::InitStubs(JNIEnv *jEnv) {
 
 NativeZip* NativeZip::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     NativeZip* ret = new NativeZip(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -4146,28 +2259,13 @@ NativeZip* NativeZip::Wrap(jobject obj) {
 
 jobject NativeZip::CreateInputStream(jobject a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(2) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallObjectMethod(wrapped_obj, jCreateInputStream, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
@@ -4190,12 +2288,6 @@ void MatrixBlobCursor::InitStubs(JNIEnv *jEnv) {
 
 MatrixBlobCursor* MatrixBlobCursor::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     MatrixBlobCursor* ret = new MatrixBlobCursor(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -4203,16 +2295,9 @@ MatrixBlobCursor* MatrixBlobCursor::Wrap(jobject obj) {
 
 MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor, a0), env);
@@ -4221,16 +2306,9 @@ MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0) {
 
 MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor0, a0, a1), env);
@@ -4239,82 +2317,37 @@ MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0, int32_t a1) {
 
 void MatrixBlobCursor::AddRow(jobject a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jAddRow, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void MatrixBlobCursor::AddRow(jobject a0, int32_t a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jAddRow1, a0, a1);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 void MatrixBlobCursor::AddRow(jobjectArray a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallVoidMethod(wrapped_obj, jAddRow2, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 jclass SQLiteBridgeException::mSQLiteBridgeExceptionClass = 0;
@@ -4332,12 +2365,6 @@ void SQLiteBridgeException::InitStubs(JNIEnv *jEnv) {
 
 SQLiteBridgeException* SQLiteBridgeException::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     SQLiteBridgeException* ret = new SQLiteBridgeException(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -4345,16 +2372,9 @@ SQLiteBridgeException* SQLiteBridgeException::Wrap(jobject obj) {
 
 SQLiteBridgeException::SQLiteBridgeException() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     Init(env->NewObject(mSQLiteBridgeExceptionClass, jSQLiteBridgeException), env);
@@ -4363,16 +2383,9 @@ SQLiteBridgeException::SQLiteBridgeException() {
 
 SQLiteBridgeException::SQLiteBridgeException(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
@@ -4383,11 +2396,6 @@ SQLiteBridgeException::SQLiteBridgeException(const nsAString& a0) {
 
 int64_t SQLiteBridgeException::getserialVersionUID() {
     JNIEnv *env = GetJNIForThread();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return 0;
-    }
-
     return env->GetStaticLongField(mSQLiteBridgeExceptionClass, jserialVersionUID);
 }
 jclass Clipboard::mClipboardClass = 0;
@@ -4407,12 +2415,6 @@ void Clipboard::InitStubs(JNIEnv *jEnv) {
 
 Clipboard* Clipboard::Wrap(jobject obj) {
     JNIEnv *env = GetJNIForThread();
-
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     Clipboard* ret = new Clipboard(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
@@ -4420,113 +2422,53 @@ Clipboard* Clipboard::Wrap(jobject obj) {
 
 void Clipboard::ClearText() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     env->CallStaticVoidMethod(mClipboardClass, jClearText);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 
 jstring Clipboard::GetClipboardTextWrapper() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jobject temp = env->CallStaticObjectMethod(mClipboardClass, jGetClipboardTextWrapper);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return nullptr;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
 bool Clipboard::HasText() {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
     if (env->PushLocalFrame(0) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return false;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     bool temp = env->CallStaticBooleanMethod(mClipboardClass, jHasText);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return false;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
 }
 
 void Clipboard::SetClipboardText(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
     if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mClipboardClass, jSetClipboardText, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(nullptr);
-        return;
-    }
-
+    AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
 

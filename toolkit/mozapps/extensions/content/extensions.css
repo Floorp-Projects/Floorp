@@ -84,6 +84,10 @@ setting[type="integer"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
 }
 
+setting[type="integer"]:not([size]) textbox {
+  -moz-box-flex: 1;
+}
+
 setting[type="control"] {
   display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");

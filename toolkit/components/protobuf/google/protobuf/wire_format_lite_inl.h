@@ -36,6 +36,7 @@
 #ifndef GOOGLE_PROTOBUF_WIRE_FORMAT_LITE_INL_H__
 #define GOOGLE_PROTOBUF_WIRE_FORMAT_LITE_INL_H__
 
+#include <algorithm>
 #include <string>
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/message_lite.h>

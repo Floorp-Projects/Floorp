@@ -34,7 +34,7 @@ public:
    * Compresses 'inputSize' bytes from 'source' into 'dest'.
    * Destination buffer must be already allocated,
    * and must be sized to handle worst cases situations (input data not compressible)
-   * Worst case size evaluation is provided by function LZ4_compressBound()
+   * Worst case size evaluation is provided by function maxCompressedSize()
    *
    * @param inputSize is the input size. Max supported value is ~1.9GB
    * @param return the number of bytes written in buffer dest

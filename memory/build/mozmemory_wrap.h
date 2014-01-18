@@ -212,6 +212,15 @@
 #  define wcsdup_impl  mozmem_dup_impl(wcsdup)
 #endif
 
+/* String functions */
+#ifdef ANDROID
+/* Bug 801571 and Bug 879668, libstagefright uses vasprintf, causing malloc()/
+ * free() to be mismatched between bionic and mozglue implementation.
+ */
+#define vasprintf_impl  mozmem_dup_impl(vasprintf)
+#define asprintf_impl   mozmem_dup_impl(asprintf)
+#endif
+
 /* Jemalloc specific function */
 #define jemalloc_stats_impl              mozmem_jemalloc_impl(jemalloc_stats)
 #define jemalloc_purge_freed_pages_impl  mozmem_jemalloc_impl(jemalloc_purge_freed_pages)

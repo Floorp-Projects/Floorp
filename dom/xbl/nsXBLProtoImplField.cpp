@@ -190,7 +190,7 @@ InstallXBLField(JSContext* cx,
     JSFlatString* fieldStr = JS_ASSERT_STRING_IS_FLAT(name.toString());
     fieldName.init(fieldStr);
 
-    MOZ_ALWAYS_TRUE(JS_ValueToId(cx, name, idp.address()));
+    MOZ_ALWAYS_TRUE(JS_ValueToId(cx, name, idp));
 
     // If a separate XBL scope is being used, the callee is not same-compartment
     // with the xbl prototype, and the object is a cross-compartment wrapper.

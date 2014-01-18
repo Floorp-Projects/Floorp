@@ -100,25 +100,25 @@ protected:
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization,
                           const NetAddr& selfAddr,
-                          const NetAddr& peerAddr);
+                          const NetAddr& peerAddr) MOZ_OVERRIDE;
   bool RecvOnTransportAndData(const nsresult& status,
                               const uint64_t& progress,
                               const uint64_t& progressMax,
                               const nsCString& data,
                               const uint64_t& offset,
-                              const uint32_t& count);
+                              const uint32_t& count) MOZ_OVERRIDE;
   bool RecvOnStopRequest(const nsresult& statusCode);
-  bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax);
-  bool RecvOnStatus(const nsresult& status);
-  bool RecvFailedAsyncOpen(const nsresult& status);
+  bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax) MOZ_OVERRIDE;
+  bool RecvOnStatus(const nsresult& status) MOZ_OVERRIDE;
+  bool RecvFailedAsyncOpen(const nsresult& status) MOZ_OVERRIDE;
   bool RecvRedirect1Begin(const uint32_t& newChannel,
                           const URIParams& newURI,
                           const uint32_t& redirectFlags,
-                          const nsHttpResponseHead& responseHead);
-  bool RecvRedirect3Complete();
+                          const nsHttpResponseHead& responseHead) MOZ_OVERRIDE;
+  bool RecvRedirect3Complete() MOZ_OVERRIDE;
   bool RecvAssociateApplicationCache(const nsCString& groupID,
-                                     const nsCString& clientID);
-  bool RecvDeleteSelf();
+                                     const nsCString& clientID) MOZ_OVERRIDE;
+  bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup();

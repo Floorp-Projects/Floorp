@@ -5225,7 +5225,8 @@ if (!${obj}) {
             if self.idlNode.getExtendedAttribute("Frozen"):
                 assert self.idlNode.type.isSequence()
                 freezeValue = CGGeneric(
-                    "if (!JS_FreezeObject(cx, &args.rval().toObject())) {\n"
+                    "JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());\n"
+                    "if (!JS_FreezeObject(cx, rvalObj)) {\n"
                     "  return false;\n"
                     "}")
                 if self.idlNode.type.nullable():
@@ -5905,7 +5906,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
     def generate_code(self):
         return CGIndenter(CGGeneric(
             "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
-            "MOZ_ASSERT(info->type == JSJitInfo::Method);\n"
+            "MOZ_ASSERT(info->type() == JSJitInfo::Method);\n"
             "JSJitMethodOp method = info->method;\n"
             "return method(cx, obj, self, JSJitMethodCallArgs(args));"))
 
@@ -6110,7 +6111,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
     def generate_code(self):
         return CGIndenter(CGGeneric(
             "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
-            "MOZ_ASSERT(info->type == JSJitInfo::Getter);\n"
+            "MOZ_ASSERT(info->type() == JSJitInfo::Getter);\n"
             "JSJitGetterOp getter = info->getter;\n"
             "return getter(cx, obj, self, JSJitGetterCallArgs(args));"))
 
@@ -6226,7 +6227,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s attribute setter");\n'
                 "}\n"
                 "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
-                "MOZ_ASSERT(info->type == JSJitInfo::Setter);\n"
+                "MOZ_ASSERT(info->type() == JSJitInfo::Setter);\n"
                 "JSJitSetterOp setter = info->setter;\n"
                 "if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {\n"
                 "  return false;\n"
@@ -6357,16 +6358,16 @@ class CGMemberJITInfo(CGThing):
                     "  %s,\n"
                     "  %s,\n"
                     "  JSJitInfo::%s,\n"
+                    "  JSJitInfo::%s, /* aliasSet.  Not relevant for setters. */\n"
                     "  %s,  /* returnType.  Not relevant for setters. */\n"
                     "  %s,  /* isInfallible. False in setters. */\n"
                     "  %s,  /* isMovable.  Not relevant for setters. */\n"
                     "  %s,  /* isInSlot.  Only relevant for getters. */\n"
                     "  %s,  /* isTypedMethod.  Only relevant for methods. */\n"
-                    "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
-                    "  JSJitInfo::%s  /* aliasSet.  Not relevant for setters. */\n"
-                    "}" % (opName, protoID, depth, opType,
+                    "  %s   /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                    "}" % (opName, protoID, depth, opType, aliasSet,
                            returnType, failstr, movablestr, slotStr,
-                           typedMethodStr, slotIndex, aliasSet))
+                           typedMethodStr, slotIndex))
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]

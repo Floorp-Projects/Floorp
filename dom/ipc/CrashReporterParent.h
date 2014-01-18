@@ -78,12 +78,12 @@ public:
 
  protected:
   virtual bool
-    RecvAnnotateCrashReport(const nsCString& key, const nsCString& data) {
+    RecvAnnotateCrashReport(const nsCString& key, const nsCString& data) MOZ_OVERRIDE {
     AnnotateCrashReport(key, data);
     return true;
   }
   virtual bool
-    RecvAppendAppNotes(const nsCString& data);
+    RecvAppendAppNotes(const nsCString& data) MOZ_OVERRIDE;
   virtual mozilla::ipc::IProtocol*
   CloneProtocol(Channel* aChannel,
                 mozilla::ipc::ProtocolCloneContext *aCtx) MOZ_OVERRIDE;

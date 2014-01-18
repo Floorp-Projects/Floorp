@@ -875,7 +875,8 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
         }
 
         if (obj->is<JSFunction>()) {
-            JSString *str = JS_DecompileFunction(cx, &obj->as<JSFunction>(), JS_DONT_PRETTY_PRINT);
+            RootedFunction fun(cx, &obj->as<JSFunction>());
+            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
             return bytes->encodeLatin1(cx, str);

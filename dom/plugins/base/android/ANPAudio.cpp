@@ -125,8 +125,6 @@ AudioRunnable::Run()
   PR_SetCurrentThreadName("Android Audio");
 
   JNIEnv* jenv = GetJNIForThread();
-  if (!jenv)
-    return NS_ERROR_FAILURE;
 
   mozilla::AutoLocalJNIFrame autoFrame(jenv, 2);
 
@@ -210,8 +208,6 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return nullptr;
 
   s->at_class = init_jni_bindings(jenv);
   s->rate = sampleRate;
@@ -308,8 +304,6 @@ anp_audio_start(ANPAudioTrack* s)
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
 
   mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.play);
@@ -338,8 +332,6 @@ anp_audio_pause(ANPAudioTrack* s)
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
 
   mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.pause);
@@ -354,8 +346,6 @@ anp_audio_stop(ANPAudioTrack* s)
 
   s->isStopped = true;
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
 
   mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.stop);

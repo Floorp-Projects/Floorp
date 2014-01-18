@@ -214,6 +214,8 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * If the IME implementation on a particular platform doesn't care about
  * NotifyIMEOfTextChange() and/or NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE),
  * they should set mWantUpdates to NOTIFY_NOTHING to avoid the cost.
+ * If the IME implementation needs notifications even while our process is
+ * deactive, it should also set NOTIFY_DURING_DEACTIVE.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
@@ -224,13 +226,14 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  */
 struct nsIMEUpdatePreference {
 
-  typedef int8_t Notifications;
+  typedef uint8_t Notifications;
 
   enum
   {
-    NOTIFY_NOTHING           = 0x0000,
-    NOTIFY_SELECTION_CHANGE  = 0x0001,
-    NOTIFY_TEXT_CHANGE       = 0x0002
+    NOTIFY_NOTHING           = 0x00,
+    NOTIFY_SELECTION_CHANGE  = 0x01,
+    NOTIFY_TEXT_CHANGE       = 0x02,
+    NOTIFY_DURING_DEACTIVE   = 0x80
   };
 
   nsIMEUpdatePreference()

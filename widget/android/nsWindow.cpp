@@ -1059,9 +1059,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
     AutoLocalJNIFrame jniFrame;
 
     // We're paused, or we haven't been given a window-size yet, so do nothing
@@ -2358,9 +2355,6 @@ void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
     JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
-    if (!env)
-        return;
 
     AutoLocalJNIFrame jniFrame(env);
 
@@ -2397,9 +2391,6 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay");
     JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
-    if (!env)
-        return;
 
     AutoLocalJNIFrame jniFrame(env);
 

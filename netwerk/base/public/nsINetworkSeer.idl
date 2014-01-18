@@ -17,7 +17,7 @@ typedef unsigned long SeerLearnReason;
  *                  predictive actions upon future visits.
  *                  NOTE: nsINetworkSeer should only be used on the main thread
  */
-[scriptable, uuid(884a39a0-a3ed-4855-826a-fabb73ae878d)]
+[scriptable, uuid(25e323b6-99e0-4274-b5b3-1a9eb56e28ac)]
 interface nsINetworkSeer : nsISupports
 {
   /**
@@ -121,6 +121,12 @@ interface nsINetworkSeer : nsISupports
    * after this completes will start from a blank slate.
    */
   void reset();
+
+  /**
+   * @deprecated THIS API IS FOR TESTING ONLY. IF YOU DON'T KNOW WHAT IT DOES,
+   * DON'T USE IT
+   */
+  void prepareForDnsTest(in long long timestamp, in string uri);
 };
 
 %{C++

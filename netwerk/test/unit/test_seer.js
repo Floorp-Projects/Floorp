@@ -216,14 +216,7 @@ DnsContinueVerifier.prototype = {
     // x1000 on the Date object value.
     var tstamp = (new Date().valueOf() * 1000) - (10 * 86400 * 1000000);
 
-    var dbfile = FileUtils.getFile("ProfD", ["netpredictions.sqlite"]);
-    var dbconn = Services.storage.openDatabase(dbfile);
-    // We also need to update hits, since the toplevel has been "loaded" a
-    // second time (from the prediction that kicked off this callback) to ensure
-    // that the seer will try to do anything for this subresource.
-    var stmt = "UPDATE moz_subresources SET last_hit = " + tstamp + ", hits = 2 WHERE uri = '" + this.subresource + "';";
-    dbconn.executeSimpleSQL(stmt);
-    dbconn.close();
+    seer.prepareForDnsTest(tstamp, this.subresource);
 
     var verifier = new Verifier("dns", [], this.preresolves);
     seer.predict(this.tluri, null, seer.PREDICT_LOAD, load_context, verifier);

@@ -38,4 +38,10 @@ public @interface WrapElementForJNI {
      * Did I mention use of this function is discouraged?
      */
     boolean allowMultithread() default false;
+
+    /**
+     * If set, the generated stub will not handle uncaught exceptions.
+     * Any exception must be handled or cleared by the code calling the stub.
+     */
+    boolean noThrow() default false;
 }

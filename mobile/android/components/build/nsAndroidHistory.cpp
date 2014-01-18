@@ -62,7 +62,9 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   }
   list->AppendElement(aContent);
 
- GeckoAppShell::CheckURIVisited(uriString);
+  if (AndroidBridge::HasEnv()) {
+    GeckoAppShell::CheckURIVisited(uriString);
+  }
 
   return NS_OK;
 }
@@ -173,11 +175,13 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   if (aFlags & VisitFlags::UNRECOVERABLE_ERROR)
     return NS_OK;
 
-  nsAutoCString uri;
-  rv = aURI->GetSpec(uri);
-  if (NS_FAILED(rv)) return rv;
-  NS_ConvertUTF8toUTF16 uriString(uri);
-  GeckoAppShell::MarkURIVisited(uriString);
+  if (AndroidBridge::HasEnv()) {
+    nsAutoCString uri;
+    rv = aURI->GetSpec(uri);
+    if (NS_FAILED(rv)) return rv;
+    NS_ConvertUTF8toUTF16 uriString(uri);
+    GeckoAppShell::MarkURIVisited(uriString);
+  }
 
   AppendToRecentlyVisitedURIs(aURI);
 
@@ -206,7 +210,7 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
     return NS_OK;
   }
 
-  if (AndroidBridge::Bridge()) {
+  if (AndroidBridge::HasEnv()) {
     nsAutoCString uri;
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;

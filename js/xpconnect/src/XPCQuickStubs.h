@@ -610,7 +610,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 
     JS::RootedValue argval(cx, (argc > 0) ? args.get(0) : JSVAL_VOID);
     JS::RootedId id(cx);
-    if (!JS_ValueToId(cx, v, id.address()))
+    if (!JS_ValueToId(cx, v, &id))
         return false;
     args.rval().set(argval);
     return ApplyPropertyOp<Op>(cx, *popp, obj, id, args.rval());
