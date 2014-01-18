@@ -64,6 +64,7 @@ private:
   friend class SeerDBShutdownRunner;
   friend class SeerCommitTimerInitEvent;
   friend class SeerNewTransactionEvent;
+  friend class SeerCleanupEvent;
 
   void CheckForAndDeleteOldDBFile();
   nsresult EnsureInitStorage();
@@ -165,6 +166,16 @@ private:
     mDB->CommitTransaction();
   }
 
+  int64_t GetDBFileSize();
+  int64_t GetDBFileSizeAfterVacuum();
+  void MaybeScheduleCleanup();
+  void Cleanup();
+  void CleanupOrigins(PRTime now);
+  void CleanupStartupPages(PRTime now);
+  int32_t GetSubresourceCount();
+
+  void VacuumDatabase();
+
   // Observer-related stuff
   nsresult InstallObserver();
   void RemoveObserver();
@@ -220,6 +231,11 @@ private:
   friend class SeerPrepareForDnsTestEvent;
   void PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri);
 #endif
+
+  bool mCleanupScheduled;
+  int32_t mMaxDBSize;
+  int32_t mPreservePercentage;
+  PRTime mLastCleanupTime;
 };
 
 } // ::mozilla::net
