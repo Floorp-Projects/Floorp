@@ -141,24 +141,18 @@ public:
     }
 
     static JavaVM *GetVM() {
-        if (MOZ_LIKELY(sBridge))
-            return sBridge->mJavaVM;
-        return nullptr;
+        MOZ_ASSERT(sBridge);
+        return sBridge->mJavaVM;
     }
 
-    static JNIEnv *GetJNIEnv() {
-        if (MOZ_LIKELY(sBridge)) {
-            if (!pthread_equal(pthread_self(), sBridge->mThread)) {
-                __android_log_print(ANDROID_LOG_INFO, "AndroidBridge",
-                                    "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
-                                    (void*)pthread_self(), (void*)sBridge->mThread);
-                MOZ_ASSERT(false, "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread!");
-                return nullptr;
-            }
-            return sBridge->mJNIEnv;
 
+    static JNIEnv *GetJNIEnv() {
+        MOZ_ASSERT(sBridge);
+        if (MOZ_UNLIKELY(!pthread_equal(pthread_self(), sBridge->mThread))) {
+            MOZ_CRASH();
         }
-        return nullptr;
+        MOZ_ASSERT(sBridge->mJNIEnv);
+        return sBridge->mJNIEnv;
     }
 
     // The bridge needs to be constructed via ConstructBridge first,
