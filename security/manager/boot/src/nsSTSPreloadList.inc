@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1400325066297000);
+const PRTime gPreloadListExpirationTime = INT64_C(1400929573884000);
 
 class nsSTSPreload
 {
@@ -37,7 +37,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "blueseed.co", false },
   { "bugzilla.mozilla.org", true },
   { "business.lookout.com", false },
-  { "business.medbank.com.mt", true },
   { "carezone.com", false },
   { "check.torproject.org", false },
   { "chromiumcodereview.appspot.com", false },
@@ -66,6 +65,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "epoxate.com", false },
   { "errors.zenpayroll.com", false },
   { "espra.com", true },
+  { "f-droid.org", true },
   { "factor.cc", false },
   { "faq.lookout.com", false },
   { "forum.linode.com", false },
@@ -113,6 +113,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mylookout.com", false },
   { "neg9.org", false },
   { "oplop.appspot.com", true },
+  { "opsmate.com", false },
   { "p.linode.com", false },
   { "passwd.io", true },
   { "paste.linode.com", false },
@@ -164,6 +165,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.mydigipass.com", false },
   { "www.mylookout.com", false },
   { "www.noisebridge.net", false },
+  { "www.opsmate.com", true },
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },

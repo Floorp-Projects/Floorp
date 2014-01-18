@@ -10,6 +10,7 @@ bigshinylock.minazo.net: could not connect to host
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
+business.medbank.com.mt: did not receive HSTS header
 carlolly.co.uk: did not receive HSTS header
 cert.se: max-age too low: 2628001
 checkout.google.com: did not receive HSTS header
@@ -43,7 +44,6 @@ goto.google.com: did not receive HSTS header
 greplin.com: did not receive HSTS header
 grepular.com: max-age too low: 8640000
 groups.google.com: did not receive HSTS header
-haste.ch: could not connect to host
 history.google.com: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header
 id.atlassian.com: did not receive HSTS header
