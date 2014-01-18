@@ -84,7 +84,7 @@
                          .getService(Components.interfaces.nsIObserverService);
         os.addObserver(this, "browser-search-engine-modified", false);
 
-        this._addedObserver = true;
+        this._destroyed = false;
 
         this.searchService.init((function search_init_cb(aStatus) {
           // Bail out if the binding's been destroyed
@@ -103,12 +103,9 @@
       <destructor><![CDATA[
         this._destroyed = true;
 
-        if (this._addedObserver) {
-          var os = Components.classes["@mozilla.org/observer-service;1"]
-                             .getService(Components.interfaces.nsIObserverService);
-          os.removeObserver(this, "browser-search-engine-modified");
-          this._addedObserver = false;
-        }
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+        os.removeObserver(this, "browser-search-engine-modified");
 
         // Make sure to break the cycle from _textbox to us. Otherwise we leak
         // the world. But make sure it's actually pointing to us.
