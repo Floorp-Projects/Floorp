@@ -2982,8 +2982,7 @@
               if (!tab)
                 return;
               this.selectedTab = tab;
-              let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-              focusManager.activeWindow = window;
+              window.focus();
               break;
             }
           }
