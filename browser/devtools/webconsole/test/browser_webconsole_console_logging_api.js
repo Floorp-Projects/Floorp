@@ -7,63 +7,87 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-let hud, outputNode;
+let testDriver = null;
+let subtestDriver = null;
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    Task.spawn(runner);
-  }, true);
 
-  function* runner() {
-    hud = yield openConsole();
-    outputNode = hud.outputNode;
-
-    let methods = ["log", "info", "warn", "error", "exception", "debug"];
-    for (let method of methods) {
-      yield testMethod(method);
-    }
-
-    executeSoon(finishTest);
-  }
+  browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
 
-function* testMethod(aMethod) {
-  let console = content.console;
+function onLoad() {
+  browser.removeEventListener("DOMContentLoaded", onLoad, false);
+
+  openConsole(null, function(aHud) {
+    hud = aHud;
+    hudId = hud.hudId;
+    outputNode = hud.outputNode;
+    testDriver = testGen();
+    testDriver.next();
+  });
+}
+
+function testGen() {
+  subtestGen("log");
+  yield undefined;
+
+  subtestGen("info");
+  yield undefined;
+
+  subtestGen("warn");
+  yield undefined;
+
+  subtestGen("error");
+  yield undefined;
+
+  subtestGen("exception");
+  yield undefined;
+
+  subtestGen("debug"); // bug 616742
+  yield undefined;
+
+  testDriver = subtestDriver = null;
+  finishTest();
+
+  yield undefined;
+}
+
+function subtestGen(aMethod) {
+  subtestDriver = testConsoleLoggingAPI(aMethod);
+  subtestDriver.next();
+}
+
+function testConsoleLoggingAPI(aMethod) {
+  let console = content.wrappedJSObject.console;
 
   hud.jsterm.clearOutput();
 
+  setStringFilter("foo");
   console[aMethod]("foo-bar-baz");
-  console[aMethod]("baar-baz");
+  console[aMethod]("bar-baz");
 
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "foo-bar-baz",
-    }, {
-      text: "baar-baz",
-    }],
+  function nextTest() {
+    subtestDriver.next();
+  }
+
+  waitForSuccess({
+    name: "1 hidden " + aMethod + " node via string filtering",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".filtered-by-string").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
   });
 
-  setStringFilter("foo");
-
-  is(outputNode.querySelectorAll(".filtered-by-string").length, 1,
-     "1 hidden " + aMethod + " node via string filtering")
+  yield undefined;
 
   hud.jsterm.clearOutput();
 
   // now toggle the current method off - make sure no visible message
+
   // TODO: move all filtering tests into a separate test file: see bug 608135
-
-  console[aMethod]("foo-bar-baz");
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "foo-bar-baz",
-    }],
-  });
-
   setStringFilter("");
   let filter;
   switch(aMethod) {
@@ -77,29 +101,54 @@ function* testMethod(aMethod) {
       filter = aMethod;
       break;
   }
-
   hud.setFilterState(filter, false);
+  console[aMethod]("foo-bar-baz");
 
-  is(outputNode.querySelectorAll(".filtered-by-type").length, 1,
-     "1 message hidden for " + aMethod + " (logging turned off)")
+  waitForSuccess({
+    name: "1 message hidden for " + aMethod + " (logging turned off)",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".filtered-by-type").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
 
-  hud.setFilterState(filter, true);
-
-  is(outputNode.querySelectorAll(".message:not(.filtered-by-type)").length, 1,
-     "1 message shown for " + aMethod + " (logging turned on)")
+  yield undefined;
 
   hud.jsterm.clearOutput();
+  hud.setFilterState(filter, true);
+  console[aMethod]("foo-bar-baz");
+
+  waitForSuccess({
+    name: "1 message shown for " + aMethod + " (logging turned on)",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".message:not(.filtered-by-type)").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
+
+  yield undefined;
+
+  hud.jsterm.clearOutput();
+  setStringFilter("");
 
   // test for multiple arguments.
   console[aMethod]("foo", "bar");
 
-  yield waitForMessages({
+  waitForMessages({
     webconsole: hud,
     messages: [{
       text: '"foo" "bar"',
       category: CATEGORY_WEBDEV,
     }],
-  })
+  }).then(nextTest);
+
+  yield undefined;
+  testDriver.next();
+  yield undefined;
 }
 
 function setStringFilter(aValue) {
