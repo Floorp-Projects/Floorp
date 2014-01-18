@@ -11,8 +11,4 @@ TEST_DIRS += [
 	'mochitest',
 ]
 
-TEST_TOOL_DIRS += [
-  'compiled',
-]
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
