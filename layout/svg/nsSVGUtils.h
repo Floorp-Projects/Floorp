@@ -65,51 +65,6 @@ class SourceSurface;
 }
 } // namespace mozilla
 
-// SVG Frame state bits
-#define NS_STATE_IS_OUTER_SVG                    NS_FRAME_STATE_BIT(20)
-
-// If this bit is set, we are a <clipPath> element or descendant.
-#define NS_STATE_SVG_CLIPPATH_CHILD              NS_FRAME_STATE_BIT(21)
-
-/**
- * For text, the NS_FRAME_IS_DIRTY and NS_FRAME_HAS_DIRTY_CHILDREN bits indicate
- * that our anonymous block child needs to be reflowed, and that mPositions
- * will likely need to be updated as a consequence. These are set, for
- * example, when the font-family changes. Sometimes we only need to
- * update mPositions though. For example if the x/y attributes change.
- * mPositioningDirty is used to indicate this latter "things are dirty" case
- * to allow us to avoid reflowing the anonymous block when it is not
- * necessary.
- */
-#define NS_STATE_SVG_POSITIONING_DIRTY           NS_FRAME_STATE_BIT(22)
-
-/**
- * For text, whether the values from x/y/dx/dy attributes have any percentage values
- * that are used in determining the positions of glyphs.  The value will
- * be true even if a positioning value is overridden by a descendant element's
- * attribute with a non-percentage length.  For example,
- * NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES would be set for:
- *
- *   <text x="10%"><tspan x="0">abc</tspan></text>
- *
- * Percentage values beyond the number of addressable characters, however, do
- * not influence NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES.  For example,
- * NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES would be false for:
- *
- *   <text x="10 20 30 40%">abc</text>
- *
- * NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES is used to determine whether
- * to recompute mPositions when the viewport size changes.  So although the 
- * first example above shows that NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES
- * can be true even if a viewport size change will not affect mPositions,
- * determining a completley accurate value for
- * NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES would require extra work that is
- * probably not worth it.
- */
-#define NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES NS_FRAME_STATE_BIT(23)
-
-#define NS_STATE_SVG_TEXT_IN_REFLOW              NS_FRAME_STATE_BIT(24)
-
 // maximum dimension of an offscreen surface - choose so that
 // the surface size doesn't overflow a 32-bit signed int using
 // 4 bytes per pixel; in line with gfxASurface::CheckSurfaceSize
