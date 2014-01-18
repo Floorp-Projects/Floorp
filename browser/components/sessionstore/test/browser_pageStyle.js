@@ -26,6 +26,8 @@ add_task(function page_style() {
     let enabled = sheets.filter(([title, disabled]) => !disabled);
 
     if (title.startsWith("fail_")) {
+      // We want to ensure that no "fail_" stylesheets have been restored.
+      enabled = enabled.filter(([title, disabled]) => title.startsWith("fail_"));
       ok(!enabled.length, "didn't restore " + title);
     } else {
       ok(enabled.length == 1 && enabled[0][0] == title, "restored " + title);
