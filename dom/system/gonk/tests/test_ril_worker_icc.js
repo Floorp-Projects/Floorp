@@ -1702,7 +1702,9 @@ add_test(function test_update_icc_contact() {
       } else if (pbr.anr0.fileType === ICC_USIM_TYPE2_TAG) {
         do_check_eq(recordNumber, ANR0_RECORD_ID);
       }
-      do_check_eq(number, aContact.anr[0]);
+      if (Array.isArray(aContact.anr)) {
+        do_check_eq(number, aContact.anr[0]);
+      }
       onsuccess();
     };
 
