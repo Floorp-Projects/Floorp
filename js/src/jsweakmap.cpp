@@ -369,7 +369,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **re
             RootedObject key(cx, r.front().key());
             if (!cx->compartment()->wrap(cx, &key))
                 return false;
-            if (!js_NewbornArrayPush(cx, arr, ObjectValue(*key)))
+            if (!NewbornArrayPush(cx, arr, ObjectValue(*key)))
                 return false;
         }
     }

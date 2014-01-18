@@ -3395,14 +3395,11 @@ CASE(JSOP_YIELD)
 
 CASE(JSOP_ARRAYPUSH)
 {
-    uint32_t slot = GET_LOCALNO(REGS.pc);
-    JS_ASSERT(script->nfixed() <= slot);
-    JS_ASSERT(slot < script->nslots());
     RootedObject &obj = rootObject0;
-    obj = &REGS.fp()->unaliasedLocal(slot).toObject();
-    if (!js_NewbornArrayPush(cx, obj, REGS.sp[-1]))
+    obj = &REGS.sp[-1].toObject();
+    if (!NewbornArrayPush(cx, obj, REGS.sp[-2]))
         goto error;
-    REGS.sp--;
+    REGS.sp -= 2;
 }
 END_CASE(JSOP_ARRAYPUSH)
 
