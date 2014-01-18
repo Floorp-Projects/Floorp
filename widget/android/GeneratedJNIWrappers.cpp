@@ -51,6 +51,7 @@ jmethodID GeckoAppShell::jGetScreenOrientationWrapper = 0;
 jmethodID GeckoAppShell::jGetShowPasswordSetting = 0;
 jmethodID GeckoAppShell::jGetSystemColoursWrapper = 0;
 jmethodID GeckoAppShell::jHandleGeckoMessageWrapper = 0;
+jmethodID GeckoAppShell::jHandleUncaughtException = 0;
 jmethodID GeckoAppShell::jHideProgressDialog = 0;
 jmethodID GeckoAppShell::jInitCameraWrapper = 0;
 jmethodID GeckoAppShell::jIsNetworkLinkKnown = 0;
@@ -132,6 +133,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
     jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
     jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
+    jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
     jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
     jInitCameraWrapper = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
     jIsNetworkLinkKnown = getStaticMethod("isNetworkLinkKnown", "()Z");
@@ -1305,6 +1307,33 @@ jstring GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
 
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
+}
+
+void GeckoAppShell::HandleUncaughtException(jobject a0, jthrowable a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(2) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleUncaughtException, a0, a1);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(nullptr);
+        return;
+    }
+
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::HideProgressDialog() {
