@@ -8,7 +8,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-const SETTINGS_ROWS = 8;
+const SETTINGS_ROWS = 9;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
@@ -324,6 +324,9 @@ add_test(function() {
       is(input.tooltipText, profD.path, "Label tooltip should not have changed");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
 
+      var unsizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[2], "anonid", "input");
+      var sizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[8], "anonid", "input");
+      is(unsizedInput.clientWidth > sizedInput.clientWidth, true, "Input with size attribute should be smaller than input without");
     } finally {
       button = gManagerWindow.document.getElementById("detail-prefs-btn");
       is_element_hidden(button, "Preferences button should not be visible");
