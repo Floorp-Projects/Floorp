@@ -21,6 +21,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsISpeculativeConnect.h"
+#include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -290,6 +291,41 @@ Seer::RemoveObserver()
   }
 }
 
+static const uint32_t COMMIT_TIMER_DELTA_MS = 5 * 1000;
+
+class SeerCommitTimerInitEvent : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    nsresult rv = NS_OK;
+
+    if (!gSeer->mCommitTimer) {
+      gSeer->mCommitTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    } else {
+      gSeer->mCommitTimer->Cancel();
+    }
+    if (NS_SUCCEEDED(rv)) {
+      gSeer->mCommitTimer->Init(gSeer, COMMIT_TIMER_DELTA_MS,
+                                nsITimer::TYPE_ONE_SHOT);
+    }
+
+    return NS_OK;
+  }
+};
+
+class SeerNewTransactionEvent : public nsRunnable
+{
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  {
+    gSeer->CommitTransaction();
+    gSeer->BeginTransaction();
+    nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+};
+
 NS_IMETHODIMP
 Seer::Observe(nsISupports *subject, const char *topic,
               const char16_t *data_unicode)
@@ -298,6 +334,9 @@ Seer::Observe(nsISupports *subject, const char *topic,
 
   if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
     gSeer->Shutdown();
+  } else if (!strcmp(NS_TIMER_CALLBACK_TOPIC, topic)) {
+    nsRefPtr<SeerNewTransactionEvent> event = new SeerNewTransactionEvent();
+    gSeer->mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
   return rv;
@@ -466,6 +505,8 @@ Seer::EnsureInitStorage()
 
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA foreign_keys = ON;"));
+
+  BeginTransaction();
 
   // A table to make sure we're working with the database layout we expect
   rv = mDB->ExecuteSimpleSQL(
@@ -703,6 +744,12 @@ Seer::EnsureInitStorage()
                          "ON moz_redirects (id);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  CommitTransaction();
+  BeginTransaction();
+
+  nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+
   return NS_OK;
 }
 
@@ -737,6 +784,9 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Shutting down DB on main thread");
 
+    // Ensure everything is written to disk before we shut down the db
+    gSeer->CommitTransaction();
+
     gSeer->mStatements.FinalizeStatements();
     gSeer->mDB->Close();
     gSeer->mDB = nullptr;
@@ -764,6 +814,10 @@ Seer::Shutdown()
   }
 
   mInitialized = false;
+
+  if (mCommitTimer) {
+    mCommitTimer->Cancel();
+  }
 
   if (mIOThread) {
     nsCOMPtr<nsIThread> ioThread;
@@ -2152,13 +2206,17 @@ Seer::ResetInternal()
   nsresult rv = EnsureInitStorage();
   RETURN_IF_FAILED(rv);
 
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_redirects"));
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_startup_pages"));
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_startups"));
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_redirects;"));
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_startup_pages;"));
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_startups;"));
 
   // These cascade to moz_subresources and moz_subhosts, respectively.
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_pages"));
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts"));
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_pages;"));
+  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts;"));
+
+  // Go ahead and ensure this is flushed to disk
+  CommitTransaction();
+  BeginTransaction();
 }
 
 // Called on the main thread to clear out all our knowledge. Tabula Rasa FTW!
@@ -2174,6 +2232,68 @@ Seer::Reset()
 
   nsRefPtr<SeerResetEvent> event = new SeerResetEvent();
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+}
+
+#ifdef SEER_TESTS
+class SeerPrepareForDnsTestEvent : public nsRunnable
+{
+public:
+  SeerPrepareForDnsTestEvent(int64_t timestamp, const char *uri)
+    :mTimestamp(timestamp)
+    ,mUri(uri)
+  { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread(), "Preparing for DNS Test on main thread!");
+    gSeer->PrepareForDnsTestInternal(mTimestamp, mUri);
+    return NS_OK;
+  }
+
+private:
+  int64_t mTimestamp;
+  nsAutoCString mUri;
+};
+
+void
+Seer::PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri)
+{
+  nsCOMPtr<mozIStorageStatement> update = mStatements.GetCachedStatement(
+      NS_LITERAL_CSTRING("UPDATE moz_subresources SET last_hit = :timestamp, "
+                          "hits = 2 WHERE uri = :uri;"));
+  if (!update) {
+    return;
+  }
+  mozStorageStatementScoper scopedUpdate(update);
+
+  nsresult rv = update->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
+                                        timestamp);
+  RETURN_IF_FAILED(rv);
+
+  rv = update->BindUTF8StringByName(NS_LITERAL_CSTRING("uri"), uri);
+  RETURN_IF_FAILED(rv);
+
+  update->Execute();
+}
+#endif
+
+NS_IMETHODIMP
+Seer::PrepareForDnsTest(int64_t timestamp, const char *uri)
+{
+#ifdef SEER_TESTS
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Seer interface methods must be called on the main thread");
+
+  if (!mInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<SeerPrepareForDnsTestEvent> event =
+    new SeerPrepareForDnsTestEvent(timestamp, uri);
+  return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 // Helper functions to make using the seer easier from native code
