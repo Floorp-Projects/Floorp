@@ -27,7 +27,7 @@ nsTableColGroupFrame::GetColType() const
 void nsTableColGroupFrame::SetColType(nsTableColGroupType aType) 
 {
   uint32_t type = aType - eColGroupContent;
-  mState |= (type << COL_GROUP_TYPE_OFFSET);
+  mState |= nsFrameState(type << COL_GROUP_TYPE_OFFSET);
 }
 
 void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,

@@ -12,6 +12,8 @@ EXPORTS += [
     'nsFrameIdList.h',
     'nsFrameList.h',
     'nsFrameSelection.h',
+    'nsFrameState.h',
+    'nsFrameStateBits.h',
     'nsHTMLParts.h',
     'nsHTMLReflowMetrics.h',
     'nsHTMLReflowState.h',
