@@ -42,6 +42,12 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
                                  nsFrameState aTypeBit);
 
+// Frame state bits that are used to keep track of what this is a
+// placeholder for.
+#define PLACEHOLDER_FOR_FLOAT    NS_FRAME_STATE_BIT(20)
+#define PLACEHOLDER_FOR_ABSPOS   NS_FRAME_STATE_BIT(21)
+#define PLACEHOLDER_FOR_FIXEDPOS NS_FRAME_STATE_BIT(22)
+#define PLACEHOLDER_FOR_POPUP    NS_FRAME_STATE_BIT(23)
 #define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
                                   PLACEHOLDER_FOR_ABSPOS | \
                                   PLACEHOLDER_FOR_FIXEDPOS | \
@@ -54,10 +60,6 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
 class nsPlaceholderFrame MOZ_FINAL : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
-#ifdef DEBUG
-  NS_DECL_QUERYFRAME_TARGET(nsPlaceholderFrame)
-  NS_DECL_QUERYFRAME
-#endif
 
   /**
    * Create a new placeholder frame.  aTypeBit must be one of the

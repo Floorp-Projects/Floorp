@@ -21,6 +21,22 @@
 
 class nsBoxLayoutState;
 
+// flags from box
+#define NS_STATE_BOX_CHILD_RESERVED      NS_FRAME_STATE_BIT(20)
+#define NS_STATE_STACK_NOT_POSITIONED    NS_FRAME_STATE_BIT(21)
+//#define NS_STATE_IS_HORIZONTAL           NS_FRAME_STATE_BIT(22)  moved to nsIFrame.h
+#define NS_STATE_AUTO_STRETCH            NS_FRAME_STATE_BIT(23)
+//#define NS_STATE_IS_ROOT                 NS_FRAME_STATE_BIT(24)  moved to nsBox.h
+#define NS_STATE_CURRENTLY_IN_DEBUG      NS_FRAME_STATE_BIT(25)
+//#define NS_STATE_SET_TO_DEBUG            NS_FRAME_STATE_BIT(26)  moved to nsBox.h
+//#define NS_STATE_DEBUG_WAS_SET           NS_FRAME_STATE_BIT(27)  moved to nsBox.h
+#define NS_STATE_MENU_HAS_POPUP_LIST       NS_FRAME_STATE_BIT(28) /* used on nsMenuFrame */
+#define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK NS_FRAME_STATE_BIT(29)
+#define NS_STATE_EQUAL_SIZE              NS_FRAME_STATE_BIT(30)
+//#define NS_STATE_IS_DIRECTION_NORMAL     NS_FRAME_STATE_BIT(31)  moved to nsIFrame.h
+#define NS_FRAME_MOUSE_THROUGH_ALWAYS    NS_FRAME_STATE_BIT(60)
+#define NS_FRAME_MOUSE_THROUGH_NEVER     NS_FRAME_STATE_BIT(61)
+
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,
                          bool aIsRoot,
@@ -32,10 +48,6 @@ class nsBoxFrame : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
-#ifdef DEBUG
-  NS_DECL_QUERYFRAME_TARGET(nsBoxFrame)
-  NS_DECL_QUERYFRAME
-#endif
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
                                   nsStyleContext* aContext,
