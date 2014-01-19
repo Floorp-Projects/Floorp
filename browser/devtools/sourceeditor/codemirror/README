@@ -17,11 +17,19 @@ To confirm the functionality run mochitests for the following components:
  * styleditor
  * netmonitor
 
-The sourceeditor component contains imported CodeMirror tests [3]. Some
-tests were commented out because we don't use that functionality within
-Firefox (for example Ruby editing mode). The search addon (search.js)
-was slightly modified to make search UI localizable. Other than that,
-we don't have any Mozilla-specific patches applied to CodeMirror itself.
+The sourceeditor component contains imported CodeMirror tests [3].
+
+ * Some tests were commented out because we don't use that functionality
+   within Firefox (for example Ruby editing mode). Be careful when updating
+   files test/codemirror.html and test/vimemacs.html; they were modified to
+   co-exist with Mozilla's testing infrastructure.
+ * In cm_comment_test.js comment out fallbackToBlock and fallbackToLine
+   tests.
+ * The search addon (search.js) was slightly modified to make search
+   UI localizable.
+
+Other than that, we don't have any Mozilla-specific patches applied to
+CodeMirror itself.
 
 # Addons
 
@@ -37,6 +45,7 @@ in the LICENSE file:
  * codemirror.css
  * codemirror.js
  * comment.js
+ * activeline.js
  * dialog/dialog.css
  * dialog/dialog.js
  * keymap/emacs.js
@@ -50,6 +59,7 @@ in the LICENSE file:
  * css.js
  * javascript.js
  * clike.js
+ * htmlmixed.js
  * matchbrackets.js
  * closebrackets.js
  * trailingspace.js
@@ -62,6 +72,8 @@ in the LICENSE file:
  * test/cm_mode_javascript_test.js
  * test/cm_mode_test.css
  * test/cm_mode_test.js
+ * test/cm_vim_test.js
+ * test/cm_emacs_test.js
  * test/cm_test.js
 
 # Footnotes
