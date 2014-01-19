@@ -229,13 +229,6 @@ public:
                                 uint32_t aTrackEvents,
                                 const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
-  /**
-   * Create a buffer of black image in format of YUV:420. Called on the worker
-   * thread.
-   */
-  static void CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer,
-                               int aFrameWidth, int aFrameHeight);
-
 protected:
   /**
    * Initialized the video encoder. In order to collect the value of width and
@@ -258,6 +251,12 @@ protected:
    * Called on the MediaStreamGraph thread.
    */
   virtual void NotifyEndOfStream() MOZ_OVERRIDE;
+
+  /**
+   * Create a buffer of black image in format of YUV:420. Called on the worker
+   * thread.
+   */
+  void CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer);
 
   /**
    * The width of source video frame, ceiled if the source width is odd.
