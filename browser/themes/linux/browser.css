@@ -1894,7 +1894,7 @@ chatbox {
 }
 
 #main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
-  padding: 2em;
+  padding: 0 2em 2em;
 }
 
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),

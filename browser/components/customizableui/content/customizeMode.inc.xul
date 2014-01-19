@@ -8,6 +8,7 @@
       &customizeMode.menuAndToolbars.header;
     </label>
     <vbox id="customization-palette" flex="1"/>
+    <spacer flex="1"/>
     <hbox>
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>

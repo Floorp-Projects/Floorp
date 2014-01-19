@@ -50,50 +50,39 @@ function consoleOpened(hud)
   xhr.open("get", TEST_URI, true);
   xhr.send();
 
-  let chromeConsole = -1;
-  let contentConsole = -1;
-  let execValue = -1;
-  let exception = -1;
-  let xhrRequest = false;
-
-  let output = hud.outputNode;
-  function performChecks()
-  {
-    let text = output.textContent;
-    chromeConsole = text.indexOf("bug587757a");
-    contentConsole = text.indexOf("bug587757b");
-    execValue = text.indexOf("browser.xul");
-    exception = text.indexOf("foobarExceptionBug587757");
-    xhrRequest = text.indexOf("test-console.html");
-  }
-
-  function showResults()
-  {
-    isnot(chromeConsole, -1, "chrome window console.log() is displayed");
-    isnot(contentConsole, -1, "content window console.log() is displayed");
-    isnot(execValue, -1, "jsterm eval result is displayed");
-    isnot(exception, -1, "exception is displayed");
-    isnot(xhrRequest, -1, "xhr request is displayed");
-  }
-
-  waitForSuccess({
-    name: "messages displayed",
-    validatorFn: () => {
-      performChecks();
-      return chromeConsole > -1 &&
-             contentConsole > -1 &&
-             execValue > -1 &&
-             exception > -1 &&
-             xhrRequest > -1;
-    },
-    successFn: () => {
-      showResults();
-      executeSoon(finishTest);
-    },
-    failureFn: () => {
-      showResults();
-      info("output: " + output.textContent);
-      executeSoon(finishTest);
-    },
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "chrome window console.log() is displayed",
+        text: "bug587757a",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+      {
+        name: "content window console.log() is displayed",
+        text: "bug587757b",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+      {
+        name: "jsterm eval result",
+        text: "browser.xul",
+        category: CATEGORY_OUTPUT,
+        severity: SEVERITY_LOG,
+      },
+      {
+        name: "exception message",
+        text: "foobarExceptionBug587757",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+      },
+      {
+        name: "network message",
+        text: "test-console.html",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_LOG,
+      },
+    ],
+  }).then(finishTest);
 }

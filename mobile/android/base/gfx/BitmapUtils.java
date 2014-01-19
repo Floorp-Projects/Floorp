@@ -118,6 +118,14 @@ public final class BitmapUtils {
     }
 
     public static Bitmap decodeByteArray(byte[] bytes, BitmapFactory.Options options) {
+        return decodeByteArray(bytes, 0, bytes.length, options);
+    }
+
+    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length) {
+        return decodeByteArray(bytes, offset, length, null);
+    }
+
+    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length, BitmapFactory.Options options) {
         if (bytes.length <= 0) {
             throw new IllegalArgumentException("bytes.length " + bytes.length
                                                + " must be a positive number");
@@ -125,7 +133,7 @@ public final class BitmapUtils {
 
         Bitmap bitmap = null;
         try {
-            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+            bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, options);
         } catch (OutOfMemoryError e) {
             Log.e(LOGTAG, "decodeByteArray(bytes.length=" + bytes.length
                           + ", options= " + options + ") OOM!", e);

@@ -34,11 +34,26 @@ const PROPERTIES = [
   "url", "impp", "tel"
 ];
 
+let mozContactInitWarned = false;
+
 function Contact() { }
 
 Contact.prototype = {
   __init: function(aProp) {
     for (let prop in aProp) {
+      this[prop] = aProp[prop];
+    }
+  },
+
+  init: function(aProp) {
+    // init is deprecated, warn once in the console if it's used
+    if (!mozContactInitWarned) {
+      mozContactInitWarned = true;
+      Cu.reportError("mozContact.init is DEPRECATED. Use the mozContact constructor instead. " +
+                     "See https://developer.mozilla.org/docs/WebAPI/Contacts for details.");
+    }
+
+    for (let prop of PROPERTIES) {
       this[prop] = aProp[prop];
     }
   },
