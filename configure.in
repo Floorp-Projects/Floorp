@@ -245,6 +245,8 @@ if test -n "$gonkdir" ; then
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
+        MOZ_OMX_ENCODER=1
+        AC_SUBST(MOZ_OMX_ENCODER)
         ;;
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include"

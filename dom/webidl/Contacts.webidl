@@ -91,6 +91,8 @@ interface mozContact {
   [Cached, Pure] attribute sequence<DOMString>?       note;
   [Cached, Pure] attribute sequence<DOMString>?       key;
 
+  void init(optional ContactProperties properties);
+
   [ChromeOnly]
   void setMetadata(DOMString id, Date? published, Date? updated);
 
