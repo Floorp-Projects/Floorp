@@ -1043,7 +1043,7 @@ AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
   unsigned int value = bits <   512 ?  1 : bits ==   512 ?  2
                      : bits <   768 ?  3 : bits ==   768 ?  4
                      : bits <  1024 ?  5 : bits ==  1024 ?  6
-                     : bits <  1024 ?  7 : bits ==  1024 ?  8
+                     : bits <  1280 ?  7 : bits ==  1280 ?  8
                      : bits <  1536 ?  9 : bits ==  1536 ? 10
                      : bits <  2048 ? 11 : bits ==  2048 ? 12
                      : bits <  3072 ? 13 : bits ==  3072 ? 14
@@ -1061,7 +1061,7 @@ AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
 // named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
 // that for now. See also NSS bug 323674.
 static void
-AccummulateECCCurve(Telemetry::ID probe, uint32_t bits)
+AccumulateECCCurve(Telemetry::ID probe, uint32_t bits)
 {
   unsigned int value = bits == 256 ? 23 // P-256
                      : bits == 384 ? 24 // P-384
@@ -1267,8 +1267,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                     channelInfo.keaKeyBits);
             break;
           case ssl_kea_ecdh:
-            AccummulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
-                                channelInfo.keaKeyBits);
+            AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
+                               channelInfo.keaKeyBits);
             break;
           default:
             MOZ_CRASH("impossible KEA");
@@ -1290,8 +1290,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                       channelInfo.authKeyBits);
               break;
             case ssl_auth_ecdsa:
-              AccummulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
-                                  channelInfo.authKeyBits);
+              AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
+                                 channelInfo.authKeyBits);
               break;
             default:
               MOZ_CRASH("impossible auth algorithm");
