@@ -18,7 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsIMessageSender");
 
 function debug(aStr) {
+#ifdef MOZ_DEBUG
   dump("-*- DownloadsAPI.js : " + aStr + "\n");
+#endif
 }
 
 function DOMDownloadManagerImpl() {
