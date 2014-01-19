@@ -5,7 +5,6 @@
 package org.mozilla.gecko.favicons.decoders;
 
 import android.graphics.Bitmap;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.BitmapUtils;
 
 import java.util.Iterator;
@@ -87,7 +86,7 @@ public class FaviconDecoder {
             result = new LoadFaviconResult();
             result.mOffset = offset;
             result.mLength = length;
-            result.mHasMultipleBitmaps = false;
+            result.mIsICO = false;
 
             // We assume here that decodeByteArray doesn't hold on to the entire supplied
             // buffer -- worst case, each of our buffers will be twice the necessary size.
