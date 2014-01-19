@@ -2848,16 +2848,13 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
   }
 
   nsIFrame* frame = aFrame;
+  nsIFrame* frame2 = aFrame;
 
   NS_ASSERTION(!frame->GetPrevContinuation(), "must start with the first in flow");
 
-  // We need to handle aFrame and all of its continuations and special
-  // siblings and their continuations.  ReResolveStyleContext loops over
-  // the continuations, and also loops over the similar-type sequences
-  // in block-in-inline splits (i.e., either all the blocks or all the
-  // inlines), so here we only have to advance one step to the other set
-  // of special siblings (i.e., switch from blocks to inlines, or
-  // vice-versa).
+  // We want to start with this frame and walk all its next-in-flows,
+  // as well as all its special siblings and their next-in-flows,
+  // reresolving style on all the frames we encounter in this walk.
 
   FramePropertyTable* propTable = mPresContext->PropertyTable();
 
@@ -2869,36 +2866,39 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     parent && parent->IsElement() ? parent->AsElement() : nullptr;
   treeMatchContext.InitAncestors(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
-  for (int ibSet = 0; ibSet < 2; ++ibSet) {
-    // loop over the two sets (blocks, inlines) of special siblings
-    ElementRestyler restyler(mPresContext, frame, aChangeList,
-                             aMinChange, aRestyleTracker,
-                             treeMatchContext,
-                             visibleKidsOfHiddenElement);
+  do {
+    // Outer loop over special siblings
+    do {
+      // Inner loop over next-in-flows of the current frame
+      ElementRestyler restyler(mPresContext, frame, aChangeList,
+                               aMinChange, aRestyleTracker,
+                               treeMatchContext,
+                               visibleKidsOfHiddenElement);
 
-    restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self);
+      restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self);
 
-    if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
-      // If it's going to cause a framechange, then don't bother
-      // with the continuations or special siblings since they'll be
-      // clobbered by the frame reconstruct anyway.
-      NS_ASSERTION(!frame->GetPrevContinuation(),
-                   "continuing frame had more severe impact than first-in-flow");
-      return;
-    }
+      if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
+        // If it's going to cause a framechange, then don't bother
+        // with the continuations or special siblings since they'll be
+        // clobbered by the frame reconstruct anyway.
+        NS_ASSERTION(!frame->GetPrevContinuation(),
+                     "continuing frame had more severe impact than first-in-flow");
+        return;
+      }
+
+      frame = frame->GetNextContinuation();
+    } while (frame);
 
     // Might we have special siblings?
-    if (!(frame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+    if (!(frame2->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       // nothing more to do here
       return;
     }
 
-    frame = static_cast<nsIFrame*>
-      (propTable->Get(frame, nsIFrame::IBSplitSpecialSibling()));
-    if (!frame) {
-      return;
-    }
-  }
+    frame2 = static_cast<nsIFrame*>
+      (propTable->Get(frame2, nsIFrame::IBSplitSpecialSibling()));
+    frame = frame2;
+  } while (frame2);
 }
 
 } // namespace mozilla
