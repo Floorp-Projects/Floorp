@@ -24,6 +24,13 @@ if CONFIG['MOZ_OPUS']:
     EXPORTS += ['OpusTrackEncoder.h']
     UNIFIED_SOURCES += ['OpusTrackEncoder.cpp']
 
+if CONFIG['MOZ_OMX_ENCODER']:
+    DEFINES['MOZ_OMX_ENCODER'] = True
+    EXPORTS += ['OmxTrackEncoder.h']
+    UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
+
+include('/ipc/chromium/chromium-config.mozbuild')
