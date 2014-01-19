@@ -479,11 +479,22 @@ nsBrowserContentHandler.prototype = {
     }
     if (cmdLine.handleFlag("silent", false))
       cmdLine.preventDefault = true;
-    if (cmdLine.handleFlag("private-window", false)) {
-      openWindow(null, this.chromeURL, "_blank",
-        "chrome,dialog=no,private,all" + this.getFeatures(cmdLine),
-        "about:privatebrowsing");
-      cmdLine.preventDefault = true;
+
+    try {
+      var privateWindowParam = cmdLine.handleFlagWithParam("private-window", false);
+      if (privateWindowParam) {
+        var uri = resolveURIInternal(cmdLine, privateWindowParam);
+        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, true);
+        cmdLine.preventDefault = true;
+      }
+    } catch (e if e.result == Components.results.NS_ERROR_INVALID_ARG) {
+      // NS_ERROR_INVALID_ARG is thrown when flag exists, but has no param.
+      if (cmdLine.handleFlag("private-window", false)) {
+        openWindow(null, this.chromeURL, "_blank",
+          "chrome,dialog=no,private,all" + this.getFeatures(cmdLine),
+          "about:privatebrowsing");
+        cmdLine.preventDefault = true;
+      }
     }
 
     var searchParam = cmdLine.handleFlagWithParam("search", false);
@@ -685,19 +696,22 @@ nsBrowserContentHandler.prototype = {
 };
 var gBrowserContentHandler = new nsBrowserContentHandler();
 
-function handURIToExistingBrowser(uri, location, cmdLine)
+function handURIToExistingBrowser(uri, location, cmdLine, forcePrivate)
 {
   if (!shouldLoadURI(uri))
     return;
 
-  // Do not open external links in private windows, unless we're in perma-private mode
-  var allowPrivate = PrivateBrowsingUtils.permanentPrivateBrowsing;
+  // Unless using a private window is forced, open external links in private
+  // windows only if we're in perma-private mode.
+  var allowPrivate = forcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
   var navWin = RecentWindow.getMostRecentBrowserWindow({private: allowPrivate});
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
-    openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
-               "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),
-               uri.spec);
+    var features = "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine);
+    if (forcePrivate) {
+      features += ",private";
+    }
+    openWindow(null, gBrowserContentHandler.chromeURL, "_blank", features, uri.spec);
     return;
   }
 

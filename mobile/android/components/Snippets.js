@@ -291,6 +291,28 @@ function _httpGetRequest(url, callback) {
   xhr.send(null);
 }
 
+function loadSyncPromoBanner() {
+  // XXX: Use Accounts.jsm to check if a sync account exists (bug 917942).
+  let syncAccountExists = false;
+  if (syncAccountExists) {
+    // Don't show the promo banner if a sync account already exists.
+    return;
+  }
+
+  let stringBundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+  let text = stringBundle.GetStringFromName("promoBanner.message.text");
+  let link = stringBundle.GetStringFromName("promoBanner.message.link");
+
+  Home.banner.add({
+    text: text + "<a href=\"#\">" + link + "</a>",
+    icon: "drawable://sync_promo",
+    onclick: function() {
+      // XXX: Use Accounts.jsm to launch sync set-up activity (bug 917942).
+      gChromeWin.alert("Launch sync set-up activity!");
+    }
+  });
+}
+
 function Snippets() {}
 
 Snippets.prototype = {
@@ -298,12 +320,15 @@ Snippets.prototype = {
   classID: Components.ID("{a78d7e59-b558-4321-a3d6-dffe2f1e76dd}"),
 
   observe: function(subject, topic, data) {
-    if (!Services.prefs.getBoolPref("browser.snippets.enabled")) {
-      return;
-    }
     switch(topic) {
       case "profile-after-change":
-        loadSnippetsFromCache();
+        if (Services.prefs.getBoolPref("browser.snippets.syncPromo.enabled")) {
+          loadSyncPromoBanner();
+        }
+
+        if (Services.prefs.getBoolPref("browser.snippets.enabled")) {
+          loadSnippetsFromCache();
+        }
         break;
     }
   },
