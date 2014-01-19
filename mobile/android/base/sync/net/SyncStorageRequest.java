@@ -78,6 +78,21 @@ public class SyncStorageRequest implements Resource {
     this.resource.delegate = this.resourceDelegate;
   }
 
+  @Override
+  public URI getURI() {
+    return this.resource.getURI();
+  }
+
+  @Override
+  public String getURIString() {
+    return this.resource.getURIString();
+  }
+
+  @Override
+  public String getHostname() {
+    return this.resource.getHostname();
+  }
+
   /**
    * A ResourceDelegate that mediates between Resource-level notifications and the SyncStorageRequest.
    */
