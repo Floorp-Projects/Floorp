@@ -1091,6 +1091,7 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 7; break;
     case TLS_ECDHE_RSA_WITH_RC4_128_SHA: value = 8; break;
     case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: value = 9; break;
+    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
     // DHE key exchange
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: value = 21; break;
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
@@ -1101,6 +1102,7 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA: value = 27; break;
     case TLS_DHE_DSS_WITH_AES_256_CBC_SHA: value = 28; break;
     case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA: value = 29; break;
+    case SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA: value = 30; break;
     // ECDH key exchange
     case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA: value = 41; break;
     case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA: value = 42; break;
@@ -1122,10 +1124,10 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case SSL_RSA_WITH_RC4_128_MD5: value = 69; break;
     // unknown
     default:
-      MOZ_CRASH("impossible cipher suite");
       value = 0;
       break;
   }
+  MOZ_ASSERT(value != 0);
   Telemetry::Accumulate(probe, value);
 }
 
