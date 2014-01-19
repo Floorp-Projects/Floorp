@@ -2867,7 +2867,14 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
 
   // We want to start with this frame and walk all its next-in-flows,
   // as well as all its special siblings and their next-in-flows,
-  // reresolving style on all the frames we encounter in this walk.
+  // reresolving style on all the frames we encounter in this walk that
+  // we didn't reach already.  In the normal case, this will mean only
+  // restyling the first two block-in-inline splits and no
+  // continuations, and skipping everything else.  However, when we have
+  // a style change targeted at an element inside a context where styles
+  // vary between continuations (e.g., a style change on an element that
+  // extends from inside a styled ::first-line to outside of that first
+  // line), we might restyle more than that.
 
   FramePropertyTable* propTable = mPresContext->PropertyTable();
 
@@ -2883,6 +2890,12 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
        ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
     // Outer loop over special siblings
     for (nsIFrame* cont = ibSibling; cont; cont = cont->GetNextContinuation()) {
+      if (GetPrevContinuationWithSameStyle(cont)) {
+        // We already handled this element when dealing with its earlier
+        // continuation.
+        continue;
+      }
+
       // Inner loop over next-in-flows of the current frame
       ElementRestyler restyler(mPresContext, cont, aChangeList,
                                aMinChange, aRestyleTracker,
