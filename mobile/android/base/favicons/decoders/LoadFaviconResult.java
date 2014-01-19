@@ -25,7 +25,7 @@ public class LoadFaviconResult {
     int mOffset;
     int mLength;
 
-    boolean mHasMultipleBitmaps;
+    boolean mIsICO;
     Iterator<Bitmap> mBitmapsDecoded;
 
     public Iterator<Bitmap> getBitmaps() {
@@ -49,7 +49,7 @@ public class LoadFaviconResult {
 
         // For results containing a single image, we re-encode the result as a PNG in an effort to
         // save space.
-        if (!mHasMultipleBitmaps) {
+        if (!mIsICO) {
             Bitmap favicon = ((FaviconDecoder.SingleBitmapIterator) mBitmapsDecoded).peek();
             byte[] data = null;
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
