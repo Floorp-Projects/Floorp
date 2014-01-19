@@ -15,6 +15,13 @@ function doEdgeUIGesture() {
   window.dispatchEvent(event);
 }
 
+function fireTabURLChanged(tab, hasLocationChanged) {
+  let urlChangedEvent = document.createEvent("UIEvents");
+  urlChangedEvent.initUIEvent("URLChanged", true, false, window,
+      hasLocationChanged);
+  tab.browser.dispatchEvent(urlChangedEvent);
+}
+
 function getpage(idx) {
   return "http://mochi.test:8888/metro/browser/metro/base/tests/mochitest/" + "res/blankpage" + idx + ".html";
 }
@@ -254,5 +261,28 @@ gTests.push({
 
     Browser.closeTab(newTab, { forceClose: true });
     Browser.closeTab(mozTab, { forceClose: true });
+  }
+});
+
+gTests.push({
+  desc: "Bug 956576 - Location app bar pops up when fragment identifier " +
+        "changes (URL stuff after hash / number sign).",
+  run: function () {
+    let tab = yield addTab("about:mozilla");
+    yield showNavBar();
+    ok(ContextUI.navbarVisible, "Navbar is initially visible.");
+
+    ContextUI.dismiss();
+    ok(!ContextUI.navbarVisible, "Navbar is dismissed and hidden.");
+
+    let locationHasChanged = false;
+    fireTabURLChanged(tab, locationHasChanged);
+    ok(!ContextUI.navbarVisible, "Navbar isn't shown on URL fragment change.");
+
+    locationHasChanged = true;
+    fireTabURLChanged(tab, locationHasChanged);
+    ok(ContextUI.navbarVisible, "Navbar is shown on actual URL change.");
+
+    Browser.closeTab(tab, { forceClose: true });
   }
 });
