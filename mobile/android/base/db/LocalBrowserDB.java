@@ -15,6 +15,8 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
+import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.gfx.BitmapUtils;
 
 import android.content.ContentProviderOperation;
@@ -708,7 +710,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
      * @return The decoded Bitmap from the database, if any. null if none is stored.
      */
     @Override
-    public Bitmap getFaviconForUrl(ContentResolver cr, String faviconURL) {
+    public LoadFaviconResult getFaviconForUrl(ContentResolver cr, String faviconURL) {
         Cursor c = null;
         byte[] b = null;
 
@@ -735,7 +737,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             return null;
         }
 
-        return BitmapUtils.decodeByteArray(b);
+        return FaviconDecoder.decodeFavicon(b);
     }
 
     @Override
@@ -761,19 +763,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public void updateFaviconForUrl(ContentResolver cr, String pageUri,
-            Bitmap favicon, String faviconUri) {
+            byte[] encodedFavicon, String faviconUri) {
         ContentValues values = new ContentValues();
         values.put(Favicons.URL, faviconUri);
         values.put(Favicons.PAGE_URL, pageUri);
-
-        byte[] data = null;
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        if (favicon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
-            data = stream.toByteArray();
-        } else {
-            Log.w(LOGTAG, "Favicon compression failed.");
-        }
-        values.put(Favicons.DATA, data);
+        values.put(Favicons.DATA, encodedFavicon);
 
         // Update or insert
         Uri faviconsUri = getAllFaviconsUri().buildUpon().

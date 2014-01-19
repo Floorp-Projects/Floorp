@@ -34,12 +34,12 @@ import android.util.Log;
  *  public abstract void initGecko();
  */
 
-public abstract class PerProfileContentProvider extends ContentProvider {
+public abstract class SQLiteBridgeContentProvider extends ContentProvider {
     private HashMap<String, SQLiteBridge> mDatabasePerProfile;
     protected Context mContext = null;
     private final String mLogTag;
 
-    protected PerProfileContentProvider(String logTag) {
+    protected SQLiteBridgeContentProvider(String logTag) {
         mLogTag = logTag;
     }
 

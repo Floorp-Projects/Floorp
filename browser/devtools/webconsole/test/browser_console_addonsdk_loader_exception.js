@@ -11,6 +11,8 @@ const TEST_URI = "data:text/html;charset=utf8,<p>hello world from bug 866950";
 
 function test()
 {
+  requestLongerTimeout(2);
+
   let webconsole, browserconsole;
 
   addTab(TEST_URI);
