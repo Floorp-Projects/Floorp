@@ -282,6 +282,14 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: none;
 }
 
+#PanelUI-quit:not([disabled]):hover {
+  background-color: #d94141;
+}
+
+#PanelUI-quit:not([disabled]):hover:active {
+  background-color: #ad3434;
+}
+
 #main-window[customize-entered] #PanelUI-customize {
   color: white;
   background-image: linear-gradient(rgb(41,123,204), rgb(40,133,203));
