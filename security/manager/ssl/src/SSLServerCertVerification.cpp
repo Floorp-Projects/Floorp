@@ -465,7 +465,8 @@ PRErrorCodeToOverrideType(PRErrorCode errorCode)
 // Returns null with the error code (PR_GetError()) set if it does not create
 // the CertErrorRunnable.
 CertErrorRunnable*
-CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
+CreateCertErrorRunnable(CertVerifier& certVerifier,
+                        PRErrorCode defaultErrorCodeToReport,
                         TransportSecurityInfo* infoObject,
                         CERTCertificate* cert,
                         const void* fdForLogging,
@@ -498,13 +499,6 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
 
   SECStatus srv;
 
-  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
-  if (!certVerifier) {
-    NS_ERROR("GetDefaultCerVerifier failed");
-    PR_SetError(defaultErrorCodeToReport, 0);
-    return nullptr;
-  }
-
   PLArenaPool* log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
   if (!log_arena) {
@@ -520,8 +514,8 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
   verify_log->arena = log_arena;
 
-  srv = certVerifier->VerifyCert(cert, certificateUsageSSLServer, now,
-                                 infoObject, 0, nullptr, nullptr, verify_log);
+  srv = certVerifier.VerifyCert(cert, certificateUsageSSLServer, now,
+                                infoObject, 0, nullptr, nullptr, verify_log);
 
   // We ignore the result code of the cert verification.
   // Either it is a failure, which is expected, and we'll process the
@@ -624,8 +618,9 @@ class SSLServerCertVerificationJob : public nsRunnable
 {
 public:
   // Must be called only on the socket transport thread
-  static SECStatus Dispatch(const void* fdForLogging,
-                            nsNSSSocketInfo* infoObject,
+  static SECStatus Dispatch(const RefPtr<SharedCertVerifier>& certVerifier,
+                            const void* fdForLogging,
+                            TransportSecurityInfo* infoObject,
                             CERTCertificate* serverCert,
                             SECItem* stapledOCSPResponse,
                             uint32_t providerFlags);
@@ -633,13 +628,15 @@ private:
   NS_DECL_NSIRUNNABLE
 
   // Must be called only on the socket transport thread
-  SSLServerCertVerificationJob(const void* fdForLogging,
-                               nsNSSSocketInfo* infoObject,
+  SSLServerCertVerificationJob(const RefPtr<SharedCertVerifier>& certVerifier,
+                               const void* fdForLogging,
+                               TransportSecurityInfo* infoObject,
                                CERTCertificate* cert,
                                SECItem* stapledOCSPResponse,
                                uint32_t providerFlags);
+  const RefPtr<SharedCertVerifier> mCertVerifier;
   const void* const mFdForLogging;
-  const RefPtr<nsNSSSocketInfo> mInfoObject;
+  const RefPtr<TransportSecurityInfo> mInfoObject;
   const ScopedCERTCertificate mCert;
   const uint32_t mProviderFlags;
   const TimeStamp mJobStartTime;
@@ -647,10 +644,11 @@ private:
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
-    const void* fdForLogging, nsNSSSocketInfo* infoObject,
-    CERTCertificate* cert, SECItem* stapledOCSPResponse,
-    uint32_t providerFlags)
-  : mFdForLogging(fdForLogging)
+    const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
+    TransportSecurityInfo* infoObject, CERTCertificate* cert,
+    SECItem* stapledOCSPResponse, uint32_t providerFlags)
+  : mCertVerifier(certVerifier)
+  , mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert))
   , mProviderFlags(providerFlags)
@@ -660,21 +658,16 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
 }
 
 SECStatus
-PSM_SSL_PKIX_AuthCertificate(CERTCertificate* peerCert,
+PSM_SSL_PKIX_AuthCertificate(CertVerifier& certVerifier,
+                             CERTCertificate* peerCert,
                              nsIInterfaceRequestor* pinarg,
                              const char* hostname,
                              CERTCertList** validationChain,
                              SECOidTag* evOidPolicy)
 {
-    RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
-    if (!certVerifier) {
-      PR_SetError(PR_INVALID_STATE_ERROR, 0);
-      return SECFailure;
-    }
-
-    SECStatus rv = certVerifier->VerifyCert(peerCert,
-                                            certificateUsageSSLServer, PR_Now(),
-                                            pinarg, 0, validationChain , evOidPolicy);
+    SECStatus rv = certVerifier.VerifyCert(peerCert, certificateUsageSSLServer,
+                                           PR_Now(), pinarg, 0,
+                                           validationChain, evOidPolicy);
 
     if (rv == SECSuccess) {
         // cert is OK. This is the client side of an SSL connection.
@@ -845,8 +838,9 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo* infoObject,
 }
 
 SECStatus
-AuthCertificate(nsNSSSocketInfo* infoObject, CERTCertificate* cert,
-                SECItem* stapledOCSPResponse, uint32_t providerFlags)
+AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
+                CERTCertificate* cert, SECItem* stapledOCSPResponse,
+                uint32_t providerFlags)
 {
   if (cert->serialNumber.data &&
       cert->issuerName &&
@@ -926,7 +920,7 @@ AuthCertificate(nsNSSSocketInfo* infoObject, CERTCertificate* cert,
       PORT_Free(ocspURI);
     }
 
-    if (!infoObject->SharedState().IsOCSPFetchingEnabled()) {
+    if (!certVerifier.mOCSPDownloadEnabled) {
       reasonsForNotFetching |= 2;
     }
 
@@ -936,7 +930,8 @@ AuthCertificate(nsNSSSocketInfo* infoObject, CERTCertificate* cert,
 
   CERTCertList* verifyCertChain = nullptr;
   SECOidTag evOidPolicy;
-  rv = PSM_SSL_PKIX_AuthCertificate(cert, infoObject, infoObject->GetHostNameRaw(),
+  rv = PSM_SSL_PKIX_AuthCertificate(certVerifier, cert, infoObject,
+                                    infoObject->GetHostNameRaw(),
                                     &verifyCertChain, &evOidPolicy);
 
   // We want to remember the CA certs in the temp db, so that the application can find the
@@ -1052,22 +1047,25 @@ AuthCertificate(nsNSSSocketInfo* infoObject, CERTCertificate* cert,
 }
 
 /*static*/ SECStatus
-SSLServerCertVerificationJob::Dispatch(const void* fdForLogging,
-                                       nsNSSSocketInfo* infoObject,
-                                       CERTCertificate* serverCert,
-                                       SECItem* stapledOCSPResponse,
-                                       uint32_t providerFlags)
+SSLServerCertVerificationJob::Dispatch(
+  const RefPtr<SharedCertVerifier>& certVerifier,
+  const void* fdForLogging,
+  TransportSecurityInfo* infoObject,
+  CERTCertificate* serverCert,
+  SECItem* stapledOCSPResponse,
+  uint32_t providerFlags)
 {
   // Runs on the socket transport thread
-  if (!infoObject || !serverCert) {
+  if (!certVerifier || !infoObject || !serverCert) {
     NS_ERROR("Invalid parameters for SSL server cert validation");
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
     return SECFailure;
   }
 
   RefPtr<SSLServerCertVerificationJob> job(
-    new SSLServerCertVerificationJob(fdForLogging, infoObject, serverCert,
-                                     stapledOCSPResponse, providerFlags));
+    new SSLServerCertVerificationJob(certVerifier, fdForLogging, infoObject,
+                                     serverCert, stapledOCSPResponse,
+                                     providerFlags));
 
   nsresult nrv;
   if (!gCertVerificationThreadPool) {
@@ -1108,27 +1106,37 @@ SSLServerCertVerificationJob::Run()
   if (mInfoObject->isAlreadyShutDown()) {
     error = SEC_ERROR_USER_CANCELLED;
   } else {
+    Telemetry::ID successTelemetry;
+    Telemetry::ID failureTelemetry;
+    switch (mCertVerifier->mImplementation) {
+      case CertVerifier::classic:
+        successTelemetry
+          = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC;
+        failureTelemetry
+          = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC;
+        break;
+#ifndef NSS_NO_LIBPKIX
+      case CertVerifier::libpkix:
+        successTelemetry
+          = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX;
+        failureTelemetry
+          = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX;
+        break;
+#endif
+      default:
+        MOZ_CRASH("Unknown CertVerifier mode");
+    }
+
     // Reset the error code here so we can detect if AuthCertificate fails to
     // set the error code if/when it fails.
     PR_SetError(0, 0);
-    SECStatus rv = AuthCertificate(mInfoObject, mCert, mStapledOCSPResponse,
-                                   mProviderFlags);
+    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
+                                   mStapledOCSPResponse, mProviderFlags);
     if (rv == SECSuccess) {
       uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
-      Telemetry::ID telemetryID;
-#ifndef NSS_NO_LIBPKIX
-      if(nsNSSComponent::globalConstFlagUsePKIXVerification){
-        telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX;
-      }
-      else{
-#endif
-        telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC;
-#ifndef NSS_NO_LIBPKIX
-      }
-#endif
       RefPtr<SSLServerCertVerificationResult> restart(
         new SSLServerCertVerificationResult(mInfoObject, 0,
-                                            telemetryID, interval));
+                                            successTelemetry, interval));
       restart->Dispatch();
       return NS_OK;
     }
@@ -1138,25 +1146,13 @@ SSLServerCertVerificationJob::Run()
     error = PR_GetError();
     {
       TimeStamp now = TimeStamp::Now();
-      Telemetry::ID telemetryID;
-#ifndef NSS_NO_LIBPKIX
-      if(nsNSSComponent::globalConstFlagUsePKIXVerification) {
-        telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX;
-      }
-      else {
-#endif
-        telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC;
-#ifndef NSS_NO_LIBPKIX
-      }
-#endif
       MutexAutoLock telemetryMutex(*gSSLVerificationTelemetryMutex);
-      Telemetry::AccumulateTimeDelta(telemetryID,
-                                     mJobStartTime,
-                                     now);
+      Telemetry::AccumulateTimeDelta(failureTelemetry, mJobStartTime, now);
     }
     if (error != 0) {
-      RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
-        error, mInfoObject, mCert, mFdForLogging, mProviderFlags, PR_Now()));
+      RefPtr<CertErrorRunnable> runnable(
+          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject, mCert,
+                                  mFdForLogging, mProviderFlags, PR_Now()));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError();
@@ -1206,6 +1202,12 @@ SSLServerCertVerificationJob::Run()
 SECStatus
 AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 {
+  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  if (!certVerifier) {
+    PR_SetError(SEC_ERROR_NOT_INITIALIZED, 0);
+    return SECFailure;
+  }
+
   // Runs on the socket transport thread
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1229,6 +1231,10 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   }
 
   socketInfo->SetFullHandshake();
+
+  // This value of "now" is used both here for OCSP stapling and later
+  // when calling CreateCertErrorRunnable.
+  PRTime now = PR_Now();
 
   if (BlockServerCertChangeForSpdy(socketInfo, serverCert) != SECSuccess)
     return SECFailure;
@@ -1269,8 +1275,8 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
     // because of the performance benefits of doing so.
     socketInfo->SetCertVerificationWaiting();
     SECStatus rv = SSLServerCertVerificationJob::Dispatch(
-                     static_cast<const void*>(fd), socketInfo, serverCert,
-                     stapledOCSPResponse, providerFlags);
+                     certVerifier, static_cast<const void*>(fd), socketInfo,
+                     serverCert, stapledOCSPResponse, providerFlags);
     return rv;
   }
 
@@ -1279,17 +1285,18 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   // of our SSLServerCertVerificationResult event, and/or it might not even be
   // a non-blocking socket.
 
-  SECStatus rv = AuthCertificate(socketInfo, serverCert, stapledOCSPResponse,
-                                 providerFlags);
+  SECStatus rv = AuthCertificate(*certVerifier, socketInfo, serverCert,
+                                 stapledOCSPResponse, providerFlags);
   if (rv == SECSuccess) {
     return SECSuccess;
   }
 
   PRErrorCode error = PR_GetError();
   if (error != 0) {
-    RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
-                    error, socketInfo, serverCert,
-                    static_cast<const void*>(fd), providerFlags, PR_Now()));
+    RefPtr<CertErrorRunnable> runnable(
+        CreateCertErrorRunnable(*certVerifier, error, socketInfo, serverCert,
+                                static_cast<const void*>(fd), providerFlags,
+                                now));
     if (!runnable) {
       // CreateCertErrorRunnable sets a new error code when it fails
       error = PR_GetError();

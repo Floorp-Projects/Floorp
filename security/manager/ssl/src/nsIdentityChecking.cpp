@@ -1280,7 +1280,8 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
     return nrv;
   nssComponent->EnsureIdentityInfoLoaded();
 
-  RefPtr<mozilla::psm::CertVerifier> certVerifier(mozilla::psm::GetDefaultCertVerifier());
+  RefPtr<mozilla::psm::SharedCertVerifier>
+    certVerifier(mozilla::psm::GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   validEV = false;

@@ -10,7 +10,6 @@
 
 #include "nsNSSComponent.h"
 
-#include "CertVerifier.h"
 #include "mozilla/Telemetry.h"
 #include "nsCertVerificationThread.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -77,10 +76,6 @@ PRLogModuleInfo* gPIPNSSLog = nullptr;
 #endif
 
 int nsNSSComponent::mInstanceCount = 0;
-
-#ifndef NSS_NO_LIBPKIX
-bool nsNSSComponent::globalConstFlagUsePKIXVerification = false;
-#endif
 
 // XXX tmp callback for slot password
 extern char* pk11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
@@ -1032,8 +1027,8 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
 
   bool ocspStaplingEnabled = Preferences::GetBool("security.ssl.enable_ocsp_stapling",
                                                   true);
-  PublicSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
-  PrivateSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
+  PublicSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
+  PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
 
   setNonPkixOcspEnabled(ocspEnabled);
 
@@ -1051,7 +1046,17 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   bool ocspGetEnabled = Preferences::GetBool("security.OCSP.GET.enabled", false);
   CERT_ForcePostMethodForOCSP(!ocspGetEnabled);
 
-  mDefaultCertVerifier = new CertVerifier(
+  CertVerifier::implementation_config certVerifierImplementation
+    = CertVerifier::classic;
+
+#ifndef NSS_NO_LIBPKIX
+  if (Preferences::GetBool("security.use_libpkix_verification", false)) {
+    certVerifierImplementation = CertVerifier::libpkix;
+  }
+#endif
+
+  mDefaultCertVerifier = new SharedCertVerifier(
+      certVerifierImplementation,
       aiaDownloadEnabled ?
         CertVerifier::missing_cert_download_on : CertVerifier::missing_cert_download_off,
       crlDownloading ?
@@ -1188,10 +1193,6 @@ nsNSSComponent::InitializeNSS()
       }
     }
 
-#ifndef NSS_NO_LIBPKIX
-    globalConstFlagUsePKIXVerification =
-      Preferences::GetBool("security.use_libpkix_verification", false);
-#endif
 
     // init phase 2, init calls to NSS library
 
@@ -1897,16 +1898,34 @@ nsNSSComponent::IsNSSInitialized(bool* initialized)
   return NS_OK;
 }
 
+SharedCertVerifier::~SharedCertVerifier() { }
+
 //#ifndef NSS_NO_LIBPKIX
-NS_IMETHODIMP
-nsNSSComponent::GetDefaultCertVerifier(RefPtr<CertVerifier>& out)
+TemporaryRef<SharedCertVerifier>
+nsNSSComponent::GetDefaultCertVerifier()
 {
   MutexAutoLock lock(mutex);
-  if (!mNSSInitialized)
-      return NS_ERROR_NOT_INITIALIZED;
-  out = mDefaultCertVerifier;
-  return NS_OK;
+  MOZ_ASSERT(mNSSInitialized);
+  return mDefaultCertVerifier;
 }
+
+namespace mozilla { namespace psm {
+
+TemporaryRef<SharedCertVerifier>
+GetDefaultCertVerifier()
+{
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID));
+  RefPtr<SharedCertVerifier> certVerifier;
+  if (nssComponent) {
+    return nssComponent->GetDefaultCertVerifier();
+  }
+
+  return nullptr;
+}
+
+} } // namespace mozilla::psm
 
 NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
 
