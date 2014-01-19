@@ -31,3 +31,5 @@ load stress-10.html # crash test
 == 403177-1.html 403177-1-ref.html
 == 469227-2.html 469227-2-ref.html
 == 469227-3.html 469227-3-ref.html
+
+== restyle-inside-first-line.html restyle-inside-first-line-ref.html
