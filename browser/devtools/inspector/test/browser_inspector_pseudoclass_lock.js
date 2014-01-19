@@ -54,7 +54,7 @@ function selectNode(aInspector)
   inspector.sidebar.once("ruleview-ready", function() {
     ruleview = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
     inspector.sidebar.select("ruleview");
-    inspector.selection.setNode(div);
+    inspector.selection.setNode(div, "test");
     inspector.once("inspector-updated", performTests);
   });
 }
@@ -95,21 +95,21 @@ function performTests()
 
 function testNavigate(callback)
 {
-  inspector.selection.setNode(parentDiv);
+  inspector.selection.setNode(parentDiv, "test");
   inspector.once("inspector-updated", () => {
 
     // make sure it's still on after naving to parent
     is(DOMUtils.hasPseudoClassLock(div, pseudo), true,
       "pseudo-class lock is still applied after inspecting ancestor");
 
-    inspector.selection.setNode(div2);
+    inspector.selection.setNode(div2, "test");
     inspector.selection.once("pseudoclass", () => {
       // make sure it's removed after naving to a non-hierarchy node
       is(DOMUtils.hasPseudoClassLock(div, pseudo), false,
         "pseudo-class lock is removed after inspecting sibling node");
 
       // toggle it back on
-      inspector.selection.setNode(div);
+      inspector.selection.setNode(div, "test");
       inspector.once("inspector-updated", () => {
         inspector.togglePseudoClass(pseudo);
         inspector.once("computed-view-refreshed", callback);
@@ -144,7 +144,7 @@ function testAdded(cb)
     // infobar selector contains pseudo-class
     let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
     is(pseudoClassesBox.textContent, pseudo, "pseudo-class in infobar selector");
-    cb();
+    inspector.toolbox.highlighter.hideBoxModel().then(cb);
   });
 }
 
@@ -168,7 +168,7 @@ function testRemovedFromUI(cb)
   showPickerOn(div, () => {
     let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
     is(pseudoClassesBox.textContent, "", "pseudo-class removed from infobar selector");
-    cb();
+    inspector.toolbox.highlighter.hideBoxModel().then(cb);
   });
 }
 
