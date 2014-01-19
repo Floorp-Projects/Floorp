@@ -508,6 +508,7 @@ sync_java_files = [
     'background/fxa/FxAccountClient20.java',
     'background/fxa/FxAccountClientException.java',
     'background/fxa/FxAccountUtils.java',
+    'background/fxa/SkewHandler.java',
     'background/healthreport/Environment.java',
     'background/healthreport/EnvironmentBuilder.java',
     'background/healthreport/EnvironmentV1.java',

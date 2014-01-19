@@ -150,6 +150,7 @@ public class FxAccountClient10 {
     protected final byte[] tokenId;
     protected final byte[] reqHMACKey;
     protected final boolean payload;
+    protected final SkewHandler skewHandler;
 
     /**
      * Create a delegate for an un-authenticated resource.
@@ -167,12 +168,13 @@ public class FxAccountClient10 {
       this.reqHMACKey = reqHMACKey;
       this.tokenId = tokenId;
       this.payload = authenticatePayload;
+      this.skewHandler = SkewHandler.getSkewHandlerForResource(resource);
     }
 
     @Override
     public AuthHeaderProvider getAuthHeaderProvider() {
       if (tokenId != null && reqHMACKey != null) {
-        return new HawkAuthHeaderProvider(Utils.byte2Hex(tokenId), reqHMACKey, payload);
+        return new HawkAuthHeaderProvider(Utils.byte2Hex(tokenId), reqHMACKey, payload, skewHandler.getSkewInSeconds());
       }
       return super.getAuthHeaderProvider();
     }
@@ -182,9 +184,14 @@ public class FxAccountClient10 {
       final int status = response.getStatusLine().getStatusCode();
       switch (status) {
       case 200:
+        skewHandler.updateSkew(response, now());
         invokeHandleSuccess(status, response);
         return;
       default:
+        if (!skewHandler.updateSkew(response, now())) {
+          // If we couldn't update skew, but we got a failure, let's try clearing the skew.
+          skewHandler.resetSkew();
+        }
         invokeHandleFailure(status, response);
         return;
       }
@@ -240,6 +247,11 @@ public class FxAccountClient10 {
       invokeHandleError(delegate, e);
       return;
     }
+  }
+
+  @SuppressWarnings("static-method")
+  public long now() {
+    return System.currentTimeMillis();
   }
 
   public void createAccount(final String email, final byte[] stretchedPWBytes,
