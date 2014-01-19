@@ -2833,6 +2833,21 @@ ElementRestyler::SendAccessibilityNotifications()
 #endif
 }
 
+inline nsIFrame*
+GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
+{
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "must start with the first continuation");
+  // Might we have special siblings?
+  if (!(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+    // nothing more to do here
+    return nullptr;
+  }
+
+  return static_cast<nsIFrame*>
+    (aPropTable->Get(aFrame, nsIFrame::IBSplitSpecialSibling()));
+}
+
 void
 RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                       nsStyleChangeList* aChangeList,
@@ -2847,10 +2862,8 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }
 
-  nsIFrame* frame = aFrame;
-  nsIFrame* frame2 = aFrame;
-
-  NS_ASSERTION(!frame->GetPrevContinuation(), "must start with the first in flow");
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "must start with the first continuation");
 
   // We want to start with this frame and walk all its next-in-flows,
   // as well as all its special siblings and their next-in-flows,
@@ -2866,11 +2879,12 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     parent && parent->IsElement() ? parent->AsElement() : nullptr;
   treeMatchContext.InitAncestors(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
-  do {
+  for (nsIFrame* ibSibling = aFrame; ibSibling;
+       ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
     // Outer loop over special siblings
-    do {
+    for (nsIFrame* cont = ibSibling; cont; cont = cont->GetNextContinuation()) {
       // Inner loop over next-in-flows of the current frame
-      ElementRestyler restyler(mPresContext, frame, aChangeList,
+      ElementRestyler restyler(mPresContext, cont, aChangeList,
                                aMinChange, aRestyleTracker,
                                treeMatchContext,
                                visibleKidsOfHiddenElement);
@@ -2881,24 +2895,12 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.
-        NS_ASSERTION(!frame->GetPrevContinuation(),
+        NS_ASSERTION(!cont->GetPrevContinuation(),
                      "continuing frame had more severe impact than first-in-flow");
         return;
       }
-
-      frame = frame->GetNextContinuation();
-    } while (frame);
-
-    // Might we have special siblings?
-    if (!(frame2->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
-      // nothing more to do here
-      return;
     }
-
-    frame2 = static_cast<nsIFrame*>
-      (propTable->Get(frame2, nsIFrame::IBSplitSpecialSibling()));
-    frame = frame2;
-  } while (frame2);
+  }
 }
 
 } // namespace mozilla
