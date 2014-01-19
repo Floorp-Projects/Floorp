@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<title>Test for bug 945105: direct restyling of element inside of a ::first-line that extends to the next line</title>
+<style>
+body { background-color: white; color: black; width: 400px; height: 400px; }
+div::first-line { color: purple; }
+</style>
+<div style="width: 0"><span id="x" style="visibility: hidden">This is some text</span></div>
+<script>
+document.body.firstChild.offsetWidth;
+document.getElementById("x").style.visibility = "visible";
+</script>
