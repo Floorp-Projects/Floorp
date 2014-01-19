@@ -20,6 +20,7 @@
 #include "nsINSSErrorsService.h"
 #include "nsNSSCallbacks.h"
 #include "ScopedNSSTypes.h"
+#include "SharedCertVerifier.h"
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
 #include "prerror.h"
@@ -30,7 +31,9 @@ class SmartCardThreadList;
 
 namespace mozilla { namespace psm {
 
-class CertVerifier;
+MOZ_WARN_UNUSED_RESULT
+  ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+  GetDefaultCertVerifier();
 
 } } // namespace mozilla::psm
 
@@ -110,8 +113,8 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD IsNSSInitialized(bool* initialized) = 0;
 
-  NS_IMETHOD GetDefaultCertVerifier(
-                  mozilla::RefPtr<mozilla::psm::CertVerifier>& out) = 0;
+  virtual ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+    GetDefaultCertVerifier() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -177,10 +180,10 @@ public:
 #endif
   NS_IMETHOD IsNSSInitialized(bool* initialized);
 
-  NS_IMETHOD GetDefaultCertVerifier(
-                  mozilla::RefPtr<mozilla::psm::CertVerifier>& out);
-private:
+  ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
+    GetDefaultCertVerifier() MOZ_OVERRIDE;
 
+private:
   nsresult InitializeNSS();
   void ShutdownNSS();
 
@@ -219,14 +222,11 @@ private:
   nsCertVerificationThread* mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
-  mozilla::RefPtr<mozilla::psm::CertVerifier> mDefaultCertVerifier;
+  mozilla::RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
 
 
   static PRStatus IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;
-
-public:
-  static bool globalConstFlagUsePKIXVerification;
 };
 
 class nsNSSErrors

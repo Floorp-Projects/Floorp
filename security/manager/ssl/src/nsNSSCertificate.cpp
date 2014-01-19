@@ -824,7 +824,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   ScopedCERTCertList nssChain;
   SECStatus srv;
   nssChain = nullptr;
-  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
+  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
   CERTCertList* pkixNssChain = nullptr;
 

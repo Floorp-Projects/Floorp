@@ -5,21 +5,14 @@
 #ifndef mozilla_psm__CertVerifier_h
 #define mozilla_psm__CertVerifier_h
 
-#include "mozilla/RefPtr.h"
-#include "CryptoUtil.h"
-#include "nsISupportsImpl.h"
 #include "certt.h"
-
-class nsIInterfaceRequestor;
-class nsNSSComponent;
+#include "insanity/ScopedPtr.h"
 
 namespace mozilla { namespace psm {
 
 class CertVerifier
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CertVerifier)
-
   typedef unsigned int Flags;
   // XXX: FLAG_LOCAL_ONLY is ignored in the classic verification case
   static const Flags FLAG_LOCAL_ONLY;
@@ -31,11 +24,18 @@ public:
   SECStatus VerifyCert(CERTCertificate* cert,
                        const SECCertificateUsage usage,
                        const PRTime time,
-                       nsIInterfaceRequestor* pinArg,
+                       void* pinArg,
                        const Flags flags = 0,
                        /*optional out*/ CERTCertList** validationChain = nullptr,
                        /*optional out*/ SECOidTag* evOidPolicy = nullptr ,
                        /*optional out*/ CERTVerifyLog* verifyLog = nullptr);
+
+  enum implementation_config {
+    classic = 0,
+#ifndef NSS_NO_LIBPKIX
+    libpkix = 1,
+#endif
+  };
 
   enum missing_cert_download_config { missing_cert_download_off = 0, missing_cert_download_on };
   enum crl_download_config { crl_local_only = 0, crl_download_allowed };
@@ -45,21 +45,19 @@ public:
 
   bool IsOCSPDownloadEnabled() const { return mOCSPDownloadEnabled; }
 
-private:
-  CertVerifier(missing_cert_download_config ac, crl_download_config cdc,
-               ocsp_download_config odc, ocsp_strict_config osc,
-               ocsp_get_config ogc);
+  CertVerifier(implementation_config ic, missing_cert_download_config ac,
+               crl_download_config cdc, ocsp_download_config odc,
+               ocsp_strict_config osc, ocsp_get_config ogc);
   ~CertVerifier();
 
+public:
+  const implementation_config mImplementation;
   const bool mMissingCertDownloadEnabled;
   const bool mCRLDownloadEnabled;
   const bool mOCSPDownloadEnabled;
   const bool mOCSPStrict;
   const bool mOCSPGETEnabled;
-  friend class ::nsNSSComponent;
 };
-
-MOZ_WARN_UNUSED_RESULT TemporaryRef<CertVerifier> GetDefaultCertVerifier();
 
 } } // namespace mozilla::psm
 

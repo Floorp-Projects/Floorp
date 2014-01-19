@@ -213,7 +213,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
   NSSCMSSignedData *sigd = nullptr;
   NSSCMSSignerInfo *si;
   int32_t nsigners;
-  RefPtr<CertVerifier> certVerifier;
+  RefPtr<SharedCertVerifier> certVerifier;
   nsresult rv = NS_ERROR_FAILURE;
 
   if (!NSS_CMSMessage_IsSigned(m_cmsMsg)) {

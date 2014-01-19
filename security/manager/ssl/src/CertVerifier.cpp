@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CertVerifier.h"
-#include "nsNSSComponent.h"
-#include "nsServiceManagerUtils.h"
+#include "ScopedNSSTypes.h"
 #include "cert.h"
 #include "secerr.h"
+#include "prerror.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -20,31 +20,30 @@ extern CERTCertList* getRootsForOid(SECOidTag oid_tag);
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
 const CertVerifier::Flags CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV = 2;
 
-CertVerifier::CertVerifier(missing_cert_download_config mcdc,
+CertVerifier::CertVerifier(implementation_config ic,
+                           missing_cert_download_config mcdc,
                            crl_download_config cdc,
                            ocsp_download_config odc,
                            ocsp_strict_config osc,
                            ocsp_get_config ogc)
-  : mMissingCertDownloadEnabled(mcdc == missing_cert_download_on)
+  : mImplementation(ic)
+  , mMissingCertDownloadEnabled(mcdc == missing_cert_download_on)
   , mCRLDownloadEnabled(cdc == crl_download_allowed)
   , mOCSPDownloadEnabled(odc == ocsp_on)
   , mOCSPStrict(osc == ocsp_strict)
   , mOCSPGETEnabled(ogc == ocsp_get_enabled)
 {
-  MOZ_COUNT_CTOR(CertVerifier);
 }
 
 CertVerifier::~CertVerifier()
 {
-  MOZ_COUNT_DTOR(CertVerifier);
 }
-
 
 static SECStatus
 ClassicVerifyCert(CERTCertificate* cert,
                   const SECCertificateUsage usage,
                   const PRTime time,
-                  nsIInterfaceRequestor* pinArg,
+                  void* pinArg,
                   /*optional out*/ CERTCertList** validationChain,
                   /*optional out*/ CERTVerifyLog* verifyLog)
 {
@@ -117,13 +116,17 @@ SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert,
                          const SECCertificateUsage usage,
                          const PRTime time,
-                         nsIInterfaceRequestor* pinArg,
+                         void* pinArg,
                          const Flags flags,
                          /*optional out*/ CERTCertList** validationChain,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
-  if (!cert) {
+  if (!cert ||
+      ((flags & FLAG_NO_DV_FALLBACK_FOR_EV) &&
+      (usage != certificateUsageSSLServer || !evOidPolicy)))
+  {
+    PR_NOT_REACHED("Invalid arguments to CertVerifier::VerifyCert");
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
   }
@@ -149,17 +152,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
       return SECFailure;
   }
 
+#ifndef NSS_NO_LIBPKIX
   ScopedCERTCertList trustAnchors;
   SECStatus rv;
   SECOidTag evPolicy = SEC_OID_UNKNOWN;
 
-#ifdef NSS_NO_LIBPKIX
-  if (flags & FLAG_NO_DV_FALLBACK_FOR_EV) {
-    return SECSuccess;
-  }
-  return ClassicVerifyCert(cert, usage, time, pinArg, validationChain,
-                           verifyLog);
-#else
   // Do EV checking only for sslserver usage
   if (usage == certificateUsageSSLServer) {
     SECStatus srv = getFirstEVPolicy(cert, evPolicy);
@@ -315,19 +312,28 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     }
 
   }
+#endif
 
   // If we're here, PKIX EV verification failed.
   // If requested, don't do DV fallback.
   if (flags & FLAG_NO_DV_FALLBACK_FOR_EV) {
+    PR_ASSERT(*evOidPolicy == SEC_OID_UNKNOWN);
     return SECSuccess;
   }
 
-  if (!nsNSSComponent::globalConstFlagUsePKIXVerification){
+  if (mImplementation == classic) {
     // XXX: we do not care about the localOnly flag (currently) as the
     // caller that wants localOnly should disable and reenable the fetching.
     return ClassicVerifyCert(cert, usage, time, pinArg, validationChain,
                              verifyLog);
   }
+
+#ifdef NSS_NO_LIBPKIX
+  PR_NOT_REACHED("libpkix implementation chosen but not even compiled in");
+  PR_SetError(PR_INVALID_STATE_ERROR, 0);
+  return SECFailure;
+#else
+  PR_ASSERT(mImplementation == libpkix);
 
   // The current flags check the chain the same way as the leafs
   rev.leafTests.cert_rev_flags_per_method[cert_revocation_method_crl] =
@@ -430,19 +436,6 @@ pkix_done:
 
   return rv;
 #endif
-}
-
-TemporaryRef<CertVerifier>
-GetDefaultCertVerifier()
-{
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID));
-  RefPtr<CertVerifier> certVerifier;
-  if (nssComponent) {
-    (void) nssComponent->GetDefaultCertVerifier(certVerifier);
-  }
-  return certVerifier;
 }
 
 } } // namespace mozilla::psm
