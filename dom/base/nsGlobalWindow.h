@@ -547,17 +547,6 @@ public:
     return mContext;
   }
 
-  nsIScriptContext *GetScriptContextInternal(uint32_t aLangID)
-  {
-    NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-                 "We don't support this language ID");
-    if (mOuterWindow) {
-      return GetOuterWindowInternal()->mContext;
-    }
-
-    return mContext;
-  }
-
   nsGlobalWindow *GetOuterWindowInternal()
   {
     return static_cast<nsGlobalWindow *>(GetOuterWindow());
