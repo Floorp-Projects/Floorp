@@ -5,6 +5,9 @@
 package org.mozilla.gecko.favicons.decoders;
 
 import android.graphics.Bitmap;
+import android.util.Base64;
+import android.util.Log;
+
 import org.mozilla.gecko.gfx.BitmapUtils;
 
 import java.util.Iterator;
@@ -14,6 +17,8 @@ import java.util.NoSuchElementException;
  * Class providing static utility methods for decoding favicons.
  */
 public class FaviconDecoder {
+    private static final String LOG_TAG = "GeckoFaviconDecoder";
+
     static enum ImageMagicNumbers {
         // It is irritating that Java bytes are signed...
         PNG(new byte[] {(byte) (0x89 & 0xFF), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a}),
@@ -106,6 +111,34 @@ public class FaviconDecoder {
         }
 
         return result;
+    }
+
+    public static LoadFaviconResult decodeDataURI(String uri) {
+        if (uri == null) {
+            Log.w(LOG_TAG, "Can't decode null data: URI.");
+            return null;
+        }
+
+        if (!uri.startsWith("data:image/")) {
+            Log.w(LOG_TAG, "Can't decode non-image data: URI.");
+            return null;
+        }
+
+        // Otherwise, let's attack this blindly. Strictly we should be parsing.
+        int offset = uri.indexOf(',') + 1;
+        if (offset == 0) {
+            Log.w(LOG_TAG, "No ',' in data: URI; malformed?");
+            return null;
+        }
+
+        try {
+            String base64 = uri.substring(offset);
+            byte[] raw = Base64.decode(base64, Base64.DEFAULT);
+            return decodeFavicon(raw);
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Couldn't decode data: URI.", e);
+            return null;
+        }
     }
 
     public static LoadFaviconResult decodeFavicon(byte[] buffer) {
