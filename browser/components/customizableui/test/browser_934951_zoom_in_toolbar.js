@@ -14,6 +14,13 @@ add_task(function() {
   gBrowser.selectedTab = tab1;
   let zoomResetButton = document.getElementById("zoom-reset-button");
 
+  registerCleanupFunction(() => {
+    info("Cleaning up.");
+    CustomizableUI.reset();
+    gBrowser.removeTab(tab2);
+    gBrowser.removeTab(tab1);
+  });
+
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
   let zoomChangePromise = promiseObserverNotification("browser-fullZoom:zoomChange");
   FullZoom.enlarge();
@@ -31,9 +38,16 @@ add_task(function() {
   yield zoomResetPromise;
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
 
-  CustomizableUI.reset();
-  gBrowser.removeTab(tab2);
-  gBrowser.removeTab(tab1);
+  // Test zoom label updates while navigating pages in the same tab.
+  FullZoom.enlarge();
+  yield zoomChangePromise;
+  is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
+  yield promiseTabLoadEvent(tab1, "about:home");
+  is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:home");
+  yield promiseTabHistoryNavigation(-1, function() {
+    return parseInt(zoomResetButton.label, 10) == 110;
+  });
+  is(parseInt(zoomResetButton.label, 10), 110, "Zoom is still 110% for about:mozilla");
 });
 
 function promiseObserverNotification(aObserver) {
