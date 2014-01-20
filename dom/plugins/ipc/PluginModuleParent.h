@@ -70,20 +70,20 @@ protected:
     virtual PPluginIdentifierParent*
     AllocPPluginIdentifierParent(const nsCString& aString,
                                  const int32_t& aInt,
-                                 const bool& aTemporary);
+                                 const bool& aTemporary) MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginIdentifierParent(PPluginIdentifierParent* aActor);
+    DeallocPPluginIdentifierParent(PPluginIdentifierParent* aActor) MOZ_OVERRIDE;
 
     PPluginInstanceParent*
     AllocPPluginInstanceParent(const nsCString& aMimeType,
                                const uint16_t& aMode,
                                const InfallibleTArray<nsCString>& aNames,
                                const InfallibleTArray<nsCString>& aValues,
-                               NPError* rv);
+                               NPError* rv) MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginInstanceParent(PPluginInstanceParent* aActor);
+    DeallocPPluginInstanceParent(PPluginInstanceParent* aActor) MOZ_OVERRIDE;
 
 public:
     // aFilePath is UTF8, not native!
@@ -141,20 +141,18 @@ protected:
         return MediateRace(parent, child);
     }
 
-    virtual bool RecvXXX_HACK_FIXME_cjones(Shmem& mem) { NS_RUNTIMEABORT("not reached"); return false; }
-
     virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
     virtual bool
     RecvBackUpXResources(const FileDescriptor& aXSocketFd) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerNPN_UserAgent(nsCString* userAgent);
+    AnswerNPN_UserAgent(nsCString* userAgent) MOZ_OVERRIDE;
 
     virtual bool
     AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariable,
                                       NPError* aError,
-                                      bool* aBoolVal);
+                                      bool* aBoolVal) MOZ_OVERRIDE;
 
     virtual bool AnswerProcessSomeEvents() MOZ_OVERRIDE;
 
