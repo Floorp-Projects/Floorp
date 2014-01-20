@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
-  "resource:///modules/sessionstore/Utils.jsm");
 
 /**
  * Module that contains tab state collection methods.
@@ -29,10 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
 this.TabState = Object.freeze({
   setSyncHandler: function (browser, handler) {
     TabStateInternal.setSyncHandler(browser, handler);
-  },
-
-  onBrowserContentsSwapped: function (browser, otherBrowser) {
-    TabStateInternal.onBrowserContentsSwapped(browser, otherBrowser);
   },
 
   update: function (browser, data) {
@@ -70,8 +64,8 @@ let TabStateInternal = {
    * Install the sync handler object from a given tab.
    */
   setSyncHandler: function (browser, handler) {
-    this._syncHandlers.set(browser, handler);
-    this._latestMessageID.set(browser, 0);
+    this._syncHandlers.set(browser.permanentKey, handler);
+    this._latestMessageID.set(browser.permanentKey, 0);
   },
 
   /**
@@ -81,8 +75,8 @@ let TabStateInternal = {
     // Only ever process messages that have an ID higher than the last one we
     // saw. This ensures we don't use stale data that has already been received
     // synchronously.
-    if (id > this._latestMessageID.get(browser)) {
-      this._latestMessageID.set(browser, id);
+    if (id > this._latestMessageID.get(browser.permanentKey)) {
+      this._latestMessageID.set(browser.permanentKey, id);
       TabStateCache.update(browser, data);
     }
   },
@@ -91,9 +85,9 @@ let TabStateInternal = {
    * Flushes all data currently queued in the given browser's content script.
    */
   flush: function (browser) {
-    if (this._syncHandlers.has(browser)) {
-      let lastID = this._latestMessageID.get(browser);
-      this._syncHandlers.get(browser).flush(lastID);
+    if (this._syncHandlers.has(browser.permanentKey)) {
+      let lastID = this._latestMessageID.get(browser.permanentKey);
+      this._syncHandlers.get(browser.permanentKey).flush(lastID);
     }
   },
 
@@ -104,18 +98,6 @@ let TabStateInternal = {
     for (let browser of window.gBrowser.browsers) {
       this.flush(browser);
     }
-  },
-
-  /**
-   * When a docshell swap happens, a xul:browser element will be
-   * associated with a different content-sessionStore.js script
-   * global. In this case, the sync handler for the element needs to
-   * be swapped just like the docshell.
-   */
-  onBrowserContentsSwapped: function (browser, otherBrowser) {
-    // Swap data stored per-browser.
-    [this._syncHandlers, this._latestMessageID]
-      .forEach(map => Utils.swapMapEntries(map, browser, otherBrowser));
   },
 
   /**
