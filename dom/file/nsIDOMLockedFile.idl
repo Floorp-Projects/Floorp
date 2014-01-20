@@ -9,12 +9,6 @@
 interface nsIDOMEventListener;
 interface nsIDOMFileHandle;
 
-dictionary DOMFileMetadataParameters
-{
-  boolean size;
-  boolean lastModified;
-};
-
 [scriptable, builtinclass, uuid(a09cdc35-6b1e-42ce-95bb-f8f10a354202)]
 interface nsIDOMLockedFile : nsISupports
 {
