@@ -1351,6 +1351,14 @@ CairoTextureClientD3D9::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
     return false;
   }
 
+  if (aFlags & ALLOC_CLEAR_BUFFER) {
+    DebugOnly<bool> locked = Lock(OPEN_WRITE_ONLY);
+    MOZ_ASSERT(locked);
+    RefPtr<DrawTarget> dt = GetAsDrawTarget();
+    dt->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
+    Unlock();
+  }
+
   MOZ_ASSERT(mTexture);
   return true;
 }
