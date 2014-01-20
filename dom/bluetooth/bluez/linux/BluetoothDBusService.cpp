@@ -3119,6 +3119,13 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   nsCString tempMediaNumber = EmptyCString();
   nsCString tempTotalMediaCount = EmptyCString();
   nsCString tempDuration = EmptyCString();
+
+  // We currently don't support genre field in music player.
+  // In order to send media metadata through AVRCP, we set genre to an empty
+  // string to match the BlueZ method "UpdateMetaData" with signature "sssssss",
+  // which takes genre field as the last parameter.
+  nsCString tempGenre = EmptyCString();
+
   if (aMediaNumber >= 0) {
     tempMediaNumber.AppendInt(aMediaNumber);
   }
@@ -3135,6 +3142,7 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   const char* mediaNumber = tempMediaNumber.get();
   const char* totalMediaCount = tempTotalMediaCount.get();
   const char* duration = tempDuration.get();
+  const char* genre = tempGenre.get();
 
   nsAutoString prevTitle, prevAlbum;
   a2dp->GetTitle(prevTitle);
@@ -3161,6 +3169,7 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
     DBUS_TYPE_STRING, &mediaNumber,
     DBUS_TYPE_STRING, &totalMediaCount,
     DBUS_TYPE_STRING, &duration,
+    DBUS_TYPE_STRING, &genre,
     DBUS_TYPE_INVALID);
   NS_ENSURE_TRUE_VOID(ret);
 
