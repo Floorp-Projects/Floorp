@@ -345,7 +345,7 @@ public class ICODecoder implements Iterable<Bitmap> {
         result.mFaviconBytes = mDecodand;
         result.mOffset = mOffset;
         result.mLength = mLen;
-        result.mHasMultipleBitmaps = mIconDirectory.length > 1;
+        result.mIsICO = true;
 
         return result;
     }

@@ -14,6 +14,9 @@ package-compare:
 stage-package:
 	@$(MAKE) -C browser/installer stage-package
 
+sdk:
+	@$(MAKE) -C browser/installer make-sdk
+
 install::
 	@$(MAKE) -C browser/installer install
 
