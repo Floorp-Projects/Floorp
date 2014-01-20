@@ -83,6 +83,12 @@ struct NS_GFX nsFont {
   // constants; see gfxFontConstants.h).
   int16_t stretch;
 
+  // Kerning
+  uint8_t kerning;
+
+  // Synthesis setting, controls use of fake bolding/italics
+  uint8_t synthesis;
+
   // The logical size of the font, in nscoord units
   nscoord size;
 
@@ -105,12 +111,6 @@ struct NS_GFX nsFont {
   // this is an OpenType "language system" tag represented as a 32-bit integer
   // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
   nsString languageOverride;
-
-  // Kerning
-  uint8_t kerning;
-
-  // Synthesis setting, controls use of fake bolding/italics
-  uint8_t synthesis;
 
   // Initialize the font struct with an ASCII name
   nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
