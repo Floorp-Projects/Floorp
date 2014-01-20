@@ -1766,12 +1766,6 @@ IdToValue(jsid id)
     return JS::UndefinedValue();
 }
 
-static JS_ALWAYS_INLINE jsval
-IdToJsval(jsid id)
-{
-    return IdToValue(id);
-}
-
 extern JS_FRIEND_API(bool)
 IsReadOnlyDateMethod(JS::IsAcceptableThis test, JS::NativeImpl method);
 

@@ -691,12 +691,9 @@ nsPresContext::GetDocumentColorPreferences()
   bool usePrefColors = true;
   nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
   if (docShell) {
-    int32_t docShellType;
-    docShell->GetItemType(&docShellType);
-    if (nsIDocShellTreeItem::typeChrome == docShellType) {
+    if (nsIDocShellTreeItem::typeChrome == docShell->ItemType()) {
       usePrefColors = false;
-    }
-    else {
+    } else {
       useAccessibilityTheme =
         LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
       usePrefColors = !useAccessibilityTheme;
@@ -963,11 +960,8 @@ nsPresContext::UpdateAfterPreferencesChanged()
   mPrefChangedTimer = nullptr;
 
   nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
-  if (docShell) {
-    int32_t docShellType;
-    docShell->GetItemType(&docShellType);
-    if (nsIDocShellTreeItem::typeChrome == docShellType)
-      return;
+  if (docShell && nsIDocShellTreeItem::typeChrome == docShell->ItemType()) {
+    return;
   }
 
   // Initialize our state from the user preferences
@@ -2044,16 +2038,8 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 bool
 nsPresContext::IsChromeSlow() const
 {
-  bool isChrome = false;
-  nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
-  if (docShell) {
-    int32_t docShellType;
-    nsresult result = docShell->GetItemType(&docShellType);
-    if (NS_SUCCEEDED(result)) {
-      isChrome = nsIDocShellTreeItem::typeChrome == docShellType;
-    }
-  }
-  mIsChrome = isChrome;
+  mIsChrome = mContainer &&
+              nsIDocShellTreeItem::typeChrome == mContainer->ItemType();
   mIsChromeIsCached = true;
   return mIsChrome;
 }

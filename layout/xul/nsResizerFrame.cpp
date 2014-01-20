@@ -337,15 +337,8 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     }
 
     // don't allow resizing windows in content shells
-    bool isChromeShell = false;
     nsCOMPtr<nsIDocShellTreeItem> dsti = aPresShell->GetPresContext()->GetDocShell();
-    if (dsti) {
-      int32_t type = -1;
-      isChromeShell = (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
-                       type == nsIDocShellTreeItem::typeChrome);
-    }
-
-    if (!isChromeShell) {
+    if (!dsti || dsti->ItemType() != nsIDocShellTreeItem::typeChrome) {
       // don't allow resizers in content shells, except for the viewport
       // scrollbar which doesn't have a parent
       nsIContent* nonNativeAnon = mContent->FindFirstNonChromeOnlyAccessContent();
