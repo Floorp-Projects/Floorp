@@ -94,16 +94,14 @@ class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
     }
 
     for (uint32_t i = 0; i < maxFrames && frame; ++i) {
-      nsAutoCString fileNameEscaped;
-      char* fileName = nullptr;
+      nsCString fileName;
       int32_t lineNumber = 0;
 
-      frame->GetFilename(&fileName);
+      frame->GetFilename(fileName);
       frame->GetLineNumber(&lineNumber);
 
-      if (fileName != nullptr && fileName[0] != '\0') {
+      if (!fileName.IsEmpty()) {
         stack += "js(";
-        fileNameEscaped = fileName;
         if (!origin.IsEmpty()) {
           // Make the file name root-relative for conciseness if possible.
           const char* originData;
@@ -111,14 +109,14 @@ class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
 
           originLen = origin.GetData(&originData);
           // If fileName starts with origin + "/", cut up to that "/".
-          if (strlen(fileName) >= originLen + 1 &&
-              memcmp(fileName, originData, originLen) == 0 &&
+          if (fileName.Length() >= originLen + 1 &&
+              memcmp(fileName.get(), originData, originLen) == 0 &&
               fileName[originLen] == '/') {
-            fileNameEscaped.Cut(0, originLen);
+            fileName.Cut(0, originLen);
           }
         }
-        fileNameEscaped.ReplaceChar('/', '\\');
-        stack += fileNameEscaped;
+        fileName.ReplaceChar('/', '\\');
+        stack += fileName;
         if (lineNumber > 0) {
           stack += ", line=";
           stack.AppendInt(lineNumber);
