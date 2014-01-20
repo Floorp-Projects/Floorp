@@ -7,11 +7,9 @@
 # replaces 'EXTRA_TEST_ARGS=--test-path=...'.
 ifdef TEST_PATH
 TEST_PATH_ARG := --test-path='$(TEST_PATH)'
-PEPTEST_PATH_ARG := --test-path='$(TEST_PATH)'
 IPCPLUGINS_PATH_ARG := --test-path='$(TEST_PATH)'
 else
 TEST_PATH_ARG :=
-PEPTEST_PATH_ARG := --test-path=_tests/peptest/tests/firefox/firefox_all.ini
 IPCPLUGINS_PATH_ARG := --test-path=dom/plugins/test
 endif
 
@@ -361,20 +359,6 @@ xpcshell-tests-remote:
           echo 'please prepare your host with environment variables for TEST_DEVICE'; \
         fi
 
-# Runs peptest, for usage see: https://developer.mozilla.org/en/Peptest#Running_Tests
-RUN_PEPTEST = \
-	rm -f ./$@.log && \
-	$(PYTHON) _tests/peptest/runtests.py --binary=$(browser_path) \
-          $(PEPTEST_PATH_ARG) \
-	  --proxy=_tests/peptest/tests/firefox/server-locations.txt \
-          --proxy-host-dirs \
-          --server-path=_tests/peptest/tests/firefox/server \
-          --log-file=./$@.log $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS)
-
-peptest:
-	$(RUN_PEPTEST)
-	$(CHECK_TEST_ERROR)
-
 REMOTE_CPPUNITTESTS = \
 	$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
 	  --xre-path=$(DEPTH)/dist/bin \
@@ -415,7 +399,6 @@ package-tests: \
   stage-xpcshell \
   stage-jstests \
   stage-jetpack \
-  stage-peptest \
   stage-mozbase \
   stage-tps \
   stage-modules \
@@ -455,7 +438,6 @@ make-stage-dir:
 	$(NSINSTALL) -D $(PKG_STAGE)/certs
 	$(NSINSTALL) -D $(PKG_STAGE)/config
 	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
-	$(NSINSTALL) -D $(PKG_STAGE)/peptest
 	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 
@@ -493,9 +475,6 @@ endif
 
 stage-jetpack: make-stage-dir
 	$(MAKE) -C $(DEPTH)/addon-sdk stage-tests-package
-
-stage-peptest: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/peptest stage-package
 
 stage-tps: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/tps/tests
@@ -566,7 +545,6 @@ stage-mozbase: make-stage-dir
   crashtest \
   xpcshell-tests \
   jstestbrowser \
-  peptest \
   package-tests \
   make-stage-dir \
   stage-b2g \
@@ -577,7 +555,6 @@ stage-mozbase: make-stage-dir
   stage-jstests \
   stage-android \
   stage-jetpack \
-  stage-peptest \
   stage-mozbase \
   stage-tps \
   stage-modules \
