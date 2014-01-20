@@ -11,7 +11,7 @@ CONFIGURE_SUBST_FILES += [
 
 if CONFIG['BUILDING_JS']:
     if CONFIG['JS_STANDALONE']:
-        add_tier_dir('base', ['config'])
+        add_tier_dir('base', ['config', 'mfbt'])
     add_tier_dir('js', ['js/src'])
 else:
     CONFIGURE_SUBST_FILES += [
