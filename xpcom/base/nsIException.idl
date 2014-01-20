@@ -10,7 +10,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(91d82105-7c62-4f8b-9779-154277c0ee90)]
+[scriptable, uuid(60abee59-717e-477d-8bbb-a1c3e7067126)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -26,7 +26,7 @@ interface nsIStackFrame : nsISupports
     AUTF8String toString();
 };
 
-[scriptable, uuid(F3A8D3B4-C424-4edc-8BF6-8974C983BA78)]
+[scriptable, uuid(6738090a-ba6f-4f3f-8aa0-b9f6311262a5)]
 interface nsIException : nsISupports
 {
     // A custom message set by the thrower.
