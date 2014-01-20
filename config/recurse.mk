@@ -67,7 +67,8 @@ endif
 # Get all directories traversed for all subtiers in the current tier, or use
 # directly the $(*_dirs) variables available in root.mk when there is no
 # TIERS (like for js/src).
-CURRENT_DIRS := $(or $($(CURRENT_TIER)_dirs),$(foreach subtier,$(CURRENT_SUBTIERS),$($(CURRENT_TIER)_subtier_$(subtier))))
+TIER_DIRS = $(or $($(1)_dirs),$(foreach subtier,$($(1)_subtiers),$($(1)_subtier_$(subtier))))
+CURRENT_DIRS := $(call TIER_DIRS,$(CURRENT_TIER))
 
 ifneq (,$(filter binaries libs,$(CURRENT_TIER)))
 WANT_STAMPS = 1
@@ -199,10 +200,13 @@ endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
 ifdef MOZ_PSEUDO_DERECURSE
 ifeq (.,$(DEPTH))
 # top-level directories
-recurse_targets := $(addsuffix /binaries,$(binaries_dirs))
-ifdef recurse_targets
-# only js/src has binaries_dirs, and we want to adjust paths for it.
+ifdef BUILDING_JS
+ifndef JS_STANDALONE
+# Only define recurse_targets for js, when it is built as part of gecko.
+recurse_targets := $(addsuffix /binaries,$(call TIER_DIRS,binaries))
+# we want to adjust paths for js/src.
 want_abspaths = 1
+endif
 endif
 endif
 

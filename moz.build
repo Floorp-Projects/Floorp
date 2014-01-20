@@ -11,8 +11,8 @@ CONFIGURE_SUBST_FILES += [
 
 if CONFIG['BUILDING_JS']:
     if CONFIG['JS_STANDALONE']:
-        DIRS += ['config']
-    DIRS += ['js/src']
+        add_tier_dir('base', ['config'])
+    add_tier_dir('js', ['js/src'])
 else:
     CONFIGURE_SUBST_FILES += [
         'mozilla-config.h',
