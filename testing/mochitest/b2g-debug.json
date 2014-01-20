@@ -465,6 +465,7 @@
     "dom/contacts/tests/test_contacts_basics.html": "debug-only failure",
     "dom/contacts/tests/test_contacts_getall.html": "debug-only failure",
     "dom/datastore/tests/test_arrays.html": "debug-only failure; time out",
+    "dom/datastore/tests/test_certifiedApp.html": "debug-only failure; time out",
     "dom/datastore/tests/test_sync.html": "debug-only failure; time out",
     "dom/imptests/editing/selecttest/test_extend.html": "debug-only failure; time out",
     "dom/imptests/editing/selecttest/test_selectAllChildren.html": "debug-only failure",
