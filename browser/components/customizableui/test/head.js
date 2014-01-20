@@ -20,6 +20,7 @@ registerCleanupFunction(() => Services.prefs.clearUserPref("browser.uiCustomizat
 let {synthesizeDragStart, synthesizeDrop} = ChromeUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kTabEventFailureTimeoutInMs = 20000;
 
 function createDummyXULButton(id, label) {
   let btn = document.createElementNS(kNSXUL, "toolbarbutton");
@@ -302,5 +303,72 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
 function waitFor(aTimeout=100) {
   let deferred = Promise.defer();
   setTimeout(function() deferred.resolve(), aTimeout);
+  return deferred.promise;
+}
+
+/**
+ * Starts a load in an existing tab and waits for it to finish (via some event).
+ *
+ * @param aTab       The tab to load into.
+ * @param aUrl       The url to load.
+ * @param aEventType The load event type to wait for.  Defaults to "load".
+ * @return {Promise} resolved when the event is handled.
+ */
+function promiseTabLoadEvent(aTab, aURL, aEventType="load") {
+  let deferred = Promise.defer();
+  info("Wait for tab event: " + aEventType);
+
+  let timeoutId = setTimeout(() => {
+    aTab.linkedBrowser.removeEventListener(aEventType, onTabLoad, true);
+    deferred.reject("TabSelect did not happen within " + kTabEventFailureTimeoutInMs + "ms");
+  }, kTabEventFailureTimeoutInMs);
+
+  function onTabLoad(event) {
+    if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
+        event.target.location.href == "about:blank") {
+      info("skipping spurious load event");
+      return;
+    }
+    clearTimeout(timeoutId);
+    aTab.linkedBrowser.removeEventListener(aEventType, onTabLoad, true);
+    info("Tab event received: " + aEventType);
+    deferred.resolve();
+  }
+  aTab.linkedBrowser.addEventListener(aEventType, onTabLoad, true, true);
+  aTab.linkedBrowser.loadURI(aURL);
+  return deferred.promise;
+}
+
+/**
+ * Navigate back or forward in tab history and wait for it to finish.
+ *
+ * @param aDirection   Number to indicate to move backward or forward in history.
+ * @param aConditionFn Function that returns the result of an evaluated condition
+ *                     that needs to be `true` to resolve the promise.
+ * @return {Promise} resolved when navigation has finished.
+ */
+function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
+  let deferred = Promise.defer();
+
+  let timeoutId = setTimeout(() => {
+    gBrowser.removeEventListener("pageshow", listener, true);
+    deferred.reject("Pageshow did not happen within " + kTabEventFailureTimeoutInMs + "ms");
+  }, kTabEventFailureTimeoutInMs);
+
+  function listener(event) {
+    gBrowser.removeEventListener("pageshow", listener, true);
+    clearTimeout(timeoutId);
+
+    if (aConditionFn) {
+      waitForCondition(aConditionFn).then(() => deferred.resolve(),
+                                          aReason => deferred.reject(aReason));
+    } else {
+      deferred.resolve();
+    }
+  }
+  gBrowser.addEventListener("pageshow", listener, true);
+
+  content.history.go(aDirection);
+
   return deferred.promise;
 }
