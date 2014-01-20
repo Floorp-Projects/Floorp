@@ -1814,7 +1814,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
     new (&builder) nsDisplayTransform(&builder, aFrame, &list);
 
   *aTransform =
-    item->GetTransform(aFrame->PresContext()->AppUnitsPerDevPixel());
+    item->GetTransform();
   item->~nsDisplayTransform();
 
   return true;
