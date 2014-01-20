@@ -9,7 +9,7 @@
                  Apps screen, which we only want when testing. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             </intent-filter>
         </activity>
 
@@ -33,9 +33,6 @@
             android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
         </activity>
 
         <activity
@@ -43,9 +40,6 @@
             android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateSuccessActivity"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
         </activity>
 
         <activity
@@ -53,9 +47,6 @@
             android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountSignInActivity"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
         </activity>
 
         <activity
@@ -63,7 +54,4 @@
             android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
         </activity>
