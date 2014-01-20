@@ -327,6 +327,12 @@ GetCurrentSwitchState(SwitchDevice aDevice)
   return state;
 }
 
+void
+NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
+{
+  Hal()->SendNotifySwitchStateFromInputDevice(aDevice, aState);
+}
+
 bool
 EnableAlarm()
 {
@@ -813,6 +819,14 @@ public:
   {
     // Content has no reason to listen to switch events currently.
     *aState = hal::GetCurrentSwitchState(aDevice);
+    return true;
+  }
+
+  virtual bool
+  RecvNotifySwitchStateFromInputDevice(const SwitchDevice& aDevice,
+                                       const SwitchState& aState) MOZ_OVERRIDE
+  {
+    hal::NotifySwitchStateFromInputDevice(aDevice, aState);
     return true;
   }
 

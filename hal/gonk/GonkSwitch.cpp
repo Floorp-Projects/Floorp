@@ -17,6 +17,7 @@
 #include <android/log.h>
 #include <fcntl.h>
 #include <sysutils/NetlinkEvent.h>
+#include <cutils/properties.h>
 
 #include "base/message_loop.h"
 
@@ -280,6 +281,20 @@ public:
     }
   }
 
+  void Notify(SwitchDevice aDevice, SwitchState aState)
+  {
+    EventInfo& info = mEventInfo[aDevice];
+    if (aState == info.mEvent.status()) {
+      return;
+    }
+
+    info.mEvent.status() = aState;
+
+    if (info.mEnabled) {
+      NS_DispatchToMainThread(new SwitchEventRunnable(info.mEvent));
+    }
+  }
+
   SwitchState GetCurrentInformation(SwitchDevice aDevice)
   {
     return mEventInfo[aDevice].mEvent.status();
@@ -311,7 +326,18 @@ private:
 
   void Init()
   {
-    mHandler.AppendElement(new SwitchHandlerHeadphone(SWITCH_HEADSET_DEVPATH));
+    char value[PROPERTY_VALUE_MAX];
+    property_get("ro.moz.devinputjack", value, "0");
+    bool headphonesFromInputDev = !strcmp(value, "1");
+
+    if (!headphonesFromInputDev) {
+      mHandler.AppendElement(new SwitchHandlerHeadphone(SWITCH_HEADSET_DEVPATH));
+    } else {
+      // If headphone status will be notified from input dev then initialize
+      // status to "off" and wait for event notification.
+      mEventInfo[SWITCH_HEADPHONES].mEvent.device() = SWITCH_HEADPHONES;
+      mEventInfo[SWITCH_HEADPHONES].mEvent.status() = SWITCH_STATE_OFF;
+    }
     mHandler.AppendElement(new SwitchHandler(SWITCH_USB_DEVPATH_GB, SWITCH_USB));
     mHandler.AppendElement(new SwitchHandlerUsbIcs(SWITCH_USB_DEVPATH_ICS));
 
@@ -417,5 +443,18 @@ GetCurrentSwitchState(SwitchDevice aDevice)
   return sSwitchObserver->GetCurrentInformation(aDevice);
 }
 
+static void
+NotifySwitchStateIOThread(SwitchDevice aDevice, SwitchState aState)
+{
+  sSwitchObserver->Notify(aDevice, aState);
+}
+
+void NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
+{
+  InitializeResourceIfNeed();
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(NotifySwitchStateIOThread, aDevice, aState));
+}
 } // hal_impl
 } //mozilla
