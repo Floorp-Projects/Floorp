@@ -412,6 +412,7 @@ add_test(function test_EncodedStringValue_decode() {
 add_test(function test_EncodedStringValue_encode() {
   // Test for normal TextString
   wsp_encode_test(MMS.EncodedStringValue, "Hello", strToCharCodeArray("Hello"));
+
   // Test for utf-8
   let (entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
     // "Mozilla" in full width.
@@ -422,6 +423,16 @@ add_test(function test_EncodedStringValue_encode() {
     conv.charset = entry.converter;
 
     let raw = conv.convertToByteArray(str).concat([0]);
+    wsp_encode_test(MMS.EncodedStringValue, str,
+                    [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
+
+    // MMS.EncodedStringValue encodes non us-ascii characters (128 ~ 255)
+    // (e.g., 'Ñ' or 'ü') by the utf-8 encoding. Otherwise, for us-ascii
+    // characters (0 ~ 127), still use the normal TextString encoding.
+
+    // "Ñü" in full width.
+    str = "\u00d1\u00fc";
+    raw = conv.convertToByteArray(str).concat([0]);
     wsp_encode_test(MMS.EncodedStringValue, str,
                     [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
   }
