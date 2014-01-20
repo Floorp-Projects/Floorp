@@ -69,44 +69,50 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window);
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv);
+    AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) MOZ_OVERRIDE;
     virtual bool
-    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
+    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv) MOZ_OVERRIDE;
     virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
-                                                    NPError* result);
+                                                    NPError* result) MOZ_OVERRIDE;
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(nsCString* aPlugId,
-                                                     NPError* aResult);
+                                                           NPError* aResult) MOZ_OVERRIDE;
     virtual bool
-    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result);
+    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
+    AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) MOZ_OVERRIDE;
     virtual bool
-    AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event, Shmem& mem, int16_t* handled, Shmem* rtnmem);
+    AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
+                                Shmem& mem,
+                                int16_t* handled,
+                                Shmem* rtnmem) MOZ_OVERRIDE;
     virtual bool
-    AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event, const uint32_t& surface, int16_t* handled);
+    AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
+                                    const uint32_t& surface,
+                                    int16_t* handled) MOZ_OVERRIDE;
 
     // Async rendering
     virtual bool
     RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
-                       const NPRemoteWindow& aWindow);
+                       const NPRemoteWindow& aWindow) MOZ_OVERRIDE;
 
     virtual void
     DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                      const NPRemoteWindow& aWindow,
                      bool aIsAsync);
 
-    virtual PPluginSurfaceChild* AllocPPluginSurfaceChild(const WindowsSharedMemoryHandle&,
-                                                          const gfxIntSize&, const bool&) {
+    virtual PPluginSurfaceChild*
+    AllocPPluginSurfaceChild(const WindowsSharedMemoryHandle&,
+                             const gfxIntSize&, const bool&) MOZ_OVERRIDE {
         return new PPluginSurfaceChild();
     }
 
-    virtual bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) {
+    virtual bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) MOZ_OVERRIDE {
         delete s;
         return true;
     }
@@ -125,13 +131,13 @@ protected:
     RecvContentsScaleFactorChanged(const double& aContentsScaleFactor) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerNPP_Destroy(NPError* result);
+    AnswerNPP_Destroy(NPError* result) MOZ_OVERRIDE;
 
     virtual PPluginScriptableObjectChild*
-    AllocPPluginScriptableObjectChild();
+    AllocPPluginScriptableObjectChild() MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginScriptableObjectChild(PPluginScriptableObjectChild* aObject);
+    DeallocPPluginScriptableObjectChild(PPluginScriptableObjectChild* aObject) MOZ_OVERRIDE;
 
     virtual bool
     RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor) MOZ_OVERRIDE;
@@ -145,7 +151,7 @@ protected:
                              const nsCString& mimeType,
                              const bool& seekable,
                              NPError* rv,
-                             uint16_t *stype);
+                             uint16_t *stype) MOZ_OVERRIDE;
 
     virtual bool
     AnswerPBrowserStreamConstructor(
@@ -158,36 +164,36 @@ protected:
             const nsCString& mimeType,
             const bool& seekable,
             NPError* rv,
-            uint16_t* stype);
-        
+            uint16_t* stype) MOZ_OVERRIDE;
+
     virtual bool
-    DeallocPBrowserStreamChild(PBrowserStreamChild* stream);
+    DeallocPBrowserStreamChild(PBrowserStreamChild* stream) MOZ_OVERRIDE;
 
     virtual PPluginStreamChild*
     AllocPPluginStreamChild(const nsCString& mimeType,
                             const nsCString& target,
-                            NPError* result);
+                            NPError* result) MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPluginStreamChild(PPluginStreamChild* stream);
+    DeallocPPluginStreamChild(PPluginStreamChild* stream) MOZ_OVERRIDE;
 
     virtual PStreamNotifyChild*
     AllocPStreamNotifyChild(const nsCString& url, const nsCString& target,
                             const bool& post, const nsCString& buffer,
                             const bool& file,
-                            NPError* result);
+                            NPError* result) MOZ_OVERRIDE;
 
     virtual bool
     DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerSetPluginFocus();
+    AnswerSetPluginFocus() MOZ_OVERRIDE;
 
     virtual bool
-    AnswerUpdateWindow();
+    AnswerUpdateWindow() MOZ_OVERRIDE;
 
     virtual bool
-    RecvNPP_DidComposite();
+    RecvNPP_DidComposite() MOZ_OVERRIDE;
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     bool CreateWindow(const NPRemoteWindow& aWindow);

@@ -54,57 +54,57 @@ public:
 
 
   virtual bool
-  AnswerInvalidate();
+  AnswerInvalidate() MOZ_OVERRIDE;
 
   virtual bool
   AnswerHasMethod(PPluginIdentifierChild* aId,
-                  bool* aHasMethod);
+                  bool* aHasMethod) MOZ_OVERRIDE;
 
   virtual bool
   AnswerInvoke(PPluginIdentifierChild* aId,
                const InfallibleTArray<Variant>& aArgs,
                Variant* aResult,
-               bool* aSuccess);
+               bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerInvokeDefault(const InfallibleTArray<Variant>& aArgs,
                       Variant* aResult,
-                      bool* aSuccess);
+                      bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerHasProperty(PPluginIdentifierChild* aId,
-                    bool* aHasProperty);
+                    bool* aHasProperty) MOZ_OVERRIDE;
 
   virtual bool
   AnswerGetChildProperty(PPluginIdentifierChild* aId,
                          bool* aHasProperty,
                          bool* aHasMethod,
                          Variant* aResult,
-                         bool* aSuccess);
+                         bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerSetProperty(PPluginIdentifierChild* aId,
                     const Variant& aValue,
-                    bool* aSuccess);
+                    bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerRemoveProperty(PPluginIdentifierChild* aId,
-                       bool* aSuccess);
+                       bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerEnumerate(InfallibleTArray<PPluginIdentifierChild*>* aProperties,
-                  bool* aSuccess);
+                  bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
   AnswerConstruct(const InfallibleTArray<Variant>& aArgs,
                   Variant* aResult,
-                  bool* aSuccess);
+                  bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
-  RecvProtect();
+  RecvProtect() MOZ_OVERRIDE;
 
   virtual bool
-  RecvUnprotect();
+  RecvUnprotect() MOZ_OVERRIDE;
 
   NPObject*
   GetObject(bool aCanResurrect);
