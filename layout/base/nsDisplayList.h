@@ -2978,7 +2978,7 @@ public:
     INDEX_MAX = UINT32_MAX >> nsDisplayItem::TYPE_BITS
   };
 
-  const gfx3DMatrix& GetTransform(float aAppUnitsPerPixel);
+  const gfx3DMatrix& GetTransform();
 
   float GetHitDepthAtPoint(const nsPoint& aPoint);
 
@@ -3111,7 +3111,6 @@ private:
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;
   ComputeTransformFunction mTransformGetter;
-  float mCachedAppUnitsPerPixel;
   uint32_t mIndex;
 };
 
