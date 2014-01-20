@@ -144,9 +144,8 @@ endif
 
 else
 
-# Don't recurse if MAKELEVEL is NO_RECURSE_MAKELEVEL as defined above, but
-# still recurse for externally managed make files (gyp-generated ones).
-ifeq ($(EXTERNALLY_MANAGED_MAKE_FILE)_$(NO_RECURSE_MAKELEVEL),_$(MAKELEVEL))
+# Don't recurse if MAKELEVEL is NO_RECURSE_MAKELEVEL as defined above
+ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 
 compile binaries libs export tools::
 
@@ -193,22 +192,17 @@ tools export:: $(SUBMAKEFILES)
 
 endif # ifdef TIERS
 
-endif # ifeq ($(EXTERNALLY_MANAGED_MAKE_FILE)_$(NO_RECURSE_MAKELEVEL),_$(MAKELEVEL))
+endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 
 endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
 
 ifdef MOZ_PSEUDO_DERECURSE
-ifdef EXTERNALLY_MANAGED_MAKE_FILE
-# gyp-managed directories
-recurse_targets := $(addsuffix /binaries,$(DIRS) $(PARALLEL_DIRS))
-else
 ifeq (.,$(DEPTH))
 # top-level directories
 recurse_targets := $(addsuffix /binaries,$(binaries_dirs))
 ifdef recurse_targets
 # only js/src has binaries_dirs, and we want to adjust paths for it.
 want_abspaths = 1
-endif
 endif
 endif
 
