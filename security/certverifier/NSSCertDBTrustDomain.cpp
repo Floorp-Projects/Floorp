@@ -78,6 +78,17 @@ InitializeNSS(const char* dir, bool readOnly)
   return ::NSS_Initialize(dir, "", "", SECMOD_DB, flags);
 }
 
+void
+DisableMD5()
+{
+  NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+    0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+    0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+    0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+}
+
 SECStatus
 LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
 {

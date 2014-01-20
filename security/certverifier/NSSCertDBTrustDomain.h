@@ -15,6 +15,8 @@ namespace mozilla { namespace psm {
 
 SECStatus InitializeNSS(const char* dir, bool readOnly);
 
+void DisableMD5();
+
 extern const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[];
 
 // The dir parameter is the path to the directory containing the NSS builtin

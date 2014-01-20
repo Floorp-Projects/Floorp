@@ -1929,17 +1929,6 @@ setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx)
 namespace mozilla {
 namespace psm {
 
-void
-DisableMD5()
-{
-  NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-  NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-  NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-}
-
 nsresult
 InitializeCipherSuite()
 {
