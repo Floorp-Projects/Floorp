@@ -8461,13 +8461,13 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 
 # For extensions and langpacks, we require a max version that is compatible
 # across security releases. MOZ_APP_MAXVERSION is our method for doing that.
-# 10.0a1 and 10.0a2 aren't affected
-# 10.0 becomes 10.0.*
-# 10.0.1 becomes 10.0.*
+# 24.0a1 and 24.0a2 aren't affected
+# 24.0 becomes 24.*
+# 24.1.1 becomes 24.*
 IS_ALPHA=`echo $MOZ_APP_VERSION | grep a`
 if test -z "$IS_ALPHA"; then
   changequote(,)
-  MOZ_APP_MAXVERSION=`echo $MOZ_APP_VERSION | sed "s|\(^[0-9]*.[0-9]*\).*|\1|"`.*
+  MOZ_APP_MAXVERSION=`echo $MOZ_APP_VERSION | sed "s|\(^[0-9]*\).*|\1|"`.*
   changequote([,])
 else
   MOZ_APP_MAXVERSION=$MOZ_APP_VERSION

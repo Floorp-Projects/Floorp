@@ -1049,7 +1049,7 @@ AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
   unsigned int value = bits <   512 ?  1 : bits ==   512 ?  2
                      : bits <   768 ?  3 : bits ==   768 ?  4
                      : bits <  1024 ?  5 : bits ==  1024 ?  6
-                     : bits <  1024 ?  7 : bits ==  1024 ?  8
+                     : bits <  1280 ?  7 : bits ==  1280 ?  8
                      : bits <  1536 ?  9 : bits ==  1536 ? 10
                      : bits <  2048 ? 11 : bits ==  2048 ? 12
                      : bits <  3072 ? 13 : bits ==  3072 ? 14
@@ -1067,7 +1067,7 @@ AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
 // named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
 // that for now. See also NSS bug 323674.
 static void
-AccummulateECCCurve(Telemetry::ID probe, uint32_t bits)
+AccumulateECCCurve(Telemetry::ID probe, uint32_t bits)
 {
   unsigned int value = bits == 256 ? 23 // P-256
                      : bits == 384 ? 24 // P-384
@@ -1091,6 +1091,7 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 7; break;
     case TLS_ECDHE_RSA_WITH_RC4_128_SHA: value = 8; break;
     case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: value = 9; break;
+    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
     // DHE key exchange
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: value = 21; break;
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
@@ -1101,6 +1102,7 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA: value = 27; break;
     case TLS_DHE_DSS_WITH_AES_256_CBC_SHA: value = 28; break;
     case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA: value = 29; break;
+    case SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA: value = 30; break;
     // ECDH key exchange
     case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA: value = 41; break;
     case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA: value = 42; break;
@@ -1122,10 +1124,10 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case SSL_RSA_WITH_RC4_128_MD5: value = 69; break;
     // unknown
     default:
-      MOZ_CRASH("impossible cipher suite");
       value = 0;
       break;
   }
+  MOZ_ASSERT(value != 0);
   Telemetry::Accumulate(probe, value);
 }
 
@@ -1271,8 +1273,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                     channelInfo.keaKeyBits);
             break;
           case ssl_kea_ecdh:
-            AccummulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
-                                channelInfo.keaKeyBits);
+            AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
+                               channelInfo.keaKeyBits);
             break;
           default:
             MOZ_CRASH("impossible KEA");
@@ -1294,8 +1296,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                       channelInfo.authKeyBits);
               break;
             case ssl_auth_ecdsa:
-              AccummulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
-                                  channelInfo.authKeyBits);
+              AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
+                                 channelInfo.authKeyBits);
               break;
             default:
               MOZ_CRASH("impossible auth algorithm");

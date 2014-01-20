@@ -220,9 +220,10 @@ struct BufferSliceTail : public BufferSlice<SliceSize> {
         isBranch[idx >> 3] |= 1 << (idx & 0x7);
     }
     bool isNextBranch() {
-        if (this->nodeSize == InstBaseSize)
+        unsigned int size = this->nodeSize;
+        if (size == InstBaseSize || size >= SliceSize)
             return false;
-        int idx = this->nodeSize / InstBaseSize;
+        int idx = size / InstBaseSize;
         return (isBranch[idx >> 3] >> (idx & 0x7)) & 1;
     }
 };

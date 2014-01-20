@@ -1,0 +1,81 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+STANDALONE_MAKEFILE = 1
+SUPPRESS_DEFAULT_RULES = 1
+
+# Ensure that this happens before including rules.mk
+ifdef ENABLE_INTL_API
+  ifndef MOZ_NATIVE_ICU
+  # Library names: On Windows, ICU uses modified library names for static
+  # and debug libraries.
+    ifeq ($(OS_ARCH),WINNT)
+      ifdef MOZ_DEBUG
+        ICU_LIB_SUFFIX=d
+      endif
+    endif # WINNT
+    ifdef MOZ_SHARED_ICU
+      ifeq ($(OS_ARCH),WINNT)
+        ifdef JS_SHARED_LIBRARY
+          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(libname)$(ICU_LIB_SUFFIX)$(MOZ_ICU_VERSION).dll)
+        endif
+      else # ! WINNT
+        ifeq ($(OS_ARCH),Darwin)
+          ifdef JS_SHARED_LIBRARY
+            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))
+          endif
+        else # ! Darwin
+          ifdef JS_SHARED_LIBRARY
+            ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))
+          endif
+        endif
+      endif # WINNT
+      ifdef ICU_FILES
+        ICU_DEST := $(DIST)/bin
+        INSTALL_TARGETS += ICU
+        $(ICU_FILES): buildicu
+        ICU_TARGET := default
+      endif
+    else # !MOZ_SHARED_ICU
+      ifeq ($(OS_ARCH),WINNT)
+        ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
+                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname).lib;)
+      endif
+    endif # MOZ_SHARED_ICU
+  endif # !MOZ_NATIVE_ICU
+endif # ENABLE_INTL_API
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef ENABLE_INTL_API
+ifndef MOZ_NATIVE_ICU
+ifdef .PYMAKE
+ICU_MAKE = $(GMAKE)
+else
+ICU_MAKE = $(MAKE)
+endif
+
+default:: buildicu
+
+# - ICU requires GNU make according to its readme.html. pymake can't be used
+#   because it doesn't support order only dependencies.
+# - Force ICU to use the standard suffix for object files because expandlibs
+#   will discard all files with a non-standard suffix (bug 857450).
+# - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
+buildicu::
+# ICU's build system is full of races, so force non-parallel build.
+ifdef CROSS_COMPILE
+	+$(ICU_MAKE) -j1 -C host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+endif
+	+$(ICU_MAKE) -j1 -C target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+	$(ICU_LIB_RENAME)
+
+distclean clean::
+ifdef CROSS_COMPILE
+	+$(ICU_MAKE) -C host $@ STATIC_O=$(OBJ_SUFFIX)
+endif
+	+$(ICU_MAKE) -C target $@ STATIC_O=$(OBJ_SUFFIX)
+
+endif
+endif
