@@ -49,15 +49,6 @@ const WINDOW_HIDEABLE_FEATURES = [
 ];
 
 const MESSAGES = [
-  // The content script has received a pageshow event. This happens when a
-  // page is loaded from bfcache without any network activity, i.e. when
-  // clicking the back or forward button.
-  "SessionStore:pageshow",
-
-  // The content script tells us that a new page just started loading in a
-  // browser.
-  "SessionStore:loadStart",
-
   // The content script gives us a reference to an object that performs
   // synchronous collection of session data.
   "SessionStore:setupSyncHandler",
@@ -66,7 +57,7 @@ const MESSAGES = [
   // be saved to disk.
   "SessionStore:update",
 
-  // A "load" event happened. Invalidate the TabStateCache.
+  // A "load" event happened.
   "SessionStore:load",
 
   // The restoreHistory code has run. This is a good time to run SSTabRestoring.
@@ -95,11 +86,6 @@ const TAB_EVENTS = [
   "TabUnpinned"
 ];
 
-// Browser events observed.
-const BROWSER_EVENTS = [
-  "SwapDocShells", "UserTypedValueChanged"
-];
-
 // The number of milliseconds in a day
 const MS_PER_DAY = 1000.0 * 60.0 * 60.0 * 24.0;
 
@@ -121,14 +107,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "GlobalState",
-  "resource:///modules/sessionstore/GlobalState.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
-  "resource:///modules/sessionstore/Messenger.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
-  "resource:///modules/sessionstore/PrivacyFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "GlobalState",
+  "resource:///modules/sessionstore/GlobalState.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
+  "resource:///modules/sessionstore/PrivacyFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
@@ -286,10 +271,6 @@ this.SessionStore = {
 
   getCurrentState: function (aUpdateAll) {
     return SessionStoreInternal.getCurrentState(aUpdateAll);
-  },
-
-  fillTabCachesAsynchronously: function () {
-    return SessionStoreInternal.fillTabCachesAsynchronously();
   },
 
   /**
@@ -609,12 +590,6 @@ let SessionStoreInternal = {
     var win = browser.ownerDocument.defaultView;
 
     switch (aMessage.name) {
-      case "SessionStore:pageshow":
-        this.onTabLoad(win, browser);
-        break;
-      case "SessionStore:loadStart":
-        TabStateCache.delete(browser);
-        break;
       case "SessionStore:setupSyncHandler":
         TabState.setSyncHandler(browser, aMessage.objects.handler);
         break;
@@ -624,7 +599,6 @@ let SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "SessionStore:load":
-        TabStateCache.delete(browser);
         this.onTabLoad(win, browser);
         break;
       case "SessionStore:restoreHistoryComplete":
@@ -744,16 +718,6 @@ let SessionStoreInternal = {
         TabState.onBrowserContentsSwapped(browser, otherBrowser);
         TabStateCache.onBrowserContentsSwapped(browser, otherBrowser);
         break;
-      case "UserTypedValueChanged":
-        browser = aEvent.currentTarget;
-        if (browser.userTypedValue) {
-          TabStateCache.updateField(browser, "userTypedValue", browser.userTypedValue);
-          TabStateCache.updateField(browser, "userTypedClear", browser.userTypedClear);
-        } else {
-          TabStateCache.removeField(browser, "userTypedValue");
-          TabStateCache.removeField(browser, "userTypedClear");
-        }
-        break;
       case "TabOpen":
         this.onTabAdd(win, aEvent.originalTarget);
         break;
@@ -773,13 +737,7 @@ let SessionStoreInternal = {
         this.onTabHide(win, aEvent.originalTarget);
         break;
       case "TabPinned":
-        // If possible, update cached data without having to invalidate it
-        TabStateCache.updateField(aEvent.originalTarget, "pinned", true);
-        this.saveStateDelayed(win);
-        break;
       case "TabUnpinned":
-        // If possible, update cached data without having to invalidate it
-        TabStateCache.updateField(aEvent.originalTarget, "pinned", false);
         this.saveStateDelayed(win);
         break;
     }
@@ -1222,7 +1180,6 @@ let SessionStoreInternal = {
     let openWindows = {};
     this._forEachBrowserWindow(function(aWindow) {
       Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
-        TabStateCache.delete(aTab);
         delete aTab.linkedBrowser.__SS_data;
         if (aTab.linkedBrowser.__SS_restoreState)
           this._resetTabRestoringState(aTab);
@@ -1341,7 +1298,7 @@ let SessionStoreInternal = {
    */
   onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
-    BROWSER_EVENTS.forEach(msg => browser.addEventListener(msg, this, true));
+    browser.addEventListener("SwapDocShells", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
@@ -1367,7 +1324,7 @@ let SessionStoreInternal = {
    */
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
-    BROWSER_EVENTS.forEach(msg => browser.removeEventListener(msg, this, true));
+    browser.removeEventListener("SwapDocShells", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
@@ -1412,7 +1369,7 @@ let SessionStoreInternal = {
     TabState.flush(aTab.linkedBrowser);
 
     // Get the latest data for this tab (generally, from the cache)
-    let tabState = TabState.collectSync(aTab);
+    let tabState = TabState.collect(aTab);
 
     // Don't save private tabs
     let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(aWindow);
@@ -1448,16 +1405,12 @@ let SessionStoreInternal = {
    *        Browser reference
    */
   onTabLoad: function ssi_onTabLoad(aWindow, aBrowser) {
-    // react on "load" and solitary "pageshow" events (the first "pageshow"
-    // following "load" is too late for deleting the data caches)
     // It's possible to get a load event after calling stop on a browser (when
     // overwriting tabs). We want to return early if the tab hasn't been restored yet.
     if (aBrowser.__SS_restoreState &&
         aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
       return;
     }
-
-    TabStateCache.delete(aBrowser);
 
     delete aBrowser.__SS_data;
     this.saveStateDelayed(aWindow);
@@ -1499,9 +1452,6 @@ let SessionStoreInternal = {
       this.restoreNextTab();
     }
 
-    // If possible, update cached data without having to invalidate it
-    TabStateCache.updateField(aTab, "hidden", false);
-
     // Default delay of 2 seconds gives enough time to catch multiple TabShow
     // events due to changing groups in Panorama.
     this.saveStateDelayed(aWindow);
@@ -1514,9 +1464,6 @@ let SessionStoreInternal = {
       TabRestoreQueue.visibleToHidden(aTab);
     }
 
-    // If possible, update cached data without having to invalidate it
-    TabStateCache.updateField(aTab, "hidden", true);
-
     // Default delay of 2 seconds gives enough time to catch multiple TabHide
     // events due to changing groups in Panorama.
     this.saveStateDelayed(aWindow);
@@ -1526,10 +1473,8 @@ let SessionStoreInternal = {
     // On the first gather-telemetry notification of the session,
     // gather telemetry data.
     Services.obs.removeObserver(this, "gather-telemetry");
-    this.fillTabCachesAsynchronously().then(function() {
-      let stateString = SessionStore.getBrowserState();
-      return SessionFile.gatherTelemetry(stateString);
-    });
+    let stateString = SessionStore.getBrowserState();
+    return SessionFile.gatherTelemetry(stateString);
   },
 
   /* ........ nsISessionStore API .............. */
@@ -1623,7 +1568,7 @@ let SessionStoreInternal = {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    let tabState = TabState.collectSync(aTab);
+    let tabState = TabState.collect(aTab);
 
     return this._toJSONString(tabState);
   },
@@ -1656,7 +1601,6 @@ let SessionStoreInternal = {
       this._resetTabRestoringState(aTab);
     }
 
-    TabStateCache.delete(aTab);
     this._setWindowStateBusy(window);
     this.restoreTabs(window, [aTab], [tabState], 0);
   },
@@ -1861,7 +1805,6 @@ let SessionStoreInternal = {
     }
 
     saveTo[aKey] = aStringValue;
-    TabStateCache.updateField(aTab, "extData", saveTo);
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
 
@@ -1879,15 +1822,6 @@ let SessionStoreInternal = {
 
     if (deleteFrom && aKey in deleteFrom) {
       delete deleteFrom[aKey];
-
-      // Keep the extData object only if it is not empty, to save
-      // a little disk space when serializing the tab state later.
-      if (Object.keys(deleteFrom).length) {
-        TabStateCache.updateField(aTab, "extData", deleteFrom);
-      } else {
-        TabStateCache.removeField(aTab, "extData");
-      }
-
       this.saveStateDelayed(aTab.ownerDocument.defaultView);
     }
   },
@@ -1908,7 +1842,6 @@ let SessionStoreInternal = {
 
   persistTabAttribute: function ssi_persistTabAttribute(aName) {
     if (TabAttributes.persist(aName)) {
-      TabStateCache.clear();
       this.saveStateDelayed();
     }
   },
@@ -2086,68 +2019,6 @@ let SessionStoreInternal = {
     return [true, canOverwriteTabs];
   },
 
-  /* ........ Async Data Collection .............. */
-
-  /**
-   * Kicks off asynchronous data collection for all tabs that do not have any
-   * cached data. The returned promise will only notify that the tab collection
-   * has been finished without resolving to any data. The tab collection for a
-   * a few or all tabs might have failed or timed out. By calling
-   * fillTabCachesAsynchronously() and waiting for the promise to be resolved
-   * before calling getCurrentState(), callers ensure that most of the data
-   * should have been collected asynchronously, without blocking the main
-   * thread.
-   *
-   * @return {Promise} the promise that is fulfilled when the tab data is ready
-   */
-  fillTabCachesAsynchronously: function () {
-    let countdown = 0;
-    let deferred = Promise.defer();
-    let activeWindow = this._getMostRecentBrowserWindow();
-
-    // The callback that will be called when a promise has been resolved
-    // successfully, i.e. the tab data has been collected.
-    function done() {
-      if (--countdown === 0) {
-        deferred.resolve();
-      }
-    }
-
-    // The callback that will be called when a promise is rejected, i.e. we
-    // we couldn't collect the tab data because of a script error or a timeout.
-    function fail(reason) {
-      debug("Failed collecting tab data asynchronously: " + reason);
-      done();
-    }
-
-    this._forEachBrowserWindow(win => {
-      if (!this._isWindowLoaded(win)) {
-        // Bail out if the window hasn't even loaded, yet.
-        return;
-      }
-
-      if (!DirtyWindows.has(win) && win != activeWindow) {
-        // Bail out if the window is not dirty and inactive.
-        return;
-      }
-
-      for (let tab of win.gBrowser.tabs) {
-        if (!tab.closing && !TabStateCache.has(tab)) {
-          countdown++;
-          TabState.collect(tab).then(done, fail);
-        }
-      }
-    });
-
-    // If no dirty tabs were found, return a resolved
-    // promise because there is nothing to do here.
-    if (countdown == 0) {
-      return Promise.resolve();
-    }
-
-    return deferred.promise;
-  },
-
   /* ........ Saving Functionality .............. */
 
   /**
@@ -2323,7 +2194,7 @@ let SessionStoreInternal = {
 
     // update the internal state data for this window
     for (let tab of tabs) {
-      tabsData.push(TabState.collectSync(tab));
+      tabsData.push(TabState.collect(tab));
     }
     winData.selected = tabbrowser.mTabBox.selectedIndex + 1;
 
@@ -2703,10 +2574,6 @@ let SessionStoreInternal = {
         Object.keys(tabData.attributes).forEach(a => TabAttributes.persist(a));
       }
 
-      // Any data that's in the process of being collected for this tab will be
-      // out of date now that we're restoring it.
-      TabState.dropPendingCollections(browser);
-
       if (!tabData.entries) {
         tabData.entries = [];
       }
@@ -2745,7 +2612,8 @@ let SessionStoreInternal = {
       tab.setAttribute("pending", "true");
 
       // Update the persistent tab state cache with |tabData| information.
-      TabStateCache.updatePersistent(browser, {
+      TabStateCache.update(browser, {
+        history: {entries: tabData.entries, index: tabData.index},
         scroll: tabData.scroll || null,
         storage: tabData.storage || null,
         formdata: tabData.formdata || null,

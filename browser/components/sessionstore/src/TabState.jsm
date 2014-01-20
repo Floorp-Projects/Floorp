@@ -14,8 +14,6 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
-  "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
   "resource:///modules/sessionstore/PrivacyFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
@@ -53,24 +51,12 @@ this.TabState = Object.freeze({
     return TabStateInternal.collect(tab);
   },
 
-  collectSync: function (tab) {
-    return TabStateInternal.collectSync(tab);
-  },
-
   clone: function (tab) {
     return TabStateInternal.clone(tab);
-  },
-
-  dropPendingCollections: function (browser) {
-    TabStateInternal.dropPendingCollections(browser);
   }
 });
 
 let TabStateInternal = {
-  // A map (xul:browser -> promise) that keeps track of tabs and
-  // their promises when collecting tab data asynchronously.
-  _pendingCollections: new WeakMap(),
-
   // A map (xul:browser -> handler) that maps a tab to the
   // synchronous collection handler object for that tab.
   // See SyncHandler in content-sessionStore.js.
@@ -97,7 +83,7 @@ let TabStateInternal = {
     // synchronously.
     if (id > this._latestMessageID.get(browser)) {
       this._latestMessageID.set(browser, id);
-      TabStateCache.updatePersistent(browser, data);
+      TabStateCache.update(browser, data);
     }
   },
 
@@ -127,89 +113,9 @@ let TabStateInternal = {
    * be swapped just like the docshell.
    */
   onBrowserContentsSwapped: function (browser, otherBrowser) {
-    // Data collected while docShells have been swapped should not go into
-    // the TabStateCache. Collections will most probably time out but we want
-    // to make sure.
-    this.dropPendingCollections(browser);
-    this.dropPendingCollections(otherBrowser);
-
     // Swap data stored per-browser.
     [this._syncHandlers, this._latestMessageID]
       .forEach(map => Utils.swapMapEntries(map, browser, otherBrowser));
-  },
-
-  /**
-   * Collect data related to a single tab, asynchronously.
-   *
-   * @param tab
-   *        tabbrowser tab
-   *
-   * @returns {Promise} A promise that will resolve to a TabData instance.
-   */
-  collect: function (tab) {
-    if (!tab) {
-      throw new TypeError("Expecting a tab");
-    }
-
-    // Don't collect if we don't need to.
-    if (TabStateCache.has(tab)) {
-      return Promise.resolve(TabStateCache.get(tab));
-    }
-
-    // If the tab was recently added, or if it's being restored, we
-    // just collect basic data about it and skip the cache.
-    if (!this._tabNeedsExtraCollection(tab)) {
-      let tabData = this._collectBaseTabData(tab);
-      return Promise.resolve(tabData);
-    }
-
-    let browser = tab.linkedBrowser;
-
-    let promise = Task.spawn(function task() {
-      // Collect session history data asynchronously.
-      let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
-
-      // The tab could have been closed while waiting for a response.
-      if (!tab.linkedBrowser) {
-        return;
-      }
-
-      // Collect basic tab data, without session history and storage.
-      let tabData = this._collectBaseTabData(tab);
-
-      // Apply collected data.
-      tabData.entries = history.entries;
-      if ("index" in history) {
-        tabData.index = history.index;
-      }
-
-      // If we're still the latest async collection for the given tab and
-      // the cache hasn't been filled by collect() in the meantime, let's
-      // fill the cache with the data we received.
-      if (this._pendingCollections.get(browser) == promise) {
-        TabStateCache.set(tab, tabData);
-        this._pendingCollections.delete(browser);
-      }
-
-      // Copy data from the persistent cache. We need to create an explicit
-      // copy of the |tabData| object so that the properties injected by
-      // |_copyFromPersistentCache| don't end up in the non-persistent cache.
-      // The persistent cache does not store "null" values, so any values that
-      // have been cleared by the frame script would not be overriden by
-      // |_copyFromPersistentCache|. These two caches are only an interim
-      // solution and the non-persistent one will go away soon.
-      tabData = Utils.copy(tabData);
-      this._copyFromPersistentCache(tab, tabData);
-
-      throw new Task.Result(tabData);
-    }.bind(this));
-
-    // Save the current promise as the latest asynchronous collection that is
-    // running. This will be used to check whether the collected data is still
-    // valid and will be used to fill the tab state cache.
-    this._pendingCollections.set(browser, promise);
-
-    return promise;
   },
 
   /**
@@ -220,61 +126,10 @@ let TabStateInternal = {
    *
    * @returns {TabData} An object with the data for this tab.  If the
    * tab has not been invalidated since the last call to
-   * collectSync(aTab), the same object is returned.
+   * collect(aTab), the same object is returned.
    */
-  collectSync: function (tab) {
-    if (!tab) {
-      throw new TypeError("Expecting a tab");
-    }
-    if (TabStateCache.has(tab)) {
-      // Copy data from the persistent cache. We need to create an explicit
-      // copy of the |tabData| object so that the properties injected by
-      // |_copyFromPersistentCache| don't end up in the non-persistent cache.
-      // The persistent cache does not store "null" values, so any values that
-      // have been cleared by the frame script would not be overriden by
-      // |_copyFromPersistentCache|. These two caches are only an interim
-      // solution and the non-persistent one will go away soon.
-      let tabData = Utils.copy(TabStateCache.get(tab));
-      this._copyFromPersistentCache(tab, tabData);
-      return tabData;
-    }
-
-    let tabData = this._collectSyncUncached(tab);
-
-    if (this._tabCachingAllowed(tab)) {
-      TabStateCache.set(tab, tabData);
-    }
-
-    // Copy data from the persistent cache. We need to create an explicit
-    // copy of the |tabData| object so that the properties injected by
-    // |_copyFromPersistentCache| don't end up in the non-persistent cache.
-    // The persistent cache does not store "null" values, so any values that
-    // have been cleared by the frame script would not be overriden by
-    // |_copyFromPersistentCache|. These two caches are only an interim
-    // solution and the non-persistent one will go away soon.
-    tabData = Utils.copy(tabData);
-    this._copyFromPersistentCache(tab, tabData);
-
-    // Prevent all running asynchronous collections from filling the cache.
-    // Every asynchronous data collection started before a collectSync() call
-    // can't expect to retrieve different data than the sync call. That's why
-    // we just fill the cache with the data collected from the sync call and
-    // discard any data collected asynchronously.
-    this.dropPendingCollections(tab.linkedBrowser);
-
-    return tabData;
-  },
-
-  /**
-   * Drop any pending calls to TabState.collect. These calls will
-   * continue to run, but they won't store their results in the
-   * TabStateCache.
-   *
-   * @param browser
-   *        xul:browser
-   */
-  dropPendingCollections: function (browser) {
-    this._pendingCollections.delete(browser);
+  collect: function (tab) {
+    return this._collectBaseTabData(tab);
   },
 
   /**
@@ -289,155 +144,7 @@ let TabStateInternal = {
    *                   up-to-date.
    */
   clone: function (tab) {
-    let options = {includePrivateData: true};
-    let tabData = this._collectSyncUncached(tab, options);
-
-    // Copy data from the persistent cache.
-    this._copyFromPersistentCache(tab, tabData, options);
-
-    return tabData;
-  },
-
-  /**
-   * Synchronously collect all session data for a tab. The
-   * TabStateCache is not consulted, and the resulting data is not put
-   * in the cache.
-   */
-  _collectSyncUncached: function (tab, options = {}) {
-    // Collect basic tab data, without session history and storage.
-    let tabData = this._collectBaseTabData(tab);
-
-    // If we don't need any other data, return what we have.
-    if (!this._tabNeedsExtraCollection(tab)) {
-      return tabData;
-    }
-
-    // In multiprocess Firefox, there is a small window of time after
-    // tab creation when we haven't received a sync handler object. In
-    // this case the tab shouldn't have any history or cookie data, so we
-    // just return the base data already collected.
-    if (!this._syncHandlers.has(tab.linkedBrowser)) {
-      return tabData;
-    }
-
-    let syncHandler = this._syncHandlers.get(tab.linkedBrowser);
-
-    let includePrivateData = options && options.includePrivateData;
-
-    let history;
-    try {
-      history = syncHandler.collectSessionHistory(includePrivateData);
-    } catch (e) {
-      // This may happen if the tab has crashed.
-      console.error(e);
-      return tabData;
-    }
-
-    tabData.entries = history.entries;
-    if ("index" in history) {
-      tabData.index = history.index;
-    }
-
-    return tabData;
-  },
-
-  /**
-   * Copy tab data for the given |tab| from the persistent cache to |tabData|.
-   *
-   * @param tab (xul:tab)
-   *        The tab belonging to the given |tabData| object.
-   * @param tabData (object)
-   *        The tab data belonging to the given |tab|.
-   * @param options (object)
-   *        {includePrivateData: true} to always include private data
-   */
-  _copyFromPersistentCache: function (tab, tabData, options = {}) {
-    let data = TabStateCache.getPersistent(tab.linkedBrowser);
-    if (!data) {
-      return;
-    }
-
-    // The caller may explicitly request to omit privacy checks.
-    let includePrivateData = options && options.includePrivateData;
-
-    for (let key of Object.keys(data)) {
-      let value = data[key];
-
-      // Filter sensitive data according to the current privacy level.
-      if (!includePrivateData) {
-        if (key === "storage") {
-          value = PrivacyFilter.filterSessionStorageData(value, tab.pinned);
-        } else if (key === "formdata") {
-          value = PrivacyFilter.filterFormData(value, tab.pinned);
-        }
-      }
-
-      if (value) {
-        tabData[key] = value;
-      }
-    }
-  },
-
-  /*
-   * Returns true if the xul:tab element is newly added (i.e., if it's
-   * showing about:blank with no history).
-   */
-  _tabIsNew: function (tab) {
-    let browser = tab.linkedBrowser;
-    return (!browser || !browser.currentURI);
-  },
-
-  /*
-   * Returns true if the xul:tab element is in the process of being
-   * restored.
-   */
-  _tabIsRestoring: function (tab) {
-    return !!tab.linkedBrowser.__SS_data;
-  },
-
-  /**
-   * This function returns true if we need to collect history, page
-   * style, and text and scroll data from the tab. Normally we do. The
-   * cases when we don't are:
-   * 1. the tab is about:blank with no history, or
-   * 2. the tab is waiting to be restored.
-   *
-   * @param tab   A xul:tab element.
-   * @returns     True if the tab is in the process of being restored.
-   */
-  _tabNeedsExtraCollection: function (tab) {
-    if (this._tabIsNew(tab)) {
-      // Tab is about:blank with no history.
-      return false;
-    }
-
-    if (this._tabIsRestoring(tab)) {
-      // Tab is waiting to be restored.
-      return false;
-    }
-
-    // Otherwise we need the extra data.
-    return true;
-  },
-
-  /*
-   * Returns true if we should cache the tabData for the given the
-   * xul:tab element.
-   */
-  _tabCachingAllowed: function (tab) {
-    if (this._tabIsNew(tab)) {
-      // No point in caching data for newly created tabs.
-      return false;
-    }
-
-    if (this._tabIsRestoring(tab)) {
-      // If the tab is being restored, we just return the data being
-      // restored. This data may be incomplete (if supplied by
-      // setBrowserState, for example), so we don't want to cache it.
-      return false;
-    }
-
-    return true;
+    return this._collectBaseTabData(tab, {includePrivateData: true});
   },
 
   /**
@@ -445,10 +152,12 @@ let TabStateInternal = {
    *
    * @param tab
    *        tabbrowser tab
+   * @param options (object)
+   *        {includePrivateData: true} to always include private data
    *
    * @returns {object} An object with the basic data for this tab.
    */
-  _collectBaseTabData: function (tab) {
+  _collectBaseTabData: function (tab, options) {
     let tabData = {entries: [], lastAccessed: tab.lastAccessed };
     let browser = tab.linkedBrowser;
 
@@ -507,6 +216,53 @@ let TabStateInternal = {
     else if (tabData.extData)
       delete tabData.extData;
 
+    // Copy data from the tab state cache only if the tab has fully finished
+    // restoring. We don't want to overwrite data contained in __SS_data.
+    this._copyFromCache(tab, tabData, options);
+
     return tabData;
+  },
+
+  /**
+   * Copy tab data for the given |tab| from the cache to |tabData|.
+   *
+   * @param tab (xul:tab)
+   *        The tab belonging to the given |tabData| object.
+   * @param tabData (object)
+   *        The tab data belonging to the given |tab|.
+   * @param options (object)
+   *        {includePrivateData: true} to always include private data
+   */
+  _copyFromCache: function (tab, tabData, options = {}) {
+    let data = TabStateCache.get(tab.linkedBrowser);
+    if (!data) {
+      return;
+    }
+
+    // The caller may explicitly request to omit privacy checks.
+    let includePrivateData = options && options.includePrivateData;
+
+    for (let key of Object.keys(data)) {
+      let value = data[key];
+
+      // Filter sensitive data according to the current privacy level.
+      if (!includePrivateData) {
+        if (key === "storage") {
+          value = PrivacyFilter.filterSessionStorageData(value, tab.pinned);
+        } else if (key === "formdata") {
+          value = PrivacyFilter.filterFormData(value, tab.pinned);
+        }
+      }
+
+      if (key === "history") {
+        tabData.entries = value.entries;
+
+        if (value.hasOwnProperty("index")) {
+          tabData.index = value.index;
+        }
+      } else if (value) {
+        tabData[key] = value;
+      }
+    }
   }
 };
