@@ -147,7 +147,9 @@ Throw(JSContext* aCx, nsresult aRv, const char* aMessage)
 
   // If not, use the default.
   if (!finalException) {
-    finalException = new Exception(aMessage, aRv, nullptr, nullptr, nullptr);
+    // aMessage can be null.
+    finalException = new Exception(nsCString(aMessage), aRv,
+                                   EmptyCString(), nullptr, nullptr);
   }
 
   MOZ_ASSERT(finalException);
@@ -292,16 +294,14 @@ private:
     return mLanguage == nsIProgrammingLanguage::JAVASCRIPT;
   }
 
-  const char* GetFilename();
-  const char* GetFunname();
   int32_t GetLineno();
 
   nsRefPtr<StackDescriptionOwner> mStackDescription;
   nsCOMPtr<nsIStackFrame> mCaller;
 
   // Cached values
-  char* mFilename;
-  char* mFunname;
+  nsCString mFilename;
+  nsCString mFunname;
   int32_t mLineno;
   uint32_t mLanguage;
 
@@ -315,9 +315,7 @@ private:
 
 JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
                            size_t aIndex)
-  : mFilename(nullptr),
-    mFunname(nullptr),
-    mLineno(0)
+  : mLineno(0)
 {
   if (aStackDescription && aIndex < aStackDescription->NumFrames()) {
     mStackDescription = aStackDescription;
@@ -340,12 +338,6 @@ JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
 
 JSStackFrame::~JSStackFrame()
 {
-  if (mFilename) {
-    nsMemory::Free(mFilename);
-  }
-  if (mFunname) {
-    nsMemory::Free(mFunname);
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_2(JSStackFrame, mStackDescription, mCaller)
@@ -366,22 +358,22 @@ NS_IMETHODIMP JSStackFrame::GetLanguage(uint32_t* aLanguage)
 }
 
 /* readonly attribute string languageName; */
-NS_IMETHODIMP JSStackFrame::GetLanguageName(char** aLanguageName)
+NS_IMETHODIMP JSStackFrame::GetLanguageName(nsACString& aLanguageName)
 {
   static const char js[] = "JavaScript";
   static const char cpp[] = "C++";
 
   if (IsJSFrame()) {
-    *aLanguageName = (char*) nsMemory::Clone(js, sizeof(js));
+    aLanguageName.AssignASCII(js);
   } else {
-    *aLanguageName = (char*) nsMemory::Clone(cpp, sizeof(cpp));
+    aLanguageName.AssignASCII(cpp);
   }
 
   return NS_OK;
 }
 
-const char*
-JSStackFrame::GetFilename()
+/* readonly attribute string filename; */
+NS_IMETHODIMP JSStackFrame::GetFilename(nsACString& aFilename)
 {
   if (!mFilenameInitialized) {
     JS::FrameDescription& desc = mStackDescription->FrameAt(mIndex);
@@ -393,34 +385,24 @@ JSStackFrame::GetFilename()
       JSAutoCompartment ac(cx, desc.script());
       const char* filename = JS_GetScriptFilename(cx, desc.script());
       if (filename) {
-        mFilename =
-          (char*)nsMemory::Clone(filename, sizeof(char)*(strlen(filename)+1));
+        mFilename.Assign(filename);
       }
     }
     mFilenameInitialized = true;
   }
 
-  return mFilename;
-}
-
-/* readonly attribute string filename; */
-NS_IMETHODIMP JSStackFrame::GetFilename(char** aFilename)
-{
-  NS_ENSURE_ARG_POINTER(aFilename);
-
-  const char* filename = GetFilename();
-  if (filename) {
-    *aFilename = (char*) nsMemory::Clone(filename,
-                                         sizeof(char)*(strlen(filename)+1));
+  // The filename must be set to null if empty.
+  if (mFilename.IsEmpty()) {
+    aFilename.SetIsVoid(true);
   } else {
-    *aFilename = nullptr;
+    aFilename.Assign(mFilename);
   }
 
   return NS_OK;
 }
 
-const char*
-JSStackFrame::GetFunname()
+/* readonly attribute string name; */
+NS_IMETHODIMP JSStackFrame::GetName(nsACString& aFunction)
 {
   if (!mFunnameInitialized) {
     JS::FrameDescription& desc = mStackDescription->FrameAt(mIndex);
@@ -431,33 +413,17 @@ JSStackFrame::GetFunname()
       JS::Rooted<JSFunction*> fun(cx, desc.fun());
       JS::Rooted<JSString*> funid(cx, JS_GetFunctionDisplayId(fun));
       if (funid) {
-        size_t length = JS_GetStringEncodingLength(cx, funid);
-        if (length != size_t(-1)) {
-          mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
-          if (mFunname) {
-            JS_EncodeStringToBuffer(cx, funid, mFunname, length);
-            mFunname[length] = '\0';
-          }
-        }
+        CopyUTF16toUTF8(JS_GetStringCharsZ(cx, funid), mFunname);
       }
     }
     mFunnameInitialized = true;
   }
 
-  return mFunname;
-}
-
-/* readonly attribute string name; */
-NS_IMETHODIMP JSStackFrame::GetName(char** aFunction)
-{
-  NS_ENSURE_ARG_POINTER(aFunction);
-
-  const char* funname = GetFunname();
-  if (funname) {
-    *aFunction = (char*) nsMemory::Clone(funname,
-                                         sizeof(char)*(strlen(funname)+1));
+  // The function name must be set to null if empty.
+  if (mFunname.IsEmpty()) {
+    aFunction.SetIsVoid(true);
   } else {
-    *aFunction = nullptr;
+    aFunction.Assign(mFunname);
   }
 
   return NS_OK;
@@ -482,10 +448,10 @@ NS_IMETHODIMP JSStackFrame::GetLineNumber(int32_t* aLineNumber)
   return NS_OK;
 }
 
-/* readonly attribute string sourceLine; */
-NS_IMETHODIMP JSStackFrame::GetSourceLine(char** aSourceLine)
+/* readonly attribute AUTF8String sourceLine; */
+NS_IMETHODIMP JSStackFrame::GetSourceLine(nsACString& aSourceLine)
 {
-  *aSourceLine = nullptr;
+  aSourceLine.Truncate();
   return NS_OK;
 }
 
@@ -500,26 +466,31 @@ NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
   return NS_OK;
 }
 
-/* string toString (); */
-NS_IMETHODIMP JSStackFrame::ToString(char** _retval)
+/* AUTF8String toString (); */
+NS_IMETHODIMP JSStackFrame::ToString(nsACString& _retval)
 {
+  _retval.Truncate();
+
   const char* frametype = IsJSFrame() ? "JS" : "native";
-  const char* filename = GetFilename();
-  if (!filename) {
-    filename = "<unknown filename>";
+
+  nsCString filename;
+  nsresult rv = GetFilename(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (filename.IsEmpty()) {
+    filename.AssignASCII("<unknown filename>");
   }
-  const char* funname = GetFunname();
-  if (!funname) {
-    funname = "<TOP_LEVEL>";
+
+  nsCString funname;
+  rv = GetName(funname);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (funname.IsEmpty()) {
+    funname.AssignASCII("<TOP_LEVEL>");
   }
   static const char format[] = "%s frame :: %s :: %s :: line %d";
-  int len = sizeof(char)*
-              (strlen(frametype) + strlen(filename) + strlen(funname)) +
-            sizeof(format) + 3 * sizeof(mLineno);
-
-  char* buf = (char*) nsMemory::Alloc(len);
-  JS_snprintf(buf, len, format, frametype, filename, funname, GetLineno());
-  *_retval = buf;
+  _retval.AppendPrintf(format, frametype, filename.get(),
+                       funname.get(), GetLineno());
   return NS_OK;
 }
 
@@ -550,17 +521,8 @@ JSStackFrame::CreateStackFrameLocation(uint32_t aLanguage,
 
   self->mLanguage = aLanguage;
   self->mLineno = aLineNumber;
-
-  if (aFilename) {
-    self->mFilename =
-      (char*)nsMemory::Clone(aFilename, sizeof(char)*(strlen(aFilename)+1));
-  }
-
-  if (aFunctionName) {
-    self->mFunname = 
-      (char*)nsMemory::Clone(aFunctionName,
-                             sizeof(char)*(strlen(aFunctionName)+1));
-  }
+  self->mFilename = aFilename;
+  self->mFunname = aFunctionName;
 
   self->mCaller = aCaller;
 
