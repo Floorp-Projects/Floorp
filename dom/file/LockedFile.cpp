@@ -541,19 +541,23 @@ LockedFile::GetMetadata(JS::Handle<JS::Value> aParameters,
     return NS_OK;
   }
 
-  nsRefPtr<MetadataParameters> params = new MetadataParameters();
-
   // Get optional arguments.
+  bool size, lastModified;
   if (!JSVAL_IS_VOID(aParameters) && !JSVAL_IS_NULL(aParameters)) {
-    nsresult rv = params->Init(aCx, aParameters);
+    idl::DOMFileMetadataParameters config;
+    nsresult rv = config.Init(aCx, aParameters.address());
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
-    if (!params->IsConfigured()) {
-      return NS_ERROR_TYPE_ERR;
-    }
+    size = config.size;
+    lastModified = config.lastModified;
   }
   else {
-    params->Init(true, true);
+    size = lastModified = true;
+  }
+
+  nsRefPtr<MetadataParameters> params =
+    new MetadataParameters(size, lastModified);
+  if (!params->IsConfigured()) {
+    return NS_ERROR_TYPE_ERR;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
