@@ -53,6 +53,7 @@ chrome.jar:
   content/FeedHandler.js               (content/FeedHandler.js)
   content/Feedback.js                  (content/Feedback.js)
   content/Linkify.js                   (content/Linkify.js)
+  content/CastingApps.js               (content/CastingApps.js)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
 * content/aboutHealthReport.js         (content/aboutHealthReport.js)
