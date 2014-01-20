@@ -141,9 +141,6 @@ protected:
         return MediateRace(parent, child);
     }
 
-    virtual bool RecvXXX_HACK_FIXME_cjones(Shmem& mem)
-      { NS_RUNTIMEABORT("not reached"); return false; }
-
     virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
     virtual bool
