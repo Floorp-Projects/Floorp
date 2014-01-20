@@ -59,15 +59,10 @@ def writeFiles(files):
         pathmap.setdefault(dirp, []).append(leaf)
 
     for k, v in pathmap.items():
-        with open(k + '/Makefile.in', 'wb') as fh:
-            result = writeBuildFiles.substMakefile('parseFailures.py', v)
-            result = result.encode('utf-8')
+        with open(k + '/mochitest.ini', 'w') as fh:
+            result = writeBuildFiles.substManifest('parseFailures.py', v, [])
             fh.write(result)
 
-        with open(k + '/moz.build', 'wb') as fh:
-            result = writeBuildFiles.substMozbuild('parseFailures.py', [])
-            result = result.encode('utf-8')
-            fh.write(result)
 
 def main(logPath):
     fp = open(logPath, 'rb')
