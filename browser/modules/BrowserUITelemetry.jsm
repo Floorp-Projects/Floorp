@@ -135,6 +135,13 @@ const OTHER_MOUSEUP_MONITORED_ITEMS = [
   "menubar-items",
 ];
 
+// Items that open arrow panels will often be overlapped by
+// the panel that they're opening by the time the mouseup
+// event is fired, so for these items, we monitor mousedown.
+const MOUSEDOWN_MONITORED_ITEMS = [
+  "PanelUI-menu-button",
+];
+
 // Weakly maps browser windows to objects whose keys are relative
 // timestamps for when some kind of session started. For example,
 // when a customization session started. That way, when the window
@@ -261,6 +268,13 @@ this.BrowserUITelemetry = {
       }
     }
 
+    for (let itemID of MOUSEDOWN_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.addEventListener("mousedown", this);
+      }
+    }
+
     WINDOW_DURATION_MAP.set(aWindow, {});
   },
 
@@ -281,6 +295,13 @@ this.BrowserUITelemetry = {
         item.removeEventListener("mouseup", this);
       }
     }
+
+    for (let itemID of MOUSEDOWN_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.removeEventListener("mousedown", this);
+      }
+    }
   },
 
   handleEvent: function(aEvent) {
@@ -290,6 +311,9 @@ this.BrowserUITelemetry = {
         break;
       case "mouseup":
         this._handleMouseUp(aEvent);
+        break;
+      case "mousedown":
+        this._handleMouseDown(aEvent);
         break;
     }
   },
@@ -309,6 +333,16 @@ this.BrowserUITelemetry = {
         break;
       default:
         this._checkForBuiltinItem(aEvent);
+    }
+  },
+
+  _handleMouseDown: function(aEvent) {
+    if (aEvent.currentTarget.id == "PanelUI-menu-button") {
+      // _countMouseUpEvent expects a detail for the second argument,
+      // but we don't really have any details to give. Just passing in
+      // "button" is probably simpler than trying to modify
+      // _countMouseUpEvent for this particular case.
+      this._countMouseUpEvent("click-menu-button", "button", aEvent.button);
     }
   },
 
