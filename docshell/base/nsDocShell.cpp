@@ -2839,12 +2839,18 @@ nsDocShell::NameEquals(const char16_t *aName, bool *_retval)
     return NS_OK;
 }
 
+/* virtual */ int32_t
+nsDocShell::ItemType()
+{
+   return mItemType;
+}
+
 NS_IMETHODIMP
 nsDocShell::GetItemType(int32_t * aItemType)
 {
     NS_ENSURE_ARG_POINTER(aItemType);
 
-    *aItemType = mItemType;
+    *aItemType = ItemType();
     return NS_OK;
 }
 
@@ -3028,10 +3034,7 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem ** aParent)
     if (!parent)
         return NS_OK;
 
-    int32_t parentType;
-    NS_ENSURE_SUCCESS(parent->GetItemType(&parentType), NS_ERROR_FAILURE);
-
-    if (parentType == mItemType) {
+    if (parent->ItemType() == mItemType) {
         parent.swap(*aParent);
     }
     return NS_OK;
@@ -3048,10 +3051,7 @@ nsDocShell::GetSameTypeParentIgnoreBrowserAndAppBoundaries(nsIDocShell** aParent
     if (!parent)
         return NS_OK;
 
-    int32_t parentType;
-    NS_ENSURE_SUCCESS(parent->GetItemType(&parentType), NS_ERROR_FAILURE);
-
-    if (parentType == mItemType) {
+    if (parent->ItemType() == mItemType) {
         nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parent);
         parentDS.forget(aParent);
     }
@@ -3351,9 +3351,7 @@ nsDocShell::DoFindItemWithName(const char16_t* aName,
         if (parentAsTreeItem == reqAsTreeItem)
             return NS_OK;
 
-        int32_t parentType;
-        parentAsTreeItem->GetItemType(&parentType);
-        if (parentType == mItemType) {
+        if (parentAsTreeItem->ItemType() == mItemType) {
             return parentAsTreeItem->
                 FindItemWithName(aName,
                                  static_cast<nsIDocShellTreeItem*>
@@ -3463,8 +3461,7 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   int32_t childWebshellCount;
   aParentNode->GetChildCount(&childWebshellCount);
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
-  int32_t type;
-  aParentNode->GetItemType(&type);
+  int32_t type = aParentNode->ItemType();
   nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
   nsRefPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -3556,9 +3553,8 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
     while (iter.HasMore()) {
         nsCOMPtr<nsIDocShellTreeItem> child = do_QueryObject(iter.GetNext());
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-        int32_t childType = ~mItemType; // Set it to not us in case the get fails
-        child->GetItemType(&childType); // We don't care if this fails, if it does we won't set the owner
-        if (childType == mItemType)
+        
+        if (child->ItemType() == mItemType)
             child->SetTreeOwner(aTreeOwner);
     }
 
@@ -3656,13 +3652,9 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
             childDocShell->SetUseGlobalHistory(true);
     }
 
-
-    int32_t childType = ~mItemType;     // Set it to not us in case the get fails
-    aChild->GetItemType(&childType);
-    if (childType != mItemType)
+    if (aChild->ItemType() != mItemType) {
         return NS_OK;
-    // Everything below here is only done when the child is the same type.
-
+    }
 
     aChild->SetTreeOwner(mTreeOwner);
 
@@ -3772,8 +3764,7 @@ nsDocShell::FindChildWithName(const char16_t * aName,
     while (iter.HasMore()) {
         nsCOMPtr<nsIDocShellTreeItem> child = do_QueryObject(iter.GetNext());
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-        int32_t childType;
-        child->GetItemType(&childType);
+        int32_t childType = child->ItemType();
 
         if (aSameType && (childType != mItemType))
             continue;

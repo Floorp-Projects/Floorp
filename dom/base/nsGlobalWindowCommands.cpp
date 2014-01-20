@@ -245,12 +245,8 @@ nsSelectMoveScrollCommand::DoCommand(const char *aCommandName, nsISupports *aCom
     caretOn = Preferences::GetBool("accessibility.browsewithcaret");
     if (caretOn) {
       nsCOMPtr<nsIDocShell> docShell = piWindow->GetDocShell();
-      if (docShell) {
-        int32_t itemType;
-        docShell->GetItemType(&itemType);
-        if (itemType == nsIDocShellTreeItem::typeChrome) {
-          caretOn = false;
-        }
+      if (docShell && docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
+        caretOn = false;
       }
     }
   }
