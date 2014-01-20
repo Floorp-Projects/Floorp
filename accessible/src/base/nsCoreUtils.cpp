@@ -10,7 +10,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsRange.h"
@@ -34,6 +33,7 @@
 
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -216,8 +216,8 @@ nsCoreUtils::GetRoleContent(nsINode *aNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   if (!content) {
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aNode));
-    if (domDoc) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+    if (doc) {
       nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(aNode));
       if (htmlDoc) {
         nsCOMPtr<nsIDOMHTMLElement> bodyElement;
@@ -225,9 +225,7 @@ nsCoreUtils::GetRoleContent(nsINode *aNode)
         content = do_QueryInterface(bodyElement);
       }
       else {
-        nsCOMPtr<nsIDOMElement> docElement;
-        domDoc->GetDocumentElement(getter_AddRefs(docElement));
-        content = do_QueryInterface(docElement);
+        return doc->GetDocumentElement();
       }
     }
   }
