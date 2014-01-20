@@ -25,6 +25,10 @@ gFrameTree.addObserver({
  * to modify and query docShell data when running with multiple processes.
  */
 
+addEventListener("hashchange", function () {
+  sendAsyncMessage("ss-test:hashchange");
+});
+
 addEventListener("MozStorageChanged", function () {
   sendSyncMessage("ss-test:MozStorageChanged");
 });
@@ -44,6 +48,11 @@ addMessageListener("ss-test:modifySessionStorage2", function (msg) {
 addMessageListener("ss-test:purgeDomainData", function ({data: domain}) {
   Services.obs.notifyObservers(null, "browser:purge-domain-data", domain);
   content.setTimeout(() => sendAsyncMessage("ss-test:purgeDomainData"));
+});
+
+addMessageListener("ss-test:purgeSessionHistory", function () {
+  Services.obs.notifyObservers(null, "browser:purge-session-history", "");
+  content.setTimeout(() => sendAsyncMessage("ss-test:purgeSessionHistory"));
 });
 
 addMessageListener("ss-test:getStyleSheets", function (msg) {
@@ -148,4 +157,9 @@ addMessageListener("ss-test:removeLastFrame", function ({data}) {
 addMessageListener("ss-test:mapFrameTree", function (msg) {
   let result = gFrameTree.map(frame => ({href: frame.location.href}));
   sendAsyncMessage("ss-test:mapFrameTree", result);
+});
+
+addMessageListener("ss-test:click", function ({data}) {
+  content.document.getElementById(data.id).click();
+  sendAsyncMessage("ss-test:click");
 });
