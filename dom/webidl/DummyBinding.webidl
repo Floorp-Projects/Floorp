@@ -30,6 +30,7 @@ interface DummyInterface : EventTarget {
                    optional WifiResultOptions arg2);
   void AppNotificationServiceOptions(optional AppNotificationServiceOptions arg);
   void AppInfo(optional AppInfo arg1);
+  void DOMFileMetadataParameters(optional DOMFileMetadataParameters arg);
 };
 
 interface DummyInterfaceWorkers {

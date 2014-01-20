@@ -33,6 +33,7 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/LockedFileBinding.h"
 
 #define STREAM_COPY_BLOCK_SIZE 32768
 
@@ -542,20 +543,13 @@ LockedFile::GetMetadata(JS::Handle<JS::Value> aParameters,
   }
 
   // Get optional arguments.
-  bool size, lastModified;
-  if (!JSVAL_IS_VOID(aParameters) && !JSVAL_IS_NULL(aParameters)) {
-    idl::DOMFileMetadataParameters config;
-    nsresult rv = config.Init(aCx, aParameters.address());
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    size = config.size;
-    lastModified = config.lastModified;
-  }
-  else {
-    size = lastModified = true;
-  }
+  DOMFileMetadataParameters config;
+  JS::Rooted<JS::Value> parameters(aCx, aParameters);
+  bool result = config.Init(aCx, parameters);
+  NS_ENSURE_TRUE(result, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
 
   nsRefPtr<MetadataParameters> params =
-    new MetadataParameters(size, lastModified);
+    new MetadataParameters(config.mSize, config.mLastModified);
   if (!params->IsConfigured()) {
     return NS_ERROR_TYPE_ERR;
   }
