@@ -25,7 +25,7 @@ public:
   virtual bool IsBrowserStream() MOZ_OVERRIDE { return false; }
 
   virtual bool Answer__delete__(const NPReason& reason,
-                                const bool& artificial);
+                                const bool& artificial) MOZ_OVERRIDE;
 
   int32_t NPN_Write(int32_t length, void* buffer);
   void NPP_DestroyStream(NPError reason);

@@ -510,14 +510,14 @@ var FullZoom = {
   },
 
   /**
-   * Asynchronously broadcasts "FullZoom:TESTS:location-change" so that tests
-   * can select tabs, load pages, etc. and be notified when the zoom levels on
-   * those pages change.  The notification is always asynchronous so that
-   * observers are guaranteed a consistent behavior.
+   * Asynchronously broadcasts "browser-fullZoom:location-change" so that
+   * listeners can be notified when the zoom levels on those pages change.
+   * The notification is always asynchronous so that observers are guaranteed a
+   * consistent behavior.
    */
   _notifyOnLocationChange: function FullZoom__notifyOnLocationChange() {
     this._executeSoon(function () {
-      Services.obs.notifyObservers(null, "FullZoom:TESTS:location-change", "");
+      Services.obs.notifyObservers(null, "browser-fullZoom:location-change", "");
     });
   },
 
