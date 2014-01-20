@@ -988,8 +988,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   // Initialise refresh tick counters for OMTA
   mLastStyleUpdateForAllAnimations =
-    mLastUpdateThrottledAnimationStyle =
-    mLastUpdateThrottledTransitionStyle = mRefreshDriver->MostRecentRefresh();
+    mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
