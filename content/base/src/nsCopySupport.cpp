@@ -637,10 +637,9 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   if (!nsContentUtils::IsSafeToRunScript())
     return false;
 
-  int32_t type = -1;
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(piWindow);
-  bool chromeShell = (docShell && NS_SUCCEEDED(docShell->GetItemType(&type)) &&
-                      type == nsIDocShellTreeItem::typeChrome);
+  const bool chromeShell =
+    docShell && docShell->ItemType() == nsIDocShellTreeItem::typeChrome;
 
   // next, fire the cut, copy or paste event
   bool doDefault = true;
