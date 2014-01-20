@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import os
 import subprocess
 import traceback
 
@@ -38,7 +39,6 @@ class Runner(object):
         self.log = mozlog.getLogger('MozRunner')
         self.symbols_path = symbols_path
 
-    @abstractmethod
     def start(self, *args, **kwargs):
         """
         Run the process
@@ -112,7 +112,10 @@ class Runner(object):
         if getattr(self, 'profile', False):
             self.profile.reset()
 
-    def check_for_crashes(self, dump_directory, test_name=None):
+    def check_for_crashes(self, dump_directory=None, test_name=None):
+        if not dump_directory:
+            dump_directory = os.path.join(self.profile.profile, 'minidumps')
+
         crashed = False
         try:
             crashed = mozcrash.check_for_crashes(dump_directory,
