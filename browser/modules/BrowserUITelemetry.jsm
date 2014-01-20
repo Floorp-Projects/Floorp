@@ -132,6 +132,7 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
 const OTHER_MOUSEUP_MONITORED_ITEMS = [
   "PlacesChevron",
   "PlacesToolbarItems",
+  "menubar-items",
 ];
 
 // Weakly maps browser windows to objects whose keys are relative
@@ -303,6 +304,9 @@ this.BrowserUITelemetry = {
       case "PlacesChevron":
         this._PlacesChevronMouseUp(aEvent);
         break;
+      case "menubar-items":
+        this._menubarMouseUp(aEvent);
+        break;
       default:
         this._checkForBuiltinItem(aEvent);
     }
@@ -323,6 +327,13 @@ this.BrowserUITelemetry = {
 
     let result = target.hasAttribute("container") ? "container" : "item";
     this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
+  },
+
+  _menubarMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let tag = target.localName
+    let result = (tag == "menu" || tag == "menuitem") ? tag : "other";
+    this._countMouseUpEvent("click-menubar", result, aEvent.button);
   },
 
   _bookmarksMenuButtonMouseUp: function(aEvent) {
@@ -390,6 +401,13 @@ this.BrowserUITelemetry = {
     // Determine if the Bookmarks bar is currently visible
     let bookmarksBar = document.getElementById("PersonalToolbar");
     result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
+
+    // Determine if the menubar is currently visible. On OS X, the menubar
+    // is never shown, despite not having the collapsed attribute set.
+    let menuBar = document.getElementById("toolbar-menubar");
+    result.menuBarEnabled =
+      menuBar && Services.appinfo.OS != "Darwin"
+              && menuBar.getAttribute("autohide") != "true";
 
     // Examine all customizable areas and see what default items
     // are present and missing.
