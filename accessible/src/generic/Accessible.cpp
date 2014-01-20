@@ -383,9 +383,8 @@ Accessible::AccessKey() const
     return KeyBinding();
 
   nsresult rv = NS_ERROR_FAILURE;
-  int32_t itemType = 0, modifierMask = 0;
-  treeItem->GetItemType(&itemType);
-  switch (itemType) {
+  int32_t modifierMask = 0;
+  switch (treeItem->ItemType()) {
     case nsIDocShellTreeItem::typeChrome:
       rv = Preferences::GetInt("ui.key.chromeAccess", &modifierMask);
       break;
@@ -2120,10 +2119,9 @@ Accessible::RelationByType(RelationType aType)
           // If the item type is typeContent, we assume we are in browser tab
           // content. Note, this includes content such as about:addons,
           // for consistency.
-          int32_t itemType = 0;
-          root->GetItemType(&itemType);
-          if (itemType == nsIDocShellTreeItem::typeContent)
+          if (root->ItemType() == nsIDocShellTreeItem::typeContent) {
             return Relation(nsAccUtils::GetDocAccessibleFor(root));
+          }
         }
       }
       return  Relation();
