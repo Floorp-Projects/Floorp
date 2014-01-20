@@ -82,9 +82,9 @@ toolkit.jar:
         skin/classic/global/arrow/arrow-up-hov.gif               (arrow/arrow-up-hov.gif)
         skin/classic/global/arrow/arrow-up-sharp.gif             (arrow/arrow-up-sharp.gif)
         skin/classic/global/arrow/panelarrow-horizontal.svg      (arrow/panelarrow-horizontal.svg)
-        skin/classic/global/arrow/panelarrow-horizontal-white.png (arrow/panelarrow-horizontal-white.png)
         skin/classic/global/arrow/panelarrow-vertical.svg        (arrow/panelarrow-vertical.svg)
-        skin/classic/global/arrow/panelarrow-vertical-white.png  (arrow/panelarrow-vertical-white.png)
+        skin/classic/global/arrow/panelarrow-horizontal-themed.svg (arrow/panelarrow-horizontal-themed.svg)
+        skin/classic/global/arrow/panelarrow-vertical-themed.svg   (arrow/panelarrow-vertical-themed.svg)
         skin/classic/global/checkbox/cbox-check.gif              (checkbox/cbox-check.gif)
         skin/classic/global/checkbox/cbox-check-dis.gif          (checkbox/cbox-check-dis.gif)
         skin/classic/global/console/console.css                  (console/console.css)
@@ -225,7 +225,7 @@ toolkit.jar:
         skin/classic/aero/global/numberbox.css
 *       skin/classic/aero/global/notification.css                        (notification-aero.css)
         skin/classic/aero/global/passwordmgr.css
-*       skin/classic/aero/global/popup.css
+*       skin/classic/aero/global/popup.css                               (popup-aero.css)
         skin/classic/aero/global/preferences.css
         skin/classic/aero/global/printPageSetup.css
         skin/classic/aero/global/printPreview.css
@@ -267,9 +267,9 @@ toolkit.jar:
         skin/classic/aero/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
         skin/classic/aero/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
         skin/classic/aero/global/arrow/panelarrow-horizontal.svg         (arrow/panelarrow-horizontal.svg)
-        skin/classic/aero/global/arrow/panelarrow-horizontal-white.png   (arrow/panelarrow-horizontal-white.png)
         skin/classic/aero/global/arrow/panelarrow-vertical.svg           (arrow/panelarrow-vertical.svg)
-        skin/classic/aero/global/arrow/panelarrow-vertical-white.png     (arrow/panelarrow-vertical-white.png)
+        skin/classic/aero/global/arrow/panelarrow-horizontal-themed.svg  (arrow/panelarrow-horizontal-themed.svg)
+        skin/classic/aero/global/arrow/panelarrow-vertical-themed.svg    (arrow/panelarrow-vertical-themed.svg)
         skin/classic/aero/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
         skin/classic/aero/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
 *       skin/classic/aero/global/console/console.css                     (console/console-aero.css)
