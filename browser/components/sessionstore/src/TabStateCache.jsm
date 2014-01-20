@@ -6,13 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["TabStateCache"];
 
-const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
-  "resource:///modules/sessionstore/Utils.jsm");
-
 /**
  * A cache for tabs data.
  *
@@ -24,18 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
  * - caching private data in addition to public data is memory consuming.
  */
 this.TabStateCache = Object.freeze({
-  /**
-   * Swap cached data for two given browsers.
-   *
-   * @param {xul:browser} browser
-   *        The first of the two browsers that swapped docShells.
-   * @param {xul:browser} otherBrowser
-   *        The second of the two browsers that swapped docShells.
-   */
-  onBrowserContentsSwapped: function(browser, otherBrowser) {
-    TabStateCacheInternal.onBrowserContentsSwapped(browser, otherBrowser);
-  },
-
   /**
    * Retrieves cached data for a given |browser|.
    *
@@ -65,19 +46,6 @@ let TabStateCacheInternal = {
   _data: new WeakMap(),
 
   /**
-   * Swap cached data for two given browsers.
-   *
-   * @param {xul:browser} browser
-   *        The first of the two browsers that swapped docShells.
-   * @param {xul:browser} otherBrowser
-   *        The second of the two browsers that swapped docShells.
-   */
-  onBrowserContentsSwapped: function(browser, otherBrowser) {
-    // Swap data stored per-browser.
-    Utils.swapMapEntries(this._data, browser, otherBrowser);
-  },
-
-  /**
    * Retrieves cached data for a given |browser|.
    *
    * @param browser (xul:browser)
@@ -86,7 +54,7 @@ let TabStateCacheInternal = {
    *         The cached data stored for the given |browser|.
    */
   get: function (browser) {
-    return this._data.get(browser);
+    return this._data.get(browser.permanentKey);
   },
 
   /**
@@ -98,7 +66,7 @@ let TabStateCacheInternal = {
    *        The new data to be stored for the given |browser|.
    */
   update: function (browser, newData) {
-    let data = this._data.get(browser) || {};
+    let data = this._data.get(browser.permanentKey) || {};
 
     for (let key of Object.keys(newData)) {
       let value = newData[key];
@@ -109,6 +77,6 @@ let TabStateCacheInternal = {
       }
     }
 
-    this._data.set(browser, data);
+    this._data.set(browser.permanentKey, data);
   }
 };

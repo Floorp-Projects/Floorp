@@ -712,12 +712,6 @@ let SessionStoreInternal = {
     var win = aEvent.currentTarget.ownerDocument.defaultView;
     let browser;
     switch (aEvent.type) {
-      case "SwapDocShells":
-        browser = aEvent.currentTarget;
-        let otherBrowser = aEvent.detail;
-        TabState.onBrowserContentsSwapped(browser, otherBrowser);
-        TabStateCache.onBrowserContentsSwapped(browser, otherBrowser);
-        break;
       case "TabOpen":
         this.onTabAdd(win, aEvent.originalTarget);
         break;
@@ -1297,10 +1291,7 @@ let SessionStoreInternal = {
    *        bool Do not save state if we're updating an existing tab
    */
   onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
-    let browser = aTab.linkedBrowser;
-    browser.addEventListener("SwapDocShells", this, true);
-
-    let mm = browser.messageManager;
+    let mm = aTab.linkedBrowser.messageManager;
     MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
 
     // Load the frame script after registering listeners.
@@ -1324,8 +1315,6 @@ let SessionStoreInternal = {
    */
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
-    browser.removeEventListener("SwapDocShells", this, true);
-
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
@@ -2602,7 +2591,7 @@ let SessionStoreInternal = {
       // message. If a message is received that relates to a previous epoch, we
       // discard it.
       let epoch = this._nextRestoreEpoch++;
-      this._browserEpochs.set(browser, epoch);
+      this._browserEpochs.set(browser.permanentKey, epoch);
 
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
@@ -3468,7 +3457,7 @@ let SessionStoreInternal = {
 
     // The browser is no longer in any sort of restoring state.
     delete browser.__SS_restoreState;
-    this._browserEpochs.delete(browser);
+    this._browserEpochs.delete(browser.permanentKey);
 
     aTab.removeAttribute("pending");
     browser.removeAttribute("pending");
@@ -3500,7 +3489,7 @@ let SessionStoreInternal = {
    * with respect to |browser|.
    */
   isCurrentEpoch: function (browser, epoch) {
-    return this._browserEpochs.get(browser, 0) == epoch;
+    return this._browserEpochs.get(browser.permanentKey, 0) == epoch;
   },
 
 };
