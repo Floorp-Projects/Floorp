@@ -442,12 +442,12 @@ SVGMotionSMILType::Interpolate(const nsSMILValue& aStartVal,
   return NS_OK;
 }
 
-/* static */ gfxMatrix
+/* static */ gfx::Matrix
 SVGMotionSMILType::CreateMatrix(const nsSMILValue& aSMILVal)
 {
   const MotionSegmentArray& arr = ExtractMotionSegmentArray(aSMILVal);
 
-  gfxMatrix matrix;
+  gfx::Matrix matrix;
   uint32_t length = arr.Length();
   for (uint32_t i = 0; i < length; i++) {
     gfxPoint point;  // initialized below
@@ -464,8 +464,8 @@ SVGMotionSMILType::CreateMatrix(const nsSMILValue& aSMILVal)
                                  arr[i].mRotateType,
                                  rotateAngle, point);
     }
-    matrix.Translate(point);
-    matrix.Rotate(rotateAngle);
+    matrix.Translate(point.x, point.y);
+    matrix = gfx::Matrix::Rotation(rotateAngle) * matrix;
   }
   return matrix;
 }

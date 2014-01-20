@@ -10,12 +10,15 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Attributes.h"
-#include "gfxMatrix.h"
 #include "nsISMILType.h"
 
 class nsSMILValue;
 
 namespace mozilla {
+
+namespace gfx {
+struct Matrix;
+}
 
 /**
  * MotionRotateType: Enum to indicate the type of our "rotate" attribute.
@@ -63,7 +66,7 @@ protected:
                                nsSMILValue& aResult) const MOZ_OVERRIDE;
 public:
   // Used to generate a transform matrix from an <animateMotion> nsSMILValue.
-  static gfxMatrix CreateMatrix(const nsSMILValue& aSMILVal);
+  static gfx::Matrix CreateMatrix(const nsSMILValue& aSMILVal);
 
   // Used to generate a nsSMILValue for the point at the given distance along
   // the given path.
