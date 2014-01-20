@@ -299,43 +299,7 @@ vprintf_stderr(const char *fmt, va_list args)
 void
 vprintf_stderr(const char *fmt, va_list args)
 {
-  if (!fmt) {
-    return;
-  }
-
-  // Android's logging functions append new-lines to all output, so handle this
-  // by buffering between new-lines.
-
-  static char printf_buffer[2048];
-  static size_t printf_buffer_idx = 0;
-
-  size_t old_idx = printf_buffer_idx;
-  printf_buffer_idx +=
-    vsnprintf(printf_buffer + printf_buffer_idx,
-              sizeof(printf_buffer) - printf_buffer_idx,
-              fmt, args);
-
-  // Handle overflow. In this case, print the old buffer, the new format and
-  // clear the buffer for the next call.
-  if (printf_buffer_idx >= sizeof(printf_buffer)) {
-    printf_buffer[old_idx] = '\0';
-    printf_buffer_idx = 0;
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", printf_buffer);
-    __android_log_vprint(ANDROID_LOG_INFO, "Gecko", fmt, args);
-    return;
-  }
-
-  // Print up to the last new-line, if there are any, and if there are, move
-  // the rest of the string back to the beginning.
-  char* last_newline = strrchr(printf_buffer + old_idx, '\n');
-  if (last_newline) {
-    last_newline[0] = '\0';
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", printf_buffer);
-
-    char* remainder = last_newline + 1;
-    printf_buffer_idx = strlen(remainder);
-    memmove(printf_buffer, remainder, printf_buffer_idx);
-  }
+  __android_log_vprint(ANDROID_LOG_INFO, "Gecko", fmt, args);
 }
 #else
 void
