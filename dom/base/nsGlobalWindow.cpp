@@ -1956,12 +1956,9 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
 
   // Now, if we're about to use the system principal, make sure we're not using
   // it for a content docshell.
-  if (newWindowPrincipal == systemPrincipal) {
-    int32_t itemType;
-    nsresult rv = GetDocShell()->GetItemType(&itemType);
-    if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
-      newWindowPrincipal = nullptr;
-    }
+  if (newWindowPrincipal == systemPrincipal &&
+      GetDocShell()->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    newWindowPrincipal = nullptr;
   }
 
   // If there's an existing document, bail if it either:
@@ -2586,12 +2583,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // situation when we're creating a temporary non-chrome-about-blank
     // document in a chrome docshell, don't notify just yet. Instead wait
     // until we have a real chrome doc.
-    int32_t itemType = nsIDocShellTreeItem::typeContent;
-    if (mDocShell) {
-      mDocShell->GetItemType(&itemType);
-    }
-
-    if (itemType != nsIDocShellTreeItem::typeChrome ||
+    if (!mDocShell ||
+        mDocShell->ItemType() != nsIDocShellTreeItem::typeChrome ||
         nsContentUtils::IsSystemPrincipal(mDoc->NodePrincipal())) {
       newInnerWindow->mHasNotifiedGlobalCreated = true;
       nsContentUtils::AddScriptRunner(
@@ -3157,15 +3150,8 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
     nsCOMPtr<Element> element = GetFrameElementInternal();
     nsIDocShell* docShell = GetDocShell();
-
-    int32_t itemType = nsIDocShellTreeItem::typeChrome;
-
-    if (docShell) {
-      docShell->GetItemType(&itemType);
-    }
-
     if (element && GetParentInternal() &&
-        itemType != nsIDocShellTreeItem::typeChrome) {
+        docShell && docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       // If we're not in chrome, or at a chrome boundary, fire the
       // onload event for the frame element.
 
@@ -5656,9 +5642,7 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
 
   // make sure we don't try to set full screen on a non-chrome window,
   // which might happen in embedding world
-  int32_t itemType;
-  mDocShell->GetItemType(&itemType);
-  if (itemType != nsIDocShellTreeItem::typeChrome)
+  if (mDocShell->ItemType() != nsIDocShellTreeItem::typeChrome)
     return NS_ERROR_FAILURE;
 
   // If we are already in full screen mode, just return.
@@ -6289,9 +6273,7 @@ nsGlobalWindow::Focus(ErrorResult& aError)
   // about:blank loaded.  We don't want to focus our widget in that case.
   // XXXbz should we really be checking for IsInitialDocument() instead?
   bool lookForPresShell = true;
-  int32_t itemType = nsIDocShellTreeItem::typeContent;
-  mDocShell->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeChrome &&
+  if (mDocShell->ItemType() == nsIDocShellTreeItem::typeChrome &&
       GetPrivateRoot() == static_cast<nsIDOMWindow*>(this) &&
       mDoc) {
     nsIURI* ourURI = mDoc->GetDocumentURI();
@@ -6881,10 +6863,10 @@ nsGlobalWindow::GetWindowRoot(nsIDOMEventTarget **aWindowRoot)
 already_AddRefed<nsPIWindowRoot>
 nsGlobalWindow::GetTopWindowRoot()
 {
-  nsIDOMWindow *rootWindow = GetPrivateRoot();
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-  if (!piWin)
+  nsPIDOMWindow* piWin = GetPrivateRoot();
+  if (!piWin) {
     return nullptr;
+  }
 
   nsCOMPtr<nsPIWindowRoot> window = do_QueryInterface(piWin->GetChromeEventHandler());
   return window.forget();
@@ -7154,10 +7136,9 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
 
   NS_ASSERTION(mDocShell, "Must have docshell");
   
-  int32_t type = nsIDocShellTreeItem::typeChrome;
-  mDocShell->GetItemType(&type);
-  if (type != nsIDocShellTreeItem::typeContent)
+  if (mDocShell->ItemType() != nsIDocShellTreeItem::typeContent) {
     return openAllowed;
+  }
 
   PopupControlState abuse = aControl;
   switch (abuse) {
@@ -9416,22 +9397,16 @@ nsGlobalWindow::DisableGamepadUpdates()
 void
 nsGlobalWindow::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 {
+  MOZ_ASSERT(IsOuterWindow());
+
   SetChromeEventHandlerInternal(aChromeEventHandler);
-  if (IsOuterWindow()) {
-    // update the chrome event handler on all our inner windows
-    for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
-         inner != this;
-         inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
-      NS_ASSERTION(!inner->mOuterWindow || inner->mOuterWindow == this,
-                   "bad outer window pointer");
-      inner->SetChromeEventHandlerInternal(aChromeEventHandler);
-    }
-  } else if (mOuterWindow) {
-    // Need the cast to be able to call the protected method on a
-    // superclass. We could make the method public instead, but it's really
-    // better this way.
-    static_cast<nsGlobalWindow*>(mOuterWindow.get())->
-      SetChromeEventHandlerInternal(aChromeEventHandler);
+  // update the chrome event handler on all our inner windows
+  for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
+       inner != this;
+       inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+    NS_ASSERTION(!inner->mOuterWindow || inner->mOuterWindow == this,
+                 "bad outer window pointer");
+    inner->SetChromeEventHandlerInternal(aChromeEventHandler);
   }
 }
 

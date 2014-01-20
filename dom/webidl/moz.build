@@ -209,6 +209,7 @@ WEBIDL_FILES = [
     'LinkStyle.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',
+    'LockedFile.webidl',
     'MediaElementAudioSourceNode.webidl',
     'MediaError.webidl',
     'MediaList.webidl',
