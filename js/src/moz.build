@@ -543,12 +543,14 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'jit/ExecutableAllocatorWin.cpp',
+        'threading/windows/Mutex.cpp',
     ]
     # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
     DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
         'jit/ExecutableAllocatorPosix.cpp',
+        'threading/posix/Mutex.cpp',
     ]
 
 if CONFIG['JS_HAS_CTYPES']:
