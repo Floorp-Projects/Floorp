@@ -19,14 +19,42 @@ var CastingApps = {
       this.filterCast,
       this.openExternal.bind(this)
     );
+
+    Services.obs.addObserver(this, "Casting:Play", false);
+    Services.obs.addObserver(this, "Casting:Pause", false);
+    Services.obs.addObserver(this, "Casting:Stop", false);
   },
 
   uninit: function ca_uninit() {
+    Services.obs.removeObserver(this, "Casting:Play");
+    Services.obs.removeObserver(this, "Casting:Pause");
+    Services.obs.removeObserver(this, "Casting:Stop");
+
     NativeWindow.contextmenus.remove(this._castMenuId);
   },
 
   isEnabled: function isEnabled() {
     return Services.prefs.getBoolPref("browser.casting.enabled");
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "Casting:Play":
+        if (this.session && this.session.remoteMedia.status == "paused") {
+          this.session.remoteMedia.play();
+        }
+        break;
+      case "Casting:Pause":
+        if (this.session && this.session.remoteMedia.status == "started") {
+          this.session.remoteMedia.pause();
+        }
+        break;
+      case "Casting:Stop":
+        if (this.session) {
+          this.closeExternal();
+        }
+        break;
+    }
   },
 
   makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
@@ -192,9 +220,11 @@ var CastingApps = {
     }
 
     aRemoteMedia.load(this.session.data);
+    sendMessageToJava({ type: "Casting:Started", device: this.session.service.friendlyName });
   },
 
   onRemoteMediaStop: function(aRemoteMedia) {
+    sendMessageToJava({ type: "Casting:Stopped" });
   },
 
   onRemoteMediaStatus: function(aRemoteMedia) {
