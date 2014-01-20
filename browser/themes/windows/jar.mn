@@ -395,7 +395,7 @@ browser.jar:
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/slowStartup-16.png
         skin/classic/aero/browser/Toolbar.png                        (Toolbar-aero.png)
-        skin/classic/aero/browser/Toolbar-inverted.png               (Toolbar-inverted-aero.png)
+        skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
         skin/classic/aero/browser/urlbar-arrow.png
