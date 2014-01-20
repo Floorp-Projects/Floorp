@@ -274,6 +274,9 @@ pref("browser.search.noCurrentEngine", true);
 pref("browser.search.official", true);
 #endif
 
+// Control media casting feature
+pref("browser.casting.enabled", false);
+
 // Enable sparse localization by setting a few package locale overrides
 pref("chrome.override_package.global", "browser");
 pref("chrome.override_package.mozapps", "browser");

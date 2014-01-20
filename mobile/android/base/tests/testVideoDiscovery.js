@@ -55,7 +55,7 @@ function execute_video_test(test) {
   let element = browser.contentDocument.getElementById(test.id);
   if (element) {
     let [x, y] = middle(element);
-    let video = chromeWin.CastApps.getVideo(element, x, y);
+    let video = chromeWin.CastingApps.getVideo(element, x, y);
     if (video) {
       let matchPoster = (test.poster == video.poster);
       let matchSource = (test.source == video.source);
