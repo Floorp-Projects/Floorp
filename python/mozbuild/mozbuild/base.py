@@ -468,6 +468,20 @@ class MozbuildObject(ProcessExecutionMixin):
 
     def _make_path(self, force_pymake=False):
         if self._is_windows() and not force_pymake:
+            # Use gnumake if it's available and we can verify it's a working
+            # version.
+            baseconfig = os.path.join(self.topsrcdir, 'config', 'baseconfig.mk')
+            if os.path.exists(baseconfig):
+                try:
+                    make = which.which('gnumake')
+                    subprocess.check_call([make, '-f', baseconfig, 'HOST_OS_ARCH=WINNT'],
+                        stdout=open(os.devnull, 'wb'), stderr=subprocess.STDOUT)
+                    return [make]
+                except subprocess.CalledProcessError:
+                    pass
+                except which.WhichError:
+                    pass
+
             # Use mozmake if it's available.
             try:
                 return [which.which('mozmake')]
