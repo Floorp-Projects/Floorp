@@ -717,10 +717,6 @@
         <setter><![CDATA[
           this.userTypedClear = 0;
           this._userTypedValue = val;
-
-          let event = new CustomEvent("UserTypedValueChanged");
-          this.dispatchEvent(event);
-
           return val;
         ]]></setter>
       </property>
