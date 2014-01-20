@@ -6881,10 +6881,10 @@ nsGlobalWindow::GetWindowRoot(nsIDOMEventTarget **aWindowRoot)
 already_AddRefed<nsPIWindowRoot>
 nsGlobalWindow::GetTopWindowRoot()
 {
-  nsIDOMWindow *rootWindow = GetPrivateRoot();
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-  if (!piWin)
+  nsPIDOMWindow* piWin = GetPrivateRoot();
+  if (!piWin) {
     return nullptr;
+  }
 
   nsCOMPtr<nsPIWindowRoot> window = do_QueryInterface(piWin->GetChromeEventHandler());
   return window.forget();
