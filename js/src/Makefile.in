@@ -144,20 +144,9 @@ endif # ENABLE_INTL_API
 
 include $(topsrcdir)/config/rules.mk
 
-.PHONY: buildffi buildicu
-buildffi buildicu:
-$(if $(MOZ_PSEUDO_DERECURSE),compile,export):: buildffi buildicu
-
-ifdef JS_HAS_CTYPES
-ifndef MOZ_NATIVE_FFI
-buildffi:
-		$(call SUBMAKE,,ctypes/libffi)
-
-distclean clean::
-		$(call SUBMAKE,$@,ctypes/libffi)
-endif
-endif
-
+.PHONY: buildicu
+buildicu:
+$(if $(MOZ_PSEUDO_DERECURSE),compile,export):: buildicu
 
 #############################################
 # BEGIN ECMAScript Internationalization API
