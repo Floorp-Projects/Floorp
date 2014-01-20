@@ -643,7 +643,7 @@ GeneratePropertyOp(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigne
     JS_SetPrivate(ptrobj, popp);
 
     js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(ptrobj));
-    js::SetFunctionNativeReserved(funobj, 1, js::IdToJsval(id));
+    js::SetFunctionNativeReserved(funobj, 1, js::IdToValue(id));
     return funobj;
 }
 
