@@ -14,6 +14,8 @@ if CONFIG['BUILDING_JS']:
         add_tier_dir('base', ['config', 'mfbt'])
     if CONFIG['JS_HAS_CTYPES'] and not CONFIG['MOZ_NATIVE_FFI']:
         add_tier_dir('js', ['js/src/ctypes/libffi'], static=True)
+    add_tier_dir('js', ['intl/icu'], static=True)
+    CONFIGURE_SUBST_FILES += ['intl/icu/Makefile']
     add_tier_dir('js', ['js/src'])
 else:
     CONFIGURE_SUBST_FILES += [
