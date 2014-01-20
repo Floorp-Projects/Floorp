@@ -36,21 +36,31 @@ function startTests() {
   Task.spawn(function() {
     yield prepareHighlighter();
 
+    // Highlighter should be shown on this element
     yield hoverElement("#id1");
     assertHighlighterShownOn("#id1");
 
+    // But not over a comment
     yield hoverComment();
     assertHighlighterHidden();
 
+    // It should be shown again when coming back to the same element tough
+    yield hoverElement("#id1");
+    assertHighlighterShownOn("#id1");
+
+    // Shown here too
     yield hoverElement("#id2");
     assertHighlighterShownOn("#id2");
 
+    // But not over a script tag
     yield hoverElement("script");
     assertHighlighterHidden();
 
+    // Shown here
     yield hoverElement("#id3");
     assertHighlighterShownOn("#id3");
 
+    // But not over a hidden element
     yield hoverElement("#id4");
     assertHighlighterHidden();
   }).then(null, Cu.reportError).then(finishTest);
