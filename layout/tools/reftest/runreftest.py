@@ -6,23 +6,28 @@
 Runs the reftest test harness.
 """
 
-import re
-import sys
-import shutil
-import os
-import threading
-import subprocess
+from optparse import OptionParser
 import collections
+import json
+import mozprofile
 import multiprocessing
+import os
+import re
+import shutil
+import subprocess
+import sys
+import threading
+
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automation import Automation
-from automationutils import *
-from optparse import OptionParser
-from tempfile import mkdtemp
-
-import mozprofile
+from automationutils import (
+        addCommonOptions,
+        getDebuggerInfo,
+        isURL,
+        processLeakLog
+)
 
 def categoriesToRegex(categoryList):
   return "\\(" + ', '.join(["(?P<%s>\\d+) %s" % c for c in categoryList]) + "\\)"
@@ -129,11 +134,11 @@ class RefTest(object):
     return '"%s"' % re.sub(r'([\\"])', r'\\\1', s)
 
   def createReftestProfile(self, options, manifest, server='localhost',
-                           special_powers=True):
+                           special_powers=True, profile_to_clone=None):
     """
       Sets up a profile for reftest.
       'manifest' is the path to the reftest.list file we want to test with.  This is used in
-      the remote subclass in remotereftest.py so we can write it to a preference for the 
+      the remote subclass in remotereftest.py so we can write it to a preference for the
       bootstrap extension.
     """
 
@@ -184,11 +189,14 @@ class RefTest(object):
     for f in options.extensionsToInstall:
       addons.append(self.getFullPath(f))
 
-    profile = mozprofile.profile.Profile(
-        addons=addons,
-        preferences=prefs,
-        locations=locations,
-    )
+    kwargs = { 'addons': addons,
+               'preferences': prefs,
+               'locations': locations }
+    if profile_to_clone:
+        profile = mozprofile.Profile.clone(profile_to_clone, **kwargs)
+    else:
+        profile = mozprofile.Profile(**kwargs)
+
     self.copyExtraFilesToProfile(options, profile)
     return profile
 
@@ -201,7 +209,7 @@ class RefTest(object):
       if ix <= 0:
         print "Error: syntax error in --setenv=" + v
         return None
-      browserEnv[v[:ix]] = v[ix + 1:]    
+      browserEnv[v[:ix]] = v[ix + 1:]
 
     # Enable leaks detection to its own log file.
     self.leakLogFile = os.path.join(profileDir, "runreftest_leaks.log")
@@ -338,16 +346,16 @@ class RefTest(object):
 
 class ReftestOptions(OptionParser):
 
-  def __init__(self, automation):
-    self._automation = automation
+  def __init__(self, automation=None):
+    self.automation = automation or Automation()
     OptionParser.__init__(self)
     defaults = {}
 
     # we want to pass down everything from automation.__all__
-    addCommonOptions(self, 
-                     defaults=dict(zip(self._automation.__all__, 
-                            [getattr(self._automation, x) for x in self._automation.__all__])))
-    self._automation.addCommonOptions(self)
+    addCommonOptions(self,
+                     defaults=dict(zip(self.automation.__all__,
+                            [getattr(self.automation, x) for x in self.automation.__all__])))
+    self.automation.addCommonOptions(self)
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     default = os.path.join(SCRIPT_DIRECTORY, automation.DEFAULT_APP),
@@ -356,8 +364,8 @@ class ReftestOptions(OptionParser):
                     action = "append", dest = "extraProfileFiles",
                     default = [],
                     help = "copy specified files/dirs to testing profile")
-    self.add_option("--timeout",              
-                    action = "store", dest = "timeout", type = "int", 
+    self.add_option("--timeout",
+                    action = "store", dest = "timeout", type = "int",
                     default = 5 * 60, # 5 minutes per bug 479518
                     help = "reftest will timeout in specified number of seconds. [default %default s].")
     self.add_option("--leak-threshold",
@@ -369,10 +377,10 @@ class ReftestOptions(OptionParser):
                            "than the given number")
     self.add_option("--utility-path",
                     action = "store", type = "string", dest = "utilityPath",
-                    default = self._automation.DIST_BIN,
+                    default = self.automation.DIST_BIN,
                     help = "absolute path to directory containing utility "
                            "programs (xpcshell, ssltunnel, certutil)")
-    defaults["utilityPath"] = self._automation.DIST_BIN
+    defaults["utilityPath"] = self.automation.DIST_BIN
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",
@@ -389,7 +397,7 @@ class ReftestOptions(OptionParser):
                     default = None,
                     help = "file to log output to in addition to stdout")
     defaults["logFile"] = None
- 
+
     self.add_option("--skip-slow-tests",
                     dest = "skipSlowTests", action = "store_true",
                     help = "skip tests marked as slow when running")
