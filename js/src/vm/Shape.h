@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
@@ -1549,11 +1550,11 @@ struct StackShape
         HashNumber hash = uintptr_t(base);
 
         /* Accumulate from least to most random so the low bits are most random. */
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ slot_;
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid);
+        hash = mozilla::RotateLeft(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
+        hash = mozilla::RotateLeft(hash, 4) ^ attrs;
+        hash = mozilla::RotateLeft(hash, 4) ^ shortid;
+        hash = mozilla::RotateLeft(hash, 4) ^ slot_;
+        hash = mozilla::RotateLeft(hash, 4) ^ JSID_BITS(propid);
         return hash;
     }
 

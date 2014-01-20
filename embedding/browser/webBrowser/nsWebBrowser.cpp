@@ -429,11 +429,17 @@ NS_IMETHODIMP nsWebBrowser::NameEquals(const char16_t *aName, bool *_retval)
     return NS_OK;
 }
 
+/* virtual */ int32_t
+nsWebBrowser::ItemType()
+{
+   return mContentType;
+}
+
 NS_IMETHODIMP nsWebBrowser::GetItemType(int32_t* aItemType)
 {
    NS_ENSURE_ARG_POINTER(aItemType);
 
-   *aItemType = mContentType;
+   *aItemType = ItemType();
    return NS_OK;
 }
 
