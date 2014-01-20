@@ -996,6 +996,8 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
         CertVerifier::crl_download_allowed : CertVerifier::crl_local_only,
 #endif
       odc, osc, ogc);
+
+  CERT_ClearOCSPCache();
 }
 
 // Enable the TLS versions given in the prefs, defaulting to SSL 3.0 (min
@@ -1602,7 +1604,9 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                || prefName.Equals("security.missing_cert_download.enabled")
                || prefName.Equals("security.OCSP.require")
                || prefName.Equals("security.OCSP.GET.enabled")
-               || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
+               || prefName.Equals("security.ssl.enable_ocsp_stapling")
+               || prefName.Equals("security.use_insanity_verification")
+               || prefName.Equals("security.use_libpkix_verification")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
     } else if (prefName.Equals("network.ntlm.send-lm-response")) {
