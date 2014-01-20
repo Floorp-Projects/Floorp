@@ -1865,8 +1865,8 @@ ContainerState::PopThebesLayerData()
 
   uint32_t flags = 0;
   nsIWidget* widget = mContainerReferenceFrame->PresContext()->GetRootWidget();
-  // Disable subpixelAA on hidpi
-  bool hidpi = widget && widget->GetDefaultScale().scale >= 2;
+  // See bug 941095. Not quite ready to disable this.
+  bool hidpi = false && widget && widget->GetDefaultScale().scale >= 2;
   if (hidpi) {
     flags |= Layer::CONTENT_DISABLE_SUBPIXEL_AA;
   }
