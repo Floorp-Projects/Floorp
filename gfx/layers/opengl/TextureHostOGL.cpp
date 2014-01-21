@@ -225,7 +225,6 @@ CompositableDataGonkOGL::DeleteTextureIfPresent()
     if (gl()->MakeCurrent()) {
       gl()->fDeleteTextures(1, &mTexture);
     }
-    mTexture = 0;
   }
 }
 
