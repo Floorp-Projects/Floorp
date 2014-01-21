@@ -1694,7 +1694,7 @@ DebugScopes::sweep(JSRuntime *rt)
     }
 }
 
-#if defined(JSGC_GENERATIONAL) and defined(JS_GC_ZEAL)
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
 void
 DebugScopes::checkHashTablesAfterMovingGC(JSRuntime *runtime)
 {
