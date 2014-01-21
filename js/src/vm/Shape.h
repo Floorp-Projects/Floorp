@@ -960,8 +960,6 @@ class Shape : public gc::BarrieredCell<Shape>
         insertIntoDictionary(dictp);
     }
 
-    Shape *getChildBinding(ExclusiveContext *cx, const StackShape &child);
-
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
     static Shape *replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
                                       TaggedProto proto, HandleShape shape);
@@ -1148,17 +1146,18 @@ class Shape : public gc::BarrieredCell<Shape>
 
     bool matches(const Shape *other) const {
         return propid_.get() == other->propid_.get() &&
-               matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
-                                    other->flags, other->shortid_);
+               matchesParamsAfterId(other->base(), other->maybeSlot(), other->numFixedSlots(),
+                                    other->attrs, other->flags, other->shortid_);
     }
 
     inline bool matches(const StackShape &other) const;
 
-    bool matchesParamsAfterId(BaseShape *base, uint32_t aslot, unsigned aattrs, unsigned aflags,
-                              int ashortid) const
+    bool matchesParamsAfterId(BaseShape *base, uint32_t aslot, uint32_t afixed, unsigned aattrs,
+                              unsigned aflags, int ashortid) const
     {
         return base->unowned() == this->base()->unowned() &&
                maybeSlot() == aslot &&
+               numFixedSlots() == afixed &&
                attrs == aattrs &&
                ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
                shortid_ == ashortid;
@@ -1503,6 +1502,7 @@ struct StackShape
     UnownedBaseShape *base;
     jsid             propid;
     uint32_t         slot_;
+    uint32_t         nfixed_;
     uint8_t          attrs;
     uint8_t          flags;
     int16_t          shortid;
@@ -1512,6 +1512,7 @@ struct StackShape
       : base(base),
         propid(propid),
         slot_(slot),
+        nfixed_(nfixed),
         attrs(uint8_t(attrs)),
         flags(uint8_t(flags)),
         shortid(int16_t(shortid))
@@ -1524,7 +1525,8 @@ struct StackShape
     StackShape(Shape *shape)
       : base(shape->base()->unowned()),
         propid(shape->propidRef()),
-        slot_(shape->slotInfo & Shape::SLOT_MASK),
+        slot_(shape->maybeSlot()),
+        nfixed_(shape->numFixedSlots()),
         attrs(shape->attrs),
         flags(shape->flags),
         shortid(shape->shortid_)
@@ -1546,6 +1548,10 @@ struct StackShape
         slot_ = slot;
     }
 
+    uint32_t numFixedSlots() const {
+        return nfixed_;
+    }
+
     HashNumber hash() const {
         HashNumber hash = uintptr_t(base);
 
@@ -1554,6 +1560,7 @@ struct StackShape
         hash = mozilla::RotateLeft(hash, 4) ^ attrs;
         hash = mozilla::RotateLeft(hash, 4) ^ shortid;
         hash = mozilla::RotateLeft(hash, 4) ^ slot_;
+        hash = mozilla::RotateLeft(hash, 4) ^ nfixed_;
         hash = mozilla::RotateLeft(hash, 4) ^ JSID_BITS(propid);
         return hash;
     }
@@ -1703,7 +1710,8 @@ inline bool
 Shape::matches(const StackShape &other) const
 {
     return propid_.get() == other.propid &&
-           matchesParamsAfterId(other.base, other.slot_, other.attrs, other.flags, other.shortid);
+           matchesParamsAfterId(other.base, other.slot_, other.nfixed_, other.attrs, other.flags,
+                                other.shortid);
 }
 
 template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};

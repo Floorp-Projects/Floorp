@@ -685,7 +685,7 @@ GlobalObject::addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value)
     Rooted<UnownedBaseShape*> base(cx, last->base()->unowned());
 
     StackShape child(base, id, slot, holder->numFixedSlots(), 0, 0, 0);
-    RootedShape shape(cx, cx->compartment()->propertyTree.getChild(cx, last, holder->numFixedSlots(), child));
+    RootedShape shape(cx, cx->compartment()->propertyTree.getChild(cx, last, child));
     if (!shape)
         return false;
 
