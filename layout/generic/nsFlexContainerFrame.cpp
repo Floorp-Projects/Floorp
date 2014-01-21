@@ -1049,7 +1049,9 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
     mIsStrut(false),
     mAlignSelf(aChildFrame->StylePosition()->mAlignSelf)
 {
-  MOZ_ASSERT(aChildFrame, "expecting a non-null child frame");
+  MOZ_ASSERT(mFrame, "expecting a non-null child frame");
+  MOZ_ASSERT(!mFrame->IsAbsolutelyPositioned(),
+             "abspos child frames should not be treated as flex items");
 
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
 
@@ -1117,9 +1119,12 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize)
     mIsStrut(true), // (this is the constructor for making struts, after all)
     mAlignSelf(NS_STYLE_ALIGN_ITEMS_FLEX_START)
 {
+  MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(NS_STYLE_VISIBILITY_COLLAPSE ==
              mFrame->StyleVisibility()->mVisible,
              "Should only make struts for children with 'visibility:collapse'");
+  MOZ_ASSERT(!mFrame->IsAbsolutelyPositioned(),
+             "abspos child frames should not be treated as flex items");
 }
 
 nscoord
