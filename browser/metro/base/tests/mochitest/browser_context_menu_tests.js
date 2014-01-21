@@ -744,7 +744,7 @@ gTests.push({
     // Case #2: Document isn't in design mode and text is selected.
     tabWindow.getSelection().selectAllChildren(testSpan);
 
-    let promise = waitForEvent(tabWindow.document, "popupshown");
+    let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToSelection(tabWindow);
     yield promise;
 
@@ -758,7 +758,7 @@ gTests.push({
     tabWindow.document.designMode = "on";
     tabWindow.getSelection().removeAllRanges();
 
-    promise = waitForEvent(tabWindow.document, "popupshown");
+    promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(tabWindow, testSpan);
     yield promise;
 
@@ -771,7 +771,7 @@ gTests.push({
     // Case #4: Document is in design mode and text is selected.
     tabWindow.getSelection().selectAllChildren(testSpan);
 
-    promise = waitForEvent(tabWindow.document, "popupshown");
+    promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToSelection(tabWindow);
     yield promise;
 
@@ -782,6 +782,93 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
+
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
+  }
+});
+
+gTests.push({
+  desc: "Bug 961702 - 'Copy' context menu action does not copy rich content " +
+        "while document in design mode (or inside container that allows to " +
+        "edit its content)",
+  run: function test() {
+    info(chromeRoot + "browser_context_menu_tests_05.html");
+    yield addTab(chromeRoot + "browser_context_menu_tests_05.html");
+
+    purgeEventQueue();
+    emptyClipboard();
+    ContextUI.dismiss();
+
+    yield waitForCondition(() => !ContextUI.navbarVisible);
+
+    let tabWindow = Browser.selectedTab.browser.contentWindow;
+    let testDiv = tabWindow.document.getElementById("div1");
+
+    // Case #1: Document is in design mode.
+    tabWindow.document.designMode = "on";
+
+    let promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(tabWindow, testDiv);
+    yield promise;
+
+    let selectAllMenuItem = document.getElementById("context-select-all");
+    promise = waitForEvent(document, "popuphidden");
+    sendNativeTap(selectAllMenuItem);
+    yield promise;
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToSelection(tabWindow);
+    yield promise;
+
+    let copyMenuItem = document.getElementById("context-copy");
+    promise = waitForEvent(document, "popuphidden");
+    sendNativeTap(copyMenuItem);
+    yield promise;
+
+    // The wait is needed to give time to populate the clipboard.
+    let clipboardContent = "";
+    let contentToCopy = tabWindow.document.body.innerHTML;
+    yield waitForCondition(function () {
+      clipboardContent = SpecialPowers.getClipboardData("text/html");
+      return clipboardContent == contentToCopy;
+    });
+    ok(clipboardContent == contentToCopy, "Rich content copied.");
+
+    // Case #2: Container with editable content.
+    emptyClipboard();
+    tabWindow.document.designMode = "off";
+    tabWindow.getSelection().removeAllRanges();
+
+    promise = waitForEvent(tabWindow.document.body, "focus");
+    sendNativeTap(testDiv);
+    yield promise;
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(tabWindow, testDiv);
+    yield promise;
+
+    selectAllMenuItem = document.getElementById("context-select-all");
+    promise = waitForEvent(document, "popuphidden");
+    sendNativeTap(selectAllMenuItem);
+    yield promise;
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToSelection(tabWindow);
+    yield promise;
+
+    copyMenuItem = document.getElementById("context-copy");
+    promise = waitForEvent(document, "popuphidden");
+    sendNativeTap(copyMenuItem);
+    yield promise;
+
+     // The wait is needed to give time to populate the clipboard.
+    clipboardContent = "";
+    contentToCopy = testDiv.innerHTML;
+    yield waitForCondition(function () {
+      clipboardContent = SpecialPowers.getClipboardData("text/html");
+      return clipboardContent == contentToCopy;
+    });
+    ok(clipboardContent == contentToCopy, "Rich content copied.");
 
     Browser.closeTab(Browser.selectedTab, { forceClose: true });
   }
