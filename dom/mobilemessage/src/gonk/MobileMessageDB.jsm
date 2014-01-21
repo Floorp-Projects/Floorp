@@ -191,7 +191,18 @@ MobileMessageDB.prototype = {
             break;
           case 13:
             if (DEBUG) debug("Upgrade to version 14. Fix the wrong participants.");
-            self.upgradeSchema13(event.target.transaction, next);
+            // A workaround to check if we need to re-upgrade the DB schema 12. We missed this
+            // because we didn't properly uplift that logic to b2g_v1.2 and errors could happen
+            // when migrating b2g_v1.2 to b2g_v1.3. Please see Bug 960741 for details.
+            self.needReUpgradeSchema12(event.target.transaction, function(isNeeded) {
+              if (isNeeded) {
+                self.upgradeSchema12(event.target.transaction, function() {
+                  self.upgradeSchema13(event.target.transaction, next);
+                });
+              } else {
+                self.upgradeSchema13(event.target.transaction, next);
+              }
+            });
             break;
           case 14:
             if (DEBUG) debug("Upgrade to version 15. Add deliveryTimestamp.");
@@ -897,6 +908,29 @@ MobileMessageDB.prototype = {
         }
         delete messageRecord.deliveryStatus;
         cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
+  /**
+   * Check if we need to re-upgrade the DB schema 12.
+   */
+  needReUpgradeSchema12: function(transaction, callback) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        callback(false);
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "mms" &&
+          messageRecord.deliveryInfo === undefined) {
+        callback(true);
+        return;
       }
       cursor.continue();
     };
