@@ -1370,6 +1370,19 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
   }
 
   SendAsyncScrollEvent();
+  mPaintThrottler.PostTask(
+    FROM_HERE,
+    NewRunnableMethod(this,
+                      &AsyncPanZoomController::DispatchRepaintRequest,
+                      aFrameMetrics),
+    GetFrameTime());
+
+  aFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
+  mLastPaintRequestMetrics = aFrameMetrics;
+}
+
+void
+AsyncPanZoomController::DispatchRepaintRequest(const FrameMetrics& aFrameMetrics) {
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
@@ -1377,15 +1390,9 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
     LogRendertraceRect(GetGuid(), "requested displayport", "yellow",
         aFrameMetrics.mDisplayPort + aFrameMetrics.mScrollOffset);
 
-    mPaintThrottler.PostTask(
-      FROM_HERE,
-      NewRunnableMethod(controller.get(),
-                        &GeckoContentController::RequestContentRepaint,
-                        aFrameMetrics),
-      GetFrameTime());
+    controller->RequestContentRepaint(aFrameMetrics);
+    mLastDispatchedPaintMetrics = aFrameMetrics;
   }
-  aFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
-  mLastPaintRequestMetrics = aFrameMetrics;
 }
 
 void
@@ -1553,15 +1560,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   }
 
   if (aIsFirstPaint || isDefault) {
+    // Initialize our internal state to something sane when the content
+    // that was just painted is something we knew nothing about previously
     mPaintThrottler.ClearHistory();
     mPaintThrottler.SetMaxDurations(gNumPaintDurationSamples);
 
     mX.CancelTouch();
     mY.CancelTouch();
+    SetState(NOTHING);
 
     mFrameMetrics = aLayerMetrics;
+    mLastDispatchedPaintMetrics = aLayerMetrics;
     ShareCompositorFrameMetrics();
-    SetState(NOTHING);
   } else {
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local mFrameMetrics because these things are
