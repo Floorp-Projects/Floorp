@@ -223,6 +223,15 @@ public:
   gfx3DMatrix GetNontransientAsyncTransform();
 
   /**
+   * Returns the transform to take something from the coordinate space of the
+   * last thing we know gecko painted, to the coordinate space of the last thing
+   * we asked gecko to paint. In cases where that last request has not yet been
+   * processed, this is needed to transform input events properly into a space
+   * gecko will understand.
+   */
+  gfx3DMatrix GetTransformToLastDispatchedPaint();
+
+  /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
    * than the composite-to dimensions so that when you scroll down, you don't
    * checkerboard immediately. This includes a bunch of logic, including
