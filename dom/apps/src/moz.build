@@ -30,6 +30,7 @@ EXTRA_JS_MODULES += [
     'OfflineCacheInstaller.jsm',
     'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',
+    'StoreTrustAnchor.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
