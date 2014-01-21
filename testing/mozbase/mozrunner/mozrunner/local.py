@@ -73,16 +73,16 @@ class LocalRunner(Runner):
 
     @classmethod
     def create(cls, binary=None, cmdargs=None, env=None, kp_kwargs=None, profile_args=None,
-               clean_profile=True, process_class=None, **kwargs):
+               clean_profile=True, process_class=None):
         profile = cls.profile_class(**(profile_args or {}))
         return cls(profile, binary=binary, cmdargs=cmdargs, env=env, kp_kwargs=kp_kwargs,
-                                           clean_profile=clean_profile, process_class=process_class, **kwargs)
+                                           clean_profile=clean_profile, process_class=process_class)
 
     def __init__(self, profile, binary, cmdargs=None, env=None,
-                 kp_kwargs=None, clean_profile=None, process_class=None, **kwargs):
+                 kp_kwargs=None, clean_profile=None, process_class=None):
 
         super(LocalRunner, self).__init__(profile, clean_profile=clean_profile, kp_kwargs=kp_kwargs,
-                                          process_class=process_class, env=env, **kwargs)
+                                               process_class=process_class, env=env)
 
         # find the binary
         self.binary = binary
