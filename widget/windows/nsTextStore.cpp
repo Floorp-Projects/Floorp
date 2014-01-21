@@ -3358,13 +3358,22 @@ nsTextStore::MarkContextAsEmpty(ITfContext* aContext)
 
 // static
 void
-nsTextStore::Initialize(void)
+nsTextStore::Initialize()
 {
 #ifdef PR_LOGGING
   if (!sTextStoreLog) {
     sTextStoreLog = PR_NewLogModule("nsTextStoreWidgets");
   }
 #endif
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+    ("TSF: nsTextStore::Initialize() is called..."));
+
+  if (sTsfThreadMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED due to already initialized"));
+    return;
+  }
 
   bool enableTsf = Preferences::GetBool(kPrefNameTSFEnabled, false);
   // Migrate legacy TSF pref to new pref.  This should be removed in next
@@ -3375,7 +3384,7 @@ nsTextStore::Initialize(void)
     Preferences::ClearUser(kLegacyPrefNameTSFEnabled);
   }
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: nsTextStore::Initialize(), TSF is %s",
+    ("TSF:   nsTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));
   if (!enableTsf) {
     return;
@@ -3385,119 +3394,119 @@ nsTextStore::Initialize(void)
   //     desktop apps.  However, there is no known way to obtain
   //     ITfInputProcessorProfileMgr instance without ITfInputProcessorProfiles
   //     instance.
+  nsRefPtr<ITfInputProcessorProfiles> inputProcessorProfiles;
   HRESULT hr =
     ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr,
                        CLSCTX_INPROC_SERVER,
                        IID_ITfInputProcessorProfiles,
-                       reinterpret_cast<void**>(&sInputProcessorProfiles));
-  if (FAILED(hr) || !sInputProcessorProfiles) {
+                       getter_AddRefs(inputProcessorProfiles));
+  if (FAILED(hr) || !inputProcessorProfiles) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
       ("TSF:   nsTextStore::Initialize() FAILED to create input processor "
-       "profiles"));
+       "profiles, hr=0x%08X", hr));
     return;
   }
 
-  if (!sTsfThreadMgr) {
-    if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
-          CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
-          reinterpret_cast<void**>(&sTsfThreadMgr)))) {
-      DebugOnly<HRESULT> hr =
-        sTsfThreadMgr->QueryInterface(IID_ITfMessagePump,
-                                      reinterpret_cast<void**>(&sMessagePump));
-      MOZ_ASSERT(SUCCEEDED(hr));
-      MOZ_ASSERT(sMessagePump);
-      hr =
-        sTsfThreadMgr->QueryInterface(IID_ITfKeystrokeMgr,
-                                      reinterpret_cast<void**>(&sKeystrokeMgr));
-      MOZ_ASSERT(SUCCEEDED(hr));
-      MOZ_ASSERT(sKeystrokeMgr);
-      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-        ("TSF:   nsTextStore::Initialize() succeeded to "
-         "create the thread manager, activating..."));
-      if (FAILED(sTsfThreadMgr->Activate(&sTsfClientId))) {
-        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF:   nsTextStore::Initialize() FAILED to activate, "
-           "releasing the thread manager..."));
-        NS_RELEASE(sTsfThreadMgr);
-      }
-    }
-#ifdef PR_LOGGING
-    else {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF:   nsTextStore::Initialize() FAILED to "
-         "create the thread manager"));
-    }
-#endif // #ifdef PR_LOGGING
-  }
-  if (sTsfThreadMgr && !sTsfTextStore) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-      ("TSF:   nsTextStore::Initialize() is creating "
-       "an nsTextStore instance..."));
-    sTsfTextStore = new nsTextStore();
-  }
-  if (sTsfThreadMgr && !sDisplayAttrMgr) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-      ("TSF:   nsTextStore::Initialize() is creating "
-       "a display attribute manager instance..."));
-    hr = ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
-                            CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
-                            reinterpret_cast<void**>(&sDisplayAttrMgr));
-    if (FAILED(hr) || !sDisplayAttrMgr) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF:   nsTextStore::Initialize() FAILED to create "
-         "a display attribute manager instance"));
-    }
-  }
-  if (sTsfThreadMgr && sDisplayAttrMgr && !sCategoryMgr) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-      ("TSF:   nsTextStore::Initialize() is creating "
-       "a category manager instance..."));
-    hr = ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
-                            CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
-                            reinterpret_cast<void**>(&sCategoryMgr));
-    if (FAILED(hr) || !sCategoryMgr) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF:   nsTextStore::Initialize() FAILED to create "
-         "a category manager instance"));
-      // release the display manager because it cannot work without the
-      // category manager
-      NS_RELEASE(sDisplayAttrMgr);
-    }
+  nsRefPtr<ITfThreadMgr> threadMgr;
+  hr = ::CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
+                          CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
+                          getter_AddRefs(threadMgr));
+  if (FAILED(hr) || !threadMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to "
+       "create the thread manager, hr=0x%08X", hr));
+    return;
   }
 
-  if (sTsfThreadMgr && sTsfTextStore) {
-    hr = sTsfThreadMgr->CreateDocumentMgr(&sTsfDisabledDocumentMgr);
-    if (FAILED(hr) || !sTsfDisabledDocumentMgr) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF:   nsTextStore::Initialize() FAILED to create "
-         "a document manager for disabled mode"));
-    }
-    if (sTsfDisabledDocumentMgr) {
-      DWORD editCookie = 0;
-      hr = sTsfDisabledDocumentMgr->CreateContext(sTsfClientId, 0, nullptr,
-                                                  &sTsfDisabledContext,
-                                                  &editCookie);
-      if (FAILED(hr) || !sTsfDisabledContext) {
-        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF:   nsTextStore::Initialize() FAILED to create "
-           "a context for disabled mode"));
-      }
-      if (sTsfDisabledContext) {
-        MarkContextAsKeyboardDisabled(sTsfDisabledContext);
-        MarkContextAsEmpty(sTsfDisabledContext);
-      }
-    }
+  nsRefPtr<ITfMessagePump> messagePump;
+  hr = threadMgr->QueryInterface(IID_ITfMessagePump,
+                                 getter_AddRefs(messagePump));
+  if (FAILED(hr) || !messagePump) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to "
+       "QI message pump from the thread manager, hr=0x%08X", hr));
+    return;
   }
 
-  if (sTsfThreadMgr && !sFlushTIPInputMessage) {
-    sFlushTIPInputMessage = ::RegisterWindowMessageW(
-        L"Flush TIP Input Message");
+  nsRefPtr<ITfKeystrokeMgr> keystrokeMgr;
+  hr = threadMgr->QueryInterface(IID_ITfKeystrokeMgr,
+                                 getter_AddRefs(keystrokeMgr));
+  if (FAILED(hr) || !keystrokeMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to "
+       "QI keystroke manager from the thread manager, hr=0x%08X", hr));
+    return;
   }
 
-  if (!sTsfThreadMgr) {
-    NS_IF_RELEASE(sMessagePump);
-    NS_IF_RELEASE(sKeystrokeMgr);
+  hr = threadMgr->Activate(&sTsfClientId);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to activate, hr=0x%08X", hr));
+    return;
   }
+
+  nsRefPtr<ITfDisplayAttributeMgr> displayAttributeMgr;
+  hr = ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
+                          CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
+                          getter_AddRefs(displayAttributeMgr));
+  if (FAILED(hr) || !displayAttributeMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to create "
+       "a display attribute manager instance, hr=0x%08X", hr));
+    return;
+  }
+
+  nsRefPtr<ITfCategoryMgr> categoryMgr;
+  hr = ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
+                          CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
+                          getter_AddRefs(categoryMgr));
+  if (FAILED(hr) || !categoryMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to create "
+       "a category manager instance, hr=0x%08X", hr));
+    return;
+  }
+
+  nsRefPtr<ITfDocumentMgr> disabledDocumentMgr;
+  hr = threadMgr->CreateDocumentMgr(getter_AddRefs(disabledDocumentMgr));
+  if (FAILED(hr) || !disabledDocumentMgr) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to create "
+       "a document manager for disabled mode, hr=0x%08X", hr));
+    return;
+  }
+
+  nsRefPtr<ITfContext> disabledContext;
+  DWORD editCookie = 0;
+  hr = disabledDocumentMgr->CreateContext(sTsfClientId, 0, nullptr,
+                                          getter_AddRefs(disabledContext),
+                                          &editCookie);
+  if (FAILED(hr) || !disabledContext) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF:   nsTextStore::Initialize() FAILED to create "
+       "a context for disabled mode, hr=0x%08X", hr));
+    return;
+  }
+
+  MarkContextAsKeyboardDisabled(disabledContext);
+  MarkContextAsEmpty(disabledContext);
+
+  inputProcessorProfiles.swap(sInputProcessorProfiles);
+  threadMgr.swap(sTsfThreadMgr);
+  messagePump.swap(sMessagePump);
+  keystrokeMgr.swap(sKeystrokeMgr);
+  displayAttributeMgr.swap(sDisplayAttrMgr);
+  categoryMgr.swap(sCategoryMgr);
+  disabledDocumentMgr.swap(sTsfDisabledDocumentMgr);
+  disabledContext.swap(sTsfDisabledContext);
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+    ("TSF:   nsTextStore::Initialize() is creating "
+     "an nsTextStore instance..."));
+  sTsfTextStore = new nsTextStore();
+
+  MOZ_ASSERT(!sFlushTIPInputMessage);
+  sFlushTIPInputMessage = ::RegisterWindowMessageW(L"Flush TIP Input Message");
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
