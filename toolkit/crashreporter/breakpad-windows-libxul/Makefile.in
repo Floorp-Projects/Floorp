@@ -3,24 +3,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STL_FLAGS =
-
-LOCAL_INCLUDES = -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src
-
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mk
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/objs.mk
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/sender/objs.mk
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/objs.mk
-
-VPATH += \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/windows \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/handler \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/sender \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation \
-  $(NULL)
-
-CPPSRCS += \
-  $(objs_common) \
-  $(objs_crash_generation) \
-  $(objs_handler) \
-  $(objs_sender) \
-  $(NULL)
