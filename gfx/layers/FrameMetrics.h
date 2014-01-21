@@ -12,6 +12,10 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 
+namespace IPC {
+template <typename T> struct ParamTraits;
+} // namespace IPC
+
 namespace mozilla {
 namespace layers {
 
@@ -32,6 +36,7 @@ typedef gfx::ScaleFactor<ParentLayerPixel, ScreenPixel> ParentLayerToScreenScale
  * atomically with new pixels.
  */
 struct FrameMetrics {
+  friend struct IPC::ParamTraits<mozilla::layers::FrameMetrics>;
 public:
   // We use IDs to identify frames across processes.
   typedef uint64_t ViewID;
@@ -51,11 +56,13 @@ public:
     , mCumulativeResolution(1)
     , mZoom(1)
     , mDevPixelsPerCSSPixel(1)
-    , mMayHaveTouchListeners(false)
     , mPresShellId(-1)
+    , mMayHaveTouchListeners(false)
     , mIsRoot(false)
     , mHasScrollgrab(false)
     , mUpdateScrollOffset(false)
+    , mDisableScrollingX(false)
+    , mDisableScrollingY(false)
   {}
 
   // Default copy ctor and operator= are fine
@@ -75,6 +82,9 @@ public:
            mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
            mPresShellId == aOther.mPresShellId &&
            mIsRoot == aOther.mIsRoot &&
+           mHasScrollgrab == aOther.mHasScrollgrab &&
+           mDisableScrollingX == aOther.mDisableScrollingX &&
+           mDisableScrollingY == aOther.mDisableScrollingY &&
            mUpdateScrollOffset == aOther.mUpdateScrollOffset;
   }
   bool operator!=(const FrameMetrics& aOther) const
@@ -277,10 +287,10 @@ public:
   // resolution.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
+  uint32_t mPresShellId;
+
   // Whether or not this frame may have touch listeners.
   bool mMayHaveTouchListeners;
-
-  uint32_t mPresShellId;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRoot;
@@ -291,6 +301,36 @@ public:
   // Whether mScrollOffset was updated by something other than the APZ code, and
   // if the APZC receiving this metrics should update its local copy.
   bool mUpdateScrollOffset;
+
+public:
+  bool GetDisableScrollingX() const
+  {
+    return mDisableScrollingX;
+  }
+
+  void SetDisableScrollingX(bool aDisableScrollingX)
+  {
+    mDisableScrollingX = aDisableScrollingX;
+  }
+
+  bool GetDisableScrollingY() const
+  {
+    return mDisableScrollingY;
+  }
+
+  void SetDisableScrollingY(bool aDisableScrollingY)
+  {
+    mDisableScrollingY = aDisableScrollingY;
+  }
+
+private:
+  // New fields from now on should be made private and old fields should
+  // be refactored to be private.
+
+  // Allow disabling scrolling in individual axis to support
+  // |overflow: hidden|.
+  bool mDisableScrollingX;
+  bool mDisableScrollingY;
 };
 
 /**
