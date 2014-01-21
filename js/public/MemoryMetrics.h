@@ -296,6 +296,7 @@ struct RuntimeSizes
     macro(_, _, interpreterStack) \
     macro(_, _, gcMarker) \
     macro(_, _, mathCache) \
+    macro(_, _, sourceDataCache) \
     macro(_, _, scriptData) \
     macro(_, _, scriptSources)
 
