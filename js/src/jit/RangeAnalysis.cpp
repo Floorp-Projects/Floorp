@@ -18,6 +18,8 @@
 #include "jit/MIRGraph.h"
 #include "vm/NumericConversions.h"
 
+#include "jsopcodeinlines.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -167,7 +169,7 @@ RangeAnalysis::addBetaNodes()
         JSOp jsop = compare->jsop();
 
         if (branch_dir == FALSE_BRANCH) {
-            jsop = analyze::NegateCompareOp(jsop);
+            jsop = NegateCompareOp(jsop);
             conservativeLower = GenericNaN();
             conservativeUpper = GenericNaN();
         }
@@ -175,7 +177,7 @@ RangeAnalysis::addBetaNodes()
         if (left->isConstant() && left->toConstant()->value().isNumber()) {
             bound = left->toConstant()->value().toNumber();
             val = right;
-            jsop = analyze::ReverseCompareOp(jsop);
+            jsop = ReverseCompareOp(jsop);
         } else if (right->isConstant() && right->toConstant()->value().isNumber()) {
             bound = right->toConstant()->value().toNumber();
             val = left;
