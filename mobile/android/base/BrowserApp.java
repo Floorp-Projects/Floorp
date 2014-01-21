@@ -156,7 +156,6 @@ abstract public class BrowserApp extends GeckoApp
     };
 
     private FindInPageBar mFindInPageBar;
-    private MediaCastingBar mMediaCastingBar;
 
     private boolean mAccessibilityEnabled = false;
 
@@ -531,7 +530,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
-        mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
         registerEventListener("CharEncoding:Data");
         registerEventListener("CharEncoding:State");
@@ -830,11 +828,6 @@ abstract public class BrowserApp extends GeckoApp
         if (mFindInPageBar != null) {
             mFindInPageBar.onDestroy();
             mFindInPageBar = null;
-        }
-
-        if (mMediaCastingBar != null) {
-            mMediaCastingBar.onDestroy();
-            mMediaCastingBar = null;
         }
 
         if (mSharedPreferencesHelper != null) {

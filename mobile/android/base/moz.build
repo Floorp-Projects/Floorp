@@ -248,7 +248,6 @@ gbjar.sources += [
     'LightweightTheme.java',
     'LightweightThemeDrawable.java',
     'LocaleManager.java',
-    'MediaCastingBar.java',
     'MemoryMonitor.java',
     'menu/GeckoMenu.java',
     'menu/GeckoMenuInflater.java',
