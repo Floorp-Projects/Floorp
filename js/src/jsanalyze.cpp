@@ -729,7 +729,8 @@ bool
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
-    JS_ASSERT(!ranBytecode());
+    JS_ASSERT(!codeArray);
+
     LifoAlloc &alloc = cx->typeLifoAlloc();
 
     numSlots = TotalSlots(script_);
@@ -1004,16 +1005,22 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     JS_ASSERT(forwardJump == 0 && forwardLoop == 0 && forwardCatch == 0);
 
-    ranBytecode_ = true;
-
     /*
      * Always ensure that a script's arguments usage has been analyzed before
      * entering the script. This allows the functionPrologue to ensure that
      * arguments are always created eagerly which simplifies interp logic.
      */
     if (!script_->analyzedArgsUsage()) {
+        if (!analyzeLifetimes(cx))
+            return false;
         if (!analyzeSSA(cx))
             return false;
+
+        /*
+         * Now that we have full SSA information for the script, analyze whether
+         * we can avoid creating the arguments object.
+         */
+        script_->setNeedsArgsObj(needsArgsObj(cx));
     }
 
     return true;
@@ -1026,12 +1033,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 bool
 ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment()->activeAnalysis && !ranLifetimes());
-
-    if (!ranBytecode()) {
-        if (!analyzeBytecode(cx))
-            return false;
-    }
+    JS_ASSERT(cx->compartment()->activeAnalysis);
+    JS_ASSERT(codeArray);
+    JS_ASSERT(!lifetimes);
 
     LifoAlloc &alloc = cx->typeLifoAlloc();
 
@@ -1258,8 +1262,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
     }
 
     js_free(saved);
-
-    ranLifetimes_ = true;
 
     return true;
 }
@@ -1506,12 +1508,9 @@ struct SSAValueInfo
 bool
 ScriptAnalysis::analyzeSSA(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment()->activeAnalysis && !ranSSA());
-
-    if (!ranLifetimes()) {
-        if (!analyzeLifetimes(cx))
-            return false;
-    }
+    JS_ASSERT(cx->compartment()->activeAnalysis);
+    JS_ASSERT(codeArray);
+    JS_ASSERT(lifetimes);
 
     LifoAlloc &alloc = cx->typeLifoAlloc();
     unsigned maxDepth = script_->nslots() - script_->nfixed();
@@ -1904,15 +1903,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         offset = successorOffset;
     }
-
-    ranSSA_ = true;
-
-    /*
-     * Now that we have full SSA information for the script, analyze whether
-     * we can avoid creating the arguments object.
-     */
-    if (!script_->analyzedArgsUsage())
-        script_->setNeedsArgsObj(needsArgsObj(cx));
 
     return true;
 }
