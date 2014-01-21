@@ -43,6 +43,9 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TrustedRootCertificate",
+  "resource://gre/modules/StoreTrustAnchor.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PermissionsInstaller",
   "resource://gre/modules/PermissionsInstaller.jsm");
 
@@ -3054,7 +3057,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
     let deferred = Promise.defer();
 
     aCertDb.openSignedAppFileAsync(
-       Ci.nsIX509CertDB.AppMarketplaceProdPublicRoot, aZipFile,
+       TrustedRootCertificate.index, aZipFile,
        function(aRv, aZipReader) {
          deferred.resolve([aRv, aZipReader]);
        }

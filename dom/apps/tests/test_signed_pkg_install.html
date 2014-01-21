@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=880043
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 880043 Packaged apps installation and update</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=880043">Mozilla Bug 880043</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+const Cu = SpecialPowers.Cu;
+
+var launchableValue;
+var index = -1;
+var gDebug = false;
+var gApp = null;
+var gAppName = "Simple App";
+var gInstallOrigin = "http://mochi.test:8888/";
+var gSJSPath = "tests/dom/apps/tests/signed_app.sjs";
+var gSJS = gInstallOrigin + gSJSPath;
+var gPackagePath = gInstallOrigin + "tests/dom/apps/tests/";
+var gSignedAppOriginsStr ="";
+
+SimpleTest.waitForExplicitFinish();
+
+function checkAppOnInstallError(aMiniManifestURL, aExpectedError) {
+  navigator.mozApps.mgmt.oninstall = function(evt) {
+    info("Got oninstall event");
+    gApp = evt.application;
+    gApp.ondownloaderror = function() {
+      is(gApp.downloadError.name, aExpectedError,
+        "Download fails with expected error: " + aExpectedError);
+      if (gApp.downloadError.name != aExpectedError) {
+        PackagedTestHelper.finish();
+      } else {
+        PackagedTestHelper.next();
+      }
+    };
+    gApp.ondownloadsuccess = function() {
+      ok(false, "App download should fail");
+      PackagedTestHelper.finish();
+    };
+  };
+  var request = navigator.mozApps.installPackage(aMiniManifestURL);
+  request.onerror = function(evt) {
+    ok(false, "Application should throw the error inside oninstall: " + evt.error.name);
+    PackagedTestHelper.finish();
+  };
+  request.onsuccess = function() {
+    info("Application install returns successfully");
+  };
+}
+
+function checkUninstallApp(aApp) {
+  var req = navigator.mozApps.mgmt.uninstall(aApp);
+
+  req.onsuccess = function() {
+    info("App uninstalled");
+    aApp.ondownloadsuccess = null;
+    aApp.ondownloaderror = null;
+    aApp.onprogress = null;
+    PackagedTestHelper.next();
+  };
+  req.onerror = function(evt) {
+    ok(false, "App uninstallation should succeed (got unexpected " +
+              evt.target.error.name + ")");
+    PackagedTestHelper.finish();
+  };
+}
+
+var steps = [
+  function() {
+    // Set up
+    info("Test Initial Setup");
+    gSignedAppOriginsStr = SpecialPowers.getCharPref("dom.mozApps.signed_apps_installable_from");
+    var signedAppOriginsStr = gSignedAppOriginsStr.concat("," + gInstallOrigin.slice(0, -1));
+    SpecialPowers.pushPrefEnv({'set': [['dom.mozApps.signed_apps_installable_from', signedAppOriginsStr]]}, function() {
+      var url = SimpleTest.getTestFileURL("chromeAddCert.js");
+      var script = SpecialPowers.loadChromeScript(url);
+      script.addMessageListener("addCertCompleted", function() {
+        launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+        SpecialPowers.addPermission("webapps-manage", true, document);
+        info("Test CA Certificate Selected");
+        PackagedTestHelper.next();
+        script.destroy();
+      });
+    });
+  },
+  function() {
+    info("autoConfirmAppInstall");
+    SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
+  },
+  function() {
+    info("== TEST == Install packaged app");
+    var miniManifestURL = gSJS + "?" + "app=valid&" + "version=1";
+
+    navigator.mozApps.mgmt.oninstall = function(evt) {
+      info("Got oninstall event");
+      gApp = evt.application;
+      gApp.ondownloaderror = function() {
+        ok(false, "Download should succeed (got error: " +
+                  gApp.downloadError.name + ")");
+        PackagedTestHelper.finish();
+      };
+      gApp.ondownloadsuccess = function() {
+        info("App downloaded");
+        var expected = {
+          name: gAppName,
+          manifestURL: miniManifestURL,
+          installOrigin: gInstallOrigin.slice(0, -1),
+          progress: 0,
+          installState: "installed",
+          downloadAvailable: false,
+          downloading: false,
+          readyToApplyDownload: false,
+        };
+        PackagedTestHelper.checkAppState(gApp, 1, expected,
+                                         true, false, PackagedTestHelper.next);
+      };
+    };
+    info("Installing app: " + miniManifestURL);
+    var request = navigator.mozApps.installPackage(miniManifestURL);
+    request.onerror = function(evt) {
+      ok(false, "Application should have been correctly installed (error: " +
+                JSON.stringify(evt));
+    };
+    request.onsuccess = function() {
+      info("Application installed");
+    };
+  },
+  function() {
+    info("== TEST == Uninstall a signed app");
+    // Uninstall App
+    checkUninstallApp(gApp);
+  },
+  function() {
+    info("== TEST == Install a corrupted package");
+    //Scenario: Corrupted package
+    var miniManifestURL = gSJS + "?" + "app=corrupt&" + "version=1";
+    checkAppOnInstallError(miniManifestURL, "APP_PACKAGE_CORRUPTED");
+  },
+  function() {
+    info("== TEST == Install a unsigned app from a trusted store");
+    //Scenario: Unsigned App from an origin that requires signed apps
+    var miniManifestURL = gSJS + "?" + "app=unknown_issuer&" + "version=1";
+    checkAppOnInstallError(miniManifestURL, "INVALID_SIGNATURE");
+  },
+  function() {
+    info("== TEST == Install packaged app with origin");
+    var miniManifestURL = gSJS + "?" +
+                          "app=origin&" +
+                          "version=1";
+
+    navigator.mozApps.mgmt.oninstall = function(evt) {
+      info("Got oninstall event");
+      gApp = evt.application;
+      gApp.ondownloaderror = function() {
+        ok(false, "Download should succeed (got error: " +
+                  gApp.downloadError.name + ")");
+        PackagedTestHelper.finish();
+      };
+      gApp.ondownloadsuccess = function() {
+        info("App downloaded");
+        var expected = {
+          name: gAppName,
+          manifestURL: miniManifestURL,
+          installOrigin: gInstallOrigin.slice(0, -1),
+          progress: 0,
+          installState: "installed",
+          downloadAvailable: false,
+          downloading: false,
+          origin: "app://test.origin.privileged.app",
+          readyToApplyDownload: false,
+        };
+        PackagedTestHelper.checkAppState(gApp, 1, expected,
+                                         true, false, PackagedTestHelper.next);
+      };
+    };
+    info("Installing app: " + miniManifestURL);
+    var request = navigator.mozApps.installPackage(miniManifestURL);
+    request.onerror = function(evt) {
+      ok(false, "Application should have been correctly installed (error: " +
+                JSON.stringify(evt));
+    };
+    request.onsuccess = function() {
+      info("Application installed");
+    };
+  },
+  function() {
+    info("== TEST == Install app from an invalid source");
+    // Scenario: This is where an unexpected store is signing packages and
+    // attempting to install. Please note that after this test you cannot
+    // add new successful tests without changing the preference again
+    SpecialPowers.pushPrefEnv(
+      {'set': [['dom.mozApps.signed_apps_installable_from',
+                gSignedAppOriginsStr]]},
+      function() {
+        var miniManifestURL = gSJS + "?" + "app=valid&" + "version=1";
+        checkAppOnInstallError(miniManifestURL, "INSTALL_FROM_DENIED");
+    });
+  },
+  function() {
+    info("all done!");
+    PackagedTestHelper.finish();
+  }
+];
+
+PackagedTestHelper.setSteps(steps);
+PackagedTestHelper.gSJSPath = gSJSPath;
+
+addLoadEvent(PackagedTestHelper.start);
+
+</script>
+</pre>
+</body>
+</html>
