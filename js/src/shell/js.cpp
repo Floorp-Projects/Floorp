@@ -3304,15 +3304,15 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(true)
            .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
-    if (!JS::CanCompileOffThread(cx, options)) {
-        JS_ReportError(cx, "cannot compile code on worker thread");
-        return false;
-    }
-
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
         return false;
     size_t length = JS_GetStringLength(scriptContents);
+
+    if (!JS::CanCompileOffThread(cx, options, length)) {
+        JS_ReportError(cx, "cannot compile code on worker thread");
+        return false;
+    }
 
     if (!offThreadState.startIfIdle(cx, scriptContents)) {
         JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
