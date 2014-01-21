@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'CertVerifier.cpp',
+    'NSSCertDBTrustDomain.cpp',
 ]
 
 if not CONFIG['NSS_NO_LIBPKIX']:
