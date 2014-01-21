@@ -148,10 +148,17 @@ class HTMLElement(object):
 
     @property
     def location(self):
-        '''
-        A dictionary with the x and y location of an element
-        '''
-        return self.marionette._send_message('getElementPosition', 'value', id=self.id)
+        """Get an element's location on the page.
+
+        The returned point will contain the x and y coordinates of the
+        top left-hand corner of the given element.  The point (0,0)
+        refers to the upper-left corner of the document.
+
+        :returns: a dictionary containing x and y as entries
+
+        """
+
+        return self.marionette._send_message("getElementLocation", "value", id=self.id)
 
     def value_of_css_property(self, property_name):
         '''
