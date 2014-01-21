@@ -145,4 +145,14 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   public static Account[] getFirefoxAccounts(final Context context) {
     return AccountManager.get(context).getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
   }
+
+  /**
+   * Return true if at least one Firefox Account exists.
+   *
+   * @param context Android context.
+   * @return true if at least one Firefox Account exists.
+   */
+  public static boolean firefoxAccountsExist(final Context context) {
+    return getFirefoxAccounts(context).length > 0;
+  }
 }

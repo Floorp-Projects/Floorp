@@ -488,7 +488,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnDismissListener(new BrowserToolbar.OnDismissListener() {
             public void onDismiss() {
-                dismissEditingMode();
+                mBrowserToolbar.cancelEdit();
             }
         });
 
@@ -607,10 +607,6 @@ abstract public class BrowserApp extends GeckoApp
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             super.onBackPressed();
-            return;
-        }
-
-        if (dismissEditingMode()) {
             return;
         }
 
@@ -1574,16 +1570,6 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private boolean dismissEditingMode() {
-        if (!mBrowserToolbar.isEditing()) {
-            return false;
-        }
-
-        mBrowserToolbar.cancelEdit();
-
-        return true;
-    }
-
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
         if (TextUtils.isEmpty(searchTerm)) {
             hideBrowserSearch();
@@ -2400,7 +2386,7 @@ abstract public class BrowserApp extends GeckoApp
 
         // Dismiss editing mode if the user is loading a URL from an external app.
         if (Intent.ACTION_VIEW.equals(action)) {
-            dismissEditingMode();
+            mBrowserToolbar.cancelEdit();
             return;
         }
 

@@ -364,7 +364,7 @@ ContentSecurityPolicy.prototype = {
                                                        .getService(Ci.nsIScriptSecurityManager)
                                                        .getChannelPrincipal(aChannel));
 
-    if (aChannel.referrer) {
+    if (aChannel instanceof Ci.nsIHttpChannel && aChannel.referrer) {
       let referrer = aChannel.referrer.cloneIgnoringRef();
       try { // GetUserPass throws for some protocols without userPass
         referrer.userPass = '';
