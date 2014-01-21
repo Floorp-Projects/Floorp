@@ -9,9 +9,7 @@
     android:layout_height="fill_parent"
     android:fillViewport="true" >
 
-    <LinearLayout
-        android:id="@+id/create_success_view"
-        style="@style/FxAccountMiddle" >
+    <LinearLayout style="@style/FxAccountMiddle" >
 
         <LinearLayout style="@style/FxAccountSpacer" />
 
@@ -22,7 +20,7 @@
 
         <TextView
             style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_confirmation_email_sent" >
+            android:text="@string/fxaccount_confirm_your_account" >
         </TextView>
 
         <ImageView
@@ -30,14 +28,16 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="45dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/fxaccount_mail_contentDescription"
             android:src="@drawable/fxaccount_mail" >
+
         </ImageView>
 
         <TextView
             style="@style/FxAccountTextItem"
             android:layout_marginBottom="15dp"
-            android:text="@string/fxaccount_confirmation_description"
+            android:text="@string/fxaccount_verification_link_awaits_at"
             android:textSize="18sp" >
         </TextView>
 
@@ -50,8 +50,9 @@
         </TextView>
 
         <TextView
+            android:id="@+id/resend_confirmation_email_link"
             style="@style/FxAccountLinkItem"
-            android:text="@string/fxaccount_offer_resend_confirmation_email" />
+            android:text="@string/fxaccount_verification_link_not_showing_up_offer_resend" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

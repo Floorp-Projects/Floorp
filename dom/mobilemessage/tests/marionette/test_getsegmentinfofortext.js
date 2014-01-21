@@ -112,7 +112,7 @@ let date = new Date();
 addTest(date, 1, PDU_MAX_USER_DATA_7BIT,
         PDU_MAX_USER_DATA_7BIT - ("" + date).length);
 
-addTest("", 0, PDU_MAX_USER_DATA_7BIT,
+addTest("", 1, PDU_MAX_USER_DATA_7BIT,
         PDU_MAX_USER_DATA_7BIT - "".length);
 
 // WARNING: All tasks should be pushed before this!!!
