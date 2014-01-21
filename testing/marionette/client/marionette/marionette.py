@@ -761,10 +761,18 @@ class Marionette(object):
 
     @property
     def current_window_handle(self):
-        '''
-        A reference to the current window.
-        '''
-        self.window = self._send_message('getWindow', 'value')
+        """Get the current window's handle.
+
+        Return an opaque server-assigned identifier to this window
+        that uniquely identifies it within this Marionette instance.
+        This can be used to switch to this window at a later point.
+
+        :returns: unique window handle
+        :rtype: string
+
+        """
+
+        self.window = self._send_message("getCurrentWindowHandle", "value")
         return self.window
 
     @property
