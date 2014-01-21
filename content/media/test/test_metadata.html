@@ -16,7 +16,6 @@ var manager = new MediaTestManager;
 
 function startTest(test, token) {
   var a = document.createElement('audio');
-  a.preload = "auto";
   a.token = token;
   manager.started(token);
 

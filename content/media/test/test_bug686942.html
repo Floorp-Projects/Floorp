@@ -48,7 +48,6 @@ function onended(event) {
 
 function startTest(test, token) {
   var v = document.createElement('video');
-  v.preload = "auto";
   v.token = token;
   manager.started(token);
   v.src = test.name;

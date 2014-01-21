@@ -21,9 +21,7 @@ function do_ended(e) {
   var v = e.target;
   ok(!v._finished, "Only one ended event for " + v._name);
   v._finished = true;
-  v.removeEventListener("ended", do_ended, false);
-  v.removeEventListener("progress", do_progress, false);
-  removeNodeAndSource(v);
+  v.parentNode.removeChild(v);
   manager.finished(v.token);
 }
 

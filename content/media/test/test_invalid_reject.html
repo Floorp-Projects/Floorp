@@ -34,7 +34,6 @@ function startTest(test, token) {
   v.addEventListener("error", function(e) {
     is(v.error.code, v.error.MEDIA_ERR_DECODE,
       "decoder should reject " + test.name);
-    v.removeEventListener('error', arguments.callee, false);
     manager.finished(token);
   });
 

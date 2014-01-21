@@ -40,10 +40,10 @@ function ended(e) {
       // confusing the test results.
       v.removeEventListener("ended", ended, false);
       v.removeEventListener("timeupdate", timeupdate, false);
-      for (var i = 0; i < eventsToLog.length; ++i) {
-        v.removeEventListener(eventsToLog[i], logEvent, false);
-      }
-      removeNodeAndSource(v);
+      v.removeEventListener("timeupdate", logEvent, false);
+      v.removeEventListener("pause", logEvent, false);
+      v.removeEventListener("stalled", logEvent, false);
+      v.parentNode.removeChild(v);
       manager.finished(v.token);
     },
     500);
