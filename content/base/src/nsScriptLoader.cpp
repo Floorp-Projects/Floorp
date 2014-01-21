@@ -841,7 +841,7 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
   JS::CompileOptions options(cx);
   FillCompileOptionsForRequest(aRequest, global, &options);
 
-  if (!JS::CanCompileOffThread(cx, options, aRequest->mScriptText.Length())) {
+  if (!JS::CanCompileOffThread(cx, options)) {
     return NS_ERROR_FAILURE;
   }
 

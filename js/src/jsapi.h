@@ -3647,7 +3647,7 @@ extern JS_PUBLIC_API(JSScript *)
 Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, const char *filename);
 
 extern JS_PUBLIC_API(bool)
-CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t length);
+CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options);
 
 /*
  * Off thread compilation control flow.
