@@ -143,6 +143,8 @@ interface mozContact {
            attribute object?      note;
            attribute object?      key;
 
+  void init(optional ContactProperties properties);
+
   [ChromeOnly]
   void setMetadata(DOMString id, Date? published, Date? updated);
 
