@@ -2272,6 +2272,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   KIND_HEAP, rtStats.runtime.mathCache,
                   "Memory used for the math cache.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/source-data-cache"),
+                  KIND_HEAP, rtStats.runtime.sourceDataCache,
+                  "Memory used for the source data cache, which holds "
+                  "decompressed script source code.");
+
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/script-data"),
                   KIND_HEAP, rtStats.runtime.scriptData,
                   "Memory used for the table holding script data shared in "

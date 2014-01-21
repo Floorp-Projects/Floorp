@@ -353,6 +353,8 @@ class SourceDataCache
     bool put(ScriptSource *ss, const jschar *chars, const AutoSuppressPurge &asp);
 
     void purge();
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
 class ScriptSource
