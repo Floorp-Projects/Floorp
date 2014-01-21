@@ -578,7 +578,7 @@ static const JSPropertySpec sCTypeProps[] = {
          (Property<CType::IsCTypeOrProto, CType::PrototypeGetter>::Fun),
          CTYPESACC_FLAGS),
   JS_PS_END
-};l
+};
 
 static const JSFunctionSpec sCTypeFunctions[] = {
   JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
