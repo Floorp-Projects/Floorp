@@ -55,9 +55,34 @@ function testCancelNew()
       ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding modification request after a cancel.");
       is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
       ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
-      testCreateNew();
+      testCancelNewOnEscape();
     });
     aEditor.input.blur();
+  });
+
+  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
+                             { },
+                             ruleWindow);
+}
+
+function testCancelNewOnEscape()
+{
+  // Start at the beginning: start to add a rule to the element's style
+  // declaration, add some text, then press escape.
+
+  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
+  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
+    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
+    for (let ch of "background") {
+      EventUtils.sendChar(ch, ruleWindow);
+    }
+    waitForEditorBlur(aEditor, function () {
+      ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding modification request after a cancel.");
+      is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
+      ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
+      testCreateNew();
+    });
+    EventUtils.synthesizeKey("VK_ESCAPE", { });
   });
 
   EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
