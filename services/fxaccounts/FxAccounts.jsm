@@ -582,7 +582,7 @@ this.FxAccounts.prototype = Object.freeze({
 
   // Return the URI of the remote UI flows.
   getAccountsURI: function() {
-    let url = Services.urlFormatter.formatURLPref("firefox.accounts.remoteUrl");
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.uri");
     if (!/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
