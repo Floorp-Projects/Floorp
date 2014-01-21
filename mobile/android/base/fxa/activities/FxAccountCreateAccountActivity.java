@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.fxa.FxAccountConstants;
@@ -25,6 +26,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -40,6 +42,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
 
   private static final int CHILD_REQUEST_CODE = 2;
 
+  protected String[] yearItems;
   protected EditText yearEdit;
 
   /**
@@ -105,24 +108,21 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
   }
 
   protected void createYearEdit() {
+    yearItems = getResources().getStringArray(R.array.fxaccount_create_account_ages_array);
+
     yearEdit.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        final String[] years = new String[20];
-        for (int i = 0; i < years.length; i++) {
-          years[i] = Integer.toString(2014 - i);
-        }
-
         android.content.DialogInterface.OnClickListener listener = new Dialog.OnClickListener() {
           @Override
           public void onClick(DialogInterface dialog, int which) {
-            yearEdit.setText(years[which]);
+            yearEdit.setText(yearItems[which]);
+            updateButtonState();
           }
         };
-
-        AlertDialog dialog = new AlertDialog.Builder(FxAccountCreateAccountActivity.this)
+        final AlertDialog dialog = new AlertDialog.Builder(FxAccountCreateAccountActivity.this)
         .setTitle(R.string.fxaccount_when_were_you_born)
-        .setItems(years, listener)
+        .setItems(yearItems, listener)
         .setIcon(R.drawable.fxaccount_icon)
         .create();
 
@@ -197,6 +197,12 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     }
   }
 
+  @Override
+  protected boolean shouldButtonBeEnabled() {
+    return super.shouldButtonBeEnabled() &&
+        (yearEdit.length() > 0);
+  }
+
   protected void createCreateAccountButton() {
     button.setOnClickListener(new OnClickListener() {
       @Override
@@ -206,7 +212,15 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
         }
         final String email = emailEdit.getText().toString();
         final String password = passwordEdit.getText().toString();
-        createAccount(email, password);
+        if (FxAccountAgeLockoutHelper.passesAgeCheck(yearEdit.getText().toString(), yearItems)) {
+          FxAccountConstants.pii(LOG_TAG, "Passed age check.");
+          createAccount(email, password);
+        } else {
+          FxAccountConstants.pii(LOG_TAG, "Failed age check!");
+          FxAccountAgeLockoutHelper.lockOut(SystemClock.elapsedRealtime());
+          setResult(RESULT_CANCELED);
+          redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
+        }
       }
     });
   }

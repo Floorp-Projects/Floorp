@@ -6,12 +6,14 @@ package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 
 import android.accounts.AccountAuthenticatorActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
 
@@ -51,10 +53,16 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
 
   public void onResume() {
     super.onResume();
-    if (FxAccountAuthenticator.getFirefoxAccounts(this).length > 0) {
+
+    Intent intent = null;
+    if (FxAccountAgeLockoutHelper.isLockedOut(SystemClock.elapsedRealtime())) {
+      intent = new Intent(this, FxAccountCreateAccountNotAllowedActivity.class);
+    } else if (FxAccountAuthenticator.firefoxAccountsExist(this)) {
+      intent = new Intent(this, FxAccountStatusActivity.class);
+    }
+    if (intent != null) {
       this.setAccountAuthenticatorResult(null);
       setResult(RESULT_CANCELED);
-      Intent intent = new Intent(this, FxAccountStatusActivity.class);
       // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
       // the soft keyboard not being shown for the started activity. Why, Android, why?
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

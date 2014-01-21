@@ -152,3 +152,20 @@
   <string name="fxaccount_status_tabs">&fxaccount.status.tabs;</string>
   <string name="fxaccount_update_credentials">&fxaccount.update.credentials;</string>
   <string name="fxaccount_update_credentials_button_label">&fxaccount.update.credentials.button.label;</string>
+  <string name="fxaccount_account_create_not_allowed">&fxaccount.account.create.not.allowed;</string>
+  <string name="fxaccount_account_create_not_allowed_description">&fxaccount.account.create.not.allowed.description;</string>
+  <string name="fxaccount_create_account_age_1960s">&fxaccount.create.account.age.1960s;</string>
+  <string name="fxaccount_create_account_age_1970s">&fxaccount.create.account.age.1970s;</string>
+  <string name="fxaccount_create_account_age_1980s">&fxaccount.create.account.age.1980s;</string>
+  <string name="fxaccount_create_account_age_1990s">&fxaccount.create.account.age.1990s;</string>
+  <string name="fxaccount_create_account_age_2000">&fxaccount.create.account.age.2000;</string>
+  <string name="fxaccount_create_account_age_2001">&fxaccount.create.account.age.2001;</string>
+  <string name="fxaccount_create_account_age_2002">&fxaccount.create.account.age.2002;</string>
+  <string name="fxaccount_create_account_age_2003">&fxaccount.create.account.age.2003;</string>
+  <string name="fxaccount_create_account_age_2004">&fxaccount.create.account.age.2004;</string>
+  <string name="fxaccount_create_account_age_2005">&fxaccount.create.account.age.2005;</string>
+  <string name="fxaccount_create_account_age_2006">&fxaccount.create.account.age.2006;</string>
+  <string name="fxaccount_create_account_age_2007">&fxaccount.create.account.age.2007;</string>
+  <!-- We haven't yet decided how to linkify, so to save translation
+       time we're holding this back. -->
+  <string name="fxaccount_account_create_not_allowed_learn_more">&lt;a href="http://www.ftc.gov/news-events/media-resources/protecting-consumer-privacy/kids-privacy-coppa"&gt;Learn more&lt;/a&gt;</string>
