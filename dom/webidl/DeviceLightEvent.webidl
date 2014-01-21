@@ -7,7 +7,7 @@
 [Constructor(DOMString type, optional DeviceLightEventInit eventInitDict)]
 interface DeviceLightEvent : Event
 {
-  readonly attribute double value;
+  readonly attribute unrestricted double value;
 };
 
 dictionary DeviceLightEventInit : EventInit

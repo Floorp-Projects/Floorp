@@ -510,6 +510,12 @@ ok(!e.isTrusted, "Event should not be trusted");
 is(e.value, 1, "value should be 1");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
+e = new DeviceLightEvent("hello", {value: Infinity} );
+is(e.value, Infinity, "value should be positive infinity");
+e = new DeviceLightEvent("hello", {value: -Infinity} );
+is(e.value, -Infinity, "value should be negative infinity");
+e = new DeviceLightEvent("hello");
+is(e.value, Infinity, "Uninitialized value should be positive infinity");
 
 // DeviceOrientationEvent
 e = new DeviceOrientationEvent("hello");
