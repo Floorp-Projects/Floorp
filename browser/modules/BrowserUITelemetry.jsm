@@ -132,6 +132,14 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
 const OTHER_MOUSEUP_MONITORED_ITEMS = [
   "PlacesChevron",
   "PlacesToolbarItems",
+  "menubar-items",
+];
+
+// Items that open arrow panels will often be overlapped by
+// the panel that they're opening by the time the mouseup
+// event is fired, so for these items, we monitor mousedown.
+const MOUSEDOWN_MONITORED_ITEMS = [
+  "PanelUI-menu-button",
 ];
 
 // Weakly maps browser windows to objects whose keys are relative
@@ -260,6 +268,13 @@ this.BrowserUITelemetry = {
       }
     }
 
+    for (let itemID of MOUSEDOWN_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.addEventListener("mousedown", this);
+      }
+    }
+
     WINDOW_DURATION_MAP.set(aWindow, {});
   },
 
@@ -280,6 +295,13 @@ this.BrowserUITelemetry = {
         item.removeEventListener("mouseup", this);
       }
     }
+
+    for (let itemID of MOUSEDOWN_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.removeEventListener("mousedown", this);
+      }
+    }
   },
 
   handleEvent: function(aEvent) {
@@ -289,6 +311,9 @@ this.BrowserUITelemetry = {
         break;
       case "mouseup":
         this._handleMouseUp(aEvent);
+        break;
+      case "mousedown":
+        this._handleMouseDown(aEvent);
         break;
     }
   },
@@ -303,8 +328,21 @@ this.BrowserUITelemetry = {
       case "PlacesChevron":
         this._PlacesChevronMouseUp(aEvent);
         break;
+      case "menubar-items":
+        this._menubarMouseUp(aEvent);
+        break;
       default:
         this._checkForBuiltinItem(aEvent);
+    }
+  },
+
+  _handleMouseDown: function(aEvent) {
+    if (aEvent.currentTarget.id == "PanelUI-menu-button") {
+      // _countMouseUpEvent expects a detail for the second argument,
+      // but we don't really have any details to give. Just passing in
+      // "button" is probably simpler than trying to modify
+      // _countMouseUpEvent for this particular case.
+      this._countMouseUpEvent("click-menu-button", "button", aEvent.button);
     }
   },
 
@@ -323,6 +361,13 @@ this.BrowserUITelemetry = {
 
     let result = target.hasAttribute("container") ? "container" : "item";
     this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
+  },
+
+  _menubarMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let tag = target.localName
+    let result = (tag == "menu" || tag == "menuitem") ? tag : "other";
+    this._countMouseUpEvent("click-menubar", result, aEvent.button);
   },
 
   _bookmarksMenuButtonMouseUp: function(aEvent) {
@@ -390,6 +435,13 @@ this.BrowserUITelemetry = {
     // Determine if the Bookmarks bar is currently visible
     let bookmarksBar = document.getElementById("PersonalToolbar");
     result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
+
+    // Determine if the menubar is currently visible. On OS X, the menubar
+    // is never shown, despite not having the collapsed attribute set.
+    let menuBar = document.getElementById("toolbar-menubar");
+    result.menuBarEnabled =
+      menuBar && Services.appinfo.OS != "Darwin"
+              && menuBar.getAttribute("autohide") != "true";
 
     // Examine all customizable areas and see what default items
     // are present and missing.
