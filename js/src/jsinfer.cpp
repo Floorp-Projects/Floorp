@@ -1874,13 +1874,13 @@ static inline jsbytecode *
 PreviousOpcode(HandleScript script, jsbytecode *pc)
 {
     ScriptAnalysis *analysis = script->analysis();
-    JS_ASSERT(analysis->maybeCode(pc));
+    JS_ASSERT(analysis->isReachable(pc));
 
     if (pc == script->code())
         return nullptr;
 
     for (pc--;; pc--) {
-        if (analysis->maybeCode(pc))
+        if (analysis->isReachable(pc))
             break;
     }
 
@@ -1897,7 +1897,7 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
     if (!script->hasAnalysis())
         return nullptr;
 
-    if (!script->analysis()->maybeCode(initpc))
+    if (!script->analysis()->isReachable(initpc))
         return nullptr;
 
     /*
