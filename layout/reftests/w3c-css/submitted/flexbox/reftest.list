@@ -77,6 +77,12 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-break-request-vert-2a.html  flexbox-break-request-vert-2-ref.html
 == flexbox-break-request-vert-2b.html  flexbox-break-request-vert-2-ref.html
 
+# Tests for flex items with "visibility:collapse"
+== flexbox-collapsed-item-baseline-1.html flexbox-collapsed-item-baseline-1-ref.html
+== flexbox-collapsed-item-horiz-1.html flexbox-collapsed-item-horiz-1-ref.html
+== flexbox-collapsed-item-horiz-2.html flexbox-collapsed-item-horiz-2-ref.html
+== flexbox-collapsed-item-horiz-3.html flexbox-collapsed-item-horiz-3-ref.html
+
 # Tests for flex-flow shorthand property
 == flexbox-flex-flow-1.html flexbox-flex-flow-1-ref.html
 
