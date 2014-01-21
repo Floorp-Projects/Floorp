@@ -64,6 +64,28 @@ protected:
   {}
   virtual ~nsFlexContainerFrame();
 
+  /*
+   * This method does the bulk of the flex layout, implementing the algorithm
+   * described at:
+   *   http://dev.w3.org/csswg/css-flexbox/#layout-algorithm
+   * (with a few initialization pieces happening in the caller, Reflow().
+   *
+   * Since this is a helper for Reflow(), this takes all the same parameters
+   * as Reflow(), plus a few more parameters that Reflow() sets up for us.
+   *
+   * (The logic behind the division of work between Reflow and DoFlexLayout is
+   * as follows: DoFlexLayout() begins at the step that we have to jump back
+   * to, if we find any visibility:collapse children, and Reflow() does
+   * everything before that point.)
+   */
+  nsresult DoFlexLayout(nsPresContext*           aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus,
+                        nscoord aContentBoxMainSize,
+                        nscoord aAvailableHeightForContent,
+                        const FlexboxAxisTracker& aAxisTracker);
+
   /**
    * Checks whether our child-frame list "mFrames" is sorted, using the given
    * IsLessThanOrEqual function, and sorts it if it's not already sorted.

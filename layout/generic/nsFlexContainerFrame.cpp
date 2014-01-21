@@ -2608,8 +2608,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-  aStatus = NS_FRAME_COMPLETE;
-
   // We (and our children) can only depend on our ancestor's height if we have
   // a percent-height, or if we're positioned and we have "top" and "bottom"
   // set and have height:auto.  (There are actually other cases, too -- e.g. if
@@ -2646,9 +2644,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   const FlexboxAxisTracker axisTracker(this);
 
-  nscoord contentBoxMainSize = GetMainSizeFromReflowState(aReflowState,
-                                                          axisTracker);
-
   // If we're being fragmented into a constrained height, subtract off
   // borderpadding-top from it, to get the available height for our
   // content box. (Don't subtract if we're skipping top border/padding,
@@ -2661,20 +2656,45 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     availableHeightForContent = std::max(availableHeightForContent, 0);
   }
 
+  nscoord contentBoxMainSize = GetMainSizeFromReflowState(aReflowState,
+                                                          axisTracker);
+
+  nsresult rv = DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
+                             contentBoxMainSize, availableHeightForContent,
+                             axisTracker);
+
+  // XXXdholbert If we discover any visibility:collapse children, we'll make
+  // a second call to DoFlexLayout here.
+
+  return rv;
+}
+
+nsresult
+nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
+                                   nsHTMLReflowMetrics&     aDesiredSize,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsReflowStatus&          aStatus,
+                                   nscoord aContentBoxMainSize,
+                                   nscoord aAvailableHeightForContent,
+                                   const FlexboxAxisTracker& aAxisTracker)
+{
+  aStatus = NS_FRAME_COMPLETE;
+
   // Generate an array of our flex items (already sorted), in a FlexLine.
   nsAutoTArray<FlexLine, 1> lines;
   nsresult rv = GenerateFlexLines(aPresContext, aReflowState,
-                                  contentBoxMainSize, availableHeightForContent,
-                                  axisTracker, lines);
+                                  aContentBoxMainSize,
+                                  aAvailableHeightForContent,
+                                  aAxisTracker, lines);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  contentBoxMainSize =
-    ClampFlexContainerMainSize(aReflowState, axisTracker,
-                               contentBoxMainSize, availableHeightForContent,
+  aContentBoxMainSize =
+    ClampFlexContainerMainSize(aReflowState, aAxisTracker,
+                               aContentBoxMainSize, aAvailableHeightForContent,
                                lines, aStatus);
 
   for (uint32_t i = 0; i < lines.Length(); i++) {
-    lines[i].ResolveFlexibleLengths(contentBoxMainSize);
+    lines[i].ResolveFlexibleLengths(aContentBoxMainSize);
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
@@ -2693,13 +2713,13 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                                            nsSize(aReflowState.ComputedWidth(),
                                                   NS_UNCONSTRAINEDSIZE));
         // Override computed main-size
-        if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
+        if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
           childReflowState.SetComputedWidth(curItem.GetMainSize());
         } else {
           childReflowState.SetComputedHeight(curItem.GetMainSize());
         }
 
-        nsresult rv = SizeItemInCrossAxis(aPresContext, axisTracker,
+        nsresult rv = SizeItemInCrossAxis(aPresContext, aAxisTracker,
                                           childReflowState, curItem);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -2709,19 +2729,20 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // Calculate the cross size and (if necessary) baseline-alignment position
   // for each of our flex lines:
   for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
-    lines[lineIdx].ComputeCrossSizeAndBaseline(axisTracker);
+    lines[lineIdx].ComputeCrossSizeAndBaseline(aAxisTracker);
   }
 
   bool isCrossSizeDefinite;
   const nscoord contentBoxCrossSize =
-    ComputeCrossSize(aReflowState, axisTracker, lines,
-                     availableHeightForContent, &isCrossSizeDefinite, aStatus);
+    ComputeCrossSize(aReflowState, aAxisTracker, lines,
+                     aAvailableHeightForContent, &isCrossSizeDefinite, aStatus);
 
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)
   CrossAxisPositionTracker
     crossAxisPosnTracker(lines, aReflowState.mStylePosition->mAlignContent,
-                         contentBoxCrossSize, isCrossSizeDefinite, axisTracker);
+                         contentBoxCrossSize, isCrossSizeDefinite,
+                         aAxisTracker);
 
   // Set the flex container's baseline, from the baseline-alignment position
   // of the first line's baseline-aligned items.
@@ -2744,7 +2765,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     flexContainerAscent = aReflowState.ComputedPhysicalBorderPadding().top +
       PhysicalPosFromLogicalPos(firstLineBaselineOffsetWRTContainer,
                                 contentBoxCrossSize,
-                                axisTracker.GetCrossAxis());
+                                aAxisTracker.GetCrossAxis());
   }
 
   for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
@@ -2753,13 +2774,13 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
     line.PositionItemsInMainAxis(aReflowState.mStylePosition->mJustifyContent,
-                                 contentBoxMainSize,
-                                 axisTracker);
+                                 aContentBoxMainSize,
+                                 aAxisTracker);
 
     // Cross-Axis Alignment - Flexbox spec section 9.6
     // ===============================================
     line.PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
-                                  axisTracker);
+                                  aAxisTracker);
     crossAxisPosnTracker.TraverseLine(line);
     crossAxisPosnTracker.TraversePackingSpace();
   }
@@ -2779,10 +2800,10 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
       FlexItem& curItem = line.mItems[i];
 
-      nsPoint physicalPosn = axisTracker.PhysicalPointFromLogicalPoint(
+      nsPoint physicalPosn = aAxisTracker.PhysicalPointFromLogicalPoint(
                                curItem.GetMainPosition(),
                                curItem.GetCrossPosition(),
-                               contentBoxMainSize,
+                               aContentBoxMainSize,
                                contentBoxCrossSize);
       // Adjust physicalPosn to be relative to the container's border-box
       // (i.e. its frame rect), instead of the container's content-box:
@@ -2799,7 +2820,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
       bool didOverrideComputedHeight = false;
 
       // Override computed main-size
-      if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
+      if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
         childReflowState.SetComputedWidth(curItem.GetMainSize());
         didOverrideComputedWidth = true;
       } else {
@@ -2811,7 +2832,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
       if (curItem.IsStretched()) {
         MOZ_ASSERT(curItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
                    "stretched item w/o 'align-self: stretch'?");
-        if (IsAxisHorizontal(axisTracker.GetCrossAxis())) {
+        if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
           childReflowState.SetComputedWidth(curItem.GetCrossSize());
           didOverrideComputedWidth = true;
         } else {
@@ -2884,8 +2905,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   nsSize desiredContentBoxSize =
-    axisTracker.PhysicalSizeFromLogicalSizes(contentBoxMainSize,
-                                             contentBoxCrossSize);
+    aAxisTracker.PhysicalSizeFromLogicalSizes(aContentBoxMainSize,
+                                              contentBoxCrossSize);
 
   aDesiredSize.Width() = desiredContentBoxSize.width +
     containerBorderPadding.LeftRight();
