@@ -507,6 +507,8 @@ private:
   bool IsTransformingState(PanZoomState aState);
   bool IsPanningState(PanZoomState mState);
 
+  bool AllowZoom();
+
   enum AxisLockMode {
     FREE,     /* No locking at all */
     STANDARD, /* Default axis locking mode that remains locked until pan ends*/
