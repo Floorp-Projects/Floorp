@@ -1230,7 +1230,8 @@ let CustomizableUIInternal = {
       }
       // If the user hit enter/return, we don't check preventDefault - it makes sense
       // that this was prevented, but we probably still want to close the panel.
-      // If consumers don't want this to happen, they should specify noautoclose.
+      // If consumers don't want this to happen, they should specify the closemenu
+      // attribute.
 
     } else if (aEvent.type != "command") { // mouse events:
       if (aEvent.defaultPrevented || aEvent.button != 0) {
@@ -1243,7 +1244,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    if (aEvent.target.getAttribute("noautoclose") == "true" ||
+    if (aEvent.target.getAttribute("closemenu") == "none" ||
         aEvent.target.getAttribute("widget-type") == "view") {
       return;
     }
