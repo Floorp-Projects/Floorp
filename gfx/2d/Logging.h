@@ -14,6 +14,7 @@
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
+#include "mozilla/TypedEnum.h"
 
 #ifdef WIN32
 // This file gets included from nsGlobalWindow.cpp, which doesn't like
@@ -80,12 +81,20 @@ public:
   NoLog &operator <<(const T &aLogText) { return *this; }
 };
 
+MOZ_BEGIN_ENUM_CLASS(LogOptions, int)
+  NoNewline = 0x01
+MOZ_END_ENUM_CLASS(LogOptions)
+
 template<int L>
 class Log
 {
 public:
-  Log() {}
-  ~Log() { mMessage << '\n'; WriteLog(mMessage.str()); }
+  Log(LogOptions aOptions = LogOptions(0)) : mOptions(aOptions) {}
+  ~Log() {
+    if (!(int(mOptions) & int(LogOptions::NoNewline)))
+      mMessage << '\n';
+    WriteLog(mMessage.str());
+  }
 
   Log &operator <<(char aChar) { mMessage << aChar; return *this; }
   Log &operator <<(const std::string &aLogText) { mMessage << aLogText; return *this; }
@@ -117,6 +126,7 @@ private:
   }
 
   std::stringstream mMessage;
+  LogOptions mOptions;
 };
 
 typedef Log<LOG_DEBUG> DebugLog;
