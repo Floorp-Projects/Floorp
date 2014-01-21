@@ -606,7 +606,6 @@ class ScriptAnalysis
     Bytecode **codeArray;
 
     uint32_t numSlots;
-    uint32_t numPropertyReads_;
 
     bool outOfMemory;
     bool hadFailure;
@@ -625,21 +624,15 @@ class ScriptAnalysis
 
     /* --------- Bytecode analysis --------- */
 
-    bool usesScopeChain_:1;
     bool localsAliasStack_:1;
     bool canTrackVars:1;
-    bool hasLoops_:1;
-    bool hasTryFinally_:1;
     bool argumentsContentsObserved_:1;
-
-    uint32_t numReturnSites_;
 
     /* --------- Lifetime analysis --------- */
 
     LifetimeVariable *lifetimes;
 
   public:
-
     ScriptAnalysis(JSScript *script) {
         mozilla::PodZero(this);
         this->script_ = script;
@@ -649,28 +642,10 @@ class ScriptAnalysis
     }
 
     bool ranBytecode() { return ranBytecode_; }
-    bool ranSSA() { return ranSSA_; }
-    bool ranLifetimes() { return ranLifetimes_; }
-
     void analyzeBytecode(JSContext *cx);
-    void analyzeSSA(JSContext *cx);
-    void analyzeLifetimes(JSContext *cx);
 
     bool OOM() const { return outOfMemory; }
     bool failed() const { return hadFailure; }
-
-    /* Whether the script has a |finally| block. */
-    bool hasTryFinally() const { return hasTryFinally_; }
-
-    /* Number of property read opcodes in the script. */
-    uint32_t numPropertyReads() const { return numPropertyReads_; }
-
-    /* Whether there are NAME bytecodes which can access the frame's scope chain. */
-    bool usesScopeChain() const { return usesScopeChain_; }
-
-    uint32_t numReturnSites() const { return numReturnSites_; }
-
-    bool hasLoops() const { return hasLoops_; }
 
     /*
      * True if there are any LOCAL opcodes aliasing values on the stack (above
@@ -678,8 +653,15 @@ class ScriptAnalysis
      */
     bool localsAliasStack() { return localsAliasStack_; }
 
-    /* Accessors for bytecode information. */
+    bool isReachable(const jsbytecode *pc) { return maybeCode(pc); }
 
+  private:
+    bool ranSSA() { return ranSSA_; }
+    bool ranLifetimes() { return ranLifetimes_; }
+    void analyzeSSA(JSContext *cx);
+    void analyzeLifetimes(JSContext *cx);
+
+    /* Accessors for bytecode information. */
     Bytecode& getCode(uint32_t offset) {
         JS_ASSERT(offset < script_->length());
         JS_ASSERT(codeArray[offset]);
@@ -698,11 +680,6 @@ class ScriptAnalysis
         return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
     bool jumpTarget(const jsbytecode *pc) { return jumpTarget(script_->pcToOffset(pc)); }
-
-    bool popGuaranteed(jsbytecode *pc) {
-        jsbytecode *next = pc + GetBytecodeLength(pc);
-        return JSOp(*next) == JSOP_POP && !jumpTarget(next);
-    }
 
     inline const SSAValue &poppedValue(uint32_t offset, uint32_t which);
 
@@ -763,7 +740,6 @@ class ScriptAnalysis
     void printSSA(JSContext *cx);
     void printTypes(JSContext *cx);
 
-  private:
     void setOOM(JSContext *cx) {
         if (!outOfMemory)
             js_ReportOutOfMemory(cx);
@@ -823,8 +799,12 @@ class ScriptAnalysis
   public:
 #ifdef DEBUG
     void assertMatchingDebugMode();
+    void assertMatchingStackDepthAtOffset(uint32_t offset, uint32_t stackDepth) {
+      JS_ASSERT_IF(maybeCode(offset), getCode(offset).stackDepth == stackDepth);
+    }
 #else
     void assertMatchingDebugMode() { }
+    void assertMatchingStackDepthAtOffset(uint32_t offset, uint32_t stackDepth) { }
 #endif
 };
 
