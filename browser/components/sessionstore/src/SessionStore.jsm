@@ -2745,6 +2745,12 @@ let SessionStoreInternal = {
         pageStyle: tabData.pageStyle || null
       });
 
+      // In electrolysis, we may need to change the browser's remote
+      // attribute so that it runs in a content process.
+      let activePageData = tabData.entries[activeIndex] || null;
+      let uri = activePageData ? activePageData.url || null : null;
+      tabbrowser.updateBrowserRemoteness(browser, uri);
+
       browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
                                               {tabData: tabData, epoch: epoch});
 
