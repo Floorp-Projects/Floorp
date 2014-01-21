@@ -68,7 +68,7 @@ parent:
     returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
-  async PTexture();
+  async PTexture(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
