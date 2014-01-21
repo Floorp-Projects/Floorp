@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_psm__NSSCertDBTrustDomain_h
+#define mozilla_psm__NSSCertDBTrustDomain_h
+
+#include "secmodt.h"
+#include "CertVerifier.h"
+
+namespace mozilla { namespace psm {
+
+SECStatus InitializeNSS(const char* dir, bool readOnly);
+
+extern const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[];
+
+// The dir parameter is the path to the directory containing the NSS builtin
+// roots module. Usually this is the same as the path to the other NSS shared
+// libraries. If it is null then the (library) path will be searched.
+//
+// The modNameUTF8 parameter should usually be
+// BUILTIN_ROOTS_MODULE_DEFAULT_NAME.
+SECStatus LoadLoadableRoots(/*optional*/ const char* dir,
+                            const char* modNameUTF8);
+
+void UnloadLoadableRoots(const char* modNameUTF8);
+
+void
+SetClassicOCSPBehavior(CertVerifier::ocsp_download_config enabled,
+                       CertVerifier::ocsp_strict_config strict,
+                       CertVerifier::ocsp_get_config get);
+
+} } // namespace mozilla::psm
+
+#endif // mozilla_psm__NSSCertDBTrustDomain_h
