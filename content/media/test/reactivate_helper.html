@@ -22,7 +22,6 @@ for (var i = 0; i < parent.gSmallTests.length; ++i) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   // Associate these elements with the subframe's document
   var e = document.createElement(elemType);
-  e.preload = "auto";
   if (e.canPlayType(test.type)) {
     e.src = test.name;
     e.addEventListener("loadeddata", loadedData, false);

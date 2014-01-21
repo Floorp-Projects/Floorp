@@ -21,7 +21,6 @@ function onloadedmetadata(e) {
 function startTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var element = document.createElement(elemType);
-  element.preload = "auto";
 
   element.token = token;
   manager.started(token);

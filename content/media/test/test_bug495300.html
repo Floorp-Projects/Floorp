@@ -39,7 +39,6 @@ function mediaEnded(event) {
 function startTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var v1 = document.createElement(elemType);
-  v1.preload = "auto";
 
   v1.src = test.name;
   if (test.duration) {

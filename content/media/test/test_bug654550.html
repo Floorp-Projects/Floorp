@@ -17,10 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
 
   /* Test for Bug 654550 */
 
-  // Parallel test must be disabled for media.video_stats.enabled is a global setting
-  // to prevent the setting from changing unexpectedly in the middle of the test.
-  PARALLEL_TESTS = 1;
-  SimpleTest.waitForExplicitFinish();
   var manager = new MediaTestManager;
 
   function checkStats(v, aShouldBeEnabled) {
@@ -50,7 +46,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
       SpecialPowers.setBoolPref("media.video_stats.enabled", true);
       v.removeEventListener("timeupdate", ontimeupdate);
       SpecialPowers.clearUserPref("media.video_stats.enabled");
-      removeNodeAndSource(v);
       manager.finished(v.token);
     }
   }
@@ -64,6 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
     v.play();
     SpecialPowers.setBoolPref("media.video_stats.enabled", true);
     v.addEventListener("timeupdate", ontimeupdate);
+    SimpleTest.waitForExplicitFinish();
   }
 
   manager.runTests(gVideoTests, startTest);
