@@ -57,10 +57,6 @@ public:
 
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
-    already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc,
-                                                      const gfxIntSize& size,
-                                                      gfxImageFormat format);
-
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     nsresult EndPrinting();
     nsresult AbortPrinting();

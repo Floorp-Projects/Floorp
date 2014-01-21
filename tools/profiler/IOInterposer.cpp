@@ -246,6 +246,14 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
 
   AutoPRLock listLock(sObserverLists->mObserverListsLock);
 
+  if (aOp & IOInterposeObserver::OpCreateOrOpen) {
+    VectorRemove(sObserverLists->mCreateObservers, aObserver);
+    if (sObserverLists->mCreateObservers.empty()) {
+      sObservedOperations = (IOInterposeObserver::Operation)
+                       (sObservedOperations &
+                        ~IOInterposeObserver::OpCreateOrOpen);
+    }
+  }
   if (aOp & IOInterposeObserver::OpRead) {
     VectorRemove(sObserverLists->mReadObservers, aObserver);
     if (sObserverLists->mReadObservers.empty()) {
@@ -265,6 +273,20 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
     if (sObserverLists->mFSyncObservers.empty()) {
       sObservedOperations = (IOInterposeObserver::Operation)
                        (sObservedOperations & ~IOInterposeObserver::OpFSync);
+    }
+  }
+  if (aOp & IOInterposeObserver::OpStat) {
+    VectorRemove(sObserverLists->mStatObservers, aObserver);
+    if (sObserverLists->mStatObservers.empty()) {
+      sObservedOperations = (IOInterposeObserver::Operation)
+                       (sObservedOperations & ~IOInterposeObserver::OpStat);
+    }
+  }
+  if (aOp & IOInterposeObserver::OpClose) {
+    VectorRemove(sObserverLists->mCloseObservers, aObserver);
+    if (sObserverLists->mCloseObservers.empty()) {
+      sObservedOperations = (IOInterposeObserver::Operation)
+                       (sObservedOperations & ~IOInterposeObserver::OpClose);
     }
   }
 }

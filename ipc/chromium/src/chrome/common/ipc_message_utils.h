@@ -13,12 +13,12 @@
 #include "base/string_util.h"
 #include "base/string16.h"
 #include "base/tuple.h"
+#include "base/time.h"
 
 #if defined(OS_POSIX)
 #include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #include "chrome/common/ipc_sync_message.h"
-#include "chrome/common/thumbnail_score.h"
 #include "chrome/common/transport_dib.h"
 
 namespace IPC {
@@ -731,17 +731,6 @@ struct ParamTraitsIPC<FilePath> {
   static void Log(const param_type& p, std::wstring* l);
 };
 
-template<>
-struct ParamTraitsIPC<ThumbnailScore> {
-  typedef ThumbnailScore param_type;
-  static void Write(Message* m, const param_type& p);
-  static bool Read(const Message* m, void** iter, param_type* r);
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"(%f, %d, %d)",
-                           p.boring_score, p.good_clipping, p.at_top));
-  }
-};
-
 struct LogData {
   std::wstring channel;
   int32_t routing_id;
@@ -1043,32 +1032,6 @@ ParamTraitsIPC<FilePath>::Read(const Message* m, void** iter, param_type* r) {
 inline void
 ParamTraitsIPC<FilePath>::Log(const param_type& p, std::wstring* l) {
   ParamTraits<FilePath::StringType>::Log(p.value(), l);
-}
-
-
-inline void
-ParamTraitsIPC<ThumbnailScore>::Write(Message* m, const param_type& p) {
-  IPC::ParamTraits<double>::Write(m, p.boring_score);
-  IPC::ParamTraits<bool>::Write(m, p.good_clipping);
-  IPC::ParamTraits<bool>::Write(m, p.at_top);
-  IPC::ParamTraits<base::Time>::Write(m, p.time_at_snapshot);
-}
-inline bool
-ParamTraitsIPC<ThumbnailScore>::Read(const Message* m, void** iter, param_type* r) {
-  double boring_score;
-  bool good_clipping, at_top;
-  base::Time time_at_snapshot;
-  if (!IPC::ParamTraits<double>::Read(m, iter, &boring_score) ||
-      !IPC::ParamTraits<bool>::Read(m, iter, &good_clipping) ||
-      !IPC::ParamTraits<bool>::Read(m, iter, &at_top) ||
-      !IPC::ParamTraits<base::Time>::Read(m, iter, &time_at_snapshot))
-    return false;
-
-  r->boring_score = boring_score;
-  r->good_clipping = good_clipping;
-  r->at_top = at_top;
-  r->time_at_snapshot = time_at_snapshot;
-  return true;
 }
 
 //-----------------------------------------------------------------------------
