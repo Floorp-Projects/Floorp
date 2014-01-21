@@ -6,21 +6,3 @@ USE_STATIC_LIBS = 1
 MOZ_GLUE_LDFLAGS =
 
 STL_FLAGS =
-
-LOCAL_INCLUDES = -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src
-
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mk
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/objs.mk
-include $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/objs.mk
-
-VPATH += \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/windows \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/handler \
-  $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation \
-  $(NULL)
-
-CPPSRCS += \
-  $(objs_common) \
-  $(objs_crash_generation) \
-  $(objs_handler) \
-  $(NULL)
