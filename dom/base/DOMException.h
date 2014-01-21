@@ -21,13 +21,14 @@
 #include "nsIDOMDOMException.h"
 #include "nsWrapperCache.h"
 #include "xpcexception.h"
+#include "nsString.h"
 
 class nsIStackFrame;
 class nsString;
 
 nsresult
-NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
-                                   const char** aMessage,
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,
+                                   nsACString& aMessage,
                                    uint16_t* aCode = nullptr);
 
 namespace mozilla {
@@ -85,21 +86,21 @@ public:
   // XPCOM factory ctor.
   Exception();
 
-  Exception(const char *aMessage,
+  Exception(const nsACString& aMessage,
             nsresult aResult,
-            const char *aName,
+            const nsACString& aName,
             nsIStackFrame *aLocation,
             nsISupports *aData);
 
 protected:
   virtual ~Exception();
 
-  char*           mMessage;
+  nsCString       mMessage;
   nsresult        mResult;
-  char*           mName;
+  nsCString       mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
-  char*           mFilename;
+  nsCString       mFilename;
   int             mLineNumber;
   nsCOMPtr<nsIException> mInner;
   bool            mInitialized;
@@ -117,14 +118,14 @@ class DOMException : public Exception,
                      public nsIDOMDOMException
 {
 public:
-  DOMException(nsresult aRv, const char* aMessage,
-               const char* aName, uint16_t aCode);
+  DOMException(nsresult aRv, const nsACString& aMessage,
+               const nsACString& aName, uint16_t aCode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDOMEXCEPTION
 
   // nsIException overrides
-  NS_IMETHOD ToString(char **aReturn) MOZ_OVERRIDE;
+  NS_IMETHOD ToString(nsACString& aReturn) MOZ_OVERRIDE;
 
   // nsWrapperCache overrides
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
@@ -145,9 +146,8 @@ protected:
 
   virtual ~DOMException() {}
 
-  // Intentionally shadow the nsXPCException version.
-  const char* mName;
-  const char* mMessage;
+  nsCString mName;
+  nsCString mMessage;
 
   uint16_t mCode;
 };

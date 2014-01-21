@@ -594,13 +594,10 @@ nsFocusManager::GetFocusedElementForWindow(nsIDOMWindow* aWindow,
 NS_IMETHODIMP
 nsFocusManager::MoveCaretToFocus(nsIDOMWindow* aWindow)
 {
-  int32_t itemType = nsIDocShellTreeItem::typeChrome;
-
   nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(aWindow);
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
   if (dsti) {
-    dsti->GetItemType(&itemType);
-    if (itemType != nsIDocShellTreeItem::typeChrome) {
+    if (dsti->ItemType() != nsIDocShellTreeItem::typeChrome) {
       nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(dsti);
       NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
@@ -2041,10 +2038,9 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
   if (!dsti)
     return;
 
-  int32_t itemType;
-  dsti->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeChrome)
+  if (dsti->ItemType() == nsIDocShellTreeItem::typeChrome) {
     return;  // Never browse with caret in chrome
+  }
 
   bool browseWithCaret =
     Preferences::GetBool("accessibility.browsewithcaret");
@@ -2473,9 +2469,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     }
     else {
       // Otherwise, for content shells, start from the location of the caret.
-      int32_t itemType;
-      docShell->GetItemType(&itemType);
-      if (itemType != nsIDocShellTreeItem::typeChrome) {
+      if (docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
         nsCOMPtr<nsIContent> endSelectionContent;
         GetSelectionLocation(doc, presShell,
                              getter_AddRefs(startContent),
@@ -2991,14 +2985,11 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
       if (!frame || !frame->IsFocusable(nullptr, 0))
         return nullptr;
     }
-  }
-  else  {
-    int32_t itemType;
+  } else {
     nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-    docShell->GetItemType(&itemType);
-
-    if (itemType == nsIDocShellTreeItem::typeChrome)
+    if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
       return nullptr;
+    }
   }
 
   if (aCheckVisibility && !IsWindowVisible(aWindow))

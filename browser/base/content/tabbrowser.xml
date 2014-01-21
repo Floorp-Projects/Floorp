@@ -2829,6 +2829,18 @@
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
 
+      <property name="fullZoom"
+                onget="return this.mCurrentBrowser.fullZoom;"
+                onset="this.mCurrentBrowser.fullZoom = val;"/>
+
+      <property name="textZoom"
+                onget="return this.mCurrentBrowser.textZoom;"
+                onset="this.mCurrentBrowser.textZoom = val;"/>
+
+      <property name="isSyntheticDocument"
+                onget="return this.mCurrentBrowser.isSyntheticDocument;"
+                readonly="true"/>
+
       <method name="_handleKeyEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2948,7 +2960,7 @@
           switch (aMessage.name) {
             case "DOMTitleChanged": {
               let tab = this._getTabForBrowser(browser);
-              if (!tab)
+              if (!tab || tab.hasAttribute("pending"))
                 return;
               let titleChanged = this.setTabTitle(tab);
               if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
@@ -2970,8 +2982,7 @@
               if (!tab)
                 return;
               this.selectedTab = tab;
-              let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-              focusManager.activeWindow = window;
+              window.focus();
               break;
             }
           }
@@ -3191,6 +3202,9 @@
             return;
 
           var tab = this._getTabForContentWindow(contentWin);
+          if (tab.hasAttribute("pending"))
+            return;
+
           var titleChanged = this.setTabTitle(tab);
           if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
             tab.setAttribute("titlechanged", "true");
