@@ -16,55 +16,6 @@
             src="chrome://browser/content/devtools/theme-switching.js"/>
 
     <script type="application/javascript;version=1.8" src="view.js"></script>
-    <script type="application/javascript;version=1.8">
-    <![CDATA[
-      let elts;
-      let tooltip;
-
-      const Ci = Components.interfaces;
-      const Cc = Components.classes;
-
-      window.setPanel = function(panel) {
-        this.layoutview = new LayoutView(panel, window);
-
-        // Tooltip mechanism
-        elts = document.querySelectorAll("*[tooltip]");
-        tooltip = document.querySelector(".tooltip");
-        for (let i = 0; i < elts.length; i++) {
-          let elt = elts[i];
-          elt.addEventListener("mouseover", onmouseover, true);
-          elt.addEventListener("mouseout", onmouseout, true);
-        }
-
-        // Mark document as RTL or LTR:
-        let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-          getService(Ci.nsIXULChromeRegistry);
-        let dir = chromeReg.isLocaleRTL("global");
-        document.body.setAttribute("dir", dir ? "rtl" : "ltr");
-
-        window.parent.postMessage("layoutview-ready", "*");
-      }
-
-      window.onunload = function() {
-        this.layoutview.destroy();
-        if (elts) {
-          for (let i = 0; i < elts.length; i++) {
-            let elt = elts[i];
-            elt.removeEventListener("mouseover", onmouseover, true);
-            elt.removeEventListener("mouseout", onmouseout, true);
-          }
-        }
-      }
-
-      function onmouseover(e) {
-        tooltip.textContent = e.target.getAttribute("tooltip");
-      }
-
-      function onmouseout(e) {
-        tooltip.textContent = "";
-      }
-    ]]>
-    </script>
 
     <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://browser/skin/devtools/layoutview.css" type="text/css"/>
