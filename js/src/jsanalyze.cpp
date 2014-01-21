@@ -67,8 +67,6 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
-        hasLoops_ = true;
-
         if (!code->analyzed) {
             /*
              * Backedge in a while/for loop, whose body has not been analyzed
@@ -226,28 +224,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         switch (op) {
 
-          case JSOP_RETURN:
-          case JSOP_RETRVAL:
-            numReturnSites_++;
-            break;
-
-          case JSOP_NAME:
-          case JSOP_CALLNAME:
-          case JSOP_BINDNAME:
-          case JSOP_SETNAME:
-          case JSOP_DELNAME:
-          case JSOP_GETALIASEDVAR:
-          case JSOP_CALLALIASEDVAR:
-          case JSOP_SETALIASEDVAR:
-          case JSOP_LAMBDA:
-            usesScopeChain_ = true;
-            break;
-
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
-            usesScopeChain_ = true; // Requires access to VarObj via ScopeChain.
             canTrackVars = false;
             break;
 
@@ -333,18 +313,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             }
             break;
           }
-
-          case JSOP_GETPROP:
-          case JSOP_CALLPROP:
-          case JSOP_LENGTH:
-          case JSOP_GETELEM:
-          case JSOP_CALLELEM:
-            numPropertyReads_++;
-            break;
-
-          case JSOP_FINALLY:
-            hasTryFinally_ = true;
-            break;
 
           case JSOP_PUSHBLOCKSCOPE:
             localsAliasStack_ = true;
