@@ -1177,6 +1177,7 @@ MarionetteServerConnection.prototype = {
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
         this.sendResponse(i, this.command_id);
+        return;
       }
     }
   },
