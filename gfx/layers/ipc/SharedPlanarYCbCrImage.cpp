@@ -84,6 +84,16 @@ SharedPlanarYCbCrImage::DeprecatedGetAsSurface()
   return PlanarYCbCrImage::DeprecatedGetAsSurface();
 }
 
+TemporaryRef<gfx::SourceSurface>
+SharedPlanarYCbCrImage::GetAsSourceSurface()
+{
+  if (!mTextureClient->IsAllocated()) {
+    NS_WARNING("Can't get as surface");
+    return nullptr;
+  }
+  return PlanarYCbCrImage::GetAsSourceSurface();
+}
+
 void
 SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
 {

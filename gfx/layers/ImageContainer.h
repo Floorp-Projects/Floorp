@@ -902,6 +902,7 @@ protected:
   virtual uint8_t* AllocateBuffer(uint32_t aSize);
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
+  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   gfxImageFormat GetOffscreenFormat();
@@ -911,7 +912,8 @@ protected:
   Data mData;
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
-  nsCountedRef<nsMainThreadSurfaceRef> mSurface;
+  nsCountedRef<nsMainThreadSurfaceRef> mDeprecatedSurface;
+  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
   nsRefPtr<BufferRecycleBin> mRecycleBin;
 };
 
