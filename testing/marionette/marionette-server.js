@@ -1912,11 +1912,14 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get all visible cookies for a document
+   * Get all the cookies for the current domain.
+   *
+   * This is the equivalent of calling "document.cookie" and parsing
+   * the result.
    */
-  getAllCookies: function MDA_getAllCookies() {
+  getCookies: function MDA_getCookies() {
     this.command_id = this.getCommandId();
-    this.sendAsync("getAllCookies", {}, this.command_id);
+    this.sendAsync("getCookies", {}, this.command_id);
   },
 
   /**
@@ -2385,7 +2388,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "setTestName": MarionetteServerConnection.prototype.setTestName,
   "screenShot": MarionetteServerConnection.prototype.screenShot,
   "addCookie": MarionetteServerConnection.prototype.addCookie,
-  "getAllCookies": MarionetteServerConnection.prototype.getAllCookies,
+  "getCookies": MarionetteServerConnection.prototype.getCookies,
+  "getAllCookies": MarionetteServerConnection.prototype.getCookies,  // deprecated
   "deleteAllCookies": MarionetteServerConnection.prototype.deleteAllCookies,
   "deleteCookie": MarionetteServerConnection.prototype.deleteCookie,
   "getActiveElement": MarionetteServerConnection.prototype.getActiveElement,
