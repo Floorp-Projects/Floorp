@@ -870,10 +870,20 @@ class Marionette(object):
         return response
 
     def get_url(self):
-        '''
-        Returns the url of the active page in the browser.
-        '''
-        response = self._send_message('getUrl', 'value')
+        """Get a string representing the current URL.
+
+        On Desktop this returns a string representation of the URL of
+        the current top level browsing context.  This is equivalent to
+        document.location.href.
+
+        When in the context of the chrome, this returns the canonical
+        URL of the current resource.
+
+        :returns: string representation of URL
+
+        """
+
+        response = self._send_message("getCurrentUrl", "value")
         return response
 
     def get_window_type(self):
