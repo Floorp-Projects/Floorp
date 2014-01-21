@@ -284,6 +284,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mChildID(0)
   , mRenderMode(RENDER_MODE_DEFAULT)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
+  , mPendingFrameSent(false)
 {
   ResetPermissionManagerStatus();
 }
@@ -458,8 +459,17 @@ nsFrameLoader::ReallyStartLoadingInternal()
 
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
+      if (!mPendingFrameSent) {
+        nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+        if (OwnerIsBrowserOrAppFrame() && os && !mRemoteBrowserInitialized) {
+          os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                              "remote-browser-frame-pending", nullptr);
+          mPendingFrameSent = true;
+        }
+      }
       if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false) &&
           !ContentParent::PreallocatedProcessReady()) {
+
         ContentParent::RunAfterPreallocatedProcessReady(
             new DelayedStartLoadingRunnable(this));
         return NS_ERROR_FAILURE;
@@ -783,9 +793,7 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, int32_t aType)
     nsCOMPtr<nsIDocShellTreeItem> kid;
     aParentItem->GetChildAt(i, getter_AddRefs(kid));
 
-    int32_t kidType;
-    kid->GetItemType(&kidType);
-    if (kidType != aType || !AllDescendantsOfType(kid, aType)) {
+    if (kid->ItemType() != aType || !AllDescendantsOfType(kid, aType)) {
       return false;
     }
   }
@@ -985,6 +993,11 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (OwnerIsBrowserOrAppFrame() && os && !mRemoteBrowserInitialized) {
+      if (!mPendingFrameSent) {
+        os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                            "remote-browser-frame-pending", nullptr);
+        mPendingFrameSent = true;
+      }
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
                           "remote-browser-frame-shown", nullptr);
       mRemoteBrowserInitialized = true;
@@ -1090,10 +1103,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // Also make sure that the two docshells are the same type. Otherwise
   // swapping is certainly not safe. If this needs to be changed then
   // the code below needs to be audited as it assumes identical types.
-  int32_t ourType = nsIDocShellTreeItem::typeChrome;
-  int32_t otherType = nsIDocShellTreeItem::typeChrome;
-  ourDocshell->GetItemType(&ourType);
-  otherDocshell->GetItemType(&otherType);
+  int32_t ourType = ourDocshell->ItemType();
+  int32_t otherType = otherDocshell->ItemType();
   if (ourType != otherType) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1123,10 +1134,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   }
 
   // Make sure our parents are the same type too
-  int32_t ourParentType = nsIDocShellTreeItem::typeContent;
-  int32_t otherParentType = nsIDocShellTreeItem::typeContent;
-  ourParentItem->GetItemType(&ourParentType);
-  otherParentItem->GetItemType(&otherParentType);
+  int32_t ourParentType = ourParentItem->ItemType();
+  int32_t otherParentType = otherParentItem->ItemType();
   if (ourParentType != otherParentType) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1616,8 +1625,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // Note: This logic duplicates a lot of logic in
   // nsSubDocumentFrame::AttributeChanged.  We should fix that.
 
-  int32_t parentType;
-  docShell->GetItemType(&parentType);
+  int32_t parentType = docShell->ItemType();
 
   // XXXbz why is this in content code, exactly?  We should handle
   // this some other way.....  Not sure how yet.
@@ -1753,10 +1761,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
                    "Trying to load a new url to a docshell without owner!");
   NS_ENSURE_STATE(treeOwner);
   
-  
-  int32_t ourType;
-  rv = mDocShell->GetItemType(&ourType);
-  if (NS_SUCCEEDED(rv) && ourType != nsIDocShellTreeItem::typeContent) {
+  if (mDocShell->ItemType() != nsIDocShellTreeItem::typeContent) {
     // No need to do recursion-protection here XXXbz why not??  Do we really
     // trust people not to screw up with non-content docshells?
     return NS_OK;
@@ -2015,10 +2020,7 @@ nsFrameLoader::TryRemoteBrowser()
 
   // <iframe mozbrowser> gets to skip these checks.
   if (!OwnerIsBrowserOrAppFrame()) {
-    int32_t parentType;
-    parentAsItem->GetItemType(&parentType);
-
-    if (parentType != nsIDocShellTreeItem::typeChrome) {
+    if (parentAsItem->ItemType() != nsIDocShellTreeItem::typeChrome) {
       return false;
     }
 
@@ -2544,10 +2546,7 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
     return;
   }
 
-  int32_t parentType;
-  parentItem->GetItemType(&parentType);
-
-  if (parentType != nsIDocShellTreeItem::typeChrome) {
+  if (parentItem->ItemType() != nsIDocShellTreeItem::typeChrome) {
     return;
   }
 

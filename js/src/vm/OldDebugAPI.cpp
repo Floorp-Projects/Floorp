@@ -627,7 +627,7 @@ static bool
 GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc *pd)
 {
     assertSameCompartment(cx, obj_);
-    pd->id = IdToJsval(shape->propid());
+    pd->id = IdToValue(shape->propid());
 
     RootedObject obj(cx, obj_);
 

@@ -119,6 +119,33 @@
                 onget="return this._imageDocument"
                 readonly="true"/>
 
+      <field name="_fullZoom">1</field>
+      <property name="fullZoom">
+        <getter><![CDATA[
+          return this._fullZoom;
+        ]]></getter>
+        <setter><![CDATA[
+          this.messageManager.sendAsyncMessage("FullZoom", {value: val});
+        ]]></setter>
+      </property>
+
+      <field name="_textZoom">1</field>
+      <property name="textZoom">
+        <getter><![CDATA[
+          return this._textZoom;
+        ]]></getter>
+        <setter><![CDATA[
+          this.messageManager.sendAsyncMessage("TextZoom", {value: val});
+        ]]></setter>
+      </property>
+
+      <field name="_isSyntheticDocument">false</field>
+      <property name="isSyntheticDocument">
+        <getter><![CDATA[
+          return this._isSyntheticDocument;
+        ]]></getter>
+      </property>
+
       <property name="autoCompletePopup"
                 onget="return document.getElementById(this.getAttribute('autocompletepopup'))"
                 readonly="true"/>
@@ -132,6 +159,9 @@
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
           this.messageManager.addMessageListener("SetSyncHandler", this);
+          this.messageManager.addMessageListener("DocumentInserted", this);
+          this.messageManager.addMessageListener("FullZoomChange", this);
+          this.messageManager.addMessageListener("TextZoomChange", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectpopup")) {
@@ -185,6 +215,18 @@
               SelectParentHelper.open(this, dropdown, data.rect);
               break;
             }
+
+            case "DocumentInserted":
+              this._isSyntheticDocument = data.synthetic;
+              break;
+
+            case "FullZoomChange":
+              this._fullZoom = data.value;
+              break;
+
+            case "TextZoomChange":
+              this._textZoom = data.value;
+              break;
 
             case "Forms:HideDropDown": {
               Cu.import("resource://gre/modules/SelectParentHelper.jsm");

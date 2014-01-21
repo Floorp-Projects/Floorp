@@ -22,6 +22,7 @@
 using namespace js;
 
 using mozilla::CeilingLog2Size;
+using mozilla::RotateLeft;
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)
@@ -441,7 +442,7 @@ JS_HashString(const void *key)
 
     h = 0;
     for (s = (const unsigned char *)key; *s; s++)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
+        h = RotateLeft(h, 4) ^ *s;
     return h;
 }
 

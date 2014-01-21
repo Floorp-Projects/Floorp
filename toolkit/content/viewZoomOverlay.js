@@ -41,11 +41,8 @@ var ZoomManager = {
   },
 
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
-    var markupDocumentViewer = aBrowser.markupDocumentViewer;
-
-    return this.useFullZoom || 
-      aBrowser.contentDocument.mozSyntheticDocument ?
-      markupDocumentViewer.fullZoom : markupDocumentViewer.textZoom;
+    return (this.useFullZoom || aBrowser.isSyntheticDocument)
+           ? aBrowser.fullZoom : aBrowser.textZoom;
   },
 
   set zoom(aVal) {
@@ -57,14 +54,12 @@ var ZoomManager = {
     if (aVal < this.MIN || aVal > this.MAX)
       throw Components.results.NS_ERROR_INVALID_ARG;
 
-    var markupDocumentViewer = aBrowser.markupDocumentViewer;
-
-    if (this.useFullZoom || aBrowser.contentDocument.mozSyntheticDocument) {
-      markupDocumentViewer.textZoom = 1;
-      markupDocumentViewer.fullZoom = aVal;
+    if (this.useFullZoom || aBrowser.isSyntheticDocument) {
+      aBrowser.textZoom = 1;
+      aBrowser.fullZoom = aVal;
     } else {
-      markupDocumentViewer.textZoom = aVal;
-      markupDocumentViewer.fullZoom = 1;
+      aBrowser.textZoom = aVal;
+      aBrowser.fullZoom = 1;
     }
   },
 

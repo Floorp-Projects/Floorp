@@ -13,3 +13,10 @@ CXXFLAGS += \
 		-I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
 		-I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include/ \
 		$(NULL)
+
+# These includes are for Android JB, using MediaCodec on OMXCodec.
+INCLUDES	+= \
+		-I$(ANDROID_SOURCE)/frameworks/native/opengl/include/ \
+		-I$(ANDROID_SOURCE)/frameworks/native/include/ \
+		-I$(ANDROID_SOURCE)/frameworks/av/include/media/ \
+		$(NULL)

@@ -365,9 +365,9 @@ const CustomizableWidgets = [{
         //XXXgijs in some tests we get called very early, and there's no docShell on the
         // tabbrowser. This breaks the zoom toolkit code (see bug 897410). Don't let that happen:
         let zoomFactor = 100;
-        if (window.gBrowser.docShell) {
+        try {
           zoomFactor = Math.floor(window.ZoomManager.zoom * 100);
-        }
+        } catch (e) {}
         zoomResetButton.setAttribute("label", CustomizableUI.getLocalizedProperty(
           buttons[1], "label", [zoomFactor]
         ));
@@ -376,6 +376,7 @@ const CustomizableWidgets = [{
       // Register ourselves with the service so we know when the zoom prefs change.
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
+      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:location-change", false);
 
       if (inPanel) {
         let panel = aDocument.getElementById(kPanelId);
@@ -446,6 +447,7 @@ const CustomizableWidgets = [{
           CustomizableUI.removeListener(listener);
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomChange");
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
+          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:location-change");
           let panel = aDoc.getElementById(kPanelId);
           panel.removeEventListener("popupshowing", updateZoomResetButton);
           let container = aDoc.defaultView.gBrowser.tabContainer;

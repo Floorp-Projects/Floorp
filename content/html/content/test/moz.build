@@ -4,17 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This extra subdirectory is needed due to the nature of this test.
-# With the bug, the test loads the base URL of the bug649134/file_*.sjs
-# files, and the mochitest server responds with the contents of index.html if
-# it exists in that case, which we use to detect failure.
-# We can't have index.html in this directory because it would prevent
-# running the tests here.
-TEST_DIRS += ['bug649134']
-
-TEST_DIRS += ['forms']
-
-MOCHITEST_MANIFESTS += ['mochitest.ini']
+MOCHITEST_MANIFESTS += ['forms/mochitest.ini', 'mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 

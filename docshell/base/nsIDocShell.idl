@@ -44,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(24732b66-e37e-444e-96a2-8b8d1fa292fc)]
+[scriptable, builtinclass, uuid(af035c67-1690-431b-9c4d-d38e3cc3137a)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**

@@ -302,7 +302,7 @@ PopupNotifications.prototype = {
       if (!notification.dismissed && isActive) {
         this.window.getAttention();
         if (notification.anchorElement.parentNode != this.iconBox) {
-          notification.anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
+          this._updateAnchorIcon(notifications, notification.anchorElement);
         }
       }
 
@@ -640,20 +640,7 @@ PopupNotifications.prototype = {
         this._showIcons(notifications);
         this.iconBox.hidden = false;
       } else if (anchorElement) {
-        anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
-        // use the anchorID as a class along with the default icon class as a
-        // fallback if anchorID is not defined in CSS. We always use the first
-        // notifications icon, so in the case of multiple notifications we'll
-        // only use the default icon
-        if (anchorElement.classList.contains("notification-anchor-icon")) {
-          // remove previous icon classes
-          let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
-          className = "default-notification-icon " + className;
-          if (notifications.length == 1) {
-            className = notifications[0].anchorID + " " + className;
-          }
-          anchorElement.className = className;
-        }
+        this._updateAnchorIcon(notifications, anchorElement);
       }
 
       // Also filter out notifications that have been dismissed.
@@ -684,6 +671,24 @@ PopupNotifications.prototype = {
         else if (anchorElement)
           anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
       }
+    }
+  },
+
+  _updateAnchorIcon: function PopupNotifications_updateAnchorIcon(notifications,
+                                                                  anchorElement) {
+    anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
+    // Use the anchorID as a class along with the default icon class as a
+    // fallback if anchorID is not defined in CSS. We always use the first
+    // notifications icon, so in the case of multiple notifications we'll
+    // only use the default icon.
+    if (anchorElement.classList.contains("notification-anchor-icon")) {
+      // remove previous icon classes
+      let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
+      className = "default-notification-icon " + className;
+      if (notifications.length == 1) {
+        className = notifications[0].anchorID + " " + className;
+      }
+      anchorElement.className = className;
     }
   },
 

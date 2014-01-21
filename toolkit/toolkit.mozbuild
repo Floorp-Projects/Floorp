@@ -190,7 +190,6 @@ if CONFIG['ENABLE_TESTS']:
         'testing/mochitest',
         'testing/xpcshell',
         'testing/tools/screenshot',
-        'testing/peptest',
         'testing/profiles',
         'testing/mozbase',
         'testing/modules',

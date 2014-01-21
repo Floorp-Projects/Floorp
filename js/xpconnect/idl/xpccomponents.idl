@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(1b981569-2b21-4702-a01a-81ffdb5d3d4c)]
+[scriptable, uuid(872b0aa4-c234-4c46-b72c-1bc861d6c5eb)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -153,7 +153,7 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext,optional_argc]
     jsval evalInSandbox(in AString source, in jsval sandbox,
                         [optional] in jsval version,
-                        [optional] in jsval filename,
+                        [optional] in AUTF8String filename,
                         [optional] in long lineNo);
 
     /*

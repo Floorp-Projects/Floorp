@@ -11,7 +11,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="73a7e0c15969a058964e92fad1925efead38dcfc"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="e218d17ae7d01a81d48f833cd6fafb4e11b26cd8"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9b6626eddbc85873eaa2a9174a9bd5101e5c05f"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="84f2f2fce22605e17d511ff1767e54770067b5b5"/>
@@ -90,12 +90,12 @@
   <project name="platform/system/netd" path="system/netd" revision="2e226e6e636ca0a8cc4c51093e46f4baba1ffcce"/>
   <project name="platform/system/vold" path="system/vold" revision="8ac5eef8ea3a456b96d52ce2091bf6d814782d8c"/>
   <!-- hamachi specific things -->
-  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="2e484664c353fd739200b908dce85500be870d43"/>
+  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="4970f51b2c66f842dfcbc8315c8e501d0b2ac791"/>
   <project name="quic/lf/b2g/external/jsmin" path="external/jsmin" revision="cec896f0affaa0226c02605ad28d42df1bc0e393"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="d13aaf080177b7c48f243d51827db5c7a7873cd0"/>
   <project name="platform/vendor/qcom/msm7627a" path="device/qcom/msm7627a" revision="f06bcacc6f13cec895dc5d4c2385c076396194ec"/>
   <project name="android-device-hamachi" path="device/qcom/hamachi" remote="b2g" revision="9071ac8f0830979fe4a96ce47c7443d8adf0929d"/>
-  <project name="kernel/msm" path="kernel" revision="1f91c1843268af615bf00d7945948653829ac88a"/>
+  <project name="kernel/msm" path="kernel" revision="8072055e7094023e2cac8eea425bb785fe1d4066"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="19933e5d182a4799c6217b19a18562193a419298"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="5a58382180c70d0c446badc9c9837918ab69ec60"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="20d83ab382a1f813702421e76c2f9f994585990e"/>

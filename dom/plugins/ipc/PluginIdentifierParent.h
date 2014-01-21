@@ -64,7 +64,7 @@ protected:
     MOZ_COUNT_DTOR(PluginIdentifierParent);
   }
 
-  virtual bool RecvRetain();
+  virtual bool RecvRetain() MOZ_OVERRIDE;
 
   void AddTemporaryRef() {
     mTemporaryRefs++;

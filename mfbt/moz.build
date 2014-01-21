@@ -8,7 +8,78 @@ TEST_DIRS += ['tests']
 
 LIBRARY_NAME = 'mfbt'
 
-mfbt_root = '.'
-include('common.mozbuild')
+EXPORTS.mozilla = [
+    'Alignment.h',
+    'AllocPolicy.h',
+    'Array.h',
+    'ArrayUtils.h',
+    'Assertions.h',
+    'Atomics.h',
+    'Attributes.h',
+    'BloomFilter.h',
+    'Casting.h',
+    'Char16.h',
+    'CheckedInt.h',
+    'Compiler.h',
+    'Compression.h',
+    'Constants.h',
+    'DebugOnly.h',
+    'decimal/Decimal.h',
+    'Endian.h',
+    'EnumSet.h',
+    'FloatingPoint.h',
+    'GuardObjects.h',
+    'HashFunctions.h',
+    'IntegerPrintfMacros.h',
+    'Likely.h',
+    'LinkedList.h',
+    'MathAlgorithms.h',
+    'Maybe.h',
+    'MemoryChecking.h',
+    'MemoryReporting.h',
+    'Move.h',
+    'MSIntTypes.h',
+    'NullPtr.h',
+    'NumericLimits.h',
+    'PodOperations.h',
+    'Poison.h',
+    'Range.h',
+    'RangedPtr.h',
+    'ReentrancyGuard.h',
+    'RefPtr.h',
+    'RollingMean.h',
+    'Scoped.h',
+    'SHA1.h',
+    'SplayTree.h',
+    'TemplateLib.h',
+    'ThreadLocal.h',
+    'TypedEnum.h',
+    'Types.h',
+    'TypeTraits.h',
+    'Vector.h',
+    'WeakPtr.h',
+]
 
-FINAL_LIBRARY = 'mozglue'
+UNIFIED_SOURCES = [
+    'double-conversion/bignum-dtoa.cc',
+    'double-conversion/bignum.cc',
+    'double-conversion/cached-powers.cc',
+    'double-conversion/diy-fp.cc',
+    'double-conversion/double-conversion.cc',
+    'double-conversion/fast-dtoa.cc',
+    'double-conversion/fixed-dtoa.cc',
+    'double-conversion/strtod.cc',
+    'FloatingPoint.cpp',
+    'HashFunctions.cpp',
+    'Poison.cpp',
+    'SHA1.cpp',
+]
+
+DEFINES['IMPL_MFBT'] = True
+
+# Compression.cpp cannot be built in unified mode because it pulls in Windows system headers.
+# Decimal.cpp doesn't build in unified mode with gcc.
+SOURCES += [
+    'Compression.cpp',
+    'decimal/Decimal.cpp',
+]

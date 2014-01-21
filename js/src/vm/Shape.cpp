@@ -28,9 +28,10 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::CeilingLog2Size;
 using mozilla::DebugOnly;
 using mozilla::PodZero;
-using mozilla::CeilingLog2Size;
+using mozilla::RotateLeft;
 
 bool
 ShapeTable::init(ThreadSafeContext *cx, Shape *lastProp)
@@ -1432,11 +1433,11 @@ Shape::setObjectFlag(ExclusiveContext *cx, BaseShape::Flag flag, TaggedProto pro
 StackBaseShape::hash(const StackBaseShape *base)
 {
     HashNumber hash = base->flags;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->clasp) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->parent) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->metadata) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawGetter);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawSetter);
+    hash = RotateLeft(hash, 4) ^ (uintptr_t(base->clasp) >> 3);
+    hash = RotateLeft(hash, 4) ^ (uintptr_t(base->parent) >> 3);
+    hash = RotateLeft(hash, 4) ^ (uintptr_t(base->metadata) >> 3);
+    hash = RotateLeft(hash, 4) ^ uintptr_t(base->rawGetter);
+    hash = RotateLeft(hash, 4) ^ uintptr_t(base->rawSetter);
     return hash;
 }
 
@@ -1575,9 +1576,9 @@ InitialShapeEntry::getLookup() const
 InitialShapeEntry::hash(const Lookup &lookup)
 {
     HashNumber hash = uintptr_t(lookup.clasp) >> 3;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^
+    hash = RotateLeft(hash, 4) ^
         (uintptr_t(lookup.hashProto.toWord()) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^
+    hash = RotateLeft(hash, 4) ^
         (uintptr_t(lookup.hashParent) >> 3) ^
         (uintptr_t(lookup.hashMetadata) >> 3);
     return hash + lookup.nfixed;

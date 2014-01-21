@@ -7,14 +7,14 @@
 #include "nsISupports.idl"
 #include "nsIException.idl"
 
-[scriptable, uuid(ce83229c-0a82-4ba4-937b-7fd4cd45f34b)]
+[scriptable, uuid(dd250248-2586-4ec1-a68f-8d14ef452517)]
 interface nsIXPCException : nsIException
 {
     // inherits methods from nsIException
 
-    void initialize(in string           aMessage,
+    void initialize(in AUTF8String      aMessage,
                     in nsresult         aResult,
-                    in string           aName,
+                    in AUTF8String      aName,
                     in nsIStackFrame    aLocation,
                     in nsISupports      aData,
                     in nsIException     aInner);

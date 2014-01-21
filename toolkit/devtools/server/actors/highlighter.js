@@ -85,6 +85,8 @@ let HighlighterActor = protocol.ActorClass({
   showBoxModel: method(function(node, options={}) {
     if (this._isNodeValidForHighlighting(node.rawNode)) {
       this._boxModelHighlighter.show(node.rawNode, options);
+    } else {
+      this._boxModelHighlighter.hide();
     }
   }, {
     request: {
@@ -512,6 +514,7 @@ BoxModelHighlighter.prototype = {
 
     if (oldRect && aRect.top == oldRect.top && aRect.left == oldRect.left &&
         aRect.width == oldRect.width && aRect.height == oldRect.height) {
+      this._showOutline();
       return true; // same rectangle
     }
 

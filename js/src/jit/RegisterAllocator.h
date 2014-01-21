@@ -8,6 +8,7 @@
 #define jit_RegisterAllocator_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "jit/LIR.h"
 #include "jit/MIRGenerator.h"
@@ -97,8 +98,8 @@ struct AllocationIntegrityState
         typedef IntegrityItem Lookup;
         static HashNumber hash(const IntegrityItem &item) {
             HashNumber hash = item.alloc.hash();
-            hash = JS_ROTATE_LEFT32(hash, 4) ^ item.vreg;
-            hash = JS_ROTATE_LEFT32(hash, 4) ^ HashNumber(item.block->mir()->id());
+            hash = mozilla::RotateLeft(hash, 4) ^ item.vreg;
+            hash = mozilla::RotateLeft(hash, 4) ^ HashNumber(item.block->mir()->id());
             return hash;
         }
         static bool match(const IntegrityItem &one, const IntegrityItem &two) {

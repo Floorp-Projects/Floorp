@@ -421,6 +421,31 @@
                        return val;"
                 onget="return this.getAttribute('showresizer') == 'true';"/>
 
+
+      <property name="fullZoom">
+        <getter><![CDATA[
+          return this.markupDocumentViewer.fullZoom;
+        ]]></getter>
+        <setter><![CDATA[
+          this.markupDocumentViewer.fullZoom = val;
+        ]]></setter>
+      </property>
+
+      <property name="textZoom">
+        <getter><![CDATA[
+          return this.markupDocumentViewer.textZoom;
+        ]]></getter>
+        <setter><![CDATA[
+          this.markupDocumentViewer.textZoom = val;
+        ]]></setter>
+      </property>
+
+      <property name="isSyntheticDocument">
+        <getter><![CDATA[
+          return this.contentDocument.mozSyntheticDocument;
+        ]]></getter>
+      </property>
+
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefBranch);

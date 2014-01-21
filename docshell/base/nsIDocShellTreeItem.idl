@@ -15,7 +15,7 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(cb16a98d-a9e4-4ee2-a450-709b92ad8a89)]
+[scriptable, uuid(f897f4af-f67e-4115-9d37-ce09f71122e2)]
 interface nsIDocShellTreeItem : nsISupports
 {
 	/*
@@ -46,6 +46,7 @@ interface nsIDocShellTreeItem : nsISupports
 	The type this item is.  
 	*/
 	attribute long itemType;
+	[noscript,notxpcom,nostdcall] long ItemType();
 
 	/*
 	Parent DocShell.

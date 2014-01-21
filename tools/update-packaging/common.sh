@@ -133,14 +133,13 @@ append_remove_instructions() {
 
 # List all files in the current directory, stripping leading "./"
 # Skip the channel-prefs.js file as it should not be included in any
-# generated MAR files (see bug 306077). Also update-settings.ini (bug 908134)
-# Pass a variable name and it will be filled as an array.
+# generated MAR files (see bug 306077). Pass a variable name and it will be
+# filled as an array.
 list_files() {
   count=0
 
   find . -type f \
     ! -name "channel-prefs.js" \
-    ! -name "update-settings.ini" \
     ! -name "update.manifest" \
     ! -name "updatev2.manifest" \
     ! -name "temp-dirlist" \

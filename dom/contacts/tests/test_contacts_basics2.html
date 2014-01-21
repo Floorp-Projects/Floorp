@@ -768,6 +768,38 @@ var steps = [
     req.onerror = onFailure;
   },
   clearDatabase,
+  function() {
+    ok(true, "mozContact.init deprecation message");
+    var c = new mozContact();
+    SimpleTest.monitorConsole(next, [
+      { errorMessage: "mozContact.init is DEPRECATED. Use the mozContact constructor instead. " +
+                      "See https://developer.mozilla.org/docs/WebAPI/Contacts for details." }
+    ], /* forbidUnexpectedMsgs */ true);
+    c.init({name: ["Bar"]});
+    c.init({name: ["Bar"]});
+    SimpleTest.endMonitorConsole();
+  },
+  function() {
+    ok(true, "mozContact.init works as expected");
+    var c = new mozContact({name: ["Foo"]});
+    c.init({name: ["Bar"]});
+    ise(c.name[0], "Bar", "Same name");
+    next();
+  },
+  function() {
+    ok(true, "mozContact.init without parameters");
+    var c = new mozContact({name: ["Foo"]});
+    c.init();
+    next();
+  },
+  function() {
+    ok(true, "mozContact.init resets properties");
+    var c = new mozContact({jobTitle: ["Software Engineer"]});
+    c.init({nickname: ["Jobless Johnny"]});
+    ise(c.nickname[0], "Jobless Johnny", "Same nickname");
+    ok(!c.jobTitle, "jobTitle is not set");
+    next();
+  },
   function () {
     ok(true, "all done!\n");
     SimpleTest.finish();

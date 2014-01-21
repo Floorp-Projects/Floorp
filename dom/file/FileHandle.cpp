@@ -151,8 +151,7 @@ FileHandle::GetFile(ErrorResult& aError)
   nsRefPtr<FileRequest> request =
     FileRequest::Create(GetOwner(), lockedFile, false);
 
-  nsRefPtr<MetadataParameters> params = new MetadataParameters();
-  params->Init(true, false);
+  nsRefPtr<MetadataParameters> params = new MetadataParameters(true, false);
 
   nsRefPtr<GetFileHelper> helper =
     new GetFileHelper(lockedFile, request, params, this);

@@ -5,5 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['idl', 'locales', 'hunspell', 'src']
-TEST_DIRS += ['tests/chrome']
 
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']

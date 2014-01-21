@@ -253,10 +253,10 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
   nsDOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
 
   // Continue with the Disconnect cleanup
-  nsCOMPtr<nsIDOMWindow> win = do_GetInterface(mDocShell);
-  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(win);
-  if (pwin) {
-    pwin->SetChromeEventHandler(pwin->GetChromeEventHandler());
+  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(mDocShell);
+  if (win) {
+    MOZ_ASSERT(win->IsOuterWindow());
+    win->SetChromeEventHandler(win->GetChromeEventHandler());
   }
   mDocShell = nullptr;
   mChromeMessageManager = nullptr;

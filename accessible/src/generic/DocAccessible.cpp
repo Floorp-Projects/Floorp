@@ -189,8 +189,7 @@ DocAccessible::NativeRole()
   if (docShell) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    int32_t itemType;
-    docShell->GetItemType(&itemType);
+    int32_t itemType = docShell->ItemType();
     if (sameTypeRoot == docShell) {
       // Root of content or chrome tree
       if (itemType == nsIDocShellTreeItem::typeChrome)
@@ -692,9 +691,7 @@ DocAccessible::AddEventListeners()
 
   // We want to add a command observer only if the document is content and has
   // an editor.
-  int32_t itemType;
-  docShellTreeItem->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeContent) {
+  if (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent) {
     nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
     if (commandManager)
       commandManager->AddCommandObserver(this, "obs_documentCreated");
@@ -724,9 +721,7 @@ DocAccessible::RemoveEventListeners()
     NS_ASSERTION(docShellTreeItem, "doc should support nsIDocShellTreeItem.");
 
     if (docShellTreeItem) {
-      int32_t itemType;
-      docShellTreeItem->GetItemType(&itemType);
-      if (itemType == nsIDocShellTreeItem::typeContent) {
+      if (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent) {
         nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
         if (commandManager) {
           commandManager->RemoveCommandObserver(this, "obs_documentCreated");
@@ -2028,9 +2023,7 @@ DocAccessible::IsLoadEventTarget() const
   }
 
   // It's content (not chrome) root document.
-  int32_t contentType;
-  treeItem->GetItemType(&contentType);
-  return (contentType == nsIDocShellTreeItem::typeContent);
+  return (treeItem->ItemType() == nsIDocShellTreeItem::typeContent);
 }
 
 PLDHashOperator

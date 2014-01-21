@@ -114,37 +114,19 @@ def copy(dest, directories):
         for support in d["supportfiles"]:
             shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
 
-def printMozbuildFile(dest, directories):
-    """Create a .mozbuild file to be included into the main moz.build, which
-    lists the directories with tests.
-    """
-    print("Creating mozbuild...")
-    path = dest + ".mozbuild"
-    with open(path, 'w') as fh:
-        normalized = [makeDestPath(dest, d["path"]) for d in directories]
-        result = writeBuildFiles.substMozbuild("importTestsuite.py",
-            normalized)
-        fh.write(result)
-
-    subprocess.check_call(["hg", "add", path])
-
 def printBuildFiles(dest, directories):
-    """Create Makefile.in files for each directory that contains tests we import.
+    """Create a mochitest.ini that all the contains tests we import.
     """
-    print("Creating build files...")
+    print("Creating manifest...")
+    all_mochitests = set()
+    all_support = set()
+
     for d in directories:
         path = makeDestPath(dest, d["path"])
 
-        files = ["test_%s" % (mochitest, ) for mochitest in d["mochitests"]]
-        files.extend(d["supportfiles"])
-
-        with open(path + "/Makefile.in", "w") as fh:
-            result = writeBuildFiles.substMakefile("importTestsuite.py", files)
-            fh.write(result)
-
-        with open(path + "/moz.build", "w") as fh:
-            result = writeBuildFiles.substMozbuild("importTestsuite.py", [])
-            fh.write(result)
+        all_mochitests |= set('%s/test_%s' % (d['path'], mochitest)
+            for mochitest in d['mochitests'])
+        all_support |= set('%s/%s' % (d['path'], p) for p in d['supportfiles'])
 
         if d["reftests"]:
             with open(path + "/reftest.list", "w") as fh:
@@ -152,6 +134,12 @@ def printBuildFiles(dest, directories):
                     d["reftests"])
                 fh.write(result)
 
+    manifest_path = dest + '/mochitest.ini'
+    with open(manifest_path, 'w') as fh:
+        result = writeBuildFiles.substManifest('importTestsuite.py',
+            all_mochitests, all_support)
+        fh.write(result)
+    subprocess.check_call(["hg", "add", manifest_path])
 
 def hgadd(dest, directories):
     """Inform hg of the files in |directories|."""
@@ -185,7 +173,6 @@ def importRepo(confFile):
 
         copy(dest, data)
         printBuildFiles(dest, data)
-        printMozbuildFile(dest, data)
         hgadd(dest, directories)
         print("Removing %s again..." % hgdest)
         subprocess.check_call(["rm", "-rf", hgdest])
