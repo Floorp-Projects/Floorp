@@ -7,6 +7,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsXPCOM.h"
+#include "nsDOMNavigationTiming.h"
 #include "mozilla/RefPtr.h"
 #include "CodecConfig.h"
 #include "VideoTypes.h"
@@ -138,7 +139,18 @@ public:
 
   virtual bool GetLocalSSRC(unsigned int* ssrc) = 0;
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
-  virtual bool GetReceivedJitter(unsigned int* jitterMs) = 0;
+
+  /**
+   * Functions returning stats needed by w3c stats model.
+   */
+  virtual bool GetRTPJitter(unsigned int* jitterMs) = 0;
+  virtual bool GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
+                                     unsigned int* jitterMs,
+                                     unsigned int* packetsReceived,
+                                     uint64_t* bytesReceived) = 0;
+  virtual bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
+                                   unsigned int* packetsSent,
+                                   uint64_t* bytesSent) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 

@@ -1177,7 +1177,11 @@ int32_t ViEChannel::SendApplicationDefinedRTCPPacket(
   return 0;
 }
 
-int32_t ViEChannel::GetSendRtcpStatistics(uint16_t* fraction_lost,
+int32_t ViEChannel::GetSendRtcpStatistics(uint32_t* ntp_high,
+                                          uint32_t* ntp_low,
+                                          uint32_t* bytes_sent,
+                                          uint32_t* packets_sent,
+                                          uint16_t* fraction_lost,
                                           uint32_t* cumulative_lost,
                                           uint32_t* extended_max,
                                           uint32_t* jitter_samples,
@@ -1195,6 +1199,20 @@ int32_t ViEChannel::GetSendRtcpStatistics(uint16_t* fraction_lost,
   //   RtpRtcp* rtp_rtcp = *it;
   // }
   uint32_t remote_ssrc = vie_receiver_.GetRemoteSsrc();
+
+  // --- Information from sender info in received RTCP Sender Reports
+
+  RTCPSenderInfo sender_info;
+  if (rtp_rtcp_->RemoteRTCPStat(&sender_info) != 0) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
+                 "%s: Could not get sender info for remote side", __FUNCTION__);
+    return -1;
+  }
+
+  *ntp_high = sender_info.NTPseconds;
+  *ntp_low = sender_info.NTPfraction;
+  *bytes_sent = sender_info.sendOctetCount;
+  *packets_sent = sender_info.sendPacketCount;
 
   // Get all RTCP receiver report blocks that have been received on this
   // channel. If we receive RTP packets from a remote source we know the
@@ -1240,13 +1258,33 @@ int32_t ViEChannel::GetSendRtcpStatistics(uint16_t* fraction_lost,
 // TODO(holmer): This is a bad function name as it implies that it returns the
 // received RTCP, while it actually returns the statistics which will be sent
 // in the RTCP.
-int32_t ViEChannel::GetReceivedRtcpStatistics(uint16_t* fraction_lost,
+int32_t ViEChannel::GetReceivedRtcpStatistics(uint32_t* ntp_high,
+                                              uint32_t* ntp_low,
+                                              uint32_t* bytes_sent,
+                                              uint32_t* packets_sent,
+                                              uint16_t* fraction_lost,
                                               uint32_t* cumulative_lost,
                                               uint32_t* extended_max,
                                               uint32_t* jitter_samples,
                                               int32_t* rtt_ms) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, channel_id_),
                "%s", __FUNCTION__);
+
+  // --- Information from sender info in received RTCP Sender Reports
+
+  RTCPSenderInfo sender_info;
+  if (rtp_rtcp_->RemoteRTCPStat(&sender_info) != 0) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
+                 "%s: Could not get sender info for remote side", __FUNCTION__);
+    return -1;
+  }
+
+  *ntp_high = sender_info.NTPseconds;
+  *ntp_low = sender_info.NTPfraction;
+  *bytes_sent = sender_info.sendOctetCount;
+  *packets_sent = sender_info.sendPacketCount;
+
+  // --- Locally derived information
 
   uint32_t remote_ssrc = vie_receiver_.GetRemoteSsrc();
   uint8_t frac_lost = 0;

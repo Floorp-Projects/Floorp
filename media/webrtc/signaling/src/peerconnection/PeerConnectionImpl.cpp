@@ -1325,7 +1325,7 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector, bool internalStats) {
     } else {
        CSFLogError(logTag, "Failed to get NrIceMediaStream for level %u "
                            "in %s:  %s",
-                           level, __FUNCTION__, mHandle.c_str());
+                           uint32_t(level), __FUNCTION__, mHandle.c_str());
        MOZ_CRASH();
     }
   }
@@ -1978,36 +1978,103 @@ PeerConnectionImpl::GetStatsImpl_s(
 
     switch (mp.direction()) {
       case MediaPipeline::TRANSMIT: {
-        RTCOutboundRTPStreamStats s;
-        s.mTimestamp.Construct(now);
-        s.mId.Construct(NS_LITERAL_STRING("outbound_rtp_") + idstr);
-        s.mType.Construct(RTCStatsType::Outboundrtp);
-        unsigned int ssrc;
-        if (mp.Conduit()->GetLocalSSRC(&ssrc)) {
-          nsString str;
-          str.AppendInt(ssrc);
-          s.mSsrc.Construct(str);
+        nsString localId = NS_LITERAL_STRING("outbound_rtp_") + idstr;
+        nsString remoteId;
+        nsString ssrc;
+        unsigned int ssrcval;
+        if (mp.Conduit()->GetLocalSSRC(&ssrcval)) {
+          ssrc.AppendInt(ssrcval);
         }
-        s.mPacketsSent.Construct(mp.rtp_packets_sent());
-        s.mBytesSent.Construct(mp.rtp_bytes_sent());
-        report->mOutboundRTPStreamStats.Value().AppendElement(s);
+        {
+          // First, fill in remote stat with rtcp receiver data, if present.
+          // ReceiverReports have less information than SenderReports,
+          // so fill in what we can.
+          DOMHighResTimeStamp timestamp;
+          uint32_t jitterMs;
+          uint32_t packetsReceived;
+          uint64_t bytesReceived;
+          if (mp.Conduit()->GetRTCPReceiverReport(&timestamp, &jitterMs,
+                                                  &packetsReceived,
+                                                  &bytesReceived)) {
+            remoteId = NS_LITERAL_STRING("outbound_rtcp_") + idstr;
+            RTCInboundRTPStreamStats s;
+            s.mTimestamp.Construct(timestamp);
+            s.mId.Construct(remoteId);
+            s.mType.Construct(RTCStatsType::Inboundrtp);
+            if (ssrc.Length()) {
+              s.mSsrc.Construct(ssrc);
+            }
+            s.mJitter.Construct(double(jitterMs)/1000);
+            s.mRemoteId.Construct(localId);
+            s.mIsRemote = true;
+            s.mPacketsReceived.Construct(packetsReceived);
+            s.mBytesReceived.Construct(bytesReceived);
+            report->mInboundRTPStreamStats.Value().AppendElement(s);
+          }
+        }
+        // Then, fill in local side (with cross-link to remote only if present)
+        {
+          RTCOutboundRTPStreamStats s;
+          s.mTimestamp.Construct(now);
+          s.mId.Construct(localId);
+          s.mType.Construct(RTCStatsType::Outboundrtp);
+          if (ssrc.Length()) {
+            s.mSsrc.Construct(ssrc);
+          }
+          s.mRemoteId.Construct(remoteId);
+          s.mIsRemote = false;
+          s.mPacketsSent.Construct(mp.rtp_packets_sent());
+          s.mBytesSent.Construct(mp.rtp_bytes_sent());
+          report->mOutboundRTPStreamStats.Value().AppendElement(s);
+        }
         break;
       }
       case MediaPipeline::RECEIVE: {
+        nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
+        nsString remoteId;
+        nsString ssrc;
+        unsigned int ssrcval;
+        if (mp.Conduit()->GetRemoteSSRC(&ssrcval)) {
+          ssrc.AppendInt(ssrcval);
+        }
+        {
+          // First, fill in remote stat with rtcp sender data, if present.
+          DOMHighResTimeStamp timestamp;
+          uint32_t packetsSent;
+          uint64_t bytesSent;
+          if (mp.Conduit()->GetRTCPSenderReport(&timestamp,
+                                                &packetsSent, &bytesSent)) {
+            remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
+            RTCOutboundRTPStreamStats s;
+            s.mTimestamp.Construct(timestamp);
+            s.mId.Construct(remoteId);
+            s.mType.Construct(RTCStatsType::Outboundrtp);
+            if (ssrc.Length()) {
+              s.mSsrc.Construct(ssrc);
+            }
+            s.mRemoteId.Construct(localId);
+            s.mIsRemote = true;
+            s.mPacketsSent.Construct(packetsSent);
+            s.mBytesSent.Construct(bytesSent);
+            report->mOutboundRTPStreamStats.Value().AppendElement(s);
+          }
+        }
+        // Then, fill in local side (with cross-link to remote only if present)
         RTCInboundRTPStreamStats s;
         s.mTimestamp.Construct(now);
-        s.mId.Construct(NS_LITERAL_STRING("inbound_rtp_") + idstr);
+        s.mId.Construct(localId);
         s.mType.Construct(RTCStatsType::Inboundrtp);
-        unsigned int ssrc;
-        if (mp.Conduit()->GetRemoteSSRC(&ssrc)) {
-          nsString str;
-          str.AppendInt(ssrc);
-          s.mSsrc.Construct(str);
+        if (ssrc.Length()) {
+          s.mSsrc.Construct(ssrc);
         }
         unsigned int jitterMs;
-        if (mp.Conduit()->GetReceivedJitter(&jitterMs)) {
+        if (mp.Conduit()->GetRTPJitter(&jitterMs)) {
           s.mJitter.Construct(double(jitterMs)/1000);
         }
+        if (remoteId.Length()) {
+          s.mRemoteId.Construct(remoteId);
+        }
+        s.mIsRemote = false;
         s.mPacketsReceived.Construct(mp.rtp_packets_received());
         s.mBytesReceived.Construct(mp.rtp_bytes_received());
         report->mInboundRTPStreamStats.Value().AppendElement(s);
