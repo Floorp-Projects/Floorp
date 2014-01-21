@@ -1892,22 +1892,22 @@ js_ReportIsNotFunction(JSContext *cx, JS::HandleValue v);
 #ifdef JSGC_GENERATIONAL
 extern JS_FRIEND_API(void)
 JS_StoreObjectPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSObject *key, void *data),
                                   JSObject *key, void *data);
 
 extern JS_FRIEND_API(void)
 JS_StoreStringPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSString *key, void *data),
                                   JSString *key, void *data);
 #else
 inline void
 JS_StoreObjectPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSObject *key, void *data),
                                   JSObject *key, void *data) {}
 
 inline void
 JS_StoreStringPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSString *key, void *data),
                                   JSString *key, void *data) {}
 #endif /* JSGC_GENERATIONAL */
 
