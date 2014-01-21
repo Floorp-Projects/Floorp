@@ -1275,10 +1275,16 @@ class Marionette(object):
         return None
 
     def get_cookies(self):
-        '''
-        Gets all cookies in the scope of the current session.
-        '''
-        return self._send_message("getAllCookies", "value")
+        """Get all the cookies for the current domain.
+
+        This is the equivalent of calling `document.cookie` and
+        parsing the result.
+
+        :returns: A set of cookies for the current domain.
+
+        """
+
+        return self._send_message("getCookies", "value")
 
     @property
     def application_cache(self):
