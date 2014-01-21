@@ -1727,6 +1727,10 @@ static bool Throw(nsresult errNum, XPCCallContext& ccx)
 class CallMethodHelper
 {
     XPCCallContext& mCallContext;
+    // We wait to call SetLastResult(mInvokeResult) until ~CallMethodHelper(),
+    // so that XPCWN-implemented functions like XPCComponents::GetLastResult()
+    // can still access the previous result.
+    nsresult mInvokeResult;
     nsIInterfaceInfo* const mIFaceInfo;
     const nsXPTMethodInfo* mMethodInfo;
     nsISupports* const mCallee;
@@ -1755,7 +1759,7 @@ class CallMethodHelper
     GatherAndConvertResults();
 
     JS_ALWAYS_INLINE bool
-    QueryInterfaceFastPath() const;
+    QueryInterfaceFastPath();
 
     nsXPTCVariant*
     GetDispatchParam(uint8_t paramIndex)
@@ -1790,6 +1794,7 @@ public:
 
     CallMethodHelper(XPCCallContext& ccx)
         : mCallContext(ccx)
+        , mInvokeResult(NS_ERROR_UNEXPECTED)
         , mIFaceInfo(ccx.GetInterface()->GetInterfaceInfo())
         , mMethodInfo(nullptr)
         , mCallee(ccx.GetTearOff()->GetNative())
@@ -1862,7 +1867,6 @@ CallMethodHelper::Call()
     mCallContext.SetRetVal(JSVAL_VOID);
 
     XPCJSRuntime::Get()->SetPendingException(nullptr);
-    mCallContext.GetXPCContext()->SetLastResult(NS_ERROR_UNEXPECTED);
 
     if (mVTableIndex == 0) {
         return QueryInterfaceFastPath();
@@ -1887,16 +1891,14 @@ CallMethodHelper::Call()
     if (foundDependentParam && !ConvertDependentParams())
         return false;
 
-    nsresult invokeResult = Invoke();
-
-    mCallContext.GetXPCContext()->SetLastResult(invokeResult);
+    mInvokeResult = Invoke();
 
     if (JS_IsExceptionPending(mCallContext)) {
         return false;
     }
 
-    if (NS_FAILED(invokeResult)) {
-        ThrowBadResult(invokeResult, mCallContext);
+    if (NS_FAILED(mInvokeResult)) {
+        ThrowBadResult(mInvokeResult, mCallContext);
         return false;
     }
 
@@ -1950,6 +1952,7 @@ CallMethodHelper::~CallMethodHelper()
         }
     }
 
+    mCallContext.GetXPCContext()->SetLastResult(mInvokeResult);
 }
 
 bool
@@ -2115,7 +2118,7 @@ CallMethodHelper::GatherAndConvertResults()
 }
 
 bool
-CallMethodHelper::QueryInterfaceFastPath() const
+CallMethodHelper::QueryInterfaceFastPath()
 {
     MOZ_ASSERT(mVTableIndex == 0,
                "Using the QI fast-path for a method other than QueryInterface");
@@ -2136,14 +2139,11 @@ CallMethodHelper::QueryInterfaceFastPath() const
         return false;
     }
 
-    nsresult invokeResult;
     nsISupports* qiresult = nullptr;
-    invokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
+    mInvokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
 
-    mCallContext.GetXPCContext()->SetLastResult(invokeResult);
-
-    if (NS_FAILED(invokeResult)) {
-        ThrowBadResult(invokeResult, mCallContext);
+    if (NS_FAILED(mInvokeResult)) {
+        ThrowBadResult(mInvokeResult, mCallContext);
         return false;
     }
 
