@@ -201,6 +201,8 @@ const ADDRESS_PROPERTIES = ["adr"];
 const FIELD_PROPERTIES = ["email", "url", "impp"];
 const TELFIELD_PROPERTIES = ["tel"];
 
+let mozContactInitWarned = false;
+
 function Contact() { }
 
 Contact.prototype = {
@@ -301,6 +303,17 @@ Contact.prototype = {
     this.sex =             aProp.sex;
     this.genderIdentity =  aProp.genderIdentity;
     this.key =             aProp.key;
+  },
+
+  init_ctor: function(aProp) {
+    // init is deprecated, warn once in the console if it's used
+    if (!mozContactInitWarned) {
+      mozContactInitWarned = true;
+      Cu.reportError("mozContact.init is DEPRECATED. Use the mozContact constructor instead. " +
+                     "See https://developer.mozilla.org/docs/WebAPI/Contacts for details.");
+    }
+
+    this.__init(aProp);
   },
 
   setMetadata: function(aId, aPublished, aUpdated) {
