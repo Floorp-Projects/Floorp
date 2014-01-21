@@ -108,7 +108,7 @@ class RemoteOptions(ReftestOptions):
 
         # Ensure our defaults are set properly for everything we can infer
         if not options.remoteTestRoot:
-            options.remoteTestRoot = self.automation._devicemanager.getDeviceRoot() + '/reftest'
+            options.remoteTestRoot = self._automation._devicemanager.getDeviceRoot() + '/reftest'
         options.remoteProfile = options.remoteTestRoot + "/profile"
 
         # Verify that our remotewebserver is set properly
@@ -166,8 +166,8 @@ class RemoteOptions(ReftestOptions):
             options.httpdPath = os.path.join(options.utilityPath, "components")
 
         # TODO: Copied from main, but I think these are no longer used in a post xulrunner world
-        #options.xrePath = options.remoteTestRoot + self.automation._product + '/xulrunner'
-        #options.utilityPath = options.testRoot + self.automation._product + '/bin'
+        #options.xrePath = options.remoteTestRoot + self._automation._product + '/xulrunner'
+        #options.utilityPath = options.testRoot + self._automation._product + '/bin'
         return options
 
 class ReftestServer:
@@ -178,7 +178,7 @@ class ReftestServer:
         it's own class and use it in both remote and non-remote testing. """
 
     def __init__(self, automation, options, scriptDir):
-        self.automation = automation
+        self._automation = automation
         self._utilityPath = options.utilityPath
         self._xrePath = options.xrePath
         self._profileDir = options.serverProfilePath
@@ -192,9 +192,9 @@ class ReftestServer:
     def start(self):
         "Run the Refest server, returning the process ID of the server."
 
-        env = self.automation.environment(xrePath = self._xrePath)
+        env = self._automation.environment(xrePath = self._xrePath)
         env["XPCOM_DEBUG_BREAK"] = "warn"
-        if self.automation.IS_WIN32:
+        if self._automation.IS_WIN32:
             env["PATH"] = env["PATH"] + ";" + self._xrePath
 
         args = ["-g", self._xrePath,
@@ -205,21 +205,21 @@ class ReftestServer:
                 "-f", os.path.join(self.scriptDir, "server.js")]
 
         xpcshell = os.path.join(self._utilityPath,
-                                "xpcshell" + self.automation.BIN_SUFFIX)
+                                "xpcshell" + self._automation.BIN_SUFFIX)
 
         if not os.access(xpcshell, os.F_OK):
             raise Exception('xpcshell not found at %s' % xpcshell)
-        if self.automation.elf_arm(xpcshell):
+        if self._automation.elf_arm(xpcshell):
             raise Exception('xpcshell at %s is an ARM binary; please use '
                             'the --utility-path argument to specify the path '
                             'to a desktop version.' % xpcshell)
 
-        self._process = self.automation.Process([xpcshell] + args, env = env)
+        self._process = self._automation.Process([xpcshell] + args, env = env)
         pid = self._process.pid
         if pid < 0:
             print "TEST-UNEXPECTED-FAIL | remotereftests.py | Error starting server."
             return 2
-        self.automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
+        self._automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
 
         if (self.pidFile != ""):
             f = open(self.pidFile + ".xpcshell.pid", 'w')
