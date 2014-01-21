@@ -485,6 +485,11 @@ protected:
   void RequestContentRepaint(FrameMetrics& aFrameMetrics);
 
   /**
+   * Actually send the next pending paint request to gecko.
+   */
+  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics);
+
+  /**
    * Advances a fling by an interpolated amount based on the passed in |aDelta|.
    * This should be called whenever sampling the content transform for this
    * frame. Returns true if the fling animation should be advanced by one frame,
@@ -635,6 +640,11 @@ private:
   // that we're not requesting a paint of the same thing that's already drawn.
   // If we don't do this check, we don't get a ShadowLayersUpdated back.
   FrameMetrics mLastPaintRequestMetrics;
+  // The last metrics that we actually sent to Gecko. This allows us to transform
+  // inputs into a coordinate space that Gecko knows about. This assumes the pipe
+  // through which input events and repaint requests are sent to Gecko operates
+  // in a FIFO manner.
+  FrameMetrics mLastDispatchedPaintMetrics;
 
   nsTArray<MultiTouchInput> mTouchQueue;
 
