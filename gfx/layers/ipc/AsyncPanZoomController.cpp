@@ -673,7 +673,7 @@ nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEven
 
 nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale-begin in state %d\n", this, mState);
-  if (!mZoomConstraints.mAllowZoom) {
+  if (!AllowZoom()) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
@@ -838,7 +838,7 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   // If mZoomConstraints.mAllowZoom is true we wait for a call to OnSingleTapConfirmed before
   // sending event to content
-  if (controller && !mZoomConstraints.mAllowZoom) {
+  if (controller && !AllowZoom()) {
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
     CSSIntPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
@@ -867,7 +867,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
   APZC_LOG("%p got a double-tap in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    if (mZoomConstraints.mAllowZoom) {
+    if (AllowZoom()) {
       int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
       CSSIntPoint geckoScreenPoint;
       if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
@@ -1612,6 +1612,14 @@ bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
 
 bool AsyncPanZoomController::IsPanningState(PanZoomState aState) {
   return (aState == PANNING || aState == PANNING_LOCKED_X || aState == PANNING_LOCKED_Y);
+}
+
+bool AsyncPanZoomController::AllowZoom() {
+  // In addition to looking at the zoom constraints, which comes from the meta
+  // viewport tag, disallow zooming if we are overflow:hidden in either direction.
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mZoomConstraints.mAllowZoom
+      && !(mFrameMetrics.GetDisableScrollingX() || mFrameMetrics.GetDisableScrollingY());
 }
 
 void AsyncPanZoomController::TimeoutTouchListeners() {
