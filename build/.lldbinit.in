@@ -1,0 +1,2 @@
+#filter substitution
+script topsrcdir = "@topsrcdir@"; lldb.debugger.HandleCommand("command source -s true '%s'" % os.path.join(topsrcdir, ".lldbinit"))

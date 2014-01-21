@@ -5,6 +5,12 @@
 # and in the accompanying Python scripts, see python/lldbutils/README.txt.
 # -----------------------------------------------------------------------------
 
+# Import the module that defines complex Gecko debugging commands.  This assumes
+# you are either running lldb from the top level source directory, the objdir,
+# or the dist/bin directory.  (.lldbinit files in the objdir and dist/bin set
+# topsrcdir appropriately.)
+script topsrcdir = topsrcdir if locals().has_key("topsrcdir") else "."; sys.path.append(os.path.join(topsrcdir, "python/lldbutils")); import lldbutils; lldbutils.init()
+
 # Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
 # single compiled file breaks lldb breakpoint setting. This works around that.
 # See http://lldb.llvm.org/troubleshooting.html for more info.
@@ -14,11 +20,6 @@ settings set target.inline-breakpoint-strategy always
 # will show a variable declared as "nsIFrame *" that points to an nsBlockFrame
 # object as being of type "nsBlockFrame *" rather than "nsIFrame *".
 settings set target.prefer-dynamic-value run-target
-
-# Import the module that defines complex Gecko debugging commands.  Rather
-# than do any kind of searching, this assumes that you are running lldb from
-# the top level source directory.
-script sys.path.append('python/lldbutils'); import lldbutils; lldbutils.init()
 
 # Show the string value in atoms.
 type summary add nsIAtom --summary-string "${var.mString}"

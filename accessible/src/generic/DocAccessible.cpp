@@ -22,7 +22,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
@@ -42,6 +41,7 @@
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef MOZ_XUL
@@ -352,29 +352,27 @@ DocAccessible::GetURL(nsAString& aURL)
 NS_IMETHODIMP
 DocAccessible::GetTitle(nsAString& aTitle)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentNode);
-  if (!domDocument) {
+  if (!mDocumentNode) {
     return NS_ERROR_FAILURE;
   }
-  return domDocument->GetTitle(aTitle);
+  nsString title;
+  mDocumentNode->GetTitle(title);
+  aTitle = title;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DocAccessible::GetMimeType(nsAString& aMimeType)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentNode);
-  if (!domDocument) {
+  if (!mDocumentNode) {
     return NS_ERROR_FAILURE;
   }
-  return domDocument->GetContentType(aMimeType);
+  return mDocumentNode->GetContentType(aMimeType);
 }
 
 NS_IMETHODIMP
 DocAccessible::GetDocType(nsAString& aDocType)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocumentNode));
-  nsCOMPtr<nsIDOMDocumentType> docType;
-
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
   if (xulDoc) {
@@ -382,8 +380,11 @@ DocAccessible::GetDocType(nsAString& aDocType)
     return NS_OK;
   } else
 #endif
-  if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
-    return docType->GetPublicId(aDocType);
+  if (mDocumentNode) {
+    dom::DocumentType* docType = mDocumentNode->GetDoctype();
+    if (docType) {
+      return docType->GetPublicId(aDocType);
+    }
   }
 
   return NS_ERROR_FAILURE;
