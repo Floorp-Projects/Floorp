@@ -17,13 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
 
   <script>
   var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
-  ok(jsFuns.isAsmJSCompilationAvailable());
+  ok(jsFuns.isAsmJSCompilationAvailable(), "asm.js compilation is available");
 
   // generate a big ol asm.js module and compile it async so that we can hit
   // the asm.js cache.
 
   var code = "function f() { 'use asm';\n";
-  for (var i = 0; i < 1000; i++)
+  for (var i = 0; i < 5000; i++)
     code += "function g" + i + "() { return " + i + "}\n";
   code += "return g42 }\n";
   code += "ok(jsFuns.isAsmJSModule(f), 'f is an asm.js module')\n";
@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
   code += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function')\n";
   code += "ok(g42() === 42, 'g42 returns the correct result')\n";
   code += "finishedEvalAsync(f);";
-  ok(code.length > 10000);
+  ok(code.length > 100000, "code is long enough to definitely hit the cache");
 
   function evalAsync(code) {
     var blob = new Blob([code], {type:"application/javascript"});
