@@ -34,6 +34,9 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
                                             nsStyleContext* aContext);
 
 public:
+  // Forward-decls of helper classes
+  class StrutInfo;
+
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -84,6 +87,7 @@ protected:
                         nsReflowStatus&          aStatus,
                         nscoord aContentBoxMainSize,
                         nscoord aAvailableHeightForContent,
+                        nsTArray<StrutInfo>& aStruts,
                         const FlexboxAxisTracker& aAxisTracker);
 
   /**
