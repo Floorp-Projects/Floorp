@@ -5,6 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -87,8 +91,28 @@ final class HomeConfig {
         private final String mId;
         private final EnumSet<Flags> mFlags;
 
+        private static final String JSON_KEY_TYPE = "type";
+        private static final String JSON_KEY_TITLE = "title";
+        private static final String JSON_KEY_ID = "id";
+        private static final String JSON_KEY_DEFAULT = "default";
+
+        private static final int IS_DEFAULT = 1;
+
         public enum Flags {
             DEFAULT_PANEL
+        }
+
+        public PanelConfig(JSONObject json) throws JSONException, IllegalArgumentException {
+            mType = PanelType.fromId(json.getString(JSON_KEY_TYPE));
+            mTitle = json.getString(JSON_KEY_TITLE);
+            mId = json.getString(JSON_KEY_ID);
+
+            mFlags = EnumSet.noneOf(Flags.class);
+
+            final boolean isDefault = (json.optInt(JSON_KEY_DEFAULT, -1) == IS_DEFAULT);
+            if (isDefault) {
+                mFlags.add(Flags.DEFAULT_PANEL);
+            }
         }
 
         @SuppressWarnings("unchecked")
@@ -139,6 +163,20 @@ final class HomeConfig {
 
         public boolean isDefault() {
             return mFlags.contains(Flags.DEFAULT_PANEL);
+        }
+
+        public JSONObject toJSON() throws JSONException {
+            final JSONObject json = new JSONObject();
+
+            json.put(JSON_KEY_TYPE, mType);
+            json.put(JSON_KEY_TITLE, mTitle);
+            json.put(JSON_KEY_ID, mId);
+
+            if (mFlags.contains(Flags.DEFAULT_PANEL)) {
+                json.put(JSON_KEY_DEFAULT, IS_DEFAULT);
+            }
+
+            return json;
         }
 
         @Override
