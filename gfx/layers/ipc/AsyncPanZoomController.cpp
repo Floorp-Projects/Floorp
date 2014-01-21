@@ -1533,6 +1533,14 @@ gfx3DMatrix AsyncPanZoomController::GetNontransientAsyncTransform() {
                                     1.0f);
 }
 
+gfx3DMatrix AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  CSSPoint scrollChange = mLastContentPaintMetrics.mScrollOffset - mLastDispatchedPaintMetrics.mScrollOffset;
+  float zoomChange = mLastContentPaintMetrics.mZoom.scale / mLastDispatchedPaintMetrics.mZoom.scale;
+  return gfx3DMatrix::Translation(scrollChange.x, scrollChange.y, 0) *
+         gfx3DMatrix::ScalingMatrix(zoomChange, zoomChange, 1);
+}
+
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
