@@ -63,9 +63,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
-                                  "resource://gre/modules/SimpleServiceDiscovery.jsm");
-
 #ifdef NIGHTLY_BUILD
 XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
                                   "resource://shumway/ShumwayUtils.jsm");
@@ -85,7 +82,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
   ["Linkifier", "chrome://browser/content/Linkify.js"],
-  ["CastingApps", "chrome://browser/content/CastingApps.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -390,7 +386,6 @@ var BrowserApp = {
     Reader.init();
     UserAgentOverrides.init();
     DesktopUserAgent.init();
-    CastingApps.init();
     Distribution.init();
     Tabs.init();
 #ifdef ACCESSIBILITY
@@ -732,7 +727,6 @@ var BrowserApp = {
     UserAgentOverrides.uninit();
     DesktopUserAgent.uninit();
     ExternalApps.uninit();
-    CastingApps.uninit();
     Distribution.uninit();
     Tabs.uninit();
   },
