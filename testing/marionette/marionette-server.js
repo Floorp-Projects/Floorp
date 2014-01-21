@@ -1079,22 +1079,15 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get a string representing the current URL.
-   *
-   * On Desktop this returns a string representation of the URL of the
-   * current top level browsing context.  This is equivalent to
-   * document.location.href.
-   *
-   * When in the context of the chrome, this returns the canonical URL
-   * of the current resource.
+   * Gets current url
    */
-  getCurrentUrl: function MDA_getCurrentUrl() {
+  getUrl: function MDA_getUrl() {
     this.command_id = this.getCommandId();
     if (this.context == "chrome") {
       this.sendResponse(this.getCurrentWindow().location.href, this.command_id);
     }
     else {
-      this.sendAsync("getCurrentUrl", {}, this.command_id);
+      this.sendAsync("getUrl", {}, this.command_id);
     }
   },
 
@@ -1177,7 +1170,6 @@ MarionetteServerConnection.prototype = {
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
         this.sendResponse(i, this.command_id);
-        return;
       }
     }
   },
@@ -1908,18 +1900,10 @@ MarionetteServerConnection.prototype = {
     }
   },
 
-  /**
-   * Get an element's location on the page.
-   *
-   * The returned point will contain the x and y coordinates of the
-   * top left-hand corner of the given element.  The point (0,0)
-   * refers to the upper-left corner of the document.
-   *
-   * @return a point containing x and y coordinates as properties
-   */
-  getElementLocation: function MDA_getElementLocation(aRequest) {
+  getElementPosition: function MDA_getElementPosition(aRequest) {
     this.command_id = this.getCommandId();
-    this.sendAsync("getElementLocation", {id: aRequest.parameters.id},
+    this.sendAsync("getElementPosition",
+                   { id:aRequest.parameters.id },
                    this.command_id);
   },
 
@@ -2385,15 +2369,13 @@ MarionetteServerConnection.prototype.requestTypes = {
   "isElementEnabled": MarionetteServerConnection.prototype.isElementEnabled,
   "isElementSelected": MarionetteServerConnection.prototype.isElementSelected,
   "sendKeysToElement": MarionetteServerConnection.prototype.sendKeysToElement,
-  "getElementLocation": MarionetteServerConnection.protocol.getElementLocation,
-  "getElementPosition": MarionetteServerConnection.prototype.getElementLocation,  // deprecated
+  "getElementPosition": MarionetteServerConnection.prototype.getElementPosition,
   "clearElement": MarionetteServerConnection.prototype.clearElement,
   "getTitle": MarionetteServerConnection.prototype.getTitle,
   "getWindowType": MarionetteServerConnection.prototype.getWindowType,
   "getPageSource": MarionetteServerConnection.prototype.getPageSource,
   "goUrl": MarionetteServerConnection.prototype.goUrl,
-  "getCurrentUrl": MarionetteServerConnection.prototype.getCurrentUrl,
-  "getUrl": MarionetteServerConnection.prototype.getCurrentUrl,  // deprecated
+  "getUrl": MarionetteServerConnection.prototype.getUrl,
   "goBack": MarionetteServerConnection.prototype.goBack,
   "goForward": MarionetteServerConnection.prototype.goForward,
   "refresh":  MarionetteServerConnection.prototype.refresh,
