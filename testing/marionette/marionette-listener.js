@@ -131,7 +131,7 @@ function startListeners() {
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:goUrl", goUrl);
-  addMessageListenerId("Marionette:getUrl", getUrl);
+  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
   addMessageListenerId("Marionette:goBack", goBack);
@@ -234,7 +234,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
-  removeMessageListenerId("Marionette:getUrl", getUrl);
+  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
@@ -1237,9 +1237,9 @@ function goUrl(msg) {
 }
 
 /**
- * Get the current URI
+ * Get URL of the top level browsing context.
  */
-function getUrl(msg) {
+function getCurrentUrl(msg) {
   sendResponse({value: curFrame.location.href}, msg.json.command_id);
 }
 
