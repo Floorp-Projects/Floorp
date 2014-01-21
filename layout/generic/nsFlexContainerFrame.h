@@ -124,6 +124,7 @@ protected:
                              const nsHTMLReflowState& aReflowState,
                              nscoord aContentBoxMainSize,
                              nscoord aAvailableHeightForContent,
+                             const nsTArray<StrutInfo>& aStruts,
                              const FlexboxAxisTracker& aAxisTracker,
                              nsTArray<FlexLine>& aLines);
 
