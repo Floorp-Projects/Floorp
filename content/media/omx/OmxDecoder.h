@@ -32,6 +32,8 @@ class VideoGraphicBuffer : public GraphicBufferLocked {
                        android::MediaBuffer *aBuffer,
                        SurfaceDescriptor& aDescriptor);
     ~VideoGraphicBuffer();
+
+  protected:
     void Unlock();
 };
 
