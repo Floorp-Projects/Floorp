@@ -53,11 +53,6 @@ class ScriptAnalysis
 
     bool *escapedSlots;
 
-    /* Which analyses have been performed. */
-    bool ranBytecode_;
-    bool ranSSA_;
-    bool ranLifetimes_;
-
 #ifdef DEBUG
     /* Whether the compartment was in debug mode when we performed the analysis. */
     bool originalDebugMode_: 1;
@@ -82,7 +77,6 @@ class ScriptAnalysis
 #endif
     }
 
-    bool ranBytecode() { return ranBytecode_; }
     JS_WARN_UNUSED_RESULT
     bool analyzeBytecode(JSContext *cx);
 
@@ -95,8 +89,6 @@ class ScriptAnalysis
     bool isReachable(const jsbytecode *pc) { return maybeCode(pc); }
 
   private:
-    bool ranSSA() { return ranSSA_; }
-    bool ranLifetimes() { return ranLifetimes_; }
     JS_WARN_UNUSED_RESULT
     bool analyzeSSA(JSContext *cx);
     JS_WARN_UNUSED_RESULT
