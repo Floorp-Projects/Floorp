@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "StreamFunctions.h"
 #include "nsZipWriter.h"
+
+#include <algorithm>
+
+#include "StreamFunctions.h"
 #include "nsZipDataStream.h"
 #include "nsISeekableStream.h"
 #include "nsIAsyncStreamCopier.h"
@@ -551,10 +554,7 @@ NS_IMETHODIMP nsZipWriter::RemoveEntry(const nsACString & aZipEntry,
             uint32_t read = 0;
             char buf[4096];
             while (count > 0) {
-                if (count < sizeof(buf))
-                    read = count;
-                else
-                    read = sizeof(buf);
+                read = std::min(count, (uint32_t) sizeof(buf));
 
                 rv = inputStream->Read(buf, read, &read);
                 if (NS_FAILED(rv)) {
@@ -733,6 +733,128 @@ NS_IMETHODIMP nsZipWriter::OnStopRequest(nsIRequest *aRequest,
     }
 
     BeginProcessingNextItem();
+
+    return NS_OK;
+}
+
+/*
+ * Make all stored(uncompressed) files align to given alignment size.
+ */
+NS_IMETHODIMP nsZipWriter::AlignStoredFiles(uint16_t aAlignSize)
+{
+    nsresult rv;
+
+    // Check for range and power of 2.
+    if (aAlignSize < 2 || aAlignSize > 32768 ||
+        (aAlignSize & (aAlignSize - 1)) != 0) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    for (int i = 0; i < mHeaders.Count(); i++) {
+        nsZipHeader *header = mHeaders[i];
+
+        // Check whether this entry is file and compression method is stored.
+        bool isdir;
+        rv = header->GetIsDirectory(&isdir);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        if (isdir || header->mMethod != 0) {
+            continue;
+        }
+        // Pad extra field to align data starting position to specified size.
+        uint32_t old_len = header->mLocalFieldLength;
+        rv = header->PadExtraField(header->mOffset, aAlignSize);
+        if (NS_FAILED(rv)) {
+            continue;
+        }
+        // No padding means data already aligned.
+        uint32_t shift = header->mLocalFieldLength - old_len;
+        if (shift == 0) {
+            continue;
+        }
+
+        // Flush any remaining data before we start.
+        rv = mStream->Flush();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        // Open zip file for reading.
+        nsCOMPtr<nsIInputStream> inputStream;
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), mFile);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        nsCOMPtr<nsISeekableStream> in_seekable = do_QueryInterface(inputStream);
+        nsCOMPtr<nsISeekableStream> out_seekable = do_QueryInterface(mStream);
+
+        uint32_t data_offset = header->mOffset + header->GetFileHeaderLength() - shift;
+        uint32_t count = mCDSOffset - data_offset;
+        uint32_t read;
+        char buf[4096];
+
+        // Shift data to aligned postion.
+        while (count > 0) {
+            read = std::min(count, (uint32_t) sizeof(buf));
+
+            rv = in_seekable->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   data_offset + count - read);
+            if (NS_FAILED(rv)) {
+                break;
+             }
+
+            rv = inputStream->Read(buf, read, &read);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+
+            rv = out_seekable->Seek(nsISeekableStream::NS_SEEK_SET,
+                                    data_offset + count - read + shift);
+            if (NS_FAILED(rv)) {
+                break;
+             }
+
+            rv = ZW_WriteData(mStream, buf, read);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+
+            count -= read;
+        }
+        inputStream->Close();
+        if (NS_FAILED(rv)) {
+            Cleanup();
+            return rv;
+        }
+
+        // Update current header
+        rv = out_seekable->Seek(nsISeekableStream::NS_SEEK_SET,
+                                header->mOffset);
+        if (NS_FAILED(rv)) {
+            Cleanup();
+            return rv;
+        }
+        rv = header->WriteFileHeader(mStream);
+        if (NS_FAILED(rv)) {
+            Cleanup();
+            return rv;
+        }
+
+        // Update offset of all other headers
+        int pos = i + 1;
+        while (pos < mHeaders.Count()) {
+            mHeaders[pos]->mOffset += shift;
+            pos++;
+        }
+        mCDSOffset += shift;
+        rv = SeekCDS();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        mCDSDirty = true;
+    }
 
     return NS_OK;
 }

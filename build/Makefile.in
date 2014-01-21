@@ -47,14 +47,18 @@ GDBINIT_FILES := $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += GDBINIT
 
-# Put a useful .lldbinit in the bin directory, to be picked up automatically
-# by LLDB when we debug executables using that directory as the current working
-# directory.
-# NOTE: Keep .lldbinit in the topsrcdir for people who run LLDB from the
-# topsrcdir rather than the bin directory.
-LLDBINIT_FILES := $(topsrcdir)/.lldbinit
-LLDBINIT_DEST = $(FINAL_TARGET)
-INSTALL_TARGETS += LLDBINIT
+# Put a .lldbinit in the bin directory and the objdir, to be picked up
+# automatically by LLDB when we debug executables using either of those two
+# directories as the current working directory.  The .lldbinit file will
+# load $(topsrcdir)/.lldbinit, which is where the actual debugging commands are.
+LLDBINIT_OBJDIR := .lldbinit.in
+LLDBINIT_OBJDIR_PATH = $(DEPTH)
+LLDBINIT_OBJDIR_FLAGS += -Dtopsrcdir=$(abspath $(topsrcdir))
+PP_TARGETS += LLDBINIT_OBJDIR
+
+LLDBINIT_FINAL_TARGET_FILES := $(DEPTH)/.lldbinit
+LLDBINIT_FINAL_TARGET_DEST = $(FINAL_TARGET)
+INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 
 include $(topsrcdir)/config/rules.mk
 

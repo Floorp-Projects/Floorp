@@ -15,7 +15,6 @@
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
 
 var canvases = [];
 function callbackTestCanvas(canvas)
@@ -60,7 +59,6 @@ const MAX_ITERATIONS = 1000;
 
 function createIframe(url,next) {
   var iframe = document.createElement("iframe");
-  iframe.focus();
   iframe.src = url;
   iframe.remotePageLoaded = remotePageLoaded;
   var me = this;
@@ -84,6 +82,7 @@ function createIframe(url,next) {
   }
   iframe.addEventListener("load", iframeLoadCompleted, false);
   window.document.body.appendChild(iframe);
+  iframe.focus();
 };
 
 function refTest(test,ref) {
@@ -191,8 +190,10 @@ function runTests() {
   }
 }
 
+SimpleTest.waitForFocus(runTests);
+
 </script>
 </head>
-<body onload="runTests()">
+<body>
 </body>
 </html>
