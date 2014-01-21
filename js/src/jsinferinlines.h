@@ -1427,7 +1427,7 @@ JSScript::ensureRanAnalysis(JSContext *cx)
         return false;
     if (!hasAnalysis() && !makeAnalysis(cx))
         return false;
-    JS_ASSERT(analysis()->ranBytecode());
+    JS_ASSERT(hasAnalysis());
     return true;
 }
 
