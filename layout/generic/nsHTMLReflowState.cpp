@@ -127,6 +127,23 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
   return 0;
 }
 
+// NOTE: If we ever want to use nsCSSOffsetState for a flex item or a grid
+// item, we need to make it take the containing-block height as well as the
+// width, since flex items and grid items resolve vertical percent margins
+// and padding against the containing-block height, rather than its width.
+nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
+                                   nsRenderingContext *aRenderingContext,
+                                   nscoord aContainingBlockWidth)
+  : frame(aFrame)
+  , rendContext(aRenderingContext)
+  , mWritingMode(aFrame->GetWritingMode())
+{
+  MOZ_ASSERT(!aFrame->IsFlexItem(),
+             "We're about to resolve vertical percent margin & padding "
+             "values against CB width, which is incorrect for flex items");
+  InitOffsets(aContainingBlockWidth, aContainingBlockWidth, frame->GetType());
+}
+
 // Initialize a reflow state for a child frame's reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.

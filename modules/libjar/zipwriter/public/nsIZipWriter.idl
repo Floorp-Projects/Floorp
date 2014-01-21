@@ -36,7 +36,7 @@ interface nsIZipEntry;
  * entries within them, however it is possible that some zip programs may
  * experience problems what that.
  */
-[scriptable, uuid(6d4ef074-206c-4649-9884-57bc355864d6)]
+[scriptable, uuid(3ca10750-797e-4a22-bcfe-66170b5e96dd)]
 interface nsIZipWriter : nsISupports
 {
   /**
@@ -206,4 +206,15 @@ interface nsIZipWriter : nsISupports
    * @throws <other-error> on failure to complete the zip file
    */
   void close();
+
+  /**
+   * Make all stored(uncompressed) files align to given alignment size.
+   *
+   * @param aAlignSize is the alignment size, valid values from 2 to 32768, and
+            must be power of 2.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aAlignSize is invalid
+   * @throws <other-error> on failure to update the zip file
+   */
+  void alignStoredFiles(in uint16_t aAlignSize);
 };
