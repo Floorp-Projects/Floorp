@@ -13,7 +13,7 @@ import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignUpTask;
+import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
@@ -182,6 +182,14 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
       // intent.putExtra(AccountManager.KEY_AUTHTOKEN, accountType);
       setResult(RESULT_OK, intent);
       finish();
+
+      // Show success activity.
+      Intent successIntent = new Intent(FxAccountCreateAccountActivity.this, FxAccountConfirmAccountActivity.class);
+      successIntent.putExtra("email", email);
+      // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+      // the soft keyboard not being shown for the started activity. Why, Android, why?
+      successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+      startActivity(successIntent);
     }
   }
 
@@ -191,7 +199,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
     try {
-      new FxAccountSignUpTask(this, email, password, client, delegate).execute();
+      new FxAccountCreateAccountTask(this, email, password, client, delegate).execute();
     } catch (Exception e) {
       showRemoteError(e);
     }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <LinearLayout style="@style/FxAccountMiddle" >
+
+        <LinearLayout style="@style/FxAccountSpacer" />
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/firefox_accounts" >
+        </TextView>
+
+        <TextView
+            style="@style/FxAccountSubHeaderItem"
+            android:text="@string/fxaccount_confirm_your_account" >
+        </TextView>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="45dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/fxaccount_mail_contentDescription"
+            android:src="@drawable/fxaccount_mail" >
+
+        </ImageView>
+
+        <TextView
+            style="@style/FxAccountTextItem"
+            android:layout_marginBottom="15dp"
+            android:text="@string/fxaccount_verification_link_awaits_at"
+            android:textSize="18sp" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/email"
+            style="@style/FxAccountTextItem"
+            android:layout_marginBottom="45dp"
+            android:textSize="20sp"
+            android:textStyle="bold" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/resend_confirmation_email_link"
+            style="@style/FxAccountLinkItem"
+            android:text="@string/fxaccount_verification_link_not_showing_up_offer_resend" />
+
+        <LinearLayout style="@style/FxAccountSpacer" />
+
+        <ImageView
+            style="@style/FxAccountIcon"
+            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+    </LinearLayout>
+
+</ScrollView>
