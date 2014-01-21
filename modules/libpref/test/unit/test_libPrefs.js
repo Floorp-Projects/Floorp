@@ -7,6 +7,8 @@ const PREF_BOOL    = 128;
 const PREF_INT     = 64;
 const PREF_STRING  = 32;
 
+const MAX_PREF_LENGTH = 1 * 1024 * 1024;
+
 function makeList(a)
 {
   var o = {};
@@ -122,6 +124,15 @@ function run_test() {
   do_check_false(pb.prefHasUserValue("UserPref.existing.int"));
   pb.clearUserPref("UserPref.existing.char");
   do_check_false(pb.prefHasUserValue("UserPref.existing.char"));
+
+  //**************************************************************************//
+  // Large value test
+
+  let largeStr = new Array(MAX_PREF_LENGTH + 1).join('x');
+  pb.setCharPref("UserPref.large.char", largeStr);
+  largeStr += 'x';
+  do_check_throws(function() {
+    pb.setCharPref("UserPref.large.char", largeStr); }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
   //**************************************************************************//
   // getPrefType test
