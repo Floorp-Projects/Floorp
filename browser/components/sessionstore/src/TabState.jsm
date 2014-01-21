@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevelFilter",
-  "resource:///modules/sessionstore/PrivacyLevelFilter.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
+  "resource:///modules/sessionstore/PrivacyFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
@@ -366,9 +366,9 @@ let TabStateInternal = {
       // Filter sensitive data according to the current privacy level.
       if (!includePrivateData) {
         if (key === "storage") {
-          value = PrivacyLevelFilter.filterSessionStorageData(value, tab.pinned);
+          value = PrivacyFilter.filterSessionStorageData(value, tab.pinned);
         } else if (key === "formdata") {
-          value = PrivacyLevelFilter.filterFormData(value, tab.pinned);
+          value = PrivacyFilter.filterFormData(value, tab.pinned);
         }
       }
 

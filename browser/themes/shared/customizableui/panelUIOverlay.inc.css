@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %filter substitution
-%define menuPanelWidth 21em
+
+%define menuPanelWidth 22.35em
+%define panelTextSize 1rem
 %define exitSubviewGutterWidth 38px
 %define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
 %define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
@@ -71,7 +73,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 :-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbaritem > toolbarbutton > .toolbarbutton-text,
 :-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
 :-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarbutton > .toolbarbutton-text {
-  font-size: 10px;
+  font-size: @panelTextSize@;
 }
 
 #wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,
@@ -124,8 +126,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
 .panel-customization-placeholder {
   -moz-appearance: none;
   -moz-box-orient: vertical;
-  min-width: 7em;
-  max-width: 7em;
+  min-width: calc(@menuPanelWidth@ / 3);
+  max-width: calc(@menuPanelWidth@ / 3);
   height: calc(40px + 2.4em);
   max-height: calc(40px + 2.4em);
 }
@@ -145,7 +147,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
 }
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] {
-  width: 7em;
+  width: calc(@menuPanelWidth@ / 3);
   margin: 0 !important;
 }
 
@@ -162,6 +164,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   text-align: center;
 }
 
+#PanelUI-contents .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbarbutton[cui-areatype="menu-panel"] > .toolbarbutton-icon,
@@ -412,8 +415,8 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-me
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
-  min-width: 7em;
-  width: 7em;
+  min-width: calc(@menuPanelWidth@ / 3);
+  width: calc(@menuPanelWidth@ / 3);
 }
 
 #edit-controls@inAnyPanel@,
@@ -437,8 +440,8 @@ toolbarpaletteitem[place="palette"] > #search-container {
   -moz-box-flex: 1;
   /* reduce the width with 2px for each button to compensate for two separators
      of 3px. */
-  min-width: calc(7em - 2px);
-  max-width: calc(7em - 2px);
+  min-width: calc(@menuPanelWidth@ / 3 - 2px);
+  max-width: calc(@menuPanelWidth@ / 3 - 2px);
   height: auto;
   max-height: none;
   -moz-box-orient: horizontal;

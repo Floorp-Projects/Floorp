@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 949549</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=949549">Mozilla Bug 949549</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  "use strict";
+
+  // Ensure that `scanRequestData` doesn't throw with app:// URLs
+
+  const csp = SpecialPowers.Cc["@mozilla.org/contentsecuritypolicy;1"]
+              .createInstance(SpecialPowers.Ci.nsIContentSecurityPolicy);
+
+  const gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+
+  SimpleTest.waitForExplicitFinish();
+  var launchableValue, app;
+
+  function setupTest() {
+    // We have to install an app in order for the app URL to be valid
+    // (otherwise we get a "DummyChannel" that throws NS_NOT_IMPLEMENTED)
+    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.addPermission("webapps-manage", true, document);
+    SpecialPowers.autoConfirmAppInstall(function () {
+      let req = navigator.mozApps.install(gManifestURL);
+      req.onsuccess = function () {
+        app = this.result;
+        runTest();
+      }
+    });
+  }
+
+  function runTest() {
+    // We have to use a mochitest to test app:// urls,
+    // as app channels can't be instanciated in xpcshell.
+    // Because app protocol depends on webapps.jsm,
+    // which doesn't instanciate properly on xpcshell without many hacks
+    let appchan = SpecialPowers.Services.io.newChannel(gManifestURL, null, null);
+
+    try {
+      csp.scanRequestData(appchan);
+      ok(true, "scanRequestData hasn't thown");
+    } catch(e) {
+      ok(false, "scanRequestData throws");
+    }
+
+    cleanup()
+  }
+
+  function cleanup() {
+    SpecialPowers.setAllAppsLaunchable(launchableValue);
+    let req = navigator.mozApps.mgmt.uninstall(app);
+    req.onsuccess = function () {
+      SimpleTest.finish();
+    };
+  }
+
+  setupTest();
+</script>
+</pre>
+</body>
+</html>

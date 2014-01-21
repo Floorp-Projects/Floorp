@@ -68,6 +68,11 @@ add_task(function () {
   const FRAME_SCRIPT = "data:," +
     "docShell.QueryInterface%28Ci.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
 
+  // Clear the list of closed windows.
+  while (ss.getClosedWindowCount()) {
+    ss.forgetClosedWindow(0);
+  }
+
   // Create a new window to attach our frame script to.
   let win = yield promiseNewWindowLoaded();
   win.messageManager.loadFrameScript(FRAME_SCRIPT, true);
@@ -82,8 +87,52 @@ add_task(function () {
   let state = JSON.parse(ss.getTabState(tab));
   ok(state.isPrivate, "tab considered private");
 
-  // Cleanup.
+  // Ensure we don't allow restoring closed private tabs in non-private windows.
+  win.gBrowser.removeTab(tab);
+  is(ss.getClosedTabCount(win), 0, "no tabs to restore");
+
+  // Create a new tab in the new window that will load the frame script.
+  let tab = win.gBrowser.addTab("about:mozilla");
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+  SyncHandlers.get(browser).flush();
+
+  // Check that we consider the tab as private.
+  let state = JSON.parse(ss.getTabState(tab));
+  ok(state.isPrivate, "tab considered private");
+
+  // Check that all private tabs are removed when the non-private
+  // window is closed and we don't save windows without any tabs.
   yield promiseWindowClosed(win);
+  is(ss.getClosedWindowCount(), 0, "no windows to restore");
+});
+
+add_task(function () {
+  // Clear the list of closed windows.
+  while (ss.getClosedWindowCount()) {
+    ss.forgetClosedWindow(0);
+  }
+
+  // Create a new window to attach our frame script to.
+  let win = yield promiseNewWindowLoaded({private: true});
+
+  // Create a new tab in the new window that will load the frame script.
+  let tab = win.gBrowser.addTab("about:mozilla");
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+  SyncHandlers.get(browser).flush();
+
+  // Check that we consider the tab as private.
+  let state = JSON.parse(ss.getTabState(tab));
+  ok(state.isPrivate, "tab considered private");
+
+  // Ensure that closed tabs in a private windows can be restored.
+  win.gBrowser.removeTab(tab);
+  is(ss.getClosedTabCount(win), 1, "there is a single tab to restore");
+
+  // Ensure that closed private windows can never be restored.
+  yield promiseWindowClosed(win);
+  is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 
 function setUsePrivateBrowsing(browser, val) {
