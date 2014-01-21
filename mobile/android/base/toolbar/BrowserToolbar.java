@@ -485,22 +485,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
 
             switch (msg) {
-                case TITLE:
-                    flags.add(UpdateFlags.TITLE);
-                    break;
-
-                case START:
-                    updateBackButton(tab);
-                    updateForwardButton(tab);
-                    break;
-
                 case STOP:
-                    updateBackButton(tab);
-                    updateForwardButton(tab);
-
                     // Reset the title in case we haven't navigated
                     // to a new page yet.
                     flags.add(UpdateFlags.TITLE);
+                    // Fall through.
+                case START:
+                case CLOSED:
+                case ADDED:
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     break;
 
                 case SELECTED:
@@ -520,10 +514,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     setPrivateMode(tab.isPrivate());
                     break;
 
-                case CLOSED:
-                case ADDED:
-                    updateBackButton(tab);
-                    updateForwardButton(tab);
+                case TITLE:
+                    flags.add(UpdateFlags.TITLE);
                     break;
 
                 case FAVICON:
