@@ -480,6 +480,16 @@ nsDOMIdentity.prototype = {
           this._onCancelRequestCallback();
         }
         break;
+      case "Identity:RP:Watch:OnError":
+        if (!this._rpWatcher) {
+          this._log("WARNING: Received OnError message, but there is no RP watcher");
+          return;
+        }
+
+        if (this._rpWatcher.onerror) {
+          this._rpWatcher.onerror(msg.message);
+        }
+        break;
       case "Identity:IDP:CallBeginProvisioningCallback":
         this._callBeginProvisioningCallback(msg);
         break;
@@ -651,6 +661,7 @@ nsDOMIdentityInternal.prototype = {
       "Identity:RP:Watch:OnLogout",
       "Identity:RP:Watch:OnReady",
       "Identity:RP:Watch:OnCancel",
+      "Identity:RP:Watch:OnError",
       "Identity:IDP:CallBeginProvisioningCallback",
       "Identity:IDP:CallGenKeyPairCallback",
       "Identity:IDP:CallBeginAuthenticationCallback"
