@@ -4761,16 +4761,15 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static void
-PostBarrierCallback(JSTracer *trc, void *k, void *d)
+PostBarrierCallback(JSTracer *trc, JSString *key, void *data)
 {
     typedef HashMap<JSFlatString*,
                     UnbarrieredFieldInfo,
                     FieldHashPolicy,
                     SystemAllocPolicy> UnbarrieredFieldInfoHash;
 
-    JSString *prior = static_cast<JSString*>(k);
-    UnbarrieredFieldInfoHash *table = reinterpret_cast<UnbarrieredFieldInfoHash*>(d);
-    JSString *key = prior;
+    UnbarrieredFieldInfoHash *table = reinterpret_cast<UnbarrieredFieldInfoHash*>(data);
+    JSString *prior = key;
     JS_CallStringTracer(trc, &key, "CType fieldName");
     table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
 }

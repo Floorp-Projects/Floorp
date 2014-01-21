@@ -85,9 +85,8 @@ private:
      * This function is called during minor GCs for each key in the HashMap that
      * has been moved.
      */
-    static void KeyMarkCallback(JSTracer *trc, void *k, void *d) {
-        JSObject *key = static_cast<JSObject*>(k);
-        JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(d);
+    static void KeyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
+        JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(data);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
         self->mTable.rekeyIfMoved(prior, key);
@@ -694,7 +693,7 @@ private:
      * This function is called during minor GCs for each key in the HashMap that
      * has been moved.
      */
-    static void KeyMarkCallback(JSTracer *trc, void *k, void *d) {
+    static void KeyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
         /*
          * To stop the barriers on the values of mTable firing while we are
          * marking the store buffer, we cast the table to one that is
@@ -702,10 +701,9 @@ private:
          */
         typedef js::HashMap<JSObject *, JSObject *, js::PointerHasher<JSObject *, 3>,
                             js::SystemAllocPolicy> UnbarrieredMap;
-        JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(d);
+        JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(data);
         UnbarrieredMap &table = reinterpret_cast<UnbarrieredMap &>(self->mTable);
 
-        JSObject *key = static_cast<JSObject*>(k);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
         table.rekeyIfMoved(prior, key);
