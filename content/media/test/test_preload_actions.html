@@ -49,7 +49,9 @@ function maybeFinish(v, n) {
   }
   v._finished = true;
   log(n + ",");
-  removeNodeAndSource(v);
+  if (v.parentNode) {
+    v.parentNode.removeChild(v);
+  }
   manager.finished(v.token);
 }
 

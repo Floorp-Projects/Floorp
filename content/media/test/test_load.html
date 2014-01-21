@@ -62,7 +62,7 @@ var gMedia = null;
 
 function createMedia(tag) {
   gMedia = document.createElement(tag);
-  gMedia.preload = "auto";
+  gMedia.setAttribute("preload", "auto");
   for (var i=0; i<gEventTypes.length; i++) {
     gMedia.addEventListener(gEventTypes[i], listener, false);
   }
@@ -166,14 +166,12 @@ var gTests = [
 
 function nextTest() {
   if (gMedia) {
-    for (var i=0; i<gEventTypes.length; i++) {
-      gMedia.removeEventListener(gEventTypes[i], listener, false);
-    }
-    removeNodeAndSource(gMedia);
+    if (gMedia.parentNode)
+      gMedia.parentNode.removeChild(gMedia);
     gMedia = null;
   }
   gEventNum = 0;
-
+ 
   if (gTestNum == gTests.length) {
     gTestNum = 0;
     ++gTestFileNum;
