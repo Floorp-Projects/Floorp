@@ -25,4 +25,10 @@ public class FxAccountConstants {
       Logger.info(tag, "$$FxA PII$$: " + message);
     }
   }
+
+  // You must be at least 14 years old to create a Firefox Account.
+  public static final int MINIMUM_AGE_TO_CREATE_AN_ACCOUNT = 14;
+
+  // You must wait 15 minutes after failing an age check before trying to create a different account.
+  public static final long MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS = 15 * 60 * 1000;
 }
