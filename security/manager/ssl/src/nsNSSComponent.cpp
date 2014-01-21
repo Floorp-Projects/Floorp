@@ -11,6 +11,7 @@
 #include "nsNSSComponent.h"
 
 #include "ExtendedValidation.h"
+#include "NSSCertDBTrustDomain.h"
 #include "mozilla/Telemetry.h"
 #include "nsCertVerificationThread.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -204,6 +205,36 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
     NS_ASSERTION(false, "Bad operator to EnsureNSSInitialized");
     return false;
   }
+}
+
+static void
+SetClassicOCSPBehaviorFromPrefs(/*out*/ CertVerifier::ocsp_download_config* odc,
+                                /*out*/ CertVerifier::ocsp_strict_config* osc,
+                                /*out*/ CertVerifier::ocsp_get_config* ogc,
+                                const MutexAutoLock& /*proofOfLock*/)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(odc);
+  MOZ_ASSERT(osc);
+  MOZ_ASSERT(ogc);
+
+  // 0 = disabled, otherwise enabled
+  *odc = Preferences::GetInt("security.OCSP.enabled", 1)
+       ? CertVerifier::ocsp_on
+       : CertVerifier::ocsp_off;
+
+  *osc = Preferences::GetBool("security.OCSP.require", false)
+       ? CertVerifier::ocsp_strict
+       : CertVerifier::ocsp_relaxed;
+
+  // XXX: Always use POST for OCSP; see bug 871954 for undoing this.
+  *ogc = Preferences::GetBool("security.OCSP.GET.enabled", false)
+       ? CertVerifier::ocsp_get_enabled
+       : CertVerifier::ocsp_get_disabled;
+
+  SetClassicOCSPBehavior(*odc, *osc, *ogc);
+
+  SSL_ClearSessionCache();
 }
 
 nsNSSComponent::nsNSSComponent()
@@ -532,38 +563,8 @@ nsNSSComponent::ShutdownSmartCardThreads()
 }
 #endif // MOZ_DISABLE_CRYPTOLEGACY
 
-static char*
-nss_addEscape(const char* string, char quote)
-{
-    char* newString = 0;
-    int escapes = 0, size = 0;
-    const char* src;
-    char* dest;
-
-    for (src=string; *src ; src++) {
-        if ((*src == quote) || (*src == '\\')) {
-          escapes++;
-        }
-        size++;
-    }
-
-    newString = (char*)PORT_ZAlloc(escapes+size+1);
-    if (!newString) {
-        return nullptr;
-    }
-
-    for (src=string, dest=newString; *src; src++,dest++) {
-        if ((*src == quote) || (*src == '\\')) {
-            *dest++ = '\\';
-        }
-        *dest = *src;
-    }
-
-    return newString;
-}
-
 void
-nsNSSComponent::InstallLoadableRoots()
+nsNSSComponent::LoadLoadableRoots()
 {
   nsNSSShutDownPreventionLock locker;
   SECMODModule* RootsModule = nullptr;
@@ -638,15 +639,10 @@ nsNSSComponent::InstallLoadableRoots()
   };
 
   for (size_t il = 0; il < sizeof(possible_ckbi_locations)/sizeof(const char*); ++il) {
-    nsCOMPtr<nsIFile> mozFile;
-    char* fullLibraryPath = nullptr;
+    nsAutoCString libDir;
 
-    if (!possible_ckbi_locations[il])
-    {
-      fullLibraryPath = PR_GetLibraryName(nullptr, "nssckbi");
-    }
-    else
-    {
+    if (possible_ckbi_locations[il]) {
+      nsCOMPtr<nsIFile> mozFile;
       if (possible_ckbi_locations[il] == nss_lib) {
         // Get the location of the nss3 library.
         char* nss_path = PR_GetLibraryFilePathname(DLL_PREFIX "nss3" DLL_SUFFIX,
@@ -676,50 +672,16 @@ nsNSSComponent::InstallLoadableRoots()
         continue;
       }
 
-      nsAutoCString processDir;
-      mozFile->GetNativePath(processDir);
-      fullLibraryPath = PR_GetLibraryName(processDir.get(), "nssckbi");
-    }
-
-    if (!fullLibraryPath) {
-      continue;
-    }
-
-    char* escaped_fullLibraryPath = nss_addEscape(fullLibraryPath, '\"');
-    if (!escaped_fullLibraryPath) {
-      PR_FreeLibraryName(fullLibraryPath); // allocated by NSPR
-      continue;
-    }
-
-    // If a module exists with the same name, delete it.
-    NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-    int modType;
-    SECMOD_DeleteModule(const_cast<char*>(modNameUTF8.get()), &modType);
-
-    nsCString pkcs11moduleSpec;
-    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("name=\""));
-    pkcs11moduleSpec.Append(modNameUTF8.get());
-    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\" library=\""));
-    pkcs11moduleSpec.Append(escaped_fullLibraryPath);
-    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\""));
-
-    PR_FreeLibraryName(fullLibraryPath); // allocated by NSPR
-    PORT_Free(escaped_fullLibraryPath);
-
-    RootsModule =
-      SECMOD_LoadUserModule(const_cast<char*>(pkcs11moduleSpec.get()),
-                            nullptr, // no parent
-                            false); // do not recurse
-
-    if (RootsModule) {
-      bool found = (RootsModule->loaded);
-
-      SECMOD_DestroyModule(RootsModule);
-      RootsModule = nullptr;
-
-      if (found) {
-        break;
+      if (NS_FAILED(mozFile->GetNativePath(libDir))) {
+        continue;
       }
+    }
+
+    NS_ConvertUTF16toUTF8 modNameUTF8(modName);
+    if (mozilla::psm::LoadLoadableRoots(
+            libDir.Length() > 0 ? libDir.get() : nullptr,
+            modNameUTF8.get()) == SECSuccess) {
+      break;
     }
   }
 }
@@ -733,12 +695,7 @@ nsNSSComponent::UnloadLoadableRoots()
   if (NS_FAILED(rv)) return;
 
   NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-  SECMODModule* RootsModule = SECMOD_FindModule(modNameUTF8.get());
-
-  if (RootsModule) {
-    SECMOD_UnloadUserModule(RootsModule);
-    SECMOD_DestroyModule(RootsModule);
-  }
+  ::mozilla::psm::UnloadLoadableRoots(modNameUTF8.get());
 }
 
 nsresult
@@ -894,19 +851,6 @@ static const CipherPref sCipherPrefs[] = {
  { nullptr, 0 } // end marker
 };
 
-static void
-setNonPkixOcspEnabled(int32_t ocspEnabled)
-{
-  // Note: this preference is numeric vs boolean because previously we
-  // supported more than two options.
-  CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
-  if (!ocspEnabled) {
-    CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
-  } else {
-    CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
-  }
-}
-
 static const int32_t OCSP_ENABLED_DEFAULT = 1;
 static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
 static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
@@ -993,10 +937,9 @@ CipherSuiteChangeObserver::Observe(nsISupports* aSubject,
 } // anonymous namespace
 
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
-void nsNSSComponent::setValidationOptions(bool isInitialSetting)
+void nsNSSComponent::setValidationOptions(bool isInitialSetting,
+                                          const MutexAutoLock& lock)
 {
-  nsNSSShutDownPreventionLock locker;
-
   bool crlDownloading = Preferences::GetBool("security.CRL_download.enabled",
                                              false);
 
@@ -1024,22 +967,6 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   PublicSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
   PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
 
-  setNonPkixOcspEnabled(ocspEnabled);
-
-  CERT_SetOCSPFailureMode( ocspRequired ?
-                           ocspMode_FailureIsVerificationFailure
-                           : ocspMode_FailureIsNotAVerificationFailure);
-
-  int OCSPTimeoutSeconds = 3;
-  if (ocspRequired) {
-    OCSPTimeoutSeconds = 10;
-  }
-  CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
-
-  // XXX: Always use POST for OCSP; see bug 871954 for undoing this.
-  bool ocspGetEnabled = Preferences::GetBool("security.OCSP.GET.enabled", false);
-  CERT_ForcePostMethodForOCSP(!ocspGetEnabled);
-
   CertVerifier::implementation_config certVerifierImplementation
     = CertVerifier::classic;
 
@@ -1049,18 +976,19 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   }
 #endif
 
+  CertVerifier::ocsp_download_config odc;
+  CertVerifier::ocsp_strict_config osc;
+  CertVerifier::ocsp_get_config ogc;
+
+  SetClassicOCSPBehaviorFromPrefs(&odc, &osc, &ogc, lock);
   mDefaultCertVerifier = new SharedCertVerifier(
       certVerifierImplementation,
       aiaDownloadEnabled ?
         CertVerifier::missing_cert_download_on : CertVerifier::missing_cert_download_off,
       crlDownloading ?
         CertVerifier::crl_download_allowed : CertVerifier::crl_local_only,
-      ocspEnabled ?
-        CertVerifier::ocsp_on : CertVerifier::ocsp_off,
-      ocspRequired ?
-        CertVerifier::ocsp_strict : CertVerifier::ocsp_relaxed,
-      ocspGetEnabled ?
-        CertVerifier::ocsp_get_enabled : CertVerifier::ocsp_get_disabled);
+      odc, osc, ogc);
+
 }
 
 // Enable the TLS versions given in the prefs, defaulting to SSL 3.0 (min
@@ -1111,15 +1039,15 @@ nsNSSComponent::SkipOcsp()
 NS_IMETHODIMP
 nsNSSComponent::SkipOcspOff()
 {
-  nsNSSShutDownPreventionLock locker;
-  // 0 = disabled, 1 = enabled
-  int32_t ocspEnabled = Preferences::GetInt("security.OCSP.enabled",
-                                            OCSP_ENABLED_DEFAULT);
+  MutexAutoLock lock(mutex);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mNSSInitialized);
+  NS_ENSURE_TRUE(mNSSInitialized, NS_ERROR_NOT_INITIALIZED);
 
-  setNonPkixOcspEnabled(ocspEnabled);
-
-  if (ocspEnabled)
-    SSL_ClearSessionCache();
+  CertVerifier::ocsp_download_config odc; // ignored
+  CertVerifier::ocsp_strict_config osc; // ignored
+  CertVerifier::ocsp_get_config ogc; // ignored
+  SetClassicOCSPBehaviorFromPrefs(&odc, &osc, &ogc, lock);
 
   return NS_OK;
 }
@@ -1200,23 +1128,12 @@ nsNSSComponent::InitializeNSS()
 
     ConfigureInternalPKCS11Token();
 
-    // The NSS_INIT_NOROOTINIT flag turns off the loading of the root certs
-    // module by NSS_Initialize because we will load it in InstallLoadableRoots
-    // later.  It also allows us to work around a bug in the system NSS in
-    // Ubuntu 8.04, which loads any nonexistent "<configdir>/libnssckbi.so" as
-    // "/usr/lib/nss/libnssckbi.so".
-    uint32_t init_flags = NSS_INIT_NOROOTINIT | NSS_INIT_OPTIMIZESPACE;
-    SECStatus init_rv = ::NSS_Initialize(profileStr.get(), "", "",
-                                         SECMOD_DB, init_flags);
-
+    SECStatus init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
     if (init_rv != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
 
       // try to init r/o
-      init_flags |= NSS_INIT_READONLY;
-      init_rv = ::NSS_Initialize(profileStr.get(), "", "",
-                                 SECMOD_DB, init_flags);
-
+      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true);
       if (init_rv != SECSuccess) {
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
 
@@ -1250,6 +1167,7 @@ nsNSSComponent::InitializeNSS()
     }
 
     DisableMD5();
+    LoadLoadableRoots();
 
     SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
 
@@ -1287,12 +1205,10 @@ nsNSSComponent::InitializeNSS()
     }
 
     // dynamic options from prefs
-    setValidationOptions(true);
+    setValidationOptions(true, lock);
 
     mHttpForNSS.initTable();
     mHttpForNSS.registerHttpClient();
-
-    InstallLoadableRoots();
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
     LaunchSmartCardThreads();
@@ -1693,7 +1609,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
       MutexAutoLock lock(mutex);
-      setValidationOptions(false);
+      setValidationOptions(false, lock);
     } else if (prefName.Equals("network.ntlm.send-lm-response")) {
       bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
                                          SEND_LM_DEFAULT);

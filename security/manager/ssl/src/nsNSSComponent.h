@@ -180,9 +180,10 @@ private:
   nsresult InitializeNSS();
   void ShutdownNSS();
 
-  void InstallLoadableRoots();
+  void LoadLoadableRoots();
   void UnloadLoadableRoots();
-  void setValidationOptions(bool isInitialSetting);
+  void setValidationOptions(bool isInitialSetting,
+                            const mozilla::MutexAutoLock& lock);
   nsresult setEnabledTLSVersions();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
