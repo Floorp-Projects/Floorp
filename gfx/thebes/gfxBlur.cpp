@@ -99,7 +99,7 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
 
     DrawTarget *dest = aDestinationCtx->GetDrawTarget();
     if (!dest) {
-      NS_ERROR("Blurring not supported for Thebes contexts!");
+      NS_WARNING("Blurring not supported for Thebes contexts!");
       return;
     }
 

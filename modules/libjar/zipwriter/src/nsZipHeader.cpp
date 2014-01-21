@@ -342,3 +342,54 @@ const uint8_t * nsZipHeader::GetExtraField(uint16_t aTag, bool aLocal, uint16_t 
 
     return nullptr;
 }
+
+/*
+ * Pad extra field to align data starting position to specified size.
+ */
+nsresult nsZipHeader::PadExtraField(uint32_t aOffset, uint16_t aAlignSize)
+{
+    uint32_t pad_size;
+    uint32_t pa_offset;
+    uint32_t pa_end;
+
+    // Check for range and power of 2.
+    if (aAlignSize < 2 || aAlignSize > 32768 ||
+        (aAlignSize & (aAlignSize - 1)) != 0) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // Point to current starting data position.
+    aOffset += ZIP_FILE_HEADER_SIZE + mName.Length() + mLocalFieldLength;
+
+    // Calculate aligned offset.
+    pa_offset = aOffset & ~(aAlignSize - 1);
+    pa_end = pa_offset + aAlignSize;
+    pad_size = pa_end - aOffset;
+    if (pad_size == 0) {
+      return NS_OK;
+    }
+
+    // Leave enough room(at least 4 bytes) for valid values in extra field.
+    while (pad_size < 4) {
+      pad_size += aAlignSize;
+    }
+    // Extra field length is 2 bytes.
+    if (mLocalFieldLength + pad_size > 65535) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoArrayPtr<uint8_t> field = mLocalExtraField;
+    uint32_t pos = mLocalFieldLength;
+
+    mLocalExtraField = new uint8_t[mLocalFieldLength + pad_size];
+    memcpy(mLocalExtraField.get(), field, mLocalFieldLength);
+    // Use 0xFFFF as tag ID to avoid conflict with other IDs.
+    // For more information, please read "Extensible data fields" section in:
+    // http://www.pkware.com/documents/casestudies/APPNOTE.TXT
+    WRITE16(mLocalExtraField.get(), &pos, 0xFFFF);
+    WRITE16(mLocalExtraField.get(), &pos, pad_size - 4);
+    memset(mLocalExtraField.get() + pos, 0, pad_size - 4);
+    mLocalFieldLength += pad_size;
+
+    return NS_OK;
+}

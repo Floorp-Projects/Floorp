@@ -199,31 +199,6 @@ gfxWindowsSurface::GetAsImageSurface()
     return result.forget();
 }
 
-already_AddRefed<gfxWindowsSurface>
-gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat format)
-{
-    if (mForPrinting)
-        return nullptr;
-
-    if (format != gfxImageFormatRGB24)
-        return nullptr;
-
-    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, format);
-    if (wsurf->CairoStatus() != 0)
-        return nullptr;
-
-    gfxContext tmpCtx(wsurf);
-    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx.SetSource(this);
-    tmpCtx.Paint();
-
-    // we let the new DDB surfaces be converted back to dibsections if
-    // acquire_source_image is called on them
-    cairo_win32_surface_set_can_convert_to_dib(wsurf->CairoSurface(), TRUE);
-
-    return wsurf.forget().downcast<gfxWindowsSurface>();
-}
-
 nsresult
 gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName)

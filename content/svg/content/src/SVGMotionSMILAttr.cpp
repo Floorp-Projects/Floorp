@@ -41,7 +41,7 @@ SVGMotionSMILAttr::ClearAnimValue()
 nsresult
 SVGMotionSMILAttr::SetAnimValue(const nsSMILValue& aValue)
 {
-  gfx::Matrix matrix = gfx::ToMatrix(SVGMotionSMILType::CreateMatrix(aValue));
+  gfx::Matrix matrix = SVGMotionSMILType::CreateMatrix(aValue);
   mSVGElement->SetAnimateMotionTransform(&matrix);
   return NS_OK;
 }

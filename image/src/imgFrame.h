@@ -178,9 +178,6 @@ private: // data
   /** Have we called DiscardTracker::InformAllocation()? */
   bool mInformedDiscardTracker;
 
-#ifdef XP_WIN
-  bool mIsDDBSurface;
-#endif
   bool mDirty;
 };
 
