@@ -22,6 +22,10 @@
 using namespace mozilla::css;
 using namespace mozilla::layout;
 
+// Convenience typedefs for helper classes that we forward-declare in .h file
+// (so that nsFlexContainerFrame methods can use them as parameters):
+typedef nsFlexContainerFrame::StrutInfo StrutInfo;
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetFlexContainerLog()
@@ -610,6 +614,43 @@ private:
   nscoord mLineCrossSize;
   nscoord mBaselineOffsetFromCrossStart;
 };
+
+// Information about a strut left behind by a FlexItem that's been collapsed
+// using "visibility:collapse".
+struct nsFlexContainerFrame::StrutInfo {
+  StrutInfo(uint32_t aItemIdx, nscoord aStrutCrossSize)
+    : mItemIdx(aItemIdx),
+      mStrutCrossSize(aStrutCrossSize)
+  {
+  }
+
+  uint32_t mItemIdx;      // Index in the child list.
+  nscoord mStrutCrossSize; // The cross-size of this strut.
+};
+
+static void
+BuildStrutInfoFromCollapsedItems(nsTArray<FlexLine>& aLines,
+                                 nsTArray<StrutInfo>& aStruts)
+{
+  MOZ_ASSERT(aStruts.IsEmpty(),
+             "We should only build up StrutInfo once per reflow, so "
+             "aStruts should be empty when this is called");
+
+  uint32_t itemIdxInContainer = 0;
+  for (uint32_t lineIdx = 0; lineIdx < aLines.Length(); lineIdx++) {
+    FlexLine& line = aLines[lineIdx];
+    for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+      FlexItem& item = line.mItems[i];
+      if (NS_STYLE_VISIBILITY_COLLAPSE ==
+          item.Frame()->StyleVisibility()->mVisible) {
+        // Note the cross size of the line as the item's strut size.
+        aStruts.AppendElement(StrutInfo(itemIdxInContainer,
+                                        line.GetLineCrossSize()));
+      }
+      itemIdxInContainer++;
+    }
+  }
+}
 
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
 static nsIFrame*
@@ -2659,12 +2700,17 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord contentBoxMainSize = GetMainSizeFromReflowState(aReflowState,
                                                           axisTracker);
 
+  nsAutoTArray<StrutInfo, 1> struts;
   nsresult rv = DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
                              contentBoxMainSize, availableHeightForContent,
-                             axisTracker);
+                             struts, axisTracker);
 
-  // XXXdholbert If we discover any visibility:collapse children, we'll make
-  // a second call to DoFlexLayout here.
+  if (NS_SUCCEEDED(rv) && !struts.IsEmpty()) {
+    // We're restarting flex layout, with new knowledge of collapsed items.
+    rv = DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
+                      contentBoxMainSize, availableHeightForContent,
+                      struts, axisTracker);
+  }
 
   return rv;
 }
@@ -2676,6 +2722,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    nsReflowStatus&          aStatus,
                                    nscoord aContentBoxMainSize,
                                    nscoord aAvailableHeightForContent,
+                                   nsTArray<StrutInfo>& aStruts,
                                    const FlexboxAxisTracker& aAxisTracker)
 {
   aStatus = NS_FRAME_COMPLETE;
@@ -2743,6 +2790,18 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     crossAxisPosnTracker(lines, aReflowState.mStylePosition->mAlignContent,
                          contentBoxCrossSize, isCrossSizeDefinite,
                          aAxisTracker);
+
+  // Now that we know the cross size of each line (including
+  // "align-content:stretch" adjustments, from the CrossAxisPositionTracker
+  // constructor), we can create struts for any flex items with
+  // "visibility: collapse" (and restart flex layout).
+  if (aStruts.IsEmpty()) { // (Don't make struts if we already did)
+    BuildStrutInfoFromCollapsedItems(lines, aStruts);
+    if (!aStruts.IsEmpty()) {
+      // Restart flex layout, using our struts.
+      return NS_OK;
+    }
+  }
 
   // Set the flex container's baseline, from the baseline-alignment position
   // of the first line's baseline-aligned items.
