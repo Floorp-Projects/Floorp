@@ -131,7 +131,7 @@ function startListeners() {
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:goUrl", goUrl);
-  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
+  addMessageListenerId("Marionette:getUrl", getUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
   addMessageListenerId("Marionette:goBack", goBack);
@@ -151,7 +151,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementLocation", getElementLocation);
+  addMessageListenerId("Marionette:getElementPosition", getElementPosition);
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -234,7 +234,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
-  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
+  removeMessageListenerId("Marionette:getUrl", getUrl);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
@@ -251,7 +251,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  removeMessageListenerId("Marionette:getElementLocation", getElementLocation);
+  removeMessageListenerId("Marionette:getElementPosition", getElementPosition);
   removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -1237,9 +1237,9 @@ function goUrl(msg) {
 }
 
 /**
- * Get URL of the top level browsing context.
+ * Get the current URI
  */
-function getCurrentUrl(msg) {
+function getUrl(msg) {
   sendResponse({value: curFrame.location.href}, msg.json.command_id);
 }
 
@@ -1708,11 +1708,11 @@ function sendKeysToElement(msg) {
 }
 
 /**
- * Get the element's top left-hand corner point.
+ * Get the position of an element
  */
-function getElementLocation(msg) {
+function getElementPosition(msg) {
   let command_id = msg.json.command_id;
-  try {
+  try{
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
     let rect = el.getBoundingClientRect();
 
