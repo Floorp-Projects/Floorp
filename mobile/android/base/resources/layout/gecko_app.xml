@@ -48,13 +48,6 @@
                                          style="@style/FindBar"
                                          android:visibility="gone"/>
 
-        <org.mozilla.gecko.MediaCastingBar android:id="@+id/media_casting"
-                                           android:layout_width="fill_parent"
-                                           android:layout_height="wrap_content"
-                                           android:layout_alignParentBottom="true"
-                                           style="@style/FindBar"
-                                           android:visibility="gone"/>
-
         <RelativeLayout android:id="@+id/camera_layout"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
