@@ -1249,6 +1249,24 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mActionItemBar.removeView(actionItem);
     }
 
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+
+        mTabs.setPrivateMode(isPrivate);
+        mMenu.setPrivateMode(isPrivate);
+        mMenuIcon.setPrivateMode(isPrivate);
+        mUrlEditLayout.setPrivateMode(isPrivate);
+
+        if (mBack instanceof BackButton) {
+            ((BackButton) mBack).setPrivateMode(isPrivate);
+        }
+
+        if (mForward instanceof ForwardButton) {
+            ((ForwardButton) mForward).setPrivateMode(isPrivate);
+        }
+    }
+
     public void show() {
         setVisibility(View.VISIBLE);
     }
@@ -1266,18 +1284,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             updateBackButton(tab);
             updateForwardButton(tab);
 
-            final boolean isPrivate = tab.isPrivate();
-            setPrivateMode(isPrivate);
-            mTabs.setPrivateMode(isPrivate);
-            mMenu.setPrivateMode(isPrivate);
-            mMenuIcon.setPrivateMode(isPrivate);
-            mUrlEditLayout.setPrivateMode(isPrivate);
-
-            if (mBack instanceof BackButton)
-                ((BackButton) mBack).setPrivateMode(isPrivate);
-
-            if (mForward instanceof ForwardButton)
-                ((ForwardButton) mForward).setPrivateMode(isPrivate);
+            setPrivateMode(tab.isPrivate());
         }
     }
 
