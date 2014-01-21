@@ -2833,6 +2833,21 @@ ElementRestyler::SendAccessibilityNotifications()
 #endif
 }
 
+inline nsIFrame*
+GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
+{
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "must start with the first continuation");
+  // Might we have special siblings?
+  if (!(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+    // nothing more to do here
+    return nullptr;
+  }
+
+  return static_cast<nsIFrame*>
+    (aPropTable->Get(aFrame, nsIFrame::IBSplitSpecialSibling()));
+}
+
 void
 RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                       nsStyleChangeList* aChangeList,
@@ -2847,17 +2862,19 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }
 
-  nsIFrame* frame = aFrame;
+  NS_ASSERTION(!aFrame->GetPrevContinuation(),
+               "must start with the first continuation");
 
-  NS_ASSERTION(!frame->GetPrevContinuation(), "must start with the first in flow");
-
-  // We need to handle aFrame and all of its continuations and special
-  // siblings and their continuations.  ReResolveStyleContext loops over
-  // the continuations, and also loops over the similar-type sequences
-  // in block-in-inline splits (i.e., either all the blocks or all the
-  // inlines), so here we only have to advance one step to the other set
-  // of special siblings (i.e., switch from blocks to inlines, or
-  // vice-versa).
+  // We want to start with this frame and walk all its next-in-flows,
+  // as well as all its special siblings and their next-in-flows,
+  // reresolving style on all the frames we encounter in this walk that
+  // we didn't reach already.  In the normal case, this will mean only
+  // restyling the first two block-in-inline splits and no
+  // continuations, and skipping everything else.  However, when we have
+  // a style change targeted at an element inside a context where styles
+  // vary between continuations (e.g., a style change on an element that
+  // extends from inside a styled ::first-line to outside of that first
+  // line), we might restyle more than that.
 
   FramePropertyTable* propTable = mPresContext->PropertyTable();
 
@@ -2869,34 +2886,32 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     parent && parent->IsElement() ? parent->AsElement() : nullptr;
   treeMatchContext.InitAncestors(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
-  for (int ibSet = 0; ibSet < 2; ++ibSet) {
-    // loop over the two sets (blocks, inlines) of special siblings
-    ElementRestyler restyler(mPresContext, frame, aChangeList,
-                             aMinChange, aRestyleTracker,
-                             treeMatchContext,
-                             visibleKidsOfHiddenElement);
+  for (nsIFrame* ibSibling = aFrame; ibSibling;
+       ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
+    // Outer loop over special siblings
+    for (nsIFrame* cont = ibSibling; cont; cont = cont->GetNextContinuation()) {
+      if (GetPrevContinuationWithSameStyle(cont)) {
+        // We already handled this element when dealing with its earlier
+        // continuation.
+        continue;
+      }
 
-    restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self);
+      // Inner loop over next-in-flows of the current frame
+      ElementRestyler restyler(mPresContext, cont, aChangeList,
+                               aMinChange, aRestyleTracker,
+                               treeMatchContext,
+                               visibleKidsOfHiddenElement);
 
-    if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
-      // If it's going to cause a framechange, then don't bother
-      // with the continuations or special siblings since they'll be
-      // clobbered by the frame reconstruct anyway.
-      NS_ASSERTION(!frame->GetPrevContinuation(),
-                   "continuing frame had more severe impact than first-in-flow");
-      return;
-    }
+      restyler.Restyle(aRestyleDescendants ? eRestyle_Subtree : eRestyle_Self);
 
-    // Might we have special siblings?
-    if (!(frame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
-      // nothing more to do here
-      return;
-    }
-
-    frame = static_cast<nsIFrame*>
-      (propTable->Get(frame, nsIFrame::IBSplitSpecialSibling()));
-    if (!frame) {
-      return;
+      if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
+        // If it's going to cause a framechange, then don't bother
+        // with the continuations or special siblings since they'll be
+        // clobbered by the frame reconstruct anyway.
+        NS_ASSERTION(!cont->GetPrevContinuation(),
+                     "continuing frame had more severe impact than first-in-flow");
+        return;
+      }
     }
   }
 }

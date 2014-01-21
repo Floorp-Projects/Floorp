@@ -898,7 +898,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         // Check that all the property names are non-numeric strings.
         uint32_t unused;
         if (!JSID_IS_ATOM(id) || JSID_TO_ATOM(id)->isIndex(&unused)) {
-            RootedValue idValue(cx, IdToJsval(id));
+            RootedValue idValue(cx, IdToValue(id));
             ReportCannotConvertTo(cx, idValue, "StructType field name");
             return false;
         }

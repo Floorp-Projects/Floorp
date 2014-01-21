@@ -108,8 +108,8 @@ add_task(function() {
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
-  window.resizeTo(380, window.outerHeight);
-  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  window.resizeTo(360, window.outerHeight);
+  yield waitForCondition(() => navbar.getAttribute("overflowing") == "true");
   ok(!navbar.querySelector("#" + kSearchBox), "Search container should be overflowing");
   let placements = CustomizableUI.getWidgetIdsInArea(navbar.id);
   let searchboxPlacement = placements.indexOf(kSearchBox);

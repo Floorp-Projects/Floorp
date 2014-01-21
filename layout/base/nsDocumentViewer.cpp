@@ -2851,6 +2851,10 @@ nsDocumentViewer::SetTextZoom(float aTextZoom)
   // And do the external resources
   mDocument->EnumerateExternalResources(SetExtResourceTextZoom, &ZoomInfo);
 
+  nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
+                                      NS_LITERAL_STRING("TextZoomChange"),
+                                      true, true);
+
   return NS_OK;
 }
 
@@ -2953,6 +2957,10 @@ nsDocumentViewer::SetFullZoom(float aFullZoom)
 
   // And do the external resources
   mDocument->EnumerateExternalResources(SetExtResourceFullZoom, &ZoomInfo);
+
+  nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
+                                      NS_LITERAL_STRING("FullZoomChange"),
+                                      true, true);
 
   return NS_OK;
 }
@@ -4033,15 +4041,14 @@ nsDocumentViewer::ShouldAttachToTopLevel()
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // On windows, in the parent process we also attach, but just to
   // chrome items
-  int32_t docType;
   nsWindowType winType;
-  containerItem->GetItemType(&docType);
   mParentWidget->GetWindowType(winType);
   if ((winType == eWindowType_toplevel ||
        winType == eWindowType_dialog ||
        winType == eWindowType_invisible) &&
-      docType == nsIDocShellTreeItem::typeChrome)
+      containerItem->ItemType() == nsIDocShellTreeItem::typeChrome) {
     return true;
+  }
 #endif
 
   return false;

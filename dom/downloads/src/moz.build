@@ -5,11 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_COMPONENTS += [
-    'DownloadsAPI.js',
     'DownloadsAPI.manifest',
 ]
 
-EXTRA_JS_MODULES += [
+EXTRA_PP_COMPONENTS = [
+    'DownloadsAPI.js',
+]
+
+EXTRA_PP_JS_MODULES += [
     'DownloadsAPI.jsm',
     'DownloadsIPC.jsm',
 ]

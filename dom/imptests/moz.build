@@ -4,33 +4,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'failures/editing/conformancetest',
-    'failures/editing/selecttest',
-    'failures/html/dom',
-    'failures/html/dom/collections',
-    'failures/html/dom/errors',
-    'failures/html/dom/lists',
-    'failures/html/dom/nodes',
-    'failures/html/html/browsers/the-window-object',
-    'failures/html/html/browsers/the-window-object/named-access-on-the-window-object',
-    'failures/html/html/dom/documents/dta',
-    'failures/html/html/dom/documents/dta/doc.gEBN',
-    'failures/html/html/obsolete/implreq/oeaaa',
-    'failures/html/html/semantics/forms/the-form-element',
-    'failures/html/html/semantics/forms/the-option-element',
-    'failures/html/html/semantics/forms/the-select-element',
-    'failures/html/html/semantics/scripting-1/the-script-element',
-    'failures/html/html/semantics/tabular-data/the-table-element',
-    'failures/html/html/webappapis/atob',
-    'failures/html/js/builtins',
-    'failures/html/microdata/microdata-dom-api',
-    'failures/html/typedarrays',
-    'failures/webapps/WebStorage/tests/submissions/Infraware',
-    'failures/webapps/WebStorage/tests/submissions/Ms2ger',
-    'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger'
+MOCHITEST_MANIFESTS += [
+    'editing/mochitest.ini',
+    'html/mochitest.ini',
+    'webapps/mochitest.ini',
 ]
 
-include('editing.mozbuild')
-include('html.mozbuild')
-include('webapps.mozbuild')
+MOCHITEST_MANIFESTS += [
+    'failures/editing/conformancetest/mochitest.ini',
+    'failures/editing/selecttest/mochitest.ini',
+    'failures/html/dom/collections/mochitest.ini',
+    'failures/html/dom/errors/mochitest.ini',
+    'failures/html/dom/lists/mochitest.ini',
+    'failures/html/dom/mochitest.ini',
+    'failures/html/dom/nodes/mochitest.ini',
+    'failures/html/html/browsers/the-window-object/mochitest.ini',
+    'failures/html/html/browsers/the-window-object/named-access-on-the-window-object/mochitest.ini',
+    'failures/html/html/dom/documents/dta/doc.gEBN/mochitest.ini',
+    'failures/html/html/dom/documents/dta/mochitest.ini',
+    'failures/html/html/obsolete/implreq/oeaaa/mochitest.ini',
+    'failures/html/html/semantics/forms/the-form-element/mochitest.ini',
+    'failures/html/html/semantics/forms/the-option-element/mochitest.ini',
+    'failures/html/html/semantics/forms/the-select-element/mochitest.ini',
+    'failures/html/html/semantics/scripting-1/the-script-element/mochitest.ini',
+    'failures/html/html/semantics/tabular-data/the-table-element/mochitest.ini',
+    'failures/html/html/webappapis/atob/mochitest.ini',
+    'failures/html/js/builtins/mochitest.ini',
+    'failures/html/microdata/microdata-dom-api/mochitest.ini',
+    'failures/html/typedarrays/mochitest.ini',
+    'failures/webapps/WebStorage/tests/submissions/Infraware/mochitest.ini',
+    'failures/webapps/WebStorage/tests/submissions/Ms2ger/mochitest.ini',
+    'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger/mochitest.ini',
+]

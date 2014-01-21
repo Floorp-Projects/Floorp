@@ -41,16 +41,6 @@
   background-color: blue;
 }
 
-#placesList > treechildren::-moz-tree-cell(leaf) ,
-#placesList > treechildren::-moz-tree-image(leaf) {
-  cursor: pointer;
-}
-
-#placesList > treechildren::-moz-tree-cell-text(leaf, hover) {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
 #placesList > treechildren::-moz-tree-cell(separator) {
   cursor: default;
 }
