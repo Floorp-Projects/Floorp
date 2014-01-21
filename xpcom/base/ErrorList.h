@@ -600,10 +600,6 @@
   /* any new errors here should have an associated entry added in xpc.msg */
 
   ERROR(NS_SUCCESS_I_DID_SOMETHING,      SUCCESS(1)),
-  /* Classes that want to only be touched by chrome (or from code whose
-   * filename begins with chrome://global/) shoudl return this from their
-   * scriptable helper's PreCreate hook. */
-  ERROR(NS_SUCCESS_CHROME_ACCESS_ONLY,   SUCCESS(2)),
 #undef MODULE
 
 
