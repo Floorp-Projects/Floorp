@@ -370,6 +370,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     public boolean onBackPressed() {
+        if (isEditing()) {
+            stopEditing();
+            return true;
+        }
+
         return mUrlDisplayLayout.dismissSiteIdentityPopup();
     }
 
