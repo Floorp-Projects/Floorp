@@ -16,6 +16,11 @@
 extern "C" {
 #endif
 
+// 1 MB should be enough for everyone.
+static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
+// Actually, 4kb should be enough for everyone.
+static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
+
 typedef union
 {
     char*       stringVal;
