@@ -15,19 +15,19 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignInTask;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 import ch.boye.httpclientandroidlib.HttpResponse;
 
 /**
@@ -35,6 +35,8 @@ import ch.boye.httpclientandroidlib.HttpResponse;
  */
 public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
   protected static final String LOG_TAG = FxAccountSignInActivity.class.getSimpleName();
+
+  private static final int CHILD_REQUEST_CODE = 3;
 
   /**
    * {@inheritDoc}
@@ -58,21 +60,44 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     updateButtonState();
     createShowPasswordButton();
 
-    this.launchActivityOnClick(ensureFindViewById(null, R.id.create_account_link, "create account instead link"), FxAccountCreateAccountActivity.class);
+    View signInInsteadLink = ensureFindViewById(null, R.id.create_account_link, "create account instead link");
+    signInInsteadLink.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Intent intent = new Intent(FxAccountSignInActivity.this, FxAccountCreateAccountActivity.class);
+        intent.putExtra("email", emailEdit.getText().toString());
+        intent.putExtra("password", passwordEdit.getText().toString());
+        // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+        // the soft keyboard not being shown for the started activity. Why, Android, why?
+        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivityForResult(intent, CHILD_REQUEST_CODE);
+      }
+    });
+
+    // Only set email/password in onCreate; we don't want to overwrite edited values onResume.
+    if (getIntent() != null && getIntent().getExtras() != null) {
+      Bundle bundle = getIntent().getExtras();
+      emailEdit.setText(bundle.getString("email"));
+      passwordEdit.setText(bundle.getString("password"));
+    }
+
     // Not yet implemented.
-    this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
+    // this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
   }
 
   /**
-   * {@inheritDoc}
+   * We might have switched to the CreateAccount activity; if that activity
+   * succeeds, feed its result back to the authenticator.
    */
   @Override
-  public void onResume() {
-    super.onResume();
-    if (FxAccountAuthenticator.getFirefoxAccounts(this).length > 0) {
-      redirectToActivity(FxAccountStatusActivity.class);
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    Logger.debug(LOG_TAG, "onActivityResult: " + requestCode);
+    if (requestCode != CHILD_REQUEST_CODE || resultCode != RESULT_OK) {
+      super.onActivityResult(requestCode, resultCode, data);
       return;
     }
+    this.setResult(resultCode, data);
+    this.finish();
   }
 
   protected class SignInDelegate implements RequestDelegate<LoginResponse> {
@@ -119,8 +144,13 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
         new AndroidFxAccount(activity, account).dump();
       }
 
-      Toast.makeText(getApplicationContext(), "Got success creating account.", Toast.LENGTH_LONG).show();
-      redirectToActivity(FxAccountStatusActivity.class);
+      // The GetStarted activity has called us and needs to return a result to the authenticator.
+      final Intent intent = new Intent();
+      intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, email);
+      intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, FxAccountConstants.ACCOUNT_TYPE);
+      // intent.putExtra(AccountManager.KEY_AUTHTOKEN, accountType);
+      setResult(RESULT_OK, intent);
+      finish();
     }
   }
 
