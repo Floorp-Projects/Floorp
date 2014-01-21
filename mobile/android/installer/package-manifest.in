@@ -386,6 +386,8 @@
 @BINPATH@/components/nsPrompter.js
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
+@BINPATH@/components/TelemetryStartup.js
+@BINPATH@/components/TelemetryStartup.manifest
 @BINPATH@/components/Webapps.js
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
