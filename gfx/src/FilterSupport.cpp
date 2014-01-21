@@ -323,7 +323,7 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
 
       float s = aValues[0];
 
-      if (s > 1 || s < 0)
+      if (s < 0)
         return NS_ERROR_FAILURE;
 
       PodCopy(aOutMatrix, identityMatrix, 20);

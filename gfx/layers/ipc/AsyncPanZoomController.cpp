@@ -1316,8 +1316,8 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
-    "Calculated displayport as (%f %f %f %f) from velocity (%f %f) acceleration (%f %f) paint time %f metrics",
-    displayPort.x, displayPort.y, displayPort.width, displayPort.height,
+    "%p calculated displayport as (%f %f %f %f) from velocity (%f %f) acceleration (%f %f) paint time %f metrics",
+    this, displayPort.x, displayPort.y, displayPort.width, displayPort.height,
     aVelocity.x, aVelocity.y, aAcceleration.x, aAcceleration.y,
     (float)estimatedPaintDurationMillis);
 
@@ -1575,7 +1575,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // If the layers update was not triggered by our own repaint request, then
     // we want to take the new scroll offset.
     if (aLayerMetrics.mUpdateScrollOffset) {
-      APZC_LOG("Updating scroll offset from (%f, %f) to (%f, %f)\n",
+      APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
         mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y,
         aLayerMetrics.mScrollOffset.x, aLayerMetrics.mScrollOffset.y);
 
@@ -1930,7 +1930,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
       // process by an asynchronous ipc call. Include the APZC unique ID
       // so the content process know which APZC sent this shared FrameMetrics.
       if (!compositor->SendSharedCompositorFrameMetrics(mem, handle, mAPZCId)) {
-        APZC_LOG("Failed to share FrameMetrics with content process.");
+        APZC_LOG("%p failed to share FrameMetrics with content process.", this);
       }
     }
   }
