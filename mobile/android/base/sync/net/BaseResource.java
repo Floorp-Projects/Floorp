@@ -69,7 +69,7 @@ public class BaseResource implements Resource {
 
   private static final String LOG_TAG = "BaseResource";
 
-  protected URI uri;
+  protected final URI uri;
   protected BasicHttpContext context;
   protected DefaultHttpClient client;
   public    ResourceDelegate delegate;
@@ -101,6 +101,7 @@ public class BaseResource implements Resource {
         this.uri = new URI(uri.getScheme(), uri.getUserInfo(), ANDROID_LOOPBACK_IP, uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
       } catch (URISyntaxException e) {
         Logger.error(LOG_TAG, "Got error rewriting URI for Android emulator.", e);
+        throw new IllegalArgumentException("Invalid URI", e);
       }
     } else {
       this.uri = uri;
@@ -121,8 +122,19 @@ public class BaseResource implements Resource {
     httpResponseObserver = new WeakReference<HttpResponseObserver>(newHttpResponseObserver);
   }
 
+  @Override
   public URI getURI() {
     return this.uri;
+  }
+
+  @Override
+  public String getURIString() {
+    return this.uri.toString();
+  }
+
+  @Override
+  public String getHostname() {
+    return this.getURI().getHost();
   }
 
   /**

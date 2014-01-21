@@ -10,6 +10,7 @@
     <style name="FxAccountTheme" parent="@style/Gecko" />
 
     <style name="FxAccountMiddle">
+        <item name="android:background">@android:color/white</item>
         <item name="android:orientation">vertical</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
