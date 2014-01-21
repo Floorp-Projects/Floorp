@@ -3728,9 +3728,7 @@ JSScript::makeAnalysis(JSContext *cx)
 
     RootedScript self(cx, this);
 
-    self->types->analysis->analyzeBytecode(cx);
-
-    if (self->types->analysis->OOM()) {
+    if (!self->types->analysis->analyzeBytecode(cx)) {
         self->types->analysis = nullptr;
         return false;
     }
