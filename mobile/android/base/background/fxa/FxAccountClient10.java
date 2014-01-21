@@ -651,4 +651,46 @@ public class FxAccountClient10 {
     };
     post(resource, body, delegate);
   }
+
+  /**
+   * Request a verification link be sent to the account email, given a valid session token.
+   *
+   * @param sessionToken
+   *          to authenticate with.
+   * @param delegate
+   *          to invoke callbacks.
+   */
+  public void resendCode(byte[] sessionToken, final RequestDelegate<Void> delegate) {
+    final byte[] tokenId = new byte[32];
+    final byte[] reqHMACKey = new byte[32];
+    final byte[] requestKey = new byte[32];
+    try {
+      HKDF.deriveMany(sessionToken, new byte[0], FxAccountUtils.KW("sessionToken"), tokenId, reqHMACKey, requestKey);
+    } catch (Exception e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    BaseResource resource;
+    try {
+      resource = new BaseResource(new URI(serverURI + "recovery_email/resend_code"));
+    } catch (URISyntaxException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<Void>(resource, delegate, tokenId, reqHMACKey, false) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
+        try {
+          delegate.handleSuccess(null);
+          return;
+        } catch (Exception e) {
+          delegate.handleError(e);
+          return;
+        }
+      }
+    };
+    post(resource, new JSONObject(), delegate);
+  }
 }
