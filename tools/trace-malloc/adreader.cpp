@@ -5,6 +5,7 @@
 #include "adreader.h"
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 ADLog::ADLog()
@@ -87,7 +88,7 @@ ADLog::Read(const char* aFileName)
 
         Entry *entry =
             &mEntries.mPrev->entries[mEntryCount % ADLOG_ENTRY_BLOCK_SIZE];
-        entry->address = (Pointer)ptr;
+        entry->address = (Pointer) (uintptr_t) ptr;
         entry->type = type;
         entry->datasize = datasize;
         entry->data = data;
