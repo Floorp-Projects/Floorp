@@ -963,6 +963,7 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput&
 void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
                                            const ScreenPoint& aEndPoint,
                                            uint32_t aOverscrollHandoffChainIndex) {
+
   // "start - end" rather than "end - start" because e.g. moving your finger
   // down (*positive* direction along y axis) causes the vertical scroll offset
   // to *decrease* as the page follows your finger.
@@ -979,8 +980,12 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
     CSSPoint cssDisplacement = displacement / zoom;
 
     CSSPoint cssOverscroll;
-    gfx::Point scrollOffset(mX.AdjustDisplacement(cssDisplacement.x, cssOverscroll.x),
-                            mY.AdjustDisplacement(cssDisplacement.y, cssOverscroll.y));
+    gfx::Point scrollOffset(mX.AdjustDisplacement(cssDisplacement.x,
+                                                  cssOverscroll.x,
+                                                  mFrameMetrics.GetDisableScrollingX()),
+                            mY.AdjustDisplacement(cssDisplacement.y,
+                                                  cssOverscroll.y,
+                                                  mFrameMetrics.GetDisableScrollingY()));
     overscroll = cssOverscroll * zoom;
 
     if (fabs(scrollOffset.x) > EPSILON || fabs(scrollOffset.y) > EPSILON) {
@@ -1037,12 +1042,12 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     if (fabs(dx) > breakThreshold || fabs(dy) > breakThreshold) {
       if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
         if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
-          mY.SetScrollingDisabled(false);
+          mY.SetAxisLocked(false);
           SetState(PANNING);
         }
       } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
         if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
-          mX.SetScrollingDisabled(false);
+          mX.SetAxisLocked(false);
           SetState(PANNING);
         }
       }
@@ -1075,8 +1080,10 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
   // a larger swipe should move you a shorter distance).
   CSSPoint cssOffset = offset / aFrameMetrics.mZoom;
   aFrameMetrics.mScrollOffset += CSSPoint::FromUnknownPoint(gfx::Point(
-    mX.AdjustDisplacement(cssOffset.x, overscroll.x),
-    mY.AdjustDisplacement(cssOffset.y, overscroll.y)
+    mX.AdjustDisplacement(cssOffset.x, overscroll.x,
+                          aFrameMetrics.GetDisableScrollingX()),
+    mY.AdjustDisplacement(cssOffset.y, overscroll.y,
+                          aFrameMetrics.GetDisableScrollingX())
   ));
 
   return true;
@@ -1419,6 +1426,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mZoom.scale *= parentResolutionChange;
     mFrameMetrics.mResolution = aLayerMetrics.mResolution;
     mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
+    mFrameMetrics.SetDisableScrollingX(aLayerMetrics.GetDisableScrollingX());
+    mFrameMetrics.SetDisableScrollingY(aLayerMetrics.GetDisableScrollingY());
 
     // If the layers update was not triggered by our own repaint request, then
     // we want to take the new scroll offset.
