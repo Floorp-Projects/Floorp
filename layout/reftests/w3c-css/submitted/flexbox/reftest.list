@@ -1,3 +1,7 @@
+# Tests for absolutely-positioned children of a flex container
+== flexbox-abpos-child-1a.html flexbox-abpos-child-1-ref.html
+== flexbox-abpos-child-1b.html flexbox-abpos-child-1-ref.html
+
 # Tests for handling anonymous flex items
 == flexbox-anonymous-items-1.html flexbox-anonymous-items-1-ref.html
 
