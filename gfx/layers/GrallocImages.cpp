@@ -48,7 +48,7 @@ struct GraphicBufferAutoUnlock {
 GrallocImage::GrallocImage()
   : PlanarYCbCrImage(nullptr),
     mBufferAllocated(false),
-    mGraphicBuffer(nullptr),
+    mGraphicBufferLocked(nullptr),
     mTextureClient(nullptr)
 {
   mFormat = GRALLOC_PLANAR_YCBCR;
@@ -58,11 +58,15 @@ GrallocImage::~GrallocImage()
 {
   // If we have a texture client, the latter takes over the responsibility to
   // unlock the GraphicBufferLocked.
-  if (mGraphicBuffer.get() && !mTextureClient) {
-    mGraphicBuffer->Unlock();
+  if (mGraphicBufferLocked.get() && !mTextureClient) {
+    // mBufferAllocated is set when gralloc buffer is allocated
+    // in the GrallocImage.
+    // XXX the way of handling gralloc buffer in GrallocImage is inconsistent
+    // between gralloc buffer allocation in GrallocImage and
+    // gralloc buffer allocation outside of GrallocImage
     if (mBufferAllocated) {
       ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-      ibc->DeallocSurfaceDescriptorGralloc(mGraphicBuffer->GetSurfaceDescriptor());
+      ibc->DeallocSurfaceDescriptorGralloc(mGraphicBufferLocked->GetSurfaceDescriptor());
       mBufferAllocated = false;
     }
   }
@@ -78,7 +82,7 @@ GrallocImage::SetData(const Data& aData)
   mData = aData;
   mSize = aData.mPicSize;
 
-  if (!mGraphicBuffer.get()) {
+  if (!mGraphicBufferLocked.get()) {
 
     SurfaceDescriptor desc;
     ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
@@ -89,12 +93,12 @@ GrallocImage::SetData(const Data& aData)
                                        GraphicBuffer::USAGE_HW_TEXTURE,
                                        &desc);
     mBufferAllocated = true;
-    mGraphicBuffer = new GraphicBufferLocked(desc);
+    mGraphicBufferLocked = new GraphicBufferLocked(desc);
   }
 
   sp<GraphicBuffer> graphicBuffer =
     GrallocBufferActor::GetFrom(
-      mGraphicBuffer->GetSurfaceDescriptor().get_SurfaceDescriptorGralloc());
+      mGraphicBufferLocked->GetSurfaceDescriptor().get_SurfaceDescriptorGralloc());
   if (!graphicBuffer.get()) {
     return;
   }
@@ -151,7 +155,7 @@ GrallocImage::SetData(const Data& aData)
 
 void GrallocImage::SetData(const GrallocData& aData)
 {
-  mGraphicBuffer = aData.mGraphicBuffer;
+  mGraphicBufferLocked = aData.mGraphicBuffer;
   mSize = aData.mPicSize;
 }
 
@@ -295,7 +299,7 @@ GrallocImage::GetTextureClient()
     }
     GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(desc.bufferChild());
     mTextureClient = new GrallocTextureClientOGL(actor, mSize, flags);
-    mTextureClient->SetGraphicBufferLocked(mGraphicBuffer);
+    mTextureClient->SetGraphicBufferLocked(mGraphicBufferLocked);
   }
   return mTextureClient;
 }

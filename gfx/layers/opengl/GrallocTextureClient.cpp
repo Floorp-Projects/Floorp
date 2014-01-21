@@ -35,7 +35,6 @@ public:
 
   virtual void DeallocateSharedData(ISurfaceAllocator*) MOZ_OVERRIDE
   {
-    mBufferLocked->Unlock();
     mBufferLocked = nullptr;
   }
 
@@ -129,9 +128,7 @@ GrallocTextureClientOGL::~GrallocTextureClientOGL()
     if (ShouldDeallocateInDestructor()) {
     // If the buffer has never been shared we must deallocate it or it would
     // leak.
-    if (mBufferLocked) {
-      mBufferLocked->Unlock();
-    } else {
+    if (!mBufferLocked) {
       // We just need to wrap the actor in a SurfaceDescriptor because that's what
       // ISurfaceAllocator uses as input, we don't care about the other parameters.
       SurfaceDescriptor sd = SurfaceDescriptorGralloc(nullptr, mGrallocActor,
