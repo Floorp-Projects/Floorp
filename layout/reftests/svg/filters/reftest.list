@@ -72,6 +72,8 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-patterned-rect-01.svg pass.svg
 == filter-patterned-rect-02.svg pass.svg
 
+== feColorMatrix-saturate-01.svg pass.svg
+
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
