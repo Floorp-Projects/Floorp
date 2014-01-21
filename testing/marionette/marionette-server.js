@@ -1157,9 +1157,15 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get the current window's server-assigned ID
+   * Get the current window's handle.
+   *
+   * Return an opaque server-assigned identifier to this window that
+   * uniquely identifies it within this Marionette instance.  This can
+   * be used to switch to this window at a later point.
+   *
+   * @return unique window handle (string)
    */
-  getWindow: function MDA_getWindow() {
+  getCurrentWindowHandle: function MDA_getCurrentWindowHandle() {
     this.command_id = this.getCommandId();
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
@@ -2373,7 +2379,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "goBack": MarionetteServerConnection.prototype.goBack,
   "goForward": MarionetteServerConnection.prototype.goForward,
   "refresh":  MarionetteServerConnection.prototype.refresh,
-  "getWindow":  MarionetteServerConnection.prototype.getWindow,
+  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getCurrentWindowHandle,
+  "getWindow":  MarionetteServerConnection.prototype.getCurrentWindowHandle,  // deprecated
   "getWindows":  MarionetteServerConnection.prototype.getWindows,
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
