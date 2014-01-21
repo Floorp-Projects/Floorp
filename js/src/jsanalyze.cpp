@@ -585,7 +585,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     if (!code) {
         code = cx->typeLifoAlloc().new_<Bytecode>();
         if (!code) {
-            setOOM(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
         code->stackDepth = stackDepth;
@@ -725,16 +725,7 @@ ScriptAnalysis::liveness(uint32_t slot)
     return lifetimes[slot];
 }
 
-inline void
-ScriptAnalysis::setOOM(JSContext *cx)
-{
-    if (!outOfMemory)
-        js_ReportOutOfMemory(cx);
-    outOfMemory = true;
-    hadFailure = true;
-}
-
-void
+bool
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
@@ -748,8 +739,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     escapedSlots = alloc.newArray<bool>(numSlots);
 
     if (!codeArray || !escapedSlots) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
 
     PodZero(codeArray, length);
@@ -800,8 +791,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     /* Fill in stack depth and definitions at initial bytecode. */
     Bytecode *startcode = alloc.new_<Bytecode>();
     if (!startcode) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
 
     startcode->stackDepth = 0;
@@ -894,13 +885,13 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             pc2 += JUMP_OFFSET_LEN;
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                return;
+                return false;
 
             for (int32_t i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset) {
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                        return;
+                        return false;
                 }
                 pc2 += JUMP_OFFSET_LEN;
             }
@@ -927,7 +918,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
                     if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
                         if (!addJump(cx, catchOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
-                            return;
+                            return false;
                         getCode(catchOffset).exceptionEntry = true;
                     }
                 }
@@ -981,7 +972,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, &forwardLoop, newStackDepth))
-                return;
+                return false;
         }
 
         /* Handle any fallthrough from this opcode. */
@@ -993,8 +984,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             if (!nextcode) {
                 nextcode = alloc.new_<Bytecode>();
                 if (!nextcode) {
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
                 nextcode->stackDepth = stackDepth;
             }
@@ -1011,7 +1002,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         }
     }
 
-    JS_ASSERT(!failed());
     JS_ASSERT(forwardJump == 0 && forwardLoop == 0 && forwardCatch == 0);
 
     ranBytecode_ = true;
@@ -1021,31 +1011,34 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
      * entering the script. This allows the functionPrologue to ensure that
      * arguments are always created eagerly which simplifies interp logic.
      */
-    if (!script_->analyzedArgsUsage())
-        analyzeSSA(cx);
+    if (!script_->analyzedArgsUsage()) {
+        if (!analyzeSSA(cx))
+            return false;
+    }
+
+    return true;
 }
 
 /////////////////////////////////////////////////////////////////////
 // Lifetime Analysis
 /////////////////////////////////////////////////////////////////////
 
-void
+bool
 ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment()->activeAnalysis && !ranLifetimes() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranLifetimes());
 
     if (!ranBytecode()) {
-        analyzeBytecode(cx);
-        if (failed())
-            return;
+        if (!analyzeBytecode(cx))
+            return false;
     }
 
     LifoAlloc &alloc = cx->typeLifoAlloc();
 
     lifetimes = alloc.newArray<LifetimeVariable>(numSlots);
     if (!lifetimes) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
     PodZero(lifetimes, numSlots);
 
@@ -1055,8 +1048,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
      */
     LifetimeVariable **saved = cx->pod_calloc<LifetimeVariable*>(numSlots);
     if (!saved) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
     unsigned savedCount = 0;
 
@@ -1084,8 +1077,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             JS_ASSERT(loop == code->loop);
             unsigned backedge = code->loop->backedge;
             for (unsigned i = 0; i < numSlots; i++) {
-                if (lifetimes[i].lifetime)
-                    extendVariable(cx, lifetimes[i], offset, backedge);
+                if (lifetimes[i].lifetime) {
+                    if (!extendVariable(cx, lifetimes[i], offset, backedge))
+                        return false;
+                }
             }
 
             loop = loop->parent;
@@ -1122,16 +1117,20 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           case JSOP_CALLLOCAL:
           case JSOP_THIS: {
             uint32_t slot = GetBytecodeSlot(script_, pc);
-            if (!slotEscapes(slot))
-                addVariable(cx, lifetimes[slot], offset, saved, savedCount);
+            if (!slotEscapes(slot)) {
+                if (!addVariable(cx, lifetimes[slot], offset, saved, savedCount))
+                    return false;
+            }
             break;
           }
 
           case JSOP_SETARG:
           case JSOP_SETLOCAL: {
             uint32_t slot = GetBytecodeSlot(script_, pc);
-            if (!slotEscapes(slot))
-                killVariable(cx, lifetimes[slot], offset, saved, savedCount);
+            if (!slotEscapes(slot)) {
+                if (!killVariable(cx, lifetimes[slot], offset, saved, savedCount))
+                    return false;
+            }
             break;
           }
 
@@ -1143,8 +1142,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 var.lifetime = alloc.new_<Lifetime>(offset, savedEnd, var.saved);
                 if (!var.lifetime) {
                     js_free(saved);
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
                 var.saved = nullptr;
                 saved[i--] = saved[--savedCount];
@@ -1189,8 +1188,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 LoopAnalysis *nloop = alloc.new_<LoopAnalysis>();
                 if (!nloop) {
                     js_free(saved);
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
                 PodZero(nloop);
 
@@ -1236,8 +1235,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                         var.lifetime = alloc.new_<Lifetime>(offset, savedEnd, var.saved);
                         if (!var.lifetime) {
                             js_free(saved);
-                            setOOM(cx);
-                            return;
+                            js_ReportOutOfMemory(cx);
+                            return false;
                         }
                         var.saved = nullptr;
                         saved[i--] = saved[--savedCount];
@@ -1261,6 +1260,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
     js_free(saved);
 
     ranLifetimes_ = true;
+
+    return true;
 }
 
 #ifdef DEBUG
@@ -1276,13 +1277,13 @@ LifetimeVariable::print() const
 }
 #endif /* DEBUG */
 
-inline void
+inline bool
 ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                             LifetimeVariable **&saved, unsigned &savedCount)
 {
     if (var.lifetime) {
         if (var.ensured)
-            return;
+            return true;
 
         JS_ASSERT(offset < var.lifetime->start);
         var.lifetime->start = offset;
@@ -1300,14 +1301,16 @@ ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offse
         uint32_t savedEnd = var.savedEnd;
         var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, savedEnd, var.saved);
         if (!var.lifetime) {
-            setOOM(cx);
-            return;
+            js_ReportOutOfMemory(cx);
+            return false;
         }
         var.saved = nullptr;
     }
+
+    return true;
 }
 
-inline void
+inline bool
 ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                              LifetimeVariable **&saved, unsigned &savedCount)
 {
@@ -1316,15 +1319,15 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
         uint32_t savedEnd = var.savedEnd;
         Lifetime *lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, savedEnd, var.saved);
         if (!lifetime) {
-            setOOM(cx);
-            return;
+            js_ReportOutOfMemory(cx);
+            return false;
         }
         if (!var.saved)
             saved[savedCount++] = &var;
         var.saved = lifetime;
         var.saved->write = true;
         var.savedEnd = 0;
-        return;
+        return true;
     }
 
     JS_ASSERT_IF(!var.ensured, offset < var.lifetime->start);
@@ -1347,8 +1350,8 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
          */
         var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(start, 0, var.lifetime);
         if (!var.lifetime) {
-            setOOM(cx);
-            return;
+            js_ReportOutOfMemory(cx);
+            return false;
         }
         var.lifetime->end = offset;
     } else {
@@ -1358,9 +1361,11 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
 
         saved[savedCount++] = &var;
     }
+
+    return true;
 }
 
-inline void
+inline bool
 ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
                                unsigned start, unsigned end)
 {
@@ -1372,7 +1377,7 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
          * live for the entire loop.
          */
         JS_ASSERT(var.lifetime->start < start);
-        return;
+        return true;
     }
 
     var.lifetime->start = start;
@@ -1436,8 +1441,8 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
         if (savedEnd > segment->end) {
             Lifetime *tail = cx->typeLifoAlloc().new_<Lifetime>(savedEnd, 0, segment->next);
             if (!tail) {
-                setOOM(cx);
-                return;
+                js_ReportOutOfMemory(cx);
+                return false;
             }
             tail->start = segment->end;
 
@@ -1459,6 +1464,7 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
             segment = segment->next;
         }
     }
+    return true;
 }
 
 inline void
@@ -1497,15 +1503,14 @@ struct SSAValueInfo
     int32_t branchSize;
 };
 
-void
+bool
 ScriptAnalysis::analyzeSSA(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment()->activeAnalysis && !ranSSA() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranSSA());
 
     if (!ranLifetimes()) {
-        analyzeLifetimes(cx);
-        if (failed())
-            return;
+        if (!analyzeLifetimes(cx))
+            return false;
     }
 
     LifoAlloc &alloc = cx->typeLifoAlloc();
@@ -1517,8 +1522,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      */
     SSAValueInfo *values = cx->pod_calloc<SSAValueInfo>(numSlots + maxDepth);
     if (!values) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
     struct FreeSSAValues {
         SSAValueInfo *values;
@@ -1597,8 +1602,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             if (!pending) {
                 pending = cx->new_< Vector<SlotValue> >(cx);
                 if (!pending) {
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
             }
 
@@ -1614,14 +1619,18 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                         JS_ASSERT(v.value.phiOffset() < offset);
                         SSAValue ov = v.value;
                         if (!makePhi(cx, v.slot, offset, &ov))
-                            return;
-                        insertPhi(cx, ov, v.value);
+                            return false;
+                        if (!insertPhi(cx, ov, v.value))
+                            return false;
                         v.value = ov;
                     }
                 }
-                if (code->fallthrough || code->jumpFallthrough)
-                    mergeValue(cx, offset, values[v.slot].v, &v);
-                mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets, offset - 1);
+                if (code->fallthrough || code->jumpFallthrough) {
+                    if (!mergeValue(cx, offset, values[v.slot].v, &v))
+                        return false;
+                }
+                if (!mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets, offset - 1))
+                    return false;
                 values[v.slot].v = v.value;
             }
 
@@ -1643,14 +1652,17 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 }
                 SSAValue ov;
                 if (!makePhi(cx, slot, offset, &ov))
-                    return;
-                if (code->fallthrough || code->jumpFallthrough)
-                    insertPhi(cx, ov, values[slot].v);
-                mergeBranchTarget(cx, values[slot], slot, branchTargets, offset - 1);
+                    return false;
+                if (code->fallthrough || code->jumpFallthrough) {
+                    if (!insertPhi(cx, ov, values[slot].v))
+                        return false;
+                }
+                if (!mergeBranchTarget(cx, values[slot], slot, branchTargets, offset - 1))
+                    return false;
                 values[slot].v = ov;
                 if (!pending->append(SlotValue(slot, ov))) {
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
             }
         } else if (code->pendingValues) {
@@ -1670,12 +1682,15 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 SlotValue &v = (*pending)[i];
                 if (code->fallthrough || code->jumpFallthrough ||
                     (exception && values[v.slot].v.kind() != SSAValue::EMPTY)) {
-                    mergeValue(cx, offset, values[v.slot].v, &v);
+                    if (!mergeValue(cx, offset, values[v.slot].v, &v))
+                        return false;
                 }
-                mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets, offset);
+                if (!mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets, offset))
+                    return false;
                 values[v.slot].v = v.value;
             }
-            freezeNewValues(cx, offset);
+            if (!freezeNewValues(cx, offset))
+                return false;
         }
 
         unsigned nuses = GetUseCount(script_, offset);
@@ -1687,8 +1702,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         if (xuses) {
             code->poppedValues = alloc.newArray<SSAValue>(xuses);
             if (!code->poppedValues) {
-                setOOM(cx);
-                return;
+                js_ReportOutOfMemory(cx);
+                return false;
             }
             for (unsigned i = 0; i < nuses; i++) {
                 SSAValue &v = stack[stackDepth - 1 - i].v;
@@ -1710,8 +1725,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             if (xuses) {
                 SSAUseChain *useChains = alloc.newArray<SSAUseChain>(xuses);
                 if (!useChains) {
-                    setOOM(cx);
-                    return;
+                    js_ReportOutOfMemory(cx);
+                    return false;
                 }
                 PodZero(useChains, xuses);
                 for (unsigned i = 0; i < xuses; i++) {
@@ -1737,8 +1752,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         if (xdefs) {
             code->pushedUses = alloc.newArray<SSAUseChain *>(xdefs);
             if (!code->pushedUses) {
-                setOOM(cx);
-                return;
+                js_ReportOutOfMemory(cx);
+                return false;
             }
             PodZero(code->pushedUses, xdefs);
         }
@@ -1748,8 +1763,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         if (op == JSOP_SETARG || op == JSOP_SETLOCAL) {
             uint32_t slot = GetBytecodeSlot(script_, pc);
             if (trackSlot(slot)) {
-                mergeBranchTarget(cx, values[slot], slot, branchTargets, offset);
-                mergeExceptionTarget(cx, values[slot].v, slot, exceptionTargets);
+                if (!mergeBranchTarget(cx, values[slot], slot, branchTargets, offset))
+                    return false;
+                if (!mergeExceptionTarget(cx, values[slot].v, slot, exceptionTargets))
+                    return false;
                 values[slot].v.initWritten(slot, offset);
             }
         }
@@ -1829,12 +1846,15 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
             for (int32_t i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                if (targetOffset != offset)
-                    checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+                if (targetOffset != offset) {
+                    if (!checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth))
+                        return false;
+                }
                 pc2 += JUMP_OFFSET_LEN;
             }
 
-            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
+            if (!checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth))
+                return false;
             break;
           }
 
@@ -1847,8 +1867,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                     unsigned catchOffset = startOffset + tn->length;
 
                     if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
-                        checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth);
-                        checkExceptionTarget(cx, catchOffset, exceptionTargets);
+                        if (!checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth))
+                            return false;
+                        if (!checkExceptionTarget(cx, catchOffset, exceptionTargets))
+                            return false;
                     }
                 }
             }
@@ -1858,7 +1880,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           case JSOP_THROW:
           case JSOP_RETURN:
           case JSOP_RETRVAL:
-            mergeAllExceptionTargets(cx, values, exceptionTargets);
+            if (!mergeAllExceptionTargets(cx, values, exceptionTargets))
+                return false;
             break;
 
           default:;
@@ -1866,14 +1889,17 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         if (IsJumpOpcode(op)) {
             unsigned targetOffset = FollowBranch(cx, script_, offset);
-            checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+            if (!checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth))
+                return false;
 
             /*
              * If this is a back edge, we're done with the loop and can freeze
              * the phi values at the head now.
              */
-            if (targetOffset < offset)
-                freezeNewValues(cx, targetOffset);
+            if (targetOffset < offset) {
+                if (!freezeNewValues(cx, targetOffset))
+                    return false;
+            }
         }
 
         offset = successorOffset;
@@ -1887,6 +1913,8 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      */
     if (!script_->analyzedArgsUsage())
         script_->setNeedsArgsObj(needsArgsObj(cx));
+
+    return true;
 }
 
 /* Get a phi node's capacity for a given length. */
@@ -1905,7 +1933,7 @@ ScriptAnalysis::makePhi(JSContext *cx, uint32_t slot, uint32_t offset, SSAValue 
     SSAPhiNode *node = cx->typeLifoAlloc().new_<SSAPhiNode>();
     SSAValue *options = cx->typeLifoAlloc().newArray<SSAValue>(PhiNodeCapacity(0));
     if (!node || !options) {
-        setOOM(cx);
+        js_ReportOutOfMemory(cx);
         return false;
     }
     node->slot = slot;
@@ -1914,7 +1942,7 @@ ScriptAnalysis::makePhi(JSContext *cx, uint32_t slot, uint32_t offset, SSAValue 
     return true;
 }
 
-void
+bool
 ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
 {
     JS_ASSERT(phi.kind() == SSAValue::PHI);
@@ -1928,7 +1956,7 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
     if (node->length <= 8) {
         for (unsigned i = 0; i < node->length; i++) {
             if (v == node->options[i])
-                return;
+                return true;
         }
     }
 
@@ -1937,8 +1965,8 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
 
         SSAUseChain *use = cx->typeLifoAlloc().new_<SSAUseChain>();
         if (!use) {
-            setOOM(cx);
-            return;
+            js_ReportOutOfMemory(cx);
+            return false;
         }
 
         use->popped = false;
@@ -1950,44 +1978,44 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
 
     if (node->length < PhiNodeCapacity(node->length)) {
         node->options[node->length++] = v;
-        return;
+        return true;
     }
 
     SSAValue *newOptions =
         cx->typeLifoAlloc().newArray<SSAValue>(PhiNodeCapacity(node->length + 1));
     if (!newOptions) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
 
     PodCopy(newOptions, node->options, node->length);
     node->options = newOptions;
     node->options[node->length++] = v;
+
+    return true;
 }
 
-inline void
+inline bool
 ScriptAnalysis::mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, SlotValue *pv)
 {
     /* Make sure that v is accounted for in the pending value or phi value at pv. */
     JS_ASSERT(v.kind() != SSAValue::EMPTY && pv->value.kind() != SSAValue::EMPTY);
 
     if (v == pv->value)
-        return;
+        return true;
 
     if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
         SSAValue ov = pv->value;
-        if (makePhi(cx, pv->slot, offset, &pv->value)) {
-            insertPhi(cx, pv->value, v);
-            insertPhi(cx, pv->value, ov);
-        }
-        return;
+        return makePhi(cx, pv->slot, offset, &pv->value)
+            && insertPhi(cx, pv->value, v)
+            && insertPhi(cx, pv->value, ov);
     }
 
     JS_ASSERT(pv->value.phiOffset() == offset);
-    insertPhi(cx, pv->value, v);
+    return insertPhi(cx, pv->value, v);
 }
 
-void
+bool
 ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
                                   Vector<SlotValue> *pending)
 {
@@ -1995,14 +2023,18 @@ ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slo
 
     for (unsigned i = 0; i < pending->length(); i++) {
         if ((*pending)[i].slot == slot)
-            return;
+            return true;
     }
 
-    if (!pending->append(SlotValue(slot, v)))
-        setOOM(cx);
+    if (!pending->append(SlotValue(slot, v))) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
                                   Vector<uint32_t> &branchTargets,
                                   SSAValueInfo *values, uint32_t stackDepth)
@@ -2019,13 +2051,14 @@ ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
     if (pending) {
         for (unsigned i = 0; i < pending->length(); i++) {
             SlotValue &v = (*pending)[i];
-            mergeValue(cx, targetOffset, values[v.slot].v, &v);
+            if (!mergeValue(cx, targetOffset, values[v.slot].v, &v))
+                return false;
         }
     } else {
         pending = cx->new_< Vector<SlotValue> >(cx);
         if (!pending || !branchTargets.append(targetOffset)) {
-            setOOM(cx);
-            return;
+            js_ReportOutOfMemory(cx);
+            return false;
         }
     }
 
@@ -2037,11 +2070,14 @@ ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
      */
     for (unsigned i = 0; i < targetDepth; i++) {
         uint32_t slot = StackSlot(script_, i);
-        checkPendingValue(cx, values[slot].v, slot, pending);
+        if (!checkPendingValue(cx, values[slot].v, slot, pending))
+            return false;
     }
+
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
                                      Vector<uint32_t> &exceptionTargets)
 {
@@ -2053,13 +2089,17 @@ ScriptAnalysis::checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
      */
     for (unsigned i = 0; i < exceptionTargets.length(); i++) {
         if (exceptionTargets[i] == catchOffset)
-            return;
+            return true;
     }
-    if (!exceptionTargets.append(catchOffset))
-        setOOM(cx);
+    if (!exceptionTargets.append(catchOffset)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
                                   const Vector<uint32_t> &branchTargets, uint32_t currentOffset)
 {
@@ -2069,7 +2109,7 @@ ScriptAnalysis::mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t s
          * branch targets for slots on the stack, these are added to pending
          * eagerly.
          */
-        return;
+        return true;
     }
 
     JS_ASSERT(trackSlot(slot));
@@ -2087,13 +2127,15 @@ ScriptAnalysis::mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t s
         const Bytecode &code = getCode(branchTargets[i]);
 
         Vector<SlotValue> *pending = code.pendingValues;
-        checkPendingValue(cx, value.v, slot, pending);
+        if (!checkPendingValue(cx, value.v, slot, pending))
+            return false;
     }
 
     value.branchSize = branchTargets.length();
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                                      const Vector<uint32_t> &exceptionTargets)
 {
@@ -2116,17 +2158,22 @@ ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint3
             if ((*pending)[i].slot == slot) {
                 duplicate = true;
                 SlotValue &v = (*pending)[i];
-                mergeValue(cx, offset, value, &v);
+                if (!mergeValue(cx, offset, value, &v))
+                    return false;
                 break;
             }
         }
 
-        if (!duplicate && !pending->append(SlotValue(slot, value)))
-            setOOM(cx);
+        if (!duplicate && !pending->append(SlotValue(slot, value))) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
     }
+
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
                                          const Vector<uint32_t> &exceptionTargets)
 {
@@ -2134,13 +2181,16 @@ ScriptAnalysis::mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
         Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
         for (unsigned i = 0; i < pending->length(); i++) {
             const SlotValue &v = (*pending)[i];
-            if (trackSlot(v.slot))
-                mergeExceptionTarget(cx, values[v.slot].v, v.slot, exceptionTargets);
+            if (trackSlot(v.slot)) {
+                if (!mergeExceptionTarget(cx, values[v.slot].v, v.slot, exceptionTargets))
+                    return false;
+            }
         }
     }
+    return true;
 }
 
-void
+bool
 ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
 {
     Bytecode &code = getCode(offset);
@@ -2151,13 +2201,13 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     unsigned count = pending->length();
     if (count == 0) {
         js_delete(pending);
-        return;
+        return true;
     }
 
     code.newValues = cx->typeLifoAlloc().newArray<SlotValue>(count + 1);
     if (!code.newValues) {
-        setOOM(cx);
-        return;
+        js_ReportOutOfMemory(cx);
+        return false;
     }
 
     for (unsigned i = 0; i < count; i++)
@@ -2166,6 +2216,7 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     code.newValues[count].value.clear();
 
     js_delete(pending);
+    return true;
 }
 
 bool

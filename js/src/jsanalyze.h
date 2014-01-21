@@ -51,9 +51,6 @@ class ScriptAnalysis
 
     uint32_t numSlots;
 
-    bool outOfMemory;
-    bool hadFailure;
-
     bool *escapedSlots;
 
     /* Which analyses have been performed. */
@@ -86,10 +83,8 @@ class ScriptAnalysis
     }
 
     bool ranBytecode() { return ranBytecode_; }
-    void analyzeBytecode(JSContext *cx);
-
-    bool OOM() const { return outOfMemory; }
-    bool failed() const { return hadFailure; }
+    JS_WARN_UNUSED_RESULT
+    bool analyzeBytecode(JSContext *cx);
 
     /*
      * True if there are any LOCAL opcodes aliasing values on the stack (above
@@ -102,8 +97,10 @@ class ScriptAnalysis
   private:
     bool ranSSA() { return ranSSA_; }
     bool ranLifetimes() { return ranLifetimes_; }
-    void analyzeSSA(JSContext *cx);
-    void analyzeLifetimes(JSContext *cx);
+    JS_WARN_UNUSED_RESULT
+    bool analyzeSSA(JSContext *cx);
+    JS_WARN_UNUSED_RESULT
+    bool analyzeLifetimes(JSContext *cx);
 
     /* Accessors for bytecode information. */
     Bytecode& getCode(uint32_t offset) {
@@ -164,38 +161,51 @@ class ScriptAnalysis
     void printSSA(JSContext *cx);
     void printTypes(JSContext *cx);
 
-    inline void setOOM(JSContext *cx);
-
     /* Bytecode helpers */
+    JS_WARN_UNUSED_RESULT
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump, unsigned *forwardLoop,
                         unsigned stackDepth);
 
     /* Lifetime helpers */
-    inline void addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
+    JS_WARN_UNUSED_RESULT
+    inline bool addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                             LifetimeVariable **&saved, unsigned &savedCount);
-    inline void killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
+    JS_WARN_UNUSED_RESULT
+    inline bool killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                              LifetimeVariable **&saved, unsigned &savedCount);
-    inline void extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
+    JS_WARN_UNUSED_RESULT
+    inline bool extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
+
     inline void ensureVariable(LifetimeVariable &var, unsigned until);
 
     /* SSA helpers */
+    JS_WARN_UNUSED_RESULT
     bool makePhi(JSContext *cx, uint32_t slot, uint32_t offset, SSAValue *pv);
-    void insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v);
-    void mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, SlotValue *pv);
-    void checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
+    JS_WARN_UNUSED_RESULT
+    bool insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v);
+    JS_WARN_UNUSED_RESULT
+    bool mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, SlotValue *pv);
+    JS_WARN_UNUSED_RESULT
+    bool checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
                            Vector<SlotValue> *pending);
-    void checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
+    JS_WARN_UNUSED_RESULT
+    bool checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
                            SSAValueInfo *values, uint32_t stackDepth);
-    void checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
+    JS_WARN_UNUSED_RESULT
+    bool checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
                               Vector<uint32_t> &exceptionTargets);
-    void mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
+    JS_WARN_UNUSED_RESULT
+    bool mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
                            const Vector<uint32_t> &branchTargets, uint32_t currentOffset);
-    void mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
+    JS_WARN_UNUSED_RESULT
+    bool mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                               const Vector<uint32_t> &exceptionTargets);
-    void mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
+    JS_WARN_UNUSED_RESULT
+    bool mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
                                   const Vector<uint32_t> &exceptionTargets);
-    void freezeNewValues(JSContext *cx, uint32_t offset);
+    JS_WARN_UNUSED_RESULT
+    bool freezeNewValues(JSContext *cx, uint32_t offset);
 
     typedef Vector<SSAValue, 16> SeenVector;
     bool needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v);
