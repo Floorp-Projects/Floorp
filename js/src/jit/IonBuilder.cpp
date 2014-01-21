@@ -28,8 +28,8 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/CompileInfo-inl.h"
 

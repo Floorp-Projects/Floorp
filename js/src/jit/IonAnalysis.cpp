@@ -18,8 +18,8 @@
 #include "jit/MIRGraph.h"
 
 #include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 
 using namespace js;
 using namespace js::jit;
