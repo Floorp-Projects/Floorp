@@ -367,15 +367,6 @@
             return;
           this._destroyed = true;
 
-          // It is possible that the findbar may be destroyed before any
-          // documents it is listening to (see nsIEditActionListener code below).
-          // Thus, to avoid leaking, if we are listening to any editors, unhook
-          // ourselves now, and remove our cached copies
-          if (this._editors) {
-            for (let x = this._editors.length - 1; x >= 0; --x)
-              this._unhookListenersAtIndex(x);
-          }
-
           this.browser = null;
 
           let prefsvc =

@@ -7,8 +7,7 @@
 
 let inspector, h1;
 
-function createDocument()
-{
+function createDocument() {
   let doc = content.document;
   let div = doc.createElement("div");
   h1 = doc.createElement("h1");
@@ -42,43 +41,28 @@ function createDocument()
   setupHighlighterTests();
 }
 
-function setupHighlighterTests()
-{
+function setupHighlighterTests() {
   ok(h1, "we have the header node");
   openInspector(runSelectionTests);
 }
 
-function runSelectionTests(aInspector)
-{
+function runSelectionTests(aInspector) {
   inspector = aInspector;
+
   inspector.toolbox.startPicker();
   inspector.toolbox.once("picker-started", () => {
-    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
-    inspector.toolbox.once("picker-node-hovered", () => {
-      executeSoon(performTestComparisons);
+    info("Picker mode started, now clicking on H1 to select that node");
+    executeSoon(() => {
+      EventUtils.synthesizeMouseAtCenter(h1, {}, content);
+      inspector.toolbox.once("picker-stopped", () => {
+        info("Picker mode stopped, H1 selected, now switching to the console");
+        openConsole(gBrowser.selectedTab).then(performWebConsoleTests);
+      });
     });
   });
 }
 
-function getHighlighterOutline()
-{
-  return gBrowser.selectedBrowser.parentNode
-    .querySelector(".highlighter-container .highlighter-outline");
-}
-
-function performTestComparisons()
-{
-  let outline = getHighlighterOutline();
-  ok(outline && !outline.hasAttribute("hidden"), "inspector is highlighting");
-
-  EventUtils.synthesizeMouseAtCenter(h1, {}, content);
-  inspector.toolbox.once("picker-stopped", () => {
-    openConsole(gBrowser.selectedTab, performWebConsoleTests);
-  });
-}
-
-function performWebConsoleTests(hud)
-{
+function performWebConsoleTests(hud) {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let jsterm = hud.jsterm;
   outputNode = hud.outputNode;
@@ -86,16 +70,14 @@ function performWebConsoleTests(hud)
   jsterm.clearOutput();
   jsterm.execute("$0", onNodeOutput);
 
-  function onNodeOutput(node)
-  {
+  function onNodeOutput(node) {
     isnot(node.textContent.indexOf("<h1>"), -1, "correct output for $0");
 
     jsterm.clearOutput();
     jsterm.execute("$0.textContent = 'bug653531'", onNodeUpdate);
   }
 
-  function onNodeUpdate(node)
-  {
+  function onNodeUpdate(node) {
     isnot(node.textContent.indexOf("bug653531"), -1,
           "correct output for $0.textContent");
     is(inspector.selection.node.textContent, "bug653531",
@@ -107,8 +89,7 @@ function performWebConsoleTests(hud)
   }
 }
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();

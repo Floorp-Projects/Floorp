@@ -186,7 +186,7 @@ TextureClientD3D11::GetAsDrawTarget()
 }
 
 bool
-TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags)
+TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags)
 {
   mSize = aSize;
   ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
@@ -202,6 +202,14 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   if (FAILED(hr)) {
     LOGD3D11("Error creating texture for client!");
     return false;
+  }
+
+  if (aFlags & ALLOC_CLEAR_BUFFER) {
+    DebugOnly<bool> locked = Lock(OPEN_WRITE_ONLY);
+    MOZ_ASSERT(locked);
+    RefPtr<DrawTarget> dt = GetAsDrawTarget();
+    dt->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
+    Unlock();
   }
 
   return true;
