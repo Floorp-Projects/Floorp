@@ -943,8 +943,7 @@ nsJSObjWrapper::NP_Construct(NPObject *npobj, const NPVariant *args,
  * been finalized if all wrappers have died.
  */
 static void
-JSObjWrapperKeyMarkCallback(JSTracer *trc, void *key, void *data) {
-  JSObject *obj = static_cast<JSObject*>(key);
+JSObjWrapperKeyMarkCallback(JSTracer *trc, JSObject *obj, void *data) {
   NPP npp = static_cast<NPP>(data);
   if (!sJSObjWrappers.initialized())
     return;
