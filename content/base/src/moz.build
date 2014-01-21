@@ -17,6 +17,7 @@ EXPORTS += [
     'nsCrossSiteListenerProxy.h',
     'nsDOMAttributeMap.h',
     'nsFrameMessageManager.h',
+    'nsGenericDOMDataNode.h',
     'nsGkAtomList.h',
     'nsGkAtoms.h',
     'nsImageLoadingContent.h',
@@ -31,6 +32,7 @@ EXPORTS += [
     'nsStubMutationObserver.h',
     'nsStyledElement.h',
     'nsTextFragment.h',
+    'nsTraversal.h',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
