@@ -12,6 +12,7 @@
         var doc = iframe.contentDocument;
 
         setTimeout(function() {
+          doc.body.scrollIntoView();
           synthesizeMouse(iframe, 10, 10, {});
 
           // Now try to set the caret without moving it
