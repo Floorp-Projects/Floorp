@@ -1292,29 +1292,6 @@ RescueOrphans(HandleObject obj)
     // PreCreate may touch dead compartments.
     js::AutoMaybeTouchDeadZones agc(parentObj);
 
-    bool isWN = IS_WN_REFLECTOR(obj);
-
-    // There's one little nasty twist here. For reasons described in bug 752764,
-    // we nuke SOW-ed objects after transplanting them. This means that nodes
-    // parented to an element (such as XUL elements), can end up with a nuked proxy
-    // in the parent chain, depending on the order of fixup. Because the proxy is
-    // nuked, we can't follow it anywhere. But we _can_ find the new wrapper for
-    // the underlying native parent.
-    if (MOZ_UNLIKELY(JS_IsDeadWrapper(parentObj))) {
-        if (isWN) {
-            XPCWrappedNative *wn =
-                static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
-            rv = wn->GetScriptableInfo()->GetCallback()->PreCreate(wn->GetIdentityObject(), cx,
-                                                                   wn->GetScope()->GetGlobalJSObject(),
-                                                                   parentObj.address());
-            NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-            MOZ_ASSERT(IsDOMObject(obj));
-            const DOMClass* domClass = GetDOMClass(obj);
-            parentObj = domClass->mGetParent(cx, obj);
-        }
-    }
-
     // Recursively fix up orphans on the parent chain.
     rv = RescueOrphans(parentObj);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1325,7 +1302,7 @@ RescueOrphans(HandleObject obj)
         return NS_OK;
 
     // We've been orphaned. Find where our parent went, and follow it.
-    if (isWN) {
+    if (IS_WN_REFLECTOR(obj)) {
         RootedObject realParent(cx, js::UncheckedUnwrap(parentObj));
         XPCWrappedNative *wn =
             static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
