@@ -38,10 +38,13 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   protected final String email;
   protected final byte[] emailUTF8;
   protected final String password;
-  public final byte[] quickStretchedPW;
+  protected final byte[] passwordUTF8;
   protected final FxAccountClient20 client;
 
   protected ProgressDialog progressDialog = null;
+
+  // Initialized lazily.
+  protected byte[] quickStretchedPW;
 
   // AsyncTask's are one-time-use, so final members are fine.
   protected final CountDownLatch latch = new CountDownLatch(1);
@@ -54,9 +57,23 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     this.email = email;
     this.emailUTF8 = email.getBytes("UTF-8");
     this.password = password;
-    this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, password.getBytes("UTF-8"));
+    this.passwordUTF8 = password.getBytes("UTF-8");
     this.client = client;
     this.delegate = delegate;
+  }
+
+  /**
+   * Stretching the password is expensive, so we compute the stretched value lazily.
+   *
+   * @return stretched password.
+   * @throws GeneralSecurityException
+   * @throws UnsupportedEncodingException
+   */
+  public byte[] generateQuickStretchedPW() throws UnsupportedEncodingException, GeneralSecurityException {
+    if (this.quickStretchedPW == null) {
+      this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, passwordUTF8);
+    }
+    return this.quickStretchedPW;
   }
 
   @Override
@@ -137,10 +154,10 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     @Override
     protected InnerRequestDelegate<String> doInBackground(Void... arg0) {
       try {
-        client.createAccount(emailUTF8, quickStretchedPW, false, innerDelegate);
+        client.createAccount(emailUTF8, generateQuickStretchedPW(), false, innerDelegate);
         latch.await();
         return innerDelegate;
-      } catch (InterruptedException e) {
+      } catch (Exception e) {
         Logger.error(LOG_TAG, "Got exception logging in.", e);
         delegate.handleError(e);
       }
@@ -158,10 +175,10 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     @Override
     protected InnerRequestDelegate<LoginResponse> doInBackground(Void... arg0) {
       try {
-        client.loginAndGetKeys(emailUTF8, quickStretchedPW, innerDelegate);
+        client.loginAndGetKeys(emailUTF8, generateQuickStretchedPW(), innerDelegate);
         latch.await();
         return innerDelegate;
-      } catch (InterruptedException e) {
+      } catch (Exception e) {
         Logger.error(LOG_TAG, "Got exception signing in.", e);
         delegate.handleError(e);
       }
