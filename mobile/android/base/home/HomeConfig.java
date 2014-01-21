@@ -121,6 +121,8 @@ final class HomeConfig {
             mTitle = in.readString();
             mId = in.readString();
             mFlags = (EnumSet<Flags>) in.readSerializable();
+
+            validate();
         }
 
         public PanelConfig(PanelType type, String title, String id) {
@@ -128,25 +130,30 @@ final class HomeConfig {
         }
 
         public PanelConfig(PanelType type, String title, String id, EnumSet<Flags> flags) {
-            if (type == null) {
+            mType = type;
+            mTitle = title;
+            mId = id;
+            mFlags = flags;
+
+            validate();
+        }
+
+        private void validate() {
+            if (mType == null) {
                 throw new IllegalArgumentException("Can't create PanelConfig with null type");
             }
-            mType = type;
 
-            if (title == null) {
-                throw new IllegalArgumentException("Can't create PanelConfig with null title");
+            if (TextUtils.isEmpty(mTitle)) {
+                throw new IllegalArgumentException("Can't create PanelConfig with empty title");
             }
-            mTitle = title;
 
-            if (id == null) {
-                throw new IllegalArgumentException("Can't create PanelConfig with null id");
+            if (TextUtils.isEmpty(mId)) {
+                throw new IllegalArgumentException("Can't create PanelConfig with empty id");
             }
-            mId = id;
 
-            if (flags == null) {
+            if (mFlags == null) {
                 throw new IllegalArgumentException("Can't create PanelConfig with null flags");
             }
-            mFlags = flags;
         }
 
         public PanelType getType() {
