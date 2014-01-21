@@ -66,7 +66,7 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
     emailEdit.setEnabled(false);
 
     // Not yet implemented.
-    this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
+    // this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
   }
 
   @Override
