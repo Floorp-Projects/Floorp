@@ -39,7 +39,7 @@ function callbackTestCanvas(canvas)
     reference.parentNode.removeChild(reference);
   }
   canvases = [];
-  SimpleTest.waitForFocus(nextTest);
+  nextTest();
 }
 
 function doSnapShot(iframe) {
