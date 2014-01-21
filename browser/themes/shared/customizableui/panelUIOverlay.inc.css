@@ -164,6 +164,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   text-align: center;
 }
 
+#PanelUI-contents .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbarbutton[cui-areatype="menu-panel"] > .toolbarbutton-icon,
