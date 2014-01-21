@@ -128,16 +128,21 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
             return false;
 
         RootedId id(cx, NameToId(bi->name()));
+        uint32_t nfixed = gc::GetGCKindSlots(gc::GetGCObjectKind(slot + 1));
         unsigned attrs = JSPROP_PERMANENT | JSPROP_ENUMERATE |
                          (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
-        StackShape child(nbase, id, slot++, 0, attrs, 0, 0);
 
-        Shape *shape = self->callObjShape_->getChildBinding(cx, child);
+        StackShape child(nbase, id, slot, nfixed, attrs, 0, 0);
+
+        Shape *shape = cx->compartment()->propertyTree.getChild(cx, self->callObjShape_, child);
         if (!shape)
             return false;
 
         self->callObjShape_ = shape;
+        slot++;
     }
+
+    JS_ASSERT(!self->callObjShape_->inDictionary());
     JS_ASSERT(!bi);
 
     return true;
