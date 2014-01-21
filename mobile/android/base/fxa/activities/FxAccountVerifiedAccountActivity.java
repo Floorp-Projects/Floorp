@@ -13,10 +13,10 @@ import android.view.View;
 import android.widget.TextView;
 
 /**
- * Activity which displays sign up/sign in screen to the user.
+ * Activity which displays "Account verified" success screen.
  */
-public class FxAccountCreateSuccessActivity extends Activity {
-  protected static final String LOG_TAG = FxAccountCreateSuccessActivity.class.getSimpleName();
+public class FxAccountVerifiedAccountActivity extends Activity {
+  protected static final String LOG_TAG = FxAccountVerifiedAccountActivity.class.getSimpleName();
 
   protected TextView emailText;
 
@@ -50,7 +50,7 @@ public class FxAccountCreateSuccessActivity extends Activity {
     Logger.debug(LOG_TAG, "onCreate(" + icicle + ")");
 
     super.onCreate(icicle);
-    setContentView(R.layout.fxaccount_create_success);
+    setContentView(R.layout.fxaccount_account_verified);
 
     emailText = (TextView) ensureFindViewById(null, R.id.email, "email text");
     if (getIntent() != null && getIntent().getExtras() != null) {

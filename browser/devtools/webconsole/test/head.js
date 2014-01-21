@@ -67,6 +67,20 @@ function addTab(aURL)
   browser = gBrowser.getBrowserForTab(tab);
 }
 
+function loadTab(url) {
+  let deferred = promise.defer();
+
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let browser = gBrowser.getBrowserForTab(tab);
+
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    deferred.resolve({tab: tab, browser: browser});
+  }, true);
+
+  return deferred.promise;
+}
+
 function afterAllTabsLoaded(callback, win) {
   win = win || window;
 

@@ -35,13 +35,12 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   protected static final String LOG_TAG = FxAccountSetupTask.class.getSimpleName();
 
   protected final Context context;
-  protected final String email;
-  protected final byte[] emailUTF8;
-  protected final String password;
-  public final byte[] quickStretchedPW;
   protected final FxAccountClient20 client;
 
   protected ProgressDialog progressDialog = null;
+
+  // Initialized lazily.
+  protected byte[] quickStretchedPW;
 
   // AsyncTask's are one-time-use, so final members are fine.
   protected final CountDownLatch latch = new CountDownLatch(1);
@@ -49,24 +48,24 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
 
   protected final RequestDelegate<T> delegate;
 
-  public FxAccountSetupTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<T> delegate) throws UnsupportedEncodingException, GeneralSecurityException {
+  public FxAccountSetupTask(Context context, boolean shouldShowProgressDialog, FxAccountClient20 client, RequestDelegate<T> delegate) {
     this.context = context;
-    this.email = email;
-    this.emailUTF8 = email.getBytes("UTF-8");
-    this.password = password;
-    this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, password.getBytes("UTF-8"));
     this.client = client;
     this.delegate = delegate;
+    if (shouldShowProgressDialog) {
+      progressDialog = new ProgressDialog(context);
+    }
   }
 
   @Override
   protected void onPreExecute() {
-    progressDialog = new ProgressDialog(context);
-    progressDialog.setTitle("Firefox Account..."); // XXX.
-    progressDialog.setMessage("Please wait.");
-    progressDialog.setCancelable(false);
-    progressDialog.setIndeterminate(true);
-    progressDialog.show();
+    if (progressDialog != null) {
+      progressDialog.setTitle("Firefox Account..."); // XXX.
+      progressDialog.setMessage("Please wait.");
+      progressDialog.setCancelable(false);
+      progressDialog.setIndeterminate(true);
+      progressDialog.show();
+    }
   }
 
   @Override
@@ -76,15 +75,13 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     }
 
     // We are on the UI thread, and need to invoke these callbacks here to allow UI updating.
-    if (result.response != null) {
-      delegate.handleSuccess(result.response);
-    } else if (result.exception instanceof HTTPFailureException) {
+    if (result.exception instanceof HTTPFailureException) {
       HTTPFailureException e = (HTTPFailureException) result.exception;
       delegate.handleFailure(e.response.getStatusCode(), e.response.httpResponse());
     } else if (innerDelegate.exception != null) {
       delegate.handleError(innerDelegate.exception);
     } else {
-      delegate.handleError(new IllegalStateException("Got bad state."));
+      delegate.handleSuccess(result.response);
     }
   }
 
@@ -127,20 +124,39 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     }
   }
 
-  public static class FxAccountSignUpTask extends FxAccountSetupTask<String> {
-    protected static final String LOG_TAG = FxAccountSignUpTask.class.getSimpleName();
+  public static class FxAccountCreateAccountTask extends FxAccountSetupTask<String> {
+    protected static final String LOG_TAG = FxAccountCreateAccountTask.class.getSimpleName();
 
-    public FxAccountSignUpTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<String> delegate) throws UnsupportedEncodingException, GeneralSecurityException {
-      super(context, email, password, client, delegate);
+    protected final byte[] emailUTF8;
+    protected final byte[] passwordUTF8;
+
+    public FxAccountCreateAccountTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<String> delegate) throws UnsupportedEncodingException {
+      super(context, true, client, delegate);
+      this.emailUTF8 = email.getBytes("UTF-8");
+      this.passwordUTF8 = password.getBytes("UTF-8");
+    }
+
+    /**
+     * Stretching the password is expensive, so we compute the stretched value lazily.
+     *
+     * @return stretched password.
+     * @throws GeneralSecurityException
+     * @throws UnsupportedEncodingException
+     */
+    public byte[] generateQuickStretchedPW() throws UnsupportedEncodingException, GeneralSecurityException {
+      if (this.quickStretchedPW == null) {
+        this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, passwordUTF8);
+      }
+      return this.quickStretchedPW;
     }
 
     @Override
     protected InnerRequestDelegate<String> doInBackground(Void... arg0) {
       try {
-        client.createAccount(emailUTF8, quickStretchedPW, false, innerDelegate);
+        client.createAccount(emailUTF8, generateQuickStretchedPW(), false, innerDelegate);
         latch.await();
         return innerDelegate;
-      } catch (InterruptedException e) {
+      } catch (Exception e) {
         Logger.error(LOG_TAG, "Got exception logging in.", e);
         delegate.handleError(e);
       }
@@ -149,19 +165,38 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   }
 
   public static class FxAccountSignInTask extends FxAccountSetupTask<LoginResponse> {
-    protected static final String LOG_TAG = FxAccountSignUpTask.class.getSimpleName();
+    protected static final String LOG_TAG = FxAccountCreateAccountTask.class.getSimpleName();
 
-    public FxAccountSignInTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<LoginResponse> delegate) throws UnsupportedEncodingException, GeneralSecurityException {
-      super(context, email, password, client, delegate);
+    protected final byte[] emailUTF8;
+    protected final byte[] passwordUTF8;
+
+    public FxAccountSignInTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<LoginResponse> delegate) throws UnsupportedEncodingException {
+      super(context, true, client, delegate);
+      this.emailUTF8 = email.getBytes("UTF-8");
+      this.passwordUTF8 = password.getBytes("UTF-8");
+    }
+
+    /**
+     * Stretching the password is expensive, so we compute the stretched value lazily.
+     *
+     * @return stretched password.
+     * @throws GeneralSecurityException
+     * @throws UnsupportedEncodingException
+     */
+    public byte[] generateQuickStretchedPW() throws UnsupportedEncodingException, GeneralSecurityException {
+      if (this.quickStretchedPW == null) {
+        this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, passwordUTF8);
+      }
+      return this.quickStretchedPW;
     }
 
     @Override
     protected InnerRequestDelegate<LoginResponse> doInBackground(Void... arg0) {
       try {
-        client.loginAndGetKeys(emailUTF8, quickStretchedPW, innerDelegate);
+        client.loginAndGetKeys(emailUTF8, generateQuickStretchedPW(), innerDelegate);
         latch.await();
         return innerDelegate;
-      } catch (InterruptedException e) {
+      } catch (Exception e) {
         Logger.error(LOG_TAG, "Got exception signing in.", e);
         delegate.handleError(e);
       }

@@ -5,9 +5,13 @@
 package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 
+import android.accounts.Account;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
@@ -16,6 +20,55 @@ import android.widget.TextView;
 
 public abstract class FxAccountAbstractActivity extends Activity {
   private static final String LOG_TAG = FxAccountAbstractActivity.class.getSimpleName();
+
+  protected final boolean cannotResumeWhenAccountsExist;
+  protected final boolean cannotResumeWhenNoAccountsExist;
+  protected final boolean cannotResumeWhenLockedOut;
+
+  public static final int CAN_ALWAYS_RESUME = 0;
+  public static final int CANNOT_RESUME_WHEN_ACCOUNTS_EXIST = 1 << 0;
+  public static final int CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST = 1 << 1;
+  public static final int CANNOT_RESUME_WHEN_LOCKED_OUT = 1 << 2;
+
+  public FxAccountAbstractActivity(int resume) {
+    super();
+    this.cannotResumeWhenAccountsExist = 0 != (resume & CANNOT_RESUME_WHEN_ACCOUNTS_EXIST);
+    this.cannotResumeWhenNoAccountsExist = 0 != (resume & CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST);
+    this.cannotResumeWhenLockedOut = 0 != (resume & CANNOT_RESUME_WHEN_LOCKED_OUT);
+  }
+
+  /**
+   * Many Firefox Accounts activities shouldn't display if an account already
+   * exists or if account creation is locked out due to an age verification
+   * check failing (getting started, create account, sign in). This function
+   * redirects as appropriate.
+   */
+  protected void redirectIfAppropriate() {
+    if (cannotResumeWhenAccountsExist || cannotResumeWhenNoAccountsExist) {
+      Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
+      if (cannotResumeWhenAccountsExist && accounts.length > 0) {
+        redirectToActivity(FxAccountStatusActivity.class);
+        return;
+      }
+      if (cannotResumeWhenNoAccountsExist && accounts.length < 1) {
+        redirectToActivity(FxAccountGetStartedActivity.class);
+        return;
+      }
+    }
+    if (cannotResumeWhenLockedOut) {
+      if (FxAccountAgeLockoutHelper.isLockedOut(SystemClock.elapsedRealtime())) {
+        this.setResult(RESULT_CANCELED);
+        redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
+        return;
+      }
+    }
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    redirectIfAppropriate();
+  }
 
   protected void launchActivity(Class<? extends Activity> activityClass) {
     Intent intent = new Intent(this, activityClass);

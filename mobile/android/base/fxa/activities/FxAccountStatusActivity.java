@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 
@@ -24,11 +25,16 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   protected View connectionStatusSignInView;
   protected View connectionStatusSyncingView;
 
+  public FxAccountStatusActivity() {
+    super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST);
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   public void onCreate(Bundle icicle) {
+    Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.debug(LOG_TAG, "onCreate(" + icicle + ")");
 
     super.onCreate(icicle);

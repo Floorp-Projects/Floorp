@@ -21,6 +21,7 @@ let originalValue = "#00F";
 let testData = [
   {value: "red", commitKey: "VK_ESCAPE", modifiers: {}, expected: originalValue},
   {value: "red", commitKey: "VK_RETURN", modifiers: {}, expected: "#F00"},
+  {value: "invalid", commitKey: "VK_RETURN", modifiers: {}, expected: "invalid"},
   {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "blue"}
 ];
 
@@ -59,11 +60,22 @@ function runTestData(index)
     for (let ch of testData[index].value) {
       EventUtils.sendChar(ch, ruleWindow);
     }
-    EventUtils.synthesizeKey(testData[index].commitKey, testData[index].modifiers);
 
-    is(propEditor.valueSpan.textContent, testData[index].expected);
-
-    runTestData(index + 1);
+    // Need to wait for the change to be finished before the next test starts
+    // if not cancelling the change (the previous modification can change which
+    // color format is shown).
+    if (testData[index].commitKey === "VK_ESCAPE") {
+      EventUtils.synthesizeKey(testData[index].commitKey, testData[index].modifiers);
+      is(propEditor.valueSpan.textContent, testData[index].expected, "Value is same as expected: " + testData[index].expected);
+      runTestData(index + 1);
+    } else {
+      ruleView.element.addEventListener("CssRuleViewChanged", function nextTest() {
+        ruleView.element.removeEventListener("CssRuleViewChanged", nextTest);
+        is(propEditor.valueSpan.textContent, testData[index].expected, "Value is same as expected: " + testData[index].expected);
+        runTestData(index + 1);
+      });
+      EventUtils.synthesizeKey(testData[index].commitKey, testData[index].modifiers);
+    }
   });
 
   EventUtils.synthesizeMouse(propEditor.valueSpan, 1, 1, {}, ruleWindow);

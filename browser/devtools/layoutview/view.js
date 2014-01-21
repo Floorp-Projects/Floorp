@@ -7,6 +7,9 @@
 "use strict";
 
 const Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
@@ -237,4 +240,47 @@ LayoutView.prototype = {
     this._lastRequest = lastRequest;
     return this._lastRequest;
   }
+}
+
+let elts;
+let tooltip;
+
+window.setPanel = function(panel) {
+  this.layoutview = new LayoutView(panel, window);
+
+  // Tooltip mechanism
+  elts = document.querySelectorAll("*[tooltip]");
+  tooltip = document.querySelector(".tooltip");
+  for (let i = 0; i < elts.length; i++) {
+    let elt = elts[i];
+    elt.addEventListener("mouseover", onmouseover, true);
+    elt.addEventListener("mouseout", onmouseout, true);
+  }
+
+  // Mark document as RTL or LTR:
+  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+    getService(Ci.nsIXULChromeRegistry);
+  let dir = chromeReg.isLocaleRTL("global");
+  document.body.setAttribute("dir", dir ? "rtl" : "ltr");
+
+  window.parent.postMessage("layoutview-ready", "*");
+};
+
+window.onunload = function() {
+  this.layoutview.destroy();
+  if (elts) {
+    for (let i = 0; i < elts.length; i++) {
+      let elt = elts[i];
+      elt.removeEventListener("mouseover", onmouseover, true);
+      elt.removeEventListener("mouseout", onmouseout, true);
+    }
+  }
+};
+
+function onmouseover(e) {
+  tooltip.textContent = e.target.getAttribute("tooltip");
+}
+
+function onmouseout(e) {
+  tooltip.textContent = "";
 }

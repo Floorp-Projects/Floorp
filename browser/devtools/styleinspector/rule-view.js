@@ -537,11 +537,21 @@ Rule.prototype = {
    *        The property's value (not including priority).
    * @param {string} aPriority
    *        The property's priority (either "important" or an empty string).
+   * @param {TextProperty} aSiblingProp
+   *        Optional, property next to which the new property will be added.
    */
-  createProperty: function Rule_createProperty(aName, aValue, aPriority)
+  createProperty: function Rule_createProperty(aName, aValue, aPriority, aSiblingProp)
   {
     let prop = new TextProperty(this, aName, aValue, aPriority);
-    this.textProps.push(prop);
+
+    if (aSiblingProp) {
+      let ind = this.textProps.indexOf(aSiblingProp);
+      this.textProps.splice(ind + 1, 0, prop);
+    }
+    else {
+      this.textProps.push(prop);
+    }
+
     this.applyProperties();
     return prop;
   },
@@ -594,7 +604,7 @@ Rule.prototype = {
 
     let promise = aModifications.apply().then(() => {
       let cssProps = {};
-      for (let cssProp of this._parseCSSText(this.style.cssText)) {
+      for (let cssProp of parseCSSText(this.style.cssText)) {
         cssProps[cssProp.name] = cssProp;
       }
 
@@ -701,26 +711,6 @@ Rule.prototype = {
     this.applyProperties(modifications);
   },
 
-  _parseCSSText: function Rule_parseProperties(aCssText)
-  {
-    let lines = aCssText.match(CSS_LINE_RE);
-    let props = [];
-
-    for (let line of lines) {
-      let [, name, value, priority] = CSS_PROP_RE.exec(line) || [];
-      if (!name || !value) {
-        continue;
-      }
-
-      props.push({
-        name: name,
-        value: value,
-        priority: priority || ""
-      });
-    }
-    return props;
-  },
-
   /**
    * Get the list of TextProperties from the style.  Needs
    * to parse the style's cssText.
@@ -729,7 +719,7 @@ Rule.prototype = {
   {
     let textProps = [];
     let store = this.elementStyle.store;
-    let props = this._parseCSSText(this.style.cssText);
+    let props = parseCSSText(this.style.cssText);
     for (let prop of props) {
       let name = prop.name;
       if (this.inherited && !domUtils.isInheritedProperty(name)) {
@@ -1730,9 +1720,9 @@ RuleEditor.prototype = {
     });
 
     // Create a property editor when the close brace is clicked.
-    editableItem({ element: this.closeBrace }, function(aElement) {
+    editableItem({ element: this.closeBrace }, (aElement) => {
       this.newProperty();
-    }.bind(this));
+    });
   },
 
   updateSourceLink: function RuleEditor_updateSourceLink()
@@ -1803,15 +1793,60 @@ RuleEditor.prototype = {
    *        Property value.
    * @param {string} aPriority
    *        Property priority.
+   * @param {TextProperty} aSiblingProp
+   *        Optional, property next to which the new property will be added.
    * @return {TextProperty}
    *        The new property
    */
-  addProperty: function RuleEditor_addProperty(aName, aValue, aPriority)
+  addProperty: function RuleEditor_addProperty(aName, aValue, aPriority, aSiblingProp)
   {
-    let prop = this.rule.createProperty(aName, aValue, aPriority);
+    let prop = this.rule.createProperty(aName, aValue, aPriority, aSiblingProp);
+    let index = this.rule.textProps.indexOf(prop);
     let editor = new TextPropertyEditor(this, prop);
-    this.propertyList.appendChild(editor.element);
+
+    // Insert this node before the DOM node that is currently at its new index
+    // in the property list.  There is currently one less node in the DOM than
+    // in the property list, so this causes it to appear after aSiblingProp.
+    // If there is no node at its index, as is the case where this is the last
+    // node being inserted, then this behaves as appendChild.
+    this.propertyList.insertBefore(editor.element,
+      this.propertyList.children[index]);
+
     return prop;
+  },
+
+  /**
+   * Programatically add a list of new properties to the rule.  Focus the UI
+   * to the proper location after adding (either focus the value on the
+   * last property if it is empty, or create a new property and focus it).
+   *
+   * @param {Array} aProperties
+   *        Array of properties, which are objects with this signature:
+   *        {
+   *          name: {string},
+   *          value: {string},
+   *          priority: {string}
+   *        }
+   * @param {TextProperty} aSiblingProp
+   *        Optional, the property next to which all new props should be added.
+   */
+  addProperties: function RuleEditor_addProperties(aProperties, aSiblingProp)
+  {
+    if (!aProperties || !aProperties.length) {
+      return;
+    }
+
+    let lastProp = aSiblingProp;
+    for (let p of aProperties) {
+      lastProp = this.addProperty(p.name, p.value, p.priority, lastProp);
+    }
+
+    // Either focus on the last value if incomplete, or start a new one.
+    if (lastProp && lastProp.value.trim() === "") {
+      lastProp.editor.valueSpan.click();
+    } else {
+      this.newProperty();
+    }
   },
 
   /**
@@ -1840,7 +1875,9 @@ RuleEditor.prototype = {
       tabindex: "0"
     });
 
-    new InplaceEditor({
+    this.multipleAddedProperties = null;
+
+    this.editor = new InplaceEditor({
       element: this.newPropSpan,
       done: this._onNewProperty,
       destroy: this._newPropertyDestroy,
@@ -1848,11 +1885,14 @@ RuleEditor.prototype = {
       contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
       popup: this.ruleView.popup
     });
+
+    // Auto-close the input if multiple rules get pasted into new property.
+    this.editor.input.addEventListener("paste",
+      blurOnMultipleProperties, false);
   },
 
   /**
    * Called when the new property input has been dismissed.
-   * Will create a new TextProperty if necessary.
    *
    * @param {string} aValue
    *        The value in the editor.
@@ -1865,15 +1905,25 @@ RuleEditor.prototype = {
       return;
     }
 
-    // Create an empty-valued property and start editing it.
-    let prop = this.rule.createProperty(aValue, "", "");
-    let editor = new TextPropertyEditor(this, prop);
-    this.propertyList.appendChild(editor.element);
-    editor.valueSpan.click();
+    // Deal with adding declarations later (once editor has been destroyed).
+    // If aValue is just a name, will make a new property with empty value.
+    this.multipleAddedProperties = parseCSSText(aValue);
+    if (!this.multipleAddedProperties.length) {
+      this.multipleAddedProperties = [{
+        name: aValue,
+        value: "",
+        priority: ""
+      }];
+    }
+
+    this.editor.input.blur();
   },
 
   /**
    * Called when the new property editor is destroyed.
+   * This is where the properties (type TextProperty) are actually being
+   * added, since we want to wait until after the inplace editor `destroy`
+   * event has been fired to keep consistent UI state.
    */
   _newPropertyDestroy: function RuleEditor__newPropertyDestroy()
   {
@@ -1883,6 +1933,13 @@ RuleEditor.prototype = {
     this.propertyList.removeChild(this.newPropItem);
     delete this.newPropItem;
     delete this.newPropSpan;
+
+    // If properties were added, we want to focus the proper element.
+    // If the last new property has no value, focus the value on it.
+    // Otherwise, start a new property and focus that field.
+    if (this.multipleAddedProperties && this.multipleAddedProperties.length) {
+      this.addProperties(this.multipleAddedProperties);
+    }
   }
 };
 
@@ -1916,7 +1973,8 @@ function TextPropertyEditor(aRuleEditor, aProperty)
   this._onStartEditing = this._onStartEditing.bind(this);
   this._onNameDone = this._onNameDone.bind(this);
   this._onValueDone = this._onValueDone.bind(this);
-  this._onValidate = throttle(this._livePreview, 10, this, this.browserWindow);
+  this._onValidate = throttle(this._livePreview, 10, this);
+  this.update = this.update.bind(this);
 
   this._create();
   this.update();
@@ -1974,11 +2032,15 @@ TextPropertyEditor.prototype = {
       start: this._onStartEditing,
       element: this.nameSpan,
       done: this._onNameDone,
-      destroy: this.update.bind(this),
+      destroy: this.update,
       advanceChars: ':',
       contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
       popup: this.popup
     });
+
+    // Auto blur name field on multiple CSS rules get pasted in.
+    this.nameContainer.addEventListener("paste",
+      blurOnMultipleProperties, false);
 
     appendText(this.nameContainer, ": ");
 
@@ -2044,7 +2106,7 @@ TextPropertyEditor.prototype = {
       start: this._onStartEditing,
       element: this.valueSpan,
       done: this._onValueDone,
-      destroy: this.update.bind(this),
+      destroy: this.update,
       validate: this._onValidate,
       advanceChars: ';',
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
@@ -2262,30 +2324,27 @@ TextPropertyEditor.prototype = {
   _onNameDone: function TextPropertyEditor_onNameDone(aValue, aCommit)
   {
     if (aCommit) {
+      // Unlike the value editor, if a name is empty the entire property
+      // should always be removed.
       if (aValue.trim() === "") {
         this.remove();
       } else {
-        this.prop.setName(aValue);
+
+        // Adding multiple rules inside of name field overwrites the current
+        // property with the first, then adds any more onto the property list.
+        let properties = parseCSSText(aValue);
+        if (properties.length > 0) {
+          this.prop.setName(properties[0].name);
+          this.prop.setValue(properties[0].value, properties[0].priority);
+
+          this.ruleEditor.addProperties(properties.slice(1), this.prop);
+        } else {
+          this.prop.setName(aValue);
+        }
       }
     }
   },
 
-  /**
-   * Pull priority (!important) out of the value provided by a
-   * value editor.
-   *
-   * @param {string} aValue
-   *        The value from the text editor.
-   * @return {object} an object with 'value' and 'priority' properties.
-   */
-  _parseValue: function TextPropertyEditor_parseValue(aValue)
-  {
-    let pieces = aValue.split("!", 2);
-    return {
-      value: pieces[0].trim(),
-      priority: (pieces.length > 1 ? pieces[1].trim() : "")
-    };
-  },
 
   /**
    * Remove property from style and the editors from DOM.
@@ -2316,24 +2375,97 @@ TextPropertyEditor.prototype = {
    */
    _onValueDone: function PropertyEditor_onValueDone(aValue, aCommit)
   {
-    if (aCommit) {
-      this._applyNewValue(aValue);
-    } else {
-      // A new property should be removed when escape is pressed.
-      if (this.removeOnRevert) {
-        this.remove();
-      } else {
-        // We use this.valueSpan.textContent instead of this.committed.value
-        // because otherwise pressing escape to revert a color value will result
-        // in an unparsed property value.
-        this.prop.setValue(this.valueSpan.textContent, this.committed.priority);
-      }
+    if (!aCommit) {
+       // A new property should be removed when escape is pressed.
+       if (this.removeOnRevert) {
+         this.remove();
+       } else {
+         this.prop.setValue(this.committed.value, this.committed.priority);
+       }
+       return;
     }
+
+    let {propertiesToAdd,firstValue} = this._getValueAndExtraProperties(aValue);
+
+    // First, set this property value (common case, only modified a property)
+    let val = parseCSSValue(firstValue);
+    this.prop.setValue(val.value, val.priority);
+    this.removeOnRevert = false;
+    this.committed.value = this.prop.value;
+    this.committed.priority = this.prop.priority;
+
+    // If needed, add any new properties after this.prop.
+    this.ruleEditor.addProperties(propertiesToAdd, this.prop);
+
+    // If the name or value is not actively being edited, and the value is
+    // empty, then remove the whole property.
+    // A timeout is used here to accurately check the state, since the inplace
+    // editor `done` and `destroy` events fire before the next editor
+    // is focused.
+    if (val.value.trim() === "") {
+      setTimeout(() => {
+        if (!this.editing) {
+          this.remove();
+        }
+      }, 0);
+    }
+  },
+
+  /**
+   * Parse a value string and break it into pieces, starting with the
+   * first value, and into an array of additional properties (if any).
+   *
+   * Example: Calling with "red; width: 100px" would return
+   * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
+   *
+   * @param {string} aValue
+   *        The string to parse
+   * @return {object} An object with the following properties:
+   *        firstValue: A string containing a simple value, like
+   *                    "red" or "100px!important"
+   *        propertiesToAdd: An array with additional properties, following the
+   *                         parseCSSText format of {name,value,priority}
+   */
+  _getValueAndExtraProperties: function PropetyEditor_getValueAndExtraProperties(aValue) {
+
+    // The inplace editor will prevent manual typing of multiple properties,
+    // but we need to deal with the case during a paste event.
+    // Adding multiple properties inside of value editor sets value with the
+    // first, then adds any more onto the property list (below this property).
+    let properties = parseCSSText(aValue);
+    let propertiesToAdd = [];
+    let firstValue = aValue;
+
+    if (properties.length > 0) {
+      // If text like "red; width: 1px;" was entered in, handle this as two
+      // separate properties (setting value here to red and adding a new prop).
+      let propertiesNoName = parseCSSText("a:" + aValue);
+      let enteredValueFirst = propertiesNoName.length > properties.length;
+
+      let firstProp = properties[0];
+      propertiesToAdd = properties.slice(1);
+
+      if (enteredValueFirst) {
+        firstProp = propertiesNoName[0];
+        propertiesToAdd = propertiesNoName.slice(1);
+      }
+
+      // If "red; width: 1px", then set value to "red"
+      // If "color: red; width: 1px;", then set value to "color: red;"
+      firstValue = enteredValueFirst ?
+        firstProp.value + "!" + firstProp.priority :
+        firstProp.name + ": " + firstProp.value + "!" + firstProp.priority;
+    }
+
+    return {
+      propertiesToAdd: propertiesToAdd,
+      firstValue: firstValue
+    };
   },
 
   _applyNewValue: function PropetyEditor_applyNewValue(aValue)
   {
-    let val = this._parseValue(aValue);
+    let val = parseCSSValue(aValue);
     // Any property should be removed if has an empty value.
     if (val.value.trim() === "") {
       this.remove();
@@ -2358,7 +2490,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    let val = this._parseValue(aValue);
+    let val = parseCSSValue(aValue);
 
     // Live previewing the change without committing just yet, that'll be done in _onValueDone
     // If it was not a valid value, apply an empty string to reset the live preview
@@ -2379,7 +2511,7 @@ TextPropertyEditor.prototype = {
   {
     let name = this.prop.name;
     let value = typeof aValue == "undefined" ? this.prop.value : aValue;
-    let val = this._parseValue(value);
+    let val = parseCSSValue(value);
 
     let style = this.doc.createElementNS(HTML_NS, "div").style;
     let prefs = Services.prefs;
@@ -2524,21 +2656,98 @@ function createMenuItem(aMenu, aAttributes)
   return item;
 }
 
+function setTimeout()
+{
+  let window = Services.appShell.hiddenDOMWindow;
+  return window.setTimeout.apply(window, arguments);
+}
 
-function throttle(func, wait, scope, window) {
+function clearTimeout()
+{
+  let window = Services.appShell.hiddenDOMWindow;
+  return window.clearTimeout.apply(window, arguments);
+}
+
+function throttle(func, wait, scope)
+{
   var timer = null;
   return function() {
     if(timer) {
-      window.clearTimeout(timer);
+      clearTimeout(timer);
     }
     var args = arguments;
-    timer = window.setTimeout(function() {
+    timer = setTimeout(function() {
       timer = null;
       func.apply(scope, args);
     }, wait);
   };
 }
 
+/**
+ * Pull priority (!important) out of the value provided by a
+ * value editor.
+ *
+ * @param {string} aValue
+ *        The value from the text editor.
+ * @return {object} an object with 'value' and 'priority' properties.
+ */
+function parseCSSValue(aValue)
+{
+  let pieces = aValue.split("!", 2);
+  return {
+    value: pieces[0].trim(),
+    priority: (pieces.length > 1 ? pieces[1].trim() : "")
+  };
+}
+
+/**
+ * Return an array of CSS properties given an input string
+ * For example, parseCSSText("width: 1px; height: 1px") would return
+ * [{name:"width", value: "1px"}, {name: "height", "value": "1px"}]
+ *
+ * @param {string} aCssText
+ *        An input string of CSS
+ * @return {Array} an array of objects with the following signature:
+ *         [{"name": string, "value": string, "priority": string}, ...]
+ */
+function parseCSSText(aCssText)
+{
+  let lines = aCssText.match(CSS_LINE_RE);
+  let props = [];
+
+  [].forEach.call(lines, (line, i) => {
+    let [, name, value, priority] = CSS_PROP_RE.exec(line) || [];
+
+    // If this is ending with an unfinished line, add it onto the end
+    // with an empty value
+    if (!name && line && i > 0) {
+      name = line;
+    }
+
+    if (name) {
+      props.push({
+        name: name.trim(),
+        value: value || "",
+        priority: priority || ""
+      });
+    }
+  });
+
+  return props;
+}
+
+/**
+ * Event handler that causes a blur on the target if the input has
+ * multiple CSS properties as the value.
+ */
+function blurOnMultipleProperties(e)
+{
+  setTimeout(() => {
+    if (parseCSSText(e.target.value).length) {
+      e.target.blur();
+    }
+  }, 0);
+}
 
 /**
  * Append a text node to an element.

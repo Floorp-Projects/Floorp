@@ -137,9 +137,13 @@ function TouchEventHandler (window) {
 
           ignoreEvents = true;
           content.setTimeout(function dispatchMouseEvents(self) {
-            self.fireMouseEvent('mousedown', evt);
-            self.fireMouseEvent('mousemove', evt);
-            self.fireMouseEvent('mouseup', evt);
+            try {
+              self.fireMouseEvent('mousedown', evt);
+              self.fireMouseEvent('mousemove', evt);
+              self.fireMouseEvent('mouseup', evt);
+            } catch(e) {
+              Cu.reportError('Exception in touch event helper: ' + e);
+            }
             ignoreEvents = false;
          }, 0, this);
 

@@ -10,7 +10,7 @@
     android:fillViewport="true" >
 
     <LinearLayout
-        android:id="@+id/create_success_view"
+        android:id="@+id/create_account_not_allowed_view"
         style="@style/FxAccountMiddle" >
 
         <LinearLayout style="@style/FxAccountSpacer" />
@@ -22,36 +22,20 @@
 
         <TextView
             style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_confirmation_email_sent" >
+            android:text="@string/fxaccount_account_create_not_allowed" >
         </TextView>
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="45dp"
-            android:contentDescription="@string/fxaccount_mail_contentDescription"
-            android:src="@drawable/fxaccount_mail" >
-        </ImageView>
 
         <TextView
             style="@style/FxAccountTextItem"
-            android:layout_marginBottom="15dp"
-            android:text="@string/fxaccount_confirmation_description"
-            android:textSize="18sp" >
-        </TextView>
-
-        <TextView
-            android:id="@+id/email"
-            style="@style/FxAccountTextItem"
             android:layout_marginBottom="45dp"
-            android:textSize="20sp"
-            android:textStyle="bold" >
+            android:layout_marginTop="45dp"
+            android:text="@string/fxaccount_account_create_not_allowed_description" >
         </TextView>
 
         <TextView
-            style="@style/FxAccountLinkItem"
-            android:text="@string/fxaccount_offer_resend_confirmation_email" />
+            android:id="@+id/learn_more_link"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_account_create_not_allowed_learn_more" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

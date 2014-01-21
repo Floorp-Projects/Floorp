@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIHttpChannel;
+interface nsIChannel;
 interface nsIDocShell;
 
 /**
@@ -15,7 +15,7 @@ interface nsIDocShell;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(ff46c14e-5b2d-4aca-8961-d0b0d987cb81)]
+[scriptable, uuid(2e7875a3-8cb5-4ebb-905b-af0a90dae594)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -183,7 +183,7 @@ interface nsIContentSecurityPolicy : nsISupports
    * Called after the CSP object is created to fill in the appropriate request
    * and request header information needed in case a report needs to be sent.
    */
-  void scanRequestData(in nsIHttpChannel aChannel);
+  void scanRequestData(in nsIChannel aChannel);
 
   /**
    * Verifies ancestry as permitted by the policy.

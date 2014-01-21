@@ -38,7 +38,7 @@
         <activity
             android:theme="@style/FxAccountTheme"
             android:icon="@drawable/fxaccount_icon"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateSuccessActivity"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
@@ -52,6 +52,20 @@
         <activity
             android:theme="@style/FxAccountTheme"
             android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountVerifiedAccountActivity"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:icon="@drawable/fxaccount_icon"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountNotAllowedActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>

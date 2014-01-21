@@ -829,22 +829,21 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   // Locate libxul
   // Note that we don't actually provide the full path, only the name of the
   // library, which is sufficient to link to the library using js-ctypes.
-  {
+
 #if defined(XP_MACOSX)
-    // Under MacOS X, for some reason, libxul is called simply "XUL"
-    nsAutoString xulPath(NS_LITERAL_STRING("XUL"));
+  // Under MacOS X, for some reason, libxul is called simply "XUL"
+  nsAutoString libxul(NS_LITERAL_STRING("XUL"));
 #else
-    // On other platforms, libxul is a library "xul" with regular
-    // library prefix/suffix
-    nsAutoString xulPath;
-    xulPath.Append(NS_LITERAL_STRING(DLL_PREFIX));
-    xulPath.Append(NS_LITERAL_STRING("xul"));
-    xulPath.Append(NS_LITERAL_STRING(DLL_SUFFIX));
+  // On other platforms, libxul is a library "xul" with regular
+  // library prefix/suffix
+  nsAutoString libxul;
+  libxul.Append(NS_LITERAL_STRING(DLL_PREFIX));
+  libxul.Append(NS_LITERAL_STRING("xul"));
+  libxul.Append(NS_LITERAL_STRING(DLL_SUFFIX));
 #endif // defined(XP_MACOSX)
 
-    if (!SetStringProperty(cx, objPath, "libxul", xulPath)) {
-      return false;
-    }
+  if (!SetStringProperty(cx, objPath, "libxul", libxul)) {
+    return false;
   }
 
   if (!SetStringProperty(cx, objPath, "libDir", gPaths->libDir)) {
@@ -898,6 +897,27 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     return false;
   }
 #endif // defined(XP_MACOSX)
+
+  // sqlite3 is linked from different places depending on the platform
+  nsAutoString libsqlite3;
+#if defined(ANDROID)
+  // On Android, we use the system's libsqlite3
+  libsqlite3.Append(NS_LITERAL_STRING(DLL_PREFIX));
+  libsqlite3.Append(NS_LITERAL_STRING("sqlite3"));
+  libsqlite3.Append(NS_LITERAL_STRING(DLL_SUFFIX));
+#elif defined(XP_WIN)
+  // On Windows, for some reason, this is part of nss3.dll
+  libsqlite3.Append(NS_LITERAL_STRING(DLL_PREFIX));
+  libsqlite3.Append(NS_LITERAL_STRING("nss3"));
+  libsqlite3.Append(NS_LITERAL_STRING(DLL_SUFFIX));
+#else
+    // On other platforms, we link sqlite3 into libxul
+  libsqlite3 = libxul;
+#endif // defined(ANDROID) || defined(XP_WIN)
+
+  if (!SetStringProperty(cx, objPath, "libsqlite3", libsqlite3)) {
+    return false;
+  }
 
   return true;
 }
