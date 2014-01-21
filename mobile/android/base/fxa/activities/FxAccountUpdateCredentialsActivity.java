@@ -30,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 import ch.boye.httpclientandroidlib.HttpResponse;
 
 /**
@@ -132,7 +131,6 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
         fxAccount.dump();
       }
 
-      Toast.makeText(getApplicationContext(), "Got success updating account credential.", Toast.LENGTH_LONG).show();
       redirectToActivity(FxAccountStatusActivity.class);
     }
   }

@@ -166,6 +166,18 @@
   <string name="fxaccount_create_account_age_2005">&fxaccount.create.account.age.2005;</string>
   <string name="fxaccount_create_account_age_2006">&fxaccount.create.account.age.2006;</string>
   <string name="fxaccount_create_account_age_2007">&fxaccount.create.account.age.2007;</string>
+  <!-- Temporary Firefox Accounts strings. -->
   <!-- We haven't yet decided how to linkify, so to save translation
        time we're holding this back. -->
   <string name="fxaccount_account_create_not_allowed_learn_more">&lt;a href="http://www.ftc.gov/news-events/media-resources/protecting-consumer-privacy/kids-privacy-coppa"&gt;Learn more&lt;/a&gt;</string>
+  <string name="fxaccount_sign_in_success">Account verified</string>
+  <string name="fxaccount_sign_in_success_description">You are now ready to use Sync!</string>
+  <string name="fxaccount_checkbox_contentDescription">Firefox Accounts checkbox graphic</string>
+  <string name="fxaccount_account_verified">Account verified</string>
+  <string name="fxaccount_account_verified_description">You are now ready to use Sync!</string>
+  <string name="fxaccount_confirm_your_account">Confirm your account</string>
+  <string name="fxaccount_verification_link_awaits_at">A verification link awaits at:</string>
+  <string name="fxaccount_verification_link_not_showing_up_offer_resend">Email not showing up? Send again</string>
+  <!-- TODO: add email address to toast? -->
+  <string name="fxaccount_confirm_verification_link_sent">Sent fresh verification link</string>
+  <string name="fxaccount_confirm_verification_link_not_sent">Couldn\&apos;t send a fresh verification link</string>
