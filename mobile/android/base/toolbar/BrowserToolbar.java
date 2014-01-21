@@ -510,7 +510,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case LOCATION_CHANGE:
                     // A successful location change will cause Tab to notify
                     // us of a title change, so we don't update the title here.
-                    refreshState();
+                    flags.add(UpdateFlags.FAVICON);
+                    flags.add(UpdateFlags.SITE_IDENTITY);
+                    flags.add(UpdateFlags.PRIVATE_MODE);
+
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
+
+                    setPrivateMode(tab.isPrivate());
                     break;
 
                 case CLOSED:
@@ -1273,19 +1280,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void hide() {
         setVisibility(View.GONE);
-    }
-
-    private void refreshState() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null) {
-            updateDisplayLayout(tab, EnumSet.of(UpdateFlags.FAVICON,
-                                                UpdateFlags.SITE_IDENTITY,
-                                                UpdateFlags.PRIVATE_MODE));
-            updateBackButton(tab);
-            updateForwardButton(tab);
-
-            setPrivateMode(tab.isPrivate());
-        }
     }
 
     public View getDoorHangerAnchor() {
