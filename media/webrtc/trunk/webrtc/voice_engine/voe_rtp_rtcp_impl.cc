@@ -375,8 +375,11 @@ int VoERTP_RTCPImpl::GetRemoteRTCPData(
     unsigned int& NTPLow, // from sender info in SR
     unsigned int& timestamp, // from sender info in SR
     unsigned int& playoutTimestamp, // derived locally
+    unsigned int& sendPacketCount, // from sender info in SR
+    unsigned int& sendOctetCount, // from sender info in SR
     unsigned int* jitter, // from report block 1 in SR/RR
-    unsigned short* fractionLost) // from report block 1 in SR/RR
+    unsigned short* fractionLost, // from report block 1 in SR/RR
+    unsigned int* cumulativeLost) // from report block 1 in SR/RR
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetRemoteRTCPData(channel=%d,...)", channel);
@@ -397,8 +400,11 @@ int VoERTP_RTCPImpl::GetRemoteRTCPData(
                                          NTPLow,
                                          timestamp,
                                          playoutTimestamp,
+                                         sendPacketCount,
+                                         sendOctetCount,
                                          jitter,
-                                         fractionLost);
+                                         fractionLost,
+                                         cumulativeLost);
 }
 
 int VoERTP_RTCPImpl::SendApplicationDefinedRTCPPacket(
