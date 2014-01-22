@@ -3960,7 +3960,7 @@ window > chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customizing] #titlebar {
+#main-window[customize-entered] #titlebar {
   padding-top: 0;
 }
 

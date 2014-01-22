@@ -158,7 +158,6 @@
   ALLOW_SYSCALL(readlink), \
   ALLOW_SYSCALL(getsockname), \
   ALLOW_SYSCALL(recvmsg), \
-  ALLOW_SYSCALL(uname), \
   /* duplicate rt_sigaction in SECCOMP_WHITELIST_PROFILING */ \
   ALLOW_SYSCALL(rt_sigaction), \
   ALLOW_SYSCALL(getuid), \
@@ -268,6 +267,9 @@
   /* linux desktop is not as performance critical as B2G */ \
   /* we can place desktop syscalls at the end */ \
   SECCOMP_WHITELIST_DESKTOP_LINUX \
+  /* nsSystemInfo uses uname (and we cache an instance, so */ \
+  /* the info remains present even if we block the syscall) */ \
+  ALLOW_SYSCALL(uname), \
   ALLOW_SYSCALL(exit_group), \
   ALLOW_SYSCALL(exit)
 

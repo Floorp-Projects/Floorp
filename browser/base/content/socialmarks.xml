@@ -23,7 +23,7 @@
           let widget = widgetGroup.forWindow(window);
           this.inMenuPanel = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
           if (this.inMenuPanel) {
-            widget.node.setAttribute("noautoclose", "true");
+            widget.node.setAttribute("closemenu", "none");
             return document.getElementById("PanelUI-socialapi");
           }
           return document.getAnonymousElementByAttribute(this, "anonid", "panel");
