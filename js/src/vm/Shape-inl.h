@@ -235,14 +235,6 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t at
 }
 
 inline
-StackBaseShape::AutoRooter::AutoRooter(ThreadSafeContext *cx, const StackBaseShape *base_
-                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : CustomAutoRooter(cx), base(base_), skip(cx, base_)
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-}
-
-inline
 StackShape::AutoRooter::AutoRooter(ThreadSafeContext *cx, const StackShape *shape_
                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
