@@ -305,6 +305,19 @@ StoreBuffer::inParallelSection() const
     return InParallelSection();
 }
 
+void
+StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes
+*sizes)
+{
+    sizes->storeBufferVals       += bufferVal.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferCells      += bufferCell.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferSlots      += bufferSlot.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferWholeCells += bufferWholeCell.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferRelocVals  += bufferRelocVal.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferRelocCells += bufferRelocCell.sizeOfExcludingThis(mallocSizeOf);
+    sizes->storeBufferGenerics   += bufferGeneric.sizeOfExcludingThis(mallocSizeOf);
+}
+
 JS_PUBLIC_API(void)
 JS::HeapCellPostBarrier(js::gc::Cell **cellp)
 {
