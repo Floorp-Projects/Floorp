@@ -492,6 +492,8 @@ public:
   void ListAttributes(FILE* out) const;
 #endif
 
+  void Describe(nsAString& aOutDescription) const MOZ_OVERRIDE;
+
   /*
    * Attribute Mapping Helpers
    */
@@ -514,6 +516,8 @@ public:
   }
 
 private:
+  void DescribeAttribute(uint32_t index, nsAString& aOutDescription) const;
+
   static bool
   FindAttributeDependence(const nsIAtom* aAttribute,
                           const MappedAttributeEntry* const aMaps[],
