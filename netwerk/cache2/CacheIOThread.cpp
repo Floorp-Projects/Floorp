@@ -235,6 +235,7 @@ NS_IMETHODIMP CacheIOThread::OnDispatchedEvent(nsIThreadInternal *thread)
 {
   MonitorAutoLock lock(mMonitor);
   mHasXPCOMEvents = true;
+  MOZ_ASSERT(!mShutdown || (PR_GetCurrentThread() == mThread));
   lock.Notify();
   return NS_OK;
 }
