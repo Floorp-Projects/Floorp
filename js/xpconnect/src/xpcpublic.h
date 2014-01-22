@@ -247,8 +247,8 @@ private:
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
-NS_EXPORT_(bool) Base64Encode(JSContext *cx, JS::Value val, JS::Value *out);
-NS_EXPORT_(bool) Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
+NS_EXPORT_(bool) Base64Encode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
+NS_EXPORT_(bool) Base64Decode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
 
 /**
  * Convert an nsString to jsval, returning true on success.

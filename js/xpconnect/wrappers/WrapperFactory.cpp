@@ -285,7 +285,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
                                                     &NS_GET_IID(nsISupports), false, &v);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    obj = JSVAL_TO_OBJECT(v);
+    obj.set(&v.toObject());
     MOZ_ASSERT(IS_WN_REFLECTOR(obj), "bad object");
 
     // Because the underlying native didn't have a PreCreate hook, we had
