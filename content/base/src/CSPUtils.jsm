@@ -306,7 +306,7 @@ CSPRep.fromString = function(aStr, self, reportOnly, docRequest, csp) {
     dir = dir.trim();
     if (dir.length < 1) continue;
 
-    var dirname = dir.split(/\s+/)[0];
+    var dirname = dir.split(/\s+/)[0].toLowerCase();
     var dirvalue = dir.substring(dirname.length).trim();
 
     if (aCSPR._directives.hasOwnProperty(dirname)) {
@@ -564,7 +564,7 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, reportOnly, docRequest, cs
     dir = dir.trim();
     if (dir.length < 1) continue;
 
-    var dirname = dir.split(/\s+/)[0];
+    var dirname = dir.split(/\s+/)[0].toLowerCase();
     var dirvalue = dir.substring(dirname.length).trim();
     dirs[dirname] = dirvalue;
   }
@@ -1003,7 +1003,7 @@ CSPSourceList.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
   slObj._CSPRep = aCSPRep;
   aStr = aStr.trim();
   // w3 specifies case insensitive equality
-  if (aStr.toUpperCase() === "'NONE'") {
+  if (aStr.toLowerCase() === "'none'") {
     slObj._permitAllSources = false;
     return slObj;
   }
@@ -1071,7 +1071,7 @@ CSPSourceList.prototype = {
     // sort both arrays and compare like a zipper
     // XXX (sid): I think we can make this more efficient
     var sortfn = function(a,b) {
-      return a.toString() > b.toString();
+      return a.toString.toLowerCase() > b.toString.toLowerCase();
     };
     var a_sorted = this._sources.sort(sortfn);
     var b_sorted = that._sources.sort(sortfn);
@@ -1418,7 +1418,7 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     return CSPHashSource.fromString(aStr, aCSPRep);
 
   // check for 'self' (case insensitive)
-  if (aStr.toUpperCase() === "'SELF'") {
+  if (aStr.toLowerCase() === "'self'") {
     if (!self) {
       cspError(aCSPRep, CSPLocalizer.getStr("selfKeywordNoSelfData"));
       return null;
@@ -1429,13 +1429,13 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
   }
 
   // check for 'unsafe-inline' (case insensitive)
-  if (aStr.toUpperCase() === "'UNSAFE-INLINE'"){
+  if (aStr.toLowerCase() === "'unsafe-inline'"){
     sObj._allowUnsafeInline = true;
     return sObj;
   }
 
   // check for 'unsafe-eval' (case insensitive)
-  if (aStr.toUpperCase() === "'UNSAFE-EVAL'"){
+  if (aStr.toLowerCase() === "'unsafe-eval'"){
     sObj._allowUnsafeEval = true;
     return sObj;
   }
@@ -1556,7 +1556,7 @@ CSPSource.prototype = {
       aSource = CSPSource.create(aSource, this._CSPRep);
 
     // verify scheme
-    if (this.scheme != aSource.scheme)
+    if (this.scheme.toLowerCase() != aSource.scheme.toLowerCase())
       return false;
 
     // port is defined in 'this' (undefined means it may not be relevant
@@ -1592,14 +1592,14 @@ CSPSource.prototype = {
     // 2. ports match
     // 3. either both hosts are undefined, or one equals the other.
     if (resolveSelf)
-      return this.scheme === that.scheme
-          && this.port   === that.port
+      return this.scheme.toLowerCase() === that.scheme.toLowerCase()
+          && this.port === that.port
           && (!(this.host || that.host) ||
                (this.host && this.host.equals(that.host)));
 
     // otherwise, compare raw (non-self-resolved values)
-    return this._scheme === that._scheme
-        && this._port   === that._port
+    return this._scheme.toLowerCase() === that._scheme.toLowerCase()
+        && this._port === that._port
         && (!(this._host || that._host) ||
               (this._host && this._host.equals(that._host)));
   },
@@ -1688,7 +1688,9 @@ CSPHost.prototype = {
    */
   permits:
   function(aHost) {
-    if (!aHost) aHost = CSPHost.fromString("*");
+    if (!aHost) {
+      aHost = CSPHost.fromString("*");
+    }
 
     if (!(aHost instanceof CSPHost)) {
       // -- compare CSPHost to String
@@ -1714,7 +1716,8 @@ CSPHost.prototype = {
     // * Compare from right to left.
     for (var i=1; i <= thislen; i++) {
       if (this._segments[thislen-i] != "*" &&
-          (this._segments[thislen-i] != aHost._segments[thatlen-i])) {
+          (this._segments[thislen-i].toLowerCase() !=
+           aHost._segments[thatlen-i].toLowerCase())) {
         return false;
       }
     }
@@ -1737,8 +1740,10 @@ CSPHost.prototype = {
       return false;
 
     for (var i=0; i<this._segments.length; i++) {
-      if (this._segments[i] != that._segments[i])
+      if (this._segments[i].toLowerCase() !=
+          that._segments[i].toLowerCase()) {
         return false;
+      }
     }
     return true;
   }
