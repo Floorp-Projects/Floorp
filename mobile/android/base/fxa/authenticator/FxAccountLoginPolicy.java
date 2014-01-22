@@ -535,6 +535,7 @@ public class FxAccountLoginPolicy {
   public class EnsureAssertionStage implements LoginStage {
     @Override
     public void execute(final LoginStageDelegate delegate) throws Exception {
+      final long now = System.currentTimeMillis();
       BrowserIDKeyPair keyPair = fxAccount.getAssertionKeyPair();
       if (keyPair == null) {
         throw new IllegalStateException("keyPair must not be null");
@@ -545,9 +546,12 @@ public class FxAccountLoginPolicy {
       }
       String assertion;
       try {
-        long now = System.currentTimeMillis();
+        // Hurrah for global state. We want to make the timestamp in the
+        // generated assertion as close to the timestamp on the consuming server
+        // as possible. In this case, the audience is the consuming server.
+        SkewHandler skewHandler = SkewHandler.getSkewHandlerFromEndpointString(delegate.audience);
         assertion = JSONWebTokenUtils.createAssertion(keyPair.getPrivate(), certificate, delegate.audience,
-            JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER, now, getAssertionDurationInMilliseconds());
+            JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER, now + skewHandler.getSkewInMillis(), getAssertionDurationInMilliseconds());
       } catch (Exception e) {
         // If we can't sign an assertion, we probably have some crypto
         // configuration error on device, which we are never going to recover
