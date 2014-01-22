@@ -5,17 +5,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
-#include "GeneratedEvents.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfo.h"
-#include "nsIDOMBluetoothDeviceEvent.h"
-#include "nsIDOMBluetoothStatusChangedEvent.h"
 #include "nsTArrayHelpers.h"
 #include "DOMRequest.h"
 #include "nsThreadUtils.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothAdapterBinding.h"
+#include "mozilla/dom/BluetoothDeviceEvent.h"
+#include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/LazyIdleThread.h"
 
@@ -305,12 +304,13 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("DeviceFound")) {
     nsRefPtr<BluetoothDevice> device = BluetoothDevice::Create(GetOwner(), mPath, aData.value());
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothDeviceEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
-    nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
-    e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicefound"),
-                                false, false, device);
+    BluetoothDeviceEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mDevice = device;
+    nsRefPtr<BluetoothDeviceEvent> event =
+      BluetoothDeviceEvent::Constructor(this, NS_LITERAL_STRING("devicefound"), init);
     DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
     MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
@@ -335,13 +335,13 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsString address = arr[0].value().get_nsString();
     bool status = arr[1].value().get_bool();
 
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMBluetoothStatusChangedEvent(
-      getter_AddRefs(event), this, nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMBluetoothStatusChangedEvent> e = do_QueryInterface(event);
-    e->InitBluetoothStatusChangedEvent(aData.name(), false, false,
-                                       address, status);
+    BluetoothStatusChangedEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mAddress = address;
+    init.mStatus = status;
+    nsRefPtr<BluetoothStatusChangedEvent> event =
+      BluetoothStatusChangedEvent::Constructor(this, aData.name(), init);
     DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
     nsCOMPtr<nsIDOMEvent> event;
