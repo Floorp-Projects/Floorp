@@ -65,6 +65,13 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
       case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
       case THING_ROOT_PROPERTY_DESCRIPTOR: ((JSPropertyDescriptor *)addr)->trace(trc); break;
+      case THING_ROOT_CUSTOM: {
+          // 'rooter' is a member within a class containing a vtable. Back up
+          // to the vtable and call trace() through it.
+          const size_t rooterOffset = offsetof(RootedGeneric<void*>, rooter);
+          reinterpret_cast< RootedGeneric<void*>* >(uintptr_t(rooter) - rooterOffset)->trace(trc);
+          break;
+      }
       default: MOZ_ASSUME_UNREACHABLE("Invalid THING_ROOT kind"); break;
     }
 }
