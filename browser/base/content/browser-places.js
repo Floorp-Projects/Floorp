@@ -1324,9 +1324,7 @@ let BookmarkingUI = {
       return;
 
     if (!this._starButtonOverflowedLabel) {
-      let browserBundle = Services.strings.createBundle(
-                          "chrome://browser/locale/browser.properties");
-      this._starButtonOverflowedLabel = browserBundle.GetStringFromName(
+      this._starButtonOverflowedLabel = gNavigatorBundle.getString(
                                         "starButtonOverflowed.label");
     }
 
@@ -1334,7 +1332,7 @@ let BookmarkingUI = {
     if (!this._starButtonLabel)
       this._starButtonLabel = button.label;
 
-    if (button && button.label == this._starButtonLabel)
+    if (button && button.getAttribute("label") == this._starButtonLabel)
       button.setAttribute("label", this._starButtonOverflowedLabel);
   },
 
@@ -1349,7 +1347,7 @@ let BookmarkingUI = {
       return;
 
     let button = this.button;
-    if (button && button.label == this._starButtonOverflowedLabel)
+    if (button && button.getAttribute("label") == this._starButtonOverflowedLabel)
       button.setAttribute("label", this._starButtonLabel);
   },
 

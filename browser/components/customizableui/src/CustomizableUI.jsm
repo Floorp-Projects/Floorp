@@ -2293,6 +2293,13 @@ this.CustomizableUI = {
    *     Fired when opening customize mode in aWindow.
    *   - onCustomizeEnd(aWindow)
    *     Fired when exiting customize mode in aWindow.
+   *
+   *   - onWidgetOverflow(aNode, aContainer)
+   *     Fired when a widget's DOM node is overflowing its container, a toolbar,
+   *     and will be displayed in the overflow panel.
+   *   - onWidgetUnderflow(aNode, aContainer)
+   *     Fired when a widget's DOM node is *not* overflowing its container, a
+   *     toolbar, anymore.
    */
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
