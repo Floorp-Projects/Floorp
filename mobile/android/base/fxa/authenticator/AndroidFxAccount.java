@@ -205,7 +205,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE);
   }
 
-
   @Override
   public String getAccountServerURI() {
     return accountManager.getUserData(account, ACCOUNT_KEY_IDP_SERVER);
@@ -226,9 +225,12 @@ public class AndroidFxAccount implements AbstractFxAccount {
     String profile = getProfile();
     String username = account.name;
 
-    if (profile == null ||
-        username == null) {
-      throw new IllegalStateException("Missing profile or username. Cannot fetch prefs.");
+    if (profile == null) {
+      throw new IllegalStateException("Missing profile. Cannot fetch prefs.");
+    }
+
+    if (username == null) {
+      throw new IllegalStateException("Missing username. Cannot fetch prefs.");
     }
 
     final String tokenServerURI = getTokenServerURI();
@@ -259,14 +261,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public byte[] getQuickStretchedPW() {
     String quickStretchedPW = accountManager.getPassword(account);
     return quickStretchedPW == null ? null : Utils.hex2Byte(quickStretchedPW);
-  }
-
-  protected byte[] getUserDataBytes(String key) {
-    String data = accountManager.getUserData(account, key);
-    if (data == null) {
-      return null;
-    }
-    return Utils.hex2Byte(data);
   }
 
   @Override
@@ -301,7 +295,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public byte[] getKa() {
-    return getUserDataBytes(BUNDLE_KEY_KA);
+    return getBundleDataBytes(BUNDLE_KEY_KA);
   }
 
   @Override
@@ -311,7 +305,16 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public void setWrappedKb(byte[] wrappedKb) {
-    byte[] unwrapKb = getUserDataBytes(BUNDLE_KEY_UNWRAPKB);
+    if (wrappedKb == null) {
+      final String message = "wrappedKb is null: cannot set kB.";
+      Logger.error(LOG_TAG, message);
+      throw new IllegalArgumentException(message);
+    }
+    byte[] unwrapKb = getBundleDataBytes(BUNDLE_KEY_UNWRAPKB);
+    if (unwrapKb == null) {
+      Logger.error(LOG_TAG, "unwrapKb is null: cannot set kB.");
+      return;
+    }
     byte[] kB = new byte[wrappedKb.length]; // We could hard-code this to be 32.
     for (int i = 0; i < wrappedKb.length; i++) {
       kB[i] = (byte) (wrappedKb[i] ^ unwrapKb[i]);
@@ -321,7 +324,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public byte[] getKb() {
-    return getUserDataBytes(BUNDLE_KEY_KB);
+    return getBundleDataBytes(BUNDLE_KEY_KB);
   }
 
   protected BrowserIDKeyPair generateNewAssertionKeyPair() throws GeneralSecurityException {
@@ -428,17 +431,20 @@ public class AndroidFxAccount implements AbstractFxAccount {
     byte[] quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, passwordUTF8);
     byte[] unwrapBkey = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
 
+    // Android has internal restrictions that require all values in this
+    // bundle to be strings. *sigh*
     Bundle userdata = new Bundle();
-    userdata.putInt(ACCOUNT_KEY_ACCOUNT_VERSION, CURRENT_ACCOUNT_VERSION);
+    userdata.putString(ACCOUNT_KEY_ACCOUNT_VERSION, "" + CURRENT_ACCOUNT_VERSION);
     userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
     userdata.putString(ACCOUNT_KEY_AUDIENCE, computeAudience(tokenServerURI));
+    userdata.putString(ACCOUNT_KEY_PROFILE, profile);
 
     ExtendedJSONObject descriptor = new ExtendedJSONObject();
     descriptor.put(BUNDLE_KEY_BUNDLE_VERSION, CURRENT_BUNDLE_VERSION);
     descriptor.put(BUNDLE_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
     descriptor.put(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
-    descriptor.put(BUNDLE_KEY_VERIFIED, Boolean.valueOf(verified).toString());
+    descriptor.put(BUNDLE_KEY_VERIFIED, verified);
     descriptor.put(BUNDLE_KEY_UNWRAPKB, Utils.byte2Hex(unwrapBkey));
 
     userdata.putString(ACCOUNT_KEY_DESCRIPTOR, descriptor.toJSONString());
@@ -461,8 +467,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public boolean isValid() {
-    // Boolean.valueOf only returns true for the string "true"; this errors in
-    // the direction of marking accounts valid.
     return !getBundleDataBoolean(BUNDLE_KEY_INVALID, false);
   }
 
@@ -482,7 +486,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
     ArrayList<String> list = new ArrayList<String>(o.keySet());
     Collections.sort(list);
     for (String key : list) {
-      FxAccountConstants.pii(LOG_TAG, key + ": " + o.getString(key));
+      FxAccountConstants.pii(LOG_TAG, key + ": " + o.get(key));
     }
   }
 
