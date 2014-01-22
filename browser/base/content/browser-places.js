@@ -1082,8 +1082,14 @@ let BookmarkingUI = {
     this._updateToolbarStyle();
   },
 
+  init: function() {
+    CustomizableUI.addListener(this);
+  },
+
   _hasBookmarksObserver: false,
   uninit: function BUI_uninit() {
+    CustomizableUI.removeListener(this);
+
     this._uninitView();
 
     if (this._hasBookmarksObserver) {
@@ -1278,6 +1284,44 @@ let BookmarkingUI = {
   onBeforeItemRemoved: function () {},
   onItemVisited: function () {},
   onItemMoved: function () {},
+
+  // CustomizableUI events:
+  _starButtonLabel: null,
+  _starButtonOverflowedLabel: null,
+  onWidgetOverflow: function(aNode, aContainer) {
+    let win = aNode.ownerDocument.defaultView;
+    if (aNode.id != "bookmarks-menu-button" || win != window)
+      return;
+
+    if (!this._starButtonOverflowedLabel) {
+      let browserBundle = Services.strings.createBundle(
+                          "chrome://browser/locale/browser.properties");
+      this._starButtonOverflowedLabel = browserBundle.GetStringFromName(
+                                        "starButtonOverflowed.label");
+    }
+
+    let button = this.button;
+    if (!this._starButtonLabel)
+      this._starButtonLabel = button.label;
+
+    if (button && button.label == this._starButtonLabel)
+      button.setAttribute("label", this._starButtonOverflowedLabel);
+  },
+
+  onWidgetUnderflow: function(aNode, aContainer) {
+    let win = aNode.ownerDocument.defaultView;
+    if (aNode.id != "bookmarks-menu-button" || win != window)
+      return;
+
+    // If the button hasn't been in the overflow panel before, we may ignore
+    // this event.
+    if (!this._starButtonOverflowedLabel || !this._starButtonLabel)
+      return;
+
+    let button = this.button;
+    if (button && button.label == this._starButtonOverflowedLabel)
+      button.setAttribute("label", this._starButtonLabel);
+  },
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver

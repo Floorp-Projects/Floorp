@@ -7,3 +7,12 @@
 #BMB_bookmarksPopup > menuitem[type="checkbox"] {
   -moz-appearance: none !important; /* important, to override toolkit rule */
 }
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  border: 0;
+}
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-margin-start: 0;
+}
