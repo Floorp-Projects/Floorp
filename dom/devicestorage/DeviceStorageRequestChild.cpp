@@ -5,6 +5,7 @@
 
 
 #include "DeviceStorageRequestChild.h"
+#include "DeviceStorageFileDescriptor.h"
 #include "nsDeviceStorage.h"
 #include "nsDOMFile.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -20,11 +21,27 @@ DeviceStorageRequestChild::DeviceStorageRequestChild()
 }
 
 DeviceStorageRequestChild::DeviceStorageRequestChild(DOMRequest* aRequest,
-                                                     DeviceStorageFile* aFile)
+                                                     DeviceStorageFile* aDSFile)
   : mRequest(aRequest)
-  , mFile(aFile)
+  , mDSFile(aDSFile)
   , mCallback(nullptr)
 {
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aDSFile);
+  MOZ_COUNT_CTOR(DeviceStorageRequestChild);
+}
+
+DeviceStorageRequestChild::DeviceStorageRequestChild(DOMRequest* aRequest,
+                                                     DeviceStorageFile* aDSFile,
+                                                     DeviceStorageFileDescriptor* aDSFileDescriptor)
+  : mRequest(aRequest)
+  , mDSFile(aDSFile)
+  , mDSFileDescriptor(aDSFileDescriptor)
+  , mCallback(nullptr)
+{
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aDSFile);
+  MOZ_ASSERT(aDSFileDescriptor);
   MOZ_COUNT_CTOR(DeviceStorageRequestChild);
 }
 
@@ -53,10 +70,26 @@ DeviceStorageRequestChild::
     case DeviceStorageResponseValue::TSuccessResponse:
     {
       nsString fullPath;
-      mFile->GetFullPath(fullPath);
+      mDSFile->GetFullPath(fullPath);
       AutoJSContext cx;
       JS::Rooted<JS::Value> result(cx,
         StringToJsval(mRequest->GetOwner(), fullPath));
+      mRequest->FireSuccess(result);
+      break;
+    }
+
+    case DeviceStorageResponseValue::TFileDescriptorResponse:
+    {
+      FileDescriptorResponse r = aValue;
+
+      nsString fullPath;
+      mDSFile->GetFullPath(fullPath);
+      AutoJSContext cx;
+      JS::Rooted<JS::Value> result(cx,
+        StringToJsval(mRequest->GetOwner(), fullPath));
+
+      mDSFileDescriptor->mDSFile = mDSFile;
+      mDSFileDescriptor->mFileDescriptor = r.fileDescriptor();
       mRequest->FireSuccess(result);
       break;
     }

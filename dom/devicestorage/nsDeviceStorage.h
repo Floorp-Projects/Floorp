@@ -52,7 +52,8 @@ enum DeviceStorageRequestType {
     DEVICE_STORAGE_REQUEST_FREE_SPACE,
     DEVICE_STORAGE_REQUEST_USED_SPACE,
     DEVICE_STORAGE_REQUEST_AVAILABLE,
-    DEVICE_STORAGE_REQUEST_FORMAT
+    DEVICE_STORAGE_REQUEST_FORMAT,
+    DEVICE_STORAGE_REQUEST_CREATEFD
 };
 
 class DeviceStorageUsedSpaceCache MOZ_FINAL
@@ -90,8 +91,8 @@ public:
 
   void Invalidate(const nsAString& aStorageName)
   {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    NS_ASSERTION(mIOThread, "Null mIOThread!");
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mIOThread);
 
     nsRefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
@@ -99,8 +100,8 @@ public:
 
   void Dispatch(nsIRunnable* aRunnable)
   {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    NS_ASSERTION(mIOThread, "Null mIOThread!");
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mIOThread);
 
     mIOThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   }
