@@ -23,9 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944821
   // so that we can hit the asm.js cache.
 
   var code = "function f() { 'use asm';\n";
-  for (var i = 0; i < 1000; i++)
+  for (var i = 0; i < 5000; i++)
     code += "function g" + i + "() { return " + i + "}\n";
-  ok(code.length > 10000, "code is long enough");
+  ok(code.length > 100000, "code is long enough to definitely hit the cache");
 
   const N = 4;
 

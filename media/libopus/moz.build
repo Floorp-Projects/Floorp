@@ -37,3 +37,30 @@ if CONFIG['OS_ARCH'] == 'SunOS':
 if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
     DEFINES['FIXED_POINT'] = 1
     DEFINES['DISABLE_FLOAT_API'] = True
+
+LOCAL_INCLUDES += [
+    'celt',
+    'include',
+    'silk',
+    'src',
+]
+
+# sources.mozbuild is generated from gen-sources.py when a new libopus is
+# imported.
+include('sources.mozbuild')
+
+SOURCES += celt_sources
+SOURCES += silk_sources
+SOURCES += opus_sources
+
+if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+    LOCAL_INCLUDES += [
+        'silk/float',
+    ]
+    SOURCES += silk_sources_float
+    SOURCES += opus_sources_float
+else:
+    LOCAL_INCLUDES += [
+        'silk/fixed',
+    ]
+    SOURCES += silk_sources_fixed
