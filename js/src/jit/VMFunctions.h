@@ -575,7 +575,6 @@ bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
-bool MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value);
 bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value);
 
 template<bool Equal>

@@ -577,8 +577,8 @@ static const JSPropertySpec sCTypeProps[] = {
   JS_PSG("prototype",
          (Property<CType::IsCTypeOrProto, CType::PrototypeGetter>::Fun),
          CTYPESACC_FLAGS),
-  JS_PS_END
-};l
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+};
 
 static const JSFunctionSpec sCTypeFunctions[] = {
   JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
@@ -608,6 +608,10 @@ static const JSFunctionSpec sCDataFunctions[] = {
   JS_FN("toSource", CData::ToSource, 0, CDATAFN_FLAGS),
   JS_FN("toString", CData::ToSource, 0, CDATAFN_FLAGS),
   JS_FS_END
+};
+
+static const JSPropertySpec sCDataFinalizerProps[] = {
+  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
 static const JSFunctionSpec sCDataFinalizerFunctions[] = {
@@ -1349,7 +1353,8 @@ JS_InitCTypesClass(JSContext* cx, JSObject *globalArg)
   if (!prototype)
     return false;
 
-  if (!JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions))
+  if (!JS_DefineProperties(cx, prototype, sCDataFinalizerProps) ||
+      !JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions))
     return false;
 
   if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),

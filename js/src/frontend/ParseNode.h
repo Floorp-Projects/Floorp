@@ -139,7 +139,6 @@ class UpvarCookie
     F(FORHEAD) \
     F(ARGSBODY) \
     F(SPREAD) \
-    F(MUTATEPROTO) \
     \
     /* Unary operators. */ \
     F(TYPEOF) \

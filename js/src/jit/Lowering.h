@@ -78,7 +78,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAbortPar(MAbortPar *ins);
     bool visitInitElem(MInitElem *ins);
     bool visitInitElemGetterSetter(MInitElemGetterSetter *ins);
-    bool visitMutateProto(MMutateProto *ins);
     bool visitInitProp(MInitProp *ins);
     bool visitInitPropGetterSetter(MInitPropGetterSetter *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
