@@ -30,13 +30,13 @@ class nsNSSSocketInfo : public mozilla::psm::TransportSecurityInfo,
 {
 public:
   nsNSSSocketInfo(mozilla::psm::SharedSSLState& aState, uint32_t providerFlags);
-  
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISSLSOCKETCONTROL
   NS_DECL_NSICLIENTAUTHUSERDECISION
- 
+
   nsresult SetForSTARTTLS(bool aForSTARTTLS);
-  nsresult GetForSTARTTLS(bool *aForSTARTTLS);
+  nsresult GetForSTARTTLS(bool* aForSTARTTLS);
 
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
@@ -45,17 +45,17 @@ public:
   void SetHandshakeNotPending() { mHandshakePending = false; }
 
   void GetPreviousCert(nsIX509Cert** _result);
-  
+
   void SetHasCleartextPhase(bool aHasCleartextPhase);
   bool GetHasCleartextPhase();
-  
+
   void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
   SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
 
   PRStatus CloseSocketAndDestroy(
-                const nsNSSShutDownPreventionLock & proofOfLock);
-  
-  void SetNegotiatedNPN(const char *value, uint32_t length);
+                const nsNSSShutDownPreventionLock& proofOfLock);
+
+  void SetNegotiatedNPN(const char* value, uint32_t length);
 
   void SetHandshakeCompleted();
   void NoteTimeUntilReady();
@@ -87,7 +87,7 @@ public:
   // ignored.
   void SetCertVerificationResult(PRErrorCode errorCode,
               ::mozilla::psm::SSLErrorMessageType errorMessageType);
-  
+
   // for logging only
   PRBool IsWaitingForCertVerification() const
   {
@@ -163,7 +163,7 @@ public:
   static PRIOMethods nsSSLIOLayerMethods;
   static PRIOMethods nsSSLPlaintextLayerMethods;
 
-  nsTHashtable<nsCStringHashKey> *mRenegoUnrestrictedSites;
+  nsTHashtable<nsCStringHashKey>* mRenegoUnrestrictedSites;
   bool mTreatUnsafeNegotiationAsBroken;
   int32_t mWarnLevelMissingRFC5746;
 
@@ -185,15 +185,15 @@ private:
   };
   nsDataHashtable<nsCStringHashKey, IntoleranceEntry> mTLSIntoleranceInfo;
 public:
-  void rememberTolerantAtVersion(const nsACString & hostname, int16_t port,
+  void rememberTolerantAtVersion(const nsACString& hostname, int16_t port,
                                  uint16_t tolerant);
-  bool rememberIntolerantAtVersion(const nsACString & hostname, int16_t port,
+  bool rememberIntolerantAtVersion(const nsACString& hostname, int16_t port,
                                    uint16_t intolerant, uint16_t minVersion);
-  void adjustForTLSIntolerance(const nsACString & hostname, int16_t port,
-                               /*in/out*/ SSLVersionRange & range);
+  void adjustForTLSIntolerance(const nsACString& hostname, int16_t port,
+                               /*in/out*/ SSLVersionRange& range);
 
-  void setRenegoUnrestrictedSites(const nsCString &str);
-  bool isRenegoUnrestrictedSite(const nsCString &str);
+  void setRenegoUnrestrictedSites(const nsCString& str);
+  bool isRenegoUnrestrictedSite(const nsCString& str);
   void clearStoredData();
 
   bool mFalseStartRequireNPN;
@@ -204,26 +204,26 @@ private:
 };
 
 nsresult nsSSLIOLayerNewSocket(int32_t family,
-                               const char *host,
+                               const char* host,
                                int32_t port,
-                               const char *proxyHost,
+                               const char* proxyHost,
                                int32_t proxyPort,
-                               PRFileDesc **fd,
-                               nsISupports **securityInfo,
+                               PRFileDesc** fd,
+                               nsISupports** securityInfo,
                                bool forSTARTTLS,
                                uint32_t flags);
 
 nsresult nsSSLIOLayerAddToSocket(int32_t family,
-                                 const char *host,
+                                 const char* host,
                                  int32_t port,
-                                 const char *proxyHost,
+                                 const char* proxyHost,
                                  int32_t proxyPort,
-                                 PRFileDesc *fd,
-                                 nsISupports **securityInfo,
+                                 PRFileDesc* fd,
+                                 nsISupports** securityInfo,
                                  bool forSTARTTLS,
                                  uint32_t flags);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
-nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);
+nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo* infoObject, int error);
 
 #endif /* _NSNSSIOLAYER_H */

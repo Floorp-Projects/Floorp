@@ -34,91 +34,87 @@ extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 #define CONST_OID static const unsigned char
-#define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
+#define OI(x) { siDEROID, (unsigned char*) x, sizeof x }
 
 struct nsMyTrustedEVInfo
 {
-  const char *dotted_oid;
-  const char *oid_name; // Set this to null to signal an invalid structure,
+  const char* dotted_oid;
+  const char* oid_name; // Set this to null to signal an invalid structure,
                   // (We can't have an empty list, so we'll use a dummy entry)
   SECOidTag oid_tag;
-  const char *ev_root_sha1_fingerprint;
-  const char *issuer_base64;
-  const char *serial_base64;
-  CERTCertificate *cert;
+  const char* ev_root_sha1_fingerprint;
+  const char* issuer_base64;
+  const char* serial_base64;
+  CERTCertificate* cert;
 };
 
-/* HOWTO enable additional CA root certificates for EV:
- *
- * For each combination of "root certificate" and "policy OID",
- * one entry must be added to the array named myTrustedEVInfos.
- *
- * We use the combination of "issuer name" and "serial number" to
- * uniquely identify the certificate. In order to avoid problems
- * because of encodings when comparing certificates, we don't
- * use plain text representation, we rather use the original encoding
- * as it can be found in the root certificate (in base64 format).
- *
- * We can use the NSS utility named "pp" to extract the encoding.
- *
- * Build standalone NSS including the NSS tools, then run
- *   pp -t certificate-identity -i the-cert-filename
- *
- * You will need the output from sections "Issuer", "Fingerprint (SHA1)",
- * "Issuer DER Base64" and "Serial DER Base64".
- *
- * The new section consists of 8 lines:
- *
- * - a comment that should contain the human readable issuer name
- *   of the certificate, as printed by the pp tool
- * - the EV policy OID that is associated to the EV grant
- * - a text description of the EV policy OID. The array can contain
- *   multiple entries with the same OID.
- *   Please make sure to use the identical OID text description for
- *   all entries with the same policy OID (use the text search
- *   feature of your text editor to find duplicates).
- *   When adding a new policy OID that is not yet contained in the array,
- *   please make sure that your new description is different from
- *   all the other descriptions (again use the text search feature
- *   to be sure).
- * - the constant SEC_OID_UNKNOWN
- *   (it will be replaced at runtime with another identifier)
- * - the UPPERCASE version of the SHA1 fingerprint, hexadecimal,
- *   bytes separated by colons (as printed by pp)
- * - the "Issuer DER Base64" as printed by the pp tool.
- *   Remove all whitespaces. If you use multiple lines, make sure that
- *   only the final line will be followed by a comma.
- * - the "Serial DER Base64" (as printed by pp)
- * - a nullptr value
- *
- * After adding an entry, test it locally against the test site that
- * has been provided by the CA. Note that you must use a version of NSS
- * where the root certificate has already been added and marked as trusted
- * for issueing SSL server certificates (at least).
- *
- * If you are able to connect to the site without certificate errors,
- * but you don't see the EV status indicator, then most likely the CA
- * has a problem in their infrastructure. The most common problems are
- * related to the CA's OCSP infrastructure, either they use an incorrect
- * OCSP signing certificate, or OCSP for the intermediate certificates
- * isn't working, or OCSP isn't working at all.
- */
+// HOWTO enable additional CA root certificates for EV:
+//
+// For each combination of "root certificate" and "policy OID",
+// one entry must be added to the array named myTrustedEVInfos.
+//
+// We use the combination of "issuer name" and "serial number" to
+// uniquely identify the certificate. In order to avoid problems
+// because of encodings when comparing certificates, we don't
+// use plain text representation, we rather use the original encoding
+// as it can be found in the root certificate (in base64 format).
+//
+// We can use the NSS utility named "pp" to extract the encoding.
+//
+// Build standalone NSS including the NSS tools, then run
+//   pp -t certificate-identity -i the-cert-filename
+//
+// You will need the output from sections "Issuer", "Fingerprint (SHA1)",
+// "Issuer DER Base64" and "Serial DER Base64".
+//
+// The new section consists of 8 lines:
+//
+// - a comment that should contain the human readable issuer name
+//   of the certificate, as printed by the pp tool
+// - the EV policy OID that is associated to the EV grant
+// - a text description of the EV policy OID. The array can contain
+//   multiple entries with the same OID.
+//   Please make sure to use the identical OID text description for
+//   all entries with the same policy OID (use the text search
+//   feature of your text editor to find duplicates).
+//   When adding a new policy OID that is not yet contained in the array,
+//   please make sure that your new description is different from
+//   all the other descriptions (again use the text search feature
+//   to be sure).
+// - the constant SEC_OID_UNKNOWN
+//   (it will be replaced at runtime with another identifier)
+// - the UPPERCASE version of the SHA1 fingerprint, hexadecimal,
+//   bytes separated by colons (as printed by pp)
+// - the "Issuer DER Base64" as printed by the pp tool.
+//   Remove all whitespaces. If you use multiple lines, make sure that
+//   only the final line will be followed by a comma.
+// - the "Serial DER Base64" (as printed by pp)
+// - a nullptr value
+//
+// After adding an entry, test it locally against the test site that
+// has been provided by the CA. Note that you must use a version of NSS
+// where the root certificate has already been added and marked as trusted
+// for issueing SSL server certificates (at least).
+//
+// If you are able to connect to the site without certificate errors,
+// but you don't see the EV status indicator, then most likely the CA
+// has a problem in their infrastructure. The most common problems are
+// related to the CA's OCSP infrastructure, either they use an incorrect
+// OCSP signing certificate, or OCSP for the intermediate certificates
+// isn't working, or OCSP isn't working at all.
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
-  /*
-   * IMPORTANT! When extending this list, 
-   * pairs of dotted_oid and oid_name should always be unique pairs.
-   * In other words, if you add another list, that uses the same dotted_oid
-   * as an existing entry, then please use the same oid_name.
-   */
+  // IMPORTANT! When extending this list,
+  // pairs of dotted_oid and oid_name should always be unique pairs.
+  // In other words, if you add another list, that uses the same dotted_oid
+  // as an existing entry, then please use the same oid_name.
 #ifdef DEBUG
-  /* Debug EV certificates should all use the OID (repeating EV OID is OK):
-   * 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
-   * If you add or remove debug EV certs you must also modify IdentityInfoInit
-   * (there is another #ifdef DEBUG section there) so that the correct number of
-   * certs are skipped as these debug EV certs are NOT part of the default trust
-   * store.
-   */
+  // Debug EV certificates should all use the OID (repeating EV OID is OK):
+  // 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
+  // If you add or remove debug EV certs you must also modify IdentityInfoInit
+  // (there is another #ifdef DEBUG section there) so that the correct number of
+  // certs are skipped as these debug EV certs are NOT part of the default trust
+  // store.
   {
     // This is the testing EV signature (xpcshell) (RSA)
     // CN=XPCShell EV Testing (untrustworthy) CA,OU=Security Engineering,O=Mozilla - EV debug test CA,L=Mountain View,ST=CA,C=US"
@@ -779,7 +775,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
 };
 
 static SECOidTag
-register_oid(const SECItem *oid_item, const char *oid_name)
+register_oid(const SECItem* oid_item, const char* oid_name)
 {
   if (!oid_item)
     return SEC_OID_UNKNOWN;
@@ -795,7 +791,7 @@ register_oid(const SECItem *oid_item, const char *oid_name)
 }
 
 static void
-addToCertListIfTrusted(CERTCertList* certList, CERTCertificate *cert) {
+addToCertListIfTrusted(CERTCertList* certList, CERTCertificate* cert) {
   CERTCertTrust nssTrust;
   if (CERT_GetCertTrust(cert, &nssTrust) != SECSuccess) {
     return;
@@ -838,8 +834,8 @@ nsMyTrustedEVInfoClass::~nsMyTrustedEVInfoClass()
     CERT_DestroyCertificate(cert);
 }
 
-typedef nsTArray< nsMyTrustedEVInfoClass* > testEVArray; 
-static testEVArray *testEVInfos;
+typedef nsTArray<nsMyTrustedEVInfoClass*> testEVArray;
+static testEVArray* testEVInfos;
 static bool testEVInfosLoaded = false;
 #endif
 
@@ -854,10 +850,10 @@ loadTestEVInfos()
 
   testEVInfos->Clear();
 
-  char *env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
+  char* env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
   if (!env_val)
     return;
-    
+
   int enabled_val = atoi(env_val);
   if (!enabled_val)
     return;
@@ -875,32 +871,32 @@ loadTestEVInfos()
   if (NS_FAILED(rv))
     return;
 
-  nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
+  nsCOMPtr<nsILineInputStream> lineInputStream =
+      do_QueryInterface(fileInputStream, &rv);
   if (NS_FAILED(rv))
     return;
 
   nsAutoCString buffer;
   bool isMore = true;
 
-  /* file format
-   *
-   * file format must be strictly followed
-   * strings in file must be UTF-8
-   * each record consists of multiple lines
-   * each line consists of a descriptor, a single space, and the data
-   * the descriptors are:
-   *   1_fingerprint (in format XX:XX:XX:...)
-   *   2_readable_oid (treated as a comment)
-   * the input file must strictly follow this order
-   * the input file may contain 0, 1 or many records
-   * completely empty lines are ignored
-   * lines that start with the # char are ignored
-   */
+  // file format
+  //
+  // file format must be strictly followed
+  // strings in file must be UTF-8
+  // each record consists of multiple lines
+  // each line consists of a descriptor, a single space, and the data
+  // the descriptors are:
+  //   1_fingerprint (in format XX:XX:XX:...)
+  //   2_readable_oid (treated as a comment)
+  // the input file must strictly follow this order
+  // the input file may contain 0, 1 or many records
+  // completely empty lines are ignored
+  // lines that start with the # char are ignored
 
   int line_counter = 0;
   bool found_error = false;
 
-  enum { 
+  enum {
     pos_fingerprint, pos_readable_oid, pos_issuer, pos_serial
   } reader_position = pos_fingerprint;
 
@@ -918,9 +914,10 @@ loadTestEVInfos()
       break;
     }
 
-    const nsASingleFragmentCString &descriptor = Substring(buffer, 0, seperatorIndex);
-    const nsASingleFragmentCString &data = 
-            Substring(buffer, seperatorIndex + 1, 
+    const nsASingleFragmentCString& descriptor =
+            Substring(buffer, 0, seperatorIndex);
+    const nsASingleFragmentCString& data =
+            Substring(buffer, seperatorIndex + 1,
                       buffer.Length() - seperatorIndex + 1);
 
     if (reader_position == pos_fingerprint &&
@@ -951,7 +948,7 @@ loadTestEVInfos()
       break;
     }
 
-    nsMyTrustedEVInfoClass *temp_ev = new nsMyTrustedEVInfoClass;
+    nsMyTrustedEVInfoClass* temp_ev = new nsMyTrustedEVInfoClass;
     if (!temp_ev)
       return;
 
@@ -1013,22 +1010,22 @@ loadTestEVInfos()
   }
 }
 
-static bool 
+static bool
 isEVPolicyInExternalDebugRootsFile(SECOidTag policyOIDTag)
 {
   if (!testEVInfos)
     return false;
 
-  char *env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
+  char* env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
   if (!env_val)
     return false;
-    
+
   int enabled_val = atoi(env_val);
   if (!enabled_val)
     return false;
 
   for (size_t i=0; i<testEVInfos->Length(); ++i) {
-    nsMyTrustedEVInfoClass *ev = testEVInfos->ElementAt(i);
+    nsMyTrustedEVInfoClass* ev = testEVInfos->ElementAt(i);
     if (!ev)
       continue;
     if (policyOIDTag == ev->oid_tag)
@@ -1038,23 +1035,23 @@ isEVPolicyInExternalDebugRootsFile(SECOidTag policyOIDTag)
   return false;
 }
 
-static bool 
-getRootsForOidFromExternalRootsFile(CERTCertList* certList, 
+static bool
+getRootsForOidFromExternalRootsFile(CERTCertList* certList,
                                     SECOidTag policyOIDTag)
 {
   if (!testEVInfos)
     return false;
 
-  char *env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
+  char* env_val = getenv("ENABLE_TEST_EV_ROOTS_FILE");
   if (!env_val)
     return false;
-    
+
   int enabled_val = atoi(env_val);
   if (!enabled_val)
     return false;
 
   for (size_t i=0; i<testEVInfos->Length(); ++i) {
-    nsMyTrustedEVInfoClass *ev = testEVInfos->ElementAt(i);
+    nsMyTrustedEVInfoClass* ev = testEVInfos->ElementAt(i);
     if (!ev)
       continue;
     if (policyOIDTag == ev->oid_tag) {
@@ -1066,11 +1063,11 @@ getRootsForOidFromExternalRootsFile(CERTCertList* certList,
 }
 #endif
 
-static bool 
+static bool
 isEVPolicy(SECOidTag policyOIDTag)
 {
   for (size_t iEV=0; iEV < (sizeof(myTrustedEVInfos)/sizeof(nsMyTrustedEVInfo)); ++iEV) {
-    nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
+    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
     if (!entry.oid_name) // invalid or placeholder list entry
       continue;
     if (policyOIDTag == entry.oid_tag) {
@@ -1092,12 +1089,12 @@ namespace mozilla { namespace psm {
 CERTCertList*
 getRootsForOid(SECOidTag oid_tag)
 {
-  CERTCertList *certList = CERT_NewCertList();
+  CERTCertList* certList = CERT_NewCertList();
   if (!certList)
     return nullptr;
 
   for (size_t iEV=0; iEV < (sizeof(myTrustedEVInfos)/sizeof(nsMyTrustedEVInfo)); ++iEV) {
-    nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
+    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
     if (!entry.oid_name) // invalid or placeholder list entry
       continue;
     if (entry.oid_tag == oid_tag) {
@@ -1117,7 +1114,7 @@ PRStatus
 nsNSSComponent::IdentityInfoInit()
 {
   for (size_t iEV=0; iEV < (sizeof(myTrustedEVInfos)/sizeof(nsMyTrustedEVInfo)); ++iEV) {
-    nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
+    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
     if (!entry.oid_name) // invalid or placeholder list entry
       continue;
 
@@ -1161,7 +1158,7 @@ nsNSSComponent::IdentityInfoInit()
     SECItem ev_oid_item;
     ev_oid_item.data = nullptr;
     ev_oid_item.len = 0;
-    SECStatus srv = SEC_StringToOID(nullptr, &ev_oid_item, 
+    SECStatus srv = SEC_StringToOID(nullptr, &ev_oid_item,
                                     entry.dotted_oid, 0);
     if (srv != SECSuccess)
       continue;
@@ -1185,34 +1182,36 @@ nsNSSComponent::IdentityInfoInit()
 }
 
 namespace mozilla { namespace psm {
+
 // Find the first policy OID that is known to be an EV policy OID.
-SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
+SECStatus
+getFirstEVPolicy(CERTCertificate* cert, SECOidTag& outOidTag)
 {
   if (!cert)
     return SECFailure;
 
   if (cert->extensions) {
     for (int i=0; cert->extensions[i]; i++) {
-      const SECItem *oid = &cert->extensions[i]->id;
+      const SECItem* oid = &cert->extensions[i]->id;
 
       SECOidTag oidTag = SECOID_FindOIDTag(oid);
       if (oidTag != SEC_OID_X509_CERTIFICATE_POLICIES)
         continue;
 
-      SECItem *value = &cert->extensions[i]->value;
+      SECItem* value = &cert->extensions[i]->value;
 
-      CERTCertificatePolicies *policies;
-      CERTPolicyInfo **policyInfos, *policyInfo;
-    
+      CERTCertificatePolicies* policies;
+      CERTPolicyInfo** policyInfos;
+
       policies = CERT_DecodeCertificatePoliciesExtension(value);
       if (!policies)
         continue;
-    
+
       policyInfos = policies->policyInfos;
 
       bool found = false;
       while (*policyInfos) {
-        policyInfo = *policyInfos++;
+        const CERTPolicyInfo* policyInfo = *policyInfos++;
 
         SECOidTag oid_tag = policyInfo->oid;
         if (oid_tag != SEC_OID_UNKNOWN && isEVPolicy(oid_tag)) {
@@ -1268,14 +1267,14 @@ nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)
 #ifndef NSS_NO_LIBPKIX
 
 nsresult
-nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
+nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
   nsresult nrv;
-  nsCOMPtr<nsINSSComponent> nssComponent = 
+  nsCOMPtr<nsINSSComponent> nssComponent =
     do_GetService(PSM_COMPONENT_CONTRACTID, &nrv);
   if (NS_FAILED(nrv))
     return nrv;
@@ -1291,7 +1290,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
                    mozilla::psm::CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV;
   SECStatus rv = certVerifier->VerifyCert(mCert,
                                           certificateUsageSSLServer, PR_Now(),
-                                          nullptr /* XXX pinarg*/,
+                                          nullptr /* XXX pinarg */,
                                           flags, nullptr, &resultOidTag);
 
   if (rv != SECSuccess) {
@@ -1304,7 +1303,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
 }
 
 nsresult
-nsNSSCertificate::getValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
+nsNSSCertificate::getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
 {
   if (mCachedEVStatus != ev_status_unknown) {
     validEV = (mCachedEVStatus == ev_status_valid);
@@ -1350,7 +1349,7 @@ nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetValidEVPolicyOid(nsACString &outDottedOid)
+nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
 {
   outDottedOid.Truncate();
 
@@ -1366,11 +1365,11 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString &outDottedOid)
     return rv;
 
   if (valid) {
-    SECOidData *oid_data = SECOID_FindOIDByTag(oid_tag);
+    SECOidData* oid_data = SECOID_FindOIDByTag(oid_tag);
     if (!oid_data)
       return NS_ERROR_FAILURE;
 
-    char *oid_str = CERT_GetOidString(&oid_data->oid);
+    char* oid_str = CERT_GetOidString(&oid_data->oid);
     if (!oid_str)
       return NS_ERROR_FAILURE;
 
@@ -1388,7 +1387,7 @@ NS_IMETHODIMP
 nsNSSComponent::EnsureIdentityInfoLoaded()
 {
   PRStatus rv = PR_CallOnce(&mIdentityInfoCallOnce, IdentityInfoInit);
-  return (rv == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE; 
+  return (rv == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // only called during shutdown
@@ -1397,7 +1396,7 @@ nsNSSComponent::CleanupIdentityInfo()
 {
   nsNSSShutDownPreventionLock locker;
   for (size_t iEV=0; iEV < (sizeof(myTrustedEVInfos)/sizeof(nsMyTrustedEVInfo)); ++iEV) {
-    nsMyTrustedEVInfo &entry = myTrustedEVInfos[iEV];
+    nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
     if (entry.cert) {
       CERT_DestroyCertificate(entry.cert);
       entry.cert = nullptr;
