@@ -214,6 +214,7 @@ struct GCSizes
 {
 #define FOR_EACH_SIZE(macro) \
     macro(_, _, marker) \
+    macro(_, _, nursery) \
     macro(_, _, storeBufferVals) \
     macro(_, _, storeBufferCells) \
     macro(_, _, storeBufferSlots) \
