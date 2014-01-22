@@ -293,8 +293,16 @@ void
 WifiProxyService::DispatchWifiEvent(const nsAString& aEvent, const nsACString& aInterface)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  nsAutoString event;
+  if (StringBeginsWith(aEvent, NS_LITERAL_STRING("IFNAME"))) {
+    // Jump over IFNAME for gonk-kk.
+    event = Substring(aEvent, aEvent.FindChar(' ') + 1);
+  }
+  else {
+    event = aEvent;
+  }
   // Call the listener.
-  mListener->OnWaitEvent(aEvent, aInterface);
+  mListener->OnWaitEvent(event, aInterface);
 }
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WifiProxyService,
