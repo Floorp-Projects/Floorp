@@ -685,7 +685,8 @@ static bool
 IsContextIdWebGL(const nsAString& str)
 {
   return str.EqualsLiteral("webgl") ||
-         str.EqualsLiteral("experimental-webgl");
+         str.EqualsLiteral("experimental-webgl") ||
+         str.EqualsLiteral("moz-webgl");
 }
 
 already_AddRefed<nsISupports>
