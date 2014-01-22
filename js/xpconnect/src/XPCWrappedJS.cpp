@@ -328,7 +328,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
     AutoJSContext cx;
     JSObject2WrappedJSMap* map;
-    nsXPCWrappedJS* wrapper = nullptr;
     nsRefPtr<nsXPCWrappedJSClass> clasp;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
@@ -348,11 +347,11 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         return NS_ERROR_FAILURE;
 
     nsRefPtr<nsXPCWrappedJS> root = map->Find(rootJSObj);
+    nsRefPtr<nsXPCWrappedJS> wrapper;
     if (root) {
         wrapper = root->FindOrFindInherited(aIID);
         if (wrapper) {
-            NS_ADDREF(wrapper);
-            *wrapperResult = wrapper;
+            wrapper.forget(wrapperResult);
             return NS_OK;
         }
     } else {
@@ -360,8 +359,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
             wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, nullptr);
-            NS_ADDREF(wrapper);
-            *wrapperResult = wrapper;
+            wrapper.forget(wrapperResult);
             return NS_OK;
         } else {
             // just a root wrapper
@@ -382,9 +380,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     MOZ_ASSERT(!wrapper, "no wrapper found yet");
 
     wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root);
-    NS_ADDREF(wrapper);
-
-    *wrapperResult = wrapper;
+    wrapper.forget(wrapperResult);
     return NS_OK;
 }
 
