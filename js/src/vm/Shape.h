@@ -1546,19 +1546,9 @@ struct StackShape
         return hash;
     }
 
-    class AutoRooter : private JS::CustomAutoRooter
-    {
-      public:
-        inline AutoRooter(ThreadSafeContext *cx, const StackShape *shape_
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
-      private:
-        virtual void trace(JSTracer *trc);
-
-        const StackShape *shape;
-        SkipRoot skip;
-        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    };
+    // For RootedGeneric<StackShape*>
+    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_CUSTOM; }
+    void trace(JSTracer *trc);
 };
 
 } /* namespace js */
