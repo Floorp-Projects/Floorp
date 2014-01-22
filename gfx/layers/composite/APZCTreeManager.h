@@ -19,6 +19,7 @@
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
+#include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 
 class gfx3DMatrix;
 template <class E> class nsTArray;
@@ -340,6 +341,9 @@ private:
    * the next APZC in the chain.
    */
   Vector< nsRefPtr<AsyncPanZoomController> > mOverscrollHandoffChain;
+  /* For logging the APZC tree for debugging (enabled by the apz.printtree
+   * pref). */
+  gfx::TreeLog mApzcTreeLog;
 
   static float sDPI;
 };
