@@ -569,6 +569,19 @@ WebConsoleFrame.prototype = {
       toolbox.on("webconsole-selected", this._onPanelSelected);
     }
 
+    /*
+     * Focus input line whenever the output area is clicked.
+     * Only focus when the target node (or parent, as in source links) is
+     * not an anchor.
+     */
+    this.outputNode.addEventListener("click", (e) => {
+      if ((e.button == 0) &&
+          (e.target.nodeName.toLowerCase() != "a") &&
+          (e.target.parentNode.nodeName.toLowerCase() != "a")) {
+        this.jsterm.inputNode.focus();
+      }
+    });
+
     // Toggle the timestamp on preference change
     gDevTools.on("pref-changed", this._onToolboxPrefChanged);
     this._onToolboxPrefChanged("pref-changed", {
