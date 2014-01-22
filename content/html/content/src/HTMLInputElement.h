@@ -1112,6 +1112,11 @@ protected:
    */
   Decimal GetDefaultStep() const;
 
+  enum StepCallerType {
+    CALLED_FOR_USER_EVENT,
+    CALLED_FOR_SCRIPT
+  };
+
   /**
    * Sets the aValue outparam to the value that this input would take if
    * someone tries to step aStep steps and this input's value would change as
@@ -1124,7 +1129,9 @@ protected:
    * was initiated by a stepUp()/stepDown() call from script under conditions
    * that such a call should throw.
    */
-  nsresult GetValueIfStepped(int32_t aStep, Decimal* aNextStep);
+  nsresult GetValueIfStepped(int32_t aStepCount,
+                             StepCallerType aCallerType,
+                             Decimal* aNextStep);
 
   /**
    * Apply a step change from stepUp or stepDown by multiplying aStep by the
