@@ -1030,26 +1030,6 @@ static inline bool IS_PROTO_CLASS(const js::Class *clazz)
 }
 
 /***************************************************************************/
-
-namespace XPCWrapper {
-
-enum WrapperType {
-    UNKNOWN         = 0,
-    NONE            = 0,
-    XPCNW_IMPLICIT  = 1 << 0,
-    XPCNW_EXPLICIT  = 1 << 1,
-    XPCNW           = (XPCNW_IMPLICIT | XPCNW_EXPLICIT),
-    SJOW            = 1 << 2,
-    // SJOW must be the last wrapper type that can be returned to chrome.
-
-    XOW             = 1 << 3,
-    COW             = 1 << 4,
-    SOW             = 1 << 5
-};
-
-}
-
-/***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
 class nsXPCComponentsBase;
@@ -2189,7 +2169,6 @@ public:
             GetProto()->TraceSelf(trc);
         else
             GetScope()->TraceSelf(trc);
-        TraceWrapper(trc);
         if (mFlatJSObject && JS_IsGlobalObject(mFlatJSObject))
         {
             TraceXPCGlobal(trc, mFlatJSObject);
@@ -2232,41 +2211,6 @@ public:
 
     bool HasExternalReference() const {return mRefCnt > 1;}
 
-    bool NeedsSOW() { return mWrapper.hasFlag(WRAPPER_NEEDS_SOW); }
-    void SetNeedsSOW() { mWrapper.setFlags(WRAPPER_NEEDS_SOW); }
-    bool NeedsCOW() { return mWrapper.hasFlag(WRAPPER_NEEDS_COW); }
-    void SetNeedsCOW() { mWrapper.setFlags(WRAPPER_NEEDS_COW); }
-
-    JSObject* GetWrapperPreserveColor() const { return mWrapper.getPtr(); }
-
-    JSObject* GetWrapper()
-    {
-        JSObject* wrapper = GetWrapperPreserveColor();
-        if (wrapper) {
-            JS::ExposeObjectToActiveJS(wrapper);
-            // Call this to unmark mFlatJSObject.
-            GetFlatJSObject();
-        }
-        return wrapper;
-    }
-    void SetWrapper(JSObject *obj)
-    {
-        JS::IncrementalObjectBarrier(GetWrapperPreserveColor());
-        mWrapper.setPtr(obj);
-    }
-
-    void TraceWrapper(JSTracer *trc)
-    {
-        JS_CallTenuredObjectTracer(trc, &mWrapper, "XPCWrappedNative::mWrapper");
-    }
-
-    // Returns the relevant same-compartment security if applicable, or
-    // mFlatJSObject otherwise.
-    //
-    // This takes care of checking mWrapper to see if we already have such
-    // a wrapper.
-    JSObject *GetSameCompartmentSecurityWrapper(JSContext *cx);
-
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
@@ -2289,10 +2233,6 @@ protected:
 
 private:
     enum {
-        // Flags bits for mWrapper:
-        WRAPPER_NEEDS_SOW = JS_BIT(0),
-        WRAPPER_NEEDS_COW = JS_BIT(1),
-
         // Flags bits for mFlatJSObject:
         FLAT_JS_OBJECT_VALID = JS_BIT(0)
     };
@@ -2326,7 +2266,6 @@ private:
     JS::TenuredHeap<JSObject*>   mFlatJSObject;
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
-    JS::TenuredHeap<JSObject*>   mWrapper;
 };
 
 /***************************************************************************

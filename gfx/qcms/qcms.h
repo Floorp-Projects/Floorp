@@ -130,16 +130,27 @@ typedef struct
 } qcms_CIE_xyYTRIPLE;
 
 qcms_profile* qcms_profile_create_rgb_with_gamma(
-		qcms_CIE_xyY white_point,
-		qcms_CIE_xyYTRIPLE primaries,
-		float gamma);
+                qcms_CIE_xyY white_point,
+                qcms_CIE_xyYTRIPLE primaries,
+                float gamma);
+
+void qcms_data_create_rgb_with_gamma(
+                qcms_CIE_xyY white_point,
+                qcms_CIE_xyYTRIPLE primaries,
+                float gamma,
+                void **mem,
+                size_t *size);
 
 qcms_profile* qcms_profile_from_memory(const void *mem, size_t size);
 
 qcms_profile* qcms_profile_from_file(FILE *file);
 qcms_profile* qcms_profile_from_path(const char *path);
+
+void qcms_data_from_path(const char *path, void **mem, size_t *size);
+
 #ifdef _WIN32
 qcms_profile* qcms_profile_from_unicode_path(const wchar_t *path);
+void qcms_data_from_unicode_path(const wchar_t *path, void **mem, size_t *size);
 #endif
 qcms_profile* qcms_profile_sRGB(void);
 void qcms_profile_release(qcms_profile *profile);

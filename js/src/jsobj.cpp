@@ -1137,7 +1137,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
             if (!JSID_IS_EMPTY(child.propid) && it == FREEZE)
                 MarkTypePropertyNonWritable(cx, obj, child.propid);
 
-            last = cx->compartment()->propertyTree.getChild(cx, last, obj->numFixedSlots(), child);
+            last = cx->compartment()->propertyTree.getChild(cx, last, child);
             if (!last)
                 return false;
         }

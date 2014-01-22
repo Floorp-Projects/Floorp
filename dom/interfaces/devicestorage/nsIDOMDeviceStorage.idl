@@ -11,7 +11,12 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-[scriptable, uuid(7c1b2305-0f14-4c07-8a8a-359eeb850068), builtinclass]
+%{C++
+class DeviceStorageFileDescriptor;
+%}
+[ptr] native DeviceStorageFdPtr(DeviceStorageFileDescriptor);
+
+[scriptable, uuid(8b724547-3c78-4244-969a-f00a1f4ae0c3), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -34,5 +39,8 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     // for storing new files.
     readonly attribute bool default;
 
-    [noscript] nsIFile getRootDirectoryForFile(in DOMString aName);
+    // Note: aFileDescriptor is reference counted, which is why we're using
+    //       a pointer rather than a reference.
+    [noscript] nsIDOMDOMRequest createFileDescriptor(in DOMString aName,
+                                                     in DeviceStorageFdPtr aFileDescriptor);
 };
