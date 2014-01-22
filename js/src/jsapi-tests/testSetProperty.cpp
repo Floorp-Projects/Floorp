@@ -11,15 +11,12 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 {
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
-    JS::RootedValue vobj(cx, OBJECT_TO_JSVAL(obj));
 
-    CHECK(JS_DefineProperty(cx, global, "globalProp", vobj,
-                            JS_PropertyStub, JS_StrictPropertyStub,
-                            JSPROP_ENUMERATE));
+    CHECK(JS_DefineProperty(cx, global, "globalProp", obj, JSPROP_ENUMERATE,
+                            JS_PropertyStub, JS_StrictPropertyStub));
 
-    CHECK(JS_DefineProperty(cx, obj, "prop", JSVAL_VOID,
-                            NativeGet, JS_StrictPropertyStub,
-                            JSPROP_SHARED));
+    CHECK(JS_DefineProperty(cx, obj, "prop", JS::UndefinedHandleValue, JSPROP_SHARED,
+                            NativeGet, JS_StrictPropertyStub));
 
     EXEC("'use strict';                                     \n"
          "var error, passed = false;                        \n"
@@ -72,7 +69,7 @@ BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
     // shell can't.
     JS_ASSERT(JS_GetClass(global)->resolve == &JS_ResolveStub);
 
-    CHECK(JS_DefineProperty(cx, global, "HOTLOOP", INT_TO_JSVAL(8), nullptr, nullptr, 0));
+    CHECK(JS_DefineProperty(cx, global, "HOTLOOP", 8, 0));
     EXEC("var n = 0;\n"
          "var global = this;\n"
          "function f() { n++; }\n"

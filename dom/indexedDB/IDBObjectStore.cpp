@@ -907,11 +907,8 @@ public:
     JS::Rooted<JSString*> type(aCx,
       JS_NewUCStringCopyN(aCx, aData.type.get(), aData.type.Length()));
     if (!type ||
-        !JS_DefineProperty(aCx, obj, "size",
-                           JS_NumberValue((double)aData.size),
-                           nullptr, nullptr, 0) ||
-        !JS_DefineProperty(aCx, obj, "type", STRING_TO_JSVAL(type),
-                           nullptr, nullptr, 0)) {
+        !JS_DefineProperty(aCx, obj, "size", double(aData.size), 0) ||
+        !JS_DefineProperty(aCx, obj, "type", type, 0)) {
       return nullptr;
     }
 
@@ -924,10 +921,8 @@ public:
     JS::Rooted<JSObject*> date(aCx,
       JS_NewDateObjectMsec(aCx, aData.lastModifiedDate));
     if (!name || !date ||
-        !JS_DefineProperty(aCx, obj, "name", STRING_TO_JSVAL(name),
-                           nullptr, nullptr, 0) ||
-        !JS_DefineProperty(aCx, obj, "lastModifiedDate", OBJECT_TO_JSVAL(date),
-                           nullptr, nullptr, 0)) {
+        !JS_DefineProperty(aCx, obj, "name", name, 0) ||
+        !JS_DefineProperty(aCx, obj, "lastModifiedDate", date, 0)) {
       return nullptr;
     }
 
