@@ -3001,16 +3001,16 @@ extern JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::HandleValue v);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
+JS_DeleteProperty(JSContext *cx, JS::HandleObject obj, const char *name);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name, bool *succeeded);
+JS_DeleteProperty2(JSContext *cx, JS::HandleObject obj, const char *name, bool *succeeded);
 
 extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id);
+JS_DeletePropertyById(JSContext *cx, JS::HandleObject obj, jsid id);
 
 extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, bool *succeeded);
+JS_DeletePropertyById2(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
@@ -3089,10 +3089,10 @@ extern JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index);
+JS_DeleteElement(JSContext *cx, JS::HandleObject obj, uint32_t index);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32_t index, bool *succeeded);
+JS_DeleteElement2(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
 
 /*
  * Remove all configurable properties from the given (non-global) object and

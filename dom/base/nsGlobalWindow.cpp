@@ -2546,7 +2546,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // make sure the cached document property gets updated.
 
         // XXXmarkh - tell other languages about this?
-        ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
+        JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
+        ::JS_DeleteProperty(cx, obj, "document");
       }
     } else {
       newInnerWindow->InnerSetNewDocument(aDocument);
