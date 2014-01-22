@@ -51,6 +51,7 @@ function createTestArray() {
 function startTest(test, token) {
   var elemType = getMajorMimeType(test.type);
   var element = document.createElement(elemType);
+  element.preload = "auto";
   element.src = test.name;
   element.token = token;
   test.setup(element);

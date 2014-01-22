@@ -13,6 +13,8 @@
 <script class="testbody" type="text/javascript">
 var v1 = document.getElementById("v1");
 var a1 = document.getElementById("a1");
+v1.preload = "auto";
+a1.preload = "auto";
 
 is(v1.src, "", "src should be null");
 is(a1.src, "", "src should be null");

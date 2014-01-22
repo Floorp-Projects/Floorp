@@ -99,8 +99,6 @@ CacheStorageService::CacheStorageService()
 
   sSelf = this;
   sGlobalEntryTables = new GlobalEntryTables();
-
-  NS_NewNamedThread("Cache Mngmnt", getter_AddRefs(mThread));
 }
 
 CacheStorageService::~CacheStorageService()
@@ -123,9 +121,7 @@ void CacheStorageService::Shutdown()
 
   nsCOMPtr<nsIRunnable> event =
     NS_NewRunnableMethod(this, &CacheStorageService::ShutdownBackground);
-
-  if (mThread)
-    mThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  Dispatch(event);
 
   mozilla::MutexAutoLock lock(mLock);
   sGlobalEntryTables->Clear();
@@ -390,12 +386,34 @@ void CacheStorageService::DropPrivateBrowsingEntries()
 
 // Helper methods
 
+// static
+bool CacheStorageService::IsOnManagementThread()
+{
+  nsRefPtr<CacheStorageService> service = Self();
+  if (!service)
+    return false;
+
+  nsCOMPtr<nsIEventTarget> target = service->Thread();
+  if (!target)
+    return false;
+
+  bool currentThread;
+  nsresult rv = target->IsOnCurrentThread(&currentThread);
+  return NS_SUCCEEDED(rv) && currentThread;
+}
+
+already_AddRefed<nsIEventTarget> CacheStorageService::Thread() const
+{
+  return CacheFileIOManager::IOTarget();
+}
+
 nsresult CacheStorageService::Dispatch(nsIRunnable* aEvent)
 {
-  if (!mThread)
+  nsRefPtr<CacheIOThread> cacheIOThread = CacheFileIOManager::IOThread();
+  if (!cacheIOThread)
     return NS_ERROR_NOT_AVAILABLE;
 
-  return mThread->Dispatch(aEvent, nsIThread::DISPATCH_NORMAL);
+  return cacheIOThread->Dispatch(aEvent, CacheIOThread::MANAGEMENT);
 }
 
 // nsICacheStorageService

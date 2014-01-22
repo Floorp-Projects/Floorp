@@ -54,7 +54,7 @@ public class FxAccountLoginPolicy {
   }
 
   protected FxAccountClient makeFxAccountClient() {
-    String serverURI = fxAccount.getServerURI();
+    String serverURI = fxAccount.getAccountServerURI();
     return new FxAccountClient20(serverURI, executor);
   }
 
@@ -101,7 +101,7 @@ public class FxAccountLoginPolicy {
   };
 
   public AccountState getAccountState(AbstractFxAccount fxAccount) {
-    String serverURI = fxAccount.getServerURI();
+    String serverURI = fxAccount.getAccountServerURI();
     byte[] emailUTF8 = fxAccount.getEmailUTF8();
     byte[] quickStretchedPW = fxAccount.getQuickStretchedPW();
     if (!fxAccount.isValid() || serverURI == null || emailUTF8 == null || quickStretchedPW == null) {

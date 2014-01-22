@@ -2787,18 +2787,18 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
+JS_AlreadyHasOwnProperty(JSContext *cx, JS::HandleObject obj, const char *name,
                          bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id,
+JS_AlreadyHasOwnPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                              bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, bool *foundp);
+JS_HasProperty(JSContext *cx, JS::HandleObject obj, const char *name, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, bool *foundp);
+JS_HasPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandleValue vp);
@@ -3001,16 +3001,16 @@ extern JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::HandleValue v);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
+JS_DeleteProperty(JSContext *cx, JS::HandleObject obj, const char *name);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name, bool *succeeded);
+JS_DeleteProperty2(JSContext *cx, JS::HandleObject obj, const char *name, bool *succeeded);
 
 extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id);
+JS_DeletePropertyById(JSContext *cx, JS::HandleObject obj, jsid id);
 
 extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, bool *succeeded);
+JS_DeletePropertyById2(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
@@ -3026,11 +3026,11 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name,
+JS_AlreadyHasOwnUCProperty(JSContext *cx, JS::HandleObject obj, const jschar *name,
                            size_t namelen, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_HasUCProperty(JSContext *cx, JSObject *obj,
+JS_HasUCProperty(JSContext *cx, JS::HandleObject obj,
                  const jschar *name, size_t namelen,
                  bool *vp);
 
@@ -3070,10 +3070,10 @@ JS_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, uint32_t index, bool *foundp);
+JS_AlreadyHasOwnElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_HasElement(JSContext *cx, JSObject *obj, uint32_t index, bool *foundp);
+JS_HasElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
 JS_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
@@ -3089,10 +3089,10 @@ extern JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index);
+JS_DeleteElement(JSContext *cx, JS::HandleObject obj, uint32_t index);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32_t index, bool *succeeded);
+JS_DeleteElement2(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
 
 /*
  * Remove all configurable properties from the given (non-global) object and
