@@ -1160,8 +1160,13 @@ MetroInput::DeliverNextQueuedTouchEvent()
   if (mCancelable && event->message == NS_TOUCH_START) {
     nsRefPtr<Touch> touch = event->touches[0];
     LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(touch->mRefPoint);
-    bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenIntPoint(pt.x, pt.y));
-    mChromeHitTestCacheForTouch = (apzIntersect && HitTestChrome(pt));
+    // This is currently a general contained rect hit test, it may produce a false
+    // positive for overlay chrome elements.
+    mChromeHitTestCacheForTouch = !mWidget->ApzHitTest(mozilla::ScreenIntPoint(pt.x, pt.y));
+    if (!mChromeHitTestCacheForTouch) {
+      // Confirm using a MozMouseHittest event the browser picks up in input.js
+      mChromeHitTestCacheForTouch = HitTestChrome(pt);
+    }
   }
 
   // If this event is destined for chrome, deliver it directly there bypassing
