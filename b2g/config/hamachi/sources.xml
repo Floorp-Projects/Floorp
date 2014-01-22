@@ -11,12 +11,12 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="a6f1bc96ac9e0a32022c75f0ee7771a2ab9050db"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="afa75c6f431b00a2cee83c48f1bf986fc1cd6df1"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9b6626eddbc85873eaa2a9174a9bd5101e5c05f"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="84f2f2fce22605e17d511ff1767e54770067b5b5"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="96d2d00165f4561fbde62d1062706eab74b3a01f"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e2f73049f8d52fb06cb9b5d923c1280557aa9238"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="4addd530e2dc1708745d11d81de21b5d1230ed41"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
   <project name="platform/bionic" path="bionic" revision="d2eb6c7b6e1bc7643c17df2d9d9bcb1704d0b9ab"/>
@@ -90,7 +90,7 @@
   <project name="platform/system/netd" path="system/netd" revision="2e226e6e636ca0a8cc4c51093e46f4baba1ffcce"/>
   <project name="platform/system/vold" path="system/vold" revision="8ac5eef8ea3a456b96d52ce2091bf6d814782d8c"/>
   <!-- hamachi specific things -->
-  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="4970f51b2c66f842dfcbc8315c8e501d0b2ac791"/>
+  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="9b2d2215ee4b3413addf6222fb4ee520b2858472"/>
   <project name="quic/lf/b2g/external/jsmin" path="external/jsmin" revision="cec896f0affaa0226c02605ad28d42df1bc0e393"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="d13aaf080177b7c48f243d51827db5c7a7873cd0"/>
   <project name="platform/vendor/qcom/msm7627a" path="device/qcom/msm7627a" revision="f06bcacc6f13cec895dc5d4c2385c076396194ec"/>
