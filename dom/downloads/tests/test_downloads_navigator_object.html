@@ -48,7 +48,7 @@ var steps = [
     SpecialPowers.pushPermissions([
       {type: "downloads", allow: 0, context: document}
     ], function() {
-      ise(frames[0].navigator.mozDownloadManager, null, "navigator.mozDownloadManager is null when the page doesn't have permissions");
+      ise(frames[0].navigator.mozDownloadManager, undefined, "navigator.mozDownloadManager is undefined when the page doesn't have permissions");
       next();
     });
   },
