@@ -7723,7 +7723,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
     def generate_code(self):
         return CGIndenter(CGGeneric(
                 "JS::Rooted<JS::Value> value(cx);\n"
-                "if (!self->DoNewResolve(cx, obj, id, &value)) {\n"
+                "if (!self->DoNewResolve(cx, wrapper, id, &value)) {\n"
                 "  return false;\n"
                 "}\n"
                 "if (!value.isUndefined()) {\n"
