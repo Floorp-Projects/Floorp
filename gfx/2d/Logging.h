@@ -110,10 +110,10 @@ public:
   Log &operator <<(const std::string &aLogText) { mMessage << aLogText; return *this; }
   Log &operator <<(const char aStr[]) { mMessage << static_cast<const char*>(aStr); return *this; }
   Log &operator <<(bool aBool) { mMessage << (aBool ? "true" : "false"); return *this; }
-  Log &operator <<(int aInt) { mMessage << aInt; return *this; }
-  Log &operator <<(unsigned int aInt) { mMessage << aInt; return *this; }
-  Log &operator <<(long aLong) { mMessage << aLong; return *this; }
-  Log &operator <<(unsigned long aLong) { mMessage << aLong; return *this; }
+  Log &operator <<(int32_t aInt) { mMessage << aInt; return *this; }
+  Log &operator <<(uint32_t aInt) { mMessage << aInt; return *this; }
+  Log &operator <<(int64_t aLong) { mMessage << aLong; return *this; }
+  Log &operator <<(uint64_t aLong) { mMessage << aLong; return *this; }
   Log &operator <<(Float aFloat) { mMessage << aFloat; return *this; }
   Log &operator <<(double aDouble) { mMessage << aDouble; return *this; }
   template <typename T, typename Sub>
