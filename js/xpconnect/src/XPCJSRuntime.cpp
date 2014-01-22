@@ -2308,6 +2308,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   KIND_HEAP, rtStats.runtime.gc.marker,
                   "Memory used for the GC mark stack and gray roots.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery"),
+                  KIND_NONHEAP, rtStats.runtime.gc.nursery,
+                  "Memory used for the GC nursery.");
+
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
                   KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
                   "Memory used for values in the store buffer.");
