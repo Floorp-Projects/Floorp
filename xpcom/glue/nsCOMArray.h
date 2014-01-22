@@ -89,8 +89,6 @@ protected:
         mArray.SwapElements(aOther.mArray);
     }
 
-    void Adopt(nsISupports** aElements, uint32_t aCount);
-    uint32_t Forget(nsISupports*** aElements);
 public:
     // elements in the array (including null elements!)
     int32_t Count() const {
@@ -232,15 +230,7 @@ class nsCOMArray : public nsCOMArray_base
     explicit
     nsCOMArray(const nsCOMArray<T>& aOther) : nsCOMArray_base(aOther) { }
 
-    nsCOMArray(nsCOMArray<T>&& aOther) { SwapElements(aOther); }
-
     ~nsCOMArray() {}
-
-    // We have a move assignment operator, but no copy assignment operator.
-    nsCOMArray<T>& operator=(nsCOMArray<T>&& aOther) {
-        SwapElements(aOther);
-        return *this;
-    }
 
     // these do NOT refcount on the way out, for speed
     T* ObjectAt(int32_t aIndex) const {
@@ -395,35 +385,6 @@ class nsCOMArray : public nsCOMArray_base
         return nsCOMArray_base::SizeOfExcludingThis(
                  nsBaseArraySizeOfElementIncludingThisFunc(aSizeOfElementIncludingThis),
                  aMallocSizeOf, aData);
-    }
-
-    /**
-     * Adopt parameters that resulted from an XPIDL outparam. The aElements
-     * parameter will be freed as a result of the call.
-     *
-     * Example usage:
-     * nsCOMArray<nsISomeInterface> array;
-     * nsISomeInterface** elements;
-     * uint32_t length;
-     * ptr->GetSomeArray(&elements, &length);
-     * array.Adopt(elements, length);
-     */
-    void Adopt(T** aElements, uint32_t aSize) {
-        nsCOMArray_base::Adopt(reinterpret_cast<nsISupports**>(aElements),
-            aSize);
-    }
-
-    /**
-     * Export the contents of this array to an XPIDL outparam. The array will be
-     * Clear()'d after this operation.
-     *
-     * Example usage:
-     * nsCOMArray<nsISomeInterface> array;
-     * *length = array.Forget(retval);
-     */
-    uint32_t Forget(T*** elements) {
-        return nsCOMArray_base::Forget(
-            reinterpret_cast<nsISupports***>(elements));
     }
 
 private:
