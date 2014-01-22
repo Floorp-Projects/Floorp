@@ -6,7 +6,7 @@
 
 dictionary DataStoreChangeEventInit : EventInit {
   DOMString revisionId = "";
-  DataStoreKey id = 0;
+  unsigned long id = 0;
   DOMString operation = "";
 };
 
@@ -14,6 +14,6 @@ dictionary DataStoreChangeEventInit : EventInit {
  Constructor(DOMString type, optional DataStoreChangeEventInit eventInitDict)]
 interface DataStoreChangeEvent : Event {
   readonly attribute DOMString revisionId;
-  readonly attribute DataStoreKey id;
+  readonly attribute unsigned long id;
   readonly attribute DOMString operation;
 };

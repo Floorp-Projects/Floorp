@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-typedef (DOMString or unsigned long) DataStoreKey;
-
 [Pref="dom.datastore.enabled",
  JSImplementation="@mozilla.org/dom/datastore;1"]
 interface DataStore : EventTarget {
@@ -20,16 +18,19 @@ interface DataStore : EventTarget {
   readonly attribute boolean readOnly;
 
   // Promise<any>
-  Promise get(DataStoreKey... id);
+  Promise get(unsigned long id);
+
+  // Promise<any>
+  Promise get(sequence<unsigned long> id);
 
   // Promise<void>
-  Promise put(any obj, DataStoreKey id);
+  Promise put(any obj, unsigned long id);
 
-  // Promise<DataStoreKey>
-  Promise add(any obj, optional DataStoreKey id);
+  // Promise<unsigned long>
+  Promise add(any obj, optional unsigned long id);
 
   // Promise<boolean>
-  Promise remove(DataStoreKey id);
+  Promise remove(unsigned long id);
 
   // Promise<void>
   Promise clear();
@@ -69,6 +70,6 @@ dictionary DataStoreTask {
   DOMString revisionId;
 
   DataStoreOperation operation;
-  DataStoreKey id;
+  unsigned long id;
   any data;
 };
