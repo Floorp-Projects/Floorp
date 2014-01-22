@@ -17,11 +17,6 @@ nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 
 typedef nsContainerFrame nsFlexContainerFrameSuper;
 
-class FlexItem;
-class FlexLine;
-class FlexboxAxisTracker;
-class MainAxisPositionTracker;
-class SingleLineCrossAxisPositionTracker;
 template <class T> class nsTArray;
 
 class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
@@ -35,6 +30,9 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
 
 public:
   // Forward-decls of helper classes
+  class FlexItem;
+  class FlexLine;
+  class FlexboxAxisTracker;
   class StrutInfo;
 
   // nsIFrame overrides
