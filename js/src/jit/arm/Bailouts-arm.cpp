@@ -76,11 +76,12 @@ class BailoutStack
         uintptr_t tableOffset_;
     };
 
-  private:
+  protected: // Silence Clang warning about unused private fields.
     mozilla::Array<double, FloatRegisters::Total> fpregs_;
     mozilla::Array<uintptr_t, Registers::Total> regs_;
 
     uintptr_t snapshotOffset_;
+    uintptr_t padding_;
 
   public:
     FrameSizeClass frameClass() const {
@@ -108,6 +109,9 @@ class BailoutStack
         return (uint8_t *)this + offsetof(BailoutStack, snapshotOffset_);
     }
 };
+
+// Make sure the compiler doesn't add extra padding.
+static_assert((sizeof(BailoutStack) % 8) == 0, "BailoutStack should be 8-byte aligned.");
 
 } // namespace jit
 } // namespace js
