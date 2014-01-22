@@ -2264,10 +2264,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   KIND_HEAP, rtStats.runtime.interpreterStack,
                   "Memory used for JS interpreter frames.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc-marker"),
-                  KIND_HEAP, rtStats.runtime.gcMarker,
-                  "Memory used for the GC mark stack and gray roots.");
-
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/math-cache"),
                   KIND_HEAP, rtStats.runtime.mathCache,
                   "Memory used for the math cache.");
@@ -2307,6 +2303,38 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   KIND_NONHEAP, rtStats.runtime.code.unused,
                   "Memory allocated by one of the JITs to hold code, "
                   "but which is currently unused.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/marker"),
+                  KIND_HEAP, rtStats.runtime.gc.marker,
+                  "Memory used for the GC mark stack and gray roots.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
+                  "Memory used for values in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/cells"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferCells,
+                  "Memory used for cells in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/slots"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferSlots,
+                  "Memory used for slots in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/whole-cells"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferWholeCells,
+                  "Memory used for whole cells in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-vals"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferRelocVals,
+                  "Memory used for relocatable values in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-cells"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferRelocCells,
+                  "Memory used for relocatable cells in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/generics"),
+                  KIND_HEAP, rtStats.runtime.gc.storeBufferGenerics,
+                  "Memory used for generic things in the store buffer.");
 
     if (rtTotalOut)
         *rtTotalOut = rtTotal;
