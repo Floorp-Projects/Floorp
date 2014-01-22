@@ -155,16 +155,23 @@
 
 /*
  * MOZ_ASAN_BLACKLIST is a macro to tell AddressSanitizer (a compile-time
- * instrumentation shipped with Clang) to not instrument the annotated function.
- * Furthermore, it will prevent the compiler from inlining the function because
- * inlining currently breaks the blacklisting mechanism of AddressSanitizer.
+ * instrumentation shipped with Clang and GCC) to not instrument the annotated
+ * function. Furthermore, it will prevent the compiler from inlining the
+ * function because inlining currently breaks the blacklisting mechanism of
+ * AddressSanitizer.
  */
 #if defined(__has_feature)
 #  if __has_feature(address_sanitizer)
-#    define MOZ_ASAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_sanitize_address))
-#  else
-#    define MOZ_ASAN_BLACKLIST /* nothing */
+#    define MOZ_HAVE_ASAN_BLACKLIST
 #  endif
+#elif defined(__GNUC__)
+#  if defined(__SANITIZE_ADDRESS__)
+#    define MOZ_HAVE_ASAN_BLACKLIST
+#  endif
+#endif
+
+#if defined(MOZ_HAVE_ASAN_BLACKLIST)
+#  define MOZ_ASAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_sanitize_address))
 #else
 #  define MOZ_ASAN_BLACKLIST /* nothing */
 #endif

@@ -28,3 +28,19 @@
   padding-top: 0;
   padding-bottom: 0;
 }
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  border: 0;
+  -moz-margin-start: 3px;
+}
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  padding: 0 2px;
+  -moz-padding-start: 0;
+  height: 18px;
+}
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  padding: 0 6px;
+}

@@ -14,6 +14,9 @@ let CustomizationHandler = {
       case "customizationstarting":
         this._customizationStarting();
         break;
+      case "customizationchange":
+        this._customizationChange();
+        break;
       case "customizationending":
         this._customizationEnding(aEvent.detail);
         break;
@@ -51,6 +54,12 @@ let CustomizationHandler = {
       let tabstrip = tabContainer.mTabstrip;
       tabstrip.ensureElementIsVisible(gBrowser.selectedTab, true);
     }
+  },
+
+  _customizationChange: function() {
+    gHomeButton.updatePersonalToolbarStyle();
+    BookmarkingUI.customizeChange();
+    PlacesToolbarHelper.customizeChange();
   },
 
   _customizationEnding: function(aDetails) {
