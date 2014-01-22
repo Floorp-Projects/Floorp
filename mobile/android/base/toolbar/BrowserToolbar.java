@@ -485,22 +485,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
 
             switch (msg) {
-                case TITLE:
-                    flags.add(UpdateFlags.TITLE);
-                    break;
-
-                case START:
-                    updateBackButton(tab);
-                    updateForwardButton(tab);
-                    break;
-
                 case STOP:
-                    updateBackButton(tab);
-                    updateForwardButton(tab);
-
                     // Reset the title in case we haven't navigated
                     // to a new page yet.
                     flags.add(UpdateFlags.TITLE);
+                    // Fall through.
+                case START:
+                case CLOSED:
+                case ADDED:
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     break;
 
                 case SELECTED:
@@ -510,13 +504,18 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case LOCATION_CHANGE:
                     // A successful location change will cause Tab to notify
                     // us of a title change, so we don't update the title here.
-                    refreshState();
-                    break;
+                    flags.add(UpdateFlags.FAVICON);
+                    flags.add(UpdateFlags.SITE_IDENTITY);
+                    flags.add(UpdateFlags.PRIVATE_MODE);
 
-                case CLOSED:
-                case ADDED:
                     updateBackButton(tab);
                     updateForwardButton(tab);
+
+                    setPrivateMode(tab.isPrivate());
+                    break;
+
+                case TITLE:
+                    flags.add(UpdateFlags.TITLE);
                     break;
 
                 case FAVICON:
@@ -1249,36 +1248,30 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mActionItemBar.removeView(actionItem);
     }
 
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+
+        mTabs.setPrivateMode(isPrivate);
+        mMenu.setPrivateMode(isPrivate);
+        mMenuIcon.setPrivateMode(isPrivate);
+        mUrlEditLayout.setPrivateMode(isPrivate);
+
+        if (mBack instanceof BackButton) {
+            ((BackButton) mBack).setPrivateMode(isPrivate);
+        }
+
+        if (mForward instanceof ForwardButton) {
+            ((ForwardButton) mForward).setPrivateMode(isPrivate);
+        }
+    }
+
     public void show() {
         setVisibility(View.VISIBLE);
     }
 
     public void hide() {
         setVisibility(View.GONE);
-    }
-
-    private void refreshState() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null) {
-            updateDisplayLayout(tab, EnumSet.of(UpdateFlags.FAVICON,
-                                                UpdateFlags.SITE_IDENTITY,
-                                                UpdateFlags.PRIVATE_MODE));
-            updateBackButton(tab);
-            updateForwardButton(tab);
-
-            final boolean isPrivate = tab.isPrivate();
-            setPrivateMode(isPrivate);
-            mTabs.setPrivateMode(isPrivate);
-            mMenu.setPrivateMode(isPrivate);
-            mMenuIcon.setPrivateMode(isPrivate);
-            mUrlEditLayout.setPrivateMode(isPrivate);
-
-            if (mBack instanceof BackButton)
-                ((BackButton) mBack).setPrivateMode(isPrivate);
-
-            if (mForward instanceof ForwardButton)
-                ((ForwardButton) mForward).setPrivateMode(isPrivate);
-        }
     }
 
     public View getDoorHangerAnchor() {
