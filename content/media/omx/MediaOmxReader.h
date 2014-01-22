@@ -13,6 +13,7 @@
 
 namespace android {
 class OmxDecoder;
+class MediaExtractor;
 }
 
 namespace mozilla {
@@ -36,6 +37,8 @@ class MediaOmxReader : public MediaDecoderReader
 
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
+
+  android::sp<android::MediaExtractor> mExtractor;
 
   // Called by ReadMetadata() during MediaDecoderStateMachine::DecodeMetadata()
   // on decode thread. It create and initialize the OMX decoder including
