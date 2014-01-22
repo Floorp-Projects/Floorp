@@ -37,6 +37,16 @@ const MAX_CLIPBOARD_DATA_SIZE = 8000;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/NetUtil.jsm');
+Cu.import("resource://gre/modules/AddonManager.jsm");
+
+var shumwayVersion;
+try {
+  AddonManager.getAddonByID("shumway@research.mozilla.org", function(addon) {
+    shumwayVersion = addon.version;
+  });
+} catch (ignored) {
+
+}
 
 XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
   'resource://gre/modules/PrivateBrowsingUtils.jsm');
@@ -44,10 +54,12 @@ XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
 XPCOMUtils.defineLazyModuleGetter(this, 'ShumwayTelemetry',
   'resource://shumway/ShumwayTelemetry.jsm');
 
-let appInfo = Cc['@mozilla.org/xre/app-info;1'].getService(Ci.nsIXULAppInfo);
 let Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
                                    '@mozilla.org/mime;1', 'nsIMIMEService');
+
+let StringInputStream = Cc["@mozilla.org/io/string-input-stream;1"];
+let MimeInputStream = Cc["@mozilla.org/network/mime-input-stream;1"];
 
 function getBoolPref(pref, def) {
   try {
@@ -186,6 +198,23 @@ function isShumwayEnabledFor(actions) {
   }
 
   return true;
+}
+
+function getVersionInfo() {
+  var versionInfo = {
+    geckoMstone : 'unknown',
+    geckoBuildID: 'unknown',
+    shumwayVersion: 'unknown'
+  };
+  try {
+    versionInfo.geckoMstone = Services.prefs.getCharPref('gecko.mstone');
+    versionInfo.geckoBuildID = Services.prefs.getCharPref('gecko.buildID');
+    versionInfo.shumwayVersion = shumwayVersion;
+  } catch (e) {
+    console.warn('Error encountered while getting platform and shumway ' +
+                 'version info:', e);
+  }
+  return versionInfo;
 }
 
 function fallbackToNativePlugin(window, userAction, activateCTP) {
@@ -366,7 +395,7 @@ ChromeActions.prototype = {
     });
   },
   fallback: function(automatic) {
-    automatic = !!automatic; // cast to boolean
+    automatic = !!automatic;
     fallbackToNativePlugin(this.window, !automatic, automatic);
   },
   setClipboard: function (data) {
@@ -432,6 +461,26 @@ ChromeActions.prototype = {
       break;
     }
   },
+  reportIssue: function(exceptions) {
+    var base = "http://shumway-issue-reporter.paas.allizom.org/input?";
+    var windowUrl = this.window.parent.wrappedJSObject.location + '';
+    var params = 'url=' + encodeURIComponent(windowUrl);
+    params += '&swf=' + encodeURIComponent(this.url);
+    var versions = getVersionInfo();
+    params += '&ffbuild=' + encodeURIComponent(versions.geckoMstone + ' (' +
+                                               versions.geckoBuildID + ')');
+    params += '&shubuild=' + encodeURIComponent(versions.shumwayVersion);
+    var postDataStream = StringInputStream.
+                         createInstance(Ci.nsIStringInputStream);
+    postDataStream.data = 'exceptions=' + encodeURIComponent(exceptions);
+    var postData = MimeInputStream.createInstance(Ci.nsIMIMEInputStream);
+    postData.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    postData.addContentLength = true;
+    postData.setData(postDataStream);
+    this.window.openDialog('chrome://browser/content', '_blank',
+                           'all,dialog=no', base + params, null, null,
+                           postData);
+  },
   externalCom: function (data) {
     if (!this.allowScriptAccess)
       return;
@@ -459,6 +508,9 @@ ChromeActions.prototype = {
     case 'unregister':
       return embedTag.__flash__unregisterCallback(data.functionName);
     }
+  },
+  getWindowUrl: function() {
+    return this.window.parent.wrappedJSObject.location + '';
   }
 };
 
