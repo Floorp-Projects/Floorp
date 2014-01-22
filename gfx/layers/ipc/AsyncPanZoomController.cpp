@@ -923,20 +923,20 @@ nsEventStatus AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent
   if (!gCrossSlideEnabled && (!mX.Scrollable() || !mY.Scrollable())) {
     SetState(PANNING);
   } else if (IsCloseToHorizontal(angle, AXIS_LOCK_ANGLE)) {
-    mY.SetScrollingDisabled(true);
+    mY.SetAxisLocked(true);
     if (mX.Scrollable()) {
       SetState(PANNING_LOCKED_X);
     } else {
       SetState(CROSS_SLIDING_X);
-      mX.SetScrollingDisabled(true);
+      mX.SetAxisLocked(true);
     }
   } else if (IsCloseToVertical(angle, AXIS_LOCK_ANGLE)) {
-    mX.SetScrollingDisabled(true);
+    mX.SetAxisLocked(true);
     if (mY.Scrollable()) {
       SetState(PANNING_LOCKED_Y);
     } else {
       SetState(CROSS_SLIDING_Y);
-      mY.SetScrollingDisabled(true);
+      mY.SetAxisLocked(true);
     }
   } else {
     SetState(PANNING);
