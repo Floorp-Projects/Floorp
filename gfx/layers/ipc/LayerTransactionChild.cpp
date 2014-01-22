@@ -98,7 +98,8 @@ LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
 }
 
 PTextureChild*
-LayerTransactionChild::AllocPTextureChild()
+LayerTransactionChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                          const TextureFlags&)
 {
   return TextureClient::CreateIPDLActor();
 }

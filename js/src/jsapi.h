@@ -3466,6 +3466,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         extraWarningsOption(false),
         werrorOption(false),
         asmJSOption(false),
+        forceAsync(false),
         sourcePolicy(SAVE_SOURCE)
     { }
 
@@ -3498,6 +3499,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     bool extraWarningsOption;
     bool werrorOption;
     bool asmJSOption;
+    bool forceAsync;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -3647,7 +3649,7 @@ extern JS_PUBLIC_API(JSScript *)
 Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, const char *filename);
 
 extern JS_PUBLIC_API(bool)
-CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options);
+CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t length);
 
 /*
  * Off thread compilation control flow.
