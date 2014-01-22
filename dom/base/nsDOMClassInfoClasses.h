@@ -108,10 +108,6 @@ DOMCI_CLASS(CSSPageRule)
 DOMCI_CLASS(MozIccManager)
 #endif
 
-#ifdef MOZ_B2G_BT
-DOMCI_CLASS(BluetoothDevice)
-#endif
-
 DOMCI_CLASS(CameraCapabilities)
 
 DOMCI_CLASS(LockedFile)

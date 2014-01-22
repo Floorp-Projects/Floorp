@@ -989,7 +989,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         rv = aPrincipal->GetOrigin(getter_Copies(origin));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        JS::Rooted<JSString*> originValue(cx, JS_InternString(cx, origin.get()));
+        JS::Rooted<JSString*> originValue(cx, JS_NewStringCopyN(cx, origin.get(), origin.Length()));
         JS_DefineProperty(cx, principalObj, "origin", STRING_TO_JSVAL(originValue), nullptr, nullptr, JSPROP_ENUMERATE);
 
         bool browser;

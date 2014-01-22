@@ -11,10 +11,7 @@
 #include "BluetoothCommon.h"
 #include "BluetoothPropertyContainer.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsIDOMBluetoothDevice.h"
 #include "nsString.h"
-
-class nsIDOMDOMRequest;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -24,15 +21,11 @@ class BluetoothSignal;
 class BluetoothSocket;
 
 class BluetoothDevice : public nsDOMEventTargetHelper
-                      , public nsIDOMBluetoothDevice
                       , public BluetoothSignalObserver
                       , public BluetoothPropertyContainer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMBLUETOOTHDEVICE
-
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(BluetoothDevice,
                                                          nsDOMEventTargetHelper)

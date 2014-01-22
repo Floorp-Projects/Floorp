@@ -6001,14 +6001,20 @@ class CGNewResolveHook(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                "JS::Rooted<JS::Value> value(cx);\n"
-                "if (!self->DoNewResolve(cx, obj, id, &value)) {\n"
+                "JS::Rooted<JSPropertyDescriptor> desc(cx);\n"
+                "if (!self->DoNewResolve(cx, obj, id, &desc)) {\n"
                 "  return false;\n"
                 "}\n"
-                "if (value.isUndefined()) {\n"
+                "if (!desc.object()) {\n"
                 "  return true;\n"
                 "}\n"
-                "if (!JS_DefinePropertyById(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE)) {\n"
+                "// If desc.value() is undefined, then the DoNewResolve call\n"
+                "// has already defined it on the object.  Don't try to also\n"
+                "// define it.\n"
+                "if (!desc.value().isUndefined() &&\n"
+                "    !JS_DefinePropertyById(cx, obj, id, desc.value(),\n"
+                "                           desc.getter(), desc.setter(),\n"
+                "                           desc.attributes())) {\n"
                 "  return false;\n"
                 "}\n"
                 "objp.set(obj);\n"
@@ -7722,14 +7728,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                                          callArgs="")
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                "JS::Rooted<JS::Value> value(cx);\n"
-                "if (!self->DoNewResolve(cx, obj, id, &value)) {\n"
-                "  return false;\n"
-                "}\n"
-                "if (!value.isUndefined()) {\n"
-                "  FillPropertyDescriptor(desc, wrapper, value, /* readonly = */ false);\n"
-                "}\n"
-                "return true;"))
+                "return self->DoNewResolve(cx, wrapper, id, desc);"))
 
 class CGEnumerateOwnProperties(CGAbstractStaticMethod):
     def __init__(self, descriptor):

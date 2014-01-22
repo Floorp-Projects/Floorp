@@ -169,12 +169,12 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
     return false;
   }
 
-  mActor = static_cast<TextureChild*>(aForwarder->CreateEmptyTextureChild());
+  mActor = static_cast<TextureChild*>(aForwarder->CreateTexture(desc, GetFlags()));
+  MOZ_ASSERT(mActor);
   mActor->mForwarder = aForwarder;
   mActor->mTextureClient = this;
   mShared = true;
-  return mActor->IPCOpen() &&
-         mActor->SendInit(desc, GetFlags());
+  return mActor->IPCOpen();
 }
 
 PTextureChild*

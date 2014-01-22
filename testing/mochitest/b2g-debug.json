@@ -490,6 +490,8 @@
     "dom/tests/mochitest/ajax/prototype/test_Prototype.html": "debug-only timeout",
     "dom/tests/mochitest/geolocation/test_errorcheck.html": "debug-only timeout",
     "dom/tests/mochitest/localstorage/test_cookieSession.html": "debug-only failure",
+    "dom/tests/mochitest/notification/test_notification_storage.html": "debug-only timeout",
+    "dom/tests/mochitest/notification/test_bug931307.html": "debug-only timeout",
     "dom/tests/mochitest/orientation/test_bug507902.html": "debug-only failure",
     "dom/workers/test/test_onLine.html": "debug-only failure",
     "dom/workers/test/test_csp.html": "debug-only failure",

@@ -70,11 +70,9 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
   title.Adopt(ToNewUTF8String(mTitle));
   GtkWidget *color_chooser = gtk_color_selection_dialog_new(title);
 
-  GtkWindow *window = GTK_WINDOW(color_chooser);
-  gtk_window_set_modal(window, TRUE);
-
   GtkWindow *parent_window = GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
   if (parent_window) {
+    GtkWindow *window = GTK_WINDOW(color_chooser);
     gtk_window_set_transient_for(window, parent_window);
     gtk_window_set_destroy_with_parent(window, TRUE);
   }
