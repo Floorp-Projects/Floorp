@@ -17,11 +17,6 @@ nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 
 typedef nsContainerFrame nsFlexContainerFrameSuper;
 
-class FlexItem;
-class FlexLine;
-class FlexboxAxisTracker;
-class MainAxisPositionTracker;
-class SingleLineCrossAxisPositionTracker;
 template <class T> class nsTArray;
 
 class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
@@ -34,6 +29,12 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
                                             nsStyleContext* aContext);
 
 public:
+  // Forward-decls of helper classes
+  class FlexItem;
+  class FlexLine;
+  class FlexboxAxisTracker;
+  class StrutInfo;
+
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -63,6 +64,29 @@ protected:
     mChildrenHaveBeenReordered(false)
   {}
   virtual ~nsFlexContainerFrame();
+
+  /*
+   * This method does the bulk of the flex layout, implementing the algorithm
+   * described at:
+   *   http://dev.w3.org/csswg/css-flexbox/#layout-algorithm
+   * (with a few initialization pieces happening in the caller, Reflow().
+   *
+   * Since this is a helper for Reflow(), this takes all the same parameters
+   * as Reflow(), plus a few more parameters that Reflow() sets up for us.
+   *
+   * (The logic behind the division of work between Reflow and DoFlexLayout is
+   * as follows: DoFlexLayout() begins at the step that we have to jump back
+   * to, if we find any visibility:collapse children, and Reflow() does
+   * everything before that point.)
+   */
+  nsresult DoFlexLayout(nsPresContext*           aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus,
+                        nscoord aContentBoxMainSize,
+                        nscoord aAvailableHeightForContent,
+                        nsTArray<StrutInfo>& aStruts,
+                        const FlexboxAxisTracker& aAxisTracker);
 
   /**
    * Checks whether our child-frame list "mFrames" is sorted, using the given
@@ -98,6 +122,7 @@ protected:
                              const nsHTMLReflowState& aReflowState,
                              nscoord aContentBoxMainSize,
                              nscoord aAvailableHeightForContent,
+                             const nsTArray<StrutInfo>& aStruts,
                              const FlexboxAxisTracker& aAxisTracker,
                              nsTArray<FlexLine>& aLines);
 

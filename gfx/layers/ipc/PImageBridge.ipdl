@@ -51,7 +51,7 @@ parent:
   sync Stop();
 
   sync PCompositable(TextureInfo aInfo) returns (uint64_t id);
-  async PTexture();
+  async PTexture(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
 };
 
 
