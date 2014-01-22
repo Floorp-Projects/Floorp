@@ -14,7 +14,7 @@
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
-#include "DOMRequest.h"
+#include "mozilla/dom/DOMRequest.h"
 
 #define DEVICESTORAGE_PICTURES   "pictures"
 #define DEVICESTORAGE_VIDEOS     "videos"
@@ -23,6 +23,7 @@
 #define DEVICESTORAGE_SDCARD     "sdcard"
 #define DEVICESTORAGE_CRASHES    "crashes"
 
+class DeviceStorageFile;
 class nsIInputStream;
 
 namespace mozilla {
@@ -31,6 +32,9 @@ class DeviceStorageEnumerationParameters;
 class DOMCursor;
 class DOMRequest;
 } // namespace dom
+namespace ipc {
+class FileDescriptor;
+}
 } // namespace mozilla
 
 class DeviceStorageFile MOZ_FINAL
@@ -102,6 +106,7 @@ public:
 
   nsresult CalculateSizeAndModifiedDate();
   nsresult CalculateMimeType();
+  nsresult CreateFileDescriptor(mozilla::ipc::FileDescriptor& aFileDescriptor);
 
 private:
   void Init();
