@@ -138,6 +138,7 @@ struct NullPtr
 
 namespace gc {
 struct Cell;
+struct PersistentRootedMarker;
 } /* namespace gc */
 
 } /* namespace js */
@@ -1098,7 +1099,6 @@ MutableHandle<T>::MutableHandle(PersistentRooted<T> *root)
     ptr = root->address();
 }
 
-
 /*
  * A copyable, assignable global GC root type with arbitrary lifetime, an
  * infallible constructor, and automatic unrooting on destruction.
@@ -1132,9 +1132,10 @@ MutableHandle<T>::MutableHandle(PersistentRooted<T> *root)
  * marked when the object itself is marked.
  */
 template<typename T>
-class PersistentRooted : public mozilla::LinkedListElement<PersistentRooted<T> > {
-    typedef mozilla::LinkedList<PersistentRooted> List;
-    typedef mozilla::LinkedListElement<PersistentRooted> Element;
+class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T> > {
+    friend class mozilla::LinkedList<PersistentRooted>;
+    friend class mozilla::LinkedListElement<PersistentRooted>;
+    friend class js::gc::PersistentRootedMarker;
 
     void registerWithRuntime(JSRuntime *rt) {
         JS::shadow::Runtime *srt = JS::shadow::Runtime::asShadowRuntime(rt);

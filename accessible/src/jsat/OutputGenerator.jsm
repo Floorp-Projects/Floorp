@@ -678,6 +678,32 @@ this.BrailleGenerator = {
     let output = OutputGenerator.genForContext.apply(this, arguments);
 
     let acc = aContext.accessible;
+
+    // add the static text indicating a list item; do this for both listitems or
+    // direct first children of listitems, because these are both common browsing
+    // scenarios
+    let addListitemIndicator = function addListitemIndicator(indicator = '*') {
+      output.output.unshift(indicator);
+    };
+
+    if (acc.indexInParent === 1 &&
+        acc.parent.role == Roles.LISTITEM &&
+        acc.previousSibling.role == Roles.STATICTEXT) {
+      if (acc.parent.parent && acc.parent.parent.DOMNode &&
+          acc.parent.parent.DOMNode.nodeName == 'UL') {
+        addListitemIndicator();
+      } else {
+        addListitemIndicator(acc.previousSibling.name.trim());
+      }
+    } else if (acc.role == Roles.LISTITEM && acc.firstChild &&
+               acc.firstChild.role == Roles.STATICTEXT) {
+      if (acc.parent.DOMNode.nodeName == 'UL') {
+        addListitemIndicator();
+      } else {
+        addListitemIndicator(acc.firstChild.name.trim());
+      }
+    }
+
     if (acc instanceof Ci.nsIAccessibleText) {
       output.endOffset = this.outputOrder === OUTPUT_DESC_FIRST ?
                          output.output.join(' ').length : acc.characterCount;
@@ -692,20 +718,7 @@ this.BrailleGenerator = {
     __proto__: OutputGenerator.objectOutputFunctions,
 
     defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
-      let braille = this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
-
-      if (aAccessible.indexInParent === 1 &&
-          aAccessible.parent.role == Roles.LISTITEM &&
-          aAccessible.previousSibling.role == Roles.STATICTEXT) {
-        if (aAccessible.parent.parent && aAccessible.parent.parent.DOMNode &&
-            aAccessible.parent.parent.DOMNode.nodeName == 'UL') {
-          braille.unshift('*');
-        } else {
-          braille.unshift(aAccessible.previousSibling.name);
-        }
-      }
-
-      return braille;
+      return this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
     },
 
     listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {

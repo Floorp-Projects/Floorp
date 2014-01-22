@@ -38,7 +38,12 @@ public interface AbstractFxAccount {
    * Get the Firefox Account auth server URI that this account login flow should
    * talk to.
    */
-  public String getServerURI();
+  public String getAccountServerURI();
+
+  /**
+   * @return the profile name associated with the account, such as "default".
+   */
+  public String getProfile();
 
   public boolean isValid();
   public void setInvalid();

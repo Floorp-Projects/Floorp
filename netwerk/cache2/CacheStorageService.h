@@ -55,9 +55,9 @@ public:
 
   static CacheStorageService* Self() { return sSelf; }
   nsresult Dispatch(nsIRunnable* aEvent);
-  static bool IsOnManagementThread() { return sSelf && NS_GetCurrentThread() == sSelf->mThread; }
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }
-  nsIEventTarget* Thread() const { return mThread; }
+  static bool IsOnManagementThread();
+  already_AddRefed<nsIEventTarget> Thread() const;
   mozilla::Mutex& Lock() { return mLock; }
 
 private:
@@ -188,9 +188,6 @@ private:
   mozilla::Mutex mLock;
 
   bool mShutdown;
-
-  // The service thread
-  nsCOMPtr<nsIThread> mThread;
 
   // Accessible only on the service thread
   nsTArray<nsRefPtr<CacheEntry> > mFrecencyArray;
