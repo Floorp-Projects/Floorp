@@ -1195,7 +1195,7 @@ RasterImage::ApplyDecodeFlags(uint32_t aNewFlags)
     // decode.
     if (!(aNewFlags & FLAG_SYNC_DECODE))
       return false;
-    if (!CanForciblyDiscard() || mDecoder || mAnim)
+    if (!CanForciblyDiscardAndRedecode())
       return false;
     ForceDiscard();
   }
@@ -1938,6 +1938,14 @@ RasterImage::CanForciblyDiscard() {
          mHasSourceData;         // ...have the source data...
 }
 
+bool
+RasterImage::CanForciblyDiscardAndRedecode() {
+  return mDiscardable &&         // ...Enabled at creation time...
+         mHasSourceData &&       // ...have the source data...
+         !mDecoder &&            // Can't discard with an open decoder
+         !mAnim;                 // Can never discard animated images
+}
+
 // Helper method to tell us whether the clock is currently running for
 // discarding this image. Mainly for assertions.
 bool
@@ -2374,6 +2382,15 @@ RasterImage::SyncDecode()
   if (mDecoder && mDecoder->GetDecodeFlags() != mFrameDecodeFlags) {
     nsresult rv = FinishedSomeDecoding(eShutdownIntent_NotNeeded);
     CONTAINER_ENSURE_SUCCESS(rv);
+
+    if (mDecoded) {
+      // If we've finished decoding we need to discard so we can re-decode
+      // with the new flags. If we can't discard then there isn't
+      // anything we can do.
+      if (!CanForciblyDiscardAndRedecode())
+        return NS_ERROR_NOT_AVAILABLE;
+      ForceDiscard();
+    }
   }
 
   // If we're currently waiting on a new frame for this image, we have to create
@@ -2602,7 +2619,7 @@ RasterImage::Draw(gfxContext *aContext,
 
   // We can only draw with the default decode flags
   if (mFrameDecodeFlags != DECODE_FLAGS_DEFAULT) {
-    if (!CanForciblyDiscard() || mDecoder || mAnim)
+    if (!CanForciblyDiscardAndRedecode())
       return NS_ERROR_NOT_AVAILABLE;
     ForceDiscard();
 
@@ -2725,7 +2742,7 @@ RasterImage::UnlockImage()
 NS_IMETHODIMP
 RasterImage::RequestDiscard()
 {
-  if (CanDiscard() && !mDecoder && !mAnim) {
+  if (CanDiscard() && CanForciblyDiscardAndRedecode()) {
     ForceDiscard();
   }
 

@@ -20,10 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
   ok(jsFuns.isAsmJSCompilationAvailable());
 
   var asmjsCode = "function f() { 'use asm';";
-  for (var i = 0; i < 1000; i++)
+  for (var i = 0; i < 5000; i++)
     asmjsCode += "function g" + i + "() { return " + i + "}";
   asmjsCode += "return g42 }";
-  ok(asmjsCode.length > 10000);
+  ok(asmjsCode.length > 100000, "code is long enough to definitely hit the cache");
 
   var workerCode = asmjsCode;
   workerCode += "if (f()() !== 42) postMessage('fail'); else postMessage('ok');";

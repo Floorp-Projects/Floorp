@@ -82,7 +82,7 @@ function expectedValueAfterStepUpOrDown(stepFactor, element) {
   }
   var step = getStep(element);
   if (step == "any") {
-    return value;
+    step = 1;
   }
 
   var minimum = getMinimum(element);
@@ -187,6 +187,15 @@ function test() {
     expectedVal = 0;
     synthesizeKey(key, {});
     is(elem.value, expectedVal, "Test " + key + " for number control where scripted preventDefault() should prevent the value changing");
+
+    // Test step="any" behavior:
+    var oldStep = elem.step;
+    elem.step = "any";
+    oldVal = elem.value = 0;
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the midpoint and step='any' (" + oldVal + ")");
+    elem.step = oldStep; // restore
   }
 }
 
