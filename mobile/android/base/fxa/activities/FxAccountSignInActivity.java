@@ -131,8 +131,11 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
       Account account;
       try {
         final String profile = Constants.DEFAULT_PROFILE;
+        final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_URI;
         account = AndroidFxAccount.addAndroidAccount(activity, email, password,
-            serverURI, profile, result.sessionToken, result.keyFetchToken, result.verified);
+            serverURI,
+            tokenServerURI,
+            profile, result.sessionToken, result.keyFetchToken, result.verified);
         if (account == null) {
           throw new RuntimeException("XXX what?");
         }
