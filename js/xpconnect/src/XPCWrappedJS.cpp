@@ -362,6 +362,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
             wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, nullptr);
+            NS_ADDREF(wrapper);
             *wrapperResult = wrapper;
             return NS_OK;
         } else {
@@ -373,6 +374,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                 return NS_ERROR_FAILURE;
 
             root = new nsXPCWrappedJS(cx, rootJSObj, rootClasp, nullptr);
+            NS_ADDREF(root);
             NS_RELEASE(rootClasp);
 
             release_root = true;
@@ -385,6 +387,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     MOZ_ASSERT(!wrapper, "no wrapper found yet");
 
     wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root);
+    NS_ADDREF(wrapper);
 
     if (release_root)
         NS_RELEASE(root);
@@ -407,7 +410,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     // There is an extra AddRef to support weak references to wrappers
     // that are subject to finalization. See the top of the file for more
     // details.
-    NS_ADDREF_THIS();
     NS_ADDREF_THIS();
 
     if (IsRootWrapper()) {
