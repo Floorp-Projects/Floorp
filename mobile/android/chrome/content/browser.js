@@ -418,9 +418,8 @@ var BrowserApp = {
         this.isGuest = window.arguments[4];
     }
 
-    let status = this.startupStatus();
     if (pinned) {
-      this._initRuntime(status, url, aUrl => this.addTab(aUrl));
+      this._initRuntime(this._startupStatus, url, aUrl => this.addTab(aUrl));
     } else {
       SearchEngines.init();
       this.initContextMenu();
@@ -437,7 +436,7 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    if (status)
+    if (this._startupStatus)
       this.onAppUpdated();
 
     // Store the low-precision buffer pref
@@ -452,18 +451,22 @@ var BrowserApp = {
 #endif
   },
 
-  startupStatus: function() {
-    let savedmstone = null;
+  get _startupStatus() {
+    delete this._startupStatus;
+
+    let savedMilestone = null;
     try {
-      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
+      savedMilestone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
     } catch (e) {
     }
-#expand    let ourmstone = "__MOZ_APP_VERSION__";
-    if (ourmstone != savedmstone) {
-      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
-      return savedmstone ? "upgrade" : "new";
+#expand    let ourMilestone = "__MOZ_APP_VERSION__";
+    this._startupStatus = "";
+    if (ourMilestone != savedMilestone) {
+      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourMilestone);
+      this._startupStatus = savedMilestone ? "upgrade" : "new";
     }
-    return "";
+
+    return this._startupStatus;
   },
 
   /**
@@ -916,8 +919,8 @@ var BrowserApp = {
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
   _loadWebapp: function(aMessage) {
-    // TODO: figure out when (if ever) to pass "new" to the status parameter.
-    this._initRuntime("", aMessage.url, aUrl => {
+
+    this._initRuntime(this._startupStatus, aMessage.url, aUrl => {
       this.manifestUrl = aMessage.url;
       this.addTab(aUrl, { title: aMessage.name });
     });
