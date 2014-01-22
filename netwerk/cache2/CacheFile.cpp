@@ -920,8 +920,7 @@ CacheFile::Doom(CacheFileListener *aCallback)
   nsresult rv = NS_OK;
 
   if (mMemoryOnly) {
-    // TODO what exactly to do here?
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_FILE_NOT_FOUND;
   }
 
   nsCOMPtr<CacheFileIOListener> listener;

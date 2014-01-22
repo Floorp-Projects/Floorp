@@ -2018,7 +2018,7 @@ nsHttpChannel::MaybeSetupByteRangeRequest(int64_t partialLen, int64_t contentLen
     mIsPartialRequest = false;
 
     if (!IsResumable(partialLen, contentLength))
-      return NS_OK;
+      return NS_ERROR_NOT_RESUMABLE;
 
     // looks like a partial entry we can reuse; add If-Range
     // and Range headers.
@@ -2757,7 +2757,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                  "[content-length=%lld size=%lld]\n", contentLength, size));
 
             rv = MaybeSetupByteRangeRequest(size, contentLength);
-            mCachedContentIsPartial = NS_SUCCEEDED(rv);
+            mCachedContentIsPartial = NS_SUCCEEDED(rv) && mIsPartialRequest;
             if (mCachedContentIsPartial) {
                 rv = OpenCacheInputStream(entry, false);
                 *aResult = ENTRY_NEEDS_REVALIDATION;

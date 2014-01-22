@@ -221,6 +221,9 @@ private:
   void BackgroundOp(uint32_t aOperation, bool aForceAsync = false);
   void StoreFrecency();
 
+  // Called only from DoomAlreadyRemoved()
+  void DoomFile();
+
   already_AddRefed<CacheEntryHandle> ReopenTruncated(nsICacheEntryOpenCallback* aCallback);
   void TransferCallbacks(CacheEntry & aFromEntry);
 
@@ -305,8 +308,8 @@ private:
   public:
     static uint32_t const REGISTER =          1 << 0;
     static uint32_t const FRECENCYUPDATE =    1 << 1;
-    static uint32_t const DOOM =              1 << 2;
-    static uint32_t const CALLBACKS =         1 << 3;
+    static uint32_t const CALLBACKS =         1 << 2;
+    static uint32_t const UNREGISTER =        1 << 3;
 
     Ops() : mFlags(0) { }
     uint32_t Grab() { uint32_t flags = mFlags; mFlags = 0; return flags; }
