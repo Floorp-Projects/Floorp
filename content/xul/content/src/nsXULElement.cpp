@@ -2656,7 +2656,7 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
       JS::ExposeObjectToActiveJS(scope);
     }
 
-    if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options)) {
+    if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aTextLength)) {
         if (!JS::CompileOffThread(cx, scope, options,
                                   static_cast<const jschar*>(aText), aTextLength,
                                   OffThreadScriptReceiverCallback,

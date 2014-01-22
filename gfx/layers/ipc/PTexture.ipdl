@@ -26,10 +26,6 @@ child:
     async __delete__();
 
 parent:
-    /**
-     * Set the shared data and create the TextureHost on the parent side.
-     */
-    async Init(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
 
     /**
      * Asynchronously tell the Compositor side to remove the texture.

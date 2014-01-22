@@ -102,14 +102,6 @@
 #define JS_NEVER_INLINE MOZ_NEVER_INLINE
 #endif
 
-#ifndef JS_WARN_UNUSED_RESULT
-# if defined __GNUC__
-#  define JS_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-# else
-#  define JS_WARN_UNUSED_RESULT
-# endif
-#endif
-
 /***********************************************************************
 ** MACROS:      JS_BEGIN_MACRO
 **              JS_END_MACRO
