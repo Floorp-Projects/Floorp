@@ -1478,6 +1478,13 @@ struct JSJitInfo {
         ArgTypeListEnd = (1 << 31)
     };
 
+    static_assert(Any & String, "Any must include String.");
+    static_assert(Any & Integer, "Any must include Integer.");
+    static_assert(Any & Double, "Any must include Double.");
+    static_assert(Any & Boolean, "Any must include Boolean.");
+    static_assert(Any & Object, "Any must include Object.");
+    static_assert(Any & Null, "Any must include Null.");
+
     enum AliasSet {
         // An enum that describes what this getter/setter/method aliases.  This
         // determines what things can be hoisted past this call, and if this
@@ -1585,17 +1592,6 @@ struct JSJitInfo {
                                    JSTypedMethodJitInfo. */
     uint32_t slotIndex : 12;   /* If isInSlot is true, the index of the slot to
                                   get the value from.  Otherwise 0. */
-
-private:
-    static void staticAsserts()
-    {
-        JS_STATIC_ASSERT(Any & String);
-        JS_STATIC_ASSERT(Any & Integer);
-        JS_STATIC_ASSERT(Any & Double);
-        JS_STATIC_ASSERT(Any & Boolean);
-        JS_STATIC_ASSERT(Any & Object);
-        JS_STATIC_ASSERT(Any & Null);
-    }
 };
 
 static_assert(sizeof(JSJitInfo) == (sizeof(void*) + 2 * sizeof(uint32_t)),
@@ -1892,22 +1888,22 @@ js_ReportIsNotFunction(JSContext *cx, JS::HandleValue v);
 #ifdef JSGC_GENERATIONAL
 extern JS_FRIEND_API(void)
 JS_StoreObjectPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSObject *key, void *data),
                                   JSObject *key, void *data);
 
 extern JS_FRIEND_API(void)
 JS_StoreStringPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSString *key, void *data),
                                   JSString *key, void *data);
 #else
 inline void
 JS_StoreObjectPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSObject *key, void *data),
                                   JSObject *key, void *data) {}
 
 inline void
 JS_StoreStringPostBarrierCallback(JSContext* cx,
-                                  void (*callback)(JSTracer *trc, void *key, void *data),
+                                  void (*callback)(JSTracer *trc, JSString *key, void *data),
                                   JSString *key, void *data) {}
 #endif /* JSGC_GENERATIONAL */
 

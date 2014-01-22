@@ -119,25 +119,6 @@ endif
 ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU
 
-ifdef _MSC_VER
-ifdef MOZ_SHARED_ICU
-OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
-ifdef MOZ_DEBUG
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:icudtd$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuind$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuucd$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-else
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:icudt$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuin$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuuc$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-endif
-endif
-endif
-
 endif
 endif
 
