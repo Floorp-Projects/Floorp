@@ -29,13 +29,14 @@ public abstract class CustomListPreference extends Preference implements View.On
     public static final int INDEX_SET_DEFAULT_BUTTON = 0;
 
     // Dialog item labels.
-    protected String[] mDialogItems;
+    protected final String[] mDialogItems;
 
     // Dialog displayed when this element is tapped.
     protected AlertDialog mDialog;
 
     // Cache label to avoid repeated use of the resource system.
     public final String LABEL_IS_DEFAULT;
+    public final String LABEL_SET_AS_DEFAULT;
 
     protected boolean mIsDefault;
 
@@ -66,8 +67,9 @@ public abstract class CustomListPreference extends Preference implements View.On
 
         Resources res = getContext().getResources();
 
-        // Fetch this resource now, instead of every time we ever want to relabel a button.
-        LABEL_IS_DEFAULT = res.getString(R.string.pref_search_default);
+        // Fetch these strings now, instead of every time we ever want to relabel a button.
+        LABEL_IS_DEFAULT = res.getString(R.string.pref_default);
+        LABEL_SET_AS_DEFAULT = res.getString(R.string.pref_dialog_set_default);
 
         mDialogItems = getDialogStrings();
     }

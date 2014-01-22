@@ -72,8 +72,8 @@ public class SearchEnginePreference extends CustomListPreference {
     @Override
     protected String[] getDialogStrings() {
         Resources res = getContext().getResources();
-        return new String[] { res.getString(R.string.pref_search_set_default),
-                              res.getString(R.string.pref_search_remove) };
+        return new String[] { LABEL_SET_AS_DEFAULT,
+                              res.getString(R.string.pref_dialog_remove) };
     }
 
     @Override
