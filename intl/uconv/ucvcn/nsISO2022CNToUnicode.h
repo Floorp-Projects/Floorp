@@ -18,8 +18,6 @@
 #define SS2         0x4e
 #define SS3         0x4f
 
-using namespace mozilla;
-
 class nsISO2022CNToUnicode : public nsBasicDecoderSupport
 {
 public:
@@ -28,7 +26,8 @@ public:
         mPlaneID(0),
         mRunLength(0)
   {
-    Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_ISO2022CN, true);
+    mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::DECODER_INSTANTIATED_ISO2022CN, true);
   }
 
   virtual ~nsISO2022CNToUnicode() {}
