@@ -55,7 +55,7 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 
 // If profileDir is not available, osfile.jsm has been imported before the
@@ -138,9 +138,10 @@ let Scheduler = {
     this.resetTimer = setTimeout(File.resetWorker, delay);
   },
 
-  post: function post(...args) {
+  post: function post(method, ...args) {
     if (this.shutdown) {
-      LOG("OS.File is not available anymore. The following request has been rejected.", args);
+      LOG("OS.File is not available anymore. The following request has been rejected.",
+        method, args);
       return Promise.reject(new Error("OS.File has been shut down."));
     }
     if (!worker) {
@@ -148,21 +149,30 @@ let Scheduler = {
       worker = new PromiseWorker(
         "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
     }
-    if (!this.launched && SharedAll.Config.DEBUG) {
+    let firstLaunch = !this.launched;
+    this.launched = true;
+
+    if (firstLaunch && SharedAll.Config.DEBUG) {
       // If we have delayed sending SET_DEBUG, do it now.
       worker.post("SET_DEBUG", [true]);
     }
-    this.launched = true;
 
     // By convention, the last argument of any message may be an |options| object.
-    let methodArgs = args[1];
-    let options = methodArgs ? methodArgs[methodArgs.length - 1] : null;
-    let promise = worker.post.apply(worker, args);
+    let options;
+    let methodArgs = args[0];
+    if (methodArgs) {
+      options = methodArgs[methodArgs.length - 1];
+    }
+    let promise = worker.post(method,...args);
     return this.latestPromise = promise.then(
       function onSuccess(data) {
+        if (firstLaunch) {
+          Scheduler._updateTelemetry();
+        }
+
         // Don't restart the timer when reseting the worker, since that will
         // lead to an endless "resetWorker()" loop.
-        if (args[0] != "Meta_reset") {
+        if (method != "Meta_reset") {
           Scheduler.restartTimer();
         }
 
@@ -194,9 +204,13 @@ let Scheduler = {
         return data.ok;
       },
       function onError(error) {
+        if (firstLaunch) {
+          Scheduler._updateTelemetry();
+        }
+
         // Don't restart the timer when reseting the worker, since that will
         // lead to an endless "resetWorker()" loop.
-        if (args[0] != "Meta_reset") {
+        if (method != "Meta_reset") {
           Scheduler.restartTimer();
         }
 
@@ -215,6 +229,26 @@ let Scheduler = {
         throw error;
       }
     );
+  },
+
+  /**
+   * Post Telemetry statistics.
+   *
+   * This is only useful on first launch.
+   */
+  _updateTelemetry: function() {
+    let workerTimeStamps = worker.workerTimeStamps;
+    if (!workerTimeStamps) {
+      // If the first call to OS.File results in an uncaught errors,
+      // the timestamps are absent. As this case is a developer error,
+      // let's not waste time attempting to extract telemetry from it.
+      return;
+    }
+    let HISTOGRAM_LAUNCH = Services.telemetry.getHistogramById("OSFILE_WORKER_LAUNCH_MS");
+    HISTOGRAM_LAUNCH.add(worker.workerTimeStamps.entered - worker.launchTimeStamp);
+
+    let HISTOGRAM_READY = Services.telemetry.getHistogramById("OSFILE_WORKER_READY_MS");
+    HISTOGRAM_READY.add(worker.workerTimeStamps.loaded - worker.launchTimeStamp);
   }
 };
 
@@ -852,10 +886,14 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   // - the buffer is effectively shared (not neutered) between both
   //   threads;
   // - we take care of any |byteOffset|.
-  return Scheduler.post("writeAtomic",
+  let refObj = {};
+  TelemetryStopwatch.start("OSFILE_WRITEATOMIC_JANK_MS", refObj);
+  let promise = Scheduler.post("writeAtomic",
     [Type.path.toMsg(path),
      Type.void_t.in_ptr.toMsg(buffer),
      options], [options, buffer]);
+  TelemetryStopwatch.finish("OSFILE_WRITEATOMIC_JANK_MS", refObj);
+  return promise;
 };
 
 File.removeDir = function(path, options = {}) {
