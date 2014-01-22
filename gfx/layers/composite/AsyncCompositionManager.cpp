@@ -540,6 +540,20 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
   return appliedTransform;
 }
 
+static bool
+LayerHasNonContainerDescendants(ContainerLayer* aContainer)
+{
+  for (Layer* child = aContainer->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    ContainerLayer* container = child->AsContainerLayer();
+    if (!container || LayerHasNonContainerDescendants(container)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
 {
@@ -550,6 +564,11 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
   // Note that it is possible that the content layer is no longer there; in
   // this case we don't need to do anything because there can't be an async
   // transform on the content.
+  // We only apply the transform if the scroll-target layer has non-container
+  // children (i.e. when it has some possibly-visible content). This is to
+  // avoid moving scroll-bars in the situation that only a scroll information
+  // layer has been built for a scroll frame, as this would result in a
+  // disparity between scrollbars and visible content.
   for (Layer* scrollTarget = aLayer->GetPrevSibling();
        scrollTarget;
        scrollTarget = scrollTarget->GetPrevSibling()) {
@@ -563,6 +582,9 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
     const FrameMetrics& metrics = scrollTarget->AsContainerLayer()->GetFrameMetrics();
     if (metrics.mScrollId != aLayer->GetScrollbarTargetContainerId()) {
       continue;
+    }
+    if (!LayerHasNonContainerDescendants(scrollTarget->AsContainerLayer())) {
+      return;
     }
 
     gfx3DMatrix asyncTransform = gfx3DMatrix(apzc->GetCurrentAsyncTransform());
