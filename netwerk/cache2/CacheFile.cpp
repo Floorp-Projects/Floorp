@@ -917,7 +917,7 @@ CacheFile::Doom(CacheFileListener *aCallback)
 
   LOG(("CacheFile::Doom() [this=%p, listener=%p]", this, aCallback));
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (mMemoryOnly) {
     // TODO what exactly to do here?
