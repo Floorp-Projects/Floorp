@@ -1,0 +1,459 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=753984
+-->
+  <head>
+    <title>[AccessFu] utterance order test</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+    <script type="application/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="../common.js"></script>
+    <script type="application/javascript"
+            src="./output.js"></script>
+    <script type="application/javascript">
+
+      function doTest() {
+        // Test the following accOrElmOrID (with optional old accOrElmOrID).
+        // Note: each accOrElmOrID entry maps to a unique object utterance
+        // generator function within the UtteranceGenerator.
+        var tests = [{
+          accOrElmOrID: "anchor",
+          expectedUtterance: [["link", "title"], ["title", "link"]],
+          expectedBraille: [["lnk", "title"], ["title", "lnk"]]
+        }, {
+          accOrElmOrID: "anchor_titleandtext",
+          expectedUtterance: [["link", "goes to the tests -", "Tests"],
+                             ["Tests", "- goes to the tests", "link"]],
+          expectedBraille:   [["lnk", "goes to the tests -", "Tests"],
+                             ["Tests", "- goes to the tests", "lnk"]],
+        }, {
+          accOrElmOrID: "anchor_duplicatedtitleandtext",
+          expectedUtterance: [["link", "Tests"], ["Tests", "link"]],
+          expectedBraille: [["lnk", "Tests"], ["Tests", "lnk"]]
+        }, {
+          accOrElmOrID: "anchor_arialabelandtext",
+          expectedUtterance: [["link", "goes to the tests - Tests"],
+                              ["Tests - goes to the tests", "link"]],
+          expectedBraille: [["lnk", "goes to the tests - Tests"],
+                              ["Tests - goes to the tests", "lnk"]],
+        }, {
+          accOrElmOrID: "textarea",
+          expectedUtterance: [[
+            "text area", "This is the text area text."
+          ], [
+            "This is the text area text.", "text area"
+          ],],
+          expectedBraille: [[
+            "txtarea", "This is the text area text."
+          ], [
+            "This is the text area text.", "txtarea"
+          ],],
+        }, {
+          accOrElmOrID: "heading",
+          expectedUtterance: [
+            ["heading level 1", "Test heading"],
+            ["Test heading", "heading level 1"]
+          ],
+          expectedBraille: [
+            ["heading", "Test heading"],
+            ["Test heading", "heading"]
+          ]
+        }, {
+          accOrElmOrID: "list",
+          expectedUtterance: [
+            ["list 1 item", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 item"]
+          ],
+          expectedBraille: [
+            ["list", "list one"],
+            ["list one", "list"]
+          ]
+        }, {
+          accOrElmOrID: "dlist",
+          expectedUtterance: [
+            ["definition list 0.5 items", "dd one"],
+            ["dd one", "definition list 0.5 items"]
+          ],
+          expectedBraille: [
+            ["definition list", "dd one"],
+            ["dd one", "definition list"]
+          ]
+        }, {
+          accOrElmOrID: "li_one",
+          expectedUtterance: [
+            ["list 1 item", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 item"]
+          ],
+          expectedBraille: [
+            ["1.", "list one"],
+            ["1.", "list one"]
+          ]
+        }, {
+          accOrElmOrID: "cell",
+          expectedUtterance: [[
+            "table with 1 column and 1 row", "Fruits and vegetables",
+            "Column 1 Row 1", "list 4 items", "First item", "link", "Apples",
+            "link", "Bananas", "link", "Peaches", "Last item", "link", "Plums"
+          ], [
+            "Apples", "link", "First item", "Bananas", "link", "Peaches",
+            "link", "Plums", "link", "Last item", "list 4 items",
+            "Column 1 Row 1", "Fruits and vegetables",
+            "table with 1 column and 1 row"
+          ]],
+          expectedBraille: [[
+            "c1r1", "list", "lnk", "Apples", "lnk", "Bananas", "lnk",
+            "Peaches", "lnk", "Plums"
+          ], [
+            "Apples", "lnk", "Bananas", "lnk", "Peaches", "lnk", "Plums",
+            "lnk", "list", "c1r1"
+          ]]
+        }, {
+          accOrElmOrID: "date",
+          expectedUtterance: [["date entry", "2011-09-29"], ["2011-09-29", "date entry"]],
+          expectedBraille: [["date entry", "2011-09-29"], ["2011-09-29", "date entry"]]
+        }, {
+          accOrElmOrID: "email",
+          expectedUtterance: [
+            ["e-mail entry", "test@example.com"],
+            ["test@example.com", "e-mail entry"]
+          ],
+          expectedBraille: [
+            ["e-mail entry", "test@example.com"],
+            ["test@example.com", "e-mail entry"]
+          ]
+        }, {
+          accOrElmOrID: "search",
+          expectedUtterance: [
+            ["search entry", "This is a search"],
+            ["This is a search", "search entry"]
+          ],
+          expectedBraille: [
+            ["search entry", "This is a search"],
+            ["This is a search", "search entry"]
+          ]
+        }, {
+          accOrElmOrID: "tel",
+          expectedUtterance: [
+            ["telephone entry", "555-5555"], ["555-5555", "telephone entry"]
+          ],
+          expectedBraille: [
+            ["telephone entry", "555-5555"], ["555-5555", "telephone entry"]
+          ]
+        }, {
+          accOrElmOrID: "url",
+          expectedUtterance: [
+            ["URL entry", "http://example.com"],
+            ["http://example.com", "URL entry"]
+          ],
+          expectedBraille: [
+            ["URL entry", "http://example.com"],
+            ["http://example.com", "URL entry"]
+          ]
+        }, {
+          accOrElmOrID: "textInput",
+          expectedUtterance: [["entry", "This is text."], ["This is text.", "entry"]],
+          expectedBraille: [["entry", "This is text."], ["This is text.", "entry"]]
+        }, {
+          // Test pivot to list from li_one.
+          accOrElmOrID: "list",
+          oldAccOrElmOrID: "li_one",
+          expectedUtterance: [
+            ["list 1 item", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 item"]
+          ],
+          expectedBraille: [
+            ["list", "list one"],
+            ["list one", "list"]
+          ]
+        }, {
+          // Test pivot to "apples" link from the table cell.
+          accOrElmOrID: "apples",
+          oldAccOrElmOrID: "cell",
+          expectedUtterance: [
+            ["list 4 items", "First item", "link", "Apples"],
+            ["Apples", "link", "First item", "list 4 items"]
+          ],
+          expectedBraille: [
+            ["*", "lnk", "Apples"],
+            ["*", "Apples", "lnk"]
+          ]
+        }, {
+          // Test pivot to 'bananas' link from 'apples' link.
+          accOrElmOrID: "bananas",
+          oldAccOrElmOrID: "apples",
+          expectedUtterance: [["link", "Bananas"], ["Bananas", "link"]],
+          expectedBraille: [["*", "lnk", "Bananas"], ["*", "Bananas", "lnk"]]
+        }, {
+          // test unavailable state utterance
+          accOrElmOrID: 'unavailableButton',
+          expectedUtterance: [["unavailable button", "I am unavailable"],
+            ["I am unavailable", "unavailable button"]],
+          expectedBraille: [["btn", "I am unavailable"],
+            ["I am unavailable", "btn"]]
+        }, {
+          // test expanded state utterance
+          accOrElmOrID: 'expandedButton',
+          expectedUtterance: [["expanded button", "I am expanded"],
+            ["I am expanded", "expanded button"]],
+          expectedBraille: [["btn", "I am expanded"],
+            ["I am expanded", "btn"]]
+        }, {
+          // test collapsed state utterance
+          accOrElmOrID: 'collapsedButton',
+          expectedUtterance: [["collapsed button", "I am collapsed"],
+            ["I am collapsed", "collapsed button"]],
+          expectedBraille: [["btn", "I am collapsed"],
+            ["I am collapsed", "btn"]]
+        }, {
+          // test required state utterance
+          accOrElmOrID: 'requiredInput',
+          expectedUtterance: [["required entry", "I am required"],
+            ["I am required", "required entry"]],
+          expectedBraille: [["entry", "I am required"],
+            ["I am required", "entry"]]
+        }, {
+          // test has popup state utterance
+          accOrElmOrID: 'hasPopupButton',
+          expectedUtterance: [["has pop up button menu", "I have a popup"],
+            ["I have a popup", "has pop up button menu"]],
+          expectedBraille: [["button menu", "I have a popup"],
+            ["I have a popup", "button menu"]]
+        }, {
+          // Test selected tab
+          accOrElmOrID: 'tab1',
+          expectedUtterance: [['tab list', 'selected tab 1 of 2', 'Account'],
+            ['Account', 'selected tab 1 of 2', 'tab list']],
+          expectedBraille: [['tab 1 of 2', 'Account'],
+            ['Account', 'tab 1 of 2']]
+        }, {
+          // Test unselected tab
+          accOrElmOrID: 'tab2',
+          expectedUtterance: [['tab list', 'tab 2 of 2', 'Advanced'],
+            ['Advanced', 'tab 2 of 2', 'tab list']],
+          expectedBraille: [['tab 2 of 2', 'Advanced'],
+            ['Advanced', 'tab 2 of 2']]
+        },
+
+        {
+          // Landing on this label should mimic landing on the checkbox.
+          accOrElmOrID: "label1",
+          expectedUtterance: [['not checked check button', 'Orange'],
+                     ['Orange', 'not checked check button']],
+          expectedBraille: [['( )', 'Orange'],
+                     ['Orange', '( )']]
+        },
+        {
+          // Here we get a top-level view of the form.
+          accOrElmOrID: "form1",
+          expectedUtterance: [['label', 'not checked check button', 'Orange', 'Orange',
+                      'not checked check button', 'Blue', 'label', 'Blue'],
+                     ['Orange', 'not checked check button', 'Orange', 'label',
+                      'Blue', 'not checked check button', 'Blue', 'label']],
+          expectedBraille: [['label', '( )', 'Orange', 'Orange',
+                      '( )', 'Blue', 'label', 'Blue'],
+                     ['Orange', '( )', 'Orange', 'label',
+                      'Blue', '( )', 'Blue', 'label']]
+        },
+        {
+          // This is a non-nesting label.
+          accOrElmOrID: "label2",
+          expectedUtterance: [['label', 'Blue'], ['Blue', 'label']],
+          expectedBraille: [['label', 'Blue'], ['Blue', 'label']]
+        },
+        {
+          // This is a distinct control.
+          accOrElmOrID: "input2",
+          expectedUtterance: [['not checked check button', 'Blue'],
+                     ['Blue', 'not checked check button']],
+          expectedBraille: [['( )', 'Blue'],
+                     ['Blue', '( )']]
+        },
+        {
+          // This is a nested control.
+          accOrElmOrID: "input1",
+          expectedUtterance: [['not checked check button', 'Orange'],
+                     ['Orange', 'not checked check button']],
+          expectedBraille: [['( )', 'Orange'],
+                     ['Orange', '( )']]
+        },
+        {
+          // Landing on this label should mimic landing on the entry.
+          accOrElmOrID: "label3",
+          expectedUtterance: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']],
+          expectedBraille: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']]
+        },
+        {
+          // This is a nested control with a value.
+          accOrElmOrID: "input3",
+          expectedUtterance: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']],
+          expectedBraille: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']]
+        },
+        {
+          // This is a nested control with a value.
+          accOrElmOrID: "input4",
+          expectedUtterance: [['slider', '3', 'Points:'],
+                     ['Points:', '3', 'slider']],
+          expectedBraille: [['slider', '3', 'Points:'],
+                     ['Points:', '3', 'slider']]
+        },{
+          accOrElmOrID: "password",
+          expectedUtterance: [["password text", "Secret Password"],
+                              ["Secret Password", "password text"]],
+          expectedBraille: [["passwdtxt", "Secret Password"],
+                            ["Secret Password", "passwdtxt"]]
+        },{
+          accOrElmOrID: "input5",
+          expectedUtterance: [["checked check button", "Boring label"],
+                              ["Boring label", "checked check button"]],
+          expectedBraille: [["(x)", "Boring label"],
+                            ["Boring label", "(x)"]]
+        },{
+          accOrElmOrID: "radio_unselected",
+          expectedUtterance: [["not checked radio button", "any old radio button"],
+                              ["any old radio button", "not checked radio button"]],
+          expectedBraille: [["( )", "any old radio button"],
+                            ["any old radio button", "( )"]]
+        },{
+          accOrElmOrID: "radio_selected",
+          expectedUtterance: [["checked radio button", "a unique radio button"],
+                              ["a unique radio button", "checked radio button"]],
+          expectedBraille: [["(x)", "a unique radio button"],
+                            ["a unique radio button", "(x)"]]
+        },{
+          accOrElmOrID: "togglebutton_notpressed",
+          expectedUtterance: [["not checked toggle button", "I ain't pressed"],
+                              ["I ain't pressed", "not checked toggle button"]],
+          expectedBraille: [["( )", "I ain't pressed"],
+                            ["I ain't pressed", "( )"]]
+        },{
+          accOrElmOrID: "togglebutton_pressed",
+          expectedUtterance: [["not checked toggle button", "I am pressed!"],
+                              ["I am pressed!", "not checked toggle button"]],
+          expectedBraille: [["(x)", "I am pressed!"],
+                            ["I am pressed!", "(x)"]]
+        }
+        ];
+
+        // Test all possible utterance order preference values.
+        tests.forEach(function run(test) {
+          var utteranceOrderValues = [0, 1];
+          utteranceOrderValues.forEach(
+            function testUtteranceOrder(utteranceOrder) {
+              SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, utteranceOrder);
+              testOutput(test.expectedUtterance[utteranceOrder],
+                         test.accOrElmOrID, test.oldAccOrElmOrID, 1);
+              testOutput(test.expectedBraille[utteranceOrder],
+                         test.accOrElmOrID, test.oldAccOrElmOrID, 0);
+            }
+          );
+        });
+
+        // If there was an original utterance order preference, revert to it.
+        SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
+        SimpleTest.finish();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      addA11yLoadEvent(doTest);
+
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=753984"
+         title="[AccessFu] utterance order test">
+         Mozilla Bug 753984</a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=758675"
+         title="[AccessFu] Add support for accDescription">
+         Mozilla Bug 758675</a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=876475"
+         title="[AccessFu] Make braille output less verbose">
+         Mozilla Bug 876475</a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=924284"
+         title="[AccessFu] Output accessible values">
+         Mozilla Bug 924284</a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=925845"
+         title="[AccessFu] Unify output tests">
+         Mozilla Bug 925845</a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test"></pre>
+      <a id="anchor" href="#test" title="title"></a>
+      <a id="anchor_titleandtext" href="#test" title="goes to the tests">Tests</a>
+      <a id="anchor_duplicatedtitleandtext" href="#test" title="Tests">Tests</a>
+      <a id="anchor_arialabelandtext" href="#test" aria-label="Tests" title="goes to the tests">Tests</a>
+      <textarea id="textarea" cols="80" rows="5">
+        This is the text area text.
+      </textarea>
+      <h1 id="heading" title="Test heading"></h1>
+      <ol id="list">
+        <li id="li_one">list one</li>
+      </ol>
+      <dl id="dlist">
+        <dd id="dd_one">
+          dd one
+        </dd>
+      </dl>
+      <table>
+        <caption>Fruits and vegetables</caption>
+        <tr>
+          <td id="cell">
+            <ul style="list-style-type: none;">
+              <li><a id="apples" href="#">Apples</a></li>
+              <li><a id="bananas" href="#">Bananas</a></li>
+              <li><a href="#">Peaches</a></li>
+              <li>
+                <a href="#">
+                  Plums
+                </a>
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+      <button id="unavailableButton" disabled>I am unavailable</button>
+      <button id="expandedButton" aria-expanded="true">I am expanded</button>
+      <button id="collapsedButton" aria-expanded="false">I am collapsed</button>
+      <input id="requiredInput" required placeholder="I am required" />
+      <button id="hasPopupButton" aria-haspopup="true">I have a popup</button>
+      <div role="tablist">
+        <a id="tab1" href="#" role="tab" aria-selected="true">Account</a>
+        <a id="tab2" href="#" role="tab" aria-selected="false">Advanced</a>
+      </div>
+      <form id="form1">
+        <label id="label1"><input id="input1" type="checkbox">Orange</label>
+        <input id="input2" type="checkbox"><label id="label2" for="input2">Blue</label>
+      </form>
+      <label id="label3">First name: <input id="input3" value="Joe"></label>
+      <label id="label4">Points:
+        <input id="input4" type="range" name="points" min="1" max="10" value="3">
+      </label>
+      <label for="input5">Boring label</label><input id="input5" type="checkbox" checked></input>
+      <label for="password">Secret Password</label><input id="password" type="password"></input>
+      <label for="radio_unselected">any old radio button</label><input id="radio_unselected" type="radio"></input>
+      <label for="radio_selected">a unique radio button</label><input id="radio_selected" type="radio" checked></input>
+      <input id="date" type="date" value="2011-09-29" />
+      <input id="email" type="email" value="test@example.com" />
+      <input id="search" type="search" value="This is a search" />
+      <input id="tel" type="tel" value="555-5555" />
+      <input id="url" type="url" value="http://example.com" />
+      <input id="textInput" type="text" value="This is text." />
+      <label>Points: <input id="range" type="range" name="points" min="1" max="10" value="3"></label>
+      <div id="togglebutton_notpressed" aria-pressed="false" role="button" tabindex="-1">I ain't pressed</div>
+      <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
+    </div>
+  </body>
+</html>
