@@ -1192,19 +1192,92 @@ let CustomizableUIInternal = {
    * part of the menu.
    */
   _isOnInteractiveElement: function(aEvent) {
+    function getMenuPopupForDescendant(aNode) {
+      let lastPopup = null;
+      while (aNode && aNode.parentNode &&
+             aNode.parentNode.localName.startsWith("menu")) {
+        lastPopup = aNode.localName == "menupopup" ? aNode : lastPopup;
+        aNode = aNode.parentNode;
+      }
+      return lastPopup;
+    }
+
     let target = aEvent.originalTarget;
     let panel = this._getPanelForNode(aEvent.currentTarget);
+    // We keep track of:
+    // whether we're in an input container (text field)
     let inInput = false;
+    // whether we're in a popup/context menu
     let inMenu = false;
+    // whether we're in a toolbarbutton/toolbaritem
     let inItem = false;
-    while (!inInput && !inMenu && !inItem && target != panel) {
+    // whether the current menuitem has a valid closemenu attribute
+    let menuitemCloseMenu = "auto";
+    // whether the toolbarbutton/item has a valid closemenu attribute.
+    let closemenu = "auto";
+
+    // While keeping track of that, we go from the original target back up,
+    // to the panel if we have to. We bail as soon as we find an input,
+    // a toolbarbutton/item, or the panel:
+    while (true) {
       let tagName = target.localName;
-      inInput = tagName == "input";
-      inMenu = target.type == "menu";
+      inInput = tagName == "input" || tagName == "textbox";
       inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
-      target = target.parentNode;
+      let isMenuItem = tagName == "menuitem";
+      inMenu = inMenu || isMenuItem;
+      if (inItem && target.hasAttribute("closemenu")) {
+        let closemenuVal = target.getAttribute("closemenu");
+        closemenu = (closemenuVal == "single" || closemenuVal == "none") ?
+                    closemenuVal : "auto";
+      }
+
+      if (isMenuItem && target.hasAttribute("closemenu")) {
+        let closemenuVal = target.getAttribute("closemenu");
+        menuitemCloseMenu = (closemenuVal == "single" || closemenuVal == "none") ?
+                            closemenuVal : "auto";
+      }
+      // This isn't in the loop condition because we want to break before
+      // changing |target| if any of these conditions are true
+      if (inInput || inItem || target == panel) {
+        break;
+      }
+      // We need specific code for popups: the item on which they were invoked
+      // isn't necessarily in their parentNode chain:
+      if (isMenuItem) {
+        let topmostMenuPopup = getMenuPopupForDescendant(target);
+        target = (topmostMenuPopup && topmostMenuPopup.triggerNode) ||
+                 target.parentNode;
+      } else {
+        target = target.parentNode;
+      }
     }
-    return inMenu || inInput || !inItem;
+    // If the user clicked a menu item...
+    if (inMenu) {
+      // We care if we're in an input also,
+      // or if the user specified closemenu!="auto":
+      if (inInput || menuitemCloseMenu != "auto") {
+        return true;
+      }
+      // Otherwise, we're probably fine to close the panel
+      return false;
+    }
+    // If we're not in a menu, and we *are* in a type="menu" toolbarbutton,
+    // we'll now interact with the menu
+    if (inItem && target.getAttribute("type") == "menu") {
+      return true;
+    }
+    // If we're not in a menu, and we *are* in a type="menu-button" toolbarbutton,
+    // it depends whether we're in the dropmarker or the 'real' button:
+    if (inItem && target.getAttribute("type") == "menu-button") {
+      // 'real' button (which has a single action):
+      if (target.getAttribute("anonid") == "button") {
+        return closemenu != "none";
+      }
+      // otherwise, this is the outer button, and the user will now
+      // interact with the menu:
+      return true;
+    }
+    return inInput || !inItem;
   },
 
   hidePanelForNode: function(aNode) {
