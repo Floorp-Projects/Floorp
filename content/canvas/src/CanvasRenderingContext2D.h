@@ -338,7 +338,7 @@ public:
   void SetMozDash(JSContext* cx, const JS::Value& mozDash,
                   mozilla::ErrorResult& error);
 
-  void SetLineDash(const mozilla::dom::AutoSequence<double>& mSegments);
+  void SetLineDash(const Sequence<double>& mSegments);
   void GetLineDash(nsTArray<double>& mSegments) const;
 
   void SetLineDashOffset(double mOffset);
