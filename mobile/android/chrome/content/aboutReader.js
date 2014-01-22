@@ -266,8 +266,9 @@ AboutReader.prototype = {
         break;
       case "scroll":
         if (!this._scrolled) {
-          this._scrolled = true;
-          this._setToolbarVisibility(false);
+          let isScrollingUp = this._scrollOffset > aEvent.pageY;
+          this._setToolbarVisibility(isScrollingUp);
+          this._scrollOffset = aEvent.pageY;
         }
         break;
       case "popstate":
@@ -501,6 +502,7 @@ AboutReader.prototype = {
       return;
 
     this._toolbarElement.classList.toggle("toolbar-hidden");
+    this._setSystemUIVisibility(visible);
 
     if (!visible && !this._hasUsedToolbar) {
       this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
@@ -515,6 +517,13 @@ AboutReader.prototype = {
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
     this._setToolbarVisibility(!this._getToolbarVisibility());
+  },
+
+  _setSystemUIVisibility: function Reader_setSystemUIVisibility(visible) {
+    gChromeWin.sendMessageToJava({
+      type: "SystemUI:Visibility",
+      visible: visible
+    });
   },
 
   _loadFromURL: function Reader_loadFromURL(url) {
