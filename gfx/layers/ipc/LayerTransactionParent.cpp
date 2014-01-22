@@ -603,9 +603,10 @@ LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* actor)
 }
 
 PTextureParent*
-LayerTransactionParent::AllocPTextureParent()
+LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                            const TextureFlags& aFlags)
 {
-  return TextureHost::CreateIPDLActor(this);
+  return TextureHost::CreateIPDLActor(this, aSharedData, aFlags);
 }
 
 bool

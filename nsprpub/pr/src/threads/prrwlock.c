@@ -226,7 +226,8 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_SET_THREAD_RWLOCK_RANK(rwlock);
+	if (rwlock->rw_rank != PR_RWLOCK_RANK_NONE)
+		_PR_SET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 }
 
@@ -282,7 +283,8 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_SET_THREAD_RWLOCK_RANK(rwlock);
+	if (rwlock->rw_rank != PR_RWLOCK_RANK_NONE)
+		_PR_SET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 }
 
@@ -347,7 +349,8 @@ int err;
 	/*
 	 * update thread's lock rank
 	 */
-	_PR_UNSET_THREAD_RWLOCK_RANK(rwlock);
+	if (rwlock->rw_rank != PR_RWLOCK_RANK_NONE)
+		_PR_UNSET_THREAD_RWLOCK_RANK(rwlock);
 #endif
 	return;
 }
@@ -429,7 +432,8 @@ _PR_GET_THREAD_RWLOCK_RANK(void)
 {
 	thread_rwlock_stack *lock_stack;
 
-	if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock_key)) == NULL)
+	lock_stack = PR_GetThreadPrivate(pr_thread_rwlock_key);
+	if (lock_stack == NULL || lock_stack->trs_index == 0)
 		return (PR_RWLOCK_RANK_NONE);
 	else
 		return(lock_stack->trs_stack[lock_stack->trs_index - 1]->rw_rank);
@@ -452,9 +456,8 @@ _PR_UNSET_THREAD_RWLOCK_RANK(PRRWLock *rwlock)
 
 	PR_ASSERT(lock_stack != NULL);
 
-	index = lock_stack->trs_index - 1;
-	while (index-- >= 0) {
-		if ((lock_stack->trs_stack[index] == rwlock) && !done)  {
+	for (index = lock_stack->trs_index - 1; index >= 0; index--) {
+		if (!done && (lock_stack->trs_stack[index] == rwlock))  {
 			/*
 			 * reset the slot for rwlock
 			 */
@@ -465,7 +468,7 @@ _PR_UNSET_THREAD_RWLOCK_RANK(PRRWLock *rwlock)
 		 * search for the lowest-numbered empty slot, above which there are
 		 * no non-empty slots
 		 */
-		if ((lock_stack->trs_stack[index] != NULL) && !new_index)
+		if (!new_index && (lock_stack->trs_stack[index] != NULL))
 			new_index = index + 1;
 		if (done && new_index)
 			break;

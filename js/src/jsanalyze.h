@@ -77,7 +77,7 @@ class ScriptAnalysis
 #endif
     }
 
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool analyzeBytecode(JSContext *cx);
 
     /*
@@ -89,9 +89,9 @@ class ScriptAnalysis
     bool isReachable(const jsbytecode *pc) { return maybeCode(pc); }
 
   private:
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool analyzeSSA(JSContext *cx);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool analyzeLifetimes(JSContext *cx);
 
     /* Accessors for bytecode information. */
@@ -154,49 +154,49 @@ class ScriptAnalysis
     void printTypes(JSContext *cx);
 
     /* Bytecode helpers */
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump, unsigned *forwardLoop,
                         unsigned stackDepth);
 
     /* Lifetime helpers */
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     inline bool addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                             LifetimeVariable **&saved, unsigned &savedCount);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     inline bool killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
                              LifetimeVariable **&saved, unsigned &savedCount);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     inline bool extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
 
     inline void ensureVariable(LifetimeVariable &var, unsigned until);
 
     /* SSA helpers */
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool makePhi(JSContext *cx, uint32_t slot, uint32_t offset, SSAValue *pv);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, SlotValue *pv);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
                            Vector<SlotValue> *pending);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
                            SSAValueInfo *values, uint32_t stackDepth);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
                               Vector<uint32_t> &exceptionTargets);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
                            const Vector<uint32_t> &branchTargets, uint32_t currentOffset);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                               const Vector<uint32_t> &exceptionTargets);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
                                   const Vector<uint32_t> &exceptionTargets);
-    JS_WARN_UNUSED_RESULT
+    MOZ_WARN_UNUSED_RESULT
     bool freezeNewValues(JSContext *cx, uint32_t offset);
 
     typedef Vector<SSAValue, 16> SeenVector;
