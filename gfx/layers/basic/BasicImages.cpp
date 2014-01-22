@@ -53,6 +53,7 @@ public:
   virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
+  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
 private:
   nsAutoArrayPtr<uint8_t> mDecodedBuffer;
@@ -137,8 +138,8 @@ BasicPlanarYCbCrImage::DeprecatedGetAsSurface()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
 
-  if (mSurface) {
-    nsRefPtr<gfxASurface> result = mSurface.get();
+  if (mDeprecatedSurface) {
+    nsRefPtr<gfxASurface> result = mDeprecatedSurface.get();
     return result.forget();
   }
 
@@ -166,10 +167,49 @@ BasicPlanarYCbCrImage::DeprecatedGetAsSurface()
   }
 #endif
 
-  mSurface = result;
+  mDeprecatedSurface = result;
 
   return result.forget();
 }
+
+TemporaryRef<gfx::SourceSurface>
+BasicPlanarYCbCrImage::GetAsSourceSurface()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
+
+  if (mSourceSurface) {
+    return mSourceSurface.get();
+  }
+
+  if (!mDecodedBuffer) {
+    return PlanarYCbCrImage::GetAsSourceSurface();
+  }
+
+  gfxImageFormat format = GetOffscreenFormat();
+
+  RefPtr<gfx::SourceSurface> surface;
+  {
+    // Create a DrawTarget so that we can own the data inside mDecodeBuffer.
+    // We create the target out of mDecodedBuffer, and get a snapshot from it.
+    // The draw target is destroyed on scope exit and the surface owns the data.
+    RefPtr<gfx::DrawTarget> drawTarget
+      = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer,
+                                                            mSize,
+                                                            mStride,
+                                                            gfx::ImageFormatToSurfaceFormat(format));
+    if (!drawTarget) {
+      return nullptr;
+    }
+
+    surface = drawTarget->Snapshot();
+  }
+
+  mRecycleBin->RecycleBuffer(mDecodedBuffer.forget(), mSize.height * mStride);
+
+  mSourceSurface = surface;
+  return mSourceSurface.get();
+}
+
 
 ImageFactory*
 BasicLayerManager::GetImageFactory()

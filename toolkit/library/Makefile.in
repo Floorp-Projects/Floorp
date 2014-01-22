@@ -130,21 +130,6 @@ EXTRA_DSO_LDOPTS += \
 ifdef ENABLE_INTL_API
 ifdef JS_SHARED_LIBRARY
 EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
-ifdef _MSC_VER
-ifdef MOZ_DEBUG
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:icudtd$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuind$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuucd$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-else
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:icudt$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuin$(MOZ_ICU_VERSION).dll \
-  -DELAYLOAD:icuuc$(MOZ_ICU_VERSION).dll \
-  $(NULL)
-endif
-endif
 endif
 endif
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>      /* XXX push error reporting out to clients? */
 #ifndef XP_WIN
@@ -524,7 +525,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             PLHashNumber hash;
             PLHashEntry **hep, *he;
 
-            key = (const void*) event.serial;
+            key = (const void*) (uintptr_t) event.serial;
             hash = hash_serial(key);
             hep = PL_HashTableRawLookup(tmr->libraries, hash, key);
             he = *hep;
@@ -545,7 +546,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             PLHashNumber hash;
             PLHashEntry **hep, *he;
 
-            key = (const void*) event.serial;
+            key = (const void*) (uintptr_t) event.serial;
             hash = hash_serial(key);
             hep = PL_HashTableRawLookup(tmr->filenames, hash, key);
             he = *hep;
@@ -569,7 +570,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             tmgraphnode *comp, *lib;
             tmmethodnode *meth;
 
-            key = (const void*) event.serial;
+            key = (const void*) (uintptr_t) event.serial;
             hash = hash_serial(key);
             hep = PL_HashTableRawLookup(tmr->methods, hash, key);
             he = *hep;
@@ -585,7 +586,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             meth = (tmmethodnode*) he;
 
             meth->linenumber = event.u.method.linenumber;
-            sourcekey = (const void*)event.u.method.filename;
+            sourcekey = (const void*) (uintptr_t) event.u.method.filename;
             sourcehash = hash_serial(sourcekey);
             sourcehep = PL_HashTableRawLookup(tmr->filenames, sourcehash, sourcekey);
             sourcehe = *sourcehep;
@@ -625,7 +626,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                 }
                 comp = (tmgraphnode*) he;
 
-                key = (const void*) event.u.method.library;
+                key = (const void*) (uintptr_t) event.u.method.library;
                 hash = hash_serial(key);
                 lib = (tmgraphnode*)
                       *PL_HashTableRawLookup(tmr->libraries, hash, key);
@@ -650,7 +651,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             tmcallsite *site, *parent;
             tmmethodnode *meth;
 
-            key = (const void*) event.serial;
+            key = (const void*) (uintptr_t) event.serial;
             hash = hash_serial(key);
             hep = PL_HashTableRawLookup(tmr->callsites, hash, key);
             he = *hep;
@@ -683,7 +684,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             parent->kids = site;
             site->kids = NULL;
 
-            mkey = (const void*) event.u.site.method;
+            mkey = (const void*) (uintptr_t) event.u.site.method;
             mhash = hash_serial(mkey);
             meth = (tmmethodnode*)
                    *PL_HashTableRawLookup(tmr->methods, mhash, mkey);
@@ -802,7 +803,7 @@ tmgraphnode *tmreader_library(tmreader *tmr, uint32_t serial)
     const void *key;
     PLHashNumber hash;
 
-    key = (const void*) serial;
+    key = (const void*) (uintptr_t) serial;
     hash = hash_serial(key);
     return (tmgraphnode*) *PL_HashTableRawLookup(tmr->libraries, hash, key);
 }
@@ -812,7 +813,7 @@ tmgraphnode *tmreader_filename(tmreader *tmr, uint32_t serial)
     const void *key;
     PLHashNumber hash;
 
-    key = (const void*) serial;
+    key = (const void*) (uintptr_t) serial;
     hash = hash_serial(key);
     return (tmgraphnode*) *PL_HashTableRawLookup(tmr->filenames, hash, key);
 }
@@ -830,7 +831,7 @@ tmmethodnode *tmreader_method(tmreader *tmr, uint32_t serial)
     const void *key;
     PLHashNumber hash;
 
-    key = (const void*) serial;
+    key = (const void*) (uintptr_t) serial;
     hash = hash_serial(key);
     return (tmmethodnode*) *PL_HashTableRawLookup(tmr->methods, hash, key);
 }
@@ -840,7 +841,7 @@ tmcallsite *tmreader_callsite(tmreader *tmr, uint32_t serial)
     const void *key;
     PLHashNumber hash;
 
-    key = (const void*) serial;
+    key = (const void*) (uintptr_t) serial;
     hash = hash_serial(key);
     return (tmcallsite*) *PL_HashTableRawLookup(tmr->callsites, hash, key);
 }

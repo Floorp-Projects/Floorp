@@ -14,6 +14,10 @@
 #include "DOMCameraPreview.h"
 #include "ICameraControl.h"
 #include "CameraCommon.h"
+#include "DeviceStorage.h"
+#include "DeviceStorageFileDescriptor.h"
+
+class DeviceStorageFileDescriptor;
 
 namespace mozilla {
 
@@ -54,7 +58,7 @@ public:
   void StopPreview();
   nsresult AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult TakePicture(const idl::CameraSize& aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError);
-  nsresult StartRecording(idl::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult StartRecording(idl::CameraStartRecordingOptions* aOptions, DeviceStorageFileDescriptor *aDSFileDescriptor, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StopRecording();
   nsresult GetPreviewStreamVideoMode(idl::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult ReleaseHardware(nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError);
@@ -452,11 +456,15 @@ protected:
 class StartRecordingTask : public nsRunnable
 {
 public:
-  StartRecordingTask(CameraControlImpl* aCameraControl, idl::CameraStartRecordingOptions aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
+  StartRecordingTask(CameraControlImpl* aCameraControl,
+                     idl::CameraStartRecordingOptions aOptions,
+                     DeviceStorageFileDescriptor *aDSFileDescriptor,
+                     nsICameraStartRecordingCallback* onSuccess,
+                     nsICameraErrorCallback* onError,
+                     uint64_t aWindowId)
     : mCameraControl(aCameraControl)
     , mOptions(aOptions)
-    , mFolder(aFolder)
-    , mFilename(aFilename)
+    , mDSFileDescriptor(aDSFileDescriptor)
     , mOnSuccessCb(new nsMainThreadPtrHolder<nsICameraStartRecordingCallback>(onSuccess))
     , mOnErrorCb(new nsMainThreadPtrHolder<nsICameraErrorCallback>(onError))
     , mWindowId(aWindowId)
@@ -491,8 +499,7 @@ public:
 
   nsRefPtr<CameraControlImpl> mCameraControl;
   idl::CameraStartRecordingOptions mOptions;
-  nsCOMPtr<nsIFile> mFolder;
-  nsString mFilename;
+  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   nsMainThreadPtrHandle<nsICameraStartRecordingCallback> mOnSuccessCb;
   nsMainThreadPtrHandle<nsICameraErrorCallback> mOnErrorCb;
   uint64_t mWindowId;

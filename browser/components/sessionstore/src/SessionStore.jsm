@@ -607,6 +607,11 @@ let SessionStoreInternal = {
   receiveMessage: function ssi_receiveMessage(aMessage) {
     var browser = aMessage.target;
     var win = browser.ownerDocument.defaultView;
+    let tab = this._getTabForBrowser(browser);
+    if (!tab) {
+      // Ignore messages from <browser> elements that are not tabs.
+      return;
+    }
 
     switch (aMessage.name) {
       case "SessionStore:pageshow":
@@ -630,7 +635,6 @@ let SessionStoreInternal = {
       case "SessionStore:restoreHistoryComplete":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
           // Notify the tabbrowser that the tab chrome has been restored.
-          let tab = this._getTabForBrowser(browser);
           let tabData = browser.__SS_data;
 
           // wall-paper fix for bug 439675: make sure that the URL to be loaded
@@ -681,7 +685,6 @@ let SessionStoreInternal = {
             Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
           }
 
-          let tab = this._getTabForBrowser(browser);
           if (tab) {
             SessionStoreInternal._resetLocalTabRestoringState(tab);
             SessionStoreInternal.restoreNextTab();
@@ -703,7 +706,6 @@ let SessionStoreInternal = {
         break;
       case "SessionStore:reloadPendingTab":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          let tab = this._getTabForBrowser(browser);
           if (tab && browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
             this.restoreTabContent(tab);
           }
@@ -818,6 +820,12 @@ let SessionStoreInternal = {
     // Assign the window a unique identifier we can use to reference
     // internal data about the window.
     aWindow.__SSi = this._generateWindowID();
+
+    let mm = aWindow.messageManager;
+    MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
+
+    // Load the frame script after registering listeners.
+    mm.loadFrameScript("chrome://browser/content/content-sessionStore.js", true);
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [], busy: false };
@@ -1342,12 +1350,6 @@ let SessionStoreInternal = {
   onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
     BROWSER_EVENTS.forEach(msg => browser.addEventListener(msg, this, true));
-
-    let mm = browser.messageManager;
-    MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
-
-    // Load the frame script after registering listeners.
-    mm.loadFrameScript("chrome://browser/content/content-sessionStore.js", false);
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -2752,6 +2754,12 @@ let SessionStoreInternal = {
         disallow: tabData.disallow || null,
         pageStyle: tabData.pageStyle || null
       });
+
+      // In electrolysis, we may need to change the browser's remote
+      // attribute so that it runs in a content process.
+      let activePageData = tabData.entries[activeIndex] || null;
+      let uri = activePageData ? activePageData.url || null : null;
+      tabbrowser.updateBrowserRemoteness(browser, uri);
 
       browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
                                               {tabData: tabData, epoch: epoch});

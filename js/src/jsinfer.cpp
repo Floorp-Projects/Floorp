@@ -1874,13 +1874,13 @@ static inline jsbytecode *
 PreviousOpcode(HandleScript script, jsbytecode *pc)
 {
     ScriptAnalysis *analysis = script->analysis();
-    JS_ASSERT(analysis->maybeCode(pc));
+    JS_ASSERT(analysis->isReachable(pc));
 
     if (pc == script->code())
         return nullptr;
 
     for (pc--;; pc--) {
-        if (analysis->maybeCode(pc))
+        if (analysis->isReachable(pc))
             break;
     }
 
@@ -1897,7 +1897,7 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
     if (!script->hasAnalysis())
         return nullptr;
 
-    if (!script->analysis()->maybeCode(initpc))
+    if (!script->analysis()->isReachable(initpc))
         return nullptr;
 
     /*
@@ -3728,9 +3728,7 @@ JSScript::makeAnalysis(JSContext *cx)
 
     RootedScript self(cx, this);
 
-    self->types->analysis->analyzeBytecode(cx);
-
-    if (self->types->analysis->OOM()) {
+    if (!self->types->analysis->analyzeBytecode(cx)) {
         self->types->analysis = nullptr;
         return false;
     }
@@ -4073,7 +4071,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
     return type;
 }
 
-#if defined(JSGC_GENERATIONAL) and defined(JS_GC_ZEAL)
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
 void
 JSCompartment::checkNewTypeObjectTableAfterMovingGC()
 {

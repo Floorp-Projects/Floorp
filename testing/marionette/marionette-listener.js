@@ -89,7 +89,7 @@ let modalHandler = function() {
 };
 
 /**
- * Called when listener is first started up. 
+ * Called when listener is first started up.
  * The listener sends its unique window ID and its current URI to the actor.
  * If the actor returns an ID, we start the listeners. Otherwise, nothing happens.
  */
@@ -162,7 +162,7 @@ function startListeners() {
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:screenShot", screenShot);
   addMessageListenerId("Marionette:addCookie", addCookie);
-  addMessageListenerId("Marionette:getAllCookies", getAllCookies);
+  addMessageListenerId("Marionette:getCookies", getCookies);
   addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
   addMessageListenerId("Marionette:deleteCookie", deleteCookie);
 }
@@ -198,7 +198,7 @@ function newSession(msg) {
     inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
   }
 }
- 
+
 /**
  * Puts the current session to sleep, so all listeners are removed except
  * for the 'restart' listener. This is used to keep the content listener
@@ -262,7 +262,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:screenShot", screenShot);
   removeMessageListenerId("Marionette:addCookie", addCookie);
-  removeMessageListenerId("Marionette:getAllCookies", getAllCookies);
+  removeMessageListenerId("Marionette:getCookies", getCookies);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookie);
   if (isB2G) {
@@ -276,7 +276,7 @@ function deleteSession(msg) {
 }
 
 /*
- * Helper methods 
+ * Helper methods
  */
 
 /**
@@ -471,7 +471,7 @@ function executeScript(msg, directInject) {
   try {
     if (directInject) {
       if (importedScripts.exists()) {
-        let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
+        let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].
                       createInstance(Components.interfaces.nsIFileInputStream);
         stream.init(importedScripts, -1, 0, 0);
         let data = NetUtil.readInputStreamToString(stream, stream.available());
@@ -502,7 +502,7 @@ function executeScript(msg, directInject) {
       script = "let __marionetteFunc = function(){" + script + "};" +
                    "__marionetteFunc.apply(null, __marionetteParams);";
       if (importedScripts.exists()) {
-        let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
+        let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].
                       createInstance(Components.interfaces.nsIFileInputStream);
         stream.init(importedScripts, -1, 0, 0);
         let data = NetUtil.readInputStreamToString(stream, stream.available());
@@ -555,10 +555,10 @@ function executeJSScript(msg) {
 
 /**
  * This function is used by executeAsync and executeJSScript to execute a script
- * in a sandbox. 
- * 
+ * in a sandbox.
+ *
  * For executeJSScript, it will return a message only when the finish() method is called.
- * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1] 
+ * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1]
  * method is called, or if it times out.
  */
 function executeWithCallback(msg, useFinish) {
@@ -914,7 +914,7 @@ function createATouch(el, corx, cory, touchId) {
 
 /**
  * Function to emit touch events for each finger. e.g. finger=[['press', id], ['wait', 5], ['release']]
- * touchId represents the finger id, i keeps track of the current action of the chain 
+ * touchId represents the finger id, i keeps track of the current action of the chain
  */
 function actions(chain, touchId, command_id, i) {
   if (typeof i === "undefined") {
@@ -993,7 +993,7 @@ function actions(chain, touchId, command_id, i) {
 }
 
 /**
- * Function to start action chain on one finger 
+ * Function to start action chain on one finger
  */
 function actionChain(msg) {
   let command_id = msg.json.command_id;
@@ -1251,7 +1251,7 @@ function getTitle(msg) {
 }
 
 /**
- * Get the current page source 
+ * Get the current page source
  */
 function getPageSource(msg) {
   var XMLSerializer = curFrame.XMLSerializer;
@@ -1260,7 +1260,7 @@ function getPageSource(msg) {
 }
 
 /**
- * Go back in history 
+ * Go back in history
  */
 function goBack(msg) {
   curFrame.history.back();
@@ -1268,7 +1268,7 @@ function goBack(msg) {
 }
 
 /**
- * Go forward in history 
+ * Go forward in history
  */
 function goForward(msg) {
   curFrame.history.forward();
@@ -1289,7 +1289,7 @@ function refresh(msg) {
 }
 
 /**
- * Find an element in the document using requested search strategy 
+ * Find an element in the document using requested search strategy
  */
 function findElementContent(msg) {
   let command_id = msg.json.command_id;
@@ -1305,7 +1305,7 @@ function findElementContent(msg) {
 }
 
 /**
- * Find elements in the document using requested search strategy 
+ * Find elements in the document using requested search strategy
  */
 function findElementsContent(msg) {
   let command_id = msg.json.command_id;
@@ -1753,7 +1753,7 @@ function switchToFrame(msg) {
     if (curFrame.document.readyState == "complete") {
       sendOk(command_id);
       return;
-    } 
+    }
     else if (curFrame.document.readyState == "interactive" && errorRegex.exec(curFrame.document.baseURI)) {
       sendError("Error loading page", 13, null, command_id);
       return;
@@ -1772,7 +1772,7 @@ function switchToFrame(msg) {
                       .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   } catch (e) {
     // We probably have a dead compartment so accessing it is going to make Firefox
-    // very upset. Let's now try redirect everything to the top frame even if the 
+    // very upset. Let's now try redirect everything to the top frame even if the
     // user has given us a frame since search doesnt look up.
     msg.json.id = null;
     msg.json.element = null;
@@ -1801,7 +1801,7 @@ function switchToFrame(msg) {
       for (let i = 0; i < frames.length; i++) {
         // use XPCNativeWrapper to compare elements; see bug 834266
         if (XPCNativeWrapper(frames[i]) == XPCNativeWrapper(wantedFrame)) {
-          curFrame = frames[i]; 
+          curFrame = frames[i];
           foundFrame = i;
         }
       }
@@ -1908,9 +1908,9 @@ function addCookie(msg) {
 }
 
 /**
- * Get All the cookies for a location
+ * Get all cookies for the current domain.
  */
-function getAllCookies(msg) {
+function getCookies(msg) {
   var toReturn = [];
   var cookies = getVisibleCookies(curFrame.location);
   for (var i = 0; i < cookies.length; i++) {
@@ -2002,7 +2002,7 @@ function getVisibleCookies(location) {
 function getAppCacheStatus(msg) {
   sendResponse({ value: curFrame.applicationCache.status },
                msg.json.command_id);
-} 
+}
 
 // emulator callbacks
 let _emu_cb_id = 0;
@@ -2128,4 +2128,3 @@ function screenShot(msg) {
 
 //call register self when we get loaded
 registerSelf();
-

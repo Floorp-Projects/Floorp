@@ -126,7 +126,7 @@ Shape::removeChild(Shape *child)
 }
 
 Shape *
-PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
+PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, const StackShape &child)
 {
     {
         Shape *shape = nullptr;
@@ -189,7 +189,7 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, uint32_t nfixed, co
     if (!shape)
         return nullptr;
 
-    new (shape) Shape(child, nfixed);
+    new (shape) Shape(child, child.numFixedSlots());
 
     if (!insertChild(cx, parent, shape))
         return nullptr;
