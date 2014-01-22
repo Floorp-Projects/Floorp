@@ -162,10 +162,15 @@ public:
         : mLog(LogOptions::NoNewline),
           mPrefix(aPrefix),
           mDepth(0),
-          mStartOfLine(true) {}
+          mStartOfLine(true),
+          mConditionedOnPref(false),
+          mPref(nullptr) {}
 
   template <typename T>
   TreeLog& operator<<(const T& aObject) {
+    if (mConditionedOnPref && !*mPref) {
+      return *this;
+    }
     if (mStartOfLine) {
       mLog << '[' << mPrefix << "] " << std::string(mDepth * INDENT_PER_LEVEL, ' ');
       mStartOfLine = false;
@@ -182,11 +187,18 @@ public:
 
   void IncreaseIndent() { ++mDepth; }
   void DecreaseIndent() { --mDepth; }
+
+  void ConditionOnPref(bool* aPref) {
+    mConditionedOnPref = true;
+    mPref = aPref;
+  }
 private:
   Log<LOG_DEBUG> mLog;
   std::string mPrefix;
   uint32_t mDepth;
   bool mStartOfLine;
+  bool mConditionedOnPref;
+  bool* mPref;
 
   template <typename T>
   static bool EndsInNewline(const T& aObject) {
