@@ -363,15 +363,15 @@ JSObject::getChildPropertyOnDictionary(ThreadSafeContext *cx, JS::HandleObject o
 
     if (obj->inDictionaryMode()) {
         JS_ASSERT(parent == obj->lastProperty());
-        StackShape::AutoRooter childRoot(cx, &child);
+        RootedGeneric<StackShape*> childRoot(cx, &child);
         shape = js_NewGCShape(cx);
         if (!shape)
             return nullptr;
-        if (child.hasSlot() && child.slot() >= obj->lastProperty()->base()->slotSpan()) {
-            if (!JSObject::setSlotSpan(cx, obj, child.slot() + 1))
+        if (childRoot->hasSlot() && childRoot->slot() >= obj->lastProperty()->base()->slotSpan()) {
+            if (!JSObject::setSlotSpan(cx, obj, childRoot->slot() + 1))
                 return nullptr;
         }
-        shape->initDictionaryShape(child, obj->numFixedSlots(), &obj->shape_);
+        shape->initDictionaryShape(*childRoot, obj->numFixedSlots(), &obj->shape_);
     }
 
     return shape;
@@ -379,13 +379,13 @@ JSObject::getChildPropertyOnDictionary(ThreadSafeContext *cx, JS::HandleObject o
 
 /* static */ Shape *
 JSObject::getChildProperty(ExclusiveContext *cx,
-                           HandleObject obj, HandleShape parent, StackShape &child)
+                           HandleObject obj, HandleShape parent, StackShape &unrootedChild)
 {
-    StackShape::AutoRooter childRoot(cx, &child);
-    RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, child));
+    RootedGeneric<StackShape*> child(cx, &unrootedChild);
+    RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, *child));
 
     if (!obj->inDictionaryMode()) {
-        shape = cx->compartment()->propertyTree.getChild(cx, parent, child);
+        shape = cx->compartment()->propertyTree.getChild(cx, parent, *child);
         if (!shape)
             return nullptr;
         //JS_ASSERT(shape->parent == parent);
@@ -399,15 +399,15 @@ JSObject::getChildProperty(ExclusiveContext *cx,
 
 /* static */ Shape *
 JSObject::lookupChildProperty(ThreadSafeContext *cx,
-                              HandleObject obj, HandleShape parent, StackShape &child)
+                              HandleObject obj, HandleShape parent, StackShape &unrootedChild)
 {
-    StackShape::AutoRooter childRoot(cx, &child);
+    RootedGeneric<StackShape*> child(cx, &unrootedChild);
     JS_ASSERT(cx->isThreadLocal(obj));
 
-    RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, child));
+    RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, *child));
 
     if (!obj->inDictionaryMode()) {
-        shape = cx->compartment_->propertyTree.lookupChild(cx, parent, child);
+        shape = cx->compartment_->propertyTree.lookupChild(cx, parent, *child);
         if (!shape)
             return nullptr;
         if (!JSObject::setLastProperty(cx, obj, shape))
