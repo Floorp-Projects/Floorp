@@ -1171,7 +1171,7 @@ SocialStatus = {
     if (inMenuPanel) {
       panel = document.getElementById("PanelUI-socialapi");
       this._attachNotificatonPanel(panel, aToolbarButton, provider);
-      widget.node.setAttribute("noautoclose", "true");
+      widget.node.setAttribute("closemenu", "none");
       showingEvent = "ViewShowing";
       hidingEvent = "ViewHiding";
     } else {

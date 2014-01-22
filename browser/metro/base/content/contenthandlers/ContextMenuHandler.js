@@ -105,6 +105,8 @@ var ContextMenuHandler = {
     if (Util.isTextInput(this._target)) {
       // select all text in the input control
       this._target.select();
+    } else if (Util.isEditableContent(this._target)) {
+      this._target.ownerDocument.execCommand("selectAll", false);
     } else {
       // select the entire document
       content.getSelection().selectAllChildren(content.document);
@@ -121,7 +123,7 @@ var ContextMenuHandler = {
       } else {
         Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
       }
-    } else if (this._target.isContentEditable) {
+    } else if (Util.isEditableContent(this._target)) {
       try {
         this._target.ownerDocument.execCommand("paste",
                                                false,
@@ -145,7 +147,7 @@ var ContextMenuHandler = {
       } else {
         Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
       }
-    } else if (this._target.isContentEditable) {
+    } else if (Util.isEditableContent(this._target)) {
       try {
         this._target.ownerDocument.execCommand("cut", false);
       } catch (ex) {
@@ -259,7 +261,9 @@ var ContextMenuHandler = {
           break;
         }
         // is the target contentEditable (not just inheriting contentEditable)
-        else if (elem.contentEditable == "true") {
+        // or the entire document in designer mode.
+        else if (elem.contentEditable == "true" ||
+                 Util.isOwnerDocumentInDesignMode(elem)) {
           this._target = elem;
           isEditableText = true;
           isText = true;
