@@ -304,6 +304,9 @@ pref("media.audio_data.enabled", false);
 // 2 = STICKY (Allow lock to be broken, with hysteresis)
 pref("apz.axis_lock_mode", 0);
 
+// Whether to print the APZC tree for debugging
+pref("apz.printtree", false);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
