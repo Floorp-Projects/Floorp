@@ -15,6 +15,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
 
 /**
@@ -362,5 +363,27 @@ public class ExtendedJSONObject {
         throw new BadRequiredFieldJSONException("Value for key not an instance of " + requiredFieldClass + ": " + k);
       }
     }
+  }
+
+  /**
+   * Return a base64-encoded string value as a byte array.
+   */
+  public byte[] getByteArrayBase64(String key) {
+    String s = (String) this.object.get(key);
+    if (s == null) {
+      return null;
+    }
+    return Base64.decodeBase64(s);
+  }
+
+  /**
+   * Return a hex-encoded string value as a byte array.
+   */
+  public byte[] getByteArrayHex(String key) {
+    String s = (String) this.object.get(key);
+    if (s == null) {
+      return null;
+    }
+    return Utils.hex2Byte(s);
   }
 }
