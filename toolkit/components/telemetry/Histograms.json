@@ -5620,5 +5620,29 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Is OCSP required when the cert has an OCSP URI? (pref security.OCSP.require)"
+  },
+  "OSFILE_WORKER_LAUNCH_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "description": "The duration between the instant the first message is sent to OS.File and the moment the OS.File worker starts executing JavaScript, in milliseconds",
+    "high": "5000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true
+  },
+  "OSFILE_WORKER_READY_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "description": "The duration between the instant the first message is sent to OS.File and the moment the OS.File worker has finished executing its startup JavaScript and is ready to receive requests, in milliseconds",
+    "high": "5000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true
+  },
+  "OSFILE_WRITEATOMIC_JANK_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "description": "The duration during which the main thread is blocked during a call to OS.File.writeAtomic, in milliseconds",
+    "high": "5000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true
   }
 }
