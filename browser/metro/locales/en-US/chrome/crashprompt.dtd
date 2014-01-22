@@ -8,6 +8,13 @@
 <!ENTITY crashprompt.detailsLink     "What's in a crash report?">
 <!ENTITY crashprompt.detailedMessage.firstParagraph "A crash report contains some details about the crash, your machine, as well as a snapshot of the state of your browser when it crashed.">
 <!ENTITY crashprompt.detailedMessage.secondParagraph "This may include things like open pages, text typed into forms and the content of open messages, recent browsing history, or geolocation shared with a site.">
+<!-- LOCALIZATION NOTE (crashprompt.detailedMessage.thirdParagraph, crashprompt.privacyPolicyLink):
+     These two entities form a single sentence. crashprompt.privacyPolicyLink is a
+     clickable link that must follow crashprompt.detailedMessage.thirdParagraph.
+     If the structure of the English strings doesn't work for your locale, you can
+     move "&brandShortName; privacy policy." to the first sentence, and use a
+     generic "More information" for the link. These strings will be updated in the
+     next version of Firefox. -->
 <!ENTITY crashprompt.detailedMessage.thirdParagraph "We use crash reports to try to fix problems and improve our products. We handle your information as we describe in our ">
 <!ENTITY crashprompt.privacyPolicyLink "&brandShortName; privacy policy">
 <!ENTITY crashprompt.includeURLLabel "Include the address of the page I was on">
