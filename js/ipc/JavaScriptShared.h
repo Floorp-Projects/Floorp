@@ -75,7 +75,7 @@ class ObjectIdCache
     void remove(JSObject *obj);
 
   private:
-    static void keyMarkCallback(JSTracer *trc, void *key, void *data);
+    static void keyMarkCallback(JSTracer *trc, JSObject *key, void *data);
 
     ObjectIdTable *table_;
 };

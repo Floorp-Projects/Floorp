@@ -876,6 +876,13 @@ bool OmxDecoder::ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, 
   return true;
 }
 
+class ReadOptions : public MediaSource::ReadOptions
+{
+  // HTC have their own version of ReadOptions with extra fields. If we don't
+  // have this here, HTCOMXCodec will corrupt our stack.
+  uint32_t sadface[4];
+};
+
 bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs,
                            BufferCallback *aBufferCallback)
 {
@@ -889,7 +896,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs,
   status_t err;
 
   if (aSeekTimeUs != -1) {
-    MediaSource::ReadOptions options;
+    ReadOptions options;
     options.setSeekTo(aSeekTimeUs);
     err = mVideoSource->read(&mVideoBuffer, &options);
   } else {
@@ -953,7 +960,7 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
   else {
     ReleaseAudioBuffer();
     if (aSeekTimeUs != -1) {
-      MediaSource::ReadOptions options;
+      ReadOptions options;
       options.setSeekTo(aSeekTimeUs);
       err = mAudioSource->read(&mAudioBuffer, &options);
     } else {

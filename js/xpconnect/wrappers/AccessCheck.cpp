@@ -263,12 +263,7 @@ AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
     JSObject* wrapper = obj;
     if (dom::GetSameCompartmentWrapperForDOMBinding(wrapper))
         return wrapper != obj;
-
-    if (!IS_WN_REFLECTOR(obj))
-        return false;
-
-    XPCWrappedNative *wn = XPCWrappedNative::Get(obj);
-    return wn->NeedsSOW();
+    return false;
 }
 
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };

@@ -938,15 +938,23 @@ nsJSObjWrapper::NP_Construct(NPObject *npobj, const NPVariant *args,
 /*
  * This function is called during minor GCs for each key in the sJSObjWrappers
  * table that has been moved.
+ *
+ * Note that the wrapper may be dead at this point, and even the table may have
+ * been finalized if all wrappers have died.
  */
 static void
-JSObjWrapperKeyMarkCallback(JSTracer *trc, void *key, void *data) {
-  JSObject *obj = static_cast<JSObject*>(key);
-  nsJSObjWrapper* wrapper = static_cast<nsJSObjWrapper*>(data);
+JSObjWrapperKeyMarkCallback(JSTracer *trc, JSObject *obj, void *data) {
+  NPP npp = static_cast<NPP>(data);
+  if (!sJSObjWrappers.initialized())
+    return;
+
   JSObject *prior = obj;
-  JS_CallObjectTracer(trc, &obj, "sJSObjWrappers key object");
-  NPP npp = wrapper->mNpp;
   nsJSObjWrapperKey oldKey(prior, npp);
+  JSObjWrapperTable::Ptr p = sJSObjWrappers.lookup(oldKey);
+  if (!p)
+    return;
+
+  JS_CallObjectTracer(trc, &obj, "sJSObjWrappers key object");
   nsJSObjWrapperKey newKey(obj, npp);
   sJSObjWrappers.rekeyIfMoved(oldKey, newKey);
 }
@@ -1048,7 +1056,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
   }
 
   // Add postbarrier for the hashtable key
-  JS_StoreObjectPostBarrierCallback(cx, JSObjWrapperKeyMarkCallback, obj, wrapper);
+  JS_StoreObjectPostBarrierCallback(cx, JSObjWrapperKeyMarkCallback, obj, wrapper->mNpp);
 
   return wrapper;
 }

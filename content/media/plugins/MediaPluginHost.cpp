@@ -152,10 +152,7 @@ static const char* GetOmxLibraryName()
     return nullptr;
 
 #if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  /*
   if (version >= 19) {
-  */
-  if (version >= 16) {
     return "libomxpluginkk.so";
   }
   else if (version == 13 || version == 12 || version == 11) {
