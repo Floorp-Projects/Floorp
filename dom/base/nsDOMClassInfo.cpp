@@ -3408,7 +3408,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  // WebIDL quickstubs handle location for us, but Xrays don't see those.  So if
+  // WebIDL quickstubs handle "top" for us, but Xrays don't see those.  So if
   // we're an Xray and we want "top" to be JSPROP_PERMANENT, we need to resolve
   // it here.
   if (sTop_id == id && isXray) {
