@@ -213,14 +213,14 @@ ImageLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique;
   nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+  nsRefPtr<gfxASurface> surf = image->DeprecatedGetAsSurface();
 
   if (image->GetFormat() == ImageFormat::CAIRO_SURFACE ||
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE ||
       image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
-                 !static_cast<CairoImage*>(image)->DeprecatedGetAsSurface().get() ||
-                 static_cast<CairoImage*>(image)->DeprecatedGetAsSurface().get()->GetContentType() != GFX_CONTENT_ALPHA,
+                 !surf || surf->GetContentType() != GFX_CONTENT_ALPHA,
                  "Image layer has alpha image");
     bool hasAlpha = false;
 
