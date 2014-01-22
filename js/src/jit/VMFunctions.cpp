@@ -188,24 +188,14 @@ SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, Handle
 }
 
 bool
-MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value)
-{
-    // Copy the incoming value. This may be overwritten; the return value is discarded.
-    RootedValue rval(cx, value);
-
-    RootedId id(cx, NameToId(cx->names().proto));
-    return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval, false);
-}
-
-bool
 InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value)
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
     RootedValue rval(cx, value);
     RootedId id(cx, NameToId(name));
 
-    MOZ_ASSERT(name != cx->names().proto,
-               "__proto__ should have been handled by JSOP_MUTATEPROTO");
+    if (name == cx->names().proto)
+        return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval, false);
     return DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE, 0, 0, 0);
 }
 

@@ -5912,16 +5912,6 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-        /* Handle __proto__ specially because it's not binary. */
-        if (pn2->isKind(PNK_MUTATEPROTO)) {
-            if (!EmitTree(cx, bce, pn2->pn_kid))
-                return false;
-            obj = nullptr;
-            if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
-                return false;
-            continue;
-        }
-
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *pn3 = pn2->pn_left;
         bool isIndex = false;
@@ -5970,9 +5960,12 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!bce->makeAtomIndex(pn3->pn_atom, &index))
                 return false;
 
-            MOZ_ASSERT((op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER) ||
-                        pn3->pn_atom != cx->names().proto,
-                       "__proto__ shouldn't have been generated as an initprop");
+            /*
+             * Disable NEWOBJECT on initializers that set __proto__, which has
+             * a non-standard setter on objects.
+             */
+            if (pn3->pn_atom == cx->names().proto)
+                obj = nullptr;
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());

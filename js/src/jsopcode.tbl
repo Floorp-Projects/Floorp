@@ -410,8 +410,7 @@ OPDEF(JSOP_UNUSED192,     192,"unused192",   NULL,    1,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC)
 
-/* __proto__: v inside an object initializer. */
-OPDEF(JSOP_MUTATEPROTO,   194, "mutateproto",NULL,    1,  2,  1, JOF_BYTE)
+OPDEF(JSOP_UNUSED194,     194,"unused194",   NULL,    1,  0,  0,  JOF_BYTE)
 
 /*
  * Get an extant property value, throwing ReferenceError if the identified

@@ -600,26 +600,6 @@ class LInitElemGetterSetter : public LCallInstructionHelper<0, 2 + BOX_PIECES, 0
 };
 
 // Takes in an Object and a Value.
-class LMutateProto : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(MutateProto)
-
-    LMutateProto(const LAllocation &object) {
-        setOperand(0, object);
-    }
-
-    static const size_t ValueIndex = 1;
-
-    const LAllocation *getObject() {
-        return getOperand(0);
-    }
-    const LAllocation *getValue() {
-        return getOperand(1);
-    }
-};
-
-// Takes in an Object and a Value.
 class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
   public:

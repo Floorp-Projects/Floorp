@@ -113,7 +113,6 @@ class SyntaxParseHandler
     bool addArrayElement(Node literal, Node element) { return true; }
 
     Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
-    bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
     bool addShorthandPropertyDefinition(Node literal, Node name) { return true; }
     bool addAccessorPropertyDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
