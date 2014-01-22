@@ -164,10 +164,6 @@
 #include "FMRadio.h"
 #endif
 
-#ifdef MOZ_B2G_BT
-#include "BluetoothDevice.h"
-#endif
-
 #include "nsIDOMCameraManager.h"
 #include "nsIDOMGlobalObjectConstructor.h"
 #include "nsIDOMLockedFile.h"
@@ -486,11 +482,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-#ifdef MOZ_B2G_BT
-  NS_DEFINE_CLASSINFO_DATA(BluetoothDevice, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(CameraCapabilities, nsDOMGenericSH,
@@ -1201,12 +1192,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-#endif
-
-#ifdef MOZ_B2G_BT
-  DOM_CLASSINFO_MAP_BEGIN(BluetoothDevice, nsIDOMBluetoothDevice)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothDevice)
-  DOM_CLASSINFO_MAP_END
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN(CameraCapabilities, nsICameraCapabilities)
@@ -3356,46 +3341,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return DefineComponentsShim(cx, obj, win);
   }
 
-  nsIScriptContext *my_context = win->GetContextInternal();
-
   // Don't resolve standard classes on XrayWrappers, only resolve them if we're
   // resolving on the real global object.
-  if (!xpc::WrapperFactory::IsXrayWrapper(obj)) {
+  bool isXray = xpc::WrapperFactory::IsXrayWrapper(obj);
+  if (!isXray) {
     bool did_resolve = false;
-    bool ok = true;
-    JS::Rooted<JS::Value> exn(cx, JSVAL_VOID);
-
-    {
-      // Resolve standard classes on my_context's JSContext (or on cx,
-      // if we don't have a my_context yet), in case the two contexts
-      // have different origins.  We want lazy standard class
-      // initialization to behave as if it were done eagerly, on each
-      // window's own context (not on some other window-caller's
-      // context).
-      AutoPushJSContext my_cx(my_context ? my_context->GetNativeContext() : cx);
-      JSAutoCompartment ac(my_cx, obj);
-
-      ok = JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
-
-      if (!ok) {
-        // Trust the JS engine (or the script security manager) to set
-        // the exception in the JS engine.
-
-        if (!JS_GetPendingException(my_cx, &exn)) {
-          return NS_ERROR_UNEXPECTED;
-        }
-
-        // Return NS_OK to avoid stomping over the exception that was passed
-        // down from the ResolveStandardClass call.
-        // Note that the order of the JS_ClearPendingException and
-        // JS_SetPendingException is important in the case that my_cx == cx.
-
-        JS_ClearPendingException(my_cx);
-      }
-    }
-
-    if (!ok) {
-      JS_SetPendingException(cx, exn);
+    if (!JS_ResolveStandardClass(cx, obj, id, &did_resolve)) {
+      // Return NS_OK to avoid stomping over the exception that was passed
+      // down from the ResolveStandardClass call.
       *_retval = false;
       return NS_OK;
     }
@@ -3406,14 +3359,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  if (!my_context || !my_context->IsContextInitialized()) {
-    // The context is not yet initialized so there's nothing we can do
-    // here yet.
-
-    return NS_OK;
-  }
-
-  if (sLocation_id == id) {
+  // WebIDL quickstubs handle location for us, but Xrays don't see those.  So if
+  // we're an Xray, we have to resolve stuff here to make "window.location =
+  // someString" work.
+  if (sLocation_id == id && isXray) {
     // This must be done even if we're just getting the value of
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
     // here) since we must define window.location to prevent the
@@ -3444,7 +3393,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  if (sTop_id == id) {
+  // WebIDL quickstubs handle "top" for us, but Xrays don't see those.  So if
+  // we're an Xray and we want "top" to be JSPROP_PERMANENT, we need to resolve
+  // it here.
+  if (sTop_id == id && isXray) {
     nsCOMPtr<nsIDOMWindow> top;
     nsresult rv = win->GetScriptableTop(getter_AddRefs(top));
     NS_ENSURE_SUCCESS(rv, rv);

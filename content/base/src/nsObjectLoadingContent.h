@@ -156,7 +156,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Helper for WebIDL newResolve
     bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                       JS::Handle<jsid> aId,
-                      JS::MutableHandle<JS::Value> aValue);
+                      JS::MutableHandle<JSPropertyDescriptor> aDesc);
     // Helper for WebIDL enumeration
     void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& /* unused */,
                              mozilla::ErrorResult& aRv);

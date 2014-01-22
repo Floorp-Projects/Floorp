@@ -195,7 +195,7 @@ public:
   DeallocPGrallocBufferChild(PGrallocBufferChild* actor) MOZ_OVERRIDE;
 
   virtual PTextureChild*
-  AllocPTextureChild() MOZ_OVERRIDE;
+  AllocPTextureChild(const SurfaceDescriptor& aSharedData, const TextureFlags& aFlags) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
@@ -372,7 +372,8 @@ public:
    */
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem);
 
-  virtual PTextureChild* CreateEmptyTextureChild() MOZ_OVERRIDE;
+  virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
+                                       TextureFlags aFlags) MOZ_OVERRIDE;
 
 protected:
   ImageBridgeChild();

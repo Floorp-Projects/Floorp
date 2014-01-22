@@ -620,7 +620,7 @@ JSObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveConte
                 return nullptr;
         }
 
-        StackShape child(nbase, id, slot, obj->numFixedSlots(), attrs, flags, shortid);
+        StackShape child(nbase, id, slot, attrs, flags, shortid);
         shape = getOrLookupChildProperty<mode>(cx, obj, last, child);
     }
 
@@ -704,7 +704,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
                 return nullptr;
         }
 
-        StackShape child(nbase, id, i, res->numFixedSlots(), JSPROP_ENUMERATE, 0, 0);
+        StackShape child(nbase, id, i, JSPROP_ENUMERATE, 0, 0);
         newShape = cx->compartment()->propertyTree.getChild(cx, newShape, child);
         if (!newShape)
             return nullptr;
@@ -840,7 +840,7 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
      * Now that we've possibly preserved slot, check whether all members match.
      * If so, this is a redundant "put" and we can return without more work.
      */
-    if (shape->matchesParamsAfterId(nbase, slot, obj->numFixedSlots(), attrs, flags, shortid))
+    if (shape->matchesParamsAfterId(nbase, slot, attrs, flags, shortid))
         return shape;
 
     /*
@@ -901,7 +901,7 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
         JS_ASSERT(shape == obj->lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        StackShape child(nbase, id, slot, obj->numFixedSlots(), attrs, flags, shortid);
+        StackShape child(nbase, id, slot, attrs, flags, shortid);
         RootedShape parent(cx, shape->parent);
         Shape *newShape = getOrLookupChildProperty<mode>(cx, obj, parent, child);
 

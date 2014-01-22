@@ -126,70 +126,68 @@ Shape::removeChild(Shape *child)
 }
 
 Shape *
-PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, const StackShape &child)
+PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, const StackShape &child)
 {
-    {
-        Shape *shape = nullptr;
+    RootedShape parent(cx, parentArg);
+    JS_ASSERT(parent);
 
-        JS_ASSERT(parent_);
+    Shape *existingShape = nullptr;
 
-        /*
-         * The property tree has extremely low fan-out below its root in
-         * popular embeddings with real-world workloads. Patterns such as
-         * defining closures that capture a constructor's environment as
-         * getters or setters on the new object that is passed in as
-         * |this| can significantly increase fan-out below the property
-         * tree root -- see bug 335700 for details.
-         */
-        KidsPointer *kidp = &parent_->kids;
-        if (kidp->isShape()) {
-            Shape *kid = kidp->toShape();
-            if (kid->matches(child))
-                shape = kid;
-        } else if (kidp->isHash()) {
-            if (KidsHash::Ptr p = kidp->toHash()->lookup(child))
-                shape = *p;
-        } else {
-            /* If kidp->isNull(), we always insert. */
-        }
-
-#ifdef JSGC_INCREMENTAL
-        if (shape) {
-            JS::Zone *zone = shape->zone();
-            if (zone->needsBarrier()) {
-                /*
-                 * We need a read barrier for the shape tree, since these are weak
-                 * pointers.
-                 */
-                Shape *tmp = shape;
-                MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
-                JS_ASSERT(tmp == shape);
-            } else if (zone->isGCSweeping() && !shape->isMarked() &&
-                       !shape->arenaHeader()->allocatedDuringIncremental)
-            {
-                /*
-                 * The shape we've found is unreachable and due to be finalized, so
-                 * remove our weak reference to it and don't use it.
-                 */
-                JS_ASSERT(parent_->isMarked());
-                parent_->removeChild(shape);
-                shape = nullptr;
-            }
-        }
-#endif
-
-        if (shape)
-            return shape;
+    /*
+     * The property tree has extremely low fan-out below its root in
+     * popular embeddings with real-world workloads. Patterns such as
+     * defining closures that capture a constructor's environment as
+     * getters or setters on the new object that is passed in as
+     * |this| can significantly increase fan-out below the property
+     * tree root -- see bug 335700 for details.
+     */
+    KidsPointer *kidp = &parent->kids;
+    if (kidp->isShape()) {
+        Shape *kid = kidp->toShape();
+        if (kid->matches(child))
+            existingShape = kid;
+    } else if (kidp->isHash()) {
+        if (KidsHash::Ptr p = kidp->toHash()->lookup(child))
+            existingShape = *p;
+    } else {
+        /* If kidp->isNull(), we always insert. */
     }
 
+#ifdef JSGC_INCREMENTAL
+    if (existingShape) {
+        JS::Zone *zone = existingShape->zone();
+        if (zone->needsBarrier()) {
+            /*
+             * We need a read barrier for the shape tree, since these are weak
+             * pointers.
+             */
+            Shape *tmp = existingShape;
+            MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
+            JS_ASSERT(tmp == existingShape);
+        } else if (zone->isGCSweeping() && !existingShape->isMarked() &&
+                   !existingShape->arenaHeader()->allocatedDuringIncremental)
+        {
+            /*
+             * The shape we've found is unreachable and due to be finalized, so
+             * remove our weak reference to it and don't use it.
+             */
+            JS_ASSERT(parent->isMarked());
+            parent->removeChild(existingShape);
+            existingShape = nullptr;
+        }
+    }
+#endif
+
+    if (existingShape)
+        return existingShape;
+
     StackShape::AutoRooter childRoot(cx, &child);
-    RootedShape parent(cx, parent_);
 
     Shape *shape = newShape(cx);
     if (!shape)
         return nullptr;
 
-    new (shape) Shape(child, child.numFixedSlots());
+    new (shape) Shape(child, parent->numFixedSlots());
 
     if (!insertChild(cx, parent, shape))
         return nullptr;

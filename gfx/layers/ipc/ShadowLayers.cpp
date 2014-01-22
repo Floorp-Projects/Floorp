@@ -963,9 +963,10 @@ void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
 }
 
 PTextureChild*
-ShadowLayerForwarder::CreateEmptyTextureChild()
+ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                    TextureFlags aFlags)
 {
-  return mShadowManager->SendPTextureConstructor();
+  return mShadowManager->SendPTextureConstructor(aSharedData, aFlags);
 }
 
 
