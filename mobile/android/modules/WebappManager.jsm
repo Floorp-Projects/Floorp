@@ -96,7 +96,7 @@ this.WebappManager = {
       // aData.app.origin may now point to the app: url that hosts this app.
       sendMessageToJava({
         type: "WebApps:PostInstall",
-        packageName: aData.app.packageName,
+        apkPackageName: aData.app.apkPackageName,
         origin: aData.app.origin,
       });
 
@@ -148,7 +148,7 @@ this.WebappManager = {
     // Thus, we should take the APK as the source of truth.
     message.app.manifestURL = aData.manifestUrl;
     message.app.manifest = aData.manifest;
-    message.app.packageName = aData.packageName;
+    message.app.apkPackageName = aData.apkPackageName;
     message.profilePath = aData.profilePath;
     message.autoInstall = true;
     message.mm = mm;
@@ -172,12 +172,12 @@ this.WebappManager = {
         dump("autoUninstall sendAsyncMessage " + aMessageName + ": " + JSON.stringify(aData));
       }
     };
-    let installedPackages = {};
-    DOMApplicationRegistry.doGetAll(installedPackages, mm);
+    let installed = {};
+    DOMApplicationRegistry.doGetAll(installed, mm);
 
-    for (let app in installedPackages.apps) {
-      if (aData.packages.indexOf(installedPackages.apps[app].packageName) > -1) {
-        let appToRemove = installedPackages.apps[app];
+    for (let app in installed.apps) {
+      if (aData.apkPackageNames.indexOf(installed.apps[app].apkPackageName) > -1) {
+        let appToRemove = installed.apps[app];
         dump("should remove: " + appToRemove.name);
         DOMApplicationRegistry.uninstall(appToRemove.manifestURL, function() {
           dump(appToRemove.name + " uninstalled");
