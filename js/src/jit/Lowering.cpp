@@ -270,16 +270,6 @@ LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter *ins)
 }
 
 bool
-LIRGenerator::visitMutateProto(MMutateProto *ins)
-{
-    LMutateProto *lir = new(alloc()) LMutateProto(useRegisterAtStart(ins->getObject()));
-    if (!useBoxAtStart(lir, LMutateProto::ValueIndex, ins->getValue()))
-        return false;
-
-    return add(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new(alloc()) LInitProp(useRegisterAtStart(ins->getObject()));

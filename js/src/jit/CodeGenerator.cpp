@@ -3670,21 +3670,6 @@ CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter *lir)
     return callVM(InitElemGetterSetterInfo, lir);
 }
 
-typedef bool(*MutatePrototypeFn)(JSContext *cx, HandleObject obj, HandleValue value);
-static const VMFunction MutatePrototypeInfo =
-    FunctionInfo<MutatePrototypeFn>(MutatePrototype);
-
-bool
-CodeGenerator::visitMutateProto(LMutateProto *lir)
-{
-    Register objReg = ToRegister(lir->getObject());
-
-    pushArg(ToValue(lir, LMutateProto::ValueIndex));
-    pushArg(objReg);
-
-    return callVM(MutatePrototypeInfo, lir);
-}
-
 typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
                           HandlePropertyName name, HandleValue value);
 static const VMFunction InitPropInfo =

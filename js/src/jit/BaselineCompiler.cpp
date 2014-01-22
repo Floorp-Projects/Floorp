@@ -1652,30 +1652,6 @@ BaselineCompiler::emit_JSOP_INITELEM()
     return true;
 }
 
-typedef bool (*MutateProtoFn)(JSContext *cx, HandleObject obj, HandleValue newProto);
-static const VMFunction MutateProtoInfo = FunctionInfo<MutateProtoFn>(MutatePrototype);
-
-bool
-BaselineCompiler::emit_JSOP_MUTATEPROTO()
-{
-    // Keep values on the stack for the decompiler.
-    frame.syncStack(0);
-
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
-
-    prepareVMCall();
-
-    pushArg(R1);
-    pushArg(R0.scratchReg());
-
-    if (!callVM(MutateProtoInfo))
-        return false;
-
-    frame.pop();
-    return true;
-}
-
 bool
 BaselineCompiler::emit_JSOP_INITPROP()
 {

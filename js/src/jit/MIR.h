@@ -1603,42 +1603,6 @@ class MAbortPar : public MAryControlInstruction<0, 0>
     }
 };
 
-// Setting __proto__ in an object literal.
-class MMutateProto
-  : public MAryInstruction<2>,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
-{
-  protected:
-    MMutateProto(MDefinition *obj, MDefinition *value)
-    {
-        setOperand(0, obj);
-        setOperand(1, value);
-        setResultType(MIRType_None);
-    }
-
-  public:
-    INSTRUCTION_HEADER(MutateProto)
-
-    static MMutateProto *New(TempAllocator &alloc, MDefinition *obj, MDefinition *value)
-    {
-        return new(alloc) MMutateProto(obj, value);
-    }
-
-    MDefinition *getObject() const {
-        return getOperand(0);
-    }
-    MDefinition *getValue() const {
-        return getOperand(1);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
 // Slow path for adding a property to an object without a known base.
 class MInitProp
   : public MAryInstruction<2>,

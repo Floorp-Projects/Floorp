@@ -235,14 +235,6 @@ class FullParseHandler
         return literal;
     }
 
-    bool addPrototypeMutation(ParseNode *literal, uint32_t begin, ParseNode *expr) {
-        ParseNode *mutation = newUnary(PNK_MUTATEPROTO, JSOP_NOP, begin, expr);
-        if (!mutation)
-            return false;
-        literal->append(mutation);
-        return true;
-    }
-
     bool addPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *expr) {
         ParseNode *propdef = newBinary(PNK_COLON, name, expr, JSOP_INITPROP);
         if (!propdef)

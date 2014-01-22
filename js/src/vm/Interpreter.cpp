@@ -1658,6 +1658,7 @@ CASE(JSOP_UNUSED189)
 CASE(JSOP_UNUSED190)
 CASE(JSOP_UNUSED191)
 CASE(JSOP_UNUSED192)
+CASE(JSOP_UNUSED194)
 CASE(JSOP_UNUSED196)
 CASE(JSOP_UNUSED201)
 CASE(JSOP_UNUSED205)
@@ -3099,28 +3100,6 @@ CASE(JSOP_ENDINIT)
 }
 END_CASE(JSOP_ENDINIT)
 
-CASE(JSOP_MUTATEPROTO)
-{
-    /* Load the new [[Prototype]] value into rval. */
-    MOZ_ASSERT(REGS.stackDepth() >= 2);
-    RootedValue &rval = rootValue0;
-    rval = REGS.sp[-1];
-
-    /* Load the object being initialized into lval/obj. */
-    RootedObject &obj = rootObject0;
-    obj = &REGS.sp[-2].toObject();
-    MOZ_ASSERT(obj->is<JSObject>());
-
-    RootedId &id = rootId0;
-    id = NameToId(cx->names().proto);
-
-    if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval, false))
-        goto error;
-
-    REGS.sp--;
-}
-END_CASE(JSOP_MUTATEPROTO);
-
 CASE(JSOP_INITPROP)
 {
     /* Load the property's initial value into rval. */
@@ -3138,8 +3117,13 @@ CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (!DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE, 0, 0, 0))
+    if (JS_UNLIKELY(name == cx->names().proto)
+        ? !baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval,
+                                                           script->strict())
+        : !DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr,
+                                JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
+    }
 
     REGS.sp--;
 }
