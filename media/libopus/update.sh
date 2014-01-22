@@ -43,7 +43,7 @@ for file in ${SRC_FILES}; do
 done
  
 # copy files into the target directory
-for file in ${STATIC_FILES} ${MK_FILES} ${SRC_FILES} ${HDR_FILES}; do
+for file in ${STATIC_FILES} ${SRC_FILES} ${HDR_FILES}; do
   cmd="cp $1/${file} ${TARGET}/${file}"
   echo ${cmd}
   ${cmd}
@@ -64,6 +64,8 @@ sed -e "s/^The git tag\/revision used was .*/The git tag\/revision used was ${ve
 sed -e "s/DEFINES\['OPUS_VERSION'\][ \t]*=[ \t]*'\".*\"'/DEFINES['OPUS_VERSION'] = '\"${version}-mozilla\"'/" \
     ${TARGET}/moz.build > ${TARGET}/moz.build+ && \
     mv ${TARGET}/moz.build+ ${TARGET}/moz.build
+
+python gen-sources.py $1
 
 # apply outstanding local patches
 # ... no patches to apply ...

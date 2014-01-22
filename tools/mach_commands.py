@@ -5,6 +5,10 @@
 from __future__ import unicode_literals
 
 import sys
+import os
+import stat
+import platform
+import urllib2
 
 from mach.decorators import (
     CommandArgument,
@@ -216,7 +220,6 @@ class PastebinProvider(object):
     def pastebin(self, language, poster, duration, file):
         import sys
         import urllib
-        import urllib2
 
         URL = 'http://pastebin.mozilla.org/'
 
@@ -306,3 +309,69 @@ class ReviewboardToolsProvider(MachCommandBase):
         # we fake it out.
         sys.argv = ['rbt'] + args
         return main()
+
+@CommandProvider
+class FormatProvider(MachCommandBase):
+    @Command('clang-format', category='devenv', allow_all_args=True,
+        description='Run clang-format on current changes')
+    @CommandArgument('args', nargs='...', help='Arguments to clang-format tool')
+    def clang_format(self, args):
+        if not args:
+            args = ['help']
+
+        fmt = "clang-format-3.5"
+        fmt_diff = "clang-format-diff-3.5"
+
+        # We are currently using a modified verion of clang-format hosted on people.mozilla.org.
+        # This is a temporary work around until we upstream the necessary changes and we can use
+        # a system version of clang-format. See bug 961541.
+        self.prompt = 1
+        plat = platform.system()
+        if plat == "Windows":
+            fmt += ".exe"
+        else:
+            arch = os.uname()[4]
+            if plat != "Linux" or arch != 'x86_64':
+                print("Unsupported platform " + plat + "/" + arch +
+                      ". Supported platforms are Windows/* and Linux/x86_64")
+                return 1
+
+        os.chdir(self.topsrcdir)
+
+        try:
+            if not self.locate_or_fetch(fmt):
+                return 1
+            clang_format_diff = self.locate_or_fetch(fmt_diff)
+            if not clang_format_diff:
+                return 1
+
+        except urllib2.HTTPError as e:
+            print("HTTP error {0}: {1}".format(e.code, e.reason))
+            return 1
+
+        from subprocess import Popen, PIPE
+        p1 = Popen(["hg", "diff", "-U0", "-r", "tip^", "--include", "glob:**.c", "--include", "glob:**.cpp",
+                   "--include", "glob:**.h", "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
+        p2 = Popen([sys.executable, clang_format_diff, "-i", "-p1", "-style=Mozilla"], stdin=p1.stdout)
+        return p2.communicate()[0]
+
+    def locate_or_fetch(self, root):
+        target = os.path.join(self._mach_context.state_dir, root)
+        if not os.path.exists(target):
+            site = "http://people.mozilla.org/~ajones/clang-format/"
+            if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(site)).lower() != 'y':
+                print("Download aborted.")
+                return 1
+            self.prompt = 0
+
+            u = site + root
+            print("Downloading {0} to {1}".format(u, target))
+            data = urllib2.urlopen(url=u).read()
+            temp = target + ".tmp"
+            with open(temp, "wb") as fh:
+                fh.write(data)
+                fh.close()
+            os.chmod(temp, os.stat(temp).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            os.rename(temp, target)
+        return target
+

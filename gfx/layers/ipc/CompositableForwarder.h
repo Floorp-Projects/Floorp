@@ -96,12 +96,9 @@ public:
                                        const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
-   * Create an unitialized TextureChild.
-   *
-   * This does not trigger the the creation of a TextureHost on the compositor
-   * side (see PTexture::Init).
+   * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
    */
-  virtual PTextureChild* CreateEmptyTextureChild() = 0;
+  virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData, TextureFlags aFlags) = 0;
 
   /**
    * Communicate to the compositor that the texture identified by aCompositable
