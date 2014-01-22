@@ -203,16 +203,26 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-footer {
   display: flex;
   background-color: rgba(0, 0, 0, 0.05);
-  border-top: 1px solid rgba(0,0,0,.1);
+  box-shadow: 0 -1px 0 rgba(0,0,0,.15);
   padding: 0;
   margin: 0;
   min-height: 4em;
 }
 
+#PanelUI-footer > toolbarseparator {
+  border: 0;
+  border-left: 1px solid rgba(0,0,0,0.1);
+  margin: 7px 0 7px;
+}
+
+#PanelUI-footer:hover > toolbarseparator {
+  margin: 0;
+}
+
 #PanelUI-help,
 #PanelUI-customize,
 #PanelUI-quit {
-  margin: -1px 0 0;
+  margin: 0;
   padding: 10px 0;
   -moz-appearance: none;
   box-shadow: none;
@@ -285,14 +295,14 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-help:not([disabled]):hover,
 #PanelUI-customize:hover,
 #PanelUI-quit:not([disabled]):hover {
-  border-color: rgba(8,25,42,0.2);
-  border-top-color: rgba(8,25,42,0.1);
+  outline: 1px solid rgba(0,0,0,0.1);
   background-color: rgba(0,0,0,0.1);
   box-shadow: none;
 }
 
 #PanelUI-quit:not([disabled]):hover {
   background-color: #d94141;
+  outline-color: #c23a3a;
 }
 
 #PanelUI-quit:not([disabled]):hover:active {
