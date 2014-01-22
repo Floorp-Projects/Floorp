@@ -306,7 +306,7 @@ ShapeTable::grow(ThreadSafeContext *cx)
 }
 
 /* static */ Shape *
-Shape::replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
+Shape::replaceLastProperty(ExclusiveContext *cx, StackBaseShape &base,
                            TaggedProto proto, HandleShape shape)
 {
     JS_ASSERT(!shape->inDictionary());
@@ -546,7 +546,7 @@ ShouldConvertToDictionary(JSObject *obj)
 template <ExecutionMode mode>
 static inline UnownedBaseShape *
 GetOrLookupUnownedBaseShape(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
-                            const StackBaseShape &base)
+                            StackBaseShape &base)
 {
     if (mode == ParallelExecution)
         return BaseShape::lookupUnowned(cx, base);
@@ -1439,28 +1439,28 @@ StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
 }
 
 void
-StackBaseShape::AutoRooter::trace(JSTracer *trc)
+StackBaseShape::trace(JSTracer *trc)
 {
-    if (base->parent) {
-        gc::MarkObjectRoot(trc, (JSObject**)&base->parent,
-                           "StackBaseShape::AutoRooter parent");
+    if (parent) {
+        gc::MarkObjectRoot(trc, (JSObject**)&parent,
+                           "StackBaseShape parent");
     }
-    if (base->metadata) {
-        gc::MarkObjectRoot(trc, (JSObject**)&base->metadata,
-                           "StackBaseShape::AutoRooter metadata");
+    if (metadata) {
+        gc::MarkObjectRoot(trc, (JSObject**)&metadata,
+                           "StackBaseShape metadata");
     }
-    if ((base->flags & BaseShape::HAS_GETTER_OBJECT) && base->rawGetter) {
-        gc::MarkObjectRoot(trc, (JSObject**)&base->rawGetter,
-                           "StackBaseShape::AutoRooter getter");
+    if ((flags & BaseShape::HAS_GETTER_OBJECT) && rawGetter) {
+        gc::MarkObjectRoot(trc, (JSObject**)&rawGetter,
+                           "StackBaseShape getter");
     }
-    if ((base->flags & BaseShape::HAS_SETTER_OBJECT) && base->rawSetter) {
-        gc::MarkObjectRoot(trc, (JSObject**)&base->rawSetter,
-                           "StackBaseShape::AutoRooter setter");
+    if ((flags & BaseShape::HAS_SETTER_OBJECT) && rawSetter) {
+        gc::MarkObjectRoot(trc, (JSObject**)&rawSetter,
+                           "StackBaseShape setter");
     }
 }
 
 /* static */ UnownedBaseShape*
-BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
+BaseShape::getUnowned(ExclusiveContext *cx, StackBaseShape &base)
 {
     BaseShapeSet &table = cx->compartment()->baseShapes;
 
@@ -1471,17 +1471,17 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
     if (p)
         return *p;
 
-    StackBaseShape::AutoRooter root(cx, &base);
+    RootedGeneric<StackBaseShape*> root(cx, &base);
 
     BaseShape *nbase_ = js_NewGCBaseShape<CanGC>(cx);
     if (!nbase_)
         return nullptr;
 
-    new (nbase_) BaseShape(base);
+    new (nbase_) BaseShape(*root);
 
     UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_);
 
-    if (!p.add(cx, table, &base, nbase))
+    if (!p.add(cx, table, root, nbase))
         return nullptr;
 
     return nbase;
