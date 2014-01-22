@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 			PR_ProcessExit(2);
 		}
 		if (_debug_on)
-			PR_fprintf(output,"%s: created thread = 0x%x\n", argv[0],
+			PR_fprintf(output,"%s: created thread = %p\n", argv[0],
 										threads[cnt]);
 	}
 
