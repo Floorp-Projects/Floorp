@@ -361,10 +361,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         // build the root wrapper
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedJS(cx, jsObj, clasp, nullptr);
-
-            map->Add(cx, root);
-
+            wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, nullptr);
             *wrapperResult = wrapper;
             return NS_OK;
         } else {
@@ -379,8 +376,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             NS_RELEASE(rootClasp);
 
             release_root = true;
-
-            map->Add(cx, root);
         }
     }
 
@@ -415,7 +410,9 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
 
-    if (!IsRootWrapper()) {
+    if (IsRootWrapper()) {
+        nsXPConnect::GetRuntimeInstance()->GetWrappedJSMap()->Add(cx, this);
+    } else {
         NS_ADDREF(mRoot);
         mNext = mRoot->mNext;
         mRoot->mNext = this;
