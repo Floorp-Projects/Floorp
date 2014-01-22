@@ -1456,6 +1456,8 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                        nsTArray<nsString>& names,
                        bool shadowPrototypeProperties, JS::AutoIdVector& props);
 
+namespace binding_detail {
+
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {
@@ -1533,6 +1535,8 @@ private:
   };
 };
 
+} // namespace binding_detail
+
 enum StringificationBehavior {
   eStringify,
   eEmpty,
@@ -1545,7 +1549,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
                        JS::MutableHandle<JS::Value> pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       FakeDependentString& result)
+                       binding_detail::FakeDependentString& result)
 {
   JSString *s;
   if (v.isString()) {
