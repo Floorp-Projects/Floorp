@@ -12,9 +12,9 @@ public class FxAccountConstants {
   public static final String ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
 
   public static final String DEFAULT_IDP_ENDPOINT = "https://api-accounts-onepw.dev.lcip.org";
-  public static final String DEFAULT_AUTH_ENDPOINT = "http://auth.oldsync.dev.lcip.org";
-
-  public static final String PREFS_PATH = "fxa.v1";
+  public static final String DEFAULT_TOKEN_SERVER_ENDPOINT = "http://auth.oldsync.dev.lcip.org";
+  public static final String DEFAULT_TOKEN_SERVER_URI = DEFAULT_TOKEN_SERVER_ENDPOINT +
+            (DEFAULT_TOKEN_SERVER_ENDPOINT.endsWith("/") ? "" : "/") + "1.0/sync/1.1";
 
   // For extra debugging.  Not final so it can be changed from Fennec, or from
   // an add-on.

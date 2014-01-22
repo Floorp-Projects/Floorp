@@ -56,7 +56,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     userData.putString(JSON_KEY_KA, kA);
     userData.putString(JSON_KEY_KB, kB);
     userData.putString(JSON_KEY_IDP_ENDPOINT, FxAccountConstants.DEFAULT_IDP_ENDPOINT);
-    userData.putString(JSON_KEY_AUTH_ENDPOINT, FxAccountConstants.DEFAULT_AUTH_ENDPOINT);
+    userData.putString(JSON_KEY_AUTH_ENDPOINT, FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
     if (!accountManager.addAccountExplicitly(account, sessionToken, userData)) {
       Logger.warn(LOG_TAG, "Error adding account named " + account.name + " of type " + account.type);
       return null;

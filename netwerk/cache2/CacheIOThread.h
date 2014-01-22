@@ -31,8 +31,8 @@ public:
     READ_PRIORITY,
     OPEN,
     READ,
-    OPEN_TRUNCATE,
     WRITE,
+    MANAGEMENT,
     CLOSE,
     EVICT,
     LAST_LEVEL

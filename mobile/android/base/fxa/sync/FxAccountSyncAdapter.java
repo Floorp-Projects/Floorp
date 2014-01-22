@@ -23,6 +23,7 @@ import org.mozilla.gecko.fxa.authenticator.FxAccountLoginPolicy;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.BaseGlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -157,26 +158,30 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     final CountDownLatch latch = new CountDownLatch(1);
     final BaseGlobalSessionCallback callback = new SessionCallback(latch, syncResult);
 
-
     try {
-      final String authEndpoint = FxAccountConstants.DEFAULT_AUTH_ENDPOINT;
-      final String tokenServerEndpoint = authEndpoint + (authEndpoint.endsWith("/") ? "" : "/") + "1.0/sync/1.1";
-      final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
-
-      final AndroidFxAccount fxAccount = new AndroidFxAccount(getContext(), account);
+      final Context context = getContext();
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
 
       if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
         fxAccount.dump();
       }
 
-      final SharedPreferences sharedPrefs = getContext().getSharedPreferences(FxAccountConstants.PREFS_PATH, Context.MODE_PRIVATE); // TODO Ensure preferences are per-Account.
+      final String prefsPath = fxAccount.getSyncPrefsPath();
 
-      final FxAccountLoginPolicy loginPolicy = new FxAccountLoginPolicy(getContext(), fxAccount, executor);
+      // This will be the same chunk of SharedPreferences that GlobalSession/SyncConfiguration will later create.
+      final SharedPreferences sharedPrefs = context.getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
+
+      final String audience = fxAccount.getAudience();
+      final String tokenServerEndpoint = fxAccount.getTokenServerURI();
+      final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
+
+      // TODO: why doesn't the loginPolicy extract the audience from the account?
+      final FxAccountLoginPolicy loginPolicy = new FxAccountLoginPolicy(context, fxAccount, executor);
       loginPolicy.certificateDurationInMilliseconds = 20 * 60 * 1000;
       loginPolicy.assertionDurationInMilliseconds = 15 * 60 * 1000;
       Logger.info(LOG_TAG, "Asking for certificates to expire after 20 minutes and assertions to expire after 15 minutes.");
 
-      loginPolicy.login(authEndpoint, new FxAccountLoginDelegate() {
+      loginPolicy.login(audience, new FxAccountLoginDelegate() {
         @Override
         public void handleSuccess(final String assertion) {
           TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
@@ -201,7 +206,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                 final long tokenServerSkew = tokenServerSkewHandler.getSkewInSeconds();
                 AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
 
-                globalSession = new FxAccountGlobalSession(token.endpoint, token.uid, authHeaderProvider, FxAccountConstants.PREFS_PATH, syncKeyBundle, callback, getContext(), extras, clientsDataDelegate);
+                globalSession = new FxAccountGlobalSession(token.endpoint, token.uid, authHeaderProvider, prefsPath, syncKeyBundle, callback, context, extras, clientsDataDelegate);
                 globalSession.start();
               } catch (Exception e) {
                 callback.handleError(globalSession, e);

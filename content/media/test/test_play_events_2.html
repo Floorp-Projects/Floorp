@@ -31,7 +31,7 @@ function ended(event) {
   var v = event.target;
   v._finished = true;
   is(v._state, "canplaythrough", "Last event should be canplaythrough for " + v.src);
-  v.parentNode.removeChild(v);
+  removeNodeAndSource(v);
   manager.finished(v.token);
 }
 

@@ -859,7 +859,6 @@
                    cui-areatype="toolbar"
                    removable="true">
         <toolbarbutton id="bookmarks-toolbar-placeholder"
-                       type="wrap"
                        mousethrough="never"
                        label="&bookmarksToolbarItem.label;"
                        oncommand="PlacesToolbarHelper.onPlaceholderCommand();"/>

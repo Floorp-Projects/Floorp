@@ -9,6 +9,7 @@
 #include "CacheHashUtils.h"
 #include "CacheStorageService.h"
 #include "nsThreadUtils.h"
+#include "CacheFile.h"
 #include "nsIFile.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
@@ -36,25 +37,48 @@ namespace mozilla {
 namespace net {
 
 #define kOpenHandlesLimit   64
+#define kMetadataWriteDelay 5000
 
+bool
+CacheFileHandle::DispatchRelease()
+{
+  if (CacheFileIOManager::IsOnIOThreadOrCeased())
+    return false;
+
+  nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
+  if (!ioTarget)
+    return false;
+
+  nsRefPtr<nsRunnableMethod<CacheFileHandle, nsrefcnt, false> > event =
+    NS_NewNonOwningRunnableMethod(this, &CacheFileHandle::Release);
+  nsresult rv = ioTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  if (NS_FAILED(rv))
+    return false;
+
+  return true;
+}
 
 NS_IMPL_ADDREF(CacheFileHandle)
 NS_IMETHODIMP_(nsrefcnt)
 CacheFileHandle::Release()
 {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the IO thread.
+    return count;
+  }
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
   LOG(("CacheFileHandle::Release() [this=%p, refcnt=%d]", this, mRefCnt.get()));
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  nsrefcnt count = --mRefCnt;
+  count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "CacheFileHandle");
 
   if (0 == count) {
     mRefCnt = 1;
     delete (this);
     return 0;
-  }
-
-  if (!mRemovingHandle && count == 1 && !mClosed) {
-    CacheFileIOManager::gInstance->CloseHandle(this);
   }
 
   return count;
@@ -68,7 +92,6 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash,
                                  bool aPriority)
   : mHash(aHash)
   , mIsDoomed(false)
-  , mRemovingHandle(false)
   , mPriority(aPriority)
   , mClosed(false)
   , mInvalid(false)
@@ -77,41 +100,83 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash,
   , mFD(nullptr)
 {
   LOG(("CacheFileHandle::CacheFileHandle() [this=%p]", this));
-  MOZ_COUNT_CTOR(CacheFileHandle);
-  PR_INIT_CLIST(this);
 }
 
 CacheFileHandle::~CacheFileHandle()
 {
   LOG(("CacheFileHandle::~CacheFileHandle() [this=%p]", this));
-  MOZ_COUNT_DTOR(CacheFileHandle);
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  nsRefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
+  if (ioMan) {
+    ioMan->CloseHandleInternal(this);
+  }
 }
 
+/******************************************************************************
+ *  CacheFileHandles::HandleHashKey
+ *****************************************************************************/
+
+void
+CacheFileHandles::HandleHashKey::AddHandle(CacheFileHandle* aHandle)
+{
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  mHandles.InsertElementAt(0, aHandle);
+}
+
+void
+CacheFileHandles::HandleHashKey::RemoveHandle(CacheFileHandle* aHandle)
+{
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  DebugOnly<bool> found;
+  found = mHandles.RemoveElement(aHandle);
+  MOZ_ASSERT(found);
+}
+
+already_AddRefed<CacheFileHandle>
+CacheFileHandles::HandleHashKey::GetNewestHandle()
+{
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  nsRefPtr<CacheFileHandle> handle;
+  if (mHandles.Length())
+    handle = mHandles[0];
+
+  return handle.forget();
+}
+
+void
+CacheFileHandles::HandleHashKey::GetHandles(nsTArray<nsRefPtr<CacheFileHandle> > &aResult)
+{
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  for (uint32_t i = 0; i < mHandles.Length(); ++i) {
+    CacheFileHandle* handle = mHandles[i];
+    aResult.AppendElement(handle);
+  }
+}
+
+#ifdef DEBUG
+
+void
+CacheFileHandles::HandleHashKey::AssertHandlesState()
+{
+  for (uint32_t i = 0; i < mHandles.Length(); ++i) {
+    CacheFileHandle* handle = mHandles[i];
+    MOZ_ASSERT(handle->IsDoomed());
+  }
+}
+
+#endif
 
 /******************************************************************************
  *  CacheFileHandles
  *****************************************************************************/
 
-class CacheFileHandlesEntry : public PLDHashEntryHdr
-{
-public:
-  PRCList      *mHandles;
-  SHA1Sum::Hash mHash;
-};
-
-const PLDHashTableOps CacheFileHandles::mOps =
-{
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  HashKey,
-  MatchEntry,
-  MoveEntry,
-  ClearEntry,
-  PL_DHashFinalizeStub
-};
-
 CacheFileHandles::CacheFileHandles()
-  : mInitialized(false)
 {
   LOG(("CacheFileHandles::CacheFileHandles() [this=%p]", this));
   MOZ_COUNT_CTOR(CacheFileHandles);
@@ -121,86 +186,6 @@ CacheFileHandles::~CacheFileHandles()
 {
   LOG(("CacheFileHandles::~CacheFileHandles() [this=%p]", this));
   MOZ_COUNT_DTOR(CacheFileHandles);
-
-  if (mInitialized)
-    Shutdown();
-}
-
-nsresult
-CacheFileHandles::Init()
-{
-  LOG(("CacheFileHandles::Init() %p", this));
-
-  MOZ_ASSERT(!mInitialized);
-  mInitialized = PL_DHashTableInit(&mTable, &mOps, nullptr,
-                                   sizeof(CacheFileHandlesEntry), 512);
-
-  return mInitialized ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-void
-CacheFileHandles::Shutdown()
-{
-  LOG(("CacheFileHandles::Shutdown() %p", this));
-
-  if (mInitialized) {
-    PL_DHashTableFinish(&mTable);
-    mInitialized = false;
-  }
-}
-
-PLDHashNumber
-CacheFileHandles::HashKey(PLDHashTable *table, const void *key)
-{
-  const SHA1Sum::Hash *hash = static_cast<const SHA1Sum::Hash *>(key);
-  return static_cast<PLDHashNumber>(((*hash)[0] << 24) | ((*hash)[1] << 16) |
-                                    ((*hash)[2] << 8) | (*hash)[3]);
-}
-
-bool
-CacheFileHandles::MatchEntry(PLDHashTable *table,
-                             const PLDHashEntryHdr *header,
-                             const void *key)
-{
-  const CacheFileHandlesEntry *entry;
-
-  entry = static_cast<const CacheFileHandlesEntry *>(header);
-
-  return (memcmp(&entry->mHash, key, sizeof(SHA1Sum::Hash)) == 0);
-}
-
-void
-CacheFileHandles::MoveEntry(PLDHashTable *table,
-                            const PLDHashEntryHdr *from,
-                            PLDHashEntryHdr *to)
-{
-  const CacheFileHandlesEntry *src;
-  CacheFileHandlesEntry *dst;
-
-  src = static_cast<const CacheFileHandlesEntry *>(from);
-  dst = static_cast<CacheFileHandlesEntry *>(to);
-
-  dst->mHandles = src->mHandles;
-  memcpy(&dst->mHash, &src->mHash, sizeof(SHA1Sum::Hash));
-
-  LOG(("CacheFileHandles::MoveEntry() hash=%08x%08x%08x%08x%08x "
-       "moving from %p to %p", LOGSHA1(src->mHash), from, to));
-
-  // update pointer to mHash in all handles
-  CacheFileHandle *handle = (CacheFileHandle *)PR_LIST_HEAD(dst->mHandles);
-  while (handle != dst->mHandles) {
-    handle->mHash = &dst->mHash;
-    handle = (CacheFileHandle *)PR_NEXT_LINK(handle);
-  }
-}
-
-void
-CacheFileHandles::ClearEntry(PLDHashTable *table,
-                             PLDHashEntryHdr *header)
-{
-  CacheFileHandlesEntry *entry = static_cast<CacheFileHandlesEntry *>(header);
-  delete entry->mHandles;
-  entry->mHandles = nullptr;
 }
 
 nsresult
@@ -208,36 +193,38 @@ CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
                             bool aReturnDoomed,
                             CacheFileHandle **_retval)
 {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+  MOZ_ASSERT(aHash);
 
   // find hash entry for key
-  CacheFileHandlesEntry *entry;
-  entry = static_cast<CacheFileHandlesEntry *>(
-    PL_DHashTableOperate(&mTable,
-                         (void *)aHash,
-                         PL_DHASH_LOOKUP));
-  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+  HandleHashKey *entry = mTable.GetEntry(*aHash);
+  if (!entry) {
     LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
-         "no handle found", LOGSHA1(aHash)));
+         "no handle entries found", LOGSHA1(aHash)));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Check if the entry is doomed
-  CacheFileHandle *handle = static_cast<CacheFileHandle *>(
-                              PR_LIST_HEAD(entry->mHandles));
+  nsRefPtr<CacheFileHandle> handle = entry->GetNewestHandle();
+  if (!handle) {
+    LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
+         "no handle found %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (handle->IsDoomed()) {
     LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
-         "found doomed handle %p, entry %p", LOGSHA1(aHash), handle, entry));
+         "found doomed handle %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
 
     // If the consumer doesn't want doomed handles, exit with NOT_AVAIL.
     if (!aReturnDoomed)
       return NS_ERROR_NOT_AVAILABLE;
   } else {
     LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
-         "found handle %p, entry %p", LOGSHA1(aHash), handle, entry));
+         "found handle %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
   }
 
-  NS_ADDREF(*_retval = handle);
+  handle.forget(_retval);
   return NS_OK;
 }
 
@@ -247,122 +234,85 @@ CacheFileHandles::NewHandle(const SHA1Sum::Hash *aHash,
                             bool aPriority,
                             CacheFileHandle **_retval)
 {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+  MOZ_ASSERT(aHash);
 
   // find hash entry for key
-  CacheFileHandlesEntry *entry;
-  entry = static_cast<CacheFileHandlesEntry *>(
-    PL_DHashTableOperate(&mTable,
-                         (void *)aHash,
-                         PL_DHASH_ADD));
-  if (!entry) return NS_ERROR_OUT_OF_MEMORY;
+  HandleHashKey *entry = mTable.PutEntry(*aHash);
 
-  if (!entry->mHandles) {
-    // new entry
-    entry->mHandles = new PRCList;
-    memcpy(&entry->mHash, aHash, sizeof(SHA1Sum::Hash));
-    PR_INIT_CLIST(entry->mHandles);
-
-    LOG(("CacheFileHandles::NewHandle() hash=%08x%08x%08x%08x%08x "
-         "created new entry %p, list %p", LOGSHA1(aHash), entry,
-         entry->mHandles));
-  }
 #ifdef DEBUG
-  else {
-    MOZ_ASSERT(!PR_CLIST_IS_EMPTY(entry->mHandles));
-    CacheFileHandle *handle = (CacheFileHandle *)PR_LIST_HEAD(entry->mHandles);
-    MOZ_ASSERT(handle->IsDoomed());
-  }
+  entry->AssertHandlesState();
 #endif
 
-  nsRefPtr<CacheFileHandle> handle = new CacheFileHandle(&entry->mHash, aPriority);
-  PR_APPEND_LINK(handle, entry->mHandles);
+  nsRefPtr<CacheFileHandle> handle = new CacheFileHandle(entry->Hash(), aPriority);
+  entry->AddHandle(handle);
 
   LOG(("CacheFileHandles::NewHandle() hash=%08x%08x%08x%08x%08x "
        "created new handle %p, entry=%p", LOGSHA1(aHash), handle.get(), entry));
 
-  NS_ADDREF(*_retval = handle);
-  handle.forget();
+  handle.forget(_retval);
   return NS_OK;
 }
 
 void
 CacheFileHandles::RemoveHandle(CacheFileHandle *aHandle)
 {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+  MOZ_ASSERT(aHandle);
 
-  void *key = (void *)aHandle->Hash();
+  if (!aHandle)
+    return;
 
-  CacheFileHandlesEntry *entry;
-  entry = static_cast<CacheFileHandlesEntry *>(
-    PL_DHashTableOperate(&mTable, key, PL_DHASH_LOOKUP));
+  // find hash entry for key
+  HandleHashKey *entry = mTable.GetEntry(*aHandle->Hash());
+  if (!entry) {
+    MOZ_ASSERT(CacheFileIOManager::IsShutdown(),
+      "Should find entry when removing a handle before shutdown");
 
-  MOZ_ASSERT(PL_DHASH_ENTRY_IS_BUSY(entry));
-
-#ifdef DEBUG
-  {
-    CacheFileHandle *handle = (CacheFileHandle *)PR_LIST_HEAD(entry->mHandles);
-    bool handleFound = false;
-    while (handle != entry->mHandles) {
-      if (handle == aHandle) {
-        handleFound = true;
-        break;
-      }
-      handle = (CacheFileHandle *)PR_NEXT_LINK(handle);
-    }
-    MOZ_ASSERT(handleFound);
+    LOG(("CacheFileHandles::RemoveHandle() hash=%08x%08x%08x%08x%08x "
+         "no entries found", LOGSHA1(aHandle->Hash())));
+    return;
   }
-#endif
 
   LOG(("CacheFileHandles::RemoveHandle() hash=%08x%08x%08x%08x%08x "
-       "removing handle %p", LOGSHA1(&entry->mHash), aHandle));
+       "removing handle %p", LOGSHA1(entry->Hash()), aHandle));
+  entry->RemoveHandle(aHandle);
 
-  PR_REMOVE_AND_INIT_LINK(aHandle);
-  NS_RELEASE(aHandle);
-
-  if (PR_CLIST_IS_EMPTY(entry->mHandles)) {
+  if (entry->IsEmpty()) {
     LOG(("CacheFileHandles::RemoveHandle() hash=%08x%08x%08x%08x%08x "
-         "list %p is empty, removing entry %p", LOGSHA1(&entry->mHash),
-         entry->mHandles, entry));
-    PL_DHashTableOperate(&mTable, key, PL_DHASH_REMOVE);
+         "list is empty, removing entry %p", LOGSHA1(entry->Hash()), entry));
+    mTable.RemoveEntry(*entry->Hash());
   }
 }
 
-PLDHashOperator
-GetHandles(PLDHashTable    *table,
-           PLDHashEntryHdr *hdr,
-           uint32_t         number,
-           void *           arg)
+static PLDHashOperator
+GetAllHandlesEnum(CacheFileHandles::HandleHashKey* aEntry, void *aClosure)
 {
-  const CacheFileHandlesEntry *entry;
-  nsTArray<nsRefPtr<CacheFileHandle> > *handles;
+  nsTArray<nsRefPtr<CacheFileHandle> > *array =
+    static_cast<nsTArray<nsRefPtr<CacheFileHandle> > *>(aClosure);
 
-  entry = static_cast<const CacheFileHandlesEntry *>(hdr);
-  handles = reinterpret_cast<nsTArray<nsRefPtr<CacheFileHandle> > *>(arg);
-
-  CacheFileHandle *handle = (CacheFileHandle *)PR_LIST_HEAD(entry->mHandles);
-  while (handle != entry->mHandles) {
-    handles->AppendElement(handle);
-    handle = (CacheFileHandle *)PR_NEXT_LINK(handle);
-  }
-
+  aEntry->GetHandles(*array);
   return PL_DHASH_NEXT;
 }
 
 void
 CacheFileHandles::GetAllHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval)
 {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+  mTable.EnumerateEntries(&GetAllHandlesEnum, _retval);
+}
 
-  PL_DHashTableEnumerate(&mTable, GetHandles, _retval);
+void
+CacheFileHandles::ClearAll()
+{
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+  mTable.Clear();
 }
 
 uint32_t
 CacheFileHandles::HandleCount()
 {
-  MOZ_ASSERT(mInitialized);
-
-  return mTable.entryCount;
+  return mTable.Count();
 }
 
 // Events
@@ -492,30 +442,6 @@ protected:
   nsRefPtr<CacheFileHandle>     mHandle;
   nsresult                      mRV;
   nsCString                     mKey;
-};
-
-class CloseHandleEvent : public nsRunnable {
-public:
-  CloseHandleEvent(CacheFileHandle *aHandle)
-    : mHandle(aHandle)
-  {
-    MOZ_COUNT_CTOR(CloseHandleEvent);
-  }
-
-  ~CloseHandleEvent()
-  {
-    MOZ_COUNT_DTOR(CloseHandleEvent);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (!mHandle->IsClosed())
-      CacheFileIOManager::gInstance->CloseHandleInternal(mHandle);
-    return NS_OK;
-  }
-
-protected:
-  nsRefPtr<CacheFileHandle> mHandle;
 };
 
 class ReadEvent : public nsRunnable {
@@ -813,9 +739,55 @@ protected:
 };
 
 
+class MetadataWriteScheduleEvent : public nsRunnable
+{
+public:
+  enum EMode {
+    SCHEDULE,
+    UNSCHEDULE,
+    SHUTDOWN
+  } mMode;
+
+  nsRefPtr<CacheFile> mFile;
+  nsRefPtr<CacheFileIOManager> mIOMan;
+
+  MetadataWriteScheduleEvent(CacheFileIOManager * aManager,
+                             CacheFile * aFile,
+                             EMode aMode)
+    : mMode(aMode)
+    , mFile(aFile)
+    , mIOMan(aManager)
+  { }
+
+  virtual ~MetadataWriteScheduleEvent() { }
+
+  NS_IMETHOD Run()
+  {
+    nsRefPtr<CacheFileIOManager> ioMan = CacheFileIOManager::gInstance;
+    if (!ioMan) {
+      NS_WARNING("CacheFileIOManager already gone in MetadataWriteScheduleEvent::Run()");
+      return NS_OK;
+    }
+
+    switch (mMode)
+    {
+    case SCHEDULE:
+      ioMan->ScheduleMetadataWriteInternal(mFile);
+      break;
+    case UNSCHEDULE:
+      ioMan->UnscheduleMetadataWriteInternal(mFile);
+      break;
+    case SHUTDOWN:
+      ioMan->ShutdownMetadataWriteSchedulingInternal();
+      break;
+    }
+    return NS_OK;
+  }
+};
+
 CacheFileIOManager * CacheFileIOManager::gInstance = nullptr;
 
-NS_IMPL_ISUPPORTS0(CacheFileIOManager)
+NS_IMPL_ISUPPORTS1(CacheFileIOManager, nsITimerCallback)
 
 CacheFileIOManager::CacheFileIOManager()
   : mShuttingDown(false)
@@ -862,13 +834,6 @@ CacheFileIOManager::InitInternal()
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Can't create background thread");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mHandles.Init();
-  if (NS_FAILED(rv)) {
-    mIOThread->Shutdown();
-
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
@@ -883,6 +848,8 @@ CacheFileIOManager::Shutdown()
     return NS_ERROR_NOT_INITIALIZED;
 
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_V2> shutdownTimer;
+
+  ShutdownMetadataWriteScheduling();
 
   {
     mozilla::Mutex lock("CacheFileIOManager::Shutdown() lock");
@@ -899,11 +866,11 @@ CacheFileIOManager::Shutdown()
   MOZ_ASSERT(gInstance->mHandles.HandleCount() == 0);
   MOZ_ASSERT(gInstance->mHandlesByLastUsed.Length() == 0);
 
+  if (gInstance->mIOThread)
+    gInstance->mIOThread->Shutdown();
+
   nsRefPtr<CacheFileIOManager> ioMan;
   ioMan.swap(gInstance);
-
-  if (ioMan->mIOThread)
-    ioMan->mIOThread->Shutdown();
 
   return NS_OK;
 }
@@ -911,6 +878,9 @@ CacheFileIOManager::Shutdown()
 nsresult
 CacheFileIOManager::ShutdownInternal()
 {
+  MOZ_ASSERT(mIOThread->IsCurrentThread());
+
+  // No new handles can be created after this flag is set
   mShuttingDown = true;
 
   // close all handles and delete all associated files
@@ -919,7 +889,6 @@ CacheFileIOManager::ShutdownInternal()
 
   for (uint32_t i=0 ; i<handles.Length() ; i++) {
     CacheFileHandle *h = handles[i];
-    h->mRemovingHandle = true;
     h->mClosed = true;
 
     // Close file handle
@@ -935,6 +904,12 @@ CacheFileIOManager::ShutdownInternal()
     // Remove the handle from hashtable
     mHandles.RemoveHandle(h);
   }
+
+  // Assert the table is empty. When we are here, no new handles can be added
+  // and handles will no longer remove them self from this table and we don't 
+  // want to keep invalid handles here. Also, there is no lookup after this 
+  // point to happen.
+  MOZ_ASSERT(mHandles.HandleCount() == 0);
 
   return NS_OK;
 }
@@ -990,6 +965,7 @@ CacheFileIOManager::IOTarget()
   return target.forget();
 }
 
+// static
 already_AddRefed<CacheIOThread>
 CacheFileIOManager::IOThread()
 {
@@ -998,6 +974,153 @@ CacheFileIOManager::IOThread()
     thread = gInstance->mIOThread;
 
   return thread.forget();
+}
+
+// static
+bool
+CacheFileIOManager::IsOnIOThreadOrCeased()
+{
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  if (ioMan && ioMan->mIOThread)
+    return ioMan->mIOThread->IsCurrentThread();
+
+  // Ceased...
+  return true;
+}
+
+// static
+bool
+CacheFileIOManager::IsShutdown()
+{
+  if (!gInstance)
+    return true;
+  return gInstance->mShuttingDown;
+}
+
+// static
+nsresult
+CacheFileIOManager::ScheduleMetadataWrite(CacheFile * aFile)
+{
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
+
+  NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
+
+  nsRefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
+    ioMan, aFile, MetadataWriteScheduleEvent::SCHEDULE);
+  nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
+  NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+  return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+nsresult
+CacheFileIOManager::ScheduleMetadataWriteInternal(CacheFile * aFile)
+{
+  MOZ_ASSERT(IsOnIOThreadOrCeased());
+
+  nsresult rv;
+
+  if (!mMetadataWritesTimer) {
+    mMetadataWritesTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mMetadataWritesTimer->InitWithCallback(
+      this, kMetadataWriteDelay, nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (mScheduledMetadataWrites.IndexOf(aFile) !=
+      mScheduledMetadataWrites.NoIndex) {
+    return NS_OK;
+  }
+
+  mScheduledMetadataWrites.AppendElement(aFile);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+CacheFileIOManager::UnscheduleMetadataWrite(CacheFile * aFile)
+{
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
+
+  NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
+
+  nsRefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
+    ioMan, aFile, MetadataWriteScheduleEvent::UNSCHEDULE);
+  nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
+  NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+  return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+nsresult
+CacheFileIOManager::UnscheduleMetadataWriteInternal(CacheFile * aFile)
+{
+  MOZ_ASSERT(IsOnIOThreadOrCeased());
+
+  mScheduledMetadataWrites.RemoveElement(aFile);
+
+  if (mScheduledMetadataWrites.Length() == 0 &&
+      mMetadataWritesTimer) {
+    mMetadataWritesTimer->Cancel();
+    mMetadataWritesTimer = nullptr;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+CacheFileIOManager::ShutdownMetadataWriteScheduling()
+{
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
+
+  nsRefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
+    ioMan, nullptr, MetadataWriteScheduleEvent::SHUTDOWN);
+  nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
+  NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+  return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+nsresult
+CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal()
+{
+  MOZ_ASSERT(IsOnIOThreadOrCeased());
+
+  nsTArray<nsRefPtr<CacheFile> > files;
+  files.SwapElements(mScheduledMetadataWrites);
+  for (uint32_t i = 0; i < files.Length(); ++i) {
+    CacheFile * file = files[i];
+    file->WriteMetadataIfNeeded();
+  }
+
+  if (mMetadataWritesTimer) {
+    mMetadataWritesTimer->Cancel();
+    mMetadataWritesTimer = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CacheFileIOManager::Notify(nsITimer * aTimer)
+{
+  MOZ_ASSERT(IsOnIOThreadOrCeased());
+  MOZ_ASSERT(mMetadataWritesTimer == aTimer);
+
+  mMetadataWritesTimer = nullptr;
+
+  nsTArray<nsRefPtr<CacheFile> > files;
+  files.SwapElements(mScheduledMetadataWrites);
+  for (uint32_t i = 0; i < files.Length(); ++i) {
+    CacheFile * file = files[i];
+    file->WriteMetadataIfNeeded();
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1029,6 +1152,8 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
                                      uint32_t aFlags,
                                      CacheFileHandle **_retval)
 {
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
   nsresult rv;
 
   if (mShuttingDown)
@@ -1103,38 +1228,9 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
 }
 
 nsresult
-CacheFileIOManager::CloseHandle(CacheFileHandle *aHandle)
-{
-  LOG(("CacheFileIOManager::CloseHandle() [handle=%p]", aHandle));
-
-  nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (aHandle->IsClosed() || !ioMan)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsRefPtr<CloseHandleEvent> ev = new CloseHandleEvent(aHandle);
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::CLOSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
 CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 {
-  // This method should be called only from CloseHandleEvent. If this handle is
-  // still unused then mRefCnt should be 2 (reference in hashtable and in
-  // CacheHandleEvent)
-
-  if (aHandle->mRefCnt != 2) {
-    // someone got this handle between calls to CloseHandle() and
-    // CloseHandleInternal()
-    return NS_OK;
-  }
-
-  // We're going to remove this handle, don't call CloseHandle() again
-  aHandle->mRemovingHandle = true;
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   // Close file handle
   if (aHandle->mFD) {
@@ -1147,7 +1243,8 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
   }
 
   // Remove the handle from hashtable
-  mHandles.RemoveHandle(aHandle);
+  if (!mShuttingDown) // Don't touch after shutdown
+    mHandles.RemoveHandle(aHandle);
 
   return NS_OK;
 }
@@ -1369,6 +1466,8 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
 nsresult
 CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
 {
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
   nsresult rv;
 
   if (mShuttingDown)
@@ -1430,6 +1529,7 @@ CacheFileIOManager::ReleaseNSPRHandle(CacheFileHandle *aHandle)
 nsresult
 CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle)
 {
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHandle->mFD);
 
   DebugOnly<bool> found;
@@ -1737,6 +1837,7 @@ CacheFileIOManager::CreateCacheTree()
 nsresult
 CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
 {
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(!aHandle->mFD);
   MOZ_ASSERT(mHandlesByLastUsed.IndexOf(aHandle) == mHandlesByLastUsed.NoIndex);
   MOZ_ASSERT(mHandlesByLastUsed.Length() <= kOpenHandlesLimit);
@@ -1774,6 +1875,7 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
 void
 CacheFileIOManager::NSPRHandleUsed(CacheFileHandle *aHandle)
 {
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHandle->mFD);
 
   DebugOnly<bool> found;
