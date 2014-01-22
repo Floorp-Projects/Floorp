@@ -62,6 +62,20 @@ function test() {
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
   is(input.value, 0, "Test mouseup on spin-down button");
 
+  // Test step="any" behavior:
+  input.value = 0;
+  var oldStep = input.step;
+  input.step = "any";
+  synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousedown" });
+  is(input.value, 1, "Test step-up on mousedown on spin-up button with step='any'");
+  synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
+  is(input.value, 1, "Test mouseup on spin-up button with step='any'");
+  synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousedown" });
+  is(input.value, 0, "Test step-down on mousedown on spin-down button with step='any'");
+  synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
+  is(input.value, 0, "Test mouseup on spin-down button with step='any'");
+  input.step = oldStep; // restore
+
   // Test that preventDefault() works:
   function preventDefault(e) {
     e.preventDefault();
