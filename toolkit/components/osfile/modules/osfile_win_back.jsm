@@ -39,6 +39,7 @@
      let SysAll = require("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
      let LOG = SharedAll.LOG.bind(SharedAll, "Unix", "back");
      let libc = SysAll.libc;
+     let advapi32 = new SharedAll.Library("advapi32", "advapi32.dll");
      let Const = SharedAll.Constants.Win;
 
      /**
@@ -121,8 +122,29 @@
        Type.zero_or_nothing =
          Type.int.withName("zero_or_nothing");
 
+       /**
+        * A C integer holding flags related to NTFS security.
+        */
        Type.SECURITY_ATTRIBUTES =
          Type.void_t.withName("SECURITY_ATTRIBUTES");
+
+       /**
+        * A C integer holding pointers related to NTFS security.
+        */
+       Type.PSID =
+         Type.voidptr_t.withName("PSID");
+
+       Type.PACL =
+         Type.voidptr_t.withName("PACL");
+
+       Type.PSECURITY_DESCRIPTOR =
+         Type.voidptr_t.withName("PSECURITY_DESCRIPTOR");
+
+       /**
+        * A C integer holding Win32 local memory handle.
+        */
+       Type.HLOCAL =
+         Type.voidptr_t.withName("HLOCAL");
 
        Type.FILETIME =
          new SharedAll.Type("FILETIME",
@@ -356,6 +378,34 @@
                      /*return*/         Type.zero_or_nothing,
                      /*fileName*/       Type.path,
                      /*fileAttributes*/ Type.DWORD);
+
+        advapi32.declareLazyFFI(SysFile, "GetNamedSecurityInfo",
+          "GetNamedSecurityInfoW", ctypes.winapi_abi,
+                     /*return*/       Type.DWORD,
+                     /*objectName*/   Type.path,
+                     /*objectType*/   Type.DWORD,
+                     /*securityInfo*/ Type.DWORD,
+                     /*sidOwner*/     Type.PSID.out_ptr,
+                     /*sidGroup*/     Type.PSID.out_ptr,
+                     /*dacl*/         Type.PACL.out_ptr,
+                     /*sacl*/         Type.PACL.out_ptr,
+                     /*securityDesc*/ Type.PSECURITY_DESCRIPTOR.out_ptr);
+
+        advapi32.declareLazyFFI(SysFile, "SetNamedSecurityInfo",
+          "SetNamedSecurityInfoW", ctypes.winapi_abi,
+                     /*return*/       Type.DWORD,
+                     /*objectName*/   Type.path,
+                     /*objectType*/   Type.DWORD,
+                     /*securityInfo*/ Type.DWORD,
+                     /*sidOwner*/     Type.PSID,
+                     /*sidGroup*/     Type.PSID,
+                     /*dacl*/         Type.PACL,
+                     /*sacl*/         Type.PACL);
+
+        declareLazyFFI(SysFile, "LocalFree", libc,
+          "LocalFree", ctypes.winapi_abi,
+                     /*return*/       Type.HLOCAL,
+                     /*mem*/          Type.HLOCAL);
      };
 
      exports.OS.Win = {

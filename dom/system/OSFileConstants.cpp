@@ -28,6 +28,7 @@
 
 #if defined(XP_WIN)
 #include <windows.h>
+#include <accctrl.h>
 #endif // defined(XP_WIN)
 
 #include "jsapi.h"
@@ -661,6 +662,11 @@ static const dom::ConstantSpec gWinProperties[] =
 
   // GetFileAttributes error constant
   INT_CONSTANT(INVALID_FILE_ATTRIBUTES),
+
+  // GetNamedSecurityInfo and SetNamedSecurityInfo constants
+  INT_CONSTANT(UNPROTECTED_DACL_SECURITY_INFORMATION),
+  INT_CONSTANT(SE_FILE_OBJECT),
+  INT_CONSTANT(DACL_SECURITY_INFORMATION),
 
   // Errors
   INT_CONSTANT(ERROR_ACCESS_DENIED),
