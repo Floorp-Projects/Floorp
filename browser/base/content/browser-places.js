@@ -1328,12 +1328,12 @@ let BookmarkingUI = {
                                         "starButtonOverflowed.label");
     }
 
-    let button = this.button;
+    let currentLabel = aNode.getAttribute("label");
     if (!this._starButtonLabel)
-      this._starButtonLabel = button.label;
+      this._starButtonLabel = currentLabel;
 
-    if (button && button.getAttribute("label") == this._starButtonLabel)
-      button.setAttribute("label", this._starButtonOverflowedLabel);
+    if (currentLabel == this._starButtonLabel)
+      aNode.setAttribute("label", this._starButtonOverflowedLabel);
   },
 
   onWidgetUnderflow: function(aNode, aContainer) {
@@ -1346,9 +1346,8 @@ let BookmarkingUI = {
     if (!this._starButtonOverflowedLabel || !this._starButtonLabel)
       return;
 
-    let button = this.button;
-    if (button && button.getAttribute("label") == this._starButtonOverflowedLabel)
-      button.setAttribute("label", this._starButtonLabel);
+    if (aNode.getAttribute("label") == this._starButtonOverflowedLabel)
+      aNode.setAttribute("label", this._starButtonLabel);
   },
 
   QueryInterface: XPCOMUtils.generateQI([
