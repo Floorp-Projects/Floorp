@@ -2,96 +2,344 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@media (max-width: 499px) {
-  #editor-container > hbox {
-    -moz-box-orient: vertical;
-  }
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #ced7de;
+    -moz-user-select: none;
+    font-family: "Segoe UI", sans-serif;
+    -moz-text-size-adjust: none;
 }
 
-richlistitem {
-  -moz-box-align: center;
+.toolbar {
+    width: 100%;
+    height: 3em;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    box-shadow: 0 0 3px #444;
+    background-color: #ced7de;
+    color: #000000;
+    font-weight: bold;
+    border-bottom: 2px solid;
+    -moz-border-bottom-colors: #ff9100 #f27900;
 }
 
-richlistitem .preferences-title {
-  pointer-events: none;
-  min-width: 200px;
-  -moz-box-flex: 1;
-  margin-right: 8px;
+.toolbar-container {
+    max-width: 40em;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* XXX look  + sync */
-richlistitem[default="false"] .preferences-title {
-  font-weight: bold;
+#filter-container {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-right: 0.5em;
+    height: 2em;
+    border: 1px solid transparent;
+    border-image-source: url("chrome://browser/skin/images/textfield.png");
+    border-image-slice: 1 1 3 1;
+    border-image-width: 1px 1px 3px 1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
 }
 
-richlistitem .preferences-value {
-  min-width: 200px;
-  pointer-events: none;
-  -moz-box-flex: 4;
-  text-align: end;
-  color: grey;
+#filter-input {
+    -moz-appearance: none;
+    border: none;
+    background-image: none;
+    background-color: transparent;
+    display: inline-block;
+    width: 12em;
+    min-width: 0;
+    color: #000000;
+    opacity: 1;
+    flex: 1 1 auto;
 }
 
-/* Editor */
-#editor-row {
-  padding: 0;
-  background: #E9E9E9;
+#filter-input:-moz-placeholder {
+    color: rgba(255,255,255,0.5);
 }
 
-#editor {
-  border-bottom: 1px solid rgb(207,207,207);
+.toolbar input {
+    display: inline-block;
+    height: 100%;
+    min-width: 3em;
+    -moz-box-sizing: border-box;
+    opacity: 0.75;
 }
 
-#editor > hbox > #editor-name,
-#editor > hbox > #editor-cancel,
-#editor > hbox > #editor-done {
-  display: none;
+#new-pref-toggle-button {
+    background-position: center center;
+    background-image: url("chrome://browser/skin/images/reader-plus-icon-xhdpi.png");
+    background-size: 48px 48px;
+    height: 48px;
+    width: 48px;
+    display: inline-block;
+    outline-style: none;
 }
 
-#editor-container > #editor > hbox > #editor-name,
-#editor-container > #editor > hbox > #editor-cancel,
-#editor-container > #editor > hbox > #editor-done {
-  display: -moz-box;
+#filter-search-button {
+    background-image: url("chrome://browser/skin/images/search.png");
+    background-size: 32px 32px;
+    height: 32px;
+    width: 32px;
+    display: inline-block;
+    outline-style: none;
 }
 
-#editor-container > #editor > hbox > #editor-reset {
-  display: none;
+#filter-input-clear-button {
+    background-image: url("chrome://browser/skin/images/search-clear-30.png");
+    background-size: 32px 32px;
+    height: 32px;
+    width: 32px;
+    display: inline-block;
+    outline-style: none;
 }
 
-#editor-container > hbox > label {
-  pointer-events: none;
-  color: black;
+#filter-input[value=""] + #filter-input-clear-button {
+    display: none;
 }
 
-#editor + richlistitem {
-  display: none;
+.toolbar-item {
+    display: inline-block;
+    height: 3em;
+    min-width: 3em;
+    float: right;
 }
 
-#editor[default="false"] .preferences-title {
-  font-weight: bold;
+#content {
+    position: relative;
+    margin: 0;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 3em;
+    padding-left: 0;
+    padding-right: 0;
+    min-height: 100%;
+    max-width: 40em;
 }
 
-#editor-setting setting {
-  border-color: transparent !important;
+ul {
+    list-style-position: inside;
+    border: 1px solid #808080;
+    background-color: #ffffff;
+    min-height: 100%;
+    width: 100%;
+    padding-top: 0;
+    margin: 0;
+    padding-left: 0;
+    -moz-box-sizing: border-box;
+    box-shadow: 0 0 5px #000000;
+    overflow-x: hidden;
 }
 
-#editor-setting[type="string"] .setting-input {
-  -moz-box-flex: 4;
+#new-pref-container {
+    width: 100%;
+    margin: 0;
+    background-color: #ffffff;
+    -moz-box-sizing: border-box;
+    box-shadow: 0 0 5px #000000;
+    overflow-x: hidden;
+    max-width: 40em;
+    max-height: 100%;
+    position: fixed;
+    top: 3em;
+    left: auto;
+    display: none;
+    z-index: 5;
 }
 
-#editor-setting[type="string"] .setting-input > textbox {
-  -moz-box-flex: 1;
+#new-pref-container input,
+#new-pref-container select {
+    border: none;
+    background-image: none;
 }
 
-/* bug 647650: keep 'text-align: right' here instead of using start/end since 
- * the field should looks like ltr as much as possible
- */
-#editor-setting[type="string"] .setting-input > textbox:-moz-locale-dir(rtl) {
-  direction: ltr;
-  text-align: right;
+#new-pref-container.show {
+    display: block;
 }
 
-#editor-buttons {
-  margin: 2px;
+li {
+    list-style-type: none;
+    border-bottom: 1px solid #d3d3d3;
+    opacity: 1;
+    background-color: #ffffff;
+    cursor: pointer;
 }
 
+#new-pref-line-boolean,
+#new-pref-value-string,
+#new-pref-value-int {
+    display: none;
+}
+#new-pref-item[typestyle="boolean"] #new-pref-line-boolean,
+#new-pref-item[typestyle="string"] #new-pref-value-string,
+#new-pref-item[typestyle="int"] #new-pref-value-int {
+    display: block;
+}
+
+.pref-name,
+.pref-value {
+    padding: 15px 10px;
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    background-image: none;
+}
+
+.pref-value {
+    color: rgba(0,0,0,0.5);
+    flex: 1 1 auto;
+    border: none;
+    -moz-appearance: none;
+    background-image: none;
+    background-color: transparent;
+}
+
+.pref-name[locked] {
+    padding-right: 20px;
+    background-image: url("chrome://browser/skin/images/lock.png");
+    background-repeat: no-repeat;
+    background-position: right 50%;
+    background-size: auto 60%;
+}
+
+#new-pref-name {
+    width: 30em;
+}
+
+#new-pref-type {
+    display: inline-block !important;
+    border-left: 1px solid #d3d3d3;
+    width: 10em;
+    text-align: right;
+}
+
+.pref-item-line {
+    border-top: 1px solid rgba(0,0,0,0.05);
+    color: rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: row;
+}
+
+#new-pref-value-boolean {
+    flex: 1 1 auto;
+}
+
+/* Disable newPref dialog spinbuttons, use custom version from Android */
+/* Filed Bug 962359 to enhance the default spinbutton style to be touch-friendly */
+#new-pref-value-int {
+    -moz-appearance: textfield;
+}
+
+#new-pref-container .pref-button.toggle {
+    display: inline-block;
+    opacity: 1;
+    flex: 0 1 auto;
+    float: right;
+}
+
+#new-pref-container .pref-button.cancel,
+#new-pref-container .pref-button.create {
+    display: inline-block;
+    opacity: 1;
+    flex: 1 1 auto;
+}
+
+.pref-item-line {
+    pointer-events: none;
+}
+
+#new-pref-container .pref-item-line,
+.pref-item.selected .pref-item-line,
+.pref-item:not(.selected) .pref-button.reset {
+    pointer-events: auto;
+}
+
+#new-pref-container .pref-button.create[disabled] {
+    color: #d3d3d3;
+}
+
+.pref-item.selected {
+    background-color: rgba(0,0,255,0.05);
+}
+
+.pref-button {
+    display: inline-block;
+    -moz-box-sizing: border-box;
+    text-align: center;
+    padding: 10px 1em;
+    border-left: 1px solid rgba(0,0,0,0.1);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 500ms;
+}
+
+.pref-item.selected .pref-item-line .pref-button {
+    opacity: 1;
+}
+
+.pref-item:not(.selected) .pref-item-line .pref-button:not(.reset) {
+    display: none;
+}
+
+.pref-item:not(.selected) .pref-button.reset {
+    opacity: 1;
+}
+
+/* Disable detail list item spinbuttons, use custom version from Android */
+/* Filed Bug 962359 to enhance the default spinbutton style to be touch-friendly */
+.pref-item input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.pref-button:active {
+    background-color: rgba(0,0,255,0.2);
+}
+
+.pref-button[disabled] {
+    display: none;
+}
+
+.pref-button.up {
+    background-image: url("chrome://browser/skin/images/arrowup-16.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.pref-button.down {
+    background-image: url("chrome://browser/skin/images/arrowdown-16.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+#prefs-shield {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 500ms;
+    display: none;
+}
+
+#prefs-shield[shown] {
+    display: block;
+    opacity: 1;
+}
+
+#loading-container > li {
+    background-image: url(chrome://global/skin/media/throbber.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    padding-left: 40px;
+    height: 3em;
+    width: 100%;
+}
