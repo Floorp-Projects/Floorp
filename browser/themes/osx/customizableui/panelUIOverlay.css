@@ -63,3 +63,7 @@ toolbarbutton[cui-areatype="menu-panel"] {
 #BMB_bookmarksPopup > menu > .menu-right {
   -moz-margin-end: 0;
 }
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-margin-start: 4px;
+}

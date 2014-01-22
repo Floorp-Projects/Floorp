@@ -532,6 +532,20 @@ toolbarpaletteitem[place="palette"] > #search-container {
   min-height: 28px;
 }
 
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button::after {
+  content: "";
+  display: -moz-box;
+  width: 1px;
+  height: 18px;
+  -moz-margin-end: -1px;
+  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
+  background-clip: padding-box;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 1px 18px;
+  box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
+}
+
 #PanelUI-developerItems > toolbarbutton[checked="true"],
 #PanelUI-bookmarks > toolbarbutton[checked="true"],
 #PanelUI-history > toolbarbutton[checked="true"],
