@@ -2078,7 +2078,9 @@ HTMLInputElement::GetStepBase() const
 }
 
 nsresult
-HTMLInputElement::GetValueIfStepped(int32_t aStep, Decimal* aNextStep)
+HTMLInputElement::GetValueIfStepped(int32_t aStep,
+                                    StepCallerType aCallerType,
+                                    Decimal* aNextStep)
 {
   if (!DoStepDownStepUpApply()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -2086,7 +2088,11 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep, Decimal* aNextStep)
 
   Decimal step = GetStep();
   if (step == kStepAny) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    if (aCallerType != CALLED_FOR_USER_EVENT) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+    // Allow the spin buttons and up/down arrow keys to do something sensible:
+    step = GetDefaultStep();
   }
 
   Decimal value = GetValueAsDecimal();
@@ -2168,7 +2174,7 @@ HTMLInputElement::ApplyStep(int32_t aStep)
 {
   Decimal nextStep = Decimal::nan(); // unchanged if value will not change
 
-  nsresult rv = GetValueIfStepped(aStep, &nextStep);
+  nsresult rv = GetValueIfStepped(aStep, CALLED_FOR_SCRIPT, &nextStep);
 
   if (NS_SUCCEEDED(rv) && nextStep.isFinite()) {
     SetValue(nextStep);
@@ -3603,7 +3609,7 @@ HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
 {
   Decimal newValue = Decimal::nan(); // unchanged if value will not change
 
-  nsresult rv = GetValueIfStepped(aDirection, &newValue);
+  nsresult rv = GetValueIfStepped(aDirection, CALLED_FOR_USER_EVENT, &newValue);
 
   if (NS_FAILED(rv) || !newValue.isFinite()) {
     return; // value should not or will not change

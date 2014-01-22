@@ -3614,14 +3614,9 @@ PRStatus _MD_MemUnmap(void *addr, PRUint32 len)
 {
     if (munmap(addr, len) == 0) {
         return PR_SUCCESS;
-    } else {
-    if (errno == EINVAL) {
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, errno);
-    } else {
-        PR_SetError(PR_UNKNOWN_ERROR, errno);
     }
-        return PR_FAILURE;
-    }
+    _PR_MD_MAP_DEFAULT_ERROR(errno);
+    return PR_FAILURE;
 }
 
 PRStatus _MD_CloseFileMap(PRFileMap *fmap)
@@ -3643,16 +3638,13 @@ PRStatus _MD_SyncMemMap(
     void *addr,
     PRUint32 len)
 {
+    /* msync(..., MS_SYNC) alone is sufficient to flush modified data to disk
+     * synchronously. It is not necessary to call fsync. */
     if (msync(addr, len, MS_SYNC) == 0) {
         return PR_SUCCESS;
-    } else {
-        if (errno == EINVAL) {
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, errno);
-        } else {
-            PR_SetError(PR_UNKNOWN_ERROR, errno);
-        }
-        return PR_FAILURE;
     }
+    _PR_MD_MAP_DEFAULT_ERROR(errno);
+    return PR_FAILURE;
 }
 
 #if defined(_PR_NEED_FAKE_POLL)
