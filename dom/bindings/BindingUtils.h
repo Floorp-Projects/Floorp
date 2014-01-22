@@ -1597,6 +1597,8 @@ template<typename T>
 void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq);
 
 // Class for simple sequence arguments, only used internally by codegen.
+namespace binding_detail {
+
 template<typename T>
 class AutoSequence : public AutoFallibleTArray<T, 16>
 {
@@ -1609,6 +1611,8 @@ public:
     return *reinterpret_cast<const Sequence<T>*>(this);
   }
 };
+
+} // namespace binding_detail
 
 // Class used to trace sequences, with specializations for various
 // sequence types.
