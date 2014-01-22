@@ -11,8 +11,8 @@
 
 #include "jsscriptinlines.h"
 
-using namespace js;
-using namespace jit;
+namespace js {
+namespace jit {
 
 inline RegExpObject *
 CompileInfo::getRegExp(jsbytecode *pc) const
@@ -25,5 +25,8 @@ CompileInfo::getFunction(jsbytecode *pc) const
 {
     return script_->getFunction(GET_UINT32_INDEX(pc));
 }
+
+} // namespace jit
+} // namespace js
 
 #endif /* jit_CompileInfo_inl_h */
