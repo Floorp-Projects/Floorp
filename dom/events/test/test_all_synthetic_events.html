@@ -285,6 +285,10 @@ const kEventConstructors = {
                                                           return new MozWifiStatusChangeEvent(aName, aProps);
                                                        },
                                              },
+  MozWifiStationInfoEvent:                   { create: function (aName, aProps) {
+                                                          return new MozWifiStationInfoEvent(aName, aProps);
+                                                       },
+                                             },
   MutationEvent:                             { create: function (aName, aProps) {
                                                          var e = document.createEvent("mutationevent");
                                                          e.initMutationEvent(aName, aProps.bubbles, aProps.cancelable,
