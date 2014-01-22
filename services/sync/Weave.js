@@ -107,7 +107,7 @@ WeaveService.prototype = {
               // This makes sure that Weave.Service is loaded
               Svc.Obs.notify("weave:service:setup-complete");
               // TODO: this shouldn't be here. It should be at the end
-              // of the promise chain of the 'fxaccounts:onlogin' handler.
+              // of the promise chain of the 'fxaccounts:onverified' handler.
               Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
               this.ensureLoaded();
             }
@@ -127,7 +127,7 @@ WeaveService.prototype = {
       let os = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
       os.addObserver(this, "final-ui-startup", true);
-      os.addObserver(this, "fxaccounts:onlogin", true);
+      os.addObserver(this, "fxaccounts:onverified", true);
       os.addObserver(this, "fxaccounts:onlogout", true);
       break;
 
@@ -161,7 +161,7 @@ WeaveService.prototype = {
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
 
-    case 'fxaccounts:onlogin':
+    case 'fxaccounts:onverified':
         // Tell sync that if this is a first sync, it should try and sync the
         // server data with what is on the client - despite the name implying
         // otherwise, this is what "resetClient" does.

@@ -1044,19 +1044,17 @@ var gBrowserInit = {
     if (!isLoadingBlank || !focusAndSelectUrlBar())
       gBrowser.selectedBrowser.focus();
 
-    gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
-    gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
-
     // Set up Sanitize Item
     this._initializeSanitizer();
 
     // Enable/Disable auto-hide tabbar
     gBrowser.tabContainer.updateVisibility();
 
+    BookmarkingUI.init();
+
     gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
     var homeButton = document.getElementById("home-button");
-    gHomeButton.init();
     gHomeButton.updateTooltip(homeButton);
     gHomeButton.updatePersonalToolbarStyle(homeButton);
 
@@ -1151,6 +1149,7 @@ var gBrowserInit = {
     window.addEventListener("dragover", MousePosTracker, false);
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
+    gNavToolbox.addEventListener("customizationchange", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
 
     // End startup crash tracking after a delay to catch crashes while restoring
@@ -1248,7 +1247,6 @@ var gBrowserInit = {
     }
 
     BookmarkingUI.uninit();
-    gHomeButton.uninit();
 
     TabsInTitlebar.uninit();
 
@@ -3278,18 +3276,9 @@ function OpenBrowserWindow(options)
   return win;
 }
 
-//XXXunf Are these still useful to keep around?
+// Only here for backwards compat, we should remove this soon
 function BrowserCustomizeToolbar() {
   gCustomizeMode.enter();
-}
-
-function BrowserToolboxCustomizeDone(aToolboxChanged) {
-  gCustomizeMode.exit(aToolboxChanged);
-}
-
-function BrowserToolboxCustomizeChange(aType) {
-  gHomeButton.updatePersonalToolbarStyle();
-  BookmarksMenuButton.customizeChange();
 }
 
 /**
@@ -4777,16 +4766,6 @@ function fireSidebarFocusedEvent() {
 
 
 var gHomeButton = {
-  init: function() {
-    gNavToolbox.addEventListener("customizationchange",
-                                 this.onCustomizationChange);
-  },
-
-  uninit: function() {
-    gNavToolbox.removeEventListener("customizationchange",
-                                    this.onCustomizationChange);
-  },
-
   prefDomain: "browser.startup.homepage",
   observe: function (aSubject, aTopic, aPrefName)
   {
@@ -4838,10 +4817,6 @@ var gHomeButton = {
                                || homeButton.parentNode.parentNode.id == "PersonalToolbar" ?
                              homeButton.className.replace("toolbarbutton-1", "bookmark-item") :
                              homeButton.className.replace("bookmark-item", "toolbarbutton-1");
-  },
-
-  onCustomizationChange: function(aEvent) {
-    gHomeButton.updatePersonalToolbarStyle();
   },
 };
 

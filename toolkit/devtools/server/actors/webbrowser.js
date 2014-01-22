@@ -793,22 +793,26 @@ BrowserTabActor.prototype = {
     let enable =  Ci.nsIRequest.LOAD_NORMAL;
     let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
-    let docShell = this.window
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
+    if (this.window) {
+      let docShell = this.window
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDocShell);
 
-    docShell.defaultLoadFlags = allow ? enable : disable;
+      docShell.defaultLoadFlags = allow ? enable : disable;
+    }
   },
 
   /**
    * Disable or enable JS via docShell.
    */
   _setJavascriptEnabled: function(allow) {
-    let docShell = this.window
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
+    if (this.window) {
+      let docShell = this.window
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDocShell);
 
-    docShell.allowJavascript = allow;
+      docShell.allowJavascript = allow;
+    }
   },
 
   /**

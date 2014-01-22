@@ -371,6 +371,16 @@ if (navigator.userAgent.indexOf("Windows") == -1 ||
     { name:"big-buck-bunny-unseekable.mp4", type:"video/mp4" }
   ]);
 }
+// Android supports fragmented MP4 playback from 4.3.
+var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                  .getProperty('version');
+// Fragmented MP4.
+if (navigator.userAgent.indexOf("Mobile") != -1 && androidVersion >= 18) {
+  gUnseekableTests = gUnseekableTests.concat([
+    { name:"street.mp4", type:"video/mp4" }
+  ]);
+}
 
 // These are files suitable for using with a "new Audio" constructor.
 var gAudioTests = [
@@ -577,6 +587,15 @@ function getMajorMimeType(mimetype) {
   }
 }
 
+function removeNodeAndSource(n) {
+  n.remove();
+  // force release of underlying decoder
+  n.src = "";
+  while (n.firstChild) {
+    n.removeChild(n.firstChild);
+  }
+}
+
 // Number of tests to run in parallel. Warning: Each media element requires
 // at least 3 threads (4 on Linux), and on Linux each thread uses 10MB of
 // virtual address space. Beware!
@@ -700,12 +719,12 @@ function MediaTestManager() {
 function mediaTestCleanup() {
     var V = document.getElementsByTagName("video");
     for (i=0; i<V.length; i++) {
-      V[i].parentNode.removeChild(V[i]);
+      removeNodeAndSource(V[i]);
       V[i] = null;
     }
     var A = document.getElementsByTagName("audio");
     for (i=0; i<A.length; i++) {
-      A[i].parentNode.removeChild(A[i]);
+      removeNodeAndSource(A[i]);
       A[i] = null;
     }
     SpecialPowers.forceGC();

@@ -22,6 +22,12 @@
                android:value="preferences_search"/>
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_home"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+            <extra android:name="resource"
+                   android:value="preferences_home" />
+    </PreferenceScreen>
+
     <org.mozilla.gecko.preferences.AndroidImportPreference
             android:key="android.not_a_preference.import_android"
             gecko:entries="@array/pref_import_android_entries"

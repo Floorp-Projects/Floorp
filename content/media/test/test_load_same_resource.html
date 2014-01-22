@@ -22,6 +22,8 @@ function cloneLoaded(event) {
        "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
   }
 
+  e.removeEventListener("loadeddata", cloneLoaded, false);
+
   manager.finished(e.token);
 }
 
@@ -29,7 +31,7 @@ function tryClone(event) {
   var e = event.target;
   var clone = e.cloneNode(false);
   clone.token = e.token;
-  
+
   if (e._expectedDuration) {
     ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
        e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
@@ -37,6 +39,8 @@ function tryClone(event) {
   }
 
   clone.addEventListener("loadeddata", cloneLoaded, false);
+
+  e.removeEventListener("loadeddata", tryClone, false);
 }
 
 // This test checks that loading the same URI twice in different elements at the same time
@@ -49,6 +53,7 @@ function tryClone(event) {
 function initTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var e = document.createElement(elemType);
+  e.preload = "auto";
   if (e.canPlayType(test.type)) {
     e.src = test.name;
     if (test.duration) {

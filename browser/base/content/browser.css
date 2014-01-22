@@ -747,6 +747,14 @@ toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbut
   max-height: 32px;
 }
 
+toolbarbutton[sdk-button="true"] > .toolbarbutton-icon {
+  max-height: 32px;
+}
+
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  max-height: 18px;
+}
+
 panelview > .social-panel-frame {
   width: auto;
   height: auto;

@@ -150,3 +150,10 @@ chrome.jar:
   skin/images/arrow-left.png                (images/arrow-left.png)
   skin/images/arrow-left@1.4x.png           (images/arrow-left@1.4x.png)
   skin/images/arrow-left@1.8x.png           (images/arrow-left@1.8x.png)
+
+# AboutConfig specific:
+  skin/images/textfield.png                 (images/textfield.png)
+  skin/images/reader-plus-icon-xhdpi.png    (images/reader-plus-icon-xhdpi.png)
+  skin/images/search.png                    (images/search.png)
+  skin/images/search-clear-30.png           (images/search-clear-30.png)
+  skin/images/lock.png                      (images/lock.png)

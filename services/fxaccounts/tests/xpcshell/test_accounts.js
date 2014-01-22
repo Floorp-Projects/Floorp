@@ -7,6 +7,7 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
@@ -189,25 +190,33 @@ add_test(function test_client_mock() {
 
 /*
  * Sign in a user, and after a little while, verify the user's email.
+ * Right after signing in the user, we should get the 'onlogin' notification.
  * Polling should detect that the email is verified, and eventually
- * 'onlogin' should be observed
+ * 'onverified' should be observed
  */
 add_test(function test_verification_poll() {
   do_test_pending();
 
   let fxa = new MockFxAccounts();
   let test_user = getTestUser("francine");
+  let login_notification_received = false;
 
-  makeObserver("fxaccounts:onlogin", function() {
-    log.debug("test_verification_poll observed onlogin");
-    // Once email verification is complete, we will observe onlogin
+  makeObserver(ONVERIFIED_NOTIFICATION, function() {
+    log.debug("test_verification_poll observed onverified");
+    // Once email verification is complete, we will observe onverified
     fxa.internal.getUserAccountData().then(user => {
       // And confirm that the user's state has changed
       do_check_eq(user.verified, true);
       do_check_eq(user.email, test_user.email);
+      do_check_true(login_notification_received);
       do_test_finished();
       run_next_test();
     });
+  });
+
+  makeObserver(ONLOGIN_NOTIFICATION, function() {
+    log.debug("test_verification_poll observer onlogin");
+    login_notification_received = true;
   });
 
   fxa.setSignedInUser(test_user).then(() => {
@@ -225,21 +234,21 @@ add_test(function test_verification_poll() {
 
 /*
  * Sign in the user, but never verify the email.  The check-email
- * poll should time out.  No login event should be observed, and the
+ * poll should time out.  No verifiedlogin event should be observed, and the
  * internal whenVerified promise should be rejected
  */
 add_test(function test_polling_timeout() {
   do_test_pending();
 
-  // This test could be better - the onlogin observer might fire on somebody
-  // else's stack, and we're not making sure that we're not receiving such a
-  // message.  In other words, this tests either failure, or success, but not
-  // both.
+  // This test could be better - the onverified observer might fire on
+  // somebody else's stack, and we're not making sure that we're not receiving
+  // such a message. In other words, this tests either failure, or success, but
+  // not both.
 
   let fxa = new MockFxAccounts();
   let test_user = getTestUser("carol");
 
-  let removeObserver = makeObserver("fxaccounts:onlogin", function() {
+  let removeObserver = makeObserver(ONVERIFIED_NOTIFICATION, function() {
     do_throw("We should not be getting a login event!");
   });
 
@@ -304,7 +313,7 @@ add_test(function test_getKeys_no_token() {
   let user = getTestUser("lettuce.protheroe");
   delete user.keyFetchToken
 
-  makeObserver("fxaccounts:onlogout", function() {
+  makeObserver(ONLOGOUT_NOTIFICATION, function() {
     log.debug("test_getKeys_no_token observed logout");
     fxa.internal.getUserAccountData().then(user => {
       do_test_finished();
@@ -329,9 +338,9 @@ add_test(function test_overlapping_signins() {
   let alice = getTestUser("alice");
   let bob = getTestUser("bob");
 
-  makeObserver("fxaccounts:onlogin", function() {
-    log.debug("test_overlapping_signins observed onlogin");
-    // Once email verification is complete, we will observe onlogin
+  makeObserver(ONVERIFIED_NOTIFICATION, function() {
+    log.debug("test_overlapping_signins observed onverified");
+    // Once email verification is complete, we will observe onverified
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user.email, bob.email);
       do_check_eq(user.verified, true);

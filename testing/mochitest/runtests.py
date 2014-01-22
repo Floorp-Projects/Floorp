@@ -12,6 +12,7 @@ import sys
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR);
 
+import glob
 import json
 import mozcrash
 import mozinfo
@@ -26,6 +27,7 @@ import tempfile
 import time
 import traceback
 import urllib2
+import zipfile
 
 from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, systemMemory, dumpScreen, ShutdownLeaks
 from datetime import datetime
@@ -49,6 +51,16 @@ def resetGlobalLog():
   log.setLevel(logging.INFO)
   log.addHandler(handler)
 resetGlobalLog()
+
+###########################
+# Option for NSPR logging #
+###########################
+
+# Set the desired log modules you want an NSPR log be produced by a try run for, or leave blank to disable the feature.
+# This will be passed to NSPR_LOG_MODULES environment variable. Try run will then put a download link for the log file
+# on tbpl.mozilla.org.
+
+NSPR_LOG_MODULES = ""
 
 ####################
 # PROCESS HANDLING #
@@ -648,6 +660,15 @@ class Mochitest(MochitestUtilsMixin):
     if options.fatalAssertions:
       browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
+    # Produce an NSPR log, is setup (see NSPR_LOG_MODULES global at the top of
+    # this script).
+    self.nsprLogs = NSPR_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
+    if self.nsprLogs:
+      browserEnv["NSPR_LOG_MODULES"] = NSPR_LOG_MODULES
+
+      browserEnv["NSPR_LOG_FILE"] = "%s/nspr.log" % tempfile.gettempdir()
+      browserEnv["GECKO_SEPARATE_NSPR_LOGS"] = "1"
+
     return browserEnv
 
   def cleanup(self, manifest, options):
@@ -1040,6 +1061,12 @@ class Mochitest(MochitestUtilsMixin):
     self.stopWebServer(options)
     self.stopWebSocketServer(options)
     processLeakLog(self.leak_report_file, options.leakThreshold)
+
+    if self.nsprLogs:
+      with zipfile.ZipFile("%s/nsprlog.zip" % browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
+        for logfile in glob.glob("%s/nspr*.log*" % tempfile.gettempdir()):
+          logzip.write(logfile)
+          os.remove(logfile)
 
     log.info("runtests.py | Running tests: end.")
 
