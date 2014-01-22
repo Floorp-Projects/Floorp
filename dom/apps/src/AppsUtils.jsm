@@ -71,7 +71,7 @@ this.AppsUtils = {
       installOrigin: aApp.installOrigin,
       origin: aApp.origin,
 #ifdef MOZ_ANDROID_SYNTHAPKS
-      packageName: aApp.packageName,
+      apkPackageName: aApp.apkPackageName,
 #endif
       receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
       installTime: aApp.installTime,
