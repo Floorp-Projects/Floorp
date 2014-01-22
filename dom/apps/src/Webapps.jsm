@@ -241,14 +241,26 @@ this.DOMApplicationRegistry = {
   },
 
   // Notify we are starting with registering apps.
+  _registryStarted: Promise.defer(),
   notifyAppsRegistryStart: function notifyAppsRegistryStart() {
     Services.obs.notifyObservers(this, "webapps-registry-start", null);
+    this._registryStarted.resolve();
+  },
+
+  get registryStarted() {
+    return this._registryStarted.promise;
   },
 
   // Notify we are done with registering apps and save a copy of the registry.
+  _registryReady: Promise.defer(),
   notifyAppsRegistryReady: function notifyAppsRegistryReady() {
+    this._registryReady.resolve();
     Services.obs.notifyObservers(this, "webapps-registry-ready", null);
     this._saveApps();
+  },
+
+  get registryReady() {
+    return this._registryReady.promise;
   },
 
   // Ensure that the .to property in redirects is a relative URL.
