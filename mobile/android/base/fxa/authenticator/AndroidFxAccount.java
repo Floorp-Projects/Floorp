@@ -33,17 +33,24 @@ import android.os.Bundle;
 public class AndroidFxAccount implements AbstractFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
-  public static final String ACCOUNT_KEY_ASSERTION = "assertion";
-  public static final String ACCOUNT_KEY_CERTIFICATE = "certificate";
-  public static final String ACCOUNT_KEY_INVALID = "invalid";
-  public static final String ACCOUNT_KEY_SERVERURI = "serverURI";
-  public static final String ACCOUNT_KEY_SESSION_TOKEN = "sessionToken";
-  public static final String ACCOUNT_KEY_KEY_FETCH_TOKEN = "keyFetchToken";
-  public static final String ACCOUNT_KEY_VERIFIED = "verified";
-  public static final String ACCOUNT_KEY_KA = "kA";
-  public static final String ACCOUNT_KEY_KB = "kB";
-  public static final String ACCOUNT_KEY_UNWRAPKB = "unwrapkB";
-  public static final String ACCOUNT_KEY_ASSERTION_KEY_PAIR = "assertionKeyPair";
+  public static final int CURRENT_ACCOUNT_VERSION = 2;
+  public static final String ACCOUNT_KEY_ACCOUNT_VERSION = "version";
+  public static final String ACCOUNT_KEY_PROFILE = "profile";
+  public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
+
+  public static final int CURRENT_BUNDLE_VERSION = 1;
+  public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
+  public static final String BUNDLE_KEY_ASSERTION = "assertion";
+  public static final String BUNDLE_KEY_CERTIFICATE = "certificate";
+  public static final String BUNDLE_KEY_INVALID = "invalid";
+  public static final String BUNDLE_KEY_SERVERURI = "serverURI";
+  public static final String BUNDLE_KEY_SESSION_TOKEN = "sessionToken";
+  public static final String BUNDLE_KEY_KEY_FETCH_TOKEN = "keyFetchToken";
+  public static final String BUNDLE_KEY_VERIFIED = "verified";
+  public static final String BUNDLE_KEY_KA = "kA";
+  public static final String BUNDLE_KEY_KB = "kB";
+  public static final String BUNDLE_KEY_UNWRAPKB = "unwrapkB";
+  public static final String BUNDLE_KEY_ASSERTION_KEY_PAIR = "assertionKeyPair";
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -71,6 +78,105 @@ public class AndroidFxAccount implements AbstractFxAccount {
     this.accountManager = AccountManager.get(this.context);
   }
 
+  protected int getAccountVersion() {
+    String v = accountManager.getUserData(account, ACCOUNT_KEY_ACCOUNT_VERSION);
+    if (v == null) {
+      return 0;         // Implicit.
+    }
+
+    try {
+      return Integer.parseInt(v, 10);
+    } catch (NumberFormatException ex) {
+      return 0;
+    }
+  }
+
+  protected void persistBundle(ExtendedJSONObject bundle) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
+  }
+
+  protected ExtendedJSONObject unbundle() {
+    final int version = getAccountVersion();
+    if (version < CURRENT_ACCOUNT_VERSION) {
+      // Needs upgrade. For now, do nothing.
+      return null;
+    }
+
+    if (version > CURRENT_ACCOUNT_VERSION) {
+      // Oh dear.
+      return null;
+    }
+
+    String bundle = accountManager.getUserData(account, ACCOUNT_KEY_DESCRIPTOR);
+    if (bundle == null) {
+      return null;
+    }
+    return unbundleAccountV1(bundle);
+  }
+
+  protected String getBundleData(String key) {
+    ExtendedJSONObject o = unbundle();
+    if (o == null) {
+      return null;
+    }
+    return o.getString(key);
+  }
+
+  protected boolean getBundleDataBoolean(String key, boolean def) {
+    ExtendedJSONObject o = unbundle();
+    if (o == null) {
+      return def;
+    }
+    Boolean b = o.getBoolean(key);
+    if (b == null) {
+      return def;
+    }
+    return b.booleanValue();
+  }
+
+  protected byte[] getBundleDataBytes(String key) {
+    ExtendedJSONObject o = unbundle();
+    if (o == null) {
+      return null;
+    }
+    return o.getByteArrayHex(key);
+  }
+
+  protected void updateBundleDataBytes(String key, byte[] value) {
+    updateBundleValue(key, value == null ? null : Utils.byte2Hex(value));
+  }
+
+  protected void updateBundleValue(String key, boolean value) {
+    ExtendedJSONObject descriptor = unbundle();
+    if (descriptor == null) {
+      return;
+    }
+    descriptor.put(key, value);
+    persistBundle(descriptor);
+  }
+
+  protected void updateBundleValue(String key, String value) {
+    ExtendedJSONObject descriptor = unbundle();
+    if (descriptor == null) {
+      return;
+    }
+    descriptor.put(key, value);
+    persistBundle(descriptor);
+  }
+
+  private ExtendedJSONObject unbundleAccountV1(String bundle) {
+    ExtendedJSONObject o;
+    try {
+      o = new ExtendedJSONObject(bundle);
+    } catch (Exception e) {
+      return null;
+    }
+    if (CURRENT_BUNDLE_VERSION == o.getIntegerSafely(BUNDLE_KEY_BUNDLE_VERSION)) {
+      return o;
+    }
+    return null;
+  }
+
   @Override
   public byte[] getEmailUTF8() {
     try {
@@ -79,6 +185,15 @@ public class AndroidFxAccount implements AbstractFxAccount {
       // Ignore.
       return null;
     }
+  }
+
+  /**
+   * Note that if the user clears data, an account will be left pointing to a
+   * deleted profile. Such is life.
+   */
+  @Override
+  public String getProfile() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE);
   }
 
   @Override
@@ -95,7 +210,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public String getServerURI() {
-    return accountManager.getUserData(account, ACCOUNT_KEY_SERVERURI);
+    return getBundleData(BUNDLE_KEY_SERVERURI);
   }
 
   protected byte[] getUserDataBytes(String key) {
@@ -108,58 +223,57 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
   @Override
   public byte[] getSessionToken() {
-    return getUserDataBytes(ACCOUNT_KEY_SESSION_TOKEN);
+    return getBundleDataBytes(BUNDLE_KEY_SESSION_TOKEN);
   }
 
   @Override
   public byte[] getKeyFetchToken() {
-    return getUserDataBytes(ACCOUNT_KEY_KEY_FETCH_TOKEN);
+    return getBundleDataBytes(BUNDLE_KEY_KEY_FETCH_TOKEN);
   }
 
   @Override
   public void setSessionToken(byte[] sessionToken) {
-    accountManager.setUserData(account, ACCOUNT_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
+    updateBundleDataBytes(BUNDLE_KEY_SESSION_TOKEN, sessionToken);
   }
 
   @Override
   public void setKeyFetchToken(byte[] keyFetchToken) {
-    accountManager.setUserData(account, ACCOUNT_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
+    updateBundleDataBytes(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken);
   }
 
   @Override
   public boolean isVerified() {
-    String data = accountManager.getUserData(account, ACCOUNT_KEY_VERIFIED);
-    return Boolean.valueOf(data);
+    return getBundleDataBoolean(BUNDLE_KEY_VERIFIED, false);
   }
 
   @Override
   public void setVerified() {
-    accountManager.setUserData(account, ACCOUNT_KEY_VERIFIED, Boolean.valueOf(true).toString());
+    updateBundleValue(BUNDLE_KEY_VERIFIED, true);
   }
 
   @Override
   public byte[] getKa() {
-    return getUserDataBytes(ACCOUNT_KEY_KA);
+    return getUserDataBytes(BUNDLE_KEY_KA);
   }
 
   @Override
   public void setKa(byte[] kA) {
-    accountManager.setUserData(account, ACCOUNT_KEY_KA, Utils.byte2Hex(kA));
+    updateBundleValue(BUNDLE_KEY_KA, Utils.byte2Hex(kA));
   }
 
   @Override
   public void setWrappedKb(byte[] wrappedKb) {
-    byte[] unwrapKb = getUserDataBytes(ACCOUNT_KEY_UNWRAPKB);
+    byte[] unwrapKb = getUserDataBytes(BUNDLE_KEY_UNWRAPKB);
     byte[] kB = new byte[wrappedKb.length]; // We could hard-code this to be 32.
     for (int i = 0; i < wrappedKb.length; i++) {
       kB[i] = (byte) (wrappedKb[i] ^ unwrapKb[i]);
     }
-    accountManager.setUserData(account, ACCOUNT_KEY_KB, Utils.byte2Hex(kB));
+    updateBundleValue(BUNDLE_KEY_KB, Utils.byte2Hex(kB));
   }
 
   @Override
   public byte[] getKb() {
-    return getUserDataBytes(ACCOUNT_KEY_KB);
+    return getUserDataBytes(BUNDLE_KEY_KB);
   }
 
   protected BrowserIDKeyPair generateNewAssertionKeyPair() throws GeneralSecurityException {
@@ -171,35 +285,41 @@ public class AndroidFxAccount implements AbstractFxAccount {
   @Override
   public BrowserIDKeyPair getAssertionKeyPair() throws GeneralSecurityException {
     try {
-      String data = accountManager.getUserData(account, ACCOUNT_KEY_ASSERTION_KEY_PAIR);
+      String data = getBundleData(BUNDLE_KEY_ASSERTION_KEY_PAIR);
       return RSACryptoImplementation.fromJSONObject(new ExtendedJSONObject(data));
     } catch (Exception e) {
       // Fall through to generating a new key pair.
     }
 
     BrowserIDKeyPair keyPair = generateNewAssertionKeyPair();
-    accountManager.setUserData(account, ACCOUNT_KEY_ASSERTION_KEY_PAIR, keyPair.toJSONObject().toJSONString());
+
+    ExtendedJSONObject descriptor = unbundle();
+    if (descriptor == null) {
+      descriptor = new ExtendedJSONObject();
+    }
+    descriptor.put(BUNDLE_KEY_ASSERTION_KEY_PAIR, keyPair.toJSONObject().toJSONString());
+    persistBundle(descriptor);
     return keyPair;
   }
 
   @Override
   public String getCertificate() {
-    return accountManager.getUserData(account, ACCOUNT_KEY_CERTIFICATE);
+    return getBundleData(BUNDLE_KEY_CERTIFICATE);
   }
 
   @Override
   public void setCertificate(String certificate) {
-    accountManager.setUserData(account, ACCOUNT_KEY_CERTIFICATE, certificate);
+    updateBundleValue(BUNDLE_KEY_CERTIFICATE, certificate);
   }
 
   @Override
   public String getAssertion() {
-    return accountManager.getUserData(account, ACCOUNT_KEY_ASSERTION);
+    return getBundleData(BUNDLE_KEY_ASSERTION);
   }
 
   @Override
   public void setAssertion(String assertion) {
-    accountManager.setUserData(account, ACCOUNT_KEY_ASSERTION, assertion);
+    updateBundleValue(BUNDLE_KEY_ASSERTION, assertion);
   }
 
   /**
@@ -212,22 +332,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
    * @return JSON-object of Strings.
    */
   public ExtendedJSONObject toJSONObject() {
-    ExtendedJSONObject o = new ExtendedJSONObject();
-    for (String key : new String[] {
-        ACCOUNT_KEY_ASSERTION,
-        ACCOUNT_KEY_CERTIFICATE,
-        ACCOUNT_KEY_SERVERURI,
-        ACCOUNT_KEY_SESSION_TOKEN,
-        ACCOUNT_KEY_INVALID,
-        ACCOUNT_KEY_KEY_FETCH_TOKEN,
-        ACCOUNT_KEY_VERIFIED,
-        ACCOUNT_KEY_KA,
-        ACCOUNT_KEY_KB,
-        ACCOUNT_KEY_UNWRAPKB,
-        ACCOUNT_KEY_ASSERTION_KEY_PAIR,
-    }) {
-      o.put(key, accountManager.getUserData(account, key));
-    }
+    ExtendedJSONObject o = unbundle();
     o.put("email", account.name);
     try {
       o.put("emailUTF8", Utils.byte2Hex(account.name.getBytes("UTF-8")));
@@ -238,7 +343,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return o;
   }
 
-  public static Account addAndroidAccount(Context context, String email, String password,
+  public static Account addAndroidAccount(Context context, String email, String password, String profile,
       String serverURI, byte[] sessionToken, byte[] keyFetchToken, boolean verified)
           throws UnsupportedEncodingException, GeneralSecurityException {
     if (email == null) {
@@ -265,11 +370,17 @@ public class AndroidFxAccount implements AbstractFxAccount {
     byte[] unwrapBkey = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
 
     Bundle userdata = new Bundle();
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_SERVERURI, serverURI);
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_VERIFIED, Boolean.valueOf(verified).toString());
-    userdata.putString(AndroidFxAccount.ACCOUNT_KEY_UNWRAPKB, Utils.byte2Hex(unwrapBkey));
+    userdata.putInt(ACCOUNT_KEY_ACCOUNT_VERSION, CURRENT_ACCOUNT_VERSION);
+
+    ExtendedJSONObject descriptor = new ExtendedJSONObject();
+    descriptor.put(BUNDLE_KEY_BUNDLE_VERSION, CURRENT_BUNDLE_VERSION);
+    descriptor.put(BUNDLE_KEY_SERVERURI, serverURI);
+    descriptor.put(BUNDLE_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
+    descriptor.put(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
+    descriptor.put(BUNDLE_KEY_VERIFIED, Boolean.valueOf(verified).toString());
+    descriptor.put(BUNDLE_KEY_UNWRAPKB, Utils.byte2Hex(unwrapBkey));
+
+    userdata.putString(ACCOUNT_KEY_DESCRIPTOR, descriptor.toJSONString());
 
     Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
     AccountManager accountManager = AccountManager.get(context);
@@ -285,13 +396,12 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public boolean isValid() {
     // Boolean.valueOf only returns true for the string "true"; this errors in
     // the direction of marking accounts valid.
-    boolean invalid = Boolean.valueOf(accountManager.getUserData(account, ACCOUNT_KEY_INVALID)).booleanValue();
-    return !invalid;
+    return !getBundleDataBoolean(BUNDLE_KEY_INVALID, false);
   }
 
   @Override
   public void setInvalid() {
-    accountManager.setUserData(account, ACCOUNT_KEY_INVALID, Boolean.valueOf(true).toString());
+    updateBundleValue(BUNDLE_KEY_INVALID, true);
   }
 
   /**
@@ -313,8 +423,13 @@ public class AndroidFxAccount implements AbstractFxAccount {
    * <b>For debugging only!</b>
    */
   public void forgetAccountTokens() {
-    accountManager.setUserData(account, ACCOUNT_KEY_SESSION_TOKEN, null);
-    accountManager.setUserData(account, ACCOUNT_KEY_KEY_FETCH_TOKEN, null);
+    ExtendedJSONObject descriptor = unbundle();
+    if (descriptor == null) {
+      return;
+    }
+    descriptor.remove(BUNDLE_KEY_SESSION_TOKEN);
+    descriptor.remove(BUNDLE_KEY_KEY_FETCH_TOKEN);
+    persistBundle(descriptor);
   }
 
   /**
