@@ -374,7 +374,8 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     NR_reg_set_uchar((char *)"ice.pref.type.srv_rflx", 100);
     NR_reg_set_uchar((char *)"ice.pref.type.peer_rflx", 110);
     NR_reg_set_uchar((char *)"ice.pref.type.host", 126);
-    NR_reg_set_uchar((char *)"ice.pref.type.relayed", 0);
+    NR_reg_set_uchar((char *)"ice.pref.type.relayed", 5);
+    NR_reg_set_uchar((char *)"ice.pref.type.relayed_tcp", 0);
 
     if (set_interface_priorities) {
       NR_reg_set_uchar((char *)"ice.pref.interface.rl0", 255);
