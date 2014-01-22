@@ -321,6 +321,7 @@ public:
         DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
     }
 
+protected:
     // Unlock either returns the buffer to the native window or
     // destroys the buffer if the window is already released.
     virtual void Unlock() MOZ_OVERRIDE

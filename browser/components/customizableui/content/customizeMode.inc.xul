@@ -7,8 +7,17 @@
     <label id="customization-header">
       &customizeMode.menuAndToolbars.header;
     </label>
+    <hbox id="customization-empty" hidden="true">
+      <label>&customizeMode.menuAndToolbars.empty;</label>
+      <label onclick="BrowserOpenAddonsMgr('addons://discovery/');"
+             onkeypress="BrowserOpenAddonsMgr('addons://discovery/');"
+             id="customization-more-tools"
+             class="text-link">
+        &customizeMode.menuAndToolbars.emptyLink;
+      </label>
+    </hbox>
     <vbox id="customization-palette" flex="1"/>
-    <spacer flex="1"/>
+    <spacer id="customization-spacer" flex="1"/>
     <hbox>
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>

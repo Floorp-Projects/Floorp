@@ -143,24 +143,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Toggle the Web Console for the current tab.
-   *
-   * @return object
-   *         A promise for either the opening of the toolbox that holds the Web
-   *         Console, or a Promise for the closing of the toolbox.
-   */
-  toggleWebConsole: function HS_toggleWebConsole()
-  {
-    let window = this.currentContext();
-    let target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
-    let toolbox = gDevTools.getToolbox(target);
-
-    return toolbox && toolbox.currentToolId == "webconsole" ?
-        toolbox.destroy() :
-        gDevTools.showToolbox(target, "webconsole");
-  },
-
-  /**
    * Find if there is a Web Console open for the current tab and return the
    * instance.
    * @return object|null
@@ -744,7 +726,7 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
 const HUDService = new HUD_SERVICE();
 
 (() => {
-  let methods = ["openWebConsole", "openBrowserConsole", "toggleWebConsole",
+  let methods = ["openWebConsole", "openBrowserConsole",
                  "toggleBrowserConsole", "getOpenWebConsole",
                  "getBrowserConsole", "getHudByWindow", "getHudReferenceById"];
   for (let method of methods) {

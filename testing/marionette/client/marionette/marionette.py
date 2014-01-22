@@ -761,10 +761,18 @@ class Marionette(object):
 
     @property
     def current_window_handle(self):
-        '''
-        A reference to the current window.
-        '''
-        self.window = self._send_message('getWindow', 'value')
+        """Get the current window's handle.
+
+        Return an opaque server-assigned identifier to this window
+        that uniquely identifies it within this Marionette instance.
+        This can be used to switch to this window at a later point.
+
+        :returns: unique window handle
+        :rtype: string
+
+        """
+
+        self.window = self._send_message("getCurrentWindowHandle", "value")
         return self.window
 
     @property
@@ -1275,10 +1283,16 @@ class Marionette(object):
         return None
 
     def get_cookies(self):
-        '''
-        Gets all cookies in the scope of the current session.
-        '''
-        return self._send_message("getAllCookies", "value")
+        """Get all the cookies for the current domain.
+
+        This is the equivalent of calling `document.cookie` and
+        parsing the result.
+
+        :returns: A set of cookies for the current domain.
+
+        """
+
+        return self._send_message("getCookies", "value")
 
     @property
     def application_cache(self):
