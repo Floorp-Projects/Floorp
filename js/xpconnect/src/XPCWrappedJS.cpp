@@ -328,7 +328,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
     AutoJSContext cx;
     JSObject2WrappedJSMap* map;
-    nsRefPtr<nsXPCWrappedJSClass> clasp;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
     map = rt->GetWrappedJSMap();
@@ -337,6 +336,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         return NS_ERROR_FAILURE;
     }
 
+    nsRefPtr<nsXPCWrappedJSClass> clasp;
     nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, getter_AddRefs(clasp));
     if (!clasp)
         return NS_ERROR_FAILURE;
@@ -363,14 +363,13 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             return NS_OK;
         } else {
             // just a root wrapper
-            nsXPCWrappedJSClass* rootClasp = nullptr;
+            nsRefPtr<nsXPCWrappedJSClass> rootClasp;
             nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports),
-                                              &rootClasp);
+                                              getter_AddRefs(rootClasp));
             if (!rootClasp)
                 return NS_ERROR_FAILURE;
 
             root = new nsXPCWrappedJS(cx, rootJSObj, rootClasp, nullptr);
-            NS_RELEASE(rootClasp);
         }
     }
 
