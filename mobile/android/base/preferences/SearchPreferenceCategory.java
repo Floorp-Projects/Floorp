@@ -6,42 +6,35 @@ package org.mozilla.gecko.preferences;
 
 import android.content.Context;
 import android.preference.Preference;
-import android.preference.PreferenceCategory;
 import android.util.AttributeSet;
 import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.GeckoEventListener;
 
-public class SearchPreferenceCategory extends PreferenceCategory implements GeckoEventListener {
+public class SearchPreferenceCategory extends CustomListCategory implements GeckoEventListener {
     public static final String LOGTAG = "SearchPrefCategory";
 
-    private SearchEnginePreference mDefaultEngineReference;
-
-    // These seemingly redundant constructors are mandated by the Android system, else it fails to
-    // inflate this object.
-
-    public SearchPreferenceCategory(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public SearchPreferenceCategory(Context context) {
+        super(context);
     }
 
     public SearchPreferenceCategory(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public SearchPreferenceCategory(Context context) {
-        super(context);
+    public SearchPreferenceCategory(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
     }
 
     @Override
     protected void onAttachedToActivity() {
         super.onAttachedToActivity();
-
-        // Ensures default engine remains at top of list.
-        setOrderingAsAdded(true);
 
         // Register for SearchEngines messages and request list of search engines from Gecko.
         GeckoAppShell.registerEventListener("SearchEngines:Data", this);
@@ -51,6 +44,20 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
     @Override
     protected void onPrepareForRemoval() {
         GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
+    }
+
+    @Override
+    public void setDefault(CustomListPreference item) {
+        super.setDefault(item);
+
+        sendGeckoEngineEvent("SearchEngines:SetDefault", item.getTitle().toString());
+    }
+
+    @Override
+    public void uninstall(CustomListPreference item) {
+        super.uninstall(item);
+
+        sendGeckoEngineEvent("SearchEngines:Remove", item.getTitle().toString());
     }
 
     @Override
@@ -93,8 +100,8 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
                         // We set this here, not in setSearchEngineFromJSON, because it allows us to
                         // keep a reference  to the default engine to use when the AlertDialog
                         // callbacks are used.
-                        enginePreference.setIsDefaultEngine(true);
-                        mDefaultEngineReference = enginePreference;
+                        enginePreference.setIsDefault(true);
+                        mDefaultReference = enginePreference;
                     }
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSONException parsing engine at index " + i, e);
@@ -104,57 +111,18 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
     }
 
     /**
-     * Set the default engine to any available engine. Used if the current default is removed or
-     * disabled.
-     */
-    private void setFallbackDefaultEngine() {
-        if (getPreferenceCount() > 0) {
-            SearchEnginePreference aEngine = (SearchEnginePreference) getPreference(0);
-            setDefault(aEngine);
-        }
-    }
-
-    /**
      * Helper method to send a particular event string to Gecko with an associated engine name.
      * @param event The type of event to send.
      * @param engine The engine to which the event relates.
      */
-    private void sendGeckoEngineEvent(String event, SearchEnginePreference engine) {
+    private void sendGeckoEngineEvent(String event, String engineName) {
         JSONObject json = new JSONObject();
         try {
-            json.put("engine", engine.getTitle());
+            json.put("engine", engineName);
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSONException creating search engine configuration change message for Gecko.", e);
             return;
         }
         GeckoAppShell.notifyGeckoOfEvent(GeckoEvent.createBroadcastEvent(event, json.toString()));
-    }
-
-    // Methods called by tapping items on the submenus for each search engine are below.
-
-    /**
-     * Removes the given engine from the set of available engines.
-     * @param engine The engine to remove.
-     */
-    public void uninstall(SearchEnginePreference engine) {
-        removePreference(engine);
-        if (engine == mDefaultEngineReference) {
-            // If they're deleting their default engine, get them a new default engine.
-            setFallbackDefaultEngine();
-        }
-
-        sendGeckoEngineEvent("SearchEngines:Remove", engine);
-    }
-
-    /**
-     * Sets the given engine as the current default engine.
-     * @param engine The intended new default engine.
-     */
-    public void setDefault(SearchEnginePreference engine) {
-        engine.setIsDefaultEngine(true);
-        mDefaultEngineReference.setIsDefaultEngine(false);
-        mDefaultEngineReference = engine;
-
-        sendGeckoEngineEvent("SearchEngines:SetDefault", engine);
     }
 }

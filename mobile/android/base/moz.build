@@ -269,6 +269,8 @@ gbjar.sources += [
     'preferences/AlignRightLinkPreference.java',
     'preferences/AndroidImport.java',
     'preferences/AndroidImportPreference.java',
+    'preferences/CustomListCategory.java',
+    'preferences/CustomListPreference.java',
     'preferences/FontSizePreference.java',
     'preferences/GeckoPreferenceFragment.java',
     'preferences/GeckoPreferences.java',
