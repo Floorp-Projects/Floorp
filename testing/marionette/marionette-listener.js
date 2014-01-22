@@ -151,7 +151,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementPosition", getElementPosition);
+  addMessageListenerId("Marionette:getElementLocation", getElementLocation);
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -251,7 +251,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  removeMessageListenerId("Marionette:getElementPosition", getElementPosition);
+  removeMessageListenerId("Marionette:getElementLocation", getElementLocation);
   removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -1708,11 +1708,11 @@ function sendKeysToElement(msg) {
 }
 
 /**
- * Get the position of an element
+ * Get the element's top left-hand corner point.
  */
-function getElementPosition(msg) {
+function getElementLocation(msg) {
   let command_id = msg.json.command_id;
-  try{
+  try {
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
     let rect = el.getBoundingClientRect();
 
