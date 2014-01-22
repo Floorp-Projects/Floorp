@@ -1102,8 +1102,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 }
 
-.toolbarbutton-1:not([type="menu-button"]),
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1:not([type="menu-button"]),
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #restore-button {
   min-width: 28px;
 }
