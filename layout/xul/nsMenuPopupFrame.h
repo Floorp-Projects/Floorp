@@ -65,14 +65,6 @@ enum FlipStyle {
   FlipStyle_Inside = 2
 };
 
-// Values for the flip attribute
-enum FlipType {
-  FlipType_Default = 0,
-  FlipType_None = 1,    // don't try to flip or translate to stay onscreen
-  FlipType_Both = 2,    // flip in both directions
-  FlipType_Slide = 3    // allow the arrow to "slide" instead of resizing
-};
-
 // values are selected so that the direction can be flipped just by
 // changing the sign
 #define POPUPALIGNMENT_NONE 0
@@ -467,7 +459,8 @@ protected:
 
   // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
   int8_t mConsumeRollupEvent;
-  FlipType mFlip; // Whether to flip
+  bool mFlipBoth; // flip in both directions
+  bool mSlide; // allow the arrow to "slide" instead of resizing
 
   bool mIsOpenChanged; // true if the open state changed since the last layout
   bool mIsContextMenu; // true for context menus
