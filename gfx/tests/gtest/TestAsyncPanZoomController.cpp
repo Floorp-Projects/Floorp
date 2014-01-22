@@ -221,6 +221,8 @@ void DoPanTest(bool aShouldTriggerScroll, bool aShouldUseTouchAction, uint32_t a
 
   EXPECT_EQ(pointOut, ScreenPoint());
   EXPECT_EQ(viewTransformOut, ViewTransform());
+
+  apzc->Destroy();
 }
 
 static void
@@ -315,6 +317,8 @@ TEST(AsyncPanZoomController, Pinch) {
   EXPECT_EQ(fm.mZoom.scale, 1.0f);
   EXPECT_EQ(fm.mScrollOffset.x, 880);
   EXPECT_EQ(fm.mScrollOffset.y, 0);
+
+  apzc->Destroy();
 }
 
 TEST(AsyncPanZoomController, PinchWithTouchActionNone) {
@@ -878,9 +882,13 @@ TEST(APZCTreeManager, HitTesting2) {
   // of -50 to be set on the root layer.
   int time = 0;
   // Silence GMock warnings about "uninteresting mock function calls".
-  EXPECT_CALL(*mcc, PostDelayedTask(_,_)).Times(1);
+  EXPECT_CALL(*mcc, PostDelayedTask(_,_)).Times(AtLeast(1));
   EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(AtLeast(1));
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+
+  // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
+  // Since this paint request is in the queue to Gecko, transformToGecko will
+  // take it into account.
   ApzcPan(apzcroot, manager, time, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
@@ -888,18 +896,44 @@ TEST(APZCTreeManager, HitTesting2) {
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(gfxPoint(75, 75), transformToApzc.Transform(gfxPoint(75, 75)));
-  // but transformToGecko does
-  EXPECT_EQ(gfxPoint(75, 125), transformToGecko.Transform(gfxPoint(75, 75)));
+  // and transformToGecko unapplies it and then reapplies it, because by the
+  // time the event being transformed reaches Gecko the new paint request will
+  // have been handled.
+  EXPECT_EQ(gfxPoint(75, 75), transformToGecko.Transform(gfxPoint(75, 75)));
 
   // Hit where layers[1] used to be and where layers[3] should now be.
   hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
   EXPECT_EQ(apzc3, hit.get());
   // transformToApzc unapplies both layers[2]'s css transform and the root's
-  // async trasnform
+  // async transform
   EXPECT_EQ(gfxPoint(12.5, 75), transformToApzc.Transform(gfxPoint(25, 25)));
-  // transformToGecko reapplies the css transform only (since Gecko doesn't
-  // know about async transforms)
-  EXPECT_EQ(gfxPoint(25, 75), transformToGecko.Transform(gfxPoint(12.5, 75)));
+  // transformToGecko reapplies both the css transform and the async transform
+  // because we have already issued a paint request with it.
+  EXPECT_EQ(gfxPoint(25, 25), transformToGecko.Transform(gfxPoint(12.5, 75)));
+
+  // This second pan will move the APZC by another 50 pixels but since the paint
+  // request dispatched above has not "completed", we will not dispatch another
+  // one yet. Now we have an async transform on top of the pending paint request
+  // transform.
+  ApzcPan(apzcroot, manager, time, 100, 50);
+
+  // Hit where layers[3] used to be. It should now hit the root.
+  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzcroot, hit.get());
+  // transformToApzc doesn't unapply the root's own async transform
+  EXPECT_EQ(gfxPoint(75, 75), transformToApzc.Transform(gfxPoint(75, 75)));
+  // transformToGecko unapplies the full async transform of -100 pixels, and then
+  // reapplies the "D" transform of -50 leading to an overall adjustment of +50
+  EXPECT_EQ(gfxPoint(75, 125), transformToGecko.Transform(gfxPoint(75, 75)));
+
+  // Hit where layers[1] used to be. It should now hit the root.
+  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzcroot, hit.get());
+  // transformToApzc doesn't unapply the root's own async transform
+  EXPECT_EQ(gfxPoint(25, 25), transformToApzc.Transform(gfxPoint(25, 25)));
+  // transformToGecko unapplies the full async transform of -100 pixels, and then
+  // reapplies the "D" transform of -50 leading to an overall adjustment of +50
+  EXPECT_EQ(gfxPoint(25, 75), transformToGecko.Transform(gfxPoint(25, 25)));
 
   manager->ClearTree();
 }
