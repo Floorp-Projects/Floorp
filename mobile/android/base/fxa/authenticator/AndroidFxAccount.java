@@ -5,10 +5,13 @@
 package org.mozilla.gecko.fxa.authenticator;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
@@ -33,9 +36,16 @@ import android.os.Bundle;
 public class AndroidFxAccount implements AbstractFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
-  public static final int CURRENT_ACCOUNT_VERSION = 2;
+  public static final int CURRENT_PREFS_VERSION = 1;
+
+  public static final int CURRENT_ACCOUNT_VERSION = 3;
   public static final String ACCOUNT_KEY_ACCOUNT_VERSION = "version";
   public static final String ACCOUNT_KEY_PROFILE = "profile";
+  public static final String ACCOUNT_KEY_IDP_SERVER = "idpServerURI";
+
+  // The audience should always be a prefix of the token server URI.
+  public static final String ACCOUNT_KEY_AUDIENCE = "audience";                 // Sync-specific.
+  public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
 
   public static final int CURRENT_BUNDLE_VERSION = 1;
@@ -43,7 +53,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public static final String BUNDLE_KEY_ASSERTION = "assertion";
   public static final String BUNDLE_KEY_CERTIFICATE = "certificate";
   public static final String BUNDLE_KEY_INVALID = "invalid";
-  public static final String BUNDLE_KEY_SERVERURI = "serverURI";
   public static final String BUNDLE_KEY_SESSION_TOKEN = "sessionToken";
   public static final String BUNDLE_KEY_KEY_FETCH_TOKEN = "keyFetchToken";
   public static final String BUNDLE_KEY_VERIFIED = "verified";
@@ -196,6 +205,50 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE);
   }
 
+
+  @Override
+  public String getAccountServerURI() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_IDP_SERVER);
+  }
+
+  public String getAudience() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_AUDIENCE);
+  }
+
+  public String getTokenServerURI() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_TOKEN_SERVER);
+  }
+
+  /**
+   * This needs to return a string because of the tortured prefs access in GlobalSession.
+   */
+  public String getSyncPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+    String profile = getProfile();
+    String username = account.name;
+
+    if (profile == null ||
+        username == null) {
+      throw new IllegalStateException("Missing profile or username. Cannot fetch prefs.");
+    }
+
+    final String tokenServerURI = getTokenServerURI();
+    if (tokenServerURI == null) {
+      throw new IllegalStateException("No token server URI. Cannot fetch prefs.");
+    }
+
+    final String fxaServerURI = getAccountServerURI();
+    if (fxaServerURI == null) {
+      throw new IllegalStateException("No account server URI. Cannot fetch prefs.");
+    }
+
+    final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".fxa";
+    final long version = CURRENT_PREFS_VERSION;
+
+    // This is unique for each syncing 'view' of the account.
+    final String serverURLThing = fxaServerURI + "!" + tokenServerURI;
+    return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
+  }
+
   @Override
   public void setQuickStretchedPW(byte[] quickStretchedPW) {
     accountManager.setPassword(account, quickStretchedPW == null ? null : Utils.byte2Hex(quickStretchedPW));
@@ -206,11 +259,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public byte[] getQuickStretchedPW() {
     String quickStretchedPW = accountManager.getPassword(account);
     return quickStretchedPW == null ? null : Utils.hex2Byte(quickStretchedPW);
-  }
-
-  @Override
-  public String getServerURI() {
-    return getBundleData(BUNDLE_KEY_SERVERURI);
   }
 
   protected byte[] getUserDataBytes(String key) {
@@ -343,17 +391,28 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return o;
   }
 
-  public static Account addAndroidAccount(Context context, String email, String password, String profile,
-      String serverURI, byte[] sessionToken, byte[] keyFetchToken, boolean verified)
-          throws UnsupportedEncodingException, GeneralSecurityException {
+  public static Account addAndroidAccount(
+      Context context,
+      String email,
+      String password,
+      String profile,
+      String idpServerURI,
+      String tokenServerURI,
+      byte[] sessionToken,
+      byte[] keyFetchToken,
+      boolean verified)
+          throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
     }
     if (password == null) {
       throw new IllegalArgumentException("password must not be null");
     }
-    if (serverURI == null) {
-      throw new IllegalArgumentException("serverURI must not be null");
+    if (idpServerURI == null) {
+      throw new IllegalArgumentException("idpServerURI must not be null");
+    }
+    if (tokenServerURI == null) {
+      throw new IllegalArgumentException("tokenServerURI must not be null");
     }
     // sessionToken and keyFetchToken are allowed to be null; they can be
     // fetched via /account/login from the password. These tokens are generated
@@ -371,10 +430,12 @@ public class AndroidFxAccount implements AbstractFxAccount {
 
     Bundle userdata = new Bundle();
     userdata.putInt(ACCOUNT_KEY_ACCOUNT_VERSION, CURRENT_ACCOUNT_VERSION);
+    userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
+    userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
+    userdata.putString(ACCOUNT_KEY_AUDIENCE, computeAudience(tokenServerURI));
 
     ExtendedJSONObject descriptor = new ExtendedJSONObject();
     descriptor.put(BUNDLE_KEY_BUNDLE_VERSION, CURRENT_BUNDLE_VERSION);
-    descriptor.put(BUNDLE_KEY_SERVERURI, serverURI);
     descriptor.put(BUNDLE_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
     descriptor.put(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
     descriptor.put(BUNDLE_KEY_VERIFIED, Boolean.valueOf(verified).toString());
@@ -390,6 +451,12 @@ public class AndroidFxAccount implements AbstractFxAccount {
     }
     FxAccountAuthenticator.enableSyncing(context, account);
     return account;
+  }
+
+  // TODO: this is shit.
+  private static String computeAudience(String tokenServerURI) throws URISyntaxException {
+     URI uri = new URI(tokenServerURI);
+     return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
   }
 
   @Override
