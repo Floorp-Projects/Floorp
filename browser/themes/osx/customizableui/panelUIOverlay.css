@@ -45,8 +45,7 @@
   }
 }
 
-.panel-wide-item[cui-areatype="menu-panel"] > toolbarbutton,
-toolbarbutton[cui-areatype="menu-panel"] {
+.panelUI-grid .toolbarbutton-1 {
   margin-right: 0;
   margin-left: 0;
   margin-bottom: 0;
@@ -62,4 +61,8 @@ toolbarbutton[cui-areatype="menu-panel"] {
 #BMB_bookmarksPopup > menuitem > .menu-accel-container,
 #BMB_bookmarksPopup > menu > .menu-right {
   -moz-margin-end: 0;
+}
+
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-margin-start: 4px;
 }

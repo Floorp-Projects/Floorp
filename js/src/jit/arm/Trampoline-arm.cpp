@@ -765,9 +765,10 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Test for failure.
     switch (f.failType()) {
       case Type_Object:
+        masm.branchTestPtr(Assembler::Zero, r0, r0, masm.failureLabel(f.executionMode));
+        break;
       case Type_Bool:
-        // Called functions return bools, which are 0/false and non-zero/true
-        masm.branch32(Assembler::Equal, r0, Imm32(0), masm.failureLabel(f.executionMode));
+        masm.branchIfFalseBool(r0, masm.failureLabel(f.executionMode));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("unknown failure kind");

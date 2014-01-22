@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import unittest
 import time
 import sys
 
@@ -167,14 +166,29 @@ class WaitUntilTest(MarionetteTestCase):
         self.assertEqual(self.clock.ticks, 10)
 
     def test_exception_raises_immediately(self):
-        with self.assertRaises(Exception):
-            self.w.until(lambda x: x.exception())
+        with self.assertRaises(TypeError):
+            self.w.until(lambda x: x.exception(e=TypeError))
         self.assertEqual(self.clock.ticks, 0)
 
-    def test_custom_ignored_exception(self):
-        self.w.exceptions = self.w.exceptions + (Exception,)
-        with self.assertRaises(Exception):
-            self.w.until(lambda x: x.exception(e=Exception))
+    def test_ignored_exception(self):
+        self.w.exceptions = (TypeError,)
+        with self.assertRaises(errors.TimeoutException):
+            self.w.until(lambda x: x.exception(e=TypeError))
+
+    def test_ignored_exception_wrapped_in_timeoutexception(self):
+        self.w.exceptions = (TypeError,)
+
+        exc = None
+        try:
+            self.w.until(lambda x: x.exception(e=TypeError))
+        except Exception as e:
+            exc = e
+
+        s = str(exc)
+        self.assertIsNotNone(exc)
+        self.assertIsInstance(exc, errors.TimeoutException)
+        self.assertIn(", caused by %r" % TypeError, s)
+        self.assertIn("self.w.until(lambda x: x.exception(e=TypeError))", s)
 
     def test_ignored_exception_after_timeout_is_not_raised(self):
         with self.assertRaises(errors.TimeoutException):
