@@ -8,6 +8,7 @@ TEST_DIRS += ['test', 'ipc']
 
 EXPORTS += [
     'DeviceStorage.h',
+    'DeviceStorageFileDescriptor.h',
     'nsDeviceStorage.h',
 ]
 
