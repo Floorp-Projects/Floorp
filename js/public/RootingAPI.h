@@ -917,6 +917,61 @@ class SkipRoot
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/*
+ * RootedGeneric<T> allows a class to instantiate its own Rooted type by
+ * including the following two methods:
+ *
+ *    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_CUSTOM; }
+ *    void trace(JSTracer *trc);
+ *
+ * The trace() method must trace all of the class's fields.
+ *
+ * Implementation:
+ *
+ * RootedGeneric<T> works by placing a pointer to its 'rooter' field into the
+ * usual list of rooters when it is instantiated. When marking, it backs up
+ * from this pointer to find a vtable containing a type-appropriate trace()
+ * method.
+ */
+template <typename GCType>
+class JS_PUBLIC_API(RootedGeneric)
+{
+  public:
+    JS::Rooted<GCType> rooter;
+    SkipRoot skip;
+
+    RootedGeneric(js::ContextFriendFields *cx)
+        : rooter(cx), skip(cx, rooter.address())
+    {
+    }
+
+    RootedGeneric(js::ContextFriendFields *cx, const GCType &initial)
+        : rooter(cx, initial), skip(cx, rooter.address())
+    {
+    }
+
+    virtual inline void trace(JSTracer *trc);
+
+    operator const GCType&() const { return rooter.get(); }
+    GCType operator->() const { return rooter.get(); }
+};
+
+template <typename GCType>
+inline void RootedGeneric<GCType>::trace(JSTracer *trc)
+{
+    rooter->trace(trc);
+}
+
+// We will instantiate RootedGeneric<void*> in RootMarking.cpp, and MSVC will
+// notice that void*s have no trace() method defined on them and complain (even
+// though it's never called.) MSVC's complaint is not unreasonable, so
+// specialize for void*.
+template <>
+inline void RootedGeneric<void*>::trace(JSTracer *trc)
+{
+    MOZ_ASSUME_UNREACHABLE("RootedGeneric<void*>::trace()");
+}
+
 /* Interface substitute for Rooted<T> which does not root the variable's memory. */
 template <typename T>
 class FakeRooted : public RootedBase<T>
