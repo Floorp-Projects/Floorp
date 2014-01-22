@@ -3030,7 +3030,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if isMember or isOptional or nullable or isCallbackReturnValue:
             sequenceClass = "Sequence"
         else:
-            sequenceClass = "AutoSequence"
+            sequenceClass = "binding_detail::AutoSequence"
 
         # XXXbz we can't include the index in the the sourceDescription, because
         # we don't really have a way to pass one in dynamically at runtime...
@@ -3832,7 +3832,7 @@ for (uint32_t i = 0; i < length; ++i) {
             # Since we're not a member and not nullable or optional, no one will
             # see our real type, so we can do the fast version of the dictionary
             # that doesn't pre-initialize members.
-            typeName = "dictionary_detail::Fast" + typeName
+            typeName = "binding_detail::Fast" + typeName
 
         declType = CGGeneric(typeName)
 
@@ -4170,7 +4170,7 @@ class CGArgumentConverter(CGThing):
             raise TypeError("Shouldn't need holders for variadics")
 
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
-        replacer["seqType"] = CGTemplatedType("AutoSequence",
+        replacer["seqType"] = CGTemplatedType("binding_detail::AutoSequence",
                                               typeConversion.declType).define()
         if typeNeedsRooting(self.argument.type):
             rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
@@ -9258,7 +9258,7 @@ if (""",
             isStruct=True)
 
         return CGList([struct,
-                       CGNamespace.build(['dictionary_detail'],
+                       CGNamespace.build(['binding_detail'],
                                          fastStruct)],
                       "\n")
 
