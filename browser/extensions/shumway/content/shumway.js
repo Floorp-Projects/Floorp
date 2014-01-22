@@ -5021,23 +5021,10 @@ var turboMode = rendererOptions.register(new Option('', 'turbo', 'boolean', fals
 var forceHidpi = rendererOptions.register(new Option('', 'forceHidpi', 'boolean', false, 'force hidpi'));
 var skipFrameDraw = rendererOptions.register(new Option('', 'skipFrameDraw', 'boolean', true, 'skip frame when not on time'));
 var hud = rendererOptions.register(new Option('', 'hud', 'boolean', false, 'show hud mode'));
+var dummyAnimation = rendererOptions.register(new Option('', 'dummy', 'boolean', false, 'show test balls animation'));
 var enableConstructChildren = rendererOptions.register(new Option('', 'constructChildren', 'boolean', true, 'Construct Children'));
 var enableEnterFrame = rendererOptions.register(new Option('', 'enterFrame', 'boolean', true, 'Enter Frame'));
 var enableAdvanceFrame = rendererOptions.register(new Option('', 'advanceFrame', 'boolean', true, 'Advance Frame'));
-if (typeof FirefoxCom !== 'undefined') {
-  turboMode.value = FirefoxCom.requestSync('getBoolPref', {
-    pref: 'shumway.turboMode',
-    def: false
-  });
-  hud.value = FirefoxCom.requestSync('getBoolPref', {
-    pref: 'shumway.hud',
-    def: false
-  });
-  forceHidpi.value = FirefoxCom.requestSync('getBoolPref', {
-    pref: 'shumway.force_hidpi',
-    def: false
-  });
-}
 var CanvasCache = {
     cache: [],
     getCanvas: function getCanvas(protoCanvas) {
@@ -5433,13 +5420,7 @@ function RenderingContext(refreshStage, invalidPath) {
 function renderDisplayObject(child, ctx, context) {
   var m = child._currentTransform;
   if (m) {
-    if (m.a * m.d == m.b * m.c) {
-      ctx.closePath();
-      ctx.rect(0, 0, 0, 0);
-      ctx.clip();
-    } else {
-      ctx.transform(m.a, m.b, m.c, m.d, m.tx / 20, m.ty / 20);
-    }
+    ctx.transform(m.a, m.b, m.c, m.d, m.tx / 20, m.ty / 20);
   }
   if (!renderAsWireframe.value) {
     if (child._alpha !== 1) {
@@ -5546,10 +5527,56 @@ function initializeHUD(stage, parentCanvas) {
   canvasContainer.style.width = '100%';
   canvasContainer.style.height = '150px';
   canvasContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+  canvasContainer.style.pointerEvents = 'none';
   parentCanvas.parentElement.appendChild(canvasContainer);
   hudTimeline = new Timeline(canvas);
   hudTimeline.setFrameRate(stage._frameRate);
   hudTimeline.refreshEvery(10);
+}
+function createRenderDummyBalls(ctx, stage) {
+  var dummyBalls;
+  var radius = 10;
+  var speed = 1;
+  var m = stage._concatenatedTransform;
+  var scaleX = m.a, scaleY = m.d;
+  dummyBalls = [];
+  for (var i = 0; i < 10; i++) {
+    dummyBalls.push({
+      position: {
+        x: radius + Math.random() * ((ctx.canvas.width - 2 * radius) / scaleX),
+        y: radius + Math.random() * ((ctx.canvas.height - 2 * radius) / scaleY)
+      },
+      velocity: {
+        x: speed * (Math.random() - 0.5),
+        y: speed * (Math.random() - 0.5)
+      }
+    });
+  }
+  ctx.fillStyle = 'black';
+  ctx.lineWidth = 2;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  return function renderDummyBalls() {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.strokeStyle = 'green';
+    dummyBalls.forEach(function (ball) {
+      var position = ball.position;
+      var velocity = ball.velocity;
+      ctx.beginPath();
+      ctx.arc(position.x, position.y, radius, 0, Math.PI * 2, true);
+      ctx.stroke();
+      var x = position.x + velocity.x;
+      var y = position.y + velocity.y;
+      if (x < radius || x > ctx.canvas.width / scaleX - radius) {
+        velocity.x *= -1;
+      }
+      if (y < radius || y > ctx.canvas.height / scaleY - radius) {
+        velocity.y *= -1;
+      }
+      position.x += velocity.x;
+      position.y += velocity.y;
+    });
+  };
 }
 function renderStage(stage, ctx, events) {
   var frameWidth, frameHeight;
@@ -5608,68 +5635,17 @@ function renderStage(stage, ctx, events) {
     m.ty = offsetY * 20;
   }
   updateRenderTransform();
-  var frameTime = 0;
-  var maxDelay = 1000 / stage._frameRate;
-  var nextRenderAt = performance.now();
+  var frameScheduler = new FrameScheduler();
+  stage._frameScheduler = frameScheduler;
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || window.setTimeout;
-  var renderDummyBalls;
-  var dummyBalls;
-  if (typeof FirefoxCom !== 'undefined' && FirefoxCom.requestSync('getBoolPref', {
-      pref: 'shumway.dummyMode',
-      def: false
-    })) {
-    var radius = 10;
-    var speed = 1;
-    var m = stage._concatenatedTransform;
-    var scaleX = m.a, scaleY = m.d;
-    dummyBalls = [];
-    for (var i = 0; i < 10; i++) {
-      dummyBalls.push({
-        position: {
-          x: radius + Math.random() * ((ctx.canvas.width - 2 * radius) / scaleX),
-          y: radius + Math.random() * ((ctx.canvas.height - 2 * radius) / scaleY)
-        },
-        velocity: {
-          x: speed * (Math.random() - 0.5),
-          y: speed * (Math.random() - 0.5)
-        }
-      });
-    }
-    ctx.fillStyle = 'black';
-    ctx.lineWidth = 2;
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    renderDummyBalls = function () {
-      ctx.fillStyle = 'black';
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.strokeStyle = 'green';
-      dummyBalls.forEach(function (ball) {
-        var position = ball.position;
-        var velocity = ball.velocity;
-        ctx.beginPath();
-        ctx.arc(position.x, position.y, radius, 0, Math.PI * 2, true);
-        ctx.stroke();
-        var x = position.x + velocity.x;
-        var y = position.y + velocity.y;
-        if (x < radius || x > ctx.canvas.width / scaleX - radius) {
-          velocity.x *= -1;
-        }
-        if (y < radius || y > ctx.canvas.height / scaleY - radius) {
-          velocity.y *= -1;
-        }
-        position.x += velocity.x;
-        position.y += velocity.y;
-      });
-    };
-  }
+  var renderDummyBalls = dummyAnimation.value && createRenderDummyBalls(ctx, stage);
   console.timeEnd('Initialize Renderer');
   console.timeEnd('Total');
   var firstRun = true;
   var frameCount = 0;
   var frameFPSAverage = new metrics.Average(120);
-  function drawFrame(renderFrame, frameRequested) {
-    if (!skipFrameDraw.value) {
-      frameRequested = true;
-    }
+  var frameRequested = true;
+  function drawFrame(renderFrame, repaint) {
     sampleStart();
     var refreshStage = false;
     if (stage._invalid) {
@@ -5708,7 +5684,14 @@ function renderStage(stage, ctx, events) {
         stage._deferRenderEvent = false;
         domain.broadcastMessage('render', 'render');
       }
-      if (isCanvasVisible(ctx.canvas) && (refreshStage || renderFrame) && frameRequested) {
+      var drawEnabled = isCanvasVisible(ctx.canvas) && (refreshStage || renderFrame) && (frameRequested || repaint || !skipFrameDraw.value);
+      if (drawEnabled && !repaint && skipFrameDraw.value && frameScheduler.shallSkipDraw) {
+        drawEnabled = false;
+        frameScheduler.skipDraw();
+        traceRenderer.value && appendToFrameTerminal('Skip Frame Draw', 'red');
+      }
+      if (drawEnabled) {
+        frameScheduler.startDraw();
         var invalidPath = null;
         traceRenderer.value && frameWriter.enter('> Invalidation');
         timelineEnter('invalidate');
@@ -5731,6 +5714,7 @@ function renderStage(stage, ctx, events) {
           invalidPath.draw(ctx);
           ctx.stroke();
         }
+        frameScheduler.endDraw();
       }
       if (mouseMoved && !disableMouseVisitor.value) {
         renderFrame && timelineEnter('mouse');
@@ -5757,10 +5741,7 @@ function renderStage(stage, ctx, events) {
     }
     sampleEnd();
   }
-  var frameRequested = true;
-  var skipNextFrameDraw = false;
   (function draw() {
-    var now = performance.now();
     var renderFrame = true;
     if (events.onBeforeFrame) {
       var e = {
@@ -5769,29 +5750,20 @@ function renderStage(stage, ctx, events) {
       events.onBeforeFrame(e);
       renderFrame = !e.cancel;
     }
-    frameTime = now;
-    if (renderFrame && renderDummyBalls) {
-      renderDummyBalls();
+    if (renderDummyBalls) {
+      if (renderFrame) {
+        renderDummyBalls();
+        events.onAfterFrame && events.onAfterFrame();
+      }
+      setTimeout(draw);
       return;
     }
-    drawFrame(renderFrame, frameRequested && !skipNextFrameDraw);
+    frameScheduler.startFrame(stage._frameRate);
+    drawFrame(renderFrame, false);
+    frameScheduler.endFrame();
     frameRequested = false;
-    maxDelay = 1000 / stage._frameRate;
-    if (!turboMode.value) {
-      nextRenderAt += maxDelay;
-      var wasLate = false;
-      while (nextRenderAt < now) {
-        wasLate = true;
-        nextRenderAt += maxDelay;
-      }
-      if (wasLate && !skipNextFrameDraw) {
-        skipNextFrameDraw = true;
-        traceRenderer.value && appendToFrameTerminal('Skip Frame Draw', 'red');
-      } else {
-        skipNextFrameDraw = false;
-      }
-    } else {
-      nextRenderAt = now;
+    if (!frameScheduler.isOnTime) {
+      traceRenderer.value && appendToFrameTerminal('Frame Is Late', 'red');
     }
     if (renderFrame && events.onAfterFrame) {
       events.onAfterFrame();
@@ -5802,19 +5774,111 @@ function renderStage(stage, ctx, events) {
       }
       return;
     }
-    setTimeout(draw, Math.max(0, nextRenderAt - performance.now()));
+    setTimeout(draw, turboMode.value ? 0 : frameScheduler.nextFrameIn);
   }());
   (function frame() {
     if (renderingTerminated) {
       return;
     }
-    if (stage._invalid || stage._mouseMoved) {
+    frameRequested = true;
+    if ((stage._invalid || stage._mouseMoved) && !renderDummyBalls) {
       drawFrame(false, true);
     }
-    frameRequested = true;
     requestAnimationFrame(frame);
   }());
 }
+var FrameScheduler = function () {
+    var STATS_TO_REMEMBER = 50;
+    var MAX_DRAWS_TO_SKIP = 2;
+    var INTERVAL_PADDING_MS = 4;
+    var SPEED_ADJUST_RATE = 0.9;
+    function FrameScheduler() {
+      this._drawStats = [];
+      this._drawStatsSum = 0;
+      this._drawStarted = 0;
+      this._drawsSkipped = 0;
+      this._expectedNextFrameAt = performance.now();
+      this._onTime = true;
+      this._trackDelta = false;
+      this._delta = 0;
+      this._onTimeDelta = 0;
+    }
+    FrameScheduler.prototype = {
+      get shallSkipDraw() {
+        if (this._drawsSkipped >= MAX_DRAWS_TO_SKIP) {
+          return false;
+        }
+        var averageDraw = this._drawStats.length < STATS_TO_REMEMBER ? 0 : this._drawStatsSum / this._drawStats.length;
+        var estimatedDrawEnd = performance.now() + averageDraw;
+        return estimatedDrawEnd + INTERVAL_PADDING_MS > this._expectedNextFrameAt;
+      },
+      get nextFrameIn() {
+        return Math.max(0, this._expectedNextFrameAt - performance.now());
+      },
+      get isOnTime() {
+        return this._onTime;
+      },
+      startFrame: function (frameRate) {
+        var interval = 1000 / frameRate;
+        var adjustedInterval = interval;
+        var delta = this._onTimeDelta + this._delta;
+        if (delta !== 0) {
+          if (delta < 0) {
+            adjustedInterval *= SPEED_ADJUST_RATE;
+          } else if (delta > 0) {
+            adjustedInterval /= SPEED_ADJUST_RATE;
+          }
+          this._onTimeDelta += interval - adjustedInterval;
+        }
+        this._expectedNextFrameAt += adjustedInterval;
+        this._onTime = true;
+      },
+      endFrame: function () {
+        var estimatedNextFrameStart = performance.now() + INTERVAL_PADDING_MS;
+        if (estimatedNextFrameStart > this._expectedNextFrameAt) {
+          if (this._trackDelta) {
+            this._onTimeDelta += this._expectedNextFrameAt - estimatedNextFrameStart;
+            console.log(this._onTimeDelta);
+          }
+          this._expectedNextFrameAt = estimatedNextFrameStart;
+          this._onTime = false;
+        }
+      },
+      startDraw: function () {
+        this._drawsSkipped = 0;
+        this._drawStarted = performance.now();
+      },
+      endDraw: function () {
+        var drawTime = performance.now() - this._drawStarted;
+        this._drawStats.push(drawTime);
+        this._drawStatsSum += drawTime;
+        while (this._drawStats.length > STATS_TO_REMEMBER) {
+          this._drawStatsSum -= this._drawStats.shift();
+        }
+      },
+      skipDraw: function () {
+        this._drawsSkipped++;
+      },
+      setDelta: function (value) {
+        if (!this._trackDelta) {
+          return;
+        }
+        this._delta = value;
+      },
+      startTrackDelta: function () {
+        this._trackDelta = true;
+      },
+      endTrackDelta: function () {
+        if (!this._trackDelta) {
+          return;
+        }
+        this._trackDelta = false;
+        this._delta = 0;
+        this._onTimeDelta = 0;
+      }
+    };
+    return FrameScheduler;
+  }();
 var tagHandler = function (global) {
     function defineShape($bytes, $stream, $, swfVersion, tagCode) {
       $ || ($ = {});
@@ -7245,7 +7309,7 @@ var readHeader = function readHeader($bytes, $stream, $, swfVersion, tagCode) {
   $.frameCount = readUi16($bytes, $stream);
   return $;
 };
-function readTags(context, stream, swfVersion, final, onprogress) {
+function readTags(context, stream, swfVersion, final, onprogress, onexception) {
   var tags = context.tags;
   var bytes = stream.bytes;
   var lastSuccessfulPosition;
@@ -7314,6 +7378,7 @@ function readTags(context, stream, swfVersion, final, onprogress) {
     }
   } catch (e) {
     if (e !== StreamNoDataError) {
+      onexception && onexception(e);
       throw e;
     }
     stream.pos = lastSuccessfulPosition;
@@ -7473,7 +7538,7 @@ BodyParser.prototype = {
       finalBlock = progressInfo.bytesLoaded >= progressInfo.bytesTotal;
     }
     var readStartTime = performance.now();
-    readTags(swf, stream, swfVersion, finalBlock, options.onprogress);
+    readTags(swf, stream, swfVersion, finalBlock, options.onprogress, options.onexception);
     swf.parseTime += performance.now() - readStartTime;
     var read = stream.pos;
     buffer.removeHead(read);
@@ -7901,6 +7966,13 @@ function createParsingContext(commitData) {
       commitData({
         command: 'complete',
         stats: stats
+      });
+    },
+    onexception: function (e) {
+      commitData({
+        type: 'exception',
+        message: e.message,
+        stack: e.stack
       });
     }
   };
@@ -9463,6 +9535,11 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
           throw new AS2CriticalError('long running script -- AVM1 errors limit is reached');
         }
         console.error('AVM1 error: ' + e);
+        avm2.exceptions.push({
+          source: 'avm1',
+          message: e.message,
+          stack: e.stack
+        });
         recoveringFromError = true;
       }
     }
@@ -24538,11 +24615,20 @@ var ApplicationDomain = function () {
         if (false) {
           Timer.start('broadcast: ' + type);
         }
-        this.onMessage.notify1(type, {
-          data: message,
-          origin: origin,
-          source: this
-        });
+        try {
+          this.onMessage.notify1(type, {
+            data: message,
+            origin: origin,
+            source: this
+          });
+        } catch (e) {
+          avm2.exceptions.push({
+            source: type,
+            message: e.message,
+            stack: e.stack
+          });
+          throw e;
+        }
         if (false) {
           Timer.stop();
         }
@@ -33502,7 +33588,23 @@ var Interpreter = new (function () {
     return Interpreter;
   }())();
 var AVM2 = function () {
-    function avm2(sysMode, appMode, findDefiningAbc, loadAVM1) {
+    function findDefiningAbc(mn) {
+      if (!avm2.builtinsLoaded) {
+        return null;
+      }
+      for (var i = 0; i < mn.namespaces.length; i++) {
+        var name = mn.namespaces[i].originalURI + ':' + mn.name;
+        var abcName = playerGlobalNames[name];
+        if (abcName) {
+          break;
+        }
+      }
+      if (abcName) {
+        return grabAbc(abcName);
+      }
+      return null;
+    }
+    function avm2Ctor(sysMode, appMode, loadAVM1) {
       this.systemDomain = new ApplicationDomain(this, null, sysMode, true);
       this.applicationDomain = new ApplicationDomain(this, this.systemDomain, appMode, false);
       this.findDefiningAbc = findDefiningAbc;
@@ -33511,8 +33613,9 @@ var AVM2 = function () {
       this.exception = {
         value: undefined
       };
+      this.exceptions = [];
     }
-    avm2.currentAbc = function () {
+    avm2Ctor.currentAbc = function () {
       var caller = arguments.callee;
       var maxDepth = 20;
       var abc = null;
@@ -33526,15 +33629,15 @@ var AVM2 = function () {
       }
       return abc;
     };
-    avm2.currentDomain = function () {
+    avm2Ctor.currentDomain = function () {
       var abc = this.currentAbc();
       return abc.applicationDomain;
     };
-    avm2.prototype = {
+    avm2Ctor.prototype = {
       notifyConstruct: function notifyConstruct(instanceConstructor, args) {
       }
     };
-    return avm2;
+    return avm2Ctor;
   }();
 var playerGlobalNames = {};
 var playerGlobalScripts = {};
@@ -36936,28 +37039,11 @@ function grabAbc(abcName) {
   }
   return null;
 }
-function findDefiningAbc(mn) {
-  if (!avm2.builtinsLoaded) {
-    return null;
-  }
-  var name;
-  for (var i = 0; i < mn.namespaces.length; i++) {
-    var name = mn.namespaces[i].originalURI + ':' + mn.name;
-    var abcName = playerGlobalNames[name];
-    if (abcName) {
-      break;
-    }
-  }
-  if (abcName) {
-    return grabAbc(abcName);
-  }
-  return null;
-}
 var avm2;
 var libraryScripts = playerGlobalScripts;
 var libraryNames = playerGlobalNames;
 function createAVM2(builtinPath, libraryPath, avm1Path, sysMode, appMode, next) {
-  avm2 = new AVM2(sysMode, appMode, findDefiningAbc, loadAVM1);
+  avm2 = new AVM2(sysMode, appMode, loadAVM1);
   var builtinAbc, libraryAbc, avm1Abc;
   new BinaryFileReader(libraryPath).readAll(null, function (buffer) {
     libraryAbcs = buffer;
@@ -37658,7 +37744,7 @@ var DisplayObjectDefinition = function () {
             m = this._concatenatedTransform;
           }
           if (targetCoordSpace && targetCoordSpace !== this._stage) {
-            m2 = targetCoordMatrix || targetCoordSpace._getConcatenatedTransform();
+            m2 = targetCoordMatrix || targetCoordSpace._getConcatenatedTransform(null, false);
             var a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0;
             if (m2.b || m2.c) {
               var det = 1 / (m2.a * m2.d - m2.b * m2.c);
@@ -37697,14 +37783,14 @@ var DisplayObjectDefinition = function () {
           return m;
         },
         _applyCurrentTransform: function (pt) {
-          var m = this._getConcatenatedTransform();
+          var m = this._getConcatenatedTransform(null, false);
           var x = pt.x;
           var y = pt.y;
           pt.x = m.a * x + m.c * y + m.tx | 0;
           pt.y = m.d * y + m.b * x + m.ty | 0;
         },
         _applyConcatenatedInverseTransform: function (pt) {
-          var m = this._getConcatenatedTransform();
+          var m = this._getConcatenatedTransform(null, false);
           var det = 1 / (m.a * m.d - m.b * m.c);
           var x = pt.x - m.tx;
           var y = pt.y - m.ty;
@@ -37745,7 +37831,7 @@ var DisplayObjectDefinition = function () {
             var children = this._children;
             for (var i = 0, n = children.length; i < n; i++) {
               var child = children[i];
-              if (child._hitTest && child._hitTest(true, x, y, true)) {
+              if (child._hitTest && child._hitTest(true, x, y, true, null)) {
                 return true;
               }
             }
@@ -38138,6 +38224,9 @@ var DisplayObjectDefinition = function () {
               var numChildren = children.length;
               for (var i = 0; i < numChildren; i++) {
                 var child = children[i];
+                if (!flash.display.DisplayObject.class.isInstanceOf(child)) {
+                  continue;
+                }
                 var b = child.getBounds(this);
                 var x1 = b.xMin;
                 var y1 = b.yMin;
@@ -38248,7 +38337,7 @@ var DisplayObjectDefinition = function () {
               yMax: 0
             };
           }
-          var m = targetCoordSpace && !flash.display.DisplayObject.class.isInstanceOf(targetCoordSpace) ? targetCoordSpace : this._getConcatenatedTransform(targetCoordSpace);
+          var m = targetCoordSpace && !flash.display.DisplayObject.class.isInstanceOf(targetCoordSpace) ? targetCoordSpace : this._getConcatenatedTransform(targetCoordSpace, false);
           var x0 = m.a * xMin + m.c * yMin + m.tx | 0;
           var y0 = m.b * xMin + m.d * yMin + m.ty | 0;
           var x1 = m.a * xMax + m.c * yMin + m.tx | 0;
@@ -39841,7 +39930,15 @@ var LoaderDefinition = function () {
           var loader = this;
           loader._worker = worker;
           worker.onmessage = function (evt) {
-            loader._commitData(evt.data);
+            if (evt.data.type === 'exception') {
+              avm2.exceptions.push({
+                source: 'parser',
+                message: evt.data.message,
+                stack: evt.data.stack
+              });
+            } else {
+              loader._commitData(evt.data);
+            }
           };
           if (flash.net.URLRequest.class.isInstanceOf(request)) {
             var session = FileLoadingService.createSession();
@@ -40443,52 +40540,10 @@ var MovieClipDefinition = function () {
           this._startSoundRegistrations[frameNum] = starts;
         },
         _initSoundStream: function (streamInfo) {
-          var soundStream = this._soundStream = {
-              data: {
-                sampleRate: streamInfo.sampleRate,
-                channels: streamInfo.channels
-              },
-              seekIndex: [],
-              position: 0
-            };
-          var isMP3 = streamInfo.format === 'mp3';
-          if (isMP3 && PLAY_USING_AUDIO_TAG) {
-            var element = document.createElement('audio');
-            if (element.canPlayType('audio/mpeg')) {
-              soundStream.element = element;
-              soundStream.rawFrames = [];
-              return;
-            }
-          }
-          soundStream.data.pcm = new Float32Array(streamInfo.samplesCount * streamInfo.channels);
-          if (isMP3) {
-            soundStream.decoderPosition = 0;
-            soundStream.decoderSession = new MP3DecoderSession();
-            soundStream.decoderSession.onframedata = function (frameData) {
-              var position = soundStream.decoderPosition;
-              soundStream.data.pcm.set(frameData, position);
-              soundStream.decoderPosition = position + frameData.length;
-            }.bind(this);
-            soundStream.decoderSession.onerror = function (error) {
-              console.error('ERROR: MP3DecoderSession: ' + error);
-            };
-          }
+          this._soundStream = new MovieClipSoundStream(streamInfo, this);
         },
         _addSoundStreamBlock: function (frameNum, streamBlock) {
-          var soundStream = this._soundStream;
-          var streamPosition = soundStream.position;
-          soundStream.seekIndex[frameNum] = streamPosition + streamBlock.seek * soundStream.data.channels;
-          soundStream.position = streamPosition + streamBlock.samplesCount * soundStream.data.channels;
-          if (soundStream.rawFrames) {
-            soundStream.rawFrames.push(streamBlock.data);
-            return;
-          }
-          var decoderSession = soundStream.decoderSession;
-          if (decoderSession) {
-            decoderSession.pushAsync(streamBlock.data);
-          } else {
-            soundStream.data.pcm.set(streamBlock.pcm, streamPosition);
-          }
+          this._soundStream.appendBlock(frameNum, streamBlock);
         },
         _startSounds: function (frameNum) {
           var starts = this._startSoundRegistrations[frameNum];
@@ -40521,42 +40576,8 @@ var MovieClipDefinition = function () {
               }
             }
           }
-          if (this._soundStream && !isNaN(this._soundStream.seekIndex[frameNum])) {
-            var PAUSE_WHEN_OF_SYNC_GREATER = 2;
-            var RESET_WHEN_OF_SYNC_GREATER = 4;
-            var soundStream = this._soundStream;
-            var element = soundStream.element;
-            if (element) {
-              var soundStreamData = soundStream.data;
-              var time = soundStream.seekIndex[frameNum] / soundStreamData.sampleRate / soundStreamData.channels;
-              if (this._complete && !soundStream.channel) {
-                var blob = new Blob(soundStream.rawFrames);
-                element.preload = 'metadata';
-                element.loop = false;
-                element.src = URL.createObjectURL(blob);
-                var symbolClass = flash.media.SoundChannel.class;
-                var channel = symbolClass.createAsSymbol({
-                    element: element
-                  });
-                symbolClass.instanceConstructor.call(channel);
-                soundStream.channel = channel;
-              } else if (!isNaN(element.duration) && element.currentTime > time + PAUSE_WHEN_OF_SYNC_GREATER && element.currentTime < time + RESET_WHEN_OF_SYNC_GREATER) {
-                element.pause();
-              } else if (!isNaN(element.duration) && (element.paused || Math.abs(element.currentTime - time) > RESET_WHEN_OF_SYNC_GREATER)) {
-                if (Math.abs(element.currentTime - time) > PAUSE_WHEN_OF_SYNC_GREATER) {
-                  element.pause();
-                  element.currentTime = time;
-                }
-                element.play();
-              }
-            } else if (!soundStream.sound) {
-              var symbolClass = flash.media.Sound.class;
-              var sound = symbolClass.createAsSymbol(this._soundStream.data);
-              symbolClass.instanceConstructor.call(sound);
-              var channel = sound.play();
-              soundStream.sound = sound;
-              soundStream.channel = channel;
-            }
+          if (this._soundStream) {
+            this._soundStream.playFrame(frameNum);
           }
         },
         _getAS2Object: function () {
@@ -40736,6 +40757,177 @@ var MovieClipDefinition = function () {
     };
     return def;
   }.call(this);
+var MovieClipSoundStream = function () {
+    var MP3_MIME_TYPE = 'audio/mpeg';
+    function openMediaSource(soundStream, mediaSource) {
+      var sourceBuffer;
+      try {
+        sourceBuffer = mediaSource.addSourceBuffer(MP3_MIME_TYPE);
+        soundStream.mediaSource = mediaSource;
+        soundStream.sourceBuffer = sourceBuffer;
+        soundStream.rawFrames.forEach(function (data) {
+          sourceBuffer.appendBuffer(data);
+        });
+        delete soundStream.rawFrames;
+      } catch (e) {
+        console.error('MediaSource mp3 playback is not supported: ' + e);
+      }
+    }
+    function syncTime(element, movieClip) {
+      var initialized = false;
+      var startMediaTime, startRealTime;
+      element.addEventListener('timeupdate', function (e) {
+        if (!initialized) {
+          startMediaTime = element.currentTime;
+          startRealTime = performance.now();
+          initialized = true;
+          movieClip._stage._frameScheduler.startTrackDelta();
+          return;
+        }
+        var mediaDelta = element.currentTime - startMediaTime;
+        var realDelta = performance.now() - startRealTime;
+        movieClip._stage._frameScheduler.setDelta(realDelta - mediaDelta * 1000);
+      });
+      element.addEventListener('pause', function (e) {
+        movieClip._stage._frameScheduler.endTrackDelta();
+        initialized = false;
+      });
+      element.addEventListener('seeking', function (e) {
+        movieClip._stage._frameScheduler.endTrackDelta();
+        initialized = false;
+      });
+    }
+    function MovieClipSoundStream(streamInfo, movieClip) {
+      this.movieClip = movieClip;
+      this.data = {
+        sampleRate: streamInfo.sampleRate,
+        channels: streamInfo.channels
+      };
+      this.seekIndex = [];
+      this.position = 0;
+      var isMP3 = streamInfo.format === 'mp3';
+      if (isMP3 && PLAY_USING_AUDIO_TAG) {
+        var element = document.createElement('audio');
+        element.preload = 'metadata';
+        element.loop = false;
+        syncTime(element, movieClip);
+        if (element.canPlayType(MP3_MIME_TYPE)) {
+          this.element = element;
+          if (typeof MediaSource !== 'undefined') {
+            var mediaSource = new MediaSource();
+            mediaSource.addEventListener('sourceopen', openMediaSource.bind(null, this, mediaSource));
+            element.src = URL.createObjectURL(mediaSource);
+          } else {
+            console.warn('MediaSource is not supported');
+          }
+          this.rawFrames = [];
+          return;
+        }
+      }
+      var totalSamples = streamInfo.samplesCount * streamInfo.channels;
+      this.data.pcm = new Float32Array(totalSamples);
+      if (isMP3) {
+        var soundStream = this;
+        soundStream.decoderPosition = 0;
+        soundStream.decoderSession = new MP3DecoderSession();
+        soundStream.decoderSession.onframedata = function (frameData) {
+          var position = soundStream.decoderPosition;
+          soundStream.data.pcm.set(frameData, position);
+          soundStream.decoderPosition = position + frameData.length;
+        }.bind(this);
+        soundStream.decoderSession.onerror = function (error) {
+          console.error('ERROR: MP3DecoderSession: ' + error);
+        };
+      }
+    }
+    MovieClipSoundStream.prototype = {
+      appendBlock: function (frameNum, streamBlock) {
+        var streamPosition = this.position;
+        this.seekIndex[frameNum] = streamPosition + streamBlock.seek * this.data.channels;
+        this.position = streamPosition + streamBlock.samplesCount * this.data.channels;
+        if (this.sourceBuffer) {
+          this.sourceBuffer.appendBuffer(streamBlock.data);
+          return;
+        }
+        if (this.rawFrames) {
+          this.rawFrames.push(streamBlock.data);
+          return;
+        }
+        var decoderSession = this.decoderSession;
+        if (decoderSession) {
+          decoderSession.pushAsync(streamBlock.data);
+        } else {
+          this.data.pcm.set(streamBlock.pcm, streamPosition);
+        }
+      },
+      playFrame: function (frameNum) {
+        if (isNaN(this.seekIndex[frameNum])) {
+          return;
+        }
+        var PAUSE_WHEN_OF_SYNC_GREATER = 1;
+        var PLAYBACK_ADJUSTMENT = 0.25;
+        var element = this.element;
+        if (element) {
+          var soundStreamData = this.data;
+          var time = this.seekIndex[frameNum] / soundStreamData.sampleRate / soundStreamData.channels;
+          if (!this.channel && (this.movieClip._complete || this.sourceBuffer)) {
+            if (!this.sourceBuffer) {
+              var blob = new Blob(this.rawFrames);
+              element.src = URL.createObjectURL(blob);
+            }
+            var symbolClass = flash.media.SoundChannel.class;
+            var channel = symbolClass.createAsSymbol({
+                element: element
+              });
+            symbolClass.instanceConstructor.call(channel);
+            this.channel = channel;
+            this.expectedFrame = 0;
+            this.waitFor = 0;
+          } else if (this.sourceBuffer || !isNaN(element.duration)) {
+            if (this.mediaSource && this.movieClip._complete) {
+              this.mediaSource.endOfStream();
+              this.mediaSource = null;
+            }
+            var elementTime = element.currentTime;
+            if (this.expectedFrame !== frameNum) {
+              if (element.paused) {
+                element.play();
+                element.addEventListener('playing', function setTime(e) {
+                  element.removeEventListener('playing', setTime);
+                  element.currentTime = time;
+                });
+              } else {
+                element.currentTime = time;
+              }
+            } else if (this.waitFor > 0) {
+              if (this.waitFor <= time) {
+                if (element.paused) {
+                  element.play();
+                }
+                this.waitFor = 0;
+              }
+            } else if (elementTime - time > PAUSE_WHEN_OF_SYNC_GREATER) {
+              console.warn('Sound is faster than frames by ' + (elementTime - time));
+              this.waitFor = elementTime - PLAYBACK_ADJUSTMENT;
+              element.pause();
+            } else if (time - elementTime > PAUSE_WHEN_OF_SYNC_GREATER) {
+              console.warn('Sound is slower than frames by ' + (time - elementTime));
+              element.currentTime = time + PLAYBACK_ADJUSTMENT;
+            }
+            this.expectedFrame = frameNum + 1;
+          }
+        } else if (!this.sound) {
+          var symbolClass = flash.media.Sound.class;
+          var sound = symbolClass.createAsSymbol(this.data);
+          symbolClass.instanceConstructor.call(sound);
+          var channel = sound.play();
+          this.sound = sound;
+          this.channel = channel;
+        }
+      }
+    };
+    return MovieClipSoundStream;
+  }();
 var NativeMenuDefinition = function () {
     return {
       __class__: 'flash.display.NativeMenu',
@@ -41522,7 +41714,7 @@ var StageDefinition = function () {
         this._concatenatedTransform.invalid = false;
       },
       _setup: function setup(ctx, options) {
-        this._qtree = new QuadTree(0, 0, this._stageWidth, this._stageHeight, 0);
+        this._qtree = new QuadTree(0, 0, this._stageWidth, this._stageHeight, null);
         this._invalid = true;
       },
       _addToStage: function addToStage(displayObject) {
@@ -42140,44 +42332,53 @@ var EventDispatcherDefinition = function () {
       if (queue) {
         queue = queue.slice();
         var needsInit = true;
-        for (var i = 0; i < queue.length; i++) {
-          var item = queue[i];
-          var methodInfo = item.handleEvent.methodInfo;
-          if (methodInfo) {
-            if (methodInfo.parameters.length) {
-              if (!methodInfo.parameters[0].isUsed) {
-                item.handleEvent();
-                continue;
-              }
-            }
-          }
-          if (needsInit) {
-            if (typeof event === 'string') {
-              if (eventClass) {
-                event = new eventClass(event);
-              } else {
-                if (event in mouseEvents) {
-                  event = new flash.events.MouseEvent(event, mouseEvents[event]);
-                  if (target._stage) {
-                    event._localX = target.mouseX;
-                    event._localY = target.mouseY;
-                  }
-                } else {
-                  event = new flash.events.Event(event);
+        try {
+          for (var i = 0; i < queue.length; i++) {
+            var item = queue[i];
+            var methodInfo = item.handleEvent.methodInfo;
+            if (methodInfo) {
+              if (methodInfo.parameters.length) {
+                if (!methodInfo.parameters[0].isUsed) {
+                  item.handleEvent();
+                  continue;
                 }
               }
-            } else if (event._target) {
-              event = event.clone();
             }
-            event._target = target;
-            event._currentTarget = currentTarget || target;
-            event._eventPhase = eventPhase || 2;
-            needsInit = false;
+            if (needsInit) {
+              if (typeof event === 'string') {
+                if (eventClass) {
+                  event = new eventClass(event);
+                } else {
+                  if (event in mouseEvents) {
+                    event = new flash.events.MouseEvent(event, mouseEvents[event]);
+                    if (target._stage) {
+                      event._localX = target.mouseX;
+                      event._localY = target.mouseY;
+                    }
+                  } else {
+                    event = new flash.events.Event(event);
+                  }
+                }
+              } else if (event._target) {
+                event = event.clone();
+              }
+              event._target = target;
+              event._currentTarget = currentTarget || target;
+              event._eventPhase = eventPhase || 2;
+              needsInit = false;
+            }
+            item.handleEvent(event);
+            if (event._stopImmediatePropagation) {
+              break;
+            }
           }
-          item.handleEvent(event);
-          if (event._stopImmediatePropagation) {
-            break;
-          }
+        } catch (e) {
+          avm2.exceptions.push({
+            source: 'avm2',
+            message: e.message,
+            stack: e.stack
+          });
+          throw e;
         }
       }
       return !event._stopPropagation;
@@ -42347,7 +42548,7 @@ var MouseEventDefinition = function () {
             },
             getStageX: function getStageX() {
               if (this._target) {
-                var m = this._target._getConcatenatedTransform();
+                var m = this._target._getConcatenatedTransform(null, false);
                 var x = m.a * this._localX + m.c * this._localY + m.tx;
                 return x / 20;
               }
@@ -42355,7 +42556,7 @@ var MouseEventDefinition = function () {
             },
             getStageY: function getStageY() {
               if (this._target) {
-                var m = this._target._getConcatenatedTransform();
+                var m = this._target._getConcatenatedTransform(null, false);
                 var y = m.d * this._localY + m.b * this._localX + m.ty;
                 return y / 20;
               }
@@ -43281,7 +43482,7 @@ var TransformDefinition = function () {
           if (this._target._current3DTransform) {
             return null;
           }
-          var m = this._target._getConcatenatedTransform();
+          var m = this._target._getConcatenatedTransform(null, false);
           return new flash.geom.Matrix(m.a, m.b, m.c, m.d, m.tx / 20, m.ty / 20);
         },
         get matrix() {
