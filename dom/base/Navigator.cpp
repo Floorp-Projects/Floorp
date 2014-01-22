@@ -1488,7 +1488,7 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
 bool
 Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                         JS::Handle<jsid> aId,
-                        JS::MutableHandle<JS::Value> aValue)
+                        JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   if (!JSID_IS_STRING(aId)) {
     return true;
@@ -1534,14 +1534,14 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         bool hasPermission = CheckPermission("settings-read") ||
                              CheckPermission("settings-write");
         if (!hasPermission) {
-          aValue.setNull();
+          FillPropertyDescriptor(aDesc, aObject, JS::NullValue(), false);
           return true;
         }
       }
 
       if (name.EqualsLiteral("mozDownloadManager")) {
         if (!CheckPermission("downloads")) {
-          aValue.setNull();
+          FillPropertyDescriptor(aDesc, aObject, JS::NullValue(), false);
           return true;
         }
       }
@@ -1556,7 +1556,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       return false;
     }
 
-    aValue.setObject(*domObject);
+    FillPropertyDescriptor(aDesc, aObject, JS::ObjectValue(*domObject), false);
     return true;
   }
 
@@ -1597,7 +1597,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
 
-  aValue.set(prop_val);
+  FillPropertyDescriptor(aDesc, aObject, prop_val, false);
   return true;
 }
 
