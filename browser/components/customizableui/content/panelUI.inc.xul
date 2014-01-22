@@ -178,6 +178,6 @@
        level="top"
        hidden="true">
   <vbox id="widget-overflow-scroller">
-    <vbox id="widget-overflow-list"/>
+    <vbox id="widget-overflow-list" class="widget-overflow-list"/>
   </vbox>
 </panel>

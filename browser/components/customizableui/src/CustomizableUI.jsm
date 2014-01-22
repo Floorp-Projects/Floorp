@@ -3235,6 +3235,7 @@ OverflowableToolbar.prototype = {
         this._collapsed.set(child.id, this._target.clientWidth);
         child.classList.add("overflowedItem");
         child.setAttribute("cui-anchorid", this._chevron.id);
+        CustomizableUIInternal.notifyListeners("onWidgetOverflow", child, this._target);
 
         this._list.insertBefore(child, this._list.firstChild);
         if (!this._toolbar.hasAttribute("overflowing")) {
@@ -3291,6 +3292,7 @@ OverflowableToolbar.prototype = {
       }
       child.removeAttribute("cui-anchorid");
       child.classList.remove("overflowedItem");
+      CustomizableUIInternal.notifyListeners("onWidgetUnderflow", child, this._target);
     }
 
     let win = this._target.ownerDocument.defaultView;
@@ -3365,6 +3367,7 @@ OverflowableToolbar.prototype = {
         this._collapsed.set(aNode.id, minSize);
         aNode.setAttribute("cui-anchorid", this._chevron.id);
         aNode.classList.add("overflowedItem");
+        CustomizableUIInternal.notifyListeners("onWidgetOverflow", aNode, this._target);
       }
       // If it is not overflowed and not in the toolbar, and was not overflowed
       // either, it moved out of the toolbar. That means there's now space in there!
@@ -3382,6 +3385,7 @@ OverflowableToolbar.prototype = {
         this._collapsed.delete(aNode.id);
         aNode.removeAttribute("cui-anchorid");
         aNode.classList.remove("overflowedItem");
+        CustomizableUIInternal.notifyListeners("onWidgetUnderflow", aNode, this._target);
 
         if (!this._collapsed.size) {
           this._toolbar.removeAttribute("overflowing");
