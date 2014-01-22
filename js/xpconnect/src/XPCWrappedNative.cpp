@@ -1571,8 +1571,8 @@ XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
 {
     AutoJSContext cx;
 
-    RootedObject proto(cx, JS_GetObjectPrototype(cx, mFlatJSObject));
     RootedObject parent(cx, mFlatJSObject);
+    RootedObject proto(cx, JS_GetObjectPrototype(cx, parent));
     JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass),
                                  proto, parent);
     if (!obj)
