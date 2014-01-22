@@ -223,6 +223,7 @@ const OTHER_MOUSEUP_MONITORED_ITEMS = [
    "PlacesChevron",
    "PlacesToolbarItems",
    "star-button",
+   "menubar-items",
 ];
 
 // Weakly maps browser windows to objects whose keys are relative
@@ -396,6 +397,9 @@ this.BrowserUITelemetry = {
       case "star-button":
         this._starButtonMouseUp(aEvent);
         break;
+      case "menubar-items":
+        this._menubarMouseUp(aEvent);
+        break;
       default:
         this._checkForBuiltinItem(aEvent);
     }
@@ -473,6 +477,13 @@ this.BrowserUITelemetry = {
     this._countMouseUpEvent("click-star-button", action, aEvent.button);
   },
 
+  _menubarMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let tag = target.localName;
+    let result = (tag == "menu" || tag == "menuitem") ? tag : "other";
+    this._countMouseUpEvent("click-menubar", result, aEvent.button);
+  },
+
   countCustomizationEvent: function(aCustomizationEvent) {
     this._countEvent("customize", aCustomizationEvent);
   },
@@ -511,6 +522,13 @@ this.BrowserUITelemetry = {
     // Determine if the Bookmarks bar is currently visible
     let bookmarksBar = document.getElementById("PersonalToolbar");
     result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
+
+    // Determine if the menubar is currently visible. On OS X, the menubar
+    // is never shown, despite not having the collapsed attribute set.
+    let menuBar = document.getElementById("toolbar-menubar");
+    result.menuBarEnabled =
+      menuBar && Services.appinfo.OS != "Darwin"
+              && menuBar.getAttribute("autohide") != "true";
 
     // Examine the default toolbars and see what default items
     // are present and missing.
