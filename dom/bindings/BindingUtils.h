@@ -1456,6 +1456,8 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                        nsTArray<nsString>& names,
                        bool shadowPrototypeProperties, JS::AutoIdVector& props);
 
+namespace binding_detail {
+
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {
@@ -1533,6 +1535,8 @@ private:
   };
 };
 
+} // namespace binding_detail
+
 enum StringificationBehavior {
   eStringify,
   eEmpty,
@@ -1545,7 +1549,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
                        JS::MutableHandle<JS::Value> pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       FakeDependentString& result)
+                       binding_detail::FakeDependentString& result)
 {
   JSString *s;
   if (v.isString()) {
@@ -2044,6 +2048,39 @@ T& NonNullHelper(OwningNonNull<T>& aArg)
 
 template<typename T>
 const T& NonNullHelper(const OwningNonNull<T>& aArg)
+{
+  return aArg;
+}
+
+inline
+void NonNullHelper(NonNull<binding_detail::FakeDependentString>& aArg)
+{
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a NonNull<binding_detail::FakeDependentString>. If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
+
+inline
+void NonNullHelper(const NonNull<binding_detail::FakeDependentString>& aArg)
+{
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a NonNull<binding_detail::FakeDependentString>. If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
+
+inline
+void NonNullHelper(binding_detail::FakeDependentString& aArg)
+{
+  // This overload is here to make sure that we never end up applying
+  // NonNullHelper to a FakeDependentString before we've constified it.  If we
+  // try to, it should fail to compile, since presumably the caller will try to
+  // use our nonexistent return value.
+}
+
+MOZ_ALWAYS_INLINE
+const nsAString& NonNullHelper(const binding_detail::FakeDependentString& aArg)
 {
   return aArg;
 }
