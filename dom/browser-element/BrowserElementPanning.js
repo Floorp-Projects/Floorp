@@ -15,6 +15,12 @@ Cu.import("resource://gre/modules/Geometry.jsm");
 
 var global = this;
 
+const kObservedEvents = [
+  "BEC:ShownModalPrompt",
+  "Activity:Success",
+  "Activity:Error"
+];
+
 const ContentPanning = {
   // Are we listening to touch or mouse events?
   watchedEventsType: '',
@@ -56,12 +62,17 @@ const ContentPanning = {
                                  /* useCapture = */ false);
     }.bind(this));
 
+    addEventListener("unload",
+		     this._unloadHandler.bind(this),
+		     /* useCapture = */ false,
+		     /* wantsUntrusted = */ false);
+
     addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
     addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
     addEventListener("visibilitychange", this._handleVisibilityChange.bind(this));
-    Services.obs.addObserver(this, "BEC:ShownModalPrompt", false);
-    Services.obs.addObserver(this, "Activity:Success", false);
-    Services.obs.addObserver(this, "Activity:Error", false);
+    kObservedEvents.forEach((topic) => {
+      Services.obs.addObserver(this, topic, false);
+    });
   },
 
   handleEvent: function cp_handleEvent(evt) {
@@ -599,6 +610,12 @@ const ContentPanning = {
     if (this.panning && docShell.asyncPanZoomEnabled === false) {
       KineticPanning.start(this);
     }
+  },
+
+  _unloadHandler: function() {
+    kObservedEvents.forEach((topic) => {
+      Services.obs.removeObserver(this, topic);
+    });
   }
 };
 
