@@ -5016,7 +5016,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 {
     static bool reflected;
     char **evp, *name, *value;
-    JSString *valstr;
+    RootedString valstr(cx);
     bool ok;
 
     if (reflected)
@@ -5028,8 +5028,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
             continue;
         *value++ = '\0';
         valstr = JS_NewStringCopyZ(cx, value);
-        ok = valstr && JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
-                                         nullptr, nullptr, JSPROP_ENUMERATE);
+        ok = valstr && JS_DefineProperty(cx, obj, name, valstr, JSPROP_ENUMERATE);
         value[-1] = '=';
         if (!ok)
             return false;
@@ -5055,10 +5054,8 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         RootedString valstr(cx, JS_NewStringCopyZ(cx, value));
         if (!valstr)
             return false;
-        if (!JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
-                               nullptr, nullptr, JSPROP_ENUMERATE)) {
+        if (!JS_DefineProperty(cx, obj, name, valstr, JSPROP_ENUMERATE))
             return false;
-        }
         objp.set(obj);
     }
     return true;
@@ -5659,8 +5656,7 @@ BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (!scriptArgs)
         return false;
 
-    if (!JS_DefineProperty(cx, obj, "scriptArgs", OBJECT_TO_JSVAL(scriptArgs),
-                           nullptr, nullptr, 0))
+    if (!JS_DefineProperty(cx, obj, "scriptArgs", scriptArgs, 0))
         return false;
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {

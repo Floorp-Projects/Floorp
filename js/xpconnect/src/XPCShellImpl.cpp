@@ -802,7 +802,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 {
     static bool reflected;
     char **evp, *name, *value;
-    JSString *valstr;
+    RootedString valstr(cx);
     bool ok;
 
     if (reflected)
@@ -814,12 +814,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
             continue;
         *value++ = '\0';
         valstr = JS_NewStringCopyZ(cx, value);
-        if (!valstr) {
-            ok = false;
-        } else {
-            ok = JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
-                                   nullptr, nullptr, JSPROP_ENUMERATE);
-        }
+        ok = valstr ? JS_DefineProperty(cx, obj, name, valstr, JSPROP_ENUMERATE) : false;
         value[-1] = '=';
         if (!ok)
             return false;
@@ -1094,10 +1089,8 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
     argsObj = JS_NewArrayObject(cx, 0);
     if (!argsObj)
         return 1;
-    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
-                           nullptr, nullptr, 0)) {
+    if (!JS_DefineProperty(cx, obj, "arguments", argsObj, 0))
         return 1;
-    }
 
     for (size_t j = 0, length = argc - i; j < length; j++) {
         JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
@@ -1585,8 +1578,8 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             if (GetCurrentWorkingDirectory(workingDirectory))
                 gWorkingDirectory = &workingDirectory;
 
-            JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
-                              GetLocationProperty, nullptr, 0);
+            JS_DefineProperty(cx, glob, "__LOCATION__", JS::UndefinedHandleValue, 0,
+                              GetLocationProperty, nullptr);
 
             result = ProcessArgs(cx, glob, argv, argc, &dirprovider);
 

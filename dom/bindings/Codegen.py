@@ -6482,7 +6482,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
                         '  if (!get_%s(cx, obj, self, JSJitGetterCallArgs(&temp))) {\n'
                         '    return false;\n'
                         '  }\n'
-                        '  if (!JS_DefineProperty(cx, result, "%s", temp, nullptr, nullptr, JSPROP_ENUMERATE)) {\n'
+                        '  if (!JS_DefineProperty(cx, result, "%s", temp, JSPROP_ENUMERATE)) {\n'
                         '    return false;\n'
                         '  }\n'
                         '}\n' % (m.identifier.name, m.identifier.name))
@@ -6900,7 +6900,7 @@ class CGSpecializedReplaceableSetter(CGSpecializedSetter):
         attrName = self.attr.identifier.name
         # JS_DefineProperty can only deal with ASCII
         assert all(ord(c) < 128 for c in attrName)
-        return CGIndenter(CGGeneric("""return JS_DefineProperty(cx, obj, "%s", args[0], nullptr, nullptr, JSPROP_ENUMERATE);""" % attrName)).define()
+        return CGIndenter(CGGeneric("""return JS_DefineProperty(cx, obj, "%s", args[0], JSPROP_ENUMERATE);""" % attrName)).define()
 
 
 def memberReturnsNewObject(member):
@@ -11660,7 +11660,7 @@ class CGJSImplClass(CGBindingImplClass):
                 "if (!JS_WrapObject(aCx, &obj)) {\n"
                 "  return nullptr;\n"
                 "}\n"
-                'if (!JS_DefineProperty(aCx, mImpl->Callback(), "__DOM_IMPL__", JS::ObjectValue(*obj), nullptr, nullptr, 0)) {\n'
+                'if (!JS_DefineProperty(aCx, mImpl->Callback(), "__DOM_IMPL__", obj, 0)) {\n'
                 "  return nullptr;\n"
                 "}\n"
                 "return obj;" % self.descriptor.name)

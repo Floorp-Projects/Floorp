@@ -2543,10 +2543,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
 
     if (!aState) {
-      if (!JS_DefineProperty(cx, newInnerGlobal, "window",
-                             OBJECT_TO_JSVAL(GetWrapperPreserveColor()),
-                             JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
+      JS::Rooted<JSObject*> rootedWrapper(cx, GetWrapperPreserveColor());
+      if (!JS_DefineProperty(cx, newInnerGlobal, "window", rootedWrapper,
+                             JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,
+                             JS_PropertyStub, JS_StrictPropertyStub)) {
         NS_ERROR("can't create the 'window' property");
         return NS_ERROR_FAILURE;
       }
@@ -4460,9 +4460,8 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener, ErrorResult& aError)
 
     if (!JS_WrapObject(cx, &otherObj) ||
         !JS_WrapObject(cx, &thisObj) ||
-        !JS_DefineProperty(cx, thisObj, "opener", JS::ObjectValue(*otherObj),
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_ENUMERATE)) {
+        !JS_DefineProperty(cx, thisObj, "opener", otherObj, JSPROP_ENUMERATE,
+                           JS_PropertyStub, JS_StrictPropertyStub)) {
       aError.Throw(NS_ERROR_FAILURE);
     }
 
@@ -13601,8 +13600,8 @@ nsGlobalWindow::SetConsole(JSContext* aCx, JS::Handle<JS::Value> aValue)
 
   if (!JS_WrapObject(aCx, &thisObj) ||
       !JS_DefineProperty(aCx, thisObj, "console", aValue,
-                         JS_PropertyStub, JS_StrictPropertyStub,
-                         JSPROP_ENUMERATE)) {
+                         JSPROP_ENUMERATE, JS_PropertyStub,
+                         JS_StrictPropertyStub)) {
     return NS_ERROR_FAILURE;
   }
 
