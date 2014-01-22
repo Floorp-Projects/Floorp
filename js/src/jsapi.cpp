@@ -3457,9 +3457,8 @@ JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t nam
 }
 
 JS_PUBLIC_API(bool)
-JS_DeletePropertyById2(JSContext *cx, JSObject *objArg, jsid id, bool *result)
+JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *result)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
@@ -3473,9 +3472,8 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *objArg, jsid id, bool *result)
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteElement2(JSContext *cx, JSObject *objArg, uint32_t index, bool *result)
+JS_DeleteElement2(JSContext *cx, HandleObject obj, uint32_t index, bool *result)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3485,9 +3483,8 @@ JS_DeleteElement2(JSContext *cx, JSObject *objArg, uint32_t index, bool *result)
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteProperty2(JSContext *cx, JSObject *objArg, const char *name, bool *result)
+JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *result)
 {
-    RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, 0);
@@ -3514,24 +3511,24 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t
 }
 
 JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext *cx, JSObject *objArg, jsid idArg)
+JS_DeletePropertyById(JSContext *cx, HandleObject obj, HandleId id)
 {
     bool junk;
-    return JS_DeletePropertyById2(cx, objArg, idArg, &junk);
+    return JS_DeletePropertyById2(cx, obj, id, &junk);
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext *cx, JSObject *objArg, uint32_t index)
+JS_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index)
 {
     bool junk;
-    return JS_DeleteElement2(cx, objArg, index, &junk);
+    return JS_DeleteElement2(cx, obj, index, &junk);
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext *cx, JSObject *objArg, const char *name)
+JS_DeleteProperty(JSContext *cx, HandleObject obj, const char *name)
 {
     bool junk;
-    return JS_DeleteProperty2(cx, objArg, name, &junk);
+    return JS_DeleteProperty2(cx, obj, name, &junk);
 }
 
 static Shape *
