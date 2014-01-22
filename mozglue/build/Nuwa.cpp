@@ -15,15 +15,21 @@
 #include <pthread.h>
 #include <alloca.h>
 #include <sys/epoll.h>
+#include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <vector>
 
 #include "mozilla/LinkedList.h"
 #include "Nuwa.h"
 
 using namespace mozilla;
+
+extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno) {
+  return syscall(__NR_tgkill, tgid, tid, signalno);
+}
 
 /**
  * Provides the wrappers to a selected set of pthread and system-level functions
@@ -62,7 +68,6 @@ int __real_pipe2(int __pipedes[2], int flags);
 int __real_pipe(int __pipedes[2]);
 int __real_epoll_ctl(int aEpollFd, int aOp, int aFd, struct epoll_event *aEvent);
 int __real_close(int aFd);
-
 }
 
 #define REAL(s) __real_##s
@@ -139,6 +144,8 @@ TLSInfoList;
 #define NUWA_STACK_SIZE (1024 * 32)
 #endif
 
+#define NATIVE_THREAD_NAME_LENGTH 16
+
 struct thread_info : public mozilla::LinkedListElement<thread_info> {
   pthread_t origThreadID;
   pthread_t recreatedThreadID;
@@ -160,6 +167,10 @@ struct thread_info : public mozilla::LinkedListElement<thread_info> {
 
   pthread_mutex_t *reacquireMutex;
   void *stk;
+
+  pid_t origNativeThreadID;
+  pid_t recreatedNativeThreadID;
+  char nativeThreadName[NATIVE_THREAD_NAME_LENGTH];
 };
 
 typedef struct thread_info thread_info_t;
@@ -212,6 +223,7 @@ static TLSKeySet sTLSKeys;
  */
 static pthread_mutex_t sThreadFreezeLock = PTHREAD_MUTEX_INITIALIZER;
 
+static thread_info_t sMainThread;
 static LinkedList<thread_info_t> sAllThreads;
 static int sThreadCount = 0;
 static int sThreadFreezeCount = 0;
@@ -275,6 +287,32 @@ GetThreadInfo(pthread_t threadID) {
     pthread_mutex_unlock(&sThreadCountLock);
   }
   return tinfo;
+}
+
+/**
+ * Get thread info using the specified native thread ID.
+ *
+ * @return thread_info_t with nativeThreadID == specified threadID
+ */
+static thread_info_t*
+GetThreadInfo(pid_t threadID) {
+  if (sIsNuwaProcess) {
+    REAL(pthread_mutex_lock)(&sThreadCountLock);
+  }
+  thread_info_t *thrinfo = nullptr;
+  for (thread_info_t *tinfo = sAllThreads.getFirst();
+       tinfo;
+       tinfo = tinfo->getNext()) {
+    if (tinfo->origNativeThreadID == threadID) {
+      thrinfo = tinfo;
+      break;
+    }
+  }
+  if (sIsNuwaProcess) {
+    pthread_mutex_unlock(&sThreadCountLock);
+  }
+
+  return thrinfo;
 }
 
 #if !defined(HAVE_THREAD_TLS_KEYWORD)
@@ -449,6 +487,7 @@ thread_info_new(void) {
   tinfo->recrFunc = nullptr;
   tinfo->recrArg = nullptr;
   tinfo->recreatedThreadID = 0;
+  tinfo->recreatedNativeThreadID = 0;
   tinfo->reacquireMutex = nullptr;
   tinfo->stk = malloc(NUWA_STACK_SIZE);
   pthread_attr_init(&tinfo->threadAttr);
@@ -497,6 +536,7 @@ _thread_create_startup(void *arg) {
 
   SET_THREAD_INFO(tinfo);
   tinfo->origThreadID = REAL(pthread_self)();
+  tinfo->origNativeThreadID = gettid();
 
   pthread_cleanup_push(thread_info_cleanup, tinfo);
 
@@ -619,6 +659,7 @@ RestoreTLSInfo(thread_info_t *tinfo) {
 
   SET_THREAD_INFO(tinfo);
   tinfo->recreatedThreadID = REAL(pthread_self)();
+  tinfo->recreatedNativeThreadID = gettid();
 }
 
 extern "C" MFBT_API int
@@ -1215,6 +1256,27 @@ __wrap_close(int aFd) {
   return rv;
 }
 
+extern "C" MFBT_API int
+__wrap_tgkill(pid_t tgid, pid_t tid, int signalno)
+{
+  if (sIsNuwaProcess) {
+    return tgkill(tgid, tid, signalno);
+  }
+
+  if (tid == sMainThread.origNativeThreadID) {
+    return tgkill(tgid, sMainThread.recreatedNativeThreadID, signalno);
+  }
+
+  thread_info_t *tinfo = (tid == sMainThread.origNativeThreadID ?
+      &sMainThread :
+      GetThreadInfo(tid));
+  if (!tinfo) {
+    return tgkill(tgid, tid, signalno);
+  }
+
+  return tgkill(tgid, tinfo->recreatedNativeThreadID, signalno);
+}
+
 static void *
 thread_recreate_startup(void *arg) {
   /*
@@ -1232,6 +1294,7 @@ thread_recreate_startup(void *arg) {
    */
   thread_info_t *tinfo = (thread_info_t *)arg;
 
+  prctl(PR_SET_NAME, (unsigned long)&tinfo->nativeThreadName, 0, 0, 0);
   RestoreTLSInfo(tinfo);
 
   if (setjmp(tinfo->retEnv) != 0) {
@@ -1266,6 +1329,9 @@ static void
 RecreateThreads() {
   sIsNuwaProcess = false;
   sIsFreezing = false;
+
+  sMainThread.recreatedThreadID = pthread_self();
+  sMainThread.recreatedNativeThreadID = gettid();
 
   // Run registered constructors.
   for (std::vector<nuwa_construct_t>::iterator ctr = sConstructors.begin();
@@ -1556,6 +1622,10 @@ PrepareNuwaProcess() {
 
   // Make marked threads block in one freeze point.
   REAL(pthread_mutex_lock)(&sThreadFreezeLock);
+
+  // Populate sMainThread for mapping of tgkill.
+  sMainThread.origThreadID = pthread_self();
+  sMainThread.origNativeThreadID = gettid();
 }
 
 // Make current process as a Nuwa process.
@@ -1607,6 +1677,10 @@ NuwaMarkCurrentThread(void (*recreate)(void *), void *arg) {
   tinfo->flags |= TINFO_FLAG_NUWA_SUPPORT;
   tinfo->recrFunc = recreate;
   tinfo->recrArg = arg;
+
+  // XXX Thread name might be set later than this call. If this is the case, we
+  // might need to delay getting the thread name.
+  prctl(PR_GET_NAME, (unsigned long)&tinfo->nativeThreadName, 0, 0, 0);
 }
 
 /**
