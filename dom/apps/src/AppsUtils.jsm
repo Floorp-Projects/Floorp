@@ -629,6 +629,23 @@ ManifestHelper.prototype = {
     return {};
   },
 
+  get biggestIconURL() {
+    let icons = this._localeProp("icons");
+    if (!icons)
+      return null;
+
+    let iconSizes = Object.keys(icons);
+    if (iconSizes.length == 0)
+      return null;
+
+    iconSizes.sort((a, b) => a - b);
+    let biggestIconSize = iconSizes.pop();
+    let biggestIcon = icons[biggestIconSize];
+    let biggestIconURL = this._origin.resolve(biggestIcon);
+
+    return biggestIconURL;
+  },
+
   iconURLForSize: function(aSize) {
     let icons = this._localeProp("icons");
     if (!icons)
