@@ -1651,15 +1651,13 @@ HTMLMediaElement::BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
   MetadataIterCx* args = static_cast<MetadataIterCx*>(aUserArg);
 
   nsString wideValue = NS_ConvertUTF8toUTF16(aValue);
-  JSString* string = JS_NewUCStringCopyZ(args->cx, wideValue.Data());
+  JS::Rooted<JSString*> string(args->cx, JS_NewUCStringCopyZ(args->cx, wideValue.Data()));
   if (!string) {
     NS_WARNING("Failed to perform string copy");
     args->error = true;
     return PL_DHASH_STOP;
   }
-  JS::Value value = STRING_TO_JSVAL(string);
-  if (!JS_DefineProperty(args->cx, args->tags, aKey.Data(), value,
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(args->cx, args->tags, aKey.Data(), string, JSPROP_ENUMERATE)) {
     NS_WARNING("Failed to set metadata property");
     args->error = true;
     return PL_DHASH_STOP;

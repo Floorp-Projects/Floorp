@@ -446,8 +446,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
     return false;
   }
 
-  return JS_DefineProperty(aCx, aGlobal, IDB_STR, indexedDB, nullptr, nullptr,
-                           JSPROP_ENUMERATE);
+  return JS_DefineProperty(aCx, aGlobal, IDB_STR, indexedDB, JSPROP_ENUMERATE);
 }
 
 // static

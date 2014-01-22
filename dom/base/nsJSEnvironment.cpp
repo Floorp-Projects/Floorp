@@ -1001,14 +1001,12 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
     }
   }
 
-  JSObject* array = ::JS_NewArrayObject(mContext, args);
+  JS::Rooted<JSObject*> array(mContext, ::JS_NewArrayObject(mContext, args));
   if (!array) {
     return NS_ERROR_FAILURE;
   }
-  JS::Rooted<JS::Value> arrayVal(mContext, JS::ObjectValue(*array));
 
-  return JS_DefineProperty(mContext, aTarget, aPropName, arrayVal,
-                           nullptr, nullptr, 0) ? NS_OK : NS_ERROR_FAILURE;
+  return JS_DefineProperty(mContext, aTarget, aPropName, array, 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult

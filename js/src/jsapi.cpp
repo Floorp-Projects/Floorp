@@ -3100,13 +3100,62 @@ DefineSelfHostedProperty(JSContext *cx,
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext *cx, JSObject *objArg, const char *name, jsval valueArg,
-                  PropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue value,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
 {
-    RootedObject obj(cx, objArg);
-    RootedValue value(cx, valueArg);
     return DefineProperty(cx, obj, name, value, GetterWrapper(getter), SetterWrapper(setter),
                           attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, HandleObject valueArg,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
+{
+    RootedValue value(cx, ObjectValue(*valueArg));
+    return DefineProperty(cx, obj, name, value, GetterWrapper(getter), SetterWrapper(setter),
+                          attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, HandleString valueArg,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
+{
+    RootedValue value(cx, StringValue(valueArg));
+    return DefineProperty(cx, obj, name, value, GetterWrapper(getter), SetterWrapper(setter),
+                          attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, int32_t valueArg,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
+{
+    Value value = Int32Value(valueArg);
+    return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
+                          GetterWrapper(getter), SetterWrapper(setter), attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, uint32_t valueArg,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
+{
+    Value value = UINT_TO_JSVAL(valueArg);
+    return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
+                          GetterWrapper(getter), SetterWrapper(setter), attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext *cx, HandleObject obj, const char *name, double valueArg,
+                  unsigned attrs,
+                  PropertyOp getter /* = nullptr */, JSStrictPropertyOp setter /* = nullptr */)
+{
+    Value value = NumberValue(valueArg);
+    return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
+                          GetterWrapper(getter), SetterWrapper(setter), attrs, 0);
 }
 
 static bool

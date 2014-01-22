@@ -695,8 +695,7 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
   JS::Rooted<JSObject*> eventObj(aCx, &eventValue.toObject());
   MOZ_ASSERT(eventObj);
 
-  if (!JS_DefineProperty(aCx, eventObj, "wrappedJSObject", eventValue,
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(aCx, eventObj, "wrappedJSObject", eventValue, JSPROP_ENUMERATE)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1004,8 +1003,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
   JS::Rooted<JSObject*> eventObj(cx, &eventValue.toObject());
   MOZ_ASSERT(eventObj);
 
-  if (!JS_DefineProperty(cx, eventObj, "wrappedJSObject", eventValue,
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, eventObj, "wrappedJSObject", eventValue, JSPROP_ENUMERATE)) {
     return;
   }
 

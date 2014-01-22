@@ -879,12 +879,12 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
   if (!prototype)
     return nullptr;
 
-  if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, ctor, "prototype", prototype,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return nullptr;
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(ctor),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, prototype, "constructor", ctor,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return nullptr;
 
   // Define properties and functions common to all CTypes.
@@ -935,12 +935,12 @@ InitCDataClass(JSContext* cx, HandleObject parent, HandleObject CTypeProto)
   if (!prototype)
     return nullptr;
 
-  if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, ctor, "prototype", prototype,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return nullptr;
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(ctor),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, prototype, "constructor", ctor,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return nullptr;
 
   // Define properties and functions common to all CDatas.
@@ -1000,8 +1000,8 @@ InitTypeConstructor(JSContext* cx,
     return false;
 
   // Define property before proceeding, for GC safety.
-  if (!JS_DefineProperty(cx, obj, "prototype", OBJECT_TO_JSVAL(typeProto),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, obj, "prototype", typeProto,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
   if (fns && !JS_DefineFunctions(cx, typeProto, fns))
@@ -1010,8 +1010,8 @@ InitTypeConstructor(JSContext* cx,
   if (!JS_DefineProperties(cx, typeProto, props))
     return false;
 
-  if (!JS_DefineProperty(cx, typeProto, "constructor", OBJECT_TO_JSVAL(obj),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, typeProto, "constructor", obj,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
   // Stash ctypes.{Pointer,Array,Struct}Type.prototype on a reserved slot of
@@ -1246,9 +1246,8 @@ InitTypeClasses(JSContext* cx, HandleObject parent)
 
   // Alias 'ctypes.unsigned' as 'ctypes.unsigned_int', since they represent
   // the same type in C.
-  if (!JS_DefineProperty(cx, parent, "unsigned",
-         OBJECT_TO_JSVAL(typeObj_unsigned_int), nullptr, nullptr,
-         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, parent, "unsigned", typeObj_unsigned_int,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
   // Create objects representing the special types void_t and voidptr_t.
@@ -1261,8 +1260,8 @@ InitTypeClasses(JSContext* cx, HandleObject parent)
   typeObj = PointerType::CreateInternal(cx, typeObj);
   if (!typeObj)
     return false;
-  if (!JS_DefineProperty(cx, parent, "voidptr_t", OBJECT_TO_JSVAL(typeObj),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, parent, "voidptr_t", typeObj,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
   return true;
@@ -1327,8 +1326,8 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
   if (!ctypes)
     return false;
 
-  if (!JS_DefineProperty(cx, global, "ctypes", OBJECT_TO_JSVAL(ctypes),
-         JS_PropertyStub, JS_StrictPropertyStub, JSPROP_READONLY | JSPROP_PERMANENT)){
+  if (!JS_DefineProperty(cx, global, "ctypes", ctypes, JSPROP_READONLY | JSPROP_PERMANENT,
+                         JS_PropertyStub, JS_StrictPropertyStub)){
     return false;
   }
 
@@ -1352,12 +1351,12 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
   if (!JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions))
     return false;
 
-  if (!JS_DefineProperty(cx, ctor, "prototype", OBJECT_TO_JSVAL(prototype),
-                         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, ctor, "prototype", prototype,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(ctor),
-                         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, prototype, "constructor", ctor,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
 
@@ -3232,8 +3231,8 @@ CType::Create(JSContext* cx,
     if (!prototype)
       return nullptr;
 
-    if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
-           nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JS_DefineProperty(cx, prototype, "constructor", typeObj,
+                           JSPROP_READONLY | JSPROP_PERMANENT))
       return nullptr;
 
     // Set the 'prototype' object.
@@ -3281,8 +3280,8 @@ CType::DefineBuiltin(JSContext* cx,
     return nullptr;
 
   // Define the CType as a 'propName' property on 'parent'.
-  if (!JS_DefineProperty(cx, parent, propName, OBJECT_TO_JSVAL(typeObj),
-         nullptr, nullptr, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, parent, propName, typeObj,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return nullptr;
 
   return typeObj;
@@ -4794,8 +4793,8 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   if (!prototype)
     return false;
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
-         nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+  if (!JS_DefineProperty(cx, prototype, "constructor", typeObj,
+                         JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
   // Create a FieldInfoHash to stash on the type object, and an array to root

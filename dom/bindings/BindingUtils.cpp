@@ -272,9 +272,11 @@ bool
 DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
                 const ConstantSpec* cs)
 {
+  JS::Rooted<JS::Value> value(cx);
   for (; cs->name; ++cs) {
+    value = cs->value;
     bool ok =
-      JS_DefineProperty(cx, obj, cs->name, cs->value, nullptr, nullptr,
+      JS_DefineProperty(cx, obj, cs->name, value,
                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
     if (!ok) {
       return false;
@@ -415,8 +417,7 @@ DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
 
   // This is Enumerable: False per spec.
   return alreadyDefined ||
-         JS_DefineProperty(cx, global, name, OBJECT_TO_JSVAL(constructor),
-                           nullptr, nullptr, 0);
+         JS_DefineProperty(cx, global, name, constructor, 0);
 }
 
 static JSObject*
@@ -467,8 +468,8 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
                                   STRING_TO_JSVAL(str));
 
-    if (!JS_DefineProperty(cx, constructor, "length", JS::Int32Value(ctorNargs),
-                           nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT)) {
+    if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
+                           JSPROP_READONLY | JSPROP_PERMANENT)) {
       return nullptr;
     }
   }
@@ -525,9 +526,8 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                           namedConstructors->mNargs));
       if (!namedConstructor ||
           !JS_DefineProperty(cx, namedConstructor, "prototype",
-                             JS::ObjectValue(*proto), JS_PropertyStub,
-                             JS_StrictPropertyStub,
-                             JSPROP_PERMANENT | JSPROP_READONLY) ||
+                             proto, JSPROP_PERMANENT | JSPROP_READONLY,
+                             JS_PropertyStub, JS_StrictPropertyStub) ||
           (defineOnGlobal &&
            !DefineConstructor(cx, global, namedConstructors->mName,
                               namedConstructor))) {

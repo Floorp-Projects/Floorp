@@ -721,11 +721,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         RootedObject locationObj(aCx, locationHolder->GetJSObject());
         NS_ENSURE_TRUE(locationObj, nullptr);
 
-        if (!JS_DefineProperty(aCx, obj, "__LOCATION__",
-                               ObjectValue(*locationObj),
-                               nullptr, nullptr, 0)) {
+        if (!JS_DefineProperty(aCx, obj, "__LOCATION__", locationObj, 0))
             return nullptr;
-        }
     }
 
     nsAutoCString nativePath;
@@ -734,12 +731,11 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
 
     // Expose the URI from which the script was imported through a special
     // variable that we insert into the JSM.
-    JSString *exposedUri = JS_NewStringCopyN(aCx, nativePath.get(),
-                                             nativePath.Length());
-    if (!JS_DefineProperty(aCx, obj, "__URI__",
-                           STRING_TO_JSVAL(exposedUri), nullptr, nullptr, 0)) {
+    RootedString exposedUri(aCx, JS_NewStringCopyN(aCx, nativePath.get(), nativePath.Length()));
+    NS_ENSURE_TRUE(exposedUri, nullptr);
+
+    if (!JS_DefineProperty(aCx, obj, "__URI__", exposedUri, 0))
         return nullptr;
-    }
 
     if (createdNewGlobal) {
         RootedObject global(aCx, holder->GetJSObject());

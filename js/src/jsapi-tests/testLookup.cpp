@@ -87,7 +87,7 @@ BEGIN_TEST(testLookup_bug570195)
 {
     JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
-    CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), nullptr, nullptr, 0));
+    CHECK(JS_DefineProperty(cx, global, "document", obj, 0));
     JS::RootedValue v(cx);
     EVAL("document.all ? true : false", &v);
     CHECK_SAME(v, JSVAL_FALSE);
