@@ -371,6 +371,16 @@ if (navigator.userAgent.indexOf("Windows") == -1 ||
     { name:"big-buck-bunny-unseekable.mp4", type:"video/mp4" }
   ]);
 }
+// Android supports fragmented MP4 playback from 4.3.
+var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                  .getProperty('version');
+// Fragmented MP4.
+if (navigator.userAgent.indexOf("Mobile") != -1 && androidVersion >= 18) {
+  gUnseekableTests = gUnseekableTests.concat([
+    { name:"street.mp4", type:"video/mp4" }
+  ]);
+}
 
 // These are files suitable for using with a "new Audio" constructor.
 var gAudioTests = [
