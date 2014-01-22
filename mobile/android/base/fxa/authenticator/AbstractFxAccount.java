@@ -40,6 +40,11 @@ public interface AbstractFxAccount {
    */
   public String getServerURI();
 
+  /**
+   * @return the profile name associated with the account, such as "default".
+   */
+  public String getProfile();
+
   public boolean isValid();
   public void setInvalid();
 
