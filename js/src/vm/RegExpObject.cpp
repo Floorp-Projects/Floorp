@@ -755,7 +755,7 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj_, JSObject *proto_)
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
     Rooted<RegExpObject*> proto(cx, &proto_->as<RegExpObject>());
     JSObject *res = builder.clone(regex, proto);
-    JS_ASSERT(res->type() == regex->type());
+    JS_ASSERT_IF(res, res->type() == regex->type());
     return res;
 }
 
