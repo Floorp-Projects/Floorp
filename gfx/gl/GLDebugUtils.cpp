@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "GLDebugUtils.h"
+#include "GLConsts.h"
+
+namespace mozilla {
+namespace gl {
+
+const char*
+GLenumToStr(GLenum e) {
+    switch (e) {
+#define HANDLE_GL_ENUM(x) case LOCAL_##x: return #x
+        HANDLE_GL_ENUM(GL_TRIANGLES);
+        HANDLE_GL_ENUM(GL_TRIANGLE_STRIP);
+        HANDLE_GL_ENUM(GL_TRIANGLE_FAN);
+        HANDLE_GL_ENUM(GL_FRAMEBUFFER);
+        HANDLE_GL_ENUM(GL_RENDERBUFFER);
+        HANDLE_GL_ENUM(GL_DEPTH_ATTACHMENT);
+        HANDLE_GL_ENUM(GL_STENCIL_ATTACHMENT);
+        HANDLE_GL_ENUM(GL_DEPTH_STENCIL_ATTACHMENT);
+        HANDLE_GL_ENUM(GL_TEXTURE_2D);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+        HANDLE_GL_ENUM(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT0);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT1);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT2);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT3);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT4);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT5);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT6);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT7);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT8);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT9);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT10);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT11);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT12);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT13);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT14);
+        HANDLE_GL_ENUM(GL_COLOR_ATTACHMENT15);
+        HANDLE_GL_ENUM(GL_UNSIGNED_BYTE);
+        HANDLE_GL_ENUM(GL_UNSIGNED_SHORT);
+        HANDLE_GL_ENUM(GL_UNSIGNED_INT);
+        HANDLE_GL_ENUM(GL_RGBA);
+        HANDLE_GL_ENUM(GL_DEPTH_COMPONENT);
+#undef HANDLE_GL_ENUM
+    }
+
+    return "(unknown)";
+}
+
+} // namespace gl
+} // namespace mozilla
