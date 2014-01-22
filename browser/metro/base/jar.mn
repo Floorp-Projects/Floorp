@@ -6,11 +6,12 @@
 chrome.jar:
 % content browser %content/
 
+  content/aboutAddons.xhtml                    (content/pages/aboutAddons.xhtml)
   content/aboutCertError.xhtml                 (content/pages/aboutCertError.xhtml)
   content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
   content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
+  content/config.xhtml                         (content/pages/config.xhtml)
   content/netError.xhtml                       (content/pages/netError.xhtml)
-  content/aboutAddons.xhtml                    (content/pages/aboutAddons.xhtml)
 #ifdef MOZ_CRASHREPORTER
   content/crashprompt.xhtml                    (content/pages/crashprompt.xhtml)
 #endif
@@ -64,8 +65,7 @@ chrome.jar:
   content/ContentAreaObserver.js               (content/ContentAreaObserver.js)
   content/BrowserTouchHandler.js               (content/BrowserTouchHandler.js)
 * content/WebProgress.js                       (content/WebProgress.js)
-  content/config.xul                           (content/config.xul)
-  content/config.js                            (content/config.js)
+  content/pages/config.js                      (content/pages/config.js)
 * content/browser.xul                          (content/browser.xul)
   content/browser.js                           (content/browser.js)
 * content/browser-ui.js                        (content/browser-ui.js)
@@ -103,6 +103,6 @@ chrome.jar:
   content/RemoteTabsView.js                    (content/startui/RemoteTabsView.js)
 #endif
 
-% override chrome://global/content/config.xul chrome://browser/content/config.xul
+% override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
 % override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml

@@ -198,7 +198,7 @@ InternalMethods.prototype = {
       // We are now ready for business. This should only be invoked once
       // per setSignedInUser(), regardless of whether we've rebooted since
       // setSignedInUser() was called.
-      internal.notifyObservers(ONLOGIN_NOTIFICATION);
+      internal.notifyObservers(ONVERIFIED_NOTIFICATION);
       return data;
     }.bind(this));
   },
@@ -327,7 +327,7 @@ InternalMethods.prototype = {
     // that will fire when we are completely ready.
     //
     // Login is truly complete once keys have been fetched, so once getKeys()
-    // obtains and stores kA and kB, it will fire the onlogin observer
+    // obtains and stores kA and kB, it will fire the onverified observer
     // notification.
     return this.whenVerified(data)
       .then((data) => this.getKeys(data));
@@ -457,8 +457,8 @@ this.FxAccounts.prototype = Object.freeze({
   // set() makes sure that polling is happening, if necessary.
   // get() does not wait for verification, and returns an object even if
   // unverified. The caller of get() must check .verified .
-  // The "fxaccounts:onlogin" event will fire only when the verified state
-  // goes from false to true, so callers must register their observer
+  // The "fxaccounts:onverified" event will fire only when the verified
+  // state goes from false to true, so callers must register their observer
   // and then call get(). In particular, it will not fire when the account
   // was found to be verified in a previous boot: if our stored state says
   // the account is verified, the event will never fire. So callers must do:
@@ -495,6 +495,7 @@ this.FxAccounts.prototype = Object.freeze({
     // We're telling the caller that this is durable now.
     return internal.signedInUserStorage.set(record)
       .then(() => {
+        internal.notifyObservers(ONLOGIN_NOTIFICATION);
         if (!internal.isUserEmailVerified(credentials)) {
           internal.startVerifiedCheck(credentials);
         }

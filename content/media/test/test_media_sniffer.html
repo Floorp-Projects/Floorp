@@ -17,8 +17,8 @@
 var manager = new MediaTestManager;
 
 function finish_test(element) {
-  if (element.parentNode)
-    element.parentNode.removeChild(element);
+  element.removeEventListener("error", onerror, false);
+  removeNodeAndSource(element);
   manager.finished(element.token);
 }
 
