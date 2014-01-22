@@ -516,6 +516,37 @@
        throw_on_zero("move",
          WinFile.MoveFileEx(sourcePath, destPath, flags)
        );
+
+       // Inherit NTFS permissions from the destination directory
+       // if possible.
+       if (Path.dirname(sourcePath) === Path.dirname(destPath)) {
+         // Skip if the move operation was the simple rename,
+         return;
+       }
+       // The function may fail for various reasons (e.g. not all
+       // filesystems support NTFS permissions or the user may not
+       // have the enough rights to read/write permissions).
+       // However we can safely ignore errors. The file was already
+       // moved. Setting permissions is not mandatory.
+       let dacl = new ctypes.voidptr_t();
+       let sd = new ctypes.voidptr_t();
+       WinFile.GetNamedSecurityInfo(destPath, Const.SE_FILE_OBJECT,
+                                    Const.DACL_SECURITY_INFORMATION,
+                                    null /*sidOwner*/, null /*sidGroup*/,
+                                    dacl.address(), null /*sacl*/,
+                                    sd.address());
+       // dacl will be set only if the function succeeds.
+       if (!dacl.isNull()) {
+         WinFile.SetNamedSecurityInfo(destPath, Const.SE_FILE_OBJECT,
+                                      Const.DACL_SECURITY_INFORMATION |
+                                      Const.UNPROTECTED_DACL_SECURITY_INFORMATION,
+                                      null /*sidOwner*/, null /*sidGroup*/,
+                                      dacl, null /*sacl*/);
+       }
+       // sd will be set only if the function succeeds.
+       if (!sd.isNull()) {
+           WinFile.LocalFree(Type.HLOCAL.cast(sd));
+       }
      };
 
      /**
