@@ -24,6 +24,9 @@ using namespace mozilla::layout;
 
 // Convenience typedefs for helper classes that we forward-declare in .h file
 // (so that nsFlexContainerFrame methods can use them as parameters):
+typedef nsFlexContainerFrame::FlexItem FlexItem;
+typedef nsFlexContainerFrame::FlexLine FlexLine;
+typedef nsFlexContainerFrame::FlexboxAxisTracker FlexboxAxisTracker;
 typedef nsFlexContainerFrame::StrutInfo StrutInfo;
 
 #ifdef PR_LOGGING
@@ -202,7 +205,7 @@ MarginComponentForSide(nsMargin& aMargin, Side aSide)
   IsAxisHorizontal((axisTracker_).GetCrossAxis()) ? (width_) : (height_)
 
 // Encapsulates our flex container's main & cross axes.
-class MOZ_STACK_CLASS FlexboxAxisTracker {
+class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
   FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame);
 
@@ -277,7 +280,7 @@ private:
 // Represents a flex item.
 // Includes the various pieces of input that the Flexbox Layout Algorithm uses
 // to resolve a flexible width.
-class FlexItem {
+class nsFlexContainerFrame::FlexItem {
 public:
   // Normal constructor:
   FlexItem(nsIFrame* aChildFrame,
@@ -561,7 +564,7 @@ protected:
 
 // Represents a single flex line in a flex container.
 // Manages an array of the FlexItems that are in the line.
-class FlexLine {
+class nsFlexContainerFrame::FlexLine {
 public:
   FlexLine()
   : mTotalInnerHypotheticalMainSize(0),
