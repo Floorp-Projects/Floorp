@@ -250,6 +250,10 @@ function promisePanelElementHidden(win, aPanel) {
   return deferred.promise;
 }
 
+function isPanelUIOpen() {
+  return PanelUI.panel.state == "open" || PanelUI.panel.state == "showing";
+}
+
 function subviewShown(aSubview) {
   let deferred = Promise.defer();
   let win = aSubview.ownerDocument.defaultView;
