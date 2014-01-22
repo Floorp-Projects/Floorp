@@ -41,7 +41,7 @@ function startTest(test, token) {
 
   v.addEventListener("ended", function (e) {
     ok(!e.target.loop, "Shouldn't get ended event while looping.");
-    e.target.parentNode.removeChild(v);
+    removeNodeAndSource(e.target);
     manager.finished(e.target.token);
   }, false);
 

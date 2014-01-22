@@ -508,8 +508,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
 XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
   return {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
     ril: null,
     pendingMessages: [],  // For queueing "RIL:SetRadioEnabled" messages.
     timer: null,
@@ -518,7 +516,6 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
 
     init: function(ril) {
       this.ril = ril;
-      Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
     },
 
     receiveMessage: function(msg) {
@@ -674,27 +671,6 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       }
       this._processNextMessage();
     },
-
-    /**
-     * nsIObserver interface methods.
-     */
-    observe: function observe(subject, topic, data) {
-      switch (topic) {
-        case kSysMsgListenerReadyObserverTopic:
-          Services.obs.removeObserver(this, kSysMsgListenerReadyObserverTopic);
-
-          let numCards = this._getNumCards();
-          for (let i = 0, N = this.ril.numRadioInterfaces; i < N; ++i) {
-            if (this._isRadioAbleToEnableAtClient(i, numCards)) {
-              let radioInterface = this.ril.getRadioInterface(i);
-              radioInterface.setRadioEnabledInternal({enabled: true}, null);
-            }
-          }
-          break;
-        default:
-          break;
-      }
-    }
   };
 });
 

@@ -250,6 +250,8 @@ if test -n "$gonkdir" ; then
         ;;
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        MOZ_B2G_BT=1
+        MOZ_B2G_BT_BLUEDROID=1
         MOZ_NFC=1
 
         ;;
