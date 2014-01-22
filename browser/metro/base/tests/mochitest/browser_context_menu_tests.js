@@ -709,6 +709,84 @@ gTests.push({
   run: getReopenTest(sendContextMenuClickToElement, sendTap)
 });
 
+gTests.push({
+  desc: "Bug 947505 - Right-click in a designMode document should display a " +
+        "context menu",
+  run: function test() {
+    info(chromeRoot + "browser_context_menu_tests_02.html");
+    yield addTab(chromeRoot + "browser_context_menu_tests_02.html");
+
+    purgeEventQueue();
+    emptyClipboard();
+    ContextUI.dismiss();
+
+    yield waitForCondition(() => !ContextUI.navbarVisible);
+
+    let tabWindow = Browser.selectedTab.browser.contentWindow;
+    let testSpan = tabWindow.document.getElementById("text1");
+
+    // Case #1: Document isn't in design mode and nothing is selected.
+    tabWindow.document.designMode = "off";
+
+    // Simulate right mouse click to reproduce the same step as noted in the
+    // appropriate bug. It's valid for non-touch case only.
+    synthesizeNativeMouseRDown(Browser.selectedTab.browser, 10, 10);
+    synthesizeNativeMouseRUp(Browser.selectedTab.browser, 10, 10);
+
+    yield waitForCondition(() => ContextUI.navbarVisible);
+
+    ok(ContextUI.navbarVisible, "Navbar is visible on context menu action.");
+    ok(ContextUI.tabbarVisible, "Tabbar is visible on context menu action.");
+
+    ContextUI.dismiss();
+    yield waitForCondition(() => !ContextUI.navbarVisible);
+
+    // Case #2: Document isn't in design mode and text is selected.
+    tabWindow.getSelection().selectAllChildren(testSpan);
+
+    let promise = waitForEvent(tabWindow.document, "popupshown");
+    sendContextMenuClickToSelection(tabWindow);
+    yield promise;
+
+    checkContextUIMenuItemVisibility(["context-copy", "context-search"]);
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+
+    // Case #3: Document is in design mode and nothing is selected.
+    tabWindow.document.designMode = "on";
+    tabWindow.getSelection().removeAllRanges();
+
+    promise = waitForEvent(tabWindow.document, "popupshown");
+    sendContextMenuClickToElement(tabWindow, testSpan);
+    yield promise;
+
+    checkContextUIMenuItemVisibility(["context-select-all", "context-select"]);
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+
+    // Case #4: Document is in design mode and text is selected.
+    tabWindow.getSelection().selectAllChildren(testSpan);
+
+    promise = waitForEvent(tabWindow.document, "popupshown");
+    sendContextMenuClickToSelection(tabWindow);
+    yield promise;
+
+    checkContextUIMenuItemVisibility(["context-cut", "context-copy",
+                                      "context-select-all", "context-select",
+                                      "context-search"]);
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
+  }
+});
+
 function test() {
   setDevPixelEqualToPx();
   runTests();

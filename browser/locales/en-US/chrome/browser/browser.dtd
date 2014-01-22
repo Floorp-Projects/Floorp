@@ -677,6 +677,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
 <!ENTITY customizeMode.menuAndToolbars.label "Menu and toolbars">
 <!ENTITY customizeMode.menuAndToolbars.header "More Tools to Add to the Menu and Toolbar">
+<!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
+<!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
 <!ENTITY customizeMode.toolbars "Show / Hide Toolbars">
 

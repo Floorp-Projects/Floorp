@@ -1157,9 +1157,15 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get the current window's server-assigned ID
+   * Get the current window's handle.
+   *
+   * Return an opaque server-assigned identifier to this window that
+   * uniquely identifies it within this Marionette instance.  This can
+   * be used to switch to this window at a later point.
+   *
+   * @return unique window handle (string)
    */
-  getWindow: function MDA_getWindow() {
+  getCurrentWindowHandle: function MDA_getCurrentWindowHandle() {
     this.command_id = this.getCommandId();
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
@@ -1912,11 +1918,14 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get all visible cookies for a document
+   * Get all the cookies for the current domain.
+   *
+   * This is the equivalent of calling "document.cookie" and parsing
+   * the result.
    */
-  getAllCookies: function MDA_getAllCookies() {
+  getCookies: function MDA_getCookies() {
     this.command_id = this.getCommandId();
-    this.sendAsync("getAllCookies", {}, this.command_id);
+    this.sendAsync("getCookies", {}, this.command_id);
   },
 
   /**
@@ -2370,7 +2379,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "goBack": MarionetteServerConnection.prototype.goBack,
   "goForward": MarionetteServerConnection.prototype.goForward,
   "refresh":  MarionetteServerConnection.prototype.refresh,
-  "getWindow":  MarionetteServerConnection.prototype.getWindow,
+  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getCurrentWindowHandle,
+  "getWindow":  MarionetteServerConnection.prototype.getCurrentWindowHandle,  // deprecated
   "getWindows":  MarionetteServerConnection.prototype.getWindows,
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
@@ -2385,7 +2395,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "setTestName": MarionetteServerConnection.prototype.setTestName,
   "screenShot": MarionetteServerConnection.prototype.screenShot,
   "addCookie": MarionetteServerConnection.prototype.addCookie,
-  "getAllCookies": MarionetteServerConnection.prototype.getAllCookies,
+  "getCookies": MarionetteServerConnection.prototype.getCookies,
+  "getAllCookies": MarionetteServerConnection.prototype.getCookies,  // deprecated
   "deleteAllCookies": MarionetteServerConnection.prototype.deleteAllCookies,
   "deleteCookie": MarionetteServerConnection.prototype.deleteCookie,
   "getActiveElement": MarionetteServerConnection.prototype.getActiveElement,

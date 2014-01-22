@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 953381 requires a clobber due to bug 961339.
+CLOBBER due to recent changes to JS build files that were causing
+"STOP! configure has changed and needs to be run in this build directory." bustage

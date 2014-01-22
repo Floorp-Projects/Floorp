@@ -22,7 +22,6 @@
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsanalyzeinlines.h"
 #include "jscntxtinlines.h"
 
 namespace js {
@@ -1428,7 +1427,7 @@ JSScript::ensureRanAnalysis(JSContext *cx)
         return false;
     if (!hasAnalysis() && !makeAnalysis(cx))
         return false;
-    JS_ASSERT(analysis()->ranBytecode());
+    JS_ASSERT(hasAnalysis());
     return true;
 }
 

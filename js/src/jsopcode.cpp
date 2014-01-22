@@ -304,8 +304,8 @@ AssertStackDepth(JSScript *script, uint32_t offset, uint32_t stackDepth) {
      *
      *     call js_DumpScriptDepth(cx, script, pc)
      */
-    JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(offset),
-                 script->analysis()->getCode(offset).stackDepth == stackDepth);
+    if (script->hasAnalysis())
+        script->analysis()->assertMatchingStackDepthAtOffset(offset, stackDepth);
 }
 
 namespace {
