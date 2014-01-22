@@ -8,14 +8,13 @@
 #include "cert.h"
 #include "secerr.h"
 
-
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 namespace mozilla { namespace psm {
 
-extern SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag);
+extern SECStatus getFirstEVPolicy(CERTCertificate* cert, SECOidTag& outOidTag);
 extern CERTCertList* getRootsForOid(SECOidTag oid_tag);
 
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
@@ -42,12 +41,12 @@ CertVerifier::~CertVerifier()
 
 
 static SECStatus
-ClassicVerifyCert(CERTCertificate * cert,
+ClassicVerifyCert(CERTCertificate* cert,
                   const SECCertificateUsage usage,
                   const PRTime time,
-                  nsIInterfaceRequestor * pinArg,
-                  /*optional out*/ CERTCertList **validationChain,
-                  /*optional out*/ CERTVerifyLog *verifyLog)
+                  nsIInterfaceRequestor* pinArg,
+                  /*optional out*/ CERTCertList** validationChain,
+                  /*optional out*/ CERTVerifyLog* verifyLog)
 {
   SECStatus rv;
   SECCertUsage enumUsage;
@@ -94,17 +93,15 @@ ClassicVerifyCert(CERTCertificate * cert,
     }
   }
   if (usage == certificateUsageSSLServer) {
-    /* SSL server cert verification has always used CERT_VerifyCert, so we
-     * continue to use it for SSL cert verification to minimize the risk of
-     * there being any differnce in results between CERT_VerifyCert and
-     * CERT_VerifyCertificate.
-     */
+    // SSL server cert verification has always used CERT_VerifyCert, so we
+    // continue to use it for SSL cert verification to minimize the risk of
+    // there being any differnce in results between CERT_VerifyCert and
+    // CERT_VerifyCertificate.
     rv = CERT_VerifyCert(CERT_GetDefaultCertDB(), cert, true,
                          certUsageSSLServer, time, pinArg, verifyLog);
   } else {
     rv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), cert, true,
-                                usage, time, pinArg,
-                                verifyLog, nullptr);
+                                usage, time, pinArg, verifyLog, nullptr);
   }
   if (rv == SECSuccess && validationChain) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: getting chain in 'classic' \n"));
@@ -117,14 +114,14 @@ ClassicVerifyCert(CERTCertificate * cert,
 }
 
 SECStatus
-CertVerifier::VerifyCert(CERTCertificate * cert,
+CertVerifier::VerifyCert(CERTCertificate* cert,
                          const SECCertificateUsage usage,
                          const PRTime time,
-                         nsIInterfaceRequestor * pinArg,
+                         nsIInterfaceRequestor* pinArg,
                          const Flags flags,
-                         /*optional out*/ CERTCertList **validationChain,
-                         /*optional out*/ SECOidTag *evOidPolicy,
-                         /*optional out*/ CERTVerifyLog *verifyLog)
+                         /*optional out*/ CERTCertList** validationChain,
+                         /*optional out*/ SECOidTag* evOidPolicy,
+                         /*optional out*/ CERTVerifyLog* verifyLog)
 {
   if (!cert) {
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -184,7 +181,7 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
       evPolicy = SEC_OID_UNKNOWN;
     }
   }
-  
+
   MOZ_ASSERT_IF(evPolicy != SEC_OID_UNKNOWN, trustAnchors);
 
   size_t i = 0;
@@ -304,7 +301,7 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
 
     if (verifyLog) {
       // Cleanup the log so that it is ready the the next validation
-      CERTVerifyLogNode *i_node;
+      CERTVerifyLogNode* i_node;
       for (i_node = verifyLog->head; i_node; i_node = i_node->next) {
          //destroy cert if any.
          if (i_node->cert) {
@@ -376,7 +373,7 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
     // ocsp enabled controls network fetching, too
     | ((mOCSPDownloadEnabled && !localOnly) ?
         CERT_REV_M_ALLOW_NETWORK_FETCHING : CERT_REV_M_FORBID_NETWORK_FETCHING)
-    
+
     | (mOCSPGETEnabled ? 0 : CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP);
     ;
 

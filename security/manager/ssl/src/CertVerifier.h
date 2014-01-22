@@ -28,14 +28,14 @@ public:
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
-  SECStatus VerifyCert(CERTCertificate * cert,
+  SECStatus VerifyCert(CERTCertificate* cert,
                        const SECCertificateUsage usage,
                        const PRTime time,
-                       nsIInterfaceRequestor * pinArg,
+                       nsIInterfaceRequestor* pinArg,
                        const Flags flags = 0,
-                       /*optional out*/ CERTCertList **validationChain = nullptr,
-                       /*optional out*/ SECOidTag *evOidPolicy = nullptr ,
-                       /*optional out*/ CERTVerifyLog *verifyLog = nullptr);
+                       /*optional out*/ CERTCertList** validationChain = nullptr,
+                       /*optional out*/ SECOidTag* evOidPolicy = nullptr ,
+                       /*optional out*/ CERTVerifyLog* verifyLog = nullptr);
 
   enum missing_cert_download_config { missing_cert_download_off = 0, missing_cert_download_on };
   enum crl_download_config { crl_local_only = 0, crl_download_allowed };
