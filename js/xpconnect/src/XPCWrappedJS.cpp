@@ -351,10 +351,13 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
     root = map->Find(rootJSObj);
     if (root) {
+        NS_ADDREF(root);
+        release_root = true;
         wrapper = root->FindOrFindInherited(aIID);
         if (wrapper) {
             NS_ADDREF(wrapper);
             *wrapperResult = wrapper;
+            NS_RELEASE(root);
             return NS_OK;
         }
     } else {
