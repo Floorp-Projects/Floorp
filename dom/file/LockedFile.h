@@ -101,7 +101,7 @@ private:
   GenerateFileRequest();
 
   nsresult
-  WriteOrAppend(const jsval& aValue, JSContext* aCx,
+  WriteOrAppend(JS::Handle<JS::Value> aValue, JSContext* aCx,
                 nsISupports** _retval, bool aAppend);
 
   nsresult
