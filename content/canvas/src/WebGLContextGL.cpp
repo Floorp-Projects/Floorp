@@ -4201,6 +4201,23 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
         }
 
         MOZ_CRASH("Invalid WebGL texture format/type?");
+    } else if (type == LOCAL_GL_HALF_FLOAT_OES) {
+        // OES_texture_half_float
+        switch (internalformat) {
+            case LOCAL_GL_RGBA:
+                return WebGLTexelFormat::RGBA16F;
+            case LOCAL_GL_RGB:
+                return WebGLTexelFormat::RGB16F;
+            case LOCAL_GL_ALPHA:
+                return WebGLTexelFormat::A16F;
+            case LOCAL_GL_LUMINANCE:
+                return WebGLTexelFormat::R16F;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                return WebGLTexelFormat::RA16F;
+            default:
+                MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
+                return WebGLTexelFormat::BadFormat;
+        }
     }
 
     switch (type) {
@@ -4258,6 +4275,21 @@ InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2)
             return LOCAL_GL_LUMINANCE32F_ARB;
         case LOCAL_GL_LUMINANCE_ALPHA:
             return LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
+        }
+        break;
+
+    case LOCAL_GL_HALF_FLOAT_OES:
+        switch (format) {
+        case LOCAL_GL_RGBA:
+            return LOCAL_GL_RGBA16F;
+        case LOCAL_GL_RGB:
+            return LOCAL_GL_RGB16F;
+        case LOCAL_GL_ALPHA:
+            return LOCAL_GL_ALPHA16F_ARB;
+        case LOCAL_GL_LUMINANCE:
+            return LOCAL_GL_LUMINANCE16F_ARB;
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            return LOCAL_GL_LUMINANCE_ALPHA16F_ARB;
         }
         break;
 
