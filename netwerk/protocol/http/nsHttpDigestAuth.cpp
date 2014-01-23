@@ -504,9 +504,9 @@ nsHttpDigestAuth::CalculateHA2(const nsAFlatCString & method,
                                const char * bodyDigest,
                                char * result)
 {
-  int16_t methodLen = method.Length();
-  int16_t pathLen = path.Length();
-  int16_t len = methodLen + pathLen + 1;
+  uint16_t methodLen = method.Length();
+  uint32_t pathLen = path.Length();
+  uint32_t len = methodLen + pathLen + 1;
 
   if (qop & QOP_AUTH_INT) {
     len += EXPANDED_DIGEST_LENGTH + 1;
