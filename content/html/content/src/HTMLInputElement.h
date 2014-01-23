@@ -715,6 +715,17 @@ public:
 
   // XPCOM GetPhonetic() is OK
 
+  /**
+   * If aValue contains a valid floating-point number in the format specified
+   * by the HTML 5 spec:
+   *
+   *   http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#floating-point-numbers
+   *
+   * then this function will return the number parsed as a Decimal, otherwise
+   * it will return a Decimal for which Decimal::isFinite() will return false.
+   */
+  static Decimal StringToDecimal(const nsAString& aValue);
+
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

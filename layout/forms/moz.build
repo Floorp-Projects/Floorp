@@ -52,3 +52,12 @@ LOCAL_INCLUDES += [
     '../generic',
     '../xul',
 ]
+
+if CONFIG['ENABLE_INTL_API']:
+    # nsNumberControlFrame.cpp requires ICUUtils.h which in turn requires
+    # i18n/unum.h
+    LOCAL_INCLUDES += [
+        '../../intl/icu/source/common',
+        '../../intl/icu/source/i18n',
+    ]
+
