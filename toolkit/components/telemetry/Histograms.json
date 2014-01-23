@@ -4866,6 +4866,34 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took to display a selected source to the user."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_RECONFIGURETAB_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'reconfigure tab' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_RECONFIGURETAB_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'reconfigure tab' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_RECONFIGURETHREAD_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_RECONFIGURETHREAD_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
+  },
   "WEBRTC_ICE_SUCCESS_RATE": {
     "expires_in_version": "never",
     "kind": "boolean",

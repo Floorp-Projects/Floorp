@@ -1228,7 +1228,7 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
     mX.AdjustDisplacement(cssOffset.x, overscroll.x,
                           aFrameMetrics.GetDisableScrollingX()),
     mY.AdjustDisplacement(cssOffset.y, overscroll.y,
-                          aFrameMetrics.GetDisableScrollingX())
+                          aFrameMetrics.GetDisableScrollingY())
   ));
 
   return true;

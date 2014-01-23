@@ -229,12 +229,12 @@ function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate"
 }
 
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.client.activeTab.navigateTo(aUrl));
+  executeSoon(() => aTarget.activeTab.navigateTo(aUrl));
   return once(aTarget, aWaitForTargetEvent);
 }
 
 function reload(aTarget, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.client.activeTab.reload());
+  executeSoon(() => aTarget.activeTab.reload());
   return once(aTarget, aWaitForTargetEvent);
 }
 
