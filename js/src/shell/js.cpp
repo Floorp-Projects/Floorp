@@ -804,13 +804,13 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
     if (v.isObject())
         options.setElement(&v.toObject());
 
-    if (!JS_GetProperty(cx, opts, "elementProperty", &v))
+    if (!JS_GetProperty(cx, opts, "elementAttributeName", &v))
         return false;
     if (!v.isUndefined()) {
         s = ToString(cx, v);
         if (!s)
             return false;
-        options.setElementProperty(s);
+        options.setElementAttributeName(s);
     }
 
     if (!JS_GetProperty(cx, opts, "lineNumber", &v))
@@ -4068,9 +4068,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         mark the source as being attached to the DOM element |o|. If the\n"
 "         property is omitted or |v| is null, don't attribute the source to\n"
 "         any DOM element.\n"
-"      elementProperty: if present and not undefined, the name of property\n"
-"         of 'element' that holds this code. This is what Debugger.Source\n"
-"         .prototype.elementProperty returns.\n"
+"      elementAttributeName: if present and not undefined, the name of\n"
+"         property of 'element' that holds this code. This is what\n"
+"         Debugger.Source.prototype.elementAttributeName returns.\n"
 "      sourceMapURL: if present with value |v|, convert |v| to a string, and\n"
 "         provide that as the code's source map URL. If omitted, attach no\n"
 "         source map URL to the code (although the code may provide one itself,\n"
@@ -4270,9 +4270,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         mark the source as being attached to the DOM element |o|. If the\n"
 "         property is omitted or |v| is null, don't attribute the source to\n"
 "         any DOM element.\n"
-"      elementProperty: if present and not undefined, the name of property\n"
-"         of 'element' that holds this code. This is what Debugger.Source\n"
-"         .prototype.elementProperty returns.\n"),
+"      elementAttributeName: if present and not undefined, the name of\n"
+"         property of 'element' that holds this code. This is what\n"
+"         Debugger.Source.prototype.elementAttributeName returns.\n"),
 
     JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
 "runOffThreadScript()",

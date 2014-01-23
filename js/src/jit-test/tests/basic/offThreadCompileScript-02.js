@@ -11,7 +11,7 @@ var element = {};
 offThreadCompileScript('Error()', { element: element }); // shouldn't crash
 runOffThreadScript();
 
-var elementAttribute = "molybdenum";
-elementAttribute += elementAttribute + elementAttribute + elementAttribute;
-offThreadCompileScript('Error()', { elementProperty: elementAttribute }); // shouldn't crash
+var elementAttributeName = "molybdenum";
+elementAttributeName += elementAttributeName + elementAttributeName + elementAttributeName;
+offThreadCompileScript('Error()', { elementAttributeName: elementAttributeName }); // shouldn't crash
 runOffThreadScript();

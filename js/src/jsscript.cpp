@@ -574,7 +574,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /*
              * We use this CompileOptions only to initialize the
              * ScriptSourceObject. Most CompileOptions fields aren't used by
-             * ScriptSourceObject, and those that are (element; elementProperty)
+             * ScriptSourceObject, and those that are (element; elementAttributeName)
              * aren't preserved by XDR. So this can be simple.
              */
             CompileOptions options(cx);
@@ -998,7 +998,7 @@ ScriptSourceObject::initElement(HandleObject element)
 }
 
 const Value &
-ScriptSourceObject::elementProperty() const
+ScriptSourceObject::elementAttributeName() const
 {
     const Value &prop = getReservedSlot(ELEMENT_PROPERTY_SLOT);
     JS_ASSERT(prop.isUndefined() || prop.isString());
@@ -1038,8 +1038,8 @@ ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source,
     source->incref();
     sourceObject->initSlot(SOURCE_SLOT, PrivateValue(source));
     sourceObject->initSlot(ELEMENT_SLOT, ObjectOrNullValue(options.element()));
-    if (options.elementProperty())
-        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, StringValue(options.elementProperty()));
+    if (options.elementAttributeName())
+        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, StringValue(options.elementAttributeName()));
     else
         sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, UndefinedValue());
 
