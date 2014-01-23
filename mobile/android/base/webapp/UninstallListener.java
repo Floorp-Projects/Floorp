@@ -47,7 +47,7 @@ public class UninstallListener extends BroadcastReceiver {
             JSONArray packageNames = new JSONArray();
             try {
                 packageNames.put(packageName);
-                message.put("packages", packageNames);
+                message.put("apkPackageNames", packageNames);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Webapps:AutoUninstall", message.toString()));
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON EXCEPTION " + e);
@@ -84,7 +84,7 @@ public class UninstallListener extends BroadcastReceiver {
                 for (String packageName : uninstalledPackages) {
                     packageNames.put(packageName);
                 }
-                message.put("packages", packageNames);
+                message.put("apkPackageNames", packageNames);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Webapps:AutoUninstall", message.toString()));
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON EXCEPTION " + e);

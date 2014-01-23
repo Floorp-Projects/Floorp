@@ -19,6 +19,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "SharedThreadPool.h"
 #include <algorithm>
 #include <cassert>
 
@@ -30,75 +31,6 @@ PRLogModuleInfo* gWMFByteStreamLog = nullptr;
 #else
 #define WMF_BS_LOG(...)
 #endif
-
-// Limit the number of threads that we use for IO.
-static const uint32_t NumWMFIoThreads = 4;
-
-// Thread pool listener which ensures that MSCOM is initialized and
-// deinitialized on the thread pool thread. We can call back into WMF
-// on this thread, so we need MSCOM working.
-class ThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener {
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITHREADPOOLLISTENER
-};
-
-NS_IMPL_ISUPPORTS1(ThreadPoolListener, nsIThreadPoolListener)
-
-NS_IMETHODIMP
-ThreadPoolListener::OnThreadCreated()
-{
-  HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to initialize MSCOM on WMFByteStream thread.");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ThreadPoolListener::OnThreadShuttingDown()
-{
-  CoUninitialize();
-  return NS_OK;
-}
-
-// Thread pool on which read requests are processed.
-// This is created and destroyed on the main thread only.
-static nsIThreadPool* sThreadPool = nullptr;
-
-// Counter of the number of WMFByteStreams that are instantiated and that need
-// the thread pool. This is read/write on the main thread only.
-static int32_t sThreadPoolRefCnt = 0;
-
-class ReleaseWMFByteStreamResourcesEvent MOZ_FINAL : public nsRunnable {
-public:
-  ReleaseWMFByteStreamResourcesEvent(already_AddRefed<MediaResource> aResource)
-    : mResource(aResource) {}
-  virtual ~ReleaseWMFByteStreamResourcesEvent() {}
-  NS_IMETHOD Run() {
-    NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
-    // Explicitly release the MediaResource reference. We *must* do this on
-    // the main thread, so we must explicitly release it here, we can't rely
-    // on the destructor to release it, since if this event runs before its
-    // dispatch call returns the destructor may run on the non-main thread.
-    mResource = nullptr;
-    NS_ASSERTION(sThreadPoolRefCnt > 0, "sThreadPoolRefCnt Should be non-negative");
-    sThreadPoolRefCnt--;
-    if (sThreadPoolRefCnt == 0) {
-      NS_ASSERTION(sThreadPool != nullptr, "Should have thread pool ref if sThreadPoolRefCnt==0.");
-      // Note: store ref to thread pool, then clear global ref, then
-      // Shutdown() using the stored ref. Events can run during the Shutdown()
-      // call, so if we release after calling Shutdown(), another event may
-      // have incremented the refcnt in the meantime, and have a dangling
-      // pointer to the now destroyed threadpool!
-      nsCOMPtr<nsIThreadPool> pool = sThreadPool;
-      NS_IF_RELEASE(sThreadPool);
-      pool->Shutdown();
-    }
-    return NS_OK;
-  }
-  nsRefPtr<MediaResource> mResource;
-};
 
 WMFByteStream::WMFByteStream(MediaResource* aResource,
                              WMFSourceReaderCallback* aSourceReaderCallback)
@@ -123,12 +55,6 @@ WMFByteStream::WMFByteStream(MediaResource* aResource,
 WMFByteStream::~WMFByteStream()
 {
   MOZ_COUNT_DTOR(WMFByteStream);
-  // The WMFByteStream can be deleted from a thread pool thread, so we
-  // dispatch an event to the main thread to deref the thread pool and
-  // deref the MediaResource.
-  nsCOMPtr<nsIRunnable> event =
-    new ReleaseWMFByteStreamResourcesEvent(mResource.forget());
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   WMF_BS_LOG("[%p] WMFByteStream DTOR", this);
 }
 
@@ -137,39 +63,8 @@ WMFByteStream::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
 
-  if (!sThreadPool) {
-    nsresult rv;
-    nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    sThreadPool = pool;
-    NS_ADDREF(sThreadPool);
-
-    rv = sThreadPool->SetName(NS_LITERAL_CSTRING("WMFByteStream Async Read Pool"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    // We limit the number of threads that we use for IO. Note that the thread
-    // limit is the same as the idle limit so that we're not constantly creating
-    // and destroying threads. When the thread pool threads shutdown they
-    // dispatch an event to the main thread to call nsIThread::Shutdown(),
-    // and if we're very busy that can take a while to run, and we end up with
-    // dozens of extra threads. Note that threads that are idle for 60 seconds
-    // are shutdown naturally.
-    rv = sThreadPool->SetThreadLimit(NumWMFIoThreads);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = sThreadPool->SetIdleThreadLimit(NumWMFIoThreads);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIThreadPoolListener> listener = new ThreadPoolListener();
-    rv = sThreadPool->SetListener(listener);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  sThreadPoolRefCnt++;
-
-  // Store a ref to the thread pool, so that we keep the pool alive as long as
-  // we're alive.
-  mThreadPool = sThreadPool;
+  mThreadPool = SharedThreadPool::Get(NS_LITERAL_CSTRING("WMFByteStream IO"));
+  NS_ENSURE_TRUE(mThreadPool, NS_ERROR_FAILURE);
 
   NS_ConvertUTF8toUTF16 contentTypeUTF16(mResource->GetContentType());
   if (!contentTypeUTF16.IsEmpty()) {
