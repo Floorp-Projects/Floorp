@@ -2085,7 +2085,9 @@ nsFrameLoader::TryRemoteBrowser()
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
   ScrollingBehavior scrollingBehavior = DEFAULT_SCROLLING;
-  if (mOwnerContent->AttrValueIs(kNameSpaceID_None,
+
+  if (Preferences::GetBool("dom.browser_frames.useAsyncPanZoom", false) ||
+      mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                  nsGkAtoms::mozasyncpanzoom,
                                  nsGkAtoms::_true,
                                  eCaseMatters)) {
