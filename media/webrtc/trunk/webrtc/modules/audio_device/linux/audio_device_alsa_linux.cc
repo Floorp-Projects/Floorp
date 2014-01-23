@@ -190,6 +190,7 @@ int32_t AudioDeviceLinuxALSA::Init()
         return 0;
     }
 
+#ifdef USE_X11
     //Get X display handle for typing detection
     _XDisplay = XOpenDisplay(NULL);
     if (!_XDisplay)
@@ -197,6 +198,7 @@ int32_t AudioDeviceLinuxALSA::Init()
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
           "  failed to open X display, typing detection will not work");
     }
+#endif
 
     _playWarning = 0;
     _playError = 0;
@@ -264,11 +266,13 @@ int32_t AudioDeviceLinuxALSA::Terminate()
         _critSect.Enter();
     }
 
+#ifdef USE_X11
     if (_XDisplay)
     {
       XCloseDisplay(_XDisplay);
       _XDisplay = NULL;
     }
+#endif
 
     _initialized = false;
     _outputDeviceIsSpecified = false;
@@ -2370,11 +2374,13 @@ bool AudioDeviceLinuxALSA::KeyPressed() const{
   unsigned int i = 0;
   char state = 0;
 
+#ifdef USE_X11
   if (!_XDisplay)
     return false;
 
   // Check key map status
   XQueryKeymap(_XDisplay, szKey);
+#endif
 
   // A bit change in keymap means a key is pressed
   for (i = 0; i < sizeof(szKey); i++)
