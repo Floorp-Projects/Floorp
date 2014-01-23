@@ -34,8 +34,8 @@ function test() {
 
     let exceptionMsg = [...exceptionRule.matched][0];
     let consoleMsg = [...consoleRule.matched][0];
-    let nodes = [exceptionMsg.querySelector(".location"),
-                 consoleMsg.querySelector(".location")];
+    let nodes = [exceptionMsg.querySelector(".message-location"),
+                 consoleMsg.querySelector(".message-location")];
     ok(nodes[0], ".location node for the exception message");
     ok(nodes[1], ".location node for the console message");
 

@@ -53,7 +53,7 @@ function runTests(aToolbox)
 
     let [matched] = [...messages[0].matched];
     ok(matched, "Found logged message from Scratchpad");
-    let anchor = matched.querySelector("a.location");
+    let anchor = matched.querySelector("a.message-location");
 
     aToolbox.on("scratchpad-selected", function selected() {
       aToolbox.off("scratchpad-selected", selected);
