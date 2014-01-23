@@ -1657,12 +1657,15 @@ RadioInterface.prototype = {
     */
   checkRoamingBetweenOperators: function checkRoamingBetweenOperators(registration) {
     let iccInfo = this.rilContext.iccInfo;
-    if (!iccInfo || !registration.connected) {
+    let operator = registration.network;
+    let state = registration.state;
+
+    if (!iccInfo || !operator ||
+        state != RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
       return;
     }
 
     let spn = iccInfo.spn && iccInfo.spn.toLowerCase();
-    let operator = registration.network;
     let longName = operator.longName && operator.longName.toLowerCase();
     let shortName = operator.shortName && operator.shortName.toLowerCase();
 
