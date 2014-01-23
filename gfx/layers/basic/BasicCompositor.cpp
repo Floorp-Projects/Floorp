@@ -96,6 +96,15 @@ protected:
   {
     AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
     nsRefPtr<gfxASurface> surface = ShadowLayerForwarder::OpenDescriptor(OPEN_READ_ONLY, aImage);
+    if (!surface) {
+      if (aImage.type() != SurfaceDescriptor::TShmem &&
+          aImage.type() != SurfaceDescriptor::TMemoryImage &&
+          aImage.type() != SurfaceDescriptor::TRGBImage) {
+        printf_stderr("Unsupported SurfaceDescriptor type: %i\n", static_cast<int>(aImage.type()));
+      }
+      NS_WARNING("Could not open the SurfaceDescriptor");
+      return;
+    }
     nsRefPtr<gfxImageSurface> image = surface->GetAsImageSurface();
     mFormat = ImageFormatToSurfaceFormat(image->Format());
     mSize = IntSize(image->Width(), image->Height());
@@ -106,7 +115,7 @@ protected:
   }
 
   virtual bool EnsureSurface() {
-    return true;
+    return mSurface != nullptr;
   }
 
   virtual bool Lock() MOZ_OVERRIDE {
