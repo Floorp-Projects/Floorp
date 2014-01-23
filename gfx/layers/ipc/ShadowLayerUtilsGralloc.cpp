@@ -175,7 +175,7 @@ PixelFormatForImageFormat(gfxImageFormat aFormat)
   default:
     MOZ_CRASH("Unknown gralloc pixel format");
   }
-  return gfxImageFormat::ARGB32;
+  return android::PIXEL_FORMAT_RGBA_8888;
 }
 
 static size_t
