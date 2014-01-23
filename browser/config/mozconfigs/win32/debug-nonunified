@@ -1,0 +1,3 @@
+. "$topsrcdir/browser/config/mozconfigs/win32/debug"
+
+ac_add_options --disable-unified-compilation
