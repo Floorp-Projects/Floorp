@@ -175,6 +175,8 @@
         </receiver>
 #endif
 
+        <!-- If the windowSoftInputMode adjust* flag changes below, the
+             setSoftInputMode call in BrowserSearch#onStop must also be updated. -->
         <activity android:name=".WebApp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
