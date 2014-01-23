@@ -206,12 +206,12 @@ function DOMDownloadImpl() {
   this.currentBytes = 0;
   this.url = null;
   this.path = null;
+  this.state = "stopped";
   this.contentType = null;
 
   /* fields that require getters/setters */
   this._error = null;
   this._startTime = new Date();
-  this._state = "stopped";
 
   /* private fields */
   this.id = null;
@@ -267,25 +267,6 @@ DOMDownloadImpl.prototype = {
     }
     else {
       this._startTime = new Date(aStartTime);
-    }
-  },
-
-  get state() {
-    return this._state;
-  },
-
-  // We require a setter here to simplify the internals of the Download Manager
-  // since we actually pass dummy JSON objects to the child process and update
-  // them. This is the case for all other setters for read-only attributes
-  // implemented in this object.
-  set state(aState) {
-    // We need to ensure that XPCOM consumers of this API respect the enum
-    // values as well.
-    if (["downloading",
-         "stopped",
-         "succeeded",
-         "finalized"].indexOf(aState) != -1) {
-      this._state = aState;
     }
   },
 

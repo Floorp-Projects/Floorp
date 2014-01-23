@@ -290,8 +290,6 @@ public:
 
   static bool HasDataStoreSupport(JSContext* cx, JSObject* aGlobal);
 
-  static bool HasDownloadsSupport(JSContext* aCx, JSObject* aGlobal);
-
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
