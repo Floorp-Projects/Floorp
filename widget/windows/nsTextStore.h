@@ -44,11 +44,6 @@ struct MSGResult;
 } // namespace widget
 } // namespace mozilla
 
-// It doesn't work well when we notify TSF of text change
-// during a mutation observer call because things get broken.
-// So we post a message and notify TSF when we get it later.
-#define WM_USER_TSF_TEXTCHANGE  (WM_USER + 0x100)
-
 /*
  * Text Services Framework text store
  */
@@ -246,7 +241,6 @@ protected:
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
   nsresult OnTextChangeInternal(uint32_t, uint32_t, uint32_t);
-  void     OnTextChangeMsg();
   nsresult OnSelectionChangeInternal(void);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
@@ -289,8 +283,6 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
-  // Cumulative text change offsets since the last notification
-  TS_TEXTCHANGE                mTextChange;
 
   class Composition MOZ_FINAL
   {

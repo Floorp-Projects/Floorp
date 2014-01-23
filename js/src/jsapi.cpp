@@ -2500,6 +2500,12 @@ JS::CompartmentOptions::asmJS(JSContext *cx) const
     return asmJSOverride_.get(cx->options().asmJS());
 }
 
+bool
+JS::CompartmentOptions::cloneSingletons(JSContext *cx) const
+{
+    return cloneSingletonsOverride_.get(cx->options().cloneSingletons());
+}
+
 JS::CompartmentOptions &
 JS::CompartmentOptions::setZone(ZoneSpecifier spec)
 {

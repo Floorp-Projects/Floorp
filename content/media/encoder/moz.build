@@ -25,7 +25,6 @@ if CONFIG['MOZ_OPUS']:
     UNIFIED_SOURCES += ['OpusTrackEncoder.cpp']
 
 if CONFIG['MOZ_OMX_ENCODER']:
-    DEFINES['MOZ_OMX_ENCODER'] = True
     EXPORTS += ['OmxTrackEncoder.h']
     UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
 
