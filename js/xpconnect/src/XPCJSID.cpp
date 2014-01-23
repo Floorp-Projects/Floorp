@@ -625,7 +625,8 @@ nsJSCID::NewID(const char* str)
         NS_ENSURE_TRUE(registrar, nullptr);
 
         nsCID *cid;
-        NS_ENSURE_SUCCESS(registrar->ContractIDToCID(str, &cid), nullptr);
+        if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
+            return nullptr;
         bool success = idObj->mDetails.InitWithName(*cid, str);
         nsMemory::Free(cid);
         if (!success)

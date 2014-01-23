@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import traceback
+
 class ErrorCodes(object):
-    
     SUCCESS = 0
     NO_SUCH_ELEMENT = 7
     NO_SUCH_FRAME = 8
@@ -33,18 +34,26 @@ class ErrorCodes(object):
     MARIONETTE_ERROR = 500
 
 class MarionetteException(Exception):
-
-    def __init__(self, message=None, status=ErrorCodes.MARIONETTE_ERROR, stacktrace=None):
+    def __init__(self, message=None,
+                 status=ErrorCodes.MARIONETTE_ERROR, cause=None,
+                 stacktrace=None):
         self.msg = message
         self.status = status
+        self.cause = cause
         self.stacktrace = stacktrace
 
     def __str__(self):
+        msg = str(self.msg)
+        tb = None
+
+        if self.cause:
+            msg += ", caused by %r" % self.cause[0]
+            tb = self.cause[2]
         if self.stacktrace:
-            return '%s\n\tstacktrace:\n%s' % (str(self.msg),
-                ''.join(['\t%s\n' % x for x in self.stacktrace.split('\n')]))
-        else:
-            return str(self.msg)
+            stack = "".join(["\t%s\n" % x for x in self.stacktrace.splitlines()])
+            msg += "\nstacktrace:\n%s" % stack
+
+        return "".join(traceback.format_exception(self.__class__, msg, tb))
 
 class InstallGeckoError(MarionetteException):
     pass
