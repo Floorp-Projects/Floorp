@@ -1078,6 +1078,18 @@ CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
     return emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
 }
 
+typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
+static const VMFunction DeepCloneObjectLiteralInfo =
+    FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
+
+bool
+CodeGenerator::visitCloneLiteral(LCloneLiteral *lir)
+{
+    pushArg(ImmWord(js::MaybeSingletonObject));
+    pushArg(ToRegister(lir->output()));
+    return callVM(DeepCloneObjectLiteralInfo, lir);
+}
+
 bool
 CodeGenerator::visitParameter(LParameter *lir)
 {
