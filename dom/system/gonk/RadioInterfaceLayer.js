@@ -3758,8 +3758,12 @@ RadioInterface.prototype = {
   },
 
   setupDataCallByType: function(apntype) {
+    if (DEBUG) this.debug("setupDataCallByType: " + apntype);
     let apnSetting = this.apnSettings.byType[apntype];
     if (!apnSetting) {
+      if (DEBUG) {
+        this.debug("No apn setting for type: " + apntype);
+      }
       return;
     }
 
@@ -3798,8 +3802,12 @@ RadioInterface.prototype = {
   },
 
   deactivateDataCallByType: function(apntype) {
+    if (DEBUG) this.debug("deactivateDataCallByType: " + apntype);
     let apnSetting = this.apnSettings.byType[apntype];
     if (!apnSetting) {
+      if (DEBUG) {
+        this.debug("No apn setting for type: " + apntype);
+      }
       return;
     }
 
