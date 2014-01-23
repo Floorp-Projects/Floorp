@@ -4108,6 +4108,19 @@ RILNetworkInterface.prototype = {
 
     this.state = datacall.state;
 
+    Services.obs.notifyObservers(this,
+                                 kNetworkInterfaceStateChangedTopic,
+                                 null);
+
+    if ((this.state == RIL.GECKO_NETWORK_STATE_UNKNOWN ||
+         this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED) &&
+        this.registeredAsNetworkInterface) {
+      gNetworkManager.unregisterNetworkInterface(this);
+      this.registeredAsNetworkInterface = false;
+      this.cid = null;
+      this.connectedTypes = [];
+    }
+
     // In case the data setting changed while the datacall was being started or
     // ended, let's re-check the setting and potentially adjust the datacall
     // state again.
@@ -4115,18 +4128,6 @@ RILNetworkInterface.prototype = {
         (this.radioInterface.apnSettings.byType.default.apn ==
          this.apnSetting.apn)) {
       this.radioInterface.updateRILNetworkInterface();
-    }
-
-    Services.obs.notifyObservers(this,
-                                 kNetworkInterfaceStateChangedTopic,
-                                 null);
-
-    if (this.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
-        this.registeredAsNetworkInterface) {
-      gNetworkManager.unregisterNetworkInterface(this);
-      this.registeredAsNetworkInterface = false;
-      this.cid = null;
-      this.connectedTypes = [];
     }
   },
 
