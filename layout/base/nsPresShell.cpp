@@ -5804,7 +5804,7 @@ PresShell::Paint(nsView*        aViewToPaint,
       NotifySubDocInvalidationFunc computeInvalidFunc =
         presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
       bool computeInvalidRect = computeInvalidFunc ||
-                                (layerManager->GetBackendType() == LAYERS_BASIC);
+                                (layerManager->GetBackendType() == LayersBackend::LAYERS_BASIC);
 
       nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
                                          LayerProperties::CloneFrom(layerManager->GetRoot()) : 
