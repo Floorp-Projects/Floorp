@@ -4,22 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-// Represents the state of a download.
-// "downloading": The resource is actively transfering.
-// "stopped"    : No network tranfer is happening.
-// "succeeded"  : The resource has been downloaded successfully.
-// "finalized"  : We won't try to download this resource, but the DOM
-//                object is still alive.
-enum DownloadState {
-  "downloading",
-  "stopped",
-  "succeeded",
-  "finalized"
-};
-
 [NavigatorProperty="mozDownloadManager",
  JSImplementation="@mozilla.org/downloads/manager;1",
- Func="Navigator::HasDownloadsSupport"]
+ Pref="dom.mozDownloads.enabled"]
 interface DOMDownloadManager : EventTarget {
   // This promise returns an array of downloads with all the current
   // download objects.
@@ -37,7 +24,7 @@ interface DOMDownloadManager : EventTarget {
 };
 
 [JSImplementation="@mozilla.org/downloads/download;1",
- Func="Navigator::HasDownloadsSupport"]
+ Pref="dom.mozDownloads.enabled"]
 interface DOMDownload : EventTarget {
   // The full size of the resource.
   readonly attribute long totalBytes;
@@ -52,8 +39,13 @@ interface DOMDownload : EventTarget {
   // is complete.
   readonly attribute DOMString path;
 
-  // The state of the download.
-  readonly attribute DownloadState state;
+  // The state of the download. Can be any of:
+  // "downloading": The resource is actively transfering.
+  // "stopped"    : No network tranfer is happening.
+  // "succeeded"  : The resource has been downloaded successfully.
+  // "finalized"  : We won't try to download this resource, but the DOM
+  //                object is still alive.
+  readonly attribute DOMString state;
 
   // The mime type for this resource.
   readonly attribute DOMString contentType;
