@@ -36,8 +36,10 @@ GetCurrentJSStack();
 // Internal stuff not intended to be widely used.
 namespace exceptions {
 
+// aMaxDepth can be used to define a maximal depth for the stack trace. If the
+// value is -1, a default maximal depth will be selected.
 already_AddRefed<nsIStackFrame>
-CreateStack(JSContext* cx);
+CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
 
 already_AddRefed<nsIStackFrame>
 CreateStackFrameLocation(uint32_t aLanguage,
