@@ -12,6 +12,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Alignment.h"
 #include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -1700,8 +1701,8 @@ struct FakeDependentString {
   {
   }
 
-  void SetData(const nsDependentString::char_type* aData,
-               nsDependentString::size_type aLength) {
+  void Rebind(const nsDependentString::char_type* aData,
+              nsDependentString::size_type aLength) {
     MOZ_ASSERT(mFlags == nsDependentString::F_TERMINATED);
     mData = aData;
     mLength = aLength;
@@ -1712,7 +1713,9 @@ struct FakeDependentString {
     mLength = 0;
   }
 
-  void SetNull() {
+  void SetIsVoid(bool aValue) {
+    MOZ_ASSERT(aValue,
+               "We don't support SetIsVoid(false) on FakeDependentString!");
     Truncate();
     mFlags |= nsDependentString::F_VOIDED;
   }
@@ -1778,12 +1781,13 @@ enum StringificationBehavior {
 };
 
 // pval must not be null and must point to a rooted JS::Value
+template<typename T>
 static inline bool
 ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
                        JS::MutableHandle<JS::Value> pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       binding_detail::FakeDependentString& result)
+                       T& result)
 {
   JSString *s;
   if (v.isString()) {
@@ -1802,7 +1806,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
       if (behavior == eEmpty) {
         result.Truncate();
       } else {
-        result.SetNull();
+        result.SetIsVoid(true);
       }
       return true;
     }
@@ -1820,7 +1824,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
     return false;
   }
 
-  result.SetData(chars, len);
+  result.Rebind(chars, len);
   return true;
 }
 
