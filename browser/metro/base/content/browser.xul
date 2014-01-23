@@ -643,9 +643,6 @@ Desktop browser's sync prefs.
 #endif
 
     <flyoutpanel id="prefs-flyoutpanel" class="flyout-narrow" headertext="&optionsHeader.title;">
-      <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
-        <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
-      </settings>
       <settings id="prefs-privdata" label="&clearPrivateData.title;">
         <description>&clearPrivateData.label;</description>
 

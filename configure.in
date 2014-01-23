@@ -247,6 +247,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_OMX_ENCODER=1
         AC_SUBST(MOZ_OMX_ENCODER)
+        AC_DEFINE(MOZ_OMX_ENCODER)
         ;;
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include"

@@ -376,6 +376,7 @@ var DebuggerServer = {
       this.registerModule("devtools/server/actors/webgl");
       this.registerModule("devtools/server/actors/stylesheets");
       this.registerModule("devtools/server/actors/styleeditor");
+      this.registerModule("devtools/server/actors/tracer");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
