@@ -72,10 +72,17 @@ DEBUGGER_INFO = {
   },
 
   # valgrind doesn't explain much about leaks unless you set the
-  # '--leak-check=full' flag.
+  # '--leak-check=full' flag. But there are a lot of objects that are
+  # semi-deliberately leaked, so we set '--show-possibly-lost=no' to avoid
+  # uninteresting output from those objects. We set '--smc-check==all-non-file'
+  # and '--vex-iropt-register-updates=allregs-at-mem-access' so that valgrind
+  # deals properly with JIT'd JavaScript code.  
   "valgrind": {
     "interactive": False,
-    "args": "--leak-check=full"
+    "args": " ".join(["--leak-check=full",
+                      "--show-possibly-lost=no",
+                      "--smc-check=all-non-file,"
+                      "--vex-iropt-register-updates=allregs-at-mem-access"])
   }
 }
 
