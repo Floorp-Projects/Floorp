@@ -3549,10 +3549,12 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     bool copy(JSContext *cx, const ReadOnlyCompileOptions &rhs);
 
     /* These setters make copies of their string arguments, and are fallible. */
+    bool setFile(JSContext *cx, const char *f);
     bool setFileAndLine(JSContext *cx, const char *f, unsigned l);
     bool setSourceMapURL(JSContext *cx, const jschar *s);
 
     /* These setters are infallible, and can be chained. */
+    OwningCompileOptions &setLine(unsigned l)             { lineno = l;              return *this; }
     OwningCompileOptions &setElement(JSObject *e)         { elementRoot = e;         return *this; }
     OwningCompileOptions &setElementProperty(JSString *p) { elementPropertyRoot = p; return *this; }
     OwningCompileOptions &setPrincipals(JSPrincipals *p) {
@@ -3614,6 +3616,8 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
     JSString *elementProperty() const MOZ_OVERRIDE { return elementPropertyRoot; }
 
+    CompileOptions &setFile(const char *f) { filename_ = f; return *this; }
+    CompileOptions &setLine(unsigned l) { lineno = l; return *this; }
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename_ = f; lineno = l; return *this;
     }
