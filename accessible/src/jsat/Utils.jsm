@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Events',
 XPCOMUtils.defineLazyModuleGetter(this, 'Relations',
   'resource://gre/modules/accessibility/Constants.jsm');
 
-this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache', 'SettingCache'];
 
 this.Utils = {
   _buildAppMap: {
@@ -773,4 +773,37 @@ PrefCache.prototype = {
 
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference])
+};
+
+this.SettingCache = function SettingCache(aName, aCallback, aOptions = {}) {
+  this.value = aOptions.defaultValue;
+  let runCallback = () => {
+    if (aCallback && aOptions.callbackNow) {
+      aCallback(aName, this.value);
+      if (aOptions.callbackOnce) {
+        runCallback = () => {};
+      }
+    }
+  };
+
+  let settings = Utils.win.navigator.mozSettings;
+  if (!settings) {
+    runCallback();
+    return;
+  }
+
+
+  let lock = settings.createLock();
+  let req = lock.get(aName);
+
+  req.addEventListener('success', () => {
+    this.value = req.result[aName] == undefined ? aOptions.defaultValue : req.result[aName];
+    runCallback();
+  });
+
+  settings.addObserver(aName,
+                       (evt) => {
+                         this.value = evt.settingValue;
+                         runCallback();
+                       });
 };
