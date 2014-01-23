@@ -267,9 +267,9 @@ public:
     return 0;
   }
 
-  int64_t AudioQueueMemoryInUse() {
+  size_t SizeOfAudioQueue() {
     if (mReader) {
-      return mReader->AudioQueueMemoryInUse();
+      return mReader->SizeOfAudioQueue();
     }
     return 0;
   }
