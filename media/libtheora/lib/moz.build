@@ -20,7 +20,7 @@ UNIFIED_SOURCES += [
     'state.c',
 ]
 
-if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
         'armbits-gnu',
         'armfrag-gnu',

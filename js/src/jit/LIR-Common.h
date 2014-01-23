@@ -232,6 +232,27 @@ class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+// Clone an object literal such as we are not modifying the object contained in
+// the sources.
+class LCloneLiteral : public LCallInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CloneLiteral)
+
+    LCloneLiteral(const LAllocation &obj)
+    {
+        setOperand(0, obj);
+    }
+
+    const LAllocation *getObjectLiteral() {
+        return getOperand(0);
+    }
+
+    MCloneLiteral *mir() const {
+        return mir_->toCloneLiteral();
+    }
+};
+
 // Formal argument for a function, returning a box. Formal arguments are
 // initially read from the stack.
 class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0>
