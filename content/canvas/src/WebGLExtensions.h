@@ -161,6 +161,16 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionTextureHalfFloat
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionTextureHalfFloat(WebGLContext*);
+    virtual ~WebGLExtensionTextureHalfFloat();
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionDrawBuffers
     : public WebGLExtensionBase
 {

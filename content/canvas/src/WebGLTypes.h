@@ -108,25 +108,30 @@ MOZ_BEGIN_ENUM_CLASS(WebGLTexelFormat, int)
     // 1-channel formats
     R8,
     A8,
-    D16, // used for WEBGL_depth_texture extension
-    D32, // used for WEBGL_depth_texture extension
-    R32F, // used for OES_texture_float extension
-    A32F, // used for OES_texture_float extension
+    D16, // WEBGL_depth_texture
+    D32, // WEBGL_depth_texture
+    R16F, // OES_texture_half_float
+    A16F, // OES_texture_half_float
+    R32F, // OES_texture_float
+    A32F, // OES_texture_float
     // 2-channel formats
     RA8,
-    RA32F,
-    D24S8, // used for WEBGL_depth_texture extension
+    RA16F, // OES_texture_half_float
+    RA32F, // OES_texture_float
+    D24S8, // WEBGL_depth_texture
     // 3-channel formats
     RGB8,
     BGRX8, // used for DOM elements. Source format only.
     RGB565,
-    RGB32F, // used for OES_texture_float extension
+    RGB16F, // OES_texture_half_float
+    RGB32F, // OES_texture_float
     // 4-channel formats
     RGBA8,
     BGRA8, // used for DOM elements
     RGBA5551,
     RGBA4444,
-    RGBA32F // used for OES_texture_float extension
+    RGBA16F, // OES_texture_half_float
+    RGBA32F // OES_texture_float
 MOZ_END_ENUM_CLASS(WebGLTexelFormat)
 
 } // namespace mozilla
