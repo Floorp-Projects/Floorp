@@ -113,7 +113,25 @@ class CompileCompartment
     const JitCompartment *jitCompartment();
 
     bool hasObjectMetadataCallback();
+
+    // Mirror CompartmentOptions.
+    void setSingletonsAsValues();
 };
+
+class JitCompileOptions
+{
+  public:
+    JitCompileOptions();
+    JitCompileOptions(JSContext *cx);
+
+    bool cloneSingletons() const {
+        return cloneSingletons_;
+    }
+
+  private:
+    bool cloneSingletons_;
+};
+
 
 } // namespace jit
 } // namespace js

@@ -28,6 +28,16 @@ using mozilla::DebugOnly;
 using JS::GenericNaN;
 
 bool
+LIRGenerator::visitCloneLiteral(MCloneLiteral *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    JS_ASSERT(ins->input()->type() == MIRType_Object);
+
+    LCloneLiteral *lir = new(alloc()) LCloneLiteral(useRegisterAtStart(ins->input()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
