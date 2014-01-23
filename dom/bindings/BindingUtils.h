@@ -1456,8 +1456,6 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                        nsTArray<nsString>& names,
                        bool shadowPrototypeProperties, JS::AutoIdVector& props);
 
-namespace binding_detail {
-
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {
@@ -1535,8 +1533,6 @@ private:
   };
 };
 
-} // namespace binding_detail
-
 enum StringificationBehavior {
   eStringify,
   eEmpty,
@@ -1549,7 +1545,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
                        JS::MutableHandle<JS::Value> pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       binding_detail::FakeDependentString& result)
+                       FakeDependentString& result)
 {
   JSString *s;
   if (v.isString()) {
@@ -1601,8 +1597,6 @@ template<typename T>
 void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq);
 
 // Class for simple sequence arguments, only used internally by codegen.
-namespace binding_detail {
-
 template<typename T>
 class AutoSequence : public AutoFallibleTArray<T, 16>
 {
@@ -1615,8 +1609,6 @@ public:
     return *reinterpret_cast<const Sequence<T>*>(this);
   }
 };
-
-} // namespace binding_detail
 
 // Class used to trace sequences, with specializations for various
 // sequence types.

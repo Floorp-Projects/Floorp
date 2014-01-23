@@ -3154,7 +3154,7 @@ nsGenericHTMLElement::SetItemValue(JSContext* aCx, JS::Value aValue,
     return;
   }
 
-  binding_detail::FakeDependentString string;
+  FakeDependentString string;
   JS::Rooted<JS::Value> value(aCx, aValue);
   if (!ConvertJSValueToString(aCx, value, &value, eStringify, eStringify, string)) {
     aError.Throw(NS_ERROR_UNEXPECTED);

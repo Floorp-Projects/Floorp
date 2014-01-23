@@ -322,9 +322,7 @@ public:
 // internal strings.  So we just have to forward-declare it and reimplement its
 // ToAStringPtr.
 
-namespace binding_detail {
 struct FakeDependentString;
-} // namespace binding_detail
 
 template<>
 class Optional<nsAString>
@@ -346,7 +344,7 @@ public:
 
   // If this code ever goes away, remove the comment pointing to it in the
   // FakeDependentString class in BindingUtils.h.
-  void operator=(const binding_detail::FakeDependentString* str)
+  void operator=(const FakeDependentString* str)
   {
     MOZ_ASSERT(str);
     mStr = reinterpret_cast<const nsDependentString*>(str);
