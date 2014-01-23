@@ -15,13 +15,12 @@
 #include "nsAutoPtr.h"
 #include "mozilla/RefPtr.h"
 
-class nsIThreadPool;
-
 namespace mozilla {
 
 class MediaResource;
 class ReadRequest;
 class WMFSourceReaderCallback;
+class SharedThreadPool;
 
 // Wraps a MediaResource around an IMFByteStream interface, so that it can
 // be used by the IMFSourceReader. Each WMFByteStream creates a WMF Work Queue
@@ -123,7 +122,7 @@ private:
 
   // Reference to the thread pool in which we perform the reads asynchronously.
   // Note this is pool is shared amongst all active WMFByteStreams.
-  nsCOMPtr<nsIThreadPool> mThreadPool;
+  RefPtr<SharedThreadPool> mThreadPool;
 
   // Reference to the source reader's callback. We use this reference to
   // notify threads waiting on a ReadSample() callback to stop waiting

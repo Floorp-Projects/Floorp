@@ -190,22 +190,24 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
                      const jschar *chars, size_t length, JSObject *scopeChain,
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
-    alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(scopeChain),
-    exclusiveContextGlobal(exclusiveContextGlobal), callback(callback),
+    alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(initCx, scopeChain),
+    exclusiveContextGlobal(initCx, exclusiveContextGlobal), optionsElement(initCx), callback(callback),
     callbackData(callbackData), script(nullptr), errors(cx), overRecursed(false)
 {
-    JSRuntime *rt = scopeChain->runtimeFromMainThread();
-
-    if (!AddObjectRoot(rt, &this->scopeChain, "ParseTask::scopeChain"))
-        MOZ_CRASH();
-    if (!AddObjectRoot(rt, &this->exclusiveContextGlobal, "ParseTask::exclusiveContextGlobal"))
-        MOZ_CRASH();
 }
 
 bool
 ParseTask::init(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    return this->options.copy(cx, options);
+    if (!this->options.copy(cx, options))
+        return false;
+
+    // Save those compilation options that the ScriptSourceObject can't
+    // point at while it's in the compilation's temporary compartment.
+    optionsElement = this->options.element();
+    this->options.setElement(nullptr);
+
+    return true;
 }
 
 void
@@ -215,13 +217,19 @@ ParseTask::activate(JSRuntime *rt)
     cx->enterCompartment(exclusiveContextGlobal->compartment());
 }
 
+void
+ParseTask::finish()
+{
+    if (script) {
+        // Initialize the ScriptSourceObject slots that we couldn't while the SSO
+        // was in the temporary compartment.
+        ScriptSourceObject &sso = script->sourceObject()->as<ScriptSourceObject>();
+        sso.initElement(optionsElement);
+    }
+}
+
 ParseTask::~ParseTask()
 {
-    JSRuntime *rt = scopeChain->runtimeFromMainThread();
-
-    JS_RemoveObjectRootRT(rt, &scopeChain);
-    JS_RemoveObjectRootRT(rt, &exclusiveContextGlobal);
-
     // ParseTask takes over ownership of its input exclusive context.
     js_delete(cx);
 
@@ -651,6 +659,7 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
 
     // Move the parsed script and all its contents into the desired compartment.
     gc::MergeCompartments(parseTask->cx->compartment(), parseTask->scopeChain->compartment());
+    parseTask->finish();
 
     RootedScript script(rt, parseTask->script);
 

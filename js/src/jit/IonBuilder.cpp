@@ -4100,6 +4100,8 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
           case InliningDecision_Inline:
             inlineable = true;
             break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unhandled InliningDecision value!");
         }
 
         // Enforce a maximum inlined bytecode limit at the callsite.

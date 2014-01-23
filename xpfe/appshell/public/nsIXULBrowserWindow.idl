@@ -16,7 +16,7 @@ interface nsIDOMElement;
  * internals of the browser area to tell the containing xul window to update
  * its ui. 
  */
-[scriptable, uuid(7c91b4bd-f855-4872-b3fa-a2076d28eb03)]
+[scriptable, uuid(e4ee85a0-645d-11e3-949a-0800200c9a66)]
 interface nsIXULBrowserWindow : nsISupports
 {
   /**
@@ -37,5 +37,11 @@ interface nsIXULBrowserWindow : nsISupports
                                 in nsIURI linkURI,
                                 in nsIDOMNode linkNode,
                                 in boolean isAppTab);
+
+  /**
+   * Show/hide a tooltip (when the user mouses over a link, say).
+   */
+  void showTooltip(in long x, in long y, in AString tooltip);
+  void hideTooltip();
 };
 
