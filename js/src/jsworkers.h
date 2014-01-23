@@ -342,10 +342,10 @@ struct ParseTask
     // Rooted pointer to the scope in the target compartment which the
     // resulting script will be merged into. This is not safe to use off the
     // main thread.
-    JSObject *scopeChain;
+    PersistentRootedObject scopeChain;
 
     // Rooted pointer to the global object used by 'cx'.
-    JSObject *exclusiveContextGlobal;
+    PersistentRootedObject exclusiveContextGlobal;
 
     // Callback invoked off the main thread when the parse finishes.
     JS::OffThreadCompileCallback callback;
