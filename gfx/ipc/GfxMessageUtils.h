@@ -210,16 +210,16 @@ struct ParamTraits<mozilla::GraphicsFilterType>
 
 template <>
 struct ParamTraits<mozilla::layers::LayersBackend>
-  : public EnumSerializer<mozilla::layers::LayersBackend,
-                          mozilla::layers::LAYERS_NONE,
-                          mozilla::layers::LAYERS_LAST>
+  : public TypedEnumSerializer<mozilla::layers::LayersBackend,
+                               mozilla::layers::LayersBackend::LAYERS_NONE,
+                               mozilla::layers::LayersBackend::LAYERS_LAST>
 {};
 
 template <>
 struct ParamTraits<mozilla::layers::ScaleMode>
-  : public EnumSerializer<mozilla::layers::ScaleMode,
-                          mozilla::layers::SCALE_NONE,
-                          mozilla::layers::SCALE_SENTINEL>
+  : public TypedEnumSerializer<mozilla::layers::ScaleMode,
+                               mozilla::layers::ScaleMode::SCALE_NONE,
+                               mozilla::layers::ScaleMode::SENTINEL>
 {};
 
 template <>

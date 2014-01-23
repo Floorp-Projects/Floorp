@@ -34,7 +34,7 @@ namespace layers {
 ThebesLayerD3D10::ThebesLayerD3D10(LayerManagerD3D10 *aManager)
   : ThebesLayer(aManager, nullptr)
   , LayerD3D10(aManager)
-  , mCurrentSurfaceMode(SURFACE_OPAQUE)
+  , mCurrentSurfaceMode(SurfaceMode::SURFACE_OPAQUE)
 {
   mImplData = static_cast<LayerD3D10*>(this);
 }
@@ -94,13 +94,13 @@ ThebesLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique;
   switch (mCurrentSurfaceMode) {
-  case SURFACE_COMPONENT_ALPHA:
+  case SurfaceMode::SURFACE_COMPONENT_ALPHA:
     technique = SelectShader(SHADER_COMPONENT_ALPHA | LoadMaskTexture());
     break;
-  case SURFACE_OPAQUE:
+  case SurfaceMode::SURFACE_OPAQUE:
     technique = SelectShader(SHADER_RGB | SHADER_PREMUL | LoadMaskTexture());
     break;
-  case SURFACE_SINGLE_CHANNEL_ALPHA:
+  case SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA:
     technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | LoadMaskTexture());
     break;
   default:
@@ -154,9 +154,9 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
   nsIntRect newTextureRect = mVisibleRegion.GetBounds();
 
   SurfaceMode mode = GetSurfaceMode();
-  if (mode == SURFACE_COMPONENT_ALPHA &&
+  if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA &&
       (!mParent || !mParent->SupportsComponentAlphaChildren())) {
-    mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+    mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
   }
   // If we have a transform that requires resampling of our texture, then
   // we need to make sure we don't sample pixels that haven't been drawn.
@@ -168,11 +168,11 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
       neededRegion.GetNumRects() > 1) {
     if (MayResample()) {
       neededRegion = newTextureRect;
-      if (mode == SURFACE_OPAQUE) {
+      if (mode == SurfaceMode::SURFACE_OPAQUE) {
         // We're going to paint outside the visible region, but layout hasn't
         // promised that it will paint opaquely there, so we'll have to
         // treat this layer as transparent.
-        mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+        mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
       }
     }
   }
@@ -226,7 +226,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
   }
   mTextureRect = newTextureRect;
 
-  if (!mTexture || (mode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite)) {
+  if (!mTexture || (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA && !mTextureOnWhite)) {
     CreateNewTextures(gfx::IntSize(newTextureRect.width, newTextureRect.height), mode);
     mValidRegion.SetEmpty();
   }
@@ -286,7 +286,7 @@ void
 ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
 {
   if (mD2DSurface) {
-    gfxContentType type = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+    gfxContentType type = aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ?
       gfxContentType::COLOR : gfxContentType::COLOR_ALPHA;
 
     if (type != mD2DSurface->GetContentType()) {  
@@ -301,7 +301,7 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
       mValidRegion.SetEmpty();
     }
   } else if (mDrawTarget) {
-    SurfaceFormat format = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+    SurfaceFormat format = aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ?
       SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
 
     if (format != mDrawTarget->GetFormat()) {
@@ -316,7 +316,7 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
     }
   }    
 
-  if (aMode != SURFACE_COMPONENT_ALPHA && mTextureOnWhite) {
+  if (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA && mTextureOnWhite) {
     // If we've transitioned away from component alpha, we can delete those resources.
     mD2DSurfaceOnWhite = nullptr;
     mSRViewOnWhite = nullptr;
@@ -400,7 +400,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
 
   nsRefPtr<gfxASurface> destinationSurface;
   
-  if (aMode == SURFACE_COMPONENT_ALPHA) {
+  if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     FillTexturesBlackWhite(aRegion, visibleRect.TopLeft());
     if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
       gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
@@ -418,7 +418,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   nsRefPtr<gfxContext> context = new gfxContext(mDrawTarget);
 
   context->Translate(gfxPoint(-visibleRect.x, -visibleRect.y));
-  if (aMode == SURFACE_SINGLE_CHANNEL_ALPHA) {
+  if (aMode == SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA) {
     nsIntRegionRectIterator iter(aRegion);
     const nsIntRect *iterRect;
     while ((iterRect = iter.Next())) {
@@ -429,7 +429,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   mDrawTarget->SetPermitSubpixelAA(!(mContentFlags & CONTENT_COMPONENT_ALPHA));
 
   LayerManagerD3D10::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-  cbInfo.Callback(this, context, aRegion, CLIP_DRAW, nsIntRegion(), cbInfo.CallbackData);
+  cbInfo.Callback(this, context, aRegion, DrawRegionClip::DRAW, nsIntRegion(), cbInfo.CallbackData);
 }
 
 void
@@ -460,7 +460,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
     }
 
     if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      mD2DSurface = new gfxD2DSurface(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+      mD2DSurface = new gfxD2DSurface(mTexture, aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ?
                                                 gfxContentType::COLOR : gfxContentType::COLOR_ALPHA);
 
       if (!mD2DSurface || mD2DSurface->CairoStatus()) {
@@ -473,7 +473,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
     }
   }
 
-  if (aMode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite) {
+  if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA && !mTextureOnWhite) {
     hr = device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTextureOnWhite));
 
     if (FAILED(hr)) {
@@ -501,10 +501,10 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
   }
 
   if (gfxPlatform::GetPlatform()->SupportsAzureContent() && !mDrawTarget) {
-    if (aMode == SURFACE_COMPONENT_ALPHA) {
+    if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
       mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, SurfaceFormat::B8G8R8X8);
     } else {
-      mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+      mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ?
         SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8);
     }
 

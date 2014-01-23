@@ -434,7 +434,7 @@ void
 nsWindow::ClearCachedResources()
 {
     if (mLayerManager &&
-        mLayerManager->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_BASIC) {
         statimLayerManager->ClearCachedResources();
     }
     for (nsIWidget* kid = mFirstChild; kid; ) {
@@ -1077,7 +1077,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
 
     {
         AutoLayerManagerSetup
-            setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
+            setupLayerManager(this, ctx, mozilla::layers::BufferMode::BUFFER_NONE);
         if (mWidgetListener) {
           nsIntRegion region(rect);
           painted = mWidgetListener->PaintWindow(this, region);
@@ -3139,7 +3139,7 @@ uint32_t
 nsWindow::GetGLFrameBufferFormat()
 {
     if (mLayerManager &&
-        mLayerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL) {
         return MozQGLWidgetWrapper::isRGBAContext() ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
     }
     return LOCAL_GL_NONE;

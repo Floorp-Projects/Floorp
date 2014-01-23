@@ -984,21 +984,21 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
         mWidgetListener->WillPaintWindow(this);
 
         switch (GetLayerManager(nullptr)->GetBackendType()) {
-            case mozilla::layers::LAYERS_BASIC: {
+            case mozilla::layers::LayersBackend::LAYERS_BASIC: {
 
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
                 {
                     mozilla::layers::RenderTraceScope trace2("Basic DrawTo", "727272");
                     AutoLayerManagerSetup
-                      setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
+                      setupLayerManager(this, ctx, mozilla::layers::BufferMode::BUFFER_NONE);
 
                     mWidgetListener->PaintWindow(this, region);
                 }
                 break;
             }
 
-            case mozilla::layers::LAYERS_CLIENT: {
+            case mozilla::layers::LayersBackend::LAYERS_CLIENT: {
                 mWidgetListener->PaintWindow(this, region);
                 break;
             }

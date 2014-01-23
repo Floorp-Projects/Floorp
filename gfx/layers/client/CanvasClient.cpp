@@ -37,7 +37,7 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
                                  TextureFlags aFlags)
 {
   if (aType == CanvasClientGLContext &&
-      aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+      aForwarder->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL) {
     aFlags |= TEXTURE_DEALLOCATE_CLIENT;
     return new CanvasClientSurfaceStream(aForwarder, aFlags);
   }
@@ -238,7 +238,7 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
 {
   if (!mDeprecatedTextureClient) {
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_STREAM_GL,
-                                                             aLayer->GetSurfaceMode() == SURFACE_OPAQUE
+                                                             aLayer->GetSurfaceMode() == SurfaceMode::SURFACE_OPAQUE
                                                                ? gfxContentType::COLOR
                                                                : gfxContentType::COLOR_ALPHA);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
