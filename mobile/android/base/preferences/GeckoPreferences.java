@@ -153,8 +153,8 @@ public class GeckoPreferences
                 final ListAdapter listAdapter = ((ListView) parent).getAdapter();
                 final Object listItem = listAdapter.getItem(position);
 
-                // Only SearchEnginePreference handles long clicks.
-                if (listItem instanceof SearchEnginePreference && listItem instanceof View.OnLongClickListener) {
+                // Only CustomListPreference handles long clicks.
+                if (listItem instanceof CustomListPreference && listItem instanceof View.OnLongClickListener) {
                     final View.OnLongClickListener longClickListener = (View.OnLongClickListener) listItem;
                     return longClickListener.onLongClick(view);
                 }

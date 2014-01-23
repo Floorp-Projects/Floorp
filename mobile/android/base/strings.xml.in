@@ -108,6 +108,9 @@
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>
 
+  <string name="pref_category_home">&pref_category_home;</string>
+  <string name="pref_category_home_panels">&pref_category_home_panels;</string>
+
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
@@ -169,11 +172,14 @@
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
   <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>
 
-  <!-- Strings used in default search provider config preferences menu -->
-  <string name="pref_search_set_default">&pref_search_set_default;</string>
-  <string name="pref_search_default">&pref_search_default;</string>
-  <string name="pref_search_remove">&pref_search_remove;</string>
+  <string name="pref_dialog_set_default">&pref_dialog_set_default;</string>
+  <string name="pref_default">&pref_dialog_default;</string>
+  <string name="pref_dialog_remove">&pref_dialog_remove;</string>
+
   <string name="pref_search_last_toast">&pref_search_last_toast;</string>
+
+  <string name="pref_panels_show">&pref_panels_show;</string>
+  <string name="pref_panels_hide">&pref_panels_hide;</string>
 
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
   <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>

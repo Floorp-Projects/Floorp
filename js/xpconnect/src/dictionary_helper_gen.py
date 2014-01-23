@@ -193,27 +193,20 @@ def print_cpp_file(fd, conf):
       if not c in conf.exclude_automatic_type_include:
             fd.write("#include \"%s.h\"\n" % c)
 
-    fd.write("\nusing namespace mozilla::idl;\n\n")
+    fd.write("\n"
+             "using namespace mozilla::idl;\n"
+             "using namespace mozilla::dom;\n\n")
 
     for a in attrnames:
-        fd.write("static jsid %s = JSID_VOID;\n"% get_jsid(a))
+        fd.write("static InternedStringId %s;\n" % get_jsid(a))
 
     fd.write("\n"
-             "static bool\n"
-             "InternStaticJSVal(JSContext* aCx, jsid &id, const char* aString)\n"
-             "{\n"
-             "  if (JSString* str = JS_InternString(aCx, aString)) {\n"
-             "    id = INTERNED_STRING_TO_JSID(aCx, str);\n"
-             "    return true;\n"
-             "  }\n"
-             "  return false;\n"
-             "}\n\n"
              "bool\n"
              "InternStaticDictionaryJSVals(JSContext* aCx)\n"
              "{\n"
              "  return\n")
     for a in attrnames:
-        fd.write("    InternStaticJSVal(aCx, %s, \"%s\") &&\n"
+        fd.write("    %s.init(aCx, \"%s\") &&\n"
                  % (get_jsid(a), a))
 
     fd.write("    true;\n")
