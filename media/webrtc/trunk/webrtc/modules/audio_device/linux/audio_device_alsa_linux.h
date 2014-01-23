@@ -16,7 +16,9 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 
+#ifdef USE_X11
 #include <X11/Xlib.h>
+#endif
 #include <alsa/asoundlib.h>
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
@@ -253,7 +255,9 @@ private:
     uint16_t _playBufDelayFixed;            // fixed playback delay
 
     char _oldKeyState[32];
+#ifdef USE_X11
     Display* _XDisplay;
+#endif
 };
 
 }
