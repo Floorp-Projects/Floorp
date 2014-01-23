@@ -1606,4 +1606,9 @@ protected:
   bool mIsNeverPainting;
 };
 
+class nsIPresShell_MOZILLA27 : public nsIPresShell {
+public:
+  virtual gfxSize GetCumulativeResolution() = 0;
+};
+
 #endif /* nsIPresShell_h___ */
