@@ -602,23 +602,16 @@ int main(int argc, char* argv[])
 
   nsIFile *xreDirectory;
 
-#ifdef HAS_DLL_BLOCKLIST
-  DllBlocklist_Initialize();
-
-  // In order to be effective against AppInit DLLs, the blocklist must be
-  // initialized before user32.dll is loaded into the process. If this assert
-  // ever fires, then the fix for bug 932100 has been defeated and the
-  // blocklist will miss AppInit DLLs. You should use a delayload or reorder
-  // the code to prevent user32.dll from loading during early startup.
-  MOZ_ASSERT(!GetModuleHandleA("user32.dll"));
-#endif
-
   nsresult rv = InitXPCOMGlue(argv[0], &xreDirectory);
   if (NS_FAILED(rv)) {
     return 255;
   }
 
   XRE_StartupTimelineRecord(mozilla::StartupTimeline::START, start);
+
+#ifdef HAS_DLL_BLOCKLIST
+  DllBlocklist_Initialize();
+#endif
 
   if (gotCounters) {
 #if defined(XP_WIN)
