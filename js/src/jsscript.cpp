@@ -990,6 +990,13 @@ ScriptSourceObject::element() const
     return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
 }
 
+void
+ScriptSourceObject::initElement(HandleObject element)
+{
+    JS_ASSERT(getReservedSlot(ELEMENT_SLOT).isNull());
+    setReservedSlot(ELEMENT_SLOT, ObjectOrNullValue(element));
+}
+
 const Value &
 ScriptSourceObject::elementProperty() const
 {

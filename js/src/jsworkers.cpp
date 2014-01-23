@@ -191,7 +191,7 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(initCx, scopeChain),
-    exclusiveContextGlobal(initCx, exclusiveContextGlobal), callback(callback),
+    exclusiveContextGlobal(initCx, exclusiveContextGlobal), optionsElement(initCx), callback(callback),
     callbackData(callbackData), script(nullptr), errors(cx), overRecursed(false)
 {
 }
@@ -199,7 +199,15 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
 bool
 ParseTask::init(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    return this->options.copy(cx, options);
+    if (!this->options.copy(cx, options))
+        return false;
+
+    // Save those compilation options that the ScriptSourceObject can't
+    // point at while it's in the compilation's temporary compartment.
+    optionsElement = this->options.element();
+    this->options.setElement(nullptr);
+
+    return true;
 }
 
 void
@@ -207,6 +215,17 @@ ParseTask::activate(JSRuntime *rt)
 {
     rt->setUsedByExclusiveThread(exclusiveContextGlobal->zone());
     cx->enterCompartment(exclusiveContextGlobal->compartment());
+}
+
+void
+ParseTask::finish()
+{
+    if (script) {
+        // Initialize the ScriptSourceObject slots that we couldn't while the SSO
+        // was in the temporary compartment.
+        ScriptSourceObject &sso = script->sourceObject()->as<ScriptSourceObject>();
+        sso.initElement(optionsElement);
+    }
 }
 
 ParseTask::~ParseTask()
@@ -640,6 +659,7 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
 
     // Move the parsed script and all its contents into the desired compartment.
     gc::MergeCompartments(parseTask->cx->compartment(), parseTask->scopeChain->compartment());
+    parseTask->finish();
 
     RootedScript script(rt, parseTask->script);
 
