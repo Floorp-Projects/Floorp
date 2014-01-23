@@ -1611,14 +1611,14 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
     if (content == GFX_CONTENT_COLOR_ALPHA &&
       !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
       nsRefPtr<gfxASurface> s = CurrentSurface();
-      if ((s->GetAllowUseAsSource() || s->GetType() == gfxSurfaceTypeTee) &&
+      if ((s->GetAllowUseAsSource() || s->GetType() == gfxSurfaceType::Tee) &&
           (s->GetContentType() == GFX_CONTENT_COLOR ||
               s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
         cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
         nsRefPtr<gfxASurface> d = CurrentSurface();
 
-        if (d->GetType() == gfxSurfaceTypeTee) {
-          NS_ASSERTION(s->GetType() == gfxSurfaceTypeTee, "Mismatched types");
+        if (d->GetType() == gfxSurfaceType::Tee) {
+          NS_ASSERTION(s->GetType() == gfxSurfaceType::Tee, "Mismatched types");
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
           static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);

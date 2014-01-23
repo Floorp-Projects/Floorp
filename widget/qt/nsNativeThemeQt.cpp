@@ -93,7 +93,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
     nsRefPtr<gfxASurface> surface = context->CurrentSurface();
 
 #ifdef CAIRO_HAS_QT_SURFACE
-    if (surface->GetType() == gfxSurfaceTypeQPainter) {
+    if (surface->GetType() == gfxSurfaceType::QPainter) {
         gfxQPainterSurface* qSurface = (gfxQPainterSurface*) (surface.get());
         QPainter *painter = qSurface->GetQPainter();
         NS_ASSERTION(painter, "Where'd my QPainter go?");
@@ -104,7 +104,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
                                     aRect, aClipRect);
     } else
 #endif
-    if (surface->GetType() == gfxSurfaceTypeImage) {
+    if (surface->GetType() == gfxSurfaceType::Image) {
         gfxImageSurface* qSurface = (gfxImageSurface*) (surface.get());
         QImage tempQImage(qSurface->Data(),
                           qSurface->Width(),
@@ -117,7 +117,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
                                     aRect, aClipRect);
     }
 #if defined(MOZ_X11) && defined(Q_WS_X11)
-    else if (surface->GetType() == gfxSurfaceTypeXlib) {
+    else if (surface->GetType() == gfxSurfaceType::Xlib) {
         gfxXlibSurface* qSurface = (gfxXlibSurface*) (surface.get());
         QPixmap pixmap(QPixmap::fromX11Pixmap(qSurface->XDrawable()));
         QPainter painter(&pixmap);

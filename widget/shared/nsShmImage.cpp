@@ -25,7 +25,7 @@ static bool gShmAvailable = true;
 bool nsShmImage::UseShm()
 {
     return gfxPlatform::GetPlatform()->
-        ScreenReferenceSurface()->GetType() == gfxSurfaceTypeImage
+        ScreenReferenceSurface()->GetType() == gfxSurfaceType::Image
         && gShmAvailable;
 }
 

@@ -49,7 +49,7 @@ UsingXCompositing()
   if (!PR_GetEnv("MOZ_LAYERS_ENABLE_XLIB_SURFACES")) {
       return false;
   }
-  return (gfxSurfaceTypeXlib ==
+  return (gfxSurfaceType::Xlib ==
           gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
 }
 
@@ -137,7 +137,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
   nsRefPtr<gfxASurface> buffer =
     platform->CreateOffscreenSurface(gfx::ThebesIntSize(aSize), aContent);
   if (!buffer ||
-      buffer->GetType() != gfxSurfaceTypeXlib) {
+      buffer->GetType() != gfxSurfaceType::Xlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");
     return false;
   }

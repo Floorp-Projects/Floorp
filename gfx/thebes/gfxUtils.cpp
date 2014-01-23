@@ -283,7 +283,7 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
      : mContext(aContext), mSucceeded(true), mPushedGroup(false)
     {
         // Quartz's limits for matrix are much larger than pixman
-        if (!aSurface || aSurface->GetType() == gfxSurfaceTypeQuartz)
+        if (!aSurface || aSurface->GetType() == gfxSurfaceType::Quartz)
             return;
 
         if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xx) ||

@@ -159,7 +159,7 @@ TextureImageEGL::EndUpdate()
     nsRefPtr<gfxImageSurface> uploadImage = nullptr;
     gfxIntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
-    NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceTypeImage &&
+    NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceType::Image &&
                   mUpdateSurface->GetSize() == updateSize,
                   "Upload image isn't an image surface when one is expected, or is wrong size!");
 

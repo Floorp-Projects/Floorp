@@ -57,7 +57,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
     return nullptr;
   }
 
-  if (aSurface->GetType() == gfxSurfaceTypeD2D) {
+  if (aSurface->GetType() == gfxSurfaceType::D2D) {
     void *data = aSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       nsRefPtr<ID3D10Texture2D> texture = static_cast<ID3D10Texture2D*>(data);

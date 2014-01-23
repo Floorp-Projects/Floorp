@@ -619,17 +619,17 @@ static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
-                 gfxSurfaceTypeMax);
+                 size_t(gfxSurfaceType::Max));
 #ifdef CAIRO_HAS_D2D_SURFACE
 PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_D2D) ==
-                 uint32_t(gfxSurfaceTypeD2D));
+                 uint32_t(gfxSurfaceType::D2D));
 #endif
 PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
-                 uint32_t(gfxSurfaceTypeSkia));
+                 uint32_t(gfxSurfaceType::Skia));
 
 /* Surface size memory reporting */
 
-static int64_t gSurfaceMemoryUsed[gfxSurfaceTypeMax] = { 0 };
+static int64_t gSurfaceMemoryUsed[size_t(gfxSurfaceType::Max)] = { 0 };
 
 class SurfaceMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
@@ -668,7 +668,7 @@ void
 gfxASurface::RecordMemoryUsedForSurfaceType(gfxSurfaceType aType,
                                             int32_t aBytes)
 {
-    if (aType < 0 || aType >= gfxSurfaceTypeMax) {
+    if (int(aType) < 0 || aType >= gfxSurfaceType::Max) {
         NS_WARNING("Invalid type to RecordMemoryUsedForSurfaceType!");
         return;
     }
@@ -679,7 +679,7 @@ gfxASurface::RecordMemoryUsedForSurfaceType(gfxSurfaceType aType,
         registered = true;
     }
 
-    gSurfaceMemoryUsed[aType] += aBytes;
+    gSurfaceMemoryUsed[size_t(aType)] += aBytes;
 }
 
 void
