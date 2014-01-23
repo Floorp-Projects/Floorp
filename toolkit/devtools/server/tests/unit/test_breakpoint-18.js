@@ -43,12 +43,12 @@ function setUpCode() {
 }
 
 function setBreakpoint() {
+  gClient.addOneTimeListener("resumed", runCode);
   gThreadClient.setBreakpoint({
     url: URL,
     line: 1
   }, ({ error }) => {
     do_check_true(!error);
-    gThreadClient.resume(runCode);
   });
 }
 

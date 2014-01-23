@@ -890,26 +890,24 @@ BrowserTabActor.prototype = {
    */
   onWindowCreated:
   makeInfallible(function BTA_onWindowCreated(evt) {
-    if (evt.target === this.browser.contentDocument) {
-      // pageshow events for non-persisted pages have already been handled by a
-      // prior DOMWindowCreated event.
-      if (evt.type == "pageshow" && !evt.persisted) {
-        return;
-      }
-      if (this._attached) {
-        this.threadActor.clearDebuggees();
-        if (this.threadActor.dbg) {
-          this.threadActor.dbg.enabled = true;
-          this.threadActor.maybePauseOnExceptions();
-        }
+    // pageshow events for non-persisted pages have already been handled by a
+    // prior DOMWindowCreated event.
+    if (!this._attached || (evt.type == "pageshow" && !evt.persisted)) {
+      return;
+    }
+    if (evt.target === this.browser.contentDocument ) {
+      this.threadActor.clearDebuggees();
+      if (this.threadActor.dbg) {
+        this.threadActor.dbg.enabled = true;
+        this.threadActor.global = evt.target.defaultView.wrappedJSObject;
+        this.threadActor.maybePauseOnExceptions();
       }
     }
 
-    if (this._attached) {
-      this.threadActor.global = evt.target.defaultView.wrappedJSObject;
-      if (this.threadActor.attached) {
-        this.threadActor.findGlobals();
-      }
+    // Refresh the debuggee list when a new window object appears (top window or
+    // iframe).
+    if (this.threadActor.attached) {
+      this.threadActor.findGlobals();
     }
   }, "BrowserTabActor.prototype.onWindowCreated"),
 

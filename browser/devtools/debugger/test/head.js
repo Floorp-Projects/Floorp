@@ -410,7 +410,7 @@ function ensureThreadClientState(aPanel, aState) {
 
 function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
   let finished = waitForDebuggerEvents(aPanel, aWaitForEventName, aEventRepeat);
-  let activeTab = aPanel.panelWin.gClient.activeTab;
+  let activeTab = aPanel.panelWin.DebuggerController._target.activeTab;
   aUrl ? activeTab.navigateTo(aUrl) : activeTab.reload();
   return finished;
 }
