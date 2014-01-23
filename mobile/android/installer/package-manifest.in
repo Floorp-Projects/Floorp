@@ -542,6 +542,8 @@ bin/libfreebl_32int64_3.so
 ; [Crash Reporter]
 ;
 #ifdef MOZ_CRASHREPORTER
+@BINPATH@/components/CrashService.manifest
+@BINPATH@/components/CrashService.js
 @BINPATH@/crashreporter@BIN_SUFFIX@
 @BINPATH@/crashreporter.crt
 @BINPATH@/crashreporter.ini
