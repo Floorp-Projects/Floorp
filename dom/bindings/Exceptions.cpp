@@ -281,7 +281,7 @@ public:
   virtual ~JSStackFrame();
 
   static already_AddRefed<nsIStackFrame>
-  CreateStack(JSContext* cx);
+  CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
   static already_AddRefed<nsIStackFrame>
   CreateStackFrameLocation(uint32_t aLanguage,
                            const char* aFilename,
@@ -495,11 +495,14 @@ NS_IMETHODIMP JSStackFrame::ToString(nsACString& _retval)
 }
 
 /* static */ already_AddRefed<nsIStackFrame>
-JSStackFrame::CreateStack(JSContext* cx)
+JSStackFrame::CreateStack(JSContext* aCx, int32_t aMaxDepth)
 {
   static const unsigned MAX_FRAMES = 100;
+  if (aMaxDepth < 0) {
+    aMaxDepth = MAX_FRAMES;
+  }
 
-  JS::StackDescription* desc = JS::DescribeStack(cx, MAX_FRAMES);
+  JS::StackDescription* desc = JS::DescribeStack(aCx, aMaxDepth);
   if (!desc) {
     return nullptr;
   }
@@ -530,9 +533,9 @@ JSStackFrame::CreateStackFrameLocation(uint32_t aLanguage,
 }
 
 already_AddRefed<nsIStackFrame>
-CreateStack(JSContext* cx)
+CreateStack(JSContext* aCx, int32_t aMaxDepth)
 {
-  return JSStackFrame::CreateStack(cx);
+  return JSStackFrame::CreateStack(aCx, aMaxDepth);
 }
 
 already_AddRefed<nsIStackFrame>
