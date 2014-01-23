@@ -349,7 +349,7 @@ nsPrintEngine::InstallPrintPreviewListener()
 
     nsCOMPtr<nsPIDOMWindow> win(docShell->GetWindow());
     if (win) {
-      nsCOMPtr<EventTarget> target = do_QueryInterface(win->GetFrameElementInternal());
+      nsCOMPtr<EventTarget> target = win->GetFrameElementInternal();
       mPrt->mPPEventListeners = new nsPrintPreviewListener(target);
       mPrt->mPPEventListeners->AddListeners();
     }

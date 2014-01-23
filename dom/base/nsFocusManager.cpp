@@ -377,12 +377,11 @@ NS_IMETHODIMP nsFocusManager::SetFocusedWindow(nsIDOMWindow* aWindowToFocus)
 
   windowToFocus = windowToFocus->GetOuterWindow();
 
-  nsCOMPtr<nsIContent> frameContent =
-    do_QueryInterface(windowToFocus->GetFrameElementInternal());
-  if (frameContent) {
+  nsCOMPtr<Element> frameElement = windowToFocus->GetFrameElementInternal();
+  if (frameElement) {
     // pass false for aFocusChanged so that the caret does not get updated
     // and scrolling does not occur.
-    SetFocusInner(frameContent, 0, false, true);
+    SetFocusInner(frameElement, 0, false, true);
   }
   else {
     // this is a top-level window. If the window has a child frame focused,
@@ -1348,8 +1347,7 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindow* aWindow,
   while (window) {
     // get the containing <iframe> or equivalent element so that it can be
     // focused below.
-    nsCOMPtr<nsIContent> frameContent =
-      do_QueryInterface(window->GetFrameElementInternal());
+    nsCOMPtr<Element> frameElement = window->GetFrameElementInternal();
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = window->GetDocShell();
     if (!dsti) 
@@ -1374,7 +1372,7 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindow* aWindow,
       if (aCheckPermission && !nsContentUtils::CanCallerAccess(window))
         break;
 
-      window->SetFocusedNode(frameContent);
+      window->SetFocusedNode(frameElement);
     }
   }
 }
@@ -2084,10 +2082,10 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
   // on the nearest ancestor frame which is a chrome frame. But this is
   // what the existing code does, so just leave it for now.
   if (!browseWithCaret) {
-    nsCOMPtr<nsIContent> docContent =
-      do_QueryInterface(mFocusedWindow->GetFrameElementInternal());
-    if (docContent)
-      browseWithCaret = docContent->AttrValueIs(kNameSpaceID_None,
+    nsCOMPtr<Element> docElement =
+      mFocusedWindow->GetFrameElementInternal();
+    if (docElement)
+      browseWithCaret = docElement->AttrValueIs(kNameSpaceID_None,
                                                 nsGkAtoms::showcaret,
                                                 NS_LITERAL_STRING("true"),
                                                 eCaseMatters);
@@ -2601,7 +2599,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       presShell = doc->GetShell();
 
       rootContent = doc->GetRootElement();
-      startContent = do_QueryInterface(piWindow->GetFrameElementInternal());
+      startContent = piWindow->GetFrameElementInternal();
       if (startContent) {
         nsIFrame* frame = startContent->GetPrimaryFrame();
         if (!frame)
@@ -2980,14 +2978,13 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
   // the root element's canvas may be focused as long as the document is in a
   // a non-chrome shell and does not contain a frameset.
   if (aIsForDocNavigation) {
-    nsCOMPtr<nsIContent> docContent =
-      do_QueryInterface(aWindow->GetFrameElementInternal());
+    nsCOMPtr<Element> docElement = aWindow->GetFrameElementInternal();
     // document navigation skips iframes and frames that are specifically non-focusable
-    if (docContent) {
-      if (docContent->Tag() == nsGkAtoms::iframe)
+    if (docElement) {
+      if (docElement->Tag() == nsGkAtoms::iframe)
         return nullptr;
 
-      nsIFrame* frame = docContent->GetPrimaryFrame();
+      nsIFrame* frame = docElement->GetPrimaryFrame();
       if (!frame || !frame->IsFocusable(nullptr, 0))
         return nullptr;
     }

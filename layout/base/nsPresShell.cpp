@@ -5159,8 +5159,7 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext)
   nsCOMPtr<nsPIDOMWindow> pwin = docShell->GetWindow();
   if (!pwin)
     return false;
-  nsCOMPtr<nsIContent> containerElement =
-    do_QueryInterface(pwin->GetFrameElementInternal());
+  nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
   return containerElement &&
          containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
 }

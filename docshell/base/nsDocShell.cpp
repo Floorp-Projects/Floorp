@@ -2456,7 +2456,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     if (!win) {
         return NS_OK;
     }
-    nsCOMPtr<nsIContent> frameElement = do_QueryInterface(win->GetFrameElementInternal());
+    nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
     if (frameElement &&
         frameElement->IsHTML(nsGkAtoms::iframe) &&
         !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
@@ -7229,10 +7229,10 @@ nsDocShell::EnsureContentViewer()
     if (parentItem) {
         nsCOMPtr<nsPIDOMWindow> domWin = GetWindow();
         if (domWin) {
-            nsCOMPtr<nsIContent> parentContent =
-                do_QueryInterface(domWin->GetFrameElementInternal());
-            if (parentContent) {
-                baseURI = parentContent->GetBaseURI();
+            nsCOMPtr<Element> parentElement =
+                domWin->GetFrameElementInternal();
+            if (parentElement) {
+                baseURI = parentElement->GetBaseURI();
             }
         }
     }
