@@ -2943,8 +2943,7 @@ CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
 }
 
 void
-CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments)
-{
+CanvasRenderingContext2D::SetLineDash(const mozilla::dom::AutoSequence<double>& aSegments) {
   FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
   dash.Clear();
 
