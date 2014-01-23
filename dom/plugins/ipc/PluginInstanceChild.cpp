@@ -2919,9 +2919,9 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
         if (winSize != surfSize ||
             (mBackground && !CanPaintOnBackground()) ||
             (mBackground &&
-             GFX_CONTENT_COLOR != mCurrentSurface->GetContentType()) ||
+             gfxContentType::COLOR != mCurrentSurface->GetContentType()) ||
             (!mBackground && mIsTransparent &&
-             GFX_CONTENT_COLOR == mCurrentSurface->GetContentType())) {
+             gfxContentType::COLOR == mCurrentSurface->GetContentType())) {
             // Don't try to use an old, invalid DC.
             mWindow.window = nullptr;
             ClearCurrentSurface();
@@ -3200,7 +3200,7 @@ void
 PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
                                                   gfxASurface* aSurface)
 {
-    NS_ABORT_IF_FALSE(aSurface->GetContentType() == GFX_CONTENT_COLOR_ALPHA,
+    NS_ABORT_IF_FALSE(aSurface->GetContentType() == gfxContentType::COLOR_ALPHA,
                       "Refusing to pointlessly recover alpha");
 
     nsIntRect rect(aRect);
@@ -3418,7 +3418,7 @@ PluginInstanceChild::ShowPluginFrame()
     }
 
     bool haveTransparentPixels =
-        GFX_CONTENT_COLOR_ALPHA == mCurrentSurface->GetContentType();
+        gfxContentType::COLOR_ALPHA == mCurrentSurface->GetContentType();
     PLUGIN_LOG_DEBUG(
         ("[InstanceChild][%p] Painting%s <x=%d,y=%d, w=%d,h=%d> on surface <w=%d,h=%d>",
          this, haveTransparentPixels ? " with alpha" : "",

@@ -1048,8 +1048,8 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
 
   bool canUseOpaqueSurface = aLayer->CanUseOpaqueSurface();
   ContentType contentType =
-    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
-                          GFX_CONTENT_COLOR_ALPHA;
+    canUseOpaqueSurface ? gfxContentType::COLOR :
+                          gfxContentType::COLOR_ALPHA;
 
   SurfaceMode mode;
   nsIntRegion neededRegion;
@@ -1084,7 +1084,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
           !aLayer->GetParent()->SupportsComponentAlphaChildren()) {
         mode = SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
-        contentType = GFX_CONTENT_COLOR;
+        contentType = gfxContentType::COLOR;
       }
     }
 
@@ -1093,10 +1093,10 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       if (mode == SURFACE_OPAQUE) {
-        contentType = GFX_CONTENT_COLOR_ALPHA;
+        contentType = gfxContentType::COLOR_ALPHA;
         mode = SURFACE_SINGLE_CHANNEL_ALPHA;
       }
-      // For component alpha layers, we leave contentType as GFX_CONTENT_COLOR.
+      // For component alpha layers, we leave contentType as gfxContentType::COLOR.
 
       // We need to validate the entire buffer, to make sure that only valid
       // pixels are sampled
@@ -1281,7 +1281,7 @@ ContentClientIncremental::BorrowDrawTargetForPainting(ThebesLayer* aLayer,
   result->SetTransform(mLoanedTransform);
   mLoanedTransform.Translate(drawBounds.x, drawBounds.y);
 
-  if (mContentType == GFX_CONTENT_COLOR_ALPHA) {
+  if (mContentType == gfxContentType::COLOR_ALPHA) {
     gfxUtils::ClipToRegion(result, aPaintState.mRegionToDraw);
     nsIntRect bounds = aPaintState.mRegionToDraw.GetBounds();
     result->ClearRect(Rect(bounds.x, bounds.y, bounds.width, bounds.height));

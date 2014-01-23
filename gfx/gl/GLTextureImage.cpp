@@ -145,7 +145,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     }
 
     ImageFormat format =
-        (GetContentType() == GFX_CONTENT_COLOR) ?
+        (GetContentType() == gfxContentType::COLOR) ?
         gfxImageFormat::RGB24 : gfxImageFormat::ARGB32;
     mUpdateSurface =
         GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
@@ -509,7 +509,7 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
 
     // update covers multiple Images - create a temp surface to paint in
     gfxImageFormat format =
-        (GetContentType() == GFX_CONTENT_COLOR) ?
+        (GetContentType() == gfxContentType::COLOR) ?
         gfxImageFormat::RGB24 : gfxImageFormat::ARGB32;
     mUpdateSurface = gfxPlatform::GetPlatform()->
         CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height), gfxASurface::ContentFromFormat(format));

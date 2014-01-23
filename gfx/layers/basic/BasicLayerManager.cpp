@@ -93,20 +93,20 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
   if (aLayer->CanUseOpaqueSurface() &&
       ((didCompleteClip && aRegion.GetNumRects() == 1) ||
        !aContext->CurrentMatrix().HasNonIntegerTranslation())) {
-    // If the layer is opaque in its visible region we can push a GFX_CONTENT_COLOR
+    // If the layer is opaque in its visible region we can push a gfxContentType::COLOR
     // group. We need to make sure that only pixels inside the layer's visible
     // region are copied back to the destination. Remember if we've already
     // clipped precisely to the visible region.
     *aNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
     MOZ_ASSERT(!aContext->IsCairo());
-    result = PushGroupWithCachedSurface(aContext, GFX_CONTENT_COLOR);
+    result = PushGroupWithCachedSurface(aContext, gfxContentType::COLOR);
   } else {
     *aNeedsClipToVisibleRegion = false;
     result = aContext;
     if (aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
-      aContext->PushGroupAndCopyBackground(GFX_CONTENT_COLOR_ALPHA);
+      aContext->PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA);
     } else {
-      aContext->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+      aContext->PushGroup(gfxContentType::COLOR_ALPHA);
     }
   }
   return result.forget();

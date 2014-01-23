@@ -106,7 +106,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
       mIsD2DTexture = true;
       device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
       mHasAlpha =
-        mSurface->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
+        mSurface->GetContentType() == gfxContentType::COLOR_ALPHA;
       return;
     }
   }

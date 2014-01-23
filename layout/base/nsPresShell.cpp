@@ -4535,8 +4535,8 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
 
   if (needsGroup) {
     aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
-                              GFX_CONTENT_COLOR :
-                              GFX_CONTENT_COLOR_ALPHA);
+                              gfxContentType::COLOR :
+                              gfxContentType::COLOR_ALPHA);
     aThebesContext->Save();
 
     if (oldOperator != gfxContext::OPERATOR_OVER) {

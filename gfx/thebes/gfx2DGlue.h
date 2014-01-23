@@ -244,13 +244,13 @@ inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
   case SurfaceFormat::R5G6B5:
   case SurfaceFormat::B8G8R8X8:
   case SurfaceFormat::R8G8B8X8:
-    return GFX_CONTENT_COLOR;
+    return gfxContentType::COLOR;
   case SurfaceFormat::A8:
-    return GFX_CONTENT_ALPHA;
+    return gfxContentType::ALPHA;
   case SurfaceFormat::B8G8R8A8:
   case SurfaceFormat::R8G8B8A8:
   default:
-    return GFX_CONTENT_COLOR_ALPHA;
+    return gfxContentType::COLOR_ALPHA;
   }
 }
 
