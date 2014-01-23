@@ -93,7 +93,7 @@ let wrapper = {
 
   get accountsURI() {
     delete this.accountsURI;
-    return this.accountsURI = Services.urlFormatter.formatURLPref("firefox.accounts.remoteUrl");
+    return this.accountsURI = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.uri");
   },
 
   handleRemoteCommand: function (evt) {

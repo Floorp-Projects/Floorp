@@ -6,20 +6,21 @@
 
 %define menuPanelWidth 22.35em
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
+%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],[_moz-menuactive="true"],:active)):hover
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],[_moz-menuactive="true"],:hover:active)
 
 %include ../browser.inc
 
 .panel-subviews {
-  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
-  background-color: -moz-dialog;
-  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
+  padding: 4px;
+  background-color: hsla(0,0%,100%,.97);
+  background-clip: padding-box;
+  border-right: 1px solid hsla(210,4%,10%,.2);
+  border-left: 1px solid hsla(210,4%,10%,.2);
+  box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
+              0 0 7px hsla(210,4%,10%,.1);
+  color: #222426;
   -moz-margin-start: @exitSubviewGutterWidth@;
-}
-
-.panel-subviews:-moz-locale-dir(rtl) {
-  box-shadow: 1px 0px 0px rgba(0, 0, 0, 0.2), 1px 0px 2px rgba(0, 0, 0, 0.1), -1px 0px 0px rgba(255, 255, 255, 0.2) inset;
 }
 
 .panel-viewstack[viewtype="main"] > .panel-subviews {
@@ -32,6 +33,23 @@
 
 .panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
   -moz-box-flex: 1;
+}
+
+.panel-subview-header,
+.subviewbutton.panel-subview-footer {
+  padding: 12px;
+  background-color: hsla(210,4%,10%,.04);
+}
+
+.panel-subview-header {
+  margin: -4px -4px 4px;
+  box-shadow: 0 -1px 0 hsla(210,4%,10%,.08) inset;
+  color: #797c80;
+}
+
+.subviewbutton.panel-subview-footer {
+  margin: 4px -4px -4px;
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
 }
 
 #PanelUI-mainView {
@@ -317,8 +335,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-panelview toolbarbutton,
-#widget-overflow-list > toolbarbutton,
+panelview .toolbarbutton-1,
+panelview .subviewbutton,
+.widget-overflow-list .toolbarbutton-1,
 .customizationmode-button,
 #edit-controls@inAnyPanel@ > toolbarbutton,
 #zoom-controls@inAnyPanel@ > toolbarbutton,
@@ -334,13 +353,43 @@ panelview toolbarbutton,
   transition-duration: 150ms;
 }
 
+.PanelUI-subView .subviewbutton.panel-subview-footer {
+  border-radius: 0;
+  border: none;
+}
+
+.PanelUI-subView .subviewbutton.panel-subview-footer > .toolbarbutton-text {
+  -moz-padding-start: 0;
+  text-align: center;
+}
+
+.PanelUI-subView .subviewbutton:not(.panel-subview-footer) {
+  margin: 2px 0;
+}
+
+.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text {
+  font-size: 1.1em;
+}
+
+.PanelUI-subView .subviewbutton.bookmark-item {
+  font-weight: normal;
+  color: inherit;
+}
+
+.PanelUI-subView menuseparator,
+.PanelUI-subView toolbarseparator {
+  -moz-margin-start: -5px;
+  -moz-margin-end: -4px;
+}
+
 panelview .toolbarbutton-1,
-#widget-overflow-list > toolbarbutton {
+.widget-overflow-list .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-panelview toolbarbutton@buttonStateHover@,
-#widget-overflow-list > toolbarbutton@buttonStateHover@,
+panelview .toolbarbutton-1@buttonStateHover@,
+panelview .subviewbutton@buttonStateHover@,
+.widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .customizationmode-button,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
@@ -356,9 +405,10 @@ panelview toolbarbutton@buttonStateHover@,
   border-color: hsla(210,4%,10%,.1);
 }
 
-panelview toolbarbutton@buttonStateActive@,
+panelview .toolbarbutton-1@buttonStateActive@,
+panelview .subviewbutton@buttonStateActive@,
 .customizationmode-button@buttonStateActive@,
-#widget-overflow-list > toolbarbutton@buttonStateActive@,
+.widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #BMB_bookmarksPopup > menu@buttonStateActive@,

@@ -46,14 +46,16 @@ var FeedHandler = {
       var item = document.createElement(itemNodeType);
       var baseTitle = feedInfo.title || feedInfo.href;
       var labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);
-      item.setAttribute("class", "feed-" + itemNodeType);
       item.setAttribute("label", labelStr);
       item.setAttribute("feed", feedInfo.href);
       item.setAttribute("tooltiptext", feedInfo.href);
       item.setAttribute("crop", "center");
+      let className = "feed-" + itemNodeType;
       if (isSubview) {
         item.setAttribute("tabindex", "0");
+        className += " subviewbutton";
       }
+      item.setAttribute("class", className);
       container.appendChild(item);
     }
     return true;
