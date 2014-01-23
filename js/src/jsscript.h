@@ -498,8 +498,7 @@ class ScriptSourceObject : public JSObject
 
     JSObject *element() const;
     void initElement(HandleObject element);
-
-    const Value &elementProperty() const;
+    const Value &elementAttributeName() const;
 
   private:
     static const uint32_t SOURCE_SLOT = 0;
