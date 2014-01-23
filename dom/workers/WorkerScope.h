@@ -20,14 +20,12 @@ class Function;
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
-class WorkerConsole;
 class WorkerLocation;
 class WorkerNavigator;
 
 class WorkerGlobalScope : public nsDOMEventTargetHelper,
                           public nsIGlobalObject
 {
-  nsRefPtr<WorkerConsole> mConsole;
   nsRefPtr<WorkerLocation> mLocation;
   nsRefPtr<WorkerNavigator> mNavigator;
 
@@ -59,9 +57,6 @@ public:
   {
     return nsRefPtr<WorkerGlobalScope>(this).forget();
   }
-
-  WorkerConsole*
-  Console();
 
   already_AddRefed<WorkerLocation>
   Location();

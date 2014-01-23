@@ -15,7 +15,6 @@
 #include <android/log.h>
 #endif
 
-#include "Console.h"
 #include "Location.h"
 #include "Navigator.h"
 #include "Principal.h"
@@ -76,19 +75,6 @@ JSObject*
 WorkerGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_CRASH("We should never get here!");
-}
-
-WorkerConsole*
-WorkerGlobalScope::Console()
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (!mConsole) {
-    mConsole = WorkerConsole::Create();
-    MOZ_ASSERT(mConsole);
-  }
-
-  return mConsole;
 }
 
 already_AddRefed<WorkerLocation>
