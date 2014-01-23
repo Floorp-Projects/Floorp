@@ -284,6 +284,7 @@ TabTarget.prototype = {
           this._remote.reject("Unable to attach to the tab");
           return;
         }
+        this.activeTab = aTabClient;
         this.threadActor = aResponse.threadActor;
         this._remote.resolve(null);
       });
@@ -444,11 +445,14 @@ TabTarget.prototype = {
       this._teardownListeners();
     }
 
+    let cleanupAndResolve = () => {
+      this._cleanup();
+      this._destroyer.resolve(null);
+    };
     // If this target was not remoted, the promise will be resolved before the
     // function returns.
     if (this._tab && !this._client) {
-      this._cleanup();
-      this._destroyer.resolve(null);
+      cleanupAndResolve();
     } else if (this._client) {
       // If, on the other hand, this target was remoted, the promise will be
       // resolved after the remote connection is closed.
@@ -457,15 +461,15 @@ TabTarget.prototype = {
       if (this.isLocalTab) {
         // We started with a local tab and created the client ourselves, so we
         // should close it.
-        this._client.close(() => {
-          this._cleanup();
-          this._destroyer.resolve(null);
-        });
+        this._client.close(cleanupAndResolve);
       } else {
         // The client was handed to us, so we are not responsible for closing
-        // it.
-        this._cleanup();
-        this._destroyer.resolve(null);
+        // it. We just need to detach from the tab, if already attached.
+        if (this.activeTab) {
+          this.activeTab.detach(cleanupAndResolve);
+        } else {
+          cleanupAndResolve();
+        }
       }
     }
 
@@ -481,6 +485,7 @@ TabTarget.prototype = {
     } else {
       promiseTargets.delete(this._form);
     }
+    this.activeTab = null;
     this._client = null;
     this._tab = null;
     this._form = null;

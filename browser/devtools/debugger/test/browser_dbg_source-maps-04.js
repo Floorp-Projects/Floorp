@@ -101,7 +101,7 @@ function testSetBreakpoint() {
 
 function reloadPage() {
   let loaded = waitForSourceAndCaret(gPanel, ".js", 3);
-  gDebugger.gClient.activeTab.reload();
+  gDebugger.DebuggerController._target.activeTab.reload();
   return loaded.then(() => ok(true, "Page was reloaded and execution resumed."));
 }
 

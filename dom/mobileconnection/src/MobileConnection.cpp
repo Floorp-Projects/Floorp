@@ -107,8 +107,6 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
     DebugOnly<nsresult> rv = mProvider->RegisterMobileConnectionMsg(mClientId, mListener);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Failed registering mobile connection messages with provider");
-
-    printf_stderr("MobileConnection initialized");
   }
 }
 
