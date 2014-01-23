@@ -565,3 +565,10 @@ SettingsListener.observe("layers.draw-borders", false, function(value) {
   };
 
 })();
+
+// =================== AsyncPanZoom ======================
+
+SettingsListener.observe('apz.force-enable', false, function(value) {
+  Services.prefs.setBoolPref('dom.browser_frames.useAsyncPanZoom', value);
+});
+
