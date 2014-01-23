@@ -910,17 +910,17 @@ IdentityInfoInit()
     unsigned char certFingerprint[20];
     rv = PK11_HashBuf(SEC_OID_SHA1, certFingerprint,
                       entry.cert->derCert.data, entry.cert->derCert.len);
-    MOZ_ASSERT(rv == SECSuccess);
+    PR_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
       bool same = !memcmp(certFingerprint, entry.ev_root_sha1_fingerprint, 20);
-      MOZ_ASSERT(same);
+      PR_ASSERT(same);
       if (same) {
 
         SECItem ev_oid_item;
         ev_oid_item.data = nullptr;
         ev_oid_item.len = 0;
         rv = SEC_StringToOID(nullptr, &ev_oid_item, entry.dotted_oid, 0);
-        MOZ_ASSERT(rv == SECSuccess);
+        PR_ASSERT(rv == SECSuccess);
         if (rv == SECSuccess) {
           entry.oid_tag = register_oid(&ev_oid_item, entry.oid_name);
           if (entry.oid_tag == SEC_OID_UNKNOWN) {

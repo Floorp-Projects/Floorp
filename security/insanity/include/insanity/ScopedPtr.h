@@ -71,6 +71,34 @@ protected:
   void operator=(const ScopedPtr&) /* = delete */;
 };
 
+template <typename T, void(*Destroyer)(T*)>
+inline bool
+operator==(T* a, const ScopedPtr<T, Destroyer>& b)
+{
+  return a == b.get();
+}
+
+template <typename T, void(*Destroyer)(T*)>
+inline bool
+operator==(const ScopedPtr<T, Destroyer>& a, T* b)
+{
+  return a.get() == b;
+}
+
+template <typename T, void(*Destroyer)(T*)>
+inline bool
+operator!=(T* a, const ScopedPtr<T, Destroyer>& b)
+{
+  return a != b.get();
+}
+
+template <typename T, void(*Destroyer)(T*)>
+inline bool
+operator!=(const ScopedPtr<T, Destroyer>& a, T* b)
+{
+  return a.get() != b;
+}
+
 } } // namespace insanity::pkix
 
 #endif // insanity_pkix__ScopedPtr_h
