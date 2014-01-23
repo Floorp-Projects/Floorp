@@ -58,34 +58,34 @@ MOZ_BEGIN_ENUM_CLASS(gfxImageFormat)
   Unknown
 MOZ_END_ENUM_CLASS(gfxImageFormat)
 
-    enum gfxSurfaceType {
-        gfxSurfaceTypeImage,
-        gfxSurfaceTypePDF,
-        gfxSurfaceTypePS,
-        gfxSurfaceTypeXlib,
-        gfxSurfaceTypeXcb,
-        gfxSurfaceTypeGlitz,           // unused, but needed for cairo parity
-        gfxSurfaceTypeQuartz,
-        gfxSurfaceTypeWin32,
-        gfxSurfaceTypeBeOS,
-        gfxSurfaceTypeDirectFB,        // unused, but needed for cairo parity
-        gfxSurfaceTypeSVG,
-        gfxSurfaceTypeOS2,
-        gfxSurfaceTypeWin32Printing,
-        gfxSurfaceTypeQuartzImage,
-        gfxSurfaceTypeScript,
-        gfxSurfaceTypeQPainter,
-        gfxSurfaceTypeRecording,
-        gfxSurfaceTypeVG,
-        gfxSurfaceTypeGL,
-        gfxSurfaceTypeDRM,
-        gfxSurfaceTypeTee,
-        gfxSurfaceTypeXML,
-        gfxSurfaceTypeSkia,
-        gfxSurfaceTypeSubsurface,
-        gfxSurfaceTypeD2D,
-        gfxSurfaceTypeMax
-    };
+MOZ_BEGIN_ENUM_CLASS(gfxSurfaceType)
+  Image,
+  PDF,
+  PS,
+  Xlib,
+  Xcb,
+  Glitz,           // unused, but needed for cairo parity
+  Quartz,
+  Win32,
+  BeOS,
+  DirectFB,        // unused, but needed for cairo parity
+  SVG,
+  OS2,
+  Win32Printing,
+  QuartzImage,
+  Script,
+  QPainter,
+  Recording,
+  VG,
+  GL,
+  DRM,
+  Tee,
+  XML,
+  Skia,
+  Subsurface,
+  D2D,
+  Max
+MOZ_END_ENUM_CLASS(gfxSurfaceType)
 
     enum gfxContentType {
         GFX_CONTENT_COLOR       = 0x1000,

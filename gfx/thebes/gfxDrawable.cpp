@@ -75,7 +75,7 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
     switch (currentTarget->GetType()) {
 
 #ifdef MOZ_X11
-        case gfxSurfaceTypeXlib:
+        case gfxSurfaceType::Xlib:
         {
             // See bugs 324698, 422179, and 468496.  This is a workaround for
             // XRender's RepeatPad not being implemented correctly on old X
