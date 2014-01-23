@@ -86,8 +86,8 @@
 <!ENTITY netTimeout.title "The connection has timed out">
 <!ENTITY netTimeout.longDesc "&sharedLongDesc;">
 
-<!ENTITY protocolNotFound.title "The address wasn't understood">
-<!ENTITY protocolNotFound.longDesc "
+<!ENTITY unknownProtocolFound.title "The address wasn't understood">
+<!ENTITY unknownProtocolFound.longDesc "
 <ul>
   <li>You might need to install other software to open this address.</li>
 </ul>
