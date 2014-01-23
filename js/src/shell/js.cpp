@@ -765,6 +765,87 @@ LoadScriptRelativeToScript(JSContext *cx, unsigned argc, jsval *vp)
     return LoadScript(cx, argc, vp, true);
 }
 
+// Populate |options| with the options given by |opts|'s properties. If we
+// need to convert a filename to a C string, let fileNameBytes own the
+// bytes.
+static bool
+ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
+                    JSAutoByteString &fileNameBytes)
+{
+    RootedValue v(cx);
+    RootedString s(cx);
+
+    if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
+        return false;
+    if (!v.isUndefined())
+        options.setCompileAndGo(ToBoolean(v));
+
+    if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
+        return false;
+    if (!v.isUndefined())
+        options.setNoScriptRval(ToBoolean(v));
+
+    if (!JS_GetProperty(cx, opts, "fileName", &v))
+        return false;
+    if (v.isNull()) {
+        options.setFile(nullptr);
+    } else if (!v.isUndefined()) {
+        s = ToString(cx, v);
+        if (!s)
+            return false;
+        char *fileName = fileNameBytes.encodeLatin1(cx, s);
+        if (!fileName)
+            return false;
+        options.setFile(fileName);
+    }
+
+    if (!JS_GetProperty(cx, opts, "element", &v))
+        return false;
+    if (v.isObject())
+        options.setElement(&v.toObject());
+
+    if (!JS_GetProperty(cx, opts, "elementProperty", &v))
+        return false;
+    if (!v.isUndefined()) {
+        s = ToString(cx, v);
+        if (!s)
+            return false;
+        options.setElementProperty(s);
+    }
+
+    if (!JS_GetProperty(cx, opts, "lineNumber", &v))
+        return false;
+    if (!v.isUndefined()) {
+        uint32_t u;
+        if (!ToUint32(cx, v, &u))
+            return false;
+        options.setLine(u);
+    }
+
+    if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
+        return false;
+    if (!v.isUndefined()) {
+        JSString *s = ToString(cx, v);
+        if (!s)
+            return false;
+        char *policy = JS_EncodeStringToUTF8(cx, s);
+        if (!policy)
+            return false;
+        if (strcmp(policy, "NO_SOURCE") == 0) {
+            options.setSourcePolicy(CompileOptions::NO_SOURCE);
+        } else if (strcmp(policy, "LAZY_SOURCE") == 0) {
+            options.setSourcePolicy(CompileOptions::LAZY_SOURCE);
+        } else if (strcmp(policy, "SAVE_SOURCE") == 0) {
+            options.setSourcePolicy(CompileOptions::SAVE_SOURCE);
+        } else {
+            JS_ReportError(cx, "bad 'sourcePolicy' option: '%s'", policy);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 class AutoNewContext
 {
   private:
@@ -849,21 +930,17 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    bool newContext = false;
-    bool compileAndGo = true;
-    bool noScriptRval = false;
-    const char *fileName = "@evaluate";
-    RootedObject element(cx);
-    RootedString elementProperty(cx);
+    CompileOptions options(cx);
     JSAutoByteString fileNameBytes;
+    bool newContext = false;
     RootedString displayURL(cx);
     RootedString sourceMapURL(cx);
-    unsigned lineNumber = 1;
     RootedObject global(cx, nullptr);
     bool catchTermination = false;
     bool saveFrameChain = false;
     RootedObject callerGlobal(cx, cx->global());
-    CompileOptions::SourcePolicy sourcePolicy = CompileOptions::SAVE_SOURCE;
+
+    options.setFileAndLine("@evaluate", 1);
 
     global = JS_GetGlobalForObject(cx, &args.callee());
     if (!global)
@@ -873,46 +950,13 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         RootedObject opts(cx, &args[1].toObject());
         RootedValue v(cx);
 
+        if (!ParseCompileOptions(cx, options, opts, fileNameBytes))
+            return false;
+
         if (!JS_GetProperty(cx, opts, "newContext", &v))
             return false;
         if (!v.isUndefined())
             newContext = ToBoolean(v);
-
-        if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
-            return false;
-        if (!v.isUndefined())
-            compileAndGo = ToBoolean(v);
-
-        if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
-            return false;
-        if (!v.isUndefined())
-            noScriptRval = ToBoolean(v);
-
-        if (!JS_GetProperty(cx, opts, "fileName", &v))
-            return false;
-        if (v.isNull()) {
-            fileName = nullptr;
-        } else if (!v.isUndefined()) {
-            JSString *s = ToString(cx, v);
-            if (!s)
-                return false;
-            fileName = fileNameBytes.encodeLatin1(cx, s);
-            if (!fileName)
-                return false;
-        }
-
-        if (!JS_GetProperty(cx, opts, "element", &v))
-            return false;
-        if (v.isObject())
-            element = &v.toObject();
-
-        if (!JS_GetProperty(cx, opts, "elementProperty", &v))
-            return false;
-        if (!v.isUndefined()) {
-            elementProperty = ToString(cx, v);
-            if (!elementProperty)
-                return false;
-        }
 
         if (!JS_GetProperty(cx, opts, "displayURL", &v))
             return false;
@@ -928,15 +972,6 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             sourceMapURL = ToString(cx, v);
             if (!sourceMapURL)
                 return false;
-        }
-
-        if (!JS_GetProperty(cx, opts, "lineNumber", &v))
-            return false;
-        if (!v.isUndefined()) {
-            uint32_t u;
-            if (!ToUint32(cx, v, &u))
-                return false;
-            lineNumber = u;
         }
 
         if (!JS_GetProperty(cx, opts, "global", &v))
@@ -963,28 +998,6 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (!v.isUndefined())
             saveFrameChain = ToBoolean(v);
-
-        if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
-            return false;
-        if (!v.isUndefined()) {
-            JSString *s = ToString(cx, v);
-            if (!s)
-                return false;
-            char *policy = JS_EncodeStringToUTF8(cx, s);
-            if (!policy)
-                return false;
-            if (strcmp(policy, "NO_SOURCE") == 0) {
-                sourcePolicy = CompileOptions::NO_SOURCE;
-            } else if (strcmp(policy, "LAZY_SOURCE") == 0) {
-                sourcePolicy = CompileOptions::LAZY_SOURCE;
-            } else if (strcmp(policy, "SAVE_SOURCE") == 0) {
-                sourcePolicy = CompileOptions::SAVE_SOURCE;
-            } else {
-                JS_ReportError(cx, "bad 'sourcePolicy' option passed to 'evaluate': '%s'",
-                               policy);
-                return false;
-            }
-        }
     }
 
     RootedString code(cx, args[0].toString());
@@ -1009,18 +1022,12 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         JSAutoCompartment ac(cx, global);
         RootedScript script(cx);
 
+        if (!options.wrap(cx, cx->compartment()))
+            return false;
+
         {
             JS::AutoSaveContextOptions asco(cx);
-            JS::ContextOptionsRef(cx).setNoScriptRval(noScriptRval);
-
-            CompileOptions options(cx);
-            options.setFileAndLine(fileName, lineNumber)
-                   .setElement(element)
-                   .setElementProperty(elementProperty)
-                   .setSourcePolicy(sourcePolicy)
-                   .setCompileAndGo(compileAndGo);
-            if (!options.wrap(cx, cx->compartment()))
-                return false;
+            JS::ContextOptionsRef(cx).setNoScriptRval(options.noScriptRval);
 
             script = JS::Compile(cx, global, options, codeChars, codeLength);
             if (!script)
