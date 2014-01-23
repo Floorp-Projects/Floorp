@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 /* Helper functions */
 function createDOMError(aWindow, aEvent) {
-  return new aWindow.DOMError(aEvent.target.error.name);
+  return new aWindow.DOMError(aEvent);
 }
 
 function throwInvalidArg(aWindow) {
