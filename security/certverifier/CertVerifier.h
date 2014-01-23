@@ -8,7 +8,7 @@
 #define mozilla_psm__CertVerifier_h
 
 #include "certt.h"
-#include "insanity/ScopedPtr.h"
+#include "insanity/pkixtypes.h"
 
 namespace mozilla { namespace psm {
 
@@ -28,9 +28,9 @@ public:
                        const PRTime time,
                        void* pinArg,
                        const Flags flags = 0,
-                       /*optional out*/ CERTCertList** validationChain = nullptr,
-                       /*optional out*/ SECOidTag* evOidPolicy = nullptr ,
-                       /*optional out*/ CERTVerifyLog* verifyLog = nullptr);
+      /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain = nullptr,
+      /*optional out*/ SECOidTag* evOidPolicy = nullptr ,
+      /*optional out*/ CERTVerifyLog* verifyLog = nullptr);
 
   enum implementation_config {
     classic = 0,

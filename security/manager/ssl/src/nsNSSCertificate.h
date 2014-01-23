@@ -19,7 +19,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
-#include "ScopedNSSTypes.h"
+#include "insanity/pkixtypes.h"
 #include "certt.h"
 
 class nsAutoString;
@@ -58,7 +58,7 @@ public:
   static char* defaultServerNickname(CERTCertificate* cert);
 
 private:
-  mozilla::ScopedCERTCertificate mCert;
+  insanity::pkix::ScopedCERTCertificate mCert;
   bool             mPermDelete;
   uint32_t         mCertType;
   nsresult CreateASN1Struct(nsIASN1Object** aRetVal);
@@ -84,7 +84,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTLIST
 
-  nsNSSCertList(CERTCertList* certList,
+  // certList is adopted 
+  nsNSSCertList(insanity::pkix::ScopedCERTCertList& certList,
                 const nsNSSShutDownPreventionLock& proofOfLock);
 
   static CERTCertList* DupCertList(CERTCertList* aCertList,
@@ -95,7 +96,7 @@ private:
    virtual void virtualDestroyNSSReference();
    void destructorSafeDestroyNSSReference();
 
-   mozilla::ScopedCERTCertList mCertList;
+   insanity::pkix::ScopedCERTCertList mCertList;
 
    nsNSSCertList(const nsNSSCertList&) MOZ_DELETE;
    void operator=(const nsNSSCertList&) MOZ_DELETE;
@@ -115,7 +116,7 @@ private:
    virtual void virtualDestroyNSSReference();
    void destructorSafeDestroyNSSReference();
 
-   mozilla::ScopedCERTCertList mCertList;
+   insanity::pkix::ScopedCERTCertList mCertList;
 
    nsNSSCertListEnumerator(const nsNSSCertListEnumerator&) MOZ_DELETE;
    void operator=(const nsNSSCertListEnumerator&) MOZ_DELETE;

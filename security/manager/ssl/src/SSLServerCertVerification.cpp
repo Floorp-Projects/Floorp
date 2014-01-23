@@ -94,7 +94,7 @@
 
 #include "SSLServerCertVerification.h"
 
-#include <cstring>
+#include "insanity/pkixtypes.h"
 
 #include "CertVerifier.h"
 #include "CryptoTask.h"
@@ -634,7 +634,7 @@ private:
   const RefPtr<SharedCertVerifier> mCertVerifier;
   const void* const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  const ScopedCERTCertificate mCert;
+  const insanity::pkix::ScopedCERTCertificate mCert;
   const uint32_t mProviderFlags;
   const TimeStamp mJobStartTime;
   const ScopedSECItem mStapledOCSPResponse;
@@ -659,7 +659,7 @@ PSM_SSL_PKIX_AuthCertificate(CertVerifier& certVerifier,
                              CERTCertificate* peerCert,
                              nsIInterfaceRequestor* pinarg,
                              const char* hostname,
-                             CERTCertList** validationChain,
+                             insanity::pkix::ScopedCERTCertList* validationChain,
                              SECOidTag* evOidPolicy)
 {
     SECStatus rv = certVerifier.VerifyCert(peerCert, certificateUsageSSLServer,
@@ -802,11 +802,12 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
                           reasonsForNotFetching);
   }
 
-  CERTCertList* verifyCertChain = nullptr;
+
+  insanity::pkix::ScopedCERTCertList certList;
   SECOidTag evOidPolicy;
   rv = PSM_SSL_PKIX_AuthCertificate(certVerifier, cert, infoObject,
                                     infoObject->GetHostNameRaw(),
-                                    &verifyCertChain, &evOidPolicy);
+                                    &certList, &evOidPolicy);
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
@@ -823,8 +824,6 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
       nsc = nsNSSCertificate::Create(cert);
     }
   }
-
-  ScopedCERTCertList certList(verifyCertChain);
 
   if (rv == SECSuccess && certList) {
     // We want to avoid storing any intermediate cert information when browsing
@@ -981,7 +980,7 @@ SSLServerCertVerificationJob::Run()
     // Reset the error code here so we can detect if AuthCertificate fails to
     // set the error code if/when it fails.
     PR_SetError(0, 0);
-    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
+    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert.get(),
                                    mStapledOCSPResponse, mProviderFlags);
     if (rv == SECSuccess) {
       uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
@@ -1002,8 +1001,9 @@ SSLServerCertVerificationJob::Run()
     }
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(
-          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject, mCert,
-                                  mFdForLogging, mProviderFlags, PR_Now()));
+          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject,
+                                  mCert.get(), mFdForLogging, mProviderFlags,
+                                  PR_Now()));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError();

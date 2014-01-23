@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 
+#include "insanity/pkixtypes.h"
+#include "nsNSSComponent.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
@@ -1884,9 +1885,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
 {
   PLArenaPool* arena = nullptr;
   char** caNameStrings;
-  ScopedCERTCertificate cert;
+  insanity::pkix::ScopedCERTCertificate cert;
   ScopedSECKEYPrivateKey privKey;
-  ScopedCERTCertList certList;
+  insanity::pkix::ScopedCERTCertList certList;
   CERTCertListNode* node;
   ScopedCERTCertNicknames nicknames;
   char* extracted = nullptr;
@@ -1931,7 +1932,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
     }
 
     // filter the list to those issued by CAs supported by the server
-    mRV = CERT_FilterCertListByCANames(certList, mCANames->nnames,
+    mRV = CERT_FilterCertListByCANames(certList.get(), mCANames->nnames,
                                        caNameStrings, certUsageSSLClient);
     if (mRV != SECSuccess) {
       goto noCert;
@@ -1974,7 +1975,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
     if (!cert && low_prio_nonrep_cert) {
       cert = low_prio_nonrep_cert.forget();
-      privKey = PK11_FindKeyByAnyCert(cert, wincx);
+      privKey = PK11_FindKeyByAnyCert(cert.get(), wincx);
     }
 
     if (!cert) {
@@ -2046,9 +2047,10 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
       if (mCANames->nnames != 0) {
         // filter the list to those issued by CAs supported by the server
-        mRV = CERT_FilterCertListByCANames(certList, mCANames->nnames,
-          caNameStrings,
-          certUsageSSLClient);
+        mRV = CERT_FilterCertListByCANames(certList.get(),
+                                           mCANames->nnames,
+                                           caNameStrings,
+                                           certUsageSSLClient);
         if (mRV != SECSuccess) {
           goto loser;
         }
@@ -2060,16 +2062,16 @@ ClientAuthDataRunnable::RunOnTargetThread()
       }
 
       // filter it further for hostname restriction
-      node = CERT_LIST_HEAD(certList);
-      while (!CERT_LIST_END(node, certList)) {
+      node = CERT_LIST_HEAD(certList.get());
+      while (!CERT_LIST_END(node, certList.get())) {
         ++NumberOfCerts;
         node = CERT_LIST_NEXT(node);
       }
-      if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+      if (CERT_LIST_END(CERT_LIST_HEAD(certList.get()), certList.get())) {
         goto noCert;
       }
 
-      nicknames = getNSSCertNicknamesFromCertList(certList);
+      nicknames = getNSSCertNicknamesFromCertList(certList.get());
 
       if (!nicknames) {
         goto loser;
@@ -2205,7 +2207,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
     }
 
     // go get the private key
-    privKey = PK11_FindKeyByAnyCert(cert, wincx);
+    privKey = PK11_FindKeyByAnyCert(cert.get(), wincx);
     if (!privKey) {
       keyError = PR_GetError();
       if (keyError == SEC_ERROR_BAD_PASSWORD) {
@@ -2233,7 +2235,7 @@ done:
     PORT_FreeArena(arena, false);
   }
 
-  *mPRetCert = cert.forget();
+  *mPRetCert = cert.release();
   *mPRetKey = privKey.forget();
 
   if (mRV == SECFailure) {
