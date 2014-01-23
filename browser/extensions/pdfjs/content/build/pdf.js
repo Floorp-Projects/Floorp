@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.759';
-PDFJS.build = 'd3b5aa3';
+PDFJS.version = '0.8.934';
+PDFJS.build = 'c80df60';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -43,16 +43,14 @@ PDFJS.build = 'd3b5aa3';
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals Cmd, ColorSpace, Dict, MozBlobBuilder, Name, PDFJS, Ref, URL */
+/* globals Cmd, ColorSpace, Dict, MozBlobBuilder, Name, PDFJS, Ref, URL,
+           Promise */
 
 'use strict';
 
 var globalScope = (typeof window === 'undefined') ? this : window;
 
 var isWorker = (typeof window == 'undefined');
-
-var ERRORS = 0, WARNINGS = 1, INFOS = 5;
-var verbosity = WARNINGS;
 
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 
@@ -77,6 +75,12 @@ if (!globalScope.PDFJS) {
 }
 
 globalScope.PDFJS.pdfBug = false;
+
+PDFJS.VERBOSITY_LEVELS = {
+  errors: 0,
+  warnings: 1,
+  infos: 5
+};
 
 // All the possible operations for an operator list.
 var OPS = PDFJS.OPS = {
@@ -171,32 +175,19 @@ var OPS = PDFJS.OPS = {
   paintInlineImageXObjectGroup: 87
 };
 
-// Use only for debugging purposes. This should not be used in any code that is
-// in mozilla master.
-var log = (function() {
-  if ('console' in globalScope && 'log' in globalScope['console']) {
-    return globalScope['console']['log'].bind(globalScope['console']);
-  } else {
-    return function nop() {
-    };
-  }
-})();
-
-// A notice for devs that will not trigger the fallback UI.  These are good
-// for things that are helpful to devs, such as warning that Workers were
-// disabled, which is important to devs but not end users.
+// A notice for devs. These are good for things that are helpful to devs, such
+// as warning that Workers were disabled, which is important to devs but not
+// end users.
 function info(msg) {
-  if (verbosity >= INFOS) {
-    log('Info: ' + msg);
-    PDFJS.LogManager.notify('info', msg);
+  if (PDFJS.verbosity >= PDFJS.VERBOSITY_LEVELS.infos) {
+    console.log('Info: ' + msg);
   }
 }
 
-// Non-fatal warnings that should trigger the fallback UI.
+// Non-fatal warnings.
 function warn(msg) {
-  if (verbosity >= WARNINGS) {
-    log('Warning: ' + msg);
-    PDFJS.LogManager.notify('warn', msg);
+  if (PDFJS.verbosity >= PDFJS.VERBOSITY_LEVELS.warnings) {
+    console.log('Warning: ' + msg);
   }
 }
 
@@ -207,20 +198,15 @@ function error(msg) {
   if (arguments.length > 1) {
     var logArguments = ['Error:'];
     logArguments.push.apply(logArguments, arguments);
-    log.apply(null, logArguments);
+    console.log.apply(console, logArguments);
     // Join the arguments into a single string for the lines below.
     msg = [].join.call(arguments, ' ');
   } else {
-    log('Error: ' + msg);
+    console.log('Error: ' + msg);
   }
-  log(backtrace());
-  PDFJS.LogManager.notify('error', msg);
+  console.log(backtrace());
+  UnsupportedManager.notify(UNSUPPORTED_FEATURES.unknown);
   throw new Error(msg);
-}
-
-// Missing features that should trigger the fallback UI.
-function TODO(what) {
-  warn('TODO: ' + what);
 }
 
 function backtrace() {
@@ -236,12 +222,37 @@ function assert(cond, msg) {
     error(msg);
 }
 
+var UNSUPPORTED_FEATURES = PDFJS.UNSUPPORTED_FEATURES = {
+  unknown: 'unknown',
+  forms: 'forms',
+  javaScript: 'javaScript',
+  smask: 'smask',
+  shadingPattern: 'shadingPattern',
+  font: 'font'
+};
+
+var UnsupportedManager = PDFJS.UnsupportedManager =
+  (function UnsupportedManagerClosure() {
+  var listeners = [];
+  return {
+    listen: function (cb) {
+      listeners.push(cb);
+    },
+    notify: function (featureId) {
+      warn('Unsupported feature "' + featureId + '"');
+      for (var i = 0, ii = listeners.length; i < ii; i++) {
+        listeners[i](featureId);
+      }
+    }
+  };
+})();
+
 // Combines two URLs. The baseUrl shall be absolute URL. If the url is an
 // absolute URL, it will be returned as is.
 function combineUrl(baseUrl, url) {
   if (!url)
     return baseUrl;
-  if (url.indexOf(':') >= 0)
+  if (/^[a-z][a-z0-9+\-.]*:/i.test(url))
     return url;
   if (url.charAt(0) == '/') {
     // absolute path
@@ -265,11 +276,13 @@ function isValidUrl(url, allowRelative) {
   if (!url) {
     return false;
   }
-  var colon = url.indexOf(':');
-  if (colon < 0) {
+  // RFC 3986 (http://tools.ietf.org/html/rfc3986#section-3.1)
+  // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+  var protocol = /^[a-z][a-z0-9+\-.]*(?=:)/i.exec(url);
+  if (!protocol) {
     return allowRelative;
   }
-  var protocol = url.substr(0, colon);
+  protocol = protocol[0].toLowerCase();
   switch (protocol) {
     case 'http':
     case 'https':
@@ -288,22 +301,6 @@ function assertWellFormed(cond, msg) {
   if (!cond)
     error(msg);
 }
-
-var LogManager = PDFJS.LogManager = (function LogManagerClosure() {
-  var loggers = [];
-  return {
-    addLogger: function logManager_addLogger(logger) {
-      loggers.push(logger);
-    },
-    notify: function(type, message) {
-      for (var i = 0, ii = loggers.length; i < ii; i++) {
-        var logger = loggers[i];
-        if (logger[type])
-          logger[type](message);
-      }
-    }
-  };
-})();
 
 function shadow(obj, prop, value) {
   Object.defineProperty(obj, prop, { value: value,
@@ -834,6 +831,24 @@ function isPDFFunction(v) {
 }
 
 /**
+ * Legacy support for PDFJS Promise implementation.
+ * TODO remove eventually
+ */
+var LegacyPromise = PDFJS.LegacyPromise = (function LegacyPromiseClosure() {
+  return function LegacyPromise() {
+    var resolve, reject;
+    var promise = new Promise(function (resolve_, reject_) {
+      resolve = resolve_;
+      reject = reject_;
+    });
+    promise.resolve = resolve;
+    promise.reject = reject;
+    return promise;
+  };
+})();
+
+/**
+ * Polyfill for Promises:
  * The following promise implementation tries to generally implment the
  * Promise/A+ spec. Some notable differences from other promise libaries are:
  * - There currently isn't a seperate deferred and promise object.
@@ -842,229 +857,40 @@ function isPDFFunction(v) {
  * Based off of the work in:
  * https://bugzilla.mozilla.org/show_bug.cgi?id=810490
  */
-var Promise = PDFJS.Promise = (function PromiseClosure() {
-  var STATUS_PENDING = 0;
-  var STATUS_RESOLVED = 1;
-  var STATUS_REJECTED = 2;
-
-  // In an attempt to avoid silent exceptions, unhandled rejections are
-  // tracked and if they aren't handled in a certain amount of time an
-  // error is logged.
-  var REJECTION_TIMEOUT = 500;
-
-  var HandlerManager = {
-    handlers: [],
-    running: false,
-    unhandledRejections: [],
-    pendingRejectionCheck: false,
-
-    scheduleHandlers: function scheduleHandlers(promise) {
-      if (promise._status == STATUS_PENDING) {
-        return;
-      }
-
-      this.handlers = this.handlers.concat(promise._handlers);
-      promise._handlers = [];
-
-      if (this.running) {
-        return;
-      }
-      this.running = true;
-
-      setTimeout(this.runHandlers.bind(this), 0);
-    },
-
-    runHandlers: function runHandlers() {
-      while (this.handlers.length > 0) {
-        var handler = this.handlers.shift();
-
-        var nextStatus = handler.thisPromise._status;
-        var nextValue = handler.thisPromise._value;
-
-        try {
-          if (nextStatus === STATUS_RESOLVED) {
-            if (typeof(handler.onResolve) == 'function') {
-              nextValue = handler.onResolve(nextValue);
+(function PromiseClosure() {
+  if (globalScope.Promise) {
+    // Promises existing in the DOM/Worker, checking presence of all/resolve
+    if (typeof globalScope.Promise.all !== 'function') {
+      globalScope.Promise.all = function (iterable) {
+        var count = 0, results = [], resolve, reject;
+        var promise = new globalScope.Promise(function (resolve_, reject_) {
+          resolve = resolve_;
+          reject = reject_;
+        });
+        iterable.forEach(function (p, i) {
+          count++;
+          p.then(function (result) {
+            results[i] = result;
+            count--;
+            if (count === 0) {
+              resolve(results);
             }
-          } else if (typeof(handler.onReject) === 'function') {
-              nextValue = handler.onReject(nextValue);
-              nextStatus = STATUS_RESOLVED;
-
-              if (handler.thisPromise._unhandledRejection) {
-                this.removeUnhandeledRejection(handler.thisPromise);
-              }
-          }
-        } catch (ex) {
-          nextStatus = STATUS_REJECTED;
-          nextValue = ex;
+          }, reject);
+        });
+        if (count === 0) {
+          resolve(results);
         }
-
-        handler.nextPromise._updateStatus(nextStatus, nextValue);
-      }
-
-      this.running = false;
-    },
-
-    addUnhandledRejection: function addUnhandledRejection(promise) {
-      this.unhandledRejections.push({
-        promise: promise,
-        time: Date.now()
-      });
-      this.scheduleRejectionCheck();
-    },
-
-    removeUnhandeledRejection: function removeUnhandeledRejection(promise) {
-      promise._unhandledRejection = false;
-      for (var i = 0; i < this.unhandledRejections.length; i++) {
-        if (this.unhandledRejections[i].promise === promise) {
-          this.unhandledRejections.splice(i);
-          i--;
-        }
-      }
-    },
-
-    scheduleRejectionCheck: function scheduleRejectionCheck() {
-      if (this.pendingRejectionCheck) {
-        return;
-      }
-      this.pendingRejectionCheck = true;
-      setTimeout(function rejectionCheck() {
-        this.pendingRejectionCheck = false;
-        var now = Date.now();
-        for (var i = 0; i < this.unhandledRejections.length; i++) {
-          if (now - this.unhandledRejections[i].time > REJECTION_TIMEOUT) {
-            var unhandled = this.unhandledRejections[i].promise._value;
-            var msg = 'Unhandled rejection: ' + unhandled;
-            if (unhandled.stack) {
-              msg += '\n' + unhandled.stack;
-            }
-            warn(msg);
-            this.unhandledRejections.splice(i);
-            i--;
-          }
-        }
-        if (this.unhandledRejections.length) {
-          this.scheduleRejectionCheck();
-        }
-      }.bind(this), REJECTION_TIMEOUT);
+        return promise;
+      };
     }
-  };
-
-  function Promise() {
-    this._status = STATUS_PENDING;
-    this._handlers = [];
+    if (typeof globalScope.Promise.resolve !== 'function') {
+      globalScope.Promise.resolve = function (x) {
+        return new globalScope.Promise(function (resolve) { resolve(x); });
+      };
+    }
+    return;
   }
-  /**
-   * Builds a promise that is resolved when all the passed in promises are
-   * resolved.
-   * @param {array} array of data and/or promises to wait for.
-   * @return {Promise} New dependant promise.
-   */
-  Promise.all = function Promise_all(promises) {
-    var deferred = new Promise();
-    var unresolved = promises.length;
-    var results = [];
-    if (unresolved === 0) {
-      deferred.resolve(results);
-      return deferred;
-    }
-    function reject(reason) {
-      if (deferred._status === STATUS_REJECTED) {
-        return;
-      }
-      results = [];
-      deferred.reject(reason);
-    }
-    for (var i = 0, ii = promises.length; i < ii; ++i) {
-      var promise = promises[i];
-      var resolve = (function(i) {
-        return function(value) {
-          if (deferred._status === STATUS_REJECTED) {
-            return;
-          }
-          results[i] = value;
-          unresolved--;
-          if (unresolved === 0)
-            deferred.resolve(results);
-        };
-      })(i);
-      if (Promise.isPromise(promise)) {
-        promise.then(resolve, reject);
-      } else {
-        resolve(promise);
-      }
-    }
-    return deferred;
-  };
-
-  /**
-   * Checks if the value is likely a promise (has a 'then' function).
-   * @return {boolean} true if x is thenable
-   */
-  Promise.isPromise = function Promise_isPromise(value) {
-    return value && typeof value.then === 'function';
-  };
-
-  Promise.prototype = {
-    _status: null,
-    _value: null,
-    _handlers: null,
-    _unhandledRejection: null,
-
-    _updateStatus: function Promise__updateStatus(status, value) {
-      if (this._status === STATUS_RESOLVED ||
-          this._status === STATUS_REJECTED) {
-        return;
-      }
-
-      if (status == STATUS_RESOLVED &&
-          Promise.isPromise(value)) {
-        value.then(this._updateStatus.bind(this, STATUS_RESOLVED),
-                   this._updateStatus.bind(this, STATUS_REJECTED));
-        return;
-      }
-
-      this._status = status;
-      this._value = value;
-
-      if (status === STATUS_REJECTED && this._handlers.length === 0) {
-        this._unhandledRejection = true;
-        HandlerManager.addUnhandledRejection(this);
-      }
-
-      HandlerManager.scheduleHandlers(this);
-    },
-
-    get isResolved() {
-      return this._status === STATUS_RESOLVED;
-    },
-
-    get isRejected() {
-      return this._status === STATUS_REJECTED;
-    },
-
-    resolve: function Promise_resolve(value) {
-      this._updateStatus(STATUS_RESOLVED, value);
-    },
-
-    reject: function Promise_reject(reason) {
-      this._updateStatus(STATUS_REJECTED, reason);
-    },
-
-    then: function Promise_then(onResolve, onReject) {
-      var nextPromise = new Promise();
-      this._handlers.push({
-        thisPromise: this,
-        onResolve: onResolve,
-        onReject: onReject,
-        nextPromise: nextPromise
-      });
-      HandlerManager.scheduleHandlers(this);
-      return nextPromise;
-    }
-  };
-
-  return Promise;
+  throw new Error('DOM Promise is not present');
 })();
 
 var StatTimer = (function StatTimerClosure() {
@@ -1130,18 +956,17 @@ PDFJS.createBlob = function createBlob(data, contentType) {
 };
 
 PDFJS.createObjectURL = (function createObjectURLClosure() {
-  if (typeof URL !== 'undefined' && URL.createObjectURL) {
-    return function createObjectURL(data, contentType) {
-      var blob = PDFJS.createBlob(data, contentType);
-      return URL.createObjectURL(blob);
-    };
-  }
-
   // Blob/createObjectURL is not available, falling back to data schema.
   var digits =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 
   return function createObjectURL(data, contentType) {
+    if (!PDFJS.disableCreateObjectURL &&
+        typeof URL !== 'undefined' && URL.createObjectURL) {
+      var blob = PDFJS.createBlob(data, contentType);
+      return URL.createObjectURL(blob);
+    }
+
     var buffer = 'data:' + contentType + ';base64,';
     for (var i = 0, ii = data.length; i < ii; i += 3) {
       var b1 = data[i] & 0xFF;
@@ -1165,21 +990,13 @@ function MessageHandler(name, comObj) {
   var ah = this.actionHandler = {};
 
   ah['console_log'] = [function ahConsoleLog(data) {
-    log.apply(null, data);
+    console.log.apply(console, data);
   }];
-  // If there's no console available, console_error in the
-  // action handler will do nothing.
-  if ('console' in globalScope) {
-    ah['console_error'] = [function ahConsoleError(data) {
-      globalScope['console'].error.apply(null, data);
-    }];
-  } else {
-    ah['console_error'] = [function ahConsoleError(data) {
-      log.apply(null, data);
-    }];
-  }
-  ah['_warn'] = [function ah_Warn(data) {
-    warn(data);
+  ah['console_error'] = [function ahConsoleError(data) {
+    console.error.apply(console, data);
+  }];
+  ah['_unsupported_feature'] = [function ah_unsupportedFeature(data) {
+    UnsupportedManager.notify(data);
   }];
 
   comObj.onmessage = function messageHandlerComObjOnMessage(event) {
@@ -1196,7 +1013,12 @@ function MessageHandler(name, comObj) {
     } else if (data.action in ah) {
       var action = ah[data.action];
       if (data.callbackId) {
-        var promise = new Promise();
+        var deferred = {};
+        var promise = new Promise(function (resolve, reject) {
+          deferred.resolve = resolve;
+          deferred.reject = reject;
+        });
+        deferred.promise = promise;
         promise.then(function(resolvedData) {
           comObj.postMessage({
             isReply: true,
@@ -1204,7 +1026,7 @@ function MessageHandler(name, comObj) {
             data: resolvedData
           });
         });
-        action[0].call(action[1], data.data, promise);
+        action[0].call(action[1], data.data, deferred);
       } else {
         action[0].call(action[1], data.data);
       }
@@ -1283,17 +1105,22 @@ var ColorSpace = (function ColorSpaceClosure() {
      * The colors are located in the src array starting from the srcOffset.
      * The result is placed into the dest array starting from the destOffset.
      * The src array items shall be in [0,2^bits) range, the dest array items
-     * will be in [0,255] range.
+     * will be in [0,255] range. alpha01 indicates how many alpha components
+     * there are in the dest array; it will be either 0 (RGB array) or 1 (RGBA
+     * array).
      */
     getRgbBuffer: function ColorSpace_getRgbBuffer(src, srcOffset, count,
-                                                   dest, destOffset, bits) {
+                                                   dest, destOffset, bits,
+                                                   alpha01) {
       error('Should not call ColorSpace.getRgbBuffer');
     },
     /**
-     * Determines amount of the bytes is required to store the reslut of the
-     * conversion that done by the getRgbBuffer method.
+     * Determines the number of bytes required to store the result of the
+     * conversion done by the getRgbBuffer method. As in getRgbBuffer,
+     * |alpha01| is either 0 (RGB output) or 1 (RGBA output).
      */
-    getOutputLength: function ColorSpace_getOutputLength(inputLength) {
+    getOutputLength: function ColorSpace_getOutputLength(inputLength,
+                                                         alpha01) {
       error('Should not call ColorSpace.getOutputLength');
     },
     /**
@@ -1303,45 +1130,84 @@ var ColorSpace = (function ColorSpaceClosure() {
       return false;
     },
     /**
-     * Creates the output buffer and converts the specified number of the color
-     * values to the RGB colors, similar to the getRgbBuffer.
+     * Fills in the RGB colors in an RGBA buffer.
      */
-    createRgbBuffer: function ColorSpace_createRgbBuffer(src, srcOffset,
-                                                         count, bits) {
-      if (this.isPassthrough(bits)) {
-        return src.subarray(srcOffset);
-      }
-      var dest = new Uint8Array(count * 3);
-      var numComponentColors = 1 << bits;
-      // Optimization: create a color map when there is just one component and
-      // we are converting more colors than the size of the color map. We
-      // don't build the map if the colorspace is gray or rgb since those
-      // methods are faster than building a map. This mainly offers big speed
-      // ups for indexed and alternate colorspaces.
-      if (this.numComps === 1 && count > numComponentColors &&
+    fillRgb: function ColorSpace_fillRgb(rgbaBuf, originalWidth,
+                                         originalHeight, width, height,
+                                         actualHeight, bpc, comps) {
+      var count = originalWidth * originalHeight;
+      var rgbBuf = null;
+      var numComponentColors = 1 << bpc;
+      var needsResizing = originalHeight != height || originalWidth != width;
+
+      if (this.isPassthrough(bpc)) {
+        rgbBuf = comps;
+
+      } else if (this.numComps === 1 && count > numComponentColors &&
           this.name !== 'DeviceGray' && this.name !== 'DeviceRGB') {
+        // Optimization: create a color map when there is just one component and
+        // we are converting more colors than the size of the color map. We
+        // don't build the map if the colorspace is gray or rgb since those
+        // methods are faster than building a map. This mainly offers big speed
+        // ups for indexed and alternate colorspaces.
+        //
         // TODO it may be worth while to cache the color map. While running
         // testing I never hit a cache so I will leave that out for now (perhaps
         // we are reparsing colorspaces too much?).
-        var allColors = bits <= 8 ? new Uint8Array(numComponentColors) :
-                                    new Uint16Array(numComponentColors);
+        var allColors = bpc <= 8 ? new Uint8Array(numComponentColors) :
+                                   new Uint16Array(numComponentColors);
         for (var i = 0; i < numComponentColors; i++) {
           allColors[i] = i;
         }
         var colorMap = new Uint8Array(numComponentColors * 3);
-        this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bits);
+        this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bpc,
+                          /* alpha01 = */ 0);
 
-        var destOffset = 0;
-        for (var i = 0; i < count; ++i) {
-          var key = src[srcOffset++] * 3;
-          dest[destOffset++] = colorMap[key];
-          dest[destOffset++] = colorMap[key + 1];
-          dest[destOffset++] = colorMap[key + 2];
+        if (!needsResizing) {
+          // Fill in the RGB values directly into |rgbaBuf|.
+          var rgbaPos = 0;
+          for (var i = 0; i < count; ++i) {
+            var key = comps[i] * 3;
+            rgbaBuf[rgbaPos++] = colorMap[key];
+            rgbaBuf[rgbaPos++] = colorMap[key + 1];
+            rgbaBuf[rgbaPos++] = colorMap[key + 2];
+            rgbaPos++;
+          }
+        } else {
+          rgbBuf = new Uint8Array(count * 3);
+          var rgbPos = 0;
+          for (var i = 0; i < count; ++i) {
+            var key = comps[i] * 3;
+            rgbBuf[rgbPos++] = colorMap[key];
+            rgbBuf[rgbPos++] = colorMap[key + 1];
+            rgbBuf[rgbPos++] = colorMap[key + 2];
+          }
         }
-        return dest;
+      } else {
+        if (!needsResizing) {
+          // Fill in the RGB values directly into |rgbaBuf|.
+          this.getRgbBuffer(comps, 0, width * actualHeight, rgbaBuf, 0, bpc,
+                            /* alpha01 = */ 1);
+        } else {
+          rgbBuf = new Uint8Array(count * 3);
+          this.getRgbBuffer(comps, 0, count, rgbBuf, 0, bpc,
+                            /* alpha01 = */ 0);
+        }
       }
-      this.getRgbBuffer(src, srcOffset, count, dest, 0, bits);
-      return dest;
+
+      if (rgbBuf) {
+        if (needsResizing) {
+          rgbBuf = PDFImage.resize(rgbBuf, bpc, 3, originalWidth,
+                                   originalHeight, width, height);
+        }
+        var rgbPos = 0;
+        var actualLength = width * actualHeight * 4;
+        for (var i = 0; i < actualLength; i += 4) {
+          rgbaBuf[i] = rgbBuf[rgbPos++];
+          rgbaBuf[i + 1] = rgbBuf[rgbPos++];
+          rgbaBuf[i + 2] = rgbBuf[rgbPos++];
+        }
+      }
     },
     /**
      * True if the colorspace has components in the default range of [0, 1].
@@ -1573,13 +1439,15 @@ var AlternateCS = (function AlternateCSClosure() {
       this.base.getRgbItem(tinted, 0, dest, destOffset);
     },
     getRgbBuffer: function AlternateCS_getRgbBuffer(src, srcOffset, count,
-                                                    dest, destOffset, bits) {
+                                                    dest, destOffset, bits,
+                                                    alpha01) {
       var tintFn = this.tintFn;
       var base = this.base;
       var scale = 1 / ((1 << bits) - 1);
       var baseNumComps = base.numComps;
       var usesZeroToOneRange = base.usesZeroToOneRange;
-      var isPassthrough = base.isPassthrough(8) || !usesZeroToOneRange;
+      var isPassthrough = (base.isPassthrough(8) || !usesZeroToOneRange) &&
+                          alpha01 === 0;
       var pos = isPassthrough ? destOffset : 0;
       var baseBuf = isPassthrough ? dest : new Uint8Array(baseNumComps * count);
       var numComps = this.numComps;
@@ -1600,15 +1468,17 @@ var AlternateCS = (function AlternateCSClosure() {
         }
       }
       if (!isPassthrough) {
-        base.getRgbBuffer(baseBuf, 0, count, dest, destOffset, 8);
+        base.getRgbBuffer(baseBuf, 0, count, dest, destOffset, 8, alpha01);
       }
     },
-    getOutputLength: function AlternateCS_getOutputLength(inputLength) {
+    getOutputLength: function AlternateCS_getOutputLength(inputLength,
+                                                          alpha01) {
       return this.base.getOutputLength(inputLength *
-                                       this.base.numComps / this.numComps);
+                                       this.base.numComps / this.numComps,
+                                       alpha01);
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function AlternateCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -1669,23 +1539,25 @@ var IndexedCS = (function IndexedCSClosure() {
       this.base.getRgbItem(this.lookup, start, dest, destOffset);
     },
     getRgbBuffer: function IndexedCS_getRgbBuffer(src, srcOffset, count,
-                                                  dest, destOffset) {
+                                                  dest, destOffset, bits,
+                                                  alpha01) {
       var base = this.base;
       var numComps = base.numComps;
-      var outputDelta = base.getOutputLength(numComps);
+      var outputDelta = base.getOutputLength(numComps, alpha01);
       var lookup = this.lookup;
 
       for (var i = 0; i < count; ++i) {
         var lookupPos = src[srcOffset++] * numComps;
-        base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8);
+        base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8, alpha01);
         destOffset += outputDelta;
       }
     },
-    getOutputLength: function IndexedCS_getOutputLength(inputLength) {
-      return this.base.getOutputLength(inputLength * this.base.numComps);
+    getOutputLength: function IndexedCS_getOutputLength(inputLength, alpha01) {
+      return this.base.getOutputLength(inputLength * this.base.numComps,
+                                       alpha01);
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function IndexedCS_isDefaultDecode(decodeMap) {
       // indexed color maps shouldn't be changed
       return true;
@@ -1715,7 +1587,8 @@ var DeviceGrayCS = (function DeviceGrayCSClosure() {
       dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
     },
     getRgbBuffer: function DeviceGrayCS_getRgbBuffer(src, srcOffset, count,
-                                                     dest, destOffset, bits) {
+                                                     dest, destOffset, bits,
+                                                     alpha01) {
       var scale = 255 / ((1 << bits) - 1);
       var j = srcOffset, q = destOffset;
       for (var i = 0; i < count; ++i) {
@@ -1723,13 +1596,15 @@ var DeviceGrayCS = (function DeviceGrayCSClosure() {
         dest[q++] = c;
         dest[q++] = c;
         dest[q++] = c;
+        q += alpha01;
       }
     },
-    getOutputLength: function DeviceGrayCS_getOutputLength(inputLength) {
-      return inputLength * 3;
+    getOutputLength: function DeviceGrayCS_getOutputLength(inputLength,
+                                                           alpha01) {
+      return inputLength * (3 + alpha01);
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function DeviceGrayCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -1760,25 +1635,29 @@ var DeviceRgbCS = (function DeviceRgbCSClosure() {
       dest[destOffset + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
     },
     getRgbBuffer: function DeviceRgbCS_getRgbBuffer(src, srcOffset, count,
-                                                    dest, destOffset, bits) {
-      var length = count * 3;
-      if (bits == 8) {
-        dest.set(src.subarray(srcOffset, srcOffset + length), destOffset);
+                                                    dest, destOffset, bits,
+                                                    alpha01) {
+      if (bits === 8 && alpha01 === 0) {
+        dest.set(src.subarray(srcOffset, srcOffset + count * 3), destOffset);
         return;
       }
       var scale = 255 / ((1 << bits) - 1);
       var j = srcOffset, q = destOffset;
-      for (var i = 0; i < length; ++i) {
+      for (var i = 0; i < count; ++i) {
         dest[q++] = (scale * src[j++]) | 0;
+        dest[q++] = (scale * src[j++]) | 0;
+        dest[q++] = (scale * src[j++]) | 0;
+        q += alpha01;
       }
     },
-    getOutputLength: function DeviceRgbCS_getOutputLength(inputLength) {
-      return inputLength;
+    getOutputLength: function DeviceRgbCS_getOutputLength(inputLength,
+                                                          alpha01) {
+      return (inputLength * (3 + alpha01) / 3) | 0;
     },
     isPassthrough: function DeviceRgbCS_isPassthrough(bits) {
       return bits == 8;
     },
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function DeviceRgbCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -1848,19 +1727,21 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
       convertToRgb(src, srcOffset, 1, dest, destOffset);
     },
     getRgbBuffer: function DeviceCmykCS_getRgbBuffer(src, srcOffset, count,
-                                                     dest, destOffset, bits) {
+                                                     dest, destOffset, bits,
+                                                     alpha01) {
       var scale = 1 / ((1 << bits) - 1);
       for (var i = 0; i < count; i++) {
         convertToRgb(src, srcOffset, scale, dest, destOffset);
         srcOffset += 4;
-        destOffset += 3;
+        destOffset += 3 + alpha01;
       }
     },
-    getOutputLength: function DeviceCmykCS_getOutputLength(inputLength) {
-      return (inputLength >> 2) * 3;
+    getOutputLength: function DeviceCmykCS_getOutputLength(inputLength,
+                                                           alpha01) {
+      return (inputLength / 4 * (3 + alpha01)) | 0;
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function DeviceCmykCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -1876,8 +1757,8 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
 var CalGrayCS = (function CalGrayCSClosure() {
   function CalGrayCS(whitePoint, blackPoint, gamma) {
     this.name = 'CalGray';
-    this.numComps = 3;
-    this.defaultColor = new Float32Array([0, 0, 0]);
+    this.numComps = 1;
+    this.defaultColor = new Float32Array([0]);
 
     if (!whitePoint) {
       error('WhitePoint missing - required for color space CalGray');
@@ -1908,7 +1789,7 @@ var CalGrayCS = (function CalGrayCSClosure() {
     }
 
     if (this.XB !== 0 || this.YB !== 0 || this.ZB !== 0) {
-      TODO(this.name + ', BlackPoint: XB: ' + this.XB + ', YB: ' + this.YB +
+      warn(this.name + ', BlackPoint: XB: ' + this.XB + ', YB: ' + this.YB +
            ', ZB: ' + this.ZB + ', only default values are supported.');
     }
 
@@ -1919,6 +1800,33 @@ var CalGrayCS = (function CalGrayCSClosure() {
     }
   }
 
+  function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
+    // A represents a gray component of a calibrated gray space.
+    // A <---> AG in the spec
+    var A = src[srcOffset] * scale;
+    var AG = Math.pow(A, cs.G);
+
+    // Computes intermediate variables M, L, N as per spec.
+    // Except if other than default BlackPoint values are used.
+    var M = cs.XW * AG;
+    var L = cs.YW * AG;
+    var N = cs.ZW * AG;
+
+    // Decode XYZ, as per spec.
+    var X = M;
+    var Y = L;
+    var Z = N;
+
+    // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html, Ch 4.
+    // This yields values in range [0, 100].
+    var Lstar = Math.max(116 * Math.pow(Y, 1 / 3) - 16, 0);
+
+    // Convert values to rgb range [0, 255].
+    dest[destOffset] = Lstar * 255 / 100;
+    dest[destOffset + 1] = Lstar * 255 / 100;
+    dest[destOffset + 2] = Lstar * 255 / 100;
+  }
+
   CalGrayCS.prototype = {
     getRgb: function CalGrayCS_getRgb(src, srcOffset) {
       var rgb = new Uint8Array(3);
@@ -1927,48 +1835,24 @@ var CalGrayCS = (function CalGrayCSClosure() {
     },
     getRgbItem: function CalGrayCS_getRgbItem(src, srcOffset,
                                               dest, destOffset) {
-      // A represents a gray component of a calibrated gray space.
-      // A <---> AG in the spec
-      var A = src[srcOffset];
-      var AG = Math.pow(A, this.G);
-
-      // Computes intermediate variables M, L, N as per spec.
-      // Except if other than default BlackPoint values are used.
-      var M = this.XW * AG;
-      var L = this.YW * AG;
-      var N = this.ZW * AG;
-
-      // Decode XYZ, as per spec.
-      var X = M;
-      var Y = L;
-      var Z = N;
-
-      // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html, Ch 4.
-      // This yields values in range [0, 100].
-      var Lstar = Math.max(116 * Math.pow(Y, 1 / 3) - 16, 0);
-
-      // Convert values to rgb range [0, 255].
-      dest[destOffset] = Lstar * 255 / 100;
-      dest[destOffset + 1] = Lstar * 255 / 100;
-      dest[destOffset + 2] = Lstar * 255 / 100;
+      convertToRgb(this, src, srcOffset, dest, destOffset, 1);
     },
     getRgbBuffer: function CalGrayCS_getRgbBuffer(src, srcOffset, count,
-                                                  dest, destOffset, bits) {
-      // TODO: This part is copied from DeviceGray. Make this utility function.
-      var scale = 255 / ((1 << bits) - 1);
-      var j = srcOffset, q = destOffset;
+                                                  dest, destOffset, bits,
+                                                  alpha01) {
+      var scale = 1 / ((1 << bits) - 1);
+
       for (var i = 0; i < count; ++i) {
-        var c = (scale * src[j++]) | 0;
-        dest[q++] = c;
-        dest[q++] = c;
-        dest[q++] = c;
+        convertToRgb(this, src, srcOffset, dest, destOffset, scale);
+        srcOffset += 1;
+        destOffset += 3 + alpha01;
       }
     },
-    getOutputLength: function CalGrayCS_getOutputLength(inputLength) {
-      return inputLength * 3;
+    getOutputLength: function CalGrayCS_getOutputLength(inputLength, alpha01) {
+      return inputLength * (3 + alpha01);
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function CalGrayCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -2096,16 +1980,17 @@ var LabCS = (function LabCSClosure() {
       convertToRgb(this, src, srcOffset, false, dest, destOffset);
     },
     getRgbBuffer: function LabCS_getRgbBuffer(src, srcOffset, count,
-                                              dest, destOffset, bits) {
+                                              dest, destOffset, bits,
+                                              alpha01) {
       var maxVal = (1 << bits) - 1;
       for (var i = 0; i < count; i++) {
         convertToRgb(this, src, srcOffset, maxVal, dest, destOffset);
         srcOffset += 3;
-        destOffset += 3;
+        destOffset += 3 + alpha01;
       }
     },
-    getOutputLength: function LabCS_getOutputLength(inputLength) {
-      return inputLength;
+    getOutputLength: function LabCS_getOutputLength(inputLength, alpha01) {
+      return (inputLength * (3 + alpha01) / 3) | 0;
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
     isDefaultDecode: function LabCS_isDefaultDecode(decodeMap) {
@@ -2155,7 +2040,7 @@ var Pattern = (function PatternClosure() {
         // Both radial and axial shadings are handled by RadialAxial shading.
         return new Shadings.RadialAxial(dict, matrix, xref, res);
       default:
-        TODO('Unsupported shading type: ' + type);
+        UnsupportedManager.notify(UNSUPPORTED_FEATURES.shadingPattern);
         return new Shadings.Dummy();
     }
   };
@@ -2415,7 +2300,7 @@ var TilingPattern = (function TilingPatternClosure() {
       var commonObjs = this.commonObjs;
       var ctx = this.ctx;
 
-      TODO('TilingType: ' + tilingType);
+      info('TilingType: ' + tilingType);
 
       var x0 = bbox[0], y0 = bbox[1], x1 = bbox[2], y1 = bbox[3];
 
@@ -2628,7 +2513,7 @@ var PDFFunction = (function PDFFunctionClosure() {
       if (order !== 1) {
         // No description how cubic spline interpolation works in PDF32000:2008
         // As in poppler, ignoring order, linear interpolation may work as good
-        TODO('No support for cubic spline interpolation: ' + order);
+        info('No support for cubic spline interpolation: ' + order);
       }
 
       var encode = dict.get('Encode');
@@ -3477,6 +3362,29 @@ var Annotation = (function AnnotationClosure() {
     } else {
       var borderArray = dict.get('Border') || [0, 0, 1];
       data.borderWidth = borderArray[2] || 0;
+
+      // TODO: implement proper support for annotations with line dash patterns.
+      var dashArray = borderArray[3];
+      if (data.borderWidth > 0 && dashArray && isArray(dashArray)) {
+        var dashArrayLength = dashArray.length;
+        if (dashArrayLength > 0) {
+          // According to the PDF specification: the elements in a dashArray
+          // shall be numbers that are nonnegative and not all equal to zero.
+          var isInvalid = false;
+          var numPositive = 0;
+          for (var i = 0; i < dashArrayLength; i++) {
+            if (!(+dashArray[i] >= 0)) {
+              isInvalid = true;
+              break;
+            } else if (dashArray[i] > 0) {
+              numPositive++;
+            }
+          }
+          if (isInvalid || numPositive === 0) {
+            data.borderWidth = 0;
+          }
+        }
+      }
     }
 
     this.appearance = getDefaultAppearance(dict);
@@ -3521,7 +3429,7 @@ var Annotation = (function AnnotationClosure() {
     },
 
     loadResources: function(keys) {
-      var promise = new Promise();
+      var promise = new LegacyPromise();
       this.appearance.dict.getAsync('Resources').then(function(resources) {
         if (!resources) {
           promise.resolve();
@@ -3540,7 +3448,7 @@ var Annotation = (function AnnotationClosure() {
 
     getOperatorList: function Annotation_getToOperatorList(evaluator) {
 
-      var promise = new Promise();
+      var promise = new LegacyPromise();
 
       if (!this.appearance) {
         promise.resolve(new OperatorList());
@@ -3646,7 +3554,7 @@ var Annotation = (function AnnotationClosure() {
     if (annotation.isViewable()) {
       return annotation;
     } else {
-      TODO('unimplemented annotation type: ' + subtype);
+      warn('unimplemented annotation type: ' + subtype);
     }
   };
 
@@ -3657,7 +3565,7 @@ var Annotation = (function AnnotationClosure() {
       annotationsReadyPromise.reject(e);
     }
 
-    var annotationsReadyPromise = new Promise();
+    var annotationsReadyPromise = new LegacyPromise();
 
     var annotationPromises = [];
     for (var i = 0, n = annotations.length; i < n; ++i) {
@@ -3738,7 +3646,7 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
   Util.inherit(WidgetAnnotation, Annotation, {
     isViewable: function WidgetAnnotation_isViewable() {
       if (this.data.fieldType === 'Sig') {
-        TODO('unimplemented annotation type: Widget signature');
+        warn('unimplemented annotation type: Widget signature');
         return false;
       }
 
@@ -3819,7 +3727,7 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
         return Annotation.prototype.getOperatorList.call(this, evaluator);
       }
 
-      var promise = new Promise();
+      var promise = new LegacyPromise();
       var opList = new OperatorList();
       var data = this.data;
 
@@ -3896,7 +3804,7 @@ var TextAnnotation = (function TextAnnotationClosure() {
   Util.inherit(TextAnnotation, Annotation, {
 
     getOperatorList: function TextAnnotation_getOperatorList(evaluator) {
-      var promise = new Promise();
+      var promise = new LegacyPromise();
       promise.resolve(new OperatorList());
       return promise;
     },
@@ -3996,7 +3904,13 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
     if (action) {
       var linkType = action.get('S').name;
       if (linkType === 'URI') {
-        var url = addDefaultProtocolToUrl(action.get('URI'));
+        var url = action.get('URI');
+        if (isName(url)) {
+          // Some bad PDFs do not put parentheses around relative URLs.
+          url = '/' + url.name;
+        } else {
+          url = addDefaultProtocolToUrl(url);
+        }
         // TODO: pdf spec mentions urls can be relative to a Base
         // entry in the dictionary.
         if (!isValidUrl(url, false)) {
@@ -4023,7 +3937,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
       } else if (linkType === 'Named') {
         data.action = action.get('N').name;
       } else {
-        TODO('unrecognized link type: ' + linkType);
+        warn('unrecognized link type: ' + linkType);
       }
     } else if (dict.has('Dest')) {
       // simple destination link
@@ -4080,7 +3994,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
 /**
  * The maximum allowed image size in total pixels e.g. width * height. Images
  * above this value will not be drawn. Use -1 for no limit.
- * @var {Number}
+ * @var {number}
  */
 PDFJS.maxImageSize = PDFJS.maxImageSize === undefined ? -1 : PDFJS.maxImageSize;
 
@@ -4088,7 +4002,7 @@ PDFJS.maxImageSize = PDFJS.maxImageSize === undefined ? -1 : PDFJS.maxImageSize;
  * By default fonts are converted to OpenType fonts and loaded via font face
  * rules. If disabled, the font will be rendered using a built in font renderer
  * that constructs the glyphs with primitive path commands.
- * @var {Boolean}
+ * @var {boolean}
  */
 PDFJS.disableFontFace = PDFJS.disableFontFace === undefined ?
                         false : PDFJS.disableFontFace;
@@ -4096,7 +4010,7 @@ PDFJS.disableFontFace = PDFJS.disableFontFace === undefined ?
 /**
  * Path for image resources, mainly for annotation icons. Include trailing
  * slash.
- * @var {String}
+ * @var {string}
  */
 PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ?
                            '' : PDFJS.imageResourcesPath;
@@ -4105,7 +4019,7 @@ PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ?
  * Disable the web worker and run all code on the main thread. This will happen
  * automatically if the browser doesn't support workers or sending typed arrays
  * to workers.
- * @var {Boolean}
+ * @var {boolean}
  */
 PDFJS.disableWorker = PDFJS.disableWorker === undefined ?
                       false : PDFJS.disableWorker;
@@ -4114,7 +4028,7 @@ PDFJS.disableWorker = PDFJS.disableWorker === undefined ?
  * Path and filename of the worker file. Required when the worker is enabled in
  * development mode. If unspecified in the production build, the worker will be
  * loaded based on the location of the pdf.js file.
- * @var {String}
+ * @var {string}
  */
 PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
 
@@ -4122,7 +4036,7 @@ PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
  * Disable range request loading of PDF files. When enabled and if the server
  * supports partial content requests then the PDF will be fetched in chunks.
  * Enabled (false) by default.
- * @var {Boolean}
+ * @var {boolean}
  */
 PDFJS.disableRange = PDFJS.disableRange === undefined ?
                      false : PDFJS.disableRange;
@@ -4131,14 +4045,14 @@ PDFJS.disableRange = PDFJS.disableRange === undefined ?
  * Disable pre-fetching of PDF file data. When range requests are enabled PDF.js
  * will automatically keep fetching more data even if it isn't needed to display
  * the current page. This default behavior can be disabled.
- * @var {Boolean}
+ * @var {boolean}
  */
 PDFJS.disableAutoFetch = PDFJS.disableAutoFetch === undefined ?
                          false : PDFJS.disableAutoFetch;
 
 /**
  * Enables special hooks for debugging PDF.js.
- * @var {Boolean}
+ * @var {boolean}
  */
 PDFJS.pdfBug = PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug;
 
@@ -4148,24 +4062,52 @@ PDFJS.pdfBug = PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug;
  */
 PDFJS.postMessageTransfers = PDFJS.postMessageTransfers === undefined ?
                              true : PDFJS.postMessageTransfers;
+
+/**
+ * Disables URL.createObjectURL usage.
+ * @var {boolean}
+ */
+PDFJS.disableCreateObjectURL = PDFJS.disableCreateObjectURL === undefined ?
+                               false : PDFJS.disableCreateObjectURL;
+
+/**
+ * Controls the logging level.
+ * The constants from PDFJS.VERBOSITY_LEVELS should be used:
+ * - errors
+ * - warnings [default]
+ * - infos
+ * @var {number}
+ */
+PDFJS.verbosity = PDFJS.verbosity === undefined ?
+                  PDFJS.VERBOSITY_LEVELS.warnings : PDFJS.verbosity;
+
+/**
+ * Document initialization / loading parameters object.
+ *
+ * @typedef {Object} DocumentInitParameters
+ * @property {string}     url   - The URL of the PDF.
+ * @property {TypedArray} data  - A typed array with PDF data.
+ * @property {Object}     httpHeaders - Basic authentication headers.
+ * @property {boolean}    withCredentials - Indicates whether or not cross-site
+ *   Access-Control requests should be made using credentials such as cookies
+ *   or authorization headers. The default is false.
+ * @property {string}     password - For decrypting password-protected PDFs.
+ * @property {TypedArray} initialData - A typed array with the first portion or
+ *   all of the pdf data. Used by the extension since some data is already
+ *   loaded before the switch to range requests.
+ */
+
 /**
  * This is the main entry point for loading a PDF and interacting with it.
  * NOTE: If a URL is used to fetch the PDF data a standard XMLHttpRequest(XHR)
  * is used, which means it must follow the same origin rules that any XHR does
  * e.g. No cross domain requests without CORS.
  *
- * @param {string|TypedAray|object} source Can be an url to where a PDF is
- * located, a typed array (Uint8Array) already populated with data or
- * and parameter object with the following possible fields:
- *  - url   - The URL of the PDF.
- *  - data  - A typed array with PDF data.
- *  - httpHeaders - Basic authentication headers.
- *  - password - For decrypting password-protected PDFs.
- *  - initialData - A typed array with the first portion or all of the pdf data.
- *                  Used by the extension since some data is already loaded
- *                  before the switch to range requests. 
+ * @param {string|TypedArray|DocumentInitParameters} source Can be a url to
+ * where a PDF is located, a typed array (Uint8Array) already populated with
+ * data or parameter object.
  *
- * @param {object} pdfDataRangeTransport is optional. It is used if you want
+ * @param {Object} pdfDataRangeTransport is optional. It is used if you want
  * to manually serve range requests for data in the PDF. See viewer.js for
  * an example of pdfDataRangeTransport's interface.
  *
@@ -4174,7 +4116,8 @@ PDFJS.postMessageTransfers = PDFJS.postMessageTransfers === undefined ?
  * parameters: function that needs to be called with new password and reason
  * (see {PasswordResponses}).
  *
- * @return {Promise} A promise that is resolved with {PDFDocumentProxy} object.
+ * @return {Promise} A promise that is resolved with {@link PDFDocumentProxy}
+ *   object.
  */
 PDFJS.getDocument = function getDocument(source,
                                          pdfDataRangeTransport,
@@ -4204,8 +4147,8 @@ PDFJS.getDocument = function getDocument(source,
     params[key] = source[key];
   }
 
-  workerInitializedPromise = new PDFJS.Promise();
-  workerReadyPromise = new PDFJS.Promise();
+  workerInitializedPromise = new PDFJS.LegacyPromise();
+  workerReadyPromise = new PDFJS.LegacyPromise();
   transport = new WorkerTransport(workerInitializedPromise,
       workerReadyPromise, pdfDataRangeTransport, progressCallback);
   workerInitializedPromise.then(function transportInitialized() {
@@ -4218,13 +4161,14 @@ PDFJS.getDocument = function getDocument(source,
 /**
  * Proxy to a PDFDocument in the worker thread. Also, contains commonly used
  * properties that can be read synchronously.
+ * @class
  */
 var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
   function PDFDocumentProxy(pdfInfo, transport) {
     this.pdfInfo = pdfInfo;
     this.transport = transport;
   }
-  PDFDocumentProxy.prototype = {
+  PDFDocumentProxy.prototype = /** @lends PDFDocumentProxy.prototype */ {
     /**
      * @return {number} Total number of pages the PDF contains.
      */
@@ -4246,15 +4190,16 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       return this.transport.embeddedFontsUsed;
     },
     /**
-     * @param {number} The page number to get. The first page is 1.
-     * @return {Promise} A promise that is resolved with a {PDFPageProxy}
+     * @param {number} pageNumber The page number to get. The first page is 1.
+     * @return {Promise} A promise that is resolved with a {@link PDFPageProxy}
      * object.
      */
-    getPage: function PDFDocumentProxy_getPage(number) {
-      return this.transport.getPage(number);
+    getPage: function PDFDocumentProxy_getPage(pageNumber) {
+      return this.transport.getPage(pageNumber);
     },
     /**
-     * @param {object} Must have 'num' and 'gen' properties.
+     * @param {{num: number, gen: number}} ref The page reference. Must have
+     *   the 'num' and 'gen' properties.
      * @return {Promise} A promise that is resolved with the page index that is
      * associated with the reference.
      */
@@ -4272,14 +4217,14 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
      * @return {Promise} A promise that is resolved with an array of all the
      * JavaScript strings in the name tree.
      */
-    getJavaScript: function PDFDocumentProxy_getDestinations() {
-      var promise = new PDFJS.Promise();
+    getJavaScript: function PDFDocumentProxy_getJavaScript() {
+      var promise = new PDFJS.LegacyPromise();
       var js = this.pdfInfo.javaScript;
       promise.resolve(js);
       return promise;
     },
     /**
-     * @return {Promise} A promise that is resolved with an {array} that is a
+     * @return {Promise} A promise that is resolved with an {Array} that is a
      * tree outline (if it has one) of the PDF. The tree is in the format of:
      * [
      *  {
@@ -4294,19 +4239,19 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
      * ].
      */
     getOutline: function PDFDocumentProxy_getOutline() {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       var outline = this.pdfInfo.outline;
       promise.resolve(outline);
       return promise;
     },
     /**
-     * @return {Promise} A promise that is resolved with an {object} that has
-     * info and metadata properties.  Info is an {object} filled with anything
+     * @return {Promise} A promise that is resolved with an {Object} that has
+     * info and metadata properties.  Info is an {Object} filled with anything
      * available in the information dictionary and similarly metadata is a
      * {Metadata} object with information from the metadata section of the PDF.
      */
     getMetadata: function PDFDocumentProxy_getMetadata() {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       var info = this.pdfInfo.info;
       var metadata = this.pdfInfo.metadata;
       promise.resolve({
@@ -4315,17 +4260,12 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       });
       return promise;
     },
-    isEncrypted: function PDFDocumentProxy_isEncrypted() {
-      var promise = new PDFJS.Promise();
-      promise.resolve(this.pdfInfo.encrypted);
-      return promise;
-    },
     /**
      * @return {Promise} A promise that is resolved with a TypedArray that has
      * the raw data from the PDF.
      */
     getData: function PDFDocumentProxy_getData() {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       this.transport.getData(promise);
       return promise;
     },
@@ -4336,9 +4276,15 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
     dataLoaded: function PDFDocumentProxy_dataLoaded() {
       return this.transport.dataLoaded();
     },
+    /**
+     * Cleans up resources allocated by the document, e.g. created @font-face.
+     */
     cleanup: function PDFDocumentProxy_cleanup() {
       this.transport.startCleanup();
     },
+    /**
+     * Destroys current document instance and terminates worker.
+     */
     destroy: function PDFDocumentProxy_destroy() {
       this.transport.destroy();
     }
@@ -4346,6 +4292,22 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
   return PDFDocumentProxy;
 })();
 
+/**
+ * Page text content part.
+ *
+ * @typedef {Object} BidiText
+ * @property {string} str - text content.
+ * @property {string} dir - text direction: 'ttb', 'ltr' or 'rtl'.
+ * @property {number} x - x position of the text on the page.
+ * @property {number} y - y position of the text on the page.
+ * @property {number} angle - text rotation.
+ * @property {number} size - font size.
+ */
+
+/**
+ * Proxy to a PDFPage in the worker thread.
+ * @class
+ */
 var PDFPageProxy = (function PDFPageProxyClosure() {
   function PDFPageProxy(pageInfo, transport) {
     this.pageInfo = pageInfo;
@@ -4359,7 +4321,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     this.pendingDestroy = false;
     this.renderTasks = [];
   }
-  PDFPageProxy.prototype = {
+  PDFPageProxy.prototype = /** @lends PDFPageProxy.prototype */ {
     /**
      * @return {number} Page number of the page. First page is 1.
      */
@@ -4373,14 +4335,14 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       return this.pageInfo.rotate;
     },
     /**
-     * @return {object} The reference that points to this page. It has 'num' and
+     * @return {Object} The reference that points to this page. It has 'num' and
      * 'gen' properties.
      */
     get ref() {
       return this.pageInfo.ref;
     },
     /**
-     * @return {array} An array of the visible portion of the PDF page in the
+     * @return {Array} An array of the visible portion of the PDF page in the
      * user space units - [x1, y1, x2, y2].
      */
     get view() {
@@ -4399,21 +4361,21 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       return new PDFJS.PageViewport(this.view, scale, rotate, 0, 0);
     },
     /**
-     * @return {Promise} A promise that is resolved with an {array} of the
+     * @return {Promise} A promise that is resolved with an {Array} of the
      * annotation objects.
      */
     getAnnotations: function PDFPageProxy_getAnnotations() {
       if (this.annotationsPromise)
         return this.annotationsPromise;
 
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       this.annotationsPromise = promise;
       this.transport.getAnnotations(this.pageInfo.pageIndex);
       return promise;
     },
     /**
      * Begins the process of rendering a page to the desired context.
-     * @param {object} params A parameter object that supports:
+     * @param {Object} params A parameter object that supports:
      * {
      *   canvasContext(required): A 2D context of a DOM Canvas object.,
      *   textLayer(optional): An object that has beginLayout, endLayout, and
@@ -4440,7 +4402,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       // requested before. Make the request and create the promise.
       if (!this.displayReadyPromise) {
         this.receivingOperatorList = true;
-        this.displayReadyPromise = new Promise();
+        this.displayReadyPromise = new LegacyPromise();
         this.operatorList = {
           fnArray: [],
           argsArray: [],
@@ -4487,9 +4449,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         self._tryDestroy();
 
         if (error) {
-          renderTask.reject(error);
+          renderTask.promise.reject(error);
         } else {
-          renderTask.resolve();
+          renderTask.promise.resolve();
         }
         stats.timeEnd('Rendering');
         stats.timeEnd('Overall');
@@ -4498,11 +4460,11 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       return renderTask;
     },
     /**
-     * @return {Promise} That is resolved with the a {string} that is the text
-     * content from the page.
+     * @return {Promise} That is resolved with the array of {@link BidiText}
+     * objects that represent the page text content.
      */
     getTextContent: function PDFPageProxy_getTextContent() {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       this.transport.messageHandler.send('GetTextContent', {
           pageIndex: this.pageNumber - 1
         },
@@ -4510,18 +4472,6 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
           promise.resolve(textContent);
         }
       );
-      return promise;
-    },
-    /**
-     * Stub for future feature.
-     */
-    getOperationList: function PDFPageProxy_getOperationList() {
-      var promise = new PDFJS.Promise();
-      var operationList = { // not implemented
-        dependencyFontsID: null,
-        operatorList: null
-      };
-      promise.resolve(operationList);
       return promise;
     },
     /**
@@ -4534,6 +4484,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     /**
      * For internal use only. Attempts to clean up if rendering is in a state
      * where that's possible.
+     * @ignore
      */
     _tryDestroy: function PDFPageProxy__destroy() {
       if (!this.pendingDestroy ||
@@ -4549,12 +4500,14 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     },
     /**
      * For internal use only.
+     * @ignore
      */
     _startRenderPage: function PDFPageProxy_startRenderPage(transparency) {
       this.displayReadyPromise.resolve(transparency);
     },
     /**
      * For internal use only.
+     * @ignore
      */
     _renderPageChunk: function PDFPageProxy_renderPageChunk(operatorListChunk) {
       // Add the new chunk to the current operator list.
@@ -4577,8 +4530,10 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
   };
   return PDFPageProxy;
 })();
+
 /**
  * For internal use only.
+ * @ignore
  */
 var WorkerTransport = (function WorkerTransportClosure() {
   function WorkerTransport(workerInitializedPromise, workerReadyPromise,
@@ -4660,6 +4615,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
       this.pagePromises = [];
       var self = this;
       this.messageHandler.send('Terminate', null, function () {
+        FontLoader.clear();
         if (self.worker) {
           self.worker.terminate();
         }
@@ -4668,7 +4624,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
     loadFakeWorkerFiles: function WorkerTransport_loadFakeWorkerFiles() {
       if (!PDFJS.fakeWorkerFilesLoadedPromise) {
-        PDFJS.fakeWorkerFilesLoadedPromise = new Promise();
+        PDFJS.fakeWorkerFilesLoadedPromise = new LegacyPromise();
         // In the developer build load worker_loader which in turn loads all the
         // other files and resolves the promise. In production only the
         // pdf.worker.js file is needed.
@@ -4873,7 +4829,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
           error(data.error);
       }, this);
 
-      messageHandler.on('JpegDecode', function(data, promise) {
+      messageHandler.on('JpegDecode', function(data, deferred) {
         var imageUrl = data[0];
         var components = data[1];
         if (components != 3 && components != 1)
@@ -4902,7 +4858,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
               buf[j] = data[i];
             }
           }
-          promise.resolve({ data: buf, width: width, height: height});
+          deferred.resolve({ data: buf, width: width, height: height});
         }).bind(this);
         img.src = imageUrl;
       });
@@ -4915,7 +4871,9 @@ var WorkerTransport = (function WorkerTransportClosure() {
         source: source,
         disableRange: PDFJS.disableRange,
         maxImageSize: PDFJS.maxImageSize,
-        disableFontFace: PDFJS.disableFontFace
+        disableFontFace: PDFJS.disableFontFace,
+        disableCreateObjectURL: PDFJS.disableCreateObjectURL,
+        verbosity: PDFJS.verbosity
       });
     },
 
@@ -4926,10 +4884,14 @@ var WorkerTransport = (function WorkerTransportClosure() {
     },
 
     dataLoaded: function WorkerTransport_dataLoaded() {
-      var promise = new PDFJS.Promise();
+      if (this.dataLoadedPromise) {
+        return this.dataLoadedPromise;
+      }
+      var promise = new PDFJS.LegacyPromise();
       this.messageHandler.send('DataLoaded', null, function(args) {
         promise.resolve(args);
       });
+      this.dataLoadedPromise = promise;
       return promise;
     },
 
@@ -4937,14 +4899,14 @@ var WorkerTransport = (function WorkerTransportClosure() {
       var pageIndex = pageNumber - 1;
       if (pageIndex in this.pagePromises)
         return this.pagePromises[pageIndex];
-      var promise = new PDFJS.Promise('Page ' + pageNumber);
+      var promise = new PDFJS.LegacyPromise();
       this.pagePromises[pageIndex] = promise;
       this.messageHandler.send('GetPageRequest', { pageIndex: pageIndex });
       return promise;
     },
 
     getPageIndex: function WorkerTransport_getPageIndexByRef(ref) {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       this.messageHandler.send('GetPageIndex', { ref: ref },
         function (pageIndex) {
           promise.resolve(pageIndex);
@@ -4959,7 +4921,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
     },
 
     getDestinations: function WorkerTransport_getDestinations() {
-      var promise = new PDFJS.Promise();
+      var promise = new PDFJS.LegacyPromise();
       this.messageHandler.send('GetDestinations', null,
         function transportDestinations(destinations) {
           promise.resolve(destinations);
@@ -4992,6 +4954,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
  * for fonts, images, rendering code and such. These objects might get processed
  * inside of a worker. The `PDFObjects` implements some basic functions to
  * manage these objects.
+ * @ignore
  */
 var PDFObjects = (function PDFObjectsClosure() {
   function PDFObjects() {
@@ -5008,7 +4971,7 @@ var PDFObjects = (function PDFObjectsClosure() {
         return this.objs[objId];
 
       var obj = {
-        promise: new Promise(objId),
+        promise: new LegacyPromise(),
         data: null,
         resolved: false
       };
@@ -5089,29 +5052,40 @@ var PDFObjects = (function PDFObjectsClosure() {
   };
   return PDFObjects;
 })();
-/*
- * RenderTask is basically a promise but adds a cancel function to terminate it.
+
+/**
+ * Allows controlling of the rendering tasks.
+ * @class
  */
 var RenderTask = (function RenderTaskClosure() {
   function RenderTask(internalRenderTask) {
     this.internalRenderTask = internalRenderTask;
-    Promise.call(this);
+    /**
+     * Promise for rendering task completion.
+     * @type {Promise}
+     */
+    this.promise = new PDFJS.LegacyPromise();
   }
 
-  RenderTask.prototype = Object.create(Promise.prototype);
-
-  /**
-   * Cancel the rendering task. If the task is curently rendering it will not be
-   * cancelled until graphics pauses with a timeout. The promise that this
-   * object extends will resolved when cancelled.
-   */
-  RenderTask.prototype.cancel = function RenderTask_cancel() {
-    this.internalRenderTask.cancel();
+  RenderTask.prototype = /** @lends RenderTask.prototype */ {
+    /**
+     * Cancels the rendering task. If the task is currently rendering it will
+     * not be cancelled until graphics pauses with a timeout. The promise that
+     * this object extends will resolved when cancelled.
+     */
+    cancel: function RenderTask_cancel() {
+      this.internalRenderTask.cancel();
+      this.promise.reject(new Error('Rendering is cancelled'));
+    }
   };
 
   return RenderTask;
 })();
 
+/**
+ * For internal use only.
+ * @ignore
+ */
 var InternalRenderTask = (function InternalRenderTaskClosure() {
 
   function InternalRenderTask(callback, params, objs, commonObjs, operatorList,
@@ -5465,6 +5439,18 @@ function compileType3Glyph(imgData) {
   var points = new Uint8Array(width1 * (height + 1));
   var POINT_TYPES =
       new Uint8Array([0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0]);
+
+  // decodes bit-packed mask data
+  var lineSize = (width + 7) & ~7, data0 = imgData.data;
+  var data = new Uint8Array(lineSize * height), pos = 0, ii;
+  for (i = 0, ii = data0.length; i < ii; i++) {
+    var mask = 128, elem = data0[i];
+    while (mask > 0) {
+      data[pos++] = (elem & mask) ? 0 : 255;
+      mask >>= 1;
+    }
+  }
+
   // finding iteresting points: every point is located between mask pixels,
   // so there will be points of the (width + 1)x(height + 1) grid. Every point
   // will have flags assigned based on neighboring mask pixels:
@@ -5475,24 +5461,25 @@ function compileType3Glyph(imgData) {
   //   - outside corners: 1, 2, 4, 8;
   //   - inside corners: 7, 11, 13, 14;
   //   - and, intersections: 5, 10.
-  var pos = 3, data = imgData.data, lineSize = width * 4, count = 0;
-  if (data[3] !== 0) {
+  var count = 0;
+  pos = 0;
+  if (data[pos] !== 0) {
     points[0] = 1;
     ++count;
   }
   for (j = 1; j < width; j++) {
-    if (data[pos] !== data[pos + 4]) {
+    if (data[pos] !== data[pos + 1]) {
       points[j] = data[pos] ? 2 : 1;
       ++count;
     }
-    pos += 4;
+    pos++;
   }
   if (data[pos] !== 0) {
     points[j] = 2;
     ++count;
   }
-  pos += 4;
   for (i = 1; i < height; i++) {
+    pos = i * lineSize;
     j0 = i * width1;
     if (data[pos - lineSize] !== data[pos]) {
       points[j0] = data[pos] ? 1 : 8;
@@ -5502,37 +5489,36 @@ function compileType3Glyph(imgData) {
     // array (in order 8-1-2-4, so we can use '>>2' to shift the column).
     var sum = (data[pos] ? 4 : 0) + (data[pos - lineSize] ? 8 : 0);
     for (j = 1; j < width; j++) {
-      sum = (sum >> 2) + (data[pos + 4] ? 4 : 0) +
-            (data[pos - lineSize + 4] ? 8 : 0);
+      sum = (sum >> 2) + (data[pos + 1] ? 4 : 0) +
+            (data[pos - lineSize + 1] ? 8 : 0);
       if (POINT_TYPES[sum]) {
         points[j0 + j] = POINT_TYPES[sum];
         ++count;
       }
-      pos += 4;
+      pos++;
     }
     if (data[pos - lineSize] !== data[pos]) {
       points[j0 + j] = data[pos] ? 2 : 4;
       ++count;
     }
-    pos += 4;
 
     if (count > POINT_TO_PROCESS_LIMIT) {
       return null;
     }
   }
 
-  pos -= lineSize;
+  pos = lineSize * (height - 1);
   j0 = i * width1;
   if (data[pos] !== 0) {
     points[j0] = 8;
     ++count;
   }
   for (j = 1; j < width; j++) {
-    if (data[pos] !== data[pos + 4]) {
+    if (data[pos] !== data[pos + 1]) {
       points[j0 + j] = data[pos] ? 4 : 8;
       ++count;
     }
-    pos += 4;
+    pos++;
   }
   if (data[pos] !== 0) {
     points[j0 + j] = 4;
@@ -5638,7 +5624,6 @@ var CanvasExtraState = (function CanvasExtraStateClosure() {
     this.fillAlpha = 1;
     this.strokeAlpha = 1;
     this.lineWidth = 1;
-    this.paintFormXObjectDepth = 0;
 
     this.old = old;
   }
@@ -5690,16 +5675,77 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       return;
     }
 
-    var tmpImgData = ctx.createImageData(imgData.width, imgData.height);
+    // Put the image data to the canvas in chunks, rather than putting the
+    // whole image at once.  This saves JS memory, because the ImageData object
+    // is smaller. It also possibly saves C++ memory within the implementation
+    // of putImageData(). (E.g. in Firefox we make two short-lived copies of
+    // the data passed to putImageData()). |n| shouldn't be too small, however,
+    // because too many putImageData() calls will slow things down.
 
+    var rowsInFullChunks = 16;
+    var fullChunks = (imgData.height / rowsInFullChunks) | 0;
+    var rowsInLastChunk = imgData.height - fullChunks * rowsInFullChunks;
+    var elemsInFullChunks = imgData.width * rowsInFullChunks * 4;
+    var elemsInLastChunk = imgData.width * rowsInLastChunk * 4;
+
+    var chunkImgData = ctx.createImageData(imgData.width, rowsInFullChunks);
+    var srcPos = 0;
+    var src = imgData.data;
+    var dst = chunkImgData.data;
+    var haveSetAndSubarray = 'set' in dst && 'subarray' in src;
+
+    // Do all the full-size chunks.
+    for (var i = 0; i < fullChunks; i++) {
+      if (haveSetAndSubarray) {
+        dst.set(src.subarray(srcPos, srcPos + elemsInFullChunks));
+        srcPos += elemsInFullChunks;
+      } else {
+        for (var j = 0; j < elemsInFullChunks; j++) {
+          chunkImgData.data[j] = imgData.data[srcPos++];
+        }
+      }
+      ctx.putImageData(chunkImgData, 0, i * rowsInFullChunks);
+    }
+
+    // Do the final, partial chunk, if required.
+    if (rowsInLastChunk !== 0) {
+      if (haveSetAndSubarray) {
+        dst.set(src.subarray(srcPos, srcPos + elemsInLastChunk));
+        srcPos += elemsInLastChunk;
+      } else {
+        for (var j = 0; j < elemsInLastChunk; j++) {
+          chunkImgData.data[j] = imgData.data[srcPos++];
+        }
+      }
+      // This (conceptually) puts pixels past the bounds of the canvas.  But
+      // that's ok; any such pixels are ignored.
+      ctx.putImageData(chunkImgData, 0, fullChunks * rowsInFullChunks);
+    }
+  }
+
+  function putBinaryImageMask(ctx, imgData) {
+    var width = imgData.width, height = imgData.height;
+    var tmpImgData = ctx.createImageData(width, height);
     var data = imgData.data;
     var tmpImgDataPixels = tmpImgData.data;
-    if ('set' in tmpImgDataPixels)
-      tmpImgDataPixels.set(data);
-    else {
-      // Copy over the imageData pixel by pixel.
-      for (var i = 0, ii = tmpImgDataPixels.length; i < ii; i++)
-        tmpImgDataPixels[i] = data[i];
+    var dataPos = 0;
+
+    // Expand the mask so it can be used by the canvas.  Any required inversion
+    // has already been handled.
+    var tmpPos = 3; // alpha component offset
+    for (var i = 0; i < height; i++) {
+      var mask = 0;
+      for (var j = 0; j < width; j++) {
+        if (!mask) {
+          var elem = data[dataPos++];
+          mask = 128;
+        }
+        if (!(elem & mask)) {
+          tmpImgDataPixels[tmpPos] = 255;
+        }
+        tmpPos += 4;
+        mask >>= 1;
+      }
     }
 
     ctx.putImageData(tmpImgData, 0, 0);
@@ -5782,6 +5828,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var commonObjs = this.commonObjs;
       var objs = this.objs;
       var fnId;
+      var deferred = Promise.resolve();
 
       while (true) {
         if (stepper && i === stepper.nextBreakPoint) {
@@ -5823,7 +5870,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // to continue exeution after a short delay.
         // However, this is only possible if a 'continueCallback' is passed in.
         if (continueCallback && Date.now() > endTime) {
-          setTimeout(continueCallback, 0);
+          deferred.then(continueCallback);
           return i;
         }
 
@@ -6227,6 +6274,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       geometry.fontName = font.loadedName;
       geometry.fontFamily = font.fallbackName;
       geometry.fontSize = this.current.fontSize;
+      geometry.ascent = font.ascent;
+      geometry.descent = font.descent;
       return geometry;
     },
 
@@ -6281,6 +6330,23 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           addToPath: addToPath
         });
       }
+    },
+
+    get isFontSubpixelAAEnabled() {
+      // Checks if anti-aliasing is enabled when scaled text is painted.
+      // On Windows GDI scaled fonts looks bad.
+      var ctx = document.createElement('canvas').getContext('2d');
+      ctx.scale(1.5, 1);
+      ctx.fillText('I', 0, 10);
+      var data = ctx.getImageData(0, 0, 10, 10).data;
+      var enabled = false;
+      for (var i = 3; i < data.length; i += 4) {
+        if (data[i] > 0 && data[i] < 255) {
+          enabled = true;
+          break;
+        }
+      }
+      return shadow(this, 'isFontSubpixelAAEnabled', enabled);
     },
 
     showText: function CanvasGraphics_showText(glyphs, skipTextSelection) {
@@ -6397,7 +6463,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               scaledY = 0;
             }
 
-            if (font.remeasure && width > 0) {
+            if (font.remeasure && width > 0 && this.isFontSubpixelAAEnabled) {
               // some standard fonts may not have the exact width, trying to
               // rescale per character
               var measuredWidth = ctx.measureText(character).width * 1000 /
@@ -6684,7 +6750,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintFormXObjectBegin: function CanvasGraphics_paintFormXObjectBegin(matrix,
                                                                         bbox) {
       this.save();
-      this.current.paintFormXObjectDepth++;
       this.baseTransformStack.push(this.baseTransform);
 
       if (matrix && isArray(matrix) && 6 == matrix.length)
@@ -6702,12 +6767,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
 
     paintFormXObjectEnd: function CanvasGraphics_paintFormXObjectEnd() {
-      var depth = this.current.paintFormXObjectDepth;
-      do {
-        this.restore();
-        // some pdf don't close all restores inside object
-        // closing those for them
-      } while (this.current.paintFormXObjectDepth >= depth);
+      this.restore();
       this.baseTransform = this.baseTransformStack.pop();
     },
 
@@ -6734,7 +6794,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // TODO knockout - supposedly possible with the clever use of compositing
       // modes.
       if (group.knockout) {
-        TODO('Support knockout groups.');
+        warn('Knockout groups not supported.');
       }
 
       var currentTransform = currentCtx.mozCurrentTransform;
@@ -6884,7 +6944,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var maskCtx = maskCanvas.context;
       maskCtx.save();
 
-      putBinaryImageData(maskCtx, img);
+      putBinaryImageMask(maskCtx, img);
 
       maskCtx.globalCompositeOperation = 'source-in';
 
@@ -6911,7 +6971,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var maskCtx = maskCanvas.context;
         maskCtx.save();
 
-        putBinaryImageData(maskCtx, image);
+        putBinaryImageMask(maskCtx, image);
 
         maskCtx.globalCompositeOperation = 'source-in';
 

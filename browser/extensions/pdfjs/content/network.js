@@ -26,11 +26,13 @@
   
   var EXPORTED_SYMBOLS = ['NetworkManager'];
   
-  function log(aMsg) {
-    var msg = 'network.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
-    Services.console.logStringMessage(msg);
-    // TODO(mack): dump() doesn't seem to work here...
-    dump(msg + '\n');
+  var console = {
+    log: function console_log(aMsg) {
+      var msg = 'network.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
+      Services.console.logStringMessage(msg);
+      // TODO(mack): dump() doesn't seem to work here...
+      dump(msg + '\n');
+    }
   }
 
 var NetworkManager = (function NetworkManagerClosure() {
@@ -42,6 +44,7 @@ var NetworkManager = (function NetworkManagerClosure() {
     this.url = url;
     args = args || {};
     this.httpHeaders = args.httpHeaders || {};
+    this.withCredentials = args.withCredentials || false;
     this.getXhr = args.getXhr ||
       function NetworkManager_getXhr() {
         return new XMLHttpRequest();
@@ -90,6 +93,7 @@ var NetworkManager = (function NetworkManagerClosure() {
       };
 
       xhr.open('GET', this.url);
+      xhr.withCredentials = this.withCredentials;
       for (var property in this.httpHeaders) {
         var value = this.httpHeaders[property];
         if (typeof value === 'undefined') {
