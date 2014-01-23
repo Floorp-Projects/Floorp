@@ -231,6 +231,19 @@ CompileCompartment::hasObjectMetadataCallback()
     return compartment()->hasObjectMetadataCallback();
 }
 
+// Note: This function is thread-safe because setSingletonAsValue sets a boolean
+// variable to false, and this boolean variable has no way to be resetted to
+// true. So even if there is a concurrent write, this concurrent write will
+// always have the same value.  If there is a concurrent read, then we will
+// clone a singleton instead of using the value which is baked in the JSScript,
+// and this would be an unfortunate allocation, but this will not change the
+// semantics of the JavaScript code which is executed.
+void
+CompileCompartment::setSingletonsAsValues()
+{
+    return JS::CompartmentOptionsRef(compartment()).setSingletonsAsValues();
+}
+
 #ifdef JS_THREADSAFE
 AutoLockForCompilation::AutoLockForCompilation(CompileCompartment *compartment
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
@@ -239,3 +252,14 @@ AutoLockForCompilation::AutoLockForCompilation(CompileCompartment *compartment
     init(compartment->compartment()->runtimeFromAnyThread());
 }
 #endif
+
+JitCompileOptions::JitCompileOptions()
+  : cloneSingletons_(false)
+{
+}
+
+JitCompileOptions::JitCompileOptions(JSContext *cx)
+{
+    JS::CompartmentOptions &options = cx->compartment()->options();
+    cloneSingletons_ = options.cloneSingletons(cx);
+}

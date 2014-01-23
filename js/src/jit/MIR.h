@@ -999,6 +999,27 @@ class MConstant : public MNullaryInstruction
     bool canProduceFloat32() const;
 };
 
+// Deep clone a constant JSObject.
+class MCloneLiteral
+  : public MUnaryInstruction,
+    public ObjectPolicy<0>
+{
+  protected:
+    MCloneLiteral(MDefinition *obj)
+      : MUnaryInstruction(obj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CloneLiteral)
+    static MCloneLiteral *New(TempAllocator &alloc, MDefinition *obj);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MParameter : public MNullaryInstruction
 {
     int32_t index_;
