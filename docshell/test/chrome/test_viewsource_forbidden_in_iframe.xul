@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin/"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=624883
+-->
+<window title="Mozilla Bug 624883"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=624883"
+     target="_blank">Mozilla Bug 624883</a>
+  </body>
+
+  <!-- test code goes here -->
+  <iframe type="content" onload="startTest()" src="file_viewsource_forbidden_in_iframe.html"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+  const Ci = Components.interfaces;
+  const Cu = Components.utils;
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  // We create a promise that will resolve with the error message
+  // on a network error page load and reject on any other load.
+  function createNetworkErrorMessagePromise(frame) {
+    return new Promise(function(resolve, reject) {
+
+      // Error pages do not fire "load" events, so use a progressListener.
+      var originalDocumentURI = frame.contentDocument.documentURI;
+      var progressListener = {
+        onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+          // Make sure nothing other than an error page is loaded.
+          if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
+            reject("location change was not to an error page");
+          }
+        },
+
+        onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+          // Wait until the documentURI changes (from about:blank) this should
+          // be the error page URI.
+          var documentURI = frame.contentDocument.documentURI;
+          if (documentURI == originalDocumentURI) {
+            return;
+          }
+
+          aWebProgress.removeProgressListener(progressListener,
+                                              Ci.nsIWebProgress.NOTIFY_ALL);
+          var matchArray = /about:neterror\?.*&d=([^&]*)/.exec(documentURI);
+          if (!matchArray) {
+            reject("no network error message found in URI")
+            return;
+          }
+
+          var errorMsg = matchArray[1];
+          resolve(decodeURIComponent(errorMsg));
+        },
+
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                               Ci.nsISupportsWeakReference])
+      };
+
+      frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebProgress)
+                         .addProgressListener(progressListener,
+                                              Ci.nsIWebProgress.NOTIFY_LOCATION |
+                                              Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
+    });
+  }
+
+  function startTest() {
+    // Get a reference message that we know will be an unknown protocol message,
+    // so we can use it for comparisons in the test cases.
+    var refIframe = window[0].document.getElementById("refIframe");
+    var refErrorPromise = createNetworkErrorMessagePromise(refIframe);
+
+    refErrorPromise.then(
+      function(msg) {
+        window.refErrorMsg = msg;
+        var testIframe = window[0].document.getElementById("testIframe");
+
+        // Run test cases on load of "about:blank", so that the URI always changes
+        // and we can detect this in our Promise.
+        testIframe.onload = runNextTestCase;
+        testIframe.src = "about:blank";
+      },
+      function(reason) {
+        ok(false, "Could not get reference error message", reason);
+        SimpleTest.finish();
+      })
+      .catch(function(e) {
+        ok(false, "Unexpected exception thrown getting reference error message", exception);
+      });
+
+    refIframe.src = "wibble://example.com";
+  }
+
+  function runTestCase(testCase) {
+    var testIframe = window[0].document.getElementById("testIframe");
+    var expectedErrorMsg = window.refErrorMsg.replace("wibble", testCase.expectedProtocolList);
+
+    var testErrorPromise = createNetworkErrorMessagePromise(testIframe);
+    testErrorPromise.then(
+      function(actualErrorMsg) {
+        is(actualErrorMsg, expectedErrorMsg, testCase.desc);
+        testIframe.src = "about:blank";
+      },
+      function(reason) {
+        ok(false, testCase.desc, reason);
+        testIframe.src = "about:blank";
+      })
+      .catch(function(e) {
+        ok(false, testCase.desc + " - unexpected exception thrown", exception);
+      });
+
+    testIframe.src = testCase.protocols + "://example.com/!/";
+  }
+
+  var testCaseIndex = -1;
+  testCases = [
+    {
+      desc: "Test 1: view-source should not be allowed in an iframe",
+      protocols: "view-source:http",
+      expectedProtocolList: "view-source, http"
+    },
+    {
+      desc: "Test 2: feed:view-source should not be allowed in an iframe",
+      protocols: "feed:view-source:http",
+      expectedProtocolList: "feed, view-source, http"
+    },
+    {
+      desc: "Test 3: jar:view-source should not be allowed in an iframe",
+      protocols: "jar:view-source:http",
+      expectedProtocolList: "jar, view-source, http"
+    },
+    {
+      desc: "Test 4: pcast:view-source should not be allowed in an iframe",
+      protocols: "pcast:view-source:http",
+      expectedProtocolList: "pcast, view-source, http"
+    },
+    {
+      desc: "Test 5: pcast:feed:view-source should not be allowed in an iframe",
+      protocols: "pcast:feed:view-source:http",
+      expectedProtocolList: "pcast, feed, view-source, http"
+    },
+    {
+      desc: "Test 6: if invalid protocol first should report before view-source",
+      protocols: "wibble:view-source:http",
+      // Nothing after the invalid protocol gets set as a proper nested URI,
+      // so the list stops there.
+      expectedProtocolList: "wibble"
+    },
+    {
+      desc: "Test 7: if view-source first should report before invalid protocol",
+      protocols: "view-source:wibble:http",
+      expectedProtocolList: "view-source, wibble"
+    }
+  ];
+
+  function runNextTestCase() {
+    ++testCaseIndex;
+    if (testCaseIndex == testCases.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    runTestCase(testCases[testCaseIndex]);
+  }
+
+  ]]>
+  </script>
+</window>
