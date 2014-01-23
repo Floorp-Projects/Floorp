@@ -83,6 +83,8 @@
 		 android:debuggable="true">
 #endif
 
+        <!-- If the windowSoftInputMode adjust* flag changes below, the
+             setSoftInputMode call in BrowserSearch#onStop must also be updated. -->
         <activity android:name=".App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
