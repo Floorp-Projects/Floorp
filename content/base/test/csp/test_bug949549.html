@@ -12,7 +12,7 @@
 <script type="application/javascript;version=1.8">
   "use strict";
 
-  // Ensure that `scanRequestData` doesn't throw with app:// URLs
+  // Ensure that `setRequestContext` doesn't throw with app:// URLs
 
   const csp = SpecialPowers.Cc["@mozilla.org/contentsecuritypolicy;1"]
               .createInstance(SpecialPowers.Ci.nsIContentSecurityPolicy);
@@ -44,10 +44,10 @@
     let appchan = SpecialPowers.Services.io.newChannel(gManifestURL, null, null);
 
     try {
-      csp.scanRequestData(appchan);
-      ok(true, "scanRequestData hasn't thown");
+      csp.setRequestContext(null, null, null, appchan);
+      ok(true, "setRequestContext hasn't thown");
     } catch(e) {
-      ok(false, "scanRequestData throws");
+      ok(false, "setRequestContext throws");
     }
 
     cleanup()
