@@ -104,7 +104,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
 
   mSurface = gfxPlatform::GetPlatform()
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
-                                      gfxASurface::ContentFromFormat(gfxImageFormatARGB32));
+                                      gfxASurface::ContentFromFormat(gfxImageFormat::ARGB32));
 
   mIMEComposing = false;
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);

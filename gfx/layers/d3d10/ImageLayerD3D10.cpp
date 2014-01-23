@@ -73,7 +73,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
 
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
-                                       gfxImageFormatARGB32);
+                                       gfxImageFormat::ARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);
@@ -472,8 +472,8 @@ RemoteDXGITextureImage::DeprecatedGetAsSurface()
   nsRefPtr<gfxImageSurface> surface =
     new gfxImageSurface(ThebesIntSize(mSize),
       mFormat == RemoteImageData::BGRX32 ?
-                 gfxImageFormatRGB24 :
-                 gfxImageFormatARGB32);
+                 gfxImageFormat::RGB24 :
+                 gfxImageFormat::ARGB32);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created image surface for DXGI texture.");

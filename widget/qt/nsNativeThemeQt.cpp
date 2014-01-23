@@ -61,15 +61,15 @@ static inline QImage::Format
 _qimage_from_gfximage_format (gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormatARGB32:
+    case gfxImageFormat::ARGB32:
         return QImage::Format_ARGB32_Premultiplied;
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::RGB24:
         return QImage::Format_RGB32;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
         return QImage::Format_RGB16;
-    case gfxImageFormatA8:
+    case gfxImageFormat::A8:
         return QImage::Format_Indexed8;
-    case gfxImageFormatA1:
+    case gfxImageFormat::A1:
 #ifdef WORDS_BIGENDIAN
         return QImage::Format_Mono;
 #else

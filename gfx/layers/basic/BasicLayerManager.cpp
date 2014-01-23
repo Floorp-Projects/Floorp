@@ -723,7 +723,7 @@ PixmanTransform(const gfxImageSurface* aDest,
                 gfxPoint aDestOffset)
 {
   IntSize destSize = ToIntSize(aDest->GetSize());
-  pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == gfxImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+  pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == gfxImageFormat::ARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                   destSize.width,
                                                   destSize.height,
                                                   (uint32_t*)aDest->Data(),
@@ -797,7 +797,7 @@ Transform3D(RefPtr<SourceSurface> aSource,
   nsRefPtr<gfxASurface> dest = aDest->CurrentSurface();
   nsRefPtr<gfxImageSurface> destImage = new gfxImageSurface(gfxIntSize(aDestRect.width,
                                                                        aDestRect.height),
-                                                            gfxImageFormatARGB32);
+                                                            gfxImageFormat::ARGB32);
   gfxPoint offset = aDestRect.TopLeft();
 
   // Include a translation to the correct origin.

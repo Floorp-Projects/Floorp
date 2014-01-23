@@ -27,7 +27,7 @@ using namespace mozilla::gfx;
 static inline _D3DFORMAT
 D3dFormatForGfxFormat(gfxImageFormat aFormat)
 {
-  if (aFormat == gfxImageFormatA8) {
+  if (aFormat == gfxImageFormat::A8) {
     return D3DFMT_A8;
   }
 
@@ -141,7 +141,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
 
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
-                                       gfxImageFormatARGB32);
+                                       gfxImageFormat::ARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);

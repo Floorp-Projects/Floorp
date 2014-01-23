@@ -332,17 +332,17 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (surf->Format()) {
-  case gfxImageFormatRGB24:
+  case gfxImageFormat::RGB24:
     mFormat = SurfaceFormat::B8G8R8X8;
     format = D3DFMT_X8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageFormatARGB32:
+  case gfxImageFormat::ARGB32:
     mFormat = SurfaceFormat::B8G8R8A8;
     format = D3DFMT_A8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageFormatA8:
+  case gfxImageFormat::A8:
     mFormat = SurfaceFormat::A8;
     format = D3DFMT_A8;
     bpp = 1;
@@ -666,17 +666,17 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (gfxPlatform::GetPlatform()->OptimalFormatForContent(surf->GetContentType())) {
-  case gfxImageFormatRGB24:
+  case gfxImageFormat::RGB24:
     mFormat = SurfaceFormat::B8G8R8X8;
     format = D3DFMT_X8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageFormatARGB32:
+  case gfxImageFormat::ARGB32:
     mFormat = SurfaceFormat::B8G8R8A8;
     format = D3DFMT_A8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageFormatA8:
+  case gfxImageFormat::A8:
     mFormat = SurfaceFormat::A8;
     format = D3DFMT_A8;
     bpp = 1;

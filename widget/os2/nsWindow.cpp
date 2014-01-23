@@ -1494,7 +1494,7 @@ HBITMAP nsWindow::CreateTransparencyMask(gfxImageFormat format,
 
   // Non-alpha formats are already taken care of
   // by initializing the XOR and AND masks to zero
-  if (format == gfxImageFormatARGB32) {
+  if (format == gfxImageFormat::ARGB32) {
 
     // make the AND mask the inverse of the 8-bit alpha data
     int32_t* pSrc = (int32_t*)aImageData;

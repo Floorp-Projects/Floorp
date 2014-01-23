@@ -1507,7 +1507,7 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfxMatrix& aTransform)
     new gfxImageSurface(map.mData,
                         gfxIntSize(width, height),
                         map.mStride,
-                        gfxImageFormatARGB32);
+                        gfxImageFormat::ARGB32);
   ReadPixelsIntoImageSurface(mGLContext, surf);
   source->Unmap();
 

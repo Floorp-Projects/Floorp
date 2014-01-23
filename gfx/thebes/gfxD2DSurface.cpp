@@ -42,7 +42,7 @@ gfxD2DSurface::gfxD2DSurface(const gfxIntSize& size,
 {
     Init(cairo_d2d_surface_create(
         gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
-        (cairo_format_t)imageFormat,
+        (cairo_format_t)(int)imageFormat,
         size.width, size.height));
 }
 

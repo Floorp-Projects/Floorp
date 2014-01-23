@@ -32,7 +32,7 @@ void DocumentRendererParent::DrawToCanvas(const nsIntSize& aSize,
         new gfxImageSurface(reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aData).BeginWriting()),
                             gfxIntSize(aSize.width, aSize.height),
                             aSize.width * 4,
-                            gfxImageFormatARGB32);
+                            gfxImageFormat::ARGB32);
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
 
     gfxRect rect(gfxPoint(0, 0), gfxSize(aSize.width, aSize.height));

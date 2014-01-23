@@ -2781,15 +2781,15 @@ PluginInstanceChild::CreateOptSurface(void)
     // Use an opaque surface unless we're transparent and *don't* have
     // a background to source from.
     gfxImageFormat format =
-        (mIsTransparent && !mBackground) ? gfxImageFormatARGB32 :
-                                           gfxImageFormatRGB24;
+        (mIsTransparent && !mBackground) ? gfxImageFormat::ARGB32 :
+                                           gfxImageFormat::RGB24;
 
 #ifdef MOZ_X11
     Display* dpy = mWsInfo.display;
     Screen* screen = DefaultScreenOfDisplay(dpy);
-    if (format == gfxImageFormatRGB24 &&
+    if (format == gfxImageFormat::RGB24 &&
         DefaultDepth(dpy, DefaultScreen(dpy)) == 16) {
-        format = gfxImageFormatRGB16_565;
+        format = gfxImageFormat::RGB16_565;
     }
 
     if (mSurfaceType == gfxSurfaceTypeXlib) {
@@ -3212,7 +3212,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
         gfxImageSurface* surfaceAsImage =
             static_cast<gfxImageSurface*>(aSurface);
         useSurfaceSubimageForBlack =
-            (surfaceAsImage->Format() == gfxImageFormatARGB32);
+            (surfaceAsImage->Format() == gfxImageFormat::ARGB32);
         // If we're going to use a subimage, nudge the rect so that we
         // can use optimal alpha recovery.  If we're not using a
         // subimage, the temporaries should automatically get
@@ -3231,7 +3231,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     gfxPoint deviceOffset = -targetRect.TopLeft();
 
     // We always use a temporary "white image"
-    whiteImage = new gfxImageSurface(targetSize, gfxImageFormatRGB24);
+    whiteImage = new gfxImageSurface(targetSize, gfxImageFormat::RGB24);
     if (whiteImage->CairoStatus()) {
         return;
     }
@@ -3274,7 +3274,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
         blackImage = surface->GetSubimage(targetRect);
     } else {
         blackImage = new gfxImageSurface(targetSize,
-                                         gfxImageFormatARGB32);
+                                         gfxImageFormat::ARGB32);
     }
 
     // Paint onto black background
