@@ -148,9 +148,7 @@ ContentClientRemoteBuffer::EndPaint()
   SetBufferProvider(nullptr);
   SetBufferProviderOnWhite(nullptr);
   for (unsigned i = 0; i< mOldTextures.Length(); ++i) {
-    if (mOldTextures[i]->IsLocked()) {
-      mOldTextures[i]->Unlock();
-    }
+    mOldTextures[i]->Unlock();
   }
   mOldTextures.Clear();
 
@@ -558,15 +556,6 @@ void
 ContentClientDoubleBuffered::PrepareFrame()
 {
   mIsNewBuffer = false;
-
-  if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-  if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
 
   if (!mFrontAndBackBufferDiffer) {
     return;

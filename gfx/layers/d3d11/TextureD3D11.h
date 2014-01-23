@@ -41,8 +41,6 @@ public:
 
   virtual void Unlock() MOZ_OVERRIDE;
 
-  virtual bool IsLocked() const MOZ_OVERRIDE { return mIsLocked; }
-
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
