@@ -3004,6 +3004,19 @@ DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerScript_getGlobal(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get global)", args, obj, script);
+    Debugger *dbg = Debugger::fromChildJSObject(obj);
+
+    RootedValue v(cx, ObjectValue(script->global()));
+    if (!dbg->wrapDebuggeeValue(cx, &v))
+        return false;
+    args.rval().set(v);
+    return true;
+}
+
+static bool
 DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getChildScripts", args, obj, script);
@@ -3666,6 +3679,7 @@ static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("sourceLength", DebuggerScript_getSourceLength, 0),
     JS_PSG("staticLevel", DebuggerScript_getStaticLevel, 0),
     JS_PSG("sourceMapURL", DebuggerScript_getSourceMapUrl, 0),
+    JS_PSG("global", DebuggerScript_getGlobal, 0),
     JS_PS_END
 };
 
