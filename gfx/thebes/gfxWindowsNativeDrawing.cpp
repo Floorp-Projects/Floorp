@@ -61,8 +61,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         if (surf &&
             ((surf->GetType() == gfxSurfaceType::Win32 ||
               surf->GetType() == gfxSurfaceType::Win32Printing) &&
-              (surf->GetContentType() == GFX_CONTENT_COLOR ||
-               (surf->GetContentType() == GFX_CONTENT_COLOR_ALPHA &&
+              (surf->GetContentType() == gfxContentType::COLOR ||
+               (surf->GetContentType() == gfxContentType::COLOR_ALPHA &&
                (mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA)))))
         {
             // grab the DC. This can fail if there is a complex clipping path,
@@ -196,8 +196,8 @@ gfxWindowsNativeDrawing::IsDoublePass()
         surf->GetType() != gfxSurfaceType::Win32Printing) {
 	return true;
     }
-    if ((surf->GetContentType() != GFX_CONTENT_COLOR ||
-         (surf->GetContentType() == GFX_CONTENT_COLOR_ALPHA &&
+    if ((surf->GetContentType() != gfxContentType::COLOR ||
+         (surf->GetContentType() == gfxContentType::COLOR_ALPHA &&
           !(mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
         return true;
     return false;

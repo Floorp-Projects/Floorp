@@ -357,7 +357,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
       }
     }
 
-    aHasAlpha = surf->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
+    aHasAlpha = surf->GetContentType() == gfxContentType::COLOR_ALPHA;
   } else if (aImage->GetFormat() == D3D9_RGB32_TEXTURE) {
     if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
       // The texture in which the frame is stored belongs to DXVA's D3D9 device.
@@ -416,7 +416,7 @@ ImageLayerD3D9::RenderLayer()
   {
     nsRefPtr<gfxASurface> surf = image->DeprecatedGetAsSurface();
     NS_ASSERTION(image->GetFormat() != CAIRO_SURFACE ||
-                 !surf || surf->GetContentType() != GFX_CONTENT_ALPHA,
+                 !surf || surf->GetContentType() != gfxContentType::ALPHA,
                  "Image layer has alpha image");
 
     bool hasAlpha = false;

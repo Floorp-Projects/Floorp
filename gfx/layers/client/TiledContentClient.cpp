@@ -248,9 +248,9 @@ gfxContentType
 BasicTiledLayerBuffer::GetContentType() const
 {
   if (mThebesLayer->CanUseOpaqueSurface()) {
-    return GFX_CONTENT_COLOR;
+    return gfxContentType::COLOR;
   } else {
-    return GFX_CONTENT_COLOR_ALPHA;
+    return gfxContentType::COLOR_ALPHA;
   }
 }
 

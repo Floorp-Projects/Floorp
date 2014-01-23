@@ -474,7 +474,7 @@ LayerManagerD3D10::CreateOptimalSurface(const IntSize &aSize,
 
   nsRefPtr<gfxD2DSurface> surface =
     new gfxD2DSurface(texture, aFormat == gfxImageFormat::RGB24 ?
-      GFX_CONTENT_COLOR : GFX_CONTENT_COLOR_ALPHA);
+      gfxContentType::COLOR : gfxContentType::COLOR_ALPHA);
 
   if (!surface || surface->CairoStatus()) {
     return LayerManager::CreateOptimalSurface(aSize, aFormat);

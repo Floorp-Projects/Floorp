@@ -87,12 +87,12 @@ MOZ_BEGIN_ENUM_CLASS(gfxSurfaceType)
   Max
 MOZ_END_ENUM_CLASS(gfxSurfaceType)
 
-    enum gfxContentType {
-        GFX_CONTENT_COLOR       = 0x1000,
-        GFX_CONTENT_ALPHA       = 0x2000,
-        GFX_CONTENT_COLOR_ALPHA = 0x3000,
-        GFX_CONTENT_SENTINEL    = 0xffff
-    };
+MOZ_BEGIN_ENUM_CLASS(gfxContentType)
+  COLOR       = 0x1000,
+  ALPHA       = 0x2000,
+  COLOR_ALPHA = 0x3000,
+  SENTINEL    = 0xffff
+MOZ_END_ENUM_CLASS(gfxContentType)
 
     /**
      * The memory used by this surface (as reported by KnownMemoryUsed()) can
