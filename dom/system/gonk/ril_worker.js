@@ -3807,7 +3807,9 @@ let RIL = {
   },
 
   _processSuppSvcNotification: function(info) {
-    debug("handle supp svc notification: " + JSON.stringify(info));
+    if (DEBUG) {
+      debug("handle supp svc notification: " + JSON.stringify(info));
+    }
 
     let notification = null;
     let callIndex = -1;
@@ -6217,12 +6219,9 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
   // The data contained in the NITZ message is
   // in the form "yy/mm/dd,hh:mm:ss(+/-)tz,dt"
   // for example: 12/02/16,03:36:08-20,00,310410
+  // See also bug 714352 - Listen for NITZ updates from rild.
 
-  // Always print the NITZ info so we can collection what different providers
-  // send down the pipe (see bug XXX).
-  // TODO once data is collected, add in |if (DEBUG)|
-
-  debug("DateTimeZone string " + dateString);
+  if (DEBUG) debug("DateTimeZone string " + dateString);
 
   let now = Date.now();
 
@@ -13905,5 +13904,5 @@ onmessage = function onmessage(event) {
 };
 
 onerror = function onerror(event) {
-  debug("RIL Worker error" + event.message + "\n");
+  if (DEBUG) debug("RIL Worker error" + event.message + "\n");
 };
