@@ -5050,7 +5050,17 @@ nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
   state.mYResolution = aYResolution;
   SetRenderingState(state);
   return NS_OK;
- }
+}
+
+gfxSize PresShell::GetCumulativeResolution()
+{
+  gfxSize resolution = GetResolution();
+  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
+  if (parent) {
+    resolution = resolution * static_cast<nsIPresShell_MOZILLA27*>(parent.get())->GetCumulativeResolution();
+  }
+  return resolution;
+} 
 
 void PresShell::SetRenderingState(const RenderingState& aState)
 {
