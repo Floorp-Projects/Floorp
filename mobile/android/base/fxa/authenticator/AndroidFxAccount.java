@@ -12,11 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.browserid.BrowserIDKeyPair;
-import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
@@ -33,7 +32,7 @@ import android.os.Bundle;
  * Account type. Account user data is not removed when the App's private data is
  * cleared.
  */
-public class AndroidFxAccount implements AbstractFxAccount {
+public class AndroidFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
   public static final int CURRENT_PREFS_VERSION = 1;
@@ -48,18 +47,10 @@ public class AndroidFxAccount implements AbstractFxAccount {
   public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
 
-  public static final int CURRENT_BUNDLE_VERSION = 1;
+  public static final int CURRENT_BUNDLE_VERSION = 2;
   public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
-  public static final String BUNDLE_KEY_ASSERTION = "assertion";
-  public static final String BUNDLE_KEY_CERTIFICATE = "certificate";
-  public static final String BUNDLE_KEY_INVALID = "invalid";
-  public static final String BUNDLE_KEY_SESSION_TOKEN = "sessionToken";
-  public static final String BUNDLE_KEY_KEY_FETCH_TOKEN = "keyFetchToken";
-  public static final String BUNDLE_KEY_VERIFIED = "verified";
-  public static final String BUNDLE_KEY_KA = "kA";
-  public static final String BUNDLE_KEY_KB = "kB";
-  public static final String BUNDLE_KEY_UNWRAPKB = "unwrapkB";
-  public static final String BUNDLE_KEY_ASSERTION_KEY_PAIR = "assertionKeyPair";
+  public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
+  public static final String BUNDLE_KEY_STATE = "state";
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -87,6 +78,10 @@ public class AndroidFxAccount implements AbstractFxAccount {
     this.accountManager = AccountManager.get(this.context);
   }
 
+  public Account getAndroidAccount() {
+    return this.account;
+  }
+
   protected int getAccountVersion() {
     String v = accountManager.getUserData(account, ACCOUNT_KEY_ACCOUNT_VERSION);
     if (v == null) {
@@ -107,7 +102,8 @@ public class AndroidFxAccount implements AbstractFxAccount {
   protected ExtendedJSONObject unbundle() {
     final int version = getAccountVersion();
     if (version < CURRENT_ACCOUNT_VERSION) {
-      // Needs upgrade. For now, do nothing.
+      // Needs upgrade. For now, do nothing. We'd like to just put your account
+      // into the Separated state here and have you update your credentials.
       return null;
     }
 
@@ -120,7 +116,7 @@ public class AndroidFxAccount implements AbstractFxAccount {
     if (bundle == null) {
       return null;
     }
-    return unbundleAccountV1(bundle);
+    return unbundleAccountV2(bundle);
   }
 
   protected String getBundleData(String key) {
@@ -186,26 +182,18 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return null;
   }
 
-  @Override
-  public byte[] getEmailUTF8() {
-    try {
-      return account.name.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      // Ignore.
-      return null;
-    }
+  private ExtendedJSONObject unbundleAccountV2(String bundle) {
+    return unbundleAccountV1(bundle);
   }
 
   /**
    * Note that if the user clears data, an account will be left pointing to a
    * deleted profile. Such is life.
    */
-  @Override
   public String getProfile() {
     return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE);
   }
 
-  @Override
   public String getAccountServerURI() {
     return accountManager.getUserData(account, ACCOUNT_KEY_IDP_SERVER);
   }
@@ -251,128 +239,6 @@ public class AndroidFxAccount implements AbstractFxAccount {
     return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
   }
 
-  @Override
-  public void setQuickStretchedPW(byte[] quickStretchedPW) {
-    accountManager.setPassword(account, quickStretchedPW == null ? null : Utils.byte2Hex(quickStretchedPW));
-  }
-
-
-  @Override
-  public byte[] getQuickStretchedPW() {
-    String quickStretchedPW = accountManager.getPassword(account);
-    return quickStretchedPW == null ? null : Utils.hex2Byte(quickStretchedPW);
-  }
-
-  @Override
-  public byte[] getSessionToken() {
-    return getBundleDataBytes(BUNDLE_KEY_SESSION_TOKEN);
-  }
-
-  @Override
-  public byte[] getKeyFetchToken() {
-    return getBundleDataBytes(BUNDLE_KEY_KEY_FETCH_TOKEN);
-  }
-
-  @Override
-  public void setSessionToken(byte[] sessionToken) {
-    updateBundleDataBytes(BUNDLE_KEY_SESSION_TOKEN, sessionToken);
-  }
-
-  @Override
-  public void setKeyFetchToken(byte[] keyFetchToken) {
-    updateBundleDataBytes(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken);
-  }
-
-  @Override
-  public boolean isVerified() {
-    return getBundleDataBoolean(BUNDLE_KEY_VERIFIED, false);
-  }
-
-  @Override
-  public void setVerified() {
-    updateBundleValue(BUNDLE_KEY_VERIFIED, true);
-  }
-
-  @Override
-  public byte[] getKa() {
-    return getBundleDataBytes(BUNDLE_KEY_KA);
-  }
-
-  @Override
-  public void setKa(byte[] kA) {
-    updateBundleValue(BUNDLE_KEY_KA, Utils.byte2Hex(kA));
-  }
-
-  @Override
-  public void setWrappedKb(byte[] wrappedKb) {
-    if (wrappedKb == null) {
-      final String message = "wrappedKb is null: cannot set kB.";
-      Logger.error(LOG_TAG, message);
-      throw new IllegalArgumentException(message);
-    }
-    byte[] unwrapKb = getBundleDataBytes(BUNDLE_KEY_UNWRAPKB);
-    if (unwrapKb == null) {
-      Logger.error(LOG_TAG, "unwrapKb is null: cannot set kB.");
-      return;
-    }
-    byte[] kB = new byte[wrappedKb.length]; // We could hard-code this to be 32.
-    for (int i = 0; i < wrappedKb.length; i++) {
-      kB[i] = (byte) (wrappedKb[i] ^ unwrapKb[i]);
-    }
-    updateBundleValue(BUNDLE_KEY_KB, Utils.byte2Hex(kB));
-  }
-
-  @Override
-  public byte[] getKb() {
-    return getBundleDataBytes(BUNDLE_KEY_KB);
-  }
-
-  protected BrowserIDKeyPair generateNewAssertionKeyPair() throws GeneralSecurityException {
-    Logger.info(LOG_TAG, "Generating new assertion key pair.");
-    // TODO Have the key size be a non-constant in FxAccountUtils, or read from SharedPreferences, or...
-    return RSACryptoImplementation.generateKeyPair(1024);
-  }
-
-  @Override
-  public BrowserIDKeyPair getAssertionKeyPair() throws GeneralSecurityException {
-    try {
-      String data = getBundleData(BUNDLE_KEY_ASSERTION_KEY_PAIR);
-      return RSACryptoImplementation.fromJSONObject(new ExtendedJSONObject(data));
-    } catch (Exception e) {
-      // Fall through to generating a new key pair.
-    }
-
-    BrowserIDKeyPair keyPair = generateNewAssertionKeyPair();
-
-    ExtendedJSONObject descriptor = unbundle();
-    if (descriptor == null) {
-      descriptor = new ExtendedJSONObject();
-    }
-    descriptor.put(BUNDLE_KEY_ASSERTION_KEY_PAIR, keyPair.toJSONObject().toJSONString());
-    persistBundle(descriptor);
-    return keyPair;
-  }
-
-  @Override
-  public String getCertificate() {
-    return getBundleData(BUNDLE_KEY_CERTIFICATE);
-  }
-
-  @Override
-  public void setCertificate(String certificate) {
-    updateBundleValue(BUNDLE_KEY_CERTIFICATE, certificate);
-  }
-
-  @Override
-  public String getAssertion() {
-    return getBundleData(BUNDLE_KEY_ASSERTION);
-  }
-
-  @Override
-  public void setAssertion(String assertion) {
-    updateBundleValue(BUNDLE_KEY_ASSERTION, assertion);
-  }
-
   /**
    * Extract a JSON dictionary of the string values associated to this account.
    * <p>
@@ -390,20 +256,17 @@ public class AndroidFxAccount implements AbstractFxAccount {
     } catch (UnsupportedEncodingException e) {
       // Ignore.
     }
-    o.put("quickStretchedPW", accountManager.getPassword(account));
     return o;
   }
 
-  public static Account addAndroidAccount(
+  public static AndroidFxAccount addAndroidAccount(
       Context context,
       String email,
       String password,
       String profile,
       String idpServerURI,
       String tokenServerURI,
-      byte[] sessionToken,
-      byte[] keyFetchToken,
-      boolean verified)
+      State state)
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
@@ -417,19 +280,9 @@ public class AndroidFxAccount implements AbstractFxAccount {
     if (tokenServerURI == null) {
       throw new IllegalArgumentException("tokenServerURI must not be null");
     }
-    // sessionToken and keyFetchToken are allowed to be null; they can be
-    // fetched via /account/login from the password. These tokens are generated
-    // by the server and we have no length or formatting guarantees. However, if
-    // one is given, both should be given: they come from the server together.
-    if ((sessionToken == null && keyFetchToken != null) ||
-        (sessionToken != null && keyFetchToken == null)) {
-      throw new IllegalArgumentException("none or both of sessionToken and keyFetchToken may be null");
+    if (state == null) {
+      throw new IllegalArgumentException("state must not be null");
     }
-
-    byte[] emailUTF8 = email.getBytes("UTF-8");
-    byte[] passwordUTF8 = password.getBytes("UTF-8");
-    byte[] quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(emailUTF8, passwordUTF8);
-    byte[] unwrapBkey = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
 
     // Android has internal restrictions that require all values in this
     // bundle to be strings. *sigh*
@@ -441,39 +294,71 @@ public class AndroidFxAccount implements AbstractFxAccount {
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
 
     ExtendedJSONObject descriptor = new ExtendedJSONObject();
-    descriptor.put(BUNDLE_KEY_BUNDLE_VERSION, CURRENT_BUNDLE_VERSION);
-    descriptor.put(BUNDLE_KEY_SESSION_TOKEN, sessionToken == null ? null : Utils.byte2Hex(sessionToken));
-    descriptor.put(BUNDLE_KEY_KEY_FETCH_TOKEN, keyFetchToken == null ? null : Utils.byte2Hex(keyFetchToken));
-    descriptor.put(BUNDLE_KEY_VERIFIED, verified);
-    descriptor.put(BUNDLE_KEY_UNWRAPKB, Utils.byte2Hex(unwrapBkey));
 
+    descriptor.put(BUNDLE_KEY_STATE_LABEL, state.getStateLabel().name());
+    descriptor.put(BUNDLE_KEY_STATE, state.toJSONObject().toJSONString());
+
+    descriptor.put(BUNDLE_KEY_BUNDLE_VERSION, CURRENT_BUNDLE_VERSION);
     userdata.putString(ACCOUNT_KEY_DESCRIPTOR, descriptor.toJSONString());
 
     Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
     AccountManager accountManager = AccountManager.get(context);
-    boolean added = accountManager.addAccountExplicitly(account, Utils.byte2Hex(quickStretchedPW), userdata);
+    boolean added = accountManager.addAccountExplicitly(account, null, userdata); // XXX what should the password be?
     if (!added) {
       return null;
     }
+
+    AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+    fxAccount.clearSyncPrefs();
+    fxAccount.enableSyncing();
+
+    return fxAccount;
+  }
+
+  public void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
+    context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE).edit().clear().commit();
+  }
+
+  public void enableSyncing() {
     FxAccountAuthenticator.enableSyncing(context, account);
-    return account;
+  }
+
+  public void disableSyncing() {
+    FxAccountAuthenticator.disableSyncing(context, account);
+  }
+
+  public synchronized void setState(State state) {
+    if (state == null) {
+      throw new IllegalArgumentException("state must not be null");
+    }
+    updateBundleValue(BUNDLE_KEY_STATE_LABEL, state.getStateLabel().name());
+    updateBundleValue(BUNDLE_KEY_STATE, state.toJSONObject().toJSONString());
+  }
+
+  public synchronized State getState() {
+    String stateLabelString = getBundleData(BUNDLE_KEY_STATE_LABEL);
+    String stateString = getBundleData(BUNDLE_KEY_STATE);
+    if (stateLabelString == null) {
+      throw new IllegalStateException("stateLabelString must not be null");
+    }
+    if (stateString == null) {
+      throw new IllegalStateException("stateString must not be null");
+    }
+
+    try {
+      StateLabel stateLabel = StateLabel.valueOf(stateLabelString);
+      return StateFactory.fromJSONObject(stateLabel, new ExtendedJSONObject(stateString));
+    } catch (Exception e) {
+      throw new IllegalStateException("could not get state", e);
+    }
   }
 
   // TODO: this is shit.
   private static String computeAudience(String tokenServerURI) throws URISyntaxException {
-     URI uri = new URI(tokenServerURI);
-     return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
+    URI uri = new URI(tokenServerURI);
+    return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
   }
 
-  @Override
-  public boolean isValid() {
-    return !getBundleDataBoolean(BUNDLE_KEY_INVALID, false);
-  }
-
-  @Override
-  public void setInvalid() {
-    updateBundleValue(BUNDLE_KEY_INVALID, true);
-  }
 
   /**
    * <b>For debugging only!</b>
@@ -488,25 +373,5 @@ public class AndroidFxAccount implements AbstractFxAccount {
     for (String key : list) {
       FxAccountConstants.pii(LOG_TAG, key + ": " + o.get(key));
     }
-  }
-
-  /**
-   * <b>For debugging only!</b>
-   */
-  public void forgetAccountTokens() {
-    ExtendedJSONObject descriptor = unbundle();
-    if (descriptor == null) {
-      return;
-    }
-    descriptor.remove(BUNDLE_KEY_SESSION_TOKEN);
-    descriptor.remove(BUNDLE_KEY_KEY_FETCH_TOKEN);
-    persistBundle(descriptor);
-  }
-
-  /**
-   * <b>For debugging only!</b>
-   */
-  public void forgetQuickstretchedPW() {
-    accountManager.setPassword(account, null);
   }
 }

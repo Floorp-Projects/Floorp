@@ -47,6 +47,14 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     }
   }
 
+  protected static void disableSyncing(Context context, Account account) {
+    for (String authority : new String[] {
+        AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
+    }) {
+      ContentResolver.setSyncAutomatically(account, authority, false);
+    }
+  }
+
   public static Account addAccount(Context context, String email, String uid, String sessionToken, String kA, String kB) {
     final AccountManager accountManager = AccountManager.get(context);
     final Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
