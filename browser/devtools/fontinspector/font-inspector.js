@@ -194,16 +194,15 @@ FontInspector.prototype = {
         !this.inspector.selection.isElementNode()) {
       return;
     }
-    let node = this.inspector.selection.nodeFront;
-    let contentDocument = node.ownerDocument;
-    let root = contentDocument.documentElement;
-    if (contentDocument.body) {
-      root = contentDocument.body;
-    }
-    this.inspector.selection.setNode(root, "fontinspector");
+
+    // Select the body node to show all fonts
+    let walker = this.inspector.walker;
+
+    walker.getRootNode().then(root => walker.querySelector(root, "body")).then(body => {
+      this.inspector.selection.setNodeFront(body, "fontinspector");
+    });
   },
 }
-
 
 window.setPanel = function(panel) {
   window.fontInspector = new FontInspector(panel, window);

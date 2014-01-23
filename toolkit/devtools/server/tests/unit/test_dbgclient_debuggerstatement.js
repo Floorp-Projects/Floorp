@@ -5,6 +5,7 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 var gClient;
+var gTabClient;
 var gDebuggee;
 
 function run_test()
@@ -17,6 +18,7 @@ function run_test()
   gClient = new DebuggerClient(transport);
   gClient.connect(function(aType, aTraits) {
     attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
+      gTabClient = aTabClient;
       test_threadAttach(aReply.threadActor);
     });
   });
@@ -26,7 +28,7 @@ function run_test()
 function test_threadAttach(aThreadActorID)
 {
   do_print("Trying to attach to thread " + aThreadActorID);
-  gClient.attachThread(aThreadActorID, function(aResponse, aThreadClient) {
+  gTabClient.attachThread({}, function(aResponse, aThreadClient) {
     do_check_eq(aThreadClient.state, "paused");
     do_check_eq(aThreadClient.actor, aThreadActorID);
     aThreadClient.resume(function() {

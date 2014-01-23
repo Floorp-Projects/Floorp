@@ -627,30 +627,30 @@ JSPropertyDescriptor::trace(JSTracer *trc)
 
 namespace js {
 namespace gc {
+
+template<typename T>
 struct PersistentRootedMarker
 {
-    template<typename Referent>
+    typedef PersistentRooted<T> Element;
+    typedef mozilla::LinkedList<Element> List;
+    typedef void (*MarkFunc)(JSTracer *trc, T *ref, const char *name);
+
+    template <MarkFunc Mark>
     static void
-    markChainIfNotNull(JSTracer *trc,
-                       mozilla::LinkedList<PersistentRooted<Referent *> > &list,
-                       void (*marker)(JSTracer *trc, Referent **ref, const char *name),
-                       const char *name)
+    markChainIfNotNull(JSTracer *trc, List &list, const char *name)
     {
-        for (PersistentRooted<Referent *> *r = list.getFirst(); r; r = r->getNext()) {
+        for (Element *r = list.getFirst(); r; r = r->getNext()) {
             if (r->get())
-                marker(trc, r->address(), name);
+                Mark(trc, r->address(), name);
         }
     }
 
-    template<typename Referent>
+    template <MarkFunc Mark>
     static void
-    markChain(JSTracer *trc,
-              mozilla::LinkedList<PersistentRooted<Referent> > &list,
-              void (*marker)(JSTracer *trc, Referent *ref, const char *name),
-              const char *name)
+    markChain(JSTracer *trc, List &list, const char *name)
     {
-        for (PersistentRooted<Referent> *r = list.getFirst(); r; r = r->getNext())
-            marker(trc, r->address(), name);
+        for (Element *r = list.getFirst(); r; r = r->getNext())
+            Mark(trc, r->address(), name);
     }
 };
 }
@@ -662,20 +662,20 @@ js::gc::MarkPersistentRootedChains(JSTracer *trc)
     JSRuntime *rt = trc->runtime;
 
     // Mark the PersistentRooted chains of types that may be null.
-    PersistentRootedMarker::markChainIfNotNull(trc, rt->functionPersistentRooteds, &MarkObjectRoot,
-                                               "PersistentRooted<JSFunction *>");
-    PersistentRootedMarker::markChainIfNotNull(trc, rt->objectPersistentRooteds, &MarkObjectRoot,
-                                               "PersistentRooted<JSObject *>");
-    PersistentRootedMarker::markChainIfNotNull(trc, rt->scriptPersistentRooteds, &MarkScriptRoot,
-                                               "PersistentRooted<JSScript *>");
-    PersistentRootedMarker::markChainIfNotNull(trc, rt->stringPersistentRooteds, &MarkStringRoot,
-                                               "PersistentRooted<JSString *>");
+    PersistentRootedMarker<JSFunction*>::markChainIfNotNull<MarkObjectRoot>(
+        trc, rt->functionPersistentRooteds, "PersistentRooted<JSFunction *>");
+    PersistentRootedMarker<JSObject*>::markChainIfNotNull<MarkObjectRoot>(
+        trc, rt->objectPersistentRooteds, "PersistentRooted<JSObject *>");
+    PersistentRootedMarker<JSScript*>::markChainIfNotNull<MarkScriptRoot>(
+        trc, rt->scriptPersistentRooteds, "PersistentRooted<JSScript *>");
+    PersistentRootedMarker<JSString*>::markChainIfNotNull<MarkStringRoot>(
+        trc, rt->stringPersistentRooteds, "PersistentRooted<JSString *>");
 
     // Mark the PersistentRooted chains of types that are never null.
-    PersistentRootedMarker::markChain(trc, rt->idPersistentRooteds, &MarkIdRoot,
-                                      "PersistentRooted<jsid>");
-    PersistentRootedMarker::markChain(trc, rt->valuePersistentRooteds, &MarkValueRoot,
-                                      "PersistentRooted<Value>");
+    PersistentRootedMarker<jsid>::markChain<MarkIdRoot>(trc, rt->idPersistentRooteds,
+                                                        "PersistentRooted<jsid>");
+    PersistentRootedMarker<Value>::markChain<MarkValueRoot>(trc, rt->valuePersistentRooteds,
+                                                            "PersistentRooted<Value>");
 }
 
 void

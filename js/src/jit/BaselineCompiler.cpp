@@ -1190,9 +1190,33 @@ BaselineCompiler::emit_JSOP_STRING()
     return true;
 }
 
+typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
+static const VMFunction DeepCloneObjectLiteralInfo =
+    FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
+
 bool
 BaselineCompiler::emit_JSOP_OBJECT()
 {
+    if (JS::CompartmentOptionsRef(cx).cloneSingletons(cx)) {
+        RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+        if (!obj)
+            return false;
+
+        prepareVMCall();
+
+        pushArg(ImmWord(js::MaybeSingletonObject));
+        pushArg(ImmGCPtr(obj));
+
+        if (!callVM(DeepCloneObjectLiteralInfo))
+            return false;
+
+        // Box and push return value.
+        masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+        frame.push(R0);
+        return true;
+    }
+
+    JS::CompartmentOptionsRef(cx).setSingletonsAsValues();
     frame.push(ObjectValue(*script->getObject(pc)));
     return true;
 }
