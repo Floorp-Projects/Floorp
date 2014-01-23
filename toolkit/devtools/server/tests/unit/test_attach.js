@@ -14,15 +14,15 @@ function run_test()
   gClient = new DebuggerClient(transport);
   gClient.connect(function(aType, aTraits) {
     attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
-      test_attach(aReply.threadActor);
+      test_attach(aTabClient);
     });
   });
   do_test_pending();
 }
 
-function test_attach(aThreadActorID)
+function test_attach(aTabClient)
 {
-  gClient.attachThread(aThreadActorID, function(aResponse, aThreadClient) {
+  aTabClient.attachThread({}, function(aResponse, aThreadClient) {
     do_check_eq(aThreadClient.state, "paused");
     aThreadClient.resume(cleanup);
   });
