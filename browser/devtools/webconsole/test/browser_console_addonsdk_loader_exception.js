@@ -70,7 +70,7 @@ function test()
   {
     let msg = [...results[0].matched][0];
     ok(msg, "message element found");
-    let locationNode = msg.querySelector(".location");
+    let locationNode = msg.querySelector(".message-location");
     ok(locationNode, "message location element found");
 
     let title = locationNode.getAttribute("title");
