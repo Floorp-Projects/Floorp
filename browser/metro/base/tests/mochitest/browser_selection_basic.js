@@ -318,6 +318,39 @@ gTests.push({
   tearDown: setUpAndTearDown,
 });
 
+gTests.push({
+  desc: "Bug 960886 - selection monocles being spilled over to other tabs " +
+        "when switching.",
+  setUp: setUpAndTearDown,
+  run: function test() {
+    let initialTab = Browser.selectedTab;
+
+    // Create additional tab to which we will switch later
+    info(chromeRoot + "browser_selection_basic.html");
+    let lastTab = yield addTab(chromeRoot + "browser_selection_basic.html");
+
+    // Switch back to the initial tab
+    let tabSelectPromise = waitForEvent(Elements.tabList, "TabSelect");
+    Browser.selectedTab = initialTab;
+    yield tabSelectPromise;
+    yield hideContextUI();
+
+    // Make selection
+    sendContextMenuClick(30, 20);
+    yield waitForCondition(()=>SelectionHelperUI.isSelectionUIVisible);
+
+    // Switch to another tab
+    tabSelectPromise = waitForEvent(Elements.tabList, "TabSelect");
+    Browser.selectedTab = lastTab;
+    yield tabSelectPromise;
+
+    yield waitForCondition(()=>!SelectionHelperUI.isSelectionUIVisible);
+
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
+  },
+  tearDown: setUpAndTearDown
+});
+
 function test() {
   if (!isLandscapeMode()) {
     todo(false, "browser_selection_tests need landscape mode to run.");
