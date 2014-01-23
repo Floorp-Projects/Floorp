@@ -196,6 +196,8 @@ PopupNotifications.prototype = {
    *          - accessKey (string): the button's accessKey.
    *          - callback (function): a callback to be invoked when the button is
    *            pressed.
+   *          - [optional] dismiss (boolean): If this is true, the notification
+   *            will be dismissed instead of removed after running the callback.
    *        If null, the notification will not have a button, and
    *        secondaryActions will be ignored.
    * @param secondaryActions
@@ -249,6 +251,11 @@ PopupNotifications.prototype = {
    *                     removed when they would have otherwise been dismissed
    *                     (i.e. any time the popup is closed due to user
    *                     interaction).
+   *        hideNotNow:  If true, indicates that the 'Not Now' menuitem should
+   *                     not be shown. If 'Not Now' is hidden, it needs to be
+   *                     replaced by another 'do nothing' item, so providing at
+   *                     least one secondary action is required; and one of the
+   *                     actions needs to have the 'dismiss' property set to true.
    *        popupIconURL:
    *                     A string. URL of the image to be displayed in the popup.
    *                     Normally specified in CSS using list-style-image and the
@@ -269,6 +276,10 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid mainAction";
     if (secondaryActions && secondaryActions.some(isInvalidAction))
       throw "PopupNotifications_show: invalid secondaryActions";
+    if (options && options.hideNotNow &&
+        (!secondaryActions || !secondaryActions.length ||
+         !secondaryActions.concat(mainAction).some(action => action.dismiss)))
+      throw "PopupNotifications_show: 'Not Now' item hidden without replacement";
 
     let notification = new Notification(id, message, anchorID, mainAction,
                                         secondaryActions, browser, this, options);
@@ -549,7 +560,10 @@ PopupNotifications.prototype = {
           popupnotification.appendChild(item);
         }, this);
 
-        if (n.secondaryActions.length) {
+        if (n.options.hideNotNow) {
+          popupnotification.setAttribute("hidenotnow", "true");
+        }
+        else if (n.secondaryActions.length) {
           let closeItemSeparator = doc.createElementNS(XUL_NS, "menuseparator");
           popupnotification.appendChild(closeItemSeparator);
         }
@@ -894,6 +908,11 @@ PopupNotifications.prototype = {
       Cu.reportError(error);
     }
 
+    if (notification.mainAction.dismiss) {
+      this._dismiss();
+      return;
+    }
+
     this._remove(notification);
     this._update();
   },
@@ -908,6 +927,11 @@ PopupNotifications.prototype = {
       target.action.callback.call();
     } catch(error) {
       Cu.reportError(error);
+    }
+
+    if (target.action.dismiss) {
+      this._dismiss();
+      return;
     }
 
     this._remove(target.notification);
