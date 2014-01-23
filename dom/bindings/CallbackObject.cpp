@@ -151,7 +151,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   mCx = cx;
 
   // Make sure the JS engine doesn't report exceptions we want to re-throw
-  if (mExceptionHandling == eRethrowContentExceptions ||
+  if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
       mExceptionHandling == eRethrowExceptions) {
     mSavedJSContextOptions = JS::ContextOptionsRef(cx);
     JS::ContextOptionsRef(cx).setDontReportUncaught(true);
