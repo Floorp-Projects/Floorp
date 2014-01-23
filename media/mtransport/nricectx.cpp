@@ -66,6 +66,7 @@ extern "C" {
 #include "async_timer.h"
 #include "r_crc32.h"
 #include "r_memory.h"
+#include "ice_reg.h"
 #include "ice_util.h"
 #include "transport_addr.h"
 #include "nr_crypto.h"
@@ -371,11 +372,11 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     // Set the priorites for candidate type preferences.
     // These numbers come from RFC 5245 S. 4.1.2.2
-    NR_reg_set_uchar((char *)"ice.pref.type.srv_rflx", 100);
-    NR_reg_set_uchar((char *)"ice.pref.type.peer_rflx", 110);
-    NR_reg_set_uchar((char *)"ice.pref.type.host", 126);
-    NR_reg_set_uchar((char *)"ice.pref.type.relayed", 5);
-    NR_reg_set_uchar((char *)"ice.pref.type.relayed_tcp", 0);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_SRV_RFLX, 100);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_PEER_RFLX, 110);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_HOST, 126);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED, 5);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED_TCP, 0);
 
     if (set_interface_priorities) {
       NR_reg_set_uchar((char *)"ice.pref.interface.rl0", 255);
