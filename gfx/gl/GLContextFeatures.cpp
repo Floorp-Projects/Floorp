@@ -306,6 +306,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          *   GL_HALF_FLOAT_ARB = 0x140B == GL_HALF_FLOAT
          *   GL_HALF_FLOAT_NV  = 0x140B == GL_HALF_FLOAT
          *   GL_HALF_FLOAT_OES = 0x8D61 != GL_HALF_FLOAT
+         * WebGL handles this specifically with an OES_texture_half_float check.
          */
     },
     {
