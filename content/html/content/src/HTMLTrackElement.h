@@ -97,10 +97,10 @@ public:
 
   // Constants for numeric readyState property values.
   enum {
-    NONE = 0U,
-    LOADING = 1U,
-    LOADED = 2U,
-    ERROR = 3U
+    READY_STATE_NONE = 0U,
+    READY_STATE_LOADING = 1U,
+    READY_STATE_LOADED = 2U,
+    READY_STATE_ERROR = 3U
   };
   uint16_t ReadyState() const;
 
