@@ -409,6 +409,7 @@ const PanelUI = {
           continue;
         button.setAttribute(attrName, node.getAttribute(attrName));
       }
+      button.setAttribute("class", "subviewbutton");
       fragment.appendChild(button);
     }
     items.appendChild(fragment);
