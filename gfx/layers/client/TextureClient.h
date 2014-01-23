@@ -172,6 +172,8 @@ public:
 
   virtual void Unlock() {}
 
+  virtual bool IsLocked() const = 0;
+
   /**
    * Returns true if this texture has a lock/unlock mechanism.
    * Textures that do not implement locking should be immutable or should
@@ -312,6 +314,8 @@ public:
   virtual bool Lock(OpenMode aMode) MOZ_OVERRIDE;
 
   virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool IsLocked() const MOZ_OVERRIDE { return mLocked; }
 
   // TextureClientSurface
 
