@@ -34,8 +34,12 @@ var FeedHandler = {
       return false;
     }
 
-    while (container.firstChild)
-      container.removeChild(container.firstChild);
+    for (let i = container.childNodes.length - 1; i >= 0; --i) {
+      let node = container.childNodes[i];
+      if (isSubview && node.localName == "label")
+        continue;
+      container.removeChild(node);
+    }
 
     if (!feeds || feeds.length <= 1)
       return false;
