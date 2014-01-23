@@ -189,6 +189,8 @@ public:
   friend class DataChannel;
   Mutex  mLock;
 
+  int32_t ReadBlob(uint16_t aStream, nsIInputStream* aBlob);
+
 protected:
   friend class DataChannelOnMessageAvailable;
   // Avoid cycles with PeerConnectionImpl
@@ -287,6 +289,7 @@ private:
   nsCOMPtr<nsITimer> mDeferredTimer;
   uint32_t mDeferTimeout; // in ms
   bool mTimerRunning;
+  nsCOMPtr<nsIThread> mInternalIOThread;
 };
 
 #define ENSURE_DATACONNECTION \
