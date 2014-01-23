@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsISerializable.idl"
 
 interface nsIURI;
-interface nsIHttpChannel;
+interface nsIChannel;
 interface nsIDocShell;
+interface nsIPrincipal;
 
 /**
  * nsIContentSecurityPolicy
@@ -15,8 +16,8 @@ interface nsIDocShell;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(781b6511-f1fa-4e2c-8eff-1739d091eb2f)]
-interface nsIContentSecurityPolicy : nsISupports
+[scriptable, uuid(8b91f829-b1bf-4327-8ece-4000aa823394)]
+interface nsIContentSecurityPolicy : nsISerializable
 {
 
   /**
@@ -153,10 +154,18 @@ interface nsIContentSecurityPolicy : nsISupports
   const unsigned short VIOLATION_TYPE_NONCE_STYLE   = 5;
 
   /**
-   * Called after the CSP object is created to fill in the appropriate request
-   * and request header information needed in case a report needs to be sent.
+   * Called after the CSP object is created to fill in appropriate request
+   * context and give it a reference to its owning principal for violation
+   * report generation.
+   * This will use whatever data is available, choosing earlier arguments first
+   * if multiple are available.  Either way, it will attempt to obtain the URI,
+   * referrer and the principal from whatever is available.  If the channel is
+   * available, it'll also store that for processing policy-uri directives.
    */
-  void scanRequestData(in nsIHttpChannel aChannel);
+  void setRequestContext(in nsIURI selfURI,
+                         in nsIURI referrer,
+                         in nsIPrincipal documentPrincipal,
+                         in nsIChannel aChannel);
 
   /**
    * Verifies ancestry as permitted by the policy.
