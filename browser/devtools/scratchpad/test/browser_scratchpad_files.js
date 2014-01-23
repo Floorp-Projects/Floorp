@@ -53,6 +53,9 @@ function fileImported(aStatus, aFileContent)
   is(gScratchpad.getText(), gFileContent,
      "the editor content is correct");
 
+  is(gScratchpad.dirty, false,
+     "the editor marks imported file as saved");
+
   // Save the file after changes.
   gFileContent += "// omg, saved!";
   gScratchpad.editor.setText(gFileContent);

@@ -126,7 +126,7 @@ Shape::removeChild(Shape *child)
 }
 
 Shape *
-PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, const StackShape &child)
+PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unrootedChild)
 {
     RootedShape parent(cx, parentArg);
     JS_ASSERT(parent);
@@ -144,11 +144,11 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, const StackShape 
     KidsPointer *kidp = &parent->kids;
     if (kidp->isShape()) {
         Shape *kid = kidp->toShape();
-        if (kid->matches(child))
-            existingShape = kid;
+        if (kid->matches(unrootedChild))
+        existingShape = kid;
     } else if (kidp->isHash()) {
-        if (KidsHash::Ptr p = kidp->toHash()->lookup(child))
-            existingShape = *p;
+        if (KidsHash::Ptr p = kidp->toHash()->lookup(unrootedChild))
+        existingShape = *p;
     } else {
         /* If kidp->isNull(), we always insert. */
     }
@@ -181,13 +181,13 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, const StackShape 
     if (existingShape)
         return existingShape;
 
-    StackShape::AutoRooter childRoot(cx, &child);
+    RootedGeneric<StackShape*> child(cx, &unrootedChild);
 
     Shape *shape = newShape(cx);
     if (!shape)
         return nullptr;
 
-    new (shape) Shape(child, parent->numFixedSlots());
+    new (shape) Shape(*child, parent->numFixedSlots());
 
     if (!insertChild(cx, parent, shape))
         return nullptr;

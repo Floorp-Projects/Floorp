@@ -643,7 +643,7 @@ public abstract class GeckoApp
                 mCurrentResponse = GeckoAppShell.preInstallWebApp(name, manifestURL, origin).toString();
             } else if (event.equals("WebApps:PostInstall")) {
                 if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
-                    GeckoAppShell.postInstallWebApp(message.getString("packageName"), message.getString("origin"));
+                    GeckoAppShell.postInstallWebApp(message.getString("apkPackageName"), message.getString("origin"));
                 } else {
                     String name = message.getString("name");
                     String manifestURL = message.getString("manifestURL");

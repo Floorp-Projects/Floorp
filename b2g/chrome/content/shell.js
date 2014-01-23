@@ -28,6 +28,9 @@ Cu.import('resource://gre/modules/FxAccountsMgmtService.jsm');
 
 Cu.import('resource://gre/modules/DownloadsAPI.jsm');
 
+Cu.import('resource://gre/modules/Webapps.jsm');
+DOMApplicationRegistry.allAppsLaunchable = true;
+
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
                                    'nsIEnvironment');
@@ -268,7 +271,6 @@ var shell = {
       alert(msg);
       return;
     }
-
     let manifestURL = this.manifestURL;
     // <html:iframe id="systemapp"
     //              mozbrowser="true" allowfullscreen="true"
@@ -621,9 +623,6 @@ var shell = {
 
     this.reportCrash(true);
 
-    Cu.import('resource://gre/modules/Webapps.jsm');
-    DOMApplicationRegistry.allAppsLaunchable = true;
-
     this.sendEvent(window, 'ContentStart');
 
     Services.obs.notifyObservers(null, 'content-start', null);
@@ -676,13 +675,12 @@ Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data)
                           fullscreenorigin: data });
 }, "fullscreen-origin-change", false);
 
-Services.obs.addObserver(function onWebappsStart(subject, topic, data) {
+DOMApplicationRegistry.registryStarted.then(function () {
   shell.sendChromeEvent({ type: 'webapps-registry-start' });
-}, 'webapps-registry-start', false);
-
-Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
+});
+DOMApplicationRegistry.registryReady.then(function () {
   shell.sendChromeEvent({ type: 'webapps-registry-ready' });
-}, 'webapps-registry-ready', false);
+});
 
 Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
   shell.sendChromeEvent({

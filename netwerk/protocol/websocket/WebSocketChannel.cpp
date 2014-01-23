@@ -393,8 +393,15 @@ public:
       FailDelay *knownFailure = mFailures.Lookup(aChannel->mAddress,
                                                  aChannel->mPort);
       if (knownFailure) {
-        // repeated failure to connect: increase delay for next connection
-        knownFailure->FailedAgain();
+        if (aReason == NS_ERROR_NOT_CONNECTED) {
+          // Don't count close() before connection as a network error
+          LOG(("Websocket close() before connection to %s, %d completed"
+               " [this=%p]", aChannel->mAddress.get(), (int)aChannel->mPort,
+               aChannel));
+        } else {
+          // repeated failure to connect: increase delay for next connection
+          knownFailure->FailedAgain();
+        }
       } else {
         // new connection failure: record it.
         LOG(("WebSocket: connection to %s, %d failed: [this=%p]",
