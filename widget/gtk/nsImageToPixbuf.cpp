@@ -8,17 +8,12 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
-#include "gfxPlatform.h"
-#include "mozilla/gfx/2D.h"
 
 #include "imgIContainer.h"
 
 #include "nsAutoPtr.h"
 
 #include "nsImageToPixbuf.h"
-
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::SurfaceFormat;
 
 NS_IMPL_ISUPPORTS1(nsImageToPixbuf, nsIImageToPixbuf)
 
@@ -41,7 +36,7 @@ nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage)
 GdkPixbuf*
 nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 {
-    nsRefPtr<gfxASurface> thebesSurface =
+    nsRefPtr<gfxASurface> surface =
       aImage->GetFrame(imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
 
@@ -49,80 +44,65 @@ nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
     // in an imgINotificationObserver event, meaning that we're not allowed request
     // a sync decode. Presumably the originating event is something sensible like
     // OnStopFrame(), so we can just retry the call without a sync decode.
-    if (!thebesSurface)
-      thebesSurface = aImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                                       imgIContainer::FLAG_NONE);
+    if (!surface)
+        surface = aImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                                   imgIContainer::FLAG_NONE);
 
-    NS_ENSURE_TRUE(thebesSurface, nullptr);
-
-    RefPtr<SourceSurface> surface =
-      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
-                                                             thebesSurface);
     NS_ENSURE_TRUE(surface, nullptr);
 
-    return SourceSurfaceToPixbuf(surface,
-                                 surface->GetSize().width,
-                                 surface->GetSize().height);
+    nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+    NS_ENSURE_TRUE(frame, nullptr);
+
+    return ImgSurfaceToPixbuf(frame, frame->Width(), frame->Height());
 }
 
 GdkPixbuf*
-nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
-                                       int32_t aWidth,
-                                       int32_t aHeight)
+nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, int32_t aWidth, int32_t aHeight)
 {
-    MOZ_ASSERT(aWidth <= aSurface->GetSize().width &&
-               aHeight <= aSurface->GetSize().height,
-               "Requested rect is bigger than the supplied surface");
-
     GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
                                        aWidth, aHeight);
     if (!pixbuf)
         return nullptr;
 
-    uint32_t destStride = gdk_pixbuf_get_rowstride (pixbuf);
-    guchar* destPixels = gdk_pixbuf_get_pixels (pixbuf);
+    uint32_t rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+    guchar* pixels = gdk_pixbuf_get_pixels (pixbuf);
 
-    RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
-    DataSourceSurface::MappedSurface map;
-    dataSurface->Map(DataSourceSurface::MapType::READ, &map);
-    uint8_t* srcData = map.mData;
-    int32_t srcStride = map.mStride;
+    long cairoStride = aImgSurface->Stride();
+    unsigned char* cairoData = aImgSurface->Data();
 
-    SurfaceFormat format = dataSurface->GetFormat();
+    gfxImageFormat format = aImgSurface->Format();
 
     for (int32_t row = 0; row < aHeight; ++row) {
         for (int32_t col = 0; col < aWidth; ++col) {
-            guchar* destPixel = destPixels + row * destStride + 4 * col;
+            guchar* pixel = pixels + row * rowstride + 4 * col;
 
-            uint32_t* srcPixel =
-                reinterpret_cast<uint32_t*>((srcData + row * srcStride + 4 * col));
+            uint32_t* cairoPixel = reinterpret_cast<uint32_t*>
+                                                   ((cairoData + row * cairoStride + 4 * col));
 
-            if (format == SurfaceFormat::B8G8R8A8) {
-                const uint8_t a = (*srcPixel >> 24) & 0xFF;
-                const uint8_t r = unpremultiply((*srcPixel >> 16) & 0xFF, a);
-                const uint8_t g = unpremultiply((*srcPixel >>  8) & 0xFF, a);
-                const uint8_t b = unpremultiply((*srcPixel >>  0) & 0xFF, a);
+            if (format == gfxImageFormatARGB32) {
+                const uint8_t a = (*cairoPixel >> 24) & 0xFF;
+                const uint8_t r = unpremultiply((*cairoPixel >> 16) & 0xFF, a);
+                const uint8_t g = unpremultiply((*cairoPixel >>  8) & 0xFF, a);
+                const uint8_t b = unpremultiply((*cairoPixel >>  0) & 0xFF, a);
 
-                *destPixel++ = r;
-                *destPixel++ = g;
-                *destPixel++ = b;
-                *destPixel++ = a;
+                *pixel++ = r;
+                *pixel++ = g;
+                *pixel++ = b;
+                *pixel++ = a;
             } else {
-                MOZ_ASSERT(format == SurfaceFormat::B8G8R8X8);
+                NS_ASSERTION(format == gfxImageFormatRGB24,
+                             "unexpected format");
+                const uint8_t r = (*cairoPixel >> 16) & 0xFF;
+                const uint8_t g = (*cairoPixel >>  8) & 0xFF;
+                const uint8_t b = (*cairoPixel >>  0) & 0xFF;
 
-                const uint8_t r = (*srcPixel >> 16) & 0xFF;
-                const uint8_t g = (*srcPixel >>  8) & 0xFF;
-                const uint8_t b = (*srcPixel >>  0) & 0xFF;
-
-                *destPixel++ = r;
-                *destPixel++ = g;
-                *destPixel++ = b;
-                *destPixel++ = 0xFF; // A
+                *pixel++ = r;
+                *pixel++ = g;
+                *pixel++ = b;
+                *pixel++ = 0xFF; // A
             }
         }
     }
-
-    dataSurface->Unmap();
 
     return pixbuf;
 }
@@ -155,9 +135,5 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, int32_t aWidth, int32_t 
         context->Paint();
     }
 
-    RefPtr<SourceSurface> surface =
-        gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
-                                                               imgSurface);
-
-    return SourceSurfaceToPixbuf(surface, aWidth, aHeight);
+    return ImgSurfaceToPixbuf(imgSurface, aWidth, aHeight);
 }
