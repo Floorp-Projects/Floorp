@@ -173,11 +173,8 @@ add_test(function test_internalSaveStats_singleSample() {
 });
 
 add_test(function test_internalSaveStats_arraySamples() {
-  var networks = getNetworks();
-
-  netStatsDb.clearStats(networks, function (error, result) {
-    do_check_eq(error, null);
-
+  clearStore('net_stats_store', function() {
+    var networks = getNetworks();
     var network = [networks[0].id, networks[0].type];
 
     var samples = 2;
@@ -203,12 +200,9 @@ add_test(function test_internalSaveStats_arraySamples() {
       netStatsDb.logAllRecords(function(error, result) {
         do_check_eq(error, null);
 
-        // Result has one sample more than samples because clear inserts
-        // an empty sample to keep totalBytes synchronized with netd counters
-        result.shift();
         do_check_eq(result.length, samples);
         var success = true;
-        for (var i = 1; i < samples; i++) {
+        for (var i = 0; i < samples; i++) {
           if (result[i].appId != stats[i].appId ||
               result[i].serviceType != stats[i].serviceType ||
               !compareNetworks(result[i].network, stats[i].network) ||
@@ -231,11 +225,8 @@ add_test(function test_internalSaveStats_arraySamples() {
 });
 
 add_test(function test_internalRemoveOldStats() {
-  var networks = getNetworks();
-
-  netStatsDb.clearStats(networks, function (error, result) {
-    do_check_eq(error, null);
-
+  clearStore('net_stats_store', function() {
+    var networks = getNetworks();
     var network = [networks[0].id, networks[0].type];
     var samples = 10;
     var stats = [];
@@ -272,8 +263,7 @@ add_test(function test_internalRemoveOldStats() {
 });
 
 function processSamplesDiff(networks, lastStat, newStat, callback) {
-  netStatsDb.clearStats(networks, function (error, result){
-    do_check_eq(error, null);
+  clearStore('net_stats_store', function() {
     netStatsDb.dbNewTxn("net_stats_store", "readwrite", function(txn, store) {
       netStatsDb._saveStats(txn, store, lastStat);
     }, function(error, result) {
@@ -448,29 +438,23 @@ add_test(function test_saveAppStats() {
                 txBytes:        2234,
                 isAccumulative: false };
 
-  netStatsDb.clearStats(networks, function (error, result) {
-    do_check_eq(error, null);
+  clearStore('net_stats_store', function() {
     netStatsDb.saveStats(stats, function(error, result) {
       do_check_eq(error, null);
       netStatsDb.logAllRecords(function(error, result) {
         do_check_eq(error, null);
-        // The clear function clears all records of the datbase but
-        // inserts a new element for each [appId, connectionId, connectionType]
-        // record to keep the track of rxTotalBytes / txTotalBytes.
-        // So at this point, we have two records, one for the appId 0 used in
-        // past tests and the new one for appId 1
-        do_check_eq(result.length, 2);
-        do_check_eq(result[1].appId, stats.appId);
-        do_check_eq(result[1].serviceType, stats.serviceType);
-        do_check_true(compareNetworks(result[1].network, network));
+        do_check_eq(result.length, 1);
+        do_check_eq(result[0].appId, stats.appId);
+        do_check_eq(result[0].serviceType, stats.serviceType);
+        do_check_true(compareNetworks(result[0].network, network));
         let timestamp = filterTimestamp(stats.date);
-        do_check_eq(result[1].timestamp, timestamp);
-        do_check_eq(result[1].rxBytes, stats.rxBytes);
-        do_check_eq(result[1].txBytes, stats.txBytes);
-        do_check_eq(result[1].rxSystemBytes, 0);
-        do_check_eq(result[1].txSystemBytes, 0);
-        do_check_eq(result[1].rxTotalBytes, 0);
-        do_check_eq(result[1].txTotalBytes, 0);
+        do_check_eq(result[0].timestamp, timestamp);
+        do_check_eq(result[0].rxBytes, stats.rxBytes);
+        do_check_eq(result[0].txBytes, stats.txBytes);
+        do_check_eq(result[0].rxSystemBytes, 0);
+        do_check_eq(result[0].txSystemBytes, 0);
+        do_check_eq(result[0].rxTotalBytes, 0);
+        do_check_eq(result[0].txTotalBytes, 0);
         run_next_test();
       });
     });
@@ -490,36 +474,31 @@ add_test(function test_saveServiceStats() {
                 txBytes:        2234,
                 isAccumulative: false };
 
-  netStatsDb.clearStats(networks, function (error, result) {
-    do_check_eq(error, null);
+  clearStore('net_stats_store', function() {
     netStatsDb.saveStats(stats, function(error, result) {
       do_check_eq(error, null);
       netStatsDb.logAllRecords(function(error, result) {
         do_check_eq(error, null);
-        // Again, at this point, we have two records, one for the appId 0 and 
-        // empty serviceType used in past tests and the new one for appId 0 and
-        // non-empty serviceType.
-        do_check_eq(result.length, 2);
-        do_check_eq(result[1].appId, stats.appId);
-        do_check_eq(result[1].serviceType, stats.serviceType);
-        do_check_true(compareNetworks(result[1].network, network));
+        do_check_eq(result.length, 1);
+        do_check_eq(result[0].appId, stats.appId);
+        do_check_eq(result[0].serviceType, stats.serviceType);
+        do_check_true(compareNetworks(result[0].network, network));
         let timestamp = filterTimestamp(stats.date);
-        do_check_eq(result[1].timestamp, timestamp);
-        do_check_eq(result[1].rxBytes, stats.rxBytes);
-        do_check_eq(result[1].txBytes, stats.txBytes);
-        do_check_eq(result[1].rxSystemBytes, 0);
-        do_check_eq(result[1].txSystemBytes, 0);
-        do_check_eq(result[1].rxTotalBytes, 0);
-        do_check_eq(result[1].txTotalBytes, 0);
+        do_check_eq(result[0].timestamp, timestamp);
+        do_check_eq(result[0].rxBytes, stats.rxBytes);
+        do_check_eq(result[0].txBytes, stats.txBytes);
+        do_check_eq(result[0].rxSystemBytes, 0);
+        do_check_eq(result[0].txSystemBytes, 0);
+        do_check_eq(result[0].rxTotalBytes, 0);
+        do_check_eq(result[0].txTotalBytes, 0);
         run_next_test();
       });
     });
   });
 });
 
-function prepareFind(network, stats, callback) {
-  netStatsDb.clearStats(network, function (error, result) {
-    do_check_eq(error, null);
+function prepareFind(stats, callback) {
+  clearStore('net_stats_store', function() {
     netStatsDb.dbNewTxn("net_stats_store", "readwrite", function(txn, store) {
       netStatsDb._saveStats(txn, store, stats);
     }, function(error, result) {
@@ -557,7 +536,7 @@ add_test(function test_find () {
                  rxTotalBytes:              0, txTotalBytes:  0 });
   }
 
-  prepareFind(networks[0], stats, function(error, result) {
+  prepareFind(stats, function(error, result) {
     do_check_eq(error, null);
     netStatsDb.find(function (error, result) {
       do_check_eq(error, null);
@@ -601,7 +580,7 @@ add_test(function test_findAppStats () {
                  rxTotalBytes:             0, txTotalBytes: 0 });
   }
 
-  prepareFind(networks[0], stats, function(error, result) {
+  prepareFind(stats, function(error, result) {
     do_check_eq(error, null);
     netStatsDb.find(function (error, result) {
       do_check_eq(error, null);
@@ -645,7 +624,7 @@ add_test(function test_findServiceStats () {
                  rxTotalBytes:             0, txTotalBytes: 0 });
   }
 
-  prepareFind(networks[0], stats, function(error, result) {
+  prepareFind(stats, function(error, result) {
     do_check_eq(error, null);
     netStatsDb.find(function (error, result) {
       do_check_eq(error, null);
@@ -720,21 +699,14 @@ add_test(function test_saveMultipleAppStats () {
   let index = 0;
 
   networks.push(networkMobile);
-  netStatsDb.clearStats(networks, function (error, result) {
-    do_check_eq(error, null);
+
+  clearStore('net_stats_store', function() {
     netStatsDb.saveStats(cached[keys[index]],
       function callback(error, result) {
         do_check_eq(error, null);
 
         if (index == keys.length - 1) {
           netStatsDb.logAllRecords(function(error, result) {
-            // Again, result has two samples more than expected samples because
-            // clear inserts one empty sample for each network to keep totalBytes
-            // synchronized with netd counters. so the first two samples have to
-            // be discarted.
-            result.shift();
-            result.shift();
-
             do_check_eq(error, null);
             do_check_eq(result.length, 6);
             do_check_eq(result[0].serviceType, serviceType);
