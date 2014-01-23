@@ -563,4 +563,12 @@ public class Utils {
     }
     return serverURL + "user/1.0/" + userPart;
   }
+
+  public static void throwIfNull(Object... objects) {
+    for (Object object : objects) {
+      if (object == null) {
+        throw new IllegalArgumentException("object must not be null");
+      }
+    }
+  }
 }
