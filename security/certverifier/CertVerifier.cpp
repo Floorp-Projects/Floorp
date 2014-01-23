@@ -5,11 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CertVerifier.h"
+
+#include <stdint.h>
+
+#include "insanity/pkixtypes.h"
 #include "ExtendedValidation.h"
-#include "ScopedNSSTypes.h"
 #include "cert.h"
 #include "secerr.h"
 #include "prerror.h"
+
+// ScopedXXX in this file are insanity::pkix::ScopedXXX, not
+// mozilla::ScopedXXX.
+using namespace insanity::pkix;
+using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -44,7 +52,7 @@ ClassicVerifyCert(CERTCertificate* cert,
                   const SECCertificateUsage usage,
                   const PRTime time,
                   void* pinArg,
-                  /*optional out*/ CERTCertList** validationChain,
+                  /*optional out*/ ScopedCERTCertList* validationChain,
                   /*optional out*/ CERTVerifyLog* verifyLog)
 {
   SECStatus rv;
@@ -112,13 +120,28 @@ ClassicVerifyCert(CERTCertificate* cert,
   return rv;
 }
 
+#ifndef NSS_NO_LIBPKIX
+static void
+destroyCertListThatShouldNotExist(CERTCertList** certChain)
+{
+  PR_ASSERT(certChain);
+  PR_ASSERT(!*certChain);
+  if (certChain && *certChain) {
+    // There SHOULD not be a validation chain on failure, asserion here for
+    // the debug builds AND a fallback for production builds
+    CERT_DestroyCertList(*certChain);
+    *certChain = nullptr;
+  }
+}
+#endif
+
 SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert,
                          const SECCertificateUsage usage,
                          const PRTime time,
                          void* pinArg,
                          const Flags flags,
-                         /*optional out*/ CERTCertList** validationChain,
+                         /*optional out*/ ScopedCERTCertList* validationChain,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
@@ -147,7 +170,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     case certificateUsageStatusResponder:
       break;
     default:
-      NS_WARNING("Calling VerifyCert with invalid usage");
       PORT_SetError(SEC_ERROR_INVALID_ARGS);
       return SECFailure;
   }
@@ -179,7 +201,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     }
   }
 
-  MOZ_ASSERT_IF(evPolicy != SEC_OID_UNKNOWN, trustAnchors);
+  PR_ASSERT(evPolicy == SEC_OID_UNKNOWN || trustAnchors);
 
   size_t i = 0;
   size_t validationChainLocation = 0;
@@ -194,11 +216,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: setting up validation chain outparam.\n"));
     validationChainLocation = i;
     cvout[i].type = cert_po_certList;
-    cvout[i].value.pointer.cert = nullptr;
+    cvout[i].value.pointer.chain = nullptr;
     ++i;
     validationTrustAnchorLocation = i;
     cvout[i].type = cert_po_trustAnchor;
-    cvout[i].value.pointer.chain = nullptr;
+    cvout[i].value.pointer.cert = nullptr;
     ++i;
   }
   cvout[i].type = cert_po_end;
@@ -268,9 +290,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     cvin[i].value.arraySize = 1;
     cvin[i].value.array.oids = &evPolicy;
     ++i;
-    MOZ_ASSERT(trustAnchors);
+    PR_ASSERT(trustAnchors);
     cvin[i].type = cert_pi_trustAnchors;
-    cvin[i].value.pointer.chain = trustAnchors;
+    cvin[i].value.pointer.chain = trustAnchors.get();
     ++i;
 
     cvin[i].type = cert_pi_end;
@@ -287,13 +309,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("VerifyCert: failed CERT_PKIXVerifyCert(ev)\n"));
 
-    if (validationChain && *validationChain) {
-      // There SHOULD not be a validation chain on failure, asserion here for
-      // the debug builds AND a fallback for production builds
-      MOZ_ASSERT(false,
-                 "certPKIXVerifyCert returned failure AND a validationChain");
-      CERT_DestroyCertList(*validationChain);
-      *validationChain = nullptr;
+    if (validationChain) {
+      destroyCertListThatShouldNotExist(
+        &cvout[validationChainLocation].value.pointer.chain);
     }
 
     if (verifyLog) {
@@ -413,24 +431,21 @@ pkix_done:
         // we should only add the issuer to the chain if it is not already
         // present. On CA cert checking, the issuer is the same cert, so in
         // that case we do not add the cert to the chain.
-        if (!CERT_CompareCerts(trustAnchor, cert)) {
+        if (!CERT_CompareCerts(trustAnchor.get(), cert)) {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert:  adding issuer to tail for display\n"));
           // note: rv is reused to catch errors on cert creation!
-          ScopedCERTCertificate tempCert(CERT_DupCertificate(trustAnchor));
-          rv = CERT_AddCertToListTail(*validationChain, tempCert);
+          ScopedCERTCertificate tempCert(CERT_DupCertificate(trustAnchor.get()));
+          rv = CERT_AddCertToListTail(validationChain->get(), tempCert.get());
           if (rv == SECSuccess) {
-            tempCert.forget(); // ownership traferred to validationChain
+            tempCert.release(); // ownership traferred to validationChain
           } else {
-            CERT_DestroyCertList(*validationChain);
             *validationChain = nullptr;
           }
         }
       }
     } else {
-      // Validation was a fail, clean up if needed
-      if (cvout[validationChainLocation].value.pointer.chain) {
-        CERT_DestroyCertList(cvout[validationChainLocation].value.pointer.chain);
-      }
+      destroyCertListThatShouldNotExist(
+        &cvout[validationChainLocation].value.pointer.chain);
     }
   }
 
