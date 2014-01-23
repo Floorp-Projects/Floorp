@@ -1019,6 +1019,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                    .setElementProperty(elementProperty)
                    .setSourcePolicy(sourcePolicy)
                    .setCompileAndGo(compileAndGo);
+            if (!options.wrap(cx, cx->compartment()))
+                return false;
 
             script = JS::Compile(cx, global, options, codeChars, codeLength);
             if (!script)
