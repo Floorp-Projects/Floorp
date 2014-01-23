@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STANDALONE_MAKEFILE = 1
-SUPPRESS_DEFAULT_RULES = 1
 
 # Ensure that this happens before including rules.mk
 ifdef ENABLE_INTL_API
