@@ -147,6 +147,9 @@ ContentClientRemoteBuffer::EndPaint()
   // decided we didn't need one yet because the region to draw was empty.
   SetBufferProvider(nullptr);
   SetBufferProviderOnWhite(nullptr);
+  for (unsigned i = 0; i< mOldTextures.Length(); ++i) {
+    mOldTextures[i]->Unlock();
+  }
   mOldTextures.Clear();
 
   if (mTextureClient) {
@@ -237,8 +240,16 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
     return;
   }
 
+  // We just created the textures and we are about to get their draw targets
+  // so we have to lock them here.
+  DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+  MOZ_ASSERT(locked, "Could not lock the TextureClient");
+
   *aBlackDT = mTextureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
+    locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    MOZ_ASSERT(locked, "Could not lock the second TextureClient for component alpha");
+
     *aWhiteDT = mTextureClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 }
@@ -911,11 +922,21 @@ void
 ContentClientSingleBuffered::PrepareFrame()
 {
   if (!mFrontAndBackBufferDiffer) {
+    if (mTextureClient) {
+      DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+      MOZ_ASSERT(locked);
+    }
+    if (mTextureClientOnWhite) {
+      DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+      MOZ_ASSERT(locked);
+    }
     return;
   }
 
   RefPtr<DrawTarget> backBuffer = GetDTBuffer();
   if (!backBuffer && mTextureClient) {
+    DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
+    MOZ_ASSERT(locked);
     backBuffer = mTextureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 
@@ -926,6 +947,8 @@ ContentClientSingleBuffered::PrepareFrame()
 
   backBuffer = GetDTBufferOnWhite();
   if (!backBuffer && mTextureClientOnWhite) {
+    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
+    MOZ_ASSERT(locked);
     backBuffer = mTextureClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 
