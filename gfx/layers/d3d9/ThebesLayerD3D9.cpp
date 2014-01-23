@@ -131,7 +131,7 @@ ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
       } else {
         CopyRegion(oldTexture, mTextureRect.TopLeft(), mTexture, visibleRect.TopLeft(),
                    retainRegion, &mValidRegion);
-        if (aMode == SURFACE_COMPONENT_ALPHA) {
+        if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
           CopyRegion(oldTextureOnWhite, mTextureRect.TopLeft(), mTextureOnWhite, visibleRect.TopLeft(),
                      retainRegion, &mValidRegion);
         }
@@ -182,9 +182,9 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
   nsIntRect newTextureRect = mVisibleRegion.GetBounds();
 
   SurfaceMode mode = GetSurfaceMode();
-  if (mode == SURFACE_COMPONENT_ALPHA &&
+  if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA &&
       (!mParent || !mParent->SupportsComponentAlphaChildren())) {
-    mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+    mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
   }
   // If we have a transform that requires resampling of our texture, then
   // we need to make sure we don't sample pixels that haven't been drawn.
@@ -196,11 +196,11 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
       neededRegion.GetNumRects() > 1) {
     if (MayResample()) {
       neededRegion = newTextureRect;
-      if (mode == SURFACE_OPAQUE) {
+      if (mode == SurfaceMode::SURFACE_OPAQUE) {
         // We're going to paint outside the visible region, but layout hasn't
         // promised that it will paint opaquely there, so we'll have to
         // treat this layer as transparent.
-        mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+        mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
       }
     }
   }
@@ -246,7 +246,7 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
 
   SetShaderTransformAndOpacity();
 
-  if (mode == SURFACE_COMPONENT_ALPHA) {
+  if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     mD3DManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS1,
                                GetMaskLayer());
     device()->SetTexture(0, mTexture);
@@ -315,17 +315,17 @@ ThebesLayerD3D9::VerifyContentType(SurfaceMode aMode)
   mTexture->GetLevelDesc(0, &desc);
 
   switch (aMode) {
-  case SURFACE_OPAQUE:
+  case SurfaceMode::SURFACE_OPAQUE:
     if (desc.Format == D3DFMT_X8R8G8B8 && !mTextureOnWhite)
       return;
     break;
 
-  case SURFACE_SINGLE_CHANNEL_ALPHA:
+  case SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA:
     if (desc.Format == D3DFMT_A8R8G8B8 && !mTextureOnWhite)
       return;
     break;
 
-  case SURFACE_COMPONENT_ALPHA:
+  case SurfaceMode::SURFACE_COMPONENT_ALPHA:
     if (mTextureOnWhite) {
       NS_ASSERTION(desc.Format == D3DFMT_X8R8G8B8, "Wrong format for component alpha texture");
       return;
@@ -432,11 +432,11 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 
   switch (aMode)
   {
-    case SURFACE_OPAQUE:
+    case SurfaceMode::SURFACE_OPAQUE:
       destinationSurface = opaqueRenderer.Begin(this);
       break;
 
-    case SURFACE_SINGLE_CHANNEL_ALPHA: {
+    case SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA: {
       hr = device()->CreateTexture(bounds.width, bounds.height, 1,
                                    0, D3DFMT_A8R8G8B8,
                                    D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), nullptr);
@@ -459,7 +459,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       break;
     }
 
-    case SURFACE_COMPONENT_ALPHA: {
+    case SurfaceMode::SURFACE_COMPONENT_ALPHA: {
       nsRefPtr<gfxWindowsSurface> onBlack = opaqueRenderer.Begin(this);
       nsRefPtr<gfxWindowsSurface> onWhite = opaqueRendererOnWhite.Begin(this);
       if (onBlack && onWhite) {
@@ -493,10 +493,10 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 
   context->Translate(gfxPoint(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-  cbInfo.Callback(this, context, aRegion, CLIP_NONE, nsIntRegion(), cbInfo.CallbackData);
+  cbInfo.Callback(this, context, aRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), cbInfo.CallbackData);
 
   for (uint32_t i = 0; i < aReadbackUpdates.Length(); ++i) {
-    NS_ASSERTION(aMode == SURFACE_OPAQUE,
+    NS_ASSERTION(aMode == SurfaceMode::SURFACE_OPAQUE,
                  "Transparent surfaces should not be used for readback");
     const ReadbackProcessor::Update& update = aReadbackUpdates[i];
     nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
@@ -518,7 +518,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
   nsAutoTArray<IDirect3DTexture9*,2> destTextures;
   switch (aMode)
   {
-    case SURFACE_OPAQUE:
+    case SurfaceMode::SURFACE_OPAQUE:
       // Must release reference to dest surface before ending drawing
       destinationSurface = nullptr;
       opaqueRenderer.End();
@@ -526,7 +526,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       destTextures.AppendElement(mTexture);
       break;
 
-    case SURFACE_SINGLE_CHANNEL_ALPHA: {
+    case SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA: {
       LockTextureRectD3D9 textureLock(tmpTexture);
       if (!textureLock.HasLock()) {
         NS_WARNING("Failed to lock ThebesLayer tmpTexture texture.");
@@ -557,7 +557,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       break;
     }
 
-    case SURFACE_COMPONENT_ALPHA: {
+    case SurfaceMode::SURFACE_COMPONENT_ALPHA: {
       // Must release reference to dest surface before ending drawing
       destinationSurface = nullptr;
       opaqueRenderer.End();
@@ -610,7 +610,7 @@ ThebesLayerD3D9::CreateNewTextures(const gfx::IntSize &aSize,
   mTextureOnWhite = nullptr;
   HRESULT hr = device()->CreateTexture(aSize.width, aSize.height, 1,
                                        D3DUSAGE_RENDERTARGET,
-                                       aMode != SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
+                                       aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
                                        D3DPOOL_DEFAULT, getter_AddRefs(mTexture), nullptr);
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("ThebesLayerD3D9::CreateNewTextures(): Failed to create texture"),
@@ -618,7 +618,7 @@ ThebesLayerD3D9::CreateNewTextures(const gfx::IntSize &aSize,
     return;
   }
 
-  if (aMode == SURFACE_COMPONENT_ALPHA) {
+  if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     hr = device()->CreateTexture(aSize.width, aSize.height, 1,
                                  D3DUSAGE_RENDERTARGET,
                                  D3DFMT_X8R8G8B8,

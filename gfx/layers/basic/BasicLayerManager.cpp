@@ -238,7 +238,7 @@ public:
 BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
   mPhase(PHASE_NONE),
   mWidget(aWidget)
-  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
+  , mDoubleBuffering(BufferMode::BUFFER_NONE), mUsingDefaultTarget(false)
   , mCachedSurfaceInUse(false)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
@@ -250,7 +250,7 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
 BasicLayerManager::BasicLayerManager() :
   mPhase(PHASE_NONE),
   mWidget(nullptr)
-  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
+  , mDoubleBuffering(BufferMode::BUFFER_NONE), mUsingDefaultTarget(false)
   , mCachedSurfaceInUse(false)
   , mTransactionIncomplete(false)
 {
@@ -620,7 +620,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     if (IsRetained()) {
       nsIntRegion region;
       MarkLayersHidden(mRoot, clipRect, clipRect, region, ALLOW_OPAQUE);
-      if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+      if (mUsingDefaultTarget && mDoubleBuffering != BufferMode::BUFFER_NONE) {
         ApplyDoubleBuffering(mRoot, clipRect);
       }
     }

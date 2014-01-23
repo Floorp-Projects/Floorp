@@ -253,7 +253,7 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mHeight(0)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
-  sBackend = LAYERS_OPENGL;
+  sBackend = LayersBackend::LAYERS_OPENGL;
 }
 
 CompositorOGL::~CompositorOGL()

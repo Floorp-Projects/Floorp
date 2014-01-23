@@ -1131,7 +1131,7 @@ MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
   // If the backend device has changed, create a new manager (pulled from nswindow)
   if (mLayerManager) {
-    if (mLayerManager->GetBackendType() == LAYERS_D3D10) {
+    if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_D3D10) {
       LayerManagerD3D10 *layerManagerD3D10 =
         static_cast<LayerManagerD3D10*>(mLayerManager.get());
       if (layerManagerD3D10->device() !=
