@@ -7362,8 +7362,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       do {
         nsPIDOMWindow *win = doc->GetWindow();
         if (win) {
-          nsCOMPtr<nsINode> node =
-            do_QueryInterface(win->GetFrameElementInternal());
+          nsCOMPtr<nsINode> node = win->GetFrameElementInternal();
           if (node &&
               nsContentUtils::ContentIsDescendantOf(node, adoptedNode)) {
             rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
