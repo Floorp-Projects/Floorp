@@ -45,18 +45,18 @@ MOZ_BEGIN_ENUM_CLASS(gfxBreakPriority)
   eNormalBreak
 MOZ_END_ENUM_CLASS(gfxBreakPriority)
 
-    /**
-     * The format for an image surface. For all formats with alpha data, 0
-     * means transparent, 1 or 255 means fully opaque.
-     */
-    enum gfxImageFormat {
-        gfxImageFormatARGB32, ///< ARGB data in native endianness, using premultiplied alpha
-        gfxImageFormatRGB24,  ///< xRGB data in native endianness
-        gfxImageFormatA8,     ///< Only an alpha channel
-        gfxImageFormatA1,     ///< Packed transparency information (one byte refers to 8 pixels)
-        gfxImageFormatRGB16_565,  ///< RGB_565 data in native endianness
-        gfxImageFormatUnknown
-    };
+/**
+  * The format for an image surface. For all formats with alpha data, 0
+  * means transparent, 1 or 255 means fully opaque.
+  */
+MOZ_BEGIN_ENUM_CLASS(gfxImageFormat)
+  ARGB32, ///< ARGB data in native endianness, using premultiplied alpha
+  RGB24,  ///< xRGB data in native endianness
+  A8,     ///< Only an alpha channel
+  A1,     ///< Packed transparency information (one byte refers to 8 pixels)
+  RGB16_565,  ///< RGB_565 data in native endianness
+  Unknown
+MOZ_END_ENUM_CLASS(gfxImageFormat)
 
     enum gfxSurfaceType {
         gfxSurfaceTypeImage,

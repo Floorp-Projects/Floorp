@@ -113,7 +113,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
         nsIntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
                               NSToIntFloor(mNativeRect.height * mBackingScale));
         mQuartzSurface = new gfxQuartzSurface(backingSize,
-                                              gfxImageFormatARGB32);
+                                              gfxImageFormat::ARGB32);
         if (mQuartzSurface->CairoStatus())
             return nullptr;
         mSurfaceContext = new gfxContext(mQuartzSurface);

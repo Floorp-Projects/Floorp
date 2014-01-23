@@ -344,7 +344,7 @@ already_AddRefed<gfxImageSurface>
 gfxASurface::GetAsReadableARGB32ImageSurface()
 {
     nsRefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
-    if (!imgSurface || imgSurface->Format() != gfxImageFormatARGB32) {
+    if (!imgSurface || imgSurface->Format() != gfxImageFormat::ARGB32) {
       imgSurface = CopyToARGB32ImageSurface();
     }
     return imgSurface.forget();
@@ -359,7 +359,7 @@ gfxASurface::CopyToARGB32ImageSurface()
 
     const nsIntSize size = GetSize();
     nsRefPtr<gfxImageSurface> imgSurface =
-        new gfxImageSurface(size, gfxImageFormatARGB32);
+        new gfxImageSurface(size, gfxImageFormat::ARGB32);
 
     if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
         RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
@@ -432,7 +432,7 @@ gfxASurface::CheckSurfaceSize(const nsIntSize& sz, int32_t limit)
 int32_t
 gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
 {
-    return cairo_format_stride_for_width((cairo_format_t)format, (int)width);
+    return cairo_format_stride_for_width((cairo_format_t)(int)format, (int)width);
 }
 
 nsresult
@@ -469,16 +469,16 @@ gfxContentType
 gfxASurface::ContentFromFormat(gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             return GFX_CONTENT_COLOR_ALPHA;
-        case gfxImageFormatRGB24:
-        case gfxImageFormatRGB16_565:
+        case gfxImageFormat::RGB24:
+        case gfxImageFormat::RGB16_565:
             return GFX_CONTENT_COLOR;
-        case gfxImageFormatA8:
-        case gfxImageFormatA1:
+        case gfxImageFormat::A8:
+        case gfxImageFormat::A1:
             return GFX_CONTENT_ALPHA;
 
-        case gfxImageFormatUnknown:
+        case gfxImageFormat::Unknown:
         default:
             return GFX_CONTENT_COLOR;
     }
@@ -517,12 +517,12 @@ int32_t
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormatARGB32:
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::ARGB32:
+        case gfxImageFormat::RGB24:
             return 4;
-        case gfxImageFormatRGB16_565:
+        case gfxImageFormat::RGB16_565:
             return 2;
-        case gfxImageFormatA8:
+        case gfxImageFormat::A8:
             return 1;
         default:
             NS_WARNING("Unknown byte per pixel value for Image format");
@@ -715,17 +715,17 @@ gfxASurface::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat)
 {
   switch (aImageFormat) {
-    case gfxImageFormatARGB32:
+    case gfxImageFormat::ARGB32:
       return 4;
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::RGB24:
       return 4;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
       return 2;
-    case gfxImageFormatA8:
+    case gfxImageFormat::A8:
       return 1;
-    case gfxImageFormatA1:
+    case gfxImageFormat::A1:
       return 1; // Close enough
-    case gfxImageFormatUnknown:
+    case gfxImageFormat::Unknown:
     default:
       NS_NOTREACHED("Not really sure what you want me to say here");
       return 0;
@@ -775,7 +775,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   nsIntSize size;
 
   // FIXME/bug 831898: hack r5g6b5 for now.
-  if (!imgsurf || imgsurf->Format() == gfxImageFormatRGB16_565) {
+  if (!imgsurf || imgsurf->Format() == gfxImageFormat::RGB16_565) {
     size = GetSize();
     if (size.width == -1 && size.height == -1) {
       printf("Could not determine surface size\n");
@@ -784,7 +784,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
 
     imgsurf =
       new gfxImageSurface(nsIntSize(size.width, size.height),
-                          gfxImageFormatARGB32);
+                          gfxImageFormat::ARGB32);
 
     if (!imgsurf || imgsurf->CairoStatus()) {
       printf("Could not allocate image surface\n");

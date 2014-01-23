@@ -501,26 +501,26 @@ gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
     int depth;
     unsigned long red_mask, green_mask, blue_mask;
     switch (format) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             depth = 32;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::RGB24:
             depth = 24;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormatRGB16_565:
+        case gfxImageFormat::RGB16_565:
             depth = 16;
             red_mask = 0xf800;
             green_mask = 0x7e0;
             blue_mask = 0x1f;
             break;
-        case gfxImageFormatA8:
-        case gfxImageFormatA1:
+        case gfxImageFormat::A8:
+        case gfxImageFormat::A1:
         default:
             return nullptr;
     }
@@ -549,11 +549,11 @@ XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             return XRenderFindStandardFormat (dpy, PictStandardARGB32);
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::RGB24:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
-        case gfxImageFormatRGB16_565: {
+        case gfxImageFormat::RGB16_565: {
             // PictStandardRGB16_565 is not standard Xrender format
             // we should try to find related visual
             // and find xrender format by visual
@@ -562,9 +562,9 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
                 return nullptr;
             return XRenderFindVisualFormat(dpy, visual);
         }
-        case gfxImageFormatA8:
+        case gfxImageFormat::A8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
-        case gfxImageFormatA1:
+        case gfxImageFormat::A1:
             return XRenderFindStandardFormat (dpy, PictStandardA1);
         default:
             break;

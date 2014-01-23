@@ -143,7 +143,7 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, int32_t aWidth, int32_t 
                                 (static_cast<gfxASurface*>(aSurface));
     } else {
         imgSurface = new gfxImageSurface(gfxIntSize(aWidth, aHeight),
-					 gfxImageFormatARGB32);
+					 gfxImageFormat::ARGB32);
                                        
         if (!imgSurface)
             return nullptr;

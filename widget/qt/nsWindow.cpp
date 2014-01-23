@@ -238,13 +238,13 @@ _depth_to_gfximage_format(int32_t aDepth)
 {
     switch (aDepth) {
     case 32:
-        return gfxImageFormatARGB32;
+        return gfxImageFormat::ARGB32;
     case 24:
-        return gfxImageFormatRGB24;
+        return gfxImageFormat::RGB24;
     case 16:
-        return gfxImageFormatRGB16_565;
+        return gfxImageFormat::RGB16_565;
     default:
-        return gfxImageFormatUnknown;
+        return gfxImageFormat::Unknown;
     }
 }
 
@@ -252,11 +252,11 @@ static inline QImage::Format
 _gfximage_to_qformat(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormatARGB32:
+    case gfxImageFormat::ARGB32:
         return QImage::Format_ARGB32_Premultiplied;
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::RGB24:
         return QImage::Format_ARGB32;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
         return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;
@@ -283,8 +283,8 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nullptr)
         _depth_to_gfximage_format(aDepth);
 
     // Use fallback RGB24 format, Qt will do conversion for us
-    if (format == gfxImageFormatUnknown)
-        format = gfxImageFormatRGB24;
+    if (format == gfxImageFormat::Unknown)
+        format = gfxImageFormat::RGB24;
 
 #ifdef MOZ_HAVE_SHMIMAGE
     if (aWidget) {
@@ -2695,7 +2695,7 @@ nsWindow::GetThebesSurface()
     }
 #endif
     if (!mThebesSurface) {
-        gfxImageFormat imageFormat = gfxImageFormatRGB24;
+        gfxImageFormat imageFormat = gfxImageFormat::RGB24;
         mThebesSurface = new gfxImageSurface(gfxIntSize(1, 1), imageFormat);
     }
 

@@ -6880,14 +6880,14 @@ void nsWindow::ResizeTranslucentWindow(int32_t aNewWidth, int32_t aNewHeight, bo
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
     nsRefPtr<gfxD2DSurface> newSurface =
-      new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormatARGB32);
+      new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
     mTransparentSurface = newSurface;
     mMemoryDC = nullptr;
   } else
 #endif
   {
     nsRefPtr<gfxWindowsSurface> newSurface =
-      new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormatARGB32);
+      new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
     mTransparentSurface = newSurface;
     mMemoryDC = newSurface->GetDC();
   }

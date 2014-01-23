@@ -391,9 +391,9 @@ uint32_t
 AndroidGraphicBuffer::GetAndroidFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::RGB24:
       return HAL_PIXEL_FORMAT_RGBX_8888;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
       return HAL_PIXEL_FORMAT_RGB_565;
     default:
       return 0;

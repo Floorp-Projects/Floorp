@@ -31,15 +31,15 @@ ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
 {
     switch (aFormat) {
         case gfx::SurfaceFormat::B8G8R8A8:
-            return gfxImageFormatARGB32;
+            return gfxImageFormat::ARGB32;
         case gfx::SurfaceFormat::B8G8R8X8:
-            return gfxImageFormatRGB24;
+            return gfxImageFormat::RGB24;
         case gfx::SurfaceFormat::R5G6B5:
-            return gfxImageFormatRGB16_565;
+            return gfxImageFormat::RGB16_565;
         case gfx::SurfaceFormat::A8:
-            return gfxImageFormatA8;
+            return gfxImageFormat::A8;
         default:
-            return gfxImageFormatUnknown;
+            return gfxImageFormat::Unknown;
     }
 }
 
@@ -417,7 +417,7 @@ UploadImageDataToTexture(GLContext* gl,
     MOZ_ASSERT(gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
                gl->GetPreferredARGB32Format() == LOCAL_GL_RGBA);
     switch (aFormat) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
               surfaceFormat = gfx::SurfaceFormat::R8G8B8A8;
@@ -429,7 +429,7 @@ UploadImageDataToTexture(GLContext* gl,
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::RGB24:
             // Treat RGB24 surfaces as RGBA32 except for the surface
             // format used.
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
@@ -443,12 +443,12 @@ UploadImageDataToTexture(GLContext* gl,
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormatRGB16_565:
+        case gfxImageFormat::RGB16_565:
             internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
             surfaceFormat = gfx::SurfaceFormat::R5G6B5;
             break;
-        case gfxImageFormatA8:
+        case gfxImageFormat::A8:
             internalFormat = format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
             // We don't have a specific luminance shader
@@ -526,15 +526,15 @@ UploadSurfaceToTexture(GLContext* gl,
     unsigned char* data = nullptr;
 
     if (!imageSurface ||
-        (imageSurface->Format() != gfxImageFormatARGB32 &&
-         imageSurface->Format() != gfxImageFormatRGB24 &&
-         imageSurface->Format() != gfxImageFormatRGB16_565 &&
-         imageSurface->Format() != gfxImageFormatA8)) {
+        (imageSurface->Format() != gfxImageFormat::ARGB32 &&
+         imageSurface->Format() != gfxImageFormat::RGB24 &&
+         imageSurface->Format() != gfxImageFormat::RGB16_565 &&
+         imageSurface->Format() != gfxImageFormat::A8)) {
         // We can't get suitable pixel data for the surface, make a copy
         nsIntRect bounds = aDstRegion.GetBounds();
         imageSurface =
           new gfxImageSurface(gfxIntSize(bounds.width, bounds.height),
-                              gfxImageFormatARGB32);
+                              gfxImageFormat::ARGB32);
 
         nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
 

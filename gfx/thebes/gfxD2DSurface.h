@@ -21,7 +21,7 @@ public:
                   gfxContentType aContent);
 
     gfxD2DSurface(const gfxIntSize& size,
-                  gfxImageFormat imageFormat = gfxImageFormatRGB24);
+                  gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     gfxD2DSurface(HANDLE handle, gfxContentType aContent);
 

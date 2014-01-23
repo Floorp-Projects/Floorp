@@ -698,17 +698,17 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   DXGI_FORMAT dxgiFormat;
   switch (surf->Format()) {
-  case gfxImageFormatRGB24:
+  case gfxImageFormat::RGB24:
     mFormat = SurfaceFormat::B8G8R8X8;
     dxgiFormat = DXGI_FORMAT_B8G8R8X8_UNORM;
     bpp = 4;
     break;
-  case gfxImageFormatARGB32:
+  case gfxImageFormat::ARGB32:
     mFormat = SurfaceFormat::B8G8R8A8;
     dxgiFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     bpp = 4;
     break;
-  case gfxImageFormatA8:
+  case gfxImageFormat::A8:
     mFormat = SurfaceFormat::A8;
     dxgiFormat = DXGI_FORMAT_A8_UNORM;
     bpp = 1;
