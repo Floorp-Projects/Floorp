@@ -165,6 +165,13 @@ var ContextMenuHandler = {
       } else {
         Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
       }
+    } else if (Util.isEditableContent(this._target)) {
+      try {
+        this._target.ownerDocument.execCommand("copy", false);
+      } catch (ex) {
+        dump("ContextMenuHandler: exception copying from contentEditable: " +
+          ex.message + "\n");
+      }
     } else {
       let selectionText = this._previousState.string;
 

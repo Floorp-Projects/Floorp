@@ -3448,6 +3448,21 @@ var XULBrowserWindow = {
     LinkTargetDisplay.update();
   },
 
+  showTooltip: function (x, y, tooltip) {
+    // The x,y coordinates are relative to the <browser> element using
+    // the chrome zoom level.
+    let elt = document.getElementById("remoteBrowserTooltip");
+    elt.label = tooltip;
+
+    let anchor = gBrowser.selectedBrowser;
+    elt.openPopupAtScreen(anchor.boxObject.screenX + x, anchor.boxObject.screenY + y, false, null);
+  },
+
+  hideTooltip: function () {
+    let elt = document.getElementById("remoteBrowserTooltip");
+    elt.hidePopup();
+  },
+
   updateStatusField: function () {
     var text, type, types = ["overLink"];
     if (this._busyUI)
@@ -6418,10 +6433,10 @@ var gIdentityHandler = {
     // Chrome URIs however get special treatment. Some chrome URIs are
     // whitelisted to provide a positive security signal to the user.
     let chromeWhitelist = ["about:addons", "about:app-manager", "about:config",
-                           "about:crashes", "about:healthreport", "about:home",
-                           "about:newaddon", "about:permissions", "about:preferences",
-                           "about:privatebrowsing", "about:sessionstore",
-                           "about:support", "about:welcomeback"];
+                           "about:crashes", "about:customizing", "about:healthreport",
+                           "about:home", "about:newaddon", "about:permissions",
+                           "about:preferences", "about:privatebrowsing",
+                           "about:sessionstore", "about:support", "about:welcomeback"];
     let lowercaseSpec = uri.spec.toLowerCase();
     if (chromeWhitelist.some(function(whitelistedSpec) lowercaseSpec.startsWith(whitelistedSpec))) {
       this.setMode(this.IDENTITY_MODE_CHROMEUI);

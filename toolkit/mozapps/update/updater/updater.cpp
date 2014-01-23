@@ -1395,7 +1395,7 @@ PatchFile::Prepare()
   mPatchIndex = sPatchIndex++;
 
   NS_tsnprintf(spath, sizeof(spath)/sizeof(spath[0]),
-               NS_T("%s/%d.patch"), gSourcePath, mPatchIndex);
+               NS_T("%s/updating/%d.patch"), gDestinationPath, mPatchIndex);
 
   NS_tremove(spath);
 
@@ -2232,6 +2232,10 @@ UpdateThreadFunc(void *param)
     if (rv == OK) {
       rv = DoUpdate();
       gArchiveReader.Close();
+      NS_tchar updatingDir[MAXPATHLEN];
+      NS_tsnprintf(updatingDir, sizeof(updatingDir)/sizeof(updatingDir[0]),
+                   NS_T("%s/updating"), gDestinationPath);
+      ensure_remove_recursive(updatingDir);
     }
   }
 
@@ -3650,7 +3654,8 @@ int DoUpdate()
 {
   NS_tchar manifest[MAXPATHLEN];
   NS_tsnprintf(manifest, sizeof(manifest)/sizeof(manifest[0]),
-               NS_T("%s/update.manifest"), gSourcePath);
+               NS_T("%s/updating/update.manifest"), gDestinationPath);
+  ensure_parent_dir(manifest);
 
   // extract the manifest
   int rv = gArchiveReader.ExtractFile("updatev2.manifest", manifest);
@@ -3663,6 +3668,7 @@ int DoUpdate()
   }
 
   NS_tchar *rb = GetManifestContents(manifest);
+  NS_tremove(manifest);
   if (rb == nullptr) {
     LOG(("DoUpdate: error opening manifest file: " LOG_S, manifest));
     return READ_ERROR;

@@ -171,8 +171,8 @@ File(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = CurrentGlobalOrNull(cx);
+    nsXPConnect *xpc = nsXPConnect::XPConnect();
+    JSObject *glob = CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
@@ -206,8 +206,8 @@ Blob(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = CurrentGlobalOrNull(cx);
+    nsXPConnect *xpc = nsXPConnect::XPConnect();
+    JSObject *glob = CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
@@ -1141,9 +1141,9 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
 /* [noscript] JSObjectPtr importInto(in AUTF8String registryLocation,
                                      in JSObjectPtr targetObj); */
 NS_IMETHODIMP
-mozJSComponentLoader::ImportInto(const nsACString & aLocation,
+mozJSComponentLoader::ImportInto(const nsACString &aLocation,
                                  JSObject *aTargetObj,
-                                 nsAXPCNativeCallContext * cc,
+                                 nsAXPCNativeCallContext *cc,
                                  JSObject **_retval)
 {
     JSContext *callercx;

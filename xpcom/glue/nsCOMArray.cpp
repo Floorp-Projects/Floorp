@@ -278,3 +278,29 @@ nsCOMArray_base::SizeOfExcludingThis(
 
     return n;
 }
+
+
+void
+nsCOMArray_base::Adopt(nsISupports** aElements, uint32_t aSize)
+{
+    Clear();
+    mArray.AppendElements(aElements, aSize);
+
+    // Free the allocated array as well.
+    NS_Free(aElements);
+}
+
+uint32_t
+nsCOMArray_base::Forget(nsISupports*** elements)
+{
+    uint32_t length = Length();
+    size_t array_size = sizeof(nsISupports*) * length;
+    nsISupports** array = static_cast<nsISupports**>(NS_Alloc(array_size));
+    memmove(array, Elements(), array_size);
+    *elements = array;
+    // Don't Release the contained pointers; the caller of the method will
+    // do this eventually.
+    mArray.Clear();
+
+    return length;
+}

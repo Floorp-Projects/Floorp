@@ -14,10 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsIDOMElement.h"
-#include "nsINativeKeyBindings.h"
-#include "nsIController.h"
 #include "nsFocusManager.h"
-#include "nsPIWindowRoot.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -30,11 +27,11 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "nsEventStateManager.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-static nsINativeKeyBindings *sNativeEditorBindings = nullptr;
 
 class nsXBLSpecialDocInfo : public nsIObserver
 {
@@ -230,15 +227,12 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 // to a particular element rather than the document
 //
 nsresult
-nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
+nsXBLWindowKeyHandler::EnsureHandlers()
 {
   nsCOMPtr<Element> el = GetElement();
   NS_ENSURE_STATE(!mWeakPtrForElement || el);
   if (el) {
     // We are actually a XUL <keyset>.
-    if (aIsEditor)
-      *aIsEditor = false;
-
     if (mHandler)
       return NS_OK;
 
@@ -252,57 +246,15 @@ nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
     sXBLSpecialDocInfo->LoadDocInfo();
 
     // Now determine which handlers we should be using.
-    bool isEditor = IsEditor();
-    if (isEditor) {
+    if (IsHTMLEditableFieldFocused()) {
       sXBLSpecialDocInfo->GetAllHandlers("editor", &mHandler, &mUserHandler);
     }
     else {
       sXBLSpecialDocInfo->GetAllHandlers("browser", &mHandler, &mUserHandler);
     }
-
-    if (aIsEditor)
-      *aIsEditor = isEditor;
   }
 
   return NS_OK;
-}
-
-static nsINativeKeyBindings*
-GetEditorKeyBindings()
-{
-  static bool noBindings = false;
-  if (!sNativeEditorBindings && !noBindings) {
-    CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "editor",
-                   &sNativeEditorBindings);
-
-    if (!sNativeEditorBindings) {
-      noBindings = true;
-    }
-  }
-
-  return sNativeEditorBindings;
-}
-
-static void
-DoCommandCallback(const char *aCommand, void *aData)
-{
-  nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(static_cast<EventTarget*>(aData));
-  if (!root) {
-    return;
-  }
-
-  nsCOMPtr<nsIController> controller;
-  root->GetControllerForCommand(aCommand, getter_AddRefs(controller));
-  if (!controller) {
-    return;
-  }
-
-  bool commandEnabled;
-  nsresult rv = controller->IsCommandEnabled(aCommand, &commandEnabled);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (commandEnabled) {
-    controller->DoCommand(aCommand);
-  }
 }
 
 nsresult
@@ -320,8 +272,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   if (!trustedEvent)
     return NS_OK;
 
-  bool isEditor;
-  nsresult rv = EnsureHandlers(&isEditor);
+  nsresult rv = EnsureHandlers();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Element> el = GetElement();
@@ -343,45 +294,6 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
 
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
-  aKeyEvent->GetDefaultPrevented(&prevent);
-  if (prevent) {
-    return NS_OK;
-  }
-
-  // XXX Shouldn't we prefer the native key binding rather than our key
-  //     bindings?  I.e., should we call WalkHandlersInternal() after this
-  //     block?
-  if (isEditor && GetEditorKeyBindings()) {
-    WidgetKeyboardEvent* keyEvent =
-      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
-    MOZ_ASSERT(keyEvent,
-               "DOM key event's internal event must be WidgetKeyboardEvent");
-    bool handled = false;
-    switch (keyEvent->message) {
-      case NS_KEY_PRESS:
-        handled = sNativeEditorBindings->KeyPress(*keyEvent,
-                                                  DoCommandCallback,
-                                                  mTarget);
-        break;
-      case NS_KEY_UP:
-        handled = sNativeEditorBindings->KeyUp(*keyEvent,
-                                               DoCommandCallback,
-                                               mTarget);
-        break;
-      case NS_KEY_DOWN:
-        handled = sNativeEditorBindings->KeyDown(*keyEvent,
-                                                 DoCommandCallback,
-                                                 mTarget);
-        break;
-      default:
-        MOZ_CRASH("Unknown key message");
-    }
-
-    if (handled)
-      aKeyEvent->PreventDefault();
-
-  }
-  
   return NS_OK;
 }
 
@@ -422,23 +334,9 @@ nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
                                     aIgnoreShiftKey);
 }
 
-/* static */ void
-nsXBLWindowKeyHandler::ShutDown()
-{
-  NS_IF_RELEASE(sNativeEditorBindings);
-}
-
-//
-// IsEditor
-//
-// Determine if the document we're working with is Editor or Browser
-//
 bool
-nsXBLWindowKeyHandler::IsEditor()
+nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 {
-  // XXXndeakin even though this is only used for key events which should be
-  // going to the focused frame anyway, this doesn't seem like the right way
-  // to determine if something is an editor.
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm)
     return false;
@@ -450,12 +348,31 @@ nsXBLWindowKeyHandler::IsEditor()
 
   nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(focusedWindow));
   nsIDocShell *docShell = piwin->GetDocShell();
-  nsCOMPtr<nsIPresShell> presShell;
-  if (docShell)
-    presShell = docShell->GetPresShell();
+  if (!docShell) {
+    return false;
+  }
 
-  if (presShell) {
-    return presShell->GetSelectionFlags() == nsISelectionDisplay::DISPLAY_ALL;
+  nsCOMPtr<nsIEditor> editor;
+  docShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  fm->GetFocusedElement(getter_AddRefs(focusedElement));
+  nsCOMPtr<nsINode> focusedNode = do_QueryInterface(focusedElement);
+  if (focusedNode) {
+    // If there is a focused element, make sure it's in the active editing host.
+    // Note that GetActiveEditingHost finds the current editing host based on
+    // the document's selection.  Even though the document selection is usually
+    // collapsed to where the focus is, but the page may modify the selection
+    // without our knowledge, in which case this check will do something useful.
+    nsCOMPtr<Element> activeEditingHost = htmlEditor->GetActiveEditingHost();
+    if (!activeEditingHost) {
+      return false;
+    }
+    return nsContentUtils::ContentIsDescendantOf(focusedNode, activeEditingHost);
   }
 
   return false;

@@ -213,6 +213,13 @@ parent:
     SetStatus(uint32_t type, nsString status);
 
     /**
+     * Show/hide a tooltip when the mouse hovers over an element in the content
+     * document.
+     */
+    ShowTooltip(uint32_t x, uint32_t y, nsString tooltip);
+    HideTooltip();
+
+    /**
      * Initiates an asynchronous request for permission for the
      * provided principal.
      *

@@ -39,10 +39,10 @@
 
 class nsIDocShell;
 
-/* 
+/*
  * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
  *   https://bugzilla.mozilla.org/show_bug.cgi?id=686732
- * 
+ *
  * Exceptions: some of the following values are set to higher values than in the spec because
  * the values in the spec are ridiculously low. They are explicitly marked below
 */
@@ -230,7 +230,8 @@ public:
     // all context resources to be lost.
     uint32_t Generation() { return mGeneration.value(); }
 
-    const WebGLRectangleObject *FramebufferRectangleObject() const;
+    // Returns null if the current bound FB is not likely complete.
+    const WebGLRectangleObject* CurValidFBRectObject() const;
 
     static const size_t sMaxColorAttachments = 16;
 
@@ -442,7 +443,7 @@ public:
     void TexParameteri(GLenum target, GLenum pname, GLint param) {
         TexParameter_base(target, pname, &param, nullptr);
     }
-    
+
     void TexSubImage2D(GLenum target, GLint level,
                        GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format,
@@ -476,7 +477,7 @@ public:
                                   data->Stride(), format, type,
                                   data->GetData(), byteLength,
                                   -1, srcFormat, mPixelStorePremultiplyAlpha);
-        
+
     }
 
     void Uniform1i(WebGLUniformLocation* location, GLint x);
@@ -492,7 +493,7 @@ public:
                    GLfloat z);
     void Uniform4f(WebGLUniformLocation* location, GLfloat x, GLfloat y,
                    GLfloat z, GLfloat w);
-    
+
     void Uniform1iv(WebGLUniformLocation* location,
                     const dom::Int32Array& arr) {
         Uniform1iv_base(location, arr.Length(), arr.Data());
@@ -525,7 +526,7 @@ public:
     }
     void Uniform3iv_base(WebGLUniformLocation* location, uint32_t arrayLength,
                          const GLint* data);
-    
+
     void Uniform4iv(WebGLUniformLocation* location,
                     const dom::Int32Array& arr) {
         Uniform4iv_base(location, arr.Length(), arr.Data());
@@ -569,7 +570,7 @@ public:
     }
     void Uniform3fv_base(WebGLUniformLocation* location, uint32_t arrayLength,
                          const GLfloat* data);
-    
+
     void Uniform4fv(WebGLUniformLocation* location,
                     const dom::Float32Array& arr) {
         Uniform4fv_base(location, arr.Length(), arr.Data());
@@ -817,8 +818,8 @@ protected:
     void UndoFakeVertexAttrib0();
     void InvalidateFakeVertexAttrib0();
 
-    static CheckedUint32 GetImageSize(GLsizei height, 
-                                      GLsizei width, 
+    static CheckedUint32 GetImageSize(GLsizei height,
+                                      GLsizei width,
                                       uint32_t pixelSize,
                                       uint32_t alignment);
 
@@ -952,7 +953,7 @@ protected:
     bool ValidateDrawModeEnum(GLenum mode, const char *info);
     bool ValidateAttribIndex(GLuint index, const char *info);
     bool ValidateStencilParamsForDrawCall();
-    
+
     bool ValidateGLSLVariableName(const nsAString& name, const char *info);
     bool ValidateGLSLCharacter(char16_t c);
     bool ValidateGLSLString(const nsAString& string, const char *info);
@@ -1048,7 +1049,7 @@ protected:
     int32_t MaxTextureSizeForTarget(GLenum target) const {
         return target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
     }
-    
+
     /** like glBufferData but if the call may change the buffer size, checks any GL error generated
      * by this glBufferData call and returns it */
     GLenum CheckedBufferData(GLenum target,

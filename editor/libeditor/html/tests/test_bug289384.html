@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=289384
+-->
+<head>
+  <title>Test for Bug 289384</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=289384">Mozilla Bug 289384</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var win = window.open("data:text/html,<a href=\"data:text/html,<body contenteditable onload='opener.continueTest(window);'>foo bar</body>\">link</a>", "", "test-289384");
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad);
+    win.document.querySelector("a").click();
+  }, false);
+});
+
+function continueTest(win) {
+  SimpleTest.waitForFocus(function() {
+    var doc = win.document;
+    var sel = win.getSelection();
+    doc.body.focus();
+    sel.collapse(doc.body.firstChild, 3);
+    SimpleTest.executeSoon(function() {
+      synthesizeKey("VK_LEFT", {accelKey: true}, win);
+      ok(sel.isCollapsed, "The selection must be collapsed");
+      is(sel.anchorNode, doc.body.firstChild, "The anchor node should be the body element's text node");
+      is(sel.anchorOffset, 0, "The anchor offset should be 0");
+      win.close();
+      SimpleTest.finish();
+    });
+  }, win);
+}
+
+</script>
+</pre>
+</body>
+</html>
