@@ -423,15 +423,6 @@ class MochitestUtilsMixin(object):
       else:
         log.warning("runtests.py | Failed to copy %s to profile", abspath)
 
-  def copyTestsJarToProfile(self, options):
-    """ copy tests.jar to the profile directory so we can auto register it in the .xul harness """
-    testsJarFile = os.path.join(SCRIPT_DIR, "tests.jar")
-    if not os.path.isfile(testsJarFile):
-      return False
-
-    shutil.copy2(testsJarFile, options.profilePath)
-    return True
-
   def installChromeJar(self, chrome, options):
     """
       copy mochijar directory to profile as an extension so we have chrome://mochikit for all harness code
@@ -461,18 +452,13 @@ toolbar#nav-bar {
     with open(os.path.join(options.profilePath, "userChrome.css"), "a") as chromeFile:
       chromeFile.write(chrome)
 
-    # Call copyTestsJarToProfile(), Write tests.manifest.
     manifest = os.path.join(options.profilePath, "tests.manifest")
     with open(manifest, "w") as manifestFile:
-      if self.copyTestsJarToProfile(options):
-        # Register tests.jar.
-        manifestFile.write("content mochitests jar:tests.jar!/content/\n");
-      else:
-        # Register chrome directory.
-        chrometestDir = os.path.abspath(".") + "/"
-        if mozinfo.isWin:
-          chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
-        manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
+      # Register chrome directory.
+      chrometestDir = os.path.abspath(".") + "/"
+      if mozinfo.isWin:
+        chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
+      manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
 
       if options.testingModulesDir is not None:
         manifestFile.write("resource testing-common file:///%s\n" %
