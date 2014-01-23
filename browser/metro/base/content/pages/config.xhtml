@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % configDTD SYSTEM "chrome://browser/locale/config.dtd">
+%configDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta name="viewport" content="width=device-width; user-scalable=false" />
+
+    <link rel="stylesheet" href="chrome://browser/skin/config.css" type="text/css"/>
+    <script type="text/javascript;version=1.8" src="chrome://browser/content/pages/config.js"/>
+</head>
+
+<body dir="&locale.dir;" onload="NewPrefDialog.init(); AboutConfig.init();"
+                         onunload="AboutConfig.uninit();">
+
+    <div class="toolbar">
+        <div class="toolbar-container">
+            <div id="new-pref-toggle-button" onclick="NewPrefDialog.toggleShowHide();"/>
+
+            <div class="toolbar-item" id="filter-container">
+                <div id="filter-search-button"/>
+                <input id="filter-input" type="search" placeholder="&empty.label;" value=""
+                    oninput="AboutConfig.bufferFilterInput();"/>
+                <div id="filter-input-clear-button" onclick="AboutConfig.clearFilterInput();"/>
+            </div>
+        </div>
+    </div>
+
+    <div id="content" ontouchstart="AboutConfig.filterInput.blur();">
+
+        <div id="new-pref-container">
+            <li class="pref-item" id="new-pref-item">
+                <div class="pref-item-line">
+                    <input class="pref-name" id="new-pref-name" type="text" placeholder="&addpref.name;"
+                        onfocus="NewPrefDialog.focusName(event);"
+                        oninput="NewPrefDialog.updateName(event);"/>
+                    <select class="pref-value" id="new-pref-type" onchange="NewPrefDialog.type = event.target.value;">
+                        <option value="boolean">&boolean.label;</option>
+                        <option value="string">&string.label;</option>
+                        <option value="int">&integer.label;</option>
+                    </select>
+                </div>
+
+                <div class="pref-item-line" id="new-pref-line-boolean">
+                    <input class="pref-value" id="new-pref-value-boolean" disabled="disabled"/>
+                    <div class="pref-button toggle" onclick="NewPrefDialog.toggleBoolValue();">&toggle.label;</div>
+                </div>
+
+                <div class="pref-item-line">
+                    <input class="pref-value" id="new-pref-value-string" placeholder="&string.placeholder;"/>
+                    <input class="pref-value" id="new-pref-value-int" placeholder="&number.placeholder;" type="number"/>
+                </div>
+
+                <div class="pref-item-line">
+                    <div class="pref-button cancel" id="negative-button" onclick="NewPrefDialog.hide();">&cancel.label;</div>
+                    <div class="pref-button create" id="positive-button" onclick="NewPrefDialog.create(event);"></div>
+                </div>
+            </li>
+        </div>
+
+        <div id="prefs-shield"></div>
+
+        <ul id="prefs-container"/>
+
+        <ul id="loading-container"><li></li></ul>
+
+    </div>
+
+</body>
+</html>
