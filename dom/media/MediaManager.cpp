@@ -878,6 +878,7 @@ public:
     if (NS_IsMainThread()) {
       // This is safe since we're on main-thread, and the window can only
       // be invalidated from the main-thread (see OnNavigation)
+      nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       error->OnError(aErrorMsg);
 
