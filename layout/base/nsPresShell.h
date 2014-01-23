@@ -54,7 +54,7 @@ class nsAutoCauseReflowNotifier;
 // to get the pref for any reason.
 #define PAINTLOCK_EVENT_DELAY 250
 
-class PresShell : public nsIPresShell,
+class PresShell : public nsIPresShell_MOZILLA27,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
                   public nsSupportsWeakReference
@@ -180,6 +180,7 @@ public:
   virtual void SetDisplayPort(const nsRect& aDisplayPort);
 
   virtual nsresult SetResolution(float aXResolution, float aYResolution) MOZ_OVERRIDE;
+  virtual gfxSize GetCumulativeResolution() MOZ_OVERRIDE; // nsIPresShell_MOZILLA27
 
   //nsIViewObserver interface
 
