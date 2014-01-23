@@ -214,22 +214,19 @@ ConsoleAPI.prototype = {
 
   /**
    * Queue a call to a console method. See the CALL_DELAY constant.
-   * This method is the entry point for the console.* for workers.
    *
    * @param string aMethod
    *        The console method the code has invoked.
    * @param object aArguments
    *        The arguments passed to the console method.
-   * @param array aStack
-   *        The stack of the console method. Used by console.* for workers.
    */
-  queueCall: function CA_queueCall(aMethod, aArguments, aStack = null)
+  queueCall: function CA_queueCall(aMethod, aArguments)
   {
     let window = this._window.get();
     let metaForCall = {
       private: PrivateBrowsingUtils.isWindowPrivate(window),
       timeStamp: Date.now(),
-      stack: (aStack ? aStack : this.getStackTrace(aMethod != "trace" ? 1 : null)),
+      stack: this.getStackTrace(aMethod != "trace" ? 1 : null),
     };
 
     if (aMethod == "time" || aMethod == "timeEnd") {
