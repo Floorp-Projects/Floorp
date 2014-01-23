@@ -12,6 +12,7 @@
 using namespace mozilla::dom;
 
 #define BUFFER_SIZE        4096
+#define COMMAND_SIZE       256
 #define PROPERTY_VALUE_MAX 80
 
 // Intentionally not trying to dlclose() this handle. That's playing
@@ -236,6 +237,20 @@ public:
   int32_t do_wifi_stop_supplicant(int32_t arg) {
     USE_DLFUNC(wifi_stop_supplicant)
     return wifi_stop_supplicant(arg);
+  }
+
+  DEFINE_DLFUNC(wifi_command, int32_t, const char*, char*, size_t*)
+  int32_t do_wifi_command(const char* iface, const char* cmd, char* buf, size_t* len) {
+    char command[COMMAND_SIZE];
+    if (!strcmp(iface, "p2p0")) {
+      // Commands for p2p0 interface don't need prefix
+      snprintf(command, COMMAND_SIZE, "%s", cmd);
+    }
+    else {
+      snprintf(command, COMMAND_SIZE, "IFNAME=%s %s", iface, cmd);
+    }
+    USE_DLFUNC(wifi_command)
+    return wifi_command(command, buf, len);
   }
 };
 

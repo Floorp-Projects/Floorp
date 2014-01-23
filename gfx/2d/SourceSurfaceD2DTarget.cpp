@@ -143,9 +143,14 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
   if (FAILED(hr)) {
     // This seems to happen for SurfaceFormat::A8 sometimes...
-    aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
-                      D2D1::BitmapProperties(D2DPixelFormat(mFormat)),
-                      byRef(mBitmap));
+    hr = aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
+                           D2D1::BitmapProperties(D2DPixelFormat(mFormat)),
+                           byRef(mBitmap));
+
+    if (FAILED(hr)) {
+      gfxWarning() << "Failed in CreateBitmap. Code: " << hr;
+      return nullptr;
+    }
 
     RefPtr<ID2D1RenderTarget> rt;
 
