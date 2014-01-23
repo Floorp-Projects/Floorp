@@ -5,21 +5,29 @@
 package org.mozilla.gecko.fxa.sync;
 
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.SkewHandler;
+import org.mozilla.gecko.browserid.BrowserIDKeyPair;
+import org.mozilla.gecko.browserid.JSONWebTokenUtils;
+import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
-import org.mozilla.gecko.fxa.authenticator.FxAccountLoginDelegate;
-import org.mozilla.gecko.fxa.authenticator.FxAccountLoginException;
-import org.mozilla.gecko.fxa.authenticator.FxAccountLoginPolicy;
+import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
+import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineDelegate;
+import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
+import org.mozilla.gecko.fxa.login.Married;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
@@ -60,16 +68,21 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   protected static class SessionCallback implements BaseGlobalSessionCallback {
     protected final CountDownLatch latch;
     protected final SyncResult syncResult;
+    protected final AndroidFxAccount fxAccount;
 
-    public SessionCallback(CountDownLatch latch, SyncResult syncResult) {
+    public SessionCallback(CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount) {
       if (latch == null) {
         throw new IllegalArgumentException("latch must not be null");
       }
       if (syncResult == null) {
         throw new IllegalArgumentException("syncResult must not be null");
       }
+      if (fxAccount == null) {
+        throw new IllegalArgumentException("fxAccount must not be null");
+      }
       this.latch = latch;
       this.syncResult = syncResult;
+      this.fxAccount = fxAccount;
     }
 
     @Override
@@ -126,6 +139,16 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void handleError(GlobalSession globalSession, Exception e) {
+      // This is awful, but we need to propagate bad assertions back up the
+      // chain somehow, and this will do for now.
+      if (e instanceof TokenServerException) {
+        // We should only get here *after* we're locked into the married state.
+        State state = fxAccount.getState();
+        if (state.getStateLabel() == StateLabel.Married) {
+          Married married = (Married) state;
+          fxAccount.setState(married.makeCohabitingState());
+        }
+      }
       setSyncResultSoftError();
       Logger.warn(LOG_TAG, "Sync failed.", e);
       latch.countDown();
@@ -139,6 +162,48 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
   };
 
+  protected void syncWithAssertion(final String audience, final String assertion, URI tokenServerEndpointURI, final String prefsPath, final SharedPreferences sharedPrefs, final KeyBundle syncKeyBundle, final BaseGlobalSessionCallback callback) {
+    TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
+    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
+      @Override
+      public void handleSuccess(final TokenServerToken token) {
+        FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+
+        FxAccountGlobalSession globalSession = null;
+        try {
+          ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
+
+          // We compute skew over time using SkewHandler. This yields an unchanging
+          // skew adjustment that the HawkAuthHeaderProvider uses to adjust its
+          // timestamps. Eventually we might want this to adapt within the scope of a
+          // global session.
+          final SkewHandler tokenServerSkewHandler = SkewHandler.getSkewHandlerFromEndpointString(token.endpoint);
+          final long tokenServerSkew = tokenServerSkewHandler.getSkewInSeconds();
+          AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
+
+          // EXTRAS
+          globalSession = new FxAccountGlobalSession(token.endpoint, token.uid, authHeaderProvider, prefsPath, syncKeyBundle, callback, getContext(), Bundle.EMPTY, clientsDataDelegate);
+          globalSession.start();
+        } catch (Exception e) {
+          callback.handleError(globalSession, e);
+          return;
+        }
+      }
+
+      @Override
+      public void handleFailure(TokenServerException e) {
+        debugAssertion(audience, assertion);
+        handleError(e);
+      }
+
+      @Override
+      public void handleError(Exception e) {
+        Logger.error(LOG_TAG, "Failed to get token.", e);
+        callback.handleError(null, e);
+      }
+    });
+  }
+
   /**
    * A trivial Sync implementation that does not cache client keys,
    * certificates, or tokens.
@@ -149,21 +214,28 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   @Override
   public void onPerformSync(final Account account, final Bundle extras, final String authority, ContentProviderClient provider, SyncResult syncResult) {
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
+    Logger.resetLogging();
 
     Logger.info(LOG_TAG, "Syncing FxAccount" +
         " account named " + account.name +
         " for authority " + authority +
         " with instance " + this + ".");
 
+    final Context context = getContext();
+    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      fxAccount.dump();
+    }
     final CountDownLatch latch = new CountDownLatch(1);
-    final BaseGlobalSessionCallback callback = new SessionCallback(latch, syncResult);
+    final BaseGlobalSessionCallback callback = new SessionCallback(latch, syncResult, fxAccount);
 
     try {
-      final Context context = getContext();
-      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-
-      if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-        fxAccount.dump();
+      State state;
+      try {
+        state = fxAccount.getState();
+      } catch (Exception e) {
+        callback.handleError(null, e);
+        return;
       }
 
       final String prefsPath = fxAccount.getSyncPrefsPath();
@@ -172,80 +244,61 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       final SharedPreferences sharedPrefs = context.getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
 
       final String audience = fxAccount.getAudience();
+      final String authServerEndpoint = fxAccount.getAccountServerURI();
       final String tokenServerEndpoint = fxAccount.getTokenServerURI();
       final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
 
       // TODO: why doesn't the loginPolicy extract the audience from the account?
-      final FxAccountLoginPolicy loginPolicy = new FxAccountLoginPolicy(context, fxAccount, executor);
-      loginPolicy.certificateDurationInMilliseconds = 20 * 60 * 1000;
-      loginPolicy.assertionDurationInMilliseconds = 15 * 60 * 1000;
-      Logger.info(LOG_TAG, "Asking for certificates to expire after 20 minutes and assertions to expire after 15 minutes.");
-
-      loginPolicy.login(audience, new FxAccountLoginDelegate() {
+      final FxAccountClient client = new FxAccountClient20(authServerEndpoint, executor);
+      final FxAccountLoginStateMachine stateMachine = new FxAccountLoginStateMachine();
+      stateMachine.advance(state, StateLabel.Married, new LoginStateMachineDelegate() {
         @Override
-        public void handleSuccess(final String assertion) {
-          TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
-          tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
-            @Override
-            public void handleSuccess(final TokenServerToken token) {
-              FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
-              sharedPrefs.edit().putLong("tokenFailures", 0).commit();
-
-              FxAccountGlobalSession globalSession = null;
-              try {
-                ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
-
-                // TODO Document this choice for deriving from kB.
-                final KeyBundle syncKeyBundle = FxAccountUtils.generateSyncKeyBundle(fxAccount.getKb());
-
-                // We compute skew over time using SkewHandler. This yields an unchanging
-                // skew adjustment that the HawkAuthHeaderProvider uses to adjust its
-                // timestamps. Eventually we might want this to adapt within the scope of a
-                // global session.
-                final SkewHandler tokenServerSkewHandler = SkewHandler.getSkewHandlerFromEndpointString(token.endpoint);
-                final long tokenServerSkew = tokenServerSkewHandler.getSkewInSeconds();
-                AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
-
-                globalSession = new FxAccountGlobalSession(token.endpoint, token.uid, authHeaderProvider, prefsPath, syncKeyBundle, callback, context, extras, clientsDataDelegate);
-                globalSession.start();
-              } catch (Exception e) {
-                callback.handleError(globalSession, e);
-                return;
-              }
-            }
-
-            @Override
-            public void handleFailure(TokenServerException e) {
-              // This is tricky since the token server fairly
-              // consistently rejects a token the first time it sees it
-              // before accepting it for the rest of its lifetime.
-              long MAX_TOKEN_FAILURES_PER_TOKEN = 2;
-              long tokenFailures = 1 + sharedPrefs.getLong("tokenFailures", 0);
-              if (tokenFailures > MAX_TOKEN_FAILURES_PER_TOKEN) {
-                fxAccount.setCertificate(null);
-                tokenFailures = 0;
-                Logger.warn(LOG_TAG, "Seen too many failures with this token; resetting: " + tokenFailures);
-                Logger.warn(LOG_TAG, "To aid debugging, synchronously sending assertion to remote verifier for second look.");
-                debugAssertion(tokenServerEndpoint, assertion);
-              } else {
-                Logger.info(LOG_TAG, "Seen " + tokenFailures + " failures with this token so far.");
-              }
-              sharedPrefs.edit().putLong("tokenFailures", tokenFailures).commit();
-              handleError(e);
-            }
-
-            @Override
-            public void handleError(Exception e) {
-              Logger.error(LOG_TAG, "Failed to get token.", e);
-              callback.handleError(null, e);
-            }
-          });
+        public FxAccountClient getClient() {
+          return client;
         }
 
         @Override
-        public void handleError(FxAccountLoginException e) {
-          Logger.error(LOG_TAG, "Got error logging in.", e);
-          callback.handleError(null, e);
+        public long getCertificateDurationInMilliseconds() {
+          return 60 * 60 * 1000;
+        }
+
+        @Override
+        public long getAssertionDurationInMilliseconds() {
+          return 15 * 60 * 1000;
+        }
+
+        @Override
+        public BrowserIDKeyPair generateKeyPair() throws NoSuchAlgorithmException {
+          return RSACryptoImplementation.generateKeyPair(1024);
+        }
+
+        @Override
+        public void handleTransition(Transition transition, State state) {
+          Logger.warn(LOG_TAG, "handleTransition: " + transition + " to " + state);
+        }
+
+        @Override
+        public void handleFinal(State state) {
+          Logger.warn(LOG_TAG, "handleFinal: in " + state);
+          fxAccount.setState(state);
+
+          try {
+            if (state.getStateLabel() != StateLabel.Married) {
+              callback.handleError(null, new RuntimeException("Cannot sync from state: " + state));
+              return;
+            }
+
+            Married married = (Married) state;
+            final long now = System.currentTimeMillis();
+            SkewHandler skewHandler = SkewHandler.getSkewHandlerFromEndpointString(tokenServerEndpoint);
+            String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER,
+                now + skewHandler.getSkewInMillis(),
+                this.getAssertionDurationInMilliseconds());
+            syncWithAssertion(audience, assertion, tokenServerEndpointURI, prefsPath, sharedPrefs, married.getSyncKeyBundle(), callback);
+          } catch (Exception e) {
+            callback.handleError(null, e);
+            return;
+          }
         }
       });
 

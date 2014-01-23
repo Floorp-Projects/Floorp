@@ -181,3 +181,9 @@
   <!-- TODO: add email address to toast? -->
   <string name="fxaccount_confirm_verification_link_sent">Sent fresh verification link</string>
   <string name="fxaccount_confirm_verification_link_not_sent">Couldn\&apos;t send a fresh verification link</string>
+  <string name="fxaccount_status_debug_refresh_button_label">Refresh status view</string>
+  <string name="fxaccount_status_debug_dump_button_label">Dump account details</string>
+  <string name="fxaccount_status_debug_sync_button_label">Force sync</string>
+  <string name="fxaccount_status_debug_forget_certificate_button_label">Forget certificate (if applicable)</string>
+  <string name="fxaccount_status_debug_require_password_button_label">Require password re-entry</string>
+  <string name="fxaccount_status_debug_require_upgrade_button_label">Require upgrade</string>
