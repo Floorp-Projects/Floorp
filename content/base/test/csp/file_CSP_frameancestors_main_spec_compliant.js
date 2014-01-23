@@ -22,10 +22,6 @@ function setupFrames() {
   elt.src = base.a + "?testid=aa_block_spec_compliant&internalframe=aa_b&csp=" +
             escape("default-src 'none'; frame-ancestors 'none'; script-src 'self'");
 
-  elt = $('aa2_block_spec_compliant');
-  elt.src = "view-source:" + base.a + "?testid=aa2_block_spec_compliant&internalframe=aa_b&csp=" +
-            escape("default-src 'none'; frame-ancestors 'none'; script-src 'self'");
-
   elt = $('ab_allow_spec_compliant');
   elt.src = base.b + "?testid=ab_allow_spec_compliant&internalframe=ab_a&csp=" +
             escape("default-src 'none'; frame-ancestors " + host.a + "; script-src 'self'");
