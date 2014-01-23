@@ -311,5 +311,5 @@ gfxWindowsSurface::GetSize() const
 gfxMemoryLocation
 gfxWindowsSurface::GetMemoryLocation() const
 {
-    return GFX_MEMORY_IN_PROCESS_NONHEAP;
+    return gfxMemoryLocation::IN_PROCESS_NONHEAP;
 }
