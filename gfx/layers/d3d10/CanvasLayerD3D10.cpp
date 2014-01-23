@@ -99,7 +99,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 
-  if (mSurface && mSurface->GetType() == gfxSurfaceTypeD2D) {
+  if (mSurface && mSurface->GetType() == gfxSurfaceType::D2D) {
     void *data = mSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       mTexture = static_cast<ID3D10Texture2D*>(data);

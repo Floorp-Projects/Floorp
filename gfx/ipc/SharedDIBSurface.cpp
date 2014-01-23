@@ -57,7 +57,7 @@ bool
 SharedDIBSurface::IsSharedDIBSurface(gfxASurface* aSurface)
 {
   return aSurface &&
-    aSurface->GetType() == gfxSurfaceTypeImage &&
+    aSurface->GetType() == gfxSurfaceType::Image &&
     aSurface->GetData(&SHAREDDIB_KEY);
 }
 

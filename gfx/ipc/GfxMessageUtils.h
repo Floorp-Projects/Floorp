@@ -196,9 +196,9 @@ struct ParamTraits<gfxContentType>
 
 template <>
 struct ParamTraits<gfxSurfaceType>
-  : public EnumSerializer<gfxSurfaceType,
-                          gfxSurfaceTypeImage,
-                          gfxSurfaceTypeMax>
+  : public TypedEnumSerializer<gfxSurfaceType,
+                               gfxSurfaceType::Image,
+                               gfxSurfaceType::Max>
 {};
 
 template <>

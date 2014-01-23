@@ -132,9 +132,9 @@ CanvasLayerD3D9::UpdateSurface()
 
     nsRefPtr<gfxImageSurface> sourceSurface;
 
-    if (mSurface->GetType() == gfxSurfaceTypeWin32) {
+    if (mSurface->GetType() == gfxSurfaceType::Win32) {
       sourceSurface = mSurface->GetAsImageSurface();
-    } else if (mSurface->GetType() == gfxSurfaceTypeImage) {
+    } else if (mSurface->GetType() == gfxSurfaceType::Image) {
       sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxImageFormat::ARGB32 &&
           sourceSurface->Format() != gfxImageFormat::RGB24)
