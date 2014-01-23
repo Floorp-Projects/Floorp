@@ -14,6 +14,10 @@ USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef ENABLE_INTL_API
+LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
+endif
+
 ifdef _MSC_VER
 # Don't include directives about which CRT to use
 OS_COMPILE_CXXFLAGS += -Zl

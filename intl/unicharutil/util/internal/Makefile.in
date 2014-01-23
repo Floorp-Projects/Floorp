@@ -7,5 +7,9 @@
 # internal linkage. Components that use frozen (external) linkage should use
 # unicharutil_external_s.
 
+ifdef ENABLE_INTL_API
+LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
+endif
+
 DIST_INSTALL = 1
 MOZILLA_INTERNAL_API = 1
