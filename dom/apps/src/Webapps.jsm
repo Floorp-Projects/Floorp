@@ -2018,6 +2018,16 @@ this.DOMApplicationRegistry = {
                      ": " + aError);
     }.bind(this);
 
+    if (app.receipts.length > 0) {
+      for (let receipt of app.receipts) {
+        let error = this.isReceipt(receipt);
+        if (error) {
+          sendError(error);
+          return;
+        }
+      }
+    }
+
     // Hosted apps can't be trusted or certified, so just check that the
     // manifest doesn't ask for those.
     function checkAppStatus(aManifest) {
@@ -2126,6 +2136,16 @@ this.DOMApplicationRegistry = {
       Cu.reportError("Error installing packaged app from: " +
                      app.installOrigin + ": " + aError);
     }.bind(this);
+
+    if (app.receipts.length > 0) {
+      for (let receipt of app.receipts) {
+        let error = this.isReceipt(receipt);
+        if (error) {
+          sendError(error);
+          return;
+        }
+      }
+    }
 
     let checkUpdateManifest = (function() {
       let manifest = app.updateManifest;

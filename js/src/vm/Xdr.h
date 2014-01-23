@@ -8,6 +8,7 @@
 #define vm_Xdr_h
 
 #include "mozilla/Endian.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jsatom.h"
 
@@ -22,7 +23,7 @@ namespace js {
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 164);
+static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 165);
 
 class XDRBuffer {
   public:
@@ -158,6 +159,24 @@ class XDRState {
             const uint8_t *ptr = buf.read(sizeof(*n));
             *n = mozilla::LittleEndian::readUint64(ptr);
         }
+        return true;
+    }
+
+    /*
+     * Use SFINAE to refuse any specialization which is not an enum.  Uses of
+     * this function do not have to specialize the type of the enumerated field
+     * as C++ will extract the parameterized from the argument list.
+     */
+    template <typename T>
+    bool codeEnum32(T *val, typename mozilla::EnableIf<mozilla::IsEnum<T>::value, T>::Type * = NULL)
+    {
+        uint32_t tmp;
+        if (mode == XDR_ENCODE)
+            tmp = *val;
+        if (!codeUint32(&tmp))
+            return false;
+        if (mode == XDR_DECODE)
+            *val = T(tmp);
         return true;
     }
 

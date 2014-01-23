@@ -8,7 +8,6 @@ TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
     'nsITelemetry.idl',
-    'nsITelemetryPing.idl',
 ]
 
 XPIDL_MODULE = 'telemetry'
@@ -24,8 +23,6 @@ SOURCES += [
 ]
 
 EXTRA_COMPONENTS += [
-    'TelemetryPing.js',
-    'TelemetryPing.manifest',
     'TelemetryStartup.js',
     'TelemetryStartup.manifest'
 ]

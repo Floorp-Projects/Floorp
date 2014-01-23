@@ -525,8 +525,6 @@ nsTextStore::nsTextStore()
   mSinkMask = 0;
   mLock = 0;
   mLockQueued = 0;
-  mTextChange.acpStart = INT32_MAX;
-  mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
   mInputScopeDetected = false;
   mInputScopeRequested = false;
   mIsRecordingActionsWithoutLock = false;
@@ -680,7 +678,15 @@ bool
 nsTextStore::Destroy(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::Destroy()", this));
+    ("TSF: 0x%p nsTextStore::Destroy(), mComposition.IsComposing()=%s",
+     this, GetBoolName(mComposition.IsComposing())));
+
+  // If there is composition, TSF keeps the composition even after the text
+  // store destroyed.  So, we should clear the composition here.
+  if (mComposition.IsComposing()) {
+    NS_WARNING("Composition is still alive at destroying the text store");
+    CommitCompositionInternal(false);
+  }
 
   mContent.Clear();
   mSelection.MarkDirty();
@@ -3068,50 +3074,54 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::OnTextChangeInternal(aStart=%lu, "
           "aOldEnd=%lu, aNewEnd=%lu), mSink=0x%p, mSinkMask=%s, "
-          "mTextChange={ acpStart=%ld, acpOldEnd=%ld, acpNewEnd=%ld }",
+          "mComposition.IsComposing()=%s",
           this, aStart, aOldEnd, aNewEnd, mSink.get(),
-          GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
-          mTextChange.acpOldEnd, mTextChange.acpNewEnd));
+          GetSinkMaskNameStr(mSinkMask).get(),
+          GetBoolName(mComposition.IsComposing())));
 
   if (IsReadLocked()) {
     return NS_OK;
   }
 
-  NS_ASSERTION(!mComposition.IsComposing(), "text changed during composition");
   mSelection.MarkDirty();
 
-  if (mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE)) {
-    mTextChange.acpStart = std::min(mTextChange.acpStart, LONG(aStart));
-    mTextChange.acpOldEnd = std::max(mTextChange.acpOldEnd, LONG(aOldEnd));
-    mTextChange.acpNewEnd = std::max(mTextChange.acpNewEnd, LONG(aNewEnd));
-    ::PostMessageW(mWidget->GetWindowHandle(),
-                   WM_USER_TSF_TEXTCHANGE, 0, 0);
+  if (!mSink || !(mSinkMask & TS_AS_TEXT_CHANGE)) {
+    return NS_OK;
   }
-  return NS_OK;
-}
 
-void
-nsTextStore::OnTextChangeMsg()
-{
-  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p nsTextStore::OnTextChangeMsg(), "
-          "mSink=0x%p, mSinkMask=%s, mTextChange={ acpStart=%ld, "
-          "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, mSink.get(),
-          GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
-          mTextChange.acpOldEnd, mTextChange.acpNewEnd));
+  if (aStart >= INT32_MAX || aOldEnd >= INT32_MAX || aNewEnd >= INT32_MAX) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::OnTextChangeInternal() FAILED due to "
+            "offset is too big for calling mSink->OnTextChange()...",
+            this));
+    return NS_OK;
+  }
 
-  if (!mLock && mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE) &&
-      INT32_MAX > mTextChange.acpStart) {
+  // Some TIPs are confused by text change notification during composition.
+  // Especially, some of them stop working for composition in our process.
+  // For preventing it, let's commit the composition.
+  if (mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::OnTextChangeMsg(), calling"
-            "mSink->OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
-            "acpNewEnd=%ld })...", this, mTextChange.acpStart,
-            mTextChange.acpOldEnd, mTextChange.acpNewEnd));
-    mSink->OnTextChange(0, &mTextChange);
-    mTextChange.acpStart = INT32_MAX;
-    mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
+           ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(), "
+            "committing the composition for avoiding making TIP confused...",
+            this));
+    CommitCompositionInternal(false);
+    return NS_OK;
   }
+
+  TS_TEXTCHANGE textChange;
+  textChange.acpStart = static_cast<LONG>(aStart);
+  textChange.acpOldEnd = static_cast<LONG>(aOldEnd);
+  textChange.acpNewEnd = static_cast<LONG>(aNewEnd);
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(), calling"
+          "mSink->OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
+          "acpNewEnd=%ld })...", this, textChange.acpStart,
+          textChange.acpOldEnd, textChange.acpNewEnd));
+  mSink->OnTextChange(0, &textChange);
+
+  return NS_OK;
 }
 
 nsresult
@@ -3119,27 +3129,44 @@ nsTextStore::OnSelectionChangeInternal(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::OnSelectionChangeInternal(), "
-          "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s",
+          "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s, "
+          "mComposition.IsComposing()=%s",
           this, mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
-          GetBoolName(mIsRecordingActionsWithoutLock)));
+          GetBoolName(mIsRecordingActionsWithoutLock),
+          GetBoolName(mComposition.IsComposing())));
 
   if (IsReadLocked()) {
     return NS_OK;
   }
 
-  NS_ASSERTION(!mComposition.IsComposing(),
-               "selection changed during composition");
   mSelection.MarkDirty();
 
-  if (mSink && 0 != (mSinkMask & TS_AS_SEL_CHANGE)) {
+  if (!mSink || !(mSinkMask & TS_AS_SEL_CHANGE)) {
+    return NS_OK;
+  }
+
+  // Some TIPs are confused by selection change notification during composition.
+  // Especially, some of them stop working for composition in our process.
+  // For preventing it, let's commit the composition.
+  if (mComposition.IsComposing()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), "
+            "committing the composition for avoiding making TIP confused...",
+            this));
+    CommitCompositionInternal(false);
+    return NS_OK;
+  }
+
+  if (!mIsRecordingActionsWithoutLock) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), calling "
             "mSink->OnSelectionChange()...", this));
-    if (!mIsRecordingActionsWithoutLock) {
-      mSink->OnSelectionChange();
-    } else {
-      mNotifySelectionChange = true;
-    }
+    mSink->OnSelectionChange();
+  } else {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), pending "
+            "a call of mSink->OnSelectionChange()...", this));
+    mNotifySelectionChange = true;
   }
   return NS_OK;
 }
@@ -3598,12 +3625,6 @@ nsTextStore::ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
          "aMessage=WM_INPUTLANGCHANGE, aWParam=0x%08X, aLParam=0x%08X), "
          "mIsIMM_IME=%s", aWindow, aWParam, aLParam,
          GetBoolName(sTsfTextStore->mIsIMM_IME)));
-      break;
-
-    case WM_USER_TSF_TEXTCHANGE:
-      NS_ENSURE_TRUE_VOID(sTsfTextStore);
-      sTsfTextStore->OnTextChangeMsg();
-      aResult.mConsumed = true;
       break;
   }
 }
