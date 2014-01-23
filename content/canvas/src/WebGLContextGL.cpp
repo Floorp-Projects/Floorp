@@ -53,9 +53,22 @@ using namespace mozilla::gfx;
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
 static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
 
-const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
-    return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
-                             : static_cast<const WebGLRectangleObject*>(this);
+const WebGLRectangleObject*
+WebGLContext::CurValidFBRectObject() const
+{
+    const WebGLRectangleObject* rect = nullptr;
+
+    if (mBoundFramebuffer) {
+        // We don't really need to ask the driver.
+        // Use 'precheck' to just check that our internal state looks good.
+        GLenum precheckStatus = mBoundFramebuffer->PrecheckFramebufferStatus();
+        if (precheckStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            rect = &mBoundFramebuffer->RectangleObject();
+    } else {
+        rect = static_cast<const WebGLRectangleObject*>(this);
+    }
+
+    return rect;
 }
 
 WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext *gl, GLenum target, GLenum format)
@@ -347,11 +360,8 @@ GLenum
 WebGLContext::CheckFramebufferStatus(GLenum target)
 {
     if (IsContextLost())
-    {
         return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
-    }
 
-    MakeContextCurrent();
     if (target != LOCAL_GL_FRAMEBUFFER) {
         ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
         return 0;
@@ -359,42 +369,8 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
 
     if (!mBoundFramebuffer)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
-    if(mBoundFramebuffer->HasDepthStencilConflict())
-        return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
 
-    bool hasImages = false;
-    hasImages |= mBoundFramebuffer->DepthAttachment().IsDefined();
-    hasImages |= mBoundFramebuffer->StencilAttachment().IsDefined();
-    hasImages |= mBoundFramebuffer->DepthStencilAttachment().IsDefined();
-
-    if (!hasImages) {
-        int32_t colorAttachmentCount = mBoundFramebuffer->mColorAttachments.Length();
-
-        for(int32_t i = 0; i < colorAttachmentCount; i++) {
-            if (mBoundFramebuffer->ColorAttachment(i).IsDefined()) {
-                hasImages = true;
-                break;
-            }
-        }
-
-        /* http://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf section 4.4.5 (page 118)
-         GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
-         No images are attached to the framebuffer.
-         */
-        if (!hasImages) {
-            return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
-        }
-    }
-
-    if(mBoundFramebuffer->HasIncompleteAttachment())
-        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
-    if(mBoundFramebuffer->HasAttachmentsOfMismatchedDimensions())
-        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
-
-    // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
-    mBoundFramebuffer->FinalizeAttachments();
-
-    return gl->fCheckFramebufferStatus(target);
+    return mBoundFramebuffer->CheckFramebufferStatus();
 }
 
 void
@@ -409,7 +385,7 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
                                      GLsizei height,
                                      bool sub)
 {
-    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
@@ -2269,7 +2245,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (pixels.IsNull())
         return ErrorInvalidValue("readPixels: null destination buffer");
 
-    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
