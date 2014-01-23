@@ -572,13 +572,13 @@ nsDocumentViewer::SyncParentSubDocMap()
   }
 
   nsCOMPtr<nsPIDOMWindow> pwin(docShell->GetWindow());
-  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<Element> element;
 
   if (mDocument && pwin) {
-    content = do_QueryInterface(pwin->GetFrameElementInternal());
+    element = pwin->GetFrameElementInternal();
   }
 
-  if (content) {
+  if (element) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
     docShell->GetParent(getter_AddRefs(parent));
 
@@ -592,11 +592,11 @@ nsDocumentViewer::SyncParentSubDocMap()
 
       if (parent_doc) {
         if (mDocument &&
-            parent_doc->GetSubDocumentFor(content) != mDocument) {
+            parent_doc->GetSubDocumentFor(element) != mDocument) {
           mDocument->SuppressEventHandling(nsIDocument::eEvents,
                                            parent_doc->EventHandlingSuppressed());
         }
-        return parent_doc->SetSubDocumentFor(content->AsElement(), mDocument);
+        return parent_doc->SetSubDocumentFor(element, mDocument);
       }
     }
   }
@@ -2460,7 +2460,7 @@ nsDocumentViewer::FindContainerView()
     nsCOMPtr<nsIDocShell> docShell(mContainer);
     nsCOMPtr<nsPIDOMWindow> pwin(docShell->GetWindow());
     if (pwin) {
-      nsCOMPtr<nsIContent> containerElement = do_QueryInterface(pwin->GetFrameElementInternal());
+      nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
       if (!containerElement) {
         return nullptr;
       }
