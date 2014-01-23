@@ -230,7 +230,8 @@ public:
     // all context resources to be lost.
     uint32_t Generation() { return mGeneration.value(); }
 
-    const WebGLRectangleObject *FramebufferRectangleObject() const;
+    // Returns null if the current bound FB is not likely complete.
+    const WebGLRectangleObject* CurValidFBRectObject() const;
 
     static const size_t sMaxColorAttachments = 16;
 
