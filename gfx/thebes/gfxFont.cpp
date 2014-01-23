@@ -6293,7 +6293,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
             bool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
             bool wordWrapping =
                 aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
-                *aBreakPriority <= eWordWrapBreak;
+                *aBreakPriority <= gfxBreakPriority::eWordWrapBreak;
 
             if (lineBreakHere || hyphenation || wordWrapping) {
                 gfxFloat hyphenatedAdvance = advance;
@@ -6308,7 +6308,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                     lastBreakTrimmableAdvance = trimmableAdvance;
                     lastBreakUsedHyphenation = !lineBreakHere && !wordWrapping;
                     *aBreakPriority = hyphenation || lineBreakHere ?
-                        eNormalBreak : eWordWrapBreak;
+                        gfxBreakPriority::eNormalBreak : gfxBreakPriority::eWordWrapBreak;
                 }
 
                 width += advance;

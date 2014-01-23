@@ -6,6 +6,9 @@
 #ifndef GFX_TYPES_H
 #define GFX_TYPES_H
 
+#include <stdint.h>
+#include "mozilla/TypedEnum.h"
+
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_user_data_key cairo_user_data_key_t;
 
@@ -36,11 +39,11 @@ typedef double gfxFloat;
  * @see gfxTextRun::BreakAndMeasureText
  * @see nsLineLayout::NotifyOptionalBreakPosition
  */
-enum gfxBreakPriority {
-    eNoBreak       = 0,
-    eWordWrapBreak,
-    eNormalBreak
-};
+MOZ_BEGIN_ENUM_CLASS(gfxBreakPriority)
+  eNoBreak       = 0,
+  eWordWrapBreak,
+  eNormalBreak
+MOZ_END_ENUM_CLASS(gfxBreakPriority)
 
     /**
      * The format for an image surface. For all formats with alpha data, 0
