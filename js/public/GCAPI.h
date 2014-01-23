@@ -95,40 +95,117 @@ enum Reason {
 
 } /* namespace gcreason */
 
+/*
+ * Zone GC:
+ *
+ * SpiderMonkey's GC is capable of performing a collection on an arbitrary
+ * subset of the zones in the system. This allows an embedding to minimize
+ * collection time by only collecting zones that have run code recently,
+ * ignoring the parts of the heap that are unlikely to have changed.
+ *
+ * When triggering a GC using one of the functions below, it is first necessary
+ * to select the zones to be collected. To do this, you can call
+ * PrepareZoneForGC on each zone, or you can call PrepareForFullGC to select
+ * all zones. Failing to select any zone is an error.
+ */
+
+/*
+ * Schedule the given zone to be collected as part of the next GC.
+ */
 extern JS_FRIEND_API(void)
 PrepareZoneForGC(Zone *zone);
 
+/*
+ * Schedule all zones to be collected in the next GC.
+ */
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
+/*
+ * When performing an incremental GC, the zones that were selected for the
+ * previous incremental slice must be selected in subsequent slices as well.
+ * This function selects those slices automatically.
+ */
 extern JS_FRIEND_API(void)
 PrepareForIncrementalGC(JSRuntime *rt);
 
+/*
+ * Returns true if any zone in the system has been scheduled for GC with one of
+ * the functions above or by the JS engine.
+ */
 extern JS_FRIEND_API(bool)
 IsGCScheduled(JSRuntime *rt);
 
+/*
+ * Undoes the effect of the Prepare methods above. The given zone will not be
+ * collected in the next GC.
+ */
 extern JS_FRIEND_API(void)
 SkipZoneForGC(Zone *zone);
 
 /*
- * When triggering a GC using one of the functions below, it is first necessary
- * to select the compartments to be collected. To do this, you can call
- * PrepareZoneForGC on each compartment, or you can call PrepareForFullGC
- * to select all compartments. Failing to select any compartment is an error.
+ * Non-Incremental GC:
+ *
+ * The following functions perform a non-incremental GC.
  */
 
+/*
+ * Performs a non-incremental collection of all selected zones. Some objects
+ * that are unreachable from the program may still be alive afterwards because
+ * of internal references.
+ */
 extern JS_FRIEND_API(void)
 GCForReason(JSRuntime *rt, gcreason::Reason reason);
 
+/*
+ * Perform a non-incremental collection after clearing caches and other
+ * temporary references to objects. This will remove all unreferenced objects
+ * in the system.
+ */
 extern JS_FRIEND_API(void)
 ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
 
-extern JS_FRIEND_API(void)
-ShrinkGCBuffers(JSRuntime *rt);
+/*
+ * Incremental GC:
+ *
+ * Incremental GC divides the full mark-and-sweep collection into multiple
+ * slices, allowing client JavaScript code to run between each slice. This
+ * allows interactive apps to avoid long collection pauses. Incremental GC does
+ * not make collection take less time, it merely spreads that time out so that
+ * the pauses are less noticable.
+ *
+ * For a collection to be carried out incrementally the following conditions
+ * must be met:
+ *  - The collection must be run by calling JS::IncrementalGC() rather than
+ *    JS_GC().
+ *  - The GC mode must have been set to JSGC_MODE_INCREMENTAL with
+ *    JS_SetGCParameter().
+ *  - All native objects that have their own trace hook must indicate that they
+ *    implement read and write barriers with the JSCLASS_IMPLEMENTS_BARRIERS
+ *    flag.
+ *
+ * Note: Even if incremental GC is enabled and working correctly,
+ *       non-incremental collections can still happen when low on memory.
+ */
 
+/*
+ * Begin an incremental collection and perform one slice worth of work or
+ * perform a slice of an ongoing incremental collection. When this function
+ * returns, the collection is not complete. This function must be called
+ * repeatedly until !IsIncrementalGCInProgress(rt).
+ *
+ * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
+ *       shorter than the requested interval.
+ */
 extern JS_FRIEND_API(void)
 IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
 
+/*
+ * If IsIncrementalGCInProgress(rt), this call finishes the ongoing collection
+ * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(rt),
+ * this is equivalent to GCForReason. When this function returns,
+ * IsIncrementalGCInProgress(rt) will always be false.
+ */
 extern JS_FRIEND_API(void)
 FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
@@ -162,40 +239,56 @@ struct JS_FRIEND_API(GCDescription) {
 typedef void
 (* GCSliceCallback)(JSRuntime *rt, GCProgress progress, const GCDescription &desc);
 
+/*
+ * The GC slice callback is called at the beginning and end of each slice. This
+ * callback may be used for GC notifications as well as to perform additional
+ * marking.
+ */
 extern JS_FRIEND_API(GCSliceCallback)
 SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback);
 
 /*
- * Signals a good place to do an incremental slice, because the browser is
- * drawing a frame.
+ * Incremental GC defaults to enabled, but may be disabled for testing or in
+ * embeddings that have not yet implemented barriers on their native classes.
+ * There is not currently a way to re-enable incremental GC once it has been
+ * disabled on the runtime.
  */
-extern JS_FRIEND_API(void)
-NotifyDidPaint(JSRuntime *rt);
-
-extern JS_FRIEND_API(bool)
-IsIncrementalGCEnabled(JSRuntime *rt);
-
-JS_FRIEND_API(bool)
-IsIncrementalGCInProgress(JSRuntime *rt);
-
 extern JS_FRIEND_API(void)
 DisableIncrementalGC(JSRuntime *rt);
 
-extern JS_FRIEND_API(void)
-DisableGenerationalGC(JSRuntime *rt);
-
-extern JS_FRIEND_API(void)
-EnableGenerationalGC(JSRuntime *rt);
-
+/*
+ * Returns true if incremental GC is enabled. Simply having incremental GC
+ * enabled is not sufficient to ensure incremental collections are happening.
+ * See the comment "Incremental GC" above for reasons why incremental GC may be
+ * suppressed. Inspection of the "nonincremental reason" field of the
+ * GCDescription returned by GCSliceCallback may help narrow down the cause if
+ * collections are not happening incrementally when expected.
+ */
 extern JS_FRIEND_API(bool)
-IsGenerationalGCEnabled(JSRuntime *rt);
+IsIncrementalGCEnabled(JSRuntime *rt);
 
+/*
+ * Returns true while an incremental GC is ongoing, both when actively
+ * collecting and between slices.
+ */
+JS_FRIEND_API(bool)
+IsIncrementalGCInProgress(JSRuntime *rt);
+
+/*
+ * Returns true when writes to GC things must call an incremental (pre) barrier.
+ * This is generally only true when running mutator code in-between GC slices.
+ * At other times, the barrier may be elided for performance.
+ */
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx);
 
+/*
+ * Notify the GC that a reference to a GC thing is about to be overwritten.
+ * These methods must be called if IsIncrementalBarrierNeeded.
+ */
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind);
 
@@ -205,16 +298,68 @@ IncrementalValueBarrier(const Value &v);
 extern JS_FRIEND_API(void)
 IncrementalObjectBarrier(JSObject *obj);
 
-extern JS_FRIEND_API(void)
-PokeGC(JSRuntime *rt);
-
-/* Was the most recent GC run incrementally? */
+/*
+ * Returns true if the most recent GC ran incrementally.
+ */
 extern JS_FRIEND_API(bool)
 WasIncrementalGC(JSRuntime *rt);
 
+/*
+ * Generational GC:
+ *
+ * Note: Generational GC is not yet enabled by default. The following functions
+ *       are non-functional unless SpiderMonkey was configured with
+ *       --enable-gcgenerational.
+ */
+
+/*
+ * Generational GC is enabled by default. Use this method to disable it.
+ */
+extern JS_FRIEND_API(void)
+DisableGenerationalGC(JSRuntime *rt);
+
+/*
+ * Generational GC may be re-enabled at runtime.
+ */
+extern JS_FRIEND_API(void)
+EnableGenerationalGC(JSRuntime *rt);
+
+/*
+ * Returns true if generational allocation and collection is currently enabled
+ * on the given runtime.
+ */
+extern JS_FRIEND_API(bool)
+IsGenerationalGCEnabled(JSRuntime *rt);
+
+/*
+ * Returns the GC's "number". This does not correspond directly to the number
+ * of GCs that have been run, but is guaranteed to be monotonically increasing
+ * with GC activity.
+ */
 extern JS_FRIEND_API(size_t)
 GetGCNumber();
 
+/*
+ * The GC does not immediately return the unused memory freed by a collection
+ * back to the system incase it is needed soon afterwards. This call forces the
+ * GC to return this memory immediately.
+ */
+extern JS_FRIEND_API(void)
+ShrinkGCBuffers(JSRuntime *rt);
+
+/*
+ * Assert if any GC occured while this guard object was live. This is most
+ * useful to help the exact rooting hazard analysis in complex regions, since
+ * it cannot understand dataflow.
+ *
+ * Note: GC behavior is unpredictable even when deterministice and is generally
+ *       non-deterministic in practice. The fact that this guard has not
+ *       asserted is not a guarantee that a GC cannot happen in the guarded
+ *       region. As a rule, anyone performing a GC unsafe action should
+ *       understand the GC properties of all code in that region and ensure
+ *       that the hazard analysis is correct for that code, rather than relying
+ *       on this class.
+ */
 class JS_PUBLIC_API(AutoAssertNoGC)
 {
 #ifdef JS_DEBUG
@@ -345,6 +490,20 @@ MarkStringAsLive(Zone *zone, JSString *string)
     JSRuntime *rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromMainThread();
     MarkGCThingAsLive(rt, string, JSTRACE_STRING);
 }
+
+/*
+ * Internal to Firefox.
+ *
+ * Note: this is not related to the PokeGC in nsJSEnvironment.
+ */
+extern JS_FRIEND_API(void)
+PokeGC(JSRuntime *rt);
+
+/*
+ * Internal to Firefox.
+ */
+extern JS_FRIEND_API(void)
+NotifyDidPaint(JSRuntime *rt);
 
 } /* namespace JS */
 
