@@ -510,7 +510,7 @@ gfxASurface::GetSubpixelAntialiasingEnabled()
 gfxMemoryLocation
 gfxASurface::GetMemoryLocation() const
 {
-    return GFX_MEMORY_IN_PROCESS_HEAP;
+    return gfxMemoryLocation::IN_PROCESS_HEAP;
 }
 
 int32_t

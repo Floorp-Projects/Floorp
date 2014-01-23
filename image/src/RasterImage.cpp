@@ -1046,21 +1046,21 @@ RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation
 size_t
 RasterImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(GFX_MEMORY_IN_PROCESS_HEAP,
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_HEAP,
                                                  aMallocSizeOf);
 }
 
 size_t
 RasterImage::NonHeapSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(GFX_MEMORY_IN_PROCESS_NONHEAP,
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_NONHEAP,
                                                  nullptr);
 }
 
 size_t
 RasterImage::OutOfProcessSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(GFX_MEMORY_OUT_OF_PROCESS,
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::OUT_OF_PROCESS,
                                                  nullptr);
 }
 

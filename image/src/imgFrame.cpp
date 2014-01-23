@@ -770,16 +770,16 @@ void imgFrame::SetCompositingFailed(bool val)
 size_t
 imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocation, mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  // aMallocSizeOf is only used if aLocation==GFX_MEMORY_IN_PROCESS_HEAP.  It
+  // aMallocSizeOf is only used if aLocation==gfxMemoryLocation::IN_PROCESS_HEAP.  It
   // should be nullptr otherwise.
   NS_ABORT_IF_FALSE(
-    (aLocation == GFX_MEMORY_IN_PROCESS_HEAP &&  aMallocSizeOf) ||
-    (aLocation != GFX_MEMORY_IN_PROCESS_HEAP && !aMallocSizeOf),
+    (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP &&  aMallocSizeOf) ||
+    (aLocation != gfxMemoryLocation::IN_PROCESS_HEAP && !aMallocSizeOf),
     "mismatch between aLocation and aMallocSizeOf");
 
   size_t n = 0;
 
-  if (mPalettedImageData && aLocation == GFX_MEMORY_IN_PROCESS_HEAP) {
+  if (mPalettedImageData && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
     size_t n2 = aMallocSizeOf(mPalettedImageData);
     if (n2 == 0) {
       n2 = GetImageDataLength() + PaletteDataLength();
@@ -793,13 +793,13 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
   } else
 #endif
 #ifdef XP_MACOSX
-  if (mQuartzSurface && aLocation == GFX_MEMORY_IN_PROCESS_HEAP) {
+  if (mQuartzSurface && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
     n += mSize.width * mSize.height * 4;
   } else
 #endif
   if (mImageSurface && aLocation == mImageSurface->GetMemoryLocation()) {
     size_t n2 = 0;
-    if (aLocation == GFX_MEMORY_IN_PROCESS_HEAP) { // HEAP: measure
+    if (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) { // HEAP: measure
       n2 = mImageSurface->SizeOfIncludingThis(aMallocSizeOf);
     }
     if (n2 == 0) {  // non-HEAP or computed fallback for HEAP
@@ -810,7 +810,7 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
 
   if (mOptSurface && aLocation == mOptSurface->GetMemoryLocation()) {
     size_t n2 = 0;
-    if (aLocation == GFX_MEMORY_IN_PROCESS_HEAP &&
+    if (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP &&
         mOptSurface->SizeOfIsMeasured()) {
       // HEAP: measure (but only if the sub-class is capable of measuring)
       n2 = mOptSurface->SizeOfIncludingThis(aMallocSizeOf);

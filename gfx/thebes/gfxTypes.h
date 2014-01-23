@@ -94,15 +94,15 @@ MOZ_BEGIN_ENUM_CLASS(gfxContentType)
   SENTINEL    = 0xffff
 MOZ_END_ENUM_CLASS(gfxContentType)
 
-    /**
-     * The memory used by this surface (as reported by KnownMemoryUsed()) can
-     * either live in this process's heap, in this process but outside the
-     * heap, or in another process altogether.
-     */
-    enum gfxMemoryLocation {
-      GFX_MEMORY_IN_PROCESS_HEAP,
-      GFX_MEMORY_IN_PROCESS_NONHEAP,
-      GFX_MEMORY_OUT_OF_PROCESS
-    };
+/**
+  * The memory used by a gfxASurface (as reported by KnownMemoryUsed()) can
+  * either live in this process's heap, in this process but outside the
+  * heap, or in another process altogether.
+  */
+MOZ_BEGIN_ENUM_CLASS(gfxMemoryLocation)
+  IN_PROCESS_HEAP,
+  IN_PROCESS_NONHEAP,
+  OUT_OF_PROCESS
+MOZ_END_ENUM_CLASS(gfxMemoryLocation)
 
 #endif /* GFX_TYPES_H */

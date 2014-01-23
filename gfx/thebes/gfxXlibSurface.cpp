@@ -607,5 +607,5 @@ gfxXlibSurface::GetGLXPixmap()
 gfxMemoryLocation
 gfxXlibSurface::GetMemoryLocation() const
 {
-    return GFX_MEMORY_OUT_OF_PROCESS;
+    return gfxMemoryLocation::OUT_OF_PROCESS;
 }
