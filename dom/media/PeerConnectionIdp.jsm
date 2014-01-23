@@ -156,9 +156,10 @@ PeerConnectionIdp.prototype = {
       if (providerPortIdx > 0) {
         provider = provider.substring(0, providerPortIdx);
       }
-      // this really isn't correct for IDN names
-      // Bug 958741 will fix that
-      if (tail.toLowerCase() !== provider.toLowerCase()) {
+      var idnService = Components.classes["@mozilla.org/network/idn-service;1"].
+        getService(Components.interfaces.nsIIDNService);
+      if (idnService.convertUTF8toACE(tail) !==
+          idnService.convertUTF8toACE(provider)) {
         return "name '" + identity.name +
             "' doesn't match IdP: '" + this.provider + "'";
       }
