@@ -5,7 +5,7 @@ whitelist = {
     'nightly': {},
     }
 
-all_platforms = ['win32', 'linux32', 'linux64', 'macosx-universal']
+all_platforms = ['win64', 'win32', 'linux32', 'linux64', 'macosx-universal']
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
@@ -19,7 +19,7 @@ for platform in ['linux32', 'linux64', 'macosx-universal']:
         'mk_add_options MOZ_MAKE_FLAGS="-j4"',
     ]
 
-for platform in ['linux32', 'linux64', 'macosx-universal', 'win32']:
+for platform in ['linux32', 'linux64', 'macosx-universal', 'win32', 'win64']:
     whitelist['nightly'][platform] += ['ac_add_options --enable-signmar']
     whitelist['nightly'][platform] += ['ac_add_options --enable-js-diagnostics']
 
@@ -62,6 +62,10 @@ whitelist['nightly']['win32'] += [
     'fi',
     'ac_add_options --enable-metro',
 ]
+whitelist['nightly']['win64'] += [
+    '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
+    'ac_add_options --enable-metro',
+]
 
 for platform in all_platforms:
     whitelist['release'][platform] = [
@@ -71,6 +75,8 @@ for platform in all_platforms:
         'export BUILDING_RELEASE=1',
     ]
 whitelist['release']['win32'] += ['mk_add_options MOZ_PGO=1']
+whitelist['release']['win64'] += ['mk_add_options MOZ_PGO=1']
+
 whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
