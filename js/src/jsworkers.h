@@ -342,10 +342,17 @@ struct ParseTask
     // Rooted pointer to the scope in the target compartment which the
     // resulting script will be merged into. This is not safe to use off the
     // main thread.
-    JSObject *scopeChain;
+    PersistentRootedObject scopeChain;
 
     // Rooted pointer to the global object used by 'cx'.
-    JSObject *exclusiveContextGlobal;
+    PersistentRootedObject exclusiveContextGlobal;
+
+    // Saved GC-managed CompileOptions fields that will populate slots in
+    // the ScriptSourceObject. We create the ScriptSourceObject in the
+    // compilation's temporary compartment, so storing these values there
+    // at that point would create cross-compartment references. Instead we
+    // hold them here, and install them after merging the compartments.
+    PersistentRootedObject optionsElement;
 
     // Callback invoked off the main thread when the parse finishes.
     JS::OffThreadCompileCallback callback;
@@ -367,6 +374,7 @@ struct ParseTask
     bool init(JSContext *cx, const ReadOnlyCompileOptions &options);
 
     void activate(JSRuntime *rt);
+    void finish();
 
     ~ParseTask();
 };

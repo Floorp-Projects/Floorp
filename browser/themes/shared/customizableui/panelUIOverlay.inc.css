@@ -5,7 +5,6 @@
 %filter substitution
 
 %define menuPanelWidth 22.35em
-%define panelTextSize 1rem
 %define exitSubviewGutterWidth 38px
 %define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
 %define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
@@ -67,16 +66,8 @@
   padding: .5em 0;
 }
 
-toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text,
-.panelUI-grid .panel-combined-button > .toolbarbutton-text,
-.widget-overflow-list .toolbarbutton-menubutton-button > .toolbarbutton-text,
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text {
-  font-size: @panelTextSize@;
-}
-
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  font-size: @panelTextSize@;
   margin: 2px 0 0;
   text-align: center;
   -moz-hyphens: auto;

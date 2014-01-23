@@ -54,6 +54,18 @@
                 <key>weight</key>
                 <real>10</real>
             </dict>
+            <key>^Updated.app/.*</key><dict>
+                <key>omit</key>
+                <true/>
+                <key>weight</key>
+                <real>10</real>
+            </dict>
+            <key>^updating/.*</key><dict>
+                <key>omit</key>
+                <true/>
+                <key>weight</key>
+                <real>10</real>
+            </dict>
         </dict>
     </dict>
 </plist>

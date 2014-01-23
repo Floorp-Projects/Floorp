@@ -637,7 +637,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     PR_LOG(GetImgLog(), PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnStartRequest -- "
             "RetargetDeliveryTo rv %d=%s\n",
-            this, NS_SUCCEEDED(rv) ? "succeeded" : "failed", rv));
+            this, rv, NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
   }
 
   return NS_OK;

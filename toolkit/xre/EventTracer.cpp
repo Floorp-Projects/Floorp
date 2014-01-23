@@ -45,7 +45,8 @@
  * When an event servicing time exceeds the threshold, a line of the form:
  *   MOZ_EVENT_TRACE sample <timestamp> <duration>
  * will be output, where <duration> is the number of milliseconds that
- * it took for the event to be serviced.
+ * it took for the event to be serviced. Duration may contain a fractional
+ * component.
  */
 
 #include "GeckoProfiler.h"
@@ -125,7 +126,8 @@ void TracerThread(void *arg)
   }
 
   if (threadArgs->mLogTracing) {
-    fprintf(log, "MOZ_EVENT_TRACE start %llu\n", PR_Now() / PR_USEC_PER_MSEC);
+    long long now = PR_Now() / PR_USEC_PER_MSEC;
+    fprintf(log, "MOZ_EVENT_TRACE start %llu\n", now);
   }
 
   while (!sExit) {
@@ -139,10 +141,11 @@ void TracerThread(void *arg)
     if (FireAndWaitForTracerEvent()) {
       TimeDuration duration = TimeStamp::Now() - start;
       // Only report samples that exceed our measurement threshold.
+      long long now = PR_Now() / PR_USEC_PER_MSEC;
       if (threadArgs->mLogTracing && duration.ToMilliseconds() > threshold) {
-        fprintf(log, "MOZ_EVENT_TRACE sample %llu %d\n",
-                PR_Now() / PR_USEC_PER_MSEC,
-                int(duration.ToSecondsSigDigits() * 1000));
+        fprintf(log, "MOZ_EVENT_TRACE sample %llu %lf\n",
+                now,
+                duration.ToMilliseconds());
       }
 
       if (next_sleep > duration.ToMilliseconds()) {
@@ -161,7 +164,8 @@ void TracerThread(void *arg)
   }
 
   if (threadArgs->mLogTracing) {
-    fprintf(log, "MOZ_EVENT_TRACE stop %llu\n", PR_Now() / PR_USEC_PER_MSEC);
+    long long now = PR_Now() / PR_USEC_PER_MSEC;
+    fprintf(log, "MOZ_EVENT_TRACE stop %llu\n", now);
   }
 
   if (log != stdout)

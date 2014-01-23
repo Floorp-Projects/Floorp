@@ -21,7 +21,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,7 @@ public class PanelManager implements GeckoEventListener {
     private static AtomicInteger sRequestId = new AtomicInteger(0);
 
     // Stores set of pending request callbacks.
-    private static final Map<Integer, RequestCallback> sCallbacks = Collections.synchronizedMap(new HashMap<Integer, RequestCallback>());
+    private static final Map<Integer, RequestCallback> sCallbacks = new HashMap<Integer, RequestCallback>();
 
     /**
      * Asynchronously fetches list of available panels from Gecko.

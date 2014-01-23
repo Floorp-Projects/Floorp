@@ -27,12 +27,12 @@ add_task(function test_collect_smoketest() {
 
   yield provider.collectConstantData();
 
-  let m = provider.getMeasurement("sysinfo", 1);
+  let m = provider.getMeasurement("sysinfo", 2);
   let data = yield storage.getMeasurementValues(m.id);
   let serializer = m.serializer(m.SERIALIZE_JSON);
   let d = serializer.singular(data.singular);
 
-  do_check_eq(d._v, 1);
+  do_check_eq(d._v, 2);
   do_check_true(d.cpuCount > 0);
   do_check_neq(d.name, null);
 
