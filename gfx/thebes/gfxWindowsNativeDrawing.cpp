@@ -269,7 +269,7 @@ gfxWindowsNativeDrawing::PaintToContext()
         nsRefPtr<gfxImageSurface> alphaSurface =
             new gfxImageSurface(black->Data(), black->GetSize(),
                                 black->Stride(),
-                                gfxImageFormatARGB32);
+                                gfxImageFormat::ARGB32);
 
         mContext->Save();
         mContext->Translate(mNativeRect.TopLeft());

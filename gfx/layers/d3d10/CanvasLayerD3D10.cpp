@@ -208,7 +208,7 @@ CanvasLayerD3D10::UpdateSurface()
     dstSurface = new gfxImageSurface((unsigned char*)map.pData,
                                      gfxIntSize(mBounds.width, mBounds.height),
                                      map.RowPitch,
-                                     gfxImageFormatARGB32);
+                                     gfxImageFormat::ARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(dstSurface);
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctx->SetSource(mSurface);

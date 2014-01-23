@@ -750,7 +750,7 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
       (mTexture->GetSize() != size && !aOffset) ||
       mTexture->GetContentType() != surf.ContentType() ||
       (mTexture->GetImageFormat() != format &&
-       mTexture->GetImageFormat() != gfxImageFormatUnknown)) {
+       mTexture->GetImageFormat() != gfxImageFormat::Unknown)) {
 
     mTexture = CreateTextureImage(mGL,
                                   size,
@@ -1102,17 +1102,17 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
     new gfxImageSurface(deserializer.GetYData(),
                         gfx::ThebesIntSize(gfxSize),
                         deserializer.GetYStride(),
-                        gfxImageFormatA8);
+                        gfxImageFormat::A8);
   RefPtr<gfxImageSurface> tempCb =
     new gfxImageSurface(deserializer.GetCbData(),
                         gfx::ThebesIntSize(gfxCbCrSize),
                         deserializer.GetCbCrStride(),
-                        gfxImageFormatA8);
+                        gfxImageFormat::A8);
   RefPtr<gfxImageSurface> tempCr =
     new gfxImageSurface(deserializer.GetCrData(),
                         gfx::ThebesIntSize(gfxCbCrSize),
                         deserializer.GetCbCrStride(),
-                        gfxImageFormatA8);
+                        gfxImageFormat::A8);
 
   nsIntRegion yRegion(nsIntRect(0, 0, gfxSize.width, gfxSize.height));
   nsIntRegion cbCrRegion(nsIntRect(0, 0, gfxCbCrSize.width, gfxCbCrSize.height));
@@ -1146,7 +1146,7 @@ GetFormatAndTileForImageFormat(gfxImageFormat aFormat,
                                GLenum& aOutFormat,
                                GLenum& aOutType)
 {
-  if (aFormat == gfxImageFormatRGB16_565) {
+  if (aFormat == gfxImageFormat::RGB16_565) {
     aOutFormat = LOCAL_GL_RGB;
     aOutType = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
   } else {

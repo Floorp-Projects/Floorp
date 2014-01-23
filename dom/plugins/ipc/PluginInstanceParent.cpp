@@ -877,7 +877,7 @@ PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
         gfxSharedImageSurface::CreateUnsafe(
             this,
             gfxIntSize(aSize.width, aSize.height),
-            gfxImageFormatRGB24);
+            gfxImageFormat::RGB24);
     return !!mBackground;
 #else
     return nullptr;

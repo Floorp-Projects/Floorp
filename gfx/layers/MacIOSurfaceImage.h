@@ -37,7 +37,7 @@ public:
     unsigned char* ioData = (unsigned char*)mSurface->GetBaseAddress();
 
     nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxImageFormatARGB32);
+      new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxImageFormat::ARGB32);
 
     for (size_t i = 0; i < ioHeight; i++) {
       memcpy(imgSurface->Data() + i * imgSurface->Stride(),

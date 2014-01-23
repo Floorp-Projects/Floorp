@@ -168,7 +168,7 @@ nsWindow::nsWindow()
 
         if (sUsingOMTC) {
           sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
-                                             gfxImageFormatRGB24);
+                                             gfxImageFormat::RGB24);
         }
     }
 }
@@ -611,7 +611,7 @@ nsWindow::GetThebesSurface()
 
     // XXX this really wants to return already_AddRefed, but this only really gets used
     // on direct assignment to a gfxASurface
-    return new gfxImageSurface(gfxIntSize(5,5), gfxImageFormatRGB24);
+    return new gfxImageSurface(gfxIntSize(5,5), gfxImageFormat::RGB24);
 }
 
 void

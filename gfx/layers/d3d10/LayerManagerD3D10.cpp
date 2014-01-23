@@ -454,8 +454,8 @@ already_AddRefed<gfxASurface>
 LayerManagerD3D10::CreateOptimalSurface(const IntSize &aSize,
                                         gfxImageFormat aFormat)
 {
-  if ((aFormat != gfxImageFormatRGB24 &&
-       aFormat != gfxImageFormatARGB32)) {
+  if ((aFormat != gfxImageFormat::RGB24 &&
+       aFormat != gfxImageFormat::ARGB32)) {
     return LayerManager::CreateOptimalSurface(aSize, aFormat);
   }
 
@@ -473,7 +473,7 @@ LayerManagerD3D10::CreateOptimalSurface(const IntSize &aSize,
   }
 
   nsRefPtr<gfxD2DSurface> surface =
-    new gfxD2DSurface(texture, aFormat == gfxImageFormatRGB24 ?
+    new gfxD2DSurface(texture, aFormat == gfxImageFormat::RGB24 ?
       GFX_CONTENT_COLOR : GFX_CONTENT_COLOR_ALPHA);
 
   if (!surface || surface->CairoStatus()) {
@@ -491,7 +491,7 @@ LayerManagerD3D10::CreateOptimalSurface(const IntSize &aSize,
 already_AddRefed<gfxASurface>
 LayerManagerD3D10::CreateOptimalMaskSurface(const IntSize &aSize)
 {
-  return CreateOptimalSurface(aSize, gfxImageFormatARGB32);
+  return CreateOptimalSurface(aSize, gfxImageFormat::ARGB32);
 }
 
 
@@ -772,7 +772,7 @@ LayerManagerD3D10::PaintToTarget()
     new gfxImageSurface((unsigned char*)map.pData,
                         gfxIntSize(bbDesc.Width, bbDesc.Height),
                         map.RowPitch,
-                        gfxImageFormatARGB32);
+                        gfxImageFormat::ARGB32);
 
   mTarget->SetSource(tmpSurface);
   mTarget->SetOperator(gfxContext::OPERATOR_OVER);
