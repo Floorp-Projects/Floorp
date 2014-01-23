@@ -1102,7 +1102,7 @@ static unsigned		ncpus;
 #if (defined(SOLARIS) || defined(__FreeBSD__)) && \
     (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
 #define pagesize_2pow			((size_t) 13)
-#elif defined(__powerpc64__)
+#elif defined(__powerpc64__) || defined(__aarch64__)
 #define pagesize_2pow			((size_t) 16)
 #else
 #define pagesize_2pow			((size_t) 12)
