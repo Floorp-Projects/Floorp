@@ -57,6 +57,18 @@ let NotificationDB = {
         } catch (e) {
           if (DEBUG) { debug("Unable to parse file data " + e); }
         }
+        // populate the list of notifications by tag
+        if (this.notifications) {
+          for (var origin in this.notifications) {
+            this.byTag[origin] = {};
+            for (var id in this.notifications[origin]) {
+              var curNotification = this.notifications[origin][id];
+              if (curNotification.tag) {
+                this.byTag[origin][curNotification.tag] = curNotification;
+              }
+            }
+          }
+        }
         this.loaded = true;
         callback && callback();
       }.bind(this),
