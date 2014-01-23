@@ -53,7 +53,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (mBuffer &&
       (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
-    mBuffer->ForceRemove();
+    GetForwarder()->AddForceRemovingTexture(mBuffer);
     mBuffer = nullptr;
   }
 
