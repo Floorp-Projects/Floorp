@@ -2571,10 +2571,7 @@ class Debugger::ScriptQuery {
      * condition occurred.
      */
     void consider(JSScript *script) {
-        // We check for presence of script->code() because it is possible that
-        // the script was created and thus exposed to GC, but *not* fully
-        // initialized from fullyInit{FromEmitter,Trivial} due to errors.
-        if (oom || script->selfHosted || !script->code)
+        if (oom || script->selfHosted)
             return;
         JSCompartment *compartment = script->compartment();
         if (!compartments.has(compartment))
