@@ -735,7 +735,7 @@ void WebGLContext::Draw_cleanup()
     }
 
     // Let's check the viewport
-    const WebGLRectangleObject* rect = FramebufferRectangleObject();
+    const WebGLRectangleObject* rect = CurValidFBRectObject();
     if (rect) {
         if (mViewportWidth > rect->Width() ||
             mViewportHeight > rect->Height())
