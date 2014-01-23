@@ -296,14 +296,22 @@ var shell = {
                   .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
                                       .createInstance(Ci.nsISHistory);
 
+    // On firefox mulet, shell.html is loaded in a tab
+    // and we have to listen on the chrome event handler
+    // to catch key events
+    let chromeEventHandler = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler || window;
     // Capture all key events so we can filter out hardware buttons
     // And send them to Gaia via mozChromeEvents.
     // Ideally, hardware buttons wouldn't generate key events at all, or
     // if they did, they would use keycodes that conform to DOM 3 Events.
     // See discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=762362
-    window.addEventListener('keydown', this, true);
-    window.addEventListener('keypress', this, true);
-    window.addEventListener('keyup', this, true);
+    chromeEventHandler.addEventListener('keydown', this, true);
+    chromeEventHandler.addEventListener('keypress', this, true);
+    chromeEventHandler.addEventListener('keyup', this, true);
+
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener('mozfullscreenchange', this);
     window.addEventListener('MozAfterPaint', this);
