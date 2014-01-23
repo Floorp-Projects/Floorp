@@ -270,7 +270,7 @@ var PluginHelper = {
         // "Learn More..." link in the missing plugin error message.
         let learnMoreLink = doc.getAnonymousElementByAttribute(plugin, "class", "unsupportedLearnMoreLink");
         let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-        learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
+        learnMoreUrl += "mobile-flash-unsupported";
         learnMoreLink.href = learnMoreUrl;
         overlay.style.visibility = "visible";
         break;
