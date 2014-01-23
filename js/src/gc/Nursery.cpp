@@ -757,7 +757,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     TIME_END(total);
 
 #ifdef PROFILE_NURSERY
-    uint64_t totalTime = TIME_TOTAL(total);
+    int64_t totalTime = TIME_TOTAL(total);
 
     if (totalTime >= GCReportThreshold) {
         static bool printedHeader = false;
