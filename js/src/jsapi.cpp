@@ -4373,6 +4373,18 @@ JS::OwningCompileOptions::setSourceMapURL(JSContext *cx, const jschar *s)
     return true;
 }
 
+bool
+JS::OwningCompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
+{
+    if (!compartment->wrap(cx, &elementRoot))
+        return false;
+    if (elementPropertyRoot) {
+        if (!compartment->wrap(cx, elementPropertyRoot.address()))
+            return false;
+    }
+    return true;
+}
+
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
 {
@@ -4384,6 +4396,18 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     extraWarningsOption = cx->options().extraWarnings();
     werrorOption = cx->options().werror();
     asmJSOption = cx->options().asmJS();
+}
+
+bool
+JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
+{
+    if (!compartment->wrap(cx, &elementRoot))
+        return false;
+    if (elementPropertyRoot) {
+        if (!compartment->wrap(cx, elementPropertyRoot.address()))
+            return false;
+    }
+    return true;
 }
 
 JSScript *
