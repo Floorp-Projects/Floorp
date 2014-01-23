@@ -574,7 +574,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /*
              * We use this CompileOptions only to initialize the
              * ScriptSourceObject. Most CompileOptions fields aren't used by
-             * ScriptSourceObject, and those that are (element; elementProperty)
+             * ScriptSourceObject, and those that are (element; elementAttributeName)
              * aren't preserved by XDR. So this can be simple.
              */
             CompileOptions options(cx);
@@ -990,8 +990,15 @@ ScriptSourceObject::element() const
     return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
 }
 
+void
+ScriptSourceObject::initElement(HandleObject element)
+{
+    JS_ASSERT(getReservedSlot(ELEMENT_SLOT).isNull());
+    setReservedSlot(ELEMENT_SLOT, ObjectOrNullValue(element));
+}
+
 const Value &
-ScriptSourceObject::elementProperty() const
+ScriptSourceObject::elementAttributeName() const
 {
     const Value &prop = getReservedSlot(ELEMENT_PROPERTY_SLOT);
     JS_ASSERT(prop.isUndefined() || prop.isString());
@@ -1031,8 +1038,8 @@ ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source,
     source->incref();
     sourceObject->initSlot(SOURCE_SLOT, PrivateValue(source));
     sourceObject->initSlot(ELEMENT_SLOT, ObjectOrNullValue(options.element()));
-    if (options.elementProperty())
-        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, StringValue(options.elementProperty()));
+    if (options.elementAttributeName())
+        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, StringValue(options.elementAttributeName()));
     else
         sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, UndefinedValue());
 
@@ -2281,16 +2288,13 @@ js::PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp)
     return PCToLineNumber(script->lineno(), script->notes(), script->code(), pc, columnp);
 }
 
-/* The line number limit is the same as the jssrcnote offset limit. */
-#define SN_LINE_LIMIT   (SN_3BYTE_OFFSET_FLAG << 16)
-
 jsbytecode *
 js_LineNumberToPC(JSScript *script, unsigned target)
 {
     ptrdiff_t offset = 0;
     ptrdiff_t best = -1;
     unsigned lineno = script->lineno();
-    unsigned bestdiff = SN_LINE_LIMIT;
+    unsigned bestdiff = SN_MAX_OFFSET;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         /*
          * Exact-match only if offset is not in the prolog; otherwise use

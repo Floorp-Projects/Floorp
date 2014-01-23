@@ -53,9 +53,22 @@ using namespace mozilla::gfx;
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
 static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
 
-const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
-    return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
-                             : static_cast<const WebGLRectangleObject*>(this);
+const WebGLRectangleObject*
+WebGLContext::CurValidFBRectObject() const
+{
+    const WebGLRectangleObject* rect = nullptr;
+
+    if (mBoundFramebuffer) {
+        // We don't really need to ask the driver.
+        // Use 'precheck' to just check that our internal state looks good.
+        GLenum precheckStatus = mBoundFramebuffer->PrecheckFramebufferStatus();
+        if (precheckStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            rect = &mBoundFramebuffer->RectangleObject();
+    } else {
+        rect = static_cast<const WebGLRectangleObject*>(this);
+    }
+
+    return rect;
 }
 
 WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext *gl, GLenum target, GLenum format)
@@ -108,7 +121,7 @@ WebGLContext::FakeBlackTexture::~FakeBlackTexture()
 void
 WebGLContext::ActiveTexture(GLenum texture)
 {
-    if (IsContextLost()) 
+    if (IsContextLost())
         return;
 
     if (texture < LOCAL_GL_TEXTURE0 ||
@@ -168,7 +181,7 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
     NS_LossyConvertUTF16toASCII cname(name);
     nsCString mappedName;
     prog->MapIdentifier(cname, &mappedName);
-    
+
     MakeContextCurrent();
     gl->fBindAttribLocation(progname, location, mappedName.get());
 }
@@ -347,11 +360,8 @@ GLenum
 WebGLContext::CheckFramebufferStatus(GLenum target)
 {
     if (IsContextLost())
-    {
         return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
-    }
 
-    MakeContextCurrent();
     if (target != LOCAL_GL_FRAMEBUFFER) {
         ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
         return 0;
@@ -359,42 +369,8 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
 
     if (!mBoundFramebuffer)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
-    if(mBoundFramebuffer->HasDepthStencilConflict())
-        return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
 
-    bool hasImages = false;
-    hasImages |= mBoundFramebuffer->DepthAttachment().IsDefined();
-    hasImages |= mBoundFramebuffer->StencilAttachment().IsDefined();
-    hasImages |= mBoundFramebuffer->DepthStencilAttachment().IsDefined();
-
-    if (!hasImages) {
-        int32_t colorAttachmentCount = mBoundFramebuffer->mColorAttachments.Length();
-
-        for(int32_t i = 0; i < colorAttachmentCount; i++) {
-            if (mBoundFramebuffer->ColorAttachment(i).IsDefined()) {
-                hasImages = true;
-                break;
-            }
-        }
-
-        /* http://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf section 4.4.5 (page 118)
-         GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
-         No images are attached to the framebuffer.
-         */
-        if (!hasImages) {
-            return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
-        }
-    }
-
-    if(mBoundFramebuffer->HasIncompleteAttachment())
-        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
-    if(mBoundFramebuffer->HasAttachmentsOfMismatchedDimensions())
-        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
-
-    // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
-    mBoundFramebuffer->FinalizeAttachments();
-
-    return gl->fCheckFramebufferStatus(target);
+    return mBoundFramebuffer->CheckFramebufferStatus();
 }
 
 void
@@ -409,7 +385,7 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
                                      GLsizei height,
                                      bool sub)
 {
-    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
@@ -443,7 +419,7 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
         if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, -1, &texelSize, info))
             return;
 
-        CheckedUint32 checked_neededByteLength = 
+        CheckedUint32 checked_neededByteLength =
             GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment);
 
         if (!checked_neededByteLength.isValid())
@@ -914,7 +890,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
                          "with %d vertices. Try reducing the number of vertices.", vertexCount);
         return false;
     }
-    
+
     GLuint dataSize = checked_dataSize.value();
 
     if (!mFakeVertexAttrib0BufferObject) {
@@ -960,7 +936,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
             gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
         }
         UpdateWebGLErrorAndClearGLError(&error);
-        
+
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 
         // note that we do this error checking and early return AFTER having restored the buffer binding above
@@ -973,7 +949,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
     gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0);
-    
+
     return true;
 }
 
@@ -1195,14 +1171,14 @@ WebGLContext::GenerateMipmap(GLenum target)
 
     if (!tex)
         return ErrorInvalidOperation("generateMipmap: No texture is bound to this target.");
-    
+
     GLenum imageTarget = (target == LOCAL_GL_TEXTURE_2D) ? LOCAL_GL_TEXTURE_2D
                                                          : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
     if (!tex->HasImageInfoAt(imageTarget, 0))
     {
         return ErrorInvalidOperation("generateMipmap: Level zero of texture is not defined.");
     }
-    
+
     if (!tex->IsFirstImagePowerOfTwo())
         return ErrorInvalidOperation("generateMipmap: Level zero of texture does not have power-of-two width and height.");
 
@@ -1321,7 +1297,7 @@ WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
         return -1;
 
     if (!ValidateGLSLVariableName(name, "getAttribLocation"))
-        return -1; 
+        return -1;
 
     NS_LossyConvertUTF16toASCII cname(name);
     nsCString mappedName;
@@ -1630,7 +1606,7 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
         retval.Truncate();
         return;
     }
-        
+
     GLuint progname = prog->GLName();
 
     MakeContextCurrent();
@@ -2175,7 +2151,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
             for (size_t i = 0; i < program->AttachedShaders().Length(); i++) {
 
                 WebGLShader* shader = program->AttachedShaders()[i];
-                
+
                 if (shader->CompileStatus())
                     continue;
 
@@ -2269,7 +2245,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (pixels.IsNull())
         return ErrorInvalidValue("readPixels: null destination buffer");
 
-    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
@@ -2407,7 +2383,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         uint32_t subrect_plainRowSize = subrect_width * bytesPerPixel;
     // There are checks above to ensure that this doesn't overflow.
-        uint32_t subrect_alignedRowSize = 
+        uint32_t subrect_alignedRowSize =
             RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
 
@@ -2470,7 +2446,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                 NS_WARNING("Unhandled case, how'd we get here?");
                 return rv.Throw(NS_ERROR_FAILURE);
             }
-        }            
+        }
     }
 }
 
@@ -3126,7 +3102,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 #endif
         }
 
-        // We're storing an actual instance of StripComments because, if we don't, the 
+        // We're storing an actual instance of StripComments because, if we don't, the
         // cleanSource nsAString instance will be destroyed before the reference is
         // actually used.
         StripComments stripComments(shader->Source());
@@ -3141,7 +3117,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
         if (gl->WorkAroundDriverBugs()) {
             const uint32_t maxSourceLength = 0x3ffff;
             if (sourceCString.Length() > maxSourceLength)
-                return ErrorInvalidValue("compileShader: source has more than %d characters", 
+                return ErrorInvalidValue("compileShader: source has more than %d characters",
                                          maxSourceLength);
         }
 
@@ -3658,7 +3634,7 @@ WebGLContext::ShaderSource(WebGLShader *shader, const nsAString& source)
     if (!ValidateObject("shaderSource: shader", shader))
         return;
 
-    // We're storing an actual instance of StripComments because, if we don't, the 
+    // We're storing an actual instance of StripComments because, if we don't, the
     // cleanSource nsAString instance will be destroyed before the reference is
     // actually used.
     StripComments stripComments(source);
@@ -3685,7 +3661,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
     MOZ_ASSERT(tex != nullptr, "no texture bound");
 
     bool sizeMayChange = true;
-    
+
     if (tex->HasImageInfoAt(target, level)) {
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
         sizeMayChange = width != imageInfo.Width() ||
@@ -3693,7 +3669,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
                         format != imageInfo.InternalFormat() ||
                         type != imageInfo.Type();
     }
-    
+
     if (sizeMayChange) {
         UpdateWebGLErrorAndClearGLError();
         gl->fTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
@@ -3764,7 +3740,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
 
     uint32_t srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(actualSrcFormat);
 
-    CheckedUint32 checked_neededByteLength = 
+    CheckedUint32 checked_neededByteLength =
         GetImageSize(height, width, srcTexelSize, mPixelStoreUnpackAlignment);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * srcTexelSize;
@@ -3890,7 +3866,7 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
         // Spec says to generate an INVALID_VALUE error
         return ErrorInvalidValue("texImage2D: null ImageData");
     }
-    
+
     Uint8ClampedArray arr(pixels->GetDataObject());
     return TexImage2D_base(target, level, internalformat, pixels->Width(),
                            pixels->Height(), 4*pixels->Width(), 0,
@@ -3948,19 +3924,19 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
     if (width == 0 || height == 0)
         return; // ES 2.0 says it has no effect, we better return right now
 
-    CheckedUint32 checked_neededByteLength = 
+    CheckedUint32 checked_neededByteLength =
         GetImageSize(height, width, srcTexelSize, mPixelStoreUnpackAlignment);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * srcTexelSize;
 
-    CheckedUint32 checked_alignedRowSize = 
+    CheckedUint32 checked_alignedRowSize =
         RoundedToNextMultipleOf(checked_plainRowSize.value(), mPixelStoreUnpackAlignment);
 
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("texSubImage2D: integer overflow computing the needed buffer size");
 
     uint32_t bytesNeeded = checked_neededByteLength.value();
- 
+
     if (byteLength < bytesNeeded)
         return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
@@ -3971,11 +3947,11 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
 
     if (!tex->HasImageInfoAt(target, level))
         return ErrorInvalidOperation("texSubImage2D: no texture image previously defined for this level and face");
-    
+
     const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
     if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height()))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
-    
+
     // Require the format and type in texSubImage2D to match that of the existing texture as created by texImage2D
     if (imageInfo.InternalFormat() != format || imageInfo.Type() != type)
         return ErrorInvalidOperation("texSubImage2D: format or type doesn't match the existing texture");
@@ -4236,8 +4212,8 @@ InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2)
             return LOCAL_GL_DEPTH_COMPONENT16;
         else if (type == LOCAL_GL_UNSIGNED_INT)
             return LOCAL_GL_DEPTH_COMPONENT32;
-    } 
-    
+    }
+
     if (format == LOCAL_GL_DEPTH_STENCIL) {
         if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
             return LOCAL_GL_DEPTH24_STENCIL8;

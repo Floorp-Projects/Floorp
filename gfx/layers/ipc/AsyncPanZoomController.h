@@ -223,6 +223,15 @@ public:
   gfx3DMatrix GetNontransientAsyncTransform();
 
   /**
+   * Returns the transform to take something from the coordinate space of the
+   * last thing we know gecko painted, to the coordinate space of the last thing
+   * we asked gecko to paint. In cases where that last request has not yet been
+   * processed, this is needed to transform input events properly into a space
+   * gecko will understand.
+   */
+  gfx3DMatrix GetTransformToLastDispatchedPaint();
+
+  /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
    * than the composite-to dimensions so that when you scroll down, you don't
    * checkerboard immediately. This includes a bunch of logic, including
@@ -482,7 +491,12 @@ protected:
    * Tell the paint throttler to request a content repaint with the given
    * metrics.  (Helper function used by RequestContentRepaint.)
    */
-  void ScheduleContentRepaint(FrameMetrics &aFrameMetrics);
+  void RequestContentRepaint(FrameMetrics& aFrameMetrics);
+
+  /**
+   * Actually send the next pending paint request to gecko.
+   */
+  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics);
 
   /**
    * Advances a fling by an interpolated amount based on the passed in |aDelta|.
@@ -635,6 +649,11 @@ private:
   // that we're not requesting a paint of the same thing that's already drawn.
   // If we don't do this check, we don't get a ShadowLayersUpdated back.
   FrameMetrics mLastPaintRequestMetrics;
+  // The last metrics that we actually sent to Gecko. This allows us to transform
+  // inputs into a coordinate space that Gecko knows about. This assumes the pipe
+  // through which input events and repaint requests are sent to Gecko operates
+  // in a FIFO manner.
+  FrameMetrics mLastDispatchedPaintMetrics;
 
   nsTArray<MultiTouchInput> mTouchQueue;
 

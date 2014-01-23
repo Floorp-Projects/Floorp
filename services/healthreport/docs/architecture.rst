@@ -1,24 +1,6 @@
-.. _firefox_health_report:
+.. _healthreport_architecture:
 
-=====================
-Firefox Health Report
-=====================
-
-``/services/healthreport`` contains the implementation of the
-``Firefox Health Report`` (FHR).
-
-Firefox Health Report is a background service that collects application
-metrics and periodically submits them to a central server. The core
-parts of the service are implemented in this directory. However, the
-actual XPCOM service is implemented in the
-:ref:`data_reporting_service`.
-
-The core types can actually be instantiated multiple times and used to
-power multiple data submission services within a single Gecko
-application. In other words, everything in this directory is effectively
-a reusable library. However, the terminology and some of the features
-are very specific to what the Firefox Health Report feature requires.
-
+============
 Architecture
 ============
 
@@ -31,7 +13,7 @@ Architecture
 are looking for the FHR probes, this is where they are.
 
 Storage
--------
+=======
 
 Firefox Health Report stores data in 3 locations:
 
@@ -42,13 +24,13 @@ Firefox Health Report stores data in 3 locations:
 * Lesser state and run-time options are stored in preferences.
 
 Preferences
------------
+===========
 
 Preferences controlling behavior of Firefox Health Report live in the
 ``datareporting.healthreport.*`` branch.
 
 Service and Data Control
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 The follow preferences control behavior of the service and data upload.
 
@@ -112,7 +94,7 @@ to analyze! Keep in mind that Firefox Health Report can be useful even
 if it's not submitting data to remote servers!
 
 Logging
-^^^^^^^
+-------
 
 The following preferences allow you to control the logging behavior of
 Firefox Health Report.
@@ -138,7 +120,7 @@ logging.dumpLevel
    ``dump()``.
 
 State
-^^^^^
+-----
 
 currentDaySubmissionFailureCount
    How many submission failures the client has encountered while
@@ -239,12 +221,3 @@ want storage to be robust. We originally stored UUIDs in preferences,
 which only flush to disk periodically. Writes to preferences were
 apparently getting lost. We switched to writing directly to files to
 eliminate this window.
-
-Legal and Privacy Concerns
-==========================
-
-Because Firefox Health Report collects and submits data to remote
-servers and is an opt-out feature, there are legal and privacy
-concerns over what data may be collected and submitted. **Additions or
-changes to submitted data should be signed off by responsible
-parties.**

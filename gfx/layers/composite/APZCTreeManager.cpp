@@ -880,7 +880,7 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
 /* This function sets the aTransformToApzcOut and aTransformToGeckoOut out-parameters
    to some useful transformations that input events may need applied. This is best
    illustrated with an example. Consider a chain of layers, L, M, N, O, P, Q, R. Layer L
-   is the layer that corresponds to the returned APZC instance, and layer R is the root
+   is the layer that corresponds to the argument |aApzc|, and layer R is the root
    of the layer tree. Layer M is the parent of L, N is the parent of M, and so on.
    When layer L is displayed to the screen by the compositor, the set of transforms that
    are applied to L are (in order from top to bottom):
@@ -918,8 +918,15 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
    Next, if we want user inputs sent to gecko for event-dispatching, we will need to strip
    out all of the async transforms that are involved in this chain. This is because async
    transforms are stored only in the compositor and gecko does not account for them when
-   doing display-list-based hit-testing for event dispatching. Therefore, given a user input
-   in screen space, the following transforms need to be applied (in order from top to bottom):
+   doing display-list-based hit-testing for event dispatching.
+   Furthermore, because these input events are processed by Gecko in a FIFO queue that
+   includes other things (specifically paint requests), it is possible that by time the
+   input event reaches gecko, it will have painted something else. Therefore, we need to
+   apply another transform to the input events to account for the possible disparity between
+   what we know gecko last painted and the last paint request we sent to gecko. Let this
+   transform be represented by LD, MD, ... RD.
+   Therefore, given a user input in screen space, the following transforms need to be applied
+   (in order from top to bottom):
         RC.Inverse()
         RN.Inverse()
         RT.Inverse()
@@ -930,28 +937,36 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
         LC.Inverse()
         LN.Inverse()
         LT.Inverse()
+        LD
         LC
+        MD
         MC
         ...
+        RD
         RC
    This sequence can be simplified and refactored to the following:
         aTransformToApzcOut
         LT.Inverse()
+        LD
         LC
+        MD
         MC
         ...
+        RD
         RC
    Since aTransformToApzcOut is already one of the out-parameters, we set aTransformToGeckoOut
-   to the remaining transforms (LT.Inverse() * LC * ... * RC), so that the caller code can
+   to the remaining transforms (LT.Inverse() * LD * ... * RC), so that the caller code can
    combine it with aTransformToApzcOut to get the final transform required in this case.
 
    Note that for many of these layers, there will be no AsyncPanZoomController attached, and
    so the async transform will be the identity transform. So, in the example above, if layers
-   L and P have APZC instances attached, MT, MN, NT, NN, OT, ON, QT, QN, RT and RN will be
-   identity transforms.
+   L and P have APZC instances attached, MT, MN, MD, NT, NN, ND, OT, ON, OD, QT, QN, QD, RT,
+   RN and RD will be identity transforms.
    Additionally, for space-saving purposes, each APZC instance stores its layer's individual
    CSS transform and the accumulation of CSS transforms to its parent APZC. So the APZC for
    layer L would store LC and (MC * NC * OC), and the layer P would store PC and (QC * RC).
+   The APZC instances track the last dispatched paint request and so are able to calculate LD and
+   PD using those internally stored values.
    The APZCs also obviously have LT, LN, PT, and PN, so all of the above transformation combinations
    required can be generated.
  */
@@ -978,8 +993,8 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
 
   // aTransformToApzcOut is initialized to OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LN.Inverse()
   aTransformToApzcOut = ancestorUntransform * aApzc->GetCSSTransform().Inverse() * nontransientAsyncTransform.Inverse();
-  // aTransformToGeckoOut is initialized to LT.Inverse() * LC * MC * NC * OC
-  aTransformToGeckoOut = transientAsyncUntransform * aApzc->GetCSSTransform() * aApzc->GetAncestorTransform();
+  // aTransformToGeckoOut is initialized to LT.Inverse() * LD * LC * MC * NC * OC
+  aTransformToGeckoOut = transientAsyncUntransform * aApzc->GetTransformToLastDispatchedPaint() * aApzc->GetCSSTransform() * aApzc->GetAncestorTransform();
 
   for (AsyncPanZoomController* parent = aApzc->GetParent(); parent; parent = parent->GetParent()) {
     // ancestorUntransform is updated to RC.Inverse() * QC.Inverse() when parent == P
@@ -991,12 +1006,12 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
 
     // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LN.Inverse()
     aTransformToApzcOut = untransformSinceLastApzc * aTransformToApzcOut;
-    // aTransformToGeckoOut is LT.Inverse() * LC * MC * NC * OC * PC * QC * RC
-    aTransformToGeckoOut = aTransformToGeckoOut * parent->GetCSSTransform() * parent->GetAncestorTransform();
+    // aTransformToGeckoOut is LT.Inverse() * LD * LC * MC * NC * OC * PD * PC * QC * RC
+    aTransformToGeckoOut = aTransformToGeckoOut * parent->GetTransformToLastDispatchedPaint() * parent->GetCSSTransform() * parent->GetAncestorTransform();
 
     // The above values for aTransformToApzcOut and aTransformToGeckoOut when parent == P match
-    // the required output as explained in the comment above GetTargetAPZC. Note that any missing terms
-    // are async transforms that are guaranteed to be identity transforms.
+    // the required output as explained in the comment above this method. Note that any missing
+    // terms are guaranteed to be identity transforms.
   }
 }
 
