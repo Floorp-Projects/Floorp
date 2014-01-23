@@ -2006,7 +2006,7 @@ nsHttpChannel::EnsureAssocReq()
 nsresult
 nsHttpChannel::MaybeSetupByteRangeRequest(int64_t partialLen, int64_t contentLength)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_ERROR_NOT_RESUMABLE;
 
     bool hasContentEncoding =
         mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding)
@@ -2746,7 +2746,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                  "[content-length=%lld size=%lld]\n", contentLength, size));
 
             rv = MaybeSetupByteRangeRequest(size, contentLength);
-            mCachedContentIsPartial = NS_SUCCEEDED(rv);
+            mCachedContentIsPartial = NS_SUCCEEDED(rv) && mIsPartialRequest;
             if (mCachedContentIsPartial) {
                 rv = OpenCacheInputStream(entry, false);
                 *aResult = ENTRY_NEEDS_REVALIDATION;
