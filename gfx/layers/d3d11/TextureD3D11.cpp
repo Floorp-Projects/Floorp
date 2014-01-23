@@ -594,13 +594,13 @@ DeprecatedTextureClientD3D11::EnsureDrawTarget()
 
   SurfaceFormat format;
   switch (mContentType) {
-  case GFX_CONTENT_ALPHA:
+  case gfxContentType::ALPHA:
     format = SurfaceFormat::A8;
     break;
-  case GFX_CONTENT_COLOR:
+  case gfxContentType::COLOR:
     format = SurfaceFormat::B8G8R8X8;
     break;
-  case GFX_CONTENT_COLOR_ALPHA:
+  case gfxContentType::COLOR_ALPHA:
     format = SurfaceFormat::B8G8R8A8;
     break;
   default:

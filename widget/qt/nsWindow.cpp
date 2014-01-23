@@ -2691,7 +2691,7 @@ nsWindow::GetThebesSurface()
 #ifdef CAIRO_HAS_QT_SURFACE
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
-        mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), GFX_CONTENT_COLOR);
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), gfxContentType::COLOR);
     }
 #endif
     if (!mThebesSurface) {

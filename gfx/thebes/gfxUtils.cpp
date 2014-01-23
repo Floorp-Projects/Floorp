@@ -312,7 +312,7 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
         bounds.RoundOut();
         mContext->Clip(bounds);
         mContext->SetMatrix(currentMatrix);
-        mContext->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+        mContext->PushGroup(gfxContentType::COLOR_ALPHA);
         mContext->SetOperator(gfxContext::OPERATOR_OVER);
 
         mPushedGroup = true;

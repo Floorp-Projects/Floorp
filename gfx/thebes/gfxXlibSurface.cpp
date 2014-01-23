@@ -244,7 +244,7 @@ gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
       return nullptr;
     }
 
-    if (aContent == GFX_CONTENT_COLOR) {
+    if (aContent == gfxContentType::COLOR) {
         // cairo_surface_create_similar will use a matching visual if it can.
         // However, systems with 16-bit or indexed default visuals may benefit
         // from rendering with 24-bit formats.

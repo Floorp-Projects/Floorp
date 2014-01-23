@@ -328,7 +328,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
     }
     
     cairo_surface_t *surface =
-        cairo_surface_create_similar(mSurface, cairo_content_t(aContent),
+        cairo_surface_create_similar(mSurface, cairo_content_t(int(aContent)),
                                      aSize.width, aSize.height);
     if (cairo_surface_status(surface)) {
         cairo_surface_destroy(surface);
@@ -470,17 +470,17 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
 {
     switch (format) {
         case gfxImageFormat::ARGB32:
-            return GFX_CONTENT_COLOR_ALPHA;
+            return gfxContentType::COLOR_ALPHA;
         case gfxImageFormat::RGB24:
         case gfxImageFormat::RGB16_565:
-            return GFX_CONTENT_COLOR;
+            return gfxContentType::COLOR;
         case gfxImageFormat::A8:
         case gfxImageFormat::A1:
-            return GFX_CONTENT_ALPHA;
+            return gfxContentType::ALPHA;
 
         case gfxImageFormat::Unknown:
         default:
-            return GFX_CONTENT_COLOR;
+            return gfxContentType::COLOR;
     }
 }
 

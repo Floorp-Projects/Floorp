@@ -328,10 +328,10 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
           {
             if (!mD2DWindowSurface) {
-              gfxContentType content = GFX_CONTENT_COLOR;
+              gfxContentType content = gfxContentType::COLOR;
 #if defined(MOZ_XUL)
               if (mTransparencyMode != eTransparencyOpaque) {
-                content = GFX_CONTENT_COLOR_ALPHA;
+                content = gfxContentType::COLOR_ALPHA;
               }
 #endif
               mD2DWindowSurface = new gfxD2DSurface(mWnd, content);

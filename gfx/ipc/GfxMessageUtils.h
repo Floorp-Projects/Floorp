@@ -189,9 +189,9 @@ struct ParamTraits<gfx3DMatrix>
 
 template <>
 struct ParamTraits<gfxContentType>
-  : public EnumSerializer<gfxContentType,
-                          GFX_CONTENT_COLOR,
-                          GFX_CONTENT_SENTINEL>
+  : public TypedEnumSerializer<gfxContentType,
+                               gfxContentType::COLOR,
+                               gfxContentType::SENTINEL>
 {};
 
 template <>

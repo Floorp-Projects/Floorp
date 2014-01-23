@@ -740,8 +740,8 @@ public:
   ContentType GetContentType()
   {
     return (mFormat == gfx::SurfaceFormat::B8G8R8A8) ?
-             GFX_CONTENT_COLOR_ALPHA :
-             GFX_CONTENT_COLOR;
+             gfxContentType::COLOR_ALPHA :
+             gfxContentType::COLOR;
   }
 
   virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
@@ -819,8 +819,8 @@ public:
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
     return (mFormat == gfx::SurfaceFormat::B8G8R8A8) ?
-             GFX_CONTENT_COLOR_ALPHA :
-             GFX_CONTENT_COLOR;
+             gfxContentType::COLOR_ALPHA :
+             gfxContentType::COLOR;
   }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;

@@ -3464,7 +3464,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   } else {
     drawSurf =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(sw), ceil(sh)),
-                                                         GFX_CONTENT_COLOR_ALPHA);
+                                                         gfxContentType::COLOR_ALPHA);
     if (!drawSurf) {
       error.Throw(NS_ERROR_FAILURE);
       return;

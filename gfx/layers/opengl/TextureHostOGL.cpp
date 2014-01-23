@@ -1079,21 +1079,21 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
   if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
     mYTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                    gfxSize,
-                                                   GFX_CONTENT_ALPHA,
+                                                   gfxContentType::ALPHA,
                                                    WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                    FlagsToGLFlags(mFlags));
   }
   if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
-                                                    GFX_CONTENT_ALPHA,
+                                                    gfxContentType::ALPHA,
                                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }
   if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
-                                                    GFX_CONTENT_ALPHA,
+                                                    gfxContentType::ALPHA,
                                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }

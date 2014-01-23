@@ -761,13 +761,13 @@ DeprecatedTextureClientD3D9::EnsureAllocated(gfx::IntSize aSize,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (aType) {
-  case GFX_CONTENT_COLOR:
+  case gfxContentType::COLOR:
     format = D3DFMT_X8R8G8B8;
     break;
-  case GFX_CONTENT_COLOR_ALPHA:
+  case gfxContentType::COLOR_ALPHA:
     // fallback to DIB texture client
     return false;
-  case GFX_CONTENT_ALPHA:
+  case gfxContentType::ALPHA:
     format = D3DFMT_A8;
     break;
   default:
