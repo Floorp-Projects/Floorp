@@ -10,14 +10,17 @@ import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.testhelpers.DefaultGlobalSessionCallback;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
+import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
@@ -169,9 +172,10 @@ public class TestUpgradeRequired extends AndroidSyncTestCase {
       }
     };
 
-    final GlobalSession session = new MockGlobalSession(
-        TEST_USERNAME, TEST_PASSWORD,
-        new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY), callback);
+    MockSharedPreferences prefs = new MockSharedPreferences();
+    SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), prefs);
+    config.syncKeyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
+    final GlobalSession session = new MockGlobalSession(config, callback);
 
     session.interpretHTTPFailure(simulate400());
     assertTrue(calledUpgradeRequired.called);

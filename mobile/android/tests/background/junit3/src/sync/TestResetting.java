@@ -10,21 +10,26 @@ import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.testhelpers.BaseMockServerSyncStage;
 import org.mozilla.gecko.background.testhelpers.DefaultGlobalSessionCallback;
 import org.mozilla.gecko.background.testhelpers.MockRecord;
+import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
+
+import android.content.SharedPreferences;
 
 /**
  * Test the on-device side effects of reset operations on a stage.
@@ -152,11 +157,13 @@ public class TestResetting extends AndroidSyncTestCase {
   }
 
   private GlobalSession createDefaultGlobalSession(final GlobalSessionCallback callback) throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException {
-    return new GlobalSession(
-        TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), null,
-        new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY),
-        callback, getApplicationContext(), null, null, callback) {
 
+    final KeyBundle keyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
+    final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD);
+    final SharedPreferences prefs = new MockSharedPreferences();
+    final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
+    config.syncKeyBundle = keyBundle;
+    return new GlobalSession(config, callback, getApplicationContext(), null, null, callback) {
       @Override
       public boolean engineIsEnabled(String engineName,
                                      EngineSettings engineSettings)

@@ -100,39 +100,25 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
     return config.wboURI(collection, id);
   }
 
-  public GlobalSession(String username,
-                       AuthHeaderProvider authHeaderProvider,
-                       String prefsPath,
-                       KeyBundle syncKeyBundle,
+  public GlobalSession(SyncConfiguration config,
                        BaseGlobalSessionCallback callback,
                        Context context,
                        Bundle extras,
-                       ClientsDataDelegate clientsDelegate,
-                       NodeAssignmentCallback nodeAssignmentCallback)
-                           throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
-    if (username == null) {
-      throw new IllegalArgumentException("username must not be null.");
-    }
+                       ClientsDataDelegate clientsDelegate, NodeAssignmentCallback nodeAssignmentCallback)
+    throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
+
     if (callback == null) {
       throw new IllegalArgumentException("Must provide a callback to GlobalSession constructor.");
     }
 
     Logger.debug(LOG_TAG, "GlobalSession initialized with bundle " + extras);
 
-    if (syncKeyBundle == null ||
-        syncKeyBundle.getEncryptionKey() == null ||
-        syncKeyBundle.getHMACKey() == null) {
-      throw new SyncConfigurationException();
-    }
-
     this.callback        = callback;
     this.context         = context;
     this.clientsDelegate = clientsDelegate;
     this.nodeAssignmentCallback = nodeAssignmentCallback;
 
-    config = new SyncConfiguration(username, authHeaderProvider, prefsPath, this);
-    config.syncKeyBundle = syncKeyBundle;
-
+    this.config = config;
     registerCommands();
     prepareStages();
 
