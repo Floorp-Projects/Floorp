@@ -330,7 +330,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(GLenum target,
         break;
     default:
         // finish checking that the 'attachment' parameter is among the allowed values
-        if (!CheckColorAttachementNumber(attachment, "framebufferRenderbuffer")){
+        if (!CheckColorAttachmentNumber(attachment, "framebufferRenderbuffer")){
             return;
         }
 
@@ -387,7 +387,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
         mDepthStencilAttachment.SetTexImage(wtex, textarget, level);
         break;
     default:
-        if (!CheckColorAttachementNumber(attachment, "framebufferTexture2D"))
+        if (!CheckColorAttachmentNumber(attachment, "framebufferTexture2D"))
             return;
 
         size_t colorAttachmentId = size_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
@@ -407,7 +407,7 @@ WebGLFramebuffer::GetAttachment(GLenum attachment) const
     if (attachment == LOCAL_GL_STENCIL_ATTACHMENT)
         return mStencilAttachment;
 
-    if (!CheckColorAttachementNumber(attachment, "getAttachment")) {
+    if (!CheckColorAttachmentNumber(attachment, "getAttachment")) {
         MOZ_ASSERT(false);
         return mColorAttachments[0];
     }
@@ -677,7 +677,7 @@ WebGLFramebuffer::CheckAndInitializeAttachments()
     return true;
 }
 
-bool WebGLFramebuffer::CheckColorAttachementNumber(GLenum attachment, const char* functionName) const
+bool WebGLFramebuffer::CheckColorAttachmentNumber(GLenum attachment, const char* functionName) const
 {
     const char* const errorFormating = "%s: attachment: invalid enum value 0x%x";
 
