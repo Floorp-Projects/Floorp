@@ -7,16 +7,22 @@ import org.json.simple.JSONArray;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.testhelpers.DefaultGlobalSessionCallback;
 import org.mozilla.gecko.background.testhelpers.MockClientsDataDelegate;
+import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.SyncConfiguration;
+import org.mozilla.gecko.sync.SyncConfigurationException;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 public class TestClientsStage extends AndroidSyncTestCase {
   private static final String TEST_USERNAME    = "johndoe";
@@ -40,10 +46,12 @@ public class TestClientsStage extends AndroidSyncTestCase {
     final GlobalSessionCallback callback = new DefaultGlobalSessionCallback();
     final ClientsDataDelegate delegate = new MockClientsDataDelegate();
 
-    final GlobalSession session = new GlobalSession(
-        TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), null,
-        new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY),
-        callback, context, null, delegate, callback);
+    final KeyBundle keyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
+    final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD);
+    final SharedPreferences prefs = new MockSharedPreferences();
+    final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
+    config.syncKeyBundle = keyBundle;
+    GlobalSession session = new GlobalSession(config, callback, context, null, delegate, callback);
 
     SyncClientsEngineStage stage = new SyncClientsEngineStage() {
 
