@@ -780,13 +780,22 @@ class Marionette(object):
 
     @property
     def window_handles(self):
-        '''
-        A list of references to all available browser windows if called in
-        content context. If called while in the chrome context, it will list
-        all available windows, not just browser windows (ie: not just
-        'navigator:browser';).
-        '''
-        response = self._send_message('getWindows', 'value')
+        """Get list of windows in the current context.
+
+        If called in the content context it will return a list of
+        references to all available browser windows.  Called in the
+        chrome context, it will list all available windows, not just
+        browser windows (e.g. not just navigator.browser).
+
+        Each window handle is assigned by the server, and the list of
+        strings returned does not have a guaranteed ordering.
+
+        :returns: unordered list of unique window handles as strings
+
+        """
+
+        response = self._send_message("getCurrentWindowHandles",
+                                      "value")
         return response
 
     @property
