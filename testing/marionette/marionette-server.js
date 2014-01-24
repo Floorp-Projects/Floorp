@@ -1193,7 +1193,7 @@ MarionetteServerConnection.prototype = {
    *
    * @return unique window handle (string)
    */
-  getCurrentWindowHandle: function MDA_getCurrentWindowHandle() {
+  getWindowHandle: function MDA_getWindowHandle() {
     this.command_id = this.getCommandId();
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
@@ -2441,8 +2441,9 @@ MarionetteServerConnection.prototype.requestTypes = {
   "goBack": MarionetteServerConnection.prototype.goBack,
   "goForward": MarionetteServerConnection.prototype.goForward,
   "refresh":  MarionetteServerConnection.prototype.refresh,
-  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getCurrentWindowHandle,
-  "getWindow":  MarionetteServerConnection.prototype.getCurrentWindowHandle,  // deprecated
+  "getWindowHandle": MarionetteServerConnection.prototype.getWindowHandle,
+  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getWindowHandle,  // Selenium 2 compat
+  "getWindow":  MarionetteServerConnection.prototype.getWindowHandle,  // deprecated
   "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
   "getWindows":  MarionetteServerConnection.prototype.getWindowHandles,  // deprecated
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
