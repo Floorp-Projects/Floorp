@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 /**
@@ -60,11 +61,12 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_update_credentials);
 
-    localErrorTextView = (TextView) ensureFindViewById(null, R.id.local_error, "local error text view");
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
+    remoteErrorTextView = (TextView) ensureFindViewById(null, R.id.remote_error, "remote error text view");
     button = (Button) ensureFindViewById(null, R.id.button, "update credentials");
+    progressBar = (ProgressBar) ensureFindViewById(null, R.id.progress, "progress bar");
 
     minimumPasswordLength = 1; // Minimal restriction on passwords entered to sign in.
     createButton();
@@ -122,13 +124,13 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
 
     @Override
     public void handleError(Exception e) {
-      showRemoteError(e);
+      showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
     }
 
     @Override
     public void handleFailure(FxAccountClientRemoteException e) {
       // TODO On isUpgradeRequired, transition to Doghouse state.
-      showRemoteError(e);
+      showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
     }
 
     @Override
@@ -163,10 +165,12 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
     try {
+      hideRemoteError();
       RequestDelegate<LoginResponse> delegate = new UpdateCredentialsDelegate(email, password, serverURI);
-      new FxAccountSignInTask(this, email, password, client, delegate).execute();
+      new FxAccountSignInTask(this, this, email, password, client, delegate).execute();
     } catch (Exception e) {
-      showRemoteError(e);
+      Logger.warn(LOG_TAG, "Got exception updating credentials for account.", e);
+      showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
     }
   }
 

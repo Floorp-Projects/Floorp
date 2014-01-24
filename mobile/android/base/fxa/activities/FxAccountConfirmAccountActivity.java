@@ -86,7 +86,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     protected final byte[] sessionToken;
 
     public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient20 client, RequestDelegate<Void> delegate) {
-      super(context, false, client, delegate);
+      super(context, null, client, delegate);
       this.sessionToken = sessionToken;
     }
 

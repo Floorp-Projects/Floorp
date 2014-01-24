@@ -16,7 +16,6 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClient
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.InnerRequestDelegate;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -30,12 +29,16 @@ import android.os.AsyncTask;
  * process.
  */
 abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestDelegate<T>> {
-  protected static final String LOG_TAG = FxAccountSetupTask.class.getSimpleName();
+  private static final String LOG_TAG = FxAccountSetupTask.class.getSimpleName();
+
+  public interface ProgressDisplay {
+    public void showProgress();
+    public void dismissProgress();
+  }
 
   protected final Context context;
   protected final FxAccountClient20 client;
-
-  protected ProgressDialog progressDialog = null;
+  protected final ProgressDisplay progressDisplay;
 
   // Initialized lazily.
   protected byte[] quickStretchedPW;
@@ -46,34 +49,30 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
 
   protected final RequestDelegate<T> delegate;
 
-  public FxAccountSetupTask(Context context, boolean shouldShowProgressDialog, FxAccountClient20 client, RequestDelegate<T> delegate) {
+  public FxAccountSetupTask(Context context, ProgressDisplay progressDisplay, FxAccountClient20 client, RequestDelegate<T> delegate) {
     this.context = context;
     this.client = client;
     this.delegate = delegate;
-    if (shouldShowProgressDialog) {
-      progressDialog = new ProgressDialog(context);
-    }
+    this.progressDisplay = progressDisplay;
   }
 
   @Override
   protected void onPreExecute() {
-    if (progressDialog != null) {
-      progressDialog.setTitle("Firefox Account..."); // XXX.
-      progressDialog.setMessage("Please wait.");
-      progressDialog.setCancelable(false);
-      progressDialog.setIndeterminate(true);
-      progressDialog.show();
+    if (progressDisplay != null) {
+      progressDisplay.showProgress();
     }
   }
 
   @Override
   protected void onPostExecute(InnerRequestDelegate<T> result) {
-    if (progressDialog != null) {
-      progressDialog.dismiss();
+    if (progressDisplay != null) {
+      progressDisplay.dismissProgress();
     }
 
     // We are on the UI thread, and need to invoke these callbacks here to allow UI updating.
-    if (innerDelegate.exception != null) {
+    if (innerDelegate.failure != null) {
+      delegate.handleFailure(innerDelegate.failure);
+    } else if (innerDelegate.exception != null) {
       delegate.handleError(innerDelegate.exception);
     } else {
       delegate.handleSuccess(result.response);
@@ -82,8 +81,8 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
 
   @Override
   protected void onCancelled(InnerRequestDelegate<T> result) {
-    if (progressDialog != null) {
-      progressDialog.dismiss();
+    if (progressDisplay != null) {
+      progressDisplay.dismissProgress();
     }
     delegate.handleError(new IllegalStateException("Task was cancelled."));
   }
@@ -92,6 +91,7 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     protected final CountDownLatch latch;
     public T response = null;
     public Exception exception = null;
+    public FxAccountClientRemoteException failure = null;
 
     protected InnerRequestDelegate(CountDownLatch latch) {
       this.latch = latch;
@@ -107,7 +107,7 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     @Override
     public void handleFailure(FxAccountClientRemoteException e) {
       Logger.warn(LOG_TAG, "Got failure.");
-      this.exception = e;
+      this.failure = e;
       latch.countDown();
     }
 
@@ -120,13 +120,13 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   }
 
   public static class FxAccountCreateAccountTask extends FxAccountSetupTask<String> {
-    protected static final String LOG_TAG = FxAccountCreateAccountTask.class.getSimpleName();
+    private static final String LOG_TAG = FxAccountCreateAccountTask.class.getSimpleName();
 
     protected final byte[] emailUTF8;
     protected final byte[] passwordUTF8;
 
-    public FxAccountCreateAccountTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<String> delegate) throws UnsupportedEncodingException {
-      super(context, true, client, delegate);
+    public FxAccountCreateAccountTask(Context context, ProgressDisplay progressDisplay, String email, String password, FxAccountClient20 client, RequestDelegate<String> delegate) throws UnsupportedEncodingException {
+      super(context, progressDisplay, client, delegate);
       this.emailUTF8 = email.getBytes("UTF-8");
       this.passwordUTF8 = password.getBytes("UTF-8");
     }
@@ -160,13 +160,13 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
   }
 
   public static class FxAccountSignInTask extends FxAccountSetupTask<LoginResponse> {
-    protected static final String LOG_TAG = FxAccountCreateAccountTask.class.getSimpleName();
+    protected static final String LOG_TAG = FxAccountSignInTask.class.getSimpleName();
 
     protected final byte[] emailUTF8;
     protected final byte[] passwordUTF8;
 
-    public FxAccountSignInTask(Context context, String email, String password, FxAccountClient20 client, RequestDelegate<LoginResponse> delegate) throws UnsupportedEncodingException {
-      super(context, true, client, delegate);
+    public FxAccountSignInTask(Context context, ProgressDisplay progressDisplay, String email, String password, FxAccountClient20 client, RequestDelegate<LoginResponse> delegate) throws UnsupportedEncodingException {
+      super(context, progressDisplay, client, delegate);
       this.emailUTF8 = email.getBytes("UTF-8");
       this.passwordUTF8 = password.getBytes("UTF-8");
     }
