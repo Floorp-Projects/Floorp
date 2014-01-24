@@ -405,18 +405,18 @@ var SelectionHandler = {
     SELECT_ALL: {
       label: Strings.browser.GetStringFromName("contextmenu.selectAll"),
       id: "selectall_action",
-      icon: "drawable://select_all",
+      icon: "drawable://ab_select_all",
       action: function(aElement) {
         SelectionHandler.selectAll(aElement);
       },
       selector: ClipboardHelper.selectAllContext,
-      order: 1,
+      order: 5,
     },
 
     CUT: {
       label: Strings.browser.GetStringFromName("contextmenu.cut"),
       id: "cut_action",
-      icon: "drawable://cut",
+      icon: "drawable://ab_cut",
       action: function(aElement) {
         let start = aElement.selectionStart;
         let end   = aElement.selectionEnd;
@@ -427,31 +427,31 @@ var SelectionHandler = {
         // copySelection closes the selection. Show a caret where we just cut the text.
         SelectionHandler.attachCaret(aElement);
       },
-      order: 1,
+      order: 4,
       selector: ClipboardHelper.cutContext,
     },
 
     COPY: {
       label: Strings.browser.GetStringFromName("contextmenu.copy"),
       id: "copy_action",
-      icon: "drawable://copy",
+      icon: "drawable://ab_copy",
       action: function() {
         SelectionHandler.copySelection();
       },
-      order: 1,
+      order: 3,
       selector: ClipboardHelper.getCopyContext(false)
     },
 
     PASTE: {
       label: Strings.browser.GetStringFromName("contextmenu.paste"),
       id: "paste_action",
-      icon: "drawable://paste",
+      icon: "drawable://ab_paste",
       action: function(aElement) {
         ClipboardHelper.paste(aElement);
         SelectionHandler._positionHandles();
         SelectionHandler._updateMenu();
       },
-      order: 1,
+      order: 2,
       selector: ClipboardHelper.pasteContext,
     },
 
@@ -470,11 +470,12 @@ var SelectionHandler = {
         return Strings.browser.formatStringFromName("contextmenu.search", [Services.search.defaultEngine.name], 1);
       },
       id: "search_action",
-      icon: "drawable://ic_url_bar_search",
+      icon: "drawable://ab_search",
       action: function() {
         SelectionHandler.searchSelection();
         SelectionHandler._closeSelection();
       },
+      order: 1,
       selector: ClipboardHelper.searchWithContext,
     },
 
