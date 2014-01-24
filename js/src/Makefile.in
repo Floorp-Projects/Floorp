@@ -63,8 +63,6 @@ EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
 
-GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
-
 GARBAGE += selfhosted.out.h
 
 USE_HOST_CXX = 1
@@ -408,13 +406,8 @@ endif
 $(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
 
-# Use CURDIR to avoid finding a jsautooplen.h in the source tree (from
-# a previous build?) via VPATH when we're building in a separate tree.
-$(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
-	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
-
 # Force auto-header generation before compiling any source that may use them
-$(OBJS): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
+$(OBJS): $(CURDIR)/jsautokw.h
 
 ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
