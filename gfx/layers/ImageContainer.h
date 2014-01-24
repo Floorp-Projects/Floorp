@@ -960,8 +960,6 @@ public:
 
   CairoImage() : Image(nullptr, CAIRO_SURFACE) {}
 
-private:
-
   nsCountedRef<nsMainThreadSurfaceRef> mDeprecatedSurface;
   gfx::IntSize mSize;
 
