@@ -38,33 +38,21 @@ limitations under the License.
         line-height: 0;
       }
 
-      #overlay {
+      #fallback {
         display: none;
       }
 
-      #overlay.enabled {
+      #fallback.enabled {
         display: block;
         position:fixed;
-        bottom: 0;
-        right: 0;
-      }
-
-      #report, #fallback {
-        float: right;
-        width: 70px; height: 16px;
-        padding: 8px 4px 4px;
         color: white;
+        right: 0px; bottom: 0px; width: 70px; height: 16px;
+        padding: 4px;
+        padding-top: 8px;
         background-color: rgba(0, 0, 0, 0.62);
         font: bold 10px sans-serif;
         text-align: center;
         text-decoration: none;
-      }
-      #report {
-        display: none;
-        width: 100px;
-      }
-      #overlay:hover #report {
-        display: block;
       }
 
       #fallback .icon {
@@ -72,16 +60,16 @@ limitations under the License.
         color: white;
       }
 
-      #fallback:hover .icon {
+      #fallback.enabled:hover .icon {
         display: inline-block;
       }
 
-      #report:hover, #fallback:hover {
-        background-color: black;
+      #fallback:hover {
+        background-color: rgb(0, 0, 0);
       }
 
       @media screen and (max-width: 100px), screen and (max-height: 40px) {
-        body.started #overlay {
+        body.started #fallback {
           display: none;
         }
       }
@@ -91,15 +79,11 @@ limitations under the License.
   <body contextmenu="shumwayMenu">
     <div id="viewer"></div>
     <section>
-      <div id="overlay">
-        <a id="fallback" href="#">Shumway <span class="icon">&times;</span></a>
-        <a id="report" href="#">Report Problems</a>
-      </div>
+      <a id="fallback" href="#">Shumway <span class="icon">&times;</span></a>
       <menu type="context" id="shumwayMenu">
         <menuitem label="Show URL" id="showURLMenu"></menuitem>
         <menuitem label="Copy Profile" id="copyProfileMenu"></menuitem>
         <menuitem label="Open in Inspector" id="inspectorMenu"></menuitem>
-        <menuitem label="Report Problems" id="reportMenu"></menuitem>
         <menuitem label="Fallback to Flash" id="fallbackMenu" hidden></menuitem>
       </menu>
     </section>
