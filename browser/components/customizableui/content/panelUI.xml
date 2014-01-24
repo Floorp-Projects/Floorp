@@ -266,6 +266,10 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          if (aEvent.type.startsWith("popup") && aEvent.target != this._panel) {
+            // Shouldn't act on e.g. context menus being shown from within the panel.
+            return;
+          }
           switch(aEvent.type) {
             case "click":
               if (aEvent.originalTarget == this._clickCapturer) {
