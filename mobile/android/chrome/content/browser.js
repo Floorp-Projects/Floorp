@@ -777,7 +777,6 @@ var BrowserApp = {
       return;
 
     if (this._selectedTab) {
-      Tabs.touch(this._selectedTab);
       this._selectedTab.setActive(false);
     }
 
@@ -785,7 +784,6 @@ var BrowserApp = {
     if (!aTab)
       return;
 
-    Tabs.touch(aTab);
     aTab.setActive(true);
     aTab.setResolution(aTab._zoom, true);
     this.contentDocumentChanged();
@@ -3050,6 +3048,8 @@ Tab.prototype = {
   setActive: function setActive(aActive) {
     if (!this.browser || !this.browser.docShell)
       return;
+
+    this.lastTouchedAt = Date.now();
 
     if (aActive) {
       this.browser.setAttribute("type", "content-primary");
@@ -8292,10 +8292,6 @@ var Tabs = {
         this.expireLruTab();
         break;
     }
-  },
-
-  touch: function(aTab) {
-    aTab.lastTouchedAt = Date.now();
   },
 
   // Manage the most-recently-used list of tabs. Each tab has a timestamp
