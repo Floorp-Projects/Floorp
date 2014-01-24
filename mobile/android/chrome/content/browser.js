@@ -896,8 +896,6 @@ var BrowserApp = {
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
 
-    Tabs.expireLruTab();
-
     return newTab;
   },
 
@@ -8240,6 +8238,7 @@ var Tabs = {
     Services.obs.addObserver(this, "Session:Prefetch", false);
 
     BrowserApp.deck.addEventListener("pageshow", this, false);
+    BrowserApp.deck.addEventListener("TabOpen", this, false);
   },
 
   uninit: function() {
@@ -8252,14 +8251,20 @@ var Tabs = {
     Services.obs.removeObserver(this, "Session:Prefetch");
 
     BrowserApp.deck.removeEventListener("pageshow", this);
+    BrowserApp.deck.removeEventListener("TabOpen", this);
   },
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "memory-pressure":
         if (aData != "heap-minimize") {
+          // We received a low-memory related notification. This will enable
+          // expirations.
           this._enableTabExpiration = true;
           Services.obs.removeObserver(this, "memory-pressure");
+        } else {
+          // Use "heap-minimize" as a trigger to expire the most stale tab.
+          this.expireLruTab();
         }
         break;
       case "Session:Prefetch":
@@ -8281,6 +8286,10 @@ var Tabs = {
       case "pageshow":
         // Clear the domain cache whenever a page get loaded into any browser.
         this._domains.clear();
+        break;
+      case "TabOpen":
+        // Use opening a new tab as a trigger to expire the most stale tab.
+        this.expireLruTab();
         break;
     }
   },
