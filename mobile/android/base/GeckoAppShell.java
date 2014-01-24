@@ -1958,7 +1958,8 @@ public class GeckoAppShell
     static String[] getPluginDirectories() {
 
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
-        boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
+        boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists() ||
+                          (new File("/system/lib/hw/gralloc.tegra3.so")).exists();
         if (isTegra) {
             // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
             File vfile = new File("/proc/version");
@@ -1985,6 +1986,12 @@ public class GeckoAppShell
                 } catch (IOException ex) {
                     // nothing
                 }
+            }
+
+            // disable on KitKat (bug 957694)
+            if (Build.VERSION.SDK_INT >= 19) {
+                Log.w(LOGTAG, "Blocking plugins because of Tegra (bug 957694)");
+                return null;
             }
         }
 

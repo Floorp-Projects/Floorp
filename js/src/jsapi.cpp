@@ -2750,10 +2750,8 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
 }
 
 JS_PUBLIC_API(bool)
-JS_LookupPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
+JS_LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    RootedId id(cx, idArg);
-    RootedObject obj(cx, objArg);
     RootedObject obj2(cx);
     RootedShape prop(cx);
 
@@ -2762,9 +2760,8 @@ JS_LookupPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandle
 }
 
 JS_PUBLIC_API(bool)
-JS_LookupElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
+JS_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
@@ -2773,20 +2770,28 @@ JS_LookupElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleV
 }
 
 JS_PUBLIC_API(bool)
-JS_LookupProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
+JS_LookupProperty(JSContext *cx, HandleObject objArg, const char *name, MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_LookupPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    return JS_LookupPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_LookupUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_LookupUCProperty(JSContext *cx, HandleObject objArg, const jschar *name, size_t namelen,
                     MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_LookupPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    return JS_LookupPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
