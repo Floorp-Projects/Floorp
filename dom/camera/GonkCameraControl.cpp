@@ -966,6 +966,30 @@ nsGonkCameraControl::SetPictureSize(uint32_t aWidth, uint32_t aHeight)
   UpdateThumbnailSize();
 }
 
+int32_t
+nsGonkCameraControl::RationalizeRotation(int32_t aRotation)
+{
+  int32_t r = aRotation;
+
+  // The result of this operation is an angle from 0..270 degrees,
+  // in steps of 90 degrees. Angles are rounded to the nearest
+  // magnitude, so 45 will be rounded to 90, and -45 will be rounded
+  // to -90 (not 0).
+  if (r >= 0) {
+    r += 45;
+  } else {
+    r -= 45;
+  }
+  r /= 90;
+  r %= 4;
+  r *= 90;
+  if (r < 0) {
+    r += 360;
+  }
+
+  return r;
+}
+
 nsresult
 nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
 {
@@ -990,19 +1014,9 @@ nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
   SetParameter(CameraParameters::KEY_PICTURE_FORMAT, NS_ConvertUTF16toUTF8(mFileFormat).get());
 
   // Round 'rotation' up to a positive value from 0..270 degrees, in steps of 90.
-  uint32_t r = static_cast<uint32_t>(aTakePicture->mRotation);
+  int32_t r = static_cast<uint32_t>(aTakePicture->mRotation);
   r += mCameraHw->GetSensorOrientation(GonkCameraHardware::OFFSET_SENSOR_ORIENTATION);
-  if (r >= 0) {
-    r += 45;
-  } else {
-    r -= 45;
-  }
-  r /= 90;
-  r %= 4;
-  r *= 90;
-  if (r < 0) {
-    r += 360;
-  }
+  r = RationalizeRotation(r);
   DOM_CAMERA_LOGI("setting picture rotation to %d degrees (mapped from %d)\n", r, aTakePicture->mRotation);
   SetParameter(CameraParameters::KEY_ROTATION, nsPrintfCString("%u", r).get());
 
@@ -1540,14 +1554,7 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation, int64_t aMaxFileSize
   // adjust rotation by camera sensor offset
   int r = aRotation;
   r += mCameraHw->GetSensorOrientation();
-  r %= 360;
-  r += 45;
-  r /= 90;
-  r *= 90;
-  if (r < 0) {
-    // the video recorder only supports positive rotations
-    r += 360;
-  }
+  r = RationalizeRotation(r);
   DOM_CAMERA_LOGI("setting video rotation to %d degrees (mapped from %d)\n", r, aRotation);
   snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", r);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
