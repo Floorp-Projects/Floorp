@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 /**
  * Activity which displays account status.
@@ -26,6 +27,7 @@ import android.widget.TextView;
 public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   protected static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
 
+  protected ViewFlipper connectionStatusViewFlipper;
   protected View connectionStatusUnverifiedView;
   protected View connectionStatusSignInView;
   protected View connectionStatusSyncingView;
@@ -46,7 +48,8 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_status);
 
-    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified view");
+    connectionStatusViewFlipper = (ViewFlipper) ensureFindViewById(null, R.id.connection_status_view, "connection status frame layout");
+    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified vie w");
     connectionStatusSignInView = ensureFindViewById(null, R.id.sign_in_view, "sign in view");
     connectionStatusSyncingView = ensureFindViewById(null, R.id.syncing_view, "syncing view");
 
@@ -161,29 +164,19 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   }
 
   protected void showNeedsUpgrade() {
-    connectionStatusUnverifiedView.setVisibility(View.GONE);
-    connectionStatusSignInView.setVisibility(View.GONE);
-    connectionStatusSyncingView.setVisibility(View.GONE);
-  }
-
-  protected void showNeedsVerification() {
-    connectionStatusUnverifiedView.setVisibility(View.VISIBLE);
-    connectionStatusSignInView.setVisibility(View.GONE);
-    connectionStatusSyncingView.setVisibility(View.GONE);
+    connectionStatusViewFlipper.setDisplayedChild(0);
   }
 
   protected void showNeedsPassword() {
-    connectionStatusUnverifiedView.setVisibility(View.GONE);
-    connectionStatusSignInView.setVisibility(View.VISIBLE);
-    connectionStatusSyncingView.setVisibility(View.GONE);
-    return;
+    connectionStatusViewFlipper.setDisplayedChild(1);
+  }
+
+  protected void showNeedsVerification() {
+    connectionStatusViewFlipper.setDisplayedChild(2);
   }
 
   protected void showConnected() {
-    connectionStatusUnverifiedView.setVisibility(View.GONE);
-    connectionStatusSignInView.setVisibility(View.GONE);
-    connectionStatusSyncingView.setVisibility(View.VISIBLE);
-    return;
+    connectionStatusViewFlipper.setDisplayedChild(3);
   }
 
   protected void refresh(Account account) {

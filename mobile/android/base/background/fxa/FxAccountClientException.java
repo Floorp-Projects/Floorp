@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.background.fxa;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
@@ -46,7 +47,7 @@ public class FxAccountClientException extends Exception {
 
     @Override
     public String toString() {
-      return "" + this.httpStatusCode + " [" + this.apiErrorNumber + "]: " + this.message;
+      return "<FxAccountClientRemoteException " + this.httpStatusCode + " [" + this.apiErrorNumber + "]: " + this.message + ">";
     }
 
     public boolean isInvalidAuthentication() {
@@ -71,6 +72,28 @@ public class FxAccountClientException extends Exception {
           apiErrorNumber == FxAccountRemoteError.INCORRECT_LOGIN_METHOD_FOR_THIS_ACCOUNT ||
           apiErrorNumber == FxAccountRemoteError.INCORRECT_KEY_RETRIEVAL_METHOD_FOR_THIS_ACCOUNT ||
           apiErrorNumber == FxAccountRemoteError.INCORRECT_API_VERSION_FOR_THIS_ACCOUNT;
+    }
+
+    public int getErrorMessageStringResource() {
+      if (isUpgradeRequired()) {
+        return R.string.fxaccount_remote_error_UPGRADE_REQUIRED;
+      }
+      switch ((int) apiErrorNumber) {
+      case FxAccountRemoteError.ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS:
+        return R.string.fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS;
+      case FxAccountRemoteError.ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST:
+        return R.string.fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST;
+      case FxAccountRemoteError.INCORRECT_PASSWORD:
+        return R.string.fxaccount_remote_error_INCORRECT_PASSWORD;
+      case FxAccountRemoteError.ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT:
+        return R.string.fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT;
+      case FxAccountRemoteError.CLIENT_HAS_SENT_TOO_MANY_REQUESTS:
+        return R.string.fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;
+      case FxAccountRemoteError.SERVICE_TEMPORARILY_UNAVAILABLE_DUE_TO_HIGH_LOAD:
+        return R.string.fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;
+      default:
+        return R.string.fxaccount_remote_error_UNKNOWN_ERROR;
+      }
     }
   }
 
