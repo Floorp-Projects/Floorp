@@ -345,6 +345,22 @@ LayoutHelpers.prototype = {
   },
 
   /**
+   * Check a window is part of the top level window.
+   */
+  isIncludedInTopLevelWindow: function LH_isIncludedInTopLevelWindow(win) {
+    if (this.isTopLevelWindow(win)) {
+      return true;
+    }
+
+    let parent = this.getParentWindow(win);
+    if (!parent || parent === win) {
+      return false;
+    }
+
+    return this.isIncludedInTopLevelWindow(parent);
+  },
+
+  /**
    * like win.parent, but goes through mozbrowsers and mozapps iframes.
    */
   getParentWindow: function LH_getParentWindow(win) {
