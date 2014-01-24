@@ -128,24 +128,63 @@ WebGLFramebuffer::Attachment::RectangleObject() const
 }
 
 static inline bool
-IsValidAttachedTextureColorFormat(GLenum format)
+IsValidFBOTextureColorFormat(GLenum internalFormat)
 {
     return (
         /* linear 8-bit formats */
-        format == LOCAL_GL_ALPHA ||
-        format == LOCAL_GL_LUMINANCE ||
-        format == LOCAL_GL_LUMINANCE_ALPHA ||
-        format == LOCAL_GL_RGB ||
-        format == LOCAL_GL_RGBA ||
+        internalFormat == LOCAL_GL_ALPHA ||
+        internalFormat == LOCAL_GL_LUMINANCE ||
+        internalFormat == LOCAL_GL_LUMINANCE_ALPHA ||
+        internalFormat == LOCAL_GL_RGB ||
+        internalFormat == LOCAL_GL_RGBA ||
         /* sRGB 8-bit formats */
-        format == LOCAL_GL_SRGB_EXT ||
-        format == LOCAL_GL_SRGB_ALPHA_EXT ||
+        internalFormat == LOCAL_GL_SRGB_EXT ||
+        internalFormat == LOCAL_GL_SRGB_ALPHA_EXT ||
         /* linear float32 formats */
-        format ==  LOCAL_GL_ALPHA32F_ARB ||
-        format ==  LOCAL_GL_LUMINANCE32F_ARB ||
-        format ==  LOCAL_GL_LUMINANCE_ALPHA32F_ARB ||
-        format ==  LOCAL_GL_RGB32F_ARB ||
-        format ==  LOCAL_GL_RGBA32F_ARB);
+        internalFormat == LOCAL_GL_ALPHA32F_ARB ||
+        internalFormat == LOCAL_GL_LUMINANCE32F_ARB ||
+        internalFormat == LOCAL_GL_LUMINANCE_ALPHA32F_ARB ||
+        internalFormat == LOCAL_GL_RGB32F_ARB ||
+        internalFormat == LOCAL_GL_RGBA32F_ARB);
+}
+
+static inline bool
+IsValidFBOTextureDepthFormat(GLenum internalFormat) {
+    return (
+        internalFormat == LOCAL_GL_DEPTH_COMPONENT ||
+        internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
+        internalFormat == LOCAL_GL_DEPTH_COMPONENT32);
+}
+
+static inline bool
+IsValidFBOTextureDepthStencilFormat(GLenum internalFormat) {
+    return (
+        internalFormat == LOCAL_GL_DEPTH_STENCIL ||
+        internalFormat == LOCAL_GL_DEPTH24_STENCIL8);
+}
+
+static inline bool
+IsValidFBORenderbufferColorFormat(GLenum internalFormat) {
+    return (
+        internalFormat == LOCAL_GL_RGB565 ||
+        internalFormat == LOCAL_GL_RGB5_A1 ||
+        internalFormat == LOCAL_GL_RGBA4 ||
+        internalFormat == LOCAL_GL_SRGB8_ALPHA8_EXT);
+}
+
+static inline bool
+IsValidFBORenderbufferDepthFormat(GLenum internalFormat) {
+    return internalFormat == LOCAL_GL_DEPTH_COMPONENT16;
+}
+
+static inline bool
+IsValidFBORenderbufferDepthStencilFormat(GLenum internalFormat) {
+    return internalFormat == LOCAL_GL_DEPTH24_STENCIL8;
+}
+
+static inline bool
+IsValidFBORenderbufferStencilFormat(GLenum internalFormat) {
+    return internalFormat == LOCAL_GL_STENCIL_INDEX8;
 }
 
 bool
@@ -164,37 +203,43 @@ WebGLFramebuffer::Attachment::IsComplete() const
 
     if (mTexturePtr) {
         MOZ_ASSERT(mTexturePtr->HasImageInfoAt(mTexImageTarget, mTexImageLevel));
-        GLenum format = mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).InternalFormat();
+        const WebGLTexture::ImageInfo& imageInfo =
+            mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel);
+        GLenum internalFormat = imageInfo.InternalFormat();
 
-        if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT) {
-            return format == LOCAL_GL_DEPTH_COMPONENT;
-        } else if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-            return format == LOCAL_GL_DEPTH_STENCIL;
-        } else if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-                   mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments))
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
+            return IsValidFBOTextureDepthFormat(internalFormat);
+
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+            return IsValidFBOTextureDepthStencilFormat(internalFormat);
+
+        if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
+            mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 +
+                                      WebGLContext::sMaxColorAttachments))
         {
-            return IsValidAttachedTextureColorFormat(format);
+            return IsValidFBOTextureColorFormat(internalFormat);
         }
         MOZ_ASSERT(false, "Invalid WebGL attachment point?");
         return false;
     }
 
     if (mRenderbufferPtr) {
-        GLenum format = mRenderbufferPtr->InternalFormat();
+        GLenum internalFormat = mRenderbufferPtr->InternalFormat();
 
-        if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT) {
-            return format == LOCAL_GL_DEPTH_COMPONENT16;
-        } else if (mAttachmentPoint == LOCAL_GL_STENCIL_ATTACHMENT) {
-            return format == LOCAL_GL_STENCIL_INDEX8;
-        } else if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-            return format == LOCAL_GL_DEPTH_STENCIL;
-        } else if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-                   mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments))
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
+            return IsValidFBORenderbufferDepthFormat(internalFormat);
+
+        if (mAttachmentPoint == LOCAL_GL_STENCIL_ATTACHMENT)
+            return IsValidFBORenderbufferStencilFormat(internalFormat);
+
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+            return IsValidFBORenderbufferDepthStencilFormat(internalFormat);
+
+        if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
+            mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 +
+                                      WebGLContext::sMaxColorAttachments))
         {
-            return format == LOCAL_GL_RGB565 ||
-                   format == LOCAL_GL_RGB5_A1 ||
-                   format == LOCAL_GL_RGBA4 ||
-                   format == LOCAL_GL_SRGB8_ALPHA8_EXT;
+            return IsValidFBORenderbufferColorFormat(internalFormat);
         }
         MOZ_ASSERT(false, "Invalid WebGL attachment point?");
         return false;
