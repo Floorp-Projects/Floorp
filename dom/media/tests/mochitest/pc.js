@@ -1565,13 +1565,17 @@ PeerConnectionWrapper.prototype = {
     for (var key in stats) {
       if (stats.hasOwnProperty(key)) {
         var res = stats[key];
-        counters[res.type] = toNum(counters[res.type]) + 1;
+        if (!res.isRemote) {
+          counters[res.type] = toNum(counters[res.type]) + 1;
+        }
       }
     }
     // Use MapClass way of enumerating stats
     var counters2 = {};
     stats.forEach(function(res) {
-        counters2[res.type] = toNum(counters2[res.type]) + 1;
+        if (!res.isRemote) {
+          counters2[res.type] = toNum(counters2[res.type]) + 1;
+        }
       });
     is(JSON.stringify(counters), JSON.stringify(counters2),
        "Spec and MapClass variant of RTCStatsReport enumeration agree");

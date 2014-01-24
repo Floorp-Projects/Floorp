@@ -209,6 +209,31 @@ struct CodeSizes
 #undef FOR_EACH_SIZE
 };
 
+// Data for tracking GC memory usage.
+struct GCSizes
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, _, marker) \
+    macro(_, _, nursery) \
+    macro(_, _, storeBufferVals) \
+    macro(_, _, storeBufferCells) \
+    macro(_, _, storeBufferSlots) \
+    macro(_, _, storeBufferWholeCells) \
+    macro(_, _, storeBufferRelocVals) \
+    macro(_, _, storeBufferRelocCells) \
+    macro(_, _, storeBufferGenerics)
+
+    GCSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
+};
+
 // This class holds information about the memory taken up by identical copies of
 // a particular string.  Multiple JSStrings may have their sizes aggregated
 // together into one StringInfo object.  Note that two strings with identical
@@ -294,18 +319,20 @@ struct RuntimeSizes
     macro(_, _, temporary) \
     macro(_, _, regexpData) \
     macro(_, _, interpreterStack) \
-    macro(_, _, gcMarker) \
     macro(_, _, mathCache) \
+    macro(_, _, sourceDataCache) \
     macro(_, _, scriptData) \
     macro(_, _, scriptSources)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
-        code()
+        code(),
+        gc()
     {}
 
     FOR_EACH_SIZE(DECL_SIZE)
     CodeSizes code;
+    GCSizes   gc;
 
 #undef FOR_EACH_SIZE
 };

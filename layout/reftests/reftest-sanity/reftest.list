@@ -44,7 +44,7 @@ skip-if(B2G) HTTP(..) == filter-2.xhtml filter-2-ref.xhtml # bug 773482
 == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
-skip-if(B2G) fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
+skip-if(B2G||B2GDT) fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
 fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 
@@ -76,9 +76,9 @@ include default-preferences-tests.list
 
 # Test that the harness gives the correct page dimensions.
 != page-width-3.9in.html page-width-4in.html
-skip-if(B2G) == page-width-4.1in.html page-width-4in.html   # bug 774396
-skip-if(B2G) == page-width-auto.html page-width-4in.html    # bug 774396
-skip-if(B2G) != page-height-2in.html page-height-2.1in.html # bug 774396
+skip-if(B2G||B2GDT) == page-width-4.1in.html page-width-4in.html   # bug 774396
+skip-if(B2G||B2GDT) == page-width-auto.html page-width-4in.html    # bug 774396
+skip-if(B2G||B2GDT) != page-height-2in.html page-height-2.1in.html # bug 774396
 == page-height-2in.html page-height-nobreak.html
 == page-height-2.1in.html page-height-forcebreak.html
 
