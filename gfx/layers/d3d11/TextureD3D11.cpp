@@ -154,6 +154,9 @@ TextureClientD3D11::~TextureClientD3D11()
 bool
 TextureClientD3D11::Lock(OpenMode aMode)
 {
+  if (!IsValid() || !IsAllocated()) {
+    return false;
+  }
   MOZ_ASSERT(!mIsLocked, "The Texture is already locked!");
   LockD3DTexture(mTexture.get());
   mIsLocked = true;

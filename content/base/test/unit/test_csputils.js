@@ -665,46 +665,62 @@ test(function test_FrameAncestor_ignores_userpass_bug779918() {
 
 test(function test_CSP_ReportURI_parsing() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var SD = CSPRep.SRC_DIRECTIVES_NEW;
       var self = "http://self.com:34";
       var parsedURIs = [];
 
       var uri_valid_absolute = self + "/report.py";
-      var uri_invalid_host_absolute = "http://foo.org:34/report.py";
+      var uri_other_host_absolute = "http://foo.org:34/report.py";
       var uri_valid_relative = "/report.py";
       var uri_valid_relative_expanded = self + uri_valid_relative;
       var uri_valid_relative2 = "foo/bar/report.py";
       var uri_valid_relative2_expanded = self + "/" + uri_valid_relative2;
       var uri_invalid_relative = "javascript:alert(1)";
+      var uri_other_scheme_absolute = "https://self.com/report.py";
+      var uri_other_scheme_and_host_absolute = "https://foo.com/report.py";
 
-      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_absolute, URI(self));
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_valid_absolute);
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromString("allow *; report-uri " + uri_invalid_host_absolute, URI(self));
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_host_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
-      do_check_in_array(parsedURIs, "");
+      do_check_in_array(parsedURIs, uri_other_host_absolute);
       do_check_eq(parsedURIs.length, 1); // the empty string is in there.
 
-      cspr = CSPRep.fromString("allow *; report-uri " + uri_invalid_relative, URI(self));
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_invalid_relative, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, "");
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_relative, URI(self));
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_relative, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_valid_relative_expanded);
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_relative2, URI(self));
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_relative2, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       dump(parsedURIs.length);
       do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
       do_check_eq(parsedURIs.length, 1);
 
+      // make sure cross-scheme reporting works
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_scheme_absolute, URI(self));
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      dump(parsedURIs.length);
+      do_check_in_array(parsedURIs, uri_other_scheme_absolute);
+      do_check_eq(parsedURIs.length, 1);
+
+      // make sure cross-scheme, cross-host reporting works
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_scheme_and_host_absolute, URI(self));
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      dump(parsedURIs.length);
+      do_check_in_array(parsedURIs, uri_other_scheme_and_host_absolute);
+      do_check_eq(parsedURIs.length, 1);
+
       // combination!
-      cspr = CSPRep.fromString("allow *; report-uri " +
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " +
                                uri_valid_relative2 + " " +
                                uri_valid_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
@@ -712,14 +728,15 @@ test(function test_CSP_ReportURI_parsing() {
       do_check_in_array(parsedURIs, uri_valid_absolute);
       do_check_eq(parsedURIs.length, 2);
 
-      cspr = CSPRep.fromString("allow *; report-uri " +
+      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " +
                                uri_valid_relative2 + " " +
-                               uri_invalid_host_absolute + " " +
+                               uri_other_host_absolute + " " +
                                uri_valid_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
+      do_check_in_array(parsedURIs, uri_other_host_absolute);
       do_check_in_array(parsedURIs, uri_valid_absolute);
-      do_check_eq(parsedURIs.length, 2);
+      do_check_eq(parsedURIs.length, 3);
     });
 
 test(

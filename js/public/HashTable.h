@@ -159,7 +159,7 @@ class HashMap
     //   typedef HashMap<int,char> HM;
     //   HM h;
     //   for (HM::Range r = h.all(); !r.empty(); r.popFront())
-    //     char c = r.front().value;
+    //     char c = r.front().value();
     //
     // Also see the definition of Range in HashTable above (with T = Entry).
     typedef typename Impl::Range Range;
@@ -171,7 +171,7 @@ class HashMap
     //   typedef HashMap<int,char> HM;
     //   HM s;
     //   for (HM::Enum e(s); !e.empty(); e.popFront())
-    //     if (e.front().value == 'l')
+    //     if (e.front().value() == 'l')
     //       e.removeFront();
     //
     // Table resize may occur in Enum's destructor. Also see the definition of
