@@ -586,18 +586,33 @@ BrowserElementParent.prototype = {
   _sendTouchEvent: function(type, identifiers, touchesX, touchesY,
                             radiisX, radiisY, rotationAngles, forces,
                             count, modifiers) {
-    this._sendAsyncMsg("send-touch-event", {
-      "type": type,
-      "identifiers": identifiers,
-      "touchesX": touchesX,
-      "touchesY": touchesY,
-      "radiisX": radiisX,
-      "radiisY": radiisY,
-      "rotationAngles": rotationAngles,
-      "forces": forces,
-      "count": count,
-      "modifiers": modifiers
-    });
+
+    let tabParent = this._frameLoader.tabParent;
+    if (tabParent && tabParent.useAsyncPanZoom) {
+      tabParent.injectTouchEvent(type,
+                                 identifiers,
+                                 touchesX,
+                                 touchesY,
+                                 radiisX,
+                                 radiisY,
+                                 rotationAngles,
+                                 forces,
+                                 count,
+                                 modifiers);
+    } else {
+      this._sendAsyncMsg("send-touch-event", {
+        "type": type,
+        "identifiers": identifiers,
+        "touchesX": touchesX,
+        "touchesY": touchesY,
+        "radiisX": radiisX,
+        "radiisY": radiisY,
+        "rotationAngles": rotationAngles,
+        "forces": forces,
+        "count": count,
+        "modifiers": modifiers
+      });
+    }
   },
 
   _goBack: function() {
