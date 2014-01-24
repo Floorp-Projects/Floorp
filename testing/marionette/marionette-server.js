@@ -2190,16 +2190,25 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Takes a screenshot of a DOM node. If there is no node given a screenshot
-   * of the window will be taken.
-   */
-  screenShot: function MDA_saveScreenshot(aRequest) {
+   * Takes a screenshot of a web element or the current frame.
+   *
+   * The screen capture is returned as a lossless PNG image encoded as
+   * a base 64 string.  If the <code>id</code> argument is not null
+   * and refers to a present and visible web element's ID, the capture
+   * area will be limited to the bounding box of that element.
+   * Otherwise, the capture area will be the bounding box of the
+   * current frame.
+   *
+   * @param id an optional reference to a web element
+   * @param highlights an optional list of web elements to draw a red
+   *                   box around in the returned capture
+   * @return PNG image encoded as base 64 string
+    */
+  takeScreenshot: function MDA_takeScreenshot(aRequest) {
     this.command_id = this.getCommandId();
-    this.sendAsync("screenShot",
-                   {
-                     id: aRequest.parameters.id,
-                     highlights: aRequest.parameters.highlights
-                   },
+    this.sendAsync("takeScreenshot",
+                   {id: aRequest.parameters.id,
+                    highlights: aRequest.parameters.highlights},
                    this.command_id);
   },
 
@@ -2238,13 +2247,15 @@ MarionetteServerConnection.prototype = {
 
     let mozOr = or.toLowerCase();
     if (ors.indexOf(mozOr) < 0) {
-      this.sendError("Unknown screen orientation: " + or, 500, null, this.command_id);
+      this.sendError("Unknown screen orientation: " + or, 500, null,
+                     this.command_id);
       return;
     }
 
     let curWindow = this.getCurrentWindow();
     if (!curWindow.screen.mozLockOrientation(mozOr)) {
-      this.sendError("Unable to set screen orientation: " + or, 500, null, this.command_id);
+      this.sendError("Unable to set screen orientation: " + or, 500,
+                     null, this.command_id);
     }
     this.sendOk(this.command_id);
   },
@@ -2425,7 +2436,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "close": MarionetteServerConnection.prototype.close,
   "closeWindow": MarionetteServerConnection.prototype.close,  // deprecated
   "setTestName": MarionetteServerConnection.prototype.setTestName,
-  "screenShot": MarionetteServerConnection.prototype.screenShot,
+  "takeScreenshot": MarionetteServerConnection.prototype.takeScreenshot,
+  "screenShot": MarionetteServerConnection.prototype.takeScreenshot,  // deprecated
   "addCookie": MarionetteServerConnection.prototype.addCookie,
   "getCookies": MarionetteServerConnection.prototype.getCookies,
   "getAllCookies": MarionetteServerConnection.prototype.getCookies,  // deprecated

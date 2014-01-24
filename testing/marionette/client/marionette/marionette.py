@@ -1318,20 +1318,29 @@ class Marionette(object):
         return ApplicationCache(self)
 
     def screenshot(self, element=None, highlights=None):
-        '''
-        Creates a base64-encoded screenshot of the element, or the current frame if no element is specified.
+        """Takes a screenshot of a web element or the current frame.
 
-        :param element: The element to take a screenshot of. If None, will
-         take a screenshot of the current frame.
-        :param highlights: A list of HTMLElement objects to draw a red box around in the
-         returned screenshot.
-        '''
-        if element is not None:
+        The screen capture is returned as a lossless PNG image encoded
+        as a base 64 string.  If the `element` argument is defined the
+        capture area will be limited to the bounding box of that
+        element.  Otherwise, the capture area will be the bounding box
+        of the current frame.
+
+        :param element: The element to take a screenshot of.  If None, will
+            take a screenshot of the current frame.
+
+        :param highlights: A list of HTMLElement objects to draw a red
+            box around in the returned screenshot.
+
+        """
+
+        if element:
             element = element.id
         lights = None
-        if highlights is not None:
-            lights = [highlight.id for highlight in highlights if highlights]
-        return self._send_message("screenShot", 'value', id=element, highlights=lights)
+        if highlights:
+            lights = [highlight.id for highlight in highlights]
+        return self._send_message("takeScreenshot", "value",
+                                  id=element, highlights=lights)
 
     @property
     def orientation(self):
