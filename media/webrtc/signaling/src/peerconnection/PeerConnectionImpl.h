@@ -493,6 +493,24 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   // initialize telemetry for when calls start
   void startCallTelem();
+
+  // This is an intermediate form, to make this refactoring easier to review.
+  // Please forgive the use of & for out-params.
+  nsresult BuildStatsQuery_m(
+      mozilla::dom::MediaStreamTrack *aSelector,
+      std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
+      mozilla::RefPtr<NrIceCtx> &iceCtx,
+      std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
+      DOMHighResTimeStamp &now,
+      nsAutoPtr<mozilla::dom::RTCStatsReportInternal> &report);
+
+  static nsresult GetStatsImpl_s(
+      bool internalStats,
+      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
+      const mozilla::RefPtr<NrIceCtx> &iceCtx,
+      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
+      DOMHighResTimeStamp now,
+      mozilla::dom::RTCStatsReportInternal *report);
 #endif
 
 private:
@@ -557,15 +575,8 @@ private:
       const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
       const mozilla::RefPtr<NrIceCtx> &iceCtx,
       const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
-      DOMHighResTimeStamp now);
-
-  static nsresult GetStatsImpl_s(
-      bool internalStats,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      const mozilla::RefPtr<NrIceCtx> &iceCtx,
-      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
       DOMHighResTimeStamp now,
-      mozilla::dom::RTCStatsReportInternal *report);
+      nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
 
   static void FillStatsReport_s(
       NrIceMediaStream& stream,
