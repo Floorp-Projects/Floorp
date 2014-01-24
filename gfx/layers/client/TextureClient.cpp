@@ -564,7 +564,7 @@ BufferTextureClient::Lock(OpenMode aMode)
   NS_WARN_IF_FALSE(!mLocked, "The TextureClient is already Locked!");
   mOpenMode = aMode;
   mLocked = true;
-  return true;
+  return IsValid() && IsAllocated();
 }
 
 void

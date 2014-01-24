@@ -146,6 +146,18 @@ ConsoleOutput.prototype = {
   },
 
   /**
+   * Release an actor.
+   *
+   * @private
+   * @param string actorId
+   *        The actor ID you want to release.
+   */
+  _releaseObject: function(actorId)
+  {
+    this.owner._releaseObject(actorId);
+  },
+
+  /**
    * Add a message to output.
    *
    * @param object ...args
@@ -847,7 +859,7 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
 
     let repeatNode = this.document.createElementNS(XHTML_NS, "span");
     repeatNode.setAttribute("value", "1");
-    repeatNode.className = "repeats";
+    repeatNode.className = "message-repeats";
     repeatNode.textContent = 1;
     repeatNode._uid = this.getRepeatID();
     return repeatNode;
@@ -1077,6 +1089,134 @@ Messages.ConsoleGeneric.prototype = Heritage.extend(Messages.Extended.prototype,
   },
 }); // Messages.ConsoleGeneric.prototype
 
+/**
+ * The ConsoleTrace message is used for console.trace() calls.
+ *
+ * @constructor
+ * @extends Messages.Simple
+ * @param object packet
+ *        The Console API call packet received from the server.
+ */
+Messages.ConsoleTrace = function(packet)
+{
+  let options = {
+    className: "consoleTrace cm-s-mozilla",
+    timestamp: packet.timeStamp,
+    category: "webdev",
+    severity: CONSOLE_API_LEVELS_TO_SEVERITIES[packet.level],
+    private: packet.private,
+    filterDuplicates: true,
+    location: {
+      url: packet.filename,
+      line: packet.lineNumber,
+    },
+  };
+
+  this._renderStack = this._renderStack.bind(this);
+  Messages.Simple.call(this, this._renderStack, options);
+
+  this._repeatID.consoleApiLevel = packet.level;
+  this._stacktrace = this._repeatID.stacktrace = packet.stacktrace;
+  this._arguments = packet.arguments;
+};
+
+Messages.ConsoleTrace.prototype = Heritage.extend(Messages.Simple.prototype,
+{
+  /**
+   * Holds the stackframes received from the server.
+   *
+   * @private
+   * @type array
+   */
+  _stacktrace: null,
+
+  /**
+   * Holds the arguments the content script passed to the console.trace()
+   * method. This array is cleared when the message is initialized, and
+   * associated actors are released.
+   *
+   * @private
+   * @type array
+   */
+  _arguments: null,
+
+  init: function()
+  {
+    let result = Messages.Simple.prototype.init.apply(this, arguments);
+
+    // We ignore console.trace() arguments. Release object actors.
+    if (Array.isArray(this._arguments)) {
+      for (let arg of this._arguments) {
+        if (WebConsoleUtils.isActorGrip(arg)) {
+          this.output._releaseObject(arg.actor);
+        }
+      }
+    }
+    this._arguments = null;
+
+    return result;
+  },
+
+  /**
+   * Render the stack frames.
+   *
+   * @private
+   * @return DOMElement
+   */
+  _renderStack: function()
+  {
+    let cmvar = this.document.createElementNS(XHTML_NS, "span");
+    cmvar.className = "cm-variable";
+    cmvar.textContent = "console";
+
+    let cmprop = this.document.createElementNS(XHTML_NS, "span");
+    cmprop.className = "cm-property";
+    cmprop.textContent = "trace";
+
+    let title = this.document.createElementNS(XHTML_NS, "span");
+    title.className = "title devtools-monospace";
+    title.appendChild(cmvar);
+    title.appendChild(this.document.createTextNode("."));
+    title.appendChild(cmprop);
+    title.appendChild(this.document.createTextNode("():"));
+
+    let repeatNode = Messages.Simple.prototype._renderRepeatNode.call(this);
+    let location = Messages.Simple.prototype._renderLocation.call(this);
+    if (location) {
+      location.target = "jsdebugger";
+    }
+
+    let widget = new Widgets.Stacktrace(this, this._stacktrace).render();
+
+    let body = this.document.createElementNS(XHTML_NS, "div");
+    body.appendChild(title);
+    if (repeatNode) {
+      body.appendChild(repeatNode);
+    }
+    if (location) {
+      body.appendChild(location);
+    }
+    body.appendChild(this.document.createTextNode("\n"));
+
+    let frag = this.document.createDocumentFragment();
+    frag.appendChild(body);
+    frag.appendChild(widget.element);
+
+    return frag;
+  },
+
+  _renderBody: function()
+  {
+    let body = Messages.Simple.prototype._renderBody.apply(this, arguments);
+    body.classList.remove("devtools-monospace");
+    return body;
+  },
+
+  // no-op for the message location and .repeats elements.
+  // |this._renderStack| handles customized message output.
+  _renderLocation: function() { },
+  _renderRepeatNode: function() { },
+}); // Messages.ConsoleTrace.prototype
 
 let Widgets = {};
 
@@ -1352,6 +1492,91 @@ Widgets.LongString.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     this.output.addMessage(msg);
   },
 }); // Widgets.LongString.prototype
+
+
+/**
+ * The stacktrace widget.
+ *
+ * @constructor
+ * @extends Widgets.BaseWidget
+ * @param object message
+ *        The owning message.
+ * @param array stacktrace
+ *        The stacktrace to display, array of frames as supplied by the server,
+ *        over the remote protocol.
+ */
+Widgets.Stacktrace = function(message, stacktrace)
+{
+  Widgets.BaseWidget.call(this, message);
+  this.stacktrace = stacktrace;
+};
+
+Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
+{
+  /**
+   * The stackframes received from the server.
+   * @type array
+   */
+  stacktrace: null,
+
+  render: function()
+  {
+    if (this.element) {
+      return this;
+    }
+
+    let result = this.element = this.document.createElementNS(XHTML_NS, "ul");
+    result.className = "stacktrace devtools-monospace";
+
+    for (let frame of this.stacktrace) {
+      result.appendChild(this._renderFrame(frame));
+    }
+
+    return this;
+  },
+
+  /**
+   * Render a frame object received from the server.
+   *
+   * @param object frame
+   *        The stack frame to display. This object should have the following
+   *        properties: functionName, filename and lineNumber.
+   * @return DOMElement
+   *         The DOM element to display for the given frame.
+   */
+  _renderFrame: function(frame)
+  {
+    let fn = this.document.createElementNS(XHTML_NS, "span");
+    fn.className = "function";
+    if (frame.functionName) {
+      let span = this.document.createElementNS(XHTML_NS, "span");
+      span.className = "cm-variable";
+      span.textContent = frame.functionName;
+      fn.appendChild(span);
+      fn.appendChild(this.document.createTextNode("()"));
+    } else {
+      fn.classList.add("cm-comment");
+      fn.textContent = l10n.getStr("stacktrace.anonymousFunction");
+    }
+
+    let location = this.output.owner.createLocationNode(frame.filename,
+                                                        frame.lineNumber,
+                                                        "jsdebugger");
+
+    // .devtools-monospace sets font-size to 80%, however .body already has
+    // .devtools-monospace. If we keep it here, the location would be rendered
+    // smaller.
+    location.classList.remove("devtools-monospace");
+
+    let elem = this.document.createElementNS(XHTML_NS, "li");
+    elem.appendChild(fn);
+    elem.appendChild(location);
+    elem.appendChild(this.document.createTextNode("\n"));
+
+    return elem;
+  },
+
+}); // Widgets.Stacktrace.prototype
 
 
 function gSequenceId()

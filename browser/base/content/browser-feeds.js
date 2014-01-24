@@ -56,7 +56,6 @@ var FeedHandler = {
       item.setAttribute("crop", "center");
       let className = "feed-" + itemNodeType;
       if (isSubview) {
-        item.setAttribute("tabindex", "0");
         className += " subviewbutton";
       }
       item.setAttribute("class", className);

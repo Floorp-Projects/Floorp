@@ -48,7 +48,7 @@ function testFocus(sw, hud) {
   function onMessage(event, messages) {
     let msg = [...messages][0];
 
-    var loc = msg.querySelector(".location");
+    var loc = msg.querySelector(".message-location");
     ok(loc, "location element exists");
     is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1",
         "location value is correct");

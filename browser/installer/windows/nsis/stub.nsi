@@ -336,6 +336,10 @@ Function .onInit
   ; Require elevation if the user can elevate
   ${ElevateUAC}
 
+  ${If} ${AtLeastWinVista}
+    System::Call 'user32::SetProcessDPIAware()'
+  ${EndIf}
+
   ; Create a mutex to prevent multiple launches of the same stub installer in
   ; the same location on the file system. This intentionally won't handle the
   ; case where someone runs multiple copies of the stub on the file system but

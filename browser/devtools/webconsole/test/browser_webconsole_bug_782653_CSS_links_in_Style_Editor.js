@@ -41,10 +41,10 @@ function testViewSource(aHud)
   }).then(([error1Rule, error2Rule]) => {
     let error1Msg = [...error1Rule.matched][0];
     let error2Msg = [...error2Rule.matched][0];
-    nodes = [error1Msg.querySelector(".location"),
-             error2Msg.querySelector(".location")];
-    ok(nodes[0], ".location node for the first error");
-    ok(nodes[1], ".location node for the second error");
+    nodes = [error1Msg.querySelector(".message-location"),
+             error2Msg.querySelector(".message-location")];
+    ok(nodes[0], ".message-location node for the first error");
+    ok(nodes[1], ".message-location node for the second error");
 
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);

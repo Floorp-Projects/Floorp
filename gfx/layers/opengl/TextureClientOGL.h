@@ -40,6 +40,12 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
+  virtual bool Lock(OpenMode mode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool IsLocked() const MOZ_OVERRIDE { return mIsLocked; }
+
   void InitWith(gl::SharedTextureHandle aHandle,
                 gfx::IntSize aSize,
                 gl::SharedTextureShareType aShareType,
@@ -61,6 +67,7 @@ protected:
   gfx::IntSize mSize;
   gl::SharedTextureShareType mShareType;
   bool mInverted;
+  bool mIsLocked;
 };
 
 /**
@@ -75,6 +82,12 @@ public:
 
   virtual bool IsAllocated() const MOZ_OVERRIDE;
 
+  virtual bool Lock(OpenMode mode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool IsLocked() const MOZ_OVERRIDE { return mIsLocked; }
+
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE { return nullptr; }
@@ -85,6 +98,7 @@ public:
 
 protected:
   gfx::SurfaceStream* mStream;
+  bool mIsLocked;
 };
 
 class DeprecatedTextureClientSharedOGL : public DeprecatedTextureClient
