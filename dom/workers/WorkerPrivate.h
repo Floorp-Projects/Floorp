@@ -159,13 +159,27 @@ public:
     void
     StealFrom(LoadInfo& aOther)
     {
-      mBaseURI = aOther.mBaseURI.forget();
-      mResolvedScriptURI = aOther.mResolvedScriptURI.forget();
-      mPrincipal = aOther.mPrincipal.forget();
-      mScriptContext = aOther.mScriptContext.forget();
-      mWindow = aOther.mWindow.forget();
-      mCSP = aOther.mCSP.forget();
-      mChannel = aOther.mChannel.forget();
+      MOZ_ASSERT(!mBaseURI);
+      aOther.mBaseURI.swap(mBaseURI);
+
+      MOZ_ASSERT(!mResolvedScriptURI);
+      aOther.mResolvedScriptURI.swap(mResolvedScriptURI);
+
+      MOZ_ASSERT(!mPrincipal);
+      aOther.mPrincipal.swap(mPrincipal);
+
+      MOZ_ASSERT(!mScriptContext);
+      aOther.mScriptContext.swap(mScriptContext);
+
+      MOZ_ASSERT(!mWindow);
+      aOther.mWindow.swap(mWindow);
+
+      MOZ_ASSERT(!mCSP);
+      aOther.mCSP.swap(mCSP);
+
+      MOZ_ASSERT(!mChannel);
+      aOther.mChannel.swap(mChannel);
+
       mDomain = aOther.mDomain;
       mEvalAllowed = aOther.mEvalAllowed;
       mReportCSPViolations = aOther.mReportCSPViolations;

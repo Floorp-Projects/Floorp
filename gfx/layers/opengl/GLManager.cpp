@@ -50,7 +50,7 @@ private:
 GLManager::CreateGLManager(LayerManagerComposite* aManager)
 {
   if (aManager &&
-      Compositor::GetBackend() == LAYERS_OPENGL) {
+      Compositor::GetBackend() == LayersBackend::LAYERS_OPENGL) {
     return new GLManagerCompositor(static_cast<CompositorOGL*>(
       aManager->GetCompositor()));
   }

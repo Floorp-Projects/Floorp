@@ -293,11 +293,11 @@ EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
 
 enum {
   SLOT_PROMISE = 0,
-  SLOT_TASK
+  SLOT_DATA
 };
 
 /* static */ bool
-Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
+Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
 
@@ -311,7 +311,7 @@ Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
 
-  v = js::GetFunctionNativeReserved(&args.callee(), SLOT_TASK);
+  v = js::GetFunctionNativeReserved(&args.callee(), SLOT_DATA);
   PromiseCallback::Task task = static_cast<PromiseCallback::Task>(v.toInt32());
 
   if (task == PromiseCallback::Resolve) {
@@ -321,6 +321,103 @@ Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
   }
 
   return true;
+}
+
+/*
+ * Utilities for thenable callbacks.
+ *
+ * A thenable is a { then: function(resolve, reject) { } }.
+ * `then` is called with a resolve and reject callback pair.
+ * Since only one of these should be called at most once (first call wins), the
+ * two keep a reference to each other in SLOT_DATA. When either of them is
+ * called, the references are cleared. Further calls are ignored.
+ */
+namespace {
+void
+LinkThenableCallables(JSContext* aCx, JS::Handle<JSObject*> aResolveFunc,
+                      JS::Handle<JSObject*> aRejectFunc)
+{
+  js::SetFunctionNativeReserved(aResolveFunc, SLOT_DATA,
+                                JS::ObjectValue(*aRejectFunc));
+  js::SetFunctionNativeReserved(aRejectFunc, SLOT_DATA,
+                                JS::ObjectValue(*aResolveFunc));
+}
+
+/*
+ * Returns false if callback was already called before, otherwise breaks the
+ * links and returns true.
+ */
+bool
+MarkAsCalledIfNotCalledBefore(JSContext* aCx, JS::Handle<JSObject*> aFunc)
+{
+  JS::Value otherFuncVal = js::GetFunctionNativeReserved(aFunc, SLOT_DATA);
+
+  if (!otherFuncVal.isObject()) {
+    return false;
+  }
+
+  JSObject* otherFuncObj = &otherFuncVal.toObject();
+  MOZ_ASSERT(js::GetFunctionNativeReserved(otherFuncObj, SLOT_DATA).isObject());
+
+  // Break both references.
+  js::SetFunctionNativeReserved(aFunc, SLOT_DATA, JS::UndefinedValue());
+  js::SetFunctionNativeReserved(otherFuncObj, SLOT_DATA, JS::UndefinedValue());
+
+  return true;
+}
+
+Promise*
+GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
+{
+  JS::Value promiseVal = js::GetFunctionNativeReserved(aFunc, SLOT_PROMISE);
+
+  MOZ_ASSERT(promiseVal.isObject());
+
+  Promise* promise;
+  UNWRAP_OBJECT(Promise, &promiseVal.toObject(), promise);
+  return promise;
+}
+};
+
+/*
+ * Common bits of (JSCallbackThenableResolver/JSCallbackThenableRejecter).
+ * Resolves/rejects the Promise if it is ok to do so, based on whether either of
+ * the callbacks have been called before or not.
+ */
+/* static */ bool
+Promise::ThenableResolverCommon(JSContext* aCx, uint32_t aTask,
+                                unsigned aArgc, JS::Value* aVp)
+{
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+  JS::Rooted<JSObject*> thisFunc(aCx, &args.callee());
+  if (!MarkAsCalledIfNotCalledBefore(aCx, thisFunc)) {
+    // A function from this pair has been called before.
+    return true;
+  }
+
+  Promise* promise = GetPromise(aCx, thisFunc);
+  MOZ_ASSERT(promise);
+
+  if (aTask == PromiseCallback::Resolve) {
+    promise->ResolveInternal(aCx, args.get(0), SyncTask);
+  } else {
+    promise->RejectInternal(aCx, args.get(0), SyncTask);
+  }
+  return true;
+}
+
+/* static */ bool
+Promise::JSCallbackThenableResolver(JSContext* aCx,
+                                    unsigned aArgc, JS::Value* aVp)
+{
+  return ThenableResolverCommon(aCx, PromiseCallback::Resolve, aArgc, aVp);
+}
+
+/* static */ bool
+Promise::JSCallbackThenableRejecter(JSContext* aCx,
+                                    unsigned aArgc, JS::Value* aVp)
+{
+  return ThenableResolverCommon(aCx, PromiseCallback::Reject, aArgc, aVp);
 }
 
 /* static */ JSObject*
@@ -342,7 +439,33 @@ Promise::CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
   }
 
   js::SetFunctionNativeReserved(obj, SLOT_PROMISE, promiseObj);
-  js::SetFunctionNativeReserved(obj, SLOT_TASK, JS::Int32Value(aTask));
+  js::SetFunctionNativeReserved(obj, SLOT_DATA, JS::Int32Value(aTask));
+
+  return obj;
+}
+
+/* static */ JSObject*
+Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTask)
+{
+  JSNative whichFunc =
+    aTask == PromiseCallback::Resolve ? JSCallbackThenableResolver :
+                                        JSCallbackThenableRejecter ;
+
+  JSFunction* func = js::NewFunctionWithReserved(aCx, whichFunc,
+                                                 1 /* nargs */, 0 /* flags */,
+                                                 nullptr, nullptr);
+  if (!func) {
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
+
+  JS::Rooted<JS::Value> promiseObj(aCx);
+  if (!dom::WrapNewBindingObject(aCx, obj, aPromise, &promiseObj)) {
+    return nullptr;
+  }
+
+  js::SetFunctionNativeReserved(obj, SLOT_PROMISE, promiseObj);
 
   return obj;
 }
@@ -616,22 +739,77 @@ Promise::MaybeRejectInternal(JSContext* aCx,
 }
 
 void
+Promise::HandleException(JSContext* aCx)
+{
+  JS::Rooted<JS::Value> exn(aCx);
+  if (JS_GetPendingException(aCx, &exn)) {
+    JS_ClearPendingException(aCx);
+    RejectInternal(aCx, exn, SyncTask);
+  }
+}
+
+void
 Promise::ResolveInternal(JSContext* aCx,
                          JS::Handle<JS::Value> aValue,
                          PromiseTaskSync aAsynchronous)
 {
   mResolvePending = true;
 
-  // TODO: Bug 879245 - Then-able objects
   if (aValue.isObject()) {
     JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
-    Promise* nextPromise;
-    nsresult rv = UNWRAP_OBJECT(Promise, valueObj, nextPromise);
 
-    if (NS_SUCCEEDED(rv)) {
-      nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this);
-      nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this);
-      nextPromise->AppendCallbacks(resolveCb, rejectCb);
+    // Thenables.
+    JS::Rooted<JS::Value> then(aCx);
+    if (!JS_GetProperty(aCx, valueObj, "then", &then)) {
+      HandleException(aCx);
+      return;
+    }
+
+    if (then.isObject() && JS_ObjectIsCallable(aCx, &then.toObject())) {
+      JS::Rooted<JSObject*> resolveFunc(aCx,
+        CreateThenableFunction(aCx, this, PromiseCallback::Resolve));
+
+      if (!resolveFunc) {
+        HandleException(aCx);
+        return;
+      }
+
+      JS::Rooted<JSObject*> rejectFunc(aCx,
+        CreateThenableFunction(aCx, this, PromiseCallback::Reject));
+      if (!rejectFunc) {
+        HandleException(aCx);
+        return;
+      }
+
+      LinkThenableCallables(aCx, resolveFunc, rejectFunc);
+
+      JS::Rooted<JSObject*> thenObj(aCx, &then.toObject());
+      nsRefPtr<PromiseInit> thenCallback =
+        new PromiseInit(thenObj, mozilla::dom::GetIncumbentGlobal());
+
+      ErrorResult rv;
+      thenCallback->Call(valueObj, resolveFunc, rejectFunc,
+                         rv, CallbackObject::eRethrowExceptions);
+      rv.WouldReportJSException();
+
+      if (rv.IsJSException()) {
+        JS::Rooted<JS::Value> exn(aCx);
+        rv.StealJSException(aCx, &exn);
+
+        bool couldMarkAsCalled = MarkAsCalledIfNotCalledBefore(aCx, resolveFunc);
+
+        // If we could mark as called, neither of the callbacks had been called
+        // when the exception was thrown. So we can reject the Promise.
+        if (couldMarkAsCalled) {
+          Maybe<JSAutoCompartment> ac;
+          EnterCompartment(ac, aCx, exn);
+          RejectInternal(aCx, exn, Promise::SyncTask);
+        }
+        // At least one of resolveFunc or rejectFunc have been called, so ignore
+        // the exception. FIXME(nsm): This should be reported to the error
+        // console though, for debugging.
+      }
+
       return;
     }
   }

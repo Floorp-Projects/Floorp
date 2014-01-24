@@ -295,7 +295,7 @@ public:
 
   /**
    * Returns true if this LayerManager can properly support layers with
-   * SURFACE_COMPONENT_ALPHA. This can include disabling component
+   * SurfaceMode::SURFACE_COMPONENT_ALPHA. This can include disabling component
    * alpha if required.
    */
   virtual bool AreComponentAlphaLayersEnabled() { return true; }
@@ -585,9 +585,9 @@ public:
 
   bool IsCompositingCheap(LayersBackend aBackend)
   {
-    // LAYERS_NONE is an error state, but in that case we should try to
+    // LayersBackend::LAYERS_NONE is an error state, but in that case we should try to
     // avoid loading the compositor!
-    return LAYERS_BASIC != aBackend && LAYERS_NONE != aBackend;
+    return LayersBackend::LAYERS_BASIC != aBackend && LayersBackend::LAYERS_NONE != aBackend;
   }
 
   virtual bool IsCompositingCheap() { return true; }
@@ -1107,10 +1107,10 @@ public:
   SurfaceMode GetSurfaceMode()
   {
     if (CanUseOpaqueSurface())
-      return SURFACE_OPAQUE;
+      return SurfaceMode::SURFACE_OPAQUE;
     if (mContentFlags & CONTENT_COMPONENT_ALPHA)
-      return SURFACE_COMPONENT_ALPHA;
-    return SURFACE_SINGLE_CHANNEL_ALPHA;
+      return SurfaceMode::SURFACE_COMPONENT_ALPHA;
+    return SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
   }
 
   /**

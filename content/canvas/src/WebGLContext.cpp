@@ -621,7 +621,7 @@ WebGLContext::Render(gfxContext *ctx, GraphicsFilter f, uint32_t aFlags)
         return NS_OK;
 
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxImageFormatARGB32);
+                                                         gfxImageFormat::ARGB32);
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
@@ -749,7 +749,7 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
 
     nsRefPtr<gfxImageSurface> imgsurf =
         new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                            gfxImageFormatARGB32);
+                            gfxImageFormat::ARGB32);
 
     if (!imgsurf || imgsurf->CairoStatus()) {
         return;

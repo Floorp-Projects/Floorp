@@ -101,7 +101,7 @@ class TransportLayerPrsock : public TransportLayer {
   // Functions to be called by SocketHandler
   void OnSocketReady(PRFileDesc *fd, int16_t outflags);
   void OnSocketDetached(PRFileDesc *fd) {
-    SetState(TS_CLOSED);
+    TL_SET_STATE(TS_CLOSED);
   }
   void IsLocal(bool *aIsLocal) {
     // TODO(jesup): better check? Does it matter? (likely no)

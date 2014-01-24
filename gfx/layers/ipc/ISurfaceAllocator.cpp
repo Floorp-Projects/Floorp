@@ -100,7 +100,7 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
-    if (format == gfxImageFormatA8) {
+    if (format == gfxImageFormat::A8) {
       memset(data, 0, stride * aSize.height);
     }
 #endif

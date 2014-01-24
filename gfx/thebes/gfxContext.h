@@ -625,10 +625,10 @@ public:
     /**
      * Groups
      */
-    void PushGroup(gfxContentType content = GFX_CONTENT_COLOR);
+    void PushGroup(gfxContentType content = gfxContentType::COLOR);
     /**
-     * Like PushGroup, but if the current surface is GFX_CONTENT_COLOR and
-     * content is GFX_CONTENT_COLOR_ALPHA, makes the pushed surface GFX_CONTENT_COLOR
+     * Like PushGroup, but if the current surface is gfxContentType::COLOR and
+     * content is gfxContentType::COLOR_ALPHA, makes the pushed surface gfxContentType::COLOR
      * instead and copies the contents of the current surface to the pushed
      * surface. This is good for pushing opacity groups, since blending the
      * group back to the current surface with some alpha applied will give
@@ -637,7 +637,7 @@ public:
      * This API really only makes sense if you do a PopGroupToSource and
      * immediate Paint with OPERATOR_OVER.
      */
-    void PushGroupAndCopyBackground(gfxContentType content = GFX_CONTENT_COLOR);
+    void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR);
     already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
 

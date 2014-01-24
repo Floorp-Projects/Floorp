@@ -345,7 +345,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     }
 
     if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      ctx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+      ctx->PushGroup(gfxContentType::COLOR_ALPHA);
     }
 
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();

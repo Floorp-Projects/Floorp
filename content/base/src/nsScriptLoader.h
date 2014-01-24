@@ -282,7 +282,7 @@ private:
 
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
   void FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
-                                    JS::Handle<JSObject *> scopeChain,
+                                    JS::Handle<JSObject *> aScopeChain,
                                     JS::CompileOptions *aOptions);
 
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,

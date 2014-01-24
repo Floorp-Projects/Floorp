@@ -365,7 +365,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   nsRefPtr<gfxASurface> tmpSurface =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(surfaceSize,
-                                                       GFX_CONTENT_COLOR_ALPHA);
+                                                       gfxContentType::COLOR_ALPHA);
   if (!tmpSurface || tmpSurface->CairoStatus())
     return NS_ERROR_FAILURE;
 
@@ -380,7 +380,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   if (aGraphicOpacity != 1.0f) {
     gfx->Save();
-    gfx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
   // OK, now render -- note that we use "firstKid", which

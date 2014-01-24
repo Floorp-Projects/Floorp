@@ -26,7 +26,7 @@ public:
                     ContentType aContentType,
                     GLContext* aContext,
                     TextureImage::Flags aFlags = TextureImage::NoFlags,
-                    TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
+                    TextureImage::ImageFormat aImageFormat = gfxImageFormat::Unknown);
 
     ~TextureImageCGL();
 

@@ -123,7 +123,7 @@ D3D9SurfaceImage::DeprecatedGetAsSurface()
 
   HRESULT hr;
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(gfx::ThebesIntSize(mSize), gfxImageFormatRGB24);
+    new gfxImageSurface(gfx::ThebesIntSize(mSize), gfxImageFormat::RGB24);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created Cairo image surface for D3D9SurfaceImage.");

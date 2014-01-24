@@ -745,7 +745,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   if (mURLShortcut) {
     imageSurface =
       new gfxImageSurface(gfxIntSize(48, 48),
-                          gfxImageFormatARGB32);
+                          gfxImageFormat::ARGB32);
     gfxContext context(imageSurface);
     context.SetOperator(gfxContext::OPERATOR_SOURCE);
     context.SetColor(gfxRGBA(1, 1, 1, 1));
