@@ -22,6 +22,9 @@ public class FxAccountUtils {
   public static final int HASH_LENGTH_BYTES = 16;
   public static final int HASH_LENGTH_HEX = 2 * HASH_LENGTH_BYTES;
 
+  public static final int CRYPTO_KEY_LENGTH_BYTES = 32;
+  public static final int CRYPTO_KEY_LENGTH_HEX = 2 * CRYPTO_KEY_LENGTH_BYTES;
+
   public static final String KW_VERSION_STRING = "identity.mozilla.com/picl/v1/";
 
   public static final int NUMBER_OF_QUICK_STRETCH_ROUNDS = 1000;
@@ -118,5 +121,22 @@ public class FxAccountUtils {
    */
   public static byte[] generateUnwrapBKey(byte[] quickStretchedPW) throws GeneralSecurityException, UnsupportedEncodingException {
     return HKDF.derive(quickStretchedPW, new byte[0], FxAccountUtils.KW("unwrapBkey"), 32);
+  }
+
+  public static byte[] unwrapkB(byte[] unwrapkB, byte[] wrapkB) {
+    if (unwrapkB == null) {
+      throw new IllegalArgumentException("unwrapkB must not be null");
+    }
+    if (wrapkB == null) {
+      throw new IllegalArgumentException("wrapkB must not be null");
+    }
+    if (unwrapkB.length != CRYPTO_KEY_LENGTH_BYTES || wrapkB.length != CRYPTO_KEY_LENGTH_BYTES) {
+      throw new IllegalArgumentException("unwrapkB and wrapkB must be " + CRYPTO_KEY_LENGTH_BYTES + " bytes long");
+    }
+    byte[] kB = new byte[CRYPTO_KEY_LENGTH_BYTES];
+    for (int i = 0; i < wrapkB.length; i++) {
+      kB[i] = (byte) (wrapkB[i] ^ unwrapkB[i]);
+    }
+    return kB;
   }
 }

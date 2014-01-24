@@ -12,14 +12,15 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignInTask;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.sync.HTTPFailureException;
-import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.fxa.login.Engaged;
+import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.setup.Constants;
 
-import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
@@ -29,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import ch.boye.httpclientandroidlib.HttpResponse;
 
 /**
  * Activity which displays sign in screen to the user.
@@ -118,8 +118,8 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     }
 
     @Override
-    public void handleFailure(int status, HttpResponse response) {
-      showRemoteError(new HTTPFailureException(new SyncStorageResponse(response)));
+    public void handleFailure(FxAccountClientRemoteException e) {
+      showRemoteError(e);
     }
 
     @Override
@@ -128,16 +128,21 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
       Logger.info(LOG_TAG, "Got success signing in.");
 
       // We're on the UI thread, but it's okay to create the account here.
-      Account account;
+      AndroidFxAccount fxAccount;
       try {
         final String profile = Constants.DEFAULT_PROFILE;
         final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_URI;
-        account = AndroidFxAccount.addAndroidAccount(activity, email, password,
+        // TODO: This is wasteful.  We should be able to thread these through so they don't get recomputed.
+        byte[] quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(email.getBytes("UTF-8"), password.getBytes("UTF-8"));
+        byte[] unwrapkB = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
+        State state = new Engaged(email, result.uid, result.verified, unwrapkB, result.sessionToken, result.keyFetchToken);
+        fxAccount = AndroidFxAccount.addAndroidAccount(activity, email, password,
+            profile,
             serverURI,
             tokenServerURI,
-            profile, result.sessionToken, result.keyFetchToken, result.verified);
-        if (account == null) {
-          throw new RuntimeException("XXX what?");
+            state);
+        if (fxAccount == null) {
+          throw new RuntimeException("Could not add Android account.");
         }
       } catch (Exception e) {
         handleError(e);
@@ -146,7 +151,7 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
 
       // For great debugging.
       if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-        new AndroidFxAccount(activity, account).dump();
+        fxAccount.dump();
       }
 
       // The GetStarted activity has called us and needs to return a result to the authenticator.
