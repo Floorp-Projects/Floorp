@@ -2164,6 +2164,15 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         event = &gestureEvent;
       }
 
+      nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+      // Emit observer event to allow addons to modify the DataTransfer object.
+      if (observerService) {
+        observerService->NotifyObservers(dataTransfer,
+                                         "on-datatransfer-available",
+                                         nullptr);
+      }
+
       // now that the dataTransfer has been updated in the dragstart and
       // draggesture events, make it read only so that the data doesn't
       // change during the drag.
