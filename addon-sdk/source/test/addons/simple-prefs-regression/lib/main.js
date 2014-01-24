@@ -12,6 +12,10 @@ const { preferencesBranch } = require('sdk/self');
 
 const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
 
+exports.testRegression = function(assert) {
+  assert.equal(self.preferencesBranch, self.id, 'preferencesBranch returns id here');
+}
+
 exports.testDefaultValues = function (assert) {
   assert.equal(sp.prefs.myHiddenInt, 5, 'myHiddenInt default is 5');
   assert.equal(sp.prefs.myInteger, 8, 'myInteger default is 8');
@@ -66,13 +70,13 @@ if (app.is('Firefox')) {
             onMessage: function(msg) {
               // test somePreference
               assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
-              assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
+              assert.equal(msg.somePreference.pref, 'extensions.'+self.preferencesBranch+'.somePreference', 'somePreference path is correct');
               assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
               assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
 
               // test myInteger
               assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
-              assert.equal(msg.myInteger.pref, 'extensions.'+self.id+'.myInteger', 'extensions.test-simple-prefs.myInteger');
+              assert.equal(msg.myInteger.pref, 'extensions.'+self.preferencesBranch+'.myInteger', 'extensions.test-simple-prefs.myInteger');
               assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
               assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
 
@@ -88,10 +92,6 @@ if (app.is('Firefox')) {
       	}
       });
   }
-}
-
-exports.testDefaultPreferencesBranch = function(assert) {
-  assert.equal(preferencesBranch, self.id, 'preferencesBranch default the same as self.id');
 }
 
 require('sdk/test/runner').runTestsFromModule(module);
