@@ -727,6 +727,11 @@ WebGLFramebuffer::FinalizeAttachments() const
             ColorAttachment(i).FinalizeAttachment(LOCAL_GL_COLOR_ATTACHMENT0 + i);
     }
 
+    GLenum colorBufferSource =
+        ColorAttachment(0).IsDefined() ? LOCAL_GL_COLOR_ATTACHMENT0 : LOCAL_GL_NONE;
+    mContext->gl->fDrawBuffer(colorBufferSource);
+    mContext->gl->fReadBuffer(colorBufferSource);
+
     if (DepthAttachment().IsDefined())
         DepthAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
 

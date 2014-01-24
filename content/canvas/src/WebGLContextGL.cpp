@@ -206,6 +206,18 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer *wfb)
 
     if (!wfb) {
         gl->fBindFramebuffer(target, 0);
+
+        // Restore draw/read buffers when switching back to default
+        // render target.
+        GLint drawBuffer = LOCAL_GL_COLOR_ATTACHMENT0;
+        gl->fGetIntegerv(LOCAL_GL_DRAW_BUFFER, &drawBuffer);
+        if (drawBuffer == LOCAL_GL_NONE)
+            gl->fDrawBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
+
+        GLint readBuffer = LOCAL_GL_COLOR_ATTACHMENT0;
+        gl->fGetIntegerv(LOCAL_GL_READ_BUFFER, &readBuffer);
+        if (readBuffer == LOCAL_GL_NONE)
+            gl->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
     } else {
         GLuint framebuffername = wfb->GLName();
         gl->fBindFramebuffer(target, framebuffername);
