@@ -6,7 +6,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
 loader.lazyGetter(this, "HUDService", () => require("devtools/webconsole/hudservice"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 
