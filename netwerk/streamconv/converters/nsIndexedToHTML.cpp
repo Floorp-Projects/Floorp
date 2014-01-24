@@ -710,7 +710,7 @@ nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, 
       rv = mUnicodeEncoder->GetMaxLength(PromiseFlatString(aBuffer).get(), 
                                          unicharLength, &dstLength);
       if (NS_SUCCEEDED(rv)) {
-        buffer = (char *) nsMemory::Alloc(dstLength);
+        buffer = (char *) moz_malloc(dstLength);
         NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
         rv = mUnicodeEncoder->Convert(PromiseFlatString(aBuffer).get(), &unicharLength, 

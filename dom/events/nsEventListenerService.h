@@ -34,7 +34,7 @@ public:
   NS_DECL_NSIEVENTLISTENERINFO
 protected:
   bool GetJSVal(JSContext* aCx, mozilla::Maybe<JSAutoCompartment>& aAc,
-                JS::Value* aJSVal);
+                JS::MutableHandle<JS::Value> aJSVal);
 
   nsString                      mType;
   // nsReftPtr because that is what nsListenerStruct uses too.

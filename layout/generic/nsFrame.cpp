@@ -4905,7 +4905,7 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey,
   // If the layer is being updated asynchronously, and it's being forwarded
   // to a compositor, then we don't need to invalidate.
   if ((aFlags & UPDATE_IS_ASYNC) && layer &&
-      layer->Manager()->GetBackendType() == LAYERS_CLIENT) {
+      layer->Manager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     return layer;
   }
 

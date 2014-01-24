@@ -65,7 +65,7 @@ CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
 {
-  sBackend = LAYERS_D3D11;
+  sBackend = LayersBackend::LAYERS_D3D11;
 }
 
 CompositorD3D11::~CompositorD3D11()
@@ -352,7 +352,7 @@ CompositorD3D11::GetTextureFactoryIdentifier()
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentProcessId = XRE_GetProcessType();
-  ident.mParentBackend = LAYERS_D3D11;
+  ident.mParentBackend = LayersBackend::LAYERS_D3D11;
   return ident;
 }
 

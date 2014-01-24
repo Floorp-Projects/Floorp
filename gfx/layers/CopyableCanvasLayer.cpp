@@ -109,8 +109,8 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 
     IntSize readSize(sharedSurf->Size());
     gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
-                            ? gfxImageFormatRGB24
-                            : gfxImageFormatARGB32;
+                            ? gfxImageFormat::RGB24
+                            : gfxImageFormat::ARGB32;
 
     if (aDestSurface) {
       resultSurf = aDestSurface;

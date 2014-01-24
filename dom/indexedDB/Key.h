@@ -161,11 +161,11 @@ public:
   }
 
   nsresult SetFromJSVal(JSContext* aCx,
-                        const JS::Value aVal)
+                        JS::Handle<JS::Value> aVal)
   {
     mBuffer.Truncate();
 
-    if (JSVAL_IS_NULL(aVal) || JSVAL_IS_VOID(aVal)) {
+    if (aVal.isNull() || aVal.isUndefined()) {
       Unset();
       return NS_OK;
     }
@@ -184,7 +184,7 @@ public:
                    JS::MutableHandle<JS::Value> aVal) const
   {
     if (IsUnset()) {
-      aVal.set(JSVAL_VOID);
+      aVal.setUndefined();
       return NS_OK;
     }
 
@@ -211,7 +211,7 @@ public:
 
   nsresult AppendItem(JSContext* aCx,
                       bool aFirstOfArray,
-                      const JS::Value aVal)
+                      JS::Handle<JS::Value> aVal)
   {
     nsresult rv = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0);
     if (NS_FAILED(rv)) {
@@ -305,7 +305,7 @@ private:
   }
 
   // Encoding functions. These append the encoded value to the end of mBuffer
-  inline nsresult EncodeJSVal(JSContext* aCx, const JS::Value aVal,
+  inline nsresult EncodeJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
                               uint8_t aTypeOffset)
   {
     return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
@@ -331,7 +331,7 @@ private:
   nsCString mBuffer;
 
 private:
-  nsresult EncodeJSValInternal(JSContext* aCx, const JS::Value aVal,
+  nsresult EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
                                uint8_t aTypeOffset, uint16_t aRecursionDepth);
 
   static nsresult DecodeJSValInternal(const unsigned char*& aPos,

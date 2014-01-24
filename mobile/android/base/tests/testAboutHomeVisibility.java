@@ -15,7 +15,7 @@ public class testAboutHomeVisibility extends UITest {
         // Check initial state on about:home.
         mToolbar.assertTitle(StringHelper.ABOUT_HOME_TITLE);
         mAboutHome.assertVisible()
-                  .assertCurrentPage(PanelType.TOP_SITES);
+                  .assertCurrentPanel(PanelType.TOP_SITES);
 
         // Go to blank 01.
         NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
@@ -30,7 +30,7 @@ public class testAboutHomeVisibility extends UITest {
         // Enter editing mode, where the about:home UI should be visible.
         mToolbar.enterEditingMode();
         mAboutHome.assertVisible()
-                  .assertCurrentPage(PanelType.TOP_SITES);
+                  .assertCurrentPanel(PanelType.TOP_SITES);
 
         // Dismiss editing mode, where the about:home UI should be gone.
         mToolbar.dismissEditingMode();
@@ -40,7 +40,7 @@ public class testAboutHomeVisibility extends UITest {
         NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mToolbar.assertTitle(StringHelper.ABOUT_HOME_TITLE);
         mAboutHome.assertVisible()
-                  .assertCurrentPage(PanelType.TOP_SITES);
+                  .assertCurrentPanel(PanelType.TOP_SITES);
 
         // TODO: Type in a url and assert the go button is visible.
     }

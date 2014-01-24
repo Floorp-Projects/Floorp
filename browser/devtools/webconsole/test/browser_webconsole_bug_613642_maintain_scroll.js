@@ -95,36 +95,23 @@ function testGen() {
     testNext();
   };
   EventUtils.synthesizeKey("VK_END", {});
-  yield;
+  yield undefined;
 
   let oldScrollTop = scrollBox.scrollTop;
 
   content.console.log("test message 151");
 
-  waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "test message 151",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  }).then(() => {
-    scrollBox.onscroll = () => {
-      if (scrollBox.scrollTop == oldScrollTop) {
-        // Wait for scroll to change.
-        return;
-      }
-      scrollBox.onscroll = null;
-      isnot(scrollBox.scrollTop, oldScrollTop, "scroll location updated (moved to bottom again)");
-      testNext();
-    };
-  });
+  scrollBox.onscroll = () => {
+    if (scrollBox.scrollTop == oldScrollTop) {
+      // Wait for scroll to change.
+      return;
+    }
+    scrollBox.onscroll = null;
+    isnot(scrollBox.scrollTop, oldScrollTop, "scroll location updated (moved to bottom again)");
+    hud = testDriver = null;
+    finishTest();
+  };
 
-  yield undefined;
-
-  hud = testDriver = null;
-  finishTest();
-  
   yield undefined;
 }
 

@@ -133,20 +133,20 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
 
             if (mInpBuffer != nullptr && streamLen > mInpBufferLen)
             {
-                mInpBuffer = (unsigned char *) nsMemory::Realloc(mInpBuffer, mInpBufferLen = streamLen);
+                mInpBuffer = (unsigned char *) moz_realloc(mInpBuffer, mInpBufferLen = streamLen);
                
                 if (mOutBufferLen < streamLen * 2)
-                    mOutBuffer = (unsigned char *) nsMemory::Realloc(mOutBuffer, mOutBufferLen = streamLen * 3);
+                    mOutBuffer = (unsigned char *) moz_realloc(mOutBuffer, mOutBufferLen = streamLen * 3);
 
                 if (mInpBuffer == nullptr || mOutBuffer == nullptr)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
 
             if (mInpBuffer == nullptr)
-                mInpBuffer = (unsigned char *) nsMemory::Alloc(mInpBufferLen = streamLen);
+                mInpBuffer = (unsigned char *) moz_malloc(mInpBufferLen = streamLen);
 
             if (mOutBuffer == nullptr)
-                mOutBuffer = (unsigned char *) nsMemory::Alloc(mOutBufferLen = streamLen * 3);
+                mOutBuffer = (unsigned char *) moz_malloc(mOutBufferLen = streamLen * 3);
 
             if (mInpBuffer == nullptr || mOutBuffer == nullptr)
                 return NS_ERROR_OUT_OF_MEMORY;

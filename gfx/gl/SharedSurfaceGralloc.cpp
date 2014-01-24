@@ -74,8 +74,8 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     if (!HasExtensions(egl, prodGL))
         return nullptr;
 
-    gfxContentType type = hasAlpha ? GFX_CONTENT_COLOR_ALPHA
-                                   : GFX_CONTENT_COLOR;
+    gfxContentType type = hasAlpha ? gfxContentType::COLOR_ALPHA
+                                   : gfxContentType::COLOR;
 
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(type);

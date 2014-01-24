@@ -201,9 +201,9 @@ public:
   }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend)
-  { return mBackendData[aBackend]; }
+  { return mBackendData[size_t(aBackend)]; }
   void SetBackendData(LayersBackend aBackend, ImageBackendData* aData)
-  { mBackendData[aBackend] = aData; }
+  { mBackendData[size_t(aBackend)] = aData; }
 
   int32_t GetSerial() { return mSerial; }
 
@@ -220,7 +220,7 @@ protected:
     mSent(false)
   {}
 
-  nsAutoPtr<ImageBackendData> mBackendData[mozilla::layers::LAYERS_LAST];
+  nsAutoPtr<ImageBackendData> mBackendData[size_t(mozilla::layers::LayersBackend::LAYERS_LAST)];
 
   void* mImplData;
   int32_t mSerial;

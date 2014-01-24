@@ -7,12 +7,11 @@ package org.mozilla.gecko;
 
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.SparseArray;
 
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import java.lang.Thread;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class GeckoJavaSampler {
@@ -63,7 +62,7 @@ public class GeckoJavaSampler {
         private boolean mPauseSampler = false;
         private boolean mStopSampler = false;
 
-        private Map<Integer,Sample[]> mSamples = new HashMap<Integer,Sample[]>();
+        private SparseArray<Sample[]> mSamples = new SparseArray<Sample[]>();
         private int mSamplePos;
 
         public SamplingThread(final int aInterval, final int aSampleCount) {

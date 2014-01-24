@@ -4,11 +4,10 @@
 
 package org.mozilla.gecko.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import android.util.SparseArray;
 
 public final class ActivityResultHandlerMap {
-    private Map<Integer, ActivityResultHandler> mMap = new HashMap<Integer, ActivityResultHandler>();
+    private SparseArray<ActivityResultHandler> mMap = new SparseArray<ActivityResultHandler>();
     private int mCounter = 0;
 
     public synchronized int put(ActivityResultHandler handler) {
@@ -17,6 +16,9 @@ public final class ActivityResultHandlerMap {
     }
 
     public synchronized ActivityResultHandler getAndRemove(int i) {
-        return mMap.remove(i);
+        ActivityResultHandler handler = mMap.get(i);
+        mMap.delete(i);
+
+        return handler;
     }
 }
