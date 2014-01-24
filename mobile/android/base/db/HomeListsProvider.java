@@ -4,9 +4,14 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.HomeListItems;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -23,6 +28,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.io.InputStream;
+import java.io.IOException;
 
 public class HomeListsProvider extends ContentProvider {
     private static final String LOGTAG = "GeckoHomeListsProvider";
@@ -367,6 +375,17 @@ public class HomeListsProvider extends ContentProvider {
      * Returns a cursor populated with static fake data.
      */
     private Cursor queryFakeItems(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        JSONArray items = null;
+        try {
+            items = new JSONArray(getRawFakeItems());
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error getting fake list items", e);
+            return null;
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error parsing fake-list-items.json", e);
+            return null;
+        }
+
         final String[] itemsColumns = new String[] {
             HomeListItems._ID,
             HomeListItems.PROVIDER_ID,
@@ -374,10 +393,32 @@ public class HomeListsProvider extends ContentProvider {
             HomeListItems.TITLE
         };
 
-        // XXX: Return more items (from JSON file?) and filter fake items by provider specified in selection
         final MatrixCursor c = new MatrixCursor(itemsColumns);
-        c.addRow(new Object[] { 1, "fake-provider", "http://example.com", "Example" });
-        c.addRow(new Object[] { 2, "fake-provider", "http://mozilla.org", "Mozilla" });
+        for (int i = 0; i < items.length(); i++) {
+            try {
+                final JSONObject item = items.getJSONObject(i);
+                c.addRow(new Object[] {
+                    item.getInt("id"),
+                    item.getString("provider_id"),
+                    item.getString("url"),
+                    item.getString("title")
+                });
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error creating cursor row for fake list item", e);
+            }
+        }
         return c;
+    }
+
+    private String getRawFakeItems() throws IOException {
+        final InputStream inputStream = getContext().getResources().openRawResource(R.raw.fake_list_items);
+        final byte[] buffer = new byte[1024];
+        StringBuilder s = new StringBuilder();
+        int count;
+
+        while ((count = inputStream.read(buffer)) != -1) {
+            s.append(new String(buffer, 0, count));
+        }
+        return s.toString();
     }
 }
