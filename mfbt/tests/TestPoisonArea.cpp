@@ -161,6 +161,9 @@
 #elif defined __s390__
 #define RETURN_INSTR 0x07fe0000 /* br %r14 */
 
+#elif defined __aarch64__
+#define RETURN_INSTR 0xd65f03c0 /* ret */
+
 #elif defined __ia64
 struct ia64_instr { uint32_t i[4]; };
 static const ia64_instr _return_instr =

@@ -1587,6 +1587,11 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_initprop(name);
       }
 
+      case JSOP_MUTATEPROTO:
+      {
+        return jsop_mutateproto();
+      }
+
       case JSOP_INITPROP_GETTER:
       case JSOP_INITPROP_SETTER: {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
@@ -5521,6 +5526,17 @@ IonBuilder::jsop_initelem_array()
         return false;
 
    return true;
+}
+
+bool
+IonBuilder::jsop_mutateproto()
+{
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MMutateProto *mutate = MMutateProto::New(alloc(), obj, value);
+    current->add(mutate);
+    return resumeAfter(mutate);
 }
 
 bool
