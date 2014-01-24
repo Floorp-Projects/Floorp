@@ -91,16 +91,33 @@
     </style>
 
     <style name="FxAccountErrorItem">
-        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:layout_marginLeft">@dimen/fxaccount_corner_radius</item>
+        <item name="android:layout_marginRight">@dimen/fxaccount_corner_radius</item>
+        <item name="android:layout_marginTop">30dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">left</item>
-        <item name="android:layout_margin">5dp</item>
         <item name="android:background">@drawable/fxaccount_textview_error_background</item>
         <item name="android:padding">5dp</item>
         <item name="android:text">Error</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">18sp</item>
         <item name="android:visibility">invisible</item>
+    </style>
+
+    <style name="FxAccountProgress">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:background">@drawable/fxaccount_button_background</item>
+        <item name="android:visibility">invisible</item>
+    </style>
+
+    <style name="FxAccountButtonLayout">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">20dp</item>
     </style>
 
 </resources>

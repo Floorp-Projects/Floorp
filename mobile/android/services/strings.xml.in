@@ -142,6 +142,7 @@
   <string name="fxaccount_confirmation_email_sent">&fxaccount.confirmation.email.sent;</string>
   <string name="fxaccount_password_length_restriction">&fxaccount.password.length.restriction;</string>
   <string name="fxaccount_change_password">&fxaccount.change.password;</string>
+  <string name="fxaccount_status_needs_upgrade">You need to upgrade Firefox to log in to this account.</string>
   <string name="fxaccount_status_needs_verification">&fxaccount.status.needs.verification;</string>
   <string name="fxaccount_status_needs_credentials">&fxaccount.status.needs.credentials;</string>
   <string name="fxaccount_status_syncing">&fxaccount.status.syncing;</string>
@@ -187,3 +188,15 @@
   <string name="fxaccount_status_debug_forget_certificate_button_label">Forget certificate (if applicable)</string>
   <string name="fxaccount_status_debug_require_password_button_label">Require password re-entry</string>
   <string name="fxaccount_status_debug_require_upgrade_button_label">Require upgrade</string>
+  <string name="fxaccount_create_account_unknown_error">Could not create account</string>
+  <string name="fxaccount_sign_in_unknown_error">Could not sign in</string>
+  <string name="fxaccount_update_credentials_unknown_error">Could not update password</string>
+  <string name="fxaccount_remote_error_UPGRADE_REQUIRED">You need to upgrade Firefox</string>
+  <string name="fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS">Account already exists</string>
+  <string name="fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST">Account does not exist</string>
+  <string name="fxaccount_remote_error_INCORRECT_PASSWORD">Bad password</string>
+  <string name="fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT">Account is not verified</string>
+  <string name="fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS">Try again later</string>
+  <string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">Try again later</string>
+  <string name="fxaccount_remote_error_UNKNOWN_ERROR">There was a problem</string>
+  <string name="fxaccount_remote_error_COULD_NOT_CONNECT">Couldn\&apos;t connect to the internet</string>

@@ -29,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 /**
@@ -49,11 +50,12 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_sign_in);
 
-    localErrorTextView = (TextView) ensureFindViewById(null, R.id.local_error, "local error text view");
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
-    button = (Button) ensureFindViewById(null, R.id.sign_in_button, "sign in button");
+    remoteErrorTextView = (TextView) ensureFindViewById(null, R.id.remote_error, "remote error text view");
+    button = (Button) ensureFindViewById(null, R.id.button, "sign in button");
+    progressBar = (ProgressBar) ensureFindViewById(null, R.id.progress, "progress bar");
 
     minimumPasswordLength = 1; // Minimal restriction on passwords entered to sign in.
     createSignInButton();
@@ -114,12 +116,12 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
 
     @Override
     public void handleError(Exception e) {
-      showRemoteError(e);
+      showRemoteError(e, R.string.fxaccount_sign_in_unknown_error);
     }
 
     @Override
     public void handleFailure(FxAccountClientRemoteException e) {
-      showRemoteError(e);
+      showRemoteError(e, R.string.fxaccount_sign_in_unknown_error);
     }
 
     @Override
@@ -184,9 +186,10 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
     try {
-      new FxAccountSignInTask(this, email, password, client, delegate).execute();
+      hideRemoteError();
+      new FxAccountSignInTask(this, this, email, password, client, delegate).execute();
     } catch (Exception e) {
-      showRemoteError(e);
+      showRemoteError(e, R.string.fxaccount_sign_in_unknown_error);
     }
   }
 
