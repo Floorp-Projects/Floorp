@@ -872,8 +872,7 @@ void ReportLoadError(JSContext* aCx, const nsAString& aURL,
       break;
 
     default:
-      JS_ReportError(aCx, "Failed to load script: %s (nsresult = 0x%x)",
-                     url.get(), aLoadResult);
+      JS_ReportError(aCx, "Failed to load script (nsresult = 0x%x)", aLoadResult);
   }
 }
 
