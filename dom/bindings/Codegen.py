@@ -3030,7 +3030,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if isMember or isOptional or nullable or isCallbackReturnValue:
             sequenceClass = "Sequence"
         else:
-            sequenceClass = "AutoSequence"
+            sequenceClass = "binding_detail::AutoSequence"
 
         # XXXbz we can't include the index in the the sourceDescription, because
         # we don't really have a way to pass one in dynamically at runtime...
@@ -3636,7 +3636,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 assignString = "${declName} = str"
             return JSToNativeConversionInfo(
                 "{\n"
-                "  FakeDependentString str;\n"
+                "  binding_detail::FakeDependentString str;\n"
                 "%s\n"
                 "  %s;\n"
                 "}\n" % (
@@ -3646,16 +3646,20 @@ for (uint32_t i = 0; i < length; ++i) {
 
         if isOptional:
             declType = "Optional<nsAString>"
+            holderType = CGGeneric("binding_detail::FakeDependentString")
+            conversionCode = ("%s\n"
+                              "${declName} = &${holderName};" %
+                              getConversionCode("${holderName}"))
         else:
-            declType = "NonNull<nsAString>"
+            declType = "binding_detail::FakeDependentString"
+            holderType = None
+            conversionCode = getConversionCode("${declName}")
 
         # No need to deal with optional here; we handled it already
         return JSToNativeConversionInfo(
-            ("%s\n"
-             "${declName} = &${holderName};" %
-             getConversionCode("${holderName}")),
+            conversionCode,
             declType=CGGeneric(declType),
-            holderType=CGGeneric("FakeDependentString"))
+            holderType=holderType)
 
     if type.isByteString():
         assert not isEnforceRange and not isClamp
@@ -3832,7 +3836,7 @@ for (uint32_t i = 0; i < length; ++i) {
             # Since we're not a member and not nullable or optional, no one will
             # see our real type, so we can do the fast version of the dictionary
             # that doesn't pre-initialize members.
-            typeName = "dictionary_detail::Fast" + typeName
+            typeName = "binding_detail::Fast" + typeName
 
         declType = CGGeneric(typeName)
 
@@ -4170,7 +4174,7 @@ class CGArgumentConverter(CGThing):
             raise TypeError("Shouldn't need holders for variadics")
 
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
-        replacer["seqType"] = CGTemplatedType("AutoSequence",
+        replacer["seqType"] = CGTemplatedType("binding_detail::AutoSequence",
                                               typeConversion.declType).define()
         if typeNeedsRooting(self.argument.type):
             rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
@@ -6942,7 +6946,7 @@ class CGUnionStruct(CGThing):
                                 [Argument("const nsString::char_type*", "aData"),
                                  Argument("nsString::size_type", "aLength")],
                                 inline=True, bodyInHeader=True,
-                                body="mValue.mString.Value().Assign(aData, aLength);"))
+                                body="SetAsString().Assign(aData, aLength);"))
 
             body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
                                    'mValue.m${name}.Destroy();\n'
@@ -7141,7 +7145,7 @@ class CGUnionConversionStruct(CGThing):
                                      [Argument("const nsDependentString::char_type*", "aData"),
                                       Argument("nsDependentString::size_type", "aLength")],
                                      inline=True, bodyInHeader=True,
-                                     body="mStringHolder.SetData(aData, aLength);"))
+                                     body="SetAsString().SetData(aData, aLength);"))
 
             if vars["holderType"] is not None:
                 members.append(ClassMember("m%sHolder" % vars["name"],
@@ -7965,7 +7969,7 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
         # seems like probable overkill.
         return ("JS::Rooted<JS::Value> nameVal(cx);\n" +
                 idDecl +
-                ("FakeDependentString %s;\n" % argName) +
+                ("binding_detail::FakeDependentString %s;\n" % argName) +
                 unwrapString +
                 ("\n"
                  "\n"
@@ -9258,7 +9262,7 @@ if (""",
             isStruct=True)
 
         return CGList([struct,
-                       CGNamespace.build(['dictionary_detail'],
+                       CGNamespace.build(['binding_detail'],
                                          fastStruct)],
                       "\n")
 
@@ -11601,6 +11605,8 @@ struct PrototypeTraits;
         includes.add("mozilla/dom/OwningNonNull.h")
         includes.add("mozilla/dom/UnionMember.h")
         includes.add("mozilla/dom/BindingDeclarations.h")
+        # Need BindingUtils.h for FakeDependentString
+        includes.add("mozilla/dom/BindingUtils.h")
         implincludes.add("mozilla/dom/PrimitiveConversions.h")
 
         # Wrap all of that in our namespaces.

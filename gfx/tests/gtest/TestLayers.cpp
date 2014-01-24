@@ -19,7 +19,7 @@ public:
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) { return false; }
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() { return nullptr; }
   virtual void GetBackendName(nsAString& aName) {}
-  virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
   virtual void BeginTransaction() {}
   virtual already_AddRefed<ImageLayer> CreateImageLayer() { return nullptr; }
   virtual void SetRoot(Layer* aLayer) {}

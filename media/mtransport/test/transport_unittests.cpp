@@ -96,7 +96,7 @@ class TransportLayerLossy : public TransportLayer {
   }
 
   void StateChange(TransportLayer *layer, State state) {
-    SetState(state);
+    TL_SET_STATE(state);
   }
 
   void PacketReceived(TransportLayer *layer, const unsigned char *data,
@@ -115,7 +115,7 @@ class TransportLayerLossy : public TransportLayer {
         connect(this,
                 &TransportLayerLossy::StateChange);
 
-    SetState(downward_->state());
+    TL_SET_STATE(downward_->state());
   }
 
  private:

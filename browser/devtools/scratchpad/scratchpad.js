@@ -982,6 +982,7 @@ var Scratchpad = {
 
         this.editor.setText(content);
         this.editor.clearHistory();
+        this.dirty = false;
         document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
       }
       else if (!aSilentError) {

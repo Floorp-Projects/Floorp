@@ -725,24 +725,24 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
 
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
     RefPtr<Compositor> compositor;
-    if (aBackendHints[i] == LAYERS_OPENGL) {
+    if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
       compositor = new CompositorOGL(mWidget,
                                      mEGLSurfaceSize.width,
                                      mEGLSurfaceSize.height,
                                      mUseExternalSurfaceSize);
-    } else if (aBackendHints[i] == LAYERS_BASIC) {
+    } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
       compositor = new BasicCompositor(mWidget);
 #ifdef XP_WIN
-    } else if (aBackendHints[i] == LAYERS_D3D11) {
+    } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
       compositor = new CompositorD3D11(mWidget);
-    } else if (aBackendHints[i] == LAYERS_D3D9) {
+    } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9) {
       compositor = new CompositorD3D9(this, mWidget);
 #endif
     }
 
     if (!compositor) {
       // We passed a backend hint for which we can't create a compositor.
-      // For example, we sometime pass LAYERS_NONE as filler in aBackendHints.
+      // For example, we sometime pass LayersBackend::LAYERS_NONE as filler in aBackendHints.
       continue;
     }
 

@@ -60,6 +60,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGoto(LGoto *lir);
     bool visitTableSwitch(LTableSwitch *ins);
     bool visitTableSwitchV(LTableSwitchV *ins);
+    bool visitCloneLiteral(LCloneLiteral *lir);
     bool visitParameter(LParameter *lir);
     bool visitCallee(LCallee *lir);
     bool visitStart(LStart *lir);
@@ -145,6 +146,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitElemGetterSetter(LInitElemGetterSetter *lir);
+    bool visitMutateProto(LMutateProto *lir);
     bool visitInitProp(LInitProp *lir);
     bool visitInitPropGetterSetter(LInitPropGetterSetter *lir);
     bool visitCreateThis(LCreateThis *lir);

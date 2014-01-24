@@ -556,10 +556,8 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-#if 0 /* pending addressing Firebug's use of this method */
     if (!GlobalObject::warnOnceAboutWatch(cx, obj))
         return false;
-#endif
 
     if (args.length() <= 1) {
         js_ReportMissingArg(cx, args.calleev(), 1);
@@ -595,10 +593,8 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-#if 0 /* pending addressing Firebug's use of this method */
     if (!GlobalObject::warnOnceAboutWatch(cx, obj))
         return false;
-#endif
 
     RootedId id(cx);
     if (args.length() != 0) {

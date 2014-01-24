@@ -2332,14 +2332,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
         if (aTreeMatchContext.mForStyling)
           parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
-        int32_t index = parent->IndexOf(prevElement);
-        while (0 <= --index) {
-          nsIContent* content = parent->GetChildAt(index);
-          if (content->IsElement()) {
-            element = content->AsElement();
-            break;
-          }
-        }
+        element = prevElement->GetPreviousElementSibling();
       }
     }
     // for descendant combinators and child combinators, the element

@@ -238,7 +238,7 @@ MediaEngineTabVideoSource::Draw() {
            nsPresContext::CSSPixelsToAppUnits(srcW / scale),
            nsPresContext::CSSPixelsToAppUnits(srcH / scale));
 
-  gfxImageFormat format = gfxImageFormatRGB24;
+  gfxImageFormat format = gfxImageFormat::RGB24;
   uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
 
   nsRefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();

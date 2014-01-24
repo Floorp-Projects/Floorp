@@ -247,7 +247,7 @@ public:
     mNeedBackup = false;
     mLastOptionalBreakContent = nullptr;
     mLastOptionalBreakContentOffset = -1;
-    mLastOptionalBreakPriority = eNoBreak;
+    mLastOptionalBreakPriority = gfxBreakPriority::eNoBreak;
   }
   // Retrieve last set optional break position. When this returns null, no
   // optional break has been recorded (which means that the line can't break yet).

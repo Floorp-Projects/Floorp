@@ -999,6 +999,27 @@ class MConstant : public MNullaryInstruction
     bool canProduceFloat32() const;
 };
 
+// Deep clone a constant JSObject.
+class MCloneLiteral
+  : public MUnaryInstruction,
+    public ObjectPolicy<0>
+{
+  protected:
+    MCloneLiteral(MDefinition *obj)
+      : MUnaryInstruction(obj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CloneLiteral)
+    static MCloneLiteral *New(TempAllocator &alloc, MDefinition *obj);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MParameter : public MNullaryInstruction
 {
     int32_t index_;
@@ -1600,6 +1621,42 @@ class MAbortPar : public MAryControlInstruction<0, 0>
 
     static MAbortPar *New(TempAllocator &alloc) {
         return new(alloc) MAbortPar();
+    }
+};
+
+// Setting __proto__ in an object literal.
+class MMutateProto
+  : public MAryInstruction<2>,
+    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
+{
+  protected:
+    MMutateProto(MDefinition *obj, MDefinition *value)
+    {
+        setOperand(0, obj);
+        setOperand(1, value);
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(MutateProto)
+
+    static MMutateProto *New(TempAllocator &alloc, MDefinition *obj, MDefinition *value)
+    {
+        return new(alloc) MMutateProto(obj, value);
+    }
+
+    MDefinition *getObject() const {
+        return getOperand(0);
+    }
+    MDefinition *getValue() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool possiblyCalls() const {
+        return true;
     }
 };
 

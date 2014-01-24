@@ -1190,9 +1190,33 @@ BaselineCompiler::emit_JSOP_STRING()
     return true;
 }
 
+typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
+static const VMFunction DeepCloneObjectLiteralInfo =
+    FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
+
 bool
 BaselineCompiler::emit_JSOP_OBJECT()
 {
+    if (JS::CompartmentOptionsRef(cx).cloneSingletons(cx)) {
+        RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+        if (!obj)
+            return false;
+
+        prepareVMCall();
+
+        pushArg(ImmWord(js::MaybeSingletonObject));
+        pushArg(ImmGCPtr(obj));
+
+        if (!callVM(DeepCloneObjectLiteralInfo))
+            return false;
+
+        // Box and push return value.
+        masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+        frame.push(R0);
+        return true;
+    }
+
+    JS::CompartmentOptionsRef(cx).setSingletonsAsValues();
     frame.push(ObjectValue(*script->getObject(pc)));
     return true;
 }
@@ -1648,6 +1672,30 @@ BaselineCompiler::emit_JSOP_INITELEM()
         return false;
 
     // Pop the rhs, so that the object is on the top of the stack.
+    frame.pop();
+    return true;
+}
+
+typedef bool (*MutateProtoFn)(JSContext *cx, HandleObject obj, HandleValue newProto);
+static const VMFunction MutateProtoInfo = FunctionInfo<MutateProtoFn>(MutatePrototype);
+
+bool
+BaselineCompiler::emit_JSOP_MUTATEPROTO()
+{
+    // Keep values on the stack for the decompiler.
+    frame.syncStack(0);
+
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
+
+    prepareVMCall();
+
+    pushArg(R1);
+    pushArg(R0.scratchReg());
+
+    if (!callVM(MutateProtoInfo))
+        return false;
+
     frame.pop();
     return true;
 }

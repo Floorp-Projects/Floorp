@@ -331,18 +331,16 @@ HyperTextAccessible::DOMPointToHypertextOffset(nsINode* aNode,
       break;
     }
 
-    // This offset no longer applies because the passed-in text object is not a child
-    // of the hypertext. This happens when there are nested hypertexts, e.g.
-    // <div>abc<h1>def</h1>ghi</div>
-    // If the passed-in DOM point was not on a direct child of the hypertext, we will
-    // return the offset for that entire hypertext
-    if (aIsEndOffset) {
-      // Not inclusive, the indicated char comes at index before this offset
-      // If the end offset is after the first character of the passed in object, use 1 for
-    // addTextOffset, to put us after the embedded object char. We'll only treat the offset as
-    // before the embedded object char if we end at the very beginning of the child.
-    addTextOffset = addTextOffset > 0;
-    } else
+    // This offset no longer applies because the passed-in text object is not
+    // a child of the hypertext. This happens when there are nested hypertexts,
+    // e.g. <div>abc<h1>def</h1>ghi</div>. Thus we need to adjust the offset
+    // to make it relative the hypertext.
+    // If the end offset is not supposed to be inclusive and the original point
+    // is not at 0 offset then the returned offset should be after an embedded
+    // character the original point belongs to.
+    if (aIsEndOffset)
+      addTextOffset = (addTextOffset > 0 || descendantAcc->IndexInParent() > 0) ? 1 : 0;
+    else
       addTextOffset = 0;
 
     descendantAcc = parentAcc;

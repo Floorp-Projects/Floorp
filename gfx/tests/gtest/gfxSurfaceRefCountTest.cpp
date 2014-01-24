@@ -44,7 +44,7 @@ TestNewSurface () {
     int failures = 0;
     int destroyed = 0;
 
-    nsRefPtr<gfxASurface> s = new gfxImageSurface (gfxIntSize(10, 10), gfxImageFormatARGB32);
+    nsRefPtr<gfxASurface> s = new gfxImageSurface (gfxIntSize(10, 10), gfxImageFormat::ARGB32);
     cairo_surface_t *cs = s->CairoSurface();
 
     cairo_surface_set_user_data (cs, &destruction_key, &destroyed, SurfaceDestroyNotifier);

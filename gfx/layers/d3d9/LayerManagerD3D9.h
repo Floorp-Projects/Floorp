@@ -103,7 +103,7 @@ public:
 
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
 
-  virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_D3D9; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }
   bool DeviceWasRemoved() { return deviceManager()->DeviceWasRemoved(); }
 

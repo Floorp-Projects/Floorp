@@ -189,16 +189,16 @@ struct ParamTraits<gfx3DMatrix>
 
 template <>
 struct ParamTraits<gfxContentType>
-  : public EnumSerializer<gfxContentType,
-                          GFX_CONTENT_COLOR,
-                          GFX_CONTENT_SENTINEL>
+  : public TypedEnumSerializer<gfxContentType,
+                               gfxContentType::COLOR,
+                               gfxContentType::SENTINEL>
 {};
 
 template <>
 struct ParamTraits<gfxSurfaceType>
-  : public EnumSerializer<gfxSurfaceType,
-                          gfxSurfaceTypeImage,
-                          gfxSurfaceTypeMax>
+  : public TypedEnumSerializer<gfxSurfaceType,
+                               gfxSurfaceType::Image,
+                               gfxSurfaceType::Max>
 {};
 
 template <>
@@ -210,25 +210,33 @@ struct ParamTraits<mozilla::GraphicsFilterType>
 
 template <>
 struct ParamTraits<mozilla::layers::LayersBackend>
-  : public EnumSerializer<mozilla::layers::LayersBackend,
-                          mozilla::layers::LAYERS_NONE,
-                          mozilla::layers::LAYERS_LAST>
+  : public TypedEnumSerializer<mozilla::layers::LayersBackend,
+                               mozilla::layers::LayersBackend::LAYERS_NONE,
+                               mozilla::layers::LayersBackend::LAYERS_LAST>
 {};
 
 template <>
 struct ParamTraits<mozilla::layers::ScaleMode>
-  : public EnumSerializer<mozilla::layers::ScaleMode,
-                          mozilla::layers::SCALE_NONE,
-                          mozilla::layers::SCALE_SENTINEL>
+  : public TypedEnumSerializer<mozilla::layers::ScaleMode,
+                               mozilla::layers::ScaleMode::SCALE_NONE,
+                               mozilla::layers::ScaleMode::SENTINEL>
 {};
 
 template <>
-struct ParamTraits<mozilla::PixelFormat>
-  : public EnumSerializer<mozilla::PixelFormat,
-                          gfxImageFormatARGB32,
-                          gfxImageFormatUnknown>
+struct ParamTraits<gfxImageFormat>
+  : public TypedEnumSerializer<gfxImageFormat,
+                               gfxImageFormat::ARGB32,
+                               gfxImageFormat::Unknown>
 {};
 
+/*
+template <>
+struct ParamTraits<mozilla::PixelFormat>
+  : public EnumSerializer<mozilla::PixelFormat,
+                          gfxImageFormat::ARGB32,
+                          gfxImageFormat::Unknown>
+{};
+*/
 
 template<>
 struct ParamTraits<gfxRGBA>

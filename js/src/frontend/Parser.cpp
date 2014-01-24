@@ -6807,6 +6807,7 @@ Parser<ParseHandler>::objectLiteral()
 
         JSOp op = JSOP_INITPROP;
         Node propname;
+        uint32_t begin;
         switch (ltok) {
           case TOK_NUMBER:
             atom = DoubleToAtom(context, tokenStream.currentToken().number());
@@ -6825,6 +6826,10 @@ Parser<ParseHandler>::objectLiteral()
                 propname = handler.newIdentifier(atom, pos());
                 if (!propname)
                     return null();
+                if (atom == context->names().proto) {
+                    begin = pos().begin;
+                    op = JSOP_MUTATEPROTO;
+                }
                 break;
             }
 
@@ -6893,7 +6898,7 @@ Parser<ParseHandler>::objectLiteral()
             return null();
         }
 
-        if (op == JSOP_INITPROP) {
+        if (op == JSOP_INITPROP || op == JSOP_MUTATEPROTO) {
             TokenKind tt = tokenStream.getToken();
             Node propexpr;
             if (tt == TOK_COLON) {
@@ -6909,11 +6914,15 @@ Parser<ParseHandler>::objectLiteral()
                  * so that we can later assume singleton objects delegate to
                  * the default Object.prototype.
                  */
-                if (!handler.isConstant(propexpr) || atom == context->names().proto)
+                if (!handler.isConstant(propexpr) || op == JSOP_MUTATEPROTO)
                     handler.setListFlag(literal, PNX_NONCONST);
 
-                if (!handler.addPropertyDefinition(literal, propname, propexpr))
+                if (op == JSOP_MUTATEPROTO
+                    ? !handler.addPrototypeMutation(literal, begin, propexpr)
+                    : !handler.addPropertyDefinition(literal, propname, propexpr))
+                {
                     return null();
+                }
             }
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
@@ -6959,7 +6968,7 @@ Parser<ParseHandler>::objectLiteral()
          * any part of an accessor property.
          */
         AssignmentType assignType;
-        if (op == JSOP_INITPROP)
+        if (op == JSOP_INITPROP || op == JSOP_MUTATEPROTO)
             assignType = VALUE;
         else if (op == JSOP_INITPROP_GETTER)
             assignType = GET;

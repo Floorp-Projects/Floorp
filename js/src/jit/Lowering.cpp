@@ -28,6 +28,16 @@ using mozilla::DebugOnly;
 using JS::GenericNaN;
 
 bool
+LIRGenerator::visitCloneLiteral(MCloneLiteral *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    JS_ASSERT(ins->input()->type() == MIRType_Object);
+
+    LCloneLiteral *lir = new(alloc()) LCloneLiteral(useRegisterAtStart(ins->input()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
@@ -264,6 +274,16 @@ LIRGenerator::visitInitElemGetterSetter(MInitElemGetterSetter *ins)
         new(alloc()) LInitElemGetterSetter(useRegisterAtStart(ins->object()),
                                            useRegisterAtStart(ins->value()));
     if (!useBoxAtStart(lir, LInitElemGetterSetter::IdIndex, ins->idValue()))
+        return false;
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitMutateProto(MMutateProto *ins)
+{
+    LMutateProto *lir = new(alloc()) LMutateProto(useRegisterAtStart(ins->getObject()));
+    if (!useBoxAtStart(lir, LMutateProto::ValueIndex, ins->getValue()))
         return false;
 
     return add(lir, ins) && assignSafepoint(lir, ins);

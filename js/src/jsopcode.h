@@ -187,8 +187,8 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
                                  (pc)[3] = (jsbytecode)(uint32_t(i) >> 8),    \
                                  (pc)[4] = (jsbytecode)uint32_t(i))
 
-/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
-#define INDEX_LIMIT_LOG2        23
+/* Index limit is determined by SN_4BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
+#define INDEX_LIMIT_LOG2        31
 #define INDEX_LIMIT             (uint32_t(1) << INDEX_LIMIT_LOG2)
 
 #define ARGC_HI(argc)           UINT16_HI(argc)

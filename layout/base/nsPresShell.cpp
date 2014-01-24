@@ -4535,8 +4535,8 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
 
   if (needsGroup) {
     aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
-                              GFX_CONTENT_COLOR :
-                              GFX_CONTENT_COLOR_ALPHA);
+                              gfxContentType::COLOR :
+                              gfxContentType::COLOR_ALPHA);
     aThebesContext->Save();
 
     if (oldOperator != gfxContext::OPERATOR_OVER) {
@@ -4867,7 +4867,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
   nsRefPtr<gfxImageSurface> surface =
     new gfxImageSurface(gfxIntSize(pixelArea.width, pixelArea.height),
-                        gfxImageFormatARGB32);
+                        gfxImageFormat::ARGB32);
   if (surface->CairoStatus()) {
     return nullptr;
   }
@@ -5804,7 +5804,7 @@ PresShell::Paint(nsView*        aViewToPaint,
       NotifySubDocInvalidationFunc computeInvalidFunc =
         presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
       bool computeInvalidRect = computeInvalidFunc ||
-                                (layerManager->GetBackendType() == LAYERS_BASIC);
+                                (layerManager->GetBackendType() == LayersBackend::LAYERS_BASIC);
 
       nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
                                          LayerProperties::CloneFrom(layerManager->GetRoot()) : 
@@ -8858,14 +8858,14 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
 
   nsRefPtr<gfxImageSurface> imgSurface =
      new gfxImageSurface(gfxIntSize(width, height),
-                         gfxImageFormatARGB32);
+                         gfxImageFormat::ARGB32);
 
   nsRefPtr<gfxContext> imgContext = new gfxContext(imgSurface);
 
   nsRefPtr<gfxASurface> surface = 
     gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(gfxIntSize(width, height),
-      gfxASurface::ContentFromFormat(gfxImageFormatARGB32));
+      gfxASurface::ContentFromFormat(gfxImageFormat::ARGB32));
   NS_ENSURE_TRUE(surface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> context = new gfxContext(surface);

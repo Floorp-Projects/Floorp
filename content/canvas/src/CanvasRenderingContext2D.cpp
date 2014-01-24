@@ -2943,7 +2943,8 @@ CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
 }
 
 void
-CanvasRenderingContext2D::SetLineDash(const mozilla::dom::AutoSequence<double>& aSegments) {
+CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments)
+{
   FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
   dash.Clear();
 
@@ -3463,7 +3464,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   } else {
     drawSurf =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(sw), ceil(sh)),
-                                                         GFX_CONTENT_COLOR_ALPHA);
+                                                         gfxContentType::COLOR_ALPHA);
     if (!drawSurf) {
       error.Throw(NS_ERROR_FAILURE);
       return;
@@ -3900,7 +3901,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
   }
 
   nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(w, h),
-                                                          gfxImageFormatARGB32,
+                                                          gfxImageFormat::ARGB32,
                                                           false);
   if (!imgsurf || imgsurf->CairoStatus()) {
     return NS_ERROR_FAILURE;

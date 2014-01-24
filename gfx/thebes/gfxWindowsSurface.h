@@ -35,12 +35,12 @@ public:
 
     // Create a DIB surface
     gfxWindowsSurface(const gfxIntSize& size,
-                      gfxImageFormat imageFormat = gfxImageFormatRGB24);
+                      gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     // Create a DDB surface; dc may be nullptr to use the screen DC
     gfxWindowsSurface(HDC dc,
                       const gfxIntSize& size,
-                      gfxImageFormat imageFormat = gfxImageFormatRGB24);
+                      gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     gfxWindowsSurface(cairo_surface_t *csurf);
 

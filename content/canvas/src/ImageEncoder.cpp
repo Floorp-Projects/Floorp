@@ -284,7 +284,7 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     // dimensions.
     nsRefPtr<gfxImageSurface> emptyCanvas =
       new gfxImageSurface(gfxIntSize(aSize.width, aSize.height),
-                          gfxImageFormatARGB32);
+                          gfxImageFormat::ARGB32);
     if (emptyCanvas->CairoStatus()) {
       return NS_ERROR_INVALID_ARG;
     }

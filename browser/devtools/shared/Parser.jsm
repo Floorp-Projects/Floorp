@@ -9,6 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this,
   "Reflect", "resource://gre/modules/reflect.jsm");
@@ -65,7 +66,7 @@ Parser.prototype = {
         syntaxTrees.push(new SyntaxTree(nodes, aUrl, length));
       } catch (e) {
         this.errors.push(e);
-        log(aUrl, e);
+        DevToolsUtils.reportException(aUrl, e);
       }
     }
     // Generate the AST nodes for each script.
@@ -79,7 +80,7 @@ Parser.prototype = {
           syntaxTrees.push(new SyntaxTree(nodes, aUrl, length, offset));
         } catch (e) {
           this.errors.push(e);
-          log(aUrl, e);
+          DevToolsUtils.reportException(aUrl, e);
         }
       }
     }
@@ -225,7 +226,7 @@ SyntaxTreesPool.prototype = {
         // Can't guarantee that the tree traversal logic is forever perfect :)
         // Language features may be added, in which case the recursive methods
         // need to be updated. If an exception is thrown here, file a bug.
-        log("syntax tree", e);
+        DevToolsUtils.reportException("syntax tree", e);
       }
     }
     this._cache.set(requestId, results);
@@ -2339,28 +2340,6 @@ let SyntaxTreeVisitor = {
       aCallbacks.onLiteral(aNode);
     }
   }
-};
-
-/**
- * Logs a warning.
- *
- * @param string aStr
- *        The message to be displayed.
- * @param Exception aEx
- *        The thrown exception.
- */
-function log(aStr, aEx) {
-  let msg = "Warning: " + aStr + ", " + aEx.message;
-
-  if ("lineNumber" in aEx && "columnNumber" in aEx) {
-    msg += ", line: " + aEx.lineNumber + ", column: " + aEx.columnNumber;
-  }
-  if ("stack" in aEx) {
-    msg += "\n" + aEx.stack;
-  }
-
-  Cu.reportError(msg);
-  dump(msg + "\n");
 };
 
 XPCOMUtils.defineLazyGetter(Parser, "reflectionAPI", () => Reflect);

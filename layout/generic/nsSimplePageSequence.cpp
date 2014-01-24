@@ -605,7 +605,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
 
         nsRefPtr<gfxASurface> printSurface = renderingSurface->
            CreateSimilarSurface(
-             GFX_CONTENT_COLOR_ALPHA,
+             gfxContentType::COLOR_ALPHA,
              size
            );
 

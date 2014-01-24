@@ -135,7 +135,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                            aData.mCbCrStride,
                            aStride,
                            yuvtype);
-    } else // aDestFormat != gfxImageFormatRGB16_565
+    } else // aDestFormat != gfxImageFormat::RGB16_565
 #endif
       ConvertYCbCrToRGB32(aData.mYChannel, //
                           aData.mCbChannel,

@@ -103,13 +103,14 @@ jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame)
     return inspector;
 }
 
-IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp,
+IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
+                       const JitCompileOptions &options, TempAllocator *temp,
                        MIRGraph *graph, types::CompilerConstraintList *constraints,
                        BaselineInspector *inspector, CompileInfo *info,
                        const OptimizationInfo *optimizationInfo,
                        BaselineFrameInspector *baselineFrame, size_t inliningDepth,
                        uint32_t loopDepth)
-  : MIRGenerator(comp, temp, graph, info, optimizationInfo),
+  : MIRGenerator(comp, options, temp, graph, info, optimizationInfo),
     backgroundCodegen_(nullptr),
     analysisContext(analysisContext),
     baselineFrame_(baselineFrame),
@@ -1584,6 +1585,11 @@ IonBuilder::inspectOpcode(JSOp op)
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_initprop(name);
+      }
+
+      case JSOP_MUTATEPROTO:
+      {
+        return jsop_mutateproto();
       }
 
       case JSOP_INITPROP_GETTER:
@@ -3899,7 +3905,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     unlock();
 
     // Build the graph.
-    IonBuilder inlineBuilder(analysisContext, compartment, &alloc(), &graph(), constraints(),
+    IonBuilder inlineBuilder(analysisContext, compartment, options, &alloc(), &graph(), constraints(),
                              &inspector, info, &optimizationInfo(), nullptr, inliningDepth_ + 1,
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
@@ -4100,6 +4106,8 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
           case InliningDecision_Inline:
             inlineable = true;
             break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unhandled InliningDecision value!");
         }
 
         // Enforce a maximum inlined bytecode limit at the callsite.
@@ -5518,6 +5526,17 @@ IonBuilder::jsop_initelem_array()
         return false;
 
    return true;
+}
+
+bool
+IonBuilder::jsop_mutateproto()
+{
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MMutateProto *mutate = MMutateProto::New(alloc(), obj, value);
+    current->add(mutate);
+    return resumeAfter(mutate);
 }
 
 bool
@@ -9103,6 +9122,14 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
 bool
 IonBuilder::jsop_object(JSObject *obj)
 {
+    if (options.cloneSingletons()) {
+        MCloneLiteral *clone = MCloneLiteral::New(alloc(), constant(ObjectValue(*obj)));
+        current->add(clone);
+        current->push(clone);
+        return resumeAfter(clone);
+    }
+
+    compartment->setSingletonsAsValues();
     pushConstant(ObjectValue(*obj));
     return true;
 }
