@@ -96,6 +96,8 @@ protected:
   void UpdateThumbnailSize();
   void SetPictureSize(uint32_t aWidth, uint32_t aHeight);
 
+  int32_t RationalizeRotation(int32_t aRotation);
+
   android::sp<android::GonkCameraHardware> mCameraHw;
   double                    mExposureCompensationMin;
   double                    mExposureCompensationStep;

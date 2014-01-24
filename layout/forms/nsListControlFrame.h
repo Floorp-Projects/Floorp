@@ -445,6 +445,27 @@ private:
   // for incremental typing navigation
   static nsAString& GetIncrementalString ();
   static DOMTimeStamp gLastKeyTime;
+
+  class MOZ_STACK_CLASS AutoIncrementalSearchResetter
+  {
+  public:
+    AutoIncrementalSearchResetter() :
+      mCancelled(false)
+    {
+    }
+    ~AutoIncrementalSearchResetter()
+    {
+      if (!mCancelled) {
+        nsListControlFrame::GetIncrementalString().Truncate();
+      }
+    }
+    void Cancel()
+    {
+      mCancelled = true;
+    }
+  private:
+    bool mCancelled;
+  };
 };
 
 #endif /* nsListControlFrame_h___ */

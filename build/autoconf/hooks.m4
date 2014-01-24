@@ -34,7 +34,7 @@ if test -d "$1"; then
     (cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL")
 fi
 $2
-(cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py adjust)
+(cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)
 ])
 
 define([AC_OUTPUT_SUBDIRS],

@@ -140,7 +140,7 @@ static bool gTouchActionPropertyEnabled = false;
  * accidentally processing taps as touch moves, and from very short/accidental
  * touches moving the screen.
  */
-static float gTouchStartTolerance = 1.0f/2.0f;
+static float gTouchStartTolerance = 1.0f/4.5f;
 
 /**
  * Default touch behavior (is used when not touch behavior is set).

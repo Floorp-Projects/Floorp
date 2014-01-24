@@ -18,6 +18,14 @@ class File(object):
         stat = os.stat(path)
         self._times = (stat.st_atime, stat.st_mtime)
 
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def mtime(self):
+        return self._times[1]
+
     def update_time(self):
         '''If the file hasn't changed since the instance was created,
            restore its old modification time.'''
@@ -97,7 +105,7 @@ def dump(dump_file, shell):
         pickle.dump(config_files, f)
 
 
-def adjust(dump_file):
+def adjust(dump_file, configure):
     if not os.path.exists(dump_file):
         return
 
@@ -110,6 +118,11 @@ def adjust(dump_file):
         pass
 
     for f in config_files:
+        # Still touch config.status if configure is newer than its original
+        # mtime.
+        if configure and os.path.basename(f.path) == 'config.status' and \
+                os.path.getmtime(configure) > f.mtime:
+            continue
         f.update_time()
 
     os.remove(dump_file)
@@ -121,4 +134,4 @@ if __name__ == '__main__':
     if sys.argv[1] == 'dump':
         dump(CONFIG_DUMP, sys.argv[2])
     elif sys.argv[1] == 'adjust':
-        adjust(CONFIG_DUMP)
+        adjust(CONFIG_DUMP, sys.argv[2] if len(sys.argv) > 2 else None)
