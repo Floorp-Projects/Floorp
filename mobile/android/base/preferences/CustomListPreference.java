@@ -80,8 +80,12 @@ public abstract class CustomListPreference extends Preference implements View.On
     protected abstract int getPreferenceLayoutResource();
 
     /**
-     * Set whether this object's UI should display this as the default item. To ensure proper ordering,
-     * this method should only be called after this Preference is added to the PreferenceCategory.
+     * Set whether this object's UI should display this as the default item.
+     * Note: This must be called from the UI thread because it touches the view hierarchy.
+     *
+     * To ensure proper ordering, this method should only be called after this Preference
+     * is added to the PreferenceCategory.
+     *
      * @param isDefault Flag indicating if this represents the default list item.
      */
     public void setIsDefault(boolean isDefault) {
