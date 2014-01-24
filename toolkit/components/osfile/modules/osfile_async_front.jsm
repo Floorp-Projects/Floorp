@@ -58,39 +58,42 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 
-// If profileDir is not available, osfile.jsm has been imported before the
-// profile is setup. In this case, make this a lazy getter.
-if (!("profileDir" in SharedAll.Constants.Path)) {
-  Object.defineProperty(SharedAll.Constants.Path, "profileDir", {
-    get: function() {
-      let path = undefined;
-      try {
-        path = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-        delete SharedAll.Constants.Path.profileDir;
-        SharedAll.Constants.Path.profileDir = path;
-      } catch (ex) {
-        // Ignore errors: profileDir is still not available
-      }
-      return path;
+// It's possible for osfile.jsm to get imported before the profile is
+// set up. In this case, some path constants aren't yet available.
+// Here, we make them lazy loaders.
+
+function lazyPathGetter(constProp, dirKey) {
+  return function () {
+    let path;
+    try {
+      path = Services.dirsvc.get(dirKey, Ci.nsIFile).path;
+      delete SharedAll.Constants.Path[constProp];
+      SharedAll.Constants.Path[constProp] = path;
+    } catch (ex) {
+      // Ignore errors if the value still isn't available. Hopefully
+      // the next access will return it.
     }
-  });
+
+    return path;
+  }
 }
 
-LOG("Checking localProfileDir");
+for (let [constProp, dirKey] of [
+  ["localProfileDir", "ProfLD"],
+  ["profileDir", "ProfD"],
+  ["userApplicationDataDir", "UAppData"],
+  ["winAppDataDir", "AppData"],
+  ["winStartMenuProgsDir", "Progs"],
+  ]) {
 
-if (!("localProfileDir" in SharedAll.Constants.Path)) {
-  Object.defineProperty(SharedAll.Constants.Path, "localProfileDir", {
-    get: function() {
-      let path = undefined;
-      try {
-        path = Services.dirsvc.get("ProfLD", Ci.nsIFile).path;
-        delete SharedAll.Constants.Path.localProfileDir;
-        SharedAll.Constants.Path.localProfileDir = path;
-      } catch (ex) {
-        // Ignore errors: localProfileDir is still not available
-      }
-      return path;
-    }
+  if (constProp in SharedAll.Constants.Path) {
+    continue;
+  }
+
+  LOG("Installing lazy getter for OS.Constants.Path." + constProp +
+      " because it isn't defined and profile may not be loaded.");
+  Object.defineProperty(SharedAll.Constants.Path, constProp, {
+    get: lazyPathGetter(constProp, dirKey),
   });
 }
 
