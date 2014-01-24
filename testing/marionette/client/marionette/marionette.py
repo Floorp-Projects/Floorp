@@ -882,12 +882,34 @@ class Marionette(object):
         return response
 
     def navigate(self, url):
-        '''
-        Causes the browser to navigate to the specified url.
+        """Navigate to to given URL.
+
+        This will follow redirects issued by the server.  When the
+        method returns is based on the page load strategy that the
+        user has selected.
+
+        Documents that contain a META tag with the "http-equiv"
+        attribute set to "refresh" will return if the timeout is
+        greater than 1 second and the other criteria for determining
+        whether a page is loaded are met.  When the refresh period is
+        1 second or less and the page load strategy is "normal" or
+        "conservative", it will wait for the page to complete loading
+        before returning.
+
+        If any modal dialog box, such as those opened on
+        window.onbeforeunload or window.alert, is opened at any point
+        in the page load, it will return immediately.
+
+        If a 401 response is seen by the browser, it will return
+        immediately.  That is, if BASIC, DIGEST, NTLM or similar
+        authentication is required, the page load is assumed to be
+        complete.  This does not include FORM-based authentication.
 
         :param url: The url to navigate to.
-        '''
-        response = self._send_message('goUrl', 'ok', url=url)
+
+        """
+
+        response = self._send_message("get", "ok", url=url)
         return response
 
     def timeouts(self, timeout_type, ms):
