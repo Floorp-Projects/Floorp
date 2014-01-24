@@ -8,10 +8,9 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-
-#include "vm/Opcodes.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"

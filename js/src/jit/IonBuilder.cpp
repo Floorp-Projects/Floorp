@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsautooplen.h"
+
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
 #include "builtin/TypeRepresentation.h"
@@ -20,8 +22,8 @@
 #include "jit/IonSpewer.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
+
 #include "vm/ArgumentsObject.h"
-#include "vm/Opcodes.h"
 #include "vm/RegExpStatics.h"
 
 #include "jsinferinlines.h"
