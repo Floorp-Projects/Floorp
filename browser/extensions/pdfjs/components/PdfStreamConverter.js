@@ -377,19 +377,11 @@ ChromeActions.prototype = {
         break;
     }
   },
-  fallback: function(args, sendResponse) {
-    var featureId = args.featureId;
-    var url = args.url;
-
+  fallback: function(url, sendResponse) {
     var self = this;
     var domWindow = this.domWindow;
     var strings = getLocalizedStrings('chrome.properties');
-    var message;
-    if (featureId === 'forms') {
-      message = getLocalizedString(strings, 'unsupported_feature_forms');
-    } else {
-      message = getLocalizedString(strings, 'unsupported_feature');
-    }
+    var message = getLocalizedString(strings, 'unsupported_feature');
 
     PdfJsTelemetry.onFallback();
 

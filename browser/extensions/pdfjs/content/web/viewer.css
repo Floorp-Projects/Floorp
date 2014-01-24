@@ -20,7 +20,7 @@
 
 html {
   height: 100%;
-  /* Font size is needed to make the activity bar the correct size. */
+  /* Font size is needed to make the activity bar the corect size. */
   font-size: 10px;
 }
 
@@ -47,7 +47,8 @@ select {
 #viewerContainer:-moz-full-screen {
   top: 0px;
   border-top: 2px solid transparent;
-  background-color: #000;
+  background-color: #404040;
+  background-image: url(images/texture.png);
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -57,7 +58,8 @@ select {
 #viewerContainer:fullscreen {
   top: 0px;
   border-top: 2px solid transparent;
-  background-color: #000;
+  background-color: #404040;
+  background-image: url(images/texture.png);
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -180,31 +182,26 @@ html[dir='rtl'] #outerContainer.sidebarOpen > #mainContainer {
   overflow: auto;
   position: absolute;
   width: 200px;
+
   background-color: hsla(0,0%,0%,.1);
+  box-shadow: inset -1px 0 0 hsla(0,0%,0%,.25);
 }
 html[dir='ltr'] #sidebarContent {
   left: 0;
-  box-shadow: inset -1px 0 0 hsla(0,0%,0%,.25);
 }
 html[dir='rtl'] #sidebarContent {
   right: 0;
-  box-shadow: inset 1px 0 0 hsla(0,0%,0%,.25);
 }
 
 #viewerContainer {
   overflow: auto;
+  box-shadow: inset 1px 0 0 hsla(0,0%,100%,.05);
   position: absolute;
   top: 32px;
   right: 0;
   bottom: 0;
   left: 0;
   outline: none;
-}
-html[dir='ltr'] #viewerContainer {
-  box-shadow: inset 1px 0 0 hsla(0,0%,100%,.05);
-}
-html[dir='rtl'] #viewerContainer {
-  box-shadow: inset -1px 0 0 hsla(0,0%,100%,.05);
 }
 
 .toolbar {
@@ -225,16 +222,9 @@ html[dir='rtl'] #viewerContainer {
   background-color: #424242; /* fallback */
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
-}
-html[dir='ltr'] #toolbarSidebar {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25),
+
               inset 0 -1px 0 hsla(0,0%,100%,.05),
-              0 1px 0 hsla(0,0%,0%,.15),
-              0 0 1px hsla(0,0%,0%,.1);
-}
-html[dir='rtl'] #toolbarSidebar {
-  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.25),
-              inset 0 1px 0 hsla(0,0%,100%,.05),
               0 1px 0 hsla(0,0%,0%,.15),
               0 0 1px hsla(0,0%,0%,.1);
 }
@@ -245,16 +235,7 @@ html[dir='rtl'] #toolbarSidebar {
   background-color: #474747; /* fallback */
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-}
-html[dir='ltr'] #toolbarContainer, .findbar, .secondaryToolbar {
   box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
-              inset 0 1px 1px hsla(0,0%,0%,.15),
-              inset 0 -1px 0 hsla(0,0%,100%,.05),
-              0 1px 0 hsla(0,0%,0%,.15),
-              0 1px 1px hsla(0,0%,0%,.1);
-}
-html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
-  box-shadow: inset -1px 0 0 hsla(0,0%,100%,.08),
               inset 0 1px 1px hsla(0,0%,0%,.15),
               inset 0 -1px 0 hsla(0,0%,100%,.05),
               0 1px 0 hsla(0,0%,0%,.15),
@@ -521,7 +502,7 @@ html[dir='rtl'] .splitToolbarButton > .toolbarButton {
 .splitToolbarButton > .toolbarButton:hover,
 .splitToolbarButton > .toolbarButton:focus,
 .dropdownToolbarButton:hover,
-.overlayButton:hover,
+.promptButton:hover,
 .toolbarButton.textButton:hover,
 .toolbarButton.textButton:focus {
   background-color: hsla(0,0%,0%,.2);
@@ -575,7 +556,7 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
 
 .toolbarButton,
 .dropdownToolbarButton,
-.overlayButton,
+.promptButton,
 .secondaryToolbarButton {
   min-width: 16px;
   padding: 2px 6px 0;
@@ -593,12 +574,12 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
 }
 
 html[dir='ltr'] .toolbarButton,
-html[dir='ltr'] .overlayButton,
+html[dir='ltr'] .promptButton,
 html[dir='ltr'] .dropdownToolbarButton {
   margin: 3px 2px 4px 0;
 }
 html[dir='rtl'] .toolbarButton,
-html[dir='rtl'] .overlayButton,
+html[dir='rtl'] .promptButton,
 html[dir='rtl'] .dropdownToolbarButton {
   margin: 3px 0 4px 2px;
 }
@@ -606,7 +587,7 @@ html[dir='rtl'] .dropdownToolbarButton {
 .toolbarButton:hover,
 .toolbarButton:focus,
 .dropdownToolbarButton,
-.overlayButton,
+.promptButton,
 .secondaryToolbarButton:hover,
 .secondaryToolbarButton:focus {
   background-color: hsla(0,0%,0%,.12);
@@ -620,7 +601,7 @@ html[dir='rtl'] .dropdownToolbarButton {
 }
 
 .toolbarButton:hover:active,
-.overlayButton:hover:active,
+.promptButton:hover:active,
 .dropdownToolbarButton:hover:active,
 .secondaryToolbarButton:hover:active {
   background-color: hsla(0,0%,0%,.2);
@@ -687,7 +668,7 @@ html[dir='rtl'] .dropdownToolbarButton {
   background: hsl(0,0%,24%);
 }
 
-.overlayButton {
+.promptButton {
   margin: 3px 2px 4px 5px !important;
   line-height: 16px;
   padding: 2px 6px 3px 6px;
@@ -919,14 +900,6 @@ html[dir="rtl"] .secondaryToolbarButton > span {
   content: url(images/secondaryToolbarButton-rotateCw.png);
 }
 
-.secondaryToolbarButton.handTool::before {
-  content: url(images/secondaryToolbarButton-handTool.png);
-}
-
-.secondaryToolbarButton.documentProperties::before {
-  content: url(images/secondaryToolbarButton-documentProperties.png);
-}
-
 .verticalToolbarSeparator {
   display: block;
   padding: 8px 0;
@@ -1143,6 +1116,22 @@ html[dir='rtl'] .outlineItem > a {
   cursor: default;
 }
 
+#findScrollView {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  width: 280px;
+}
+
+#sidebarControls {
+  position:absolute;
+  width: 180px;
+  height: 32px;
+  left: 15px;
+  bottom: 35px;
+}
+
 .canvasWrapper {
   overflow: hidden;
 }
@@ -1346,73 +1335,6 @@ canvas {
   border-color: hsla(0,0%,0%,.32) hsla(0,0%,0%,.38) hsla(0,0%,0%,.42);
 }
 
-#documentPropertiesContainer {
-  display: table-cell;
-  vertical-align: middle;
-  text-align: center;
-}
-
-#documentPropertiesContainer > * {
-  display: inline-block;
-  padding: 15px;
-  border-spacing: 4px;
-  max-width: 350px;
-  max-height: 350px;
-  color: hsl(0,0%,85%);
-  font-size: 12px;
-  line-height: 14px;
-  text-align: left;
-  cursor: default;
-  background-color: #474747; /* fallback */
-  background-image: url(images/texture.png),
-                    linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-  box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
-              inset 0 1px 1px hsla(0,0%,0%,.15),
-              inset 0 -1px 0 hsla(0,0%,100%,.05),
-              0 1px 0 hsla(0,0%,0%,.15),
-              0 1px 1px hsla(0,0%,0%,.1);
-}
-
-#documentPropertiesContainer .separator {
-  display: block; 
-  margin: 4px 0 4px 0;
-  height: 1px;
-  width: 100%;
-  background-color: hsla(0,0%,0%,.5);
-  box-shadow: 0 0 0 1px hsla(0,0%,100%,.08);
-}
-
-#documentPropertiesContainer .row {
-  display: table-row;
-}
-
-html[dir='ltr'] #documentPropertiesContainer .row > * {
-  display: table-cell;
-  min-width: 100px;
-}
-
-html[dir='rtl'] #documentPropertiesContainer .row > * {
-  display: table-cell;
-  min-width: 100px;
-  text-align: right;
-}
-
-#documentPropertiesContainer .row span {
-  width: 125px;
-  word-wrap: break-word;
-}
-
-#documentPropertiesContainer .row p {
-  max-width: 225px;
-  word-wrap: break-word;
-}
-
-#documentPropertiesContainer .buttonRow {
-  margin-top: 10px;
-  text-align: center;
-  vertical-align: middle;
-}
-
 .clearBoth {
   clear: both;
 }
@@ -1421,10 +1343,6 @@ html[dir='rtl'] #documentPropertiesContainer .row > * {
   background: white;
   color: black;
   margin-top: 5px;
-  visibility: hidden;
-  position: fixed;
-  right: 0;
-  top: 0;
 }
 
 #PDFBug {
@@ -1484,30 +1402,6 @@ html[dir='rtl'] #documentPropertiesContainer .row > * {
 #viewer.textLayer-shadow .textLayer > div {
   background-color: rgba(255,255,255, .6);
   color: black;
-}
-
-.grab-to-pan-grab * {
-  cursor: url("images/grab.cur"), move !important;
-  cursor: -moz-grab !important;
-  cursor: grab !important;
-}
-.grab-to-pan-grabbing,
-.grab-to-pan-grabbing * {
-  cursor: url("images/grabbing.cur"), move !important;
-  cursor: -moz-grabbing !important;
-  cursor: grabbing !important;
-}
-.grab-to-pan-grab input,
-.grab-to-pan-grab textarea,
-.grab-to-pan-grab button,
-.grab-to-pan-grab button *,
-.grab-to-pan-grab select,
-.grab-to-pan-grab option {
-  cursor: auto !important;
-}
-.grab-to-pan-grab a[href],
-.grab-to-pan-grab a[href] * {
-  cursor: pointer !important;
 }
 
 @page {
