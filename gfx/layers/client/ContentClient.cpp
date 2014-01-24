@@ -656,7 +656,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
   if (isClippingCheap) {
     destDT->PopClip();
   }
-  ReturnDrawTarget(destDT);
+  ReturnDrawTargetToBuffer(destDT);
 
   if (aSource.HaveBufferOnWhite()) {
     MOZ_ASSERT(HaveBufferOnWhite());
@@ -675,7 +675,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     if (isClippingCheap) {
       destDT->PopClip();
     }
-    ReturnDrawTarget(destDT);
+    ReturnDrawTargetToBuffer(destDT);
   }
 }
 
@@ -895,7 +895,7 @@ DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer
   if (isClippingCheap) {
     destDT->PopClip();
   }
-  ReturnDrawTarget(destDT);
+  ReturnDrawTargetToBuffer(destDT);
 
   if (aSource.HaveBufferOnWhite()) {
     MOZ_ASSERT(HaveBufferOnWhite());
@@ -914,7 +914,7 @@ DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer
     if (isClippingCheap) {
       destDT->PopClip();
     }
-    ReturnDrawTarget(destDT);
+    ReturnDrawTargetToBuffer(destDT);
   }
 }
 
