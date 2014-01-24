@@ -256,7 +256,7 @@ let SessionSaverInternal = {
    * Write the given state object to disk.
    */
   _writeState: function (state) {
-    stopWatchStart("SERIALIZE_DATA_MS", "SERIALIZE_DATA_LONGEST_OP_MS");
+    stopWatchStart("SERIALIZE_DATA_MS", "SERIALIZE_DATA_LONGEST_OP_MS", "WRITE_STATE_LONGEST_OP_MS");
     let data = JSON.stringify(state);
     stopWatchFinish("SERIALIZE_DATA_MS", "SERIALIZE_DATA_LONGEST_OP_MS");
 
@@ -265,6 +265,7 @@ let SessionSaverInternal = {
 
     // Don't touch the file if an observer has deleted all state data.
     if (!data) {
+      stopWatchCancel("WRITE_STATE_LONGEST_OP_MS");
       return Promise.resolve();
     }
 
@@ -277,7 +278,11 @@ let SessionSaverInternal = {
     // Write (atomically) to a session file, using a tmp file. Once the session
     // file is successfully updated, save the time stamp of the last save and
     // notify the observers.
-    return SessionFile.write(data).then(() => {
+    stopWatchStart("SEND_SERIALIZED_STATE_LONGEST_OP_MS");
+    let promise = SessionFile.write(data);
+    stopWatchFinish("WRITE_STATE_LONGEST_OP_MS",
+                    "SEND_SERIALIZED_STATE_LONGEST_OP_MS");
+    promise.then(() => {
       this.updateLastSaveTime();
       notify(null, "sessionstore-state-write-complete");
     }, console.error);
