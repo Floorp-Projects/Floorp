@@ -104,7 +104,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
 
   mSurface = gfxPlatform::GetPlatform()
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
-                                      gfxASurface::ContentFromFormat(gfxImageFormatARGB32));
+                                      gfxASurface::ContentFromFormat(gfxImageFormat::ARGB32));
 
   mIMEComposing = false;
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);
@@ -317,7 +317,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
     // The backend hint is a temporary placeholder until Azure, when
     // all content-process layer managers will be BasicLayerManagers.
 #if defined(MOZ_ENABLE_D3D10_LAYER)
-    if (mozilla::layers::LAYERS_D3D10 == aBackendHint) {
+    if (mozilla::layers::LayersBackend::LAYERS_D3D10 == aBackendHint) {
       nsRefPtr<LayerManagerD3D10> m = new LayerManagerD3D10(this);
       m->AsShadowForwarder()->SetShadowManager(aShadowManager);
       if (m->Initialize()) {
@@ -613,9 +613,9 @@ PuppetWidget::Paint()
                          nsAutoCString("PuppetWidget"), 0);
 #endif
 
-    if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
+    if (mozilla::layers::LayersBackend::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
       mAttachedWidgetListener->PaintWindow(this, region);
-    } else if (mozilla::layers::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
+    } else if (mozilla::layers::LayersBackend::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
       // Do nothing, the compositor will handle drawing
       if (mTabChild) {
         mTabChild->NotifyPainted();
@@ -625,7 +625,7 @@ PuppetWidget::Paint()
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
-                                              BUFFER_NONE);
+                                              BufferMode::BUFFER_NONE);
       mAttachedWidgetListener->PaintWindow(this, region);
       if (mTabChild) {
         mTabChild->NotifyPainted();

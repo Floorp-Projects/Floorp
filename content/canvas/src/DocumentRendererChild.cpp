@@ -76,7 +76,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
         new gfxImageSurface(reinterpret_cast<uint8_t*>(data.BeginWriting()),
                             gfxIntSize(renderSize.width, renderSize.height),
                             4 * renderSize.width,
-                            gfxImageFormatARGB32);
+                            gfxImageFormat::ARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
 

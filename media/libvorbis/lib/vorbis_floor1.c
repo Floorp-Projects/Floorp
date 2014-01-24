@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: floor backend 1 implementation
- last mod: $Id: floor1.c 18151 2012-01-20 07:35:26Z xiphmont $
+ last mod: $Id: floor1.c 19031 2013-12-03 19:20:50Z tterribe $
 
  ********************************************************************/
 
@@ -202,6 +202,8 @@ static vorbis_look_floor *floor1_look(vorbis_dsp_state *vd,
   vorbis_info_floor1 *info=(vorbis_info_floor1 *)in;
   vorbis_look_floor1 *look=_ogg_calloc(1,sizeof(*look));
   int i,j,n=0;
+
+  (void)vd;
 
   look->vi=info;
   look->n=info->postlist[1];

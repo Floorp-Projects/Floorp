@@ -302,7 +302,7 @@ nsSVGFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   nsRefPtr<gfxContext> ctx;
   if (aTargetSurface) {
     offscreenSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
-      neededRect.Size(), GFX_CONTENT_COLOR_ALPHA);
+      neededRect.Size(), gfxContentType::COLOR_ALPHA);
     if (!offscreenSurface || offscreenSurface->CairoStatus()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -389,7 +389,7 @@ nsSVGFilterInstance::BuildSourceImage(gfxASurface* aTargetSurface,
   nsRefPtr<gfxContext> ctx;
   if (aTargetSurface) {
     offscreenSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
-      neededRect.Size(), GFX_CONTENT_COLOR_ALPHA);
+      neededRect.Size(), gfxContentType::COLOR_ALPHA);
     if (!offscreenSurface || offscreenSurface->CairoStatus()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -471,7 +471,7 @@ nsSVGFilterInstance::Render(gfxContext* aContext)
   if (aContext->IsCairo()) {
     resultImage =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(filterRect.Size(),
-                                                         GFX_CONTENT_COLOR_ALPHA);
+                                                         gfxContentType::COLOR_ALPHA);
     if (!resultImage || resultImage->CairoStatus())
       return NS_ERROR_OUT_OF_MEMORY;
 

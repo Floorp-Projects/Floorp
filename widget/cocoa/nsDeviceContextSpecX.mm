@@ -156,7 +156,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
         CGContextScaleCTM(context, 1.0, -1.0);
         newSurface = new gfxQuartzSurface(context, gfxSize(width, height), true);
     } else {
-        newSurface = new gfxQuartzSurface(gfxSize((int32_t)width, (int32_t)height), gfxImageFormatARGB32, true);
+        newSurface = new gfxQuartzSurface(gfxSize((int32_t)width, (int32_t)height), gfxImageFormat::ARGB32, true);
     }
 
     if (!newSurface)

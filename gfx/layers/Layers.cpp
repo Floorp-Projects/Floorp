@@ -123,7 +123,7 @@ LayerManager::CreateOptimalSurface(const gfx::IntSize &aSize,
 already_AddRefed<gfxASurface>
 LayerManager::CreateOptimalMaskSurface(const gfx::IntSize &aSize)
 {
-  return CreateOptimalSurface(aSize, gfxImageFormatA8);
+  return CreateOptimalSurface(aSize, gfxImageFormat::A8);
 }
 
 TemporaryRef<DrawTarget>
@@ -1533,7 +1533,7 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 
   bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-  if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
+  if (surface->GetContentType() != gfxContentType::COLOR_ALPHA) {
     // Destination doesn't have alpha channel; no need to set any special flags
     surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
     return;
