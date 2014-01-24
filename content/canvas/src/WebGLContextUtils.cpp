@@ -23,6 +23,25 @@
 
 using namespace mozilla;
 
+namespace mozilla {
+
+bool
+IsGLDepthFormat(GLenum internalFormat)
+{
+    return (internalFormat == LOCAL_GL_DEPTH_COMPONENT ||
+            internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
+            internalFormat == LOCAL_GL_DEPTH_COMPONENT32);
+}
+
+bool
+IsGLDepthStencilFormat(GLenum internalFormat)
+{
+    return (internalFormat == LOCAL_GL_DEPTH_STENCIL ||
+            internalFormat == LOCAL_GL_DEPTH24_STENCIL8);
+}
+
+} // namespace mozilla
+
 void
 WebGLContext::GenerateWarning(const char *fmt, ...)
 {
@@ -197,16 +216,7 @@ WebGLContext::ErrorName(GLenum error)
 bool
 WebGLContext::IsTextureFormatCompressed(GLenum format)
 {
-    switch(format) {
-        case LOCAL_GL_RGB:
-        case LOCAL_GL_RGBA:
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
-        case LOCAL_GL_LUMINANCE_ALPHA:
-        case LOCAL_GL_DEPTH_COMPONENT:
-        case LOCAL_GL_DEPTH_STENCIL:
-            return false;
-
+    switch (format) {
         case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
@@ -219,10 +229,9 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
         case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
         case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
             return true;
+        default:
+            return false;
     }
-
-    MOZ_ASSERT(false, "Invalid WebGL texture format?");
-    return false;
 }
 
 void
