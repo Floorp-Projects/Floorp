@@ -254,7 +254,54 @@ var tests = [
         is(panel.getOuterScreenRect().top, 245, testname + "top");
       }
     }
-  }
+  },
+  {
+    // The panel should be allowed to appear and remain offscreen
+    testname: "normal panel with flip='none' off-screen",
+    attrs: { "flip": "none" },
+    test: function(panel) {
+      panel.openPopup(document.documentElement, "", -100 - mozInnerScreenX, -100 - mozInnerScreenY, false, false, null);
+    },
+    result: function(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, -100 - mozInnerScreenX, testname + "left");
+      is(panelrect.top, -100 - mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, -100, testname + " screen left");
+      is(screenRect.top, -100, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
+  {
+    // The panel should be allowed to remain offscreen after moving and it should follow the anchor
+    testname: "normal panel with flip='none' moved off-screen",
+    attrs: { "flip": "none" },
+    test: function(panel) {
+      panel.openPopup(document.documentElement, "", -100 - mozInnerScreenX, -100 - mozInnerScreenY, false, false, null);
+      window.moveBy(-50, -50);
+    },
+    result: function(testname, panel) {
+      if (navigator.platform.indexOf("Linux") >= 0) {
+        // The window position doesn't get updated immediately on Linux.
+        return;
+      }
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, -150 - mozInnerScreenX, testname + "left");
+      is(panelrect.top, -150 - mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, -150, testname + " screen left");
+      is(screenRect.top, -150, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
+    }
+  },
 ];
 
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(test_panels, window);
