@@ -479,7 +479,6 @@ let CustomizableUIInternal = {
         this.ensureButtonContextMenu(node, aAreaNode);
         if (node.localName == "toolbarbutton") {
           if (aArea == CustomizableUI.AREA_PANEL) {
-            node.setAttribute("tabindex", "0");
             node.setAttribute("wrap", "true");
           } else {
             node.removeAttribute("wrap");
@@ -659,7 +658,6 @@ let CustomizableUIInternal = {
         continue;
       }
       this.ensureButtonContextMenu(child, aPanel);
-      child.setAttribute("tabindex", "0");
       child.setAttribute("wrap", "true");
     }
 
@@ -705,7 +703,6 @@ let CustomizableUIInternal = {
       // We remove location attributes here to make sure they're gone too when a
       // widget is removed from a toolbar to the palette. See bug 930950.
       this.removeLocationAttributes(widgetNode);
-      widgetNode.removeAttribute("tabindex");
       widgetNode.removeAttribute("wrap");
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
@@ -858,7 +855,6 @@ let CustomizableUIInternal = {
     if (isNew) {
       this.ensureButtonContextMenu(widgetNode, aAreaNode);
       if (widgetNode.localName == "toolbarbutton" && areaId == CustomizableUI.AREA_PANEL) {
-        widgetNode.setAttribute("tabindex", "0");
         widgetNode.setAttribute("wrap", "true");
       }
     }
