@@ -391,7 +391,6 @@ protected:
   gfx::DrawTarget*
   BorrowDrawTargetForQuadrantUpdate(const nsIntRect& aBounds,
                                     ContextSource aSource);
-  void ReturnDrawTarget(gfx::DrawTarget* aReturned);
 
   static bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
 
