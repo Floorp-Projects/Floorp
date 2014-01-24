@@ -99,14 +99,14 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 
-  if (mSurface && mSurface->GetType() == gfxSurfaceTypeD2D) {
+  if (mSurface && mSurface->GetType() == gfxSurfaceType::D2D) {
     void *data = mSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       mTexture = static_cast<ID3D10Texture2D*>(data);
       mIsD2DTexture = true;
       device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
       mHasAlpha =
-        mSurface->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
+        mSurface->GetContentType() == gfxContentType::COLOR_ALPHA;
       return;
     }
   }
@@ -208,7 +208,7 @@ CanvasLayerD3D10::UpdateSurface()
     dstSurface = new gfxImageSurface((unsigned char*)map.pData,
                                      gfxIntSize(mBounds.width, mBounds.height),
                                      map.RowPitch,
-                                     gfxImageFormatARGB32);
+                                     gfxImageFormat::ARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(dstSurface);
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctx->SetSource(mSurface);

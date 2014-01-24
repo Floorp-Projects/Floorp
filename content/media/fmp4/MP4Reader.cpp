@@ -81,7 +81,7 @@ private:
 
 MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
-    mLayersBackendType(layers::LAYERS_NONE),
+    mLayersBackendType(layers::LayersBackend::LAYERS_NONE),
     mHasAudio(false),
     mHasVideo(false)
 {

@@ -26,7 +26,7 @@ CompositorD3D9::CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget)
   , mWidget(aWidget)
   , mDeviceResetCount(0)
 {
-  sBackend = LAYERS_D3D9;
+  sBackend = LayersBackend::LAYERS_D3D9;
 }
 
 CompositorD3D9::~CompositorD3D9()
@@ -63,7 +63,7 @@ CompositorD3D9::GetTextureFactoryIdentifier()
 {
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
-  ident.mParentBackend = LAYERS_D3D9;
+  ident.mParentBackend = LayersBackend::LAYERS_D3D9;
   ident.mParentProcessId = XRE_GetProcessType();
   return ident;
 }

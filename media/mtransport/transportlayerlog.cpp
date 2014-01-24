@@ -20,7 +20,7 @@ void TransportLayerLogging::WasInserted() {
         this, &TransportLayerLogging::StateChange);
     downward_->SignalPacketReceived.connect(
         this, &TransportLayerLogging::PacketReceived);
-    SetState(downward_->state());
+    TL_SET_STATE(downward_->state());
   }
 }
 
@@ -39,7 +39,7 @@ TransportLayerLogging::SendPacket(const unsigned char *data, size_t len) {
 void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Received StateChange to " << state);
 
-  SetState(state);
+  TL_SET_STATE(state);
 }
 
 void TransportLayerLogging::PacketReceived(TransportLayer* layer,

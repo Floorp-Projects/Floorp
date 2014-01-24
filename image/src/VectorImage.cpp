@@ -677,7 +677,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
   gfxIntSize surfaceSize(imageIntSize.width, imageIntSize.height);
 
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(surfaceSize, gfxImageFormatARGB32);
+    new gfxImageSurface(surfaceSize, gfxImageFormat::ARGB32);
   nsRefPtr<gfxContext> context = new gfxContext(surface);
 
   // Draw to our surface!
@@ -865,7 +865,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   gfxUtils::DrawPixelSnapped(ctx, svgDrawable, gfxMatrix(),
                              aParams.imageRect, aParams.imageRect,
                              aParams.imageRect, aParams.imageRect,
-                             gfxImageFormatARGB32,
+                             gfxImageFormat::ARGB32,
                              GraphicsFilter::FILTER_NEAREST, aParams.flags);
 
   // Attempt to cache the resulting surface.
@@ -891,7 +891,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.userSpaceToImageSpace,
                              aParams.subimage, aParams.sourceRect,
                              aParams.imageRect, aParams.fill,
-                             gfxImageFormatARGB32,
+                             gfxImageFormat::ARGB32,
                              aParams.filter, aParams.flags);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");

@@ -10,6 +10,8 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
+#include "mozilla/Atomics.h"
+
 #include <stdarg.h>
 
 #include "jscntxt.h"
@@ -145,7 +147,7 @@ class MIRGenerator
     uint32_t nslots_;
     MIRGraph *graph_;
     bool error_;
-    size_t cancelBuild_;
+    mozilla::Atomic<uint32_t, mozilla::Relaxed> cancelBuild_;
 
     uint32_t maxAsmJSStackArgBytes_;
     bool performsAsmJSCall_;

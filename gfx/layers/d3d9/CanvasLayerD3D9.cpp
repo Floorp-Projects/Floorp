@@ -132,18 +132,18 @@ CanvasLayerD3D9::UpdateSurface()
 
     nsRefPtr<gfxImageSurface> sourceSurface;
 
-    if (mSurface->GetType() == gfxSurfaceTypeWin32) {
+    if (mSurface->GetType() == gfxSurfaceType::Win32) {
       sourceSurface = mSurface->GetAsImageSurface();
-    } else if (mSurface->GetType() == gfxSurfaceTypeImage) {
+    } else if (mSurface->GetType() == gfxSurfaceType::Image) {
       sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
-      if (sourceSurface->Format() != gfxImageFormatARGB32 &&
-          sourceSurface->Format() != gfxImageFormatRGB24)
+      if (sourceSurface->Format() != gfxImageFormat::ARGB32 &&
+          sourceSurface->Format() != gfxImageFormat::RGB24)
       {
         return;
       }
     } else {
       sourceSurface = new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                                          gfxImageFormatARGB32);
+                                          gfxImageFormat::ARGB32);
       nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
       ctx->SetSource(mSurface);
@@ -153,7 +153,7 @@ CanvasLayerD3D9::UpdateSurface()
     uint8_t *startBits = sourceSurface->Data();
     uint32_t sourceStride = sourceSurface->Stride();
 
-    if (sourceSurface->Format() != gfxImageFormatARGB32) {
+    if (sourceSurface->Format() != gfxImageFormat::ARGB32) {
       mHasAlpha = false;
     } else {
       mHasAlpha = true;

@@ -274,7 +274,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
       mWidget->GetBounds(bounds);
       SurfaceDescriptor inSnapshot, snapshot;
       if (mForwarder->AllocSurfaceDescriptor(bounds.Size().ToIntSize(),
-                                             GFX_CONTENT_COLOR_ALPHA,
+                                             gfxContentType::COLOR_ALPHA,
                                              &inSnapshot) &&
           // The compositor will usually reuse |snapshot| and return
           // it through |outSnapshot|, but if it doesn't, it's
@@ -452,11 +452,11 @@ void
 ClientLayerManager::GetBackendName(nsAString& aName)
 {
   switch (mForwarder->GetCompositorBackendType()) {
-    case LAYERS_BASIC: aName.AssignLiteral("Basic"); return;
-    case LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
-    case LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
-    case LAYERS_D3D10: aName.AssignLiteral("Direct3D 10"); return;
-    case LAYERS_D3D11: aName.AssignLiteral("Direct3D 11"); return;
+    case LayersBackend::LAYERS_BASIC: aName.AssignLiteral("Basic"); return;
+    case LayersBackend::LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
+    case LayersBackend::LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
+    case LayersBackend::LAYERS_D3D10: aName.AssignLiteral("Direct3D 10"); return;
+    case LayersBackend::LAYERS_D3D11: aName.AssignLiteral("Direct3D 11"); return;
     default: NS_RUNTIMEABORT("Invalid backend");
   }
 }

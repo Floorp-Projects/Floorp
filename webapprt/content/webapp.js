@@ -24,6 +24,27 @@ let progressListener = {
                                          Ci.nsISupportsWeakReference]),
   onLocationChange: function onLocationChange(progress, request, location,
                                               flags) {
+
+    // Close tooltip (code adapted from /browser/base/content/browser.js)
+    let pageTooltip = document.getElementById("contentAreaTooltip");
+    let tooltipNode = pageTooltip.triggerNode;
+    if (tooltipNode) {
+      // Optimise for the common case
+      if (progress.isTopLevel) {
+        pageTooltip.hidePopup();
+      }
+      else {
+        for (let tooltipWindow = tooltipNode.ownerDocument.defaultView;
+             tooltipWindow != tooltipWindow.parent;
+             tooltipWindow = tooltipWindow.parent) {
+          if (tooltipWindow == progress.DOMWindow) {
+            pageTooltip.hidePopup();
+            break;
+          }
+        }
+      }
+    }
+
     // Set the title of the window to the name of the webapp, adding the origin
     // of the page being loaded if it's from a different origin than the app
     // (per security bug 741955, which specifies that other-origin pages loaded

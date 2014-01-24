@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2014             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: basic shared codebook operations
- last mod: $Id: codebook.h 17030 2010-03-25 06:52:55Z xiphmont $
+ last mod: $Id: codebook.h 19057 2014-01-22 12:32:31Z xiphmont $
 
  ********************************************************************/
 
@@ -34,14 +34,14 @@
 */
 
 typedef struct static_codebook{
-  long   dim;            /* codebook dimensions (elements per vector) */
-  long   entries;        /* codebook entries */
-  long  *lengthlist;     /* codeword lengths in bits */
+  long   dim;           /* codebook dimensions (elements per vector) */
+  long   entries;       /* codebook entries */
+  char  *lengthlist;    /* codeword lengths in bits */
 
   /* mapping ***************************************************************/
-  int    maptype;        /* 0=none
-                            1=implicitly populated values from map column
-                            2=listed arbitrary values */
+  int    maptype;       /* 0=none
+                           1=implicitly populated values from map column
+                           2=listed arbitrary values */
 
   /* The below does a linear, single monotonic sequence mapping. */
   long     q_min;       /* packed 32 bit float; quant value 0 maps to minval */
