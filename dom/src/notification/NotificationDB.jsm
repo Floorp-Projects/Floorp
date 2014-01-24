@@ -91,6 +91,7 @@ let NotificationDB = {
     var promise = OS.File.open(NOTIFICATION_STORE_PATH, {create: true});
     promise.then(
       function onSuccess(handle) {
+        handle.close();
         callback && callback();
       },
       function onFailure(reason) {
