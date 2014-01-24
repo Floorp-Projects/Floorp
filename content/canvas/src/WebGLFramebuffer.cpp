@@ -719,6 +719,34 @@ void WebGLFramebuffer::EnsureColorAttachments(size_t colorAttachmentId)
     }
 }
 
+static void
+FinalizeDrawAndReadBuffers(GLContext* aGL, bool aColorBufferDefined)
+{
+    MOZ_ASSERT(aGL, "Expected a valid GLContext ptr.");
+    // GLES don't support DrawBuffer()/ReadBuffer.
+    // According to http://www.opengl.org/wiki/Framebuffer_Object
+    //
+    // Each draw buffers must either specify color attachment points that have images
+    // attached or must be GL_NONE​. (GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER​ when false).
+    //
+    // If the read buffer is set, then it must specify an attachment point that has an
+    // image attached. (GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER​ when false).
+    //
+    // Note that this test is not performed if OpenGL 4.2 or ARB_ES2_compatibility is
+    // available.
+    if (aGL->IsGLES2() ||
+        aGL->IsSupported(GLFeature::ES2_compatibility) ||
+        aGL->IsAtLeast(ContextProfile::OpenGL, 420))
+    {
+        return;
+    }
+
+    // TODO(djg): Assert that fDrawBuffer/fReadBuffer is not NULL.
+    GLenum colorBufferSource = aColorBufferDefined ? LOCAL_GL_COLOR_ATTACHMENT0 : LOCAL_GL_NONE;
+    aGL->fDrawBuffer(colorBufferSource);
+    aGL->fReadBuffer(colorBufferSource);
+}
+
 void
 WebGLFramebuffer::FinalizeAttachments() const
 {
@@ -726,11 +754,6 @@ WebGLFramebuffer::FinalizeAttachments() const
         if (ColorAttachment(i).IsDefined())
             ColorAttachment(i).FinalizeAttachment(LOCAL_GL_COLOR_ATTACHMENT0 + i);
     }
-
-    GLenum colorBufferSource =
-        ColorAttachment(0).IsDefined() ? LOCAL_GL_COLOR_ATTACHMENT0 : LOCAL_GL_NONE;
-    mContext->gl->fDrawBuffer(colorBufferSource);
-    mContext->gl->fReadBuffer(colorBufferSource);
 
     if (DepthAttachment().IsDefined())
         DepthAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
@@ -740,6 +763,8 @@ WebGLFramebuffer::FinalizeAttachments() const
 
     if (DepthStencilAttachment().IsDefined())
         DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
+
+    FinalizeDrawAndReadBuffers(mContext->gl, ColorAttachment(0).IsDefined());
 }
 
 inline void
