@@ -12,15 +12,13 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.InnerRequestDelegate;
-import org.mozilla.gecko.sync.HTTPFailureException;
-import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
-import ch.boye.httpclientandroidlib.HttpResponse;
 
 /**
  * An <code>AsyncTask</code> wrapper around signing up for, and signing in to, a
@@ -75,10 +73,7 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     }
 
     // We are on the UI thread, and need to invoke these callbacks here to allow UI updating.
-    if (result.exception instanceof HTTPFailureException) {
-      HTTPFailureException e = (HTTPFailureException) result.exception;
-      delegate.handleFailure(e.response.getStatusCode(), e.response.httpResponse());
-    } else if (innerDelegate.exception != null) {
+    if (innerDelegate.exception != null) {
       delegate.handleError(innerDelegate.exception);
     } else {
       delegate.handleSuccess(result.response);
@@ -110,9 +105,9 @@ abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerRequestD
     }
 
     @Override
-    public void handleFailure(int status, HttpResponse response) {
+    public void handleFailure(FxAccountClientRemoteException e) {
       Logger.warn(LOG_TAG, "Got failure.");
-      this.exception = new HTTPFailureException(new SyncStorageResponse(response));
+      this.exception = e;
       latch.countDown();
     }
 
