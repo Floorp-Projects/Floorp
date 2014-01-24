@@ -159,7 +159,7 @@ function startListeners() {
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
-  addMessageListenerId("Marionette:screenShot", screenShot);
+  addMessageListenerId("Marionette:takeScreenshot", takeScreenshot);
   addMessageListenerId("Marionette:addCookie", addCookie);
   addMessageListenerId("Marionette:getCookies", getCookies);
   addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
@@ -253,7 +253,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
-  removeMessageListenerId("Marionette:screenShot", screenShot);
+  removeMessageListenerId("Marionette:takeScreenshot", takeScreenshot);
   removeMessageListenerId("Marionette:addCookie", addCookie);
   removeMessageListenerId("Marionette:getCookies", getCookies);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
@@ -2056,9 +2056,15 @@ function importScript(msg) {
 }
 
 /**
- * Saves a screenshot and returns a Base64 string
+ * Takes a screen capture of the given web element if <code>id</code>
+ * property exists in the message's JSON object, or if null captures
+ * the bounding box of the current frame.
+ *
+ * If given an array of web element references in
+ * <code>msg.json.highlights</code>, a red box will be painted around
+ * them to highlight their position.
  */
-function screenShot(msg) {
+function takeScreenshot(msg) {
   let node = null;
   if (msg.json.id) {
     try {
@@ -2070,7 +2076,7 @@ function screenShot(msg) {
     }
   }
   else {
-      node = curFrame;
+    node = curFrame;
   }
   let highlights = msg.json.highlights;
 
@@ -2095,36 +2101,42 @@ function screenShot(msg) {
     left = rect.left;
   }
 
-  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                        "canvas");
   canvas.width = width;
   canvas.height = height;
   var ctx = canvas.getContext("2d");
   // Draws the DOM contents of the window to the canvas
-  ctx.drawWindow(win, left, top, width, height, 'rgb(255,255,255)');
+  ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
 
-  // This section is for drawing a red rectangle around each element passed in via the highlights array
+  // This section is for drawing a red rectangle around each element
+  // passed in via the highlights array
   if (highlights) {
     ctx.lineWidth = "2";
     ctx.strokeStyle = "red";
     ctx.save();
 
     for (var i = 0; i < highlights.length; ++i) {
-      var elem = elementManager.getKnownElement(highlights[i], curFrame)
+      var elem = elementManager.getKnownElement(highlights[i], curFrame);
       rect = elem.getBoundingClientRect();
 
       var offsetY = -top;
       var offsetX = -left;
 
       // Draw the rectangle
-      ctx.strokeRect(rect.left + offsetX, rect.top + offsetY, rect.width, rect.height);
+      ctx.strokeRect(rect.left + offsetX,
+                     rect.top + offsetY,
+                     rect.width,
+                     rect.height);
     }
   }
 
-  // Return the Base64 String back to the client bindings and they can manage
-  // saving the file to disk if it is required
-  var data_url = canvas.toDataURL("image/png","");
-  sendResponse({value: data_url.substring(data_url.indexOf(",") + 1)}, msg.json.command_id);
+  // Return the Base64 encoded string back to the client so that it
+  // can save the file to disk if it is required
+  var dataUrl = canvas.toDataURL("image/png", "");
+  var data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+  sendResponse({value: data}, msg.json.command_id);
 }
 
-//call register self when we get loaded
+// Call register self when we get loaded
 registerSelf();
