@@ -379,10 +379,12 @@ struct ParseTask
     ~ParseTask();
 };
 
+#ifdef JS_THREADSAFE
 // Return whether, if a new parse task was started, it would need to wait for
 // an in-progress GC to complete before starting.
 extern bool
 OffThreadParsingMustWaitForGC(JSRuntime *rt);
+#endif
 
 // Compression tasks are allocated on the stack by their triggering thread,
 // which will block on the compression completing as the task goes out of scope
