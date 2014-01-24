@@ -6,9 +6,11 @@ this.EXPORTED_SYMBOLS = ["FxAccountsClient"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/hawk.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
@@ -19,11 +21,17 @@ try {
 } catch(keepDefault) {}
 
 const HOST = _host;
-const PREFIX_NAME = "identity.mozilla.com/picl/v1/";
+const PROTOCOL_VERSION = "identity.mozilla.com/picl/v1/";
 
-const XMLHttpRequest =
-  Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
-
+function KW(context) {
+  // This is used as a salt.  It's specified by the protocol.  Note that the
+  // value of PROTOCOL_VERSION does not refer in any wy to the version of the
+  // Firefox Accounts API.  For this reason, it is not exposed as a pref.
+  //
+  // See:
+  // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#creating-the-account
+  return PROTOCOL_VERSION + context;
+}
 
 function stringToHex(str) {
   let encoder = new TextEncoder("utf-8");
@@ -43,9 +51,37 @@ function bytesToHex(bytes) {
 
 this.FxAccountsClient = function(host = HOST) {
   this.host = host;
+
+  // The FxA auth server expects requests to certain endpoints to be authorized
+  // using Hawk.
+  this.hawk = new HawkClient(host);
 };
 
 this.FxAccountsClient.prototype = {
+
+  /**
+   * Return client clock offset, in milliseconds, as determined by hawk client.
+   * Provided because callers should not have to know about hawk
+   * implementation.
+   *
+   * The offset is the number of milliseconds that must be added to the client
+   * clock to make it equal to the server clock.  For example, if the client is
+   * five minutes ahead of the server, the localtimeOffsetMsec will be -300000.
+   */
+  get localtimeOffsetMsec() {
+    return this.hawk.localtimeOffsetMsec;
+  },
+
+  /*
+   * Return current time in milliseconds
+   *
+   * Not used by this module, but made available to the FxAccounts.jsm
+   * that uses this client.
+   */
+  now: function() {
+    return this.hawk.now();
+  },
+
   /**
    * Create a new Firefox Account and authenticate
    *
@@ -149,7 +185,7 @@ this.FxAccountsClient.prototype = {
     let creds = this._deriveHawkCredentials(keyFetchTokenHex, "keyFetchToken");
     let keyRequestKey = creds.extra.slice(0, 32);
     let morecreds = CryptoUtils.hkdf(keyRequestKey, undefined,
-                                     PREFIX_NAME + "account/keys", 3 * 32);
+                                     KW("account/keys"), 3 * 32);
     let respHMACKey = morecreds.slice(0, 32);
     let respXORKey = morecreds.slice(32, 96);
 
@@ -199,8 +235,10 @@ this.FxAccountsClient.prototype = {
     return Promise.resolve()
       .then(_ => this._request("/certificate/sign", "POST", creds, body))
       .then(resp => resp.cert,
-            err => {dump("HAWK.signCertificate error: " + JSON.stringify(err) + "\n");
-                    throw err;});
+            err => {
+              log.error("HAWK.signCertificate error: " + JSON.stringify(err));
+              throw err;
+            });
   },
 
   /**
@@ -219,8 +257,10 @@ this.FxAccountsClient.prototype = {
         // the account exists
         (result) => true,
         (err) => {
+          log.error("accountExists: error: " + JSON.stringify(err));
           // the account doesn't exist
           if (err.errno === 102) {
+            log.debug("returning false for errno 102");
             return false;
           }
           // propogate other request errors
@@ -251,7 +291,7 @@ this.FxAccountsClient.prototype = {
    */
   _deriveHawkCredentials: function (tokenHex, context, size) {
     let token = CommonUtils.hexToBytes(tokenHex);
-    let out = CryptoUtils.hkdf(token, undefined, PREFIX_NAME + context, size || 3 * 32);
+    let out = CryptoUtils.hkdf(token, undefined, KW(context), size || 3 * 32);
 
     return {
       algorithm: "sha256",
@@ -286,63 +326,21 @@ this.FxAccountsClient.prototype = {
    */
   _request: function hawkRequest(path, method, credentials, jsonPayload) {
     let deferred = Promise.defer();
-    let xhr = new XMLHttpRequest({mozSystem: true});
-    let URI = this.host + path;
-    let payload;
 
-    xhr.mozBackgroundRequest = true;
-
-    if (jsonPayload) {
-      payload = JSON.stringify(jsonPayload);
-    }
-
-    log.debug("(HAWK request) - Path: " + path + " - Method: " + method +
-              " - Payload: " + payload);
-
-    xhr.open(method, URI);
-    xhr.channel.loadFlags = Ci.nsIChannel.LOAD_BYPASS_CACHE |
-                            Ci.nsIChannel.INHIBIT_CACHING;
-
-    // When things really blow up, reconstruct an error object that follows the general format
-    // of the server on error responses.
-    function constructError(err) {
-      return { error: err, message: xhr.statusText, code: xhr.status, errno: xhr.status };
-    }
-
-    xhr.onerror = function() {
-      deferred.reject(constructError('Request failed'));
-    };
-
-    xhr.onload = function onload() {
-      try {
-        let response = JSON.parse(xhr.responseText);
-        log.debug("(Response) Code: " + xhr.status + " - Status text: " +
-                  xhr.statusText + " - Response text: " + xhr.responseText);
-        if (xhr.status !== 200 || response.error) {
-          // In this case, the response is an object with error information.
-          return deferred.reject(response);
+    this.hawk.request(path, method, credentials, jsonPayload).then(
+      (responseText) => {
+        try {
+          let response = JSON.parse(responseText);
+          deferred.resolve(response);
+        } catch (err) {
+          deferred.reject({error: err});
         }
-        deferred.resolve(response);
-      } catch (e) {
-        log.error("(Response) Code: " + xhr.status + " - Status text: " +
-                  xhr.statusText);
-        deferred.reject(constructError(e));
+      },
+
+      (error) => {
+        deferred.reject(error);
       }
-    };
-
-    let uri = Services.io.newURI(URI, null, null);
-
-    if (credentials) {
-      let header = CryptoUtils.computeHAWK(uri, method, {
-                          credentials: credentials,
-                          payload: payload,
-                          contentType: "application/json"
-                        });
-      xhr.setRequestHeader("authorization", header.field);
-    }
-
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(payload);
+    );
 
     return deferred.promise;
   },
