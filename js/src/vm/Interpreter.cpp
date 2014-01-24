@@ -18,6 +18,7 @@
 
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -38,7 +39,6 @@
 #include "jit/Ion.h"
 #include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
-#include "vm/Opcodes.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
@@ -1341,15 +1341,14 @@ Interpret(JSContext *cx, RunState &state)
     // Use addresses instead of offsets to optimize for runtime speed over
     // load-time relocation overhead.
     static const void *const addresses[EnableInterruptsPseudoOpcode + 1] = {
-# define OPCODE_LABEL(op, ...)  LABEL(op),
-        FOR_EACH_OPCODE(OPCODE_LABEL)
-# undef OPCODE_LABEL
-# define TRAILING_LABEL(v)                                                    \
+# define OPDEF(op,v,n,t,l,u,d,f)  LABEL(op),
+# define OPPAD(v)                                                             \
     ((v) == EnableInterruptsPseudoOpcode                                      \
      ? LABEL(EnableInterruptsPseudoOpcode)                                    \
      : LABEL(default)),
-        FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_LABEL)
-# undef TRAILING_LABEL
+# include "jsopcode.tbl"
+# undef OPDEF
+# undef OPPAD
     };
 #else
 // Portable switch-based dispatch.

@@ -18,6 +18,7 @@
 #include "jsanalyze.h"
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfun.h"
@@ -32,7 +33,6 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
 #include "js/CharacterEncoding.h"
-#include "vm/Opcodes.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
@@ -53,10 +53,17 @@ using js::frontend::IsIdentifier;
  */
 JS_STATIC_ASSERT(sizeof(uint32_t) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 
+/* Verify JSOP_XXX_LENGTH constant definitions. */
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format)               \
+    JS_STATIC_ASSERT(op##_LENGTH == length);
+#include "jsopcode.tbl"
+#undef OPDEF
+
 const JSCodeSpec js_CodeSpec[] = {
-#define MAKE_CODESPEC(op,val,name,token,length,nuses,ndefs,format)  {length,nuses,ndefs,format},
-    FOR_EACH_OPCODE(MAKE_CODESPEC)
-#undef MAKE_CODESPEC
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
+    {length,nuses,ndefs,format},
+#include "jsopcode.tbl"
+#undef OPDEF
 };
 
 const unsigned js_NumCodeSpecs = JS_ARRAY_LENGTH(js_CodeSpec);
@@ -66,9 +73,10 @@ const unsigned js_NumCodeSpecs = JS_ARRAY_LENGTH(js_CodeSpec);
  * bytecode or null.
  */
 static const char * const CodeToken[] = {
-#define TOKEN(op, val, name, token, ...)  token,
-    FOR_EACH_OPCODE(TOKEN)
-#undef TOKEN
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
+    token,
+#include "jsopcode.tbl"
+#undef OPDEF
 };
 
 /*
@@ -76,9 +84,10 @@ static const char * const CodeToken[] = {
  * and JIT debug spew.
  */
 const char * const js_CodeName[] = {
-#define OPNAME(op, val, name, ...)  name,
-    FOR_EACH_OPCODE(OPNAME)
-#undef OPNAME
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
+    name,
+#include "jsopcode.tbl"
+#undef OPDEF
 };
 
 /************************************************************************/
