@@ -6,7 +6,7 @@
 let WebConsoleUtils, TargetFactory, require;
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 (() => {

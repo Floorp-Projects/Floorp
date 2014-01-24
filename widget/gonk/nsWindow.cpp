@@ -43,6 +43,7 @@
 #include "libdisplay/GonkDisplay.h"
 #include "pixelflinger/format.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "ParentProcessController.h"
 #include "nsThreadUtils.h"
@@ -573,6 +574,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         if (mCompositorParent) {
             uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
             CompositorParent::SetControllerForLayerTree(rootLayerTreeId, new ParentProcessController());
+            CompositorParent::GetAPZCTreeManager(rootLayerTreeId)->SetDPI(GetDPI());
         }
         if (mLayerManager)
             return mLayerManager;
