@@ -31,7 +31,7 @@ pref("browser.tabs.remote", false);
 // If a tab has not been active for this long (seconds), then it may be
 // turned into a zombie tab to preemptively free up memory. -1 disables time-based
 // expiration (but low-memory conditions may still require the tab to be zombified).
-pref("browser.tabs.expireTime", 3600);
+pref("browser.tabs.expireTime", 900);
 
 // From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
 pref("zoom.minPercent", 20);
