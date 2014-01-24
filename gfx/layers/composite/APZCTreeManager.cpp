@@ -28,7 +28,7 @@
 namespace mozilla {
 namespace layers {
 
-float APZCTreeManager::sDPI = 72.0;
+float APZCTreeManager::sDPI = 160.0;
 
 APZCTreeManager::APZCTreeManager()
     : mTreeLock("APZCTreeLock"),
