@@ -116,15 +116,12 @@ Finder.prototype = {
 
   enableSelection: function() {
     this._fastFind.setSelectionModeAndRepaint(Ci.nsISelectionController.SELECTION_ON);
+    this._restoreOriginalOutline();
   },
 
   removeSelection: function() {
-    let fastFind = this._fastFind;
-
-    fastFind.collapseSelection();
+    this._fastFind.collapseSelection();
     this.enableSelection();
-
-    this._restoreOriginalOutline();
   },
 
   focusContent: function() {
