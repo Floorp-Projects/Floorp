@@ -466,6 +466,104 @@ function promiseResolveNestedPromise() {
   });
 }
 
+function promiseSimpleThenableResolve() {
+  var thenable = { then: function(resolve) { resolve(5); } };
+  var promise = new Promise(function(resolve, reject) {
+    resolve(thenable);
+  });
+
+  promise.then(function(v) {
+    ok(v === 5, "promiseSimpleThenableResolve");
+    runTest();
+  }, function(e) {
+    ok(false, "promiseSimpleThenableResolve: Should not reject");
+  });
+}
+
+function promiseSimpleThenableReject() {
+  var thenable = { then: function(resolve, reject) { reject(5); } };
+  var promise = new Promise(function(resolve, reject) {
+    resolve(thenable);
+  });
+
+  promise.then(function() {
+    ok(false, "promiseSimpleThenableReject: Should not resolve");
+    runTest();
+  }, function(e) {
+    ok(e === 5, "promiseSimpleThenableReject");
+    runTest();
+  });
+}
+
+function promiseThenableThrowsBeforeCallback() {
+  var thenable = { then: function(resolve) {
+    throw new TypeError("Hi there");
+    resolve(5);
+  }};
+
+  var promise = Promise.resolve(thenable);
+  promise.then(function(v) {
+    ok(false, "promiseThenableThrowsBeforeCallback: Should've rejected");
+    runTest();
+  }, function(e) {
+    ok(e instanceof TypeError, "promiseThenableThrowsBeforeCallback");
+    runTest();
+  });
+}
+
+function promiseThenableThrowsAfterCallback() {
+  var thenable = { then: function(resolve) {
+    resolve(5);
+    throw new TypeError("Hi there");
+  }};
+
+  var promise = Promise.resolve(thenable);
+  promise.then(function(v) {
+    ok(v === 5, "promiseThenableThrowsAfterCallback");
+    runTest();
+  }, function(e) {
+    ok(false, "promiseThenableThrowsAfterCallback: Should've resolved");
+    runTest();
+  });
+}
+
+function promiseThenableRejectThenResolve() {
+  var thenable = { then: function(resolve, reject) {
+    reject(new TypeError("Hi there"));
+    resolve(5);
+  }};
+
+  var promise = Promise.resolve(thenable);
+  promise.then(function(v) {
+    ok(false, "promiseThenableRejectThenResolve should have rejected");
+    runTest();
+  }, function(e) {
+    ok(e instanceof TypeError, "promiseThenableRejectThenResolve");
+    runTest();
+  });
+}
+
+function promiseWithThenReplaced() {
+  // Ensure that we call the 'then' on the promise and not the internal then.
+  var promise = new Promise(function(resolve, reject) {
+    resolve(5);
+  });
+
+  // Rogue `then` always rejects.
+  promise.then = function(onFulfill, onReject) {
+    onReject(new TypeError("Foo"));
+  }
+
+  var promise2 = Promise.resolve(promise);
+  promise2.then(function(v) {
+    ok(false, "promiseWithThenReplaced: Should've rejected");
+    runTest();
+  }, function(e) {
+    ok(e instanceof TypeError, "promiseWithThenReplaced");
+    runTest();
+  });
+}
+
 var tests = [ promiseResolve, promiseReject,
               promiseException, promiseGC, promiseAsync,
               promiseDoubleThen, promiseThenException,
@@ -485,6 +583,12 @@ var tests = [ promiseResolve, promiseReject,
               promiseThenNullResolveFunction,
               promiseCatchNoArg,
               promiseRejectNoHandler,
+              promiseSimpleThenableResolve,
+              promiseSimpleThenableReject,
+              promiseThenableThrowsBeforeCallback,
+              promiseThenableThrowsAfterCallback,
+              promiseThenableRejectThenResolve,
+              promiseWithThenReplaced,
             ];
 
 function runTest() {

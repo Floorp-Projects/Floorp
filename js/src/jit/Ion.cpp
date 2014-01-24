@@ -7,6 +7,7 @@
 #include "jit/Ion.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ThreadLocal.h"
 
 #include "jscompartment.h"
 #include "jsworkers.h"
@@ -51,48 +52,31 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Maybe;
+using mozilla::ThreadLocal;
 
 // Assert that JitCode is gc::Cell aligned.
 JS_STATIC_ASSERT(sizeof(JitCode) % gc::CellSize == 0);
 
-#ifdef JS_THREADSAFE
-static bool IonTLSInitialized = false;
-static unsigned IonTLSIndex;
+static ThreadLocal<IonContext*> TlsIonContext;
 
-static inline IonContext *
+static IonContext *
 CurrentIonContext()
 {
-    return (IonContext *)PR_GetThreadPrivate(IonTLSIndex);
+    if (!TlsIonContext.initialized())
+        return nullptr;
+    return TlsIonContext.get();
 }
 
-bool
+void
 jit::SetIonContext(IonContext *ctx)
 {
-    return PR_SetThreadPrivate(IonTLSIndex, ctx) == PR_SUCCESS;
+    TlsIonContext.set(ctx);
 }
-
-#else
-
-static IonContext *GlobalIonContext;
-
-static inline IonContext *
-CurrentIonContext()
-{
-    return GlobalIonContext;
-}
-
-bool
-jit::SetIonContext(IonContext *ctx)
-{
-    GlobalIonContext = ctx;
-    return true;
-}
-#endif
 
 IonContext *
 jit::GetIonContext()
 {
-    JS_ASSERT(CurrentIonContext());
+    MOZ_ASSERT(CurrentIonContext());
     return CurrentIonContext();
 }
 
@@ -154,15 +138,8 @@ IonContext::~IonContext()
 bool
 jit::InitializeIon()
 {
-#ifdef JS_THREADSAFE
-    if (!IonTLSInitialized) {
-        PRStatus status = PR_NewThreadPrivateIndex(&IonTLSIndex, nullptr);
-        if (status != PR_SUCCESS)
-            return false;
-
-        IonTLSInitialized = true;
-    }
-#endif
+    if (!TlsIonContext.initialized() && !TlsIonContext.init())
+        return false;
     CheckLogging();
     CheckPerf();
     return true;

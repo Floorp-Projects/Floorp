@@ -57,7 +57,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
     return nullptr;
   }
 
-  if (aSurface->GetType() == gfxSurfaceTypeD2D) {
+  if (aSurface->GetType() == gfxSurfaceType::D2D) {
     void *data = aSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       nsRefPtr<ID3D10Texture2D> texture = static_cast<ID3D10Texture2D*>(data);
@@ -73,7 +73,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
 
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
-                                       gfxImageFormatARGB32);
+                                       gfxImageFormat::ARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);
@@ -105,13 +105,13 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
     RemoteBitmapImage *remoteImage =
       static_cast<RemoteBitmapImage*>(aImage);
 
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10)) {
       nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
 
       if (dat->mTexture) {
         device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
-        aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
+        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10, dat.forget());
       }
     }
 
@@ -132,19 +132,19 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       return nullptr;
     }
 
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10)) {
       nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
       dat->mTexture = SurfaceToTexture(device(), surf, cairoImage->GetSize());
 
       if (dat->mTexture) {
         device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
-        aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
+        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10, dat.forget());
       }
     }
 
-    aHasAlpha = surf->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
+    aHasAlpha = surf->GetContentType() == gfxContentType::COLOR_ALPHA;
   } else if (aImage->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10)) {
       // Use resource sharing to open the D3D9 texture as a D3D10 texture,
       HRESULT hr;
       D3D9SurfaceImage* d3dImage = reinterpret_cast<D3D9SurfaceImage*>(aImage);
@@ -160,7 +160,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       hr = device()->CreateShaderResourceView(dat->mTexture, nullptr, getter_AddRefs(dat->mSRView));
       NS_ENSURE_TRUE(SUCCEEDED(hr) && dat->mSRView, nullptr);
 
-      aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
+      aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10, dat.forget());
     }
     aHasAlpha = false;
   } else {
@@ -169,7 +169,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
   }
 
   TextureD3D10BackendData *data =
-    static_cast<TextureD3D10BackendData*>(aImage->GetBackendData(mozilla::layers::LAYERS_D3D10));
+    static_cast<TextureD3D10BackendData*>(aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10));
 
   if (!data) {
     return nullptr;
@@ -220,7 +220,7 @@ ImageLayerD3D10::RenderLayer()
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE ||
       image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
-                 !surf || surf->GetContentType() != GFX_CONTENT_ALPHA,
+                 !surf || surf->GetContentType() != gfxContentType::ALPHA,
                  "Image layer has alpha image");
     bool hasAlpha = false;
 
@@ -255,12 +255,12 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
 
-    if (!yuvImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+    if (!yuvImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10)) {
       AllocateTexturesYCbCr(yuvImage);
     }
 
     PlanarYCbCrD3D10BackendData *data =
-      static_cast<PlanarYCbCrD3D10BackendData*>(yuvImage->GetBackendData(mozilla::layers::LAYERS_D3D10));
+      static_cast<PlanarYCbCrD3D10BackendData*>(yuvImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10));
 
     if (!data) {
       return;
@@ -394,7 +394,7 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   device()->CreateShaderResourceView(backendData->mCbTexture, nullptr, getter_AddRefs(backendData->mCbView));
   device()->CreateShaderResourceView(backendData->mCrTexture, nullptr, getter_AddRefs(backendData->mCrView));
 
-  aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, backendData.forget());
+  aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10, backendData.forget());
 }
 
 already_AddRefed<ID3D10ShaderResourceView>
@@ -472,8 +472,8 @@ RemoteDXGITextureImage::DeprecatedGetAsSurface()
   nsRefPtr<gfxImageSurface> surface =
     new gfxImageSurface(ThebesIntSize(mSize),
       mFormat == RemoteImageData::BGRX32 ?
-                 gfxImageFormatRGB24 :
-                 gfxImageFormatARGB32);
+                 gfxImageFormat::RGB24 :
+                 gfxImageFormat::ARGB32);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created image surface for DXGI texture.");
@@ -497,9 +497,9 @@ RemoteDXGITextureImage::DeprecatedGetAsSurface()
 TextureD3D10BackendData*
 RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
 {
-  if (GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+  if (GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10)) {
     TextureD3D10BackendData *data =
-      static_cast<TextureD3D10BackendData*>(GetBackendData(mozilla::layers::LAYERS_D3D10));
+      static_cast<TextureD3D10BackendData*>(GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10));
 
     nsRefPtr<ID3D10Device> device;
     data->mTexture->GetDevice(getter_AddRefs(device));
@@ -522,7 +522,7 @@ RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
 
   aDevice->CreateShaderResourceView(texture, nullptr, getter_AddRefs(data->mSRView));
 
-  SetBackendData(mozilla::layers::LAYERS_D3D10, data);
+  SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D10, data);
 
   return data.forget();
 }

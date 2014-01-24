@@ -74,7 +74,7 @@ protected:
   DoAsyncRun(nsISupports* aStream) = 0;
 
   virtual nsresult
-  GetSuccessResult(JSContext* aCx, JS::Value* aVal);
+  GetSuccessResult(JSContext* aCx, JS::MutableHandle<JS::Value> aVal);
 
   virtual void
   ReleaseObjects();

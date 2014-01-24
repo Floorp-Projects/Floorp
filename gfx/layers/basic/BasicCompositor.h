@@ -51,7 +51,7 @@ public:
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
-    return TextureFactoryIdentifier(LAYERS_BASIC,
+    return TextureFactoryIdentifier(LayersBackend::LAYERS_BASIC,
                                     XRE_GetProcessType(),
                                     GetMaxTextureSize());
   }

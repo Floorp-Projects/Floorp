@@ -1572,7 +1572,7 @@ void
 gfxContext::PushGroup(gfxContentType content)
 {
   if (mCairo) {
-    cairo_push_group_with_content(mCairo, (cairo_content_t) content);
+    cairo_push_group_with_content(mCairo, (cairo_content_t)(int) content);
   } else {
     PushNewDT(content);
 
@@ -1608,17 +1608,17 @@ void
 gfxContext::PushGroupAndCopyBackground(gfxContentType content)
 {
   if (mCairo) {
-    if (content == GFX_CONTENT_COLOR_ALPHA &&
+    if (content == gfxContentType::COLOR_ALPHA &&
       !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
       nsRefPtr<gfxASurface> s = CurrentSurface();
-      if ((s->GetAllowUseAsSource() || s->GetType() == gfxSurfaceTypeTee) &&
-          (s->GetContentType() == GFX_CONTENT_COLOR ||
+      if ((s->GetAllowUseAsSource() || s->GetType() == gfxSurfaceType::Tee) &&
+          (s->GetContentType() == gfxContentType::COLOR ||
               s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
         cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
         nsRefPtr<gfxASurface> d = CurrentSurface();
 
-        if (d->GetType() == gfxSurfaceTypeTee) {
-          NS_ASSERTION(s->GetType() == gfxSurfaceTypeTee, "Mismatched types");
+        if (d->GetType() == gfxSurfaceType::Tee) {
+          NS_ASSERTION(s->GetType() == gfxSurfaceType::Tee, "Mismatched types");
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
           static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);
@@ -1648,7 +1648,7 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
       RefPtr<SourceSurface> source = mDT->Snapshot();
       Point oldDeviceOffset = CurrentState().deviceOffset;
 
-      PushNewDT(GFX_CONTENT_COLOR);
+      PushNewDT(gfxContentType::COLOR);
 
       Point offset = CurrentState().deviceOffset - oldDeviceOffset;
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));

@@ -148,7 +148,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
   } else if (mNumFrames == 0) {
     // Our preallocated frame matches up, with the possible exception of alpha.
-    if (format == gfxImageFormatRGB24) {
+    if (format == gfxImageFormat::RGB24) {
       GetCurrentFrame()->SetHasNoAlpha();
     }
   }
@@ -627,9 +627,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   if (channels == 1 || channels == 3)
-    decoder->format = gfxImageFormatRGB24;
+    decoder->format = gfxImageFormat::RGB24;
   else if (channels == 2 || channels == 4)
-    decoder->format = gfxImageFormatARGB32;
+    decoder->format = gfxImageFormat::ARGB32;
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
@@ -743,7 +743,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
      }
 
     switch (decoder->format) {
-      case gfxImageFormatRGB24:
+      case gfxImageFormat::RGB24:
       {
         // counter for while() loops below
         uint32_t idx = iwidth;
@@ -770,7 +770,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         }
       }
       break;
-      case gfxImageFormatARGB32:
+      case gfxImageFormat::ARGB32:
       {
         if (!decoder->mDisablePremultipliedAlpha) {
           for (uint32_t x=width; x>0; --x) {
