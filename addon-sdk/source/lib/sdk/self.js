@@ -9,7 +9,7 @@ module.metadata = {
 
 const { CC } = require('chrome');
 const { id, name, prefixURI, rootURI, metadata,
-        version, loadReason } = require('@loader/options');
+        version, loadReason, preferencesBranch } = require('@loader/options');
 
 const { readURISync } = require('./net/url');
 
@@ -24,16 +24,16 @@ const uri = (path="") =>
 // associated unique URI string that can be used for that.
 exports.uri = 'addon:' + id;
 exports.id = id;
+exports.preferencesBranch = preferencesBranch || id;
 exports.name = name;
 exports.loadReason = loadReason;
 exports.version = version;
 // If `rootURI` is jar:file://...!/ than add-on is packed.
-exports.packed = rootURI.indexOf('jar:') === 0
+exports.packed = (rootURI || '').indexOf('jar:') === 0;
 exports.data = Object.freeze({
   url: uri,
   load: function read(path) {
     return readURISync(uri(path));
   }
 });
-exports.isPrivateBrowsingSupported = ((metadata.permissions || {})['private-browsing'] === true) ?
-                                     true : false;
+exports.isPrivateBrowsingSupported = ((metadata || {}).permissions || {})['private-browsing'] === true;
