@@ -8,7 +8,6 @@
 
 #include "mozilla/PodOperations.h"
 
-#include "jsautooplen.h"
 #include "jscntxt.h"
 
 #include "gc/Marking.h"
@@ -16,6 +15,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
 #endif
+#include "vm/Opcodes.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Interpreter-inl.h"
