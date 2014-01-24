@@ -1339,5 +1339,10 @@ pref("browser.uiCustomization.debug", false);
 // be fetched. Must use HTTPS.
 pref("identity.fxaccounts.remote.uri", "https://accounts.dev.lcip.org/?service=sync");
 
+// The URL we take the user to when they opt to "manage" their Firefox Account.
+// Note that this will always need to be in the same TLD as the
+// "identity.fxaccounts.remote.uri" pref.
+pref("identity.fxaccounts.settings.uri", "https://accounts.dev.lcip.org/settings");
+
 // The URL of the Firefox Accounts auth server backend
 pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
