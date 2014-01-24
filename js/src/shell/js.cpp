@@ -4500,7 +4500,8 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
 
         for (size_t i = 0; i < ida.length(); i++) {
             RootedValue v(cx);
-            if (!JS_LookupPropertyById(cx, global, ida[i], &v))
+            RootedId id(cx, ida[i]);
+            if (!JS_LookupPropertyById(cx, global, id, &v))
                 return false;
             if (JSVAL_IS_PRIMITIVE(v)) {
                 JS_ReportError(cx, "primitive arg");

@@ -2290,7 +2290,6 @@ class AutoIdArray : private AutoGCRooter
     }
     jsid operator[](size_t i) const {
         JS_ASSERT(idArray);
-        JS_ASSERT(i < length());
         return JS_IdArrayGet(context, idArray, i);
     }
     size_t length() const {
@@ -2830,10 +2829,11 @@ extern JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandleValue vp);
+JS_LookupProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandleValue vp);
+JS_LookupPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_LookupPropertyWithFlags(JSContext *cx, JS::HandleObject obj, const char *name,
@@ -3064,7 +3064,7 @@ JS_HasUCProperty(JSContext *cx, JS::HandleObject obj,
                  bool *vp);
 
 extern JS_PUBLIC_API(bool)
-JS_LookupUCProperty(JSContext *cx, JSObject *obj,
+JS_LookupUCProperty(JSContext *cx, JS::HandleObject obj,
                     const jschar *name, size_t namelen,
                     JS::MutableHandleValue vp);
 
@@ -3105,7 +3105,7 @@ extern JS_PUBLIC_API(bool)
 JS_HasElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
+JS_LookupElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_GetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
