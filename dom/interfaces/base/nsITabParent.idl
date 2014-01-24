@@ -5,8 +5,19 @@
 
 #include "domstubs.idl"
 
-// Sole purpose is to be able to identify the concrete class nsTabParent
-[uuid(95c7c50b-6677-456f-9f1e-885e1cc272dc)]
+[scriptable, uuid(c402d6c2-837d-11e3-b47c-3c970e9f4238)]
 interface nsITabParent : nsISupports
 {
+  void injectTouchEvent(in AString aType,
+                        [array, size_is(count)] in uint32_t aIdentifiers,
+                        [array, size_is(count)] in int32_t aXs,
+                        [array, size_is(count)] in int32_t aYs,
+                        [array, size_is(count)] in uint32_t aRxs,
+                        [array, size_is(count)] in uint32_t aRys,
+                        [array, size_is(count)] in float aRotationAngles,
+                        [array, size_is(count)] in float aForces,
+                        in uint32_t count,
+                        in long aModifiers);
+
+  readonly attribute boolean useAsyncPanZoom;
 };

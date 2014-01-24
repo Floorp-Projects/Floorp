@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Iframe for Recording Status</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.7" src="RecordingStatusHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+var localStream;
+
+window.addEventListener('message', function(event) {
+  switch (event.data) {
+    case 'start':
+      let gumDeferred = expectStream({ audio: true,
+                                       fake: true
+                                     }, function(stream) {
+                                       localStream = stream;
+                                       event.source.postMessage('start-finished', window.location.origin);
+                                     });
+      break;
+    case 'stop':
+      localStream.stop();
+      localStream = null;
+      break;
+  }
+}, false);
+
+</script>
+</pre>
+</body>
+</html>
