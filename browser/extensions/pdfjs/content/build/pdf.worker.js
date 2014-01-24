@@ -34710,41 +34710,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
 var consoleTimer = {};
 
-var workerConsole = {
-  log: function log() {
-    var args = Array.prototype.slice.call(arguments);
-    globalScope.postMessage({
-      action: 'console_log',
-      data: args
-    });
-  },
-
-  error: function error() {
-    var args = Array.prototype.slice.call(arguments);
-    globalScope.postMessage({
-      action: 'console_error',
-      data: args
-    });
-    throw 'pdf.js execution error';
-  },
-
-  time: function time(name) {
-    consoleTimer[name] = Date.now();
-  },
-
-  timeEnd: function timeEnd(name) {
-    var time = consoleTimer[name];
-    if (!time) {
-      error('Unkown timer name ' + name);
-    }
-    this.log('Timer:', name, Date.now() - time);
-  }
-};
-
 // Worker thread?
 if (typeof window === 'undefined') {
-  globalScope.console = workerConsole;
-
   // Add a logger so we can pass warnings on to the main thread, errors will
   // throw an exception which will be forwarded on automatically.
   PDFJS.LogManager.addLogger({
