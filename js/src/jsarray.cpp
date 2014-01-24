@@ -13,7 +13,6 @@
 
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
