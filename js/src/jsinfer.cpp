@@ -11,7 +11,6 @@
 #include "mozilla/PodOperations.h"
 
 #include "jsapi.h"
-#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jshashutil.h"
@@ -30,6 +29,7 @@
 #include "jit/JitCompartment.h"
 #endif
 #include "js/MemoryMetrics.h"
+#include "vm/Opcodes.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
