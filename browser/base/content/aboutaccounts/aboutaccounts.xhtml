@@ -9,19 +9,78 @@
   %brandDTD;
   <!ENTITY % aboutAccountsDTD SYSTEM "chrome://browser/locale/aboutAccounts.dtd">
   %aboutAccountsDTD;
+  <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+  %syncBrandDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
    <title>&aboutAccounts.pageTitle;</title>
+   <meta name="viewport" content="width=device-width"/>
+
+
    <link rel="icon" type="image/png" id="favicon"
          href="chrome://branding/content/icon32.png"/>
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/fonts.css"
+     type="text/css" />
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/normalize.css"
+     type="text/css" />
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/main.css"
+     type="text/css" />
    <link rel="stylesheet"
      href="chrome://browser/content/aboutaccounts/aboutaccounts.css"
      type="text/css" />
   </head>
   <body>
+    <div id="stage">
+
+      <div id="manage">
+        <header>
+          <h1>&aboutAccounts.pageTitle;</h1>
+
+          <h2>&syncBrand.shortName.label;</h2>
+        </header>
+
+        <section>
+            <div class="graphic graphic-sync-intro"> </div>
+
+            <div class="button-row">
+              <a class="button" href="#" onclick="openPrefs()">Manage</a>
+            </div>
+        </section>
+      </div>
+
+      <div id="intro">
+        <header>
+          <h1>&aboutAccounts.pageTitle;</h1>
+
+          <h2>&syncBrand.shortName.label;</h2>
+        </header>
+
+        <section>
+            <div class="graphic graphic-sync-intro"> </div>
+
+            <div class="description">&aboutAccountsSetup.description;</div>
+
+            <div class="button-row">
+              <a class="button" href="#" onclick="getStarted()">&aboutAccountsSetup.startButton.label;</a>
+            </div>
+
+            <div class="links">
+              <a id="oldsync" href="#" onclick="handleOldSync();">&aboutAccountsSetup.useOldSync.label;</a>
+            </div>
+        </section>
+      </div>
+
+    </div>
+
     <iframe mozframetype="content" id="remote" />
+
+    <script type="application/javascript;version=1.8"
+      src="chrome://browser/content/utilityOverlay.js"/>
     <script type="text/javascript;version=1.8"
       src="chrome://browser/content/aboutaccounts/aboutaccounts.js" />
   </body>

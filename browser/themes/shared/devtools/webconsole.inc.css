@@ -46,7 +46,7 @@ a {
 }
 
 /* The red bubble that shows the number of times a message is repeated */
-.message > .repeats {
+.message-repeats {
   -moz-user-select: none;
   flex: 0 0 auto;
   margin: 2px 6px;
@@ -60,11 +60,11 @@ a {
   font-weight: 600;
 }
 
-.message > .repeats[value="1"] {
+.message-repeats[value="1"] {
   display: none;
 }
 
-.message > .location {
+.message-location {
   -moz-margin-start: 6px;
   display: flex;
   flex: 0 0 auto;
@@ -74,21 +74,21 @@ a {
   margin-top: 4px;
   color: -moz-nativehyperlinktext;
   text-decoration: none;
-}
-
-.message > .location:hover,
-.message > .location:focus {
-  text-decoration: underline;
-}
-
-.message > .location > .filename {
-  text-overflow: ellipsis;
-  text-align: end;
-  overflow: hidden;
   white-space: nowrap;
 }
 
-.message > .location > .line-number {
+.message-location:hover,
+.message-location:focus {
+  text-decoration: underline;
+}
+
+.message-location > .filename {
+  text-overflow: ellipsis;
+  text-align: end;
+  overflow: hidden;
+}
+
+.message-location > .line-number {
   flex: 0 0 auto;
 }
 
@@ -336,6 +336,37 @@ a {
   text-decoration: none;
 }
 
+.consoleTrace .body > div {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.consoleTrace .title {
+  display: block;
+  flex: 1 1 auto;
+}
+
+.stacktrace {
+  list-style: none;
+  padding: 0 1em 0 1.5em;
+  margin: 0;
+  max-height: 10em;
+  overflow-y: auto;
+
+  border: 1px solid rgba(128, 128, 128, .5);
+  border-radius: 3px;
+}
+
+.stacktrace li {
+  display: flex;
+  margin: 0;
+}
+
+.stacktrace .function {
+  display: block;
+  flex: 1 1 auto;
+}
+
 /* Replace these values with CSS variables as available */
 .theme-dark .jsterm-input-container {
   background-color: #252c33; /* tabToolbarBackgroundColor */
@@ -358,6 +389,10 @@ a {
   border-color: #333;
 }
 
+.theme-dark .stacktrace {
+  border-color: #333;
+}
+
 .theme-light .jsterm-input-container {
   background-color: #fff; /* mainBackgroundColor */
   border-color: ThreeDShadow;
@@ -376,6 +411,10 @@ a {
 }
 
 .theme-light .inlined-variables-view iframe {
+  border-color: #ccc;
+}
+
+.theme-light .stacktrace {
   border-color: #ccc;
 }
 
