@@ -168,8 +168,11 @@ public final class HomeConfig {
             mLayoutType = panelConfig.mLayoutType;
 
             mViews = new ArrayList<ViewConfig>();
-            for (ViewConfig viewConfig : panelConfig.mViews) {
-                mViews.add(new ViewConfig(viewConfig));
+            List<ViewConfig> viewConfigs = panelConfig.mViews;
+            if (viewConfigs != null) {
+                for (ViewConfig viewConfig : viewConfigs) {
+                    mViews.add(new ViewConfig(viewConfig));
+                }
             }
             mFlags = panelConfig.mFlags.clone();
 
