@@ -29,7 +29,8 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(detected,
                               output,
                               p.proc.returncode,
-                              p.didTimeout)
+                              p.didTimeout,
+                              expectedfail=('returncode',))
 
 if __name__ == '__main__':
     unittest.main()
