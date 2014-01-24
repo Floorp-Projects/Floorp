@@ -781,7 +781,7 @@ class Marionette(object):
 
         """
 
-        self.window = self._send_message("getCurrentWindowHandle", "value")
+        self.window = self._send_message("getWindowHandle", "value")
         return self.window
 
     @property
