@@ -1203,17 +1203,28 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get the server-assigned IDs of all available windows
+   * Get list of windows in the current context.
+   *
+   * If called in the content context it will return a list of
+   * references to all available browser windows.  Called in the
+   * chrome context, it will list all available windows, not just
+   * browser windows (e.g. not just navigator.browser).
+   *
+   * Each window handle is assigned by the server, and the array of
+   * strings returned does not have a guaranteed ordering.
+   *
+   * @return unordered array of unique window handles as strings
    */
-  getWindows: function MDA_getWindows() {
+  getWindowHandles: function MDA_getWindowHandles() {
     this.command_id = this.getCommandId();
     let res = [];
     let winEn = this.getWinEnumerator();
-    while(winEn.hasMoreElements()) {
+    while (winEn.hasMoreElements()) {
       let foundWin = winEn.getNext();
-      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-      winId = winId + ((appName == "B2G") ? '-b2g' : '');
-      res.push(winId)
+      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      winId = winId + ((appName == "B2G") ? "-b2g" : "");
+      res.push(winId);
     }
     this.sendResponse(res, this.command_id);
   },
@@ -2431,7 +2442,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "refresh":  MarionetteServerConnection.prototype.refresh,
   "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getCurrentWindowHandle,
   "getWindow":  MarionetteServerConnection.prototype.getCurrentWindowHandle,  // deprecated
-  "getWindows":  MarionetteServerConnection.prototype.getWindows,
+  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getWindows":  MarionetteServerConnection.prototype.getWindowHandles,  // deprecated
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
   "switchToWindow": MarionetteServerConnection.prototype.switchToWindow,
