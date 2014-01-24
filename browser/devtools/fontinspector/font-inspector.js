@@ -22,6 +22,9 @@ FontInspector.prototype = {
     this.onNewNode = this.onNewNode.bind(this);
     this.inspector.selection.on("new-node", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
+    this.showAll = this.showAll.bind(this);
+    this.showAllButton = this.chromeDoc.getElementById("showall");
+    this.showAllButton.addEventListener("click", this.showAll);
     this.update();
   },
 
@@ -40,6 +43,7 @@ FontInspector.prototype = {
     this.chromeDoc = null;
     this.inspector.sidebar.off("layoutview-selected", this.onNewNode);
     this.inspector.selection.off("new-node", this.onNewNode);
+    this.showAllButton.removeEventListener("click", this.showAll);
   },
 
   /**
