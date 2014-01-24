@@ -716,6 +716,8 @@ public abstract class GeckoApp
                     message.optString("className"), message.optString("action"), message.optString("title"));
             } else if (event.equals("Locale:Set")) {
                 setLocale(message.getString("locale"));
+            } else if (event.equals("SystemUI:Visibility")) {
+                setSystemUiVisible(message.getBoolean("visible"));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1580,6 +1582,7 @@ public abstract class GeckoApp
         registerEventListener("Intent:Open");
         registerEventListener("Intent:GetHandlers");
         registerEventListener("Locale:Set");
+        registerEventListener("SystemUI:Visibility");
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2109,6 +2112,7 @@ public abstract class GeckoApp
         unregisterEventListener("Intent:Open");
         unregisterEventListener("Intent:GetHandlers");
         unregisterEventListener("Locale:Set");
+        unregisterEventListener("SystemUI:Visibility");
 
         deleteTempFiles();
 
@@ -2812,6 +2816,19 @@ public abstract class GeckoApp
             public void run() {
                 GeckoApp.this.doRestart();
                 GeckoApp.this.finish();
+            }
+        });
+    }
+
+    private void setSystemUiVisible(final boolean visible) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (visible) {
+                    mMainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+                } else {
+                    mMainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+                }
             }
         });
     }
