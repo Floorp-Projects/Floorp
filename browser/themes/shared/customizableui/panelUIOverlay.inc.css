@@ -138,7 +138,7 @@ toolbarpaletteitem[place="panel"] > toolbarbutton,
 toolbarpaletteitem[place="palette"] > toolbarbutton,
 toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton,
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
-.panel-customization-placeholder {
+.panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
   min-width: calc(@menuPanelWidth@ / 3);
@@ -147,14 +147,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
   max-height: calc(40px + 2.4em);
 }
 
-.panel-customization-placeholder[expand],
-.panel-customization-placeholder[contract] {
-  transition-property: width;
-  transition-duration: 170ms;
-  transition-delay: 20ms;
-  transition-timing-function: ease-in-out;
-  min-width: 0;
-  max-width: none;
+.panel-customization-placeholder-child {
+  margin: 6px 0 0;
+  padding: 2px 6px;
+  border: 1px solid transparent;
 }
 
 .panel-combined-button[disabled] > .toolbarbutton-icon {
