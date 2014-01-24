@@ -178,6 +178,10 @@ function testOnWindow(aIsPrivate, aCallback) {
 }
 
 function waitForTabLoad(aWin, aURL, aCallback) {
-  whenBrowserLoaded(aWin.gBrowser.selectedBrowser, aCallback);
-  aWin.gBrowser.selectedBrowser.loadURI(aURL);
+  let browser = aWin.gBrowser.selectedBrowser;
+  whenBrowserLoaded(browser, function () {
+    SyncHandlers.get(browser).flush();
+    executeSoon(aCallback);
+  });
+  browser.loadURI(aURL);
 }
