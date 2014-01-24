@@ -3020,7 +3020,7 @@ extern JS_PUBLIC_API(bool)
 JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id, JSObject *onBehalfOf,
+JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject onBehalfOf,
                         JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
