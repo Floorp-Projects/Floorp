@@ -1780,7 +1780,7 @@ PlacesPanelMenuView.prototype = {
     }
     else {
       button = document.createElement("toolbarbutton");
-      button.className = "bookmark-item";
+      button.className = "bookmark-item subviewbutton";
       button.setAttribute("label", aChild.title);
       let icon = aChild.icon;
       if (icon)

@@ -592,7 +592,6 @@ endif
 # of the tiers and because of libxul. Suppress the default rules in favor
 # of something else. Makefiles which use this var *must* provide a sensible
 # default rule before including rules.mk
-ifndef SUPPRESS_DEFAULT_RULES
 default all::
 	$(MAKE) export
 ifdef MOZ_PSEUDO_DERECURSE
@@ -602,7 +601,6 @@ endif
 endif
 	$(MAKE) libs
 	$(MAKE) tools
-endif # SUPPRESS_DEFAULT_RULES
 
 ifeq ($(findstring s,$(filter-out --%, $(MAKEFLAGS))),)
 ECHO := echo

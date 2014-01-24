@@ -133,8 +133,7 @@ panel[type="arrow"][side="right"] {
 @media (-moz-windows-default-theme) {
   .panel-arrowcontent {
     border-color: hsla(210,4%,10%,.2);
-    box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
-                0 0 7px hsla(210,4%,10%,.1);
+    box-shadow: 0 0 4px hsla(210,4%,10%,.2);
   }
 
   .panel-arrow[side="top"],

@@ -308,7 +308,7 @@ uint16_t
 HTMLTrackElement::ReadyState() const
 {
   if (!mTrack) {
-    return NONE;
+    return READY_STATE_NONE;
   }
 
   return mTrack->ReadyState();

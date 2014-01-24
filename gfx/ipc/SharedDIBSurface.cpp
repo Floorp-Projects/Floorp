@@ -45,7 +45,7 @@ SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
   long stride = long(aWidth * kBytesPerPixel);
   unsigned char* data = reinterpret_cast<unsigned char*>(mSharedDIB.GetBits());
 
-  gfxImageFormat format = aTransparent ? gfxImageFormatARGB32 : gfxImageFormatRGB24;
+  gfxImageFormat format = aTransparent ? gfxImageFormat::ARGB32 : gfxImageFormat::RGB24;
 
   gfxImageSurface::InitWithData(data, gfxIntSize(aWidth, aHeight),
                                 stride, format);
@@ -57,7 +57,7 @@ bool
 SharedDIBSurface::IsSharedDIBSurface(gfxASurface* aSurface)
 {
   return aSurface &&
-    aSurface->GetType() == gfxSurfaceTypeImage &&
+    aSurface->GetType() == gfxSurfaceType::Image &&
     aSurface->GetData(&SHAREDDIB_KEY);
 }
 

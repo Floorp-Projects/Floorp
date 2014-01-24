@@ -586,7 +586,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       }
       aContext->IntersectClip(overflowRect);
     }
-    gfx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
@@ -642,7 +642,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
 
   nsRefPtr<gfxPattern> clipMaskSurface;
   if (clipPathFrame && !isTrivialClip) {
-    gfx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
 
     nsresult rv = clipPathFrame->ClipPaint(aContext, aFrame, matrix);
     clipMaskSurface = gfx->PopGroup();
@@ -650,7 +650,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        gfx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
+        gfx->PushGroup(gfxContentType::COLOR_ALPHA);
         gfx->Mask(clipMaskSurface);
         gfx->PopGroupToSource();
       } else {

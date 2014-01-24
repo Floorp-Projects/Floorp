@@ -64,7 +64,7 @@ static void do_qt_pixmap_unref (void *data)
     delete pmap;
 }
 
-static gfxImageFormat sOffscreenFormat = gfxImageFormatRGB24;
+static gfxImageFormat sOffscreenFormat = gfxImageFormat::RGB24;
 
 gfxQtPlatform::gfxQtPlatform()
 {
@@ -102,7 +102,7 @@ gfxQtPlatform::gfxQtPlatform()
     // around this by checking what type of graphicssystem a test QPixmap uses.
     QPixmap pixmap(1, 1);
     if (pixmap.depth() == 16) {
-        sOffscreenFormat = gfxImageFormatRGB16_565;
+        sOffscreenFormat = gfxImageFormat::RGB16_565;
     }
     mScreenDepth = pixmap.depth();
 #if (QT_VERSION < QT_VERSION_CHECK(4,8,0))

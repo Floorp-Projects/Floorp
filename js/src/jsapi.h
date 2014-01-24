@@ -1462,7 +1462,8 @@ class JS_PUBLIC_API(ContextOptions) {
         baseline_(false),
         typeInference_(false),
         ion_(false),
-        asmJS_(false)
+        asmJS_(false),
+        cloneSingletons_(false)
     {
     }
 
@@ -1586,6 +1587,16 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
+    bool cloneSingletons() const { return cloneSingletons_; }
+    ContextOptions &setCloneSingletons(bool flag) {
+        cloneSingletons_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleCloneSingletons() {
+        cloneSingletons_ = !cloneSingletons_;
+        return *this;
+    }
+
   private:
     bool extraWarnings_ : 1;
     bool werror_ : 1;
@@ -1599,6 +1610,7 @@ class JS_PUBLIC_API(ContextOptions) {
     bool typeInference_ : 1;
     bool ion_ : 1;
     bool asmJS_ : 1;
+    bool cloneSingletons_ : 1;
 };
 
 JS_PUBLIC_API(ContextOptions &)
@@ -2611,6 +2623,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       : version_(JSVERSION_UNKNOWN)
       , invisibleToDebugger_(false)
       , mergeable_(false)
+      , singletonsAsTemplates_(true)
     {
         zone_.spec = JS::FreshZone;
     }
@@ -2654,6 +2667,9 @@ class JS_PUBLIC_API(CompartmentOptions)
     bool asmJS(JSContext *cx) const;
     Override &asmJSOverride() { return asmJSOverride_; }
 
+    bool cloneSingletons(JSContext *cx) const;
+    Override &cloneSingletonsOverride() { return cloneSingletonsOverride_; }
+
     void *zonePointer() const {
         JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
         return zone_.pointer;
@@ -2661,6 +2677,13 @@ class JS_PUBLIC_API(CompartmentOptions)
     ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
     CompartmentOptions &setZone(ZoneSpecifier spec);
     CompartmentOptions &setSameZoneAs(JSObject *obj);
+
+    void setSingletonsAsValues() {
+        singletonsAsTemplates_ = false;
+    }
+    bool getSingletonsAsTemplates() const {
+        return singletonsAsTemplates_;
+    };
 
   private:
     JSVersion version_;
@@ -2670,10 +2693,16 @@ class JS_PUBLIC_API(CompartmentOptions)
     Override typeInferenceOverride_;
     Override ionOverride_;
     Override asmJSOverride_;
+    Override cloneSingletonsOverride_;
     union {
         ZoneSpecifier spec;
         void *pointer; // js::Zone* is not exposed in the API.
     } zone_;
+
+    // To XDR singletons, we need to ensure that all singletons are all used as
+    // templates, by making JSOP_OBJECT return a clone of the JSScript
+    // singleton, instead of returning the value which is baked in the JSScript.
+    bool singletonsAsTemplates_;
 };
 
 JS_PUBLIC_API(CompartmentOptions &)
@@ -3482,7 +3511,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     const char *filename() const { return filename_; }
     const jschar *sourceMapURL() const { return sourceMapURL_; }
     virtual JSObject *element() const = 0;
-    virtual JSString *elementProperty() const = 0;
+    virtual JSString *elementAttributeName() const = 0;
 
     // POD options.
     JSVersion version;
@@ -3506,6 +3535,10 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         SAVE_SOURCE
     } sourcePolicy;
 
+    // Wrap any compilation option values that need it as appropriate for
+    // use from |compartment|.
+    virtual bool wrap(JSContext *cx, JSCompartment *compartment) = 0;
+
   private:
     static JSObject * const nullObjectPtr;
     void operator=(const ReadOnlyCompileOptions &) MOZ_DELETE;
@@ -3528,7 +3561,7 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 {
     JSRuntime *runtime;
     PersistentRootedObject elementRoot;
-    PersistentRootedString elementPropertyRoot;
+    PersistentRootedString elementAttributeNameRoot;
 
   public:
     // A minimal constructor, for use with OwningCompileOptions::copy. This
@@ -3539,18 +3572,26 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     ~OwningCompileOptions();
 
     JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
-    JSString *elementProperty() const MOZ_OVERRIDE { return elementPropertyRoot; }
+    JSString *elementAttributeName() const MOZ_OVERRIDE { return elementAttributeNameRoot; }
 
     // Set this to a copy of |rhs|. Return false on OOM.
     bool copy(JSContext *cx, const ReadOnlyCompileOptions &rhs);
 
     /* These setters make copies of their string arguments, and are fallible. */
+    bool setFile(JSContext *cx, const char *f);
     bool setFileAndLine(JSContext *cx, const char *f, unsigned l);
     bool setSourceMapURL(JSContext *cx, const jschar *s);
 
     /* These setters are infallible, and can be chained. */
-    OwningCompileOptions &setElement(JSObject *e)         { elementRoot = e;         return *this; }
-    OwningCompileOptions &setElementProperty(JSString *p) { elementPropertyRoot = p; return *this; }
+    OwningCompileOptions &setLine(unsigned l)             { lineno = l;              return *this; }
+    OwningCompileOptions &setElement(JSObject *e) {
+        elementRoot = e;
+        return *this;
+    }
+    OwningCompileOptions &setElementAttributeName(JSString *p) {
+        elementAttributeNameRoot = p;
+        return *this;
+    }
     OwningCompileOptions &setPrincipals(JSPrincipals *p) {
         if (p) JS_HoldPrincipals(p);
         if (principals_) JS_DropPrincipals(runtime, principals_);
@@ -3576,6 +3617,8 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     OwningCompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     OwningCompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     OwningCompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
+
+    virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
 };
 
 /*
@@ -3588,12 +3631,12 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOptions
 {
     RootedObject elementRoot;
-    RootedString elementPropertyRoot;
+    RootedString elementAttributeNameRoot;
 
   public:
     explicit CompileOptions(JSContext *cx, JSVersion version = JSVERSION_UNKNOWN);
     CompileOptions(js::ContextFriendFields *cx, const ReadOnlyCompileOptions &rhs)
-      : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
+      : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx)
     {
         copyPODOptions(rhs);
 
@@ -3602,19 +3645,27 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
         filename_ = rhs.filename();
         sourceMapURL_ = rhs.sourceMapURL();
         elementRoot = rhs.element();
-        elementPropertyRoot = rhs.elementProperty();
+        elementAttributeNameRoot = rhs.elementAttributeName();
     }
 
     JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
-    JSString *elementProperty() const MOZ_OVERRIDE { return elementPropertyRoot; }
+    JSString *elementAttributeName() const MOZ_OVERRIDE { return elementAttributeNameRoot; }
 
+    CompileOptions &setFile(const char *f) { filename_ = f; return *this; }
+    CompileOptions &setLine(unsigned l) { lineno = l; return *this; }
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename_ = f; lineno = l; return *this;
     }
     CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL_ = s;       return *this; }
     CompileOptions &setElement(JSObject *e)          { elementRoot = e;         return *this; }
-    CompileOptions &setElementProperty(JSString *p)  { elementPropertyRoot = p; return *this; }
-    CompileOptions &setPrincipals(JSPrincipals *p)   { principals_ = p;         return *this; }
+    CompileOptions &setElementAttributeName(JSString *p) {
+        elementAttributeNameRoot = p;
+        return *this;
+    }
+    CompileOptions &setPrincipals(JSPrincipals *p) {
+        principals_ = p;
+        return *this;
+    }
     CompileOptions &setOriginPrincipals(JSPrincipals *p) {
         originPrincipals_ = p;
         return *this;
@@ -3632,6 +3683,8 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
+
+    virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
 };
 
 extern JS_PUBLIC_API(JSScript *)

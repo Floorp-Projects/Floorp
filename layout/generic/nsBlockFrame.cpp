@@ -3346,7 +3346,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       bool allowPullUp = true;
       nsIContent* forceBreakInContent = nullptr;
       int32_t forceBreakOffset = -1;
-      gfxBreakPriority forceBreakPriority = eNoBreak;
+      gfxBreakPriority forceBreakPriority = gfxBreakPriority::eNoBreak;
       do {
         nsFloatManager::SavedState floatManagerState;
         aState.mReflowState.mFloatManager->PushState(&floatManagerState);
@@ -3498,7 +3498,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (aFloatAvailableSpace.mHasFloats) {
     // There is a soft break opportunity at the start of the line, because
     // we can always move this line down below float(s).
-    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, true, eNormalBreak)) {
+    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, true, gfxBreakPriority::eNormalBreak)) {
       lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
     }
   }

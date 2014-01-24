@@ -933,36 +933,75 @@ TabParent::RecvSetBackgroundColor(const nscolor& aColor)
   return true;
 }
 
+nsIXULBrowserWindow*
+TabParent::GetXULBrowserWindow()
+{
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  if (!frame) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = frame->OwnerDoc()->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
+  if (!window) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+  window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+  return xulBrowserWindow;
+}
+
 bool
 TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
 {
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
-  if (frame) {
-    nsCOMPtr<nsIDocShell> docShell = frame->OwnerDoc()->GetDocShell();
-    if (!docShell)
-      return true;
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-    if (!treeOwner)
-      return true;
-
-    nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
-    if (window) {
-      nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-      window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-      if (xulBrowserWindow) {
-        switch (aType)
-        {
-        case nsIWebBrowserChrome::STATUS_SCRIPT:
-          xulBrowserWindow->SetJSStatus(aStatus);
-          break;
-        case nsIWebBrowserChrome::STATUS_LINK:
-          xulBrowserWindow->SetOverLink(aStatus, nullptr);
-          break;
-        }
-      }
-    }
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  if (!xulBrowserWindow) {
+    return true;
   }
+
+  switch (aType) {
+   case nsIWebBrowserChrome::STATUS_SCRIPT:
+    xulBrowserWindow->SetJSStatus(aStatus);
+    break;
+   case nsIWebBrowserChrome::STATUS_LINK:
+    xulBrowserWindow->SetOverLink(aStatus, nullptr);
+    break;
+  }
+  return true;
+}
+
+bool
+TabParent::RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip)
+{
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  if (!xulBrowserWindow) {
+    return true;
+  }
+
+  xulBrowserWindow->ShowTooltip(aX, aY, aTooltip);
+  return true;
+}
+
+bool
+TabParent::RecvHideTooltip()
+{
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  if (!xulBrowserWindow) {
+    return true;
+  }
+
+  xulBrowserWindow->HideTooltip();
   return true;
 }
 

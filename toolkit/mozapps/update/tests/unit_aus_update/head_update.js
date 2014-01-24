@@ -774,7 +774,7 @@ function getUpdatedDirPath() {
  * and modified by the simple.mar update file.
  *
  * @return  nsIFile for the directory where files are added, removed, and
- * modified by the simple.mar update file.
+ *          modified by the simple.mar update file.
  */
 function getUpdateTestDir() {
   let updateTestDir = getApplyDirFile(null, true);
@@ -786,6 +786,21 @@ function getUpdateTestDir() {
   return updateTestDir;
 }
 
+/**
+ * Helper function for getting the updating directory which is used by the
+ * updater to extract the update manifest and patch files.
+ *
+ * @return  nsIFile for the directory for the updating directory.
+ */
+function getUpdatingDir() {
+  let updatingDir = getApplyDirFile(null, true);
+
+  if (IS_MACOSX) {
+    updatingDir = updatingDir.parent.parent;
+  }
+  updatingDir.append("updating");
+  return updatingDir;
+}
 
 #ifdef XP_WIN
 XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash",
@@ -1095,6 +1110,9 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   do_check_eq(process.exitValue, aExpectedExitValue);
   logTestInfo("testing update status against expected status");
   do_check_eq(status, aExpectedStatus);
+
+  logTestInfo("testing updating directory doesn't exist");
+  do_check_false(getUpdatingDir().exists());
 
   if (aCallback !== null) {
     if (typeof(aCallback) == typeof(Function)) {
@@ -1612,6 +1630,9 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
     }
+
+    logTestInfo("testing updating directory doesn't exist");
+    do_check_false(getUpdatingDir().exists());
 
     checkUpdateFinished();
   }

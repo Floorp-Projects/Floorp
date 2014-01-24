@@ -238,13 +238,13 @@ _depth_to_gfximage_format(int32_t aDepth)
 {
     switch (aDepth) {
     case 32:
-        return gfxImageFormatARGB32;
+        return gfxImageFormat::ARGB32;
     case 24:
-        return gfxImageFormatRGB24;
+        return gfxImageFormat::RGB24;
     case 16:
-        return gfxImageFormatRGB16_565;
+        return gfxImageFormat::RGB16_565;
     default:
-        return gfxImageFormatUnknown;
+        return gfxImageFormat::Unknown;
     }
 }
 
@@ -252,11 +252,11 @@ static inline QImage::Format
 _gfximage_to_qformat(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormatARGB32:
+    case gfxImageFormat::ARGB32:
         return QImage::Format_ARGB32_Premultiplied;
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::RGB24:
         return QImage::Format_ARGB32;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
         return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;
@@ -283,13 +283,13 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nullptr)
         _depth_to_gfximage_format(aDepth);
 
     // Use fallback RGB24 format, Qt will do conversion for us
-    if (format == gfxImageFormatUnknown)
-        format = gfxImageFormatRGB24;
+    if (format == gfxImageFormat::Unknown)
+        format = gfxImageFormat::RGB24;
 
 #ifdef MOZ_HAVE_SHMIMAGE
     if (aWidget) {
         if (gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType() ==
-            gfxSurfaceTypeImage) {
+            gfxSurfaceType::Image) {
             gShmImage = nsShmImage::Create(gBufferMaxSize,
                                            DefaultVisualOfScreen(gfxQtPlatform::GetXScreen(aWidget)),
                                            aDepth);
@@ -434,7 +434,7 @@ void
 nsWindow::ClearCachedResources()
 {
     if (mLayerManager &&
-        mLayerManager->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_BASIC) {
         statimLayerManager->ClearCachedResources();
     }
     for (nsIWidget* kid = mFirstChild; kid; ) {
@@ -1077,7 +1077,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
 
     {
         AutoLayerManagerSetup
-            setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
+            setupLayerManager(this, ctx, mozilla::layers::BufferMode::BUFFER_NONE);
         if (mWidgetListener) {
           nsIntRegion region(rect);
           painted = mWidgetListener->PaintWindow(this, region);
@@ -1097,7 +1097,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     // Handle buffered painting mode
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
 #if defined(MOZ_X11) && defined(Q_WS_X11)
-        if (gBufferSurface->GetType() == gfxSurfaceTypeXlib) {
+        if (gBufferSurface->GetType() == gfxSurfaceType::Xlib) {
             // Paint offscreen pixmap to QPainter
             static QPixmap gBufferPixmap;
             Drawable draw = static_cast<gfxXlibSurface*>(gBufferSurface.get())->XDrawable();
@@ -1109,7 +1109,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
 
         } else
 #endif
-        if (gBufferSurface->GetType() == gfxSurfaceTypeImage) {
+        if (gBufferSurface->GetType() == gfxSurfaceType::Image) {
             // in raster mode we can just wrap gBufferImage as QImage and paint directly
             gfxImageSurface *imgs = static_cast<gfxImageSurface*>(gBufferSurface.get());
             QImage img(imgs->Data(),
@@ -1123,7 +1123,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     } else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
         QRect trans = aPainter->transform().mapRect(r).toRect();
 #ifdef MOZ_X11
-        if (gBufferSurface->GetType() == gfxSurfaceTypeXlib) {
+        if (gBufferSurface->GetType() == gfxSurfaceType::Xlib) {
             nsRefPtr<gfxASurface> widgetSurface = GetSurfaceForQWidget(aWidget);
             nsRefPtr<gfxContext> ctx = new gfxContext(widgetSurface);
             ctx->SetSource(gBufferSurface);
@@ -1132,7 +1132,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
             ctx->Fill();
         } else
 #endif
-        if (gBufferSurface->GetType() == gfxSurfaceTypeImage) {
+        if (gBufferSurface->GetType() == gfxSurfaceType::Image) {
 #ifdef MOZ_HAVE_SHMIMAGE
             if (gShmImage) {
                 gShmImage->Put(aWidget, trans);
@@ -2691,11 +2691,11 @@ nsWindow::GetThebesSurface()
 #ifdef CAIRO_HAS_QT_SURFACE
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
-        mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), GFX_CONTENT_COLOR);
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), gfxContentType::COLOR);
     }
 #endif
     if (!mThebesSurface) {
-        gfxImageFormat imageFormat = gfxImageFormatRGB24;
+        gfxImageFormat imageFormat = gfxImageFormat::RGB24;
         mThebesSurface = new gfxImageSurface(gfxIntSize(1, 1), imageFormat);
     }
 
@@ -3139,7 +3139,7 @@ uint32_t
 nsWindow::GetGLFrameBufferFormat()
 {
     if (mLayerManager &&
-        mLayerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL) {
         return MozQGLWidgetWrapper::isRGBAContext() ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
     }
     return LOCAL_GL_NONE;

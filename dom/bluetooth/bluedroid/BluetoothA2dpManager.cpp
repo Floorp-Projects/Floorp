@@ -676,6 +676,14 @@ BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
              BluetoothValue::TArrayOfBluetoothNamedValue);
 
   const nsString& address = aSignal.path();
+  /**
+   * Update sink property only if
+   * - mDeviceAddress is empty (A2dp is disconnected), or
+   * - this property change is from the connected sink.
+   */
+  NS_ENSURE_TRUE_VOID(mDeviceAddress.IsEmpty() ||
+                      mDeviceAddress.Equals(address));
+
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aSignal.value().get_ArrayOfBluetoothNamedValue();
   MOZ_ASSERT(arr.Length() == 1);

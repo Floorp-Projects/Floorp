@@ -112,6 +112,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     // obviously safe for now.  We can loosen as we need.
 
     SAFE_OP(Constant)
+    UNSAFE_OP(CloneLiteral)
     SAFE_OP(Parameter)
     SAFE_OP(Callee)
     SAFE_OP(TableSwitch)
@@ -185,6 +186,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(NewDerivedTypedObject)
     UNSAFE_OP(InitElem)
     UNSAFE_OP(InitElemGetterSetter)
+    UNSAFE_OP(MutateProto)
     UNSAFE_OP(InitProp)
     UNSAFE_OP(InitPropGetterSetter)
     SAFE_OP(Start)

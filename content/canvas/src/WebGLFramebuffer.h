@@ -27,7 +27,7 @@ class WebGLFramebuffer MOZ_FINAL
     , public WebGLContextBoundObject
 {
 public:
-    WebGLFramebuffer(WebGLContext *context);
+    WebGLFramebuffer(WebGLContext* context);
 
     ~WebGLFramebuffer() {
         DeleteOnce();
@@ -54,21 +54,21 @@ public:
 
         bool HasAlpha() const;
 
-        void SetTexImage(WebGLTexture *tex, GLenum target, GLint level);
-        void SetRenderbuffer(WebGLRenderbuffer *rb) {
+        void SetTexImage(WebGLTexture* tex, GLenum target, GLint level);
+        void SetRenderbuffer(WebGLRenderbuffer* rb) {
             mTexturePtr = nullptr;
             mRenderbufferPtr = rb;
         }
-        const WebGLTexture *Texture() const {
+        const WebGLTexture* Texture() const {
             return mTexturePtr;
         }
-        WebGLTexture *Texture() {
+        WebGLTexture* Texture() {
             return mTexturePtr;
         }
-        const WebGLRenderbuffer *Renderbuffer() const {
+        const WebGLRenderbuffer* Renderbuffer() const {
             return mRenderbufferPtr;
         }
-        WebGLRenderbuffer *Renderbuffer() {
+        WebGLRenderbuffer* Renderbuffer() {
             return mRenderbufferPtr;
         }
         GLenum TexImageTarget() const {
@@ -86,9 +86,9 @@ public:
             mRenderbufferPtr = nullptr;
         }
 
-        const WebGLRectangleObject* RectangleObject() const;
-        bool HasSameDimensionsAs(const Attachment& other) const;
+        const WebGLRectangleObject& RectangleObject() const;
 
+        bool HasImage() const;
         bool IsComplete() const;
 
         void FinalizeAttachment(GLenum attachmentLoc) const;
@@ -103,15 +103,23 @@ public:
     void FramebufferRenderbuffer(GLenum target,
                                  GLenum attachment,
                                  GLenum rbtarget,
-                                 WebGLRenderbuffer *wrb);
+                                 WebGLRenderbuffer* wrb);
 
     void FramebufferTexture2D(GLenum target,
                               GLenum attachment,
                               GLenum textarget,
-                              WebGLTexture *wtex,
+                              WebGLTexture* wtex,
                               GLint level);
 
-    bool HasIncompleteAttachment() const;
+private:
+    const WebGLRectangleObject& GetAnyRectObject() const;
+
+public:
+    bool HasDefinedAttachments() const;
+    bool HasIncompleteAttachments() const;
+    bool AllImageRectsMatch() const;
+    GLenum PrecheckFramebufferStatus() const;
+    GLenum CheckFramebufferStatus() const;
 
     bool HasDepthStencilConflict() const {
         return int(mDepthAttachment.IsDefined()) +
@@ -119,12 +127,10 @@ public:
                int(mDepthStencilAttachment.IsDefined()) >= 2;
     }
 
-    bool HasAttachmentsOfMismatchedDimensions() const;
-
-    const size_t ColorAttachmentCount() const {
+    size_t ColorAttachmentCount() const {
         return mColorAttachments.Length();
     }
-    const Attachment& ColorAttachment(uint32_t colorAttachmentId) const {
+    const Attachment& ColorAttachment(size_t colorAttachmentId) const {
         return mColorAttachments[colorAttachmentId];
     }
 
@@ -142,21 +148,19 @@ public:
 
     const Attachment& GetAttachment(GLenum attachment) const;
 
-    void DetachTexture(const WebGLTexture *tex);
+    void DetachTexture(const WebGLTexture* tex);
 
-    void DetachRenderbuffer(const WebGLRenderbuffer *rb);
+    void DetachRenderbuffer(const WebGLRenderbuffer* rb);
 
-    const WebGLRectangleObject *RectangleObject() {
-        return mColorAttachments[0].RectangleObject();
-    }
+    const WebGLRectangleObject& RectangleObject() const;
 
-    WebGLContext *GetParentObject() const {
+    WebGLContext* GetParentObject() const {
         return Context();
     }
 
     void FinalizeAttachments() const;
 
-    virtual JSObject* WrapObject(JSContext *cx,
+    virtual JSObject* WrapObject(JSContext* cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
@@ -164,7 +168,7 @@ public:
 
     bool CheckAndInitializeAttachments();
 
-    bool CheckColorAttachementNumber(GLenum attachment, const char * functionName) const;
+    bool CheckColorAttachementNumber(GLenum attachment, const char* functionName) const;
 
     GLuint mGLName;
     bool mHasEverBeenBound;

@@ -442,8 +442,8 @@ nsBinHexDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt)
 
   NS_ENSURE_TRUE(mNextListener, NS_ERROR_FAILURE);
 
-  mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
-  mOutgoingBuffer = (char *) nsMemory::Alloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
+  mDataBuffer = (char *) moz_malloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
+  mOutgoingBuffer = (char *) moz_malloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
   if (!mDataBuffer || !mOutgoingBuffer) return NS_ERROR_FAILURE; // out of memory;
 
   // now we want to create a pipe which we'll use to write our converted data...

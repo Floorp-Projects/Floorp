@@ -241,14 +241,26 @@ this.DOMApplicationRegistry = {
   },
 
   // Notify we are starting with registering apps.
+  _registryStarted: Promise.defer(),
   notifyAppsRegistryStart: function notifyAppsRegistryStart() {
     Services.obs.notifyObservers(this, "webapps-registry-start", null);
+    this._registryStarted.resolve();
+  },
+
+  get registryStarted() {
+    return this._registryStarted.promise;
   },
 
   // Notify we are done with registering apps and save a copy of the registry.
+  _registryReady: Promise.defer(),
   notifyAppsRegistryReady: function notifyAppsRegistryReady() {
+    this._registryReady.resolve();
     Services.obs.notifyObservers(this, "webapps-registry-ready", null);
     this._saveApps();
+  },
+
+  get registryReady() {
+    return this._registryReady.promise;
   },
 
   // Ensure that the .to property in redirects is a relative URL.
@@ -967,9 +979,17 @@ this.DOMApplicationRegistry = {
       channel.contentType = "application/json";
       NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
+          deferred.resolve(null);
+
+          if (aResult == Cr.NS_ERROR_FILE_NOT_FOUND) {
+            // We expect this under certain circumstances, like for webapps.json
+            // on firstrun, so we return early without reporting an error.
+            return;
+          }
+
           Cu.reportError("DOMApplicationRegistry: Could not read from json file "
                          + aPath);
-          deferred.resolve(null);
+          return;
         }
 
         try {
@@ -1998,6 +2018,16 @@ this.DOMApplicationRegistry = {
                      ": " + aError);
     }.bind(this);
 
+    if (app.receipts.length > 0) {
+      for (let receipt of app.receipts) {
+        let error = this.isReceipt(receipt);
+        if (error) {
+          sendError(error);
+          return;
+        }
+      }
+    }
+
     // Hosted apps can't be trusted or certified, so just check that the
     // manifest doesn't ask for those.
     function checkAppStatus(aManifest) {
@@ -2106,6 +2136,16 @@ this.DOMApplicationRegistry = {
       Cu.reportError("Error installing packaged app from: " +
                      app.installOrigin + ": " + aError);
     }.bind(this);
+
+    if (app.receipts.length > 0) {
+      for (let receipt of app.receipts) {
+        let error = this.isReceipt(receipt);
+        if (error) {
+          sendError(error);
+          return;
+        }
+      }
+    }
 
     let checkUpdateManifest = (function() {
       let manifest = app.updateManifest;

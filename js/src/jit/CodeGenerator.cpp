@@ -1078,6 +1078,18 @@ CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
     return emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
 }
 
+typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
+static const VMFunction DeepCloneObjectLiteralInfo =
+    FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
+
+bool
+CodeGenerator::visitCloneLiteral(LCloneLiteral *lir)
+{
+    pushArg(ImmWord(js::MaybeSingletonObject));
+    pushArg(ToRegister(lir->output()));
+    return callVM(DeepCloneObjectLiteralInfo, lir);
+}
+
 bool
 CodeGenerator::visitParameter(LParameter *lir)
 {
@@ -3693,6 +3705,21 @@ CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter *lir)
     pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
 
     return callVM(InitElemGetterSetterInfo, lir);
+}
+
+typedef bool(*MutatePrototypeFn)(JSContext *cx, HandleObject obj, HandleValue value);
+static const VMFunction MutatePrototypeInfo =
+    FunctionInfo<MutatePrototypeFn>(MutatePrototype);
+
+bool
+CodeGenerator::visitMutateProto(LMutateProto *lir)
+{
+    Register objReg = ToRegister(lir->getObject());
+
+    pushArg(ToValue(lir, LMutateProto::ValueIndex));
+    pushArg(objReg);
+
+    return callVM(MutatePrototypeInfo, lir);
 }
 
 typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,

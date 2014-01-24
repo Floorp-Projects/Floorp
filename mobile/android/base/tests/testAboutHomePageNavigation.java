@@ -6,23 +6,23 @@ import org.mozilla.gecko.tests.components.AboutHomeComponent.PanelType;
 import org.mozilla.gecko.tests.helpers.*;
 
 /**
- * Tests functionality related to navigating between the various about:home pages.
+ * Tests functionality related to navigating between the various about:home panels.
  */
 public class testAboutHomePageNavigation extends UITest {
     // TODO: Define this test dynamically by creating dynamic representations of the Page
-    // enum for both phone and tablet, then swiping through the pages. This will also
-    // benefit having a HomePager with custom pages.
+    // enum for both phone and tablet, then swiping through the panels. This will also
+    // benefit having a HomePager with custom panels.
     public void testAboutHomePageNavigation() {
         GeckoHelper.blockForReady();
 
         mAboutHome.assertVisible()
-                  .assertCurrentPage(PanelType.TOP_SITES);
+                  .assertCurrentPanel(PanelType.TOP_SITES);
 
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
 
         // Ideally these helpers would just be their own tests. However, by keeping this within
         // one method, we're saving test setUp and tearDown resources.
@@ -34,47 +34,47 @@ public class testAboutHomePageNavigation extends UITest {
     }
 
     private void helperTestTablet() {
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.HISTORY);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
 
         // Edge case.
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.HISTORY);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
 
         // Edge case.
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
     }
 
     private void helperTestPhone() {
         // Edge case.
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
 
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.HISTORY);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
 
         // Edge case.
-        mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PanelType.HISTORY);
+        mAboutHome.swipeToPanelOnLeft();
+        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
 
-        mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
+        mAboutHome.swipeToPanelOnRight();
+        mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
     }
 
     // TODO: bug 943706 - reimplement this old test code.

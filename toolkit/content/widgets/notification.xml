@@ -468,7 +468,7 @@
               <children/>
               <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
                             label="&closeNotificationItem.label;"
-                            xbl:inherits="oncommand=closeitemcommand"/>
+                            xbl:inherits="oncommand=closeitemcommand,hidden=hidenotnow"/>
             </xul:menupopup>
           </xul:button>
         </xul:hbox>

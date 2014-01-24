@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" reftest-wait="">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:html="http://www.w3.org/1999/xhtml">
+      <binding id="x">
+        <content>
+          <html:span class="a">Some text</html:span>
+          <html:span class="b">This should be green</html:span>
+          <children/>
+        </content>
+        <implementation>
+          <method name="nixText">
+            <body>
+              document.getAnonymousNodes(this)[0].textContent = "";
+            </body>
+          </method>
+        </implementation>
+      </binding>
+    </bindings>
+    <style>
+      #foo { -moz-binding: url("#x"); }
+      .a:empty + .b { color: green; }
+    </style>
+  </head>
+  <body>
+    <span id="foo"></span>
+    <script>
+      window.onload = function() {
+        var el = document.getElementById("foo");
+        // Flush its layout
+        el.offsetWidth;
+        el.nixText();
+        document.documentElement.className = "";
+      }
+    </script>
+  </body>
+</html>

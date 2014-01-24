@@ -23,6 +23,7 @@
 #include "nsCSSRendering.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMClassInfo.h"
+#include "nsEditorEventListener.h"
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGlobalWindow.h"
@@ -38,7 +39,6 @@
 #include "nsStackLayout.h"
 #include "nsStyleSet.h"
 #include "nsTextControlFrame.h"
-#include "nsXBLWindowKeyHandler.h"
 #include "nsXBLService.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsTreeSanitizer.h"
@@ -350,7 +350,7 @@ nsLayoutStatics::Shutdown()
   nsGlobalWindow::ShutDown();
   nsDOMClassInfo::ShutDown();
   nsListControlFrame::Shutdown();
-  nsXBLWindowKeyHandler::ShutDown();
+  nsEditorEventListener::ShutDown();
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
   FrameLayerBuilder::Shutdown();

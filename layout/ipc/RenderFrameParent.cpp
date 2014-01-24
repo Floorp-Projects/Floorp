@@ -102,7 +102,7 @@ AssertInTopLevelChromeDoc(ContainerLayer* aContainer,
                           nsIFrame* aContainedFrame)
 {
   NS_ASSERTION(
-    (aContainer->Manager()->GetBackendType() != mozilla::layers::LAYERS_BASIC) ||
+    (aContainer->Manager()->GetBackendType() != mozilla::layers::LayersBackend::LAYERS_BASIC) ||
     (aContainedFrame->GetNearestWidget() ==
      static_cast<BasicLayerManager*>(aContainer->Manager())->GetRetainerWidget()),
     "Expected frame to be in top-level chrome document");
@@ -354,7 +354,7 @@ ClearContainer(ContainerLayer* aContainer)
 inline static bool
 IsTempLayerManager(LayerManager* aManager)
 {
-  return (mozilla::layers::LAYERS_BASIC == aManager->GetBackendType() &&
+  return (mozilla::layers::LayersBackend::LAYERS_BASIC == aManager->GetBackendType() &&
           !static_cast<BasicLayerManager*>(aManager)->IsRetained());
 }
 
@@ -705,7 +705,7 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
 
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
   // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->GetBackendType() == LAYERS_CLIENT) {
+  if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     *aTextureFactoryIdentifier =
       static_cast<ClientLayerManager*>(lm.get())->GetTextureFactoryIdentifier();
   } else {
@@ -723,7 +723,7 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
     // Our remote frame will push layers updates to the compositor,
     // and we'll keep an indirect reference to that tree.
     *aId = mLayersId = CompositorParent::AllocateLayerTreeId();
-    if (lm && lm->GetBackendType() == LAYERS_CLIENT) {
+    if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
       ClientLayerManager *clientManager = static_cast<ClientLayerManager*>(lm.get());
       clientManager->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId);
     }

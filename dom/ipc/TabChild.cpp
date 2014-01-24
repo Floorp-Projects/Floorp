@@ -735,6 +735,7 @@ NS_INTERFACE_MAP_BEGIN(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIDialogCreator)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(TabChild)
@@ -2365,7 +2366,7 @@ TabChild::NotifyPainted()
     // we need to notify content every change so that it can compute an invalidation
     // region and send that to the widget.
     if (UseDirectCompositor() &&
-        (!mNotified || mTextureFactoryIdentifier.mParentBackend == LAYERS_BASIC)) {
+        (!mNotified || mTextureFactoryIdentifier.mParentBackend == LayersBackend::LAYERS_BASIC)) {
         mRemoteFrame->SendNotifyCompositorTransaction();
         mNotified = true;
     }
@@ -2512,6 +2513,20 @@ TabChild::GetFrom(nsIPresShell* aPresShell)
   return GetFrom(docShell);
 }
 
+NS_IMETHODIMP
+TabChild::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText)
+{
+    nsString str(aTipText);
+    SendShowTooltip(aXCoords, aYCoords, str);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnHideTooltip()
+{
+    SendHideTooltip();
+    return NS_OK;
+}
 
 TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
 : mTabChild(aTabChild)

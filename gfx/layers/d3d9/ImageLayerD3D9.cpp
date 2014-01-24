@@ -27,7 +27,7 @@ using namespace mozilla::gfx;
 static inline _D3DFORMAT
 D3dFormatForGfxFormat(gfxImageFormat aFormat)
 {
-  if (aFormat == gfxImageFormatA8) {
+  if (aFormat == gfxImageFormat::A8) {
     return D3DFMT_A8;
   }
 
@@ -141,7 +141,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
 
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
-                                       gfxImageFormatARGB32);
+                                       gfxImageFormat::ARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);
@@ -306,7 +306,7 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
     backendData->mCrTexture->UnlockRect(0);
   }
 
-  aImage->SetBackendData(mozilla::layers::LAYERS_D3D9, backendData.forget());
+  aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9, backendData.forget());
 }
 
 Layer*
@@ -331,11 +331,11 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
     RemoteBitmapImage *remoteImage =
       static_cast<RemoteBitmapImage*>(aImage);
 
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9)) {
       nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize, D3DFMT_A8R8G8B8);
       if (dat->mTexture) {
-        aImage->SetBackendData(mozilla::layers::LAYERS_D3D9, dat.forget());
+        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9, dat.forget());
       }
     }
 
@@ -349,24 +349,24 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
       return nullptr;
     }
 
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9)) {
       nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
       dat->mTexture = SurfaceToTexture(device(), surf, cairoImage->GetSize());
       if (dat->mTexture) {
-        aImage->SetBackendData(mozilla::layers::LAYERS_D3D9, dat.forget());
+        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9, dat.forget());
       }
     }
 
-    aHasAlpha = surf->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
+    aHasAlpha = surf->GetContentType() == gfxContentType::COLOR_ALPHA;
   } else if (aImage->GetFormat() == D3D9_RGB32_TEXTURE) {
-    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
+    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9)) {
       // The texture in which the frame is stored belongs to DXVA's D3D9 device.
       // We need to open it on our device before we can use it.
       nsAutoPtr<TextureD3D9BackendData> backendData(new TextureD3D9BackendData());
       D3D9SurfaceImage* image = static_cast<D3D9SurfaceImage*>(aImage);
       backendData->mTexture = OpenSharedTexture(image->GetDesc(), image->GetShareHandle(), device());
       if (backendData->mTexture) {
-        aImage->SetBackendData(mozilla::layers::LAYERS_D3D9, backendData.forget());
+        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9, backendData.forget());
       }
     }
     aHasAlpha = false;
@@ -376,7 +376,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
   }
 
   TextureD3D9BackendData *data =
-    static_cast<TextureD3D9BackendData*>(aImage->GetBackendData(mozilla::layers::LAYERS_D3D9));
+    static_cast<TextureD3D9BackendData*>(aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9));
 
   if (!data) {
     return nullptr;
@@ -416,7 +416,7 @@ ImageLayerD3D9::RenderLayer()
   {
     nsRefPtr<gfxASurface> surf = image->DeprecatedGetAsSurface();
     NS_ASSERTION(image->GetFormat() != CAIRO_SURFACE ||
-                 !surf || surf->GetContentType() != GFX_CONTENT_ALPHA,
+                 !surf || surf->GetContentType() != gfxContentType::ALPHA,
                  "Image layer has alpha image");
 
     bool hasAlpha = false;
@@ -457,12 +457,12 @@ ImageLayerD3D9::RenderLayer()
       return;
     }
 
-    if (!yuvImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
+    if (!yuvImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9)) {
       AllocateTexturesYCbCr(yuvImage, device(), mD3DManager);
     }
 
     PlanarYCbCrD3D9BackendData *data =
-      static_cast<PlanarYCbCrD3D9BackendData*>(yuvImage->GetBackendData(mozilla::layers::LAYERS_D3D9));
+      static_cast<PlanarYCbCrD3D9BackendData*>(yuvImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9));
 
     if (!data) {
       return;

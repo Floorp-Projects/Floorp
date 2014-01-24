@@ -10,6 +10,8 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
+#include "mozilla/Atomics.h"
+
 #include <stdarg.h>
 
 #include "jscntxt.h"
@@ -34,7 +36,8 @@ class OptimizationInfo;
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment *compartment, TempAllocator *alloc, MIRGraph *graph,
+    MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
+                 TempAllocator *alloc, MIRGraph *graph,
                  CompileInfo *info, const OptimizationInfo *optimizationInfo);
 
     TempAllocator &alloc() {
@@ -144,7 +147,7 @@ class MIRGenerator
     uint32_t nslots_;
     MIRGraph *graph_;
     bool error_;
-    size_t cancelBuild_;
+    mozilla::Atomic<uint32_t, mozilla::Relaxed> cancelBuild_;
 
     uint32_t maxAsmJSStackArgBytes_;
     bool performsAsmJSCall_;
@@ -163,6 +166,9 @@ class MIRGenerator
   public:
     AsmJSPerfSpewer &perfSpewer() { return asmJSPerfSpewer_; }
 #endif
+
+  public:
+    const JitCompileOptions options;
 };
 
 } // namespace jit

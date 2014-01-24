@@ -95,7 +95,7 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
 static inline ShaderProgramType
 ShaderProgramFromContentType(gfxContentType aContentType)
 {
-  if (aContentType == GFX_CONTENT_COLOR_ALPHA)
+  if (aContentType == gfxContentType::COLOR_ALPHA)
     return RGBALayerProgramType;
   return RGBXLayerProgramType;
 }

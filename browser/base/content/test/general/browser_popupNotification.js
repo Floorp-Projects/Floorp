@@ -982,7 +982,7 @@ var tests = [
     },
     onHidden: function() { }
   },
-  { // Test #31 - Moving a tab to a new window should remove non-swappable
+  { // Test #34 - Moving a tab to a new window should remove non-swappable
     // notifications.
     run: function() {
       gBrowser.selectedTab = gBrowser.addTab("about:blank");
@@ -1002,7 +1002,7 @@ var tests = [
       });
     }
   },
-  { // Test #32 - Moving a tab to a new window should preserve swappable notifications.
+  { // Test #35 - Moving a tab to a new window should preserve swappable notifications.
     run: function() {
       gBrowser.selectedTab = gBrowser.addTab("about:blank");
       let notifyObj = new basicNotification();
@@ -1023,6 +1023,50 @@ var tests = [
         win.close();
         goNext();
       });
+    }
+  },
+  { // Test #36 - the hideNotNow option
+    run: function () {
+      this.notifyObj = new basicNotification();
+      this.notifyObj.options.hideNotNow = true;
+      this.notifyObj.mainAction.dismiss = true;
+      showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      // checkPopup verifies that the Not Now item is hidden, and that no separator is added.
+      checkPopup(popup, this.notifyObj);
+      triggerMainCommand(popup);
+    },
+    onHidden: function (popup) { }
+  },
+  { // Test #37 - the main action callback can keep the notification.
+    run: function () {
+      this.notifyObj = new basicNotification();
+      this.notifyObj.mainAction.dismiss = true;
+      showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerMainCommand(popup);
+    },
+    onHidden: function (popup) {
+      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
+      ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
+    }
+  },
+  { // Test #38 - a secondary action callback can keep the notification.
+    run: function () {
+      this.notifyObj = new basicNotification();
+      this.notifyObj.secondaryActions[0].dismiss = true;
+      showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerSecondaryCommand(popup, 0);
+    },
+    onHidden: function (popup) {
+      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
+      ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
     }
   }
 ];
@@ -1063,7 +1107,12 @@ function checkPopup(popup, notificationObj) {
                                             function (child) child.nodeName == "menuitem");
   let secondaryActions = notificationObj.secondaryActions || [];
   let actualSecondaryActionsCount = actualSecondaryActions.length;
-  if (secondaryActions.length) {
+  if (notificationObj.options.hideNotNow) {
+    is(notification.getAttribute("hidenotnow"), "true", "Not Now item hidden");
+    if (secondaryActions.length)
+      is(notification.lastChild.tagName, "menuitem", "no menuseparator");
+  }
+  else if (secondaryActions.length) {
     is(notification.lastChild.tagName, "menuseparator", "menuseparator exists");
   }
   is(actualSecondaryActionsCount, secondaryActions.length, actualSecondaryActions.length + " secondary actions");

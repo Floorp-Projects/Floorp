@@ -61,7 +61,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
 {
   nsRefPtr<TextTrack> ttrack =
     mTextTracks->AddTextTrack(mMediaElement, aKind, aLabel, aLanguage);
-  ttrack->SetReadyState(HTMLTrackElement::LOADED);
+  ttrack->SetReadyState(HTMLTrackElement::READY_STATE_LOADED);
   AddCues(ttrack);
   return ttrack.forget();
 }
@@ -155,7 +155,7 @@ TextTrackManager::PopulatePendingList()
   for (uint32_t index = 0; index < len; ++index) {
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
     if (ttrack && ttrack->Mode() != TextTrackMode::Disabled &&
-        ttrack->ReadyState() == HTMLTrackElement::LOADING) {
+        ttrack->ReadyState() == HTMLTrackElement::READY_STATE_LOADING) {
       mPendingTextTracks->AddTextTrack(ttrack);
     }
   }

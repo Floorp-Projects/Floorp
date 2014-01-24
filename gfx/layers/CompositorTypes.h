@@ -206,7 +206,7 @@ struct TextureFactoryIdentifier
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
 
-  TextureFactoryIdentifier(LayersBackend aLayersBackend = LAYERS_NONE,
+  TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                            GeckoProcessType aParentProcessId = GeckoProcessType_Default,
                            int32_t aMaxTextureSize = 0,
                            bool aSupportsTextureBlitting = false,

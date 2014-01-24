@@ -6,6 +6,9 @@
 #ifndef GFX_TYPES_H
 #define GFX_TYPES_H
 
+#include <stdint.h>
+#include "mozilla/TypedEnum.h"
+
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_user_data_key cairo_user_data_key_t;
 
@@ -36,70 +39,70 @@ typedef double gfxFloat;
  * @see gfxTextRun::BreakAndMeasureText
  * @see nsLineLayout::NotifyOptionalBreakPosition
  */
-enum gfxBreakPriority {
-    eNoBreak       = 0,
-    eWordWrapBreak,
-    eNormalBreak
-};
+MOZ_BEGIN_ENUM_CLASS(gfxBreakPriority)
+  eNoBreak       = 0,
+  eWordWrapBreak,
+  eNormalBreak
+MOZ_END_ENUM_CLASS(gfxBreakPriority)
 
-    /**
-     * The format for an image surface. For all formats with alpha data, 0
-     * means transparent, 1 or 255 means fully opaque.
-     */
-    enum gfxImageFormat {
-        gfxImageFormatARGB32, ///< ARGB data in native endianness, using premultiplied alpha
-        gfxImageFormatRGB24,  ///< xRGB data in native endianness
-        gfxImageFormatA8,     ///< Only an alpha channel
-        gfxImageFormatA1,     ///< Packed transparency information (one byte refers to 8 pixels)
-        gfxImageFormatRGB16_565,  ///< RGB_565 data in native endianness
-        gfxImageFormatUnknown
-    };
+/**
+  * The format for an image surface. For all formats with alpha data, 0
+  * means transparent, 1 or 255 means fully opaque.
+  */
+MOZ_BEGIN_ENUM_CLASS(gfxImageFormat)
+  ARGB32, ///< ARGB data in native endianness, using premultiplied alpha
+  RGB24,  ///< xRGB data in native endianness
+  A8,     ///< Only an alpha channel
+  A1,     ///< Packed transparency information (one byte refers to 8 pixels)
+  RGB16_565,  ///< RGB_565 data in native endianness
+  Unknown
+MOZ_END_ENUM_CLASS(gfxImageFormat)
 
-    enum gfxSurfaceType {
-        gfxSurfaceTypeImage,
-        gfxSurfaceTypePDF,
-        gfxSurfaceTypePS,
-        gfxSurfaceTypeXlib,
-        gfxSurfaceTypeXcb,
-        gfxSurfaceTypeGlitz,           // unused, but needed for cairo parity
-        gfxSurfaceTypeQuartz,
-        gfxSurfaceTypeWin32,
-        gfxSurfaceTypeBeOS,
-        gfxSurfaceTypeDirectFB,        // unused, but needed for cairo parity
-        gfxSurfaceTypeSVG,
-        gfxSurfaceTypeOS2,
-        gfxSurfaceTypeWin32Printing,
-        gfxSurfaceTypeQuartzImage,
-        gfxSurfaceTypeScript,
-        gfxSurfaceTypeQPainter,
-        gfxSurfaceTypeRecording,
-        gfxSurfaceTypeVG,
-        gfxSurfaceTypeGL,
-        gfxSurfaceTypeDRM,
-        gfxSurfaceTypeTee,
-        gfxSurfaceTypeXML,
-        gfxSurfaceTypeSkia,
-        gfxSurfaceTypeSubsurface,
-        gfxSurfaceTypeD2D,
-        gfxSurfaceTypeMax
-    };
+MOZ_BEGIN_ENUM_CLASS(gfxSurfaceType)
+  Image,
+  PDF,
+  PS,
+  Xlib,
+  Xcb,
+  Glitz,           // unused, but needed for cairo parity
+  Quartz,
+  Win32,
+  BeOS,
+  DirectFB,        // unused, but needed for cairo parity
+  SVG,
+  OS2,
+  Win32Printing,
+  QuartzImage,
+  Script,
+  QPainter,
+  Recording,
+  VG,
+  GL,
+  DRM,
+  Tee,
+  XML,
+  Skia,
+  Subsurface,
+  D2D,
+  Max
+MOZ_END_ENUM_CLASS(gfxSurfaceType)
 
-    enum gfxContentType {
-        GFX_CONTENT_COLOR       = 0x1000,
-        GFX_CONTENT_ALPHA       = 0x2000,
-        GFX_CONTENT_COLOR_ALPHA = 0x3000,
-        GFX_CONTENT_SENTINEL    = 0xffff
-    };
+MOZ_BEGIN_ENUM_CLASS(gfxContentType)
+  COLOR       = 0x1000,
+  ALPHA       = 0x2000,
+  COLOR_ALPHA = 0x3000,
+  SENTINEL    = 0xffff
+MOZ_END_ENUM_CLASS(gfxContentType)
 
-    /**
-     * The memory used by this surface (as reported by KnownMemoryUsed()) can
-     * either live in this process's heap, in this process but outside the
-     * heap, or in another process altogether.
-     */
-    enum gfxMemoryLocation {
-      GFX_MEMORY_IN_PROCESS_HEAP,
-      GFX_MEMORY_IN_PROCESS_NONHEAP,
-      GFX_MEMORY_OUT_OF_PROCESS
-    };
+/**
+  * The memory used by a gfxASurface (as reported by KnownMemoryUsed()) can
+  * either live in this process's heap, in this process but outside the
+  * heap, or in another process altogether.
+  */
+MOZ_BEGIN_ENUM_CLASS(gfxMemoryLocation)
+  IN_PROCESS_HEAP,
+  IN_PROCESS_NONHEAP,
+  OUT_OF_PROCESS
+MOZ_END_ENUM_CLASS(gfxMemoryLocation)
 
 #endif /* GFX_TYPES_H */

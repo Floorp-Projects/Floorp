@@ -111,7 +111,7 @@ public:
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
   virtual ImageFactory *GetImageFactory();
 
-  virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
 
 #ifdef DEBUG

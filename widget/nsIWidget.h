@@ -1202,21 +1202,21 @@ class nsIWidget : public nsISupports {
      */
     inline LayerManager* GetLayerManager(bool* aAllowRetaining = nullptr)
     {
-        return GetLayerManager(nullptr, mozilla::layers::LAYERS_NONE,
+        return GetLayerManager(nullptr, mozilla::layers::LayersBackend::LAYERS_NONE,
                                LAYER_MANAGER_CURRENT, aAllowRetaining);
     }
 
     inline LayerManager* GetLayerManager(LayerManagerPersistence aPersistence,
                                          bool* aAllowRetaining = nullptr)
     {
-        return GetLayerManager(nullptr, mozilla::layers::LAYERS_NONE,
+        return GetLayerManager(nullptr, mozilla::layers::LayersBackend::LAYERS_NONE,
                                aPersistence, aAllowRetaining);
     }
 
     /**
      * Like GetLayerManager(), but prefers creating a layer manager of
      * type |aBackendHint| instead of what would normally be created.
-     * LAYERS_NONE means "no hint".
+     * LayersBackend::LAYERS_NONE means "no hint".
      */
     virtual LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager,
                                           LayersBackend aBackendHint,

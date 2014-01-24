@@ -61,6 +61,7 @@ class LIRGenerator : public LIRGeneratorSpecific
 
     // Visitor hooks are explicit, to give CPU-specific versions a chance to
     // intercept without a bunch of explicit gunk in the .cpp.
+    bool visitCloneLiteral(MCloneLiteral *ins);
     bool visitParameter(MParameter *param);
     bool visitCallee(MCallee *callee);
     bool visitGoto(MGoto *ins);
@@ -78,6 +79,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAbortPar(MAbortPar *ins);
     bool visitInitElem(MInitElem *ins);
     bool visitInitElemGetterSetter(MInitElemGetterSetter *ins);
+    bool visitMutateProto(MMutateProto *ins);
     bool visitInitProp(MInitProp *ins);
     bool visitInitPropGetterSetter(MInitPropGetterSetter *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);

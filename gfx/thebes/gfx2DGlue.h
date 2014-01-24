@@ -209,31 +209,31 @@ inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
   case SurfaceFormat::B8G8R8A8:
-    return gfxImageFormatARGB32;
+    return gfxImageFormat::ARGB32;
   case SurfaceFormat::B8G8R8X8:
-    return gfxImageFormatRGB24;
+    return gfxImageFormat::RGB24;
   case SurfaceFormat::R5G6B5:
-    return gfxImageFormatRGB16_565;
+    return gfxImageFormat::RGB16_565;
   case SurfaceFormat::A8:
-    return gfxImageFormatA8;
+    return gfxImageFormat::A8;
   default:
-    return gfxImageFormatUnknown;
+    return gfxImageFormat::Unknown;
   }
 }
 
 inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {
-  case gfxImageFormatARGB32:
+  case gfxImageFormat::ARGB32:
     return SurfaceFormat::B8G8R8A8;
-  case gfxImageFormatRGB24:
+  case gfxImageFormat::RGB24:
     return SurfaceFormat::B8G8R8X8;
-  case gfxImageFormatRGB16_565:
+  case gfxImageFormat::RGB16_565:
     return SurfaceFormat::R5G6B5;
-  case gfxImageFormatA8:
+  case gfxImageFormat::A8:
     return SurfaceFormat::A8;
   default:
-  case gfxImageFormatUnknown:
+  case gfxImageFormat::Unknown:
     return SurfaceFormat::B8G8R8A8;
   }
 }
@@ -244,13 +244,13 @@ inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
   case SurfaceFormat::R5G6B5:
   case SurfaceFormat::B8G8R8X8:
   case SurfaceFormat::R8G8B8X8:
-    return GFX_CONTENT_COLOR;
+    return gfxContentType::COLOR;
   case SurfaceFormat::A8:
-    return GFX_CONTENT_ALPHA;
+    return gfxContentType::ALPHA;
   case SurfaceFormat::B8G8R8A8:
   case SurfaceFormat::R8G8B8A8:
   default:
-    return GFX_CONTENT_COLOR_ALPHA;
+    return gfxContentType::COLOR_ALPHA;
   }
 }
 
