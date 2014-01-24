@@ -39,6 +39,10 @@ li:not(:last-of-type),
 #errorLongDesc,
 #errorLongContent {
   padding-bottom: 10px;
+}
+
+/* Push the #ignoreWarningButton to the bottom on the blocked site page */
+.blockedsite > #errorPageContainer > #errorLongContent {
   flex: 1;
 }
 
