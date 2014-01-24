@@ -227,7 +227,7 @@ BasicCompositor::BasicCompositor(nsIWidget *aWidget)
   : mWidget(aWidget)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
-  sBackend = LAYERS_BASIC;
+  sBackend = LayersBackend::LAYERS_BASIC;
 }
 
 BasicCompositor::~BasicCompositor()

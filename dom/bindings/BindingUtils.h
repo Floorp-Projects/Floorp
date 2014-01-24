@@ -1316,6 +1316,25 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
   return obj;
 }
 
+/*
+ * This specialized function simply wraps a JS::Rooted<> since
+ * WrapNativeParent() is not applicable for JS objects.
+ */
+template<>
+inline JSObject*
+WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
+                                          JS::Handle<JSObject*> scope,
+                                          const JS::Rooted<JSObject*>& p)
+{
+  JS::Rooted<JSObject*> obj(cx, p);
+
+  if (!JS_WrapObject(cx, &obj)) {
+    return nullptr;
+  }
+
+  return obj;
+}
+
 // Helper for calling WrapNewBindingObject with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
 template <class T, bool isSmartPtr=HasgetMember<T>::Value>

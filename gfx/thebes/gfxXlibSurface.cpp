@@ -244,7 +244,7 @@ gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
       return nullptr;
     }
 
-    if (aContent == GFX_CONTENT_COLOR) {
+    if (aContent == gfxContentType::COLOR) {
         // cairo_surface_create_similar will use a matching visual if it can.
         // However, systems with 16-bit or indexed default visuals may benefit
         // from rendering with 24-bit formats.
@@ -501,26 +501,26 @@ gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
     int depth;
     unsigned long red_mask, green_mask, blue_mask;
     switch (format) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             depth = 32;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::RGB24:
             depth = 24;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormatRGB16_565:
+        case gfxImageFormat::RGB16_565:
             depth = 16;
             red_mask = 0xf800;
             green_mask = 0x7e0;
             blue_mask = 0x1f;
             break;
-        case gfxImageFormatA8:
-        case gfxImageFormatA1:
+        case gfxImageFormat::A8:
+        case gfxImageFormat::A1:
         default:
             return nullptr;
     }
@@ -549,11 +549,11 @@ XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormatARGB32:
+        case gfxImageFormat::ARGB32:
             return XRenderFindStandardFormat (dpy, PictStandardARGB32);
-        case gfxImageFormatRGB24:
+        case gfxImageFormat::RGB24:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
-        case gfxImageFormatRGB16_565: {
+        case gfxImageFormat::RGB16_565: {
             // PictStandardRGB16_565 is not standard Xrender format
             // we should try to find related visual
             // and find xrender format by visual
@@ -562,9 +562,9 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
                 return nullptr;
             return XRenderFindVisualFormat(dpy, visual);
         }
-        case gfxImageFormatA8:
+        case gfxImageFormat::A8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
-        case gfxImageFormatA1:
+        case gfxImageFormat::A1:
             return XRenderFindStandardFormat (dpy, PictStandardA1);
         default:
             break;
@@ -607,5 +607,5 @@ gfxXlibSurface::GetGLXPixmap()
 gfxMemoryLocation
 gfxXlibSurface::GetMemoryLocation() const
 {
-    return GFX_MEMORY_OUT_OF_PROCESS;
+    return gfxMemoryLocation::OUT_OF_PROCESS;
 }

@@ -378,7 +378,7 @@ nsresult TransportLayerDtls::InitInternal() {
 void TransportLayerDtls::WasInserted() {
   // Connect to the lower layers
   if (!Setup()) {
-    SetState(TS_ERROR);
+    TL_SET_STATE(TS_ERROR);
   }
 }
 
@@ -590,7 +590,7 @@ bool TransportLayerDtls::Setup() {
 void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
   if (state <= state_) {
     MOZ_MTLOG(ML_ERROR, "Lower layer state is going backwards from ours");
-    SetState(TS_ERROR);
+    TL_SET_STATE(TS_ERROR);
     return;
   }
 
@@ -602,7 +602,7 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
     case TS_INIT:
       MOZ_MTLOG(ML_ERROR,
                 LAYER_INFO << "State change of lower layer to INIT forbidden");
-      SetState(TS_ERROR);
+      TL_SET_STATE(TS_ERROR);
       break;
 
     case TS_CONNECTING:
@@ -617,18 +617,18 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
 
     case TS_CLOSED:
       MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Lower lower is now closed");
-      SetState(TS_CLOSED);
+      TL_SET_STATE(TS_CLOSED);
       break;
 
     case TS_ERROR:
       MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Lower lower experienced an error");
-      SetState(TS_ERROR);
+      TL_SET_STATE(TS_ERROR);
       break;
   }
 }
 
 void TransportLayerDtls::Handshake() {
-  SetState(TS_CONNECTING);
+  TL_SET_STATE(TS_CONNECTING);
 
   // Clear the retransmit timer
   timer_->Cancel();
@@ -640,17 +640,17 @@ void TransportLayerDtls::Handshake() {
               LAYER_INFO << "****** SSL handshake completed ******");
     if (!cert_ok_) {
       MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Certificate check never occurred");
-      SetState(TS_ERROR);
+      TL_SET_STATE(TS_ERROR);
       return;
     }
-    SetState(TS_OPEN);
+    TL_SET_STATE(TS_OPEN);
   } else {
     int32_t err = PR_GetError();
     switch(err) {
       case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
         if (mode_ != DGRAM) {
           MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Malformed TLS message");
-          SetState(TS_ERROR);
+          TL_SET_STATE(TS_ERROR);
         } else {
           MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Malformed DTLS message; ignoring");
         }
@@ -674,7 +674,7 @@ void TransportLayerDtls::Handshake() {
         break;
       default:
         MOZ_MTLOG(ML_ERROR, LAYER_INFO << "SSL handshake error "<< err);
-        SetState(TS_ERROR);
+        TL_SET_STATE(TS_ERROR);
         break;
     }
   }
@@ -709,7 +709,7 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
       MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Read " << rv << " bytes from NSS");
       SignalPacketReceived(this, buf, rv);
     } else if (rv == 0) {
-      SetState(TS_CLOSED);
+      TL_SET_STATE(TS_CLOSED);
     } else {
       int32_t err = PR_GetError();
 
@@ -718,7 +718,7 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Would have blocked");
       } else {
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "NSS Error " << err);
-        SetState(TS_ERROR);
+        TL_SET_STATE(TS_ERROR);
       }
     }
   }
@@ -742,7 +742,7 @@ TransportResult TransportLayerDtls::SendPacket(const unsigned char *data,
   }
 
   if (rv == 0) {
-    SetState(TS_CLOSED);
+    TL_SET_STATE(TS_CLOSED);
     return 0;
   }
 
@@ -755,7 +755,7 @@ TransportResult TransportLayerDtls::SendPacket(const unsigned char *data,
   }
 
   MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "NSS Error " << err);
-  SetState(TS_ERROR);
+  TL_SET_STATE(TS_ERROR);
   return TE_ERROR;
 }
 

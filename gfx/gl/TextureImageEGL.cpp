@@ -18,13 +18,13 @@ static GLenum
 GLFormatForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormatARGB32:
-    case gfxImageFormatRGB24:
+    case gfxImageFormat::ARGB32:
+    case gfxImageFormat::RGB24:
         // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
         return LOCAL_GL_RGB;
-    case gfxImageFormatA8:
+    case gfxImageFormat::A8:
         return LOCAL_GL_LUMINANCE;
     default:
         NS_WARNING("Unknown GL format for Image format");
@@ -36,11 +36,11 @@ static GLenum
 GLTypeForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormatARGB32:
-    case gfxImageFormatRGB24:
-    case gfxImageFormatA8:
+    case gfxImageFormat::ARGB32:
+    case gfxImageFormat::RGB24:
+    case gfxImageFormat::A8:
         return LOCAL_GL_UNSIGNED_BYTE;
-    case gfxImageFormatRGB16_565:
+    case gfxImageFormat::RGB16_565:
         return LOCAL_GL_UNSIGNED_SHORT_5_6_5;
     default:
         NS_WARNING("Unknown GL format for Image format");
@@ -66,13 +66,13 @@ TextureImageEGL::TextureImageEGL(GLuint aTexture,
     , mTextureState(aTextureState)
     , mBound(false)
 {
-    if (mUpdateFormat == gfxImageFormatUnknown) {
+    if (mUpdateFormat == gfxImageFormat::Unknown) {
         mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
     }
 
-    if (mUpdateFormat == gfxImageFormatRGB16_565) {
+    if (mUpdateFormat == gfxImageFormat::RGB16_565) {
         mTextureFormat = gfx::SurfaceFormat::R8G8B8X8;
-    } else if (mUpdateFormat == gfxImageFormatRGB24) {
+    } else if (mUpdateFormat == gfxImageFormat::RGB24) {
         // RGB24 means really RGBX for Thebes, which means we have to
         // use the right shader and ignore the uninitialized alpha
         // value.
@@ -159,7 +159,7 @@ TextureImageEGL::EndUpdate()
     nsRefPtr<gfxImageSurface> uploadImage = nullptr;
     gfxIntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
-    NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceTypeImage &&
+    NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceType::Image &&
                   mUpdateSurface->GetSize() == updateSize,
                   "Upload image isn't an image surface when one is expected, or is wrong size!");
 

@@ -242,10 +242,10 @@ gfxPlatformGtk::GetOffscreenFormat()
     // Make sure there is a screen
     GdkScreen *screen = gdk_screen_get_default();
     if (screen && gdk_visual_get_depth(gdk_visual_get_system()) == 16) {
-        return gfxImageFormatRGB16_565;
+        return gfxImageFormat::RGB16_565;
     }
 
-    return gfxImageFormatRGB24;
+    return gfxImageFormat::RGB24;
 }
 
 static int sDepth = 0;
