@@ -174,9 +174,6 @@ public:
   RefPtr<UnixSocketConsumer> mConsumer;
 
 private:
-
-  void FireSocketError();
-
   /**
    * libevent triggered functions that reads data from socket when available and
    * guarenteed non-blocking. Only to be called on IO thread.
@@ -490,47 +487,29 @@ void ShutdownSocketTask::Run()
 }
 
 void
-UnixSocketImpl::FireSocketError()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  // Clean up watchers, statuses, fds
-  mReadWatcher.StopWatchingFileDescriptor();
-  mWriteWatcher.StopWatchingFileDescriptor();
-  mConnectionStatus = SOCKET_DISCONNECTED;
-  mFd.reset(-1);
-
-  // Tell the main thread we've errored
-  nsRefPtr<OnSocketEventTask> t =
-    new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
-  NS_DispatchToMainThread(t);
-}
-
-void
 UnixSocketImpl::Accept()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(mConnector);
+
+  if (!mConnector) {
+    NS_WARNING("No connector object available!");
+    return;
+  }
 
   // This will set things we don't particularly care about, but it will hand
   // back the correct structure size which is what we do care about.
   if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
     NS_WARNING("Cannot create socket address!");
-    FireSocketError();
     return;
   }
 
   if (mFd.get() < 0) {
     mFd = mConnector->Create();
     if (mFd.get() < 0) {
-      NS_WARNING("Cannot create socket fd!");
-      FireSocketError();
       return;
     }
 
     if (!SetSocketFlags()) {
-      NS_WARNING("Cannot set socket flags!");
-      FireSocketError();
       return;
     }
 
@@ -538,7 +517,6 @@ UnixSocketImpl::Accept()
 #ifdef DEBUG
       CHROMIUM_LOG("...bind(%d) gave errno %d", mFd.get(), errno);
 #endif
-      FireSocketError();
       return;
     }
 
@@ -546,13 +524,15 @@ UnixSocketImpl::Accept()
 #ifdef DEBUG
       CHROMIUM_LOG("...listen(%d) gave errno %d", mFd.get(), errno);
 #endif
-      FireSocketError();
       return;
     }
 
     if (!mConnector->SetUpListenSocket(mFd)) {
       NS_WARNING("Could not set up listen socket!");
-      FireSocketError();
+      nsRefPtr<OnSocketEventTask> t =
+        new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+      NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
@@ -565,13 +545,15 @@ void
 UnixSocketImpl::Connect()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(mConnector);
+
+  if (!mConnector) {
+    NS_WARNING("No connector object available!");
+    return;
+  }
 
   if (mFd.get() < 0) {
     mFd = mConnector->Create();
     if (mFd.get() < 0) {
-      NS_WARNING("Cannot create socket fd!");
-      FireSocketError();
       return;
     }
   }
@@ -580,14 +562,15 @@ UnixSocketImpl::Connect()
 
   if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
     NS_WARNING("Cannot create socket address!");
-    FireSocketError();
     return;
   }
 
   // Select non-blocking IO.
   if (-1 == fcntl(mFd.get(), F_SETFL, O_NONBLOCK)) {
-    NS_WARNING("Cannot set nonblock!");
-    FireSocketError();
+    nsRefPtr<OnSocketEventTask> t =
+      new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+    NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_DISCONNECTED;
     return;
   }
 
@@ -600,12 +583,20 @@ UnixSocketImpl::Connect()
       int current_opts = fcntl(mFd.get(), F_GETFL, 0);
       if (-1 == current_opts) {
         NS_WARNING("Cannot get socket opts!");
-        FireSocketError();
+        mFd.reset(-1);
+        nsRefPtr<OnSocketEventTask> t =
+          new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+        NS_DispatchToMainThread(t);
+        mConnectionStatus = SOCKET_DISCONNECTED;
         return;
       }
       if (-1 == fcntl(mFd.get(), F_SETFL, current_opts & ~O_NONBLOCK)) {
         NS_WARNING("Cannot set socket opts to blocking!");
-        FireSocketError();
+        mFd.reset(-1);
+        nsRefPtr<OnSocketEventTask> t =
+          new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+        NS_DispatchToMainThread(t);
+        mConnectionStatus = SOCKET_DISCONNECTED;
         return;
       }
 
@@ -625,19 +616,20 @@ UnixSocketImpl::Connect()
 #if DEBUG
     CHROMIUM_LOG("Socket connect errno=%d\n", errno);
 #endif
-    FireSocketError();
+    mFd.reset(-1);
+    nsRefPtr<OnSocketEventTask> t =
+      new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+    NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_DISCONNECTED;
     return;
   }
 
   if (!SetSocketFlags()) {
-    NS_WARNING("Cannot set socket flags!");
-    FireSocketError();
     return;
   }
 
   if (!mConnector->SetUp(mFd)) {
     NS_WARNING("Could not set up socket!");
-    FireSocketError();
     return;
   }
 
@@ -870,19 +862,30 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 
     if (ret || error) {
       NS_WARNING("getsockopt failure on async socket connect!");
-      FireSocketError();
+      mFd.reset(-1);
+      nsRefPtr<OnSocketEventTask> t =
+        new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+      NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
     if (!SetSocketFlags()) {
-      NS_WARNING("Cannot set socket flags!");
-      FireSocketError();
+      mFd.reset(-1);
+      nsRefPtr<OnSocketEventTask> t =
+        new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+      NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
     if (!mConnector->SetUp(mFd)) {
       NS_WARNING("Could not set up socket!");
-      FireSocketError();
+      mFd.reset(-1);
+      nsRefPtr<OnSocketEventTask> t =
+        new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+      NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
