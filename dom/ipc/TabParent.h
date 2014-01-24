@@ -59,6 +59,9 @@ class TabParent : public PBrowserParent
     typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
 
 public:
+    // nsITabParent
+    NS_DECL_NSITABPARENT
+
     TabParent(ContentParent* aManager, const TabContext& aContext, uint32_t aChromeFlags);
     virtual ~TabParent();
     Element* GetOwnerElement() const { return mFrameElement; }
