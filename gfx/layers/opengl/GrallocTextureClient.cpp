@@ -174,6 +174,9 @@ bool
 GrallocTextureClientOGL::Lock(OpenMode aMode)
 {
   MOZ_ASSERT(IsValid());
+  if (!IsValid() || !IsAllocated()) {
+    return false;
+  }
   // XXX- it would be cleaner to take the openMode into account or to check
   // that aMode is coherent with mGrallocFlags (which carries more information
   // than OpenMode).
