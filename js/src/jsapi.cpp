@@ -3369,17 +3369,16 @@ JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsi
 JS_PUBLIC_API(bool)
 JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
 {
-    return JS_ForwardGetPropertyTo(cx, objArg, idArg, objArg, vp);
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
+
+    return JS_ForwardGetPropertyTo(cx, obj, id, obj, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *onBehalfOfArg,
-                        MutableHandleValue vp)
+JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject onBehalfOf,
+                        JS::MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject onBehalfOf(cx, onBehalfOfArg);
-    RootedId id(cx, idArg);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
