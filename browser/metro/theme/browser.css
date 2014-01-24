@@ -389,6 +389,26 @@ documenttab[selected] .documenttab-selection {
   background-image: url(chrome://browser/skin/images/overlay-plus.png);
 }
 
+@media (min-resolution: @min_res_140pc@) {
+  #overlay-back {
+    background-image: url(chrome://browser/skin/images/overlay-back@1.4x.png);
+  }
+
+  #overlay-plus {
+    background-image: url(chrome://browser/skin/images/overlay-plus@1.4x.png);
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  #overlay-back {
+    background-image: url(chrome://browser/skin/images/overlay-back@1.8x.png);
+  }
+
+  #overlay-plus {
+    background-image: url(chrome://browser/skin/images/overlay-plus@1.8x.png);
+  }
+}
+
 #overlay-back:-moz-locale-dir(ltr),
 #overlay-plus:-moz-locale-dir(rtl) {
   left: -70px;

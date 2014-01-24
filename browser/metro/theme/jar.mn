@@ -141,7 +141,11 @@ chrome.jar:
   skin/images/progresscircle-bg.png         (images/progresscircle-bg.png)
 
   skin/images/overlay-back.png              (images/overlay-back.png)
+  skin/images/overlay-back@1.4x.png         (images/overlay-back@1.4x.png)
+  skin/images/overlay-back@1.8x.png         (images/overlay-back@1.8x.png)
   skin/images/overlay-plus.png              (images/overlay-plus.png)
+  skin/images/overlay-plus@1.4x.png         (images/overlay-plus@1.4x.png)
+  skin/images/overlay-plus@1.8x.png         (images/overlay-plus@1.8x.png)
   skin/images/autoscroll.png                (images/autoscroll.png)
 
   skin/images/arrow-top.png                 (images/arrow-top.png)
