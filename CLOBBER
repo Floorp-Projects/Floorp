@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-JS build system changes are apparently requiring clobbers.
+Bug 948583, first part, apparently requires a clobber.  (Ideas for fixing this involve removing jsopcode.tbl, which is a bit too big to do while holding up this patch.)
