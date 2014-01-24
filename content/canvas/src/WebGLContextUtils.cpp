@@ -67,8 +67,8 @@ WebGLContext::ShouldGenerateWarnings() const
 }
 
 CheckedUint32
-WebGLContext::GetImageSize(GLsizei height, 
-                           GLsizei width, 
+WebGLContext::GetImageSize(GLsizei height,
+                           GLsizei width,
                            uint32_t pixelSize,
                            uint32_t packOrUnpackAlignment)
 {
@@ -91,7 +91,7 @@ WebGLContext::SynthesizeGLError(GLenum err)
     // but if there isn't, then we need to check for a gl error
     // that may have occurred before this one and use that code
     // instead.
-    
+
     MakeContextCurrent();
 
     UpdateWebGLErrorAndClearGLError();
