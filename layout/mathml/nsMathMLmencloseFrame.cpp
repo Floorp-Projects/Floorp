@@ -799,7 +799,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
         rect.TopRight() + gfxPoint(std::min(e / 2.0, -w + .4*h), h + .4*w),
         rect.TopRight()
       };
-      gfxCtx->Polygon(p, sizeof(p));
+      gfxCtx->Polygon(p, MOZ_ARRAY_LENGTH(p));
       gfxCtx->Fill();
     }
       break;

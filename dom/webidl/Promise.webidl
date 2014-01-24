@@ -33,4 +33,13 @@ interface Promise {
 
   [NewObject]
   Promise catch(optional AnyCallback? rejectCallback);
+
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
+  static Promise all(sequence<any> iterable);
+
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
+  static Promise cast(optional any value);
+
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
+  static Promise race(sequence<any> iterable);
 };

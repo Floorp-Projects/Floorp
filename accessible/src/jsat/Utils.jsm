@@ -778,7 +778,7 @@ PrefCache.prototype = {
 this.SettingCache = function SettingCache(aName, aCallback, aOptions = {}) {
   this.value = aOptions.defaultValue;
   let runCallback = () => {
-    if (aCallback && aOptions.callbackNow) {
+    if (aCallback) {
       aCallback(aName, this.value);
       if (aOptions.callbackOnce) {
         runCallback = () => {};
@@ -788,7 +788,9 @@ this.SettingCache = function SettingCache(aName, aCallback, aOptions = {}) {
 
   let settings = Utils.win.navigator.mozSettings;
   if (!settings) {
-    runCallback();
+    if (aOptions.callbackNow) {
+      runCallback();
+    }
     return;
   }
 
@@ -798,7 +800,9 @@ this.SettingCache = function SettingCache(aName, aCallback, aOptions = {}) {
 
   req.addEventListener('success', () => {
     this.value = req.result[aName] == undefined ? aOptions.defaultValue : req.result[aName];
-    runCallback();
+    if (aOptions.callbackNow) {
+      runCallback();
+    }
   });
 
   settings.addObserver(aName,
