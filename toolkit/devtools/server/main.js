@@ -358,6 +358,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/device");
     this.registerModule("devtools/server/actors/stylesheets");
     this.registerModule("devtools/server/actors/styleeditor");
+    this.registerModule("devtools/server/actors/memory");
   },
 
   /**
@@ -377,6 +378,7 @@ var DebuggerServer = {
       this.registerModule("devtools/server/actors/stylesheets");
       this.registerModule("devtools/server/actors/styleeditor");
       this.registerModule("devtools/server/actors/tracer");
+      this.registerModule("devtools/server/actors/memory");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");

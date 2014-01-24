@@ -76,37 +76,27 @@ let EventListener = {
 
   init: function () {
     addEventListener("load", this, true);
-    addEventListener("pageshow", this, true);
   },
 
   handleEvent: function (event) {
-    switch (event.type) {
-      case "load":
-        // Ignore load events from subframes.
-        if (event.target == content.document) {
-          // If we're in the process of restoring, this load may signal
-          // the end of the restoration.
-          let epoch = gContentRestore.getRestoreEpoch();
-          if (epoch) {
-            // Restore the form data and scroll position.
-            gContentRestore.restoreDocument();
-
-            // Ask SessionStore.jsm to trigger SSTabRestored.
-            sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
-          }
-
-          // Send a load message for all loads so we can invalidate the TabStateCache.
-          sendAsyncMessage("SessionStore:load");
-        }
-        break;
-      case "pageshow":
-        if (event.persisted && event.target == content.document)
-          sendAsyncMessage("SessionStore:pageshow");
-        break;
-      default:
-        debug("received unknown event '" + event.type + "'");
-        break;
+    // Ignore load events from subframes.
+    if (event.target != content.document) {
+      return;
     }
+
+    // If we're in the process of restoring, this load may signal
+    // the end of the restoration.
+    let epoch = gContentRestore.getRestoreEpoch();
+    if (epoch) {
+      // Restore the form data and scroll position.
+      gContentRestore.restoreDocument();
+
+      // Ask SessionStore.jsm to trigger SSTabRestored.
+      sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
+    }
+
+    // Send a load message for all loads.
+    sendAsyncMessage("SessionStore:load");
   }
 };
 
@@ -116,8 +106,6 @@ let EventListener = {
 let MessageListener = {
 
   MESSAGES: [
-    "SessionStore:collectSessionHistory",
-
     "SessionStore:restoreHistory",
     "SessionStore:restoreTabContent",
     "SessionStore:resetRestore",
@@ -128,12 +116,7 @@ let MessageListener = {
   },
 
   receiveMessage: function ({name, data}) {
-    let id = data ? data.id : 0;
     switch (name) {
-      case "SessionStore:collectSessionHistory":
-        let history = SessionHistory.collect(docShell);
-        sendAsyncMessage(name, {id: id, data: history});
-        break;
       case "SessionStore:restoreHistory":
         let reloadCallback = () => {
           // Inform SessionStore.jsm about the reload. It will send
@@ -180,12 +163,12 @@ let MessageListener = {
 };
 
 /**
- * If session data must be collected synchronously, we do it via
- * method calls to this object (rather than via messages to
- * MessageListener). When using multiple processes, these methods run
- * in the content process, but the parent synchronously waits on them
- * using cross-process object wrappers. Without multiple processes, we
- * still use this code for synchronous collection.
+ * On initialization, this handler gets sent to the parent process as a CPOW.
+ * The parent will use it only to flush pending data from the frame script
+ * when needed, i.e. when closing a tab, closing a window, shutting down, etc.
+ *
+ * This will hopefully not be needed in the future once we have async APIs for
+ * closing windows and tabs.
  */
 let SyncHandler = {
   init: function () {
@@ -194,10 +177,6 @@ let SyncHandler = {
     // available in SessionStore.jsm immediately upon loading
     // content-sessionStore.js.
     sendSyncMessage("SessionStore:setupSyncHandler", {}, {handler: this});
-  },
-
-  collectSessionHistory: function (includePrivateData) {
-    return SessionHistory.collect(docShell);
   },
 
   /**
@@ -225,22 +204,57 @@ let SyncHandler = {
   }
 };
 
-let ProgressListener = {
-  init: function() {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+/**
+ * Listens for changes to the session history. Whenever the user navigates
+ * we will collect URLs and everything belonging to session history.
+ *
+ * Causes a SessionStore:update message to be sent that contains the current
+ * session history.
+ *
+ * Example:
+ *   {entries: [{url: "about:mozilla", ...}, ...], index: 1}
+ */
+let SessionHistoryListener = {
+  init: function () {
+    gFrameTree.addObserver(this);
+    addEventListener("load", this, true);
+    addEventListener("hashchange", this, true);
+    Services.obs.addObserver(this, "browser:purge-session-history", false);
   },
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
-    // We are changing page, so time to invalidate the state of the tab
-    sendAsyncMessage("SessionStore:loadStart");
+
+  uninit: function () {
+    Services.obs.removeObserver(this, "browser:purge-session-history");
   },
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {},
-  onProgressChange: function() {},
-  onStatusChange: function() {},
-  onSecurityChange: function() {},
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
+
+  observe: function () {
+    // We need to use setTimeout() here because we listen for
+    // "browser:purge-session-history". When that is fired all observers are
+    // expected to purge their data. We can't expect to be called *after* the
+    // observer in browser.xml that clears session history so we need to wait
+    // a tick before actually collecting data.
+    setTimeout(() => this.collect(), 0);
+  },
+
+  handleEvent: function (event) {
+    // We are only interested in "load" events from subframes.
+    if (event.type == "hashchange" || event.target != content.document) {
+      this.collect();
+    }
+  },
+
+  collect: function () {
+    if (docShell) {
+      MessageQueue.push("history", () => SessionHistory.collect(docShell));
+    }
+  },
+
+  onFrameTreeCollected: function () {
+    this.collect();
+  },
+
+  onFrameTreeReset: function () {
+    this.collect();
+  }
 };
 
 /**
@@ -370,9 +384,7 @@ let PageStyleListener = {
 
   onFrameTreeReset: function () {
     MessageQueue.push("pageStyle", () => null);
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+  }
 };
 
 /**
@@ -456,9 +468,7 @@ let SessionStorageListener = {
 
   onFrameTreeReset: function () {
     this.collect();
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+  }
 };
 
 /**
@@ -657,8 +667,8 @@ EventListener.init();
 MessageListener.init();
 FormDataListener.init();
 SyncHandler.init();
-ProgressListener.init();
 PageStyleListener.init();
+SessionHistoryListener.init();
 SessionStorageListener.init();
 ScrollPositionListener.init();
 DocShellCapabilitiesListener.init();
@@ -668,6 +678,7 @@ addEventListener("unload", () => {
   // Remove all registered nsIObservers.
   PageStyleListener.uninit();
   SessionStorageListener.uninit();
+  SessionHistoryListener.uninit();
 
   // We don't need to take care of any gFrameTree observers as the gFrameTree
   // will die with the content script. The same goes for the privacy transition
