@@ -34,12 +34,12 @@ function preparePendingTab(aCallback) {
   let tab = gBrowser.addTab(URL);
 
   whenLoaded(tab.linkedBrowser, function () {
-    let state = SessionStore.getTabState(tab);
     gBrowser.removeTab(tab);
+    let [{state}] = JSON.parse(SessionStore.getClosedTabData(window));
 
     tab = gBrowser.addTab("about:blank");
     whenLoaded(tab.linkedBrowser, function () {
-      SessionStore.setTabState(tab, state);
+      SessionStore.setTabState(tab, JSON.stringify(state));
       ok(tab.hasAttribute("pending"), "tab should be pending");
       aCallback(tab);
     });

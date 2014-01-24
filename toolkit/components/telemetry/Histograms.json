@@ -3369,18 +3369,6 @@
     "n_buckets": 15,
     "description": "Session restore: Days elapsed since the session was first started"
   },
-  "FX_SESSION_RESTORE_TABSTATECACHE_HIT_RATE": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 101,
-    "description": "Session restore: Percentage of tab state cache hits in all tab state cache accesses"
-  },
-  "FX_SESSION_RESTORE_TABSTATECACHE_CLEAR_RATIO": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 101,
-    "description": "Session restore: Number of times the tab state cache has been cleared during a session divided by number of total accesses during the session (percentage)"
-  },
   "FX_SESSION_RESTORE_EXTRACTING_STATISTICS_DURATION_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

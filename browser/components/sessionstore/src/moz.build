@@ -18,7 +18,6 @@ EXTRA_JS_MODULES = [
     'FormData.jsm',
     'FrameTree.jsm',
     'GlobalState.jsm',
-    'Messenger.jsm',
     'PageStyle.jsm',
     'PrivacyFilter.jsm',
     'PrivacyLevel.jsm',
