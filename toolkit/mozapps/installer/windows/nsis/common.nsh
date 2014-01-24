@@ -7561,10 +7561,10 @@
         ; with a minimum of 3 lines of text.
         StrCpy $9 $8
         StrCpy $R1 2 ; set the number of lines initially to 2
-        ${While} $9 > $0
+        ${Do}
           IntOp $R1 $R1 + 1 ; increment the number of lines
           IntOp $9 $8 / $R1
-        ${EndWhile}
+        ${LoopUntil} $9 < $0
         IntOp $7 $7 * $R1
 
         StrCpy $R0 $9
