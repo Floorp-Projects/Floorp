@@ -1040,17 +1040,37 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Navigates to given url
+   * Navigate to to given URL.
    *
-   * @param object aRequest
-   *        'url' member holds the url to navigate to
+   * This will follow redirects issued by the server.  When the method
+   * returns is based on the page load strategy that the user has
+   * selected.
+   *
+   * Documents that contain a META tag with the "http-equiv" attribute
+   * set to "refresh" will return if the timeout is greater than 1
+   * second and the other criteria for determining whether a page is
+   * loaded are met.  When the refresh period is 1 second or less and
+   * the page load strategy is "normal" or "conservative", it will
+   * wait for the page to complete loading before returning.
+   *
+   * If any modal dialog box, such as those opened on
+   * window.onbeforeunload or window.alert, is opened at any point in
+   * the page load, it will return immediately.
+   *
+   * If a 401 response is seen by the browser, it will return
+   * immediately.  That is, if BASIC, DIGEST, NTLM or similar
+   * authentication is required, the page load is assumed to be
+   * complete.  This does not include FORM-based authentication.
+   *
+   * @param object aRequest where <code>url</code> property holds the
+   *        URL to navigate to
    */
-  goUrl: function MDA_goUrl(aRequest) {
+  get: function MDA_get(aRequest) {
     let command_id = this.command_id = this.getCommandId();
     if (this.context != "chrome") {
       aRequest.command_id = command_id;
       aRequest.parameters.pageTimeout = this.pageTimeout;
-      this.sendAsync("goUrl", aRequest.parameters, command_id);
+      this.sendAsync("get", aRequest.parameters, command_id);
       return;
     }
 
@@ -1058,6 +1078,7 @@ MarionetteServerConnection.prototype = {
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let start = new Date().getTime();
     let end = null;
+
     function checkLoad() {
       end = new Date().getTime();
       let elapse = end - start;
@@ -1074,7 +1095,7 @@ MarionetteServerConnection.prototype = {
         sendError("Error loading page", 13, null, command_id);
         return;
       }
-    }//end
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
@@ -2384,7 +2405,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getTitle": MarionetteServerConnection.prototype.getTitle,
   "getWindowType": MarionetteServerConnection.prototype.getWindowType,
   "getPageSource": MarionetteServerConnection.prototype.getPageSource,
-  "goUrl": MarionetteServerConnection.prototype.goUrl,
+  "get": MarionetteServerConnection.prototype.get,
+  "goUrl": MarionetteServerConnection.prototype.get,  // deprecated
   "getCurrentUrl": MarionetteServerConnection.prototype.getCurrentUrl,
   "getUrl": MarionetteServerConnection.prototype.getCurrentUrl,  // deprecated
   "goBack": MarionetteServerConnection.prototype.goBack,

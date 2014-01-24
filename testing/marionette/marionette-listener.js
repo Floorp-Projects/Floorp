@@ -129,7 +129,7 @@ function startListeners() {
   addMessageListenerId("Marionette:singleTap", singleTap);
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
-  addMessageListenerId("Marionette:goUrl", goUrl);
+  addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
@@ -224,7 +224,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:singleTap", singleTap);
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
-  removeMessageListenerId("Marionette:goUrl", goUrl);
+  removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
   removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
@@ -1178,53 +1178,58 @@ function multiAction(msg) {
 }
 
 /**
- * Navigate to URI. Handles the case where we navigate within an iframe.
- * All other navigation is handled by the server (in chrome space).
+ * Navigate to the given URL.  The operation will be performed on the
+ * current browser context, and handles the case where we navigate
+ * within an iframe.  All other navigation is handled by the server
+ * (in chrome space).
  */
-function goUrl(msg) {
+function get(msg) {
   let command_id = msg.json.command_id;
 
   let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let start = new Date().getTime();
   let end = null;
-  function checkLoad(){
+  function checkLoad() {
     checkTimer.cancel();
     end = new Date().getTime();
     let errorRegex = /about:.+(error)|(blocked)\?/;
     let elapse = end - start;
-    if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout){
-      if (curFrame.document.readyState == "complete"){
+    if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout) {
+      if (curFrame.document.readyState == "complete") {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
         sendOk(command_id);
       }
-      else if (curFrame.document.readyState == "interactive" && errorRegex.exec(curFrame.document.baseURI)){
+      else if (curFrame.document.readyState == "interactive" &&
+               errorRegex.exec(curFrame.document.baseURI)) {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
         sendError("Error loading page", 13, null, command_id);
       }
-      else{
+      else {
         checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
       }
     }
-    else{
+    else {
       removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-      sendError("Error loading page, timed out (checkLoad)", 21, null, command_id);
+      sendError("Error loading page, timed out (checkLoad)", 21, null,
+                command_id);
     }
   }
-  // Prevent DOMContentLoaded events from frames from invoking this code,
-  // unless the event is coming from the frame associated with the current
-  // window (i.e., someone has used switch_to_frame).
-  let onDOMContentLoaded = function onDOMContentLoaded(event){
+  // Prevent DOMContentLoaded events from frames from invoking this
+  // code, unless the event is coming from the frame associated with
+  // the current window (i.e. someone has used switch_to_frame).
+  let onDOMContentLoaded = function onDOMContentLoaded(event) {
     if (!event.originalTarget.defaultView.frameElement ||
-      event.originalTarget.defaultView.frameElement == curFrame.frameElement) {
+        event.originalTarget.defaultView.frameElement == curFrame.frameElement) {
       checkLoad();
     }
   };
 
-  function timerFunc(){
+  function timerFunc() {
     removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-    sendError("Error loading page, timed out (onDOMContentLoaded)", 21, null, command_id);
+    sendError("Error loading page, timed out (onDOMContentLoaded)", 21,
+              null, command_id);
   }
-  if (msg.json.pageTimeout != null){
+  if (msg.json.pageTimeout != null) {
     checkTimer.initWithCallback(timerFunc, msg.json.pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
   }
   addEventListener("DOMContentLoaded", onDOMContentLoaded, false);
