@@ -120,7 +120,7 @@ public:
     CreateDrawTarget(const gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
 
-  virtual LayersBackend GetBackendType() { return LAYERS_D3D10; }
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_D3D10; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 10"); }
 
   virtual const char* Name() const { return "D3D10"; }

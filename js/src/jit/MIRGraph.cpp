@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::jit;
 
-MIRGenerator::MIRGenerator(CompileCompartment *compartment,
+MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
                            const OptimizationInfo *optimizationInfo)
   : compartment(compartment),
@@ -31,7 +31,8 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment,
     asmJSHeapAccesses_(*alloc),
     asmJSGlobalAccesses_(*alloc),
     minAsmJSHeapLength_(AsmJSAllocationGranularity),
-    modifiesFrameArguments_(false)
+    modifiesFrameArguments_(false),
+    options(options)
 { }
 
 bool

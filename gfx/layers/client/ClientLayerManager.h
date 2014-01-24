@@ -57,7 +57,7 @@ public:
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
-  virtual LayersBackend GetBackendType() { return LAYERS_CLIENT; }
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_CLIENT; }
   virtual void GetBackendName(nsAString& name);
   virtual const char* Name() const { return "Client"; }
 

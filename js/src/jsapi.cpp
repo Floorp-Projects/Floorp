@@ -2500,6 +2500,12 @@ JS::CompartmentOptions::asmJS(JSContext *cx) const
     return asmJSOverride_.get(cx->options().asmJS());
 }
 
+bool
+JS::CompartmentOptions::cloneSingletons(JSContext *cx) const
+{
+    return cloneSingletonsOverride_.get(cx->options().cloneSingletons());
+}
+
 JS::CompartmentOptions &
 JS::CompartmentOptions::setZone(ZoneSpecifier spec)
 {
@@ -4309,7 +4315,7 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
       elementRoot(cx),
-      elementPropertyRoot(cx)
+      elementAttributeNameRoot(cx)
 {
 }
 
@@ -4339,7 +4345,7 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
 }
 
 bool
-JS::OwningCompileOptions::setFileAndLine(JSContext *cx, const char *f, unsigned l)
+JS::OwningCompileOptions::setFile(JSContext *cx, const char *f)
 {
     char *copy = nullptr;
     if (f) {
@@ -4352,6 +4358,15 @@ JS::OwningCompileOptions::setFileAndLine(JSContext *cx, const char *f, unsigned 
     js_free(const_cast<char *>(filename_));
 
     filename_ = copy;
+    return true;
+}
+
+bool
+JS::OwningCompileOptions::setFileAndLine(JSContext *cx, const char *f, unsigned l)
+{
+    if (!setFile(cx, f))
+        return false;
+
     lineno = l;
     return true;
 }
@@ -4373,8 +4388,20 @@ JS::OwningCompileOptions::setSourceMapURL(JSContext *cx, const jschar *s)
     return true;
 }
 
+bool
+JS::OwningCompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
+{
+    if (!compartment->wrap(cx, &elementRoot))
+        return false;
+    if (elementAttributeNameRoot) {
+        if (!compartment->wrap(cx, elementAttributeNameRoot.address()))
+            return false;
+    }
+    return true;
+}
+
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
+    : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
@@ -4384,6 +4411,18 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     extraWarningsOption = cx->options().extraWarnings();
     werrorOption = cx->options().werror();
     asmJSOption = cx->options().asmJS();
+}
+
+bool
+JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
+{
+    if (!compartment->wrap(cx, &elementRoot))
+        return false;
+    if (elementAttributeNameRoot) {
+        if (!compartment->wrap(cx, elementAttributeNameRoot.address()))
+            return false;
+    }
+    return true;
 }
 
 JSScript *
@@ -4443,8 +4482,8 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 JS_PUBLIC_API(bool)
 JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t length)
 {
-    static const unsigned TINY_LENGTH = 1000;
-    static const unsigned HUGE_LENGTH = 100*1000;
+    static const size_t TINY_LENGTH = 1000;
+    static const size_t HUGE_LENGTH = 100 * 1000;
 
     // These are heuristics which the caller may choose to ignore (e.g., for
     // testing purposes).
@@ -4454,11 +4493,13 @@ JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, si
         if (length < TINY_LENGTH)
             return false;
 
+#ifdef JS_THREADSAFE
         // If the parsing task would have to wait for GC to complete, it'll probably
         // be faster to just start it synchronously on the main thread unless the
         // script is huge.
         if (OffThreadParsingMustWaitForGC(cx->runtime()) && length < HUGE_LENGTH)
             return false;
+#endif // JS_THREADSAFE
     }
 
     return cx->runtime()->canUseParallelParsing();

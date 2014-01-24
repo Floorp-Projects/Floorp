@@ -13,7 +13,7 @@ gfxD2DSurface::gfxD2DSurface(HWND aWnd, gfxContentType aContent)
     Init(cairo_d2d_surface_create_for_hwnd(
         gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
         aWnd,
-        (cairo_content_t)aContent));
+        (cairo_content_t)(int)aContent));
 }
 
 gfxD2DSurface::gfxD2DSurface(HANDLE handle, gfxContentType aContent)
@@ -21,7 +21,7 @@ gfxD2DSurface::gfxD2DSurface(HANDLE handle, gfxContentType aContent)
     Init(cairo_d2d_surface_create_for_handle(
         gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
         handle,
-	(cairo_content_t)aContent));
+	(cairo_content_t)(int)aContent));
 }
 
 gfxD2DSurface::gfxD2DSurface(ID3D10Texture2D *texture, gfxContentType aContent)
@@ -29,7 +29,7 @@ gfxD2DSurface::gfxD2DSurface(ID3D10Texture2D *texture, gfxContentType aContent)
     Init(cairo_d2d_surface_create_for_texture(
         gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
         texture,
-	(cairo_content_t)aContent));
+	(cairo_content_t)(int)aContent));
 }
 
 gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
@@ -42,7 +42,7 @@ gfxD2DSurface::gfxD2DSurface(const gfxIntSize& size,
 {
     Init(cairo_d2d_surface_create(
         gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
-        (cairo_format_t)imageFormat,
+        (cairo_format_t)(int)imageFormat,
         size.width, size.height));
 }
 

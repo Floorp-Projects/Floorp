@@ -1564,7 +1564,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
   if (!mView || !mVisible)
     return NS_OK;
 
-  NS_ASSERTION(GetLayerManager()->GetBackendType() != LAYERS_CLIENT,
+  NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   if ([NSView focusView]) {
@@ -2034,7 +2034,7 @@ gfxASurface*
 nsChildView::GetThebesSurface()
 {
   if (!mTempThebesSurface) {
-    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxImageFormatARGB32);
+    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxImageFormat::ARGB32);
   }
 
   return mTempThebesSurface;
@@ -3570,11 +3570,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   bool painted = false;
-  if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
+  if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
     nsBaseWidget::AutoLayerManagerSetup
-      setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
+      setupLayerManager(mGeckoChild, targetContext, BufferMode::BUFFER_NONE);
     painted = mGeckoChild->PaintWindow(region);
-  } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+  } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     // We only need this so that we actually get DidPaintWindow fired
     painted = mGeckoChild->PaintWindow(region);
   }
@@ -3622,7 +3622,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || ![self window])
     return NO;
 
-  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LAYERS_OPENGL;
+  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL;
 }
 
 - (BOOL)isUsingOpenGL
@@ -3831,7 +3831,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // So we notify our nsChildView about any areas needing repainting.
       mGeckoChild->NotifyDirtyRegion([self nativeDirtyRegionWithBoundingRect:[self bounds]]);
 
-      if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+      if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
         ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
         manager->AsShadowForwarder()->WindowOverlayChanged();
       }

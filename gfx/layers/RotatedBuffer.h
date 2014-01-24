@@ -214,7 +214,7 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mMode(SURFACE_NONE)
+      : mMode(SurfaceMode::SURFACE_NONE)
       , mDidSelfCopy(false)
     {}
 
@@ -391,7 +391,6 @@ protected:
   gfx::DrawTarget*
   BorrowDrawTargetForQuadrantUpdate(const nsIntRect& aBounds,
                                     ContextSource aSource);
-  void ReturnDrawTarget(gfx::DrawTarget* aReturned);
 
   static bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
 

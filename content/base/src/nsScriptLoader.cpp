@@ -999,7 +999,7 @@ nsScriptLoader::GetScriptGlobalObject()
 
 void
 nsScriptLoader::FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
-                                             JS::Handle<JSObject *> scopeChain,
+                                             JS::Handle<JSObject *> aScopeChain,
                                              JS::CompileOptions *aOptions)
 {
   // It's very important to use aRequest->mURI, not the final URI of the channel
@@ -1008,12 +1008,27 @@ nsScriptLoader::FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
 
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
   aOptions->setVersion(JSVersion(aRequest->mJSVersion));
-  aOptions->setCompileAndGo(JS_IsGlobalObject(scopeChain));
+  aOptions->setCompileAndGo(JS_IsGlobalObject(aScopeChain));
   if (aRequest->mHasSourceMapURL) {
     aOptions->setSourceMapURL(aRequest->mSourceMapURL.get());
   }
   if (aRequest->mOriginPrincipal) {
     aOptions->setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
+  }
+
+  AutoJSContext cx;
+  JS::Rooted<JS::Value> elementVal(cx);
+  MOZ_ASSERT(aRequest->mElement);
+  // XXXbz this is super-fragile, because the code that _uses_ the
+  // JS::CompileOptions is nowhere near us, but we have to coordinate
+  // compartments with it... and in particular, it will compile in the
+  // compartment of aScopeChain, so we want to wrap into that compartment as
+  // well.
+  if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, aScopeChain,
+                                              aRequest->mElement, &elementVal,
+                                              /* aAllowWrapping = */ true))) {
+    MOZ_ASSERT(elementVal.isObject());
+    aOptions->setElement(&elementVal.toObject());
   }
 }
 

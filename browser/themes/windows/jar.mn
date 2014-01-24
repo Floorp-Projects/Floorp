@@ -29,6 +29,7 @@ browser.jar:
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+        skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/fullscreen-darknoise.png
         skin/classic/browser/Geolocation-16.png

@@ -117,11 +117,11 @@ gfxAndroidPlatform::gfxAndroidPlatform()
     screen->GetColorDepth(&mScreenDepth);
 
     mOffscreenFormat = mScreenDepth == 16
-                       ? gfxImageFormatRGB16_565
-                       : gfxImageFormatRGB24;
+                       ? gfxImageFormat::RGB16_565
+                       : gfxImageFormat::RGB24;
 
     if (Preferences::GetBool("gfx.android.rgb16.force", false)) {
-        mOffscreenFormat = gfxImageFormatRGB16_565;
+        mOffscreenFormat = gfxImageFormat::RGB16_565;
     }
 
 }

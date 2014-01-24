@@ -129,6 +129,7 @@
                oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" page="true"/>
+    <tooltip id="remoteBrowserTooltip"/>
 
     <!-- for search and content formfill/pw manager -->
     <panel type="autocomplete" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
@@ -217,6 +218,7 @@
            hidden="true"
            noautofocus="true"
            noautohide="true"
+           flip="none"
            consumeoutsideclicks="false">
       <box id="UITourHighlight"></box>
     </panel>

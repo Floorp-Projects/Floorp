@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:html="http://www.w3.org/1999/xhtml">
+      <binding id="x">
+        <content>
+          <html:span class="a"></html:span>
+          <html:span class="b">This should be green</html:span>
+          <children/>
+        </content>
+      </binding>
+    </bindings>
+    <style>
+      #foo { -moz-binding: url("#x"); }
+      .a + .b { color: green; }
+    </style>
+  </head>
+  <body>
+    <span id="foo"></span>
+  </body>
+</html>

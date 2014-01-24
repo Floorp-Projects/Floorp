@@ -51,7 +51,7 @@ private:
 
   bool HaveTextures(SurfaceMode aMode)
   {
-    return mTexture && (aMode != SURFACE_COMPONENT_ALPHA || mTextureOnWhite);
+    return mTexture && (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA || mTextureOnWhite);
   }
 
   /* Checks if our surface has the right content type */

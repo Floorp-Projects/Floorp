@@ -212,7 +212,7 @@ OptionsPanel.prototype = {
       }.bind(menulist));
     }
 
-    this.target.client.attachTab(this.target.client.activeTab._actor, (response) => {
+    this.target.client.attachTab(this.target.activeTab._actor, (response) => {
       this._origJavascriptEnabled = response.javascriptEnabled;
       this._origCacheEnabled = response.cacheEnabled;
 
@@ -248,7 +248,7 @@ OptionsPanel.prototype = {
       "javascriptEnabled": !checked
     };
 
-    this.target.client.reconfigureTab(options);
+    this.target.activeTab.reconfigure(options);
   },
 
   /**
@@ -264,7 +264,7 @@ OptionsPanel.prototype = {
       "cacheEnabled": !checked
     };
 
-    this.target.client.reconfigureTab(options);
+    this.target.activeTab.reconfigure(options);
   },
 
   destroy: function() {
@@ -291,7 +291,7 @@ OptionsPanel.prototype = {
       "cacheEnabled": this._origCacheEnabled,
       "javascriptEnabled": this._origJavascriptEnabled
     };
-    this.target.client.reconfigureTab(options, () => {
+    this.target.activeTab.reconfigure(options, () => {
       this.toolbox = null;
       deferred.resolve();
     }, true);

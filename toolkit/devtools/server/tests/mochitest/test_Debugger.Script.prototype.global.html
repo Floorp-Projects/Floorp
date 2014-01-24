@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=958646
+
+Debugger.Script.prototype.global should return innerize globals, not WindowProxies.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Debugger.Script.prototype.global should return inner windows</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+addDebuggerToGlobal(this);
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+
+  var iframe = document.createElement("iframe");
+  iframe.src = "data:text/html,<script>function glorp() { }<\/script>";
+  iframe.onload = firstOnLoadHandler;
+  document.body.appendChild(iframe);
+
+  function firstOnLoadHandler() {
+    var dbg = new Debugger;
+    var iframeDO = dbg.addDebuggee(iframe.contentWindow);
+
+    // For sanity: check that the debuggee global is the inner window,
+    // and that the outer window gets a distinct D.O.
+    var iframeWindowProxyDO = iframeDO.makeDebuggeeValue(iframe.contentWindow);
+    ok(iframeDO !== iframeWindowProxyDO);
+
+    // The real test: Debugger.Script.prototype.global returns inner windows.
+    ok(iframeDO.getOwnPropertyDescriptor('glorp').value.script.global === iframeDO);
+
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

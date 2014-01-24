@@ -216,7 +216,7 @@ struct BytecodeEmitter
     unsigned currentLine() const { return current->currentLine; }
     unsigned lastColumn() const { return current->lastColumn; }
 
-    inline ptrdiff_t countFinalSourceNotes();
+    ptrdiff_t countFinalSourceNotes();
 
     bool reportError(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
@@ -281,38 +281,6 @@ AddToSrcNoteDelta(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptr
 
 bool
 FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
-
-/*
- * Finish taking source notes in cx's notePool, copying final notes to the new
- * stable store allocated by the caller and passed in via notes. Return false
- * on malloc failure, which means this function reported an error.
- *
- * Use this to compute the number of jssrcnotes to allocate and pass in via
- * notes. This method knows a lot about details of FinishTakingSrcNotes, so
- * DON'T CHANGE js::frontend::FinishTakingSrcNotes WITHOUT CHECKING WHETHER
- * THIS METHOD NEEDS CORRESPONDING CHANGES!
- */
-inline ptrdiff_t
-BytecodeEmitter::countFinalSourceNotes()
-{
-    ptrdiff_t diff = prologOffset() - prolog.lastNoteOffset;
-    ptrdiff_t cnt = prolog.notes.length() + main.notes.length() + 1;
-    if (prolog.notes.length() && prolog.currentLine != firstLine) {
-        if (diff > SN_DELTA_MASK)
-            cnt += JS_HOWMANY(diff - SN_DELTA_MASK, SN_XDELTA_MASK);
-        cnt += 2 + ((firstLine > SN_3BYTE_OFFSET_MASK) << 1);
-    } else if (diff > 0) {
-        if (main.notes.length()) {
-            jssrcnote *sn = main.notes.begin();
-            diff -= SN_IS_XDELTA(sn)
-                    ? SN_XDELTA_MASK - (*sn & SN_XDELTA_MASK)
-                    : SN_DELTA_MASK - (*sn & SN_DELTA_MASK);
-        }
-        if (diff > 0)
-            cnt += JS_HOWMANY(diff, SN_XDELTA_MASK);
-    }
-    return cnt;
-}
 
 } /* namespace frontend */
 } /* namespace js */

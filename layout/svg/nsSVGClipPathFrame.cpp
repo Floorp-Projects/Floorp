@@ -85,7 +85,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
     if (referencedClipIsTrivial) {
       clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
     } else {
-      gfx->PushGroup(GFX_CONTENT_ALPHA);
+      gfx->PushGroup(gfxContentType::ALPHA);
     }
   }
 
@@ -111,7 +111,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
         if (isTrivial) {
           clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
         } else {
-          gfx->PushGroup(GFX_CONTENT_ALPHA);
+          gfx->PushGroup(gfxContentType::ALPHA);
         }
       }
 
@@ -122,7 +122,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
           gfx->PopGroupToSource();
 
           nsRefPtr<gfxPattern> clipMaskSurface;
-          gfx->PushGroup(GFX_CONTENT_ALPHA);
+          gfx->PushGroup(gfxContentType::ALPHA);
 
           clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
           clipMaskSurface = gfx->PopGroup();
@@ -141,7 +141,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
       gfx->PopGroupToSource();
 
       nsRefPtr<gfxPattern> clipMaskSurface;
-      gfx->PushGroup(GFX_CONTENT_ALPHA);
+      gfx->PushGroup(gfxContentType::ALPHA);
 
       clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
       clipMaskSurface = gfx->PopGroup();

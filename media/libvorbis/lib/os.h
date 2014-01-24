@@ -13,7 +13,7 @@
  ********************************************************************
 
  function: #ifdef jail to whip a few platforms into the UNIX ideal.
- last mod: $Id: os.h 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id: os.h 19031 2013-12-03 19:20:50Z tterribe $
 
  ********************************************************************/
 
@@ -135,9 +135,11 @@ static __inline int vorbis_ftoi(double f){
 }
 
 static __inline void vorbis_fpu_setround(vorbis_fpu_control *fpu){
+  (void)fpu;
 }
 
 static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
+  (void)fpu;
 }
 
 #endif /* Special MSVC 32 bit implementation */
@@ -156,9 +158,11 @@ static __inline int vorbis_ftoi(double f){
 }
 
 static __inline void vorbis_fpu_setround(vorbis_fpu_control *fpu){
+  (void)fpu;
 }
 
 static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
+  (void)fpu;
 }
 
 #endif /* Special MSVC x64 implementation */

@@ -64,28 +64,30 @@ let WebAppRT = {
   },
 
   getManifestFor: function (aUrl, aCallback) {
-    let request = navigator.mozApps.mgmt.getAll();
-    request.onsuccess = function() {
-      let apps = request.result;
-      for (let i = 0; i < apps.length; i++) {
-        let app = apps[i];
-        let manifest = new ManifestHelper(app.manifest, app.origin);
+    DOMApplicationRegistry.registryReady.then(() => {
+      let request = navigator.mozApps.mgmt.getAll();
+      request.onsuccess = function() {
+        let apps = request.result;
+        for (let i = 0; i < apps.length; i++) {
+          let app = apps[i];
+          let manifest = new ManifestHelper(app.manifest, app.origin);
 
-        // if this is a path to the manifest, or the launch path, then we have a hit.
-        if (app.manifestURL == aUrl || manifest.fullLaunchPath() == aUrl) {
-          aCallback(manifest, app);
-          return;
+          // if this is a path to the manifest, or the launch path, then we have a hit.
+          if (app.manifestURL == aUrl || manifest.fullLaunchPath() == aUrl) {
+            aCallback(manifest, app);
+            return;
+          }
         }
-      }
 
-      // Otherwise, once we loop through all of them, we have a miss.
-      aCallback(undefined);
-    };
+        // Otherwise, once we loop through all of them, we have a miss.
+        aCallback(undefined);
+      };
 
-    request.onerror = function() {
-      // Treat an error like a miss. We can't find the manifest.
-      aCallback(undefined);
-    };
+      request.onerror = function() {
+        // Treat an error like a miss. We can't find the manifest.
+        aCallback(undefined);
+      };
+    });
   },
 
   findManifestUrlFor: function(aUrl, aCallback) {

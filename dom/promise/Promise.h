@@ -90,6 +90,20 @@ public:
   already_AddRefed<Promise>
   Catch(const Optional<nsRefPtr<AnyCallback>>& aRejectCallback);
 
+  // FIXME(nsm): Bug 956197
+  static already_AddRefed<Promise>
+  All(const GlobalObject& aGlobal, JSContext* aCx,
+      const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
+  Cast(const GlobalObject& aGlobal, JSContext* aCx,
+       const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv);
+
+  // FIXME(nsm): Bug 956197
+  static already_AddRefed<Promise>
+  Race(const GlobalObject& aGlobal, JSContext* aCx,
+       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
+
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
 private:
@@ -151,9 +165,23 @@ private:
   // Static methods for the PromiseInit functions.
   static bool
   JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
+
+  static bool
+  ThenableResolverCommon(JSContext* aCx, uint32_t /* PromiseCallback::Task */ aTask,
+                         unsigned aArgc, JS::Value* aVp);
+  static bool
+  JSCallbackThenableResolver(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
+  static bool
+  JSCallbackThenableRejecter(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
+
   static JSObject*
   CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
                 int32_t aTask);
+
+  static JSObject*
+  CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTask);
+
+  void HandleException(JSContext* aCx);
 
   nsRefPtr<nsPIDOMWindow> mWindow;
 

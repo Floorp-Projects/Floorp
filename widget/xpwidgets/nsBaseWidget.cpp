@@ -202,7 +202,7 @@ void nsBaseWidget::DestroyCompositor()
 nsBaseWidget::~nsBaseWidget()
 {
   if (mLayerManager &&
-      mLayerManager->GetBackendType() == LAYERS_BASIC) {
+      mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC) {
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
@@ -802,7 +802,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
 {
   mLayerManager = static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (mLayerManager) {
-    NS_ASSERTION(mLayerManager->GetBackendType() == LAYERS_BASIC,
+    NS_ASSERTION(mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     mLayerManager->SetDefaultTarget(aTarget);
     mLayerManager->SetDefaultTargetConfiguration(aDoubleBuffering, aRotation);
@@ -812,10 +812,10 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 {
   if (mLayerManager) {
-    NS_ASSERTION(mLayerManager->GetBackendType() == LAYERS_BASIC,
+    NS_ASSERTION(mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     mLayerManager->SetDefaultTarget(nullptr);
-    mLayerManager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE, ROTATION_0);
+    mLayerManager->SetDefaultTargetConfiguration(mozilla::layers::BufferMode::BUFFER_NONE, ROTATION_0);
   }
 }
 
@@ -927,21 +927,21 @@ void
 nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
 {
   if (mUseLayersAcceleration) {
-    aHints.AppendElement(LAYERS_OPENGL);
+    aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
-  aHints.AppendElement(LAYERS_BASIC);
+  aHints.AppendElement(LayersBackend::LAYERS_BASIC);
 }
 
 static void
 CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
 {
   for (size_t i = 0; i < aHints.Length(); ++i) {
-    if (aHints[i] == LAYERS_BASIC &&
+    if (aHints[i] == LayersBackend::LAYERS_BASIC &&
         !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false) &&
         !BrowserTabsRemote()) {
       // basic compositor is not stable enough for regular use
-      aHints[i] = LAYERS_NONE;
+      aHints[i] = LayersBackend::LAYERS_NONE;
     }
   }
 }

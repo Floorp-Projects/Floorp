@@ -120,6 +120,12 @@
       testTextAtOffset([ "li1" ], BOUNDARY_LINE_START,
                        [ [ 0, 5, kDiscBulletChar + "Item", 0, 5 ] ]);
 
+      //////////////////////////////////////////////////////////////////////////
+      // Nested hypertexts
+
+      testTextAtOffset(["ht_5" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ] ]);
+
       SimpleTest.finish();
     }
 
@@ -190,5 +196,12 @@ two words
   <ul>
     <li id="li1">Item</li>
   </ul>
+
+  <div id="ht_5">
+    <div>
+      <p>sectiounus</p>
+      <p>seciofarus</p>
+    </div>
+  </div>
 </body>
 </html>

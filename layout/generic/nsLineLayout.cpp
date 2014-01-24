@@ -57,7 +57,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mLastOptionalBreakContent(nullptr),
     mForceBreakContent(nullptr),
     mBlockRS(nullptr),/* XXX temporary */
-    mLastOptionalBreakPriority(eNoBreak),
+    mLastOptionalBreakPriority(gfxBreakPriority::eNoBreak),
     mLastOptionalBreakContentOffset(-1),
     mForceBreakContentOffset(-1),
     mMinLineHeight(0),
@@ -1025,7 +1025,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
           // that offset INT32_MAX means "after the content".
-          if (NotifyOptionalBreakPosition(aFrame->GetContent(), INT32_MAX, optionalBreakAfterFits, eNormalBreak)) {
+          if (NotifyOptionalBreakPosition(aFrame->GetContent(), INT32_MAX, optionalBreakAfterFits, gfxBreakPriority::eNormalBreak)) {
             // If this returns true then we are being told to actually break here.
             aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
           }

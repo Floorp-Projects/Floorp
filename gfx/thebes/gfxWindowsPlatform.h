@@ -62,8 +62,8 @@ struct DCFromContext {
         nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
         NS_ASSERTION(aSurface || !aContext->IsCairo(), "DCFromContext: null surface");
         if (aSurface &&
-            (aSurface->GetType() == gfxSurfaceTypeWin32 ||
-             aSurface->GetType() == gfxSurfaceTypeWin32Printing))
+            (aSurface->GetType() == gfxSurfaceType::Win32 ||
+             aSurface->GetType() == gfxSurfaceType::Win32Printing))
         {
             dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
             needsRelease = false;

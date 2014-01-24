@@ -173,7 +173,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
         (scriptEvent->message == NS_LOAD_ERROR ||
          scriptEvent->typeString.EqualsLiteral("error"))) {
       errorMsg = scriptEvent->errorMsg;
-      msgOrEvent.SetAsString() = static_cast<nsAString*>(&errorMsg);
+      msgOrEvent.SetAsString().SetData(errorMsg.Data(), errorMsg.Length());
 
       file = scriptEvent->fileName;
       fileName = &file;

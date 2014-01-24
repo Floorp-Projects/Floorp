@@ -101,10 +101,10 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   gfxImageFormat imageFormat;
   if (InnerImage()->FrameIsOpaque(aWhichFrame)) {
     surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
-    imageFormat = gfxImageFormatARGB32;
+    imageFormat = gfxImageFormat::ARGB32;
   } else {
     surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
-    imageFormat = gfxImageFormatARGB32;
+    imageFormat = gfxImageFormat::ARGB32;
   }
 
   // Create a surface to draw into.
