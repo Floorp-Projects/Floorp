@@ -16,16 +16,15 @@
 #include "NamespaceImports.h"
 
 #include "frontend/SourceNotes.h"
-#include "vm/Opcodes.h"
 
 /*
  * JS operation bytecodes.
  */
 typedef enum JSOp {
-#define ENUMERATE_OPCODE(op, val, ...) op = val,
-FOR_EACH_OPCODE(ENUMERATE_OPCODE)
-#undef ENUMERATE_OPCODE
-
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
+    op = val,
+#include "jsopcode.tbl"
+#undef OPDEF
     JSOP_LIMIT,
 
     /*
