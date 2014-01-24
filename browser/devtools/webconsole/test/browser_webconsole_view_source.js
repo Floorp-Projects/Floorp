@@ -47,7 +47,7 @@ function testViewSource(hud) {
   function onMessage([result]) {
     let msg = [...result.matched][0];
     ok(msg, "error message");
-    let locationNode = msg.querySelector(".location");
+    let locationNode = msg.querySelector(".message-location");
     ok(locationNode, "location node");
 
     Services.ww.registerNotification(observer);

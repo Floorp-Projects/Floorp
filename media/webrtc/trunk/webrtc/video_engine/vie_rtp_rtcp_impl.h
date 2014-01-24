@@ -90,12 +90,20 @@ class ViERTP_RTCPImpl
                                                int id);
   virtual int SetTransmissionSmoothingStatus(int video_channel, bool enable);
   virtual int GetReceivedRTCPStatistics(const int video_channel,
+                                        unsigned int& ntpHigh,
+                                        unsigned int& ntpLow,
+                                        unsigned int& bytes_sent,
+                                        unsigned int& packets_sent,
                                         uint16_t& fraction_lost,
                                         unsigned int& cumulative_lost,
                                         unsigned int& extended_max,
                                         unsigned int& jitter,
                                         int& rtt_ms) const;
   virtual int GetSentRTCPStatistics(const int video_channel,
+                                    unsigned int& ntpHigh,
+                                    unsigned int& ntpLow,
+                                    unsigned int& bytes_sent,
+                                    unsigned int& packets_sent,
                                     uint16_t& fraction_lost,
                                     unsigned int& cumulative_lost,
                                     unsigned int& extended_max,

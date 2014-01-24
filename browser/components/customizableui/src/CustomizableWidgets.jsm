@@ -100,7 +100,6 @@ const CustomizableWidgets = [{
 
               let item = doc.createElementNS(kNSXUL, "toolbarbutton");
               item.setAttribute("label", title || uri);
-              item.setAttribute("tabindex", "0");
               item.setAttribute("targetURI", uri);
               item.setAttribute("class", "subviewbutton");
               item.addEventListener("command", function (aEvent) {
@@ -256,7 +255,6 @@ const CustomizableWidgets = [{
           item = doc.createElementNS(kNSXUL, "menuseparator");
         } else if (node.localName == "menuitem") {
           item = doc.createElementNS(kNSXUL, "toolbarbutton");
-          item.setAttribute("tabindex", "0");
           item.setAttribute("class", "subviewbutton");
         } else {
           continue;
@@ -367,8 +365,6 @@ const CustomizableWidgets = [{
           node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
-        if (inPanel)
-          btnNode.setAttribute("tabindex", "0");
         node.appendChild(btnNode);
       });
 

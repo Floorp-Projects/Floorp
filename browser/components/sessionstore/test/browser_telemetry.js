@@ -4,8 +4,7 @@
 
 let tmp = {};
 Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/TabStateCache.jsm", tmp);
-let {SessionFile, TabStateCache} = tmp;
+let {SessionFile} = tmp;
 
 // Shortcuts for histogram names
 let Keys = {};
@@ -63,7 +62,8 @@ add_task(function history() {
     let statistics = yield promiseStats();
 
     info("Now changing history");
-    tab.linkedBrowser.contentWindow.history.pushState({foo:1}, "ref");
+    tab.linkedBrowser.loadURI("http://example.org:80/1");
+    yield promiseBrowserLoaded(tab.linkedBrowser);
     SyncHandlers.get(tab.linkedBrowser).flush();
     let statistics2 = yield promiseStats();
 
@@ -224,7 +224,6 @@ add_task(function formdata() {
 
     yield setInputValue(tab.linkedBrowser, {id: "input", value: "This is some form data"});
     SyncHandlers.get(tab.linkedBrowser).flush();
-    TabStateCache.delete(tab.linkedBrowser);
 
     let statistics2 = yield promiseStats();
 

@@ -6,14 +6,20 @@ package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
+import org.mozilla.gecko.fxa.login.Married;
+import org.mozilla.gecko.fxa.login.State;
 
 import android.accounts.Account;
+import android.content.ContentResolver;
 import android.os.Bundle;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 /**
  * Activity which displays account status.
@@ -21,9 +27,11 @@ import android.widget.TextView;
 public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   protected static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
 
+  protected ViewFlipper connectionStatusViewFlipper;
   protected View connectionStatusUnverifiedView;
   protected View connectionStatusSignInView;
   protected View connectionStatusSyncingView;
+  protected TextView emailTextView;
 
   public FxAccountStatusActivity() {
     super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST);
@@ -40,11 +48,113 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_status);
 
-    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified view");
+    connectionStatusViewFlipper = (ViewFlipper) ensureFindViewById(null, R.id.connection_status_view, "connection status frame layout");
+    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified vie w");
     connectionStatusSignInView = ensureFindViewById(null, R.id.sign_in_view, "sign in view");
     connectionStatusSyncingView = ensureFindViewById(null, R.id.syncing_view, "syncing view");
 
     launchActivityOnClick(connectionStatusSignInView, FxAccountUpdateCredentialsActivity.class);
+
+    emailTextView = (TextView) findViewById(R.id.email);
+
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      createDebugButtons();
+    }
+  }
+
+  protected void createDebugButtons() {
+    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      return;
+    }
+
+    findViewById(R.id.debug_buttons).setVisibility(View.VISIBLE);
+
+    findViewById(R.id.debug_refresh_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Refreshing.");
+        refresh();
+      }
+    });
+
+    findViewById(R.id.debug_dump_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Dumping account details.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        account.dump();
+      }
+    });
+
+    findViewById(R.id.debug_sync_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Syncing.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        final Bundle extras = new Bundle();
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        ContentResolver.requestSync(accounts[0], BrowserContract.AUTHORITY, extras);
+        // No sense refreshing, since the sync will complete in the future.
+      }
+    });
+
+    findViewById(R.id.debug_forget_certificate_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        try {
+          Married married = (Married) state;
+          Logger.info(LOG_TAG, "Moving to Cohabiting state: Forgetting certificate.");
+          account.setState(married.makeCohabitingState());
+          refresh();
+        } catch (ClassCastException e) {
+          Logger.info(LOG_TAG, "Not in Married state; can't forget certificate.");
+          // Ignore.
+        }
+      }
+    });
+
+    findViewById(R.id.debug_require_password_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Moving to Separated state: Forgetting password.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        account.setState(state.makeSeparatedState());
+        refresh();
+      }
+    });
+
+    findViewById(R.id.debug_require_upgrade_button).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Moving to Doghouse state: Requiring upgrade.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        account.setState(state.makeDoghouseState());
+        refresh();
+      }
+    });
   }
 
   @Override
@@ -53,36 +163,45 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     refresh();
   }
 
-  protected void refresh(Account account) {
-    TextView email = (TextView) findViewById(R.id.email);
+  protected void showNeedsUpgrade() {
+    connectionStatusViewFlipper.setDisplayedChild(0);
+  }
 
+  protected void showNeedsPassword() {
+    connectionStatusViewFlipper.setDisplayedChild(1);
+  }
+
+  protected void showNeedsVerification() {
+    connectionStatusViewFlipper.setDisplayedChild(2);
+  }
+
+  protected void showConnected() {
+    connectionStatusViewFlipper.setDisplayedChild(3);
+  }
+
+  protected void refresh(Account account) {
     if (account == null) {
       redirectToActivity(FxAccountGetStartedActivity.class);
       return;
     }
+    emailTextView.setText(account.name);
 
+    // Interrogate the Firefox Account's state.
     AndroidFxAccount fxAccount = new AndroidFxAccount(this, account);
-
-    email.setText(account.name);
-
-    // Not as good as interrogating state machine, but will do for now.
-    if (!fxAccount.isVerified()) {
-      connectionStatusUnverifiedView.setVisibility(View.VISIBLE);
-      connectionStatusSignInView.setVisibility(View.GONE);
-      connectionStatusSyncingView.setVisibility(View.GONE);
-      return;
+    State state = fxAccount.getState();
+    switch (state.getNeededAction()) {
+    case NeedsUpgrade:
+      showNeedsUpgrade();
+      break;
+    case NeedsPassword:
+      showNeedsPassword();
+      break;
+    case NeedsVerification:
+      showNeedsVerification();
+      break;
+    default:
+      showConnected();
     }
-
-    if (fxAccount.getQuickStretchedPW() == null) {
-      connectionStatusUnverifiedView.setVisibility(View.GONE);
-      connectionStatusSignInView.setVisibility(View.VISIBLE);
-      connectionStatusSyncingView.setVisibility(View.GONE);
-      return;
-    }
-
-    connectionStatusUnverifiedView.setVisibility(View.GONE);
-    connectionStatusSignInView.setVisibility(View.GONE);
-    connectionStatusSyncingView.setVisibility(View.VISIBLE);
   }
 
   protected void refresh() {
@@ -92,67 +211,5 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
       return;
     }
     refresh(accounts[0]);
-  }
-
-  protected void dumpAccountDetails() {
-    Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
-    if (accounts.length < 1) {
-      return;
-    }
-    AndroidFxAccount fxAccount = new AndroidFxAccount(this, accounts[0]);
-    fxAccount.dump();
-  }
-
-  protected void forgetAccountTokens() {
-    Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
-    if (accounts.length < 1) {
-      return;
-    }
-    AndroidFxAccount fxAccount = new AndroidFxAccount(this, accounts[0]);
-    fxAccount.forgetAccountTokens();
-    fxAccount.dump();
-  }
-
-  protected void forgetQuickStretchedPW() {
-    Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
-    if (accounts.length < 1) {
-      return;
-    }
-    AndroidFxAccount fxAccount = new AndroidFxAccount(this, accounts[0]);
-    fxAccount.forgetQuickstretchedPW();
-    fxAccount.dump();
-  }
-
-  public void onClickRefresh(View view) {
-    Logger.debug(LOG_TAG, "Refreshing.");
-    refresh();
-  }
-
-  public void onClickForgetAccountTokens(View view) {
-    Logger.debug(LOG_TAG, "Forgetting account tokens.");
-    forgetAccountTokens();
-  }
-
-  public void onClickForgetPassword(View view) {
-    Logger.debug(LOG_TAG, "Forgetting quickStretchedPW.");
-    forgetQuickStretchedPW();
-  }
-
-  public void onClickDumpAccountDetails(View view) {
-    Logger.debug(LOG_TAG, "Dumping account details.");
-    dumpAccountDetails();
-  }
-
-  public void onClickGetStarted(View view) {
-    Logger.debug(LOG_TAG, "Launching get started activity.");
-    redirectToActivity(FxAccountGetStartedActivity.class);
-  }
-
-  public void onClickVerify(View view) {
-    Logger.debug(LOG_TAG, "Launching verification activity.");
-  }
-
-  public void onClickSignIn(View view) {
-    Logger.debug(LOG_TAG, "Launching sign in again activity.");
   }
 }

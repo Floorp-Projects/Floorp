@@ -1040,17 +1040,37 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Navigates to given url
+   * Navigate to to given URL.
    *
-   * @param object aRequest
-   *        'url' member holds the url to navigate to
+   * This will follow redirects issued by the server.  When the method
+   * returns is based on the page load strategy that the user has
+   * selected.
+   *
+   * Documents that contain a META tag with the "http-equiv" attribute
+   * set to "refresh" will return if the timeout is greater than 1
+   * second and the other criteria for determining whether a page is
+   * loaded are met.  When the refresh period is 1 second or less and
+   * the page load strategy is "normal" or "conservative", it will
+   * wait for the page to complete loading before returning.
+   *
+   * If any modal dialog box, such as those opened on
+   * window.onbeforeunload or window.alert, is opened at any point in
+   * the page load, it will return immediately.
+   *
+   * If a 401 response is seen by the browser, it will return
+   * immediately.  That is, if BASIC, DIGEST, NTLM or similar
+   * authentication is required, the page load is assumed to be
+   * complete.  This does not include FORM-based authentication.
+   *
+   * @param object aRequest where <code>url</code> property holds the
+   *        URL to navigate to
    */
-  goUrl: function MDA_goUrl(aRequest) {
+  get: function MDA_get(aRequest) {
     let command_id = this.command_id = this.getCommandId();
     if (this.context != "chrome") {
       aRequest.command_id = command_id;
       aRequest.parameters.pageTimeout = this.pageTimeout;
-      this.sendAsync("goUrl", aRequest.parameters, command_id);
+      this.sendAsync("get", aRequest.parameters, command_id);
       return;
     }
 
@@ -1058,6 +1078,7 @@ MarionetteServerConnection.prototype = {
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let start = new Date().getTime();
     let end = null;
+
     function checkLoad() {
       end = new Date().getTime();
       let elapse = end - start;
@@ -1074,7 +1095,7 @@ MarionetteServerConnection.prototype = {
         sendError("Error loading page", 13, null, command_id);
         return;
       }
-    }//end
+    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
@@ -1172,7 +1193,7 @@ MarionetteServerConnection.prototype = {
    *
    * @return unique window handle (string)
    */
-  getCurrentWindowHandle: function MDA_getCurrentWindowHandle() {
+  getWindowHandle: function MDA_getWindowHandle() {
     this.command_id = this.getCommandId();
     for (let i in this.browsers) {
       if (this.curBrowser == this.browsers[i]) {
@@ -1183,17 +1204,28 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Get the server-assigned IDs of all available windows
+   * Get list of windows in the current context.
+   *
+   * If called in the content context it will return a list of
+   * references to all available browser windows.  Called in the
+   * chrome context, it will list all available windows, not just
+   * browser windows (e.g. not just navigator.browser).
+   *
+   * Each window handle is assigned by the server, and the array of
+   * strings returned does not have a guaranteed ordering.
+   *
+   * @return unordered array of unique window handles as strings
    */
-  getWindows: function MDA_getWindows() {
+  getWindowHandles: function MDA_getWindowHandles() {
     this.command_id = this.getCommandId();
     let res = [];
     let winEn = this.getWinEnumerator();
-    while(winEn.hasMoreElements()) {
+    while (winEn.hasMoreElements()) {
       let foundWin = winEn.getNext();
-      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-      winId = winId + ((appName == "B2G") ? '-b2g' : '');
-      res.push(winId)
+      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      winId = winId + ((appName == "B2G") ? "-b2g" : "");
+      res.push(winId);
     }
     this.sendResponse(res, this.command_id);
   },
@@ -2176,16 +2208,25 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Takes a screenshot of a DOM node. If there is no node given a screenshot
-   * of the window will be taken.
-   */
-  screenShot: function MDA_saveScreenshot(aRequest) {
+   * Takes a screenshot of a web element or the current frame.
+   *
+   * The screen capture is returned as a lossless PNG image encoded as
+   * a base 64 string.  If the <code>id</code> argument is not null
+   * and refers to a present and visible web element's ID, the capture
+   * area will be limited to the bounding box of that element.
+   * Otherwise, the capture area will be the bounding box of the
+   * current frame.
+   *
+   * @param id an optional reference to a web element
+   * @param highlights an optional list of web elements to draw a red
+   *                   box around in the returned capture
+   * @return PNG image encoded as base 64 string
+    */
+  takeScreenshot: function MDA_takeScreenshot(aRequest) {
     this.command_id = this.getCommandId();
-    this.sendAsync("screenShot",
-                   {
-                     id: aRequest.parameters.id,
-                     highlights: aRequest.parameters.highlights
-                   },
+    this.sendAsync("takeScreenshot",
+                   {id: aRequest.parameters.id,
+                    highlights: aRequest.parameters.highlights},
                    this.command_id);
   },
 
@@ -2224,13 +2265,15 @@ MarionetteServerConnection.prototype = {
 
     let mozOr = or.toLowerCase();
     if (ors.indexOf(mozOr) < 0) {
-      this.sendError("Unknown screen orientation: " + or, 500, null, this.command_id);
+      this.sendError("Unknown screen orientation: " + or, 500, null,
+                     this.command_id);
       return;
     }
 
     let curWindow = this.getCurrentWindow();
     if (!curWindow.screen.mozLockOrientation(mozOr)) {
-      this.sendError("Unable to set screen orientation: " + or, 500, null, this.command_id);
+      this.sendError("Unable to set screen orientation: " + or, 500,
+                     null, this.command_id);
     }
     this.sendOk(this.command_id);
   },
@@ -2391,15 +2434,18 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getTitle": MarionetteServerConnection.prototype.getTitle,
   "getWindowType": MarionetteServerConnection.prototype.getWindowType,
   "getPageSource": MarionetteServerConnection.prototype.getPageSource,
-  "goUrl": MarionetteServerConnection.prototype.goUrl,
+  "get": MarionetteServerConnection.prototype.get,
+  "goUrl": MarionetteServerConnection.prototype.get,  // deprecated
   "getCurrentUrl": MarionetteServerConnection.prototype.getCurrentUrl,
   "getUrl": MarionetteServerConnection.prototype.getCurrentUrl,  // deprecated
   "goBack": MarionetteServerConnection.prototype.goBack,
   "goForward": MarionetteServerConnection.prototype.goForward,
   "refresh":  MarionetteServerConnection.prototype.refresh,
-  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getCurrentWindowHandle,
-  "getWindow":  MarionetteServerConnection.prototype.getCurrentWindowHandle,  // deprecated
-  "getWindows":  MarionetteServerConnection.prototype.getWindows,
+  "getWindowHandle": MarionetteServerConnection.prototype.getWindowHandle,
+  "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getWindowHandle,  // Selenium 2 compat
+  "getWindow":  MarionetteServerConnection.prototype.getWindowHandle,  // deprecated
+  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getWindows":  MarionetteServerConnection.prototype.getWindowHandles,  // deprecated
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
   "switchToWindow": MarionetteServerConnection.prototype.switchToWindow,
@@ -2411,7 +2457,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "close": MarionetteServerConnection.prototype.close,
   "closeWindow": MarionetteServerConnection.prototype.close,  // deprecated
   "setTestName": MarionetteServerConnection.prototype.setTestName,
-  "screenShot": MarionetteServerConnection.prototype.screenShot,
+  "takeScreenshot": MarionetteServerConnection.prototype.takeScreenshot,
+  "screenShot": MarionetteServerConnection.prototype.takeScreenshot,  // deprecated
   "addCookie": MarionetteServerConnection.prototype.addCookie,
   "getCookies": MarionetteServerConnection.prototype.getCookies,
   "getAllCookies": MarionetteServerConnection.prototype.getCookies,  // deprecated

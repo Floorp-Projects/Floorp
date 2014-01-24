@@ -24,9 +24,15 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 public class FxAccountAgeLockoutHelper {
   private static final String LOG_TAG = FxAccountAgeLockoutHelper.class.getSimpleName();
 
-  protected static long ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK = 0;
+  protected static long ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK = 0L;
 
   public static synchronized boolean isLockedOut(long elapsedRealtime) {
+    if (ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK == 0L) {
+      // We never failed, so we're not locked out.
+      return false;
+    }
+
+    // Otherwise, find out how long it's been since we last failed.
     long millsecondsSinceLastFailedAgeCheck = elapsedRealtime - ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK;
     boolean isLockedOut = millsecondsSinceLastFailedAgeCheck < FxAccountConstants.MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS;
     FxAccountConstants.pii(LOG_TAG, "Checking if locked out: it's been " + millsecondsSinceLastFailedAgeCheck + "ms " +

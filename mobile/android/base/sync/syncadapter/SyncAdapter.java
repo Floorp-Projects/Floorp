@@ -509,10 +509,27 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
       // Do nothing.
     }
 
+    if (username == null) {
+      throw new IllegalArgumentException("username must not be null.");
+    }
+
+    if (syncKey == null) {
+      throw new SyncConfigurationException();
+    }
+
     final KeyBundle keyBundle = new KeyBundle(username, syncKey);
+
+    if (keyBundle == null ||
+        keyBundle.getEncryptionKey() == null ||
+        keyBundle.getHMACKey() == null) {
+      throw new SyncConfigurationException();
+    }
+
     final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(username, password);
-    GlobalSession globalSession = new GlobalSession(username, authHeaderProvider, prefsPath,
-                                                    keyBundle, this, this.mContext, extras, clientsDataDelegate, nodeAssignmentDelegate);
+    final SharedPreferences prefs = getContext().getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
+    final SyncConfiguration config = new SyncConfiguration(username, authHeaderProvider, prefs);
+    config.syncKeyBundle = keyBundle;
+    GlobalSession globalSession = new GlobalSession(config, this, this.mContext, extras, clientsDataDelegate, nodeAssignmentDelegate);
 
     globalSession.start();
   }
@@ -540,7 +557,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
   @Override
   public void handleSuccess(GlobalSession globalSession) {
     Logger.info(LOG_TAG, "GlobalSession indicated success.");
-    Logger.debug(LOG_TAG, "Prefs target: " + globalSession.config.prefsPath);
     globalSession.config.persistToPrefs();
     notifyMonitor();
   }

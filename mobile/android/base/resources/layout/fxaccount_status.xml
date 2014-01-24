@@ -33,7 +33,7 @@
             android:text="@string/fxaccount_change_password" >
         </TextView>
 
-        <FrameLayout
+        <ViewFlipper
             android:id="@+id/connection_status_view"
             style="@style/FxAccountTextItem"
             android:layout_width="match_parent"
@@ -52,8 +52,7 @@
                 android:drawableStart="@drawable/fxaccount_sync_error"
                 android:gravity="center_vertical"
                 android:padding="10dp"
-                android:text="@string/fxaccount_status_needs_verification"
-                android:visibility="gone" >
+                android:text="@string/fxaccount_status_needs_upgrade" >
             </TextView>
 
             <TextView
@@ -68,8 +67,22 @@
                 android:drawableStart="@drawable/fxaccount_sync_error"
                 android:gravity="center_vertical"
                 android:padding="10dp"
-                android:text="@string/fxaccount_status_needs_credentials"
-                android:visibility="gone" >
+                android:text="@string/fxaccount_status_needs_credentials" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/unverified_view"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:background="#fad4d2"
+                android:drawablePadding="10dp"
+                android:drawableStart="@drawable/fxaccount_sync_error"
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="@string/fxaccount_status_needs_verification" >
             </TextView>
 
             <TextView
@@ -84,10 +97,9 @@
                 android:drawableStart="@drawable/fxaccount_sync_icon"
                 android:gravity="center_vertical"
                 android:padding="10dp"
-                android:text="@string/fxaccount_status_syncing"
-                android:visibility="visible" >
+                android:text="@string/fxaccount_status_syncing" >
             </TextView>
-        </FrameLayout>
+        </ViewFlipper>
 
         <TextView
             style="@style/FxAccountHeaderItem"
@@ -128,31 +140,43 @@
         <LinearLayout
             android:id="@+id/debug_buttons"
             style="@style/FxAccountMiddle"
-            android:background="#7f7f7f" >
+            android:visibility="gone" >
 
             <Button
+                android:id="@+id/debug_refresh_button"
                 style="@style/FxAccountButton"
                 android:layout_marginBottom="10dp"
-                android:onClick="onClickRefresh"
-                android:text="Refresh" />
+                android:text="@string/fxaccount_status_debug_refresh_button_label" />
 
             <Button
+                android:id="@+id/debug_dump_button"
                 style="@style/FxAccountButton"
                 android:layout_marginBottom="10dp"
-                android:onClick="onClickDumpAccountDetails"
-                android:text="Dump Account Details" />
+                android:text="@string/fxaccount_status_debug_dump_button_label" />
 
             <Button
+                android:id="@+id/debug_sync_button"
                 style="@style/FxAccountButton"
                 android:layout_marginBottom="10dp"
-                android:onClick="onClickForgetAccountTokens"
-                android:text="Forget sessionToken and keyFetchToken" />
+                android:text="@string/fxaccount_status_debug_sync_button_label" />
 
             <Button
+                android:id="@+id/debug_forget_certificate_button"
                 style="@style/FxAccountButton"
                 android:layout_marginBottom="10dp"
-                android:onClick="onClickForgetPassword"
-                android:text="Forget password" />
+                android:text="@string/fxaccount_status_debug_forget_certificate_button_label" />
+
+            <Button
+                android:id="@+id/debug_require_password_button"
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:text="@string/fxaccount_status_debug_require_password_button_label" />
+
+            <Button
+                android:id="@+id/debug_require_upgrade_button"
+                style="@style/FxAccountButton"
+                android:layout_marginBottom="10dp"
+                android:text="@string/fxaccount_status_debug_require_upgrade_button_label" />
         </LinearLayout>
     </LinearLayout>
 
