@@ -127,6 +127,10 @@ WebGLFramebuffer::Attachment::RectangleObject() const
     MOZ_CRASH("Should not get here.");
 }
 
+/* The following IsValidFBOTextureXXX functions check the internal
+   format that is used by GL or GL ES texture formats.  This
+   corresponds to the state that is stored in
+   WebGLTexture::ImageInfo::InternalFormat()*/
 static inline bool
 IsValidFBOTextureColorFormat(GLenum internalFormat)
 {
@@ -149,7 +153,8 @@ IsValidFBOTextureColorFormat(GLenum internalFormat)
 }
 
 static inline bool
-IsValidFBOTextureDepthFormat(GLenum internalFormat) {
+IsValidFBOTextureDepthFormat(GLenum internalFormat)
+{
     return (
         internalFormat == LOCAL_GL_DEPTH_COMPONENT ||
         internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
@@ -157,14 +162,19 @@ IsValidFBOTextureDepthFormat(GLenum internalFormat) {
 }
 
 static inline bool
-IsValidFBOTextureDepthStencilFormat(GLenum internalFormat) {
+IsValidFBOTextureDepthStencilFormat(GLenum internalFormat)
+{
     return (
         internalFormat == LOCAL_GL_DEPTH_STENCIL ||
         internalFormat == LOCAL_GL_DEPTH24_STENCIL8);
 }
 
+/* The following IsValidFBORenderbufferXXX functions check the internal
+   format that is stored by WebGLRenderbuffer::InternalFormat(). Valid
+   values can be found in WebGLContext::RenderbufferStorage. */
 static inline bool
-IsValidFBORenderbufferColorFormat(GLenum internalFormat) {
+IsValidFBORenderbufferColorFormat(GLenum internalFormat)
+{
     return (
         internalFormat == LOCAL_GL_RGB565 ||
         internalFormat == LOCAL_GL_RGB5_A1 ||
@@ -173,17 +183,20 @@ IsValidFBORenderbufferColorFormat(GLenum internalFormat) {
 }
 
 static inline bool
-IsValidFBORenderbufferDepthFormat(GLenum internalFormat) {
+IsValidFBORenderbufferDepthFormat(GLenum internalFormat)
+{
     return internalFormat == LOCAL_GL_DEPTH_COMPONENT16;
 }
 
 static inline bool
-IsValidFBORenderbufferDepthStencilFormat(GLenum internalFormat) {
-    return internalFormat == LOCAL_GL_DEPTH24_STENCIL8;
+IsValidFBORenderbufferDepthStencilFormat(GLenum internalFormat)
+{
+    return internalFormat == LOCAL_GL_DEPTH_STENCIL;
 }
 
 static inline bool
-IsValidFBORenderbufferStencilFormat(GLenum internalFormat) {
+IsValidFBORenderbufferStencilFormat(GLenum internalFormat)
+{
     return internalFormat == LOCAL_GL_STENCIL_INDEX8;
 }
 
