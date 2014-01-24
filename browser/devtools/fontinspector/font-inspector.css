@@ -6,7 +6,8 @@
 .font:not(.has-code) .font-css-code,
 .font-is-local,
 .font-is-remote,
-.font.is-local .font-format-url {
+.font.is-local .font-format-url,
+#template {
   display: none;
 }
 

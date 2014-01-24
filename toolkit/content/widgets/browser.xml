@@ -370,6 +370,11 @@
         ]]></getter>
       </property>
 
+      <field name="_permanentKey">({})</field>
+
+      <property name="permanentKey" readonly="true"
+                onget="return this._permanentKey;"/>
+
       <field name="_lastSearchString">null</field>
       <field name="_lastSearchHighlight">false</field>
 
@@ -717,10 +722,6 @@
         <setter><![CDATA[
           this.userTypedClear = 0;
           this._userTypedValue = val;
-
-          let event = new CustomEvent("UserTypedValueChanged");
-          this.dispatchEvent(event);
-
           return val;
         ]]></setter>
       </property>
@@ -1186,7 +1187,13 @@
           // DOMLinkAdded/Removed, onStateChange) should not be swapped here,
           // because these notifications are dispatched again once the docshells
           // are swapped.
-          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation"];
+          var fieldsToSwap = [
+            "_docShell",
+            "_webBrowserFind",
+            "_contentWindow",
+            "_webNavigation",
+            "_permanentKey"
+          ];
 
           var ourFieldValues = {};
           var otherFieldValues = {};

@@ -598,9 +598,20 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
+    rtSizes->regexpData += bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
+
+    rtSizes->interpreterStack += interpreterStack_.sizeOfExcludingThis(mallocSizeOf);
+
+    rtSizes->mathCache += mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
+
+    rtSizes->sourceDataCache += sourceDataCache.sizeOfExcludingThis(mallocSizeOf);
+
+    rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
+        rtSizes->scriptData += mallocSizeOf(r.front());
+
     if (execAlloc_)
         execAlloc_->addSizeOfCode(&rtSizes->code);
-
 #ifdef JS_ION
     {
         AutoLockForOperationCallback lock(this);
@@ -611,17 +622,11 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     }
 #endif
 
-    rtSizes->regexpData += bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
-
-    rtSizes->interpreterStack += interpreterStack_.sizeOfExcludingThis(mallocSizeOf);
-
-    rtSizes->gcMarker += gcMarker.sizeOfExcludingThis(mallocSizeOf);
-
-    rtSizes->mathCache += mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
-
-    rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
-    for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
-        rtSizes->scriptData += mallocSizeOf(r.front());
+    rtSizes->gc.marker += gcMarker.sizeOfExcludingThis(mallocSizeOf);
+#ifdef JSGC_GENERATIONAL
+    rtSizes->gc.nursery += gcNursery.sizeOfHeap();
+    gcStoreBuffer.addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
+#endif
 }
 
 static bool

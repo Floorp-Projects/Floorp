@@ -49,15 +49,20 @@
             android:inputType="none" />
 
         <TextView
-            android:id="@+id/local_error"
+            android:id="@+id/remote_error"
             style="@style/FxAccountErrorItem" />
 
-        <Button
-            android:id="@+id/create_account_button"
-            style="@style/FxAccountButton"
-            android:layout_marginBottom="20dp"
-            android:layout_marginTop="45dp"
-            android:text="@string/fxaccount_create_account_button_label" />
+        <FrameLayout style="@style/FxAccountButtonLayout" >
+
+            <ProgressBar
+                android:id="@+id/progress"
+                style="@style/FxAccountProgress" />
+
+            <Button
+                android:id="@+id/button"
+                style="@style/FxAccountButton"
+                android:text="@string/fxaccount_create_account_button_label" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/sign_in_instead_link"

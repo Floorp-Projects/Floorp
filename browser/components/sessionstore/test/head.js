@@ -288,17 +288,17 @@ function forceSaveState() {
   );
 }
 
-function whenBrowserLoaded(aBrowser, aCallback = next) {
+function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true) {
   aBrowser.addEventListener("load", function onLoad(event) {
-    if (event.target == aBrowser.contentDocument) {
+    if (!ignoreSubFrames || event.target == aBrowser.contentDocument) {
       aBrowser.removeEventListener("load", onLoad, true);
       executeSoon(aCallback);
     }
   }, true);
 }
-function promiseBrowserLoaded(aBrowser) {
+function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
   let deferred = Promise.defer();
-  whenBrowserLoaded(aBrowser, deferred.resolve);
+  whenBrowserLoaded(aBrowser, deferred.resolve, ignoreSubFrames);
   return deferred.promise;
 }
 function whenBrowserUnloaded(aBrowser, aContainer, aCallback = next) {

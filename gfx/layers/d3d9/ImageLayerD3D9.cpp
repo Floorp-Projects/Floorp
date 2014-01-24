@@ -414,9 +414,9 @@ ImageLayerD3D9::RenderLayer()
       image->GetFormat() == REMOTE_IMAGE_BITMAP ||
       image->GetFormat() == D3D9_RGB32_TEXTURE)
   {
-    nsRefPtr<gfxASurface> surf = image->DeprecatedGetAsSurface();
     NS_ASSERTION(image->GetFormat() != CAIRO_SURFACE ||
-                 !surf || surf->GetContentType() != gfxContentType::ALPHA,
+                 !static_cast<CairoImage*>(image)->mDeprecatedSurface ||
+                 static_cast<CairoImage*>(image)->mDeprecatedSurface->GetContentType() != gfxContentType::ALPHA,
                  "Image layer has alpha image");
 
     bool hasAlpha = false;

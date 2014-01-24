@@ -89,6 +89,7 @@ function test() {
       history.pushState({obj2:2}, "title-obj2", "?page2");
       history.replaceState({obj3:/^a$/}, "title-obj3");
 
+      SyncHandlers.get(tab.linkedBrowser).flush();
       let state = ss.getTabState(tab);
       gBrowser.removeTab(tab);
 

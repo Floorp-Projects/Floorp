@@ -41,39 +41,5 @@ this.Utils = Object.freeze({
     let prevChar = host[index - 1];
     return (index == (host.length - domain.length)) &&
            (prevChar == "." || prevChar == "/");
-  },
-
-  swapMapEntries: function (map, key, otherKey) {
-    // Make sure that one or the other of these has an entry in the map,
-    // and let it be |key|.
-    if (!map.has(key)) {
-      [key, otherKey] = [otherKey, key];
-      if (!map.has(key)) {
-        return;
-      }
-    }
-
-    // At this point, |key| is guaranteed to have an entry,
-    // although |otherKey| may not. Perform the swap.
-    let value = map.get(key);
-    if (map.has(otherKey)) {
-      let otherValue = map.get(otherKey);
-      map.set(key, otherValue);
-      map.set(otherKey, value);
-    } else {
-      map.set(otherKey, value);
-      map.delete(key);
-    }
-  },
-
-  // Copies all properties of a given object to a new one and returns it.
-  copy: function (from) {
-    let to = {};
-
-    for (let key of Object.keys(from)) {
-      to[key] = from[key];
-    }
-
-    return to;
   }
 });

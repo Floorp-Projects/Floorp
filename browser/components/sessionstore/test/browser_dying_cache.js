@@ -24,6 +24,7 @@ function runTests() {
   // Open a second tab and close the first one.
   let tab = win.gBrowser.addTab("about:mozilla");
   yield whenBrowserLoaded(tab.linkedBrowser);
+  SyncHandlers.get(tab.linkedBrowser).flush();
   win.gBrowser.removeTab(win.gBrowser.tabs[0]);
 
   // Make sure our window is still tracked by sessionstore

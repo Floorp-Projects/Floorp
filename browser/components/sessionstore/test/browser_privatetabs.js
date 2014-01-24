@@ -30,6 +30,7 @@ add_task(function() {
     yield promiseBrowserLoaded(tab2.linkedBrowser);
 
     info("Flush to make sure chrome received all data.");
+    SyncHandlers.get(tab1.linkedBrowser).flush();
     SyncHandlers.get(tab2.linkedBrowser).flush();
 
     info("Checking out state");
