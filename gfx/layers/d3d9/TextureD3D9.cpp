@@ -1266,7 +1266,7 @@ bool
 CairoTextureClientD3D9::Lock(OpenMode)
 {
   MOZ_ASSERT(!mIsLocked);
-  if (!IsValid()) {
+  if (!IsValid() || !IsAllocated()) {
     return false;
   }
   mIsLocked = true;
