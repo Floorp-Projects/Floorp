@@ -1601,7 +1601,6 @@ public:
     bool WantNewResolve()               GET_IT(WANT_NEWRESOLVE)
     bool WantConvert()                  GET_IT(WANT_CONVERT)
     bool WantFinalize()                 GET_IT(WANT_FINALIZE)
-    bool WantCheckAccess()              GET_IT(WANT_CHECKACCESS)
     bool WantCall()                     GET_IT(WANT_CALL)
     bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
     bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)

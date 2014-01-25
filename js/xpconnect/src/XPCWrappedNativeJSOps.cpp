@@ -840,15 +840,6 @@ XPC_WN_Helper_Convert(JSContext *cx, HandleObject obj, JSType type, MutableHandl
 }
 
 static bool
-XPC_WN_Helper_CheckAccess(JSContext *cx, HandleObject obj, HandleId id,
-                          JSAccessMode mode, MutableHandleValue vp)
-{
-    PRE_HELPER_STUB
-    CheckAccess(wrapper, cx, obj, id, mode, vp.address(), &retval);
-    POST_HELPER_STUB
-}
-
-static bool
 XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1209,10 +1200,6 @@ XPCNativeScriptableShared::PopulateJSClass()
         mJSClass.base.finalize = XPC_WN_Helper_Finalize;
     else
         mJSClass.base.finalize = XPC_WN_NoHelper_Finalize;
-
-    // We let the rest default to nullptr unless the helper wants them...
-    if (mFlags.WantCheckAccess())
-        mJSClass.base.checkAccess = XPC_WN_Helper_CheckAccess;
 
     js::ObjectOps *ops = &mJSClass.base.ops;
     ops->enumerate = XPC_WN_JSOp_Enumerate;
