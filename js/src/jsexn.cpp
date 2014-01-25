@@ -56,7 +56,6 @@ const Class ErrorObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     exn_finalize,
-    nullptr,                 /* checkAccess */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr                  /* construct   */

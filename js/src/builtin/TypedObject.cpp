@@ -373,7 +373,6 @@ const Class js::ScalarType::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,
-    nullptr,
     ScalarType::call,
     nullptr,
     nullptr,
@@ -443,7 +442,6 @@ const Class js::ReferenceType::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    nullptr,
     nullptr,
     ReferenceType::call,
     nullptr,
@@ -563,7 +561,6 @@ const Class ArrayType::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    nullptr,
     nullptr,
     nullptr,
     nullptr,
@@ -847,7 +844,6 @@ const Class StructType::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr, /* finalize */
-    nullptr, /* checkAccess */
     nullptr, /* call */
     nullptr, /* hasInstance */
     TypedObject::construct,
@@ -2271,7 +2267,6 @@ const Class TypedObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     TypedDatum::obj_finalize,
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
@@ -2439,7 +2434,6 @@ const Class TypedHandle::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     TypedDatum::obj_finalize,
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
