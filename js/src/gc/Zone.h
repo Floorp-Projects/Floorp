@@ -293,7 +293,7 @@ struct Zone : public JS::shadow::Zone,
          * tolerate any thread races when updating gcMallocBytes.
          */
         gcMallocBytes -= ptrdiff_t(nbytes);
-        if (JS_UNLIKELY(isTooMuchMalloc()))
+        if (MOZ_UNLIKELY(isTooMuchMalloc()))
             onTooMuchMalloc();
     }
 

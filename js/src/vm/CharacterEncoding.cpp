@@ -189,7 +189,7 @@ JS::Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length)
         ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
     }
 
-    if (JS_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
+    if (MOZ_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
         return INVALID_UTF8;
 
     return ucs4Char;

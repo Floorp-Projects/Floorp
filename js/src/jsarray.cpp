@@ -2338,7 +2338,7 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * another object is first slowified, for type inference's sake.
      */
     types::TypeObject *arrType = arr->getType(cx);
-    if (JS_UNLIKELY(!arrType || arrType->hasAllFlags(OBJECT_FLAG_ITERATED)))
+    if (MOZ_UNLIKELY(!arrType || arrType->hasAllFlags(OBJECT_FLAG_ITERATED)))
         return false;
 
     /*

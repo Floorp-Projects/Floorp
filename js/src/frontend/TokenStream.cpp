@@ -384,7 +384,7 @@ TokenStream::getChar()
         // the 13th bit of d into the lookup, but that requires extra shifting
         // and masking and isn't worthwhile.  See TokenStream::TokenStream()
         // for the initialization of the relevant entries in the table.
-        if (JS_UNLIKELY(maybeEOL[c & 0xff])) {
+        if (MOZ_UNLIKELY(maybeEOL[c & 0xff])) {
             if (c == '\n')
                 goto eol;
             if (c == '\r') {
@@ -1058,7 +1058,7 @@ TokenStream::getTokenInternal(Modifier modifier)
     bool hadUnicodeEscape;
 
   retry:
-    if (JS_UNLIKELY(!userbuf.hasRawChars())) {
+    if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
         tp = newToken(0);
         tp->type = TOK_EOF;
         flags.isEOF = true;
@@ -1070,7 +1070,7 @@ TokenStream::getTokenInternal(Modifier modifier)
 
     // Chars not in the range 0..127 are rare.  Getting them out of the way
     // early allows subsequent checking to be faster.
-    if (JS_UNLIKELY(c >= 128)) {
+    if (MOZ_UNLIKELY(c >= 128)) {
         if (IsSpaceOrBOM2(c)) {
             if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
                 updateLineInfoForEOL();
