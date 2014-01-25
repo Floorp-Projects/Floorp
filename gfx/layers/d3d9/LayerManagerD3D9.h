@@ -225,7 +225,7 @@ public:
   void SetShaderTransformAndOpacity()
   {
     Layer* layer = GetLayer();
-    const gfx3DMatrix& transform = layer->GetEffectiveTransform();
+    const gfx::Matrix4x4& transform = layer->GetEffectiveTransform();
     device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
     float opacity[4];
