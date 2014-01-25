@@ -3197,10 +3197,6 @@ JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
 extern JS_PUBLIC_API(bool)
 JS_NextProperty(JSContext *cx, JS::Handle<JSObject*> iterobj, jsid *idp);
 
-extern JS_PUBLIC_API(bool)
-JS_CheckAccess(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSAccessMode mode,
-               JS::MutableHandle<JS::Value> vp, unsigned *attrsp);
-
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
 

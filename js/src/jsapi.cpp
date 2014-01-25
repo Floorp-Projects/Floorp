@@ -3802,16 +3802,6 @@ JS_SetArrayLength(JSContext *cx, HandleObject obj, uint32_t length)
     return SetLengthProperty(cx, obj, length);
 }
 
-JS_PUBLIC_API(bool)
-JS_CheckAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
-               MutableHandleValue vp, unsigned *attrsp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    return CheckAccess(cx, obj, id, mode, vp, attrsp);
-}
-
 JS_PUBLIC_API(void)
 JS_HoldPrincipals(JSPrincipals *principals)
 {
