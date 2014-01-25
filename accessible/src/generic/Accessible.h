@@ -389,7 +389,7 @@ public:
   /**
    * Return child accessible at the given index.
    */
-  virtual Accessible* GetChildAt(uint32_t aIndex);
+  virtual Accessible* GetChildAt(uint32_t aIndex) const;
 
   /**
    * Return child accessible count.
