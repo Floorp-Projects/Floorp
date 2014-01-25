@@ -246,6 +246,24 @@ js::Nursery::notifyInitialSlots(Cell *cell, HeapSlot *slots)
     }
 }
 
+void
+js::Nursery::notifyNewElements(gc::Cell *cell, ObjectElements *elements)
+{
+    JS_ASSERT(!isInside(elements));
+    notifyInitialSlots(cell, reinterpret_cast<HeapSlot *>(elements));
+}
+
+void
+js::Nursery::notifyRemovedElements(gc::Cell *cell, ObjectElements *oldElements)
+{
+    JS_ASSERT(cell);
+    JS_ASSERT(oldElements);
+    JS_ASSERT(!isInside(oldElements));
+
+    if (isInside(cell))
+        hugeSlots.remove(reinterpret_cast<HeapSlot *>(oldElements));
+}
+
 namespace js {
 namespace gc {
 
