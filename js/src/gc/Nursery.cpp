@@ -290,7 +290,7 @@ class MinorCollectionTracer : public JSTracer
     AutoEnterOOMUnsafeRegion oomUnsafeRegion;
 
     /* Insert the given relocation entry into the list of things to visit. */
-    JS_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
+    MOZ_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
         *tail = entry;
         tail = &entry->next_;
         *tail = nullptr;
@@ -455,7 +455,7 @@ js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc, TenureCountCache &t
     }
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 js::Nursery::traceObject(MinorCollectionTracer *trc, JSObject *obj)
 {
     const Class *clasp = obj->getClass();
@@ -474,20 +474,20 @@ js::Nursery::traceObject(MinorCollectionTracer *trc, JSObject *obj)
     markSlots(trc, dynStart, dynEnd);
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 js::Nursery::markSlots(MinorCollectionTracer *trc, HeapSlot *vp, uint32_t nslots)
 {
     markSlots(trc, vp, vp + nslots);
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 js::Nursery::markSlots(MinorCollectionTracer *trc, HeapSlot *vp, HeapSlot *end)
 {
     for (; vp != end; ++vp)
         markSlot(trc, vp);
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 js::Nursery::markSlot(MinorCollectionTracer *trc, HeapSlot *slotp)
 {
     if (!slotp->isObject())

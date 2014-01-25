@@ -119,7 +119,7 @@ IndexToId(ExclusiveContext *cx, uint32_t index, MutableHandleId idp)
     return IndexToIdSlow(cx, index, idp);
 }
 
-static JS_ALWAYS_INLINE JSFlatString *
+static MOZ_ALWAYS_INLINE JSFlatString *
 IdToString(JSContext *cx, jsid id)
 {
     if (JSID_IS_STRING(id))
