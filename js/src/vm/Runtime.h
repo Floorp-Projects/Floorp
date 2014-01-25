@@ -673,7 +673,7 @@ struct MallocProvider
         return (T *)calloc_(numElems * sizeof(T));
     }
 
-    JS_DECLARE_NEW_METHODS(new_, malloc_, JS_ALWAYS_INLINE)
+    JS_DECLARE_NEW_METHODS(new_, malloc_, MOZ_ALWAYS_INLINE)
 };
 
 namespace gc {
@@ -2023,64 +2023,64 @@ PerThreadData::removeActiveCompilation()
 
 /************************************************************************/
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *vec, size_t len)
 {
     mozilla::PodZero(vec, len);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *beg, Value *end)
 {
     mozilla::PodZero(beg, end - beg);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(jsid *beg, jsid *end)
 {
     for (jsid *id = beg; id != end; ++id)
         *id = INT_TO_JSID(0);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(jsid *vec, size_t len)
 {
     MakeRangeGCSafe(vec, vec + len);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **beg, Shape **end)
 {
     mozilla::PodZero(beg, end - beg);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **vec, size_t len)
 {
     mozilla::PodZero(vec, len);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SetValueRangeToUndefined(Value *beg, Value *end)
 {
     for (Value *v = beg; v != end; ++v)
         v->setUndefined();
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SetValueRangeToUndefined(Value *vec, size_t len)
 {
     SetValueRangeToUndefined(vec, vec + len);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SetValueRangeToNull(Value *beg, Value *end)
 {
     for (Value *v = beg; v != end; ++v)
         v->setNull();
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SetValueRangeToNull(Value *vec, size_t len)
 {
     SetValueRangeToNull(vec, vec + len);

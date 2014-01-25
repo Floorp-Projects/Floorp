@@ -134,7 +134,7 @@ TokenStream::SourceCoords::SourceCoords(ExclusiveContext *cx, uint32_t ln)
     lineStartOffsets_.infallibleAppend(maxPtr);
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
 {
     uint32_t lineIndex = lineNumToIndex(lineNum);
@@ -160,7 +160,7 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
     }
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 TokenStream::SourceCoords::fill(const TokenStream::SourceCoords &other)
 {
     JS_ASSERT(lineStartOffsets_.back() == MAX_PTR);
@@ -176,7 +176,7 @@ TokenStream::SourceCoords::fill(const TokenStream::SourceCoords &other)
         (void)lineStartOffsets_.append(other.lineStartOffsets_[i]);
 }
 
-JS_ALWAYS_INLINE uint32_t
+MOZ_ALWAYS_INLINE uint32_t
 TokenStream::SourceCoords::lineIndexOf(uint32_t offset) const
 {
     uint32_t iMin, iMax, iMid;
@@ -348,7 +348,7 @@ TokenStream::~TokenStream()
 # define fast_getc getc
 #endif
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 TokenStream::updateLineInfoForEOL()
 {
     prevLinebase = linebase;
@@ -357,7 +357,7 @@ TokenStream::updateLineInfoForEOL()
     srcCoords.add(lineno, linebase - userbuf.base());
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 TokenStream::updateFlagsForEOL()
 {
     flags.isDirtyLine = false;
@@ -888,7 +888,7 @@ TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
                         "sourceMappingURL", &sourceMapURL_);
 }
 
-JS_ALWAYS_INLINE Token *
+MOZ_ALWAYS_INLINE Token *
 TokenStream::newToken(ptrdiff_t adjust)
 {
     cursor = (cursor + 1) & ntokensMask;
@@ -901,7 +901,7 @@ TokenStream::newToken(ptrdiff_t adjust)
     return tp;
 }
 
-JS_ALWAYS_INLINE JSAtom *
+MOZ_ALWAYS_INLINE JSAtom *
 TokenStream::atomize(ExclusiveContext *cx, CharBuffer &cb)
 {
     return AtomizeChars(cx, cb.begin(), cb.length());

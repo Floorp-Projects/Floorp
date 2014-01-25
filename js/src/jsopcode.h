@@ -110,13 +110,13 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
  * Immediate operand getters, setters, and bounds.
  */
 
-static JS_ALWAYS_INLINE uint8_t
+static MOZ_ALWAYS_INLINE uint8_t
 GET_UINT8(jsbytecode *pc)
 {
     return (uint8_t) pc[1];
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SET_UINT8(jsbytecode *pc, uint8_t u)
 {
     pc[1] = (jsbytecode) u;
@@ -135,13 +135,13 @@ SET_UINT8(jsbytecode *pc, uint8_t u)
 #define JUMP_OFFSET_MIN         INT32_MIN
 #define JUMP_OFFSET_MAX         INT32_MAX
 
-static JS_ALWAYS_INLINE int32_t
+static MOZ_ALWAYS_INLINE int32_t
 GET_JUMP_OFFSET(jsbytecode *pc)
 {
     return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SET_JUMP_OFFSET(jsbytecode *pc, int32_t off)
 {
     pc[1] = (jsbytecode)(off >> 24);
@@ -152,13 +152,13 @@ SET_JUMP_OFFSET(jsbytecode *pc, int32_t off)
 
 #define UINT32_INDEX_LEN        4
 
-static JS_ALWAYS_INLINE uint32_t
+static MOZ_ALWAYS_INLINE uint32_t
 GET_UINT32_INDEX(const jsbytecode *pc)
 {
     return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 {
     pc[1] = (jsbytecode)(index >> 24);

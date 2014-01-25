@@ -1186,7 +1186,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
@@ -1241,7 +1241,7 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Valu
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
@@ -1251,7 +1251,7 @@ SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
@@ -1261,7 +1261,7 @@ MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
@@ -1271,7 +1271,7 @@ DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     int32_t l, r;
@@ -1290,7 +1290,7 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
                           bool strict, JSScript *script = nullptr, jsbytecode *pc = nullptr)
 {

@@ -481,7 +481,7 @@ GetObjectParent(JSObject *obj)
     return reinterpret_cast<shadow::Object*>(obj)->shape->base->parent;
 }
 
-static JS_ALWAYS_INLINE JSCompartment *
+static MOZ_ALWAYS_INLINE JSCompartment *
 GetObjectCompartment(JSObject *obj)
 {
     return reinterpret_cast<shadow::Object*>(obj)->shape->base->compartment;
@@ -1659,7 +1659,7 @@ inline int CheckIsParallelNative(JSParallelNative parallelNative);
     }                                                                   \
     JS_JITINFO_NATIVE_PARALLEL(infoName, wrapperName##_ParallelNativeThreadSafeWrapper)
 
-static JS_ALWAYS_INLINE const JSJitInfo *
+static MOZ_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
 {
     JS_ASSERT(js::GetObjectClass(&v.toObject()) == js::FunctionClassPtr);
@@ -1669,7 +1669,7 @@ FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
 /* Statically asserted in jsfun.h. */
 static const unsigned JS_FUNCTION_INTERPRETED_BIT = 0x1;
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 SET_JITINFO(JSFunction * func, const JSJitInfo *info)
 {
     js::shadow::Function *fun = reinterpret_cast<js::shadow::Function *>(func);
@@ -1682,7 +1682,7 @@ SET_JITINFO(JSFunction * func, const JSJitInfo *info)
  * eliminate Gecko's dependencies on it!
  */
 
-static JS_ALWAYS_INLINE jsid
+static MOZ_ALWAYS_INLINE jsid
 JSID_FROM_BITS(size_t bits)
 {
     jsid id;
@@ -1717,7 +1717,7 @@ bool IdMatchesAtom(jsid id, JSAtom *atom);
  * Thus, it is only the rare third case which needs this function, which
  * handles any JSAtom* that is known not to be representable with an int jsid.
  */
-static JS_ALWAYS_INLINE jsid
+static MOZ_ALWAYS_INLINE jsid
 NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
 {
     JS_ASSERT(((size_t)atom & 0x7) == 0);
@@ -1727,19 +1727,19 @@ NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
 }
 
 /* All strings stored in jsids are atomized, but are not necessarily property names. */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_ATOM(jsid id)
 {
     return JSID_IS_STRING(id);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_ATOM(jsid id, JSAtom *atom)
 {
     return id == JSID_FROM_BITS((size_t)atom);
 }
 
-static JS_ALWAYS_INLINE JSAtom *
+static MOZ_ALWAYS_INLINE JSAtom *
 JSID_TO_ATOM(jsid id)
 {
     return (JSAtom *)JSID_TO_STRING(id);
@@ -1749,7 +1749,7 @@ JS_STATIC_ASSERT(sizeof(jsid) == sizeof(void*));
 
 namespace js {
 
-static JS_ALWAYS_INLINE JS::Value
+static MOZ_ALWAYS_INLINE JS::Value
 IdToValue(jsid id)
 {
     if (JSID_IS_STRING(id))
