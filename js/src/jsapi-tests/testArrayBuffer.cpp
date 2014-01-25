@@ -23,8 +23,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
     CHECK(buf_len1 = JS_NewArrayBuffer(cx, sizes[0]));
     CHECK(tarray_len1 = JS_NewInt32ArrayWithBuffer(cx, testBuf[0], 0, -1));
 
-    JS::RootedValue dummy(cx, INT_TO_JSVAL(MAGIC_VALUE_1));
-    JS_SetElement(cx, testArray[0], 0, &dummy);
+    JS_SetElement(cx, testArray[0], 0, MAGIC_VALUE_1);
 
     // Many-element ArrayBuffer (uses dynamic storage)
     CHECK(buf_len200 = JS_NewArrayBuffer(cx, 200 * sizeof(uint32_t)));
