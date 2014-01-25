@@ -112,15 +112,6 @@
 #endif
 
 /***********************************************************************
-** MACROS:      JS_BEGIN_EXTERN_C
-**              JS_END_EXTERN_C
-** DESCRIPTION:
-**      Macro shorthands for conditional C++ extern block delimiters.
-***********************************************************************/
-#define JS_BEGIN_EXTERN_C      MOZ_BEGIN_EXTERN_C
-#define JS_END_EXTERN_C        MOZ_END_EXTERN_C
-
-/***********************************************************************
 ** MACROS:      JS_BIT
 **              JS_BITMASK
 ** DESCRIPTION:
