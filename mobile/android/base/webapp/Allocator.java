@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 import android.util.Log;
 
-public class WebAppAllocator {
+public class Allocator {
 
     private final String LOGTAG = "GeckoWebAppAllocator";
 
@@ -26,14 +26,14 @@ public class WebAppAllocator {
     // The number of WebApp# and WEBAPP# activites/apps/intents
     private final static int MAX_WEB_APPS = 100;
 
-    protected static WebAppAllocator sInstance = null;
-    public static WebAppAllocator getInstance() {
+    protected static Allocator sInstance = null;
+    public static Allocator getInstance() {
         return getInstance(GeckoAppShell.getContext());
     }
 
-    public static synchronized WebAppAllocator getInstance(Context cx) {
+    public static synchronized Allocator getInstance(Context cx) {
         if (sInstance == null) {
-            sInstance = new WebAppAllocator(cx);
+            sInstance = new Allocator(cx);
         }
 
         return sInstance;
@@ -41,7 +41,7 @@ public class WebAppAllocator {
 
     SharedPreferences mPrefs;
 
-    protected WebAppAllocator(Context context) {
+    protected Allocator(Context context) {
         mPrefs = context.getSharedPreferences("webapps", Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
     }
 
