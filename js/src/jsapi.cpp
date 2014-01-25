@@ -3437,8 +3437,8 @@ JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
     return JSObject::setGeneric(cx, obj, obj, id, &value, false);
 }
 
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
+static bool
+SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3446,6 +3446,48 @@ JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValu
     JSAutoResolveFlags rf(cx, JSRESOLVE_ASSIGNING);
 
     return JSObject::setElement(cx, obj, obj, index, vp, false);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v)
+{
+    RootedValue value(cx, v);
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleObject v)
+{
+    RootedValue value(cx, ObjectOrNullValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleString v)
+{
+    RootedValue value(cx, StringValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, int32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, uint32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, double v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)

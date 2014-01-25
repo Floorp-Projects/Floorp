@@ -168,10 +168,8 @@ MobileMessageCallback::NotifyMessageDeleted(bool *aDeleted, uint32_t aSize)
 
   JS::Rooted<JSObject*> deleteArrayObj(cx,
                                        JS_NewArrayObject(cx, aSize, nullptr));
-  JS::Rooted<JS::Value> value(cx);
   for (uint32_t i = 0; i < aSize; i++) {
-    value.setBoolean(aDeleted[i]);
-    JS_SetElement(cx, deleteArrayObj, i, &value);
+    JS_SetElement(cx, deleteArrayObj, i, aDeleted[i]);
   }
 
   JS::Rooted<JS::Value> deleteArrayVal(cx, JS::ObjectValue(*deleteArrayObj));
