@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=961363
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 961363</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+  /** Test for Bug 961363 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function test() {
+
+    SimpleTest.waitForFocus(function() {
+      var one = [{k:"DOWN",s:[false,true,true,false]}, {k:"UP",s:[false,false,true,false]},
+                 {k:"RIGHT",s:[false,false,false,false]}, {k:"LEFT",s:[false,true,false,false]},
+                 {k:"PAGE_DOWN",s:[false,true,false,true]}, {k:"PAGE_UP",s:[false,false,false,true]},
+                 {k:"END",s:[false,false,false,false]}, {k:"HOME",s:[true,false,false,false]} ];
+     var two_1 = [{k:"DOWN",s:[false,false,true,false]}, {k:"UP",s:[false,true,false,false]},
+                  {k:"RIGHT",s:[false,false,true,false]}, {k:"LEFT",s:[false,true,false,false]},
+                  {k:"END",s:[false,false,false,true]}, {k:"HOME",s:[true,false,false,false]} ];
+     var two_2 = [{k:"PAGE_DOWN",s:[true,false,false,false]}, {k:"PAGE_UP",s:[true,false,false,false]}];
+     var three_1 = [{k:"DOWN",s:[false,false,true,false]}, {k:"UP",s:[false,true,false,false]},
+                    {k:"RIGHT",s:[false,false,true,false]}, {k:"LEFT",s:[false,true,false,false]},
+                    {k:"END",s:[false,false,false,true]}, {k:"HOME",s:[true,false,false,false]} ];
+     var three_2 = [{k:"PAGE_DOWN",s:[true,false,false,false]}, {k:"PAGE_UP",s:[true,false,false,false]} ];
+
+      function select_test(id, tests, ctrl_change) {
+        var element = document.getElementById(id);
+        element.focus();
+        var previousValue = element.value;
+        tests.forEach(function(data) {
+          var key = data.k;
+          synthesizeKey("VK_"+key, { shiftKey:false, metaKey:false, ctrlKey:true });
+          (ctrl_change ? isnot : is)(element.value, previousValue, "value should " +
+                 (ctrl_change?"":"not ") + "have changed while testing CTRL+key " + key + " (id: " + id + ")");
+          previousValue = element.value;
+          synthesizeKey(" ", { shiftKey:false, metaKey:false, ctrlKey:true });
+          var sel = Array.prototype.slice.call(element.options).map(function(o){return o.selected})
+          is(""+sel, ""+data.s, "selected options match after CTRL+SPACE (after testing CTRL+key " + key + ") for (id: " + id + ")");
+          previousValue = element.value;
+          });
+      };
+      select_test("one", one, false);
+      select_test("two", two_1, true);
+      select_test("two", two_2, false);
+      select_test("three", three_1, true);
+      select_test("three", three_2, false);
+      SimpleTest.finish();
+    });
+  }
+</script>
+</head>
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=961363">Mozilla Bug 961363</a>
+<div>
+  <ul>
+    <li>
+    <select id="one" multiple size="3">
+      <option>0</option>
+      <option selected>1</option>
+      <option>2</option>
+      <option>3</option>
+    </select>
+    </li>
+    <li>
+    <select id="two" size="3">
+      <option>0</option>
+      <option selected>1</option>
+      <option>2</option>
+      <option>3</option>
+    </select>
+    </li>
+    <li>
+    <select id="three" size="1">
+      <option>0</option>
+      <option selected>1</option>
+      <option>2</option>
+      <option>3</option>
+    </select>
+    </li>
+  </ul>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
