@@ -382,6 +382,18 @@
       </hbox>
     </panel>
 
+    <!-- Sync Panel -->
+    <panel id="sync-popup" type="arrow" hidden="true" noautofocus="true"
+           level="top" onclick="this.hidePopup();">
+      <hbox id="sync-popup-outer">
+        <image id="sync-popup-icon"/>
+        <vbox id="sync-popup-inner">
+          <description id="sync-popup-desc-syncing" value="&syncPanel.descriptionSyncing;"/>
+          <description id="sync-popup-desc-prefs">&syncPanel.descriptionPrefs;</description>
+        </vbox>
+      </hbox>
+    </panel>
+
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
 
