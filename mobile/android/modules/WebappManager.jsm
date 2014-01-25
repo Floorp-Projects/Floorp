@@ -43,7 +43,7 @@ this.WebappManager = {
       return;
     }
 
-    this._downloadApk(aMessage);
+    this._downloadApk(aMessage, aMessageManager);
   },
 
   installPackage: function(aMessage, aMessageManager) {
@@ -53,10 +53,10 @@ this.WebappManager = {
       return;
     }
 
-    this._downloadApk(aMessage);
+    this._downloadApk(aMessage, aMessageManager);
   },
 
-  _downloadApk: function(aMsg) {
+  _downloadApk: function(aMsg, aMessageManager) {
     let manifestUrl = aMsg.app.manifestURL;
     dump("_downloadApk for " + manifestUrl);
 
@@ -94,7 +94,8 @@ this.WebappManager = {
           data: JSON.stringify(aMsg),
         });
       } else { // type == "failure"
-        // TODO: handle error better.
+        aMsg.error = message;
+        aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMsg);
         dump("error downloading APK: " + message);
       }
     }
