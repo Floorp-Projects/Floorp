@@ -13,6 +13,7 @@
 #include "gfxImageSurface.h"
 #include "AndroidBridge.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gfx/Matrix.h"
 
 using namespace mozilla;
 
@@ -72,7 +73,7 @@ public:
     env->CallObjectMethod(aSurfaceTexture, jSurfaceTexture_updateTexImage);
   }
 
-  bool GetTransformMatrix(jobject aSurfaceTexture, gfx3DMatrix& aMatrix)
+  bool GetTransformMatrix(jobject aSurfaceTexture, gfx::Matrix4x4& aMatrix)
   {
     JNIEnv* env = GetJNIForThread();
 
@@ -102,7 +103,7 @@ public:
     aMatrix._42 = array[13];
     aMatrix._43 = array[14];
     aMatrix._44 = array[15];
- 
+
     env->ReleaseFloatArrayElements(jarray, array, 0);
 
     return false;
@@ -213,7 +214,7 @@ nsSurfaceTexture::UpdateTexImage()
 }
 
 bool
-nsSurfaceTexture::GetTransformMatrix(gfx3DMatrix& aMatrix)
+nsSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
 {
   return sJNIFunctions.GetTransformMatrix(mSurfaceTexture, aMatrix);
 }
