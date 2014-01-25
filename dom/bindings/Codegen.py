@@ -6309,7 +6309,8 @@ if (!v.isObject()) {
   return ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s.%s");
 }
 
-return JS_SetProperty(cx, &v.toObject(), "%s", args[0]);""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
+JS::Rooted<JSObject*> targetObj(cx, &v.toObject());
+return JS_SetProperty(cx, targetObj, "%s", args[0]);""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
 
 class CGSpecializedReplaceableSetter(CGSpecializedSetter):
     """
@@ -11406,7 +11407,7 @@ class CallbackSetter(CallbackAccessor):
             }
         return string.Template(
             'MOZ_ASSERT(argv.length() == 1);\n'
-            'if (!JS_SetProperty(cx, mCallback, "${attrName}", ${argv})) {\n'
+            'if (!JS_SetProperty(cx, CallbackPreserveColor(), "${attrName}", ${argv})) {\n'
             '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
             '  return${errorReturn};\n'
             '}\n').substitute(replacements)
