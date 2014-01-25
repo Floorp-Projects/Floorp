@@ -82,14 +82,11 @@ ProtoGetterImpl(JSContext *cx, CallArgs args)
     if (thisv.isPrimitive() && !BoxNonStrictThis(cx, args))
         return false;
 
-    unsigned dummy;
     RootedObject obj(cx, &args.thisv().toObject());
-    RootedId nid(cx, NameToId(cx->names().proto));
-    RootedValue v(cx);
-    if (!CheckAccess(cx, obj, nid, JSACC_PROTO, &v, &dummy))
+    RootedObject proto(cx);
+    if (!JSObject::getProto(cx, obj, &proto))
         return false;
-
-    args.rval().set(v);
+    args.rval().setObjectOrNull(proto);
     return true;
 }
 
