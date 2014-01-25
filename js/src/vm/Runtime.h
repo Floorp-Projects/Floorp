@@ -169,7 +169,7 @@ struct ConservativeGCData
 #endif
     }
 
-    JS_NEVER_INLINE void recordStackTop();
+    MOZ_NEVER_INLINE void recordStackTop();
 
 #ifdef JS_THREADSAFE
     void updateForRequestEnd() {

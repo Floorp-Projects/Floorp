@@ -72,7 +72,7 @@ class InlineMap
         return true;
     }
 
-    JS_NEVER_INLINE
+    MOZ_NEVER_INLINE
     bool switchAndAdd(const K &key, const V &value) {
         if (!switchToMap())
             return false;

@@ -63,11 +63,11 @@ using mozilla::PodCopy;
 /*
  * Note: when Clang 3.2 (32-bit) inlines the two functions below in Interpret,
  * the conservative stack scanner leaks a ton of memory and this negatively
- * influences performance. The JS_NEVER_INLINE is a temporary workaround until
+ * influences performance. The MOZ_NEVER_INLINE is a temporary workaround until
  * we can remove the conservative scanner. See bug 849526 for more info.
  */
 #if defined(__clang__) && defined(JS_CPU_X86)
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 #else
 static bool
 #endif
@@ -78,7 +78,7 @@ ToBooleanOp(const FrameRegs &regs)
 
 template <bool Eq>
 #if defined(__clang__) && defined(JS_CPU_X86)
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 #else
 static bool
 #endif
@@ -366,7 +366,7 @@ js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct 
     return nullptr;
 }
 
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state);
 
 StackFrame *
@@ -1315,7 +1315,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
     return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
 }
 
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state)
 {
 /*
