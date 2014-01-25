@@ -264,14 +264,6 @@ struct JSStringFinalizer {
     void (*finalize)(const JSStringFinalizer *fin, jschar *chars);
 };
 
-// JSClass.checkAccess type: check whether obj[id] may be accessed per mode,
-// returning false on error/exception, true on success with obj[id]'s last-got
-// value in *vp, and its attributes in *attrsp.  As for JSPropertyOp above, id
-// is either a string or an int jsval.
-typedef bool
-(* JSCheckAccessOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                    JSAccessMode mode, JS::MutableHandleValue vp);
-
 // Return whether the first principal subsumes the second. The exact meaning of
 // 'subsumes' is left up to the browser. Subsumption is checked inside the JS
 // engine when determining, e.g., which stack frames to display in a backtrace.
@@ -410,7 +402,6 @@ typedef void
                                                                               \
     /* Optional members (may be null). */                                     \
     FinalizeOp          finalize;                                             \
-    JSCheckAccessOp     checkAccess;                                          \
     JSNative            call;                                                 \
     JSHasInstanceOp     hasInstance;                                          \
     JSNative            construct;                                            \
@@ -510,7 +501,6 @@ struct JSClass {
 
     // Optional members (may be null).
     JSFinalizeOp        finalize;
-    JSCheckAccessOp     checkAccess;
     JSNative            call;
     JSHasInstanceOp     hasInstance;
     JSNative            construct;
@@ -639,7 +629,6 @@ JS_STATIC_ASSERT(offsetof(JSClass, enumerate) == offsetof(Class, enumerate));
 JS_STATIC_ASSERT(offsetof(JSClass, resolve) == offsetof(Class, resolve));
 JS_STATIC_ASSERT(offsetof(JSClass, convert) == offsetof(Class, convert));
 JS_STATIC_ASSERT(offsetof(JSClass, finalize) == offsetof(Class, finalize));
-JS_STATIC_ASSERT(offsetof(JSClass, checkAccess) == offsetof(Class, checkAccess));
 JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
 JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
 JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));

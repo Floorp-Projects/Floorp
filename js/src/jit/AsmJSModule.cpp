@@ -402,7 +402,6 @@ const Class AsmJSModuleObject::class_ = {
     JS_ResolveStub,
     nullptr,                 /* convert     */
     AsmJSModuleObject_finalize,
-    nullptr,                 /* checkAccess */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
