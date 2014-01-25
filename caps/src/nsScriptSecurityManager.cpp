@@ -420,19 +420,6 @@ nsScriptSecurityManager::JSPrincipalsSubsume(JSPrincipals *first,
     return nsJSPrincipals::get(first)->Subsumes(nsJSPrincipals::get(second));
 }
 
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckPropertyAccess(JSContext* cx,
-                                             JSObject* aJSObject,
-                                             const char* aClassName,
-                                             jsid aProperty,
-                                             uint32_t aAction)
-{
-    return CheckPropertyAccessImpl(aAction, nullptr, cx, aJSObject,
-                                   nullptr, nullptr,
-                                   aClassName, aProperty);
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
                                          nsIURI* aTargetURI)
