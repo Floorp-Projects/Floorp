@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1400929573884000);
+const PRTime gPreloadListExpirationTime = INT64_C(1401534369282000);
 
 class nsSTSPreload
 {
@@ -24,6 +24,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "api.intercom.io", false },
   { "api.xero.com", false },
   { "app.recurly.com", false },
+  { "app.yinxiang.com", false },
   { "appseccalifornia.org", true },
   { "arivo.com.br", true },
   { "bank.simple.com", false },
@@ -74,6 +75,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "getlantern.org", false },
   { "go.xero.com", false },
   { "grc.com", false },
+  { "grepular.com", true },
   { "haste.ch", true },
   { "howrandom.org", true },
   { "id.mayfirst.org", false },
@@ -88,6 +90,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "linode.com", false },
   { "linx.net", false },
   { "lockify.com", true },
+  { "logentries.com", false },
   { "login.persona.org", true },
   { "login.sapo.pt", true },
   { "login.xero.com", false },
@@ -110,6 +113,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mudcrab.us", true },
   { "my.onlime.ch", false },
   { "my.xero.com", false },
+  { "mykolab.com", true },
   { "mylookout.com", false },
   { "neg9.org", false },
   { "oplop.appspot.com", true },
@@ -125,6 +129,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "pixi.me", true },
   { "publications.qld.gov.au", false },
   { "riseup.net", true },
+  { "romab.com", true },
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
   { "securityheaders.com", true },
@@ -154,6 +159,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.braintreepayments.com", false },
   { "www.cyveillance.com", true },
   { "www.entropia.de", false },
+  { "www.evernote.com", false },
   { "www.gov.uk", false },
   { "www.grc.com", false },
   { "www.heliosnet.com", true },

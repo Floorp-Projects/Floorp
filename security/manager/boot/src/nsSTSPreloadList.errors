@@ -42,7 +42,6 @@ googlemail.com: did not receive HSTS header
 googleplex.com: could not connect to host
 goto.google.com: did not receive HSTS header
 greplin.com: did not receive HSTS header
-grepular.com: max-age too low: 8640000
 groups.google.com: did not receive HSTS header
 history.google.com: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header
@@ -57,7 +56,6 @@ ledgerscope.net: did not receive HSTS header
 liberty.lavabit.com: could not connect to host
 lifeguard.aecom.com: max-age too low: 3600
 lists.mayfirst.org: did not receive HSTS header
-logentries.com: did not receive HSTS header
 lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
 mail.google.com: did not receive HSTS header
 market.android.com: did not receive HSTS header
@@ -82,7 +80,6 @@ plus.google.com: did not receive HSTS header
 plus.sandbox.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
 rapidresearch.me: did not receive HSTS header
-romab.com: max-age too low: 2628000
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header
