@@ -4746,7 +4746,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
  * Returns true if we "reset" an existing incremental GC, which would force us
  * to run another cycle.
  */
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 GCCycle(JSRuntime *rt, bool incremental, int64_t budget,
         JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
