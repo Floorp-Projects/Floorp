@@ -601,7 +601,7 @@ JSObject::finish(js::FreeOp *fop)
         fop->free_(slots);
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
-        if (JS_UNLIKELY(elements->isAsmJSArrayBuffer()))
+        if (MOZ_UNLIKELY(elements->isAsmJSArrayBuffer()))
             js::ArrayBufferObject::releaseAsmJSArrayBuffer(fop, this);
         else
             fop->free_(elements);
@@ -1038,7 +1038,7 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
 inline bool
 ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 {
-    if (JS_UNLIKELY(obj->is<ProxyObject>()))
+    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
         return Proxy::objectClassIs(obj, classValue, cx);
 
     switch (classValue) {
@@ -1091,7 +1091,7 @@ NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
     // analysis/compilation is active, to avoid recursion.
     JS_ASSERT(!*pmetadata);
     if (JSContext *cx = cxArg->maybeJSContext()) {
-        if (JS_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
+        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
             !cx->compartment()->activeAnalysis)
         {
             // Use AutoEnterAnalysis to prohibit both any GC activity under the
