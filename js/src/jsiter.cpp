@@ -757,13 +757,13 @@ js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 iterator_next_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsIterator(args.thisv()));
@@ -1698,7 +1698,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     return ok;
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 star_generator_next(JSContext *cx, CallArgs args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1720,7 +1720,7 @@ star_generator_next(JSContext *cx, CallArgs args)
                            args.rval());
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 star_generator_throw(JSContext *cx, CallArgs args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1735,7 +1735,7 @@ star_generator_throw(JSContext *cx, CallArgs args)
                            args.rval());
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 legacy_generator_next(JSContext *cx, CallArgs args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1755,7 +1755,7 @@ legacy_generator_next(JSContext *cx, CallArgs args)
                            args.rval());
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 legacy_generator_throw(JSContext *cx, CallArgs args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1799,7 +1799,7 @@ CloseLegacyGenerator(JSContext *cx, HandleObject obj)
     return CloseLegacyGenerator(cx, obj, &rval);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 legacy_generator_close(JSContext *cx, CallArgs args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1808,7 +1808,7 @@ legacy_generator_close(JSContext *cx, CallArgs args)
 }
 
 template<typename T>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsObjectOfType(HandleValue v)
 {
     return v.isObject() && v.toObject().is<T>();

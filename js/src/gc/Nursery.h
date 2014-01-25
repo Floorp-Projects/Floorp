@@ -74,7 +74,7 @@ class Nursery
     bool isEmpty() const;
 
     template <typename T>
-    JS_ALWAYS_INLINE bool isInside(const T *p) const {
+    MOZ_ALWAYS_INLINE bool isInside(const T *p) const {
         return gc::IsInsideNursery((JS::shadow::Runtime *)runtime_, p);
     }
 
@@ -124,7 +124,7 @@ class Nursery
      * returns false and leaves |*ref| unset.
      */
     template <typename T>
-    JS_ALWAYS_INLINE bool getForwardedPointer(T **ref);
+    MOZ_ALWAYS_INLINE bool getForwardedPointer(T **ref);
 
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot **pSlotsElems);
@@ -202,17 +202,17 @@ class Nursery
         return reinterpret_cast<NurseryChunkLayout *>(start())[index];
     }
 
-    JS_ALWAYS_INLINE uintptr_t start() const {
+    MOZ_ALWAYS_INLINE uintptr_t start() const {
         JS_ASSERT(runtime_);
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryStart_;
     }
 
-    JS_ALWAYS_INLINE uintptr_t heapEnd() const {
+    MOZ_ALWAYS_INLINE uintptr_t heapEnd() const {
         JS_ASSERT(runtime_);
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
 
-    JS_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
+    MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
         JS_ASSERT(chunkno < NumNurseryChunks);
         JS_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
@@ -221,16 +221,16 @@ class Nursery
         currentEnd_ = chunk(chunkno).end();
     }
 
-    JS_ALWAYS_INLINE uintptr_t allocationEnd() const {
+    MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
         JS_ASSERT(numActiveChunks_ > 0);
         return chunk(numActiveChunks_ - 1).end();
     }
 
-    JS_ALWAYS_INLINE bool isFullyGrown() const {
+    MOZ_ALWAYS_INLINE bool isFullyGrown() const {
         return numActiveChunks_ == NumNurseryChunks;
     }
 
-    JS_ALWAYS_INLINE uintptr_t currentEnd() const {
+    MOZ_ALWAYS_INLINE uintptr_t currentEnd() const {
         JS_ASSERT(runtime_);
         JS_ASSERT(currentEnd_ == chunk(currentChunk_).end());
         return currentEnd_;
@@ -258,10 +258,10 @@ class Nursery
      * |dst| in Tenured.
      */
     void collectToFixedPoint(gc::MinorCollectionTracer *trc, TenureCountCache &tenureCounts);
-    JS_ALWAYS_INLINE void traceObject(gc::MinorCollectionTracer *trc, JSObject *src);
-    JS_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer *trc, HeapSlot *vp, uint32_t nslots);
-    JS_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer *trc, HeapSlot *vp, HeapSlot *end);
-    JS_ALWAYS_INLINE void markSlot(gc::MinorCollectionTracer *trc, HeapSlot *slotp);
+    MOZ_ALWAYS_INLINE void traceObject(gc::MinorCollectionTracer *trc, JSObject *src);
+    MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer *trc, HeapSlot *vp, uint32_t nslots);
+    MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer *trc, HeapSlot *vp, HeapSlot *end);
+    MOZ_ALWAYS_INLINE void markSlot(gc::MinorCollectionTracer *trc, HeapSlot *slotp);
     void *moveToTenured(gc::MinorCollectionTracer *trc, JSObject *src);
     size_t moveObjectToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
     size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);

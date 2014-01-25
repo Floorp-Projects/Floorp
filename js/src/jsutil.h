@@ -18,7 +18,7 @@
 
 #include "js/Utility.h"
 
-static JS_ALWAYS_INLINE void *
+static MOZ_ALWAYS_INLINE void *
 js_memcpy(void *dst_, const void *src_, size_t len)
 {
     char *dst = (char *) dst_;
@@ -143,7 +143,7 @@ InitConst(const T &t)
 }
 
 template <class T, class U>
-JS_ALWAYS_INLINE T &
+MOZ_ALWAYS_INLINE T &
 ImplicitCast(U &u)
 {
     T &t = u;
@@ -192,7 +192,7 @@ AlignBytes(T bytes, U alignment)
     return bytes + ComputeByteAlignment(bytes, alignment);
 }
 
-static JS_ALWAYS_INLINE size_t
+static MOZ_ALWAYS_INLINE size_t
 UnsignedPtrDiff(const void *bigger, const void *smaller)
 {
     return size_t(bigger) - size_t(smaller);

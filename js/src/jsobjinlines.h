@@ -696,13 +696,13 @@ PropDesc::PropDesc(const Value &getter, const Value &setter,
     MOZ_ASSERT(setter.isUndefined() || js_IsCallable(setter));
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
     return v.isObject() && v.toObject().is<JSFunction>();
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
     if (v.isObject() && v.toObject().is<JSFunction>()) {
@@ -712,20 +712,20 @@ IsFunctionObject(const js::Value &v, JSFunction **fun)
     return false;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsNativeFunction(const js::Value &v)
 {
     JSFunction *fun;
     return IsFunctionObject(v, &fun) && fun->isNative();
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsNativeFunction(const js::Value &v, JSFunction **fun)
 {
     return IsFunctionObject(v, fun) && (*fun)->isNative();
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsNativeFunction(const js::Value &v, JSNative native)
 {
     JSFunction *fun;
@@ -740,7 +740,7 @@ IsNativeFunction(const js::Value &v, JSNative native)
  *
  * TODO: a per-thread shape-based cache would be faster and simpler.
  */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ClassMethodIsNative(JSContext *cx, JSObject *obj, const Class *clasp, jsid methodid, JSNative native)
 {
     JS_ASSERT(!obj->is<ProxyObject>());
@@ -757,7 +757,7 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, const Class *clasp, jsid metho
 }
 
 /* ES5 9.1 ToPrimitive(input). */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, MutableHandleValue vp)
 {
     if (vp.isPrimitive())
@@ -788,7 +788,7 @@ ToPrimitive(JSContext *cx, MutableHandleValue vp)
 }
 
 /* ES5 9.1 ToPrimitive(input, PreferredType). */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp)
 {
     JS_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
@@ -1062,13 +1062,13 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
     return ObjectClassIs(obj, classValue, cx);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ValueMightBeSpecial(const Value &propval)
 {
     return propval.isObject();
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
                JSContext *cx)
 {
@@ -1084,7 +1084,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
                               JSObject **ctorp = nullptr,
                               gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
 {
     // The metadata callback is invoked before each created object, except when

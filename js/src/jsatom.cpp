@@ -230,7 +230,7 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
  * as a new JSAtom's storage without copying. The contract is that the caller no
  * longer owns the memory and this method is responsible for freeing the memory.
  */
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static JSAtom *
 AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehavior ib)
 {
@@ -280,7 +280,7 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
 }
 
 /* |tbchars| must not point into an inline or short string. */
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static JSAtom *
 AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, InternBehavior ib)
 {
