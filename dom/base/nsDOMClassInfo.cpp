@@ -1586,38 +1586,6 @@ nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid aId, uint32_t mode,
-                            jsval *vp, bool *_retval)
-{
-  JS::Rooted<jsid> id(cx, aId);
-  uint32_t mode_type = mode & JSACC_TYPEMASK;
-
-  if ((mode_type == JSACC_WATCH || mode_type == JSACC_PROTO) && sSecMan) {
-    nsresult rv;
-    JS::Rooted<JSObject*> real_obj(cx);
-    if (wrapper) {
-      real_obj = wrapper->GetJSObject();
-      NS_ENSURE_STATE(real_obj);
-    }
-    else {
-      real_obj = obj;
-    }
-
-    rv =
-      sSecMan->CheckPropertyAccess(cx, real_obj, mData->mName, id,
-                                   nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-    if (NS_FAILED(rv)) {
-      // Let XPConnect know that the access was not granted.
-      *_retval = false;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                      JSObject *obj, const JS::CallArgs &args, bool *_retval)
 {
@@ -3506,25 +3474,6 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
   *_retval = winObj;
   return NS_OK;
-}
-
-// DOM Location helper
-
-NS_IMETHODIMP
-nsLocationSH::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsid id, uint32_t mode,
-                          jsval *vp, bool *_retval)
-{
-  if ((mode & JSACC_TYPEMASK) == JSACC_PROTO && (mode & JSACC_WRITE)) {
-    // No setting location.__proto__, ever!
-
-    // Let XPConnect know that the access was not granted.
-    *_retval = false;
-
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  return nsDOMGenericSH::CheckAccess(wrapper, cx, obj, id, mode, vp, _retval);
 }
 
 NS_IMETHODIMP
