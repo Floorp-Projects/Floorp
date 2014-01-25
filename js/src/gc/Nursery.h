@@ -266,10 +266,12 @@ class Nursery
     void setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
                                       uint32_t nelems);
 
+    /* Free malloced pointers owned by freed things in the nursery. */
+    void freeHugeSlots(JSRuntime *rt);
+
     /*
      * Frees all non-live nursery-allocated things at the end of a minor
-     * collection. This operation takes time proportional to the number of
-     * dead things.
+     * collection.
      */
     void sweep(JSRuntime *rt);
 
