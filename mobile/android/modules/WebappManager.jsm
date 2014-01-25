@@ -119,18 +119,20 @@ this.WebappManager = {
       delete aData.app.manifest.appcache_path;
     }
 
-    DOMApplicationRegistry.confirmInstall(aData, file, (function(aManifest) {
-      let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
+    DOMApplicationRegistry.registryReady.then(() => {
+      DOMApplicationRegistry.confirmInstall(aData, file, (function(aManifest) {
+        let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
 
-      // aData.app.origin may now point to the app: url that hosts this app.
-      sendMessageToJava({
-        type: "WebApps:PostInstall",
-        apkPackageName: aData.app.apkPackageName,
-        origin: aData.app.origin,
-      });
+        // aData.app.origin may now point to the app: url that hosts this app.
+        sendMessageToJava({
+          type: "WebApps:PostInstall",
+          apkPackageName: aData.app.apkPackageName,
+          origin: aData.app.origin,
+        });
 
-      this.writeDefaultPrefs(file, localeManifest);
-    }).bind(this));
+        this.writeDefaultPrefs(file, localeManifest);
+      }).bind(this));
+    });
   },
 
   launch: function({ manifestURL, origin }) {
@@ -187,16 +189,18 @@ this.WebappManager = {
     message.autoInstall = true;
     message.mm = mm;
 
-    switch (aData.type) { // can be hosted or packaged.
-      case "hosted":
-        DOMApplicationRegistry.doInstall(message, mm);
-        break;
+    DOMApplicationRegistry.registryReady.then(() => {
+      switch (aData.type) { // can be hosted or packaged.
+        case "hosted":
+          DOMApplicationRegistry.doInstall(message, mm);
+          break;
 
-      case "packaged":
-        message.isPackage = true;
-        DOMApplicationRegistry.doInstallPackage(message, mm);
-        break;
-    }
+        case "packaged":
+          message.isPackage = true;
+          DOMApplicationRegistry.doInstallPackage(message, mm);
+          break;
+      }
+    });
   },
 
   autoUninstall: function(aData) {
@@ -206,20 +210,23 @@ this.WebappManager = {
         dump("autoUninstall sendAsyncMessage " + aMessageName + ": " + JSON.stringify(aData));
       }
     };
-    let installed = {};
-    DOMApplicationRegistry.doGetAll(installed, mm);
 
-    for (let app in installed.apps) {
-      if (aData.apkPackageNames.indexOf(installed.apps[app].apkPackageName) > -1) {
-        let appToRemove = installed.apps[app];
-        dump("should remove: " + appToRemove.name);
-        DOMApplicationRegistry.uninstall(appToRemove.manifestURL, function() {
-          dump(appToRemove.name + " uninstalled");
-        }, function() {
-          dump(appToRemove.name + " did not uninstall");
-        });
+    DOMApplicationRegistry.registryReady.then(() => {
+      let installed = {};
+      DOMApplicationRegistry.doGetAll(installed, mm);
+
+      for (let app in installed.apps) {
+        if (aData.apkPackageNames.indexOf(installed.apps[app].apkPackageName) > -1) {
+          let appToRemove = installed.apps[app];
+          dump("should remove: " + appToRemove.name);
+          DOMApplicationRegistry.uninstall(appToRemove.manifestURL, function() {
+            dump(appToRemove.name + " uninstalled");
+          }, function() {
+            dump(appToRemove.name + " did not uninstall");
+          });
+        }
       }
-    }
+    });
   },
 
   writeDefaultPrefs: function(aProfile, aManifest) {
