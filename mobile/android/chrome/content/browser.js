@@ -381,9 +381,6 @@ var BrowserApp = {
     // TODO: replace with Android implementation of WebappOSUtils.isLaunchable.
     Cu.import("resource://gre/modules/Webapps.jsm");
     DOMApplicationRegistry.allAppsLaunchable = true;
-
-    // TODO: figure out why this is needed here.
-    Cu.import("resource://gre/modules/AppsUtils.jsm");
 #else
     WebappsUI.init();
 #endif
