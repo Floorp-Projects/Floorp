@@ -9,8 +9,6 @@
 
 #include "gc/Nursery-inl.h"
 
-#include <inttypes.h>
-
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsinfer.h"
@@ -22,6 +20,7 @@
 #ifdef JS_ION
 #include "jit/IonFrames.h"
 #endif
+#include "mozilla/IntegerPrintfMacros.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)
@@ -679,9 +678,35 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     /* Move objects pointed to by roots from the nursery to the major heap. */
     MinorCollectionTracer trc(rt, this);
 
-    TIME_START(markStoreBuffer);
-    rt->gcStoreBuffer.mark(&trc); // This must happen first.
-    TIME_END(markStoreBuffer);
+    /* Mark the store buffer. This must happen first. */
+    StoreBuffer &sb = rt->gcStoreBuffer;
+    TIME_START(markValues);
+    sb.markValues(&trc);
+    TIME_END(markValues);
+
+    TIME_START(markCells);
+    sb.markCells(&trc);
+    TIME_END(markCells);
+
+    TIME_START(markSlots);
+    sb.markSlots(&trc);
+    TIME_END(markSlots);
+
+    TIME_START(markWholeCells);
+    sb.markWholeCells(&trc);
+    TIME_END(markWholeCells);
+
+    TIME_START(markRelocatableValues);
+    sb.markRelocatableValues(&trc);
+    TIME_END(markRelocatableValues);
+
+    TIME_START(markRelocatableCells);
+    sb.markRelocatableCells(&trc);
+    TIME_END(markRelocatableCells);
+
+    TIME_START(markGenericEntries);
+    sb.markGenericEntries(&trc);
+    TIME_END(markGenericEntries);
 
     TIME_START(checkHashTables);
     CheckHashTablesAfterMovingGC(rt);
@@ -741,10 +766,17 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     TIME_END(pretenure);
 
     /* Sweep. */
+    TIME_START(freeHugeSlots);
+    freeHugeSlots(rt);
+    TIME_END(freeHugeSlots);
+
     TIME_START(sweep);
     sweep(rt);
-    rt->gcStoreBuffer.clear();
     TIME_END(sweep);
+
+    TIME_START(clearStoreBuffer);
+    rt->gcStoreBuffer.clear();
+    TIME_END(clearStoreBuffer);
 
     /*
      * We ignore gcMaxBytes when allocating for minor collection. However, if we
@@ -763,15 +795,25 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC time: Total   WaitBg  mkStrBf ckHshTb mkRuntm mkDbggr clrNOC  collect updtIon resize  pretnur sweep\n");
+                    "MinorGC: Reason               PRate  Size Time   WaitBg mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct updtIn resize pretnr frSlts clrSB  sweep\n");
             printedHeader = true;
         }
 
-#define FMT " %7" PRIu64
-        fprintf(stderr, "MinorGC time:" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+#define FMT " %6" PRIu64
+        fprintf(stderr,
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                js::gcstats::ExplainReason(reason),
+                promotionRate * 100,
+                numActiveChunks_,
                 totalTime,
                 TIME_TOTAL(waitBgSweep),
-                TIME_TOTAL(markStoreBuffer),
+                TIME_TOTAL(markValues),
+                TIME_TOTAL(markCells),
+                TIME_TOTAL(markSlots),
+                TIME_TOTAL(markWholeCells),
+                TIME_TOTAL(markRelocatableValues),
+                TIME_TOTAL(markRelocatableCells),
+                TIME_TOTAL(markGenericEntries),
                 TIME_TOTAL(checkHashTables),
                 TIME_TOTAL(markRuntime),
                 TIME_TOTAL(markDebugger),
@@ -780,6 +822,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
                 TIME_TOTAL(updateJitActivations),
                 TIME_TOTAL(resize),
                 TIME_TOTAL(pretenure),
+                TIME_TOTAL(freeHugeSlots),
+                TIME_TOTAL(clearStoreBuffer),
                 TIME_TOTAL(sweep));
 #undef FMT
     }
@@ -787,13 +831,16 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 }
 
 void
-js::Nursery::sweep(JSRuntime *rt)
+js::Nursery::freeHugeSlots(JSRuntime *rt)
 {
-    /* Free malloced pointers owned by freed things in the nursery. */
     for (HugeSlotsSet::Range r = hugeSlots.all(); !r.empty(); r.popFront())
         rt->defaultFreeOp()->free_(r.front());
     hugeSlots.clear();
+}
 
+void
+js::Nursery::sweep(JSRuntime *rt)
+{
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));

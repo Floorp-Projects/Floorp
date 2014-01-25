@@ -239,8 +239,8 @@ class gcstats::StatisticsSerializer
  */
 JS_STATIC_ASSERT(JS::gcreason::NUM_TELEMETRY_REASONS >= JS::gcreason::NUM_REASONS);
 
-static const char *
-ExplainReason(JS::gcreason::Reason reason)
+const char *
+js::gcstats::ExplainReason(JS::gcreason::Reason reason)
 {
     switch (reason) {
 #define SWITCH_REASON(name)                     \
