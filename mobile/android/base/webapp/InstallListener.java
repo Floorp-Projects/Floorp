@@ -82,15 +82,16 @@ public class InstallListener extends BroadcastReceiver {
     }
 
     public boolean isCorrectManifest(String manifestUrl) {
+        // Don't use URL and the sameFile method as this also includes the query which
+        // we want to ignore.
         try {
-            URL registered = new URL(mManifestUrl);
-            URL observed = new URL(manifestUrl);
-            // TODO: this should be matching the scheme, origin and path, but ignoring the query.
-            // That doesn't seem to be happening.
-            return registered.sameFile(observed);
-        } catch (MalformedURLException e) {
-            return false;
+            String registeredUrl = mManifestUrl.split("\\?")[0];
+            String observedUrl = manifestUrl.split("\\?")[0];
+            return registeredUrl.equals(observedUrl);
+        } catch (NullPointerException e) {
+            Log.e(LOGTAG, "One or both of the manifest URLs is null", e);
         }
+        return false;
     }
 
     public void cleanup() {
