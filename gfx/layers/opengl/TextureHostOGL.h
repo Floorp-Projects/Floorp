@@ -12,12 +12,12 @@
 #include "GLContextTypes.h"             // for GLContext
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_CLAMP_TO_EDGE, etc
 #include "GLTextureImage.h"             // for TextureImage
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxTypes.h"
 #include "mozilla/GfxMessageUtils.h"    // for gfxContentType
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
@@ -135,7 +135,7 @@ public:
 
   virtual GLenum GetWrapMode() const = 0;
 
-  virtual gfx3DMatrix GetTextureTransform() { return gfx3DMatrix(); }
+  virtual gfx::Matrix4x4 GetTextureTransform() { return gfx::Matrix4x4(); }
 
   virtual TextureImageDeprecatedTextureHostOGL* AsTextureImageDeprecatedTextureHost() { return nullptr; }
 };
@@ -258,7 +258,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
-  virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
+  virtual gfx::Matrix4x4 GetTextureTransform() MOZ_OVERRIDE;
 
   virtual GLenum GetTextureTarget() const { return mTextureTarget; }
 
@@ -744,7 +744,7 @@ public:
              gfxContentType::COLOR;
   }
 
-  virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
+  virtual gfx::Matrix4x4 GetTextureTransform() MOZ_OVERRIDE;
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
