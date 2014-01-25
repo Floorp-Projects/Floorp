@@ -3444,7 +3444,6 @@ const Class ArrayBufferObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,        /* finalize    */
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */
@@ -3607,7 +3606,6 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
     nullptr,                 /* finalize */                                    \
-    nullptr,                 /* checkAccess */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
@@ -3821,7 +3819,6 @@ const Class DataViewObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,                 /* finalize */
-    nullptr,                 /* checkAccess */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
