@@ -104,7 +104,7 @@ StringWriteBarrierPostRemove(js::ThreadSafeContext *maybecx, JSString **strp)
 JS_ALWAYS_INLINE bool
 JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
 {
-    if (JS_UNLIKELY(length > JSString::MAX_LENGTH)) {
+    if (MOZ_UNLIKELY(length > JSString::MAX_LENGTH)) {
         js_ReportAllocationOverflow(maybecx);
         return false;
     }

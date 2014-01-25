@@ -1217,7 +1217,7 @@ class HashTable : private AllocPolicy
         Entry *firstRemoved = nullptr;
 
         while(true) {
-            if (JS_UNLIKELY(entry->isRemoved())) {
+            if (MOZ_UNLIKELY(entry->isRemoved())) {
                 if (!firstRemoved)
                     firstRemoved = entry;
             } else {

@@ -211,7 +211,7 @@ StackFrame::callObj() const
     JS_ASSERT(fun()->isHeavyweight());
 
     JSObject *pobj = scopeChain();
-    while (JS_UNLIKELY(!pobj->is<CallObject>()))
+    while (MOZ_UNLIKELY(!pobj->is<CallObject>()))
         pobj = pobj->enclosingScope();
     return pobj->as<CallObject>();
 }
@@ -233,7 +233,7 @@ InterpreterStack::allocateFrame(JSContext *cx, size_t size)
     else
         maxFrames = MAX_FRAMES;
 
-    if (JS_UNLIKELY(frameCount_ >= maxFrames)) {
+    if (MOZ_UNLIKELY(frameCount_ >= maxFrames)) {
         js_ReportOverRecursed(cx);
         return nullptr;
     }
