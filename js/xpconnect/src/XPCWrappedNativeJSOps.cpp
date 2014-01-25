@@ -155,31 +155,9 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
         return true;
     }
 
-    // It is a double wrapped object. Figure out if the caller
-    // is allowed to see it.
-
-    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-    if (sm) {
-        AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsIXPCWrappedJSObjectGetter));
-
-        if (iface) {
-            jsid id = ccx.GetRuntime()->
-                        GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
-
-            ccx.SetCallInfo(iface, iface->GetMemberAt(1), false);
-            if (NS_FAILED(sm->
-                          CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                                    &ccx, ccx,
-                                    ccx.GetFlattenedJSObject(),
-                                    wrapper->GetIdentityObject(),
-                                    wrapper->GetClassInfo(), id))) {
-                // The SecurityManager should have set an exception.
-                return false;
-            }
-        }
-    }
-
+    // It is a double wrapped object. This should never appear in content these
+    // days, but let's be safe here.
+    MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
     args.rval().setObject(*realObject);
     return JS_WrapValue(cx, args.rval());
 }
