@@ -5729,18 +5729,6 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
     }
 }
 
-static bool
-CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
-                  MutableHandleValue vp)
-{
-    return true;
-}
-
-static const JSSecurityCallbacks securityCallbacks = {
-    CheckObjectAccess,
-    nullptr
-};
-
 /* Pretend we can always preserve wrappers for dummy DOM objects. */
 static bool
 DummyPreserveWrapperCallback(JSContext *cx, JSObject *obj)
@@ -5967,7 +5955,6 @@ main(int argc, char **argv, char **envp)
     shellTrustedPrincipals.refcount = 1;
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
-    JS_SetSecurityCallbacks(rt, &securityCallbacks);
     JS_SetOperationCallback(rt, ShellOperationCallback);
     JS::SetAsmJSCacheOps(rt, &asmJSCacheOps);
 
