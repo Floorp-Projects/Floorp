@@ -98,10 +98,6 @@
 #define JS_ALWAYS_INLINE MOZ_ALWAYS_INLINE
 #endif
 
-#ifndef JS_NEVER_INLINE
-#define JS_NEVER_INLINE MOZ_NEVER_INLINE
-#endif
-
 /***********************************************************************
 ** MACROS:      JS_BEGIN_MACRO
 **              JS_END_MACRO
