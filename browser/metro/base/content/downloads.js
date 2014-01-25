@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
-const TOAST_URI_GENERIC_ICON_DOWNLOAD = "ms-appx:///metro/chrome/chrome/skin/images/alert-downloads-30.png"
 
 var MetroDownloadsView = {
   /**
@@ -222,17 +221,14 @@ var MetroDownloadsView = {
       BrowserUI.addAndShowTab(uri, Browser.selectedTab);
   },
 
-  showAlert: function dh_showAlert(aName, aMessage, aTitle, aIcon, aObserver) {
+  showAlert: function dh_showAlert(aName, aMessage, aTitle, aObserver) {
     var notifier = Cc["@mozilla.org/alerts-service;1"]
                      .getService(Ci.nsIAlertsService);
 
     if (!aTitle)
       aTitle = Strings.browser.GetStringFromName("alertDownloads");
 
-    if (!aIcon)
-      aIcon = TOAST_URI_GENERIC_ICON_DOWNLOAD;
-
-    notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", aObserver, aName);
+    notifier.showAlertNotification("", aTitle, aMessage, true, "", aObserver, aName);
   },
 
   showNotification: function dh_showNotification(title, msg, buttons, priority) {
@@ -355,7 +351,7 @@ var MetroDownloadsView = {
         }
       }
     }
-    this.showAlert(name, msg, title, null, observer);
+    this.showAlert(name, msg, title, observer);
   },
 
   _resetCompletedDownloads: function () {
