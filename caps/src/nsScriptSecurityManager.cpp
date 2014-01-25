@@ -412,43 +412,6 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     return evalOK;
 }
 
-bool
-nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
-                                           JS::Handle<jsid> id, JSAccessMode mode,
-                                           JS::MutableHandle<JS::Value> vp)
-{
-    // Get the security manager
-    nsScriptSecurityManager *ssm =
-        nsScriptSecurityManager::GetScriptSecurityManager();
-
-    NS_WARN_IF_FALSE(ssm, "Failed to get security manager service");
-    if (!ssm)
-        return false;
-
-    // Get the object being accessed.  We protect these cases:
-    // 1. The Function.prototype.caller property's value, which might lead
-    //    an attacker up a call-stack to a function or another object from
-    //    a different trust domain.
-    // 2. A user-defined getter or setter function accessible on another
-    //    trust domain's window or document object.
-    // vp can be a primitive, in that case, we use obj as the target
-    // object.
-    JSObject* target = JSVAL_IS_PRIMITIVE(vp) ? obj : JSVAL_TO_OBJECT(vp);
-
-    // Do the same-origin check -- this sets a JS exception if the check fails.
-    // Pass the parent object's class name, as we have no class-info for it.
-    nsresult rv =
-        ssm->CheckPropertyAccess(cx, target, js::GetObjectClass(obj)->name, id,
-                                 (mode & JSACC_WRITE) ?
-                                 (int32_t)nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
-                                 (int32_t)nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-    if (NS_FAILED(rv))
-        return false; // Security check failed (XXX was an error reported?)
-
-    return true;
-}
-
 // static
 bool
 nsScriptSecurityManager::JSPrincipalsSubsume(JSPrincipals *first,
@@ -1688,7 +1651,6 @@ nsresult nsScriptSecurityManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     static const JSSecurityCallbacks securityCallbacks = {
-        CheckObjectAccess,
         ContentSecurityPolicyPermitsJSAction,
         JSPrincipalsSubsume,
     };
