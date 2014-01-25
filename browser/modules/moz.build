@@ -12,7 +12,6 @@ EXTRA_JS_MODULES += [
     'ContentClick.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
-    'openLocationLastURL.jsm',
     'SharedFrame.jsm',
     'SignInToWebsite.jsm',
     'SitePermissions.jsm',
