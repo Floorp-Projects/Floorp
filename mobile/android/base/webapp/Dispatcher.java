@@ -8,18 +8,23 @@ package org.mozilla.gecko.webapp;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
-public class WebAppDispatcher extends Activity {
+public class Dispatcher extends Activity {
     private static final String LOGTAG = "GeckoWebAppDispatcher";
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
 
-        WebAppAllocator allocator = WebAppAllocator.getInstance(getApplicationContext());
+        Allocator allocator = Allocator.getInstance(getApplicationContext());
 
         if (bundle == null) {
             bundle = getIntent().getExtras();
+        }
+
+        if (bundle == null) {
+            Log.e(LOGTAG, "Passed intent data missing.");
         }
 
         String packageName = bundle.getString("packageName");

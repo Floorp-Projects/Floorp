@@ -24,7 +24,7 @@ import android.util.Log;
 
 public class InstallListener extends BroadcastReceiver {
 
-    private static String LOGTAG = "GeckoInstallListener";
+    private static String LOGTAG = "GeckoWebAppInstallListener";
     private JSONObject mData = null;
     private String mManifestUrl;
 
@@ -63,9 +63,10 @@ public class InstallListener extends BroadcastReceiver {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             InstallHelper installHelper = new InstallHelper(context, apkResources, null);
             try {
-                JSONObject dataObject = mData;
-                dataObject = new JSONObject().put("request", dataObject);
-                WebAppAllocator slots = WebAppAllocator.getInstance(context);
+                JSONObject dataObject = new JSONObject();
+                dataObject.put("request", mData);
+
+                Allocator slots = Allocator.getInstance(context);
                 int i = slots.findOrAllocatePackage(packageName);
                 installHelper.startInstall("webapp" + i, dataObject);
             } catch (JSONException e) {
