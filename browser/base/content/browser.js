@@ -186,6 +186,8 @@ let gInitialPages = [
 #include browser-syncui.js
 #endif
 
+#include browser-fxaccounts.js
+
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN
   // Bug 666808 - AeroPeek support for e10s
@@ -1137,6 +1139,7 @@ var gBrowserInit = {
 #ifdef MOZ_SERVICES_SYNC
     // initialize the sync UI
     gSyncUI.init();
+    gFxAccounts.init();
 #endif
 
 #ifdef MOZ_DATA_REPORTING
@@ -1240,6 +1243,10 @@ var gBrowserInit = {
     gHistorySwipeAnimation.uninit();
 
     FullScreen.cleanup();
+
+#ifdef MOZ_SERVICES_SYNC
+    gFxAccounts.uninit();
+#endif
 
     Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
 
