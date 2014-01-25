@@ -26,13 +26,7 @@ ToastNotificationHandler::DisplayNotification(HSTRING title,
 {
   mCookie = aCookie;
 
-  ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics;
-  AssertHRESULT(GetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
-                                    toastNotificationManagerStatics.GetAddressOf()));
-
-  ComPtr<IXmlDocument> toastXml;
-  toastNotificationManagerStatics->GetTemplateContent(ToastTemplateType::ToastTemplateType_ToastImageAndText03, &toastXml);
-
+  ComPtr<IXmlDocument> toastXml = InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastImageAndText03);
   ComPtr<IXmlNodeList> toastTextElements, toastImageElements;
   ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot, imageNodeRoot, srcAttribute;
 
@@ -56,27 +50,70 @@ ToastNotificationHandler::DisplayNotification(HSTRING title,
   SetNodeValueString(msg, msgTextNodeRoot.Get(), toastXml.Get());
   SetNodeValueString(imagePath, srcAttribute.Get(), toastXml.Get());
 
+  CreateWindowsNotificationFromXml(toastXml.Get());
+}
+
+void
+ToastNotificationHandler::DisplayTextNotification(HSTRING title,
+                                                  HSTRING msg,
+                                                  const nsAString& aCookie)
+{
+  mCookie = aCookie;
+
+  ComPtr<IXmlDocument> toastXml = InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastText03);
+  ComPtr<IXmlNodeList> toastTextElements;
+  ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot;
+
+  HSTRING textNodeStr;
+  HSTRING_HEADER textHeader;
+  WindowsCreateStringReference(L"text", 4, &textHeader, &textNodeStr);
+  toastXml->GetElementsByTagName(textNodeStr, &toastTextElements);
+
+  AssertHRESULT(toastTextElements->Item(0, &titleTextNodeRoot));
+  AssertHRESULT(toastTextElements->Item(1, &msgTextNodeRoot));
+
+  SetNodeValueString(title, titleTextNodeRoot.Get(), toastXml.Get());
+  SetNodeValueString(msg, msgTextNodeRoot.Get(), toastXml.Get());
+
+  CreateWindowsNotificationFromXml(toastXml.Get());
+}
+
+ComPtr<IXmlDocument>
+ToastNotificationHandler::InitializeXmlForTemplate(ToastTemplateType templateType) {
+  ComPtr<IXmlDocument> toastXml;
+
+  AssertRetHRESULT(GetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
+    mToastNotificationManagerStatics.GetAddressOf()), nullptr);
+
+  mToastNotificationManagerStatics->GetTemplateContent(templateType, &toastXml);
+
+  return toastXml;
+}
+
+void
+ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXml)
+{
   ComPtr<IToastNotification> notification;
   ComPtr<IToastNotificationFactory> factory;
   AssertHRESULT(GetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(),
-                factory.GetAddressOf()));
-  AssertHRESULT(factory->CreateToastNotification(toastXml.Get(), &notification));
+    factory.GetAddressOf()));
+  AssertHRESULT(factory->CreateToastNotification(toastXml, &notification));
 
   EventRegistrationToken activatedToken;
   AssertHRESULT(notification->add_Activated(Callback<ToastActivationHandler>(this,
-      &ToastNotificationHandler::OnActivate).Get(), &activatedToken));
+    &ToastNotificationHandler::OnActivate).Get(), &activatedToken));
   EventRegistrationToken dismissedToken;
   AssertHRESULT(notification->add_Dismissed(Callback<ToastDismissHandler>(this,
-      &ToastNotificationHandler::OnDismiss).Get(), &dismissedToken));
+    &ToastNotificationHandler::OnDismiss).Get(), &dismissedToken));
 
   ComPtr<IToastNotifier> notifier;
-  toastNotificationManagerStatics->CreateToastNotifier(&notifier);
+  mToastNotificationManagerStatics->CreateToastNotifier(&notifier);
   notifier->Show(notification.Get());
 
   MetroUtils::FireObserver("metro_native_toast_shown", mCookie.get());
 }
 
-void ToastNotificationHandler::SetNodeValueString(HSTRING inputString, ComPtr<IXmlNode> node, ComPtr<IXmlDocument> xml) { 
+void ToastNotificationHandler::SetNodeValueString(HSTRING inputString, ComPtr<IXmlNode> node, ComPtr<IXmlDocument> xml) {
   ComPtr<IXmlText> inputText;
   ComPtr<IXmlNode> inputTextNode, pAppendedChild;
 
