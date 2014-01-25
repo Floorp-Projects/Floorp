@@ -3917,19 +3917,9 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
                               HandleObject val)
 {
     JS_ASSERT(val->isCallable());
-
-    /*
-     * Getters and setters are just like watchpoints from an access control
-     * point of view.
-     */
-    RootedValue scratch(cx, UndefinedValue());
-    unsigned attrs = 0;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &scratch, &attrs))
-        return false;
-
     PropertyOp getter;
     StrictPropertyOp setter;
-    attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
 
     JSOp op = JSOp(*pc);
 
@@ -3944,7 +3934,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
         attrs |= JSPROP_SETTER;
     }
 
-    scratch.setUndefined();
+    RootedValue scratch(cx);
     return JSObject::defineGeneric(cx, obj, id, scratch, getter, setter, attrs);
 }
 
