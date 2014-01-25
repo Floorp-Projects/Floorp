@@ -3426,10 +3426,8 @@ JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t nam
 }
 
 JS_PUBLIC_API(bool)
-JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, HandleValue v)
+JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
     RootedValue value(cx, v);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3440,9 +3438,8 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, HandleValue v)
 }
 
 JS_PUBLIC_API(bool)
-JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
@@ -3452,20 +3449,20 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValu
 }
 
 JS_PUBLIC_API(bool)
-JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, HandleValue v)
+JS_SetProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue v)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
-JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_SetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                  HandleValue v)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)

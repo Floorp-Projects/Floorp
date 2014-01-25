@@ -1593,7 +1593,7 @@ static bool Throw(nsresult errNum, XPCCallContext& ccx)
 
 /***************************************************************************/
 
-class CallMethodHelper
+class MOZ_STACK_CLASS CallMethodHelper
 {
     XPCCallContext& mCallContext;
     // We wait to call SetLastResult(mInvokeResult) until ~CallMethodHelper(),
@@ -1604,7 +1604,7 @@ class CallMethodHelper
     const nsXPTMethodInfo* mMethodInfo;
     nsISupports* const mCallee;
     const uint16_t mVTableIndex;
-    const jsid mIdxValueId;
+    HandleId mIdxValueId;
 
     nsAutoTArray<nsXPTCVariant, 8> mDispatchParams;
     uint8_t mJSContextIndex; // TODO make const
@@ -1942,9 +1942,8 @@ CallMethodHelper::GatherAndConvertResults()
         } else if (i < mArgc) {
             // we actually assured this before doing the invoke
             MOZ_ASSERT(mArgv[i].isObject(), "out var is not object");
-            if (!JS_SetPropertyById(mCallContext,
-                                    &mArgv[i].toObject(),
-                                    mIdxValueId, v)) {
+            RootedObject obj(mCallContext, &mArgv[i].toObject());
+            if (!JS_SetPropertyById(mCallContext, obj, mIdxValueId, v)) {
                 ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, i, mCallContext);
                 return false;
             }
