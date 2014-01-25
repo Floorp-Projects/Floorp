@@ -38,7 +38,8 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
 
     // Perform a side-effect to indicate that this hook was actually called.
     JS::RootedValue value(cx, args[0]);
-    if (!JS_SetElement(cx, &args.callee(), 0, &value))
+    JS::RootedObject callee(cx, &args.callee());
+    if (!JS_SetElement(cx, callee, 0, &value))
         return false;
 
     args.rval().setObject(*obj);

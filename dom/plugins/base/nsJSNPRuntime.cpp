@@ -775,7 +775,7 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier id,
 
 // static
 bool
-nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
+nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier npid,
                                const NPVariant *value)
 {
   NPP npp = NPPStack::Peek();
@@ -798,13 +798,15 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
   nsCxPusher pusher;
   pusher.Push(cx);
   AutoJSExceptionReporter reporter(cx);
-  JSAutoCompartment ac(cx, npjsobj->mJSObj);
+  JS::Rooted<JSObject*> jsObj(cx, npjsobj->mJSObj);
+  JSAutoCompartment ac(cx, jsObj);
 
   JS::Rooted<JS::Value> v(cx, NPVariantToJSVal(npp, cx, value));
 
-  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+  NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
                "id must be either string or int!\n");
-  ok = ::JS_SetPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), v);
+  JS::Rooted<jsid> id(cx, NPIdentifierToJSId(npid));
+  ok = ::JS_SetPropertyById(cx, jsObj, id, v);
 
   return ok;
 }
