@@ -572,11 +572,6 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &propid))
         return false;
 
-    RootedValue tmp(cx);
-    unsigned attrs;
-    if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
-        return false;
-
     if (!JSObject::watch(cx, obj, propid, callable))
         return false;
 
