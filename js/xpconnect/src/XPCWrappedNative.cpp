@@ -1698,35 +1698,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         return Throw(rv, ccx);
     }
 
-    // set up the method index and do the security check if needed
-
-    uint32_t secAction;
-
-    switch (mode) {
-        case CALL_METHOD:
-            secAction = nsIXPCSecurityManager::ACCESS_CALL_METHOD;
-            break;
-        case CALL_GETTER:
-            secAction = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
-            break;
-        case CALL_SETTER:
-            secAction = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-            break;
-        default:
-            NS_ERROR("bad value");
-            return false;
-    }
-
-    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-    if (sm && NS_FAILED(sm->CanAccess(secAction, &ccx, ccx,
-                                      ccx.GetFlattenedJSObject(),
-                                      ccx.GetWrapper()->GetIdentityObject(),
-                                      ccx.GetWrapper()->GetClassInfo(),
-                                      ccx.GetMember()->GetName()))) {
-        // the security manager vetoed. It should have set an exception.
-        return false;
-    }
-
     return CallMethodHelper(ccx).Call();
 }
 
