@@ -2670,12 +2670,6 @@ Accessible::ChildCount() const
 }
 
 int32_t
-Accessible::GetIndexOf(Accessible* aChild)
-{
-  return (aChild->mParent != this) ? -1 : aChild->IndexInParent();
-}
-
-int32_t
 Accessible::IndexInParent() const
 {
   return mIndexInParent;
