@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
 
 let gFxAccounts = {
 
+  _initialized: false,
+
   get topics() {
     delete this.topics;
     return this.topics = [
@@ -16,15 +18,27 @@ let gFxAccounts = {
   },
 
   init: function () {
+    if (this._initialized) {
+      return;
+    }
+
     for (let topic of this.topics) {
       Services.obs.addObserver(this, topic, false);
     }
+
+    this._initialized = true;
   },
 
   uninit: function () {
+    if (!this._initialized) {
+      return;
+    }
+
     for (let topic of this.topics) {
       Services.obs.removeObserver(this, topic);
     }
+
+    this._initialized = false;
   },
 
   observe: function (subject, topic) {
