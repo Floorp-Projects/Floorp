@@ -1102,8 +1102,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 }
 
-.toolbarbutton-1:not([type="menu-button"]),
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1:not([type="menu-button"]),
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #restore-button {
   min-width: 28px;
 }
@@ -3586,6 +3586,33 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #ctrlTab-showAll {
   margin-top: .5em;
+}
+
+/* Sync Panel */
+
+#sync-popup {
+  padding: 10px;
+}
+
+#sync-popup-icon {
+  width: 32px;
+  background: url("chrome://browser/content/abouthome/sync.png") center center no-repeat;
+}
+
+@media (min-resolution: 2dppx) {
+  #sync-popup-icon {
+    background: url("chrome://browser/content/abouthome/sync@2x.png") center center no-repeat;
+    background-size: 32px 32px;
+  }
+}
+
+#sync-popup-inner {
+  width: 0;
+  padding-left: 10px;
+}
+
+#sync-popup-desc-prefs {
+  margin: 0;
 }
 
 /* Status panel */
