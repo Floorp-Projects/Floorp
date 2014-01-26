@@ -9,9 +9,6 @@ function getQuery(request) {
   return query;
 }
 
-// Timer used to handle the request response.
-var timer = null;
-
 function handleResponse() {
   // Is this a rate limited response?
   if (this.state.rate > 0) {
@@ -26,7 +23,24 @@ function handleResponse() {
         (bytesToWrite > this.state.rate) ? this.state.rate : bytesToWrite;
 
       for (let i = 0; i < bytesToWrite; i++) {
-        this.response.write("0");
+        try {
+          this.response.bodyOutputStream.write("0", 1);
+        } catch (e) {
+          // Connection was closed by client.
+          if (e == Components.results.NS_ERROR_NOT_AVAILABLE) {
+            // There's no harm in calling this multiple times.
+            this.response.finish();
+
+            // It's possible that our timer wasn't cancelled in time
+            // and we'll be called again.
+            if (this.timer) {
+              this.timer.cancel();
+              this.timer = null;
+            }
+
+            return;
+          }
+        }
       }
 
       // Update the number of bytes we've sent to the client.
@@ -47,11 +61,18 @@ function handleResponse() {
   this.response.finish();
 
   // All done sending, go ahead and cancel our repeating timer.
-  timer.cancel();
+  this.timer.cancel();
+
+  // Clear the timer.
+  this.timer = null;
 }
 
 function handleRequest(request, response) {
   var query = getQuery(request);
+
+  // sending at a specific rate requires our response to be asynchronous so
+  // we handle all requests asynchronously. See handleResponse().
+  response.processAsync();
 
   // Default status when responding.
   var version = "1.1";
@@ -120,19 +141,16 @@ function handleRequest(request, response) {
       totalBytes: size,
       sentBytes: 0,
       rate: rate
-    }
+    },
+    timer: null
   };
 
   // The notify implementation for the timer.
   context.notify = handleResponse.bind(context);
 
-  timer =
+  context.timer =
     Components.classes["@mozilla.org/timer;1"]
               .createInstance(Components.interfaces.nsITimer);
-
-  // sending at a specific rate requires our response to be asynchronous so
-  // we handle all requests asynchronously. See handleResponse().
-  response.processAsync();
 
   // generate the content.
   response.setStatusLine(version, statusCode, description);
@@ -143,8 +161,10 @@ function handleRequest(request, response) {
   response.setHeader("Content-Length", size.toString(), false);
 
   // initialize the timer and start writing out the response.
-  timer.initWithCallback(context,
-                         1000,
-                         Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+  context.timer.initWithCallback(
+    context,
+    1000,
+    Components.interfaces.nsITimer.TYPE_REPEATING_SLACK
+  );
 
 }

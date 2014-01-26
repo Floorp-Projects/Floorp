@@ -57,6 +57,18 @@ let NotificationDB = {
         } catch (e) {
           if (DEBUG) { debug("Unable to parse file data " + e); }
         }
+        // populate the list of notifications by tag
+        if (this.notifications) {
+          for (var origin in this.notifications) {
+            this.byTag[origin] = {};
+            for (var id in this.notifications[origin]) {
+              var curNotification = this.notifications[origin][id];
+              if (curNotification.tag) {
+                this.byTag[origin][curNotification.tag] = curNotification;
+              }
+            }
+          }
+        }
         this.loaded = true;
         callback && callback();
       }.bind(this),
@@ -128,10 +140,20 @@ let NotificationDB = {
   receiveMessage: function(message) {
     if (DEBUG) { debug("Received message:" + message.name); }
 
+    // sendAsyncMessage can fail if the child process exits during a
+    // notification storage operation, so always wrap it in a try/catch.
+    function returnMessage(name, data) {
+      try {
+        message.target.sendAsyncMessage(name, data);
+      } catch (e) {
+        if (DEBUG) { debug("Return message failed, " + name); }
+      }
+    }
+
     switch (message.name) {
       case "Notification:GetAll":
         this.queueTask("getall", message.data, function(notifications) {
-          message.target.sendAsyncMessage("Notification:GetAll:Return:OK", {
+          returnMessage("Notification:GetAll:Return:OK", {
             requestID: message.data.requestID,
             notifications: notifications
           });
@@ -140,7 +162,7 @@ let NotificationDB = {
 
       case "Notification:Save":
         this.queueTask("save", message.data, function() {
-          message.target.sendAsyncMessage("Notification:Save:Return:OK", {
+          returnMessage("Notification:Save:Return:OK", {
             requestID: message.data.requestID
           });
         });
@@ -148,7 +170,7 @@ let NotificationDB = {
 
       case "Notification:Delete":
         this.queueTask("delete", message.data, function() {
-          message.target.sendAsyncMessage("Notification:Delete:Return:OK", {
+          returnMessage("Notification:Delete:Return:OK", {
             requestID: message.data.requestID
           });
         });
