@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <setting data-jetpack-id="test-simple-prefs@jetpack" pref="extensions.test-simple-prefs@jetpack.somePreference" pref-name="somePreference" title="some-title" type="string">Some short description for the preference</setting>
+  <setting data-jetpack-id="test-simple-prefs@jetpack" pref="extensions.test-simple-prefs@jetpack.myInteger" pref-name="myInteger" title="my-int" type="integer">How many of them we have.</setting>
+</vbox>

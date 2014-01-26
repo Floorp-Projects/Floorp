@@ -102,8 +102,6 @@ browser.jar:
         content/browser/sync/progress.js              (content/sync/progress.js)
         content/browser/sync/progress.xhtml           (content/sync/progress.xhtml)
 #endif
-        content/browser/openLocation.js               (content/openLocation.js)
-        content/browser/openLocation.xul              (content/openLocation.xul)
         content/browser/safeMode.css                  (content/safeMode.css)
         content/browser/safeMode.js                   (content/safeMode.js)
         content/browser/safeMode.xul                  (content/safeMode.xul)

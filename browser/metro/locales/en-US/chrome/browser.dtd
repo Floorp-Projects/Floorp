@@ -118,10 +118,7 @@
                         firstRunHistory.label )
      These strings appear on the Firefox Start page the first time
      Firefox for Windows 8 Touch (Metro) is launched.  Each one
-     has an arrow pointing toward the feature it references.  The code
-     to display these strings is not enabled yet, but will be soon.
-     For now, you can see this mockup for an example of how they are
-     used: https://bug941284.bugzilla.mozilla.org/attachment.cgi?id=8344046
+     has an arrow pointing toward the feature it references.
      -->
 <!ENTITY firstRunTabs.label "Looking for your tabs? Just pull down or right-click">
 <!ENTITY firstRunTopSites.label "Go to the sites you visit most">
@@ -130,3 +127,21 @@
 <!ENTITY firstRunHistory.label "See where you've been on the Web">
 <!ENTITY firstRunWelcome.label "Welcome to &brandShortName;">
 <!ENTITY firstRunDifferent.label "Different by design">
+
+  <!-- LOCALIZATION NOTE (firstRunBack.label,
+                          firstRunNewTab.label,
+                          firstRunStar.label,
+                          firstRunPin.label,
+                          firstRunGotIt.label )
+       These strings appear as a content overlay the first few times a page
+       is visited. Each one has an arrow pointing toward the feature it
+       references. The code to display these strings is not enabled yet,
+       but will be soon. For now, you can see this mockup for an example
+       of how they are used:
+       https://bug949213.bugzilla.mozilla.org/attachment.cgi?id=8363973
+       -->
+<!ENTITY firstRunBack.label "Tap to go back to the previous page">
+<!ENTITY firstRunNewTab.label "Add a new tab to explore a new site">
+<!ENTITY firstRunStar.label "Use bookmarks to save pages for later">
+<!ENTITY firstRunPin.label "Pin any site to your Windows Start screen for quick access">
+<!ENTITY firstRunGotIt.label "Got it!">

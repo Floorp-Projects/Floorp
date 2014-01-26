@@ -8,7 +8,7 @@ module.metadata = {
 };
 
 const { Ci } = require("chrome");
-const method = require("method/core");
+const method = require("../../method/core");
 const { add, remove, iterator } = require("../lang/weak-set");
 
 let getTargetWindow = method("getTargetWindow");

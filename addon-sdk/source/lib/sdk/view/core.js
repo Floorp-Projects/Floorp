@@ -9,7 +9,7 @@ module.metadata = {
 };
 
 var { Ci } = require("chrome");
-var method = require("method/core");
+var method = require("../../method/core");
 
 // Returns DOM node associated with a view for
 // the given `value`. If `value` has no view associated

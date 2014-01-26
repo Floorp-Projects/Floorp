@@ -3,7 +3,7 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const method = require('method/core');
+const method = require('../../../method/core');
 
 exports.show = method('show');
 exports.hide = method('hide');

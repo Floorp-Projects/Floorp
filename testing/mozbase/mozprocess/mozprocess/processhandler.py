@@ -110,7 +110,7 @@ class ProcessHandlerMixin(object):
             else:
                 subprocess.Popen.__del__(self)
 
-        def kill(self):
+        def kill(self, sig=None):
             self.returncode = 0
             if isWin:
                 if not self._ignore_children and self._handle and self._job:
@@ -126,20 +126,18 @@ class ProcessHandlerMixin(object):
                     self._cleanup()
                     if err is not None:
                         raise OSError(err)
-                else:
-                    pass
             else:
+                sig = sig or signal.SIGKILL
                 if not self._ignore_children:
                     try:
-                        os.killpg(self.pid, signal.SIGKILL)
+                        os.killpg(self.pid, sig)
                     except BaseException, e:
                         if getattr(e, "errno", None) != 3:
                             # Error 3 is "no such process", which is ok
                             print >> sys.stdout, "Could not kill process, could not find pid: %s, assuming it's already dead" % self.pid
                 else:
-                    os.kill(self.pid, signal.SIGKILL)
-                if self.returncode is None:
-                    self.returncode = subprocess.Popen._internal_poll(self)
+                    os.kill(self.pid, sig)
+                self.returncode = -sig
 
             self._cleanup()
             return self.returncode
@@ -417,7 +415,7 @@ falling back to not using job objects for managing child processes"""
                         threadalive = self._procmgrthread.is_alive()
                     else:
                         threadalive = self._procmgrthread.isAlive()
-                if self._job and threadalive: 
+                if self._job and threadalive:
                     # Then we are managing with IO Completion Ports
                     # wait on a signal so we know when we have seen the last
                     # process come through.
@@ -643,7 +641,7 @@ falling back to not using job objects for managing child processes"""
 
         self.processOutput(timeout=timeout, outputTimeout=outputTimeout)
 
-    def kill(self):
+    def kill(self, sig=None):
         """
         Kills the managed process.
 
@@ -654,9 +652,12 @@ falling back to not using job objects for managing child processes"""
 
         Note that this does not manage any state, save any output etc,
         it immediately kills the process.
+
+        :param sig: Signal used to kill the process, defaults to SIGKILL
+                    (has no effect on Windows)
         """
         try:
-            return self.proc.kill()
+            return self.proc.kill(sig=sig)
         except AttributeError:
             # Try to print a relevant error message.
             if not self.proc:

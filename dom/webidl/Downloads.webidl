@@ -4,7 +4,26 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NavigatorProperty="mozDownloadManager",
+// Represents the state of a download.
+// "downloading": The resource is actively transfering.
+// "stopped"    : No network tranfer is happening.
+// "succeeded"  : The resource has been downloaded successfully.
+// "finalized"  : We won't try to download this resource, but the DOM
+//                object is still alive.
+enum DownloadState {
+  "downloading",
+  "stopped",
+  "succeeded",
+  "finalized"
+};
+
+//
+// XXXTODO: When we have a generic way to do feature detection in marketplace
+//          we will *STOP* using the pref and use the function like DOMDownload
+//          and DownloadEvent.
+//
+[NoInterfaceObject,
+ NavigatorProperty="mozDownloadManager",
  JSImplementation="@mozilla.org/downloads/manager;1",
  Pref="dom.mozDownloads.enabled"]
 interface DOMDownloadManager : EventTarget {
@@ -24,7 +43,7 @@ interface DOMDownloadManager : EventTarget {
 };
 
 [JSImplementation="@mozilla.org/downloads/download;1",
- Pref="dom.mozDownloads.enabled"]
+ Func="Navigator::HasDownloadsSupport"]
 interface DOMDownload : EventTarget {
   // The full size of the resource.
   readonly attribute long totalBytes;
@@ -39,13 +58,8 @@ interface DOMDownload : EventTarget {
   // is complete.
   readonly attribute DOMString path;
 
-  // The state of the download. Can be any of:
-  // "downloading": The resource is actively transfering.
-  // "stopped"    : No network tranfer is happening.
-  // "succeeded"  : The resource has been downloaded successfully.
-  // "finalized"  : We won't try to download this resource, but the DOM
-  //                object is still alive.
-  readonly attribute DOMString state;
+  // The state of the download.
+  readonly attribute DownloadState state;
 
   // The mime type for this resource.
   readonly attribute DOMString contentType;
