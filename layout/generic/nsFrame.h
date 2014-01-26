@@ -711,6 +711,12 @@ public:
 #ifdef MOZ_DUMP_PAINTING
 public:
 
+  static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
+                               nsDisplayItem* aItem,
+                               FILE* aFile = stdout,
+                               bool aDumpSublist = false,
+                               bool aDumpHtml = false);
+
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList,
                                FILE* aFile = stdout,
