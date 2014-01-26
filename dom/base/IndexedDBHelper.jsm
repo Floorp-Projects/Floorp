@@ -56,7 +56,7 @@ IndexedDBHelper.prototype = {
       self._db.onversionchange = function(event) {
         if (DEBUG) debug("WARNING: DB modified from a different window.");
       }
-      aSuccessCb();
+      aSuccessCb && aSuccessCb();
     };
 
     req.onupgradeneeded = function (aEvent) {
@@ -70,7 +70,7 @@ IndexedDBHelper.prototype = {
     };
     req.onerror = function (aEvent) {
       if (DEBUG) debug("Failed to open database: " + self.dbName);
-      aFailureCb(aEvent.target.error.name);
+      aFailureCb && aFailureCb(aEvent.target.error.name);
     };
     req.onblocked = function (aEvent) {
       if (DEBUG) debug("Opening database request is blocked.");
@@ -88,7 +88,7 @@ IndexedDBHelper.prototype = {
   ensureDB: function ensureDB(aSuccessCb, aFailureCb) {
     if (this._db) {
       if (DEBUG) debug("ensureDB: already have a database, returning early.");
-      aSuccessCb();
+      aSuccessCb && aSuccessCb();
       return;
     }
     this.open(aSuccessCb, aFailureCb);

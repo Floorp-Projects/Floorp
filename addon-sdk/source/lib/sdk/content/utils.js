@@ -10,7 +10,7 @@ module.metadata = {
 let { merge } = require('../util/object');
 let assetsURI = require('../self').data.url();
 let isArray = Array.isArray;
-let method = require('method/core');
+let method = require('../../method/core');
 
 function isAddonContent({ contentURL }) {
   return typeof(contentURL) === 'string' && contentURL.indexOf(assetsURI) === 0;

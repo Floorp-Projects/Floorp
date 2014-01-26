@@ -1,6 +1,6 @@
 "use strict";
 
-var method = require("method/core")
+var method = require("../method/core")
 
 // Method is designed to work with data structures representing application
 // state. Calling it with a state should return object representing `delta`

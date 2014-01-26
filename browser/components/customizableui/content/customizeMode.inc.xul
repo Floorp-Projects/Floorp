@@ -16,7 +16,7 @@
         &customizeMode.menuAndToolbars.emptyLink;
       </label>
     </hbox>
-    <vbox id="customization-palette" flex="1"/>
+    <vbox id="customization-palette" class="customization-palette" flex="1"/>
     <spacer id="customization-spacer" flex="1"/>
     <hbox>
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
