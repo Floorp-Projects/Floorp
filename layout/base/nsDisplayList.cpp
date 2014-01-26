@@ -1600,7 +1600,7 @@ nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
 void
 nsDisplaySolidColor::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString("(rgba %d,%d,%d,%d)",
+  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)",
                  NS_GET_R(mColor), NS_GET_G(mColor),
                  NS_GET_B(mColor), NS_GET_A(mColor));
 }
@@ -2274,7 +2274,7 @@ nsDisplayThemedBackground::~nsDisplayThemedBackground()
 void
 nsDisplayThemedBackground::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString("(themed, appearance:%d) ", mAppearance);
+  aTo += nsPrintfCString(" (themed, appearance:%d)", mAppearance);
 }
 #endif
 
@@ -2461,7 +2461,7 @@ nsDisplayBackgroundColor::HitTest(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayBackgroundColor::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString("(rgba %d,%d,%d,%d)", 
+  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)", 
           NS_GET_R(mColor), NS_GET_G(mColor),
           NS_GET_B(mColor), NS_GET_A(mColor));
 }
@@ -3220,7 +3220,7 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
 void
 nsDisplayOpacity::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString("(opacity %f)", mFrame->StyleDisplay()->mOpacity);
+  aTo += nsPrintfCString(" (opacity %f)", mFrame->StyleDisplay()->mOpacity);
 }
 #endif
 
@@ -3727,6 +3727,15 @@ nsDisplayScrollLayer::GetScrollLayerCount()
   return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount()));
 #endif
 }
+
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplayScrollLayer::WriteDebugInfo(nsACString& aTo)
+{
+  aTo += nsPrintfCString(" (scrollframe %p scrolledframe %p)",
+                         mScrollFrame, mScrolledFrame);
+}
+#endif
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
   nsDisplayListBuilder* aBuilder,
