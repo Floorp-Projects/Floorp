@@ -12,6 +12,7 @@
 #include "nsFrame.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
+#include "nsPrintfCString.h"
 
 #include <stdio.h>
 
@@ -131,12 +132,13 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
   }
 
   for (nsDisplayItem* i = aList.GetBottom(); i != nullptr; i = i->GetAbove()) {
+    nsCString str;
     if (aDumpHtml) {
       fprintf_stderr(aOutput, "<li>");
     } else {
       sPrintDisplayListIndent ++;
       for (int indent = 0; indent < sPrintDisplayListIndent; indent++) {
-        fprintf_stderr(aOutput, "  ");
+        str += "  ";
       }
     }
     nsIFrame* f = i->Frame();
@@ -161,9 +163,9 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       nsCString string(i->Name());
       string.Append("-");
       string.AppendInt((uint64_t)i);
-      fprintf_stderr(aOutput, "<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
+      str += nsPrintfCString("<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
     }
-    fprintf_stderr(aOutput, "%s %p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
+    str += nsPrintfCString("%s %p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
             vis.x, vis.y, vis.width, vis.height,
@@ -172,25 +174,25 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
             i->IsUniform(aBuilder, &color) ? " uniform" : "");
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      fprintf_stderr(aOutput, " (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
+      str += nsPrintfCString(" (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
     }
-    i->WriteDebugInfo(aOutput);
+    i->WriteDebugInfo(str);
     if (aDumpHtml && i->Painted()) {
-      fprintf_stderr(aOutput, "</a>");
+      str += "</a>";
     }
     uint32_t key = i->GetPerFrameKey();
     Layer* layer = mozilla::FrameLayerBuilder::GetDebugOldLayerFor(f, key);
     if (layer) {
       if (aDumpHtml) {
-        fprintf_stderr(aOutput, " <a href=\"#%p\">layer=%p</a>", layer, layer);
+        str += nsPrintfCString(" <a href=\"#%p\">layer=%p</a>", layer, layer);
       } else {
-        fprintf_stderr(aOutput, " layer=%p", layer);
+        str += nsPrintfCString(" layer=%p", layer);
       }
     }
     if (i->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
-      (static_cast<nsDisplaySVGEffects*>(i))->PrintEffects(aOutput);
+      (static_cast<nsDisplaySVGEffects*>(i))->PrintEffects(str);
     }
-    fprintf_stderr(aOutput, "\n");
+    fprintf_stderr(aOutput, "%s\n", str.get());
     if (list) {
       PrintDisplayListTo(aBuilder, *list, aOutput, aDumpHtml);
     }
