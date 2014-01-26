@@ -303,10 +303,6 @@ protected:
   }
 
 public:
-  NS_IMETHOD CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, uint32_t mode,
-                         JS::Value *vp, bool *_retval) MOZ_OVERRIDE;
-
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
   NS_IMETHODIMP AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,

@@ -11,19 +11,9 @@ interface nsIChannel;
 interface nsIDocShell;
 interface nsIDomainPolicy;
 
-[scriptable, uuid(712aa338-50a1-497b-be6f-dc3d97867c01)]
+[scriptable, uuid(3b6e408b-e774-4612-89e8-3ef303564392)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
-    ///////////////// Security Checks //////////////////
-    /**
-     * Checks whether the running script is allowed to access aProperty.
-     */
-    [noscript] void checkPropertyAccess(in JSContextPtr aJSContext,
-                                        in JSObjectPtr aJSObject,
-                                        in string aClassName,
-                                        in jsid aProperty,
-                                        in uint32_t aAction);
-
     /**
      * Check that the script currently running in context "cx" can load "uri".
      *

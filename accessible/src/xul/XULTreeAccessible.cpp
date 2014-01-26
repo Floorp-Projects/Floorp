@@ -414,7 +414,7 @@ XULTreeAccessible::SelectAll()
 // XULTreeAccessible: Accessible implementation
 
 Accessible*
-XULTreeAccessible::GetChildAt(uint32_t aIndex)
+XULTreeAccessible::GetChildAt(uint32_t aIndex) const
 {
   uint32_t childCount = Accessible::ChildCount();
   if (aIndex < childCount)
@@ -522,7 +522,7 @@ XULTreeAccessible::ContainerWidget() const
 // XULTreeAccessible: public implementation
 
 Accessible*
-XULTreeAccessible::GetTreeItemAccessible(int32_t aRow)
+XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const
 {
   if (aRow < 0 || IsDefunct() || !mTreeView)
     return nullptr;
@@ -679,10 +679,11 @@ XULTreeAccessible::TreeViewChanged(nsITreeView* aView)
 // XULTreeAccessible: protected implementation
 
 already_AddRefed<Accessible>
-XULTreeAccessible::CreateTreeItemAccessible(int32_t aRow)
+XULTreeAccessible::CreateTreeItemAccessible(int32_t aRow) const
 {
   nsRefPtr<Accessible> accessible =
-    new XULTreeItemAccessible(mContent, mDoc, this, mTree, mTreeView, aRow);
+    new XULTreeItemAccessible(mContent, mDoc, const_cast<XULTreeAccessible*>(this),
+                              mTree, mTreeView, aRow);
 
   return accessible.forget();
 }

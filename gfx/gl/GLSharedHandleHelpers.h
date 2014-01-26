@@ -41,7 +41,7 @@ void ReleaseSharedHandle(GLContext* gl,
 typedef struct {
     GLenum mTarget;
     gfx::SurfaceFormat mTextureFormat;
-    gfx3DMatrix mTextureTransform;
+    gfx::Matrix4x4 mTextureTransform;
 } SharedHandleDetails;
 
 /**

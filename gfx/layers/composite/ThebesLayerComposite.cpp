@@ -105,8 +105,6 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
              mBuffer->GetLayer() == this,
              "buffer is corrupted");
 
-  gfx::Matrix4x4 transform;
-  ToMatrix4x4(GetEffectiveTransform(), transform);
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -134,7 +132,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
   mBuffer->Composite(effectChain,
                      GetEffectiveOpacity(),
-                     transform,
+                     GetEffectiveTransform(),
                      gfx::Filter::LINEAR,
                      clipRect,
                      &visibleRegion,

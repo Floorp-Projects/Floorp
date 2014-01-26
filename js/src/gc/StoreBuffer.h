@@ -437,8 +437,15 @@ class StoreBuffer
         put(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
 
-    /* Mark the source of all edges in the store buffer. */
-    void mark(JSTracer *trc);
+    /* Methods to mark the source of all edges in the store buffer. */
+    void markAll(JSTracer *trc);
+    void markValues(JSTracer *trc)            { bufferVal.mark(this, trc); }
+    void markCells(JSTracer *trc)             { bufferCell.mark(this, trc); }
+    void markSlots(JSTracer *trc)             { bufferSlot.mark(this, trc); }
+    void markWholeCells(JSTracer *trc)        { bufferWholeCell.mark(this, trc); }
+    void markRelocatableValues(JSTracer *trc) { bufferRelocVal.mark(this, trc); }
+    void markRelocatableCells(JSTracer *trc)  { bufferRelocCell.mark(this, trc); }
+    void markGenericEntries(JSTracer *trc)    { bufferGeneric.mark(this, trc); }
 
     /* We cannot call InParallelSection directly because of a circular dependency. */
     bool inParallelSection() const;

@@ -422,7 +422,6 @@ const Class WeakMapObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     WeakMap_finalize,
-    nullptr,                 /* checkAccess */
     nullptr,                 /* call        */
     nullptr,                 /* construct   */
     nullptr,                 /* xdrObject   */

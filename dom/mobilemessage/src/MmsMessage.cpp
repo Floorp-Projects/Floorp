@@ -546,8 +546,7 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDelive
       return NS_ERROR_FAILURE;
     }
 
-    tmpJsVal = OBJECT_TO_JSVAL(infoJsObj);
-    if (!JS_SetElement(aCx, deliveryInfo, i, &tmpJsVal)) {
+    if (!JS_SetElement(aCx, deliveryInfo, i, infoJsObj)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -666,8 +665,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
       return NS_ERROR_FAILURE;
     }
 
-    tmpJsVal = OBJECT_TO_JSVAL(attachmentObj);
-    if (!JS_SetElement(aCx, attachments, i, &tmpJsVal)) {
+    if (!JS_SetElement(aCx, attachments, i, attachmentObj)) {
       return NS_ERROR_FAILURE;
     }
   }

@@ -534,15 +534,17 @@ public:
         IDX_TOTAL_COUNT // just a count of the above
     };
 
-    jsid GetStringID(unsigned index) const
+    JS::HandleId GetStringID(unsigned index) const
     {
         MOZ_ASSERT(index < IDX_TOTAL_COUNT, "index out of range");
-        return mStrIDs[index];
+        // fromMarkedLocation() is safe because the string is interned.
+        return JS::HandleId::fromMarkedLocation(&mStrIDs[index]);
     }
-    jsval GetStringJSVal(unsigned index) const
+    JS::HandleValue GetStringJSVal(unsigned index) const
     {
         MOZ_ASSERT(index < IDX_TOTAL_COUNT, "index out of range");
-        return mStrJSVals[index];
+        // fromMarkedLocation() is safe because the string is interned.
+        return JS::HandleValue::fromMarkedLocation(&mStrJSVals[index]);
     }
     const char* GetStringName(unsigned index) const
     {
@@ -1601,7 +1603,6 @@ public:
     bool WantNewResolve()               GET_IT(WANT_NEWRESOLVE)
     bool WantConvert()                  GET_IT(WANT_CONVERT)
     bool WantFinalize()                 GET_IT(WANT_FINALIZE)
-    bool WantCheckAccess()              GET_IT(WANT_CHECKACCESS)
     bool WantCall()                     GET_IT(WANT_CALL)
     bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
     bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
