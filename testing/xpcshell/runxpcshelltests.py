@@ -10,6 +10,7 @@ import math
 import os
 import os.path
 import random
+import re
 import shutil
 import signal
 import socket
@@ -71,6 +72,33 @@ import manifestparser
 import mozcrash
 import mozinfo
 
+# --------------------------------------------------------------
+
+# TODO: perhaps this should be in a more generally shared location?
+# This regex matches all of the C0 and C1 control characters
+# (U+0000 through U+001F; U+007F; U+0080 through U+009F),
+# except TAB (U+0009) and LF (U+000A); also, backslash (U+005C).
+# A raw string is deliberately not used.
+_cleanup_encoding_re = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x9f\\\\]')
+def _cleanup_encoding_repl(m):
+    c = m.group(0)
+    return '\\\\' if c == '\\' else '\\x{:02X}'.format(ord(c))
+def cleanup_encoding(s):
+    """S is either a byte or unicode string.  Either way it may
+       contain control characters, unpaired surrogates, reserved code
+       points, etc.  If it is a byte string, it is assumed to be
+       UTF-8, but it may not be *correct* UTF-8.  Produce a byte
+       string that can safely be dumped into a (generally UTF-8-coded)
+       logfile."""
+    if not isinstance(s, unicode):
+        s = s.decode('utf-8', 'replace')
+    if s.endswith('\n'):
+        # A new line is always added by head.js to delimit messages,
+        # however consumers will want to supply their own.
+        s = s[:-1]
+    # Replace all C0 and C1 control characters with \xNN escapes.
+    s = _cleanup_encoding_re.sub(_cleanup_encoding_repl, s)
+    return s.encode('utf-8', 'backslashreplace')
 
 """ Control-C handling """
 gotSIGINT = False
@@ -451,8 +479,8 @@ class XPCShellTestThread(Thread):
     def report_message(self, line):
         """ Reports a message to a consumer, both as a strucutured and
         human-readable log message. """
-        message = self.message_from_line(line)
 
+        message = cleanup_encoding(self.message_from_line(line))
         if message.endswith('\n'):
             # A new line is always added by head.js to delimit messages,
             # however consumers will want to supply their own.
