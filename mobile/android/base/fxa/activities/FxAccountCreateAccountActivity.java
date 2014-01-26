@@ -10,19 +10,16 @@ import java.util.concurrent.Executors;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.fxa.PasswordStretcher;
+import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.Promised;
-import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.sync.setup.Constants;
 
-import android.accounts.AccountManager;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -134,85 +131,28 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     });
   }
 
-  protected class CreateAccountDelegate implements RequestDelegate<String> {
-    public final String email;
-    public final String password;
-    public final String serverURI;
-
-    public CreateAccountDelegate(String email, String password, String serverURI) {
-      this.email = email;
-      this.password = password;
-      this.serverURI = serverURI;
-    }
-
-    @Override
-    public void handleError(Exception e) {
-      showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
-    }
-
-    @Override
-    public void handleFailure(final FxAccountClientRemoteException e) {
-      showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
-    }
-
-    @Override
-    public void handleSuccess(String uid) {
-      Activity activity = FxAccountCreateAccountActivity.this;
-      Logger.info(LOG_TAG, "Got success creating account.");
-
-      // We're on the UI thread, but it's okay to create the account here.
-      AndroidFxAccount fxAccount;
-      try {
-        final String profile = Constants.DEFAULT_PROFILE;
-        final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_URI;
-        // TODO: This is wasteful.  We should be able to thread these through so they don't get recomputed.
-        byte[] quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(email.getBytes("UTF-8"), password.getBytes("UTF-8"));
-        byte[] unwrapkB = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
-        State state = new Promised(email, uid, false, unwrapkB, quickStretchedPW);
-        fxAccount = AndroidFxAccount.addAndroidAccount(activity, email, password,
-            profile,
-            serverURI,
-            tokenServerURI,
-            state);
-        if (fxAccount == null) {
-          throw new RuntimeException("Could not add Android account.");
-        }
-      } catch (Exception e) {
-        handleError(e);
-        return;
-      }
-
-      // For great debugging.
-      if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-        fxAccount.dump();
-      }
-
-      // The GetStarted activity has called us and needs to return a result to the authenticator.
-      final Intent intent = new Intent();
-      intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, email);
-      intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, FxAccountConstants.ACCOUNT_TYPE);
-      // intent.putExtra(AccountManager.KEY_AUTHTOKEN, accountType);
-      setResult(RESULT_OK, intent);
-      finish();
-
-      // Show success activity.
-      Intent successIntent = new Intent(FxAccountCreateAccountActivity.this, FxAccountConfirmAccountActivity.class);
-      successIntent.putExtra("email", email);
-      // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-      // the soft keyboard not being shown for the started activity. Why, Android, why?
-      successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-      startActivity(successIntent);
-    }
-  }
-
   public void createAccount(String email, String password) {
     String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
-    RequestDelegate<String> delegate = new CreateAccountDelegate(email, password, serverURI);
+    PasswordStretcher passwordStretcher = new QuickPasswordStretcher(password);
+    // This delegate creates a new Android account on success, opens the
+    // appropriate "success!" activity, and finishes this activity.
+    RequestDelegate<LoginResponse> delegate = new AddAccountDelegate(email, passwordStretcher, serverURI) {
+      @Override
+      public void handleError(Exception e) {
+        showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
+      }
+
+      @Override
+      public void handleFailure(FxAccountClientRemoteException e) {
+        showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
+      }
+    };
+
     Executor executor = Executors.newSingleThreadExecutor();
-    FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
+    FxAccountClient client = new FxAccountClient20(serverURI, executor);
     try {
       hideRemoteError();
-      new FxAccountCreateAccountTask(this, this, email, password, client, delegate).execute();
+      new FxAccountCreateAccountTask(this, this, email, passwordStretcher, client, delegate).execute();
     } catch (Exception e) {
       showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
     }

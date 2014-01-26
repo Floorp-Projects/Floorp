@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
@@ -85,7 +86,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
 
     protected final byte[] sessionToken;
 
-    public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient20 client, RequestDelegate<Void> delegate) {
+    public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient client, RequestDelegate<Void> delegate) {
       super(context, null, client, delegate);
       this.sessionToken = sessionToken;
     }
@@ -126,7 +127,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
     RequestDelegate<Void> delegate = new ResendCodeDelegate();
     Executor executor = Executors.newSingleThreadExecutor();
-    FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
+    FxAccountClient client = new FxAccountClient20(serverURI, executor);
     new FxAccountResendCodeTask(this, sessionToken, client, delegate).execute();
   }
 

@@ -4,18 +4,19 @@
 
 package org.mozilla.gecko.fxa.activities;
 
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.fxa.PasswordStretcher;
+import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignInTask;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -110,16 +111,13 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
 
   protected class UpdateCredentialsDelegate implements RequestDelegate<LoginResponse> {
     public final String email;
-    public final String password;
     public final String serverURI;
-    public final byte[] quickStretchedPW;
+    public final PasswordStretcher passwordStretcher;
 
-    public UpdateCredentialsDelegate(String email, String password, String serverURI) throws UnsupportedEncodingException, GeneralSecurityException {
+    public UpdateCredentialsDelegate(String email, PasswordStretcher passwordStretcher, String serverURI) {
       this.email = email;
-      this.password = password;
       this.serverURI = serverURI;
-      // XXX This needs to be calculated lazily.
-      this.quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(email.getBytes("UTF-8"), password.getBytes("UTF-8"));
+      this.passwordStretcher = passwordStretcher;
     }
 
     @Override
@@ -144,6 +142,12 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
 
       byte[] unwrapkB;
       try {
+        // It is crucial that we use the email address provided by the server
+        // (rather than whatever the user entered), because the user's keys are
+        // wrapped and salted with the initial email they provided to
+        // /create/account. Of course, we want to pass through what the user
+        // entered locally as much as possible.
+        byte[] quickStretchedPW = passwordStretcher.getQuickStretchedPW(result.remoteEmail.getBytes("UTF-8"));
         unwrapkB = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
       } catch (Exception e) {
         this.handleError(e);
@@ -163,11 +167,12 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
   public void updateCredentials(String email, String password) {
     String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
     Executor executor = Executors.newSingleThreadExecutor();
-    FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
+    FxAccountClient client = new FxAccountClient20(serverURI, executor);
+    PasswordStretcher passwordStretcher = new QuickPasswordStretcher(password);
     try {
       hideRemoteError();
-      RequestDelegate<LoginResponse> delegate = new UpdateCredentialsDelegate(email, password, serverURI);
-      new FxAccountSignInTask(this, this, email, password, client, delegate).execute();
+      RequestDelegate<LoginResponse> delegate = new UpdateCredentialsDelegate(email, passwordStretcher, serverURI);
+      new FxAccountSignInTask(this, this, email, passwordStretcher, client, delegate).execute();
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception updating credentials for account.", e);
       showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
