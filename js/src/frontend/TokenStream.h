@@ -854,7 +854,7 @@ class MOZ_STACK_CLASS TokenStream
     // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
         MOZ_ASSERT(!TokenBuf::isRawEOLChar(expect));
-        return JS_LIKELY(userbuf.hasRawChars()) &&
+        return MOZ_LIKELY(userbuf.hasRawChars()) &&
                userbuf.matchRawChar(expect);
     }
 

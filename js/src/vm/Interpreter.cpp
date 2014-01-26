@@ -329,7 +329,7 @@ SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleV
     RootedValue rref(cx, rval);
 
     RootedId id(cx, NameToId(script->getName(pc)));
-    if (JS_LIKELY(!obj->getOps()->setProperty)) {
+    if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
         if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0,
                                                              &rref, script->strict()))
         {
@@ -1192,7 +1192,7 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Valu
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
         int32_t t;
-        if (JS_LIKELY(SafeAdd(l, r, &t))) {
+        if (MOZ_LIKELY(SafeAdd(l, r, &t))) {
             res->setInt32(t);
             return true;
         }
@@ -1820,7 +1820,7 @@ CASE(JSOP_RETRVAL)
         JS_ASSERT(js_CodeSpec[*REGS.pc].format & JOF_INVOKE);
 
         /* Resume execution in the calling frame. */
-        if (JS_LIKELY(interpReturnOK)) {
+        if (MOZ_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 
             ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);

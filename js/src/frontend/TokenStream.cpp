@@ -368,7 +368,7 @@ int32_t
 TokenStream::getChar()
 {
     int32_t c;
-    if (JS_LIKELY(userbuf.hasRawChars())) {
+    if (MOZ_LIKELY(userbuf.hasRawChars())) {
         c = userbuf.getRawChar();
 
         // Normalize the jschar if it was a newline.  We need to detect any of
@@ -415,7 +415,7 @@ TokenStream::getChar()
 int32_t
 TokenStream::getCharIgnoreEOL()
 {
-    if (JS_LIKELY(userbuf.hasRawChars()))
+    if (MOZ_LIKELY(userbuf.hasRawChars()))
         return userbuf.getRawChar();
 
     flags.isEOF = true;

@@ -912,7 +912,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     if (!rt->isHeapMinorCollecting() && rt->gcBytes >= rt->gcMaxBytes)
         return nullptr;
 
-    ArenaHeader *aheader = JS_LIKELY(info.numArenasFreeCommitted > 0)
+    ArenaHeader *aheader = MOZ_LIKELY(info.numArenasFreeCommitted > 0)
                            ? fetchNextFreeArena(rt)
                            : fetchNextDecommittedArena();
     aheader->init(zone, thingKind);
@@ -1694,7 +1694,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
              */
             for (bool secondAttempt = false; ; secondAttempt = true) {
                 void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind);
-                if (JS_LIKELY(!!thing))
+                if (MOZ_LIKELY(!!thing))
                     return thing;
                 if (secondAttempt)
                     break;
