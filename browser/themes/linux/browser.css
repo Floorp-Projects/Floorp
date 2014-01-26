@@ -1681,6 +1681,26 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   margin-top: 10px;
 }
 
+/* Sync Panel */
+
+#sync-popup {
+  padding: 10px;
+}
+
+#sync-popup-icon {
+  width: 32px;
+  background: url("chrome://browser/content/abouthome/sync.png") center center no-repeat;
+}
+
+#sync-popup-inner {
+  width: 0;
+  padding-left: 10px;
+}
+
+#sync-popup-desc-prefs {
+  margin: 0;
+}
+
 /* Status panel */
 
 .statuspanel-label {
