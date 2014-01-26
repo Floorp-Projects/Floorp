@@ -200,7 +200,3 @@
   <string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">Try again later</string>
   <string name="fxaccount_remote_error_UNKNOWN_ERROR">There was a problem</string>
   <string name="fxaccount_remote_error_COULD_NOT_CONNECT">Couldn\&apos;t connect to the internet</string>
-  <string name="fxaccount_sync_sign_in_error_notification_title">&syncBrand.fullName.label; sign in error</string>
-  <!-- Note to translators: the format string below will be replaced
-       with the Firefox Account's email address. -->
-  <string name="fxaccount_sync_sign_in_error_notification_text">Tap to sign in to &formatS;</string>
