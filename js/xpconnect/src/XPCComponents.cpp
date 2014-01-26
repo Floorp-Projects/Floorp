@@ -3442,6 +3442,29 @@ nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetJSEngineTelemetryValue(JSContext *cx, MutableHandleValue rval)
+{
+    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    if (!obj)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+
+    size_t i = JS_SetProtoCalled(cx);
+    RootedValue v(cx, DoubleValue(i));
+    if (!JS_DefineProperty(cx, obj, "setProto", v, nullptr, nullptr, attrs))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    i = JS_GetCustomIteratorCount(cx);
+    v.setDouble(i);
+    if (!JS_DefineProperty(cx, obj, "customIter", v, nullptr, nullptr, attrs))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rval.setObject(*obj);
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
