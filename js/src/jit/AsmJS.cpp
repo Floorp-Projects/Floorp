@@ -5754,9 +5754,16 @@ static const RegisterSet AllRegsExceptSP =
     RegisterSet(GeneralRegisterSet(Registers::AllMask &
                                    ~(uint32_t(1) << Registers::StackPointer)),
                 FloatRegisterSet(FloatRegisters::AllMask));
+#if defined(JS_CPU_ARM)
+// The ARM system ABI also includes d15 in the non volatile float registers.
+static const RegisterSet NonVolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
+                    FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
+#else
 static const RegisterSet NonVolatileRegs =
     RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
                 FloatRegisterSet(FloatRegisters::NonVolatileMask));
+#endif
 
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
