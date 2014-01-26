@@ -382,7 +382,6 @@ MSVC_ENABLE_PGO = True
 
 HOST_SOURCES += [
     'jskwgen.cpp',
-    'jsoplengen.cpp',
 ]
 
 HOST_SIMPLE_PROGRAMS += [

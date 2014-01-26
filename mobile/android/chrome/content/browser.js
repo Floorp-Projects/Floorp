@@ -334,7 +334,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
 #ifdef MOZ_ANDROID_SYNTHAPKS
-    Services.obs.addObserver(this, "webapps-download-apk", false);
+    Services.obs.addObserver(this, "webapps-runtime-install", false);
+    Services.obs.addObserver(this, "webapps-runtime-install-package", false);
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
@@ -380,9 +381,6 @@ var BrowserApp = {
     // TODO: replace with Android implementation of WebappOSUtils.isLaunchable.
     Cu.import("resource://gre/modules/Webapps.jsm");
     DOMApplicationRegistry.allAppsLaunchable = true;
-
-    // TODO: figure out why this is needed here.
-    Cu.import("resource://gre/modules/AppsUtils.jsm");
 #else
     WebappsUI.init();
 #endif
@@ -1579,8 +1577,12 @@ var BrowserApp = {
         break;
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
-      case "webapps-download-apk":
-        WebappManager.downloadApk(JSON.parse(aData));
+      case "webapps-runtime-install":
+        WebappManager.install(JSON.parse(aData), aSubject);
+        break;
+
+      case "webapps-runtime-install-package":
+        WebappManager.installPackage(JSON.parse(aData), aSubject);
         break;
 
       case "webapps-ask-install":

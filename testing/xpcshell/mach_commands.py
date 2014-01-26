@@ -58,6 +58,9 @@ class XPCShellRunner(MozbuildObject):
                  # ignore parameters from other platforms' options
                  **kwargs):
         """Runs an individual xpcshell test."""
+        from mozbuild.testing import TestResolver
+        from manifestparser import TestManifest
+
         # TODO Bug 794506 remove once mach integrates with virtualenv.
         build_path = os.path.join(self.topobjdir, 'build')
         if build_path not in sys.path:
@@ -71,39 +74,30 @@ class XPCShellRunner(MozbuildObject):
                            rerun_failures=rerun_failures)
             return
 
-        path_arg = self._wrap_path_argument(test_file)
+        resolver = self._spawn(TestResolver)
+        tests = list(resolver.resolve_tests(path=test_file, flavor='xpcshell',
+            cwd=self.cwd))
 
-        test_obj_dir = os.path.join(self.topobjdir, '_tests', 'xpcshell',
-            path_arg.relpath())
-        if os.path.isfile(test_obj_dir):
-            test_obj_dir = mozpack.path.dirname(test_obj_dir)
+        if not tests:
+            raise InvalidTestPathError('We could not find an xpcshell test '
+                'for the passed test path. Please select a path that is '
+                'a test file or is a directory containing xpcshell tests.')
 
-        xpcshell_dirs = []
-        for base, dirs, files in os.walk(test_obj_dir):
-            if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
-                xpcshell_dirs.append(base)
-
-        if not xpcshell_dirs:
-            raise InvalidTestPathError('An xpcshell.ini could not be found '
-                'for the passed test path. Please select a path whose '
-                'directory or subdirectories contain an xpcshell.ini file. '
-                'It is possible you received this error because the tree is '
-                'not built or tests are not enabled.')
+        # Dynamically write out a manifest holding all the discovered tests.
+        manifest = TestManifest()
+        manifest.tests.extend(tests)
 
         args = {
             'interactive': interactive,
             'keep_going': keep_going,
             'shuffle': shuffle,
             'sequential': sequential,
-            'test_dirs': xpcshell_dirs,
             'debugger': debugger,
             'debuggerArgs': debuggerArgs,
             'debuggerInteractive': debuggerInteractive,
-            'rerun_failures': rerun_failures
+            'rerun_failures': rerun_failures,
+            'manifest': manifest,
         }
-
-        if os.path.isfile(path_arg.srcdir_path()):
-            args['test_path'] = mozpack.path.basename(path_arg.srcdir_path())
 
         return self._run_xpcshell_harness(**args)
 
@@ -339,6 +333,7 @@ class MachCommands(MachCommandBase):
             xpcshell = self._spawn(AndroidXPCShellRunner)
         else:
             xpcshell = self._spawn(XPCShellRunner)
+        xpcshell.cwd = self._mach_context.cwd
 
         try:
             return xpcshell.run_test(**params)

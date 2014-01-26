@@ -38,7 +38,8 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
 
     // Perform a side-effect to indicate that this hook was actually called.
     JS::RootedValue value(cx, args[0]);
-    if (!JS_SetElement(cx, &args.callee(), 0, &value))
+    JS::RootedObject callee(cx, &args.callee());
+    if (!JS_SetElement(cx, callee, 0, value))
         return false;
 
     args.rval().setObject(*obj);
@@ -101,7 +102,7 @@ BEGIN_TEST(testNewObject_1)
         0,
         JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr,
-        nullptr, nullptr, nullptr, constructHook
+        nullptr, nullptr, constructHook
     };
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
     CHECK(ctor);

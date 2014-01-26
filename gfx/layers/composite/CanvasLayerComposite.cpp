@@ -81,7 +81,9 @@ CanvasLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   // Using the LINEAR filter we get unexplained artifacts.
   // Use NEAREST when no scaling is required.
   gfxMatrix matrix;
-  bool is2D = GetEffectiveTransform().Is2D(&matrix);
+  gfx3DMatrix effectiveTransform;
+  gfx::To3DMatrix(GetEffectiveTransform(), effectiveTransform);
+  bool is2D = effectiveTransform.Is2D(&matrix);
   if (is2D && !matrix.HasNonTranslationOrFlip()) {
     filter = GraphicsFilter::FILTER_NEAREST;
   }
@@ -90,13 +92,11 @@ CanvasLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   EffectChain effectChain(this);
 
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
-  gfx::Matrix4x4 transform;
-  ToMatrix4x4(GetEffectiveTransform(), transform);
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
   mImageHost->Composite(effectChain,
                         GetEffectiveOpacity(),
-                        transform,
+                        GetEffectiveTransform(),
                         gfx::ToFilter(filter),
                         clipRect);
 }

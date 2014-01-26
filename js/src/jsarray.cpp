@@ -13,7 +13,6 @@
 
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
@@ -841,7 +840,6 @@ const Class ArrayObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */

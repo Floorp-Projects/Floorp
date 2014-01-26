@@ -55,9 +55,6 @@ public:
   void Destroy();
   nsIPrincipal* GetPrincipal();
 
-  static bool doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
-                            JS::Handle<jsid> id, uint32_t accessType);
-
   void ClearGlobalObjectOwner();
 
   static const JSClass gSharedGlobalClass;
@@ -69,65 +66,6 @@ protected:
   nsXBLDocumentInfo* mGlobalObjectOwner; // weak reference
   bool mDestroyed; // Probably not necessary, but let's be safe.
 };
-
-bool
-nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
-                                    JS::Handle<jsid> id, uint32_t accessType)
-{
-  nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-  if (!ssm) {
-    ::JS_ReportError(cx, "Unable to verify access to a global object property.");
-    return false;
-  }
-
-  // Make sure to actually operate on our object, and not some object further
-  // down on the proto chain.
-  JS::Rooted<JSObject*> base(cx, obj);
-  while (JS_GetClass(base) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
-    if (!::JS_GetPrototype(cx, base, &base)) {
-      return false;
-    }
-    if (!base) {
-      ::JS_ReportError(cx, "Invalid access to a global object property.");
-      return false;
-    }
-  }
-
-  nsresult rv = ssm->CheckPropertyAccess(cx, base, JS_GetClass(base)->name,
-                                         id, accessType);
-  return NS_SUCCEEDED(rv);
-}
-
-static bool
-nsXBLDocGlobalObject_getProperty(JSContext *cx, JS::Handle<JSObject*> obj,
-                                 JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
-{
-  return nsXBLDocGlobalObject::
-    doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-}
-
-static bool
-nsXBLDocGlobalObject_setProperty(JSContext *cx, JS::Handle<JSObject*> obj,
-                                 JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp)
-{
-  return nsXBLDocGlobalObject::
-    doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-}
-
-static bool
-nsXBLDocGlobalObject_checkAccess(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                 JSAccessMode mode, JS::MutableHandle<JS::Value> vp)
-{
-  uint32_t translated;
-  if (mode & JSACC_WRITE) {
-    translated = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-  } else {
-    translated = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
-  }
-
-  return nsXBLDocGlobalObject::
-    doCheckAccess(cx, obj, id, translated);
-}
 
 static void
 nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
@@ -156,11 +94,10 @@ const JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),
     JS_PropertyStub,  JS_DeletePropertyStub,
-    nsXBLDocGlobalObject_getProperty, nsXBLDocGlobalObject_setProperty,
+    JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
     JS_ConvertStub, nsXBLDocGlobalObject_finalize,
-    nsXBLDocGlobalObject_checkAccess, nullptr, nullptr, nullptr,
-    nullptr
+    nullptr, nullptr, nullptr, nullptr
 };
 
 //----------------------------------------------------------------------

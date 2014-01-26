@@ -583,15 +583,6 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
-        RootedValue dummy(cx);
-        unsigned dummyAttrs;
-        if (!CheckAccess(cx, obj, id, JSACC_WATCH, &dummy, &dummyAttrs))
-            return false;
-
         RootedValue tmp(cx, UndefinedValue());
         return baseops::DefineGeneric(cx, obj, id, tmp,
                                       desc.getter(), desc.setter(), desc.attributes());
@@ -814,14 +805,6 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
         setter = JS_StrictPropertyStub;
     } else {
         JS_ASSERT(desc.isAccessorDescriptor());
-
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
-        RootedValue dummy(cx);
-        if (!CheckAccess(cx, obj2, id, JSACC_WATCH, &dummy, &attrs))
-             return false;
 
         /* 8.12.9 step 12. */
         unsigned changed = 0;
@@ -5253,15 +5236,6 @@ bool
 js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
 {
     RootedObject obj(cx, GetInnerObject(cx, origObj));
-    if (origObj != obj) {
-        // If by unwrapping and innerizing, we changed the object, check again
-        // to make sure that we're allowed to set a watch point.
-        RootedValue v(cx);
-        unsigned attrs;
-        if (!CheckAccess(cx, obj, id, JSACC_WATCH, &v, &attrs))
-            return false;
-    }
-
     if (obj->isNative()) {
         // Use sparse indexes for watched objects, as dense elements can be
         // written to without checking the watchpoint map.
@@ -5448,83 +5422,6 @@ JS_EnumerateState(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     JS_ASSERT(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL);
     statep.setMagic(JS_NATIVE_ENUMERATE);
     return true;
-}
-
-bool
-js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
-                MutableHandleValue vp, unsigned *attrsp)
-{
-    bool writing;
-    RootedObject obj(cx, obj_), pobj(cx);
-
-    while (JS_UNLIKELY(obj->is<WithObject>()))
-        obj = obj->getProto();
-
-    writing = (mode & JSACC_WRITE) != 0;
-    switch (mode & JSACC_TYPEMASK) {
-      case JSACC_PROTO:
-        pobj = obj;
-        if (!writing) {
-            RootedObject proto(cx);
-            if (!JSObject::getProto(cx, obj, &proto))
-                return false;
-            vp.setObjectOrNull(proto);
-        }
-        *attrsp = JSPROP_PERMANENT;
-        break;
-
-      default:
-        RootedShape shape(cx);
-        if (!JSObject::lookupGeneric(cx, obj, id, &pobj, &shape))
-            return false;
-        if (!shape) {
-            if (!writing)
-                vp.setUndefined();
-            *attrsp = 0;
-            pobj = obj;
-            break;
-        }
-
-        if (!pobj->isNative()) {
-            if (!writing) {
-                    vp.setUndefined();
-                *attrsp = 0;
-            }
-            break;
-        }
-
-        *attrsp = GetShapeAttributes(shape);
-
-        if (!writing) {
-            if (IsImplicitDenseElement(shape)) {
-                vp.set(pobj->getDenseElement(JSID_TO_INT(id)));
-            } else {
-                if (shape->hasSlot())
-                    vp.set(pobj->nativeGetSlot(shape->slot()));
-                else
-                    vp.setUndefined();
-            }
-        }
-    }
-
-    JS_ASSERT_IF(*attrsp & JSPROP_READONLY, !(*attrsp & (JSPROP_GETTER | JSPROP_SETTER)));
-
-    /*
-     * If obj's class has a stub (null) checkAccess hook, use the per-runtime
-     * checkObjectAccess callback, if configured.
-     *
-     * We don't want to require all classes to supply a checkAccess hook; we
-     * need that hook only for certain classes used when precompiling scripts
-     * and functions ("brutal sharing").  But for general safety of built-in
-     * magic properties like __proto__, we route all access checks, even for
-     * classes that stub out checkAccess, through the global checkObjectAccess
-     * hook.  This covers precompilation-based sharing and (possibly
-     * unintended) runtime sharing across trust boundaries.
-     */
-    JSCheckAccessOp check = pobj->getClass()->checkAccess;
-    if (!check)
-        check = cx->runtime()->securityCallbacks->checkObjectAccess;
-    return !check || check(cx, pobj, id, mode, vp);
 }
 
 bool

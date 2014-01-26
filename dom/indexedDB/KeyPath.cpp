@@ -399,7 +399,7 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
       return rv;
     }
 
-    if (!JS_SetElement(aCx, arrayObj, i, &value)) {
+    if (!JS_SetElement(aCx, arrayObj, i, value)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
@@ -508,7 +508,7 @@ KeyPath::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
-      if (!JS_SetElement(aCx, array, i, &val)) {
+      if (!JS_SetElement(aCx, array, i, val)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }

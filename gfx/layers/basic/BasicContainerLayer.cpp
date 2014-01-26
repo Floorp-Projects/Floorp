@@ -44,14 +44,15 @@ BasicContainerLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   idealTransform.ProjectTo2D();
 
   if (!idealTransform.CanDraw2D()) {
-    mEffectiveTransform = idealTransform;
+    ToMatrix4x4(idealTransform, mEffectiveTransform);
     ComputeEffectiveTransformsForChildren(gfx3DMatrix());
     ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
     mUseIntermediateSurface = true;
     return;
   }
 
-  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
+  gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform, &residual);
+  ToMatrix4x4(snappedTransform, mEffectiveTransform);
   // We always pass the ideal matrix down to our children, so there is no
   // need to apply any compensation using the residual from SnapTransformTranslation.
   ComputeEffectiveTransformsForChildren(idealTransform);
@@ -82,7 +83,9 @@ bool
 BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
 {
   gfxMatrix transform;
-  if (!GetEffectiveTransform().CanDraw2D(&transform) ||
+  gfx3DMatrix effectiveTransform;
+  gfx::To3DMatrix(GetEffectiveTransform(), effectiveTransform);
+  if (!effectiveTransform.CanDraw2D(&transform) ||
       transform.HasNonIntegerTranslation())
     return false;
 
@@ -95,7 +98,9 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
       continue;
 
     gfxMatrix childTransform;
-    if (!l->GetEffectiveTransform().CanDraw2D(&childTransform) ||
+    gfx3DMatrix effectiveTransform;
+    gfx::To3DMatrix(l->GetEffectiveTransform(), effectiveTransform);
+    if (!effectiveTransform.CanDraw2D(&childTransform) ||
         childTransform.HasNonIntegerTranslation() ||
         l->GetEffectiveOpacity() != 1.0)
       return false;
