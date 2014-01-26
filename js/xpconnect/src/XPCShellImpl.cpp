@@ -255,20 +255,30 @@ static bool
 Print(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setUndefined();
 
     RootedString str(cx);
+    nsAutoCString utf8str;
+    size_t length;
+    const jschar *chars;
+
     for (unsigned i = 0; i < args.length(); i++) {
         str = ToString(cx, args[i]);
         if (!str)
             return false;
-        JSAutoByteString strBytes(cx, str);
-        if (!strBytes)
+        chars = JS_GetStringCharsAndLength(cx, str, &length);
+        if (!chars)
             return false;
-        fprintf(gOutFile, "%s%s", i ? " " : "", strBytes.ptr());
-        fflush(gOutFile);
+
+        if (i)
+            utf8str.Append(' ');
+        AppendUTF16toUTF8(Substring(reinterpret_cast<const char16_t*>(chars),
+                                    length),
+                          utf8str);
     }
-    fputc('\n', gOutFile);
-    args.rval().setUndefined();
+    utf8str.Append('\n');
+    fputs(utf8str.get(), gOutFile);
+    fflush(gOutFile);
     return true;
 }
 
@@ -276,7 +286,6 @@ static bool
 Dump(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
     args.rval().setUndefined();
 
     if (!args.length())
@@ -286,14 +295,22 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    JSAutoByteString bytes(cx, str);
-    if (!bytes)
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
+    if (!chars)
         return false;
 
+    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
+                                  length);
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", bytes.ptr());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
 #endif
-    fputs(bytes.ptr(), gOutFile);
+#ifdef XP_WIN
+    if (IsDebuggerPresent()) {
+      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
+    }
+#endif
+    fputs(utf8str.get(), gOutFile);
     fflush(gOutFile);
     return true;
 }
