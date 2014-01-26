@@ -125,7 +125,7 @@ IdToString(JSContext *cx, jsid id)
     if (JSID_IS_STRING(id))
         return JSID_TO_ATOM(id);
 
-    if (JS_LIKELY(JSID_IS_INT(id)))
+    if (MOZ_LIKELY(JSID_IS_INT(id)))
         return Int32ToString<CanGC>(cx, JSID_TO_INT(id));
 
     RootedValue idv(cx, IdToValue(id));

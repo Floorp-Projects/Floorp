@@ -609,14 +609,14 @@ struct MallocProvider
         Client *client = static_cast<Client *>(this);
         client->updateMallocCounter(bytes);
         void *p = js_malloc(bytes);
-        return JS_LIKELY(!!p) ? p : client->onOutOfMemory(nullptr, bytes);
+        return MOZ_LIKELY(!!p) ? p : client->onOutOfMemory(nullptr, bytes);
     }
 
     void *calloc_(size_t bytes) {
         Client *client = static_cast<Client *>(this);
         client->updateMallocCounter(bytes);
         void *p = js_calloc(bytes);
-        return JS_LIKELY(!!p) ? p : client->onOutOfMemory(reinterpret_cast<void *>(1), bytes);
+        return MOZ_LIKELY(!!p) ? p : client->onOutOfMemory(reinterpret_cast<void *>(1), bytes);
     }
 
     void *realloc_(void *p, size_t oldBytes, size_t newBytes) {
@@ -628,7 +628,7 @@ struct MallocProvider
         if (newBytes > oldBytes)
             client->updateMallocCounter(newBytes - oldBytes);
         void *p2 = js_realloc(p, newBytes);
-        return JS_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, newBytes);
+        return MOZ_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, newBytes);
     }
 
     void *realloc_(void *p, size_t bytes) {
@@ -640,7 +640,7 @@ struct MallocProvider
         if (!p)
             client->updateMallocCounter(bytes);
         void *p2 = js_realloc(p, bytes);
-        return JS_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, bytes);
+        return MOZ_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, bytes);
     }
 
     template <class T>

@@ -1754,9 +1754,9 @@ IdToValue(jsid id)
 {
     if (JSID_IS_STRING(id))
         return JS::StringValue(JSID_TO_STRING(id));
-    if (JS_LIKELY(JSID_IS_INT(id)))
+    if (MOZ_LIKELY(JSID_IS_INT(id)))
         return JS::Int32Value(JSID_TO_INT(id));
-    if (JS_LIKELY(JSID_IS_OBJECT(id)))
+    if (MOZ_LIKELY(JSID_IS_OBJECT(id)))
         return JS::ObjectValue(*JSID_TO_OBJECT(id));
     JS_ASSERT(JSID_IS_VOID(id));
     return JS::UndefinedValue();
