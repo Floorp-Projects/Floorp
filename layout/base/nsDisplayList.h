@@ -2823,6 +2823,10 @@ public:
 
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
 
+#ifdef MOZ_DUMP_PAINTING
+  virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
+#endif
+
 protected:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
