@@ -12,7 +12,6 @@ public abstract class State {
   public static final long CURRENT_VERSION = 1L;
 
   public enum StateLabel {
-    Promised,
     Engaged,
     Cohabiting,
     Married,
