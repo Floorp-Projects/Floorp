@@ -71,13 +71,6 @@ import manifestparser
 import mozcrash
 import mozinfo
 
-# ---------------------------------------------------------------
-#TODO: replace this with json.loads when Python 2.6 is required.
-def parse_json(j):
-    """
-    Awful hack to parse a restricted subset of JSON strings into Python dicts.
-    """
-    return eval(j, {'true':True,'false':False,'null':None})
 
 """ Control-C handling """
 gotSIGINT = False
@@ -1279,7 +1272,7 @@ class XPCShellTests(object):
             if not os.path.isfile(mozInfoFile):
                 self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
                 return False
-            self.mozInfo = parse_json(open(mozInfoFile).read())
+            self.mozInfo = json.loads(open(mozInfoFile).read())
         mozinfo.update(self.mozInfo)
 
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
