@@ -34760,43 +34760,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
 var consoleTimer = {};
 
-var workerConsole = {
-  log: function log() {
-    var args = Array.prototype.slice.call(arguments);
-    globalScope.postMessage({
-      action: 'console_log',
-      data: args
-    });
-  },
-
-  error: function error() {
-    var args = Array.prototype.slice.call(arguments);
-    globalScope.postMessage({
-      action: 'console_error',
-      data: args
-    });
-    throw 'pdf.js execution error';
-  },
-
-  time: function time(name) {
-    consoleTimer[name] = Date.now();
-  },
-
-  timeEnd: function timeEnd(name) {
-    var time = consoleTimer[name];
-    if (!time) {
-      error('Unknown timer name ' + name);
-    }
-    this.log('Timer:', name, Date.now() - time);
-  }
-};
-
-
 // Worker thread?
 if (typeof window === 'undefined') {
-  if (!('console' in globalScope)) {
-    globalScope.console = workerConsole;
-  }
 
   // Listen for unsupported features so we can pass them on to the main thread.
   PDFJS.UnsupportedManager.listen(function (msg) {
