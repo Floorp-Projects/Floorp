@@ -39,10 +39,10 @@ glass.google.com: did not receive HSTS header (error ignored - included regardle
 gmail.com: did not receive HSTS header
 gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 googlemail.com: did not receive HSTS header
+googleplex.com: could not connect to host
 googleplex.com: could not connect to host (error ignored - included regardless)
 goto.google.com: did not receive HSTS header (error ignored - included regardless)
 greplin.com: did not receive HSTS header
-grepular.com: max-age too low: 8640000
 groups.google.com: did not receive HSTS header (error ignored - included regardless)
 history.google.com: did not receive HSTS header (error ignored - included regardless)
 hostedtalkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -57,7 +57,6 @@ ledgerscope.net: did not receive HSTS header
 liberty.lavabit.com: could not connect to host
 lifeguard.aecom.com: max-age too low: 3600
 lists.mayfirst.org: did not receive HSTS header
-logentries.com: did not receive HSTS header
 lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
 market.android.com: did not receive HSTS header (error ignored - included regardless)
@@ -82,7 +81,6 @@ plus.google.com: did not receive HSTS header (error ignored - included regardles
 plus.sandbox.google.com: did not receive HSTS header (error ignored - included regardless)
 profiles.google.com: did not receive HSTS header (error ignored - included regardless)
 rapidresearch.me: did not receive HSTS header
-romab.com: max-age too low: 2628000
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
