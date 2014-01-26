@@ -59,8 +59,6 @@
     locale/browser/devtools/app-manager.properties (%chrome/browser/devtools/app-manager.properties)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
-    locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
-    locale/browser/openLocation.properties         (%chrome/browser/openLocation.properties)
     locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)

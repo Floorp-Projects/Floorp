@@ -6,6 +6,8 @@
 const { Cc, Ci, Cu, Cm, components } = require("chrome");
 const xulApp = require("sdk/system/xul-app");
 const self = require("sdk/self");
+const { Loader, main, unload } = require("toolkit/loader");
+const loaderOptions = require("@loader/options");
 
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
@@ -58,5 +60,20 @@ exports.testSelfID = function(assert, done) {
     done();
   });
 }
+
+exports.testSelfHandlesLackingLoaderOptions = function (assert) {
+  let root = module.uri.substr(0, module.uri.lastIndexOf('/'));
+  let uri = root + '/fixtures/loader/self/';
+  let sdkPath = loaderOptions.paths[''] + 'sdk';
+  let loader = Loader({ paths: { '': uri, 'sdk': sdkPath }});
+  let program = main(loader, 'main');
+  let self = program.self;
+  assert.pass("No errors thrown when including sdk/self without loader options");
+  assert.equal(self.isPrivateBrowsingSupported, false,
+    "safely checks sdk/self.isPrivateBrowsingSupported");
+  assert.equal(self.packed, false,
+    "safely checks sdk/self.packed");
+  unload(loader);
+};
 
 require("sdk/test").run(exports);
