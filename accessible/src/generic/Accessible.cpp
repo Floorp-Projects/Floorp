@@ -2648,7 +2648,7 @@ Accessible::RemoveChild(Accessible* aChild)
 }
 
 Accessible*
-Accessible::GetChildAt(uint32_t aIndex)
+Accessible::GetChildAt(uint32_t aIndex) const
 {
   Accessible* child = mChildren.SafeElementAt(aIndex, nullptr);
   if (!child)
@@ -2667,12 +2667,6 @@ uint32_t
 Accessible::ChildCount() const
 {
   return mChildren.Length();
-}
-
-int32_t
-Accessible::GetIndexOf(Accessible* aChild)
-{
-  return (aChild->mParent != this) ? -1 : aChild->IndexInParent();
 }
 
 int32_t

@@ -853,6 +853,7 @@ nsHttpChannelAuthProvider::ParseRealm(const char *challenge,
     // but, we'll accept anything after the the "=" up to the first space, or
     // end-of-line, if the string is not quoted.
     //
+
     const char *p = PL_strcasestr(challenge, "realm=");
     if (p) {
         bool has_quote = false;
@@ -862,21 +863,31 @@ nsHttpChannelAuthProvider::ParseRealm(const char *challenge,
             p++;
         }
 
-        const char *end = p;
-        while (*end && has_quote) {
-           // Loop through all the string characters to find the closing
-           // quote, ignoring escaped quotes.
-            if (*end == '"' && end[-1] != '\\')
-                break;
-            ++end;
-        }
+        const char *end;
+        if (has_quote) {
+            end = p;
+            while (*end) {
+                if (*end == '\\') {
+                    // escaped character, store that one instead if not zero
+                    if (!*++end)
+                        break;
+                }
+                else if (*end == '\"')
+                    // end of string
+                    break;
 
-        if (!has_quote)
+                realm.Append(*end);
+                ++end;
+            }
+        }
+        else {
+            // realm given without quotes
             end = strchr(p, ' ');
-        if (end)
-            realm.Assign(p, end - p);
-        else
-            realm.Assign(p);
+            if (end)
+                realm.Assign(p, end - p);
+            else
+                realm.Assign(p);
+        }
     }
 }
 

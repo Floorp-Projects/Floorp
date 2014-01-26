@@ -248,6 +248,8 @@ struct AutoSCC
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+const char *ExplainReason(JS::gcreason::Reason reason);
+
 } /* namespace gcstats */
 } /* namespace js */
 

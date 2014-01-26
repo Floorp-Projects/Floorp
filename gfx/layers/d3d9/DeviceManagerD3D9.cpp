@@ -552,18 +552,20 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
   gfx::IntSize size;
   nsRefPtr<IDirect3DTexture9> texture =
     static_cast<LayerD3D9*>(aMask->ImplData())->GetAsTexture(&size);
-  
+
   if (!texture) {
     return false;
   }
-  
+
   gfxMatrix maskTransform;
-  bool maskIs2D = aMask->GetEffectiveTransform().CanDraw2D(&maskTransform);
+  gfx3DMatrix effectiveTransform;
+  gfx::To3DMatrix(aMask->GetEffectiveTransform(), effectiveTransform);
+  bool maskIs2D = effectiveTransform.CanDraw2D(&maskTransform);
   NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
   gfxRect bounds = gfxRect(gfxPoint(), gfx::ThebesIntSize(size));
   bounds = maskTransform.TransformBounds(bounds);
 
-  aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister, 
+  aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister,
                                     ShaderConstantRect((float)bounds.x,
                                                        (float)bounds.y,
                                                        (float)bounds.width,

@@ -75,7 +75,8 @@ AttachNewConstructorObject(JSContext *aCx, JS::HandleObject aGlobalObject)
   if (!xpcnativewrapper) {
     return false;
   }
-  return JS_DefineFunction(aCx, JS_GetFunctionObject(xpcnativewrapper), "unwrap", UnwrapNW, 1,
+  JS::RootedObject obj(aCx, JS_GetFunctionObject(xpcnativewrapper));
+  return JS_DefineFunction(aCx, obj, "unwrap", UnwrapNW, 1,
                            JSPROP_READONLY | JSPROP_PERMANENT) != nullptr;
 }
 

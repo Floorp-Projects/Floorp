@@ -1380,15 +1380,15 @@ CSS_PROP_BORDER(
     offsetof(nsStyleBorder, mBoxShadow),
     eStyleAnimType_Shadow)
 CSS_PROP_POSITION(
-    -moz-box-sizing,
+    box-sizing,
     box_sizing,
-    CSS_PROP_DOMPROP_PREFIXED(BoxSizing),
+    BoxSizing,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
     kBoxSizingKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_None)
 CSS_PROP_TABLEBORDER(
     caption-side,
     caption_side,

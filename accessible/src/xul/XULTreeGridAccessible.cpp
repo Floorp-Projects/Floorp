@@ -237,10 +237,12 @@ XULTreeGridAccessible::NativeRole()
 // XULTreeGridAccessible: XULTreeAccessible implementation
 
 already_AddRefed<Accessible>
-XULTreeGridAccessible::CreateTreeItemAccessible(int32_t aRow)
+XULTreeGridAccessible::CreateTreeItemAccessible(int32_t aRow) const
 {
   nsRefPtr<Accessible> accessible =
-    new XULTreeGridRowAccessible(mContent, mDoc, this, mTree, mTreeView, aRow);
+    new XULTreeGridRowAccessible(mContent, mDoc,
+                                 const_cast<XULTreeGridAccessible*>(this),
+                                 mTree, mTreeView, aRow);
 
   return accessible.forget();
 }
@@ -345,7 +347,7 @@ XULTreeGridRowAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 }
 
 Accessible*
-XULTreeGridRowAccessible::GetChildAt(uint32_t aIndex)
+XULTreeGridRowAccessible::GetChildAt(uint32_t aIndex) const
 {
   if (IsDefunct())
     return nullptr;
@@ -368,7 +370,7 @@ XULTreeGridRowAccessible::ChildCount() const
 // XULTreeGridRowAccessible: XULTreeItemAccessibleBase implementation
 
 Accessible*
-XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
+XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn) const
 {
   NS_PRECONDITION(aColumn, "No tree column!");
 
@@ -378,8 +380,9 @@ XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
     return cachedCell;
 
   nsRefPtr<Accessible> cell =
-    new XULTreeGridCellAccessibleWrap(mContent, mDoc, this, mTree,
-                                      mTreeView, mRow, aColumn);
+    new XULTreeGridCellAccessibleWrap(mContent, mDoc,
+                                      const_cast<XULTreeGridRowAccessible*>(this),
+                                      mTree, mTreeView, mRow, aColumn);
   mAccessibleCache.Put(key, cell);
   Document()->BindToDocument(cell, nullptr);
   return cell;

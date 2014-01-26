@@ -155,31 +155,9 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
         return true;
     }
 
-    // It is a double wrapped object. Figure out if the caller
-    // is allowed to see it.
-
-    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-    if (sm) {
-        AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsIXPCWrappedJSObjectGetter));
-
-        if (iface) {
-            jsid id = ccx.GetRuntime()->
-                        GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
-
-            ccx.SetCallInfo(iface, iface->GetMemberAt(1), false);
-            if (NS_FAILED(sm->
-                          CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                                    &ccx, ccx,
-                                    ccx.GetFlattenedJSObject(),
-                                    wrapper->GetIdentityObject(),
-                                    wrapper->GetClassInfo(), id))) {
-                // The SecurityManager should have set an exception.
-                return false;
-            }
-        }
-    }
-
+    // It is a double wrapped object. This should never appear in content these
+    // days, but let's be safe here.
+    MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
     args.rval().setObject(*realObject);
     return JS_WrapValue(cx, args.rval());
 }
@@ -692,7 +670,6 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
     XPC_WN_NoHelper_Finalize,          // finalize
 
     /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess
     nullptr,                         // call
     nullptr,                         // construct
     nullptr,                         // hasInstance
@@ -836,15 +813,6 @@ XPC_WN_Helper_Convert(JSContext *cx, HandleObject obj, JSType type, MutableHandl
 {
     PRE_HELPER_STUB
     Convert(wrapper, cx, obj, type, vp.address(), &retval);
-    POST_HELPER_STUB
-}
-
-static bool
-XPC_WN_Helper_CheckAccess(JSContext *cx, HandleObject obj, HandleId id,
-                          JSAccessMode mode, MutableHandleValue vp)
-{
-    PRE_HELPER_STUB
-    CheckAccess(wrapper, cx, obj, id, mode, vp.address(), &retval);
     POST_HELPER_STUB
 }
 
@@ -1210,10 +1178,6 @@ XPCNativeScriptableShared::PopulateJSClass()
     else
         mJSClass.base.finalize = XPC_WN_NoHelper_Finalize;
 
-    // We let the rest default to nullptr unless the helper wants them...
-    if (mFlags.WantCheckAccess())
-        mJSClass.base.checkAccess = XPC_WN_Helper_CheckAccess;
-
     js::ObjectOps *ops = &mJSClass.base.ops;
     ops->enumerate = XPC_WN_JSOp_Enumerate;
     ops->thisObject = XPC_WN_JSOp_ThisObject;
@@ -1442,7 +1406,6 @@ const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess;
     nullptr,                         // call;
     nullptr,                         // construct;
     nullptr,                         // hasInstance;
@@ -1467,7 +1430,6 @@ const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess;
     nullptr,                         // call;
     nullptr,                         // construct;
     nullptr,                         // hasInstance;
@@ -1554,7 +1516,6 @@ const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess;
     nullptr,                         // call;
     nullptr,                         // construct;
     nullptr,                         // hasInstance;
@@ -1579,7 +1540,6 @@ const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess;
     nullptr,                         // call;
     nullptr,                         // construct;
     nullptr,                         // hasInstance;

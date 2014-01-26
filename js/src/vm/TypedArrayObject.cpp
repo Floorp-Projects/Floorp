@@ -277,6 +277,11 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, bool clear)
         if (!header)
             return false;
         elements = header->elements();
+
+#ifdef JSGC_GENERATIONAL
+        JSRuntime *rt = runtimeFromMainThread();
+        rt->gcNursery.notifyNewElements(this, header);
+#endif
     } else {
         setFixedElements();
         if (clear)
@@ -383,7 +388,7 @@ ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 void
 ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
 {
-   JS_ASSERT(!isAsmJSArrayBuffer());
+    JS_ASSERT(!isAsmJSArrayBuffer());
 
     // Grab out data before invalidating it.
     uint32_t byteLengthCopy = byteLength();
@@ -405,7 +410,20 @@ ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
     // being transferred, so null it out
     SetViewList(this, nullptr);
 
+#ifdef JSGC_GENERATIONAL
+    ObjectElements *oldHeader = ObjectElements::fromElements(elements);
+    JS_ASSERT(oldHeader != newHeader);
+    JSRuntime *rt = runtimeFromMainThread();
+    if (hasDynamicElements())
+        rt->gcNursery.notifyRemovedElements(this, oldHeader);
+#endif
+
     elements = newHeader->elements();
+
+#ifdef JSGC_GENERATIONAL
+    if (hasDynamicElements())
+        rt->gcNursery.notifyNewElements(this, newHeader);
+#endif
 
     initElementsHeader(newHeader, byteLengthCopy);
     InitViewList(this, viewListHead);
@@ -3444,7 +3462,6 @@ const Class ArrayBufferObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,        /* finalize    */
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */
@@ -3607,7 +3624,6 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
     nullptr,                 /* finalize */                                    \
-    nullptr,                 /* checkAccess */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
@@ -3821,7 +3837,6 @@ const Class DataViewObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     nullptr,                 /* finalize */
-    nullptr,                 /* checkAccess */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
@@ -4072,8 +4087,13 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
     JSObject *obj = ArrayBufferObject::create(cx, 0);
     if (!obj)
         return nullptr;
-    obj->setDynamicElements(reinterpret_cast<js::ObjectElements *>(contents));
+    js::ObjectElements *elements = reinterpret_cast<js::ObjectElements *>(contents);
+    obj->setDynamicElements(elements);
     JS_ASSERT(GetViewList(&obj->as<ArrayBufferObject>()) == nullptr);
+
+#ifdef JSGC_GENERATIONAL
+    cx->runtime()->gcNursery.notifyNewElements(obj, elements);
+#endif
     return obj;
 }
 

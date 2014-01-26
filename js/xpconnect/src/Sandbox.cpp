@@ -664,7 +664,7 @@ static const JSClass SandboxClass = {
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    nullptr, nullptr, nullptr, nullptr, TraceXPCGlobal
+    nullptr, nullptr, nullptr, TraceXPCGlobal
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
