@@ -262,7 +262,6 @@ public class AndroidFxAccount {
   public static AndroidFxAccount addAndroidAccount(
       Context context,
       String email,
-      String password,
       String profile,
       String idpServerURI,
       String tokenServerURI,
@@ -270,9 +269,6 @@ public class AndroidFxAccount {
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
-    }
-    if (password == null) {
-      throw new IllegalArgumentException("password must not be null");
     }
     if (idpServerURI == null) {
       throw new IllegalArgumentException("idpServerURI must not be null");
@@ -303,7 +299,10 @@ public class AndroidFxAccount {
 
     Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
     AccountManager accountManager = AccountManager.get(context);
-    boolean added = accountManager.addAccountExplicitly(account, null, userdata); // XXX what should the password be?
+    // We don't set an Android password, because we don't want to persist the
+    // password (or anything else as powerful as the password). Instead, we
+    // internally manage a sessionToken with a remotely owned lifecycle.
+    boolean added = accountManager.addAccountExplicitly(account, null, userdata);
     if (!added) {
       return null;
     }
