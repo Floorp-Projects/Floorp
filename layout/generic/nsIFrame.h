@@ -3252,22 +3252,23 @@ public:
     ListTag(out, this);
   }
   static void ListTag(FILE* out, const nsIFrame* aFrame) {
-    nsAutoString tmp;
-    aFrame->GetFrameName(tmp);
-    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-    fprintf(out, "@%p", static_cast<const void*>(aFrame));
+    nsAutoCString t;
+    ListTag(t, aFrame);
+    fputs(t.get(), out);
   }
-  void ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const;
+  void ListTag(nsACString& aTo) const;
+  static void ListTag(nsACString& aTo, const nsIFrame* aFrame);
+  void ListGeneric(nsACString& aTo, const char* aPrefix = "", uint32_t aFlags = 0) const;
   enum {
     TRAVERSE_SUBDOCUMENT_FRAMES = 0x01
   };
-  virtual void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
+  virtual void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)
    */
   static void RootFrameList(nsPresContext* aPresContext,
-                            FILE* out, int32_t aIndent);
+                            FILE* out = stderr, const char* aPrefix = "");
   virtual void DumpFrameTree();
   void DumpFrameTreeLimited();
 

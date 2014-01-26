@@ -113,7 +113,7 @@ public:
 
 #ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
+  void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const;
 #endif
 
   virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;

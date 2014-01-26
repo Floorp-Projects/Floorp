@@ -1753,9 +1753,10 @@ nsImageFrame::GetFrameName(nsAString& aResult) const
 }
 
 void
-nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsImageFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
 {
-  ListGeneric(out, aIndent, aFlags);
+  nsCString str;
+  ListGeneric(str, aPrefix, aFlags);
 
   // output the img src url
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -1768,10 +1769,10 @@ nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
       currentRequest->GetURI(getter_AddRefs(uri));
       nsAutoCString uristr;
       uri->GetAsciiSpec(uristr);
-      fprintf(out, " [src=%s]", uristr.get());
+      str += nsPrintfCString(" [src=%s]", uristr.get());
     }
   }
-  fputs("\n", out);
+  fprintf_stderr(out, "%s\n", str.get());
 }
 #endif
 
