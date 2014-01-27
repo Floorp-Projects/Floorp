@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
+#include "plbase64.h"
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -65,6 +66,7 @@ extern "C" {
 #include "async_timer.h"
 #include "r_crc32.h"
 #include "r_memory.h"
+#include "ice_reg.h"
 #include "ice_util.h"
 #include "transport_addr.h"
 #include "nr_crypto.h"
@@ -370,10 +372,11 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     // Set the priorites for candidate type preferences.
     // These numbers come from RFC 5245 S. 4.1.2.2
-    NR_reg_set_uchar((char *)"ice.pref.type.srv_rflx", 100);
-    NR_reg_set_uchar((char *)"ice.pref.type.peer_rflx", 110);
-    NR_reg_set_uchar((char *)"ice.pref.type.host", 126);
-    NR_reg_set_uchar((char *)"ice.pref.type.relayed", 0);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_SRV_RFLX, 100);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_PEER_RFLX, 110);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_HOST, 126);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED, 5);
+    NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED_TCP, 0);
 
     if (set_interface_priorities) {
       NR_reg_set_uchar((char *)"ice.pref.interface.rl0", 255);
@@ -718,23 +721,14 @@ void NrIceCtx::SetGatheringState(GatheringState state) {
 
 }  // close namespace
 
-
-extern "C" {
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-}
-
 // Reimplement nr_ice_compute_codeword to avoid copyright issues
 void nr_ice_compute_codeword(char *buf, int len,char *codeword) {
     UINT4 c;
-    UCHAR cc[2];
 
     r_crc32(buf,len,&c);
-    c %= 2048;
 
-    cc[0] = (c >> 8) & 0xff;
-    cc[1] = c & 0xff;
-
-    nr_bin2hex(cc, 2, reinterpret_cast<UCHAR *>(codeword));
+    PL_Base64Encode(reinterpret_cast<char*>(&c), 3, codeword);
+    codeword[4] = 0;
 
     return;
 }

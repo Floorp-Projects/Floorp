@@ -93,10 +93,13 @@ IDService.prototype = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "quit-application-granted":
-        Services.obs.removeObserver(this, "quit-application-granted");
-        // Services.obs.removeObserver(this, "identity-auth-complete");
+        this.shutdown();
         break;
     }
+  },
+
+  shutdown: function() {
+    Services.obs.removeObserver(this, "quit-application-granted");
   },
 
   /**
@@ -228,7 +231,7 @@ IDService.prototype = {
   doLogin: function doLogin(aRpCallerId, aAssertion, aInternalParams) {
     let rp = this._rpFlows[aRpCallerId];
     if (!rp) {
-      dump("WARNING: doLogin found no rp to go with callerId " + aRpCallerId + "\n");
+      log("WARNING: doLogin found no rp to go with callerId " + aRpCallerId);
       return;
     }
 
@@ -238,7 +241,7 @@ IDService.prototype = {
   doLogout: function doLogout(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
     if (!rp) {
-      dump("WARNING: doLogout found no rp to go with callerId " + aRpCallerId + "\n");
+      log("WARNING: doLogout found no rp to go with callerId " + aRpCallerId);
       return;
     }
 
@@ -255,7 +258,7 @@ IDService.prototype = {
   doReady: function doReady(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
     if (!rp) {
-      dump("WARNING: doReady found no rp to go with callerId " + aRpCallerId + "\n");
+      log("WARNING: doReady found no rp to go with callerId " + aRpCallerId);
       return;
     }
 
@@ -265,7 +268,7 @@ IDService.prototype = {
   doCancel: function doCancel(aRpCallerId) {
     let rp = this._rpFlows[aRpCallerId];
     if (!rp) {
-      dump("WARNING: doCancel found no rp to go with callerId " + aRpCallerId + "\n");
+      log("WARNING: doCancel found no rp to go with callerId " + aRpCallerId);
       return;
     }
 

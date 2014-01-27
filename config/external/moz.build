@@ -27,6 +27,9 @@ if CONFIG['MOZ_OPUS']:
 if CONFIG['MOZ_WEBM']:
     external_dirs += ['media/libnestegg']
 
+if CONFIG['MOZ_WEBM_ENCODER']:
+    external_dirs += ['media/libmkv']
+
 if CONFIG['MOZ_VPX'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
     external_dirs += ['media/libvpx']
 

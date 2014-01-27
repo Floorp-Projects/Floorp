@@ -676,6 +676,30 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const gfxPoint& aToTopLeft,
   return m;
 }
 
+Matrix
+gfxUtils::TransformRectToRect(const gfxRect& aFrom, const IntPoint& aToTopLeft,
+                              const IntPoint& aToTopRight, const IntPoint& aToBottomRight)
+{
+  Matrix m;
+  if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
+    // Not a rotation, so xy and yx are zero
+    m._12 = m._21 = 0.0;
+    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
+    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
+    m._31 = aToTopLeft.x - m._11*aFrom.x;
+    m._32 = aToTopLeft.y - m._22*aFrom.y;
+  } else {
+    NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
+                 "Destination rectangle not axis-aligned");
+    m._11 = m._22 = 0.0;
+    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
+    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
+    m._31 = aToTopLeft.x - m._21*aFrom.y;
+    m._32 = aToTopLeft.y - m._12*aFrom.x;
+  }
+  return m;
+}
+
 bool
 gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {

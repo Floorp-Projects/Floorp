@@ -262,7 +262,7 @@ MetroAppShell::Run(void)
 
       // This calls XRE_metroShutdown() in xre. Shuts down gecko, including
       // releasing the profile, and destroys MessagePump.
-      sMetroApp->ShutdownXPCOM();
+      sMetroApp->Shutdown();
 
       // Handle update restart or browser switch requests
       if (restartingInDesktop) {
@@ -324,8 +324,8 @@ MetroAppShell::InputEventsDispatched()
 void
 MetroAppShell::DispatchAllGeckoEvents()
 {
-  // Only do this if requested
-  if (!sShouldPurgeThreadQueue) {
+  // Only do this if requested and when we're not shutting down
+  if (!sShouldPurgeThreadQueue || MetroApp::sGeckoShuttingDown) {
     return;
   }
 
@@ -414,6 +414,15 @@ void
 MetroAppShell::NativeCallback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Native callbacks must be on the metro main thread");
+
+  // We shouldn't process native events during xpcom shutdown - this can
+  // trigger unexpected xpcom event dispatching for the main thread when
+  // the thread manager is in the process of shutting down non-main threads,
+  // resulting in shutdown hangs.
+  if (MetroApp::sGeckoShuttingDown) {
+    return;
+  }
+
   NativeEventCallback();
 }
 

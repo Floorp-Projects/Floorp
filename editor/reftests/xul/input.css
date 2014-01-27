@@ -67,7 +67,6 @@ html|input.num {
 }
 
 html|div.plainfield {
-  -moz-margin-start: 1px;
   color: -moz-fieldtext;
   white-space: pre;
 }

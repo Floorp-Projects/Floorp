@@ -224,7 +224,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       }
       case eCSSKeyword_matrix:
       {
-        gfx3DMatrix matrix;
+        gfx::Matrix4x4 matrix;
         matrix._11 = array->Item(1).GetFloatValue();
         matrix._12 = array->Item(2).GetFloatValue();
         matrix._13 = 0;
@@ -246,7 +246,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       }
       case eCSSKeyword_matrix3d:
       {
-        gfx3DMatrix matrix;
+        gfx::Matrix4x4 matrix;
         matrix._11 = array->Item(1).GetFloatValue();
         matrix._12 = array->Item(2).GetFloatValue();
         matrix._13 = array->Item(3).GetFloatValue();
@@ -275,7 +275,9 @@ static void AddTransformFunctions(nsCSSValueList* aList,
                                                          canStoreInRuleTree,
                                                          aBounds,
                                                          aAppUnitsPerPixel);
-        aFunctions.AppendElement(TransformMatrix(matrix));
+        gfx::Matrix4x4 transform;
+        gfx::ToMatrix4x4(matrix, transform);
+        aFunctions.AppendElement(TransformMatrix(transform));
         break;
       }
       case eCSSKeyword_perspective:
@@ -1967,11 +1969,12 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& a
   mozilla::gfx::IntSize imageSize = mImageContainer->GetCurrentSize();
   NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
 
-  gfxMatrix transform;
-  transform.Translate(mDestRect.TopLeft() + aOffset);
+  gfxPoint p = mDestRect.TopLeft() + aOffset;
+  gfx::Matrix transform;
+  transform.Translate(p.x, p.y);
   transform.Scale(mDestRect.width/imageSize.width,
                   mDestRect.height/imageSize.height);
-  aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageSize.width, imageSize.height));
 }
 
