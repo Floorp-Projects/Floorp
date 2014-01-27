@@ -179,6 +179,29 @@ var PerfTest = {
     return total / count;
   },
 
+  computeHighLowBands: function computeHighLow(aArray, aPercentage) {
+    let bandCount = Math.ceil(aArray.length * aPercentage);
+    let lowGroup = 0, highGroup = 0;
+    let idx;
+
+    function compareNumbers(a, b) {
+      return a - b;
+    }
+    aArray.sort(compareNumbers);
+    for (idx = 0; idx < bandCount; idx++) {
+      lowGroup += aArray[idx];
+    }
+    let top = aArray.length - 1;
+    for (idx = top; idx > (top - bandCount); idx--) {
+      highGroup += aArray[idx];
+    }
+    return {
+      low: lowGroup / bandCount,
+      high: highGroup / bandCount,
+      ave: this.computeAverage(aArray, {})
+    };
+  },
+
   /******************************************************
    * Internal
    */
