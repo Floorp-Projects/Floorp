@@ -35,6 +35,13 @@ public:
   {
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    // This event isn't an internal event of any DOM event.
+    MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
+    return nullptr;
+  }
+
   // NS_CONTENT_COMMAND_PASTE_TRANSFERABLE
   nsCOMPtr<nsITransferable> mTransferable; // [in]
 
@@ -99,6 +106,18 @@ public:
     userType = aEventType;
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_COMMAND_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    WidgetCommandEvent* result =
+      new WidgetCommandEvent(false, userType, command, nullptr);
+    result->AssignCommandEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
   nsCOMPtr<nsIAtom> command;
 
   // XXX Not tested by test_assign_event_data.html
@@ -126,6 +145,13 @@ public:
     WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_PLUGIN_EVENT),
     retargetToFocusedDocument(false)
   {
+  }
+
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    // This event isn't an internal event of any DOM event.
+    MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
+    return nullptr;
   }
 
   // If true, this event needs to be retargeted to focused document.
