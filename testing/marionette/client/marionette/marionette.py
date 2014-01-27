@@ -794,8 +794,7 @@ class Marionette(object):
 
         """
 
-        response = self._send_message("getCurrentWindowHandles",
-                                      "value")
+        response = self._send_message("getWindowHandles", "value")
         return response
 
     @property
