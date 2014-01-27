@@ -355,9 +355,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO2022JP)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022KRToUnicode)
 
 // ucvcn
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGB2312ToUnicodeV2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312V2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGBKToUnicode)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHZToUnicode)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHZ)
@@ -839,9 +837,9 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_JOHABTOUNICODE_CID, false, nullptr, nsJohabToUnicodeConstructor },
   { &kNS_UNICODETOJOHAB_CID, false, nullptr, nsUnicodeToJohabConstructor },
   { &kNS_ISO2022KRTOUNICODE_CID, false, nullptr, nsISO2022KRToUnicodeConstructor },
-  { &kNS_GB2312TOUNICODE_CID, false, nullptr, nsGB2312ToUnicodeV2Constructor },
+  { &kNS_GB2312TOUNICODE_CID, false, nullptr, nsGB18030ToUnicodeConstructor },
   { &kNS_UNICODETOGB2312_CID, false, nullptr, nsUnicodeToGB2312V2Constructor },
-  { &kNS_GBKTOUNICODE_CID, false, nullptr, nsGBKToUnicodeConstructor },
+  { &kNS_GBKTOUNICODE_CID, false, nullptr, nsGB18030ToUnicodeConstructor },
   { &kNS_UNICODETOGBK_CID, false, nullptr, nsUnicodeToGBKConstructor },
   { &kNS_HZTOUNICODE_CID, false, nullptr, nsHZToUnicodeConstructor },
   { &kNS_UNICODETOHZ_CID, false, nullptr, nsUnicodeToHZConstructor },

@@ -22,6 +22,8 @@ class PlanarYCbCrData;
 
 class gfxUtils {
 public:
+    typedef mozilla::gfx::IntPoint IntPoint;
+    typedef mozilla::gfx::Matrix Matrix;
     /*
      * Premultiply or Unpremultiply aSourceSurface, writing the result
      * to aDestSurface or back into aSourceSurface if aDestSurface is null.
@@ -108,6 +110,11 @@ public:
                                          const gfxPoint& aToTopLeft,
                                          const gfxPoint& aToTopRight,
                                          const gfxPoint& aToBottomRight);
+
+    static Matrix TransformRectToRect(const gfxRect& aFrom,
+                                      const IntPoint& aToTopLeft,
+                                      const IntPoint& aToTopRight,
+                                      const IntPoint& aToBottomRight);
 
     /**
      * If aIn can be represented exactly using an nsIntRect (i.e.

@@ -16,7 +16,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIObserverService.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -150,11 +149,10 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
   }
 }
 
-NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
+NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl,
                    nsISecureBrowserUI,
                    nsIWebProgressListener,
                    nsIFormSubmitObserver,
-                   nsIObserver,
                    nsISupportsWeakReference,
                    nsISSLStatusProvider)
 
@@ -189,12 +187,6 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
   mWindow = do_GetWeakReference(pwin, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // hook up to the form post notifications:
-  nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, true);
-  }
-  
   nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(aWindow));
   if (!piwindow) return NS_ERROR_FAILURE;
 
@@ -322,14 +314,6 @@ nsSecureBrowserUIImpl::SetDocShell(nsIDocShell *aDocShell)
   mDocShell = do_GetWeakReference(aDocShell, &rv);
   return rv;
 }
-
-NS_IMETHODIMP
-nsSecureBrowserUIImpl::Observe(nsISupports*, const char*,
-                               const char16_t*)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child,
                                    bool* value)
