@@ -89,6 +89,18 @@ public:
   {
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_KEY_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    WidgetKeyboardEvent* result =
+      new WidgetKeyboardEvent(false, message, nullptr);
+    result->AssignKeyEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
   // A DOM keyCode value or 0.  If a keypress event whose charCode is 0, this
   // should be 0.
   uint32_t keyCode;
@@ -190,6 +202,17 @@ public:
   {
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_TEXT_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    WidgetTextEvent* result = new WidgetTextEvent(false, message, nullptr);
+    result->AssignTextEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
   // The composition string or the commit string.
   nsString theText;
   // Count of rangeArray.
@@ -250,6 +273,18 @@ public:
     mFlags.mCancelable = false;
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_COMPOSITION_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    WidgetCompositionEvent* result =
+      new WidgetCompositionEvent(false, message, nullptr);
+    result->AssignCompositionEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
   // The composition string or the commit string.  If the instance is a
   // compositionstart event, this is initialized with selected text by
   // TextComposition automatically.
@@ -290,6 +325,13 @@ public:
     WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_QUERY_CONTENT_EVENT),
     mSucceeded(false), mWasAsync(false)
   {
+  }
+
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    // This event isn't an internal event of any DOM event.
+    MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
+    return nullptr;
   }
 
   void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength)
@@ -414,6 +456,13 @@ public:
     , mExpandToClusterBoundary(true)
     , mSucceeded(false)
   {
+  }
+
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    // This event isn't an internal event of any DOM event.
+    MOZ_CRASH("WidgetSelectionEvent doesn't support Duplicate()");
+    return nullptr;
   }
 
   // Start offset of selection

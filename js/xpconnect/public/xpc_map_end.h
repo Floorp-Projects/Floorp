@@ -67,9 +67,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_FINALIZE
     nsIXPCScriptable::WANT_FINALIZE |
 #endif
-#ifdef XPC_MAP_WANT_CHECKACCESS
-    nsIXPCScriptable::WANT_CHECKACCESS |
-#endif
 #ifdef XPC_MAP_WANT_CALL
     nsIXPCScriptable::WANT_CALL |
 #endif
@@ -154,11 +151,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Finalize(nsIXPConnectWrappedNative *wrapper, JS
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#ifndef XPC_MAP_WANT_CHECKACCESS
-NS_IMETHODIMP XPC_MAP_CLASSNAME::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, uint32_t mode, JS::Value * vp, bool *_retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
 #ifndef XPC_MAP_WANT_CALL
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Call(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, const JS::CallArgs &args, bool *_retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
@@ -235,10 +227,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_FINALIZE
 #undef XPC_MAP_WANT_FINALIZE
-#endif
-
-#ifdef XPC_MAP_WANT_CHECKACCESS
-#undef XPC_MAP_WANT_CHECKACCESS
 #endif
 
 #ifdef XPC_MAP_WANT_CALL

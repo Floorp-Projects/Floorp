@@ -20,7 +20,7 @@ interface nsIClassInfo;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSStackFramePtr(JSStackFrame);
 
-[uuid(852e1ea8-1c3f-49e1-b57c-c0f525a167d3)]
+[uuid(d4d21714-116b-4851-a785-098c5dfea523)]
 interface nsIXPCSecurityManager : nsISupports
 {
     /**
@@ -41,19 +41,4 @@ interface nsIXPCSecurityManager : nsISupports
 
     void CanGetService(in JSContextPtr aJSContext,
                        in nsCIDRef aCID);
-
-    /*
-     * Used for aAction below
-     */
-    const uint32_t ACCESS_CALL_METHOD  = 0;
-    const uint32_t ACCESS_GET_PROPERTY = 1;
-    const uint32_t ACCESS_SET_PROPERTY = 2;
-
-    void CanAccess(in uint32_t aAction,
-                   in nsAXPCNativeCallContextPtr aCallContext,
-                   in JSContextPtr aJSContext,
-                   in JSObjectPtr aJSObject,
-                   in nsISupports aObj,
-                   in nsIClassInfo aClassInfo,
-                   in jsid aName);
 };

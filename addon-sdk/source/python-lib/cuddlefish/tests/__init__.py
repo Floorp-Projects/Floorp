@@ -35,19 +35,6 @@ def get_tests():
                 if len(test.examples) > 0:
                     tests.append(doctest.DocTestCase(test))
 
-    md_dir = os.path.join(env_root, 'dev-guide')
-    doctest_opts = (doctest.NORMALIZE_WHITESPACE |
-                    doctest.REPORT_UDIFF)
-    for dirpath, dirnames, filenames in os.walk(md_dir):
-        for filename in filenames:
-            if filename.endswith('.md'):
-                absname = os.path.join(dirpath, filename)
-                tests.append(doctest.DocFileTest(
-                        absname,
-                        module_relative=False,
-                        optionflags=doctest_opts
-                        ))
-
     return tests
 
 def run(verbose=False):

@@ -9,10 +9,10 @@ module.metadata = {
 
 const { emit, off } = require("./event/core");
 const { PrefsTarget } = require("./preferences/event-target");
-const { id } = require("./self");
+const { preferencesBranch, id } = require("./self");
 const { on } = require("./system/events");
 
-const ADDON_BRANCH = "extensions." + id + ".";
+const ADDON_BRANCH = "extensions." + preferencesBranch + ".";
 const BUTTON_PRESSED = id + "-cmdPressed";
 
 const target = PrefsTarget({ branchName: ADDON_BRANCH });

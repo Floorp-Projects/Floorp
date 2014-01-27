@@ -86,8 +86,7 @@ JSObjectBuilder::ArrayPush(JS::HandleObject aArray, int value)
   if (!mOk)
     return;
 
-  JS::RootedValue objval(mCx, INT_TO_JSVAL(value));
-  mOk = JS_SetElement(mCx, aArray, length, &objval);
+  mOk = JS_SetElement(mCx, aArray, length, value);
 }
 
 void
@@ -108,8 +107,7 @@ JSObjectBuilder::ArrayPush(JS::HandleObject aArray, const char *value)
   if (!mOk)
     return;
 
-  JS::RootedValue objval(mCx, STRING_TO_JSVAL(string));
-  mOk = JS_SetElement(mCx, aArray, length, &objval);
+  mOk = JS_SetElement(mCx, aArray, length, string);
 }
 
 void
@@ -124,8 +122,7 @@ JSObjectBuilder::ArrayPush(JS::HandleObject aArray, JS::HandleObject aObject)
   if (!mOk)
     return;
 
-  JS::RootedValue objval(mCx, OBJECT_TO_JSVAL(aObject));
-  mOk = JS_SetElement(mCx, aArray, length, &objval);
+  mOk = JS_SetElement(mCx, aArray, length, aObject);
 }
 
 JSObject*

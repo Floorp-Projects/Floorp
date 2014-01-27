@@ -23,7 +23,8 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(detected,
                               output,
                               p.proc.returncode,
-                              p.didTimeout)
+                              p.didTimeout,
+                              expectedfail=('returncode',))
 
     def test_process_kill_deep(self):
         """Process is started, we kill it, we use a deep process tree"""
@@ -37,7 +38,8 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(detected,
                               output,
                               p.proc.returncode,
-                              p.didTimeout)
+                              p.didTimeout,
+                              expectedfail=('returncode',))
 
     def test_process_kill_deep_wait(self):
         """Process is started, we use a deep process tree, we let it spawn
@@ -54,7 +56,8 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(detected,
                               output,
                               p.proc.returncode,
-                              p.didTimeout)
+                              p.didTimeout,
+                              expectedfail=('returncode',))
 
     def test_process_kill_broad(self):
         """Process is started, we kill it, we use a broad process tree"""
@@ -68,7 +71,8 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(detected,
                               output,
                               p.proc.returncode,
-                              p.didTimeout)
+                              p.didTimeout,
+                              expectedfail=('returncode',))
 
 if __name__ == '__main__':
     unittest.main()

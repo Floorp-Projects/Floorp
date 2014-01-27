@@ -18,7 +18,6 @@
 
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -39,6 +38,7 @@
 #include "jit/Ion.h"
 #include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
+#include "vm/Opcodes.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
@@ -1341,14 +1341,15 @@ Interpret(JSContext *cx, RunState &state)
     // Use addresses instead of offsets to optimize for runtime speed over
     // load-time relocation overhead.
     static const void *const addresses[EnableInterruptsPseudoOpcode + 1] = {
-# define OPDEF(op,v,n,t,l,u,d,f)  LABEL(op),
-# define OPPAD(v)                                                             \
+# define OPCODE_LABEL(op, ...)  LABEL(op),
+        FOR_EACH_OPCODE(OPCODE_LABEL)
+# undef OPCODE_LABEL
+# define TRAILING_LABEL(v)                                                    \
     ((v) == EnableInterruptsPseudoOpcode                                      \
      ? LABEL(EnableInterruptsPseudoOpcode)                                    \
      : LABEL(default)),
-# include "jsopcode.tbl"
-# undef OPDEF
-# undef OPPAD
+        FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_LABEL)
+# undef TRAILING_LABEL
     };
 #else
 // Portable switch-based dispatch.
@@ -3916,19 +3917,9 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
                               HandleObject val)
 {
     JS_ASSERT(val->isCallable());
-
-    /*
-     * Getters and setters are just like watchpoints from an access control
-     * point of view.
-     */
-    RootedValue scratch(cx, UndefinedValue());
-    unsigned attrs = 0;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &scratch, &attrs))
-        return false;
-
     PropertyOp getter;
     StrictPropertyOp setter;
-    attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
 
     JSOp op = JSOp(*pc);
 
@@ -3943,7 +3934,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
         attrs |= JSPROP_SETTER;
     }
 
-    scratch.setUndefined();
+    RootedValue scratch(cx);
     return JSObject::defineGeneric(cx, obj, id, scratch, getter, setter, attrs);
 }
 

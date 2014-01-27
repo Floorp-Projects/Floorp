@@ -238,8 +238,8 @@ public:
   void SetEffectTransformAndOpacity()
   {
     Layer* layer = GetLayer();
-    const gfx3DMatrix& transform = layer->GetEffectiveTransform();
-    void* raw = &const_cast<gfx3DMatrix&>(transform)._11;
+    const gfx::Matrix4x4& transform = layer->GetEffectiveTransform();
+    void* raw = &const_cast<gfx::Matrix4x4&>(transform)._11;
     effect()->GetVariableByName("mLayerTransform")->SetRawValue(raw, 0, 64);
     effect()->GetVariableByName("fLayerOpacity")->AsScalar()->SetFloat(layer->GetEffectiveOpacity());
   }
