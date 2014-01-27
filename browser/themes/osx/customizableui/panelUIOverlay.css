@@ -5,11 +5,6 @@
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
 @media (min-resolution: 2dppx) {
-  #customization-palette toolbarbutton > .toolbarbutton-icon,
-  #PanelUI-contents toolbarbutton > .toolbarbutton-icon {
-    width: 20px;
-  }
-
   #PanelUI-customize {
     list-style-image: url(chrome://browser/skin/menuPanel-customize@2x.png);
   }
