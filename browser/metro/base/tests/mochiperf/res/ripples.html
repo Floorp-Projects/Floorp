@@ -231,7 +231,7 @@ function run() {
     ripples.run(progress);
     var time = new Date();
     var diff = time.getTime() - now.getTime();
-    if (diff < 10000) { // ten seconds
+    if (diff < 5000) { // five seconds
       window.mozRequestAnimationFrame(step);
     } else {
       var evt = document.createEvent("CustomEvent");
