@@ -7382,8 +7382,9 @@ nsTextFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
                               ComputeTransformedLength(provider),
                               gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                               aContext->ThebesContext(), &provider);
-  *aX = metrics.mBoundingBox.x;
-  *aXMost = metrics.mBoundingBox.XMost();
+  // Round it like nsTextFrame::ComputeTightBounds() to ensure consistency.
+  *aX = NSToCoordFloor(metrics.mBoundingBox.x);
+  *aXMost = NSToCoordCeil(metrics.mBoundingBox.XMost());
 
   return NS_OK;
 }
