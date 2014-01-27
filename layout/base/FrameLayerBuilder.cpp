@@ -1552,7 +1552,8 @@ static void
 SetVisibleRegionForLayer(Layer* aLayer, const nsIntRegion& aLayerVisibleRegion,
                          const nsIntRect& aRestrictToRect)
 {
-  gfx3DMatrix transform = aLayer->GetTransform();
+  gfx3DMatrix transform;
+  To3DMatrix(aLayer->GetTransform(), transform);
 
   // if 'transform' is not invertible, then nothing will be displayed
   // for the layer, so it doesn't really matter what we do here
@@ -1714,11 +1715,13 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
 static gfx3DMatrix
 GetTransformToRoot(Layer* aLayer)
 {
-  gfx3DMatrix transform = aLayer->GetTransform();
+  Matrix4x4 transform = aLayer->GetTransform();
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     transform = transform * l->GetTransform();
   }
-  return transform;
+  gfx3DMatrix result;
+  To3DMatrix(transform, result);
+  return result;
 }
 
 static void
@@ -1809,7 +1812,7 @@ ContainerState::PopThebesLayerData()
     layer->SetClipRect(nullptr);
   }
 
-  gfxMatrix transform;
+  Matrix transform;
   if (!layer->GetTransform().Is2D(&transform)) {
     NS_ERROR("Only 2D transformations currently supported");
   }
