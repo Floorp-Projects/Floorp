@@ -15,6 +15,12 @@ UNIFIED_SOURCES += [
     'WebMReader.cpp',
 ]
 
+if CONFIG['MOZ_WEBM_ENCODER']:
+    EXPORTS += ['WebMWriter.h']
+    UNIFIED_SOURCES += ['EbmlComposer.cpp',
+                        'WebMWriter.cpp',
+    ]
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
