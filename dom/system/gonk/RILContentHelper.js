@@ -107,7 +107,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:RadioStateChanged",
   "RIL:SetVoicePrivacyMode",
   "RIL:GetVoicePrivacyMode",
-  "RIL:OtaStatusChanged"
+  "RIL:OtaStatusChanged",
+  "RIL:MatchMvno"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -634,6 +635,26 @@ RILContentHelper.prototype = {
   getCardState: function(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.cardState;
+  },
+
+  matchMvno: function(clientId, window, mvnoType, mvnoData) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:MatchMvno", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        mvnoType: mvnoType,
+        mvnoData: mvnoData
+      }
+    });
+    return request;
   },
 
   /**
@@ -1783,6 +1804,9 @@ RILContentHelper.prototype = {
         break;
       case "RIL:UpdateIccContact":
         this.handleUpdateIccContact(data);
+        break;
+      case "RIL:MatchMvno":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, data.result);
         break;
       case "RIL:DataError":
         this.updateConnectionInfo(data, this.rilContexts[clientId].dataConnectionInfo);
