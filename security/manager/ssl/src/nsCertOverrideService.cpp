@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCertOverrideService.h"
+
+#include "insanity/pkixtypes.h"
 #include "nsIX509Cert.h"
+#include "NSSCertDBTrustDomain.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertHelper.h"
 #include "nsCRT.h"
@@ -29,7 +32,7 @@
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
-using mozilla::psm::SharedSSLState;
+using namespace mozilla::psm;
 
 static const char kCertOverrideFileName[] = "cert_override.txt";
 
@@ -391,11 +394,11 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
   if (!cert2)
     return NS_ERROR_FAILURE;
 
-  ScopedCERTCertificate nsscert(cert2->GetCert());
+  insanity::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
   if (!nsscert)
     return NS_ERROR_FAILURE;
 
-  return GetCertFingerprintByOidTag(nsscert, aOidTag, fp);
+  return GetCertFingerprintByOidTag(nsscert.get(), aOidTag, fp);
 }
 
 static nsresult
@@ -429,11 +432,11 @@ GetCertFingerprintByDottedOidString(nsIX509Cert *aCert,
   if (!cert2)
     return NS_ERROR_FAILURE;
 
-  ScopedCERTCertificate nsscert(cert2->GetCert());
+  insanity::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
   if (!nsscert)
     return NS_ERROR_FAILURE;
 
-  return GetCertFingerprintByDottedOidString(nsscert, dottedOid, fp);
+  return GetCertFingerprintByDottedOidString(nsscert.get(), dottedOid, fp);
 }
 
 NS_IMETHODIMP
@@ -452,11 +455,11 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   if (!cert2)
     return NS_ERROR_FAILURE;
 
-  ScopedCERTCertificate nsscert(cert2->GetCert());
+  insanity::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
   if (!nsscert)
     return NS_ERROR_FAILURE;
 
-  char* nickname = nsNSSCertificate::defaultServerNickname(nsscert);
+  char* nickname = DefaultServerNicknameForCert(nsscert.get());
   if (!aTemporary && nickname && *nickname)
   {
     ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
@@ -465,7 +468,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
       return NS_ERROR_FAILURE;
     }
   
-    SECStatus srv = PK11_ImportCert(slot, nsscert, CK_INVALID_HANDLE, 
+    SECStatus srv = PK11_ImportCert(slot, nsscert.get(), CK_INVALID_HANDLE,
                                     nickname, false);
     if (srv != SECSuccess) {
       PR_Free(nickname);
@@ -475,7 +478,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   PR_FREEIF(nickname);
 
   nsAutoCString fpStr;
-  nsresult rv = GetCertFingerprintByOidTag(nsscert, 
+  nsresult rv = GetCertFingerprintByOidTag(nsscert.get(),
                   mOidTagForStoringNewHashes, fpStr);
   if (NS_FAILED(rv))
     return rv;

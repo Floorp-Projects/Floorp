@@ -84,6 +84,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -5265,90 +5266,105 @@ int32_t nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 void
 DebugListFrameTree(nsIFrame* aFrame)
 {
-  ((nsFrame*)aFrame)->List(stdout, 0);
+  ((nsFrame*)aFrame)->List(stdout);
 }
 
+void
+nsIFrame::ListTag(nsACString& aTo) const
+{
+  ListTag(aTo, this);
+}
+
+/* static */
+void
+nsIFrame::ListTag(nsACString& aTo, const nsIFrame* aFrame) {
+  nsAutoString tmp;
+  aFrame->GetFrameName(tmp);
+  aTo += NS_ConvertUTF16toUTF8(tmp).get();
+  aTo += nsPrintfCString("@%p", static_cast<const void*>(aFrame));
+}
 
 // Debugging
 void
-nsIFrame::ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) const
 {
-  IndentBy(out, aIndent);
-  ListTag(out);
+  aTo =+ aPrefix;
+  ListTag(aTo);
   if (HasView()) {
-    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
+    aTo += nsPrintfCString(" [view=%p]", static_cast<void*>(GetView()));
   }
   if (GetNextSibling()) {
-    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
+    aTo += nsPrintfCString(" next=%p", static_cast<void*>(GetNextSibling()));
   }
   if (GetPrevContinuation()) {
     bool fluid = GetPrevInFlow() == GetPrevContinuation();
-    fprintf(out, " prev-%s=%p", fluid?"in-flow":"continuation",
+    aTo += nsPrintfCString(" prev-%s=%p", fluid?"in-flow":"continuation",
             static_cast<void*>(GetPrevContinuation()));
   }
   if (GetNextContinuation()) {
     bool fluid = GetNextInFlow() == GetNextContinuation();
-    fprintf(out, " next-%s=%p", fluid?"in-flow":"continuation",
+    aTo += nsPrintfCString(" next-%s=%p", fluid?"in-flow":"continuation",
             static_cast<void*>(GetNextContinuation()));
   }
   void* IBsibling = Properties().Get(IBSplitSpecialSibling());
   if (IBsibling) {
-    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
+    aTo += nsPrintfCString(" IBSplitSpecialSibling=%p", IBsibling);
   }
   void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
   if (IBprevsibling) {
-    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
+    aTo += nsPrintfCString(" IBSplitSpecialPrevSibling=%p", IBprevsibling);
   }
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  aTo += nsPrintfCString(" {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   nsIFrame* f = const_cast<nsIFrame*>(this);
   if (f->HasOverflowAreas()) {
     nsRect vo = f->GetVisualOverflowRect();
     if (!vo.IsEqualEdges(mRect)) {
-      fprintf(out, " vis-overflow=%d,%d,%d,%d", vo.x, vo.y, vo.width, vo.height);
+      aTo += nsPrintfCString(" vis-overflow=%d,%d,%d,%d", vo.x, vo.y, vo.width, vo.height);
     }
     nsRect so = f->GetScrollableOverflowRect();
     if (!so.IsEqualEdges(mRect)) {
-      fprintf(out, " scr-overflow=%d,%d,%d,%d", so.x, so.y, so.width, so.height);
+      aTo += nsPrintfCString(" scr-overflow=%d,%d,%d,%d", so.x, so.y, so.width, so.height);
     }
   }
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
+    aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);
   }
   if (IsTransformed()) {
-    fprintf(out, " transformed");
+    aTo += nsPrintfCString(" transformed");
   }
   if (ChildrenHavePerspective()) {
-    fprintf(out, " perspective");
+    aTo += nsPrintfCString(" perspective");
   }
   if (Preserves3DChildren()) {
-    fprintf(out, " preserves-3d-children");
+    aTo += nsPrintfCString(" preserves-3d-children");
   }
   if (Preserves3D()) {
-    fprintf(out, " preserves-3d");
+    aTo += nsPrintfCString(" preserves-3d");
   }
   if (mContent) {
-    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+    aTo += nsPrintfCString(" [content=%p]", static_cast<void*>(mContent));
   }
-  fprintf(out, " [sc=%p", static_cast<void*>(mStyleContext));
+  aTo += nsPrintfCString(" [sc=%p", static_cast<void*>(mStyleContext));
   if (mStyleContext) {
     nsIAtom* pseudoTag = mStyleContext->GetPseudo();
     if (pseudoTag) {
       nsAutoString atomString;
       pseudoTag->ToString(atomString);
-      fprintf(out, "%s", NS_LossyConvertUTF16toASCII(atomString).get());
+      aTo += nsPrintfCString("%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
     if (mParent && mStyleContext->GetParent() != mParent->StyleContext()) {
-      fprintf(out, ",parent=%p", mStyleContext->GetParent());
+      aTo += nsPrintfCString(",parent=%p", mStyleContext->GetParent());
     }
   }
-  fputs("]", out);
+  aTo += "]";
 }
 
 void
-nsIFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsIFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
 {
-  ListGeneric(out, aIndent, aFlags);
-  fputs("\n", out);
+  nsCString str;
+  ListGeneric(str, aPrefix, aFlags);
+  fprintf_stderr(out, "%s\n", str.get());
 }
 
 NS_IMETHODIMP
@@ -5380,17 +5396,17 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 void
 nsIFrame::DumpFrameTree()
 {
-  RootFrameList(PresContext(), stdout, 0);
+  RootFrameList(PresContext(), stdout);
 }
 
 void
 nsIFrame::DumpFrameTreeLimited()
 {
-  List(stdout, 0);
+  List(stdout);
 }
 
 void
-nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
+nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, const char* aPrefix)
 {
   if (!aPresContext || !out)
     return;
@@ -5399,7 +5415,7 @@ nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
   if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if(frame) {
-      frame->List(out, aIndent);
+      frame->List(out, aPrefix);
     }
   }
 }

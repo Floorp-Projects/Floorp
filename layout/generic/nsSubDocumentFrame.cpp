@@ -528,16 +528,19 @@ nsSubDocumentFrame::GetIntrinsicHeight()
 
 #ifdef DEBUG_FRAME_DUMP
 void
-nsSubDocumentFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+nsSubDocumentFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
 {
-  ListGeneric(out, aIndent, aFlags);
-  fputs("\n", out);
+  nsCString str;
+  ListGeneric(str, aPrefix, aFlags);
+  fprintf_stderr(out, "%s\n", str.get());
 
-  nsSubDocumentFrame* f = const_cast<nsSubDocumentFrame*>(this);
   if (aFlags & TRAVERSE_SUBDOCUMENT_FRAMES) {
+    nsSubDocumentFrame* f = const_cast<nsSubDocumentFrame*>(this);
     nsIFrame* subdocRootFrame = f->GetSubdocumentRootFrame();
     if (subdocRootFrame) {
-      subdocRootFrame->List(out, aIndent + 1);
+      nsCString pfx(aPrefix);
+      pfx += "  ";
+      subdocRootFrame->List(out, pfx.get(), aFlags);
     }
   }
 }

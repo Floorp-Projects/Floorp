@@ -58,7 +58,6 @@ using namespace mozilla;
   { 0x54ae32f8, 0x1dd2, 0x11b2, \
     { 0xa2, 0x09, 0xdf, 0x7c, 0x50, 0x53, 0x70, 0xf8} }
 static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
-static NS_DEFINE_CID(kNativeFilePickerCID, NS_FILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)

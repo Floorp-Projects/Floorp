@@ -20,6 +20,10 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 if CONFIG['MOZ_CONTENT_SANDBOX']:
     add_tier_dir('sandbox', 'security/sandbox')
 
+# Depends on NSS and NSPR, and must be built after sandbox or else B2G emulator
+# builds fail.
+add_tier_dir('platform', 'security/certverifier')
+
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
     add_tier_dir('platform', 'modules/libmar')

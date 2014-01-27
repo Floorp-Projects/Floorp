@@ -428,6 +428,7 @@ WEBIDL_FILES = [
     'WheelEvent.webidl',
     'WifiOptions.webidl',
     'Worker.webidl',
+    'WorkerConsole.webidl',
     'WorkerGlobalScope.webidl',
     'WorkerLocation.webidl',
     'WorkerNavigator.webidl',
