@@ -26,10 +26,12 @@ base-updater-head_TARGET  := libs
 base-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_base_updater
 base-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
 
+ifdef MOZ_MAINTENANCE_SERVICE
 INSTALL_TARGETS              += service-updater-head
 service-updater-head_TARGET  := libs
 service-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_service_updater
 service-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
+endif # MOZ_MAINTENANCE_SERVICE
 
 ifndef MOZ_PROFILE_GENERATE
 ifdef COMPILE_ENVIRONMENT
