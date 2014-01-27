@@ -642,7 +642,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
 
 void
 CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
-                               const gfxMatrix& aWorldTransform)
+                               const Matrix& aWorldTransform)
 {
   // Set the viewport correctly.
   mGLContext->fViewport(0, 0, aSize.width, aSize.height);
@@ -659,24 +659,24 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
 
   // Matrix to transform (0, 0, aWidth, aHeight) to viewport space (-1.0, 1.0,
   // 2, 2) and flip the contents.
-  gfxMatrix viewMatrix;
-  viewMatrix.Translate(-gfxPoint(1.0, -1.0));
+  Matrix viewMatrix;
+  viewMatrix.Translate(-1.0, 1.0);
   viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
   viewMatrix.Scale(1.0f, -1.0f);
   if (!mTarget) {
-    viewMatrix.Translate(gfxPoint(mRenderOffset.x, mRenderOffset.y));
+    viewMatrix.Translate(mRenderOffset.x, mRenderOffset.y);
   }
 
   viewMatrix = aWorldTransform * viewMatrix;
 
-  gfx3DMatrix matrix3d = gfx3DMatrix::From2D(viewMatrix);
+  Matrix4x4 matrix3d = Matrix4x4::From2D(viewMatrix);
   matrix3d._33 = 0.0f;
 
   SetLayerProgramProjectionMatrix(matrix3d);
 }
 
 void
-CompositorOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
+CompositorOGL::SetLayerProgramProjectionMatrix(const Matrix4x4& aMatrix)
 {
   for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
     for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {

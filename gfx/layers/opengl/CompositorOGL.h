@@ -145,7 +145,7 @@ public:
   }
 
   virtual void PrepareViewport(const gfx::IntSize& aSize,
-                               const gfxMatrix& aWorldTransform) MOZ_OVERRIDE;
+                               const gfx::Matrix& aWorldTransform) MOZ_OVERRIDE;
 
 
 #ifdef MOZ_DUMP_PAINTING
@@ -272,7 +272,7 @@ private:
   /**
    * Updates all layer programs with a new projection matrix.
    */
-  void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
+  void SetLayerProgramProjectionMatrix(const gfx::Matrix4x4& aMatrix);
 
   /**
    * Helper method for Initialize, creates all valid variations of a program
