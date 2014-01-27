@@ -105,8 +105,7 @@ ImageLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 void
 ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
 {
-  gfx::Matrix4x4 local;
-  ToMatrix4x4(GetLocalTransform(), local);
+  gfx::Matrix4x4 local = GetLocalTransform();
 
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);

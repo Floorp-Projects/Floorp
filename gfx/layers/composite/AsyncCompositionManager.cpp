@@ -43,6 +43,7 @@
 struct nsCSSValueSharedList;
 
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -125,8 +126,10 @@ static bool
 GetBaseTransform2D(Layer* aLayer, gfxMatrix* aTransform)
 {
   // Start with the animated transform if there is one
+  gfx3DMatrix localTransform;
+  To3DMatrix(aLayer->GetLocalTransform(), localTransform);
   return (aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation() ?
-          aLayer->GetLocalTransform() : aLayer->GetTransform()).Is2D(aTransform);
+          localTransform : aLayer->GetTransform()).Is2D(aTransform);
 }
 
 static void
@@ -251,7 +254,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     }
 
     gfxMatrix oldRootTransform;
-    gfxMatrix newRootTransform;
+    Matrix newRootTransform;
     if (!aPreviousTransformForRoot.Is2D(&oldRootTransform) ||
         !aTransformedSubtreeRoot->GetLocalTransform().Is2D(&newRootTransform)) {
       return;
@@ -260,7 +263,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     // Calculate the cumulative transforms between the subtree root with the
     // old transform and the current transform.
     gfxMatrix oldCumulativeTransform = ancestorTransform * oldRootTransform;
-    gfxMatrix newCumulativeTransform = ancestorTransform * newRootTransform;
+    gfxMatrix newCumulativeTransform = ancestorTransform * ThebesMatrix(newRootTransform);
     if (newCumulativeTransform.IsSingular()) {
       return;
     }
