@@ -62,16 +62,13 @@ TextTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
 }
 
 already_AddRefed<TextTrack>
-TextTrackList::AddTextTrack(HTMLMediaElement* aMediaElement,
-                            TextTrackKind aKind,
+TextTrackList::AddTextTrack(TextTrackKind aKind,
                             const nsAString& aLabel,
                             const nsAString& aLanguage)
 {
-  nsRefPtr<TextTrack> track = new TextTrack(mGlobal, aMediaElement, aKind,
-                                            aLabel, aLanguage);
+  nsRefPtr<TextTrack> track = new TextTrack(mGlobal, this, aKind, aLabel, aLanguage);
   if (mTextTracks.AppendElement(track)) {
     CreateAndDispatchTrackEventRunner(track, NS_LITERAL_STRING("addtrack"));
-    track->SetTextTrackList(this);
   }
 
   return track.forget();
