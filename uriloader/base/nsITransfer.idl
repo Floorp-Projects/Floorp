@@ -5,12 +5,13 @@
 
 #include "nsIWebProgressListener2.idl"
 
+interface nsIArray;
 interface nsIURI;
 interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
 
-[scriptable, uuid(b1c81100-9d66-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(0c81b265-34b8-472d-be98-099b2512e3ec)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
@@ -65,6 +66,16 @@ interface nsITransfer : nsIWebProgressListener2 {
      * @param aHash The SHA-256 hash in raw bytes of the downloaded file.
      */
     void setSha256Hash(in ACString aHash);
+
+    /*
+     * Used to notify the transfer object of the signature of the downloaded
+     * file.  Must be called on the main thread, only after the download has
+     * finished successfully.
+     * @param aSignatureInfo The nsIArray of nsIX509CertList of nsIX509Cert
+     *        certificates of the downloaded file.
+     */
+    void setSignatureInfo(in nsIArray aSignatureInfo);
+
 };
 
 %{C++
