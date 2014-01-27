@@ -24,22 +24,28 @@
 class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
 
-class nsCRMFObject : public nsIDOMCRMFObject
+namespace mozilla {
+namespace dom {
+
+class CRMFObject : public nsIDOMCRMFObject
 {
 public:
-  nsCRMFObject();
-  virtual ~nsCRMFObject();
+  CRMFObject();
+  virtual ~CRMFObject();
 
   NS_DECL_NSIDOMCRMFOBJECT
   NS_DECL_ISUPPORTS
 
-  nsresult init();
-
   nsresult SetCRMFRequest(char *inRequest);
+
+  JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope);
 private:
 
   nsString mBase64Request;
 };
+
+}
+}
 
 class nsCrypto: public mozilla::dom::Crypto
 {
@@ -59,7 +65,7 @@ public:
 
   virtual void GetVersion(nsString& aVersion) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDOMCRMFObject>
+  virtual already_AddRefed<mozilla::dom::CRMFObject>
   GenerateCRMFRequest(JSContext* aContext,
                       const nsCString& aReqDN,
                       const nsCString& aRegToken,
