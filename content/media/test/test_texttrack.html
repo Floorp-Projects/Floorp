@@ -20,7 +20,6 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
   function() {
     var video = document.createElement("video");
-    video.src = "seek.webm";
 
     isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
 
