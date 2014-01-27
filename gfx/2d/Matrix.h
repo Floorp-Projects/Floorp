@@ -285,6 +285,34 @@ public:
     return Matrix(_11, _12, _21, _22, _41, _42);
   }
 
+  bool CanDraw2D(Matrix* aMatrix = nullptr) const {
+    if (_14 != 0.0f ||
+        _24 != 0.0f ||
+        _44 != 1.0f) {
+      return false;
+    }
+    if (aMatrix) {
+      aMatrix->_11 = _11;
+      aMatrix->_12 = _12;
+      aMatrix->_21 = _21;
+      aMatrix->_22 = _22;
+      aMatrix->_31 = _41;
+      aMatrix->_32 = _42;
+    }
+    return true;
+  }
+
+  Matrix4x4& ProjectTo2D() {
+    _31 = 0.0f;
+    _32 = 0.0f;
+    _13 = 0.0f;
+    _23 = 0.0f;
+    _33 = 1.0f;
+    _43 = 0.0f;
+    _34 = 0.0f;
+    return *this;
+  }
+
   static Matrix4x4 From2D(const Matrix &aMatrix) {
     Matrix4x4 matrix;
     matrix._11 = aMatrix._11;
