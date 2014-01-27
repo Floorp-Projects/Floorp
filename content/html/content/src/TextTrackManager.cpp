@@ -61,7 +61,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
                                const nsAString& aLanguage)
 {
   nsRefPtr<TextTrack> ttrack =
-    mTextTracks->AddTextTrack(mMediaElement, aKind, aLabel, aLanguage);
+    mTextTracks->AddTextTrack(aKind, aLabel, aLanguage);
   ttrack->SetReadyState(HTMLTrackElement::READY_STATE_LOADED);
   AddCues(ttrack);
   return ttrack.forget();
