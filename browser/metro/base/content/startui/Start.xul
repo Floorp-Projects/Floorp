@@ -5,9 +5,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/bindings.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/start.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
