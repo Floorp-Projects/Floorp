@@ -163,6 +163,12 @@ documenttab[closing] > .documenttab-container {
   background-image: none!important;
 }
 
+/* TODO: Decide how and where to display private tabs.
+ * For now, display them in the main tab strip but hide the thumbnail. */
+documenttab[private] .documenttab-thumbnail {
+  background-color: purple;
+}
+
 .documenttab-title {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   margin-top: 0;
