@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/layers/LayerManagerComposite.h"
 
-class gfx3DMatrix;
 struct nsIntPoint;
 struct nsIntRect;
 
@@ -40,7 +39,7 @@ public:
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
@@ -75,7 +74,7 @@ public:
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }

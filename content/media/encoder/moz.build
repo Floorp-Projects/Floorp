@@ -20,13 +20,21 @@ UNIFIED_SOURCES += [
     'TrackEncoder.cpp',
 ]
 
+if CONFIG['MOZ_OMX_ENCODER']:
+    EXPORTS += ['OmxTrackEncoder.h']
+    UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
+
 if CONFIG['MOZ_OPUS']:
     EXPORTS += ['OpusTrackEncoder.h']
     UNIFIED_SOURCES += ['OpusTrackEncoder.cpp']
 
-if CONFIG['MOZ_OMX_ENCODER']:
-    EXPORTS += ['OmxTrackEncoder.h']
-    UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
+if CONFIG['MOZ_WEBM_ENCODER']:
+    EXPORTS += ['VorbisTrackEncoder.h',
+                'VP8TrackEncoder.h',
+    ]
+    UNIFIED_SOURCES += ['VorbisTrackEncoder.cpp',
+                        'VP8TrackEncoder.cpp',
+    ]
 
 FAIL_ON_WARNINGS = True
 

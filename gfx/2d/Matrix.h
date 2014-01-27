@@ -206,6 +206,10 @@ public:
            FuzzyEqual(_32, floorf(_32 + 0.5f));
   }
 
+  Point GetTranslation() const {
+    return Point(_31, _32);
+  }
+
   /**
    * Returns true if matrix is multiple of 90 degrees rotation with flipping,
    * scaling and translation.
@@ -259,11 +263,65 @@ public:
     return true;
   }
 
+  bool Is2D(Matrix* aMatrix) const {
+    if (!Is2D()) {
+      return false;
+    }
+    if (aMatrix) {
+      aMatrix->_11 = _11;
+      aMatrix->_12 = _12;
+      aMatrix->_21 = _21;
+      aMatrix->_22 = _22;
+      aMatrix->_31 = _41;
+      aMatrix->_32 = _42;
+    }
+    return true;
+  }
+
   Matrix As2D() const
   {
     MOZ_ASSERT(Is2D(), "Matrix is not a 2D affine transform");
 
     return Matrix(_11, _12, _21, _22, _41, _42);
+  }
+
+  bool CanDraw2D(Matrix* aMatrix = nullptr) const {
+    if (_14 != 0.0f ||
+        _24 != 0.0f ||
+        _44 != 1.0f) {
+      return false;
+    }
+    if (aMatrix) {
+      aMatrix->_11 = _11;
+      aMatrix->_12 = _12;
+      aMatrix->_21 = _21;
+      aMatrix->_22 = _22;
+      aMatrix->_31 = _41;
+      aMatrix->_32 = _42;
+    }
+    return true;
+  }
+
+  Matrix4x4& ProjectTo2D() {
+    _31 = 0.0f;
+    _32 = 0.0f;
+    _13 = 0.0f;
+    _23 = 0.0f;
+    _33 = 1.0f;
+    _43 = 0.0f;
+    _34 = 0.0f;
+    return *this;
+  }
+
+  static Matrix4x4 From2D(const Matrix &aMatrix) {
+    Matrix4x4 matrix;
+    matrix._11 = aMatrix._11;
+    matrix._12 = aMatrix._12;
+    matrix._21 = aMatrix._21;
+    matrix._22 = aMatrix._22;
+    matrix._41 = aMatrix._31;
+    matrix._42 = aMatrix._32;
+    return matrix;
   }
 
   bool Is2DIntegerTranslation() const
@@ -284,6 +342,16 @@ public:
     _31 *= aZ;
     _32 *= aZ;
     _33 *= aZ;
+
+    return *this;
+  }
+
+  Matrix4x4 &Translate(Float aX, Float aY, Float aZ)
+  {
+    _41 += aX * _11 + aY * _21 + aZ * _31;
+    _42 += aX * _12 + aY * _22 + aZ * _32;
+    _43 += aX * _13 + aY * _23 + aZ * _33;
+    _44 += aX * _14 + aY * _24 + aZ * _34;
 
     return *this;
   }

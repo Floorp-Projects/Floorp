@@ -23,6 +23,8 @@
 #include "limits.h"
 #include "mozilla/Assertions.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace layers {
 
@@ -78,8 +80,10 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   gfxRect ourRect = aOne->GetEffectiveVisibleRegion().GetBounds();
   gfxRect otherRect = aTwo->GetEffectiveVisibleRegion().GetBounds();
 
-  gfx3DMatrix ourTransform = aOne->GetTransform();
-  gfx3DMatrix otherTransform = aTwo->GetTransform();
+  gfx3DMatrix ourTransform;
+  To3DMatrix(aOne->GetTransform(), ourTransform);
+  gfx3DMatrix otherTransform;
+  To3DMatrix(aTwo->GetTransform(), otherTransform);
 
   // Transform both rectangles and project into 2d space.
   gfxQuad ourTransformedRect = ourTransform.TransformRect(ourRect);

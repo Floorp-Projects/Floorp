@@ -11,6 +11,7 @@
 "excludetests": {
     "content/xul":"tests that use xul",
     "layout/xul" : "",
+    "dom/datastore/tests/test_changes.html":"intermittent failures, bug 961021",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",
 

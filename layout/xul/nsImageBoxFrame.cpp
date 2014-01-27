@@ -400,11 +400,12 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset)
 
   NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
 
-  gfxMatrix transform;
-  transform.Translate(destRect.TopLeft() + aOffset);
+  gfxPoint p = destRect.TopLeft() + aOffset;
+  gfx::Matrix transform;
+  transform.Translate(p.x, p.y);
   transform.Scale(destRect.Width()/imageWidth,
                   destRect.Height()/imageHeight);
-  aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
 
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));
 }
