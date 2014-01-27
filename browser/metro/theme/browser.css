@@ -220,41 +220,9 @@ documenttab[selected] .documenttab-selection {
   padding-bottom: @toolbar_height@;
 }
 
-#startui-page {
-  overflow-x: scroll;
-  overflow-y: hidden;
-  height: 100%;
-}
-
-#startui-page[viewstate="snapped"],
-#startui-page[viewstate="portrait"] {
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-
-#startui-body {
-  height: 100%;
-  margin: 0;
-}
-
-#start-container {
-  height: 100%;
-}
-
 #urlbar-autocomplete[viewstate="snapped"],
 #urlbar-autocomplete[viewstate="portrait"]{
   -moz-box-orient: vertical;
-}
-
-#start-container[viewstate="snapped"],
-#start-container[viewstate="portrait"] {
-  width: 100%;
-  max-width: 100%; /* ensure page doesn't expand, messing up @media rules */
-  height: auto;
-}
-
-#start-container[viewstate="snapped"] .meta-section:not([expanded]) > richgrid {
-  visibility: collapse;
 }
 
 #autocomplete-overlay {
