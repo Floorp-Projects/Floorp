@@ -44,8 +44,8 @@ public:
 
   void Run();
   void CoreExit();
+  void Shutdown();
 
-  void ShutdownXPCOM();
   // Set when gecko enters xpcom shutdown.
   static bool sGeckoShuttingDown;
 
