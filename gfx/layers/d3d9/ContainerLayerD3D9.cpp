@@ -89,7 +89,8 @@ ContainerLayerD3D9::RenderLayer()
       // don't need a background, we're going to paint all opaque stuff
       mSupportsComponentAlphaChildren = true;
     } else {
-      const gfx3DMatrix& transform3D = GetEffectiveTransform();
+      gfx3DMatrix transform3D;
+      gfx::To3DMatrix(GetEffectiveTransform(), transform3D);
       gfxMatrix transform;
       // If we have an opaque ancestor layer, then we can be sure that
       // all the pixels we draw into are either opaque already or will be

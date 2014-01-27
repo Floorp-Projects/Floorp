@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TemplateLib.h"
 
-#include "jsautooplen.h"
 #include "jslibmath.h"
 #include "jstypes.h"
 
@@ -23,6 +22,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/Opcodes.h"
 
 #include "jsboolinlines.h"
 #include "jsscriptinlines.h"

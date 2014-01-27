@@ -100,7 +100,7 @@ public class WebAppImpl extends GeckoApp implements InstallCallback {
         mTitlebar = findViewById(R.id.webapp_titlebar);
         mSplashscreen = findViewById(R.id.splashscreen);
 
-        String origin = WebAppAllocator.getInstance(this).getOrigin(getIndex());
+        String origin = Allocator.getInstance(this).getOrigin(getIndex());
         boolean isInstallCompleting = (origin == null);
 
         if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning) || !isInstalled || isInstallCompleting) {
@@ -154,7 +154,7 @@ public class WebAppImpl extends GeckoApp implements InstallCallback {
     private void showSplash(boolean isApk) {
 
         // get the favicon dominant color, stored when the app was installed
-        int dominantColor = WebAppAllocator.getInstance().getColor(getIndex());
+        int dominantColor = Allocator.getInstance().getColor(getIndex());
 
         setBackgroundGradient(dominantColor);
 

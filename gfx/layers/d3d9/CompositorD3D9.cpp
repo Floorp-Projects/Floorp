@@ -511,29 +511,29 @@ CompositorD3D9::EnsureSwapChain()
   if (!mSwapChain) {
     mSwapChain = mDeviceManager->
       CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
+    // We could not create a swap chain, return false
     if (!mSwapChain) {
+      // Check the state of the device too
       DeviceManagerState state = mDeviceManager->VerifyReadyForRendering();
       if (state == DeviceMustRecreate) {
         mDeviceManager = nullptr;
-        mParent->SendInvalidateAll();
-      } else if (state == DeviceRetry) {
-        mParent->SendInvalidateAll();
       }
+      mParent->SendInvalidateAll();
       return false;
     }
   }
 
+  // We have a swap chain, lets initialise it
   DeviceManagerState state = mSwapChain->PrepareForRendering();
   if (state == DeviceOK) {
     return true;
   }
+  // Swap chain could not be initialised, handle the failure
   if (state == DeviceMustRecreate) {
     mDeviceManager = nullptr;
     mSwapChain = nullptr;
-    mParent->SendInvalidateAll();
-  } else if (state == DeviceRetry) {
-    mParent->SendInvalidateAll();
   }
+  mParent->SendInvalidateAll();
   return false;
 }
 
@@ -553,6 +553,7 @@ CompositorD3D9::Ready()
     if (EnsureSwapChain()) {
       // We don't need to call VerifyReadyForRendering because that is
       // called by mSwapChain->PrepareForRendering() via EnsureSwapChain().
+
       CheckResetCount();
       return true;
     }
@@ -560,7 +561,7 @@ CompositorD3D9::Ready()
   }
 
   NS_ASSERTION(!mCurrentRT && !mDefaultRT,
-                "Shouldn't have any render targets around, they must be released before our device");
+               "Shouldn't have any render targets around, they must be released before our device");
   mSwapChain = nullptr;
 
   mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();

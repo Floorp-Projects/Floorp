@@ -125,7 +125,6 @@
 #include "nsAutoJSValHolder.h"
 
 #include "MainThreadUtils.h"
-#include "nsIJSEngineTelemetryStats.h"
 
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -269,8 +268,7 @@ AddToCCKind(JSGCTraceKind kind)
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
                     public nsSupportsWeakReference,
-                    public nsIJSRuntimeService,
-                    public nsIJSEngineTelemetryStats
+                    public nsIJSRuntimeService
 {
 public:
     // all the interface method declarations...
@@ -278,7 +276,6 @@ public:
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
-    NS_DECL_NSIJSENGINETELEMETRYSTATS
 
     // non-interface implementation
 public:
@@ -534,15 +531,17 @@ public:
         IDX_TOTAL_COUNT // just a count of the above
     };
 
-    jsid GetStringID(unsigned index) const
+    JS::HandleId GetStringID(unsigned index) const
     {
         MOZ_ASSERT(index < IDX_TOTAL_COUNT, "index out of range");
-        return mStrIDs[index];
+        // fromMarkedLocation() is safe because the string is interned.
+        return JS::HandleId::fromMarkedLocation(&mStrIDs[index]);
     }
-    jsval GetStringJSVal(unsigned index) const
+    JS::HandleValue GetStringJSVal(unsigned index) const
     {
         MOZ_ASSERT(index < IDX_TOTAL_COUNT, "index out of range");
-        return mStrJSVals[index];
+        // fromMarkedLocation() is safe because the string is interned.
+        return JS::HandleValue::fromMarkedLocation(&mStrJSVals[index]);
     }
     const char* GetStringName(unsigned index) const
     {
@@ -1601,7 +1600,6 @@ public:
     bool WantNewResolve()               GET_IT(WANT_NEWRESOLVE)
     bool WantConvert()                  GET_IT(WANT_CONVERT)
     bool WantFinalize()                 GET_IT(WANT_FINALIZE)
-    bool WantCheckAccess()              GET_IT(WANT_CHECKACCESS)
     bool WantCall()                     GET_IT(WANT_CALL)
     bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
     bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)

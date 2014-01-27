@@ -1497,21 +1497,6 @@ NS_IMETHODIMP
 nsDOMClassInfo::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, bool *_retval)
 {
-#ifdef DEBUG
-  if (!sSecMan) {
-    NS_ERROR("No security manager!!!");
-    return NS_OK;
-  }
-
-  // Ask the security manager if it's OK to enumerate
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, sEnumerate_id,
-                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv),
-               "XOWs should have stopped us from getting here!!!");
-#endif
-
   return NS_OK;
 }
 
@@ -1583,38 +1568,6 @@ nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
   NS_WARNING("nsDOMClassInfo::Finalize Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid aId, uint32_t mode,
-                            jsval *vp, bool *_retval)
-{
-  JS::Rooted<jsid> id(cx, aId);
-  uint32_t mode_type = mode & JSACC_TYPEMASK;
-
-  if ((mode_type == JSACC_WATCH || mode_type == JSACC_PROTO) && sSecMan) {
-    nsresult rv;
-    JS::Rooted<JSObject*> real_obj(cx);
-    if (wrapper) {
-      real_obj = wrapper->GetJSObject();
-      NS_ENSURE_STATE(real_obj);
-    }
-    else {
-      real_obj = obj;
-    }
-
-    rv =
-      sSecMan->CheckPropertyAccess(cx, real_obj, mData->mName, id,
-                                   nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-    if (NS_FAILED(rv)) {
-      // Let XPConnect know that the access was not granted.
-      *_retval = false;
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3508,25 +3461,6 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   return NS_OK;
 }
 
-// DOM Location helper
-
-NS_IMETHODIMP
-nsLocationSH::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsid id, uint32_t mode,
-                          jsval *vp, bool *_retval)
-{
-  if ((mode & JSACC_TYPEMASK) == JSACC_PROTO && (mode & JSACC_WRITE)) {
-    // No setting location.__proto__, ever!
-
-    // Let XPConnect know that the access was not granted.
-    *_retval = false;
-
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  return nsDOMGenericSH::CheckAccess(wrapper, cx, obj, id, mode, vp, _retval);
-}
-
 NS_IMETHODIMP
 nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                         JSObject *globalObj, JSObject **parentObj)
@@ -3789,7 +3723,6 @@ const JSClass sHTMLDocumentAllClass = {
   (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve,
   JS_ConvertStub,
   nsHTMLDocumentSH::ReleaseDocument,
-  nullptr,                                                  /* checkAccess */
   nsHTMLDocumentSH::CallToGetPropMapper
 };
 

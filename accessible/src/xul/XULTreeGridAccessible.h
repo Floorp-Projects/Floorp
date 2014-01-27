@@ -62,7 +62,8 @@ public:
 protected:
 
   // XULTreeAccessible
-  virtual already_AddRefed<Accessible> CreateTreeItemAccessible(int32_t aRow);
+  virtual already_AddRefed<Accessible>
+    CreateTreeItemAccessible(int32_t aRow) const MOZ_OVERRIDE;
 };
 
 
@@ -91,11 +92,11 @@ public:
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
 
-  virtual Accessible* GetChildAt(uint32_t aIndex);
-  virtual uint32_t ChildCount() const;
+  virtual Accessible* GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
+  virtual uint32_t ChildCount() const MOZ_OVERRIDE;
 
   // XULTreeItemAccessibleBase
-  virtual Accessible* GetCellAccessible(nsITreeColumn* aColumn);
+  virtual Accessible* GetCellAccessible(nsITreeColumn* aColumn) const MOZ_OVERRIDE;
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx);
 
 protected:
@@ -104,7 +105,7 @@ protected:
   virtual void CacheChildren();
 
   // XULTreeItemAccessibleBase
-  AccessibleHashtable mAccessibleCache;
+  mutable AccessibleHashtable mAccessibleCache;
 };
 
 

@@ -18,7 +18,7 @@
         document.body.clientWidth;
 
         setTimeout(function() {
-          synthesizeMouse(iframe, 10, 10, {});
+          doc.body.focus();
 
           // Now try to move the caret
           win.getSelection().collapse(doc.body.firstChild, 0);

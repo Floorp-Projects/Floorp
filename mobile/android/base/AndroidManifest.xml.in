@@ -159,7 +159,7 @@
         </activity>
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
-        <activity android:name="org.mozilla.gecko.webapp.WebAppDispatcher"
+        <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
             android:noHistory="true" >
             <intent-filter>
                 <!-- catch links from synthetic apks -->

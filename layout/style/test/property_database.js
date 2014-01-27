@@ -495,10 +495,20 @@ var gCSSProperties = {
 		other_values: [ "center", "end", "justify" ],
 		invalid_values: []
 	},
+	"box-sizing": {
+		domProp: "boxSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "content-box" ],
+		other_values: [ "border-box", "padding-box" ],
+		invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
+	},
 	"-moz-box-sizing": {
 		domProp: "MozBoxSizing",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		alias_for: "box-sizing",
+		subproperties: [ "box-sizing" ],
 		initial_values: [ "content-box" ],
 		other_values: [ "border-box", "padding-box" ],
 		invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]

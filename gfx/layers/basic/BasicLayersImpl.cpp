@@ -71,8 +71,9 @@ GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
         ->GetAsSurface(getter_AddRefs(surface), &descriptor) &&
         (surface || IsSurfaceDescriptorValid(descriptor))) {
       gfxMatrix transform;
-      DebugOnly<bool> maskIs2D =
-        aMaskLayer->GetEffectiveTransform().CanDraw2D(&transform);
+      gfx3DMatrix effectiveTransform;
+      gfx::To3DMatrix(aMaskLayer->GetEffectiveTransform(), effectiveTransform);
+      DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
       if (surface) {
         aMaskData->Construct(transform, surface);

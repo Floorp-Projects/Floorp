@@ -16,7 +16,6 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'CertVerifier.cpp',
     'CryptoTask.cpp',
     'nsCertificatePrincipal.cpp',
     'nsCertOverrideService.cpp',
@@ -27,7 +26,6 @@ UNIFIED_SOURCES += [
     'nsCMSSecureMessage.cpp',
     'nsCrypto.cpp',
     'nsDataSignatureVerifier.cpp',
-    'nsIdentityChecking.cpp',
     'nsKeygenHandler.cpp',
     'nsKeygenThread.cpp',
     'nsKeyModule.cpp',
@@ -92,6 +90,12 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../../../certverifier',
+    '../../../insanity/include',
+]
+
 
 DEFINES['NSS_ENABLE_ECC'] = 'True'
 for var in ('DLL_PREFIX', 'DLL_SUFFIX'):

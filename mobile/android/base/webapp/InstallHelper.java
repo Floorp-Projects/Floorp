@@ -27,7 +27,7 @@ import android.net.Uri;
 import android.util.Log;
 
 public class InstallHelper implements GeckoEventListener {
-    private static final String LOGTAG = "GeckoInstallHelper";
+    private static final String LOGTAG = "GeckoWebAppInstallHelper";
     private static final String[] INSTALL_EVENT_NAMES = new String[] {"WebApps:PostInstall"};
     private final Context mContext;
     private final InstallCallback mCallback;
@@ -156,7 +156,7 @@ public class InstallHelper implements GeckoEventListener {
 
     private void calculateColor() {
         ThreadUtils.assertOnBackgroundThread();
-        WebAppAllocator slots = WebAppAllocator.getInstance(mContext);
+        Allocator slots = Allocator.getInstance(mContext);
         int index = slots.getIndexForApp(mApkResources.getPackageName());
         Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(mApkResources.getAppIcon());
         slots.updateColor(index, BitmapUtils.getDominantColor(bitmap));

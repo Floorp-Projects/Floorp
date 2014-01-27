@@ -215,7 +215,7 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
 
   if (mTouches.Length() > 1 && !aClearTouches) {
     const ScreenIntPoint& firstTouch = mTouches[0].mScreenPoint,
-                         secondTouch = mTouches[mTouches.Length() - 1].mScreenPoint;
+                         secondTouch = mTouches[1].mScreenPoint;
     ScreenPoint focusPoint = ScreenPoint(firstTouch + secondTouch) / 2;
     ScreenIntPoint delta = secondTouch - firstTouch;
     float currentSpan = float(NS_hypot(delta.x, delta.y));

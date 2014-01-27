@@ -156,3 +156,6 @@ user_pref("browser.download.panel.shown", true);
 // prefs for firefox metro.
 // Disable first-tun tab
 user_pref("browser.firstrun.count", 0);
+
+// Enable webapps testing mode, which bypasses native installation.
+user_pref("browser.webapps.testing", true);

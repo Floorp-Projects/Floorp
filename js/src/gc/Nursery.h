@@ -104,6 +104,12 @@ class Nursery
     /* Add a slots to our tracking list if it is out-of-line. */
     void notifyInitialSlots(gc::Cell *cell, HeapSlot *slots);
 
+    /* Add elements to our tracking list if it is out-of-line. */
+    void notifyNewElements(gc::Cell *cell, ObjectElements *elements);
+
+    /* Remove elements to our tracking list if it is out-of-line. */
+    void notifyRemovedElements(gc::Cell *cell, ObjectElements *oldElements);
+
     typedef Vector<types::TypeObject *, 0, SystemAllocPolicy> TypeObjectList;
 
     /*
@@ -266,10 +272,12 @@ class Nursery
     void setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
                                       uint32_t nelems);
 
+    /* Free malloced pointers owned by freed things in the nursery. */
+    void freeHugeSlots(JSRuntime *rt);
+
     /*
      * Frees all non-live nursery-allocated things at the end of a minor
-     * collection. This operation takes time proportional to the number of
-     * dead things.
+     * collection.
      */
     void sweep(JSRuntime *rt);
 

@@ -18,7 +18,6 @@
 
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsnum.h"
