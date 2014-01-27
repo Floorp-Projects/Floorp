@@ -9,7 +9,7 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
-#include "builtin/TypeRepresentation.h"
+#include "builtin/TypedObject.h"
 #include "vm/GlobalObject.h"
 
 /*
@@ -36,8 +36,8 @@ struct Float32x4 {
     static const X4TypeRepresentation::Type type =
         X4TypeRepresentation::TYPE_FLOAT32;
 
-    static JSObject &GetTypeObject(GlobalObject &global) {
-        return global.float32x4TypeObject();
+    static TypeDescr &GetTypeDescr(GlobalObject &global) {
+        return global.float32x4TypeDescr().as<TypeDescr>();
     }
     static Elem toType(Elem a) {
         return a;
@@ -56,8 +56,8 @@ struct Int32x4 {
     static const X4TypeRepresentation::Type type =
         X4TypeRepresentation::TYPE_INT32;
 
-    static JSObject &GetTypeObject(GlobalObject &global) {
-        return global.int32x4TypeObject();
+    static TypeDescr &GetTypeDescr(GlobalObject &global) {
+        return global.int32x4TypeDescr().as<TypeDescr>();
     }
     static Elem toType(Elem a) {
         return ToInt32(a);
