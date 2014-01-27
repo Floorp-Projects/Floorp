@@ -850,7 +850,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mCurrentRenderTarget = CompositingRenderTargetOGL::RenderTargetForWindow(this,
                             IntSize(width, height),
-                            ThebesMatrix(aTransform));
+                            aTransform);
   mCurrentRenderTarget->BindRenderTarget();
 #ifdef DEBUG
   mWindowRenderTarget = mCurrentRenderTarget;
@@ -1457,7 +1457,7 @@ CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
   // This lets us reftest and screenshot content rendered externally
   if (mTarget) {
     MakeCurrent();
-    CopyToTarget(mTarget, ThebesMatrix(aTransform));
+    CopyToTarget(mTarget, aTransform);
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   }
 }
@@ -1478,7 +1478,7 @@ CompositorOGL::SetDestinationSurfaceSize(const gfx::IntSize& aSize)
 }
 
 void
-CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfxMatrix& aTransform)
+CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfx::Matrix& aTransform)
 {
   IntRect rect;
   if (mUseExternalSurfaceSize) {
@@ -1517,7 +1517,7 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfxMatrix& aTransform)
   source->Unmap();
 
   // Map from GL space to Cairo space and reverse the world transform.
-  Matrix glToCairoTransform = ToMatrix(aTransform);
+  Matrix glToCairoTransform = aTransform;
   glToCairoTransform.Invert();
   glToCairoTransform.Scale(1.0, -1.0);
   glToCairoTransform.Translate(0.0, -height);

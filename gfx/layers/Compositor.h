@@ -104,7 +104,6 @@
  */
 
 class nsIWidget;
-struct gfxMatrix;
 struct nsIntSize;
 class nsIntRegion;
 

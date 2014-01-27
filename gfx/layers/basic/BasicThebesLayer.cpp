@@ -29,8 +29,6 @@
 #include "AutoMaskData.h"
 #include "gfx2DGlue.h"
 
-struct gfxMatrix;
-
 using namespace mozilla::gfx;
 
 namespace mozilla {
