@@ -1360,11 +1360,12 @@ nsDisplayImage::ConfigureLayer(ImageLayer *aLayer, const nsIntPoint& aOffset)
 
   const gfxRect destRect = GetDestRect();
 
-  gfxMatrix transform;
-  transform.Translate(destRect.TopLeft() + aOffset);
+  gfx::Matrix transform;
+  gfxPoint p = destRect.TopLeft() + aOffset;
+  transform.Translate(p.x, p.y);
   transform.Scale(destRect.Width()/imageWidth,
                   destRect.Height()/imageHeight);
-  aLayer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));
 }
 

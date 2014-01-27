@@ -227,7 +227,9 @@ BuildListForLayer(Layer* aLayer,
     gfx3DMatrix applyTransform = ComputeShadowTreeTransform(
       aSubdocFrame, aRootFrameLoader, metrics, view->GetViewConfig(),
       1 / GetXScale(aTransform), 1 / GetYScale(aTransform));
-    transform = applyTransform * aLayer->GetTransform() * aTransform;
+    gfx3DMatrix layerTransform;
+    To3DMatrix(aLayer->GetTransform(), layerTransform);
+    transform = applyTransform * layerTransform * aTransform;
 
     // As mentioned above, bounds calculation also depends on the scale
     // of this layer.
@@ -246,7 +248,9 @@ BuildListForLayer(Layer* aLayer,
       new (aBuilder) nsDisplayRemoteShadow(aBuilder, aSubdocFrame, bounds, scrollId));
 
   } else {
-    transform = aLayer->GetTransform() * aTransform;
+    gfx3DMatrix layerTransform;
+    To3DMatrix(aLayer->GetTransform(), layerTransform);
+    transform = layerTransform * aTransform;
   }
 
   for (Layer* child = aLayer->GetFirstChild(); child;
@@ -271,7 +275,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
   const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  gfx3DMatrix shadowTransform = aLayer->GetTransform();
+  gfx3DMatrix shadowTransform;
+  To3DMatrix(aLayer->GetTransform(), shadowTransform);
   ViewTransform layerTransform = aTransform;
 
   if (metrics && metrics->IsScrollable()) {
@@ -279,7 +284,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     const nsContentView* view =
       aFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
     NS_ABORT_IF_FALSE(view, "Array of views should be consistent with layer tree");
-    const gfx3DMatrix& currentTransform = aLayer->GetTransform();
+    gfx3DMatrix currentTransform;
+    To3DMatrix(aLayer->GetTransform(), currentTransform);
 
     const ViewConfig& config = view->GetViewConfig();
     // With temporary scale we should compensate translation
@@ -331,7 +337,9 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
                             1.0f/aLayer->GetPostYScale(),
                             1);
 
-  shadow->SetShadowTransform(shadowTransform);
+  gfx::Matrix4x4 realShadowTransform;
+  ToMatrix4x4(shadowTransform, realShadowTransform);
+  shadow->SetShadowTransform(realShadowTransform);
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform,
@@ -375,7 +383,8 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
     return;
   const FrameMetrics metrics = container->GetFrameMetrics();
   const ViewID scrollId = metrics.mScrollId;
-  const gfx3DMatrix transform = aLayer->GetTransform();
+  gfx3DMatrix transform;
+  To3DMatrix(aLayer->GetTransform(), transform);
   aXScale *= GetXScale(transform);
   aYScale *= GetYScale(transform);
 
@@ -449,7 +458,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
                           nsIFrame* aFrame)
 {
   LayerComposite* shadowRoot = aShadowRoot->AsLayerComposite();
-  gfxMatrix t;
+  gfx::Matrix t;
   if (!shadowRoot->GetShadowTransform().Is2D(&t)) {
     return;
   }
@@ -459,7 +468,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
   nsIntRect contentBounds = shadowRoot->GetShadowVisibleRegion().GetBounds();
   gfxRect contentVis(contentBounds.x, contentBounds.y,
                      contentBounds.width, contentBounds.height);
-  gfxRect localContentVis(t.Transform(contentVis));
+  gfxRect localContentVis(gfx::ThebesMatrix(t).Transform(contentVis));
   // Round *in* here because this area is punched out of the background
   localContentVis.RoundIn();
   nsIntRect localIntContentVis(localContentVis.X(), localContentVis.Y(),
@@ -850,8 +859,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     // container, but our display item is LAYER_ACTIVE_FORCE which
     // forces all layers above to be active.
     MOZ_ASSERT(aContainerParameters.mOffset == nsIntPoint());
-    gfx3DMatrix m =
-      gfx3DMatrix::Translation(offset.x, offset.y, 0.0);
+    gfx::Matrix4x4 m;
+    m.Translate(offset.x, offset.y, 0.0);
     // Remote content can't be repainted by us, so we multiply down
     // the resolution that our container expects onto our container.
     m.Scale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);

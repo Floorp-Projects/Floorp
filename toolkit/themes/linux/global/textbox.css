@@ -60,7 +60,7 @@ textbox[disabled="true"] {
 textbox.plain {
   -moz-appearance: none !important;
   background-color: transparent;
-  padding: 0px 1px !important;
+  padding: 0px !important;
   margin: 0px !important;
   border: none !important;
 }

@@ -2444,7 +2444,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getWindowHandle": MarionetteServerConnection.prototype.getWindowHandle,
   "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getWindowHandle,  // Selenium 2 compat
   "getWindow":  MarionetteServerConnection.prototype.getWindowHandle,  // deprecated
-  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,  // Selenium 2 compat
   "getWindows":  MarionetteServerConnection.prototype.getWindowHandles,  // deprecated
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,

@@ -110,8 +110,8 @@ class RefTest(object):
 
   oldcwd = os.getcwd()
 
-  def __init__(self, automation):
-    self.automation = automation
+  def __init__(self, automation=None):
+    self.automation = automation or Automation()
 
   def getFullPath(self, path):
     "Get an absolute path relative to self.oldcwd."

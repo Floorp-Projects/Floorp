@@ -174,7 +174,7 @@ let TESTS = [
   test_logout,
   test_logoutBeforeWatch,
   test_requestBeforeWatch,
-  test_unwatchBeforeWatch
+  test_unwatchBeforeWatch,
 ];
 
 TESTS.forEach(add_test);
