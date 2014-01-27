@@ -9,13 +9,13 @@
          <item name="android:orientation">vertical</item>
     </style>
 
-    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLineRow.PrimaryText">
         <item name="android:paddingLeft">60dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
     </style>
 
-    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow">
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLineRow">
         <item name="android:paddingLeft">50dp</item>
         <item name="android:paddingRight">50dp</item>
     </style>
