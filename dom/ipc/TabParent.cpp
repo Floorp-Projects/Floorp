@@ -755,7 +755,7 @@ bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
   if (!MapEventCoordinatesForChildProcess(&outEvent)) {
     return false;
   }
-  return PBrowserParent::SendMouseWheelEvent(event);
+  return PBrowserParent::SendMouseWheelEvent(outEvent);
 }
 
 bool TabParent::SendRealKeyEvent(WidgetKeyboardEvent& event)
