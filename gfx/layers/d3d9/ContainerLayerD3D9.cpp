@@ -8,6 +8,8 @@
 #include "ThebesLayerD3D9.h"
 #include "ReadbackProcessor.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace layers {
 
@@ -89,22 +91,21 @@ ContainerLayerD3D9::RenderLayer()
       // don't need a background, we're going to paint all opaque stuff
       mSupportsComponentAlphaChildren = true;
     } else {
-      gfx3DMatrix transform3D;
-      gfx::To3DMatrix(GetEffectiveTransform(), transform3D);
-      gfxMatrix transform;
+      Matrix4x4 transform3D = GetEffectiveTransform();
+      Matrix transform;
       // If we have an opaque ancestor layer, then we can be sure that
       // all the pixels we draw into are either opaque already or will be
       // covered by something opaque. Otherwise copying up the background is
       // not safe.
       HRESULT hr = E_FAIL;
       if (HasOpaqueAncestorLayer(this) &&
-          transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
+          transform3D.Is2D(&transform) && !ThebesMatrix(transform).HasNonIntegerTranslation()) {
         // Copy background up from below
         RECT dest = { 0, 0, visibleRect.width, visibleRect.height };
         RECT src = dest;
         ::OffsetRect(&src,
-                     visibleRect.x + int32_t(transform.x0),
-                     visibleRect.y + int32_t(transform.y0));
+                     visibleRect.x + int32_t(transform._31),
+                     visibleRect.y + int32_t(transform._32));
         if (!mD3DManager->CompositingDisabled()) {
           hr = device()->
             StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
