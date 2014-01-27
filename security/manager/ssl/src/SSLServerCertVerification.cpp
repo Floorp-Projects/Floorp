@@ -97,6 +97,8 @@
 #include <cstring>
 
 #include "CertVerifier.h"
+#include "CryptoTask.h"
+#include "ExtendedValidation.h"
 #include "nsIBadCertListener2.h"
 #include "nsICertOverrideService.h"
 #include "nsISiteSecurityService.h"
@@ -1343,33 +1345,16 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 }
 
 #ifndef NSS_NO_LIBPKIX
-class InitializeIdentityInfo : public nsRunnable
-                             , public nsNSSShutDownObject
+class InitializeIdentityInfo : public CryptoTask
 {
-private:
-  NS_IMETHOD Run()
+  virtual nsresult CalculateResult() MOZ_OVERRIDE
   {
-    nsNSSShutDownPreventionLock nssShutdownPrevention;
-    if (isAlreadyShutDown())
-      return NS_OK;
-
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> inss = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      inss->EnsureIdentityInfoLoaded();
+    EnsureIdentityInfoLoaded();
     return NS_OK;
   }
 
-  virtual void virtualDestroyNSSReference()
-  {
-  }
-
-  ~InitializeIdentityInfo()
-  {
-    nsNSSShutDownPreventionLock nssShutdownPrevention;
-    if (!isAlreadyShutDown())
-      shutdown(calledFromObject);
-  }
+  virtual void ReleaseNSSResources() MOZ_OVERRIDE { } // no-op
+  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE { } // no-op
 };
 #endif
 
