@@ -25,6 +25,16 @@ public:
     mFlags.mCancelable = false;
   }
 
+  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(eventStructType == NS_MUTATION_EVENT,
+               "Duplicate() must be overridden by sub class");
+    InternalMutationEvent* result = new InternalMutationEvent(false, message);
+    result->AssignMutationEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
   nsCOMPtr<nsIDOMNode> mRelatedNode;
   nsCOMPtr<nsIAtom>    mAttrName;
   nsCOMPtr<nsIAtom>    mPrevAttrValue;

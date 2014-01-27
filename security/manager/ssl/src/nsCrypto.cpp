@@ -1048,12 +1048,12 @@ nsSetEscrowAuthority(CRMFCertRequest *certReq, nsKeyPairInfo *keyInfo,
       CRMF_CertRequestIsControlPresent(certReq, crmfPKIArchiveOptionsControl)){
     return NS_ERROR_FAILURE;
   }
-  ScopedCERTCertificate cert(wrappingCert->GetCert());
+  insanity::pkix::ScopedCERTCertificate cert(wrappingCert->GetCert());
   if (!cert)
     return NS_ERROR_FAILURE;
 
   CRMFEncryptedKey *encrKey = 
-      CRMF_CreateEncryptedKeyWithEncryptedValue(keyInfo->privKey, cert);
+      CRMF_CreateEncryptedKeyWithEncryptedValue(keyInfo->privKey, cert.get());
   if (!encrKey)
     return NS_ERROR_FAILURE;
 
@@ -1949,15 +1949,15 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    ScopedCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                                       &certDer, nullptr,
-                                                       false, true));
+    insanity::pkix::ScopedCERTCertificate cert(
+      CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                              &certDer, nullptr, false, true));
     if (!cert) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
-    escrowCert = nsNSSCertificate::Create(cert);
+    escrowCert = nsNSSCertificate::Create(cert.get());
     nssCert = escrowCert;
     if (!nssCert) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -2231,12 +2231,13 @@ nsCertAlreadyExists(SECItem *derCert)
   CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
   bool retVal = false;
 
-  ScopedCERTCertificate cert(CERT_FindCertByDERCert(handle, derCert));
+  insanity::pkix::ScopedCERTCertificate cert(
+    CERT_FindCertByDERCert(handle, derCert));
   if (cert) {
     if (cert->isperm && !cert->nickname && !cert->emailAddr) {
       //If the cert doesn't have a nickname or email addr, it is
       //bogus cruft, so delete it.
-      SEC_DeletePermCertificate(cert);
+      SEC_DeletePermCertificate(cert.get());
     } else if (cert->isperm) {
       retVal = true;
     }
