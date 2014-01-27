@@ -7,6 +7,7 @@
 #include "ApplicationReputation.h"
 #include "csd.pb.h"
 
+#include "nsIArray.h"
 #include "nsIApplicationReputation.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -18,6 +19,8 @@
 #include "nsIUploadChannel2.h"
 #include "nsIURI.h"
 #include "nsIUrlClassifierDBService.h"
+#include "nsIX509Cert.h"
+#include "nsIX509CertList.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -35,6 +38,7 @@
 
 using mozilla::Preferences;
 using mozilla::Telemetry::Accumulate;
+using safe_browsing::ClientDownloadRequest_SignatureInfo;
 
 // Preferences that we need to initialize the query. We may need another
 // preference than browser.safebrowsing.malware.enabled, or simply use
@@ -45,6 +49,15 @@ using mozilla::Telemetry::Accumulate;
 #define PREF_DOWNLOAD_BLOCK_TABLE "urlclassifier.download_block_table"
 #define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.download_allow_table"
 
+// NSPR_LOG_MODULES=ApplicationReputation:5
+#if defined(PR_LOGGING)
+PRLogModuleInfo *ApplicationReputationService::prlog = nullptr;
+#define LOG(args) PR_LOG(ApplicationReputationService::prlog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(ApplicationReputationService::prlog, 4)
+#else
+#define LOG(args)
+#define LOG_ENABLED() (false)
+#endif
 /**
  * Keep track of pending lookups. Once the ApplicationReputationService creates
  * this, it is guaranteed to call mCallback. This class is private to
@@ -106,6 +119,12 @@ private:
                                  nsresult aResult,
                                  bool* aShouldBlock);
   /**
+   * Parse the XPCOM certificate lists and stick them into the protocol buffer
+   * version.
+   */
+  nsresult ParseCertificates(nsIArray* aSigArray,
+                             ClientDownloadRequest_SignatureInfo* aSigInfo);
+  /**
    * Sends a query to the remote application reputation service. Returns NS_OK
    * on success.
    */
@@ -120,16 +139,27 @@ NS_IMPL_ISUPPORTS3(PendingLookup,
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
   mQuery(aQuery),
-  mCallback(aCallback) {
+  mCallback(aCallback)
+{
+  LOG(("Created pending lookup [this = %p]", this));
 }
 
-PendingLookup::~PendingLookup() {
+PendingLookup::~PendingLookup()
+{
+  LOG(("Destroying pending lookup [this = %p]", this));
 }
 
 nsresult
-PendingLookup::OnComplete(bool shouldBlock, nsresult rv) {
+PendingLookup::OnComplete(bool shouldBlock, nsresult rv)
+{
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
     shouldBlock);
+  if (shouldBlock) {
+    LOG(("Application Reputation check failed, blocking bad binary "
+         "[this = %p]", this));
+  } else {
+    LOG(("Application Reputation check passed [this = %p]", this));
+  }
   nsresult res = mCallback->OnComplete(shouldBlock, rv);
   return res;
 }
@@ -137,7 +167,8 @@ PendingLookup::OnComplete(bool shouldBlock, nsresult rv) {
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIUrlClassifierCallback
 NS_IMETHODIMP
-PendingLookup::HandleEvent(const nsACString& tables) {
+PendingLookup::HandleEvent(const nsACString& tables)
+{
   // HandleEvent is guaranteed to call the callback if either the URL can be
   // classified locally, or if there is an error sending the remote lookup.
   // Allow listing trumps block listing.
@@ -145,6 +176,7 @@ PendingLookup::HandleEvent(const nsACString& tables) {
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allow_list);
   if (FindInReadable(tables, allow_list)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, ALLOW_LIST);
+    LOG(("Found principal on allowlist [this = %p]", this));
     return OnComplete(false, NS_OK);
   }
 
@@ -152,10 +184,12 @@ PendingLookup::HandleEvent(const nsACString& tables) {
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &block_list);
   if (FindInReadable(tables, block_list)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
+    LOG(("Found principal on blocklist [this = %p]", this));
     return OnComplete(true, NS_OK);
   }
 
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, NO_LIST);
+  // Revert to just ifdef XP_WIN when remote lookups are enabled (bug 933432)
 #if 0
   nsresult rv = SendRemoteQuery();
   if (NS_FAILED(rv)) {
@@ -163,13 +197,70 @@ PendingLookup::HandleEvent(const nsACString& tables) {
   }
   return NS_OK;
 #else
-  // Revert when remote lookups are enabled (bug 933432)
   return OnComplete(false, NS_OK);
 #endif
 }
 
 nsresult
-PendingLookup::SendRemoteQuery() {
+PendingLookup::ParseCertificates(
+  nsIArray* aSigArray,
+  ClientDownloadRequest_SignatureInfo* aSignatureInfo)
+{
+  // Binaries may be signed by multiple chains of certificates. If there are no
+  // chains, the binary is unsiged (or we were unable to extract signature
+  // information on a non-Windows platform)
+  nsCOMPtr<nsISimpleEnumerator> chains = nullptr;
+  nsresult rv = aSigArray->Enumerate(getter_AddRefs(chains));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasMoreChains = false;
+  rv = chains->HasMoreElements(&hasMoreChains);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (hasMoreChains) {
+    nsCOMPtr<nsIX509CertList> certList = nullptr;
+    rv = chains->GetNext(getter_AddRefs(certList));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    safe_browsing::ClientDownloadRequest_CertificateChain* certChain =
+      aSignatureInfo->add_certificate_chain();
+    nsCOMPtr<nsISimpleEnumerator> chainElt = nullptr;
+    rv = certList->GetEnumerator(getter_AddRefs(chainElt));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Each chain may have multiple certificates.
+    bool hasMoreCerts = false;
+    rv = chainElt->HasMoreElements(&hasMoreCerts);
+    while (hasMoreCerts) {
+      nsCOMPtr<nsIX509Cert> cert = nullptr;
+      rv = chainElt->GetNext(getter_AddRefs(cert));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      uint8_t* data = nullptr;
+      uint32_t len = 0;
+      rv = cert->GetRawDER(&len, &data);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Add this certificate to the protobuf to send remotely.
+      certChain->add_element()->set_certificate(data, len);
+      nsMemory::Free(data);
+
+      rv = chainElt->HasMoreElements(&hasMoreCerts);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = chains->HasMoreElements(&hasMoreChains);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (aSignatureInfo->certificate_chain_size() > 0) {
+    aSignatureInfo->set_trusted(true);
+  }
+  return NS_OK;
+}
+
+nsresult
+PendingLookup::SendRemoteQuery()
+{
+  LOG(("Sending remote query for application reputation [this = %p]", this));
   // We did not find a local result, so fire off the query to the application
   // reputation service.
   safe_browsing::ClientDownloadRequest req;
@@ -201,6 +292,22 @@ PendingLookup::SendRemoteQuery() {
   rv = mQuery->GetSuggestedFileName(fileName);
   NS_ENSURE_SUCCESS(rv, rv);
   req.set_file_basename(NS_ConvertUTF16toUTF8(fileName).get());
+
+  // Extract the signature and parse certificates so we can use it to check
+  // whitelists.
+  nsCOMPtr<nsIArray> sigArray = nullptr;
+  rv = mQuery->GetSignatureInfo(getter_AddRefs(sigArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // This actually needs to be further up, but it can wait until bug 964465
+  rv = ParseCertificates(sigArray, req.mutable_signature());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (req.signature().trusted()) {
+    LOG(("Got signed binary for application reputation [this = %p]", this));
+  } else {
+    LOG(("Got unsigned binary for application reputation [this = %p]", this));
+  }
 
   // Serialize the protocol buffer to a string. This can only fail if we are
   // out of memory, or if the protocol buffer req is missing required fields
@@ -371,6 +478,12 @@ ApplicationReputationService::GetSingleton()
 ApplicationReputationService::ApplicationReputationService() :
   mDBService(nullptr),
   mSecurityManager(nullptr) {
+#if defined(PR_LOGGING)
+  if (!prlog) {
+    prlog = PR_NewLogModule("ApplicationReputation");
+  }
+#endif
+  LOG(("Application reputation service started up"));
 }
 
 ApplicationReputationService::~ApplicationReputationService() {
@@ -383,6 +496,7 @@ ApplicationReputationService::QueryReputation(
   NS_ENSURE_ARG_POINTER(aQuery);
   NS_ENSURE_ARG_POINTER(aCallback);
 
+  LOG(("Sending application reputation query"));
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_COUNT, true);
   nsresult rv = QueryReputationInternal(aQuery, aCallback);
   if (NS_FAILED(rv)) {
