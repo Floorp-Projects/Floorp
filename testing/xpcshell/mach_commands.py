@@ -101,7 +101,7 @@ class XPCShellRunner(MozbuildObject):
 
         return self._run_xpcshell_harness(**args)
 
-    def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
+    def _run_xpcshell_harness(self, manifest,
                               test_path=None, shuffle=False, interactive=False,
                               keep_going=False, sequential=False,
                               debugger=None, debuggerArgs=None, debuggerInteractive=None,
@@ -124,6 +124,7 @@ class XPCShellRunner(MozbuildObject):
         verbose_output = test_path is not None or (manifest and len(manifest.test_paths())==1)
 
         args = {
+            'manifest': manifest,
             'xpcshell': os.path.join(self.bindir, 'xpcshell'),
             'mozInfo': os.path.join(self.topobjdir, 'mozinfo.json'),
             'symbolsPath': os.path.join(self.distdir, 'crashreporter-symbols'),
@@ -145,16 +146,6 @@ class XPCShellRunner(MozbuildObject):
             'on_message': (lambda obj, msg: xpcshell.log.info(msg.decode('utf-8', 'replace'))) \
                             if verbose_output else None,
         }
-
-        if manifest is not None:
-            args['manifest'] = manifest
-        elif test_dirs is not None:
-            if isinstance(test_dirs, list):
-                args['testdirs'] = test_dirs
-            else:
-                args['testdirs'] = [test_dirs]
-        else:
-            raise Exception('One of test_dirs or manifest must be provided.')
 
         if test_path is not None:
             args['testPath'] = test_path
