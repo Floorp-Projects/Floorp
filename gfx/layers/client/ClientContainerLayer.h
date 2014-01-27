@@ -121,7 +121,7 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
@@ -161,7 +161,7 @@ public:
 
   virtual void RenderLayer() { }
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }

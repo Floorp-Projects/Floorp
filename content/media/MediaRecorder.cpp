@@ -230,18 +230,20 @@ public:
     nsContentUtils::UnregisterShutdownObserver(this);
   }
 
-  void Pause()
+  nsresult Pause()
   {
-    MOZ_ASSERT(NS_IsMainThread() && mTrackUnionStream);
-
+    NS_ENSURE_TRUE(NS_IsMainThread() && mTrackUnionStream, NS_ERROR_FAILURE);
     mTrackUnionStream->ChangeExplicitBlockerCount(-1);
+
+    return NS_OK;
   }
 
-  void Resume()
+  nsresult Resume()
   {
-    MOZ_ASSERT(NS_IsMainThread() && mTrackUnionStream);
-
+    NS_ENSURE_TRUE(NS_IsMainThread() && mTrackUnionStream, NS_ERROR_FAILURE);
     mTrackUnionStream->ChangeExplicitBlockerCount(1);
+
+    return NS_OK;
   }
 
   already_AddRefed<nsIDOMBlob> GetEncodedData()
@@ -499,11 +501,13 @@ MediaRecorder::Pause(ErrorResult& aResult)
     return;
   }
 
-  mState = RecordingState::Paused;
-
   MOZ_ASSERT(mSession != nullptr);
   if (mSession) {
-    mSession->Pause();
+    nsresult rv = mSession->Pause();
+    if (NS_FAILED(rv)) {
+      NotifyError(rv);
+      return;
+    }
     mState = RecordingState::Paused;
   }
 }
@@ -518,7 +522,11 @@ MediaRecorder::Resume(ErrorResult& aResult)
 
   MOZ_ASSERT(mSession != nullptr);
   if (mSession) {
-    mSession->Resume();
+    nsresult rv = mSession->Resume();
+    if (NS_FAILED(rv)) {
+      NotifyError(rv);
+      return;
+    }
     mState = RecordingState::Recording;
   }
 }
