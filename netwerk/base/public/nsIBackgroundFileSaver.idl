@@ -6,6 +6,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIBackgroundFileSaverObserver;
 interface nsIFile;
 
@@ -38,7 +39,7 @@ interface nsIFile;
  *          public methods of the interface may only be called from the main
  *          thread.
  */
-[scriptable, uuid(581a99ca-dc8d-4cee-ac95-99156e7517ed)]
+[scriptable, uuid(c43544a4-682c-4262-b407-2453d26e660d)]
 interface nsIBackgroundFileSaver : nsISupports
 {
   /**
@@ -52,13 +53,16 @@ interface nsIBackgroundFileSaver : nsISupports
   attribute nsIBackgroundFileSaverObserver observer;
 
   /**
-   * Instructs the component to compute the SHA-256 hash of the target file, and
-   * make it available in the sha256Hash property.
+   * An nsIArray of nsIX509CertList, representing a chain of X.509 signatures on
+   * the downloaded file. Each list may belong to a different signer and contain
+   * certificates all the way up to the root.
    *
-   * @remarks This must be set on the main thread before the first call to
-   *          setTarget.
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         In case this is called before the onSaveComplete method has been
+   *         called to notify success, or enableSignatureInfo has not been
+   *         called.
    */
-  void enableSha256();
+  readonly attribute nsIArray signatureInfo;
 
   /**
    * The SHA-256 hash, in raw bytes, associated with the data that was saved.
@@ -71,6 +75,24 @@ interface nsIBackgroundFileSaver : nsISupports
    *         onSaveComplete method has been called to notify success.
    */
   readonly attribute ACString sha256Hash;
+
+  /**
+   * Instructs the component to compute the signatureInfo of the target file,
+   * and make it available in the signatureInfo property.
+   *
+   * @remarks This must be set on the main thread before the first call to
+   *          setTarget.
+   */
+  void enableSignatureInfo();
+
+  /**
+   * Instructs the component to compute the SHA-256 hash of the target file, and
+   * make it available in the sha256Hash property.
+   *
+   * @remarks This must be set on the main thread before the first call to
+   *          setTarget.
+   */
+  void enableSha256();
 
   /**
    * Instructs the component to append data to the initial target file, that
