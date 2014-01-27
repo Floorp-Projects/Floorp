@@ -4851,7 +4851,9 @@ nsIFrame::TryUpdateTransformOnly()
       !gfx::FuzzyEqual(transform.yx, previousTransform.yx, kError)) {
     return false;
   }
-  layer->SetBaseTransformForNextTransaction(transform3d);
+  gfx::Matrix4x4 matrix;
+  gfx::ToMatrix4x4(transform3d, matrix);
+  layer->SetBaseTransformForNextTransaction(matrix);
   return true;
 }
 

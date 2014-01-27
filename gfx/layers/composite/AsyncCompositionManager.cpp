@@ -392,7 +392,9 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
   transform.Translate(scaledOrigin);
 
   InfallibleTArray<TransformFunction> functions;
-  functions.AppendElement(TransformMatrix(transform));
+  Matrix4x4 realTransform;
+  ToMatrix4x4(transform, realTransform);
+  functions.AppendElement(TransformMatrix(realTransform));
   *aValue = functions;
 }
 
@@ -447,7 +449,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     }
     case eCSSProperty_transform:
     {
-      gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
+      gfx3DMatrix matrix;
+      gfx::To3DMatrix(interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value(), matrix);
       if (ContainerLayer* c = aLayer->AsContainerLayer()) {
         matrix.ScalePost(c->GetInheritedXScale(),
                          c->GetInheritedYScale(),

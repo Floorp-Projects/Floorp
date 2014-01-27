@@ -885,16 +885,18 @@ public:
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
    */
-  void SetBaseTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx::Matrix4x4& aMatrix)
   {
     NS_ASSERTION(!aMatrix.IsSingular(),
                  "Shouldn't be trying to draw with a singular matrix!");
     mPendingTransform = nullptr;
-    if (mTransform == aMatrix) {
+    gfx3DMatrix transform;
+    gfx::To3DMatrix(aMatrix, transform);
+    if (mTransform == transform) {
       return;
     }
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) BaseTransform", this));
-    mTransform = aMatrix;
+    mTransform = transform;
     Mutated();
   }
 
@@ -906,9 +908,11 @@ public:
    * method enqueues a new transform value to be set immediately after
    * the next transaction is opened.
    */
-  void SetBaseTransformForNextTransaction(const gfx3DMatrix& aMatrix)
+  void SetBaseTransformForNextTransaction(const gfx::Matrix4x4& aMatrix)
   {
-    mPendingTransform = new gfx3DMatrix(aMatrix);
+    gfx3DMatrix matrix;
+    gfx::To3DMatrix(aMatrix, matrix);
+    mPendingTransform = new gfx3DMatrix(matrix);
   }
 
   void SetPostScale(float aXScale, float aYScale)

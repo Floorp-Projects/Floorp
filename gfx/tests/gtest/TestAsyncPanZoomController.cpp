@@ -815,8 +815,8 @@ TEST(APZCTreeManager, HitTesting2) {
   gfx3DMatrix transformToGecko;
 
   // Set a CSS transform on one of the layers.
-  gfx3DMatrix transform;
-  transform.ScalePost(2, 1, 1);
+  Matrix4x4 transform;
+  transform = transform * Matrix4x4().Scale(2, 1, 1);
   layers[2]->SetBaseTransform(transform);
 
   // Make some other layers scrollable.
