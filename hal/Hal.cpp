@@ -750,6 +750,11 @@ SwitchState GetCurrentSwitchState(SwitchDevice aDevice)
   RETURN_PROXY_IF_SANDBOXED(GetCurrentSwitchState(aDevice), SWITCH_STATE_UNKNOWN);
 }
 
+void NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
+{
+  PROXY_IF_SANDBOXED(NotifySwitchStateFromInputDevice(aDevice, aState));
+}
+
 typedef mozilla::ObserverList<SwitchEvent> SwitchObserverList;
 
 static SwitchObserverList *sSwitchObserverLists = nullptr;

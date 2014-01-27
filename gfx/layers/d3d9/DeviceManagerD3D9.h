@@ -34,12 +34,14 @@ const int CBvLayerQuad = 10;
 const int CBfLayerOpacity = 0;
 const int CBvColor = 0;
 
-// TODO lower case this
 enum DeviceManagerState {
+  // The device and swap chain are OK.
   DeviceOK,
+  // The device or swap chain are in a bad state, and we should not render.
   DeviceFail,
+  // The device is lost, the user should forget the current device manager
+  // and create a new one.
   DeviceMustRecreate,
-  DeviceRetry
 };
 
 
