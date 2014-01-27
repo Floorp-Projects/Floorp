@@ -57,17 +57,29 @@ int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
     int _status;
     /* Max length for normalized IPv6 address string represntation is 39 */
     char buffer[40];
+    const char *protocol;
+
+    switch(addr->protocol){
+      case IPPROTO_TCP:
+        protocol = "TCP";
+        break;
+      case IPPROTO_UDP:
+        protocol = "UDP";
+        break;
+      default:
+        ABORT(R_INTERNAL);
+    }
 
     switch(addr->ip_version){
       case NR_IPV4:
         if (!inet_ntop(AF_INET, &addr->u.addr4.sin_addr,buffer,sizeof(buffer)))
           strcpy(buffer, "[error]");
-        snprintf(addr->as_string,sizeof(addr->as_string),"IP4:%s:%d",buffer,ntohs(addr->u.addr4.sin_port));
+        snprintf(addr->as_string,sizeof(addr->as_string),"IP4:%s:%d/%s",buffer,(int)ntohs(addr->u.addr4.sin_port),protocol);
         break;
       case NR_IPV6:
         if (!inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr,buffer,sizeof(buffer)))
           strcpy(buffer, "[error]");
-        snprintf(addr->as_string,sizeof(addr->as_string),"IP6:[%s]:%d",buffer,ntohs(addr->u.addr6.sin6_port));
+        snprintf(addr->as_string,sizeof(addr->as_string),"IP6:[%s]:%d/%s",buffer,(int)ntohs(addr->u.addr6.sin6_port),protocol);
         break;
       default:
         ABORT(R_INTERNAL);
