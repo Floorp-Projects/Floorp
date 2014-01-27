@@ -8,6 +8,7 @@
 #include "gmock/gmock.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 class TestLayerManager: public LayerManager {
@@ -47,7 +48,7 @@ public:
     return TYPE_CONTAINER;
   }
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) {
+  virtual void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
@@ -234,7 +235,7 @@ already_AddRefed<Layer> CreateLayerTree(
     }
   }
   if (rootLayer) {
-    rootLayer->ComputeEffectiveTransforms(gfx3DMatrix());
+    rootLayer->ComputeEffectiveTransforms(Matrix4x4());
   }
   return rootLayer.forget();
 }

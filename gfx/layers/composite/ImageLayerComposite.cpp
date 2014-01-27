@@ -7,7 +7,6 @@
 #include "CompositableHost.h"           // for CompositableHost
 #include "Layers.h"                     // for WriteSnapshotToDumpFile, etc
 #include "gfx2DGlue.h"                  // for ToFilter, ToMatrix4x4
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -103,11 +102,11 @@ ImageLayerComposite::RenderLayer(const nsIntRect& aClipRect)
                         clipRect);
 }
 
-void 
-ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+void
+ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
 {
   gfx::Matrix4x4 local;
-  gfx::ToMatrix4x4(GetLocalTransform(), local);
+  ToMatrix4x4(GetLocalTransform(), local);
 
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);
@@ -130,11 +129,9 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   // This makes our snapping equivalent to what would happen if our content
   // was drawn into a ThebesLayer (gfxContext would snap using the local
   // transform, then we'd snap again when compositing the ThebesLayer).
-  gfx::Matrix4x4 transformToSurface;
-  gfx::ToMatrix4x4(aTransformToSurface, transformToSurface);
   mEffectiveTransform =
       SnapTransform(local, sourceRect, nullptr) *
-      SnapTransformTranslation(transformToSurface, nullptr);
+      SnapTransformTranslation(aTransformToSurface, nullptr);
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
 }
 
