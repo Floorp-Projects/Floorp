@@ -12,6 +12,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882703
 
   SimpleTest.waitForExplicitFinish();
   video = document.createElement("video");
+
+  isnot(video.textTracks, null, "Video should have a list of TextTracks.");
+
   video.addTextTrack("subtitles", "", "");
 
   track = video.textTracks[0];
