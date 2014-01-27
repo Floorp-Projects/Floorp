@@ -262,7 +262,7 @@ MetroAppShell::Run(void)
 
       // This calls XRE_metroShutdown() in xre. Shuts down gecko, including
       // releasing the profile, and destroys MessagePump.
-      sMetroApp->ShutdownXPCOM();
+      sMetroApp->Shutdown();
 
       // Handle update restart or browser switch requests
       if (restartingInDesktop) {
