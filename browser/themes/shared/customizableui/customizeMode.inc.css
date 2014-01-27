@@ -75,6 +75,7 @@ toolbarpaletteitem[place="panel"] {
   transition: transform .3s ease-in-out;
 }
 
+toolbarpaletteitem[notransition].panel-customization-placeholder,
 toolbarpaletteitem[notransition][place="palette"],
 toolbarpaletteitem[notransition][place="panel"] {
   transition: none;
