@@ -688,10 +688,10 @@ Layer::GetEffectiveMixBlendMode()
 }
 
 void
-Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface)
+Layer::ComputeEffectiveTransformForMaskLayer(const Matrix4x4& aTransformToSurface)
 {
   if (mMaskLayer) {
-    ToMatrix4x4(aTransformToSurface, mMaskLayer->mEffectiveTransform);
+    mMaskLayer->mEffectiveTransform = aTransformToSurface;
 
 #ifdef DEBUG
     gfxMatrix maskTranslation;
@@ -885,10 +885,12 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 }
 
 void
-ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface)
 {
   Matrix residual;
-  gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
+  gfx3DMatrix idealTransform;
+  To3DMatrix(aTransformToSurface, idealTransform);
+  idealTransform = GetLocalTransform() * idealTransform;
   idealTransform.ProjectTo2D();
   Matrix4x4 ideal;
   ToMatrix4x4(idealTransform, ideal);
@@ -935,20 +937,20 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
 
   mUseIntermediateSurface = useIntermediateSurface;
   if (useIntermediateSurface) {
-    ComputeEffectiveTransformsForChildren(gfx3DMatrix::From2D(ThebesMatrix(residual)));
+    ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
   } else {
-    ComputeEffectiveTransformsForChildren(idealTransform);
+    ComputeEffectiveTransformsForChildren(ideal);
   }
 
   if (idealTransform.CanDraw2D()) {
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   } else {
-    ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
+    ComputeEffectiveTransformForMaskLayer(Matrix4x4());
   }
 }
 
 void
-ContainerLayer::ComputeEffectiveTransformsForChildren(const gfx3DMatrix& aTransformToSurface)
+ContainerLayer::ComputeEffectiveTransformsForChildren(const Matrix4x4& aTransformToSurface)
 {
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
     l->ComputeEffectiveTransforms(aTransformToSurface);
