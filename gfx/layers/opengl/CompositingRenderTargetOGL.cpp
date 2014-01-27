@@ -55,7 +55,7 @@ CompositingRenderTargetOGL::BindRenderTarget()
       }
     }
 
-    mCompositor->PrepareViewport(mInitParams.mSize, mTransform);
+    mCompositor->PrepareViewport(mInitParams.mSize, ToMatrix(mTransform));
   }
 }
 
@@ -91,7 +91,7 @@ CompositingRenderTargetOGL::InitializeImpl()
     NS_ERROR(msg.get());
   }
 
-  mCompositor->PrepareViewport(mInitParams.mSize, mTransform);
+  mCompositor->PrepareViewport(mInitParams.mSize, ToMatrix(mTransform));
   mGL->fScissor(0, 0, mInitParams.mSize.width, mInitParams.mSize.height);
   if (mInitParams.mInit == INIT_MODE_CLEAR) {
     mGL->fClearColor(0.0, 0.0, 0.0, 0.0);
