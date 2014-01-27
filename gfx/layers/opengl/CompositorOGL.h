@@ -34,7 +34,6 @@
 
 class gfx3DMatrix;
 class nsIWidget;
-struct gfxMatrix;
 
 namespace mozilla {
 class TimeStamp;
@@ -324,7 +323,7 @@ private:
    * Copies the content of our backbuffer to the set transaction target.
    * Does not restore the target FBO, so only call from EndFrame.
    */
-  void CopyToTarget(gfx::DrawTarget* aTarget, const gfxMatrix& aWorldMatrix);
+  void CopyToTarget(gfx::DrawTarget* aTarget, const gfx::Matrix& aWorldMatrix);
 
   /**
    * Records the passed frame timestamp and returns the current estimated FPS.

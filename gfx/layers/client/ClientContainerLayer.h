@@ -9,7 +9,6 @@
 #include <stdint.h>                     // for uint32_t
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE

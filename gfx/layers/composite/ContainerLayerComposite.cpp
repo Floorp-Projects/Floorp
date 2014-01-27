@@ -10,7 +10,6 @@
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
