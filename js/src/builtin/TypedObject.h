@@ -139,8 +139,6 @@ static T ConvertScalar(double d)
     }
 }
 
-bool TypeDescrToSource(JSContext *cx, unsigned int argc, Value *vp);
-
 class TypeDescr : public JSObject
 {
   public:

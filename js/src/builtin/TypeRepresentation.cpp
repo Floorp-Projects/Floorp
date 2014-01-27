@@ -689,33 +689,6 @@ TypeRepresentation::obj_finalize(js::FreeOp *fop, JSObject *object)
 ///////////////////////////////////////////////////////////////////////////
 // To string
 
-bool
-TypeRepresentation::appendString(JSContext *cx, StringBuffer &contents)
-{
-    switch (kind()) {
-      case Scalar:
-        return asScalar()->appendStringScalar(cx, contents);
-
-      case Reference:
-        return asReference()->appendStringReference(cx, contents);
-
-      case X4:
-        return asX4()->appendStringX4(cx, contents);
-
-      case SizedArray:
-        return asSizedArray()->appendStringSizedArray(cx, contents);
-
-      case UnsizedArray:
-        return asUnsizedArray()->appendStringUnsizedArray(cx, contents);
-
-      case Struct:
-        return asStruct()->appendStringStruct(cx, contents);
-    }
-
-    MOZ_ASSUME_UNREACHABLE("Invalid kind");
-    return false;
-}
-
 /*static*/ const char *
 ScalarTypeRepresentation::typeName(Type type)
 {
@@ -723,17 +696,6 @@ ScalarTypeRepresentation::typeName(Type type)
 #define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
         case constant_: return #name_;
         JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
-    }
-    MOZ_ASSUME_UNREACHABLE("Invalid type");
-}
-
-bool
-ScalarTypeRepresentation::appendStringScalar(JSContext *cx, StringBuffer &contents)
-{
-    switch (type()) {
-#define NUMERIC_TYPE_APPEND_STRING(constant_, type_, name_)                   \
-        case constant_: return contents.append(#name_);
-        JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_APPEND_STRING)
     }
     MOZ_ASSUME_UNREACHABLE("Invalid type");
 }
@@ -747,103 +709,6 @@ ReferenceTypeRepresentation::typeName(Type type)
         JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
     }
     MOZ_ASSUME_UNREACHABLE("Invalid type");
-}
-
-bool
-ReferenceTypeRepresentation::appendStringReference(JSContext *cx, StringBuffer &contents)
-{
-    switch (type()) {
-#define NUMERIC_TYPE_APPEND_STRING(constant_, type_, name_)                   \
-        case constant_: return contents.append(#name_);
-        JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_APPEND_STRING)
-    }
-    MOZ_ASSUME_UNREACHABLE("Invalid type");
-}
-
-bool
-X4TypeRepresentation::appendStringX4(JSContext *cx, StringBuffer &contents)
-{
-    switch (type()) {
-      case TYPE_FLOAT32:
-        return contents.append("float32x4");
-      case TYPE_INT32:
-        return contents.append("int32x4");
-    }
-    MOZ_ASSUME_UNREACHABLE("Invalid type");
-}
-
-bool
-SizedArrayTypeRepresentation::appendStringSizedArray(JSContext *cx, StringBuffer &contents)
-{
-    SizedTypeRepresentation *elementType = element();
-    while (elementType->isSizedArray())
-        elementType = elementType->asSizedArray()->element();
-    if (!elementType->appendString(cx, contents))
-        return false;
-
-    contents.append(".array(");
-    SizedArrayTypeRepresentation *arrayType = this;
-    while (arrayType != nullptr) {
-        if (!NumberValueToStringBuffer(cx, NumberValue(length()), contents))
-            return false;
-
-        if (arrayType->element()->isSizedArray()) {
-            if (!contents.append(","))
-                return false;
-            arrayType = arrayType->element()->asSizedArray();
-        } else {
-            break;
-        }
-    }
-
-    if (!contents.append(")"))
-        return false;
-
-    return true;
-}
-
-bool
-UnsizedArrayTypeRepresentation::appendStringUnsizedArray(JSContext *cx, StringBuffer &contents)
-{
-    if (!element()->appendString(cx, contents))
-        return false;
-
-    if (!contents.append(".array()"))
-        return false;
-
-    return true;
-}
-
-bool
-StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &contents)
-{
-    if (!contents.append("StructType({"))
-        return false;
-
-    for (size_t i = 0; i < fieldCount(); i++) {
-        const StructField &fld = field(i);
-
-        if (i > 0)
-            contents.append(", ");
-
-        RootedString idString(cx, fld.propertyName);
-        if (!idString)
-            return false;
-
-        if (!contents.append(idString))
-            return false;
-
-        if (!contents.append(": "))
-            return false;
-
-        if (!fld.typeRepr->appendString(cx, contents))
-            return false;
-    }
-
-    if (!contents.append("})"))
-        return false;
-
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
