@@ -125,7 +125,7 @@ TEST(Layers, Defaults) {
 TEST(Layers, Transform) {
   TestContainerLayer layer(nullptr);
 
-  gfx3DMatrix identity;
+  Matrix4x4 identity;
   ASSERT_EQ(true, identity.IsIdentity());
 
   ASSERT_EQ(identity, layer.GetTransform());

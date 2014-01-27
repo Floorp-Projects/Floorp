@@ -617,14 +617,15 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
   return currentClip.Intersect(scissor);
 }
 
-const gfx3DMatrix
+const Matrix4x4
 Layer::GetTransform() const
 {
-  gfx3DMatrix transform = mTransform;
+  Matrix4x4 transform;
+  ToMatrix4x4(mTransform, transform);
   if (const ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
+  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
   return transform;
 }
 
@@ -697,13 +698,10 @@ Layer::ComputeEffectiveTransformForMaskLayer(const Matrix4x4& aTransformToSurfac
     mMaskLayer->mEffectiveTransform = aTransformToSurface;
 
 #ifdef DEBUG
-    gfxMatrix maskTranslation;
-    bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D(&maskTranslation);
+    bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D();
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
 #endif
-    Matrix4x4 maskTransform;
-    ToMatrix4x4(mMaskLayer->GetTransform(), maskTransform);
-    mMaskLayer->mEffectiveTransform = maskTransform * mMaskLayer->mEffectiveTransform;
+    mMaskLayer->mEffectiveTransform = mMaskLayer->GetTransform() * mMaskLayer->mEffectiveTransform;
   }
 }
 

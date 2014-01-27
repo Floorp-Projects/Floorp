@@ -867,8 +867,7 @@ public:
   {
 #ifdef DEBUG
     if (aMaskLayer) {
-      gfxMatrix maskTransform;
-      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D(&maskTransform);
+      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D();
       NS_ASSERTION(maskIs2D, "Mask layer has invalid transform.");
     }
 #endif
@@ -1051,7 +1050,7 @@ public:
   const Layer* GetPrevSibling() const { return mPrevSibling; }
   virtual Layer* GetFirstChild() const { return nullptr; }
   virtual Layer* GetLastChild() const { return nullptr; }
-  const gfx3DMatrix GetTransform() const;
+  const gfx::Matrix4x4 GetTransform() const;
   const gfx3DMatrix& GetBaseTransform() const { return mTransform; }
   float GetPostXScale() const { return mPostXScale; }
   float GetPostYScale() const { return mPostYScale; }
