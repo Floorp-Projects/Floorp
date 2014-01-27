@@ -292,7 +292,7 @@ public:
               float aOpacity,
               gfx::CompositionOp aOp,
               gfxASurface* aMask,
-              const gfxMatrix* aMaskTransform);
+              const gfx::Matrix* aMaskTransform);
 
 protected:
   TemporaryRef<gfx::DrawTarget>
