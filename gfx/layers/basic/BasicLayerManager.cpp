@@ -599,7 +599,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     // which depends on correct effective transforms
     mSnapEffectiveTransforms =
       mTarget ? !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING) : true;
-    mRoot->ComputeEffectiveTransforms(mTarget ? gfx3DMatrix::From2D(mTarget->CurrentMatrix()) : gfx3DMatrix());
+    mRoot->ComputeEffectiveTransforms(mTarget ? Matrix4x4::From2D(ToMatrix(mTarget->CurrentMatrix())) : Matrix4x4());
 
     ToData(mRoot)->Validate(aCallback, aCallbackData);
     if (mRoot->GetMaskLayer()) {

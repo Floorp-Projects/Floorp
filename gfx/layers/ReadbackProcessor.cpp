@@ -46,19 +46,19 @@ ReadbackProcessor::BuildUpdates(ContainerLayer* aContainer)
 static Layer*
 FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
 {
-  gfxMatrix transform;
+  gfx::Matrix transform;
   if (!aLayer->GetTransform().Is2D(&transform) ||
       transform.HasNonIntegerTranslation())
     return nullptr;
-  nsIntPoint transformOffset(int32_t(transform.x0), int32_t(transform.y0));
+  nsIntPoint transformOffset(int32_t(transform._31), int32_t(transform._32));
 
   for (Layer* l = aLayer->GetPrevSibling(); l; l = l->GetPrevSibling()) {
-    gfxMatrix backgroundTransform;
+    gfx::Matrix backgroundTransform;
     if (!l->GetTransform().Is2D(&backgroundTransform) ||
-        backgroundTransform.HasNonIntegerTranslation())
+        gfx::ThebesMatrix(backgroundTransform).HasNonIntegerTranslation())
       return nullptr;
 
-    nsIntPoint backgroundOffset(int32_t(backgroundTransform.x0), int32_t(backgroundTransform.y0));
+    nsIntPoint backgroundOffset(int32_t(backgroundTransform._31), int32_t(backgroundTransform._32));
     nsIntRect rectInBackground(transformOffset - backgroundOffset, aLayer->GetSize());
     const nsIntRegion& visibleRegion = l->GetEffectiveVisibleRegion();
     if (!visibleRegion.Intersects(rectInBackground))
