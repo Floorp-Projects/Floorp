@@ -7,7 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.BrowserContract.HomeListItems;
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
@@ -220,10 +220,10 @@ public class DynamicPanel extends HomeFragment {
             final ContentResolver cr = getContext().getContentResolver();
 
             // XXX: Use the test URI for static fake data
-            final Uri fakeItemsUri = HomeListItems.CONTENT_FAKE_URI.buildUpon().
+            final Uri fakeItemsUri = HomeItems.CONTENT_FAKE_URI.buildUpon().
                 appendQueryParameter(BrowserContract.PARAM_PROFILE, "default").build();
 
-            final String selection = HomeListItems.PROVIDER_ID + " = ?";
+            final String selection = HomeItems.DATASET_ID + " = ?";
             final String[] selectionArgs = new String[] { mDatasetId };
 
             Log.i(LOGTAG, "Loading fake data for list provider: " + mDatasetId);
