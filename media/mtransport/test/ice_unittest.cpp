@@ -189,7 +189,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
                      const std::string password,
-                     const std::string transport) {
+                     const char* transport) {
     std::vector<unsigned char> password_vec(password.begin(), password.end());
     SetTurnServer(addr, port, username, password_vec, transport);
   }
@@ -198,7 +198,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
                      const std::vector<unsigned char> password,
-                     const std::string transport) {
+                     const char* transport) {
     std::vector<NrIceTurnServer> turn_servers;
     ScopedDeletePtr<NrIceTurnServer> server(NrIceTurnServer::Create(
         addr, port, username, password, transport));
@@ -783,7 +783,7 @@ class IceConnectTest : public ::testing::Test {
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
                      const std::string password,
-                     const std::string transport = kNrIceTransportUdp) {
+                     const char* transport = kNrIceTransportUdp) {
     p1_->SetTurnServer(addr, port, username, password, transport);
     p2_->SetTurnServer(addr, port, username, password, transport);
   }
