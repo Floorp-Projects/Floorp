@@ -1497,15 +1497,15 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
                        RoundToMatchResidual(scaledOffset.y, data->mAnimatedGeometryRootPosition.y));
   data->mTranslation = pixOffset;
   pixOffset += mParameters.mOffset;
-  gfxMatrix matrix;
-  matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
-  layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
+  Matrix matrix;
+  matrix.Translate(pixOffset.x, pixOffset.y);
+  layer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
-  gfxPoint animatedGeometryRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
+  gfxPoint animatedGeometryRootTopLeft = scaledOffset - ThebesPoint(matrix.GetTranslation()) + mParameters.mOffset;
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
@@ -1780,7 +1780,9 @@ ContainerState::PopThebesLayerData()
       colorLayer->SetColor(data->mSolidColor);
 
       // Copy transform
-      colorLayer->SetBaseTransform(data->mLayer->GetBaseTransform());
+      Matrix4x4 base;
+      ToMatrix4x4(data->mLayer->GetBaseTransform(), base);
+      colorLayer->SetBaseTransform(base);
       colorLayer->SetPostScale(data->mLayer->GetPostXScale(), data->mLayer->GetPostYScale());
 
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
@@ -2985,7 +2987,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
 
   // Store the inverse of our resolution-scale on the layer
-  aLayer->SetBaseTransform(transform);
+  Matrix4x4 baseTransform;
+  ToMatrix4x4(transform, baseTransform);
+  aLayer->SetBaseTransform(baseTransform);
   aLayer->SetPreScale(1.0f/float(scale.width),
                       1.0f/float(scale.height));
   aLayer->SetInheritedScale(aIncomingScale.mXScale,
@@ -3830,8 +3834,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   maskLayer->SetContainer(container);
 
   maskTransform.Invert();
-  gfx3DMatrix matrix = gfx3DMatrix::From2D(ThebesMatrix(maskTransform));
-  matrix.Translate(gfxPoint3D(mParameters.mOffset.x, mParameters.mOffset.y, 0));
+  Matrix4x4 matrix = Matrix4x4::From2D(maskTransform);
+  matrix.Translate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
   maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data

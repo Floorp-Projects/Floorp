@@ -218,7 +218,9 @@ already_AddRefed<Layer> CreateLayerTree(
     } else {
       nsRefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
       layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
-      layer->SetBaseTransform(aTransforms[layerNumber]);
+      Matrix4x4 transform;
+      ToMatrix4x4(aTransforms[layerNumber], transform);
+      layer->SetBaseTransform(transform);
       aLayersOut.AppendElement(layer);
       layerNumber++;
       if (rootLayer && !parentContainerLayer) {
