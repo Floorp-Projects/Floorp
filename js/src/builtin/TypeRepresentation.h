@@ -160,10 +160,6 @@ class TypeRepresentation {
     JSObject *ownerObject() const { return ownerObject_.get(); }
     types::TypeObject *typeObject() const { return typeObject_.get(); }
 
-    // Appends a stringified form of this type representation onto
-    // buffer, for use in error messages and the like.
-    bool appendString(JSContext *cx, StringBuffer &buffer);
-
     static bool isOwnerObject(JSObject &obj);
     static TypeRepresentation *fromOwnerObject(JSObject &obj);
 
@@ -261,18 +257,12 @@ class ScalarTypeRepresentation : public SizedTypeRepresentation {
     static const int32_t TYPE_MAX = TYPE_UINT8_CLAMPED + 1;
 
   private:
-    // so TypeRepresentation can call appendStringScalar() etc
-    friend class TypeRepresentation;
-
     // in order to call constructor
     friend class TypeRepresentationHelper;
 
     const Type type_;
 
     explicit ScalarTypeRepresentation(Type type);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringScalar(JSContext *cx, StringBuffer &buffer);
 
   public:
     Type type() const {
@@ -316,15 +306,9 @@ class ReferenceTypeRepresentation : public SizedTypeRepresentation {
     static const int32_t TYPE_MAX = TYPE_STRING + 1;
 
   private:
-    // so TypeRepresentation can call appendStringScalar() etc
-    friend class TypeRepresentation;
-
     Type type_;
 
     explicit ReferenceTypeRepresentation(Type type);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringReference(JSContext *cx, StringBuffer &buffer);
 
   public:
     Type type() const {
@@ -352,18 +336,12 @@ class X4TypeRepresentation : public SizedTypeRepresentation {
     };
 
   private:
-    // so TypeRepresentation can call appendStringScalar() etc
-    friend class TypeRepresentation;
-
     // in order to call constructor
     friend class TypeRepresentationHelper;
 
     const Type type_;
 
     explicit X4TypeRepresentation(Type type);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringX4(JSContext *cx, StringBuffer &buffer);
 
   public:
     Type type() const {
@@ -380,7 +358,7 @@ class X4TypeRepresentation : public SizedTypeRepresentation {
 
 class UnsizedArrayTypeRepresentation : public TypeRepresentation {
   private:
-    // so TypeRepresentation can call appendStringArray() etc
+    // so TypeRepresentation can call tracing routines
     friend class TypeRepresentation;
 
     SizedTypeRepresentation *element_;
@@ -389,9 +367,6 @@ class UnsizedArrayTypeRepresentation : public TypeRepresentation {
 
     // See TypeRepresentation::traceFields()
     void traceUnsizedArrayFields(JSTracer *trace);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringUnsizedArray(JSContext *cx, StringBuffer &buffer);
 
   public:
     SizedTypeRepresentation *element() {
@@ -404,7 +379,7 @@ class UnsizedArrayTypeRepresentation : public TypeRepresentation {
 
 class SizedArrayTypeRepresentation : public SizedTypeRepresentation {
   private:
-    // so TypeRepresentation can call appendStringSizedArray() etc
+    // so TypeRepresentation can call traceSizedArrayFields()
     friend class TypeRepresentation;
 
     SizedTypeRepresentation *element_;
@@ -415,9 +390,6 @@ class SizedArrayTypeRepresentation : public SizedTypeRepresentation {
 
     // See TypeRepresentation::traceFields()
     void traceSizedArrayFields(JSTracer *trace);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringSizedArray(JSContext *cx, StringBuffer &buffer);
 
   public:
     SizedTypeRepresentation *element() {
@@ -447,7 +419,7 @@ struct StructField {
 
 class StructTypeRepresentation : public SizedTypeRepresentation {
   private:
-    // so TypeRepresentation can call appendStringStruct() etc
+    // so TypeRepresentation can call traceStructFields() etc
     friend class TypeRepresentation;
 
     size_t fieldCount_;
@@ -468,9 +440,6 @@ class StructTypeRepresentation : public SizedTypeRepresentation {
 
     // See TypeRepresentation::traceFields()
     void traceStructFields(JSTracer *trace);
-
-    // See TypeRepresentation::appendString()
-    bool appendStringStruct(JSContext *cx, StringBuffer &buffer);
 
   public:
     size_t fieldCount() const {

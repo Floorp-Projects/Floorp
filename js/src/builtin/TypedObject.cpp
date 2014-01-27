@@ -67,31 +67,6 @@ ToObjectIf(HandleValue value)
     return &value.toObject().as<T>();
 }
 
-bool
-js::TypeDescrToSource(JSContext *cx, unsigned int argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    Rooted<TypeDescr*> thisObj(cx, ToObjectIf<TypeDescr>(args.thisv()));
-    if (!thisObj) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                             nullptr, JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS,
-                             "this", "type object");
-        return false;
-    }
-
-    StringBuffer contents(cx);
-    if (!thisObj->typeRepresentation()->appendString(cx, contents))
-        return false;
-
-    RootedString result(cx, contents.finishString());
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
-    return true;
-}
-
 /*
  * Overwrites the contents of `datum` at offset `offset` with `val`
  * converted to the type `typeObj`. This is done by delegating to
@@ -130,15 +105,14 @@ ConvertAndCopyTo(JSContext *cx,
         return false;
 
     InvokeArgs args(cx);
-    if (!args.init(5))
+    if (!args.init(4))
         return false;
 
     args.setCallee(ObjectValue(*func));
-    args[0].setObject(typeObj->typeRepresentationOwnerObj());
-    args[1].setObject(*typeObj);
-    args[2].setObject(*datum);
-    args[3].setInt32(offset);
-    args[4].set(val);
+    args[0].setObject(*typeObj);
+    args[1].setObject(*datum);
+    args[2].setInt32(offset);
+    args[3].set(val);
 
     return Invoke(cx, args);
 }
@@ -167,14 +141,13 @@ Reify(JSContext *cx,
         return false;
 
     InvokeArgs args(cx);
-    if (!args.init(4))
+    if (!args.init(3))
         return false;
 
     args.setCallee(ObjectValue(*func));
-    args[0].setObject(*typeRepr->ownerObject());
-    args[1].setObject(*type);
-    args[2].setObject(*datum);
-    args[3].setInt32(offset);
+    args[0].setObject(*type);
+    args[1].setObject(*datum);
+    args[2].setInt32(offset);
 
     if (!Invoke(cx, args))
         return false;
@@ -229,7 +202,7 @@ const Class js::ScalarTypeDescr::class_ = {
 };
 
 const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
@@ -300,7 +273,7 @@ const Class js::ReferenceTypeDescr::class_ = {
 };
 
 const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
@@ -442,7 +415,7 @@ const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
     {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     JS_FN("dimension", UnsizedArrayTypeDescr::dimension, 1, 0),
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_SELF_HOSTED_FN("build",    "TypedObjectArrayTypeBuild", 3, 0),
     JS_SELF_HOSTED_FN("buildPar", "TypedObjectArrayTypeBuildPar", 3, 0),
@@ -715,7 +688,7 @@ const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {
 const JSFunctionSpec StructMetaTypeDescr::typeObjectMethods[] = {
     {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_FS_END
 };
@@ -1396,13 +1369,20 @@ ReportDatumTypeError(JSContext *cx,
                      const unsigned errorNumber,
                      HandleTypedDatum obj)
 {
-    TypeRepresentation *typeRepr = obj->typeRepresentation();
-
-    StringBuffer contents(cx);
-    if (!typeRepr->appendString(cx, contents))
+    // Serialize type string using self-hosted function DescrToSource
+    RootedFunction func(
+        cx, SelfHostedFunction(cx, cx->names().DescrToSource));
+    if (!func)
+        return false;
+    InvokeArgs args(cx);
+    if (!args.init(1))
+        return false;
+    args.setCallee(ObjectValue(*func));
+    args[0].setObject(obj->typeDescr());
+    if (!Invoke(cx, args))
         return false;
 
-    RootedString result(cx, contents.finishString());
+    RootedString result(cx, args.rval().toString());
     if (!result)
         return false;
 
