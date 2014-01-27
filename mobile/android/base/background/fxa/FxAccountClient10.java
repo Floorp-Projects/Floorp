@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 
 import javax.crypto.Mac;
@@ -31,8 +32,11 @@ import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
+import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 
 /**
  * An HTTP client for talking to an FxAccount server.
@@ -54,6 +58,7 @@ public class FxAccountClient10 {
   protected static final String LOG_TAG = FxAccountClient10.class.getSimpleName();
 
   protected static final String VERSION_FRAGMENT = "v1/";
+  protected static final String ACCEPT_HEADER = "application/json;charset=utf-8";
 
   public static final String JSON_KEY_EMAIL = "email";
   public static final String JSON_KEY_KEYFETCHTOKEN = "keyFetchToken";
@@ -252,6 +257,16 @@ public class FxAccountClient10 {
     @Override
     public void handleTransportException(GeneralSecurityException e) {
       invokeHandleError(delegate, e);
+    }
+
+    @Override
+    public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
+      super.addHeaders(request, client);
+
+      // The basics.
+      final Locale locale = Locale.getDefault();
+      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, locale.toString());
+      request.addHeader(HttpHeaders.ACCEPT, ACCEPT_HEADER);
     }
   }
 
