@@ -220,6 +220,15 @@ public:
   }
 
   /**
+   * Returns true if the matrix has any transform other
+   * than a translation or scale; this is, if there is
+   * no rotation.
+   */
+  bool HasNonAxisAlignedTransform() const {
+      return !FuzzyEqual(_21, 0.0) || !FuzzyEqual(_12, 0.0);
+  }
+
+  /**
    * Returns true if the matrix has non-integer scale
    */
   bool HasNonIntegerScale() const {
