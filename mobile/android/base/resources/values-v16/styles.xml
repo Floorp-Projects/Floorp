@@ -9,7 +9,7 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
-    <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium">
+    <style name="TextAppearance.Widget.TwoLineRow.PrimaryText" parent="TextAppearance.Medium">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 

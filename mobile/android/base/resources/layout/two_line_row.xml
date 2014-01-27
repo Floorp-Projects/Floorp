@@ -6,7 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <org.mozilla.gecko.widget.FaviconView android:id="@+id/favicon"
+    <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
                                           android:layout_marginLeft="10dip"
@@ -18,14 +18,14 @@
                   android:orientation="vertical">
 
         <org.mozilla.gecko.home.FadedTextView
-                android:id="@+id/title"
-                style="@style/Widget.TwoLinePageRow.Title"
+                android:id="@+id/primary_text"
+                style="@style/Widget.TwoLineRow.PrimaryText"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 gecko:fadeWidth="30dp"/>
 
-        <TextView android:id="@+id/url"
-                  style="@style/Widget.TwoLinePageRow.Url"
+        <TextView android:id="@+id/secondary_text"
+                  style="@style/Widget.TwoLineRow.SecondaryText"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"

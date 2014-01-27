@@ -242,6 +242,7 @@ gbjar.sources += [
     'home/TopSitesPanel.java',
     'home/TopSitesThumbnailView.java',
     'home/TwoLinePageRow.java',
+    'home/TwoLineRow.java',
     'InputMethods.java',
     'JavaAddonManager.java',
     'LightweightTheme.java',
