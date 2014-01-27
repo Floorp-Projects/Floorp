@@ -663,9 +663,7 @@ SetShadowProperties(Layer* aLayer)
   // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
   // Set the layerComposite's base transform to the layer's base transform.
-  gfx3DMatrix matrix;
-  To3DMatrix(aLayer->GetBaseTransform(), matrix);
-  layerComposite->SetShadowTransform(matrix);
+  layerComposite->SetShadowTransform(aLayer->GetBaseTransform());
   layerComposite->SetShadowTransformSetByAnimation(false);
   layerComposite->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   layerComposite->SetShadowClipRect(aLayer->GetClipRect());

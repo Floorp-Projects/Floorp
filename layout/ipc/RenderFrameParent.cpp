@@ -337,7 +337,9 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
                             1.0f/aLayer->GetPostYScale(),
                             1);
 
-  shadow->SetShadowTransform(shadowTransform);
+  gfx::Matrix4x4 realShadowTransform;
+  ToMatrix4x4(shadowTransform, realShadowTransform);
+  shadow->SetShadowTransform(realShadowTransform);
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform,
@@ -456,7 +458,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
                           nsIFrame* aFrame)
 {
   LayerComposite* shadowRoot = aShadowRoot->AsLayerComposite();
-  gfxMatrix t;
+  gfx::Matrix t;
   if (!shadowRoot->GetShadowTransform().Is2D(&t)) {
     return;
   }
@@ -466,7 +468,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
   nsIntRect contentBounds = shadowRoot->GetShadowVisibleRegion().GetBounds();
   gfxRect contentVis(contentBounds.x, contentBounds.y,
                      contentBounds.width, contentBounds.height);
-  gfxRect localContentVis(t.Transform(contentVis));
+  gfxRect localContentVis(gfx::ThebesMatrix(t).Transform(contentVis));
   // Round *in* here because this area is punched out of the background
   localContentVis.RoundIn();
   nsIntRect localIntContentVis(localContentVis.X(), localContentVis.Y(),

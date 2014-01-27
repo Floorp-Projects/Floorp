@@ -629,19 +629,17 @@ Layer::GetTransform() const
 const Matrix4x4
 Layer::GetLocalTransform()
 {
-  gfx3DMatrix transform;
+  Matrix4x4 transform;
   if (LayerComposite* shadow = AsLayerComposite())
     transform = shadow->GetShadowTransform();
   else
-    To3DMatrix(mTransform, transform);
+    transform = mTransform;
   if (ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
+  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
 
-  Matrix4x4 result;
-  ToMatrix4x4(transform, result);
-  return result;
+  return transform;
 }
 
 void
