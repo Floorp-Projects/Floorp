@@ -87,16 +87,15 @@ let EventListener = {
     // If we're in the process of restoring, this load may signal
     // the end of the restoration.
     let epoch = gContentRestore.getRestoreEpoch();
-    if (epoch) {
-      // Restore the form data and scroll position.
-      gContentRestore.restoreDocument();
-
-      // Ask SessionStore.jsm to trigger SSTabRestored.
-      sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
+    if (!epoch) {
+      return;
     }
 
-    // Send a load message for all loads.
-    sendAsyncMessage("SessionStore:load");
+    // Restore the form data and scroll position.
+    gContentRestore.restoreDocument();
+
+    // Ask SessionStore.jsm to trigger SSTabRestored.
+    sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
   }
 };
 
