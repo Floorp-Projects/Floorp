@@ -427,6 +427,12 @@ private:
    */
   nsAutoCString mHash;
 
+  /**
+   * Stores the certificate chains in an nsIArray of nsIX509CertList of
+   * nsIX509Cert, if this binary is signed.
+   */
+  nsCOMPtr<nsIArray> mSignatureInfo;
+
   friend class nsDownloadManager;
 };
 
