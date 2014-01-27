@@ -400,28 +400,34 @@ Desktop browser's sync prefs.
             <spacer flex="1"/>
           </hbox>
           <hbox id="checkingForUpdates" align="center">
-            <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+            <image class="update-throbber"/>
+            <description flex="1">&update.checkingForUpdates;</description>
           </hbox>
           <hbox id="checkingAddonCompat" align="center">
-            <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
+            <image class="update-throbber"/>
+            <description flex="1">&update.checkingAddonCompat;</description>
           </hbox>
           <hbox id="downloading" align="center">
-            <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+            <image class="update-throbber"/>
+            <description flex="1">
+              &update.downloading.start;<html:span id="downloadStatus"></html:span>&update.downloading.end;
+            </description>
           </hbox>
           <hbox id="applying" align="center">
-            <image class="update-throbber"/><label>&update.applying;</label>
+            <image class="update-throbber"/>
+            <description flex="1">&update.applying;</description>
           </hbox>
           <hbox id="downloadFailed" align="center">
             <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
           </hbox>
           <hbox id="adminDisabled" align="center">
-            <label>&update.adminDisabled;</label>
+            <label linewrap="true">&update.adminDisabled;</label>
           </hbox>
           <hbox id="noUpdatesFound" align="center">
-            <label>&update.noUpdatesFound;</label>
+            <label linewrap="true">&update.noUpdatesFound;</label>
           </hbox>
           <hbox id="otherInstanceHandlingUpdates" align="center">
-            <label>&update.otherInstanceHandlingUpdates;</label>
+            <label linewrap="true">&update.otherInstanceHandlingUpdates;</label>
           </hbox>
           <hbox id="manualUpdate" align="center">
             <label>&update.manual.start;</label><label id="manualLink" linewrap="true" class="text-link"/><label>&update.manual.end;</label>
