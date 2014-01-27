@@ -10,6 +10,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.HomeListItems;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -18,6 +19,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
@@ -30,24 +32,38 @@ import android.widget.ListView;
 import java.util.EnumSet;
 
 /**
- * Fragment that displays dynamic content specified by a PanelConfig.
+ * Fragment that displays dynamic content specified by a {@code PanelConfig}.
+ * The {@code DynamicPanel} UI is built based on the given {@code LayoutType}
+ * and its associated list of {@code ViewConfig}.
+ *
+ * {@code DynamicPanel} manages all necessary Loaders to load panel datasets
+ * from their respective content providers. Each panel dataset has its own
+ * associated Loader. This is enforced by defining the Loader IDs based on
+ * their associated dataset IDs.
+ *
+ * The {@code PanelLayout} can make load and reset requests on datasets via
+ * the provided {@code DatasetHandler}. This way it doesn't need to know the
+ * details of how datasets are loaded and reset. Each time a dataset is
+ * requested, {@code DynamicPanel} restarts a Loader with the respective ID (see
+ * {@code PanelDatasetHandler}).
+ *
+ * See {@code PanelLayout} for more details on how {@code DynamicPanel}
+ * receives dataset requests and delivers them back to the {@code PanelLayout}.
  */
 public class DynamicPanel extends HomeFragment {
     private static final String LOGTAG = "GeckoDynamicPanel";
 
-    // Cursor loader ID for the lists
-    private static final int LOADER_ID_LIST = 0;
+    // Dataset ID to be used by the loader
+    private static final String DATASET_ID = "dataset_id";
+
+    // The panel layout associated with this panel
+    private PanelLayout mLayout;
 
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
 
-    // XXX: Right now DynamicPanel is hard-coded to show a single ListView,
-    // but it should dynamically build views from mPanelConfig (bug 959777).
-    private HomeListAdapter mAdapter;
-    private ListView mList;
-
-    // Callbacks used for the list loader
-    private CursorLoaderCallbacks mCursorLoaderCallbacks;
+    // Callbacks used for the loader
+    private PanelLoaderCallbacks mLoaderCallbacks;
 
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
@@ -87,22 +103,30 @@ public class DynamicPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // XXX: Dynamically build views from mPanelConfig (bug 959777).
-        mList = new HomeListView(getActivity());
-        return mList;
+        switch(mPanelConfig.getLayoutType()) {
+            case FRAME:
+                final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
+                mLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler);
+                break;
+
+            default:
+                throw new IllegalStateException("Unrecognized layout type in DynamicPanel");
+        }
+
+        Log.d(LOGTAG, "Created layout of type: " + mPanelConfig.getLayoutType());
+
+        return mLayout;
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        registerForContextMenu(mList);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mList = null;
+        mLayout = null;
     }
 
     @Override
@@ -122,29 +146,73 @@ public class DynamicPanel extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // XXX: Dynamically set adapters from mPanelConfig (bug 959777).
-        mAdapter = new HomeListAdapter(getActivity(), null);
-        mList.setAdapter(mAdapter);
-
         // Create callbacks before the initial loader is started.
-        mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+        mLoaderCallbacks = new PanelLoaderCallbacks();
         loadIfVisible();
     }
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(LOADER_ID_LIST, null, mCursorLoaderCallbacks);
+        Log.d(LOGTAG, "Loading layout");
+        mLayout.load();
+    }
+
+    private static int generateLoaderId(String datasetId) {
+        return datasetId.hashCode();
     }
 
     /**
-     * Cursor loader for the lists.
+     * Used by the PanelLayout to make load and reset requests to
+     * the holding fragment.
      */
-    private static class HomeListLoader extends SimpleCursorLoader {
-        private String mProviderId;
+    private class PanelDatasetHandler implements DatasetHandler {
+        @Override
+        public void requestDataset(String datasetId) {
+            Log.d(LOGTAG, "Requesting dataset: " + datasetId);
 
-        public HomeListLoader(Context context, String providerId) {
+            // Ignore dataset requests while the fragment is not
+            // allowed to load its content.
+            if (!getCanLoadHint()) {
+                return;
+            }
+
+            final Bundle bundle = new Bundle();
+            bundle.putString(DATASET_ID, datasetId);
+
+            // Ensure one loader per dataset
+            final int loaderId = generateLoaderId(datasetId);
+            getLoaderManager().restartLoader(loaderId, bundle, mLoaderCallbacks);
+        }
+
+        @Override
+        public void resetDataset(String datasetId) {
+            Log.d(LOGTAG, "Resetting dataset: " + datasetId);
+
+            final LoaderManager lm = getLoaderManager();
+            final int loaderId = generateLoaderId(datasetId);
+
+            // Release any resources associated with the dataset if
+            // it's currently loaded in memory.
+            final Loader<?> datasetLoader = lm.getLoader(loaderId);
+            if (datasetLoader != null) {
+                datasetLoader.reset();
+            }
+        }
+    }
+
+    /**
+     * Cursor loader for the panel datasets.
+     */
+    private static class PanelDatasetLoader extends SimpleCursorLoader {
+        private final String mDatasetId;
+
+        public PanelDatasetLoader(Context context, String datasetId) {
             super(context);
-            mProviderId = providerId;
+            mDatasetId = datasetId;
+        }
+
+        public String getDatasetId() {
+            return mDatasetId;
         }
 
         @Override
@@ -156,51 +224,41 @@ public class DynamicPanel extends HomeFragment {
                 appendQueryParameter(BrowserContract.PARAM_PROFILE, "default").build();
 
             final String selection = HomeListItems.PROVIDER_ID + " = ?";
-            final String[] selectionArgs = new String[] { mProviderId };
+            final String[] selectionArgs = new String[] { mDatasetId };
 
-            Log.i(LOGTAG, "Loading fake data for list provider: " + mProviderId);
+            Log.i(LOGTAG, "Loading fake data for list provider: " + mDatasetId);
 
             return cr.query(fakeItemsUri, null, selection, selectionArgs, null);
         }
     }
 
     /**
-     * Cursor adapter for the list.
-     */
-    private class HomeListAdapter extends CursorAdapter {
-        public HomeListAdapter(Context context, Cursor cursor) {
-            super(context, cursor, 0);
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            final TwoLinePageRow row = (TwoLinePageRow) view;
-            row.updateFromCursor(cursor);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_item_row, parent, false);
-        }
-    }
-
-    /**
      * LoaderCallbacks implementation that interacts with the LoaderManager.
      */
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class PanelLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new HomeListLoader(getActivity(), mPanelConfig.getId());
+            final String datasetId = args.getString(DATASET_ID);
+
+            Log.d(LOGTAG, "Creating loader for dataset: " + datasetId);
+            return new PanelDatasetLoader(getActivity(), datasetId);
         }
 
         @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            mAdapter.swapCursor(c);
+        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
+
+            Log.d(LOGTAG, "Finished loader for dataset: " + datasetLoader.getDatasetId());
+            mLayout.deliverDataset(datasetLoader.getDatasetId(), cursor);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            mAdapter.swapCursor(null);
+            final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
+            Log.d(LOGTAG, "Resetting loader for dataset: " + datasetLoader.getDatasetId());
+            if (mLayout != null) {
+                mLayout.releaseDataset(datasetLoader.getDatasetId());
+            }
         }
     }
 }
