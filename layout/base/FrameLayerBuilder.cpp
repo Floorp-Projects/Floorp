@@ -1783,9 +1783,7 @@ ContainerState::PopThebesLayerData()
       colorLayer->SetColor(data->mSolidColor);
 
       // Copy transform
-      Matrix4x4 base;
-      ToMatrix4x4(data->mLayer->GetBaseTransform(), base);
-      colorLayer->SetBaseTransform(base);
+      colorLayer->SetBaseTransform(data->mLayer->GetBaseTransform());
       colorLayer->SetPostScale(data->mLayer->GetPostXScale(), data->mLayer->GetPostYScale());
 
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
@@ -2965,9 +2963,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
         // Don't clamp the scale factor when the new desired scale factor matches the old one
         // or it was previously unscaled.
         bool clamp = true;
-        gfxMatrix oldFrameTransform2d;
+        Matrix oldFrameTransform2d;
         if (aLayer->GetBaseTransform().Is2D(&oldFrameTransform2d)) {
-          gfxSize oldScale = RoundToFloatPrecision(oldFrameTransform2d.ScaleFactors(true));
+          gfxSize oldScale = RoundToFloatPrecision(ThebesMatrix(oldFrameTransform2d).ScaleFactors(true));
           if (oldScale == scale || oldScale == gfxSize(1.0, 1.0)) {
             clamp = false;
           }
