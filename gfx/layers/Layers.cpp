@@ -550,11 +550,9 @@ AncestorLayerMayChangeTransform(Layer* aLayer)
 bool
 Layer::MayResample()
 {
-  gfxMatrix transform2d;
-  gfx3DMatrix effectiveTransform;
-  To3DMatrix(GetEffectiveTransform(), effectiveTransform);
-  return !effectiveTransform.Is2D(&transform2d) ||
-         transform2d.HasNonIntegerTranslation() ||
+  Matrix transform2d;
+  return !GetEffectiveTransform().Is2D(&transform2d) ||
+         ThebesMatrix(transform2d).HasNonIntegerTranslation() ||
          AncestorLayerMayChangeTransform(this);
 }
 
@@ -620,8 +618,7 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
 const Matrix4x4
 Layer::GetTransform() const
 {
-  Matrix4x4 transform;
-  ToMatrix4x4(mTransform, transform);
+  Matrix4x4 transform = mTransform;
   if (const ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
@@ -636,7 +633,7 @@ Layer::GetLocalTransform()
   if (LayerComposite* shadow = AsLayerComposite())
     transform = shadow->GetShadowTransform();
   else
-    transform = mTransform;
+    To3DMatrix(mTransform, transform);
   if (ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
