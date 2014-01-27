@@ -20,7 +20,7 @@ function runTests() {
     var S = new StructType({x: int32, y: uint8, z: float64});
     assertEq(S.__proto__, StructType.prototype);
     assertEq(S.prototype.__proto__, StructType.prototype.prototype);
-    assertEq(S.toSource(), "StructType({x: int32, y: uint8, z: float64})");
+    assertEq(S.toSource(), "new StructType({x: int32, y: uint8, z: float64})");
     assertEq(S.variable, false);
     assertEq(S.byteLength, 16);
     assertEq(S.byteAlignment, 8);

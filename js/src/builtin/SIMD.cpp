@@ -133,7 +133,7 @@ class Float32x4Defn {
 } // namespace js
 
 const JSFunctionSpec js::Float32x4Defn::TypeDescriptorMethods[] = {
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     JS_SELF_HOSTED_FN("handle", "HandleCreate", 2, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
@@ -155,7 +155,7 @@ const JSFunctionSpec js::Float32x4Defn::TypedDatumMethods[] = {
 };
 
 const JSFunctionSpec js::Int32x4Defn::TypeDescriptorMethods[] = {
-    JS_FN("toSource", TypeDescrToSource, 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     JS_SELF_HOSTED_FN("handle", "HandleCreate", 2, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
