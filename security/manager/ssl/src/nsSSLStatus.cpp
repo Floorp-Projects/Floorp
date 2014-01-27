@@ -7,6 +7,7 @@
 #include "nsSSLStatus.h"
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIIdentityInfo.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
@@ -86,6 +87,39 @@ nsSSLStatus::GetIsUntrusted(bool* _result)
   *_result = mHaveCertErrorBits && mIsUntrusted;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)
+{
+  NS_ENSURE_ARG_POINTER(aIsEV);
+  *aIsEV = false;
+
+#ifdef NSS_NO_LIBPKIX
+  return NS_OK;
+#else
+  nsCOMPtr<nsIX509Cert> cert = mServerCert;
+  nsresult rv;
+  nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(cert, &rv);
+
+  // mServerCert should never be null when this method is called because
+  // nsSSLStatus objects always have mServerCert set right after they are
+  // constructed and before they are returned. GetIsExtendedValidation should
+  // only be called in the chrome process (in e10s), and mServerCert will always
+  // implement nsIIdentityInfo in the chrome process.
+  if (!idinfo) {
+    NS_ERROR("nsSSLStatus has null mServerCert or was called in the content "
+             "process");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Never allow bad certs for EV, regardless of overrides.
+  if (mHaveCertErrorBits) {
+    return NS_OK;
+  }
+
+  return idinfo->GetIsExtendedValidation(aIsEV);
+#endif
 }
 
 NS_IMETHODIMP

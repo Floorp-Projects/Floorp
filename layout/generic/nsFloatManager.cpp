@@ -431,10 +431,10 @@ nsFloatManager::List(FILE* out) const
 
   for (uint32_t i = 0; i < mFloats.Length(); ++i) {
     const FloatInfo &fi = mFloats[i];
-    printf("Float %u: frame=%p rect={%d,%d,%d,%d} ymost={l:%d, r:%d}\n",
-           i, static_cast<void*>(fi.mFrame),
-           fi.mRect.x, fi.mRect.y, fi.mRect.width, fi.mRect.height,
-           fi.mLeftYMost, fi.mRightYMost);
+    fprintf_stderr(out, "Float %u: frame=%p rect={%d,%d,%d,%d} ymost={l:%d, r:%d}\n",
+                   i, static_cast<void*>(fi.mFrame),
+                   fi.mRect.x, fi.mRect.y, fi.mRect.width, fi.mRect.height,
+                   fi.mLeftYMost, fi.mRightYMost);
   }
   return NS_OK;
 }
