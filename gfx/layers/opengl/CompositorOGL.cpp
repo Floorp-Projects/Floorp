@@ -231,8 +231,8 @@ FPSState::DrawFPS(TimeStamp aNow,
   aProgram->SetTextureUnit(0);
   aProgram->SetLayerQuadRect(gfx::Rect(0.f, 0.f, viewport[2], viewport[3]));
   aProgram->SetLayerOpacity(1.f);
-  aProgram->SetTextureTransform(gfx3DMatrix());
-  aProgram->SetLayerTransform(gfx3DMatrix());
+  aProgram->SetTextureTransform(Matrix4x4());
+  aProgram->SetLayerTransform(Matrix4x4());
   aProgram->SetRenderOffset(0, 0);
 
   aContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ZERO,
@@ -628,10 +628,14 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
 
   gfx3DMatrix textureTransform;
   if (rects.IsSimpleQuad(textureTransform)) {
-    aProg->SetTextureTransform(aTextureTransform * textureTransform);
+    Matrix4x4 transform;
+    ToMatrix4x4(aTextureTransform * textureTransform, transform);
+    aProg->SetTextureTransform(transform);
     BindAndDrawQuad(aProg, false);
   } else {
-    aProg->SetTextureTransform(aTextureTransform);
+    Matrix4x4 transform;
+    ToMatrix4x4(aTextureTransform, transform);
+    aProg->SetTextureTransform(transform);
     DrawQuads(mGLContext, mVBOs, aProg, rects);
   }
 }
@@ -1299,7 +1303,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       program->Activate();
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
-      program->SetTextureTransform(gfx3DMatrix());
+      program->SetTextureTransform(Matrix4x4());
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE1);
       if (maskType != MaskNone) {

@@ -2762,8 +2762,10 @@ RectTextureImage::Draw(GLManager* aManager,
 
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mUsedSize));
-  program->SetLayerTransform(aTransform * gfx3DMatrix::Translation(aLocation.x, aLocation.y, 0));
-  program->SetTextureTransform(gfx3DMatrix());
+  gfx::Matrix4x4 transform;
+  gfx::ToMatrix4x4(aTransform, transform);
+  program->SetLayerTransform(transform * gfx::Matrix4x4().Translate(aLocation.x, aLocation.y, 0));
+  program->SetTextureTransform(gfx::Matrix4x4());
   program->SetLayerOpacity(1.0);
   program->SetRenderOffset(nsIntPoint(0, 0));
   program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
