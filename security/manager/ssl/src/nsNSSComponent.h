@@ -107,10 +107,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
                            const nsAString& token) = 0;
 #endif
 
-#ifndef NSS_NO_LIBPKIX
-  NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
-#endif
-
   NS_IMETHOD IsNSSInitialized(bool* initialized) = 0;
 
   virtual ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
@@ -175,9 +171,6 @@ public:
                                  const nsAString& token);
 #endif
 
-#ifndef NSS_NO_LIBPKIX
-  NS_IMETHOD EnsureIdentityInfoLoaded();
-#endif
   NS_IMETHOD IsNSSInitialized(bool* initialized);
 
   ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
@@ -189,7 +182,6 @@ private:
 
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
-  void CleanupIdentityInfo();
   void setValidationOptions(bool isInitialSetting);
   nsresult setEnabledTLSVersions();
   nsresult InitializePIPNSSBundle();
@@ -226,7 +218,6 @@ private:
 
 
   static PRStatus IdentityInfoInit(void);
-  PRCallOnceType mIdentityInfoCallOnce;
 };
 
 class nsNSSErrors

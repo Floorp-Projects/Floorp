@@ -18,10 +18,9 @@ toolkit/library
   gfx
   toolkit/components/build
     toolkit/components
-  security/build
   security/manager
-  security/dbm
-  security/nss
+    security/certverifier
+      security/build
   accessible
   dom
   content

@@ -11,6 +11,7 @@
 #include "nsNSSCertificateDB.h"
 
 #include "CertVerifier.h"
+#include "ExtendedValidation.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Base64.h"
 #include "nsCOMPtr.h"
@@ -1698,13 +1699,8 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv;
 #ifndef NSS_NO_LIBPKIX
-  nsCOMPtr<nsINSSComponent> inss = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  inss->EnsureIdentityInfoLoaded();
+  EnsureIdentityInfoLoaded();
 #endif
 
   nsCOMPtr<nsIX509Cert2> x509Cert = do_QueryInterface(aCert);

@@ -10,6 +10,7 @@
 
 #include "nsNSSComponent.h"
 
+#include "ExtendedValidation.h"
 #include "mozilla/Telemetry.h"
 #include "nsCertVerificationThread.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -219,12 +220,6 @@ nsNSSComponent::nsNSSComponent()
 #endif
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ctor\n"));
   mObserversRegistered = false;
-
-#ifndef NSS_NO_LIBPKIX
-  // In order to keep startup time lower, we delay loading and
-  // registering all identity data until first needed.
-  memset(&mIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));
-#endif
 
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
@@ -904,12 +899,11 @@ setNonPkixOcspEnabled(int32_t ocspEnabled)
 {
   // Note: this preference is numeric vs boolean because previously we
   // supported more than two options.
+  CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
   if (!ocspEnabled) {
     CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
-    CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
   } else {
     CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
-    CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
   }
 }
 

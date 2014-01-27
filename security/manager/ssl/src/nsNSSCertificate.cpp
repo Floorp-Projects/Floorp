@@ -9,6 +9,7 @@
 
 #include "nsNSSCertificate.h"
 #include "CertVerifier.h"
+#include "ExtendedValidation.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
@@ -1479,6 +1480,125 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
   }
   PR_FREEIF(servername);
   return nickname;
+}
+
+#ifndef NSS_NO_LIBPKIX
+
+nsresult
+nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  EnsureIdentityInfoLoaded();
+
+  RefPtr<mozilla::psm::SharedCertVerifier>
+    certVerifier(mozilla::psm::GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
+
+  validEV = false;
+  resultOidTag = SEC_OID_UNKNOWN;
+
+  uint32_t flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY |
+    mozilla::psm::CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV;
+  SECStatus rv = certVerifier->VerifyCert(mCert,
+    certificateUsageSSLServer, PR_Now(),
+    nullptr /* XXX pinarg */,
+    flags, nullptr, &resultOidTag);
+
+  if (rv != SECSuccess) {
+    resultOidTag = SEC_OID_UNKNOWN;
+  }
+  if (resultOidTag != SEC_OID_UNKNOWN) {
+    validEV = true;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertificate::getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
+{
+  if (mCachedEVStatus != ev_status_unknown) {
+    validEV = (mCachedEVStatus == ev_status_valid);
+    if (validEV) {
+      resultOidTag = mCachedEVOidTag;
+    }
+    return NS_OK;
+  }
+
+  nsresult rv = hasValidEVOidTag(resultOidTag, validEV);
+  if (NS_SUCCEEDED(rv)) {
+    if (validEV) {
+      mCachedEVOidTag = resultOidTag;
+    }
+    mCachedEVStatus = validEV ? ev_status_valid : ev_status_invalid;
+  }
+  return rv;
+}
+
+#endif // NSS_NO_LIBPKIX
+
+NS_IMETHODIMP
+nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
+{
+#ifdef NSS_NO_LIBPKIX
+  *aIsEV = false;
+  return NS_OK;
+#else
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ENSURE_ARG(aIsEV);
+  *aIsEV = false;
+
+  if (mCachedEVStatus != ev_status_unknown) {
+    *aIsEV = (mCachedEVStatus == ev_status_valid);
+    return NS_OK;
+  }
+
+  SECOidTag oid_tag;
+  return getValidEVOidTag(oid_tag, *aIsEV);
+#endif
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
+{
+  outDottedOid.Truncate();
+
+#ifndef NSS_NO_LIBPKIX
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  SECOidTag oid_tag;
+  bool valid;
+  nsresult rv = getValidEVOidTag(oid_tag, valid);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (valid) {
+    SECOidData* oid_data = SECOID_FindOIDByTag(oid_tag);
+    if (!oid_data) {
+      return NS_ERROR_FAILURE;
+    }
+
+    char* oid_str = CERT_GetOidString(&oid_data->oid);
+    if (!oid_str) {
+      return NS_ERROR_FAILURE;
+    }
+
+    outDottedOid.Assign(oid_str);
+    PR_smprintf_free(oid_str);
+  }
+#endif
+
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(nsNSSCertList, nsIX509CertList)
