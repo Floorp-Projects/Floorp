@@ -144,7 +144,8 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
-  "RIL:RegisterIccMsg"
+  "RIL:RegisterIccMsg",
+  "RIL:MatchMvno"
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
@@ -1378,6 +1379,9 @@ RadioInterface.prototype = {
       case "RIL:UpdateIccContact":
         this.workerMessenger.sendWithIPCMessage(msg, "updateICCContact");
         break;
+      case "RIL:MatchMvno":
+        this.matchMvno(msg.target, msg.json.data);
+        break;
       case "RIL:SetCallForwardingOptions":
         this.setCallForwardingOptions(msg.target, msg.json.data);
         break;
@@ -1602,6 +1606,52 @@ RadioInterface.prototype = {
     }
 
     return iccId;
+  },
+
+  // Matches the mvnoData pattern with imsi. Characters 'x' and 'X' are skipped
+  // and not compared. E.g., if the mvnoData passed is '310260x10xxxxxx',
+  // then the function returns true only if imsi has the same first 6 digits,
+  // 8th and 9th digit.
+  isImsiMatches: function(mvnoData) {
+    let imsi = this.rilContext.imsi;
+
+    // This should not be an error, but a mismatch.
+    if (mvnoData.length > imsi.length) {
+      return false;
+    }
+
+    for (let i = 0; i < mvnoData.length; i++) {
+      let c = mvnoData[i];
+      if ((c !== 'x') && (c !== 'X') && (c !== imsi[i])) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  matchMvno: function(target, message) {
+    if (DEBUG) this.debug("matchMvno: " + JSON.stringify(message));
+
+    if (!message || !message.mvnoType || !message.mvnoData) {
+      message.errorMsg = RIL.GECKO_ERROR_INVALID_PARAMETER;
+    }
+    // Currently we only support imsi matching.
+    if (message.mvnoType != "imsi") {
+      message.errorMsg = RIL.GECKO_ERROR_MODE_NOT_SUPPORTED;
+    }
+    // Fire error if mvnoType is imsi but imsi is not available.
+    if (!this.rilContext.imsi) {
+      message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
+    }
+
+    if (!message.errorMsg) {
+      message.result = this.isImsiMatches(message.mvnoData);
+    }
+
+    target.sendAsyncMessage("RIL:MatchMvno", {
+      clientId: this.clientId,
+      data: message
+    });
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {
