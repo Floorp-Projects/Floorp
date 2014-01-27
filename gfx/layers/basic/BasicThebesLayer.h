@@ -74,14 +74,13 @@ public:
     }
     mValidRegion.SetEmpty();
   }
-  
+
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     if (!BasicManager()->IsRetained()) {
       // Don't do any snapping of our transform, since we're just going to
       // draw straight through without intermediate buffers.
-      gfx::ToMatrix4x4(GetLocalTransform(), mEffectiveTransform);
-      mEffectiveTransform = mEffectiveTransform * aTransformToSurface;
+      mEffectiveTransform = GetLocalTransform() * aTransformToSurface;
       if (gfxPoint(0,0) != mResidualTranslation) {
         mResidualTranslation = gfxPoint(0,0);
         mValidRegion.SetEmpty();

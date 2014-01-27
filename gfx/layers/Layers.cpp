@@ -628,7 +628,7 @@ Layer::GetTransform() const
   return transform;
 }
 
-const gfx3DMatrix
+const Matrix4x4
 Layer::GetLocalTransform()
 {
   gfx3DMatrix transform;
@@ -640,7 +640,10 @@ Layer::GetLocalTransform()
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
   transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
-  return transform;
+
+  Matrix4x4 result;
+  ToMatrix4x4(transform, result);
+  return result;
 }
 
 void
@@ -888,13 +891,9 @@ void
 ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface)
 {
   Matrix residual;
-  gfx3DMatrix idealTransform;
-  To3DMatrix(aTransformToSurface, idealTransform);
-  idealTransform = GetLocalTransform() * idealTransform;
+  Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
   idealTransform.ProjectTo2D();
-  Matrix4x4 ideal;
-  ToMatrix4x4(idealTransform, ideal);
-  mEffectiveTransform = SnapTransformTranslation(ideal, &residual);
+  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
   if (GetMaskLayer()) {
@@ -939,7 +938,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   if (useIntermediateSurface) {
     ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
   } else {
-    ComputeEffectiveTransformsForChildren(ideal);
+    ComputeEffectiveTransformsForChildren(idealTransform);
   }
 
   if (idealTransform.CanDraw2D()) {
