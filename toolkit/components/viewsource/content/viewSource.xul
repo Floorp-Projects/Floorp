@@ -202,35 +202,9 @@
                 label="&charsetMenu.label;"
                 accesskey="&charsetMenu.accesskey;"
                 oncommand="MultiplexHandler(event);"
-                onpopupshowing="CharsetMenu.build(event);"
+                onpopupshowing="CharsetMenu.build(event.target);"
                 onpopupshown="UpdateMenus();">
             <menupopup>
-              <menu label="&charsetMenuAutodet.label;"
-                    accesskey="&charsetMenuAutodet.accesskey;">
-                <menupopup>
-                  <menuitem type="radio"
-                            name="detectorGroup"
-                            id="chardet.off"
-                            label="&charsetMenuAutodet.off.label;"
-                            accesskey="&charsetMenuAutodet.off.accesskey;"/>
-                  <menuitem type="radio"
-                            name="detectorGroup"
-                            id="chardet.ja_parallel_state_machine"
-                            label="&charsetMenuAutodet.ja.label;"
-                            accesskey="&charsetMenuAutodet.ja.accesskey;"/>
-                  <menuitem type="radio"
-                            name="detectorGroup"
-                            id="chardet.ruprob"
-                            label="&charsetMenuAutodet.ru.label;"
-                            accesskey="&charsetMenuAutodet.ru.accesskey;"/>
-                  <menuitem type="radio"
-                            name="detectorGroup"
-                            id="chardet.ukprob"
-                            label="&charsetMenuAutodet.uk.label;"
-                            accesskey="&charsetMenuAutodet.uk.accesskey;"/>
-                </menupopup>
-              </menu>
-              <menuseparator/>
             </menupopup>
           </menu>
           <menuseparator/>

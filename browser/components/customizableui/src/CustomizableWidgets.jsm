@@ -21,6 +21,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
+
+XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
+  const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
+  return Services.strings.createBundle(kCharsetBundle);
+});
 XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
   const kBrandBundle = "chrome://branding/locale/brand.properties";
   return Services.strings.createBundle(kBrandBundle);
@@ -764,6 +769,11 @@ const CustomizableWidgets = [{
     },
     onViewShowing: function(aEvent) {
       let document = aEvent.target.ownerDocument;
+
+      let autoDetectLabelId = "PanelUI-characterEncodingView-autodetect-label";
+      let autoDetectLabel = document.getElementById(autoDetectLabelId);
+      let label = CharsetBundle.GetStringFromName("charsetMenuAutodet");
+      autoDetectLabel.setAttribute("value", label);
 
       this.populateList(document,
                         "PanelUI-characterEncodingView-customlist",
