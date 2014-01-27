@@ -7,7 +7,6 @@
 #include <new>                          // for operator new
 #include "Layers.h"                     // for Layer, etc
 #include "basic/BasicImplData.h"        // for BasicImplData
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/CompositorTypes.h"
@@ -70,15 +69,14 @@ GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
     if (static_cast<BasicImplData*>(aMaskLayer->ImplData())
         ->GetAsSurface(getter_AddRefs(surface), &descriptor) &&
         (surface || IsSurfaceDescriptorValid(descriptor))) {
-      gfxMatrix transform;
-      gfx3DMatrix effectiveTransform;
-      gfx::To3DMatrix(aMaskLayer->GetEffectiveTransform(), effectiveTransform);
+      Matrix transform;
+      Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
       DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
       if (surface) {
-        aMaskData->Construct(transform, surface);
+        aMaskData->Construct(ThebesMatrix(transform), surface);
       } else {
-        aMaskData->Construct(transform, descriptor);
+        aMaskData->Construct(ThebesMatrix(transform), descriptor);
       }
       return true;
     }
