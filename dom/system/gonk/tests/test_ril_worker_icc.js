@@ -1702,7 +1702,9 @@ add_test(function test_update_icc_contact() {
       } else if (pbr.anr0.fileType === ICC_USIM_TYPE2_TAG) {
         do_check_eq(recordNumber, ANR0_RECORD_ID);
       }
-      do_check_eq(number, aContact.anr[0]);
+      if (Array.isArray(aContact.anr)) {
+        do_check_eq(number, aContact.anr[0]);
+      }
       onsuccess();
     };
 
@@ -1767,6 +1769,86 @@ add_test(function test_update_icc_contact() {
     do_print("Test update RUIM fdn contacts with enhanced phone book");
     do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
   }
+
+  run_next_test();
+});
+
+/**
+ * Verify updateICCContact with removal of anr and email with File Type 1.
+ */
+add_test(function test_update_icc_contact_with_remove_type1_attr() {
+  const ADN_RECORD_ID   = 100;
+  const IAP_FILE_ID     = 0x4f17;
+  const EMAIL_FILE_ID   = 0x4f50;
+  const EMAIL_RECORD_ID = 20;
+  const ANR0_FILE_ID    = 0x4f11;
+  const ANR0_RECORD_ID  = 30;
+
+  let worker = newUint8Worker();
+  let recordHelper = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+
+  recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
+    onsuccess();
+  };
+
+  let contact = {
+    pbrIndex: 0,
+    recordId: ADN_RECORD_ID,
+    alphaId:  "test2",
+    number:   "123456",
+  };
+
+  recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
+    onsuccess([EMAIL_RECORD_ID, ANR0_RECORD_ID]);
+  };
+
+  recordHelper.updateEmail = function(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
+    do_check_true(email == null);
+    onsuccess();
+  };
+
+  recordHelper.updateANR = function(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
+    do_check_true(number == null);
+    onsuccess();
+  };
+
+  function do_test(type) {
+    recordHelper.readPBR = function(onsuccess, onerror) {
+      if (type == ICC_USIM_TYPE1_TAG) {
+        onsuccess([{
+          adn:   {fileId: ICC_EF_ADN},
+          email: {fileId: EMAIL_FILE_ID,
+                  fileType: ICC_USIM_TYPE1_TAG},
+          anr0:  {fileId: ANR0_FILE_ID,
+                  fileType: ICC_USIM_TYPE1_TAG}}]);
+      } else {
+        onsuccess([{
+          adn:   {fileId: ICC_EF_ADN},
+          iap:   {fileId: IAP_FILE_ID},
+          email: {fileId: EMAIL_FILE_ID,
+                  fileType: ICC_USIM_TYPE2_TAG,
+                  indexInIAP: 0},
+          anr0:  {fileId: ANR0_FILE_ID,
+                  fileType: ICC_USIM_TYPE2_TAG,
+                  indexInIAP: 1}}]);
+      }
+    };
+
+    let successCb = function() {
+      do_check_true(true);
+    };
+
+    let errorCb = function(errorMsg) {
+      do_print(errorMsg);
+      do_check_true(false);
+    };
+
+    contactHelper.updateICCContact(CARD_APPTYPE_USIM, "adn", contact, null, successCb, errorCb);
+  }
+
+  do_test(ICC_USIM_TYPE1_TAG);
+  do_test(ICC_USIM_TYPE2_TAG);
 
   run_next_test();
 });
