@@ -282,7 +282,7 @@ public:
   }
 
   // activates this program and sets its projection matrix, if the program uses one
-  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
+  void CheckAndSetProjectionMatrix(const gfx::Matrix4x4& aMatrix)
   {
     if (mProfile.mHasMatrixProj) {
       mIsProjectionMatrixStale = true;
@@ -290,7 +290,7 @@ public:
     }
   }
 
-  void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
+  void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
     mIsProjectionMatrixStale = false;
   }
@@ -365,7 +365,7 @@ public:
   static const char* const TexCoordAttrib;
 
 protected:
-  gfx3DMatrix mProjectionMatrix;
+  gfx::Matrix4x4 mProjectionMatrix;
   // true if the projection matrix needs setting
   bool mIsProjectionMatrixStale;
 
