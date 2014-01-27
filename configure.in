@@ -5546,6 +5546,11 @@ if test -n "$MOZ_OPUS"; then
     AC_DEFINE(MOZ_OPUS)
 fi
 
+if test -n "$MOZ_WEBM_ENCODER"; then
+    AC_DEFINE(MOZ_WEBM_ENCODER)
+fi
+AC_SUBST(MOZ_WEBM_ENCODER)
+
 dnl ==================================
 dnl = Check alsa availability on Linux
 dnl ==================================

@@ -1,0 +1,139 @@
+vpx Multi-Format Codec SDK
+README - 1 August 2013
+
+Welcome to the WebM VP8/VP9 Codec SDK!
+
+COMPILING THE APPLICATIONS/LIBRARIES:
+  The build system used is similar to autotools. Building generally consists of
+  "configuring" with your desired build options, then using GNU make to build
+  the application.
+
+  1. Prerequisites
+
+    * All x86 targets require the Yasm[1] assembler be installed.
+    * All Windows builds require that Cygwin[2] be installed.
+    * Building the documentation requires PHP[3] and Doxygen[4]. If you do not
+      have these packages, you must pass --disable-install-docs to the
+      configure script.
+    * Downloading the data for the unit tests requires curl[5] and sha1sum.
+      sha1sum is provided via the GNU coreutils, installed by default on
+      many *nix platforms, as well as MinGW and Cygwin. If coreutils is not
+      available, a compatible version of sha1sum can be built from
+      source[6]. These requirements are optional if not running the unit
+      tests.
+
+    [1]: http://www.tortall.net/projects/yasm
+    [2]: http://www.cygwin.com
+    [3]: http://php.net
+    [4]: http://www.doxygen.org
+    [5]: http://curl.haxx.se
+    [6]: http://www.microbrew.org/tools/md5sha1sum/
+
+  2. Out-of-tree builds
+  Out of tree builds are a supported method of building the application. For
+  an out of tree build, the source tree is kept separate from the object
+  files produced during compilation. For instance:
+
+    $ mkdir build
+    $ cd build
+    $ ../libvpx/configure <options>
+    $ make
+
+  3. Configuration options
+  The 'configure' script supports a number of options. The --help option can be
+  used to get a list of supported options:
+    $ ../libvpx/configure --help
+
+  4. Cross development
+  For cross development, the most notable option is the --target option. The
+  most up-to-date list of supported targets can be found at the bottom of the
+  --help output of the configure script. As of this writing, the list of
+  available targets is:
+
+    armv5te-android-gcc
+    armv5te-linux-rvct
+    armv5te-linux-gcc
+    armv5te-none-rvct
+    armv6-darwin-gcc
+    armv6-linux-rvct
+    armv6-linux-gcc
+    armv6-none-rvct
+    armv7-android-gcc
+    armv7-darwin-gcc
+    armv7-linux-rvct
+    armv7-linux-gcc
+    armv7-none-rvct
+    armv7-win32-vs11
+    armv7-win32-vs12
+    mips32-linux-gcc
+    ppc32-darwin8-gcc
+    ppc32-darwin9-gcc
+    ppc32-linux-gcc
+    ppc64-darwin8-gcc
+    ppc64-darwin9-gcc
+    ppc64-linux-gcc
+    sparc-solaris-gcc
+    x86-android-gcc
+    x86-darwin8-gcc
+    x86-darwin8-icc
+    x86-darwin9-gcc
+    x86-darwin9-icc
+    x86-darwin10-gcc
+    x86-darwin11-gcc
+    x86-darwin12-gcc
+    x86-darwin13-gcc
+    x86-linux-gcc
+    x86-linux-icc
+    x86-os2-gcc
+    x86-solaris-gcc
+    x86-win32-gcc
+    x86-win32-vs7
+    x86-win32-vs8
+    x86-win32-vs9
+    x86-win32-vs10
+    x86-win32-vs11
+    x86-win32-vs12
+    x86_64-darwin9-gcc
+    x86_64-darwin10-gcc
+    x86_64-darwin11-gcc
+    x86_64-darwin12-gcc
+    x86_64-darwin13-gcc
+    x86_64-linux-gcc
+    x86_64-linux-icc
+    x86_64-solaris-gcc
+    x86_64-win64-gcc
+    x86_64-win64-vs8
+    x86_64-win64-vs9
+    x86_64-win64-vs10
+    x86_64-win64-vs11
+    x86_64-win64-vs12
+    universal-darwin8-gcc
+    universal-darwin9-gcc
+    universal-darwin10-gcc
+    universal-darwin11-gcc
+    universal-darwin12-gcc
+    universal-darwin13-gcc
+    generic-gnu
+
+  The generic-gnu target, in conjunction with the CROSS environment variable,
+  can be used to cross compile architectures that aren't explicitly listed, if
+  the toolchain is a cross GNU (gcc/binutils) toolchain. Other POSIX toolchains
+  will likely work as well. For instance, to build using the mipsel-linux-uclibc
+  toolchain, the following command could be used (note, POSIX SH syntax, adapt
+  to your shell as necessary):
+
+    $ CROSS=mipsel-linux-uclibc- ../libvpx/configure
+
+  In addition, the executables to be invoked can be overridden by specifying the
+  environment variables: CC, AR, LD, AS, STRIP, NM. Additional flags can be
+  passed to these executables with CFLAGS, LDFLAGS, and ASFLAGS.
+
+  5. Configuration errors
+  If the configuration step fails, the first step is to look in the error log.
+  This defaults to config.log. This should give a good indication of what went
+  wrong. If not, contact us for support.
+
+SUPPORT
+  This library is an open source project supported by its community. Please
+  please email webm-discuss@webmproject.org for help.
+

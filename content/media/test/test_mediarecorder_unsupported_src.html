@@ -1,0 +1,90 @@
+<html>
+<head>
+  <title>Bug 957439 - Media Recording - Assertion fail at Pause if unsupported input stream.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=957439">Mozilla Bug 957439</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  navigator.mozGetUserMedia({audio: false, video: true, fake: true},
+    function(stream) {
+
+      // Expected callback sequence should be:
+      // 1. onerror (from start)
+      // 2. onerror (from pause)
+      // 3. ondataavailable
+      // 4. onstop
+      var callbackStep = 0;
+      var mediaRecorder = new MediaRecorder(stream);
+
+      is(mediaRecorder.stream, stream, 'Stream should be provided on creation');
+
+      mediaRecorder.onerror = function (e) {
+        callbackStep++;
+        ok(callbackStep < 3, 'onerror callback fired as expected.');
+        is(e.name, 'GenericError', 'Error name should be GenericError.');
+        is(mediaRecorder.mimeType, '', 'mimetype should be empty');
+        is(mediaRecorder.state, 'recording', 'state is recording');
+        info('onerror callback fired');
+      }
+
+      mediaRecorder.onwarning = function () {
+        ok(false, 'Unexpected onwarning callback fired.');
+      };
+
+      mediaRecorder.ondataavailable = function (evt) {
+        callbackStep++;
+        info('ondataavailable callback fired');
+        is(callbackStep, 3, 'should fired ondataavailable callback');
+        is(evt.data.size, 0, 'data size should be zero');
+        ok(evt instanceof BlobEvent,
+           'Events fired from ondataavailable should be BlobEvent');
+        is(evt.data.type, '', 'encoder start fail, blob miemType should be empty');
+      };
+
+      mediaRecorder.onstop = function() {
+        callbackStep++;
+        info('onstop callback fired');
+        is(mediaRecorder.state, 'inactive', 'state should be inactive');
+        is(callbackStep, 4, 'should fired onstop callback');
+        SimpleTest.finish();
+      };
+
+      try {
+        mediaRecorder.start();
+      } catch(e) {
+        ok(false, 'Should not get exception in start call.');
+      }
+
+      try {
+        mediaRecorder.pause();
+      } catch(e) {
+        ok(false, 'Should not get exception in pause call.');
+      }
+    },
+    function(err) {
+      ok(false, 'Unexpected error fired with: ' + err);
+      SimpleTest.finish();
+    }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// In order to generate an "unsupported stream", pref off video encoding to
+// make the platform support audio encoding only.
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.encoder.webm.enabled", false]
+    ]
+  }, startTest);
+
+</script>
+</head>
+</html>

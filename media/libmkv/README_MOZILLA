@@ -1,0 +1,6 @@
+The source from this directory was copied from the libvpx/third_party/libmkv
+git repository using the update.sh script.
+
+The libvpx git repository is: http://git.chromium.org/webm/libvpx.git
+
+The git commit ID used was c5aaf923d80e9f71e0c93d7d99dc1e2f83d7acbf.
