@@ -19,7 +19,7 @@ namespace mozilla {
 namespace layers {
 
 void
-AutoMaskData::Construct(const gfxMatrix& aTransform,
+AutoMaskData::Construct(const gfx::Matrix& aTransform,
                         gfxASurface* aSurface)
 {
   MOZ_ASSERT(!IsConstructed());
@@ -28,7 +28,7 @@ AutoMaskData::Construct(const gfxMatrix& aTransform,
 }
 
 void
-AutoMaskData::Construct(const gfxMatrix& aTransform,
+AutoMaskData::Construct(const gfx::Matrix& aTransform,
                         const SurfaceDescriptor& aSurface)
 {
   MOZ_ASSERT(!IsConstructed());
@@ -46,7 +46,7 @@ AutoMaskData::GetSurface()
   return mSurfaceOpener.ref().Get();
 }
 
-const gfxMatrix&
+const gfx::Matrix&
 AutoMaskData::GetTransform()
 {
   MOZ_ASSERT(IsConstructed());
@@ -74,9 +74,9 @@ GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
       DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
       if (surface) {
-        aMaskData->Construct(ThebesMatrix(transform), surface);
+        aMaskData->Construct(transform, surface);
       } else {
-        aMaskData->Construct(ThebesMatrix(transform), descriptor);
+        aMaskData->Construct(transform, descriptor);
       }
       return true;
     }
@@ -94,7 +94,7 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
       aContext->Paint(aOpacity);
       aContext->PopGroupToSource();
     }
-    aContext->SetMatrix(mask.GetTransform());
+    aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
     aContext->Mask(mask.GetSurface());
     return;
   }
@@ -112,12 +112,12 @@ FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
       aContext->PushGroup(gfxContentType::COLOR_ALPHA);
       aContext->FillWithOpacity(aOpacity);
       aContext->PopGroupToSource();
-      aContext->SetMatrix(mask.GetTransform());
+      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
       aContext->Mask(mask.GetSurface());
     } else {
       aContext->Save();
       aContext->Clip();
-      aContext->SetMatrix(mask.GetTransform());
+      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
       aContext->Mask(mask.GetSurface());
       aContext->NewPath();
       aContext->Restore();

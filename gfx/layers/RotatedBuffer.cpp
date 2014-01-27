@@ -11,7 +11,6 @@
 #include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "Layers.h"                     // for ThebesLayer, Layer, etc
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
