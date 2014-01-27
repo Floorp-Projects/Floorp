@@ -216,15 +216,6 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::dom::Crypto)
 
 NS_IMPL_ADDREF_INHERITED(nsCrypto, mozilla::dom::Crypto)
 NS_IMPL_RELEASE_INHERITED(nsCrypto, mozilla::dom::Crypto)
- 
-// QueryInterface implementation for CRMFObject
-NS_INTERFACE_MAP_BEGIN(CRMFObject)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCRMFObject)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(CRMFObject)
-NS_IMPL_RELEASE(CRMFObject)
 
 // QueryInterface implementation for nsPkcs11
 #endif // MOZ_DISABLE_CRYPTOLEGACY
@@ -1860,7 +1851,7 @@ GetISupportsFromContext(JSContext *cx)
 
 //The top level method which is a member of nsIDOMCrypto
 //for generate a base64 encoded CRMF request.
-already_AddRefed<CRMFObject>
+CRMFObject*
 nsCrypto::GenerateCRMFRequest(JSContext* aContext,
                               const nsCString& aReqDN,
                               const nsCString& aRegToken,
@@ -2030,7 +2021,7 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsRefPtr<CRMFObject> newObject = new CRMFObject();
+  CRMFObject* newObject = new CRMFObject();
   newObject->SetCRMFRequest(encodedRequest);
   nsFreeKeyPairInfo(keyids, numRequests);
 
@@ -2080,7 +2071,7 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     delete cryptoRunnable;
   }
 
-  return newObject.forget();
+  return newObject;
 }
 
 // Reminder that we inherit the memory passed into us here.
@@ -2857,23 +2848,25 @@ nsCrypto::DisableRightClick(ErrorResult& aRv)
 
 CRMFObject::CRMFObject()
 {
+  MOZ_COUNT_CTOR(CRMFObject);
 }
 
 CRMFObject::~CRMFObject()
 {
+  MOZ_COUNT_DTOR(CRMFObject);
 }
 
 JSObject*
-CRMFObject::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
+CRMFObject::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership)
 {
-  return CRMFObjectBinding::Wrap(aCx, aScope, this);
+  return CRMFObjectBinding::Wrap(aCx, aScope, this, aTookOwnership);
 }
 
-NS_IMETHODIMP
+void
 CRMFObject::GetRequest(nsAString& aRequest)
 {
   aRequest.Assign(mBase64Request);
-  return NS_OK;
 }
 
 nsresult

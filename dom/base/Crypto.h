@@ -50,7 +50,7 @@ public:
 
   virtual void GetVersion(nsString& aVersion);
 
-  virtual already_AddRefed<mozilla::dom::CRMFObject>
+  virtual mozilla::dom::CRMFObject*
   GenerateCRMFRequest(JSContext* aContext,
                       const nsCString& aReqDN,
                       const nsCString& aRegToken,
