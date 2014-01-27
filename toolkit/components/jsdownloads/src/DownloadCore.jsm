@@ -1401,7 +1401,12 @@ this.DownloadSaver.prototype = {
   getSha256Hash: function ()
   {
     throw new Error("Not implemented.");
-  }
+  },
+
+  getSignatureInfo: function ()
+  {
+    throw new Error("Not implemented.");
+  },
 }; // DownloadSaver
 
 /**
@@ -1459,6 +1464,13 @@ this.DownloadCopySaver.prototype = {
    * unless BackgroundFileSaver has successfully completed saving the file.
    */
   _sha256Hash: null,
+
+  /**
+   * Save the signature info as an nsIArray of nsIX509CertList of nsIX509Cert
+   * if the file is signed. This is empty if the file is unsigned, and null
+   * unless BackgroundFileSaver has successfully completed saving the file.
+   */
+  _signatureInfo: null,
 
   /**
    * True if the associated download has already been added to browsing history.
@@ -1536,6 +1548,7 @@ this.DownloadCopySaver.prototype = {
               if (Components.isSuccessCode(aStatus)) {
                 // Save the hash before freeing backgroundFileSaver.
                 this._sha256Hash = aSaver.sha256Hash;
+                this._signatureInfo = aSaver.signatureInfo;
                 deferSaveComplete.resolve();
               } else {
                 // Infer the origin of the error from the failure code, because
@@ -1643,8 +1656,10 @@ this.DownloadCopySaver.prototype = {
                 }
               }
 
-              // Enable hashing before setting the target.
+              // Enable hashing and signature verification before setting the
+              // target.
               backgroundFileSaver.enableSha256();
+              backgroundFileSaver.enableSignatureInfo();
               if (partFilePath) {
                 // If we actually resumed a request, append to the partial data.
                 if (resumeAttempted) {
@@ -1770,6 +1785,14 @@ this.DownloadCopySaver.prototype = {
   getSha256Hash: function ()
   {
     return this._sha256Hash;
+  },
+
+  /*
+   * Implements DownloadSaver.getSignatureInfo.
+   */
+  getSignatureInfo: function ()
+  {
+    return this._signatureInfo;
   }
 };
 
@@ -1817,6 +1840,13 @@ this.DownloadLegacySaver.prototype = {
    * invoked.
    */
   _sha256Hash: null,
+
+  /**
+   * Save the signature info as an nsIArray of nsIX509CertList of nsIX509Cert
+   * if the file is signed. This is empty if the file is unsigned, and null
+   * unless BackgroundFileSaver has successfully completed saving the file.
+   */
+  _signatureInfo: null,
 
   /**
    * nsIRequest object associated to the status and progress updates we
@@ -2087,6 +2117,25 @@ this.DownloadLegacySaver.prototype = {
   setSha256Hash: function (hash)
   {
     this._sha256Hash = hash;
+  },
+
+  /**
+   * Implements "DownloadSaver.getSignatureInfo".
+   */
+  getSignatureInfo: function ()
+  {
+    if (this.copySaver) {
+      return this.copySaver.getSignatureInfo();
+    }
+    return this._signatureInfo;
+  },
+
+  /**
+   * Called by the nsITransfer implementation when the hash is available.
+   */
+  setSignatureInfo: function (signatureInfo)
+  {
+    this._signatureInfo = signatureInfo;
   },
 };
 

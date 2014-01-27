@@ -493,20 +493,23 @@ this.DownloadIntegration = {
       return Promise.resolve(this.shouldBlockInTestForApplicationReputation);
     }
     let hash;
+    let sigInfo;
     try {
       hash = aDownload.saver.getSha256Hash();
+       sigInfo = aDownload.saver.getSignatureInfo();
     } catch (ex) {
       // Bail if DownloadSaver doesn't have a hash.
       return Promise.resolve(false);
     }
-    if (!hash) {
+    if (!hash || !sigInfo) {
       return Promise.resolve(false);
     }
     let deferred = Promise.defer();
     gApplicationReputationService.queryReputation({
       sourceURI: NetUtil.newURI(aDownload.source.url),
       fileSize: aDownload.currentBytes,
-      sha256Hash: hash },
+      sha256Hash: hash,
+      signatureInfo: sigInfo },
       function onComplete(aShouldBlock, aRv) {
         deferred.resolve(aShouldBlock);
       });
