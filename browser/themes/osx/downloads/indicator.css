@@ -37,6 +37,11 @@
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
+#downloads-button[cui-areatype="menu-panel"][attention] {
+  list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel.png");
+  -moz-image-region: auto;
+}
+
 /* In the next few rules, we use :not([counter]) as a shortcut that is
    equivalent to -moz-any([progress], [paused]). */
 
@@ -75,6 +80,10 @@
 
   #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
     background-image: url("chrome://browser/skin/downloads/download-glow@2x.png");
+  }
+
+  #downloads-button[cui-areatype="menu-panel"][attention] {
+    list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel@2x.png");
   }
 
   #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
