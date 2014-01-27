@@ -1365,8 +1365,8 @@ protected:
    * @param aResidualTransform a transform to apply before the result transform
    * in order to get the results to completely match aTransform.
    */
-  gfx3DMatrix SnapTransformTranslation(const gfx3DMatrix& aTransform,
-                                       gfxMatrix* aResidualTransform);
+  gfx::Matrix4x4 SnapTransformTranslation(const gfx::Matrix4x4& aTransform,
+                                          gfx::Matrix* aResidualTransform);
   /**
    * See comment for SnapTransformTranslation.
    * This function implements type 2 snapping. If aTransform is a translation
@@ -1378,9 +1378,9 @@ protected:
    * @param aResidualTransform a transform to apply before the result transform
    * in order to get the results to completely match aTransform.
    */
-  gfx3DMatrix SnapTransform(const gfx3DMatrix& aTransform,
-                            const gfxRect& aSnapRect,
-                            gfxMatrix* aResidualTransform);
+  gfx::Matrix4x4 SnapTransform(const gfx::Matrix4x4& aTransform,
+                               const gfxRect& aSnapRect,
+                               gfx::Matrix* aResidualTransform);
 
   /**
    * Returns true if this layer's effective transform is not just
@@ -1480,17 +1480,17 @@ public:
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
   {
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    gfxMatrix residual;
-    gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform,
+    gfx::Matrix4x4 idealTransform;
+    gfx::ToMatrix4x4(GetLocalTransform() * aTransformToSurface, idealTransform);
+    gfx::Matrix residual;
+    mEffectiveTransform = SnapTransformTranslation(idealTransform,
         mAllowResidualTranslation ? &residual : nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
     // The residual can only be a translation because SnapTransformTranslation
     // only changes the transform if it's a translation
-    NS_ASSERTION(!residual.HasNonTranslation(),
+    NS_ASSERTION(residual.IsTranslation(),
                  "Residual transform can only be a translation");
-    if (!residual.GetTranslation().WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
-      mResidualTranslation = residual.GetTranslation();
+    if (!gfx::ThebesPoint(residual.GetTranslation()).WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
+      mResidualTranslation = gfx::ThebesPoint(residual.GetTranslation());
       NS_ASSERTION(-0.5 <= mResidualTranslation.x && mResidualTranslation.x < 0.5 &&
                    -0.5 <= mResidualTranslation.y && mResidualTranslation.y < 0.5,
                    "Residual translation out of range");
@@ -1753,9 +1753,9 @@ public:
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
   {
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform, nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
+    gfx::Matrix4x4 idealTransform;
+    gfx::ToMatrix4x4(GetLocalTransform() * aTransformToSurface, idealTransform);
+    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
@@ -1898,11 +1898,14 @@ public:
     // This makes our snapping equivalent to what would happen if our content
     // was drawn into a ThebesLayer (gfxContext would snap using the local
     // transform, then we'd snap again when compositing the ThebesLayer).
-    gfx3DMatrix snappedTransform =
-        SnapTransform(GetLocalTransform(), gfxRect(0, 0, mBounds.width, mBounds.height),
+    gfx::Matrix4x4 localTransform;
+    gfx::Matrix4x4 transformToSurface;
+    gfx::ToMatrix4x4(GetLocalTransform(), localTransform);
+    gfx::ToMatrix4x4(aTransformToSurface, transformToSurface);
+    mEffectiveTransform =
+        SnapTransform(localTransform, gfxRect(0, 0, mBounds.width, mBounds.height),
                       nullptr)*
-        SnapTransformTranslation(aTransformToSurface, nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
+        SnapTransformTranslation(transformToSurface, nullptr);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 

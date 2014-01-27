@@ -106,7 +106,8 @@ ImageLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 void 
 ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
 {
-  gfx3DMatrix local = GetLocalTransform();
+  gfx::Matrix4x4 local;
+  gfx::ToMatrix4x4(GetLocalTransform(), local);
 
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);
@@ -129,10 +130,11 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   // This makes our snapping equivalent to what would happen if our content
   // was drawn into a ThebesLayer (gfxContext would snap using the local
   // transform, then we'd snap again when compositing the ThebesLayer).
-  gfx3DMatrix snappedTransform =
+  gfx::Matrix4x4 transformToSurface;
+  gfx::ToMatrix4x4(aTransformToSurface, transformToSurface);
+  mEffectiveTransform =
       SnapTransform(local, sourceRect, nullptr) *
-      SnapTransformTranslation(aTransformToSurface, nullptr);
-  gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
+      SnapTransformTranslation(transformToSurface, nullptr);
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
 }
 
