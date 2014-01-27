@@ -27,8 +27,8 @@ import android.util.Log;
 import java.io.InputStream;
 import java.io.IOException;
 
-public class HomeListsProvider extends SQLiteBridgeContentProvider {
-    private static final String LOGTAG = "GeckoHomeListsProvider";
+public class HomeProvider extends SQLiteBridgeContentProvider {
+    private static final String LOGTAG = "GeckoHomeProvider";
 
     // This should be kept in sync with the db version in mobile/android/modules/HomeProvider.jsm
     private static int DB_VERSION = 1;
@@ -49,7 +49,7 @@ public class HomeListsProvider extends SQLiteBridgeContentProvider {
         URI_MATCHER.addURI(BrowserContract.HOME_LISTS_AUTHORITY, "items/#", ITEMS_ID);
     }
 
-    public HomeListsProvider() {
+    public HomeProvider() {
         super(LOGTAG);
     }
 
