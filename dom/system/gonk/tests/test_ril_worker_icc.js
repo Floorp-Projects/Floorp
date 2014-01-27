@@ -496,27 +496,35 @@ add_test(function test_write_number_with_length() {
   let helper = worker.GsmPDUHelper;
   let iccHelper = worker.ICCPDUHelper;
 
-  // without +
-  let number_1 = "123456789";
-  iccHelper.writeNumberWithLength(number_1);
-  let numLen = helper.readHexOctet();
-  do_check_eq(number_1, iccHelper.readDiallingNumber(numLen));
-  for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
-    do_check_eq(0xff, helper.readHexOctet());
+  function test(number, expectedNumber) {
+    expectedNumber = expectedNumber || number;
+    iccHelper.writeNumberWithLength(number);
+    let numLen = helper.readHexOctet();
+    do_check_eq(expectedNumber, iccHelper.readDiallingNumber(numLen));
+    for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
+      do_check_eq(0xff, helper.readHexOctet());
+    }
   }
+
+  // without +
+  test("123456789");
 
   // with +
-  let number_2 = "+987654321";
-  iccHelper.writeNumberWithLength(number_2);
-  numLen = helper.readHexOctet();
-  do_check_eq(number_2, iccHelper.readDiallingNumber(numLen));
-  for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
-    do_check_eq(0xff, helper.readHexOctet());
-  }
+  test("+987654321");
+
+  // extended BCD coding
+  test("1*2#3,4*5#6,");
+
+  // with + and extended BCD coding
+  test("+1*2#3,4*5#6,");
+
+  // non-supported characters should not be written.
+  test("(1)23-456+789", "123456789");
+
+  test("++(01)2*3-4#5,6+7(8)9*0#1,", "+012*34#5,6789*0#1,");
 
   // null
-  let number_3;
-  iccHelper.writeNumberWithLength(number_3);
+  iccHelper.writeNumberWithLength(null);
   for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES + 1); i++) {
     do_check_eq(0xff, helper.readHexOctet());
   }
