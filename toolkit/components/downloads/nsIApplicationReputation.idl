@@ -8,13 +8,14 @@
 
 interface nsIApplicationReputationCallback;
 interface nsIApplicationReputationQuery;
+interface nsIArray;
 interface nsIURI;
 
 /*
  * A service for asynchronously querying an application reputation service
  * based on metadata of the downloaded file.
  */
-[scriptable, uuid(9c12a510-eb1c-11e2-a98a-fa916188709b)]
+[scriptable, uuid(c9f03479-fd68-4393-acb2-c88d4f563174)]
 interface nsIApplicationReputationService : nsISupports {
   /**
    * Start querying the application reputation service.
@@ -69,6 +70,12 @@ interface nsIApplicationReputationQuery : nsISupports {
    * produce any useful information.
    */
   readonly attribute ACString sha256Hash;
+
+  /*
+   * The nsIArray of nsIX509CertList of nsIX509Cert that verify for this
+   * binary, if it is signed.
+   */
+  readonly attribute nsIArray signatureInfo;
 };
 
 [scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]
