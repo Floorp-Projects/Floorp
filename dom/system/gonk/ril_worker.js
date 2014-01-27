@@ -9552,6 +9552,13 @@ let ICCPDUHelper = {
   writeNumberWithLength: function writeNumberWithLength(number) {
     if (number) {
       let numStart = number[0] == "+" ? 1 : 0;
+      number = number.substring(0, numStart) +
+               number.substring(numStart)
+                     .replace(/[^0-9*#,]/g, "")
+                     .replace(/\*/g, "a")
+                     .replace(/\#/g, "b")
+                     .replace(/\,/g, "c");
+
       let numDigits = number.length - numStart;
       if (numDigits > ADN_MAX_NUMBER_DIGITS) {
         number = number.substring(0, ADN_MAX_NUMBER_DIGITS + numStart);
