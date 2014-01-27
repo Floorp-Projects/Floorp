@@ -157,10 +157,8 @@ TranslateShadowLayer2D(Layer* aLayer,
                       1.0f/aLayer->GetPostYScale(),
                       1);
 
-  gfx3DMatrix matrix;
-  To3DMatrix(layerTransform3D, matrix);
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
-  layerComposite->SetShadowTransform(matrix);
+  layerComposite->SetShadowTransform(layerTransform3D);
   layerComposite->SetShadowTransformSetByAnimation(false);
 
   const nsIntRect* clipRect = aLayer->GetClipRect();
@@ -452,12 +450,11 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     }
     case eCSSProperty_transform:
     {
-      gfx3DMatrix matrix;
-      gfx::To3DMatrix(interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value(), matrix);
+      Matrix4x4 matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
       if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        matrix.ScalePost(c->GetInheritedXScale(),
-                         c->GetInheritedYScale(),
-                         1);
+        matrix = matrix * Matrix4x4().Scale(c->GetInheritedXScale(),
+                                            c->GetInheritedYScale(),
+                                            1);
       }
       layerComposite->SetShadowTransform(matrix);
       layerComposite->SetShadowTransformSetByAnimation(true);
@@ -521,18 +518,19 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
-    gfx3DMatrix transform;
-    To3DMatrix(aLayer->GetTransform(), transform);
-    transform = gfx3DMatrix(treeTransform) * transform;
+    Matrix4x4 transform;
+    ToMatrix4x4(gfx3DMatrix(treeTransform), transform);
+    transform = transform * aLayer->GetTransform();
+
     // GetTransform already takes the pre- and post-scale into account.  Since we
     // will apply the pre- and post-scale again when computing the effective
     // transform, we must apply the inverses here.
     transform.Scale(1.0f/container->GetPreXScale(),
                     1.0f/container->GetPreYScale(),
                     1);
-    transform.ScalePost(1.0f/aLayer->GetPostXScale(),
-                        1.0f/aLayer->GetPostYScale(),
-                        1);
+    transform = transform * Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
+                                              1.0f/aLayer->GetPostYScale(),
+                                              1);
     layerComposite->SetShadowTransform(transform);
     NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
                  "overwriting animated transform!");
@@ -604,30 +602,28 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
     gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
     gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
 
-    gfx3DMatrix scrollbarTransform;
+    Matrix4x4 scrollbarTransform;
     if (aLayer->GetScrollbarDirection() == Layer::VERTICAL) {
       float scale = metrics.CalculateCompositedRectInCssPixels().height / metrics.mScrollableRect.height;
-      scrollbarTransform.ScalePost(1.f, 1.f / transientTransform.GetYScale(), 1.f);
-      scrollbarTransform.TranslatePost(gfxPoint3D(0, -transientTransform._42 * scale, 0));
+      scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform.GetYScale(), 1.f);
+      scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(0, -transientTransform._42 * scale, 0);
     }
     if (aLayer->GetScrollbarDirection() == Layer::HORIZONTAL) {
       float scale = metrics.CalculateCompositedRectInCssPixels().width / metrics.mScrollableRect.width;
-      scrollbarTransform.ScalePost(1.f / transientTransform.GetXScale(), 1.f, 1.f);
-      scrollbarTransform.TranslatePost(gfxPoint3D(-transientTransform._41 * scale, 0, 0));
+      scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform.GetXScale(), 1.f, 1.f);
+      scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(-transientTransform._41 * scale, 0, 0);
     }
 
-    gfx3DMatrix transform;
-    To3DMatrix(aLayer->GetTransform(), transform);
-    transform = scrollbarTransform * transform;
+    Matrix4x4 transform = scrollbarTransform * aLayer->GetTransform();
     // GetTransform already takes the pre- and post-scale into account.  Since we
     // will apply the pre- and post-scale again when computing the effective
     // transform, we must apply the inverses here.
     transform.Scale(1.0f/aLayer->GetPreXScale(),
                     1.0f/aLayer->GetPreYScale(),
                     1);
-    transform.ScalePost(1.0f/aLayer->GetPostXScale(),
-                        1.0f/aLayer->GetPostYScale(),
-                        1);
+    transform = transform * Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
+                                              1.0f/aLayer->GetPostYScale(),
+                                              1);
     aLayer->AsLayerComposite()->SetShadowTransform(transform);
 
     return;
@@ -721,7 +717,9 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   computedTransform.ScalePost(1.0f/container->GetPostXScale(),
                               1.0f/container->GetPostYScale(),
                               1);
-  layerComposite->SetShadowTransform(computedTransform);
+  Matrix4x4 matrix;
+  ToMatrix4x4(computedTransform, matrix);
+  layerComposite->SetShadowTransform(matrix);
   NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
                "overwriting animated transform!");
 
