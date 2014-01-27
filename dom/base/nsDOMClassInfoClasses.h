@@ -30,11 +30,6 @@ DOMCI_CLASS(TreeSelection)
 DOMCI_CLASS(TreeContentView)
 #endif
 
-// Crypto classes
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-DOMCI_CLASS(CRMFObject)
-#endif
-
 // DOM Chrome Window class, almost identical to Window
 DOMCI_CLASS(ChromeWindow)
 
