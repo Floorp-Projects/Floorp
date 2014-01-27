@@ -1232,12 +1232,12 @@ public:
    * We promise that when this is called on a layer, all ancestor layers
    * have already had ComputeEffectiveTransforms called.
    */
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) = 0;
 
   /**
    * computes the effective transform for a mask layer, if this layer has one
    */
-  void ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface);
+  void ComputeEffectiveTransformForMaskLayer(const gfx::Matrix4x4& aTransformToSurface);
 
   /**
    * Calculate the scissor rect required when rendering this layer.
@@ -1478,10 +1478,11 @@ public:
 
   MOZ_LAYER_DECL_NAME("ThebesLayer", TYPE_THEBES)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     gfx::Matrix4x4 idealTransform;
-    gfx::ToMatrix4x4(GetLocalTransform() * aTransformToSurface, idealTransform);
+    gfx::ToMatrix4x4(GetLocalTransform(), idealTransform);
+    idealTransform = idealTransform * aTransformToSurface;
     gfx::Matrix residual;
     mEffectiveTransform = SnapTransformTranslation(idealTransform,
         mAllowResidualTranslation ? &residual : nullptr);
@@ -1642,7 +1643,7 @@ public:
    * container is backend-specific. ComputeEffectiveTransforms must also set
    * mUseIntermediateSurface.
    */
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) = 0;
 
   /**
    * Call this only after ComputeEffectiveTransforms has been invoked
@@ -1687,12 +1688,12 @@ protected:
    * A default implementation of ComputeEffectiveTransforms for use by OpenGL
    * and D3D.
    */
-  void DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface);
+  void DefaultComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface);
 
   /**
    * Loops over the children calling ComputeEffectiveTransforms on them.
    */
-  void ComputeEffectiveTransformsForChildren(const gfx3DMatrix& aTransformToSurface);
+  void ComputeEffectiveTransformsForChildren(const gfx::Matrix4x4& aTransformToSurface);
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
@@ -1751,10 +1752,11 @@ public:
 
   MOZ_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     gfx::Matrix4x4 idealTransform;
-    gfx::ToMatrix4x4(GetLocalTransform() * aTransformToSurface, idealTransform);
+    gfx::ToMatrix4x4(GetLocalTransform(), idealTransform);
+    idealTransform = idealTransform * aTransformToSurface;
     mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
@@ -1892,20 +1894,18 @@ public:
 
   MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
     // was drawn into a ThebesLayer (gfxContext would snap using the local
     // transform, then we'd snap again when compositing the ThebesLayer).
     gfx::Matrix4x4 localTransform;
-    gfx::Matrix4x4 transformToSurface;
     gfx::ToMatrix4x4(GetLocalTransform(), localTransform);
-    gfx::ToMatrix4x4(aTransformToSurface, transformToSurface);
     mEffectiveTransform =
         SnapTransform(localTransform, gfxRect(0, 0, mBounds.width, mBounds.height),
                       nullptr)*
-        SnapTransformTranslation(transformToSurface, nullptr);
+        SnapTransformTranslation(aTransformToSurface, nullptr);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 

@@ -34,19 +34,21 @@ BasicContainerLayer::~BasicContainerLayer()
 }
 
 void
-BasicContainerLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface)
 {
   // We push groups for container layers if we need to, which always
   // are aligned in device space, so it doesn't really matter how we snap
   // containers.
   Matrix residual;
-  gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
+  gfx3DMatrix idealTransform;
+  To3DMatrix(aTransformToSurface, idealTransform);
+  idealTransform = GetLocalTransform() * idealTransform;
   idealTransform.ProjectTo2D();
 
   if (!idealTransform.CanDraw2D()) {
     ToMatrix4x4(idealTransform, mEffectiveTransform);
-    ComputeEffectiveTransformsForChildren(gfx3DMatrix());
-    ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
+    ComputeEffectiveTransformsForChildren(Matrix4x4());
+    ComputeEffectiveTransformForMaskLayer(Matrix4x4());
     mUseIntermediateSurface = true;
     return;
   }
@@ -56,7 +58,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   mEffectiveTransform = SnapTransformTranslation(ideal, &residual);
   // We always pass the ideal matrix down to our children, so there is no
   // need to apply any compensation using the residual from SnapTransformTranslation.
-  ComputeEffectiveTransformsForChildren(idealTransform);
+  ComputeEffectiveTransformsForChildren(ideal);
 
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   

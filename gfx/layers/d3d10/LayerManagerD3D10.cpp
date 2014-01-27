@@ -383,7 +383,7 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
 
     // The results of our drawing always go directly into a pixel buffer,
     // so we don't need to pass any global transform here.
-    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+    mRoot->ComputeEffectiveTransforms(Matrix4x4());
 
 #ifdef MOZ_LAYERS_HAVE_LOG
     MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
