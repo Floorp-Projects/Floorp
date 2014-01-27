@@ -16,6 +16,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 static int32_t ctorCount;
@@ -169,22 +170,22 @@ nsLineBox::Cleanup()
 
 #ifdef DEBUG_FRAME_DUMP
 static void
-ListFloats(FILE* out, int32_t aIndent, const nsFloatCacheList& aFloats)
+ListFloats(FILE* out, const char* aPrefix, const nsFloatCacheList& aFloats)
 {
   nsFloatCache* fc = aFloats.Head();
   while (fc) {
-    nsFrame::IndentBy(out, aIndent);
+    nsCString str(aPrefix);
     nsIFrame* frame = fc->mFloat;
-    fprintf(out, "floatframe@%p ", static_cast<void*>(frame));
+    str += nsPrintfCString("floatframe@%p ", static_cast<void*>(frame));
     if (frame) {
       nsAutoString frameName;
       frame->GetFrameName(frameName);
-      fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
+      str += NS_ConvertUTF16toUTF8(frameName).get();
     }
     else {
-      fputs("\n###!!! NULL out-of-flow frame", out);
+      str += "\n###!!! NULL out-of-flow frame";
     }
-    fprintf(out, "\n");
+    fprintf_stderr(out, "%s\n", str.get());
     fc = fc->Next();
   }
 }
@@ -222,20 +223,30 @@ nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const
 void
 nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  nsFrame::IndentBy(out, aIndent);
+  nsCString str;
+  while (aIndent-- > 0) {
+    str += "  ";
+  }
+  List(out, str.get(), aFlags);
+}
+
+void
+nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
+{
+  nsCString str(aPrefix);
   char cbuf[100];
-  fprintf(out, "line %p: count=%d state=%s ",
+  str += nsPrintfCString("line %p: count=%d state=%s ",
           static_cast<const void*>(this), GetChildCount(),
           StateToString(cbuf, sizeof(cbuf)));
   if (IsBlock() && !GetCarriedOutBottomMargin().IsZero()) {
-    fprintf(out, "bm=%d ", GetCarriedOutBottomMargin().get());
+    str += nsPrintfCString("bm=%d ", GetCarriedOutBottomMargin().get());
   }
-  fprintf(out, "{%d,%d,%d,%d} ",
+  str += nsPrintfCString("{%d,%d,%d,%d} ",
           mBounds.x, mBounds.y, mBounds.width, mBounds.height);
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(mBounds) ||
        !mData->mOverflowAreas.ScrollableOverflow().IsEqualEdges(mBounds))) {
-    fprintf(out, "vis-overflow=%d,%d,%d,%d scr-overflow=%d,%d,%d,%d ",
+    str += nsPrintfCString("vis-overflow=%d,%d,%d,%d scr-overflow=%d,%d,%d,%d ",
             mData->mOverflowAreas.VisualOverflow().x,
             mData->mOverflowAreas.VisualOverflow().y,
             mData->mOverflowAreas.VisualOverflow().width,
@@ -245,22 +256,22 @@ nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
             mData->mOverflowAreas.ScrollableOverflow().width,
             mData->mOverflowAreas.ScrollableOverflow().height);
   }
-  fprintf(out, "<\n");
+  fprintf_stderr(out, "%s<\n", str.get());
 
   nsIFrame* frame = mFirstChild;
   int32_t n = GetChildCount();
+  nsCString pfx(aPrefix);
+  pfx += "  ";
   while (--n >= 0) {
-    frame->List(out, aIndent + 1, aFlags);
+    frame->List(out, pfx.get(), aFlags);
     frame = frame->GetNextSibling();
   }
 
   if (HasFloats()) {
-    nsFrame::IndentBy(out, aIndent);
-    fputs("> floats <\n", out);
-    ListFloats(out, aIndent + 1, mInlineData->mFloats);
+    fprintf_stderr(out, "%s> floats <\n", aPrefix);
+    ListFloats(out, pfx.get(), mInlineData->mFloats);
   }
-  nsFrame::IndentBy(out, aIndent);
-  fputs(">\n", out);
+  fprintf_stderr(out, "%s>\n", aPrefix);
 }
 #endif
 

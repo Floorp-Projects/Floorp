@@ -500,6 +500,7 @@ public:
   char* StateToString(char* aBuf, int32_t aBufSize) const;
 
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
+  void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const;
   nsIFrame* LastChild() const;
 #endif
 

@@ -212,7 +212,7 @@ RealmTestRequestor.prototype = {
   },
 
   promptAuth: function realmtest_checkAuth(channel, level, authInfo) {
-    do_check_eq(authInfo.realm, '\\"foo_bar');
+    do_check_eq(authInfo.realm, '\"foo_bar');
 
     return false;
   },
@@ -279,7 +279,7 @@ function makeChan(url) {
 
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
-             test_auth, test_digest_noauth, test_digest,
+             test_basicrealm, test_digest_noauth, test_digest,
              test_digest_bogus_user, test_large_realm, test_large_domain];
 
 var current_test = 0;
@@ -380,7 +380,7 @@ function test_ntlm() {
   do_test_pending();
 }
 
-function test_auth() {
+function test_basicrealm() {
   var chan = makeChan(URL + "/auth/realm");
 
   chan.notificationCallbacks = new RealmTestRequestor();
@@ -463,7 +463,7 @@ function authNtlmSimple(metadata, response) {
 // /auth/realm
 function authRealm(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-  response.setHeader("WWW-Authenticate", 'Basic realm="\\"foo_bar"', false);
+  response.setHeader("WWW-Authenticate", 'Basic realm="\\"f\\oo_bar"', false);
   var body = "success";
 
   response.bodyOutputStream.write(body, body.length);

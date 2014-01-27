@@ -79,7 +79,7 @@ ConvertCloneReadInfosToArrayInternal(
         return NS_ERROR_DOM_DATA_CLONE_ERR;
       }
 
-      if (!JS_SetElement(aCx, array, index, &val)) {
+      if (!JS_SetElement(aCx, array, index, val)) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }

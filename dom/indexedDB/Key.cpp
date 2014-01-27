@@ -208,7 +208,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
 
       aTypeOffset = 0;
 
-      if (!JS_SetElement(aCx, array, index++, &val)) {
+      if (!JS_SetElement(aCx, array, index++, val)) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }

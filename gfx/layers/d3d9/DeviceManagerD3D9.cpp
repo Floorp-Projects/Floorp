@@ -552,18 +552,20 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
   gfx::IntSize size;
   nsRefPtr<IDirect3DTexture9> texture =
     static_cast<LayerD3D9*>(aMask->ImplData())->GetAsTexture(&size);
-  
+
   if (!texture) {
     return false;
   }
-  
+
   gfxMatrix maskTransform;
-  bool maskIs2D = aMask->GetEffectiveTransform().CanDraw2D(&maskTransform);
+  gfx3DMatrix effectiveTransform;
+  gfx::To3DMatrix(aMask->GetEffectiveTransform(), effectiveTransform);
+  bool maskIs2D = effectiveTransform.CanDraw2D(&maskTransform);
   NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
   gfxRect bounds = gfxRect(gfxPoint(), gfx::ThebesIntSize(size));
   bounds = maskTransform.TransformBounds(bounds);
 
-  aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister, 
+  aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister,
                                     ShaderConstantRect((float)bounds.x,
                                                        (float)bounds.y,
                                                        (float)bounds.width,
@@ -670,11 +672,11 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
 void
 DeviceManagerD3D9::DestroyDevice()
 {
+  ++mDeviceResetCount;
   mDeviceWasRemoved = true;
   if (!IsD3D9Ex()) {
     ReleaseTextureResources();
   }
-  LayerManagerD3D9::OnDeviceManagerDestroy(this);
   gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
 }
 
@@ -693,7 +695,6 @@ DeviceManagerD3D9::VerifyReadyForRendering()
 
       if (FAILED(hr)) {
         DestroyDevice();
-        ++mDeviceResetCount;
         return DeviceMustRecreate;
       }
     }
@@ -722,6 +723,11 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   pp.hDeviceWindow = mFocusWnd;
 
+  // Whatever happens from now on, either we reset the device, or we should
+  // pretend we reset the device so that the layer manager or compositor
+  // doesn't ignore it.
+  ++mDeviceResetCount;
+
   // if we got this far, we know !SUCCEEDEED(hr), that means hr is one of
   // D3DERR_DEVICELOST, D3DERR_DEVICENOTRESET, D3DERR_DRIVERINTERNALERROR.
   // It is only worth resetting if we get D3DERR_DEVICENOTRESET. If we get
@@ -731,9 +737,6 @@ DeviceManagerD3D9::VerifyReadyForRendering()
     HMONITOR hMonitorWindow;
     hMonitorWindow = MonitorFromWindow(mFocusWnd, MONITOR_DEFAULTTOPRIMARY);
     if (hMonitorWindow != mDeviceMonitor) {
-      /* The monitor has changed. We have to assume that the
-       * DEVICENOTRESET will not be comming. */
-
       /* jrmuizel: I'm not sure how to trigger this case. Usually, we get
        * DEVICENOTRESET right away and Reset() succeeds without going through a
        * set of DEVICELOSTs. This is presumeably because we don't call
@@ -741,18 +744,19 @@ DeviceManagerD3D9::VerifyReadyForRendering()
        * Hopefully comparing HMONITORs is not overly aggressive.
        * See bug 626678.
        */
+      /* The monitor has changed. We have to assume that the
+       * DEVICENOTRESET will not be coming. */
+      DestroyDevice();
       return DeviceMustRecreate;
     }
-    return DeviceRetry;
+    return DeviceFail;
   }
   if (hr == D3DERR_DEVICENOTRESET) {
     hr = mDevice->Reset(&pp);
-    ++mDeviceResetCount;
   }
 
   if (FAILED(hr) || !CreateVertexBuffer()) {
     DestroyDevice();
-    ++mDeviceResetCount;
     return DeviceMustRecreate;
   }
 

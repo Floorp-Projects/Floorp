@@ -269,9 +269,7 @@ let Impl = {
     gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
     ret.debuggerAttached = new Number(gWasDebuggerAttached);
 
-    ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
-      .getService(Ci.nsIJSEngineTelemetryStats)
-      .telemetryValue;
+    ret.js = Cu.getJSEngineTelemetryValue();
 
     let shutdownDuration = Telemetry.lastShutdownDuration;
     if (shutdownDuration)

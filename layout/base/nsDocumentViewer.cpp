@@ -3701,6 +3701,13 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   if (mPrintEngine->HasPrintCallbackCanvas()) {
     mBeforeAndAfterPrint = beforeAndAfterPrint;
   }
+  dom::Element* root = mDocument->GetRootElement();
+  if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
+    mPrintEngine->SetDisallowSelectionPrint(true);
+  }
+  if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::moznomarginboxes)) {
+    mPrintEngine->SetNoMarginBoxes(true);
+  }
   rv = mPrintEngine->PrintPreview(aPrintSettings, aChildDOMWin, aWebProgressListener);
   mPrintPreviewZoomed = false;
   if (NS_FAILED(rv)) {

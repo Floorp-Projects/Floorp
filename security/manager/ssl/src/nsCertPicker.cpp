@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCertPicker.h"
+#include "insanity/pkixtypes.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
@@ -49,13 +50,14 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
     nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-    ScopedCERTCertList allcerts(PK11_ListCerts(PK11CertListUnique, ctx));
+    insanity::pkix::ScopedCERTCertList allcerts(
+      PK11_ListCerts(PK11CertListUnique, ctx));
   }
 
   /* find all user certs that are valid and for SSL */
   /* note that we are allowing expired certs in this list */
 
-  ScopedCERTCertList certList( 
+  insanity::pkix::ScopedCERTCertList certList( 
     CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
                               (SECCertUsage)certUsage,
                               !allowDuplicateNicknames,
@@ -65,7 +67,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  ScopedCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList));
+  ScopedCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList.get()));
   if (!nicknames) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -81,8 +83,9 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
 
   int32_t CertsToUse;
 
-  for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
-       !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
+  for (CertsToUse = 0, node = CERT_LIST_HEAD(certList.get());
+       !CERT_LIST_END(node, certList.get()) &&
+         CertsToUse < nicknames->numnicknames;
        node = CERT_LIST_NEXT(node)
       )
   {

@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(872b0aa4-c234-4c46-b72c-1bc861d6c5eb)]
+[scriptable, uuid(c9ab0d20-8499-11e3-baa7-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -258,7 +258,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * Force an immediate cycle collection cycle.
      */
     void forceCC();
-    
+
     /*
      * To be called from JS only.
      *
@@ -271,7 +271,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * is running. Call the provided function once this has occurred.
      */
     void schedulePreciseGC(in ScheduledGCCallback callback);
-    
+
     /*
      * Schedule a shrinking garbage collection cycle for a point in the future
      * when no JS is running. Call the provided function once this has occured.
@@ -548,6 +548,9 @@ interface nsIXPCComponents_Utils : nsISupports
       *   "WatchdogHibernateStop"   - Watchdog stops hibernating
       */
     PRTime getWatchdogTimestamp(in AString aCategory);
+
+    [implicit_jscontext]
+    jsval getJSEngineTelemetryValue();
 };
 
 /**

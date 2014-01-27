@@ -49,12 +49,11 @@ using namespace JS;
 
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
-NS_IMPL_ISUPPORTS5(nsXPConnect,
+NS_IMPL_ISUPPORTS4(nsXPConnect,
                    nsIXPConnect,
                    nsISupportsWeakReference,
                    nsIThreadObserver,
-                   nsIJSRuntimeService,
-                   nsIJSEngineTelemetryStats)
+                   nsIJSRuntimeService)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
 bool         nsXPConnect::gOnceAliveNowDead = false;
@@ -1404,29 +1403,6 @@ nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
     gDesiredDebugMode = mode;
     if (!mode && allowSyncDisable)
         CheckForDebugMode(mRuntime->Runtime());
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetTelemetryValue(JSContext *cx, MutableHandleValue rval)
-{
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-    if (!obj)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-
-    size_t i = JS_SetProtoCalled(cx);
-    RootedValue v(cx, DoubleValue(i));
-    if (!JS_DefineProperty(cx, obj, "setProto", v, nullptr, nullptr, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    i = JS_GetCustomIteratorCount(cx);
-    v.setDouble(i);
-    if (!JS_DefineProperty(cx, obj, "customIter", v, nullptr, nullptr, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rval.setObject(*obj);
     return NS_OK;
 }
 

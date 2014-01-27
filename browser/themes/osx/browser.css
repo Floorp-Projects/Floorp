@@ -1070,6 +1070,15 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     list-style-image: url(chrome://browser/skin/menuPanel-small@2x.png);
   }
 
+  /* Wide items like the Cut/Copy/Paste and Zoom controls are special in that their icons
+     are 16x16 when in the panel, but 18x18 when in a toolbar. */
+  #edit-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
+  #zoom-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
+  toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
+  toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
+    width: 16px;
+  }
+
   #edit-controls@inAnyPanel@ > #cut-button,
   toolbarpaletteitem[place="palette"] > #edit-controls > #cut-button {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
@@ -1102,8 +1111,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 }
 
-.toolbarbutton-1:not([type="menu-button"]),
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1:not([type="menu-button"]),
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #restore-button {
   min-width: 28px;
 }
@@ -3586,6 +3595,33 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #ctrlTab-showAll {
   margin-top: .5em;
+}
+
+/* Sync Panel */
+
+#sync-popup {
+  padding: 10px;
+}
+
+#sync-popup-icon {
+  width: 32px;
+  background: url("chrome://browser/content/abouthome/sync.png") center center no-repeat;
+}
+
+@media (min-resolution: 2dppx) {
+  #sync-popup-icon {
+    background: url("chrome://browser/content/abouthome/sync@2x.png") center center no-repeat;
+    background-size: 32px 32px;
+  }
+}
+
+#sync-popup-inner {
+  width: 0;
+  padding-left: 10px;
+}
+
+#sync-popup-desc-prefs {
+  margin: 0;
 }
 
 /* Status panel */

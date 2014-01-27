@@ -1383,7 +1383,7 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
 }
 
 extern JS_PUBLIC_API(JSProtoKey)
-JS_IdToProtoKey(JSContext *cx, JS::HandleId id)
+JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -1400,7 +1400,7 @@ JS_IdToProtoKey(JSContext *cx, JS::HandleId id)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
+JS_GetObjectPrototype(JSContext *cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
@@ -1408,7 +1408,7 @@ JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj)
+JS_GetFunctionPrototype(JSContext *cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
@@ -1416,7 +1416,7 @@ JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetArrayPrototype(JSContext *cx, JSObject *forObj)
+JS_GetArrayPrototype(JSContext *cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
@@ -3369,17 +3369,16 @@ JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsi
 JS_PUBLIC_API(bool)
 JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
 {
-    return JS_ForwardGetPropertyTo(cx, objArg, idArg, objArg, vp);
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
+
+    return JS_ForwardGetPropertyTo(cx, obj, id, obj, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *onBehalfOfArg,
-                        MutableHandleValue vp)
+JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject onBehalfOf,
+                        JS::MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject onBehalfOf(cx, onBehalfOfArg);
-    RootedId id(cx, idArg);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
@@ -3427,10 +3426,8 @@ JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t nam
 }
 
 JS_PUBLIC_API(bool)
-JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, HandleValue v)
+JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
     RootedValue value(cx, v);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3440,10 +3437,9 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, HandleValue v)
     return JSObject::setGeneric(cx, obj, obj, id, &value, false);
 }
 
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
+static bool
+SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
@@ -3453,20 +3449,62 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValu
 }
 
 JS_PUBLIC_API(bool)
-JS_SetProperty(JSContext *cx, JSObject *objArg, const char *name, HandleValue v)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v)
 {
-    RootedObject obj(cx, objArg);
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
+    RootedValue value(cx, v);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
-JS_SetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleObject v)
+{
+    RootedValue value(cx, ObjectOrNullValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleString v)
+{
+    RootedValue value(cx, StringValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, int32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, uint32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, double v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, &value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue v)
+{
+    JSAtom *atom = Atomize(cx, name, strlen(name));
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_SetPropertyById(cx, obj, id, v);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                  HandleValue v)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), v);
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
@@ -3678,7 +3716,6 @@ static const Class prop_iter_class = {
     JS_ResolveStub,
     JS_ConvertStub,
     prop_iter_finalize,
-    nullptr,        /* checkAccess */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */
@@ -3801,16 +3838,6 @@ JS_SetArrayLength(JSContext *cx, HandleObject obj, uint32_t length)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     return SetLengthProperty(cx, obj, length);
-}
-
-JS_PUBLIC_API(bool)
-JS_CheckAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
-               MutableHandleValue vp, unsigned *attrsp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    return CheckAccess(cx, obj, id, mode, vp, attrsp);
 }
 
 JS_PUBLIC_API(void)
@@ -4136,10 +4163,9 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs)
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineFunction(JSContext *cx, JSObject *objArg, const char *name, JSNative call,
+JS_DefineFunction(JSContext *cx, HandleObject obj, const char *name, JSNative call,
                   unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4152,11 +4178,10 @@ JS_DefineFunction(JSContext *cx, JSObject *objArg, const char *name, JSNative ca
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineUCFunction(JSContext *cx, JSObject *objArg,
+JS_DefineUCFunction(JSContext *cx, HandleObject obj,
                     const jschar *name, size_t namelen, JSNative call,
                     unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4169,11 +4194,9 @@ JS_DefineUCFunction(JSContext *cx, JSObject *objArg,
 }
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_DefineFunctionById(JSContext *cx, JSObject *objArg, jsid id_, JSNative call,
+JS_DefineFunctionById(JSContext *cx, HandleObject obj, HandleId id, JSNative call,
                       unsigned nargs, unsigned attrs)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, id_);
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -4834,63 +4857,59 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipals(JSContext *cx, HandleObject obj,
                                  JSPrincipals *principals,
                                  const jschar *chars, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 jsval *rval)
+                                 MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, HandleObject obj,
                                         JSPrincipals *principals,
                                         const jschar *chars, unsigned length,
                                         const char *filename, unsigned lineno,
-                                        jsval *rval, JSVersion version)
+                                        MutableHandleValue rval, JSVersion version)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 extern JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *objArg,
+JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, HandleObject obj,
                                               JSPrincipals *principals,
                                               JSPrincipals *originPrincipals,
                                               const jschar *chars, unsigned length,
                                               const char *filename, unsigned lineno,
-                                              jsval *rval, JSVersion version)
+                                              MutableHandleValue rval, JSVersion version)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setPrincipals(principals)
            .setOriginPrincipals(originPrincipals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, JSObject *objArg, const jschar *chars, unsigned length,
-                    const char *filename, unsigned lineno, jsval *rval)
+JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsigned length,
+                    const char *filename, unsigned lineno, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
 
-    return Evaluate(cx, obj, options, chars, length, rval);
+    return Evaluate(cx, obj, options, chars, length, rval.address());
 }
 
 /* Ancient unsigned nbytes is part of API/ABI, so use size_t length local. */

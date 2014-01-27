@@ -35,8 +35,8 @@ ColorLayerD3D10::RenderLayer()
   color[2] = (float)(mColor.b * opacity);
   color[3] = opacity;
 
-  const gfx3DMatrix& transform = GetEffectiveTransform();
-  void* raw = &const_cast<gfx3DMatrix&>(transform)._11;
+  const gfx::Matrix4x4& transform = GetEffectiveTransform();
+  void* raw = &const_cast<gfx::Matrix4x4&>(transform)._11;
   effect()->GetVariableByName("mLayerTransform")->SetRawValue(raw, 0, 64);
   effect()->GetVariableByName("fLayerColor")->AsVector()->SetFloatVector(color);
 

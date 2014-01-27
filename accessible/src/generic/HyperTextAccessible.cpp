@@ -1669,7 +1669,7 @@ HyperTextAccessible::RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRendere
 
 int32_t
 HyperTextAccessible::GetChildOffset(uint32_t aChildIndex,
-                                    bool aInvalidateAfter)
+                                    bool aInvalidateAfter) const
 {
   if (aChildIndex == 0) {
     if (aInvalidateAfter)
@@ -1699,7 +1699,7 @@ HyperTextAccessible::GetChildOffset(uint32_t aChildIndex,
 }
 
 int32_t
-HyperTextAccessible::GetChildIndexAtOffset(uint32_t aOffset)
+HyperTextAccessible::GetChildIndexAtOffset(uint32_t aOffset) const
 {
   uint32_t lastOffset = 0;
   uint32_t offsetCount = mOffsets.Length();

@@ -33,7 +33,7 @@ RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
                        bounds.height),
     1);
 
-  const gfx3DMatrix& transform = aLayer->GetEffectiveTransform();
+  const gfx::Matrix4x4& transform = aLayer->GetEffectiveTransform();
   aManager->device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
   gfxRGBA layerColor(aLayer->GetColor());

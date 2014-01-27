@@ -146,6 +146,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
   "resource:///modules/TabCrashReporter.jsm");
@@ -182,6 +185,8 @@ let gInitialPages = [
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
 #endif
+
+#include browser-fxaccounts.js
 
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN
@@ -1134,6 +1139,7 @@ var gBrowserInit = {
 #ifdef MOZ_SERVICES_SYNC
     // initialize the sync UI
     gSyncUI.init();
+    gFxAccounts.init();
 #endif
 
 #ifdef MOZ_DATA_REPORTING
@@ -1237,6 +1243,10 @@ var gBrowserInit = {
     gHistorySwipeAnimation.uninit();
 
     FullScreen.cleanup();
+
+#ifdef MOZ_SERVICES_SYNC
+    gFxAccounts.uninit();
+#endif
 
     Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
 
@@ -1702,21 +1712,11 @@ function openLocation() {
     }
     else {
       // If there are no open browser windows, open a new one
-      win = window.openDialog("chrome://browser/content/", "_blank",
-                              "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
-      win.addEventListener("load", openLocationCallback, false);
+      window.openDialog("chrome://browser/content/", "_blank",
+                        "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
     }
-    return;
   }
 #endif
-  openDialog("chrome://browser/content/openLocation.xul", "_blank",
-             "chrome,modal,titlebar", window);
-}
-
-function openLocationCallback()
-{
-  // make sure the DOM is ready
-  setTimeout(function() { this.openLocation(); }, 0);
 }
 
 function BrowserOpenTab()

@@ -67,7 +67,7 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
                                                             principals,
                                                             originPrincipals,
                                                             chars, len, "", 0,
-							    rval.address(),
+                                                            rval,
                                                             JSVERSION_DEFAULT);
     delete[] chars;
     return ok;

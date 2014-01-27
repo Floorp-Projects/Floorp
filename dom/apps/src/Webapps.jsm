@@ -1131,7 +1131,7 @@ this.DOMApplicationRegistry = {
     switch (aMessage.name) {
       case "Webapps:Install": {
 #ifdef MOZ_ANDROID_SYNTHAPKS
-        Services.obs.notifyObservers(null, "webapps-download-apk", JSON.stringify(msg));
+        Services.obs.notifyObservers(mm, "webapps-runtime-install", JSON.stringify(msg));
 #else
         this.doInstall(msg, mm);
 #endif
@@ -1160,7 +1160,7 @@ this.DOMApplicationRegistry = {
         break;
       case "Webapps:InstallPackage": {
 #ifdef MOZ_ANDROID_SYNTHAPKS
-        Services.obs.notifyObservers(null, "webapps-download-apk", JSON.stringify(msg));
+        Services.obs.notifyObservers(mm, "webapps-runtime-install-package", JSON.stringify(msg));
 #else
         this.doInstallPackage(msg, mm);
 #endif
