@@ -50,6 +50,10 @@
 
 #customization-panel-container {
   padding: 15px 25px 25px;
+  background-image: linear-gradient(to bottom, #3e86ce, #3878ba);
+}
+
+#main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
                     url("chrome://browser/skin/customizableui/customizeMode-separatorVertical.png"),
                     url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
