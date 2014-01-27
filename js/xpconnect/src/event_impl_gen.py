@@ -81,7 +81,7 @@ def print_header_file(fd, conf):
         fd.write("NS_NewDOM%s(nsIDOMEvent** aInstance, " % e)
         fd.write("mozilla::dom::EventTarget* aOwner, ")
         fd.write("nsPresContext* aPresContext, mozilla::WidgetEvent* aEvent);\n")
- 
+
     fd.write("\n#endif\n")
 
 def print_classes_file(fd, conf):
@@ -441,7 +441,12 @@ def write_cpp(eventname, iface, fd, conf):
     fd.write(");\n");
     fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
     for a in attributes:
-        fd.write("  m%s = a%s;\n" % (firstCap(a.name), firstCap(a.name)))
+        if a.realtype.nativeType("in").count("nsAString"):
+            fd.write("  if (!m%s.Assign(a%s, fallible_t())) {\n" % (firstCap(a.name), firstCap(a.name)))
+            fd.write("    return NS_ERROR_OUT_OF_MEMORY;\n")
+            fd.write("  }\n")
+        else:
+            fd.write("  m%s = a%s;\n" % (firstCap(a.name), firstCap(a.name)))
     fd.write("  return NS_OK;\n")
     fd.write("}\n\n")
 
