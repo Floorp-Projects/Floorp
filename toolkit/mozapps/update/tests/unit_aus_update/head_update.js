@@ -493,6 +493,22 @@ function getUpdatedDirPath() {
 }
 
 /**
+ * Helper function for getting the updating directory which is used by the
+ * updater to extract the update manifest and patch files.
+ *
+ * @return  nsIFile for the directory for the updating directory.
+ */
+function getUpdatingDir() {
+  let updatingDir = getApplyDirFile(null, true);
+
+  if (IS_MACOSX) {
+    updatingDir = updatingDir.parent.parent;
+  }
+  updatingDir.append("updating");
+  return updatingDir;
+}
+
+/**
  * Helper function for getting the nsIFile for the directory where the update
  * has been applied.
  *
@@ -704,6 +720,9 @@ function runUpdate() {
   if (updateSettingsIni.exists()) {
     updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI);
   }
+
+  logTestInfo("testing updating directory doesn't exist");
+  do_check_false(getUpdatingDir().exists());
 
   return process.exitValue;
 }
@@ -1089,6 +1108,10 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
     }
+
+    logTestInfo("testing updating directory doesn't exist");
+    do_check_false(getUpdatingDir().exists());
+
     aCallback();
   }
 
