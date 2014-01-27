@@ -538,8 +538,13 @@ class BaseMarionetteTestRunner(object):
                 raise IOError('--testvars file does not exist')
 
             import json
-            with open(testvars) as f:
-                self.testvars = json.loads(f.read())
+            try:
+                with open(testvars) as f:
+                    self.testvars = json.loads(f.read())
+            except ValueError as e:
+                json_path = os.path.abspath(testvars)
+                raise Exception("JSON file (%s) is not properly "
+                                "formatted: %s" % (json_path, e.message))
 
         # set up test handlers
         self.test_handlers = []
