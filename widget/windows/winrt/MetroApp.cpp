@@ -42,6 +42,7 @@ namespace winrt {
 ComPtr<FrameworkView> sFrameworkView;
 ComPtr<MetroApp> sMetroApp;
 ComPtr<ICoreApplication> sCoreApp;
+bool MetroApp::sGeckoShuttingDown = false;
 
 ////////////////////////////////////////////////////
 // IFrameworkViewSource impl.
@@ -108,6 +109,8 @@ MetroApp::ShutdownXPCOM()
   if (sFrameworkView) {
     sFrameworkView->ShutdownXPCOM();
   }
+
+  MetroApp::sGeckoShuttingDown = true;
 
   // Shut down xpcom
   XRE_metroShutdown();
