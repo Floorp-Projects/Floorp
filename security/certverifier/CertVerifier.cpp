@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CertVerifier.h"
+#include "ExtendedValidation.h"
 #include "ScopedNSSTypes.h"
 #include "cert.h"
 #include "secerr.h"
@@ -13,9 +14,6 @@ extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 namespace mozilla { namespace psm {
-
-extern SECStatus getFirstEVPolicy(CERTCertificate* cert, SECOidTag& outOidTag);
-extern CERTCertList* getRootsForOid(SECOidTag oid_tag);
 
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
 const CertVerifier::Flags CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV = 2;
@@ -159,10 +157,10 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
 
   // Do EV checking only for sslserver usage
   if (usage == certificateUsageSSLServer) {
-    SECStatus srv = getFirstEVPolicy(cert, evPolicy);
+    SECStatus srv = GetFirstEVPolicy(cert, evPolicy);
     if (srv == SECSuccess) {
       if (evPolicy != SEC_OID_UNKNOWN) {
-        trustAnchors = getRootsForOid(evPolicy);
+        trustAnchors = GetRootsForOid(evPolicy);
       }
       if (!trustAnchors) {
         return SECFailure;
