@@ -306,7 +306,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
       case TransformFunction::TTransformMatrix:
       {
         arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_matrix3d, resultTail);
-        const gfx3DMatrix& matrix = aFunctions[i].get_TransformMatrix().value();
+        const gfx::Matrix4x4& matrix = aFunctions[i].get_TransformMatrix().value();
         arr->Item(1).SetFloatValue(matrix._11, eCSSUnit_Number);
         arr->Item(2).SetFloatValue(matrix._12, eCSSUnit_Number);
         arr->Item(3).SetFloatValue(matrix._13, eCSSUnit_Number);

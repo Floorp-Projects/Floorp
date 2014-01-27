@@ -346,6 +346,16 @@ public:
     return *this;
   }
 
+  Matrix4x4 &Translate(Float aX, Float aY, Float aZ)
+  {
+    _41 += aX * _11 + aY * _21 + aZ * _31;
+    _42 += aX * _12 + aY * _22 + aZ * _32;
+    _43 += aX * _13 + aY * _23 + aZ * _33;
+    _44 += aX * _14 + aY * _24 + aZ * _34;
+
+    return *this;
+  }
+
   bool operator==(const Matrix4x4& o) const
   {
     // XXX would be nice to memcmp here, but that breaks IEEE 754 semantics
