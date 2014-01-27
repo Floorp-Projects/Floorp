@@ -2605,7 +2605,7 @@ MobileMessageDB.prototype = {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
         collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       };
-      let request = threadStore.index("lastTimestamp").openKeyCursor();
+      let request = threadStore.index("lastTimestamp").openKeyCursor(null, PREV);
       request.onsuccess = function(event) {
         let cursor = event.target.result;
         if (cursor) {
