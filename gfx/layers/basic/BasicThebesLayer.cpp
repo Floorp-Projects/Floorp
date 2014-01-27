@@ -126,16 +126,16 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   // is internal to basic layers
   AutoMaskData mask;
   gfxASurface* maskSurface = nullptr;
-  const gfxMatrix* maskTransform = nullptr;
+  Matrix maskTransform;
   if (GetMaskData(aMaskLayer, &mask)) {
     maskSurface = mask.GetSurface();
-    maskTransform = &mask.GetTransform();
+    maskTransform = ToMatrix(mask.GetTransform());
   }
 
   if (!IsHidden() && !clipExtents.IsEmpty()) {
     mContentClient->DrawTo(this, aContext->GetDrawTarget(), opacity,
                            CompositionOpForOp(GetOperator()),
-                           maskSurface, maskTransform);
+                           maskSurface, &maskTransform);
   }
 
   for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
@@ -149,7 +149,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       ctx->Translate(gfxPoint(offset.x, offset.y));
       mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
                              CompositionOpForOp(ctx->CurrentOperator()),
-                             maskSurface, maskTransform);
+                             maskSurface, &maskTransform);
       update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
     }
   }

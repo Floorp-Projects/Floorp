@@ -188,7 +188,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
                              float aOpacity,
                              CompositionOp aOp,
                              gfxASurface* aMask,
-                             const gfxMatrix* aMaskTransform)
+                             const Matrix* aMaskTransform)
 {
   if (!EnsureBuffer()) {
     return;
@@ -220,7 +220,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
 
   Matrix maskTransform;
   if (aMaskTransform) {
-    maskTransform = ToMatrix(*aMaskTransform);
+    maskTransform = *aMaskTransform;
   }
 
   DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aOp, mask, &maskTransform);
