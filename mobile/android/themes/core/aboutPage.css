@@ -27,7 +27,6 @@ body {
 }
 
 #banner {
-  margin: 0 -10px;
   min-height: 150px;
   background-color: #bdc7ce;
 }
@@ -79,7 +78,7 @@ body {
 }
 
 #aboutLinks {
-  margin: 0 -10px 15px -10px;
+  margin: 0 0 15px 0;
   padding: 0;
 }
 
