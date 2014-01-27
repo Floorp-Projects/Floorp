@@ -188,6 +188,11 @@ var BrowserUI = {
     messageManager.removeMessageListener("Content:StateChange", this);
 
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
+
+    Services.prefs.removeObserver(debugServerStateChanged, this);
+    Services.prefs.removeObserver(debugServerPortChanged, this);
+    Services.prefs.removeObserver("app.crashreporter.autosubmit", this);
+
     Services.obs.removeObserver(this, "handle-xul-text-link");
 
     PanelUI.uninit();
