@@ -101,7 +101,7 @@ int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending, nr_socket 
 
   sock->inner = inner;
 
-  if ((r=nr_ip4_port_to_transport_addr(INADDR_ANY, 0, NR_IPV4, &sock->remote_addr)))
+  if ((r=nr_ip4_port_to_transport_addr(INADDR_ANY, 0, IPPROTO_UDP, &sock->remote_addr)))
     ABORT(r);
 
   /* TODO(ekr@rtfm.com): Check this */
@@ -146,7 +146,7 @@ int nr_socket_buffered_stun_destroy(void **objp)
   RFREE(sock->buffer);
 
   /* Cancel waiting on the socket */
-  if (!nr_socket_getfd(sock->inner, &fd)) {
+  if (sock->inner && !nr_socket_getfd(sock->inner, &fd)) {
     NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
   }
 
