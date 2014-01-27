@@ -127,7 +127,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   Matrix maskTransform;
   if (GetMaskData(aMaskLayer, &mask)) {
     maskSurface = mask.GetSurface();
-    maskTransform = ToMatrix(mask.GetTransform());
+    maskTransform = mask.GetTransform();
   }
 
   if (!IsHidden() && !clipExtents.IsEmpty()) {
