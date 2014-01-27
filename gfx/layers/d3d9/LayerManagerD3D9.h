@@ -124,11 +124,6 @@ public:
    */ 
   Nv3DVUtils *GetNv3DVUtils() { return mDeviceManager ? mDeviceManager->GetNv3DVUtils() : nullptr; } 
 
-  static void OnDeviceManagerDestroy(DeviceManagerD3D9 *aDeviceManager) {
-    if(aDeviceManager == mDefaultDeviceManager)
-      mDefaultDeviceManager = nullptr;
-  }
-
   virtual const char* Name() const { return "D3D9"; }
 
   void ReportFailure(const nsACString &aMsg, HRESULT aCode);
@@ -137,9 +132,6 @@ public:
   void SetCompositingDisabled(bool aCompositingDisabled) { mCompositingDisabled = aCompositingDisabled; }
 
 private:
-  /* Default device manager instance */
-  static DeviceManagerD3D9 *mDefaultDeviceManager;
-
   /* Device manager instance for this layer manager */
   nsRefPtr<DeviceManagerD3D9> mDeviceManager;
 
