@@ -9,6 +9,9 @@ TEST_DIRS += ['test']
 JS_MODULES_PATH = 'modules/devtools/sourceeditor'
 
 EXTRA_JS_MODULES += [
+    'autocomplete.js',
+    'css-autocompleter.js',
+    'css-tokenizer.js',
     'debugger.js',
     'editor.js'
 ]
