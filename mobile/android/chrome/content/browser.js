@@ -306,13 +306,6 @@ var BrowserApp = {
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
 
     this.deck = document.getElementById("browsers");
-    this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
-      try {
-        BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
-        Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-      } catch(ex) { console.log(ex); }
-    }, false);
-
     BrowserEventHandler.init();
     ViewportHandler.init();
 
@@ -441,7 +434,8 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+    if (this._startupStatus)
+      this.onAppUpdated();
 
     // Store the low-precision buffer pref
     this.gUseLowPrecision = Services.prefs.getBoolPref("layers.low-precision-buffer");
@@ -1627,11 +1621,6 @@ var BrowserApp = {
         // OS locale -- or should it always be false on Fennec?
         Services.prefs.setBoolPref("intl.locale.matchOS", false);
         Services.prefs.setCharPref("general.useragent.locale", aData);
-        break;
-
-      case "browser-delayed-startup-finished":
-        if (this._startupStatus)
-          this.onAppUpdated();
         break;
 
       default:
