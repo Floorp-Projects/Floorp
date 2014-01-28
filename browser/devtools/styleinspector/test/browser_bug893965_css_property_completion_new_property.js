@@ -105,9 +105,7 @@ function checkState(event) {
          state);
     }
     else {
-      ok(editor.popup._panel.state == "open" ||
-         editor.popup._panel.state == "showing",
-         "Popup is open for state " + state);
+      ok(editor.popup.isOpen, "Popup is open for state " + state);
       is(editor.popup.getItems().length, total,
          "Number of suggestions match for state " + state);
       is(editor.popup.selectedIndex, index,
