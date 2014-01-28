@@ -28,13 +28,22 @@ adopted.
 File Format
 -----------
 
-All crash event files share the same high-level file format: the file
-consists of an event name string followed by a UNIX newline (*\n*)
-followed by its payload data. This allows consumers to read the first line
-from the file and then dispatch based on its contents. If an unknown event
-type is encountered, the event can safely be ignored until later. This helps
-ensure that application downgrades (potentially due to elevated crash rate)
-don't result in data loss.
+All crash event files share the same high-level file format. The format
+consists of the following fields delimited by a UNIX newline (*\n*)
+character:
+
+* String event name (valid UTF-8, but likely ASCII)
+* String representation of integer seconds since UNIX epoch
+* Payload
+
+The payload is event specific and may contain UNIX newline characters.
+The recommended method for parsing is to split at most 3 times on UNIX
+newline and then dispatch to an event-specific parsed based on the
+event name.
+
+If an unknown event type is encountered, the event can safely be ignored
+until later. This helps ensure that application downgrades (potentially
+due to elevated crash rate) don't result in data loss.
 
 The format and semantics of each event type are meant to be constant once
 that event type is committed to the main Firefox repository. If new metadata
@@ -51,7 +60,28 @@ Each subsection documents the different types of crash events that may be
 produced. Each section name corresponds to the first line of the crash
 event file.
 
-**No event types are yet defined.**
+crash.main.1
+^^^^^^^^^^^^
+
+This event is produced when the main process crashes.
+
+The payload of this event is the string crash ID, very likely a UUID.
+There should be ``UUID.dmp`` and ``UUID.extra`` files on disk, saved by
+Breakpad.
+
+crash.plugin.1
+^^^^^^^^^^^^^^
+
+This event is produced when a plugin process crashes.
+
+The payload is identical to ``crash.main.1``'s.
+
+hang.plugin.1
+^^^^^^^^^^^^^
+
+This event is produced when a plugin process hangs.
+
+The payload is identical to ``crash.main.1``'s.
 
 Aggregated Event Log
 ====================
