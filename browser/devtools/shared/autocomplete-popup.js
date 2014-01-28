@@ -25,7 +25,6 @@ loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.j
  *        - theme {String} String related to the theme of the popup.
  *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
  *                     panel to be automatically selected when the popup shows.
- *        - fixedWidth {Boolean} Boolean to control dynamic width of the popup.
  *        - direction {String} The direction of the text in the panel. rtl or ltr
  *        - onSelect {String} The select event handler for the richlistbox
  *        - onClick {String} The click event handler for the richlistbox.
@@ -35,7 +34,6 @@ function AutocompletePopup(aDocument, aOptions = {})
 {
   this._document = aDocument;
 
-  this.fixedWidth = aOptions.fixedWidth || false;
   this.autoSelect = aOptions.autoSelect || false;
   this.position = aOptions.position || "after_start";
   this.direction = aOptions.direction || "ltr";
@@ -75,7 +73,6 @@ function AutocompletePopup(aDocument, aOptions = {})
     else {
       this._document.documentElement.appendChild(this._panel);
     }
-    this._list = null;
   }
   else {
     this._list = this._panel.firstChild;
@@ -137,13 +134,12 @@ AutocompletePopup.prototype = {
    */
   openPopup: function AP_openPopup(aAnchor, aXOffset = 0, aYOffset = 0)
   {
+    this.__maxLabelLength = -1;
+    this._updateSize();
     this._panel.openPopup(aAnchor, this.position, aXOffset, aYOffset);
 
     if (this.autoSelect) {
       this.selectFirstItem();
-    }
-    if (!this.fixedWidth) {
-      this._updateSize();
     }
   },
 
@@ -241,9 +237,7 @@ AutocompletePopup.prototype = {
       if (this.autoSelect) {
         this.selectFirstItem();
       }
-      if (!this.fixedWidth) {
-        this._updateSize();
-      }
+      this._updateSize();
     }
   },
 
@@ -260,6 +254,28 @@ AutocompletePopup.prototype = {
     else {
       this.selectedIndex = 0;
     }
+    this._list.ensureIndexIsVisible(this._list.selectedIndex);
+  },
+
+  __maxLabelLength: -1,
+
+  get _maxLabelLength() {
+    if (this.__maxLabelLength != -1) {
+      return this.__maxLabelLength;
+    }
+
+    let max = 0;
+    for (let i = 0; i < this._list.childNodes.length; i++) {
+      let item = this._list.childNodes[i]._autocompleteItem;
+      let str = item.label;
+      if (item.count) {
+        str += (item.count + "");
+      }
+      max = Math.max(str.length, max);
+    }
+
+    this.__maxLabelLength = max;
+    return this.__maxLabelLength;
   },
 
   /**
@@ -272,24 +288,8 @@ AutocompletePopup.prototype = {
     if (!this._panel) {
       return;
     }
-    // Flush the layout so that we get the latest height.
-    this._panel.boxObject.height;
-    let height = {};
-    this._list.scrollBoxObject.getScrolledSize({}, height);
-    // Change the width of the popup only if the scrollbar is visible.
-    if (height.value > this._panel.clientHeight) {
-      this._list.width = this._panel.clientWidth + this._scrollbarWidth;
-    }
-    // Height change is required, otherwise the panel is drawn at an offset
-    // the first time.
-    this._list.height = this._list.clientHeight;
-    // This brings the panel back at right position.
-    this._list.top = 0;
-    // Move the panel to -1,-1 to realign the popup with its anchor node when
-    // decreasing the panel height.
-    this._panel.moveTo(-1, -1);
-    // Changing panel height might make the selected item out of view, so
-    // bring it back to view.
+
+    this._list.style.width = (this._maxLabelLength + 3) +"ch";
     this._list.ensureIndexIsVisible(this._list.selectedIndex);
   },
 
@@ -305,16 +305,17 @@ AutocompletePopup.prototype = {
       this._list.removeChild(this._list.firstChild);
     }
 
-    if (!this.fixedWidth) {
-      // Reset the panel and list dimensions. New dimensions are calculated when
-      // a new set of items is added to the autocomplete popup.
-      this._list.width = "";
-      this._list.height = "";
-      this._panel.width = "";
-      this._panel.height = "";
-      this._panel.top = "";
-      this._panel.left = "";
-    }
+    this.__maxLabelLength = -1;
+
+    // Reset the panel and list dimensions. New dimensions are calculated when
+    // a new set of items is added to the autocomplete popup.
+    this._list.width = "";
+    this._list.style.width = "";
+    this._list.height = "";
+    this._panel.width = "";
+    this._panel.height = "";
+    this._panel.top = "";
+    this._panel.left = "";
   },
 
   /**
@@ -494,38 +495,6 @@ AutocompletePopup.prototype = {
   focus: function AP_focus()
   {
     this._list.focus();
-  },
-
-  /**
-   * Determine the scrollbar width in the current document.
-   *
-   * @private
-   */
-  get _scrollbarWidth()
-  {
-    if (this.__scrollbarWidth !== null) {
-      return this.__scrollbarWidth;
-    }
-
-    let doc = this._document;
-    if (doc.defaultView.matchMedia("(-moz-overlay-scrollbars)").matches) {
-      // This is for the Mac's floating scrollbar, which actually is drawn over
-      // the content, thus taking no extra width.
-      return (this.__scrollbarWidth = 0);
-    }
-
-    let hbox = doc.createElementNS(XUL_NS, "hbox");
-    hbox.setAttribute("style", "height: 0%; overflow: hidden");
-
-    let scrollbar = doc.createElementNS(XUL_NS, "scrollbar");
-    scrollbar.setAttribute("orient", "vertical");
-    hbox.appendChild(scrollbar);
-    doc.documentElement.appendChild(hbox);
-
-    this.__scrollbarWidth = scrollbar.clientWidth;
-    doc.documentElement.removeChild(hbox);
-
-    return this.__scrollbarWidth;
   },
 
   /**
