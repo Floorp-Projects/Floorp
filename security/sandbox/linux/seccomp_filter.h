@@ -255,8 +255,11 @@
   ALLOW_SYSCALL(access), \
   ALLOW_SYSCALL(unlink), \
   ALLOW_SYSCALL(fsync), \
+  ALLOW_SYSCALL(msync), \
   /* Should remove all of the following in the future, if possible */ \
   ALLOW_SYSCALL(getpriority), \
+  ALLOW_SYSCALL(sched_get_priority_min), \
+  ALLOW_SYSCALL(sched_get_priority_max), \
   ALLOW_SYSCALL(setpriority), \
   SECCOMP_WHITELIST_PROFILING \
   SECCOMP_WHITELIST_B2G_LOW \
