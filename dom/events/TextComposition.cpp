@@ -31,17 +31,6 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
 {
 }
 
-TextComposition::TextComposition(const TextComposition& aOther)
-{
-  mNativeContext = aOther.mNativeContext;
-  mPresContext = aOther.mPresContext;
-  mNode = aOther.mNode;
-  mLastData = aOther.mLastData;
-  mCompositionStartOffset = aOther.mCompositionStartOffset;
-  mCompositionTargetOffset = aOther.mCompositionTargetOffset;
-  mIsSynthesizedForTests = aOther.mIsSynthesizedForTests;
-}
-
 bool
 TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 {
@@ -118,15 +107,13 @@ TextComposition::DispatchCompsotionEventRunnable(uint32_t aEventMessage,
 void
 TextComposition::SynthesizeCommit(bool aDiscard)
 {
-  // backup this instance and use it since this instance might be destroyed
-  // by nsIMEStateManager if this is managed by it.
-  TextComposition composition = *this;
-  nsAutoString data(aDiscard ? EmptyString() : composition.mLastData);
-  if (composition.mLastData != data) {
-    composition.DispatchCompsotionEventRunnable(NS_COMPOSITION_UPDATE, data);
-    composition.DispatchCompsotionEventRunnable(NS_TEXT_TEXT, data);
+  nsRefPtr<TextComposition> kungFuDeathGrip(this);
+  nsAutoString data(aDiscard ? EmptyString() : mLastData);
+  if (mLastData != data) {
+    DispatchCompsotionEventRunnable(NS_COMPOSITION_UPDATE, data);
+    DispatchCompsotionEventRunnable(NS_TEXT_TEXT, data);
   }
-  composition.DispatchCompsotionEventRunnable(NS_COMPOSITION_END, data);
+  DispatchCompsotionEventRunnable(NS_COMPOSITION_END, data);
 }
 
 nsresult
@@ -202,7 +189,7 @@ TextCompositionArray::index_type
 TextCompositionArray::IndexOf(nsIWidget* aWidget)
 {
   for (index_type i = Length(); i > 0; --i) {
-    if (ElementAt(i - 1).MatchesNativeContext(aWidget)) {
+    if (ElementAt(i - 1)->MatchesNativeContext(aWidget)) {
       return i - 1;
     }
   }
@@ -213,7 +200,7 @@ TextCompositionArray::index_type
 TextCompositionArray::IndexOf(nsPresContext* aPresContext)
 {
   for (index_type i = Length(); i > 0; --i) {
-    if (ElementAt(i - 1).GetPresContext() == aPresContext) {
+    if (ElementAt(i - 1)->GetPresContext() == aPresContext) {
       return i - 1;
     }
   }
@@ -228,7 +215,7 @@ TextCompositionArray::IndexOf(nsPresContext* aPresContext,
   if (index == NoIndex) {
     return NoIndex;
   }
-  nsINode* node = ElementAt(index).GetEventTargetNode();
+  nsINode* node = ElementAt(index)->GetEventTargetNode();
   return node == aNode ? index : NoIndex;
 }
 
@@ -236,7 +223,7 @@ TextComposition*
 TextCompositionArray::GetCompositionFor(nsIWidget* aWidget)
 {
   index_type i = IndexOf(aWidget);
-  return i != NoIndex ? &ElementAt(i) : nullptr;
+  return i != NoIndex ? ElementAt(i) : nullptr;
 }
 
 TextComposition*
@@ -244,7 +231,7 @@ TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext,
                                            nsINode* aNode)
 {
   index_type i = IndexOf(aPresContext, aNode);
-  return i != NoIndex ? &ElementAt(i) : nullptr;
+  return i != NoIndex ? ElementAt(i) : nullptr;
 }
 
 TextComposition*
@@ -253,9 +240,9 @@ TextCompositionArray::GetCompositionInContent(nsPresContext* aPresContext,
 {
   // There should be only one composition per content object.
   for (index_type i = Length(); i > 0; --i) {
-    nsINode* node = ElementAt(i - 1).GetEventTargetNode();
+    nsINode* node = ElementAt(i - 1)->GetEventTargetNode();
     if (node && nsContentUtils::ContentIsDescendantOf(node, aContent)) {
-      return &ElementAt(i - 1);
+      return ElementAt(i - 1);
     }
   }
   return nullptr;
