@@ -10,13 +10,15 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/debug.js");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/debug.js", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 #ifndef MOZ_WIDGET_GONK
-Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 #endif
-Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm");
+Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
+Cu.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/Task.jsm", this);
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -127,30 +129,57 @@ let processInfo = {
 this.EXPORTED_SYMBOLS = ["TelemetryPing"];
 
 this.TelemetryPing = Object.freeze({
+  /**
+   * Returns the current telemetry payload.
+   * @returns Object
+   */
   getPayload: function() {
     return Impl.getPayload();
   },
-  saveHistograms: function(aFile, aSync) {
-    return Impl.saveHistograms(aFile, aSync);
+  /**
+   * Save histograms to a file.
+   * Used only for testing purposes.
+   *
+   * @param {nsIFile} aFile The file to load from.
+   */
+  testSaveHistograms: function(aFile) {
+    return Impl.testSaveHistograms(aFile);
   },
+  /**
+   * Collect and store information about startup.
+   */
   gatherStartup: function() {
     return Impl.gatherStartup();
   },
-  enableLoadSaveNotifications: function() {
-    return Impl.enableLoadSaveNotifications();
-  },
-  cacheProfileDirectory: function() {
-    return Impl.cacheProfileDirectory();
-  },
+  /**
+   * Inform the ping which AddOns are installed.
+   *
+   * @param aAddOns - The AddOns.
+   */
   setAddOns: function(aAddOns) {
     return Impl.setAddOns(aAddOns);
   },
+  /**
+   * Send a ping to a test server. Used only for testing.
+   *
+   * @param aServer - The server.
+   */
   testPing: function(aServer) {
     return Impl.testPing(aServer);
   },
-  testLoadHistograms: function(aFile, aSync) {
-    return Impl.testLoadHistograms(aFile, aSync);
+  /**
+   * Load histograms from a file.
+   * Used only for testing purposes.
+   *
+   * @param aFile - File to load from.
+   */
+  testLoadHistograms: function(aFile) {
+    return Impl.testLoadHistograms(aFile);
   },
+  /**
+   * Returns the path component of the current submission URL.
+   * @returns String
+   */
   submissionPath: function() {
     return Impl.submissionPath();
   },
@@ -164,13 +193,13 @@ this.TelemetryPing = Object.freeze({
    */
   reset: function() {
     this.uninstall();
-    this.setup();
+    return this.setup();
   },
   /**
    * Used only for testing purposes.
    */
   setup: function() {
-    Impl.setup(true);
+    return Impl.setup(true);
   },
   /**
    * Used only for testing purposes.
@@ -697,46 +726,15 @@ let Impl = {
   send: function send(reason, server) {
     // populate histograms one last time
     this.gatherMemory();
-    this.sendPingsFromIterator(server, reason,
+    return this.sendPingsFromIterator(server, reason,
                                Iterator(this.popPayloads(reason)));
   },
 
-  /**
-   * What we want to do is the following:
-   *
-   * for data in getPayloads(reason):
-   *   if sending ping data to server failed:
-   *     break;
-   *
-   * but we can't do that, since XMLHttpRequest is async.  What we do
-   * instead is let this function control the essential looping logic
-   * and provide callbacks for XMLHttpRequest when a request has
-   * finished.
-   */
   sendPingsFromIterator: function sendPingsFromIterator(server, reason, i) {
-    function finishPings(reason) {
-      if (reason == "test-ping") {
-        Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);
-      }
-    }
+    let p = [data for (data in i)].map((data) =>
+      this.doPing(server, data).then(null, () => TelemetryFile.savePing(data, true)));
 
-    let data = null;
-    try {
-      data = i.next();
-    } catch (e if e instanceof StopIteration) {
-      finishPings(reason);
-      return;
-    }
-    function onSuccess() {
-      this.sendPingsFromIterator(server, reason, i);
-    }
-    function onError() {
-      TelemetryFile.savePing(data, true);
-      // Notify that testing is complete, even if we didn't send everything.
-      finishPings(reason);
-    }
-    this.doPing(server, data,
-                onSuccess.bind(this), onError.bind(this));
+    return Promise.all(p);
   },
 
   finishPingRequest: function finishPingRequest(success, startTime, ping) {
@@ -747,7 +745,9 @@ let Impl = {
     hping.add(new Date() - startTime);
 
     if (success) {
-      TelemetryFile.cleanupPingFile(ping);
+      return TelemetryFile.cleanupPingFile(ping);
+    } else {
+      return Promise.resolve();
     }
   },
 
@@ -765,7 +765,8 @@ let Impl = {
     return "/submit/telemetry/" + slug;
   },
 
-  doPing: function doPing(server, ping, onSuccess, onError) {
+  doPing: function doPing(server, ping) {
+    let deferred = Promise.defer();
     let url = server + this.submissionPath(ping);
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
@@ -776,14 +777,19 @@ let Impl = {
 
     let startTime = new Date();
 
-    function handler(success, callback) {
+    function handler(success) {
       return function(event) {
         this.finishPingRequest(success, startTime, ping);
-        callback();
+
+        if (success) {
+          deferred.resolve();
+        } else {
+          deferred.reject(event);
+        }
       };
     }
-    request.addEventListener("error", handler(false, onError).bind(this), false);
-    request.addEventListener("load", handler(true, onSuccess).bind(this), false);
+    request.addEventListener("error", handler(false).bind(this), false);
+    request.addEventListener("load", handler(true).bind(this), false);
 
     request.setRequestHeader("Content-Encoding", "gzip");
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -795,6 +801,7 @@ let Impl = {
                         .createInstance(Ci.nsIStringInputStream);
     payloadStream.data = this.gzipCompressString(utf8Payload);
     request.send(payloadStream);
+    return deferred.promise;
   },
 
   gzipCompressString: function gzipCompressString(string) {
@@ -899,41 +906,39 @@ let Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    function timerCallback() {
-      this._initialized = true;
-      TelemetryFile.loadSavedPings(false, (success =>
-        {
-          let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
-          success_histogram.add(success);
-        }), () =>
-        {
-          // If we have any TelemetryPings lying around, we'll be aggressive
-          // and try to send them all off ASAP.
-          if (TelemetryFile.pingsOverdue > 0) {
-            // It doesn't really matter what we pass to this.send as a reason,
-            // since it's never sent to the server. All that this.send does with
-            // the reason is check to make sure it's not a test-ping.
-            this.send("overdue-flush", this._server);
-          }
-        });
-      this.attachObservers();
-      this.gatherMemory();
+    let deferred = Promise.defer();
 
-      Telemetry.asyncFetchTelemetryData(function () {
-      });
-      delete this._timer;
+    function timerCallback() {
+      Task.spawn(function*(){
+        this._initialized = true;
+
+        yield TelemetryFile.loadSavedPings();
+        // If we have any TelemetryPings lying around, we'll be aggressive
+        // and try to send them all off ASAP.
+        if (TelemetryFile.pingsOverdue > 0) {
+          // It doesn't really matter what we pass to this.send as a reason,
+          // since it's never sent to the server. All that this.send does with
+          // the reason is check to make sure it's not a test-ping.
+          yield this.send("overdue-flush", this._server);
+        }
+
+        this.attachObservers();
+        this.gatherMemory();
+
+        Telemetry.asyncFetchTelemetryData(function () {});
+        delete this._timer;
+        deferred.resolve();
+      }.bind(this));
     }
+
     this._timer.initWithCallback(timerCallback.bind(this),
                                  aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
                                  Ci.nsITimer.TYPE_ONE_SHOT);
+    return deferred.promise;
   },
 
-  testLoadHistograms: function testLoadHistograms(file, sync) {
-    TelemetryFile.testLoadHistograms(file, sync, (success =>
-        {
-          let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
-          success_histogram.add(success);
-        }));
+  testLoadHistograms: function testLoadHistograms(file) {
+    return TelemetryFile.testLoadHistograms(file);
   },
 
   getFlashVersion: function getFlashVersion() {
@@ -950,13 +955,12 @@ let Impl = {
 
   savePendingPings: function savePendingPings() {
     let sessionPing = this.getSessionPayloadAndSlug("saved-session");
-    TelemetryFile.savePendingPings(sessionPing);
+    return TelemetryFile.savePendingPings(sessionPing);
   },
 
-  saveHistograms: function saveHistograms(file, sync) {
-    TelemetryFile.savePingToFile(
-      this.getSessionPayloadAndSlug("saved-session"),
-      file, sync, true);
+  testSaveHistograms: function testSaveHistograms(file) {
+    return TelemetryFile.savePingToFile(this.getSessionPayloadAndSlug("saved-session"),
+      file.path, true);
   },
 
   /**
@@ -1000,10 +1004,6 @@ let Impl = {
     this._slowSQLStartup = Telemetry.slowSQL;
   },
 
-  enableLoadSaveNotifications: function enableLoadSaveNotifications() {
-    TelemetryFile.shouldNotifyUponSave = true;
-  },
-
   setAddOns: function setAddOns(aAddOns) {
     this._addons = aAddOns;
   },
@@ -1014,19 +1014,14 @@ let Impl = {
       this._isIdleObserver = false;
     }
     if (aTest) {
-      this.send("test-ping", aServer);
+      return this.send("test-ping", aServer);
     } else if (Telemetry.canSend) {
-      this.send("idle-daily", aServer);
+      return this.send("idle-daily", aServer);
     }
   },
 
   testPing: function testPing(server) {
-    this.sendIdlePing(true, server);
-  },
-
-  cacheProfileDirectory: function cacheProfileDirectory() {
-    // This method doesn't do anything anymore
-    return;
+    return this.sendIdlePing(true, server);
   },
 
   /**
@@ -1035,8 +1030,7 @@ let Impl = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
     case "profile-after-change":
-      this.setup();
-      break;
+      return this.setup();
     case "cycle-collector-begin":
       let now = new Date();
       if (!gLastMemoryPoll
@@ -1079,9 +1073,10 @@ let Impl = {
     case "profile-before-change2":
       this.uninstall();
       if (Telemetry.canSend) {
-        this.savePendingPings();
+        return this.savePendingPings();
+      } else {
+        return Promise.resolve();
       }
-      break;
 
 #ifdef MOZ_WIDGET_ANDROID
     // On Android, we can get killed without warning once we are in the background,
@@ -1107,5 +1102,5 @@ let Impl = {
       break;
 #endif
     }
-  }
+  },
 };
