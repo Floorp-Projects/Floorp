@@ -532,6 +532,7 @@ class BaseMarionetteTestRunner(object):
         self.shuffle = shuffle
         self.sdcard = sdcard
         self.mixin_run_tests = []
+        self.manifest_skipped_tests = []
 
         if testvars:
             if not os.path.exists(testvars):
@@ -806,22 +807,30 @@ class BaseMarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
-            all_tests = manifest.active_tests(exists=False, disabled=False)
             manifest_tests = manifest.active_tests(exists=False,
-                                                   disabled=False,
+                                                   disabled=True,
                                                    device=self.device,
                                                    app=self.appName,
                                                    **mozinfo.info)
-            skip_tests = list(set([x['path'] for x in all_tests]) -
-                              set([x['path'] for x in manifest_tests]))
-            for skipped in skip_tests:
-                self.logger.info('TEST-SKIP | %s | device=%s, app=%s' %
-                                 (os.path.basename(skipped),
-                                  self.device,
-                                  self.appName))
+            unfiltered_tests = []
+            for test in manifest_tests:
+                if test.get('disabled'):
+                    self.manifest_skipped_tests.append(test)
+                else:
+                    unfiltered_tests.append(test)
+
+            target_tests = manifest.get(tests=unfiltered_tests, **testargs)
+            for test in unfiltered_tests:
+                if test['path'] not in [x['path'] for x in target_tests]:
+                    test.setdefault('disabled', 'filtered by type (%s)' % self.type)
+                    self.manifest_skipped_tests.append(test)
+
+            for test in self.manifest_skipped_tests:
+                self.logger.info('TEST-SKIP | %s | %s' % (
+                    os.path.basename(test['path']),
+                    test['disabled']))
                 self.todo += 1
 
-            target_tests = manifest.get(tests=manifest_tests, **testargs)
             if self.shuffle:
                 random.shuffle(target_tests)
             for i in target_tests:
@@ -874,17 +883,32 @@ class BaseMarionetteTestRunner(object):
 
     def generate_xml(self, results_list):
 
-        def _extract_xml(test, result='passed'):
+        def _extract_xml_from_result(test_result, result='passed'):
+            _extract_xml(
+                test_name=unicode(test_result.name).split()[0],
+                test_class=test_result.test_class,
+                duration=test_result.duration,
+                result=result,
+                output='\n'.join(test_result.output))
+
+        def _extract_xml_from_skipped_manifest_test(test):
+            _extract_xml(
+                test_name=test['name'],
+                result='skipped',
+                output=test['disabled'])
+
+        def _extract_xml(test_name, test_class='', duration=0,
+                         result='passed', output=''):
             testcase = doc.createElement('testcase')
-            testcase.setAttribute('classname', test.test_class)
-            testcase.setAttribute('name', unicode(test.name).split()[0])
-            testcase.setAttribute('time', str(test.duration))
+            testcase.setAttribute('classname', test_class)
+            testcase.setAttribute('name', test_name)
+            testcase.setAttribute('time', str(duration))
             testsuite.appendChild(testcase)
 
             if result in ['failure', 'error', 'skipped']:
                 f = doc.createElement(result)
                 f.setAttribute('message', 'test %s' % result)
-                f.appendChild(doc.createTextNode(test.reason))
+                f.appendChild(doc.createTextNode(output))
                 testcase.appendChild(f)
 
         doc = dom.Document()
@@ -905,33 +929,38 @@ class BaseMarionetteTestRunner(object):
                                                for results in results_list])))
         testsuite.setAttribute('errors', str(sum([len(results.errors)
                                              for results in results_list])))
-        testsuite.setAttribute('skips', str(sum([len(results.skipped) +
-                                                     len(results.expectedFailures)
-                                                     for results in results_list])))
+        testsuite.setAttribute(
+            'skips', str(sum([len(results.skipped) +
+                         len(results.expectedFailures)
+                         for results in results_list]) +
+                         len(self.manifest_skipped_tests)))
 
         for results in results_list:
 
             for result in results.errors:
-                _extract_xml(result, result='error')
+                _extract_xml_from_result(result, result='error')
 
             for result in results.failures:
-                _extract_xml(result, result='failure')
+                _extract_xml_from_result(result, result='failure')
 
             if hasattr(results, 'unexpectedSuccesses'):
                 for test in results.unexpectedSuccesses:
                     # unexpectedSuccesses is a list of Testcases only, no tuples
-                    _extract_xml(test, result='failure')
+                    _extract_xml_from_result(test, result='failure')
 
             if hasattr(results, 'skipped'):
                 for result in results.skipped:
-                    _extract_xml(result, result='skipped')
+                    _extract_xml_from_result(result, result='skipped')
 
             if hasattr(results, 'expectedFailures'):
                 for result in results.expectedFailures:
-                    _extract_xml(result, result='skipped')
+                    _extract_xml_from_result(result, result='skipped')
 
             for result in results.tests_passed:
-                _extract_xml(result)
+                _extract_xml_from_result(result)
+
+        for test in self.manifest_skipped_tests:
+            _extract_xml_from_skipped_manifest_test(test)
 
         doc.appendChild(testsuite)
         return doc.toprettyxml(encoding='utf-8')
