@@ -203,7 +203,8 @@ public:
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 
   // layout, position and display the popup as needed
-  void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, bool aSizedToPopup);
+  void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
+                   nsIFrame* aAnchor, bool aSizedToPopup);
 
   nsView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
@@ -212,7 +213,7 @@ public:
   // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
   // will be adjusted so that it is on screen. If aIsMove is true, then the popup
   // is being moved, and should not be flipped.
-  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove);
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aSizedToPopup);
 
   bool HasGeneratedChildren() { return mGeneratedChildren; }
   void SetGeneratedChildren() { mGeneratedChildren = true; }
