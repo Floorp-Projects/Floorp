@@ -173,9 +173,8 @@
   <string name="fxaccount_create_account_age_2006">&fxaccount.create.account.age.2006;</string>
   <string name="fxaccount_create_account_age_2007">&fxaccount.create.account.age.2007;</string>
   <!-- Temporary Firefox Accounts strings. -->
-  <!-- We haven't yet decided how to linkify, so to save translation
-       time we're holding this back. -->
-  <string name="fxaccount_account_create_not_allowed_learn_more">&lt;a href="http://www.ftc.gov/news-events/media-resources/protecting-consumer-privacy/kids-privacy-coppa"&gt;Learn more&lt;/a&gt;</string>
+  <string name="fxaccount_link_create_not_allowed">http://www.ftc.gov/news-events/media-resources/protecting-consumer-privacy/kids-privacy-coppa</string>
+  <string name="fxaccount_account_create_not_allowed_learn_more">Learn more</string>
   <string name="fxaccount_sign_in_success">Account verified</string>
   <string name="fxaccount_sign_in_success_description">You are now ready to use Sync!</string>
   <string name="fxaccount_checkbox_contentDescription">Firefox Accounts checkbox graphic</string>
