@@ -17,13 +17,16 @@ class Wait(object):
     This will repeatedly evaluate a condition in anticipation for a
     truthy return value, or its timeout to expire, or its waiting
     predicate to become true.
+
     A `Wait` instance defines the maximum amount of time to wait for a
     condition, as well as the frequency with which to check the
     condition.  Furthermore, the user may configure the wait to ignore
     specific types of exceptions whilst waiting, such as
     `errors.NoSuchElementException` when searching for an element on
     the page.
+
     """
+
     def __init__(self, marionette, timeout=None,
                  interval=DEFAULT_INTERVAL, ignored_exceptions=None,
                  clock=None):
@@ -42,22 +45,28 @@ class Wait(object):
 
         :param marionette: The input value to be provided to
             conditions, usually a Marionette instance.
+
         :param timeout: How long to wait for the evaluated condition
             to become true.  The default timeout is the `timeout`
             property on the `Marionette` object if set, or
             `wait.DEFAULT_TIMEOUT`.
+
         :param interval: How often the condition should be evaluated.
             In reality the interval may be greater as the cost of
             evaluating the condition function is not factored in.  The
             default polling interval is `wait.DEFAULT_INTERVAL`.
+
         :param ignored_exceptions: Ignore specific types of exceptions
             whilst waiting for the condition.  Any exceptions not
             whitelisted will be allowed to propagate, terminating the
             wait.
+
         :param clock: Allows overriding the use of the runtime's
             default time library.  See `wait.SystemClock` for
             implementation details.
+
         """
+
         self.marionette = marionette
         self.timeout = timeout or (self.marionette.timeout and
                                    self.marionette.timeout / 1000.0) or DEFAULT_TIMEOUT
@@ -73,7 +82,7 @@ class Wait(object):
                 exceptions.append(ignored_exceptions)
         self.exceptions = tuple(set(exceptions))
 
-    def until(self, condition, is_true=None):
+    def until(self, condition, is_true=None, message=""):
         """Repeatedly runs condition until its return value evaluates to true,
         or its timeout expires or the predicate evaluates to true.
 
@@ -82,19 +91,24 @@ class Wait(object):
         condition that returns null or does not evaluate to true will
         fully elapse its timeout before raising an
         `errors.TimeoutException`.
+
         If an exception is raised in the condition function and it's
         not ignored, this function will raise immediately.  If the
         exception is ignored, it will continue polling for the
         condition until it returns successfully or a
         `TimeoutException` is raised.
+
         :param condition: A callable function whose return value will
             be returned by this function if it evaluates to true.
 
-        :param is_true: A predicate that will terminate and return
-            when it evaluates to False.  It should be a function that
-            will be passed clock and an end time.  The default
-            predicate will terminate a wait when the clock elapses the
-            timeout.
+        :param is_true: An optional predicate that will terminate and
+            return when it evaluates to False.  It should be a
+            function that will be passed clock and an end time.  The
+            default predicate will terminate a wait when the clock
+            elapses the timeout.
+
+        :param message: An optional message to include in the
+            exception's message if this function times out.
 
         """
 
@@ -120,8 +134,12 @@ class Wait(object):
 
             self.clock.sleep(self.interval)
 
+        if message:
+            message = " with message: %s" % message
+
         raise errors.TimeoutException(
-            "Timed out after %s seconds" % (self.clock.now - start),
+            "Timed out after %s seconds%s" %
+            ((self.clock.now - start), message),
             cause=last_exc)
 
 def until_pred(clock, end):

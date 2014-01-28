@@ -46,32 +46,32 @@ struct jsid
 // Objective-C++ which, apparently, wants to be able to #include jsapi.h.
 #define id iden
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_STRING(jsid id)
 {
     return (JSID_BITS(id) & JSID_TYPE_MASK) == 0;
 }
 
-static JS_ALWAYS_INLINE JSString *
+static MOZ_ALWAYS_INLINE JSString *
 JSID_TO_STRING(jsid id)
 {
     JS_ASSERT(JSID_IS_STRING(id));
     return (JSString *)JSID_BITS(id);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_ZERO(jsid id)
 {
     return JSID_BITS(id) == 0;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_INT(jsid id)
 {
     return !!(JSID_BITS(id) & JSID_TYPE_INT);
 }
 
-static JS_ALWAYS_INLINE int32_t
+static MOZ_ALWAYS_INLINE int32_t
 JSID_TO_INT(jsid id)
 {
     JS_ASSERT(JSID_IS_INT(id));
@@ -81,13 +81,13 @@ JSID_TO_INT(jsid id)
 #define JSID_INT_MIN  0
 #define JSID_INT_MAX  INT32_MAX
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 INT_FITS_IN_JSID(int32_t i)
 {
     return i >= 0;
 }
 
-static JS_ALWAYS_INLINE jsid
+static MOZ_ALWAYS_INLINE jsid
 INT_TO_JSID(int32_t i)
 {
     jsid id;
@@ -96,21 +96,21 @@ INT_TO_JSID(int32_t i)
     return id;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_OBJECT(jsid id)
 {
     return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT &&
            (size_t)JSID_BITS(id) != JSID_TYPE_OBJECT;
 }
 
-static JS_ALWAYS_INLINE JSObject *
+static MOZ_ALWAYS_INLINE JSObject *
 JSID_TO_OBJECT(jsid id)
 {
     JS_ASSERT(JSID_IS_OBJECT(id));
     return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
-static JS_ALWAYS_INLINE jsid
+static MOZ_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
     jsid id;
@@ -120,19 +120,19 @@ OBJECT_TO_JSID(JSObject *obj)
     return id;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_GCTHING(jsid id)
 {
     return JSID_IS_STRING(id) || JSID_IS_OBJECT(id);
 }
 
-static JS_ALWAYS_INLINE void *
+static MOZ_ALWAYS_INLINE void *
 JSID_TO_GCTHING(jsid id)
 {
     return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_VOID(const jsid id)
 {
     JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
@@ -140,7 +140,7 @@ JSID_IS_VOID(const jsid id)
     return ((size_t)JSID_BITS(id) == JSID_TYPE_VOID);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 JSID_IS_EMPTY(const jsid id)
 {
     return ((size_t)JSID_BITS(id) == JSID_TYPE_OBJECT);

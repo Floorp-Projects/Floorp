@@ -20,7 +20,7 @@
 namespace js {
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE JSInlineString *
+static MOZ_ALWAYS_INLINE JSInlineString *
 NewShortString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
@@ -39,7 +39,7 @@ NewShortString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE JSInlineString *
+static MOZ_ALWAYS_INLINE JSInlineString *
 NewShortString(ExclusiveContext *cx, JS::StableTwoByteChars chars)
 {
     size_t len = chars.length();
@@ -62,7 +62,7 @@ NewShortString(ExclusiveContext *cx, JS::StableTwoByteChars chars)
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE JSInlineString *
+static MOZ_ALWAYS_INLINE JSInlineString *
 NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
 {
     size_t len = chars.length();
@@ -101,10 +101,10 @@ StringWriteBarrierPostRemove(js::ThreadSafeContext *maybecx, JSString **strp)
 
 } /* namespace js */
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
 {
-    if (JS_UNLIKELY(length > JSString::MAX_LENGTH)) {
+    if (MOZ_UNLIKELY(length > JSString::MAX_LENGTH)) {
         js_ReportAllocationOverflow(maybecx);
         return false;
     }
@@ -112,7 +112,7 @@ JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
     return true;
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSRope::init(js::ThreadSafeContext *cx, JSString *left, JSString *right, size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
@@ -123,7 +123,7 @@ JSRope::init(js::ThreadSafeContext *cx, JSString *left, JSString *right, size_t 
 }
 
 template <js::AllowGC allowGC>
-JS_ALWAYS_INLINE JSRope *
+MOZ_ALWAYS_INLINE JSRope *
 JSRope::new_(js::ThreadSafeContext *cx,
              typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
              typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
@@ -145,7 +145,7 @@ JSRope::markChildren(JSTracer *trc)
     js::gc::MarkStringUnbarriered(trc, &d.s.u2.right, "right child");
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, const jschar *chars,
                         size_t length)
 {
@@ -156,7 +156,7 @@ JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, const j
     js::StringWriteBarrierPost(cx, reinterpret_cast<JSString **>(&d.s.u2.base));
 }
 
-JS_ALWAYS_INLINE JSLinearString *
+MOZ_ALWAYS_INLINE JSLinearString *
 JSDependentString::new_(js::ExclusiveContext *cx,
                         JSLinearString *baseArg, const jschar *chars, size_t length)
 {
@@ -225,7 +225,7 @@ JSFlatString::toPropertyName(JSContext *cx)
     return atom->asPropertyName();
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSStableString::init(const jschar *chars, size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
@@ -233,7 +233,7 @@ JSStableString::init(const jschar *chars, size_t length)
 }
 
 template <js::AllowGC allowGC>
-JS_ALWAYS_INLINE JSStableString *
+MOZ_ALWAYS_INLINE JSStableString *
 JSStableString::new_(js::ThreadSafeContext *cx, const jschar *chars, size_t length)
 {
     JS_ASSERT(chars[length] == jschar(0));
@@ -248,13 +248,13 @@ JSStableString::new_(js::ThreadSafeContext *cx, const jschar *chars, size_t leng
 }
 
 template <js::AllowGC allowGC>
-JS_ALWAYS_INLINE JSInlineString *
+MOZ_ALWAYS_INLINE JSInlineString *
 JSInlineString::new_(js::ThreadSafeContext *cx)
 {
     return (JSInlineString *)js_NewGCString<allowGC>(cx);
 }
 
-JS_ALWAYS_INLINE jschar *
+MOZ_ALWAYS_INLINE jschar *
 JSInlineString::init(size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
@@ -263,7 +263,7 @@ JSInlineString::init(size_t length)
     return d.inlineStorage;
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSInlineString::resetLength(size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
@@ -271,13 +271,13 @@ JSInlineString::resetLength(size_t length)
 }
 
 template <js::AllowGC allowGC>
-JS_ALWAYS_INLINE JSShortString *
+MOZ_ALWAYS_INLINE JSShortString *
 JSShortString::new_(js::ThreadSafeContext *cx)
 {
     return js_NewGCShortString<allowGC>(cx);
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSExternalString::init(const jschar *chars, size_t length, const JSStringFinalizer *fin)
 {
     JS_ASSERT(fin);
@@ -287,7 +287,7 @@ JSExternalString::init(const jschar *chars, size_t length, const JSStringFinaliz
     d.s.u2.externalFinalizer = fin;
 }
 
-JS_ALWAYS_INLINE JSExternalString *
+MOZ_ALWAYS_INLINE JSExternalString *
 JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length,
                        const JSStringFinalizer *fin)
 {
@@ -325,7 +325,7 @@ js::StaticStrings::getLength2(jschar c1, jschar c2)
     return length2StaticTable[index];
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 JSString::finalize(js::FreeOp *fop)
 {
     /* Shorts are in a different arena. */
