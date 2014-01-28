@@ -290,11 +290,11 @@
     _(AssertRangeF)                 \
     _(AssertRangeV)
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
 # include "jit/x86/LOpcodes-x86.h"
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
 # include "jit/x64/LOpcodes-x64.h"
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/LOpcodes-arm.h"
 #endif
 

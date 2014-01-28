@@ -3494,8 +3494,10 @@ JS_PUBLIC_API(bool)
 JS_SetProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue v)
 {
     JSAtom *atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_SetPropertyById(cx, obj, id, v);
+    return JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
@@ -3503,8 +3505,10 @@ JS_SetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t nam
                  HandleValue v)
 {
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_SetPropertyById(cx, obj, id, v);
+    return JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)

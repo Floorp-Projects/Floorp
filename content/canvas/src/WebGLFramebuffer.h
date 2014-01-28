@@ -168,7 +168,7 @@ public:
 
     bool CheckAndInitializeAttachments();
 
-    bool CheckColorAttachementNumber(GLenum attachment, const char* functionName) const;
+    bool CheckColorAttachmentNumber(GLenum attachment, const char* functionName) const;
 
     GLuint mGLName;
     bool mHasEverBeenBound;

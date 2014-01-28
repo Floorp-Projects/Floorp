@@ -121,6 +121,7 @@ UNIFIED_SOURCES += [
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
+    'GLDebugUtils.cpp',
     'GLLibraryEGL.cpp',
     'GLLibraryLoader.cpp',
     'GLReadTexImageHelper.cpp',

@@ -1,0 +1,61 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>subscript</title>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      function verifyItalicCorrections()
+      {
+        var epsilon = 5;
+        for (var i = 0; i < 8; i += 2) {
+          var sub = document.getElementById("s" + i);
+          var sup = document.getElementById("s" + (i+1));
+          var italicCorrection =
+           sup.getBoundingClientRect().left - sub.getBoundingClientRect().left;
+           if (italicCorrection < epsilon) {
+             return false;
+           }
+        }
+        return true;
+      }
+
+      function doTest()
+      {
+        if (verifyItalicCorrections()) {
+          document.body.style.background = "#5f5";
+        }
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+  </head>
+  <body style="background: #f00; font-size: 50px;">
+
+    <div>
+      <math>
+        <msubsup>
+          <mi>f</mi>
+          <mspace id="s0" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s1" width="50px" height="50px" mathbackground="blue"/>
+        </msubsup>
+      </math>
+    </div>
+
+    <br/>
+
+    <div>
+      <math>
+        <mmultiscripts>
+          <mi>f</mi>
+          <mspace id="s2" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s3" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s4" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s5" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s6" width="50px" height="50px" mathbackground="blue"/>
+          <mspace id="s7" width="50px" height="50px" mathbackground="blue"/>
+        </mmultiscripts>
+      </math>
+    </div>
+
+  </body>
+</html>

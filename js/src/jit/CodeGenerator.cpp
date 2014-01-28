@@ -7754,7 +7754,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             // fallthrough
 
         case MFunctionBoundary::Enter:
-            if (sps_.slowAssertions()) {
+            if (gen->options.spsSlowAssertionsEnabled()) {
                 saveLive(lir);
                 pushArg(ImmGCPtr(lir->script()));
                 if (!callVM(SPSEnterInfo, lir))
@@ -7764,7 +7764,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
                 return true;
             }
 
-            return sps_.push(GetIonContext()->cx, lir->script(), masm, temp);
+            return sps_.push(lir->script(), masm, temp);
 
         case MFunctionBoundary::Inline_Exit:
             // all inline returns were covered with ::Exit, so we just need to
@@ -7775,7 +7775,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             return true;
 
         case MFunctionBoundary::Exit:
-            if (sps_.slowAssertions()) {
+            if (gen->options.spsSlowAssertionsEnabled()) {
                 saveLive(lir);
                 pushArg(ImmGCPtr(lir->script()));
                 // Once we've exited, then we shouldn't emit instrumentation for
@@ -7900,7 +7900,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
 {
     MAsmJSCall *mir = ins->mir();
 
-#if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
+#if defined(JS_CODEGEN_ARM) && !defined(JS_CODEGEN_ARM_HARDFP)
     if (mir->callee().which() == MAsmJSCall::Callee::Builtin) {
         for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
             LAllocation *a = ins->getOperand(i);

@@ -2106,7 +2106,7 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
     // Implicit interrupt checks require asm.js signal handlers to be
     // installed. ARM does not yet use implicit interrupt checks, see
     // bug 864220.
-#ifndef JS_CPU_ARM
+#ifndef JS_CODEGEN_ARM
     if (GetIonContext()->runtime->signalHandlersInstalled()) {
         LInterruptCheckImplicit *lir = new(alloc()) LInterruptCheckImplicit();
         return add(lir, ins) && assignSafepoint(lir, ins);
@@ -3275,8 +3275,7 @@ LIRGenerator::visitFunctionBoundary(MFunctionBoundary *ins)
         return false;
     // If slow assertions are enabled, then this node will result in a callVM
     // out to a C++ function for the assertions, so we will need a safepoint.
-    return !GetIonContext()->runtime->spsProfiler().slowAssertionsEnabled() ||
-           assignSafepoint(lir, ins);
+    return !gen->options.spsSlowAssertionsEnabled() || assignSafepoint(lir, ins);
 }
 
 bool

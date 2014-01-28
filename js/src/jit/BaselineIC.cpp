@@ -581,7 +581,7 @@ ICStubCompiler::getStubCode()
 
     // Compile new stubcode.
     MacroAssembler masm;
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
 
@@ -712,7 +712,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Reg
     masm.bind(&isTenured);
 
     // void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     saveRegs.add(BaselineTailCallReg);
 #endif
     saveRegs = GeneralRegisterSet::Intersect(saveRegs, GeneralRegisterSet::Volatile());
@@ -1041,7 +1041,7 @@ DoProfilerFallback(JSContext *cx, BaselineFrame *frame, ICProfiler_Fallback *stu
 
     // Manually enter SPS this time.
     JS_ASSERT(profiler->enabled());
-    if (!cx->runtime()->spsProfiler.enter(cx, script, func))
+    if (!cx->runtime()->spsProfiler.enter(script, func))
         return false;
     frame->setPushedSPSFrame();
 
@@ -1054,7 +1054,7 @@ DoProfilerFallback(JSContext *cx, BaselineFrame *frame, ICProfiler_Fallback *stu
     JS_ASSERT(icEntry->firstStub() == stub);
 
     // Generate the string to use to identify this stack frame.
-    const char *string = profiler->profileString(cx, script, func);
+    const char *string = profiler->profileString(script, func);
     if (string == nullptr)
         return false;
 
