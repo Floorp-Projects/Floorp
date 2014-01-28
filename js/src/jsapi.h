@@ -4455,6 +4455,15 @@ JS_GetErrorReporter(JSContext *cx);
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
 
+namespace JS {
+
+extern JS_PUBLIC_API(bool)
+CreateTypeError(JSContext *cx, HandleString stack, HandleString fileName,
+                uint32_t lineNumber, uint32_t columnNumber, JSErrorReport *report,
+                HandleString message, MutableHandleValue rval);
+
+} /* namespace JS */
+
 /************************************************************************/
 
 /*
@@ -4721,7 +4730,7 @@ class AutoHideScriptedCaller
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-} /* namepsace JS */
+} /* namespace JS */
 
 /*
  * Encode/Decode interpreted scripts and functions to/from memory.
