@@ -7754,7 +7754,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             // fallthrough
 
         case MFunctionBoundary::Enter:
-            if (sps_.slowAssertions()) {
+            if (gen->options.spsSlowAssertionsEnabled()) {
                 saveLive(lir);
                 pushArg(ImmGCPtr(lir->script()));
                 if (!callVM(SPSEnterInfo, lir))
@@ -7775,7 +7775,7 @@ CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
             return true;
 
         case MFunctionBoundary::Exit:
-            if (sps_.slowAssertions()) {
+            if (gen->options.spsSlowAssertionsEnabled()) {
                 saveLive(lir);
                 pushArg(ImmGCPtr(lir->script()));
                 // Once we've exited, then we shouldn't emit instrumentation for
