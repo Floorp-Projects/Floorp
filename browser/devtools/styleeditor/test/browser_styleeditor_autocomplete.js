@@ -125,8 +125,7 @@ function checkState() {
     info("After keypress for index " + index);
     let [key, total, current, inserted] = TEST_CASES[index];
     if (total != -1) {
-      ok(gPopup._panel.state == "open" || gPopup._panel.state == "showing",
-         "Popup is open for index " + index);
+      ok(gPopup.isOpen, "Popup is open for index " + index);
       is(total, gPopup.itemCount,
          "Correct total suggestions for index " + index);
       is(current, gPopup.selectedIndex,
