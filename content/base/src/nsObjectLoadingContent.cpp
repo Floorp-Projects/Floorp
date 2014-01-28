@@ -3221,7 +3221,7 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> retval(aCx);
-  bool ok = JS::Call(aCx, thisVal, pi_obj, args.Length(), rooter.array,
+  bool ok = JS::Call(aCx, thisVal, pi_obj, rooter.length(), rooter.start(),
                      &retval);
   if (!ok) {
     aRv.Throw(NS_ERROR_FAILURE);
