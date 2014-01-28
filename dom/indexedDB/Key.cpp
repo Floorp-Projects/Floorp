@@ -7,6 +7,8 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "Key.h"
+#include "ReportInternalError.h"
+
 #include "jsfriendapi.h"
 #include "nsAlgorithm.h"
 #include "nsJSUtils.h"
@@ -112,6 +114,7 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
   if (aVal.isString()) {
     nsDependentJSString str;
     if (!str.init(aCx, aVal)) {
+      IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
     EncodeString(str, aTypeOffset);
@@ -142,12 +145,14 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
 
       uint32_t length;
       if (!JS_GetArrayLength(aCx, obj, &length)) {
+        IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
       for (uint32_t index = 0; index < length; index++) {
         JS::Rooted<JS::Value> val(aCx);
         if (!JS_GetElement(aCx, obj, index, &val)) {
+          IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
@@ -189,6 +194,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
     if (!array) {
       NS_WARNING("Failed to make array!");
+      IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
@@ -210,6 +216,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
 
       if (!JS_SetElement(aCx, array, index++, val)) {
         NS_WARNING("Failed to set array element!");
+        IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
@@ -224,6 +231,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     nsString key;
     DecodeString(aPos, aEnd, key);
     if (!xpc::StringToJsval(aCx, key, aVal)) {
+      IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
@@ -231,7 +239,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     double msec = static_cast<double>(DecodeNumber(aPos, aEnd));
     JSObject* date = JS_NewDateObjectMsec(aCx, msec);
     if (!date) {
-      NS_WARNING("Failed to make date!");
+      IDB_WARNING("Failed to make date!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 

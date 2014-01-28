@@ -130,6 +130,10 @@
       testRole("togglebutton", ROLE_TOGGLE_BUTTON);
 
       //////////////////////////////////////////////////////////////////////////
+      // ignore unknown roles, take first known
+      testRole("unknown_roles", ROLE_PUSHBUTTON);
+
+      //////////////////////////////////////////////////////////////////////////
       // misc roles
       testRole("note", ROLE_NOTE);
       testRole("scrollbar", ROLE_SCROLLBAR);
@@ -299,6 +303,9 @@
 
   <!-- roles transformed by ARIA state attributes -->
   <button aria-pressed="true" id="togglebutton">
+
+  <!-- take the first known mappable role -->
+  <div role="wiggly:worm abc123 button" id="unknown_roles">worm button</div>
 
   <!-- misc roles -->
   <div role="note" id="note">note</div>

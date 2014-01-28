@@ -95,6 +95,33 @@ struct IntermediateFormat
           : WebGLTexelFormat::RGBA8;
 };
 
+inline GLenum
+GLFormatForTexelFormat(WebGLTexelFormat format) {
+    switch (format) {
+        case WebGLTexelFormat::R8:          return LOCAL_GL_LUMINANCE;
+        case WebGLTexelFormat::A8:          return LOCAL_GL_ALPHA;
+        case WebGLTexelFormat::RA8:         return LOCAL_GL_LUMINANCE_ALPHA;
+        case WebGLTexelFormat::RGBA5551:    return LOCAL_GL_RGBA;
+        case WebGLTexelFormat::RGBA4444:    return LOCAL_GL_RGBA;
+        case WebGLTexelFormat::RGB565:      return LOCAL_GL_RGB;
+        case WebGLTexelFormat::D16:         return LOCAL_GL_DEPTH_COMPONENT;
+        case WebGLTexelFormat::RGB8:        return LOCAL_GL_RGB;
+        case WebGLTexelFormat::RGBA8:       return LOCAL_GL_RGBA;
+        case WebGLTexelFormat::BGRA8:       return LOCAL_GL_BGRA;
+        case WebGLTexelFormat::BGRX8:       return LOCAL_GL_BGR;
+        case WebGLTexelFormat::R32F:        return LOCAL_GL_LUMINANCE;
+        case WebGLTexelFormat::A32F:        return LOCAL_GL_ALPHA;
+        case WebGLTexelFormat::D32:         return LOCAL_GL_DEPTH_COMPONENT;
+        case WebGLTexelFormat::D24S8:       return LOCAL_GL_DEPTH_STENCIL;
+        case WebGLTexelFormat::RA32F:       return LOCAL_GL_LUMINANCE_ALPHA;
+        case WebGLTexelFormat::RGB32F:      return LOCAL_GL_RGB;
+        case WebGLTexelFormat::RGBA32F:     return LOCAL_GL_RGBA;
+        default:
+            MOZ_CRASH("Unknown texel format. Coding mistake?");
+            return LOCAL_GL_INVALID_ENUM;
+    }
+}
+
 inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     switch (format) {
         case WebGLTexelFormat::R8:
