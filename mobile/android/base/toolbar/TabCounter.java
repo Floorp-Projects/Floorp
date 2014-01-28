@@ -102,6 +102,16 @@ public class TabCounter extends GeckoTextSwitcher
         mCount = count;
     }
 
+    // Alpha animations in editing mode cause action bar corruption on the
+    // Nexus 7 (bug 961749). As a workaround, skip these animations in editing
+    // mode.
+    void onEnterEditingMode() {
+        final int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            getChildAt(i).clearAnimation();
+        }
+    }
+
     private AnimationSet createAnimation(float startAngle, float endAngle,
                                          FadeMode fadeMode,
                                          float zEnd, boolean reverse) {
