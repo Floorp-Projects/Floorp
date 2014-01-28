@@ -8233,10 +8233,20 @@ nsGlobalWindow::EnterModalState()
     }
   }
 
+  // Clear the capturing content if it is under topDoc.
+  // Usually the activeESM check above does that, but there are cases when
+  // we don't have activeESM, or it is for different document.
+  nsIDocument* topDoc = topWin->GetExtantDoc();
+  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+  if (capturingContent && topDoc &&
+      nsContentUtils::ContentIsCrossDocDescendantOf(capturingContent, topDoc)) {
+    nsIPresShell::SetCapturingContent(nullptr, 0);
+  }
+
   if (topWin->mModalStateDepth == 0) {
     NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
 
-    mSuspendedDoc = topWin->GetExtantDoc();
+    mSuspendedDoc = topDoc;
     if (mSuspendedDoc) {
       mSuspendedDoc->SuppressEventHandling();
     }
