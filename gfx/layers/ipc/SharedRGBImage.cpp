@@ -136,6 +136,12 @@ DeprecatedSharedRGBImage::DeprecatedGetAsSurface()
   return nullptr;
 }
 
+TemporaryRef<gfx::SourceSurface>
+DeprecatedSharedRGBImage::GetAsSourceSurface()
+{
+  return nullptr;
+}
+
 bool
 DeprecatedSharedRGBImage::ToSurfaceDescriptor(SurfaceDescriptor& aResult)
 {
