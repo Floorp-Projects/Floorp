@@ -6,7 +6,7 @@
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="fce1a137746dbd354bca1918f02f96d51c40bad2">
+  <project name="platform_build" path="build" remote="b2g" revision="317f25e0a4cb3e8e86e2b76c37a14081372f0307">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
