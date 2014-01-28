@@ -30,7 +30,7 @@ function setupAutoCompletion(ctx, walker) {
 
   let keyMap = {
     "Tab": cm => {
-      if (popup && popup.isOpen) {
+      if (popup && (popup.isOpen || popup._panel.state == "showing")) {
         cycleSuggestions(ed);
         return;
       }
@@ -38,7 +38,7 @@ function setupAutoCompletion(ctx, walker) {
       return win.CodeMirror.Pass;
     },
     "Shift-Tab": cm => {
-      if (popup && popup.isOpen) {
+      if (popup && (popup.isOpen || popup._panel.state == "showing")) {
         cycleSuggestions(ed, true);
         return;
       }
@@ -83,6 +83,7 @@ function autoComplete({ ed, cm }) {
     if (!suggestions || !suggestions.length || !suggestions[0].preLabel) {
       private.suggestionInsertedOnce = false;
       popup.hidePopup();
+      ed.emit("after-suggest");
       return;
     }
     // The cursor is at the end of the currently entered part of the token, like
@@ -94,6 +95,8 @@ function autoComplete({ ed, cm }) {
     popup.setItems(suggestions);
     popup.openPopup(cm.display.cursor, -1 * left, 0);
     private.suggestionInsertedOnce = false;
+    // This event is used in tests.
+    ed.emit("after-suggest");
   });
 }
 
@@ -119,9 +122,8 @@ function cycleSuggestions(ed, reverse) {
         popup.selectNextItem();
       }
     }
-    if (popup.itemCount == 1) {
+    if (popup.itemCount == 1)
       popup.hidePopup();
-    }
     ed.replaceText(firstItem.label.slice(firstItem.preLabel.length), cur, cur);
   } else {
     let fromCur = {
@@ -134,6 +136,8 @@ function cycleSuggestions(ed, reverse) {
       popup.selectNextItem();
     ed.replaceText(popup.selectedItem.label, fromCur, cur);
   }
+  // This event is used in tests.
+  ed.emit("suggestion-entered");
 }
 
 /**
@@ -147,6 +151,8 @@ function onEditorKeypress(ed, event) {
     case event.DOM_VK_DOWN:
     case event.DOM_VK_LEFT:
     case event.DOM_VK_RIGHT:
+    case event.DOM_VK_HOME:
+    case event.DOM_VK_END:
     case event.DOM_VK_BACK_SPACE:
     case event.DOM_VK_DELETE:
     case event.DOM_VK_ENTER:
@@ -161,6 +167,13 @@ function onEditorKeypress(ed, event) {
   }
 }
 
+/**
+ * Returns the private popup. This method is used by tests to test the feature.
+ */
+function getPopup({ ed }) {
+  return privates.get(ed).popup;
+}
 // Export functions
 
 module.exports.setupAutoCompletion = setupAutoCompletion;
+module.exports.getAutocompletionPopup = getPopup;
