@@ -79,6 +79,9 @@
 #include <algorithm>
 #include "nsWrapperCacheInlines.h"
 #endif
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "mozilla/dom/CRMFObjectBinding.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -213,16 +216,6 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::dom::Crypto)
 
 NS_IMPL_ADDREF_INHERITED(nsCrypto, mozilla::dom::Crypto)
 NS_IMPL_RELEASE_INHERITED(nsCrypto, mozilla::dom::Crypto)
- 
-// QueryInterface implementation for nsCRMFObject
-NS_INTERFACE_MAP_BEGIN(nsCRMFObject)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCRMFObject)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CRMFObject)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsCRMFObject)
-NS_IMPL_RELEASE(nsCRMFObject)
 
 // QueryInterface implementation for nsPkcs11
 #endif // MOZ_DISABLE_CRYPTOLEGACY
@@ -1858,7 +1851,7 @@ GetISupportsFromContext(JSContext *cx)
 
 //The top level method which is a member of nsIDOMCrypto
 //for generate a base64 encoded CRMF request.
-already_AddRefed<nsIDOMCRMFObject>
+CRMFObject*
 nsCrypto::GenerateCRMFRequest(JSContext* aContext,
                               const nsCString& aReqDN,
                               const nsCString& aRegToken,
@@ -1869,7 +1862,6 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
                               ErrorResult& aRv)
 {
   nsNSSShutDownPreventionLock locker;
-  nsCOMPtr<nsIDOMCRMFObject> crmf;
   nsresult nrv;
 
   uint32_t argc = aArgs.Length();
@@ -2029,9 +2021,8 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsCRMFObject *newObject = new nsCRMFObject();
+  CRMFObject* newObject = new CRMFObject();
   newObject->SetCRMFRequest(encodedRequest);
-  crmf = newObject;
   nsFreeKeyPairInfo(keyids, numRequests);
 
   // Post an event on the UI queue so that the JS gets called after
@@ -2080,7 +2071,7 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     delete cryptoRunnable;
   }
 
-  return crmf.forget();
+  return newObject;
 }
 
 // Reminder that we inherit the memory passed into us here.
@@ -2855,29 +2846,31 @@ nsCrypto::DisableRightClick(ErrorResult& aRv)
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-nsCRMFObject::nsCRMFObject()
+CRMFObject::CRMFObject()
 {
+  MOZ_COUNT_CTOR(CRMFObject);
 }
 
-nsCRMFObject::~nsCRMFObject()
+CRMFObject::~CRMFObject()
 {
+  MOZ_COUNT_DTOR(CRMFObject);
 }
 
-nsresult
-nsCRMFObject::init()
+JSObject*
+CRMFObject::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership)
 {
-  return NS_OK;
+  return CRMFObjectBinding::Wrap(aCx, aScope, this, aTookOwnership);
 }
 
-NS_IMETHODIMP
-nsCRMFObject::GetRequest(nsAString& aRequest)
+void
+CRMFObject::GetRequest(nsAString& aRequest)
 {
   aRequest.Assign(mBase64Request);
-  return NS_OK;
 }
 
 nsresult
-nsCRMFObject::SetCRMFRequest(char *inRequest)
+CRMFObject::SetCRMFRequest(char *inRequest)
 {
   mBase64Request.AssignWithConversion(inRequest);  
   return NS_OK;

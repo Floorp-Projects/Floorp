@@ -29,6 +29,17 @@ nestegg_tstamp_scale
 nestegg_has_cues
 nestegg_sniff
 #endif
+#ifdef MOZ_WEBM_ENCODER
+writeSimpleBlock
+writeHeader
+writeSegmentInformation
+writeVideoTrack
+writeAudioTrack
+Ebml_Serialize
+Ebml_SerializeUnsigned
+Ebml_StartSubElement
+Ebml_EndSubElement
+#endif
 #ifdef MOZ_VPX
 #ifndef MOZ_NATIVE_LIBVPX
 vpx_codec_control_

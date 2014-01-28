@@ -91,8 +91,9 @@ class StoreBuffer
     struct MonoTypeBuffer
     {
         LifoAlloc *storage_;
+        size_t usedAtLastCompact_;
 
-        explicit MonoTypeBuffer() : storage_(nullptr) {}
+        explicit MonoTypeBuffer() : storage_(nullptr), usedAtLastCompact_(0) {}
         ~MonoTypeBuffer() { js_delete(storage_); }
 
         bool init() {
@@ -107,6 +108,7 @@ class StoreBuffer
                 return;
 
             storage_->used() ? storage_->releaseAll() : storage_->freeAll();
+            usedAtLastCompact_ = 0;
         }
 
         bool isAboutToOverflow() const {
@@ -121,6 +123,9 @@ class StoreBuffer
          * entries.
          */
         virtual void compact(StoreBuffer *owner);
+
+        /* Compacts if any entries have been added since the last compaction. */
+        void maybeCompact(StoreBuffer *owner);
 
         /* Add one item to the buffer. */
         void put(StoreBuffer *owner, const T &t) {
@@ -291,12 +296,12 @@ class StoreBuffer
             return object != other.object || offset != other.offset || kind != other.kind;
         }
 
-        JS_ALWAYS_INLINE HeapSlot *slotLocation() const;
+        MOZ_ALWAYS_INLINE HeapSlot *slotLocation() const;
 
-        JS_ALWAYS_INLINE void *deref() const;
-        JS_ALWAYS_INLINE void *location() const;
+        MOZ_ALWAYS_INLINE void *deref() const;
+        MOZ_ALWAYS_INLINE void *location() const;
         bool inRememberedSet(const Nursery &nursery) const;
-        JS_ALWAYS_INLINE bool isNullEdge() const;
+        MOZ_ALWAYS_INLINE bool isNullEdge() const;
 
         void mark(JSTracer *trc);
     };

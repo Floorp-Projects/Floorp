@@ -6,6 +6,7 @@
 #include "MacIOSurfaceImage.h"
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 TextureClient*
@@ -18,4 +19,35 @@ MacIOSurfaceImage::GetTextureClient()
     mTextureClient = buffer;
   }
   return mTextureClient;
+}
+
+TemporaryRef<gfx::SourceSurface>
+MacIOSurfaceImage::GetAsSourceSurface()
+{
+  mSurface->Lock();
+  size_t bytesPerRow = mSurface->GetBytesPerRow();
+  size_t ioWidth = mSurface->GetDevicePixelWidth();
+  size_t ioHeight = mSurface->GetDevicePixelHeight();
+
+  unsigned char* ioData = (unsigned char*)mSurface->GetBaseAddress();
+
+  RefPtr<gfx::DataSourceSurface> dataSurface
+    = gfx::Factory::CreateDataSourceSurface(gfx::IntSize(ioWidth, ioHeight), gfx::SurfaceFormat::B8G8R8A8);
+  if (!dataSurface)
+    return nullptr;
+
+  gfx::DataSourceSurface::MappedSurface mappedSurface;
+  if (!dataSurface->Map(gfx::DataSourceSurface::WRITE, &mappedSurface))
+    return nullptr;
+
+  for (size_t i = 0; i < ioHeight; ++i) {
+    memcpy(mappedSurface.mData + i * mappedSurface.mStride,
+           ioData + i * bytesPerRow,
+           ioWidth * 4);
+  }
+
+  dataSurface->Unmap();
+  mSurface->Unlock();
+
+  return dataSurface;
 }

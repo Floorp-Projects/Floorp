@@ -494,6 +494,86 @@ RemoteDXGITextureImage::DeprecatedGetAsSurface()
   return surface.forget();
 }
 
+TemporaryRef<gfx::SourceSurface>
+RemoteDXGITextureImage::GetAsSourceSurface()
+{
+  nsRefPtr<ID3D10Device1> device =
+    gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  if (!device) {
+    NS_WARNING("Cannot readback from shared texture because no D3D10 device is available.");
+    return nullptr;
+  }
+
+  TextureD3D10BackendData* data = GetD3D10TextureBackendData(device);
+
+  if (!data) {
+    return nullptr;
+  }
+
+  nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+
+  if (FAILED(data->mTexture->QueryInterface(IID_IDXGIKeyedMutex, getter_AddRefs(keyedMutex)))) {
+    NS_WARNING("Failed to QueryInterface for IDXGIKeyedMutex, strange.");
+    return nullptr;
+  }
+
+  if (FAILED(keyedMutex->AcquireSync(0, 0))) {
+    NS_WARNING("Failed to acquire sync for keyedMutex, plugin failed to release?");
+    return nullptr;
+  }
+
+  D3D10_TEXTURE2D_DESC desc;
+
+  data->mTexture->GetDesc(&desc);
+
+  desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
+  desc.BindFlags = 0;
+  desc.MiscFlags = 0;
+  desc.Usage = D3D10_USAGE_STAGING;
+
+  nsRefPtr<ID3D10Texture2D> softTexture;
+  HRESULT hr = device->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexture));
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to create 2D staging texture.");
+    return nullptr;
+  }
+
+  device->CopyResource(softTexture, data->mTexture);
+  keyedMutex->ReleaseSync(0);
+
+  RefPtr<gfx::DataSourceSurface> surface
+    = gfx::Factory::CreateDataSourceSurface(mSize,
+                                            mFormat == RemoteImageData::BGRX32
+                                              ? gfx::SurfaceFormat::B8G8R8X8
+                                              : gfx::SurfaceFormat::B8G8R8A8);
+
+  if (!surface) {
+    NS_WARNING("Failed to create SourceSurface for DXGI texture.");
+    return nullptr;
+  }
+
+  gfx::DataSourceSurface::MappedSurface mappedSurface;
+  if (!surface->Map(gfx::DataSourceSurface::WRITE, &mappedSurface)) {
+    NS_WARNING("Failed to map source surface");
+    return nullptr;
+  }
+
+  D3D10_MAPPED_TEXTURE2D mapped;
+  softTexture->Map(0, D3D10_MAP_READ, 0, &mapped);
+
+  for (int y = 0; y < mSize.height; y++) {
+    memcpy(mappedSurface.mData + mappedSurface.mStride * y,
+           (unsigned char*)(mapped.pData) + mapped.RowPitch * y,
+           mSize.width * 4);
+  }
+
+  softTexture->Unmap(0);
+  surface->Unmap();
+
+  return surface;
+}
+
 TextureD3D10BackendData*
 RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
 {

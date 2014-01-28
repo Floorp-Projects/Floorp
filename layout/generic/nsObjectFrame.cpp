@@ -1637,10 +1637,11 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   // Set a transform on the layer to draw the plugin in the right place
-  gfxMatrix transform;
-  transform.Translate(r.TopLeft() + aContainerParameters.mOffset);
+  Matrix transform;
+  gfxPoint p = r.TopLeft() + aContainerParameters.mOffset;
+  transform.Translate(p.x, p.y);
 
-  layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  layer->SetBaseTransform(Matrix4x4::From2D(transform));
   layer->SetVisibleRegion(ThebesIntRect(IntRect(IntPoint(0, 0), size)));
   return layer.forget();
 }

@@ -21,20 +21,16 @@
   <script type="text/javascript" src="netmonitor-view.js"/>
 
   <popupset id="networkPopupSet">
-    <menupopup id="network-request-popup"
-               onpopupshowing="NetMonitorView.RequestsMenu._onContextShowing(event);">
+    <menupopup id="network-request-popup">
       <menuitem id="request-menu-context-newtab"
                 label="&netmonitorUI.context.newTab;"
-                accesskey="&netmonitorUI.context.newTab.accesskey;"
-                oncommand="NetMonitorView.RequestsMenu.openRequestInTab();"/>
+                accesskey="&netmonitorUI.context.newTab.accesskey;"/>
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
-                accesskey="&netmonitorUI.context.copyUrl.accesskey;"
-                oncommand="NetMonitorView.RequestsMenu.copyUrl();"/>
+                accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
       <menuitem id="request-menu-context-resend"
                 label="&netmonitorUI.summary.editAndResend;"
-                accesskey="&netmonitorUI.summary.editAndResend.accesskey;"
-                oncommand="NetMonitorView.RequestsMenu.cloneSelectedRequest();"/>
+                accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>
     </menupopup>
   </popupset>
 
@@ -51,12 +47,12 @@
                 align="center">
             <button id="requests-menu-status-button"
                     class="requests-menu-header-button requests-menu-status"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('status')"
+                    data-key="status"
                     label="&netmonitorUI.toolbar.status2;">
             </button>
             <button id="requests-menu-method-button"
                     class="requests-menu-header-button requests-menu-method"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('method')"
+                    data-key="method"
                     label="&netmonitorUI.toolbar.method;"
                     flex="1">
             </button>
@@ -66,7 +62,7 @@
                 align="center">
             <button id="requests-menu-file-button"
                     class="requests-menu-header-button requests-menu-file"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('file')"
+                    data-key="file"
                     label="&netmonitorUI.toolbar.file;"
                     flex="1">
             </button>
@@ -76,7 +72,7 @@
                 align="center">
             <button id="requests-menu-domain-button"
                     class="requests-menu-header-button requests-menu-domain"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('domain')"
+                    data-key="domain"
                     label="&netmonitorUI.toolbar.domain;"
                     flex="1">
             </button>
@@ -86,7 +82,7 @@
                 align="center">
             <button id="requests-menu-type-button"
                     class="requests-menu-header-button requests-menu-type"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('type')"
+                    data-key="type"
                     label="&netmonitorUI.toolbar.type;"
                     flex="1">
             </button>
@@ -96,7 +92,7 @@
                 align="center">
             <button id="requests-menu-size-button"
                     class="requests-menu-header-button requests-menu-size"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('size')"
+                    data-key="size"
                     label="&netmonitorUI.toolbar.size;"
                     flex="1">
             </button>
@@ -107,7 +103,7 @@
                 flex="1">
             <button id="requests-menu-waterfall-button"
                     class="requests-menu-header-button requests-menu-waterfall"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('waterfall')"
+                    data-key="waterfall"
                     pack="start"
                     flex="1">
               <label id="requests-menu-waterfall-label"
@@ -160,47 +156,47 @@
         <button id="requests-menu-filter-all-button"
                 class="requests-menu-footer-button"
                 checked="true"
-                onclick="NetMonitorView.RequestsMenu.filterOn('all')"
+                data-key="all"
                 label="&netmonitorUI.footer.filterAll;">
         </button>
         <button id="requests-menu-filter-html-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('html')"
+                data-key="html"
                 label="&netmonitorUI.footer.filterHTML;">
         </button>
         <button id="requests-menu-filter-css-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('css')"
+                data-key="css"
                 label="&netmonitorUI.footer.filterCSS;">
         </button>
         <button id="requests-menu-filter-js-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('js')"
+                data-key="js"
                 label="&netmonitorUI.footer.filterJS;">
         </button>
         <button id="requests-menu-filter-xhr-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('xhr')"
+                data-key="xhr"
                 label="&netmonitorUI.footer.filterXHR;">
         </button>
         <button id="requests-menu-filter-fonts-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('fonts')"
+                data-key="fonts"
                 label="&netmonitorUI.footer.filterFonts;">
         </button>
         <button id="requests-menu-filter-images-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('images')"
+                data-key="images"
                 label="&netmonitorUI.footer.filterImages;">
         </button>
         <button id="requests-menu-filter-media-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('media')"
+                data-key="media"
                 label="&netmonitorUI.footer.filterMedia;">
         </button>
         <button id="requests-menu-filter-flash-button"
                 class="requests-menu-footer-button"
-                onclick="NetMonitorView.RequestsMenu.filterOn('flash')"
+                data-key="flash"
                 label="&netmonitorUI.footer.filterFlash;">
         </button>
         <spacer id="requests-menu-spacer-end"
@@ -212,7 +208,6 @@
                crop="end"/>
         <button id="requests-menu-clear-button"
                class="requests-menu-footer-button"
-               onclick="NetMonitorView.RequestsMenu.clear()"
                label="&netmonitorUI.footer.clear;">
         </button>
       </hbox>
@@ -229,22 +224,22 @@
                  class="plain tabpanel-summary-label
                         custom-header"/>
           <hbox flex="1" pack="end">
-            <button class="devtools-toolbarbutton"
-                    label="&netmonitorUI.custom.send;"
-                    onclick="NetMonitorView.RequestsMenu.sendCustomRequest();"/>
-            <button class="devtools-toolbarbutton"
-                    label="&netmonitorUI.custom.cancel;"
-                    onclick="NetMonitorView.RequestsMenu.closeCustomRequest();"/>
+            <button id="custom-request-send-button"
+                    class="devtools-toolbarbutton"
+                    label="&netmonitorUI.custom.send;"/>
+            <button id="custom-request-close-button"
+                    class="devtools-toolbarbutton"
+                    label="&netmonitorUI.custom.cancel;"/>
           </hbox>
         </hbox>
         <hbox id="custom-method-and-url"
               class="tabpanel-summary-container"
               align="center">
           <textbox id="custom-method-value"
-                   oninput="NetMonitorView.CustomRequest.onUpdate('method');"/>
+                   data-key="method"/>
           <textbox id="custom-url-value"
                    flex="1"
-                   oninput="NetMonitorView.CustomRequest.onUpdate('url');"/>
+                   data-key="url"/>
         </hbox>
         <vbox id="custom-query"
               class="tabpanel-summary-container custom-section">
@@ -255,7 +250,7 @@
                    multiline="true"
                    rows="4"
                    wrap="off"
-                   oninput="NetMonitorView.CustomRequest.onUpdate('query');"/>
+                   data-key="query"/>
         </vbox>
         <vbox id="custom-headers"
               class="tabpanel-summary-container custom-section">
@@ -266,7 +261,7 @@
                    multiline="true"
                    rows="8"
                    wrap="off"
-                   oninput="NetMonitorView.CustomRequest.onUpdate('headers');"/>
+                   data-key="headers"/>
         </vbox>
         <vbox id="custom-postdata"
               class="tabpanel-summary-container custom-section">
@@ -277,7 +272,7 @@
                    multiline="true"
                    rows="6"
                    wrap="off"
-                   oninput="NetMonitorView.CustomRequest.onUpdate('body');"/>
+                   data-key="body"/>
         </vbox>
       </vbox>
       <tabbox id="event-details-pane"
@@ -326,9 +321,8 @@
                        crop="end"
                        flex="1"/>
                 <button id="headers-summary-resend"
-                       label="&netmonitorUI.summary.editAndResend;"
-                       class="devtools-toolbarbutton"
-                       onclick="NetMonitorView.RequestsMenu.cloneSelectedRequest();"/>
+                        class="devtools-toolbarbutton"
+                        label="&netmonitorUI.summary.editAndResend;"/>
               </hbox>
               <hbox id="headers-summary-version"
                     class="tabpanel-summary-container"

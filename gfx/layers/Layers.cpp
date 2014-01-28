@@ -306,7 +306,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
       case TransformFunction::TTransformMatrix:
       {
         arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_matrix3d, resultTail);
-        const gfx3DMatrix& matrix = aFunctions[i].get_TransformMatrix().value();
+        const gfx::Matrix4x4& matrix = aFunctions[i].get_TransformMatrix().value();
         arr->Item(1).SetFloatValue(matrix._11, eCSSUnit_Number);
         arr->Item(2).SetFloatValue(matrix._12, eCSSUnit_Number);
         arr->Item(3).SetFloatValue(matrix._13, eCSSUnit_Number);
@@ -467,30 +467,31 @@ Layer::GetEffectiveVisibleRegion()
   return GetVisibleRegion();
 }
 
-gfx3DMatrix
-Layer::SnapTransformTranslation(const gfx3DMatrix& aTransform,
-                                gfxMatrix* aResidualTransform)
+Matrix4x4
+Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
+                                Matrix* aResidualTransform)
 {
   if (aResidualTransform) {
-    *aResidualTransform = gfxMatrix();
+    *aResidualTransform = Matrix();
   }
 
-  gfxMatrix matrix2D;
-  gfx3DMatrix result;
+  Matrix matrix2D;
+  Matrix4x4 result;
   if (mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
       !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
-    gfxPoint snappedTranslation(matrix2D.GetTranslation());
-    snappedTranslation.Round();
-    gfxMatrix snappedMatrix = gfxMatrix().Translate(snappedTranslation);
-    result = gfx3DMatrix::From2D(snappedMatrix);
+    IntPoint snappedTranslation = RoundedToInt(matrix2D.GetTranslation());
+    Matrix snappedMatrix = Matrix().Translate(snappedTranslation.x,
+                                              snappedTranslation.y);
+    result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (I.e., appying snappedMatrix after aResidualTransform gives the
       // ideal transform.)
       *aResidualTransform =
-        gfxMatrix().Translate(matrix2D.GetTranslation() - snappedTranslation);
+        Matrix().Translate(matrix2D._31 - snappedTranslation.x,
+                           matrix2D._32 - snappedTranslation.y);
     }
   } else {
     result = aTransform;
@@ -498,37 +499,34 @@ Layer::SnapTransformTranslation(const gfx3DMatrix& aTransform,
   return result;
 }
 
-gfx3DMatrix
-Layer::SnapTransform(const gfx3DMatrix& aTransform,
+Matrix4x4
+Layer::SnapTransform(const Matrix4x4& aTransform,
                      const gfxRect& aSnapRect,
-                     gfxMatrix* aResidualTransform)
+                     Matrix* aResidualTransform)
 {
   if (aResidualTransform) {
-    *aResidualTransform = gfxMatrix();
+    *aResidualTransform = Matrix();
   }
 
-  gfxMatrix matrix2D;
-  gfx3DMatrix result;
+  Matrix matrix2D;
+  Matrix4x4 result;
   if (mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
       gfx::Size(1.0, 1.0) <= ToSize(aSnapRect.Size()) &&
       matrix2D.PreservesAxisAlignedRectangles()) {
-    gfxPoint transformedTopLeft = matrix2D.Transform(aSnapRect.TopLeft());
-    transformedTopLeft.Round();
-    gfxPoint transformedTopRight = matrix2D.Transform(aSnapRect.TopRight());
-    transformedTopRight.Round();
-    gfxPoint transformedBottomRight = matrix2D.Transform(aSnapRect.BottomRight());
-    transformedBottomRight.Round();
+    IntPoint transformedTopLeft = RoundedToInt(matrix2D * ToPoint(aSnapRect.TopLeft()));
+    IntPoint transformedTopRight = RoundedToInt(matrix2D * ToPoint(aSnapRect.TopRight()));
+    IntPoint transformedBottomRight = RoundedToInt(matrix2D * ToPoint(aSnapRect.BottomRight()));
 
-    gfxMatrix snappedMatrix = gfxUtils::TransformRectToRect(aSnapRect,
+    Matrix snappedMatrix = gfxUtils::TransformRectToRect(aSnapRect,
       transformedTopLeft, transformedTopRight, transformedBottomRight);
 
-    result = gfx3DMatrix::From2D(snappedMatrix);
+    result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform && !snappedMatrix.IsSingular()) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (i.e., appying snappedMatrix after aResidualTransform gives the
       // ideal transform.
-      gfxMatrix snappedMatrixInverse = snappedMatrix;
+      Matrix snappedMatrixInverse = snappedMatrix;
       snappedMatrixInverse.Invert();
       *aResidualTransform = matrix2D * snappedMatrixInverse;
     }
@@ -552,11 +550,9 @@ AncestorLayerMayChangeTransform(Layer* aLayer)
 bool
 Layer::MayResample()
 {
-  gfxMatrix transform2d;
-  gfx3DMatrix effectiveTransform;
-  To3DMatrix(GetEffectiveTransform(), effectiveTransform);
-  return !effectiveTransform.Is2D(&transform2d) ||
-         transform2d.HasNonIntegerTranslation() ||
+  Matrix transform2d;
+  return !GetEffectiveTransform().Is2D(&transform2d) ||
+         ThebesMatrix(transform2d).HasNonIntegerTranslation() ||
          AncestorLayerMayChangeTransform(this);
 }
 
@@ -588,15 +584,13 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
 
   nsIntRect scissor = *clipRect;
   if (!container->UseIntermediateSurface()) {
-    gfxMatrix matrix;
-    gfx3DMatrix effectiveTransform;
-    To3DMatrix(container->GetEffectiveTransform(), effectiveTransform);
-    DebugOnly<bool> is2D = effectiveTransform.Is2D(&matrix);
+    gfx::Matrix matrix;
+    DebugOnly<bool> is2D = container->GetEffectiveTransform().Is2D(&matrix);
     // See DefaultComputeEffectiveTransforms below
     NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
                  "Non preserves axis aligned transform with clipped child should have forced intermediate surface");
-    gfxRect r(scissor.x, scissor.y, scissor.width, scissor.height);
-    gfxRect trScissor = matrix.TransformBounds(r);
+    gfx::Rect r(scissor.x, scissor.y, scissor.width, scissor.height);
+    gfxRect trScissor = gfx::ThebesRect(matrix.TransformBounds(r));
     trScissor.Round();
     if (!gfxUtils::GfxRectToIntRect(trScissor, &scissor)) {
       return nsIntRect(currentClip.TopLeft(), nsIntSize(0, 0));
@@ -619,21 +613,21 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
   return currentClip.Intersect(scissor);
 }
 
-const gfx3DMatrix
+const Matrix4x4
 Layer::GetTransform() const
 {
-  gfx3DMatrix transform = mTransform;
+  Matrix4x4 transform = mTransform;
   if (const ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
+  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
   return transform;
 }
 
-const gfx3DMatrix
+const Matrix4x4
 Layer::GetLocalTransform()
 {
-  gfx3DMatrix transform;
+  Matrix4x4 transform;
   if (LayerComposite* shadow = AsLayerComposite())
     transform = shadow->GetShadowTransform();
   else
@@ -641,7 +635,8 @@ Layer::GetLocalTransform()
   if (ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform.ScalePost(mPostXScale, mPostYScale, 1.0f);
+  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
+
   return transform;
 }
 
@@ -690,19 +685,16 @@ Layer::GetEffectiveMixBlendMode()
 }
 
 void
-Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface)
+Layer::ComputeEffectiveTransformForMaskLayer(const Matrix4x4& aTransformToSurface)
 {
   if (mMaskLayer) {
-    ToMatrix4x4(aTransformToSurface, mMaskLayer->mEffectiveTransform);
+    mMaskLayer->mEffectiveTransform = aTransformToSurface;
 
 #ifdef DEBUG
-    gfxMatrix maskTranslation;
-    bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D(&maskTranslation);
+    bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D();
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
 #endif
-    Matrix4x4 maskTransform;
-    ToMatrix4x4(mMaskLayer->GetTransform(), maskTransform);
-    mMaskLayer->mEffectiveTransform = maskTransform * mMaskLayer->mEffectiveTransform;
+    mMaskLayer->mEffectiveTransform = mMaskLayer->GetTransform() * mMaskLayer->mEffectiveTransform;
   }
 }
 
@@ -804,6 +796,8 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
                (aAfter->Manager() == Manager() &&
                 aAfter->GetParent() == this),
                "aAfter is not our child");
+  NS_ASSERTION(aChild != aAfter,
+               "aChild cannot be the same as aAfter");
 
   Layer* prev = aChild->GetPrevSibling();
   Layer* next = aChild->GetNextSibling();
@@ -887,13 +881,12 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 }
 
 void
-ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface)
 {
-  gfxMatrix residual;
-  gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
+  Matrix residual;
+  Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
   idealTransform.ProjectTo2D();
-  gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform, &residual);
-  ToMatrix4x4(snappedTransform, mEffectiveTransform);
+  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
   if (GetMaskLayer()) {
@@ -908,14 +901,12 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
-      gfxMatrix contTransform;
-      gfx3DMatrix effectiveTransform;
-      To3DMatrix(mEffectiveTransform, effectiveTransform);
-      if (!effectiveTransform.Is2D(&contTransform) ||
+      gfx::Matrix contTransform;
+      if (!mEffectiveTransform.Is2D(&contTransform) ||
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         !contTransform.PreservesAxisAlignedRectangles()) {
 #else
-        contTransform.HasNonIntegerTranslation()) {
+        gfx::ThebesMatrix(contTransform).HasNonIntegerTranslation()) {
 #endif
         for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
           const nsIntRect *clipRect = child->GetEffectiveClipRect();
@@ -936,7 +927,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
 
   mUseIntermediateSurface = useIntermediateSurface;
   if (useIntermediateSurface) {
-    ComputeEffectiveTransformsForChildren(gfx3DMatrix::From2D(residual));
+    ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
   } else {
     ComputeEffectiveTransformsForChildren(idealTransform);
   }
@@ -944,12 +935,12 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   if (idealTransform.CanDraw2D()) {
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   } else {
-    ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
+    ComputeEffectiveTransformForMaskLayer(Matrix4x4());
   }
 }
 
 void
-ContainerLayer::ComputeEffectiveTransformsForChildren(const gfx3DMatrix& aTransformToSurface)
+ContainerLayer::ComputeEffectiveTransformsForChildren(const Matrix4x4& aTransformToSurface)
 {
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
     l->ComputeEffectiveTransforms(aTransformToSurface);

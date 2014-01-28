@@ -135,7 +135,7 @@ JSString::equals(const char *s)
 }
 #endif /* DEBUG */
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 {
     /*

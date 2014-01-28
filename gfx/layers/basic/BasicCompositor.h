@@ -112,7 +112,7 @@ public:
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) { }
 
   virtual void PrepareViewport(const gfx::IntSize& aSize,
-                               const gfxMatrix& aWorldTransform) MOZ_OVERRIDE { }
+                               const gfx::Matrix& aWorldTransform) MOZ_OVERRIDE { }
 
   virtual void NotifyLayersTransaction() MOZ_OVERRIDE { }
 

@@ -1,0 +1,3 @@
+component {92668367-1b17-4190-86b2-1061b2179744} CrashService.js
+contract @mozilla.org/crashservice;1 {92668367-1b17-4190-86b2-1061b2179744}
+category profile-after-change CrashService @mozilla.org/crashservice;1

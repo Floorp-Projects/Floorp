@@ -11,7 +11,6 @@
 #include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "Layers.h"                     // for ThebesLayer, Layer, etc
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
@@ -188,7 +187,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
                              float aOpacity,
                              CompositionOp aOp,
                              gfxASurface* aMask,
-                             const gfxMatrix* aMaskTransform)
+                             const Matrix* aMaskTransform)
 {
   if (!EnsureBuffer()) {
     return;
@@ -220,7 +219,7 @@ RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
 
   Matrix maskTransform;
   if (aMaskTransform) {
-    maskTransform = ToMatrix(*aMaskTransform);
+    maskTransform = *aMaskTransform;
   }
 
   DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aOp, mask, &maskTransform);

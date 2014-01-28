@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
   'resource://gre/modules/accessibility/Constants.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Filters',
   'resource://gre/modules/accessibility/Constants.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'States',
+  'resource://gre/modules/accessibility/Constants.jsm');
 
 let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
@@ -153,10 +155,7 @@ this.TraversalRules = {
     function Anchor_match(aAccessible)
     {
       // We want to ignore links, only focus named anchors.
-      let state = {};
-      let extraState = {};
-      aAccessible.getState(state, extraState);
-      if (state.value & Ci.nsIAccessibleStates.STATE_LINKED) {
+      if (Utils.getState(aAccessible).contains(States.LINKED)) {
         return Filters.IGNORE;
       } else {
         return Filters.MATCH;
@@ -221,10 +220,7 @@ this.TraversalRules = {
     function Link_match(aAccessible)
     {
       // We want to ignore anchors, only focus real links.
-      let state = {};
-      let extraState = {};
-      aAccessible.getState(state, extraState);
-      if (state.value & Ci.nsIAccessibleStates.STATE_LINKED) {
+      if (Utils.getState(aAccessible).contains(States.LINKED)) {
         return Filters.MATCH;
       } else {
         return Filters.IGNORE;

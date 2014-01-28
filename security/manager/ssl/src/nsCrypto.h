@@ -9,9 +9,9 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "Crypto.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMCRMFObject.h"
 #include "nsIDOMCryptoLegacy.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
@@ -24,22 +24,28 @@
 class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
 
-class nsCRMFObject : public nsIDOMCRMFObject
+namespace mozilla {
+namespace dom {
+
+class CRMFObject : public NonRefcountedDOMObject
 {
 public:
-  nsCRMFObject();
-  virtual ~nsCRMFObject();
-
-  NS_DECL_NSIDOMCRMFOBJECT
-  NS_DECL_ISUPPORTS
-
-  nsresult init();
+  CRMFObject();
+  virtual ~CRMFObject();
 
   nsresult SetCRMFRequest(char *inRequest);
-private:
 
+  JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership);
+
+  void GetRequest(nsAString& aRequest);
+
+private:
   nsString mBase64Request;
 };
+
+}
+}
 
 class nsCrypto: public mozilla::dom::Crypto
 {
@@ -59,7 +65,7 @@ public:
 
   virtual void GetVersion(nsString& aVersion) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDOMCRMFObject>
+  virtual mozilla::dom::CRMFObject*
   GenerateCRMFRequest(JSContext* aContext,
                       const nsCString& aReqDN,
                       const nsCString& aRegToken,

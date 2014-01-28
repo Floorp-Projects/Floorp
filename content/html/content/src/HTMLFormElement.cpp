@@ -17,6 +17,7 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIFormControlFrame.h"
+#include "nsISecureBrowserUI.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsInterfaceHashtable.h"
@@ -863,6 +864,31 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
                                   NS_FIRST_FORMSUBMIT_CATEGORY);
   }
 
+  // XXXbz what do the submit observers actually want?  The window
+  // of the document this is shown in?  Or something else?
+  // sXBL/XBL2 issue
+  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
+
+  // Notify the secure browser UI, if any, that the form is being submitted.
+  nsCOMPtr<nsIDocShell> docshell = OwnerDoc()->GetDocShell();
+  if (docshell && !aEarlyNotify) {
+    nsCOMPtr<nsISecureBrowserUI> secureUI;
+    docshell->GetSecurityUI(getter_AddRefs(secureUI));
+    nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver =
+      do_QueryInterface(secureUI);
+    if (formSubmitObserver) {
+      nsresult rv = formSubmitObserver->Notify(this,
+                                               window,
+                                               aActionURL,
+                                               aCancelSubmit);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (*aCancelSubmit) {
+        return NS_OK;
+      }
+    }
+  }
+
   // Notify observers that the form is being submitted.
   nsCOMPtr<nsIObserverService> service =
     mozilla::services::GetObserverService();
@@ -879,11 +905,6 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   if (theEnum) {
     nsCOMPtr<nsISupports> inst;
     *aCancelSubmit = false;
-
-    // XXXbz what do the submit observers actually want?  The window
-    // of the document this is shown in?  Or something else?
-    // sXBL/XBL2 issue
-    nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
 
     bool loop = true;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {

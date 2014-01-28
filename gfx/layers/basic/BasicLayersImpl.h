@@ -11,7 +11,6 @@
 #include "ReadbackLayer.h"              // for ReadbackLayer
 #include "gfxASurface.h"                // for gfxASurface
 #include "gfxContext.h"                 // for gfxContext, etc
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
 #include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"              // for Maybe

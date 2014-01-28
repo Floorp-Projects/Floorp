@@ -668,6 +668,27 @@ nsMenuFrame::AttributeChanged(int32_t aNameSpaceID,
   return NS_OK;
 }
 
+nsIContent*
+nsMenuFrame::GetAnchor()
+{
+  mozilla::dom::Element* anchor = nullptr;
+
+  nsAutoString id;
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::anchor, id);
+  if (!id.IsEmpty()) {
+    nsIDocument* doc = mContent->OwnerDoc();
+
+    anchor =
+      doc->GetAnonymousElementByAttribute(mContent, nsGkAtoms::anonid, id);
+    if (!anchor) {
+      anchor = doc->GetElementById(id);
+    }
+  }
+
+  // Always return the menu's content if the anchor wasn't set or wasn't found.
+  return anchor && anchor->GetPrimaryFrame() ? anchor : mContent;
+}
+
 void
 nsMenuFrame::OpenMenu(bool aSelectFirstItem)
 {
@@ -725,7 +746,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (popupFrame) {
     bool sizeToPopup = IsSizedToPopup(mContent, false);
-    popupFrame->LayoutPopup(aState, this, sizeToPopup);
+    popupFrame->LayoutPopup(aState, this, GetAnchor()->GetPrimaryFrame(), sizeToPopup);
   }
 
   return rv;

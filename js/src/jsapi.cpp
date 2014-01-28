@@ -3494,8 +3494,10 @@ JS_PUBLIC_API(bool)
 JS_SetProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue v)
 {
     JSAtom *atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_SetPropertyById(cx, obj, id, v);
+    return JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
@@ -3503,8 +3505,10 @@ JS_SetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t nam
                  HandleValue v)
 {
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_SetPropertyById(cx, obj, id, v);
+    return JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
@@ -4738,7 +4742,7 @@ JS_DecompileFunctionBody(JSContext *cx, HandleFunction fun, unsigned indent)
     return FunctionToString(cx, fun, true, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
-JS_NEVER_INLINE JS_PUBLIC_API(bool)
+MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
 JS_ExecuteScript(JSContext *cx, JSObject *objArg, JSScript *scriptArg, jsval *rval)
 {
     RootedObject obj(cx, objArg);
@@ -5967,7 +5971,7 @@ JS_GetCurrentThread()
 #endif
 }
 
-extern JS_NEVER_INLINE JS_PUBLIC_API(void)
+extern MOZ_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt)
 {
     if (!CurrentThreadCanAccessRuntime(rt))

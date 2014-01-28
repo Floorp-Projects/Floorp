@@ -127,7 +127,7 @@
       <label value="&feedsMenu.label;" class="panel-subview-header"/>
     </panelview>
 
-    <panelview id="PanelUI-helpView" flex="1">
+    <panelview id="PanelUI-helpView" flex="1" class="PanelUI-subView">
       <label value="&helpMenu.label;" class="panel-subview-header"/>
       <vbox id="PanelUI-helpItems"/>
     </panelview>

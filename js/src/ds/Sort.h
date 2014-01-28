@@ -14,7 +14,7 @@ namespace js {
 namespace detail {
 
 template<typename T>
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 CopyNonEmptyArray(T *dst, const T *src, size_t nelems)
 {
     JS_ASSERT(nelems != 0);
@@ -26,7 +26,7 @@ CopyNonEmptyArray(T *dst, const T *src, size_t nelems)
 
 /* Helper function for MergeSort. */
 template<typename T, typename Comparator>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 MergeArrayRuns(T *dst, const T *src, size_t run1, size_t run2, Comparator c)
 {
     JS_ASSERT(run1 >= 1);

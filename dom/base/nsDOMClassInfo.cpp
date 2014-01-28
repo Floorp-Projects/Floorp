@@ -110,9 +110,6 @@
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsIDOMCRMFObject.h"
-#endif
 #include "nsIControllers.h"
 #include "nsIBoxObject.h"
 #ifdef MOZ_XUL
@@ -227,10 +224,6 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define DOMCI_DATA_NO_CLASS(_dom_class)                                       \
 const uint32_t kDOMClassInfo_##_dom_class##_interfaces =                      \
   0;
-
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-DOMCI_DATA_NO_CLASS(CRMFObject)
-#endif
 
 DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
 DOMCI_DATA_NO_CLASS(ChromeMessageBroadcaster)
@@ -352,12 +345,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                       DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-  // Crypto classes
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-  NS_DEFINE_CLASSINFO_DATA(CRMFObject, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   // DOM Chrome Window class.
@@ -1014,12 +1001,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsITreeContentView)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
-#endif
-
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-   DOM_CLASSINFO_MAP_BEGIN(CRMFObject, nsIDOMCRMFObject)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
-   DOM_CLASSINFO_MAP_END
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)

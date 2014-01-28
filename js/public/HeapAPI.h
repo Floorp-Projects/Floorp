@@ -113,7 +113,7 @@ struct Zone
 namespace js {
 namespace gc {
 
-static JS_ALWAYS_INLINE uintptr_t *
+static MOZ_ALWAYS_INLINE uintptr_t *
 GetGCThingMarkBitmap(const void *thing)
 {
     JS_ASSERT(thing);
@@ -123,7 +123,7 @@ GetGCThingMarkBitmap(const void *thing)
     return reinterpret_cast<uintptr_t *>(addr);
 }
 
-static JS_ALWAYS_INLINE JS::shadow::Runtime *
+static MOZ_ALWAYS_INLINE JS::shadow::Runtime *
 GetGCThingRuntime(const void *thing)
 {
     JS_ASSERT(thing);
@@ -133,7 +133,7 @@ GetGCThingRuntime(const void *thing)
     return *reinterpret_cast<JS::shadow::Runtime **>(addr);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 GetGCThingMarkWordAndMask(const void *thing, uint32_t color,
                           uintptr_t **wordp, uintptr_t *maskp)
 {
@@ -146,7 +146,7 @@ GetGCThingMarkWordAndMask(const void *thing, uint32_t color,
     *wordp = &bitmap[bit / nbits];
 }
 
-static JS_ALWAYS_INLINE JS::shadow::ArenaHeader *
+static MOZ_ALWAYS_INLINE JS::shadow::ArenaHeader *
 GetGCThingArena(void *thing)
 {
     uintptr_t addr = uintptr_t(thing);
@@ -154,7 +154,7 @@ GetGCThingArena(void *thing)
     return reinterpret_cast<JS::shadow::ArenaHeader *>(addr);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsInsideNursery(const JS::shadow::Runtime *runtime, const void *p)
 {
 #ifdef JSGC_GENERATIONAL
@@ -170,20 +170,20 @@ IsInsideNursery(const JS::shadow::Runtime *runtime, const void *p)
 
 namespace JS {
 
-static JS_ALWAYS_INLINE Zone *
+static MOZ_ALWAYS_INLINE Zone *
 GetGCThingZone(void *thing)
 {
     JS_ASSERT(thing);
     return js::gc::GetGCThingArena(thing)->zone;
 }
 
-static JS_ALWAYS_INLINE Zone *
+static MOZ_ALWAYS_INLINE Zone *
 GetObjectZone(JSObject *obj)
 {
     return GetGCThingZone(obj);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(void *thing)
 {
 #ifdef JSGC_GENERATIONAL
@@ -201,7 +201,7 @@ GCThingIsMarkedGray(void *thing)
     return *word & mask;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnGCThing(shadow::Runtime *rt, void *thing, JSGCTraceKind kind)
 {
     if (!rt->needsBarrier_)

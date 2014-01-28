@@ -245,7 +245,7 @@ let TESTS = [
   test_request,
   test_request_forceAuthentication,
   test_request_forceIssuer,
-  test_logout
+  test_logout,
 ];
 
 TESTS.forEach(add_test);

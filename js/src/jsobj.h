@@ -833,7 +833,7 @@ class JSObject : public js::ObjectImpl
     }
 
     inline void finish(js::FreeOp *fop);
-    JS_ALWAYS_INLINE void finalize(js::FreeOp *fop);
+    MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
     static inline bool hasProperty(JSContext *cx, js::HandleObject obj,
                                    js::HandleId id, bool *foundp, unsigned flags = 0);
@@ -1215,13 +1215,13 @@ class JSObject : public js::ObjectImpl
  * const& instead of * as a syntactic way to assert non-null. This leads to an
  * abundance of address-of operators to identity. Hence this overload.
  */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 operator==(const JSObject &lhs, const JSObject &rhs)
 {
     return &lhs == &rhs;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 operator!=(const JSObject &lhs, const JSObject &rhs)
 {
     return &lhs != &rhs;
@@ -1561,7 +1561,7 @@ extern JSObject *
 ToObjectSlow(JSContext *cx, HandleValue vp, bool reportScanStack);
 
 /* For object conversion in e.g. native functions. */
-JS_ALWAYS_INLINE JSObject *
+MOZ_ALWAYS_INLINE JSObject *
 ToObject(JSContext *cx, HandleValue vp)
 {
     if (vp.isObject())
@@ -1570,7 +1570,7 @@ ToObject(JSContext *cx, HandleValue vp)
 }
 
 /* For converting stack values to objects. */
-JS_ALWAYS_INLINE JSObject *
+MOZ_ALWAYS_INLINE JSObject *
 ToObjectFromStack(JSContext *cx, HandleValue vp)
 {
     if (vp.isObject())

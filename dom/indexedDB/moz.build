@@ -62,6 +62,7 @@ SOURCES += [
     'IDBCursor.cpp',
     'IDBIndex.cpp',
     'IDBObjectStore.cpp',
+    'ReportInternalError.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

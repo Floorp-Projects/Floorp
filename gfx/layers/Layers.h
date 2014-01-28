@@ -11,7 +11,6 @@
 #include <sys/types.h>                  // for int32_t, int64_t
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for LayerMargin, LayerPoint
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxContext.h"                 // for GraphicsOperator
 #include "gfxTypes.h"
 #include "gfxColor.h"                   // for gfxRGBA
@@ -867,8 +866,7 @@ public:
   {
 #ifdef DEBUG
     if (aMaskLayer) {
-      gfxMatrix maskTransform;
-      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D(&maskTransform);
+      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D();
       NS_ASSERTION(maskIs2D, "Mask layer has invalid transform.");
     }
 #endif
@@ -885,7 +883,7 @@ public:
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
    */
-  void SetBaseTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx::Matrix4x4& aMatrix)
   {
     NS_ASSERTION(!aMatrix.IsSingular(),
                  "Shouldn't be trying to draw with a singular matrix!");
@@ -906,9 +904,9 @@ public:
    * method enqueues a new transform value to be set immediately after
    * the next transaction is opened.
    */
-  void SetBaseTransformForNextTransaction(const gfx3DMatrix& aMatrix)
+  void SetBaseTransformForNextTransaction(const gfx::Matrix4x4& aMatrix)
   {
-    mPendingTransform = new gfx3DMatrix(aMatrix);
+    mPendingTransform = new gfx::Matrix4x4(aMatrix);
   }
 
   void SetPostScale(float aXScale, float aYScale)
@@ -1047,8 +1045,8 @@ public:
   const Layer* GetPrevSibling() const { return mPrevSibling; }
   virtual Layer* GetFirstChild() const { return nullptr; }
   virtual Layer* GetLastChild() const { return nullptr; }
-  const gfx3DMatrix GetTransform() const;
-  const gfx3DMatrix& GetBaseTransform() const { return mTransform; }
+  const gfx::Matrix4x4 GetTransform() const;
+  const gfx::Matrix4x4& GetBaseTransform() const { return mTransform; }
   float GetPostXScale() const { return mPostXScale; }
   float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
@@ -1074,7 +1072,7 @@ public:
    * Returns the local transform for this layer: either mTransform or,
    * for shadow layers, GetShadowTransform()
    */
-  const gfx3DMatrix GetLocalTransform();
+  const gfx::Matrix4x4 GetLocalTransform();
 
   /**
    * Returns the local opacity for this layer: either mOpacity or,
@@ -1232,12 +1230,12 @@ public:
    * We promise that when this is called on a layer, all ancestor layers
    * have already had ComputeEffectiveTransforms called.
    */
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) = 0;
 
   /**
    * computes the effective transform for a mask layer, if this layer has one
    */
-  void ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface);
+  void ComputeEffectiveTransformForMaskLayer(const gfx::Matrix4x4& aTransformToSurface);
 
   /**
    * Calculate the scissor rect required when rendering this layer.
@@ -1365,8 +1363,8 @@ protected:
    * @param aResidualTransform a transform to apply before the result transform
    * in order to get the results to completely match aTransform.
    */
-  gfx3DMatrix SnapTransformTranslation(const gfx3DMatrix& aTransform,
-                                       gfxMatrix* aResidualTransform);
+  gfx::Matrix4x4 SnapTransformTranslation(const gfx::Matrix4x4& aTransform,
+                                          gfx::Matrix* aResidualTransform);
   /**
    * See comment for SnapTransformTranslation.
    * This function implements type 2 snapping. If aTransform is a translation
@@ -1378,9 +1376,9 @@ protected:
    * @param aResidualTransform a transform to apply before the result transform
    * in order to get the results to completely match aTransform.
    */
-  gfx3DMatrix SnapTransform(const gfx3DMatrix& aTransform,
-                            const gfxRect& aSnapRect,
-                            gfxMatrix* aResidualTransform);
+  gfx::Matrix4x4 SnapTransform(const gfx::Matrix4x4& aTransform,
+                               const gfxRect& aSnapRect,
+                               gfx::Matrix* aResidualTransform);
 
   /**
    * Returns true if this layer's effective transform is not just
@@ -1399,11 +1397,11 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   EventRegions mEventRegions;
-  gfx3DMatrix mTransform;
+  gfx::Matrix4x4 mTransform;
   // A mutation of |mTransform| that we've queued to be applied at the
   // end of the next transaction (if nothing else overrides it in the
   // meantime).
-  nsAutoPtr<gfx3DMatrix> mPendingTransform;
+  nsAutoPtr<gfx::Matrix4x4> mPendingTransform;
   float mPostXScale;
   float mPostYScale;
   gfx::Matrix4x4 mEffectiveTransform;
@@ -1478,19 +1476,18 @@ public:
 
   MOZ_LAYER_DECL_NAME("ThebesLayer", TYPE_THEBES)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    gfxMatrix residual;
-    gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform,
+    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
+    gfx::Matrix residual;
+    mEffectiveTransform = SnapTransformTranslation(idealTransform,
         mAllowResidualTranslation ? &residual : nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
     // The residual can only be a translation because SnapTransformTranslation
     // only changes the transform if it's a translation
-    NS_ASSERTION(!residual.HasNonTranslation(),
+    NS_ASSERTION(residual.IsTranslation(),
                  "Residual transform can only be a translation");
-    if (!residual.GetTranslation().WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
-      mResidualTranslation = residual.GetTranslation();
+    if (!gfx::ThebesPoint(residual.GetTranslation()).WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
+      mResidualTranslation = gfx::ThebesPoint(residual.GetTranslation());
       NS_ASSERTION(-0.5 <= mResidualTranslation.x && mResidualTranslation.x < 0.5 &&
                    -0.5 <= mResidualTranslation.y && mResidualTranslation.y < 0.5,
                    "Residual translation out of range");
@@ -1642,7 +1639,7 @@ public:
    * container is backend-specific. ComputeEffectiveTransforms must also set
    * mUseIntermediateSurface.
    */
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) = 0;
 
   /**
    * Call this only after ComputeEffectiveTransforms has been invoked
@@ -1687,12 +1684,12 @@ protected:
    * A default implementation of ComputeEffectiveTransforms for use by OpenGL
    * and D3D.
    */
-  void DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface);
+  void DefaultComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface);
 
   /**
    * Loops over the children calling ComputeEffectiveTransforms on them.
    */
-  void ComputeEffectiveTransformsForChildren(const gfx3DMatrix& aTransformToSurface);
+  void ComputeEffectiveTransformsForChildren(const gfx::Matrix4x4& aTransformToSurface);
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
@@ -1751,11 +1748,10 @@ public:
 
   MOZ_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    gfx3DMatrix snappedTransform = SnapTransformTranslation(idealTransform, nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
+    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
+    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
@@ -1892,17 +1888,16 @@ public:
 
   MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
     // was drawn into a ThebesLayer (gfxContext would snap using the local
     // transform, then we'd snap again when compositing the ThebesLayer).
-    gfx3DMatrix snappedTransform =
+    mEffectiveTransform =
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mBounds.width, mBounds.height),
                       nullptr)*
         SnapTransformTranslation(aTransformToSurface, nullptr);
-    gfx::ToMatrix4x4(snappedTransform, mEffectiveTransform);
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 

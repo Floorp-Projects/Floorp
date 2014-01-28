@@ -456,7 +456,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         return true;
     }
 
-    if (JS_LIKELY(!obj->getOps()->setProperty)) {
+    if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = (op == JSOP_SETNAME || op == JSOP_SETGNAME) ? DNP_UNQUALIFIED : 0;
         return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, defineHow, &v,
                                                                strict);
@@ -526,13 +526,13 @@ NewStringObject(JSContext *cx, HandleString str)
 bool
 SPSEnter(JSContext *cx, HandleScript script)
 {
-    return cx->runtime()->spsProfiler.enter(cx, script, script->functionNonDelazifying());
+    return cx->runtime()->spsProfiler.enter(script, script->functionNonDelazifying());
 }
 
 bool
 SPSExit(JSContext *cx, HandleScript script)
 {
-    cx->runtime()->spsProfiler.exit(cx, script, script->functionNonDelazifying());
+    cx->runtime()->spsProfiler.exit(script, script->functionNonDelazifying());
     return true;
 }
 
@@ -732,7 +732,7 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
 
     // If the frame has a pushed SPS frame, make sure to pop it.
     if (frame->hasPushedSPSFrame()) {
-        cx->runtime()->spsProfiler.exit(cx, frame->script(), frame->maybeFun());
+        cx->runtime()->spsProfiler.exit(frame->script(), frame->maybeFun());
         // Unset the pushedSPSFrame flag because DebugEpilogue may get called before
         // probes::ExitScript in baseline during exception handling, and we don't
         // want to double-pop SPS frames.

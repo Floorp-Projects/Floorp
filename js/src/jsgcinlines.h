@@ -220,7 +220,7 @@ class CellIterImpl
         for (;;) {
             if (thing != span->first)
                 break;
-            if (JS_LIKELY(span->hasNext())) {
+            if (MOZ_LIKELY(span->hasNext())) {
                 thing = span->last + thingSize;
                 span = span->nextSpan();
                 break;

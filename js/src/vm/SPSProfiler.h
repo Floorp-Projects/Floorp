@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 
+#include "jslock.h"
 #include "jsscript.h"
 
 #include "js/ProfilingStack.h"
@@ -123,9 +124,9 @@ class SPSProfiler
     uint32_t             max_;
     bool                 slowAssertions;
     uint32_t             enabled_;
+    PRLock               *lock_;
 
-    const char *allocProfileString(JSContext *cx, JSScript *script,
-                                   JSFunction *function);
+    const char *allocProfileString(JSScript *script, JSFunction *function);
     void push(const char *string, void *sp, JSScript *script, jsbytecode *pc);
     void pop();
 
@@ -165,8 +166,8 @@ class SPSProfiler
      *   - exit: this function has ceased execution, and no further
      *           entries/exits will be made
      */
-    bool enter(JSContext *cx, JSScript *script, JSFunction *maybeFun);
-    void exit(JSContext *cx, JSScript *script, JSFunction *maybeFun);
+    bool enter(JSScript *script, JSFunction *maybeFun);
+    void exit(JSScript *script, JSFunction *maybeFun);
     void updatePC(JSScript *script, jsbytecode *pc) {
         if (enabled() && *size_ - 1 < max_) {
             JS_ASSERT(*size_ > 0);
@@ -182,17 +183,54 @@ class SPSProfiler
     jsbytecode *ipToPC(JSScript *script, size_t ip) { return nullptr; }
 
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);
-    const char *profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun);
+    const char *profileString(JSScript *script, JSFunction *maybeFun);
     void onScriptFinalized(JSScript *script);
 
     /* meant to be used for testing, not recommended to call in normal code */
-    size_t stringsCount() { return strings.count(); }
-    void stringsReset() { strings.clear(); }
+    size_t stringsCount();
+    void stringsReset();
 
     uint32_t *addressOfEnabled() {
         return &enabled_;
     }
 };
+
+/*
+ * This class is used to make sure the strings table
+ * is only accessed on one thread at a time.
+ */
+class AutoSPSLock
+{
+  public:
+#ifdef JS_THREADSAFE
+    AutoSPSLock(PRLock *lock)
+    {
+        MOZ_ASSERT(lock, "Parameter should not be null!");
+        lock_ = lock;
+        PR_Lock(lock);
+    }
+    ~AutoSPSLock() { PR_Unlock(lock_); }
+#else
+    AutoSPSLock(PRLock *) {}
+#endif
+
+  private:
+    PRLock *lock_;
+};
+
+inline size_t
+SPSProfiler::stringsCount()
+{
+    AutoSPSLock lock(lock_);
+    return strings.count();
+}
+
+inline void
+SPSProfiler::stringsReset()
+{
+    AutoSPSLock lock(lock_);
+    strings.clear();
+}
 
 /*
  * This class is used in RunScript() to push the marker onto the sampling stack
@@ -254,7 +292,6 @@ class SPSInstrumentation
     /* Small proxies around SPSProfiler */
     bool enabled() { return profiler_ && profiler_->enabled(); }
     SPSProfiler *profiler() { JS_ASSERT(enabled()); return profiler_; }
-    bool slowAssertions() { return enabled() && profiler_->slowAssertionsEnabled(); }
 
     /* Signals an inline function returned, reverting to the previous state */
     void leaveInlineFrame() {
@@ -320,11 +357,10 @@ class SPSInstrumentation
      * Flags entry into a JS function for the first time. Before this is called,
      * no instrumentation is emitted, but after this instrumentation is emitted.
      */
-    bool push(JSContext *cx, JSScript *script, Assembler &masm, Register scratch) {
+    bool push(JSScript *script, Assembler &masm, Register scratch) {
         if (!enabled())
             return true;
-        const char *string = profiler_->profileString(cx, script,
-                                                      script->functionNonDelazifying());
+        const char *string = profiler_->profileString(script, script->functionNonDelazifying());
         if (string == nullptr)
             return false;
         masm.spsPushFrame(profiler_, string, script, scratch);
