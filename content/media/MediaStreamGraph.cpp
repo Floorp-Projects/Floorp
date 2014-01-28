@@ -1127,11 +1127,6 @@ MediaStreamGraphImpl::RunThread()
                "Shouldn't have started a graph with empty message queue!");
 
   uint32_t ticksProcessed = 0;
-  if (!mRealtime) {
-    NS_ASSERTION(!mNonRealtimeIsRunning,
-                 "We should not be running in non-realtime mode already");
-    mNonRealtimeIsRunning = true;
-  }
 
   for (;;) {
     // Update mCurrentTime to the min of the playing audio times, or using the
@@ -1291,9 +1286,6 @@ MediaStreamGraphImpl::RunThread()
     }
   }
 
-  if (!mRealtime) {
-    mNonRealtimeIsRunning = false;
-  }
   profiler_unregister_thread();
 }
 
@@ -2411,7 +2403,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mNeedAnotherIteration(false)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
-  , mNonRealtimeIsRunning(false)
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)
