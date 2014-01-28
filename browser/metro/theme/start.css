@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+/* Start UI ----------------------------------------------------------------- */
+
+#startui-page {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 100%;
+}
+
+#startui-page[viewstate="snapped"],
+#startui-page[viewstate="portrait"] {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+#startui-body {
+  height: 100%;
+  margin: 0;
+}
+
+#start-container {
+  height: 100%;
+}
+
+#start-container[viewstate="snapped"],
+#start-container[viewstate="portrait"] {
+  width: 100%;
+  max-width: 100%; /* ensure page doesn't expand, messing up @media rules */
+  height: auto;
+}
+
+#start-container[viewstate="snapped"] .meta-section:not([expanded]) > richgrid {
+  visibility: collapse;
+}
