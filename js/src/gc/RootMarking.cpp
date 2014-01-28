@@ -295,7 +295,7 @@ MarkRangeConservativelyAndSkipIon(JSTracer *trc, JSRuntime *rt, const uintptr_t 
     MarkRangeConservatively(trc, i, end);
 }
 
-static JS_NEVER_INLINE void
+static MOZ_NEVER_INLINE void
 MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
 {
     JSRuntime *rt = trc->runtime;
@@ -359,7 +359,7 @@ js::MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
 #endif
 }
 
-JS_NEVER_INLINE void
+MOZ_NEVER_INLINE void
 ConservativeGCData::recordStackTop()
 {
     /* Update the native stack pointer if it points to a bigger stack. */

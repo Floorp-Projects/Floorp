@@ -29,7 +29,7 @@ static PRLogModuleInfo* gCertVerifierLog = nullptr;
 namespace mozilla { namespace psm {
 
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
-const CertVerifier::Flags CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV = 2;
+const CertVerifier::Flags CertVerifier::FLAG_MUST_BE_EV = 2;
 
 CertVerifier::CertVerifier(implementation_config ic,
                            missing_cert_download_config mcdc,
@@ -159,9 +159,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
-  if (!cert ||
-      ((flags & FLAG_NO_DV_FALLBACK_FOR_EV) &&
-      (usage != certificateUsageSSLServer || !evOidPolicy)))
+  if (!cert)
   {
     PR_NOT_REACHED("Invalid arguments to CertVerifier::VerifyCert");
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -188,6 +186,11 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
       return SECFailure;
   }
 
+  if ((flags & FLAG_MUST_BE_EV) && usage != certificateUsageSSLServer) {
+      PORT_SetError(SEC_ERROR_INVALID_ARGS);
+      return SECFailure;
+  }
+
 #ifndef NSS_NO_LIBPKIX
   ScopedCERTCertList trustAnchors;
   SECStatus rv;
@@ -210,8 +213,17 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
         evPolicy = SEC_OID_UNKNOWN;
       }
     } else {
+      // No known EV policy found
+      if (flags & FLAG_MUST_BE_EV) {
+        PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
+        return SECFailure;
+      }
       // Do not setup EV verification params
       evPolicy = SEC_OID_UNKNOWN;
+    }
+    if ((evPolicy == SEC_OID_UNKNOWN) && (flags & FLAG_MUST_BE_EV)) {
+      PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
+      return SECFailure;
     }
   }
 
@@ -322,7 +334,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     }
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("VerifyCert: failed CERT_PKIXVerifyCert(ev)\n"));
-
+    if (flags & FLAG_MUST_BE_EV) {
+      return rv;
+    }
     if (validationChain) {
       destroyCertListThatShouldNotExist(
         &cvout[validationChainLocation].value.pointer.chain);
@@ -348,9 +362,14 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
 
   // If we're here, PKIX EV verification failed.
   // If requested, don't do DV fallback.
-  if (flags & FLAG_NO_DV_FALLBACK_FOR_EV) {
+  if (flags & FLAG_MUST_BE_EV) {
     PR_ASSERT(*evOidPolicy == SEC_OID_UNKNOWN);
-    return SECSuccess;
+#ifdef NSS_NO_LIBPKIX
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+#else
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+#endif
+    return SECFailure;
   }
 
   if (mImplementation == classic) {

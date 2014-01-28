@@ -123,6 +123,9 @@ var Appbar = {
   onMenuButton: function(aEvent) {
       let typesArray = [];
 
+      if (BrowserUI.isPrivateBrowsingEnabled) {
+        typesArray.push("private-browsing");
+      }
       if (!BrowserUI.isStartTabVisible) {
         typesArray.push("find-in-page");
         if (ContextCommands.getPageSource())

@@ -19,8 +19,6 @@ interface Crypto {
 };
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-interface CRMFObject;
-
 [NoInterfaceObject]
 interface CryptoLegacy {
   readonly attribute DOMString version;
@@ -28,13 +26,13 @@ interface CryptoLegacy {
   [SetterThrows]
   attribute boolean enableSmartCardEvents;
 
-  [Throws]
-  CRMFObject generateCRMFRequest(ByteString? reqDN,
-                                 ByteString? regToken,
-                                 ByteString? authenticator,
-                                 ByteString? eaCert,
-                                 ByteString? jsCallback,
-                                 any... args);
+  [Throws,NewObject]
+  CRMFObject? generateCRMFRequest(ByteString? reqDN,
+                                  ByteString? regToken,
+                                  ByteString? authenticator,
+                                  ByteString? eaCert,
+                                  ByteString? jsCallback,
+                                  any... args);
 
   [Throws]
   DOMString importUserCertificates(DOMString nickname,

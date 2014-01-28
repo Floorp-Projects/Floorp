@@ -300,7 +300,7 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
-        <provider android:name="org.mozilla.gecko.db.HomeListsProvider"
+        <provider android:name="org.mozilla.gecko.db.HomeProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.homelists"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 

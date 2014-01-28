@@ -432,7 +432,7 @@ UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind);
  * data). During incremental GC, since the gray bits haven't been computed yet,
  * we conservatively mark the object black.
  */
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(kind != JSTRACE_SHAPE);
@@ -453,14 +453,14 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
         UnmarkGrayGCThingRecursively(thing, kind);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 ExposeValueToActiveJS(const Value &v)
 {
     if (v.isMarkable())
         ExposeGCThingToActiveJS(v.toGCThing(), v.gcKind());
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 ExposeObjectToActiveJS(JSObject *obj)
 {
     ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
@@ -469,7 +469,7 @@ ExposeObjectToActiveJS(JSObject *obj)
 /*
  * If a GC is currently marking, mark the object black.
  */
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MarkGCThingAsLive(JSRuntime *rt_, void *thing, JSGCTraceKind kind)
 {
     shadow::Runtime *rt = shadow::Runtime::asShadowRuntime(rt_);
@@ -484,7 +484,7 @@ MarkGCThingAsLive(JSRuntime *rt_, void *thing, JSGCTraceKind kind)
         IncrementalReferenceBarrier(thing, kind);
 }
 
-static JS_ALWAYS_INLINE void
+static MOZ_ALWAYS_INLINE void
 MarkStringAsLive(Zone *zone, JSString *string)
 {
     JSRuntime *rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromMainThread();

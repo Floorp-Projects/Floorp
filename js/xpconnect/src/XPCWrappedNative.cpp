@@ -1613,21 +1613,21 @@ class MOZ_STACK_CLASS CallMethodHelper
     jsval* const mArgv;
     const uint32_t mArgc;
 
-    JS_ALWAYS_INLINE bool
+    MOZ_ALWAYS_INLINE bool
     GetArraySizeFromParam(uint8_t paramIndex, uint32_t* result) const;
 
-    JS_ALWAYS_INLINE bool
+    MOZ_ALWAYS_INLINE bool
     GetInterfaceTypeFromParam(uint8_t paramIndex,
                               const nsXPTType& datum_type,
                               nsID* result) const;
 
-    JS_ALWAYS_INLINE bool
+    MOZ_ALWAYS_INLINE bool
     GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const;
 
-    JS_ALWAYS_INLINE bool
+    MOZ_ALWAYS_INLINE bool
     GatherAndConvertResults();
 
-    JS_ALWAYS_INLINE bool
+    MOZ_ALWAYS_INLINE bool
     QueryInterfaceFastPath();
 
     nsXPTCVariant*
@@ -1645,19 +1645,19 @@ class MOZ_STACK_CLASS CallMethodHelper
         return const_cast<CallMethodHelper*>(this)->GetDispatchParam(paramIndex);
     }
 
-    JS_ALWAYS_INLINE bool InitializeDispatchParams();
+    MOZ_ALWAYS_INLINE bool InitializeDispatchParams();
 
-    JS_ALWAYS_INLINE bool ConvertIndependentParams(bool* foundDependentParam);
-    JS_ALWAYS_INLINE bool ConvertIndependentParam(uint8_t i);
-    JS_ALWAYS_INLINE bool ConvertDependentParams();
-    JS_ALWAYS_INLINE bool ConvertDependentParam(uint8_t i);
+    MOZ_ALWAYS_INLINE bool ConvertIndependentParams(bool* foundDependentParam);
+    MOZ_ALWAYS_INLINE bool ConvertIndependentParam(uint8_t i);
+    MOZ_ALWAYS_INLINE bool ConvertDependentParams();
+    MOZ_ALWAYS_INLINE bool ConvertDependentParam(uint8_t i);
 
-    JS_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
+    MOZ_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
 
-    JS_ALWAYS_INLINE bool HandleDipperParam(nsXPTCVariant* dp,
-                                              const nsXPTParamInfo& paramInfo);
+    MOZ_ALWAYS_INLINE bool HandleDipperParam(nsXPTCVariant* dp,
+                                             const nsXPTParamInfo& paramInfo);
 
-    JS_ALWAYS_INLINE nsresult Invoke();
+    MOZ_ALWAYS_INLINE nsresult Invoke();
 
 public:
 
@@ -1681,7 +1681,7 @@ public:
 
     ~CallMethodHelper();
 
-    JS_ALWAYS_INLINE bool Call();
+    MOZ_ALWAYS_INLINE bool Call();
 
 };
 

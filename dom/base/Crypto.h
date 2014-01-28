@@ -8,7 +8,11 @@
 #include "nsIDOMCrypto.h"
 #else
 #include "nsIDOMCryptoLegacy.h"
-class nsIDOMCRMFObject;
+namespace mozilla {
+namespace dom {
+class CRMFObject;
+}
+}
 #endif
 
 #include "nsPIDOMWindow.h"
@@ -46,7 +50,7 @@ public:
 
   virtual void GetVersion(nsString& aVersion);
 
-  virtual already_AddRefed<nsIDOMCRMFObject>
+  virtual mozilla::dom::CRMFObject*
   GenerateCRMFRequest(JSContext* aContext,
                       const nsCString& aReqDN,
                       const nsCString& aRegToken,

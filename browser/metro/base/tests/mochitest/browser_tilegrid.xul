@@ -6,7 +6,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/bindings.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
 <!DOCTYPE window []>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
