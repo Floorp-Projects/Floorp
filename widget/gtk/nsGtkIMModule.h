@@ -106,9 +106,9 @@ protected:
     GtkIMContext       *mContext;
 
     // mSimpleContext is used for the password field and
-    // the |ime-mode: disabled;| editors.  These editors disable IME.
-    // But dead keys should work.  Fortunately, the simple IM context of
-    // GTK2 support only them.
+    // the |ime-mode: disabled;| editors if sUseSimpleContext is true.
+    // These editors disable IME.  But dead keys should work.  Fortunately,
+    // the simple IM context of GTK2 support only them.
     GtkIMContext       *mSimpleContext;
 
     // mDummyContext is a dummy context and will be used in Focus()
@@ -202,6 +202,11 @@ protected:
     // class.  When a instance is destroyed and sLastFocusedModule refers it,
     // this is cleared.  So, this refers valid pointer always.
     static nsGtkIMModule* sLastFocusedModule;
+
+    // sUseSimpleContext indeicates if password editors and editors with
+    // |ime-mode: disabled;| should use GtkIMContextSimple.
+    // If true, they use GtkIMContextSimple.  Otherwise, not.
+    static bool sUseSimpleContext;
 
     // Callback methods for native IME events.  These methods should call
     // the related instance methods simply.
