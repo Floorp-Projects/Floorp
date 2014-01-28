@@ -97,6 +97,61 @@ function testRelation(aIdentifier, aRelType, aRelatedIdentifiers)
 }
 
 /**
+ * Test that the given accessible relations don't exist.
+ *
+ * @param aIdentifier           [in] identifier to get an accessible, may be ID
+ *                              attribute or DOM element or accessible object
+ * @param aRelType              [in] relation type (see constants above)
+ * @param aUnrelatedIdentifiers [in] identifier or array of identifiers of
+ *                              accessibles that shouldn't exist for this
+ *                              relation.
+ */
+function testAbsentRelation(aIdentifier, aRelType, aUnrelatedIdentifiers)
+{
+  var relation = getRelationByType(aIdentifier, aRelType);
+
+  var relDescr = getRelationErrorMsg(aIdentifier, aRelType);
+  var relDescrStart = getRelationErrorMsg(aIdentifier, aRelType, true);
+
+  if (!aUnrelatedIdentifiers) {
+    ok(false, "No identifiers given for unrelated accessibles.");
+    return;
+  }
+
+  if (!relation || !relation.targetsCount) {
+    ok(true, "No relations exist.");
+    return;
+  }
+
+  var relatedIds = (aUnrelatedIdentifiers instanceof Array) ?
+    aUnrelatedIdentifiers : [aUnrelatedIdentifiers];
+
+  var targets = [];
+  for (var idx = 0; idx < relatedIds.length; idx++)
+    targets.push(getAccessible(relatedIds[idx]));
+
+  if (targets.length != relatedIds.length)
+    return;
+
+  var actualTargets = relation.getTargets();
+
+  // Any found targets that match given accessibles should be called out.
+  for (var idx = 0; idx < targets.length; idx++) {
+    var notFound = true;
+    var enumerate = actualTargets.enumerate();
+    while (enumerate.hasMoreElements()) {
+      var relatedAcc = enumerate.getNext().QueryInterface(nsIAccessible);
+      if (targets[idx] == relatedAcc) {
+        notFound = false;
+        break;
+      }
+    }
+
+    ok(notFound, prettyName(relatedIds[idx]) + " is a target of " + relDescr);
+  }
+}
+
+/**
  * Return related accessible for the given relation type.
  *
  * @param aIdentifier  [in] identifier to get an accessible, may be ID attribute
