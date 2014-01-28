@@ -68,7 +68,8 @@ function test()
     let outlineRect = getHighlighterOutlineRect();
     let iframeRect = iframeNode.getBoundingClientRect();
     for (let dim of ["width", "height", "top", "left"]) {
-      is(Math.floor(outlineRect[dim]), Math.floor(iframeRect[dim]), "Outline dimension is correct");
+      is(Math.floor(outlineRect[dim]), Math.floor(iframeRect[dim]),
+         "Outline dimension is correct " + outlineRect[dim]);
     }
 
     iframeNode.style.marginBottom = doc.defaultView.innerHeight + "px";
@@ -101,8 +102,8 @@ function test()
 
   function moveMouseOver(aElement, x, y, cb)
   {
+    inspector.toolbox.once("picker-node-hovered", cb);
     EventUtils.synthesizeMouse(aElement, x, y, {type: "mousemove"},
                                aElement.ownerDocument.defaultView);
-    inspector.toolbox.once("picker-node-hovered", cb);
   }
 }

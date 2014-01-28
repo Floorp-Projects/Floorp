@@ -130,7 +130,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
   // lay out all of our currently open popups.
   for (nsFrameList::Enumerator e(mPopupList); !e.AtEnd(); e.Next()) {
     nsMenuPopupFrame* popupChild = static_cast<nsMenuPopupFrame*>(e.get());
-    popupChild->LayoutPopup(aState, nullptr, false);
+    popupChild->LayoutPopup(aState, nullptr, nullptr, false);
   }
 
   return rv;
