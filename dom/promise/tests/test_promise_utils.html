@@ -174,7 +174,7 @@ function promiseCastArray() {
 }
 
 function promiseCastThenable() {
-  var p = Promise.cast({ then: function(resolve) { resolve(2); } });
+  var p = Promise.cast({ then: function(onFulfill, onReject) { onFulfill(2); } });
   ok(p instanceof Promise, "Should cast to a Promise.");
   p.then(function(v) {
     is(v, 2, "Should resolve to 2.");
