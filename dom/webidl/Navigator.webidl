@@ -126,6 +126,12 @@ partial interface Navigator {
     boolean vibrate(sequence<unsigned long> pattern);
 };
 
+// http://www.w3.org/TR/pointerevents/#extensions-to-the-navigator-interface
+partial interface Navigator {
+    [Pref="dom.w3c_pointer_events.enabled"]
+    readonly attribute long maxTouchPoints;
+};
+
 // Mozilla-specific extensions
 
 callback interface MozIdleObserver {
