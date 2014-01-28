@@ -71,6 +71,7 @@ let NetMonitorView = {
     this.Toolbar.initialize();
     this.RequestsMenu.initialize();
     this.NetworkDetails.initialize();
+    this.CustomRequest.initialize();
   },
 
   /**
@@ -80,6 +81,7 @@ let NetMonitorView = {
     this.Toolbar.destroy();
     this.RequestsMenu.destroy();
     this.NetworkDetails.destroy();
+    this.CustomRequest.destroy();
 
     this._destroyPanes();
   },
@@ -271,6 +273,30 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.addEventListener("select", this._onSelect, false);
     this._splitter.addEventListener("mousemove", this._onResize, false);
     window.addEventListener("resize", this._onResize, false);
+
+    this.requestsMenuSortEvent = getKeyWithEvent(this.sortBy.bind(this));
+    this.requestsMenuFilterEvent = getKeyWithEvent(this.filterOn.bind(this));
+    this.clearEvent = this.clear.bind(this);
+    this._onContextShowing = this._onContextShowing.bind(this);
+    this._onContextNewTabCommand = this.openRequestInTab.bind(this);
+    this._onContextCopyUrlCommand = this.copyUrl.bind(this);
+    this._onContextResendCommand = this.cloneSelectedRequest.bind(this);
+
+    this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);
+    this.closeCustomRequestEvent = this.closeCustomRequest.bind(this);
+    this.cloneSelectedRequestEvent = this.cloneSelectedRequest.bind(this);
+
+    $("#toolbar-labels").addEventListener("click", this.requestsMenuSortEvent, false);
+    $("#requests-menu-footer").addEventListener("click", this.requestsMenuFilterEvent, false);
+    $("#requests-menu-clear-button").addEventListener("click", this.clearEvent, false);
+    $("#network-request-popup").addEventListener("popupshowing", this._onContextShowing, false);
+    $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
+    $("#request-menu-context-copy-url").addEventListener("command", this._onContextCopyUrlCommand, false);
+    $("#request-menu-context-resend").addEventListener("command", this._onContextResendCommand, false);
+
+    $("#custom-request-send-button").addEventListener("click", this.sendCustomRequestEvent, false);
+    $("#custom-request-close-button").addEventListener("click", this.closeCustomRequestEvent, false);
+    $("#headers-summary-resend").addEventListener("click", this.cloneSelectedRequestEvent, false);
   },
 
   /**
@@ -282,6 +308,18 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.removeEventListener("select", this._onSelect, false);
     this._splitter.removeEventListener("mousemove", this._onResize, false);
     window.removeEventListener("resize", this._onResize, false);
+
+    $("#toolbar-labels").removeEventListener("click", this.requestsMenuSortEvent, false);
+    $("#requests-menu-footer").removeEventListener("click", this.requestsMenuFilterEvent, false);
+    $("#requests-menu-clear-button").removeEventListener("click", this.clearEvent, false);
+    $("#network-request-popup").removeEventListener("popupshowing", this._onContextShowing, false);
+    $("#request-menu-context-newtab").removeEventListener("command", this._onContextNewTabCommand, false);
+    $("#request-menu-context-copy-url").removeEventListener("command", this._onContextCopyUrlCommand, false);
+    $("#request-menu-context-resend").removeEventListener("command", this._onContextResendCommand, false);
+
+    $("#custom-request-send-button").removeEventListener("click", this.sendCustomRequestEvent, false);
+    $("#custom-request-close-button").removeEventListener("click", this.closeCustomRequestEvent, false);
+    $("#headers-summary-resend").removeEventListener("click", this.cloneSelectedRequestEvent, false);
   },
 
   /**
@@ -1436,6 +1474,26 @@ function CustomRequestView() {
 
 CustomRequestView.prototype = {
   /**
+   * Initialization function, called when the network monitor is started.
+   */
+  initialize: function() {
+    dumpn("Initializing the CustomRequestView");
+
+    this.updateCustomRequestEvent = getKeyWithEvent(this.onUpdate.bind(this));
+
+    $("#custom-pane").addEventListener("input", this.updateCustomRequestEvent, false);
+  },
+
+  /**
+   * Destruction function, called when the network monitor is closed.
+   */
+  destroy: function() {
+    dumpn("Destroying the CustomRequestView");
+
+    $("#custom-pane").removeEventListener("input", this.updateCustomRequestEvent, false);
+  },
+
+  /**
    * Populates this view with the specified data.
    *
    * @param object aData
@@ -2235,6 +2293,23 @@ function writeQueryText(aParams) {
  */
 function writeQueryString(aParams) {
   return [(name + "=" + value) for ({name, value} of aParams)].join("&");
+}
+
+/**
+ * Helper method to get a wrapped function which can be bound to as an event listener directly and is executed only when data-key is present in event.target.
+ *
+ * @param function callback
+ *          Function to execute execute when data-key is present in event.target.
+ * @return function
+ *          Wrapped function with the target data-key as the first argument.
+ */
+function getKeyWithEvent(callback) {
+  return function(event) {
+    var key = event.target.getAttribute("data-key");
+    if (key) {
+      callback.call(null, key);
+    }
+  };
 }
 
 /**
