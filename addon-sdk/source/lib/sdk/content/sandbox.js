@@ -24,6 +24,7 @@ const xulApp = require('../system/xul-app');
 const USE_JS_PROXIES = !xulApp.versionInRange(xulApp.platformVersion,
                                               '17.0a2', '*');
 const { getTabForContentWindow } = require('../tabs/utils');
+const { getInnerId } = require('../window/utils');
 
 // WeakMap of sandboxes so we can access private values
 const sandboxes = new WeakMap();
@@ -34,12 +35,13 @@ const sandboxes = new WeakMap();
 */
 let prefix = module.uri.split('sandbox.js')[0];
 const CONTENT_WORKER_URL = prefix + 'content-worker.js';
+const metadata = require('@loader/options').metadata;
 
 // Fetch additional list of domains to authorize access to for each content
 // script. It is stored in manifest `metadata` field which contains
 // package.json data. This list is originaly defined by authors in
 // `permissions` attribute of their package.json addon file.
-const permissions = require('@loader/options').metadata['permissions'] || {};
+const permissions = (metadata && metadata['permissions']) || {};
 const EXPANDED_PRINCIPALS = permissions['cross-domain-content'] || [];
 
 const JS_VERSION = '1.8';
@@ -49,7 +51,7 @@ const WorkerSandbox = Class({
   implements: [
     EventTarget
   ],
-  
+
   /**
    * Emit a message to the worker content sandbox
    */
@@ -131,10 +133,13 @@ const WorkerSandbox = Class({
       wantXrays: true,
       wantGlobalProperties: wantGlobalProperties,
       sameZoneAs: window,
-      metadata: { SDKContentScript: true }
+      metadata: {
+        SDKContentScript: true,
+        'inner-window-id': getInnerId(window)
+      }
     });
     model.sandbox = content;
-    
+
     // We have to ensure that window.top and window.parent are the exact same
     // object than window object, i.e. the sandbox global object. But not
     // always, in case of iframes, top and parent are another window object.
