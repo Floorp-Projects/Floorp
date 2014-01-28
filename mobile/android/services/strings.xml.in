@@ -124,6 +124,7 @@
   <string name="fxaccount_sign_in_instead">&fxaccount.sign.in.instead;</string>
   <string name="fxaccount_sign_up_instead">&fxaccount.sign.up.instead;</string>
 
+  <string name="fxaccount_link_old_firefox">&fxaccount.link.old.firefox;</string>
   <string name="fxaccount_old_firefox">&fxaccount.old.firefox;</string>
 
   <string name="fxaccount_options_title">&fxaccount.options.title;</string>
