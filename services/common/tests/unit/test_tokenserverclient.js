@@ -335,15 +335,15 @@ add_test(function test_400_response() {
   });
 });
 
-add_test(function test_401_response() {
-  _("Ensure HTTP 401 is converted to invalid-credentials.");
+add_test(function test_401_with_error_cause() {
+  _("Ensure 401 cause is specified in body.status");
 
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
       response.setStatusLine(request.httpVersion, 401, "Unauthorized");
       response.setHeader("Content-Type", "application/json; charset=utf-8");
 
-      let body = "{}"; // Actual content may not be used.
+      let body = JSON.stringify({status: "no-soup-for-you"});
       response.bodyOutputStream.write(body, body.length);
     }
   });
@@ -354,7 +354,7 @@ add_test(function test_401_response() {
     do_check_neq(null, error);
     do_check_eq("TokenServerClientServerError", error.name);
     do_check_neq(null, error.response);
-    do_check_eq(error.cause, "invalid-credentials");
+    do_check_eq(error.cause, "no-soup-for-you");
 
     server.stop(run_next_test);
   });
