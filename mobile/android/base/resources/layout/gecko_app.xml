@@ -68,7 +68,7 @@
              the root view, BrowserToolbar should be specified as low in the
              view hierarchy as possible. -->
 
-        <ViewFlipper android:id="@id/browser_actionbar"
+        <org.mozilla.gecko.widget.GeckoViewFlipper android:id="@id/browser_actionbar"
                 android:layout_width="fill_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
@@ -88,7 +88,7 @@
                                                     android:layout_width="fill_parent"
                                                     style="@style/GeckoActionBar"/>
 
-        </ViewFlipper>
+        </org.mozilla.gecko.widget.GeckoViewFlipper>
 
     </view>
 
