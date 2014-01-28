@@ -10,11 +10,11 @@
 #include "mozilla/Array.h"
 
 #include "jit/IonTypes.h"
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
 # include "jit/x86/Architecture-x86.h"
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
 # include "jit/x64/Architecture-x64.h"
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/Architecture-arm.h"
 #endif
 
