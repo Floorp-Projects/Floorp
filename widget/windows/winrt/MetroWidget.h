@@ -143,6 +143,7 @@ public:
   float         GetDPI();
   mozilla::LayoutDeviceIntPoint CSSIntPointToLayoutDeviceIntPoint(const mozilla::CSSIntPoint &aCSSPoint);
   void          ChangedDPI();
+  virtual uint32_t GetMaxTouchPoints() const MOZ_OVERRIDE;
   virtual bool  IsVisible() const;
   virtual bool  IsEnabled() const;
   // ShouldUseOffMainThreadCompositing is defined in base widget

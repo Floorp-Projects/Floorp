@@ -52,6 +52,7 @@
 #include "nsIDOMNavigatorSystemMessages.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
+#include "WidgetUtils.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -762,6 +763,19 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
 
   hal::Vibrate(aPattern, mWindow);
   return true;
+}
+
+//*****************************************************************************
+//  Pointer Events interface
+//*****************************************************************************
+
+uint32_t
+Navigator::MaxTouchPoints()
+{
+  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(mWindow);
+
+  NS_ENSURE_TRUE(widget, 0);
+  return widget->GetMaxTouchPoints();
 }
 
 //*****************************************************************************
