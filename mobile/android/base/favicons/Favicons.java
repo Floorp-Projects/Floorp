@@ -239,7 +239,7 @@ public class Favicons {
         // Attempt to determine the Favicon URL from the Tabs datastructure. Can dodge having to use
         // the database sometimes by doing this.
         String targetURL;
-        Tab theTab = Tabs.getInstance().getTabForUrl(pageURL);
+        Tab theTab = Tabs.getInstance().getFirstTabForUrl(pageURL);
         if (theTab != null) {
             targetURL = theTab.getFaviconURL();
             if (targetURL != null) {
