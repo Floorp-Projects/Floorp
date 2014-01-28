@@ -398,6 +398,7 @@ function Nfc() {
 
   Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
   Services.obs.addObserver(this, NFC.TOPIC_XPCOM_SHUTDOWN, false);
+  Services.obs.addObserver(this, NFC.TOPIC_HARDWARE_STATE, false);
 
   gMessageManager.init(this);
   let lock = gSettingsService.createLock();
@@ -655,11 +656,28 @@ Nfc.prototype = {
           this.handle(setting.key, setting.value);
         }
         break;
+      case NFC.TOPIC_HARDWARE_STATE:
+        let state = JSON.parse(data);
+        if (state) {
+          let level = this.hardwareStateToPowerlevel(state.nfcHardwareState);
+          this.setConfig({ powerLevel: level });
+        }
+        break;
     }
   },
 
   setConfig: function setConfig(prop) {
     this.sendToWorker("config", prop);
+  },
+
+  hardwareStateToPowerlevel: function hardwareStateToPowerlevel(state) {
+    switch (state) {
+      case 0:   return NFC.NFC_POWER_LEVEL_DISABLED;
+      case 1:   return NFC.NFC_POWER_LEVEL_ENABLED;
+      case 2:   return NFC.NFC_POWER_LEVEL_ENABLED;
+      case 3:   return NFC.NFC_POWER_LEVEL_LOW;
+      default:  return NFC.NFC_POWER_LEVEL_UNKNOWN;
+    }
   }
 };
 
