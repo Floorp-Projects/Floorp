@@ -4,28 +4,6 @@
 
 import mozdevice
 import os
-import re
-
-
-def get_dm(**kwargs):
-    dm_type = os.environ.get('DM_TRANS', 'adb')
-    if dm_type == 'adb':
-        return mozdevice.DeviceManagerADB(**kwargs)
-    elif dm_type == 'sut':
-        host = os.environ.get('TEST_DEVICE')
-        if not host:
-            raise Exception('Must specify host with SUT!')
-        return mozdevice.DeviceManagerSUT(host=host)
-    else:
-        raise Exception('Unknown device manager type: %s' % dm_type)
-
-
-def get_b2g_pid(dm):
-    b2g_output = dm.shellCheckOutput(['b2g-ps'])
-    pid_re = re.compile(r"""[\s\S]*b2g[\s]*root[\s]*([\d]+)[\s\S]*""")
-    if 'b2g' in b2g_output:
-        pid = pid_re.match(b2g_output)
-        return pid.group(1)
 
 
 class B2GTestCaseMixin(object):
@@ -36,61 +14,18 @@ class B2GTestCaseMixin(object):
 
     def get_device_manager(self, *args, **kwargs):
         if not self._device_manager:
-            self._device_manager = get_dm(**kwargs)
+            dm_type = os.environ.get('DM_TRANS', 'adb')
+            if dm_type == 'adb':
+                self._device_manager = mozdevice.DeviceManagerADB(**kwargs)
+            elif dm_type == 'sut':
+                host = os.environ.get('TEST_DEVICE')
+                if not host:
+                    raise Exception('Must specify host with SUT!')
+                self._device_manager = mozdevice.DeviceManagerSUT(host=host)
+            else:
+                raise Exception('Unknown device manager type: %s' % dm_type)
         return self._device_manager
 
     @property
     def device_manager(self):
         return self.get_device_manager()
-
-class B2GTestResultMixin(object):
-
-    def __init__(self, *args, **kwargs):
-        self.result_modifiers.append(self.b2g_output_modifier)
-        self.b2g_pid = kwargs.pop('b2g_pid')
-
-    def b2g_output_modifier(self, test, result_expected, result_actual, output, context):
-        # This function will check if b2g is running and report any recent errors. This is
-        # used in automation since a plaian 'socket.timeout' error doesn't tell you
-        # much information about what actually is going on
-        def diagnose_socket(output):
-            dm_type = os.environ.get('DM_TRANS', 'adb')
-            if dm_type == 'adb':
-                device_manager = get_dm()
-                pid = get_b2g_pid(device_manager)
-                if pid:
-                    # find recent errors
-                    message = ""
-                    error_re = re.compile(r"""[\s\S]*(exception|error)[\s\S]*""", flags=re.IGNORECASE)
-                    logcat = device_manager.getLogcat()
-                    latest = []
-                    iters = len(logcat) - 1
-                    # reading from the latest line
-                    while len(latest) < 5 and iters >= 0:
-                        line = logcat[iters]
-                        error_log_line = error_re.match(line)
-                        if error_log_line is not None:
-                            latest.append(line)
-                        iters -= 1
-                    message += "\nMost recent errors/exceptions are:\n"
-                    for line in reversed(latest):
-                        message += "%s" % line
-                    b2g_status = ""
-                    if pid != self.b2g_pid:
-                        b2g_status = "The B2G process has restarted after crashing during the tests so "
-                    else:
-                        b2g_status = "B2G is still running but "
-                    output += "%s\n%sMarionette can't respond due to either a Gecko, Gaia or Marionette error. " \
-                              "Above, the 5 most recent errors are " \
-                              "listed. Check logcat for all errors if these errors are not the cause " \
-                              "of the failure." % (message, b2g_status)
-                else:
-                    output += "B2G process has died"
-            return output
-        # For some reason, errno is not available for this exception
-        if "Broken pipe" in output:
-            output = diagnose_socket(output)
-        elif "socket.timeout" in output:
-            output = diagnose_socket(output)
-        return result_expected, result_actual, output, context
-
