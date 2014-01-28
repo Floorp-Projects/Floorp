@@ -75,6 +75,7 @@ assertEq(exp.f(), 3);
 assertEq(Object.keys(exp).join(), 'f');
 
 assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {1:f}");
+assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {__proto__:f}");
 assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {get x() {} }");
 
 var exp = asmLink(asmCompile(USE_ASM + 'function internal() { return ((g()|0)+2)|0 } function f() { return 1 } function g() { return 2 } function h() { return internal()|0 } return {f:f,g1:g,h1:h}'));
