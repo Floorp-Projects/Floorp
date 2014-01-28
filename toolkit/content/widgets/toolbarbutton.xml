@@ -34,7 +34,8 @@
                  xbl:inherits="value=label,accesskey,crop,dragover-top"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
                  xbl:inherits="xbl:text=label,accesskey"/>
-      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
+      <xul:dropmarker anonid="dropmarker" type="menu"
+                      class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
   </binding>
   
@@ -50,7 +51,8 @@
           <xul:label class="toolbarbutton-multiline-text" flex="1"
                      xbl:inherits="xbl:text=label,accesskey"/>
         </xul:vbox>
-        <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
+        <xul:dropmarker anonid="dropmarker" type="menu"
+                        class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
       </xul:hbox>
     </content>
   </binding>
@@ -68,7 +70,7 @@
                          xbl:inherits="disabled,crop,image,label,accesskey,command,wrap,
                                        align,dir,pack,orient,tooltiptext=buttontooltiptext"/>
       <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
-                      xbl:inherits="align,dir,pack,orient,disabled,label,open"/>
+                      anonid="dropmarker" xbl:inherits="align,dir,pack,orient,disabled,label,open"/>
     </content>
   </binding>
 
