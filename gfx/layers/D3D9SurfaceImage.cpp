@@ -172,5 +172,67 @@ D3D9SurfaceImage::DeprecatedGetAsSurface()
   return surface.forget();
 }
 
+TemporaryRef<gfx::SourceSurface>
+D3D9SurfaceImage::GetAsSourceSurface()
+{
+  NS_ENSURE_TRUE(mTexture, nullptr);
+
+  HRESULT hr;
+  RefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
+
+  if (!surface) {
+    NS_WARNING("Failed to created SourceSurface for D3D9SurfaceImage.");
+    return nullptr;
+  }
+
+  // Ensure that the texture is ready to be used.
+  EnsureSynchronized();
+
+  // Readback the texture from GPU memory into system memory, so that
+  // we can copy it into the Cairo image. This is expensive.
+  RefPtr<IDirect3DSurface9> textureSurface;
+  hr = mTexture->GetSurfaceLevel(0, byRef(textureSurface));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  RefPtr<IDirect3DDevice9> device;
+  hr = mTexture->GetDevice(byRef(device));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  RefPtr<IDirect3DSurface9> systemMemorySurface;
+  hr = device->CreateOffscreenPlainSurface(mDesc.Width,
+                                           mDesc.Height,
+                                           D3DFMT_X8R8G8B8,
+                                           D3DPOOL_SYSTEMMEM,
+                                           byRef(systemMemorySurface),
+                                           0);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  hr = device->GetRenderTargetData(textureSurface, systemMemorySurface);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  D3DLOCKED_RECT rect;
+  hr = systemMemorySurface->LockRect(&rect, nullptr, 0);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  gfx::DataSourceSurface::MappedSurface mappedSurface;
+  if (!surface->Map(gfx::DataSourceSurface::WRITE, &mappedSurface)) {
+    systemMemorySurface->UnlockRect();
+    return nullptr;
+  }
+
+  const unsigned char* src = (const unsigned char*)(rect.pBits);
+  const unsigned srcPitch = rect.Pitch;
+  for (int y = 0; y < mSize.height; y++) {
+    memcpy(mappedSurface.mData + mappedSurface.mStride * y,
+           (unsigned char*)(src) + srcPitch * y,
+           mSize.width * 4);
+  }
+
+  systemMemorySurface->UnlockRect();
+  surface->Unmap();
+
+  return surface;
+}
+
 } /* layers */
 } /* mozilla */

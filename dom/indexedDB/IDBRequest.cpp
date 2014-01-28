@@ -30,6 +30,7 @@
 #include "IDBIndex.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
+#include "ReportInternalError.h"
 
 namespace {
 
@@ -187,7 +188,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   // Otherwise we need to get the result from the helper.
   AutoPushJSContext cx(GetJSContext());
   if (!cx) {
-    NS_WARNING("Failed to get safe JSContext!");
+    IDB_WARNING("Failed to get safe JSContext!");
     rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     SetError(rv);
     return rv;

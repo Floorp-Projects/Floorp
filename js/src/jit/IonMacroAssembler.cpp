@@ -245,14 +245,14 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     int32_t diffF = set.fpus().size() * sizeof(double);
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // On x86, always use push to push the integer registers, as it's fast
     // on modern hardware and it's a small instruction.
     for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
         diffG -= sizeof(intptr_t);
         Push(*iter);
     }
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
     if (set.gprs().size() > 1) {
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
@@ -277,7 +277,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
 #endif
     JS_ASSERT(diffG == 0);
 
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     adjustFrame(diffF);
     diffF += transferMultipleByRuns(set.fpus(), IsStore, StackPointer, DB);
 #else
@@ -298,7 +298,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     // ARM can load multiple registers at once, but only if we want back all
     // the registers we previously saved to the stack.
     if (ignore.empty(true)) {
@@ -316,7 +316,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     }
     JS_ASSERT(diffF == 0);
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // On x86, use pop to pop the integer registers, if we're not going to
     // ignore any slots, as it's fast on modern hardware and it's a small
     // instruction.
@@ -327,7 +327,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
         }
     } else
 #endif
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     if (set.gprs().size() > 1 && ignore.empty(false)) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
@@ -538,7 +538,7 @@ void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
     JS_ASSERT(input != ScratchFloatReg);
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
     ma_vimm(0.5, ScratchFloatReg);
     if (hasVFPv3()) {
         Label notSplit;
@@ -993,7 +993,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             // Discard exit frame.
             addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), StackPointer);
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
             push(BaselineTailCallReg);
 #endif
             jump(Address(BaselineStubReg, ICStub::offsetOfStubCode()));

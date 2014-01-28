@@ -2102,7 +2102,7 @@ class InstructionIterator {
 static const uint32_t NumIntArgRegs = 4;
 static const uint32_t NumFloatArgRegs = 8;
 
-#ifdef JS_CPU_ARM_HARDFP
+#ifdef JS_CODEGEN_ARM_HARDFP
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 {

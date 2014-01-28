@@ -32,16 +32,12 @@ static const char *sEGLExtensionNames[] = {
 
 #if defined(ANDROID)
 
+static bool sUseApitraceInitialized = false;
+static bool sUseApitrace = false;
+
 static PRLibrary* LoadApitraceLibrary()
 {
-    static bool sUseApitraceInitialized = false;
-    static bool sUseApitrace = false;
-
-    if (!sUseApitraceInitialized) {
-        sUseApitrace = Preferences::GetBool("gfx.apitrace.enabled", false);
-        sUseApitraceInitialized = true;
-    }
-
+    MOZ_ASSERT(sUseApitraceInitialized);
     if (!sUseApitrace) {
         return nullptr;
     }
@@ -104,6 +100,13 @@ GLLibraryEGL::EnsureInitialized()
     if (mInitialized) {
         return true;
     }
+
+#if defined(ANDROID)
+    if (!sUseApitraceInitialized) {
+        sUseApitrace = Preferences::GetBool("gfx.apitrace.enabled", false);
+        sUseApitraceInitialized = true;
+    }
+#endif // ANDROID
 
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
 

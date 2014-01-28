@@ -187,7 +187,7 @@ class AutoSetHandlingSignal
     }
 };
 
-#if defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X64)
 template <class T>
 static void
 SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
@@ -250,7 +250,7 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 # include <sys/ucontext.h> // for ucontext_t, mcontext_t
 #endif
 
-#if defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X64)
 # if defined(__DragonFly__)
 #  include <machine/npx.h> // for union savefpu
 # elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
@@ -340,7 +340,7 @@ ContextToPC(CONTEXT *context)
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
 }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
 static void
 SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
 {
@@ -386,7 +386,7 @@ SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
         }
     }
 }
-# endif  // JS_CPU_X64
+# endif  // JS_CODEGEN_X64
 #endif   // !XP_MACOSX
 
 #if defined(XP_WIN)
@@ -441,7 +441,7 @@ HandleException(PEXCEPTION_POINTERS exception)
         return true;
     }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     if (!module.maybeHeap() ||
@@ -490,7 +490,7 @@ AsmJSExceptionHandler(LPEXCEPTION_POINTERS exception)
 static uint8_t **
 ContextToPC(x86_thread_state_t &state)
 {
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     JS_STATIC_ASSERT(sizeof(state.uts.ts64.__rip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
 # else
@@ -499,7 +499,7 @@ ContextToPC(x86_thread_state_t &state)
 # endif
 }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
 static bool
 SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
                               const AsmJSHeapAccess &heapAccess)
@@ -639,7 +639,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return kret == KERN_SUCCESS;
     }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     if (!module.maybeHeap() ||
@@ -878,7 +878,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return true;
     }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     if (!module.maybeHeap() ||

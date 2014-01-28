@@ -1,0 +1,80 @@
+<!DOCTYPE HTML><meta charset=utf-8>
+<title>Canvas test: ImageData</title>
+<script type="text/javascript" src="/resources/testharness.js"></script>
+<script type="text/javascript" src="/resources/testharnessreport.js"></script>
+<body>
+<div id="log"></div>
+<script>
+
+test(function() {
+  assert_throws(new TypeError(), function(){ new ImageData(); });
+  assert_throws(new TypeError(), function(){ new ImageData(1); });
+  assert_throws(new TypeError(), function(){ new ImageData(new Uint8ClampedArray([1,2,3,4])); });
+  assert_throws("IndexSizeError", function(){ new ImageData(0,0); });
+  assert_throws("IndexSizeError", function(){ new ImageData(0,1); });
+  assert_throws("IndexSizeError", function(){ new ImageData(1,0); });
+  new ImageData(1,1);
+  new ImageData(1,2);
+  new ImageData(1,3);
+  assert_throws("IndexSizeError", function(){ new ImageData(2,0); });
+  new ImageData(2,1);
+  new ImageData(2,2);
+  assert_throws("IndexSizeError", function(){ new ImageData(32768,32768); });
+  assert_throws("IndexSizeError", function(){ new ImageData(32768,32769); });
+  assert_throws("IndexSizeError", function(){ new ImageData(32769,32768); });
+  assert_throws("IndexSizeError", function(){ new ImageData(2,536870912); });
+  assert_throws("IndexSizeError", function(){ new ImageData(2,536870913); });
+  assert_throws("IndexSizeError", function(){ new ImageData(536870912,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(536870913,2); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([]),0); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([]),0,0); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([]),1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1]),1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2]),1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2,3]),1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5]),1); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),0); });
+  new ImageData(new Uint8ClampedArray([1,2,3,4]),1);
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),0); });
+  new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),1);
+  new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2);
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),3); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([]),1,1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1]),1,1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2]),1,1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2,3]),1,1); });
+  assert_throws("InvalidStateError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5]),1,1); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),0,0); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),0,1); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),0,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),1,0); });
+  new ImageData(new Uint8ClampedArray([1,2,3,4]),1,1);
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),1,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),2,0); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),2,1); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4]),2,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),1,1); });
+  new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),1,2);
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),1,3); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2,0); });
+  new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2,1);
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2,536870912); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),2,536870913); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),536870912,2); });
+  assert_throws("IndexSizeError", function(){ new ImageData(new Uint8ClampedArray([1,2,3,4,5,6,7,8]),536870913,2); });
+}, "Test constructor arguments");
+
+test(function() {
+  var data = new Uint8ClampedArray([1,2,3,4,5,6,7,8]);
+  var imgData = new ImageData(data,1);
+  assert_equals(imgData.width, 1);
+  assert_equals(imgData.height, 2);
+  assert_array_equals(imgData.data, [1,2,3,4,5,6,7,8]);
+  data.set([8,7,6,5,4,3,2,1]);
+  assert_array_equals(imgData.data, [8,7,6,5,4,3,2,1]);
+}, "The data argument is not copied");
+
+</script>
+

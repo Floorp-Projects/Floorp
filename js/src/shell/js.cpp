@@ -5901,12 +5901,12 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
 
-#if defined(JS_CPU_X86) && defined(JS_ION)
+#if defined(JS_CODEGEN_X86) && defined(JS_ION)
     if (op.getBoolOption("no-fpu"))
         JSC::MacroAssembler::SetFloatingPointDisabled();
 #endif
 
-#if (defined(JS_CPU_X86) || defined(JS_CPU_X64)) && defined(JS_ION)
+#if (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)) && defined(JS_ION)
     if (op.getBoolOption("no-sse3")) {
         JSC::MacroAssembler::SetSSE3Disabled();
         PropagateFlagToNestedShells("--no-sse3");

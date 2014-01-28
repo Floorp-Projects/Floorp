@@ -12,7 +12,7 @@ interface mozILivemark;
 
 interface nsINavHistoryResultObserver;
 
-[scriptable, uuid(1dbf174c-696e-4d9b-af0f-350da50d2249)]
+[scriptable, uuid(5B48E5A2-F07A-4E64-A935-C722A3D60B65)]
 interface mozIAsyncLivemarks : nsISupports
 {
   /**
@@ -24,12 +24,12 @@ interface mozIAsyncLivemarks : nsISupports
    * @param [optional] aCallback
    *        Invoked when the creation process is done.  In case of failure will
    *        receive an error code.
-   *
+   * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the supplied information is insufficient
    *         for the creation.
    */
-  void addLivemark(in jsval aLivemarkInfo,
-                   [optional]in mozILivemarkCallback aCallback);
+  jsval addLivemark(in jsval aLivemarkInfo,
+                    [optional] in mozILivemarkCallback aCallback);
 
   /**
    * Removes an existing livemark.
@@ -41,10 +41,11 @@ interface mozIAsyncLivemarks : nsISupports
    *        Invoked when the removal process is done.  In case of failure will
    *        receive an error code.
    *
+   * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid.
    */
-  void removeLivemark(in jsval aLivemarkInfo,
-                      [optional]in mozILivemarkCallback aCallback);
+  jsval removeLivemark(in jsval aLivemarkInfo,
+                       [optional] in mozILivemarkCallback aCallback);
 
   /**
    * Gets an existing livemark.
@@ -52,15 +53,16 @@ interface mozIAsyncLivemarks : nsISupports
    * @param aLivemarkInfo
    *        mozILivemarkInfo object containing either an id or a guid of the
    *        livemark to retrieve.
-   * @param aCallback
+   * @param [optional] aCallback
    *        Invoked when the fetching process is done.  In case of failure will
    *        receive an error code.
    *
+   * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid or an invalid
    *         callback is provided.
    */
-  void getLivemark(in jsval aLivemarkInfo,
-                   in mozILivemarkCallback aCallback);
+  jsval getLivemark(in jsval aLivemarkInfo,
+                    [optional] in mozILivemarkCallback aCallback);
 
   /**
    * Reloads all livemarks if they are expired or if forced to do so.

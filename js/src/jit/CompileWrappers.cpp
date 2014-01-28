@@ -254,7 +254,8 @@ AutoLockForCompilation::AutoLockForCompilation(CompileCompartment *compartment
 #endif
 
 JitCompileOptions::JitCompileOptions()
-  : cloneSingletons_(false)
+  : cloneSingletons_(false),
+    spsSlowAssertionsEnabled_(false)
 {
 }
 
@@ -262,4 +263,6 @@ JitCompileOptions::JitCompileOptions(JSContext *cx)
 {
     JS::CompartmentOptions &options = cx->compartment()->options();
     cloneSingletons_ = options.cloneSingletons(cx);
+    spsSlowAssertionsEnabled_ = cx->runtime()->spsProfiler.enabled() &&
+                                cx->runtime()->spsProfiler.slowAssertionsEnabled();
 }

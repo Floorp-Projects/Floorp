@@ -98,7 +98,7 @@ public:
   /**
    * Get TextComposition from widget.
    */
-  static mozilla::TextComposition* GetTextComposition(nsIWidget* aWidget);
+  static mozilla::TextComposition* GetTextCompositionFor(nsIWidget* aWidget);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what

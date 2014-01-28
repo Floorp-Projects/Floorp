@@ -119,6 +119,7 @@
     {
       testStates("div", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("div_off", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+      testStates("div_transformed", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
       testStates("div_abschild", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
 
       gQueue = new eventQueue();
@@ -159,6 +160,9 @@
     <div id="div">div</div>
     <div id="div_off" style="position: absolute; left:-999px; top:-999px">
       offscreen!
+    </div>
+    <div id="div_transformed" style="transform: translate(-999px, -999px);">
+      transformed!
     </div>
 
     <!-- edge case: no rect but has out of flow child -->

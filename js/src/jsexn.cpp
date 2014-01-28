@@ -868,3 +868,23 @@ js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err, HandleObject scope)
     return ErrorObject::create(cx, errorType, stack, fileName,
                                lineNumber, columnNumber, &copyReport, message);
 }
+
+JS_PUBLIC_API(bool)
+JS::CreateTypeError(JSContext *cx, HandleString stack, HandleString fileName,
+                    uint32_t lineNumber, uint32_t columnNumber, JSErrorReport *report,
+                    HandleString message, MutableHandleValue rval)
+{
+    assertSameCompartment(cx, stack, fileName, message);
+    js::ScopedJSFreePtr<JSErrorReport> rep;
+    if (report)
+        rep = CopyErrorReport(cx, report);
+
+    RootedObject obj(cx,
+        js::ErrorObject::create(cx, JSEXN_TYPEERR, stack, fileName,
+                                lineNumber, columnNumber, &rep, message));
+    if (!obj)
+        return false;
+
+    rval.setObject(*obj);
+    return true;
+}
