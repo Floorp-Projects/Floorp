@@ -1764,13 +1764,16 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 	options->base.antialias == CAIRO_ANTIALIAS_NONE) {
 	options->base.antialias = CAIRO_ANTIALIAS_NONE;
 	options->base.subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
-    }
-
-    if (other->base.antialias == CAIRO_ANTIALIAS_SUBPIXEL &&
-	(options->base.antialias == CAIRO_ANTIALIAS_DEFAULT ||
-	 options->base.antialias == CAIRO_ANTIALIAS_GRAY)) {
-	options->base.antialias = CAIRO_ANTIALIAS_SUBPIXEL;
-	options->base.subpixel_order = other->base.subpixel_order;
+    } else if (options->base.antialias != CAIRO_ANTIALIAS_GRAY) {
+	/* The surface supports subpixel aa, so let the font face options
+	 * choose whether to use subpixel aa.  If the surface has
+	 * CAIRO_ANTIALIAS_GRAY (e.g. PS, PDF, SVG, translucent part of a
+	 * CONTENT_COLOR_ALPHA surface), then don't accept subpixel aa. */
+	if (other->base.antialias != CAIRO_ANTIALIAS_DEFAULT)
+	    options->base.antialias = other->base.antialias;
+	/* If the surface knows the subpixel order then use that. */
+	if (options->base.subpixel_order == CAIRO_SUBPIXEL_ORDER_DEFAULT)
+	    options->base.subpixel_order = other->base.subpixel_order;
     }
 
     if (options->base.hint_style == CAIRO_HINT_STYLE_DEFAULT)
