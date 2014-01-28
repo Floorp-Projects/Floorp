@@ -143,7 +143,7 @@ class TypeDescr : public JSObject
 {
   public:
     JSObject &typeRepresentationOwnerObj() const {
-        return getReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR).toObject();
+        return getReservedSlot(JS_DESCR_SLOT_TYPE_REPR).toObject();
     }
 
     TypeRepresentation *typeRepresentation() const {
@@ -274,7 +274,7 @@ class UnsizedArrayTypeDescr : public TypeDescr
     static bool dimension(JSContext *cx, unsigned int argc, jsval *vp);
 
     SizedTypeDescr &elementType() {
-        return getReservedSlot(JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
+        return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
 };
 
@@ -287,7 +287,7 @@ class SizedArrayTypeDescr : public SizedTypeDescr
     static const Class class_;
 
     SizedTypeDescr &elementType() {
-        return getReservedSlot(JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
+        return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
 };
 

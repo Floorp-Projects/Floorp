@@ -99,7 +99,7 @@ extern const JSFunctionSpec Int32x4Methods[];
 
 const Class X4TypeDescr::class_ = {
     "X4",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_X4_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -201,16 +201,14 @@ CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
     if (!proto)
         return nullptr;
 
-    // Create type constructor itself.
+    // Create type constructor itself and initialize its reserved slots.
 
     Rooted<X4TypeDescr*> x4(cx);
     x4 = NewObjectWithProto<X4TypeDescr>(cx, funcProto, global);
     if (!x4 || !InitializeCommonTypeDescriptorProperties(cx, x4, typeReprObj))
         return nullptr;
-
-    // Link type constructor to the type representation.
-
-    x4->initReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    x4->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    x4->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
 
     // Link constructor to prototype and install properties.
 
