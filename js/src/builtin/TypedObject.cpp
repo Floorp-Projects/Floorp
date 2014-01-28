@@ -1300,13 +1300,8 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
         // FIXME Bug 929651           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
         RootedTypeObject typeObj(cx, obj->getType(cx));
         if (typeObj) {
-            TypeRepresentation *typeRepr = type->typeRepresentation();
-            if (!typeObj->addTypedObjectAddendum(cx,
-                                                 types::TypeTypedObject::Datum,
-                                                 typeRepr))
-            {
+            if (!typeObj->addTypedObjectAddendum(cx, type))
                 return nullptr;
-            }
         }
     }
 
