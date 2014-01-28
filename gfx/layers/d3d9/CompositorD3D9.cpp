@@ -188,7 +188,7 @@ CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
   RefPtr<CompositingRenderTargetD3D9> oldRT = mCurrentRT;
   mCurrentRT = static_cast<CompositingRenderTargetD3D9*>(aRenderTarget);
   mCurrentRT->BindRenderTarget(device());
-  PrepareViewport(mCurrentRT->GetSize(), gfxMatrix());
+  PrepareViewport(mCurrentRT->GetSize(), Matrix());
 }
 
 static DeviceManagerD3D9::ShaderMode
@@ -651,9 +651,9 @@ CompositorD3D9::EndFrame()
 
 void
 CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize,
-                                const gfxMatrix &aWorldTransform)
+                                const Matrix &aWorldTransform)
 {
-  gfx3DMatrix viewMatrix;
+  Matrix4x4 viewMatrix;
   /*
    * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
    * <1.0, -1.0> bottomright)
@@ -663,7 +663,7 @@ CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize,
   viewMatrix._41 = -1.0f;
   viewMatrix._42 = 1.0f;
 
-  viewMatrix = gfx3DMatrix::From2D(aWorldTransform) * viewMatrix;
+  viewMatrix = Matrix4x4::From2D(aWorldTransform) * viewMatrix;
 
   HRESULT hr = device()->SetVertexShaderConstantF(CBmProjection, &viewMatrix._11, 4);
 

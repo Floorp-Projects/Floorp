@@ -211,7 +211,7 @@ StackFrame::callObj() const
     JS_ASSERT(fun()->isHeavyweight());
 
     JSObject *pobj = scopeChain();
-    while (JS_UNLIKELY(!pobj->is<CallObject>()))
+    while (MOZ_UNLIKELY(!pobj->is<CallObject>()))
         pobj = pobj->enclosingScope();
     return pobj->as<CallObject>();
 }
@@ -233,7 +233,7 @@ InterpreterStack::allocateFrame(JSContext *cx, size_t size)
     else
         maxFrames = MAX_FRAMES;
 
-    if (JS_UNLIKELY(frameCount_ >= maxFrames)) {
+    if (MOZ_UNLIKELY(frameCount_ >= maxFrames)) {
         js_ReportOverRecursed(cx);
         return nullptr;
     }
@@ -246,7 +246,7 @@ InterpreterStack::allocateFrame(JSContext *cx, size_t size)
     return buffer;
 }
 
-JS_ALWAYS_INLINE StackFrame *
+MOZ_ALWAYS_INLINE StackFrame *
 InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript script,
                                StackFrame::Flags *flags, Value **pargv)
 {
@@ -280,7 +280,7 @@ InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript
     return reinterpret_cast<StackFrame *>(argv + 2 + nformal);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 InterpreterStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                                   HandleScript script, InitialFrameFlags initial)
 {
@@ -312,7 +312,7 @@ InterpreterStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs
     return true;
 }
 
-JS_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE void
 InterpreterStack::popInlineFrame(FrameRegs &regs)
 {
     StackFrame *fp = regs.fp();

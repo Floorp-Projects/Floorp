@@ -33,7 +33,7 @@
 #include <vector>
 
 #include <d3d9.h>
-#include <D3D11.h>
+#include <d3d11.h>
 #include <dxgi.h>
 #include <d3dcompiler.h>
 

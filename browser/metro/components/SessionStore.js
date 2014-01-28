@@ -553,15 +553,17 @@ SessionStore.prototype = {
   },
 
   _getTabData: function(aWindow) {
-    return aWindow.Browser.tabs.map(tab => {
-      let browser = tab.browser;
-      if (browser.__SS_data) {
-        let tabData = browser.__SS_data;
-        if (browser.__SS_extdata)
-          tabData.extData = browser.__SS_extdata;
-        return tabData;
-      }
-    });
+    return aWindow.Browser.tabs
+      .filter(tab => !tab.isPrivate)
+      .map(tab => {
+        let browser = tab.browser;
+        if (browser.__SS_data) {
+          let tabData = browser.__SS_data;
+          if (browser.__SS_extdata)
+            tabData.extData = browser.__SS_extdata;
+          return tabData;
+        }
+      });
   },
 
   _collectWindowData: function ss__collectWindowData(aWindow) {

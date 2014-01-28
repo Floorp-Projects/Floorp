@@ -109,22 +109,22 @@
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <style name="Widget.TwoLinePageRow" />
+    <style name="Widget.TwoLineRow" />
 
-    <style name="Widget.TwoLinePageRow.Title">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Title</item>
+    <style name="Widget.TwoLineRow.PrimaryText">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.PrimaryText</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
     </style>
 
-    <style name="Widget.TwoLinePageRow.Url">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Url</item>
+    <style name="Widget.TwoLineRow.SecondaryText">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.SecondaryText</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLineRow.PrimaryText">
         <item name="android:paddingLeft">10dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
@@ -143,7 +143,7 @@
       <item name="android:orientation">vertical</item>
     </style>
 
-    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow"/>
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLineRow"/>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>
 
@@ -317,11 +317,11 @@
         <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="TextAppearance.Widget.TwoLinePageRow" />
+    <style name="TextAppearance.Widget.TwoLineRow" />
 
-    <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium"/>
+    <style name="TextAppearance.Widget.TwoLineRow.PrimaryText" parent="TextAppearance.Medium"/>
 
-    <style name="TextAppearance.Widget.TwoLinePageRow.Url" parent="TextAppearance.Micro">
+    <style name="TextAppearance.Widget.TwoLineRow.SecondaryText" parent="TextAppearance.Micro">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
