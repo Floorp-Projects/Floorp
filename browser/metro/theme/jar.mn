@@ -23,6 +23,7 @@ chrome.jar:
   skin/touchcontrols.css                    (touchcontrols.css)
 * skin/netError.css                         (netError.css)
   skin/firstrun.css                         (firstrun.css)
+* skin/start.css                            (start.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css

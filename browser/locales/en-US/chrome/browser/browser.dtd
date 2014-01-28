@@ -15,7 +15,7 @@
                                                                 inside the private browsing mode -->
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
 
-<!ENTITY appmenu.title                       "Customize and Control &brandFullName;">
+<!ENTITY appmenu.tooltip                     "Open menu">
 <!ENTITY navbarOverflow.label                "More tools…">
 
 <!-- Tab context menu -->
@@ -674,7 +674,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
 <!ENTITY customizeMode.menuAndToolbars.label "Menu and toolbars">
-<!ENTITY customizeMode.menuAndToolbars.header "More Tools to Add to the Menu and Toolbar">
+<!ENTITY customizeMode.menuAndToolbars.header2 "Additional Tools and Features">
 <!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
