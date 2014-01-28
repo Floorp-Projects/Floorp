@@ -1605,10 +1605,10 @@ DoCallNativeGetter(JSContext *cx, HandleFunction callee, HandleObject obj,
     Value vp[2] = { ObjectValue(*callee.get()), ObjectValue(*obj.get()) };
     AutoValueArray rootVp(cx, vp, 2);
 
-    if (!natfun(cx, 0, vp))
+    if (!natfun(cx, 0, rootVp.start()))
         return false;
 
-    result.set(vp[0]);
+    result.set(rootVp[0]);
     return true;
 }
 

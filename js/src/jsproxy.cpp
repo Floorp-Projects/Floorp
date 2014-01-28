@@ -976,7 +976,7 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
         return false;
     if (!js_IsCallable(fval))
         return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
-    return Trap(cx, handler, fval, 2, argv, vp);
+    return Trap(cx, handler, fval, 2, ava.start(), vp);
 }
 
 bool
@@ -996,7 +996,7 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
         return false;
     if (!js_IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-    return Trap(cx, handler, fval, 3, argv, &value);
+    return Trap(cx, handler, fval, 3, ava.start(), &value);
 }
 
 bool
