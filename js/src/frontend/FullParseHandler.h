@@ -254,12 +254,7 @@ class FullParseHandler
     bool addShorthandPropertyDefinition(ParseNode *literal, ParseNode *name) {
         JS_ASSERT(literal->isArity(PN_LIST));
         literal->pn_xflags |= PNX_DESTRUCT | PNX_NONCONST;  // XXX why PNX_DESTRUCT?
-
-        ParseNode *propdef = newBinary(PNK_COLON, name, name, JSOP_INITPROP);
-        if (!propdef)
-            return false;
-        literal->append(propdef);
-        return true;
+        return addPropertyDefinition(literal, name, name);
     }
 
     bool addAccessorPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)
