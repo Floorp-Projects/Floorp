@@ -210,6 +210,32 @@ static sp<IOMX> GetOMX() {
 }
 #endif
 
+static uint32_t
+GetDefaultStagefrightFlags(PluginHost *aPluginHost)
+{
+  uint32_t flags = DEFAULT_STAGEFRIGHT_FLAGS;
+
+#if !defined(MOZ_ANDROID_FROYO)
+
+  char hardware[256] = "";
+  aPluginHost->GetSystemInfoString("hardware", hardware, sizeof(hardware));
+
+  if (!strcmp("qcom", hardware)) {
+    // Qualcomm's OMXCodec implementation interprets this flag to mean that we
+    // only want a thumbnail and therefore only need one frame. After the first
+    // frame it returns EOS.
+    // All other OMXCodec implementations seen so far interpret this flag
+    // sanely; some do not return full framebuffers unless this flag is passed.
+    flags &= ~OMXCodec::kClientNeedsFramebuffer;
+  }
+
+  LOG("Hardware %s; using default flags %#x\n", hardware, flags);
+
+#endif
+
+  return flags;
+}
+
 static uint32_t GetVideoCreationFlags(PluginHost* aPluginHost)
 {
 #ifdef MOZ_WIDGET_GONK
@@ -236,7 +262,7 @@ static uint32_t GetVideoCreationFlags(PluginHost* aPluginHost)
 #endif
   }
 
-  flags |= DEFAULT_STAGEFRIGHT_FLAGS;
+  flags |= GetDefaultStagefrightFlags(aPluginHost);
 
   return static_cast<uint32_t>(flags);
 #endif
