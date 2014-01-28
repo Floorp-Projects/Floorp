@@ -964,7 +964,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
                                 "      Popping SPS entry for innermost inlined frame's SPS entry");
-                        cx->runtime()->spsProfiler.exit(cx, script, fun);
+                        cx->runtime()->spsProfiler.exit(script, fun);
                     }
                 }
             } else {
