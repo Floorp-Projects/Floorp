@@ -44,6 +44,7 @@
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
 #include "ProfilerHelpers.h"
+#include "ReportInternalError.h"
 #include "nsNetUtil.h"
 
 #include "ipc/IndexedDBChild.h"
@@ -109,18 +110,18 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
   NS_ASSERTION(aASCIIOrigin.IsEmpty() || nsContentUtils::IsCallerChrome(),
                "Non-chrome may not supply their own origin!");
 
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (aWindow->IsOuterWindow()) {
     aWindow = aWindow->GetCurrentInnerWindow();
-    NS_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   // Make sure that the manager is up before we do anything here since lots of
   // decisions depend on which process we're running in.
   indexedDB::IndexedDatabaseManager* mgr =
     indexedDB::IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv;
 
@@ -154,7 +155,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
 
   if (!IndexedDatabaseManager::IsMainProcess()) {
     TabChild* tabChild = TabChild::GetFrom(aWindow);
-    NS_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IndexedDBChild* actor = new IndexedDBChild(origin);
 
@@ -191,7 +192,7 @@ IDBFactory::Create(JSContext* aCx,
   // Make sure that the manager is up before we do anything here since lots of
   // decisions depend on which process we're running in.
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCString group;
   nsCString origin;
@@ -213,7 +214,7 @@ IDBFactory::Create(JSContext* aCx,
 
   if (!IndexedDatabaseManager::IsMainProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
-    NS_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IndexedDBChild* actor = new IndexedDBChild(origin);
 
@@ -372,7 +373,7 @@ IDBFactory::SetDefaultPragmas(mozIStorageConnection* aConnection)
     "PRAGMA recursive_triggers = ON;";
 
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(query));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
 }
@@ -611,7 +612,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
 
   nsRefPtr<IDBOpenDBRequest> request =
     IDBOpenDBRequest::Create(this, window, scriptOwner);
-  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv;
 
@@ -622,7 +623,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
                              aPrivilege);
 
     rv = openHelper->Init();
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (!Preferences::GetBool(PREF_INDEXEDDB_ENABLED)) {
       openHelper->SetError(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
@@ -647,7 +648,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
         rv = openHelper->WaitForOpenAllowed();
       }
     }
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else if (aDeleting) {
     nsCString databaseId;
@@ -798,6 +799,7 @@ IDBFactory::Open(nsIPrincipal* aPrincipal, const nsAString& aName,
                                             &privilege,
                                             &defaultPersistenceType);
     if (NS_FAILED(rv)) {
+      IDB_REPORT_INTERNAL_ERR();
       aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return nullptr;
     }
