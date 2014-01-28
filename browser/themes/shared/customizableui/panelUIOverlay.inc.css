@@ -152,14 +152,71 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .customization-palette .toolbarbutton-1,
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
-  min-width: calc(@menuPanelWidth@ / 3);
-  max-width: calc(@menuPanelWidth@ / 3);
-  height: calc(40px + 2.4em);
-  max-height: calc(40px + 2.4em);
+  width: calc(@menuPanelWidth@ / 3);
+  height: calc(40px + 4em);
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
+.panelUI-grid .toolbarbutton-1:not([type="menu-button"]),
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.customization-palette .toolbarbutton-1,
+.panel-customization-placeholder-child {
+  overflow: hidden;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item)::after,
+.panelUI-grid .toolbarbutton-1:not([type="menu-button"])::after,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button::after,
+.panelUI-grid #personal-bookmarks > toolbarbutton::after {
+  content: "";
+  position: absolute;
+  height: 1.5em;
+  margin-top: calc(-40px - 4em);
+  margin-bottom: -0.5em;
+%ifdef XP_MACOSX
+  background-image: linear-gradient(rgba(242,242,242,0), rgb(242,242,242) 75%);
+%elif XP_WIN
+  background-image: linear-gradient(rgba(255,255,255,0), rgb(255,255,255) 75%);
+%else
+  background-image: linear-gradient(rgba(242,241,240,0), rgb(242,241,240) 75%);
+%endif
+}
+
+toolbarpaletteitem[place="panel"][dragstarting] > toolbarbutton:not([type="menu-button"])::after,
+toolbarpaletteitem[place="panel"][dragstarting] > toolbaritem > toolbarbutton::after,
+toolbarpaletteitem[place="panel"][dragstarting] > toolbarbutton > toolbarbutton::after {
+  content: none !important;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item)@buttonStateHover@::after,
+.panelUI-grid .toolbarbutton-1:not([type="menu-button"])@buttonStateHover@::after,
+.panelUI-grid .toolbarbutton-1@buttonStateHover@ > .toolbarbutton-menubutton-button::after,
+.panelUI-grid #personal-bookmarks > toolbarbutton@buttonStateHover@::after {
+%ifdef XP_MACOSX
+  background-image: linear-gradient(rgba(220,220,220,0), rgb(220,220,220) 75%);
+%elif XP_WIN
+  background-image: linear-gradient(rgba(236,236,237,0), rgb(236,236,237) 75%);
+%else
+  background-image: linear-gradient(rgba(224,223,223,0), rgb(224,223,223) 75%);
+%endif
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item)@buttonStateActive@::after,
+.panelUI-grid .toolbarbutton-1:not([type="menu-button"])@buttonStateActive@::after,
+.panelUI-grid .toolbarbutton-1@buttonStateActive@ > .toolbarbutton-menubutton-button::after,
+.panelUI-grid #personal-bookmarks > toolbarbutton@buttonStateActive@::after {
+%ifdef XP_MACOSX
+  background-image: linear-gradient(rgba(202,202,202,0), rgb(202,202,202) 75%);
+%elif XP_WIN
+  background-image: linear-gradient(rgba(220,220,220,0), rgb(220,220,220) 75%);
+%else
+  background-image: linear-gradient(rgba(209,208,207,0), rgb(209,208,207) 75%);
+%endif
 }
 
 .panel-customization-placeholder-child {
@@ -171,10 +228,15 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-box-align: center;
   width: 16px;
-  -moz-margin-start: -16px;
   height: 40px;
-  max-height: 40px;
+  margin-bottom: 4em;
   padding: 0;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  -moz-margin-end: -16px;
+  margin-top: 3px; /* Hack needed to get type=menu-button to properly align vertically. */
+  border: 0;
 }
 
 .panelUI-grid .toolbarbutton-1:not([buttonover])@buttonStateHover@ > .toolbarbutton-menubutton-dropmarker {
@@ -217,7 +279,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panel-customization-placeholder-child > .toolbarbutton-icon {
   min-width: 32px;
   min-height: 32px;
-  margin: 4px;
+  margin: 4px calc(@menuPanelWidth@ / 6 - 23px);
 }
 
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
@@ -447,10 +509,6 @@ panelview .toolbarbutton-1,
 panelview .toolbarbutton-1,
 .widget-overflow-list .toolbarbutton-1 {
   margin-top: 6px;
-}
-
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  border: 0;
 }
 
 panelview .toolbarbutton-1@buttonStateHover@,
