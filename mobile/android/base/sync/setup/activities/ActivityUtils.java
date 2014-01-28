@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
@@ -60,9 +61,19 @@ public class ActivityUtils {
    */
   public static class FennecClickableSpan extends ClickableSpan {
     private final String url;
+    private final boolean underlining;
 
-    public FennecClickableSpan(final String url) {
+    public FennecClickableSpan(final String url, boolean underlining) {
       this.url = url;
+      this.underlining = underlining;
+    }
+
+    @Override
+    public void updateDrawState(TextPaint ds) {
+      super.updateDrawState(ds);
+      if (!this.underlining) {
+        ds.setUnderlineText(false);
+      }
     }
 
     @Override
@@ -79,10 +90,10 @@ public class ActivityUtils {
     final Context context = view.getContext();
     final String url = context.getString(link);
     view.setText("<a href=\"" + url + "\">" + context.getString(text) + "</a>");
-    ActivityUtils.linkifyTextView(view);
+    linkifyTextView(view, false);
   }
 
-  public static void linkifyTextView(TextView textView) {
+  public static void linkifyTextView(TextView textView, boolean underlining) {
     if (textView == null) {
       Logger.warn(LOG_TAG, "Could not process links for view.");
       return;
@@ -102,7 +113,7 @@ public class ActivityUtils {
         final int flags = replaced.getSpanFlags(span);
 
         replaced.removeSpan(span);
-        replaced.setSpan(new FennecClickableSpan(span.getURL()), start, end, flags);
+        replaced.setSpan(new FennecClickableSpan(span.getURL(), underlining), start, end, flags);
     }
 
     textView.setText(replaced);

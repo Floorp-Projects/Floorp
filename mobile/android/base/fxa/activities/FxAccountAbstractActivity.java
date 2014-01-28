@@ -118,7 +118,7 @@ public abstract class FxAccountAbstractActivity extends Activity {
         continue;
       }
 
-      ActivityUtils.linkifyTextView(textView);
+      ActivityUtils.linkifyTextView(textView, false);
     }
   }
 
