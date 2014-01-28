@@ -1071,11 +1071,13 @@ FilterView.prototype = {
 
     if (aText) {
       this._searchbox.value = aOperator + aText;
+      return;
     }
-    else if (DebuggerView.editor.somethingSelected()) {
+    if (DebuggerView.editor.somethingSelected()) {
       this._searchbox.value = aOperator + DebuggerView.editor.getSelection();
+      return;
     }
-    else {
+    if (SEARCH_AUTOFILL.indexOf(aOperator) != -1) {
       let cursor = DebuggerView.editor.getCursor();
       let content = DebuggerView.editor.getText();
       let location = DebuggerView.Sources.selectedValue;
@@ -1084,8 +1086,12 @@ FilterView.prototype = {
 
       if (identifier && identifier.name) {
         this._searchbox.value = aOperator + identifier.name;
+        this._searchbox.select();
+        this._searchbox.selectionStart += aOperator.length;
+        return;
       }
     }
+    this._searchbox.value = aOperator;
   },
 
   /**
