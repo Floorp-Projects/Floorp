@@ -19,9 +19,7 @@ add_task(function test_typeerror() {
     exn = ex;
   }
   do_print("Exception: " + exn);
-  do_check_true(typeof exn == "object");
-  do_check_true("name" in exn);
-  do_check_true(exn.message.indexOf("TypeError") != -1);
+  do_check_true(exn.constructor.name == "TypeError");
 });
 
 add_task(function() {
