@@ -83,8 +83,6 @@ extern PRThread *gSocketThread;
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
-#define DONOTTRACK_HEADER_VALUE   "privacy.donottrackheader.value"
-#define DONOTTRACK_VALUE_UNSET    2
 #define TELEMETRY_ENABLED        "toolkit.telemetry.enabled"
 #define ALLOW_EXPERIMENTS        "network.allow-experiments"
 #define SAFE_HINT_HEADER_VALUE   "safeHint.enabled"
@@ -175,7 +173,6 @@ nsHttpHandler::nsHttpHandler()
     , mSendSecureXSiteReferrer(true)
     , mEnablePersistentHttpsCaching(false)
     , mDoNotTrackEnabled(false)
-    , mDoNotTrackValue(1)
     , mSafeHintEnabled(false)
     , mParentalControlEnabled(false)
     , mTelemetryEnabled(false)
@@ -274,7 +271,6 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, true);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
-        prefBranch->AddObserver(DONOTTRACK_HEADER_VALUE, this, true);
         prefBranch->AddObserver(TELEMETRY_ENABLED, this, true);
         prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.short_lived_connections"), this, true);
         prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.long_lived_connections"), this, true);
@@ -427,8 +423,7 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request)
 
     // Add the "Do-Not-Track" header
     if (mDoNotTrackEnabled) {
-      rv = request->SetHeader(nsHttp::DoNotTrack,
-                              nsPrintfCString("%d", mDoNotTrackValue));
+      rv = request->SetHeader(nsHttp::DoNotTrack, NS_LITERAL_CSTRING("1"));
       if (NS_FAILED(rv)) return rv;
     }
 
@@ -1356,14 +1351,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mDoNotTrackEnabled = cVar;
         }
     }
-    if (PREF_CHANGED(DONOTTRACK_HEADER_VALUE)) {
-        val = 1;
-        rv = prefs->GetIntPref(DONOTTRACK_HEADER_VALUE, &val);
-        if (NS_SUCCEEDED(rv)) {
-            mDoNotTrackValue = val;
-        }
-    }
-
     // Hint option
     if (PREF_CHANGED(SAFE_HINT_HEADER_VALUE)) {
         cVar = false;
@@ -1860,9 +1847,9 @@ nsHttpHandler::Observe(nsISupports *subject,
         mSessionStartTime = NowInSeconds();
 
         if (!mDoNotTrackEnabled) {
-            Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
+            Telemetry::Accumulate(Telemetry::DNT_USAGE, 2);
         } else {
-            Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
+            Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
         }
     } else if (!strcmp(topic, "profile-change-net-restore")) {
         // initialize connection manager
