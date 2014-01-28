@@ -186,7 +186,7 @@ GetPrototype(JSContext *cx, HandleObject obj)
 
 const Class js::ScalarTypeDescr::class_ = {
     "Scalar",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_SCALAR_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
@@ -257,7 +257,7 @@ ScalarTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 
 const Class js::ReferenceTypeDescr::class_ = {
     "Reference",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_REFERENCE_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
@@ -375,7 +375,7 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
 
 const Class UnsizedArrayTypeDescr::class_ = {
     "ArrayType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_ARRAY_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -392,7 +392,7 @@ const Class UnsizedArrayTypeDescr::class_ = {
 
 const Class SizedArrayTypeDescr::class_ = {
     "ArrayType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_ARRAY_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -450,6 +450,17 @@ js::InitializeCommonTypeDescriptorProperties(JSContext *cx,
     TypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(*typeReprOwnerObj);
 
+    // Regardless of whether the data is transparent, we always
+    // store the internal size/alignment slots.
+    if (typeRepr->isSized()) {
+        SizedTypeRepresentation *sizedTypeRepr = typeRepr->asSized();
+        obj->initReservedSlot(JS_DESCR_SLOT_SIZE,
+                              Int32Value(sizedTypeRepr->size()));
+        obj->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT,
+                              Int32Value(sizedTypeRepr->alignment()));
+    }
+
+    // If data is transparent, also store the public slots.
     if (typeRepr->transparent() && typeRepr->isSized()) {
         SizedTypeRepresentation *sizedTypeRepr = typeRepr->asSized();
 
@@ -518,7 +529,7 @@ ArrayMetaTypeDescr::create(JSContext *cx,
     Rooted<T*> obj(cx, NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr));
     if (!obj)
         return nullptr;
-    obj->initReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR,
+    obj->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR,
                           ObjectValue(*arrayTypeReprObj));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
@@ -527,7 +538,7 @@ ArrayMetaTypeDescr::create(JSContext *cx,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
         return nullptr;
 
-    obj->initReservedSlot(JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE, elementTypeVal);
+    obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE, elementTypeVal);
 
     if (!InitializeCommonTypeDescriptorProperties(cx, obj, arrayTypeReprObj))
         return nullptr;
@@ -634,7 +645,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
 
     // Create the sized type object.
     Rooted<SizedTypeDescr*> elementType(cx, &unsizedTypeDescr->elementType());
-    RootedObject obj(cx);
+    Rooted<SizedArrayTypeDescr*> obj(cx);
     obj = ArrayMetaTypeDescr::create<SizedArrayTypeDescr>(
         cx, unsizedTypeDescr, sizedTypeReprObj, elementType);
     if (!obj)
@@ -665,7 +676,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
 
 const Class StructTypeDescr::class_ = {
     "StructType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_STRUCT_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) |
     JSCLASS_HAS_PRIVATE, // used to store FieldList
     JS_PropertyStub,
     JS_DeletePropertyStub,
@@ -765,7 +776,7 @@ StructMetaTypeDescr::layout(JSContext *cx,
         return false;
     StructTypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(*typeReprObj)->asStruct();
-    structType->initReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR,
+    structType->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR,
                                  ObjectValue(*typeReprObj));
 
     // Construct for internal use an array with the type object for each field.
@@ -775,7 +786,7 @@ StructMetaTypeDescr::layout(JSContext *cx,
     if (!fieldTypeVec)
         return false;
 
-    structType->initReservedSlot(JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES,
+    structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES,
                                  ObjectValue(*fieldTypeVec));
 
     // Construct the fieldNames vector
@@ -966,11 +977,13 @@ DefineSimpleTypeDescr(JSContext *cx,
     if (!typeReprObj)
         return false;
 
-    numFun->initReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR,
+    numFun->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR,
                              ObjectValue(*typeReprObj));
 
     if (!InitializeCommonTypeDescriptorProperties(cx, numFun, typeReprObj))
         return false;
+
+    numFun->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(type));
 
     if (!JS_DefineFunctions(cx, numFun, T::typeObjectMethods))
         return false;
@@ -1603,7 +1616,7 @@ StructFieldType(JSContext *cx,
     // In this scenario, line1.start.type() === Point1 and
     // line2.start.type() === Point2.
     RootedObject fieldTypes(
-        cx, &type->getReservedSlot(JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES).toObject());
+        cx, &type->getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES).toObject());
     RootedValue fieldTypeVal(cx);
     if (!JSObject::getElement(cx, fieldTypes, fieldTypes,
                               fieldIndex, &fieldTypeVal))

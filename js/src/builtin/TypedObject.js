@@ -17,15 +17,13 @@
 // Type object slots
 
 #define DESCR_TYPE_REPR(obj) \
-    UnsafeGetReservedSlot(obj, JS_TYPEOBJ_SLOT_TYPE_REPR)
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE_REPR)
 #define DESCR_KIND(obj) \
     REPR_KIND(DESCR_TYPE_REPR(obj))
 #define DESCR_SIZE(obj) \
-    REPR_SIZE(DESCR_TYPE_REPR(obj))
-#define DESCR_LENGTH(obj) \
-    REPR_LENGTH(DESCR_TYPE_REPR(obj))
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZE)
 #define DESCR_TYPE(obj)   \
-    REPR_TYPE(DESCR_TYPE_REPR(obj))
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
 
 // Typed object slots
 
@@ -118,7 +116,7 @@ function DescrToSource(descr) {
     var result = ".array";
     var sep = "(";
     while (DESCR_KIND(descr) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
-      result += sep + DESCR_LENGTH(descr);
+      result += sep + descr.length;
       descr = descr.elementType;
       sep = ", ";
     }
@@ -149,6 +147,10 @@ function DescrToSource(descr) {
 // code.
 
 function TypedObjectPointer(descr, datum, offset) {
+  assert(IsObject(descr) && ObjectIsTypeDescr(descr), "Not descr");
+  assert(IsObject(datum) && ObjectIsTypedDatum(datum), "Not datum");
+  assert(TO_INT32(offset) === offset, "offset not int");
+
   this.descr = descr;
   this.datum = datum;
   this.offset = offset;
@@ -181,16 +183,18 @@ TypedObjectPointer.prototype.kind = function() {
   return DESCR_KIND(this.descr);
 }
 
+// Extract the length. This does a switch on kind, so it's
+// best if we can avoid it.
 TypedObjectPointer.prototype.length = function() {
   switch (this.kind()) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return DESCR_LENGTH(this.descr);
+    return this.descr.length;
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    return DATUM_LENGTH(this.datum);
+    return this.datum.length;
   }
-  assert(false, "length() invoked on non-array-type");
-  return 0;
+  assert(false, "Invalid kind for length");
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -209,15 +213,10 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
     break;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
+    return this.moveToArray(propName, this.descr.length);
+
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    // For an array, property must be an element. Note that we use the
-    // length as loaded from the type *representation* as opposed to
-    // the type *object*; this is because some type objects represent
-    // unsized arrays and hence do not have a length.
-    var index = TO_INT32(propName);
-    if (index === propName && index >= 0 && index < this.length())
-      return this.moveToElem(index);
-    break;
+    return this.moveToArray(propName, this.datum.length);
 
   case JS_TYPEREPR_STRUCT_KIND:
     if (HAS_PROPERTY(this.descr.fieldTypes, propName))
@@ -229,6 +228,20 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
   return undefined;
 };
 
+TypedObjectPointer.prototype.moveToArray = function(propName, length) {
+  // For an array, property must be an element. Note that we take
+  // the length as an argument rather than loading it from the descriptor.
+  // This is because this same helper is used for *unsized arrays*, where
+  // the length is drawn from the datum, and *sized arrays*, where the
+  // length is drawn from the type.
+  var index = TO_INT32(propName);
+  if (index === propName && index >= 0 && index < length)
+    return this.moveToElem(index);
+
+  ThrowError(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, propName);
+  return undefined;
+}
+
 // Adjust `this` in place to point at the element `index`.  `this`
 // must be a array type and `index` must be within bounds. Returns
 // `this`.
@@ -239,7 +252,7 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(TO_INT32(index) === index,
          "moveToElem invoked with non-integer index");
   assert(index >= 0 && index < this.length(),
-         "moveToElem invoked with out-of-bounds index: " + index);
+         "moveToElem invoked with negative index: " + index);
 
   var elementDescr = this.descr.elementType;
   this.descr = elementDescr;
@@ -261,12 +274,21 @@ TypedObjectPointer.prototype.moveToField = function(propName) {
   assert(HAS_PROPERTY(this.descr.fieldTypes, propName),
          "moveToField invoked with undefined field");
 
+  // FIXME(Bug 966575) -- the fieldOffsets array that we are using
+  // below is only available on transparent types. This is fixed
+  // in part 6 of this patch series.
+
   var fieldDescr = this.descr.fieldTypes[propName];
   var fieldOffset = TO_INT32(this.descr.fieldOffsets[propName]);
-  this.descr = fieldDescr;
 
-  // Note: we do not allow construction of structs where the
-  // offset of a field cannot be represented by an int32.
+  assert(IsObject(fieldDescr) && ObjectIsTypeDescr(fieldDescr),
+         "bad field descr");
+  assert(TO_INT32(fieldOffset) === fieldOffset,
+         "bad field offset");
+  assert(fieldOffset >= 0 && fieldOffset < DESCR_SIZE(this.descr),
+         "out of bounds field offset");
+
+  this.descr = fieldDescr;
   this.offset += fieldOffset;
 
   return this;
@@ -423,25 +445,14 @@ TypedObjectPointer.prototype.set = function(fromValue) {
     return;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
+    if (this.setArray(fromValue, this.descr.length))
+      return;
+    break;
+
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    if (!IsObject(fromValue))
-      break;
-
-    // Check that "array-like" fromValue has an appropriate length.
-    var length = this.length();
-    if (fromValue.length !== length)
-      break;
-
-    // Adapt each element.
-    if (length > 0) {
-      var tempPtr = this.copy().moveToElem(0);
-      var size = DESCR_SIZE(tempPtr.descr);
-      for (var i = 0; i < length; i++) {
-        tempPtr.set(fromValue[i]);
-        tempPtr.offset += size;
-      }
-    }
-    return;
+    if (this.setArray(fromValue, this.datum.length))
+      return;
+    break;
 
   case JS_TYPEREPR_STRUCT_KIND:
     if (!IsObject(fromValue))
@@ -460,6 +471,27 @@ TypedObjectPointer.prototype.set = function(fromValue) {
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
              DescrToSource(this.descr));
+}
+
+TypedObjectPointer.prototype.setArray = function(fromValue, length) {
+  if (!IsObject(fromValue))
+    return false;
+
+  // Check that "array-like" fromValue has an appropriate length.
+  if (fromValue.length !== length)
+    return false;
+
+  // Adapt each element.
+  if (length > 0) {
+    var tempPtr = this.copy().moveToElem(0);
+    var size = DESCR_SIZE(tempPtr.descr);
+    for (var i = 0; i < length; i++) {
+      tempPtr.set(fromValue[i]);
+      tempPtr.offset += size;
+    }
+  }
+
+  return true;
 }
 
 // Sets `fromValue` to `this` assuming that `this` is a scalar type.
@@ -582,7 +614,7 @@ function FillTypedArrayWithValue(destArray, fromValue) {
          "FillTypedArrayWithValue: not typed handle");
 
   var descr = DATUM_TYPE_DESCR(destArray);
-  var length = DESCR_LENGTH(descr);
+  var length = descr.length;
   if (length === 0)
     return;
 
