@@ -13,13 +13,13 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.version = version
         self.dist_id = dist_id
 
-    def install_system_packages(self):
-        self.yum_groupinstall(
+        self.group_packages = [
             'Development Tools',
             'Development Libraries',
-            'GNOME Software Development')
+            'GNOME Software Development',
+        ]
 
-        self.yum_install(
+        self.packages = [
             'alsa-lib-devel',
             'autoconf213',
             'gcc-c++',
@@ -32,7 +32,12 @@ class FedoraBootstrapper(BaseBootstrapper):
             'mesa-libGL-devel',
             'pulseaudio-libs-devel',
             'wireless-tools-devel',
-            'yasm')
+            'yasm',
+        ]
+
+    def install_system_packages(self):
+        self.yum_groupinstall(*self.group_packages)
+        self.yum_install(*self.packages)
 
     def upgrade_mercurial(self, current):
         self.yum_update('mercurial')
