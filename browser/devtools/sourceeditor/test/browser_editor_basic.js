@@ -51,6 +51,11 @@ function test() {
     ed.removeLineClass(0, "test");
     ok(!ed.hasLineClass(0, "test"), "test line class is gone");
 
+    // Font size
+    is(ed.getFontSize(), 11, "default font size is 11");
+    ed.setFontSize(ed.getFontSize() + 1);
+    is(ed.getFontSize(), 12, "new font size is 12");
+
     teardown(ed, win);
   });
 }
