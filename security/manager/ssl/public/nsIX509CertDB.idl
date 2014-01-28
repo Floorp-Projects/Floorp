@@ -31,7 +31,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(6502291d-4477-43a3-9688-4b453d055c1d)]
+[scriptable, uuid(38463592-8527-11e3-b240-180373d97f23)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -306,7 +306,7 @@ interface nsIX509CertDB : nsISupports {
   // Do not fall back to DV verification after attempting EV validation.
   // Actually does prevent network traffic, but can cause a valid EV
   // certificate to not be considered valid.
-  const uint32_t FLAG_NO_DV_FALLBACK_FOR_EV = 1 << 1;
+  const uint32_t FLAG_MUST_BE_EV = 1 << 1;
 
   /** Warning: This interface is inteded to use only for testing only as:
    *    1. It can create IO on the main thread.

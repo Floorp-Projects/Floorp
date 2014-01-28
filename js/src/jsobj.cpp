@@ -1657,7 +1657,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
 JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
                                HandleId id, MutableHandleValue vp, bool strict)
 {
-    if (JS_UNLIKELY(obj->watched())) {
+    if (MOZ_UNLIKELY(obj->watched())) {
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
         if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
@@ -1669,7 +1669,7 @@ JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
 JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
                               uint32_t index, MutableHandleValue vp, bool strict)
 {
-    if (JS_UNLIKELY(obj->watched())) {
+    if (MOZ_UNLIKELY(obj->watched())) {
         RootedId id(cx);
         if (!IndexToId(cx, index, &id))
             return false;
@@ -3916,7 +3916,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
  *   - Otherwise no property was resolved. Set *propp = nullptr and
  *     *recursedp = false and return true.
  */
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
               MutableHandleObject objp, MutableHandleShape propp, bool *recursedp)
 {
@@ -3988,7 +3988,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
                                  typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                                  typename MaybeRooted<jsid, allowGC>::HandleType id,
@@ -4062,7 +4062,7 @@ NativeLookupOwnProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, uns
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 LookupPropertyWithFlagsInline(ExclusiveContext *cx,
                               typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                               typename MaybeRooted<jsid, allowGC>::HandleType id,
@@ -4297,7 +4297,7 @@ js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
                          FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 NativeGetInline(JSContext *cx,
                 typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                 typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
@@ -4413,7 +4413,7 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
      * unless the setter deleted the shape.
      */
     if (shape->hasSlot() &&
-        (JS_LIKELY(cx->runtime()->propertyRemovals == sample) ||
+        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
          obj->nativeContains(cx, shape)))
     {
         obj->setSlot(shape->slot(), vp);
@@ -4432,7 +4432,7 @@ js::NativeSet<ParallelExecution>(ForkJoinSlice *slice,
                                  HandleShape shape, bool strict, MutableHandleValue vp);
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GetPropertyHelperInline(JSContext *cx,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
@@ -4558,7 +4558,7 @@ baseops::GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid 
     return GetPropertyHelperInline<NoGC>(cx, obj, receiver, id, vp);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 LookupPropertyPureInline(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
 {
     if (!obj->isNative())
@@ -4600,7 +4600,7 @@ LookupPropertyPureInline(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 NativeGetPureInline(JSObject *pobj, Shape *shape, Value *vp)
 {
     JS_ASSERT(pobj->isNative());
@@ -4697,7 +4697,7 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static bool
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 GetElementPure(ThreadSafeContext *cx, JSObject *obj, uint32_t index, Value *vp)
 {
     if (index <= JSID_INT_MAX)
@@ -4874,7 +4874,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     JS_ASSERT(cxArg->isThreadLocal(obj));
     JS_ASSERT((defineHow & ~DNP_UNQUALIFIED) == 0);
 
-    if (JS_UNLIKELY(obj->watched())) {
+    if (MOZ_UNLIKELY(obj->watched())) {
         if (mode == ParallelExecution)
             return false;
 
@@ -5924,7 +5924,7 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Objects
 
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
-        if (JS_UNLIKELY(elements->isAsmJSArrayBuffer())) {
+        if (MOZ_UNLIKELY(elements->isAsmJSArrayBuffer())) {
 #if defined (JS_CPU_X64)
             // On x64, ArrayBufferObject::prepareForAsmJS switches the
             // ArrayBufferObject to use mmap'd storage.

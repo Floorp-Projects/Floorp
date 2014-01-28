@@ -28,7 +28,7 @@ namespace detail {
 
 static const size_t LIFO_ALLOC_ALIGN = 8;
 
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 char *
 AlignPtr(void *orig)
 {
@@ -124,7 +124,7 @@ class BumpChunk
     }
 
     // Try to perform an allocation of size |n|, return null if not possible.
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     void *tryAlloc(size_t n) {
         char *aligned = AlignPtr(bump);
         char *newBump = aligned + n;
@@ -133,7 +133,7 @@ class BumpChunk
             return nullptr;
 
         // Check for overflow.
-        if (JS_UNLIKELY(newBump < bump))
+        if (MOZ_UNLIKELY(newBump < bump))
             return nullptr;
 
         JS_ASSERT(canAlloc(n)); // Ensure consistency between "can" and "try".
@@ -258,7 +258,7 @@ class LifoAlloc
             freeAll();
     }
 
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     void *alloc(size_t n) {
         JS_OOM_POSSIBLY_FAIL();
 
@@ -272,7 +272,7 @@ class LifoAlloc
         return latest->allocInfallible(n);
     }
 
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     void *allocInfallible(size_t n) {
         void *result;
         if (latest && (result = latest->tryAlloc(n)))
@@ -287,7 +287,7 @@ class LifoAlloc
     // Ensures that enough space exists to satisfy N bytes worth of
     // allocation requests, not necessarily contiguous. Note that this does
     // not guarantee a successful single allocation of N bytes.
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     bool ensureUnusedApproximate(size_t n) {
         size_t total = 0;
         for (BumpChunk *chunk = latest; chunk; chunk = chunk->next()) {
@@ -394,12 +394,12 @@ class LifoAlloc
 
     // Doesn't perform construction; useful for lazily-initialized POD types.
     template <typename T>
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     T *newPod() {
         return static_cast<T *>(alloc(sizeof(T)));
     }
 
-    JS_DECLARE_NEW_METHODS(new_, alloc, JS_ALWAYS_INLINE)
+    JS_DECLARE_NEW_METHODS(new_, alloc, MOZ_ALWAYS_INLINE)
 
     // A mutable enumeration of the allocated data.
     class Enum

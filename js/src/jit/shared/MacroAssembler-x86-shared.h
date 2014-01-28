@@ -10,9 +10,9 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
 # include "jit/x86/Assembler-x86.h"
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
 # include "jit/x64/Assembler-x64.h"
 #endif
 

@@ -283,7 +283,7 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 }
 
 #urlbar-container {
-  min-width: 30ch;
+  min-width: 28ch;
 }
 
 #search-container {
@@ -379,7 +379,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
 }
 
 #identity-icon-labels {
-  max-width: 18em;
+  max-width: 12vw;
 }
 
 #identity-icon-country-label {
@@ -786,7 +786,11 @@ chatbar {
 
 /*** Visibility of downloads indicator controls ***/
 
-#downloads-button[indicator] > image.toolbarbutton-icon {
+/* Bug 924050: If we've loaded the indicator, for now we hide it in the menu panel,
+   and just show the icon. This is a hack to side-step very weird layout bugs that
+   seem to be caused by the indicator stack interacting with the menu panel. */
+#downloads-button[indicator]:not([cui-areatype="menu-panel"]) > image.toolbarbutton-icon,
+#downloads-button[indicator][cui-areatype="menu-panel"] > #downloads-indicator-anchor {
   display: none;
 }
 

@@ -61,6 +61,7 @@ public:
   RemoteDXGITextureImage() : Image(nullptr, REMOTE_IMAGE_DXGI_TEXTURE) {}
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
   IntSize GetSize() { return mSize; }
 

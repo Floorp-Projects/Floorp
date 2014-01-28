@@ -255,10 +255,6 @@ public:
    * Not all uniforms may be set for all programs, and such uses will throw
    * an assertion.
    */
-  void SetLayerTransform(const gfx3DMatrix& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uLayerTransform"), aMatrix);
-  }
-
   void SetLayerTransform(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uLayerTransform"), aMatrix);
   }
@@ -286,7 +282,7 @@ public:
   }
 
   // activates this program and sets its projection matrix, if the program uses one
-  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
+  void CheckAndSetProjectionMatrix(const gfx::Matrix4x4& aMatrix)
   {
     if (mProfile.mHasMatrixProj) {
       mIsProjectionMatrixStale = true;
@@ -294,16 +290,12 @@ public:
     }
   }
 
-  void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
+  void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
     mIsProjectionMatrixStale = false;
   }
 
   // sets this program's texture transform, if it uses one
-  void SetTextureTransform(const gfx3DMatrix& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
-  }
-
   void SetTextureTransform(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
@@ -373,7 +365,7 @@ public:
   static const char* const TexCoordAttrib;
 
 protected:
-  gfx3DMatrix mProjectionMatrix;
+  gfx::Matrix4x4 mProjectionMatrix;
   // true if the projection matrix needs setting
   bool mIsProjectionMatrixStale;
 

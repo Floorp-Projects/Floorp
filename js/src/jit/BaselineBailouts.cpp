@@ -337,12 +337,12 @@ struct BaselineStackBuilder
         // so we can calculate it directly.  For other archs, the previous frame pointer
         // is stored on the stack in the frame that precedes the rectifier frame.
         size_t priorOffset = IonJSFrameLayout::Size() + topFrame->prevFrameLocalSize();
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
         // On X86, the FramePointer is pushed as the first value in the Rectifier frame.
         JS_ASSERT(BaselineFrameReg == FramePointer);
         priorOffset -= sizeof(void *);
         return virtualPointerAtStackOffset(priorOffset);
-#elif defined(JS_CPU_X64) || defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
         // On X64 and ARM, the frame pointer save location depends on the caller of the
         // the rectifier frame.
         BufferPointer<IonRectifierFrameLayout> priorFrame =
@@ -964,7 +964,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
                                 "      Popping SPS entry for innermost inlined frame's SPS entry");
-                        cx->runtime()->spsProfiler.exit(cx, script, fun);
+                        cx->runtime()->spsProfiler.exit(script, fun);
                     }
                 }
             } else {
@@ -1141,7 +1141,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     size_t startOfRectifierFrame = builder.framePushed();
 
     // On x86-only, the frame pointer is saved again in the rectifier frame.
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
     if (!builder.writePtr(prevFramePtr, "PrevFramePtr-X86Only"))
         return false;
 #endif

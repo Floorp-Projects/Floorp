@@ -43,6 +43,7 @@ extern "C" {
 #define NR_ICE_REG_PREF_TYPE_RELAYED    "ice.pref.type.relayed"
 #define NR_ICE_REG_PREF_TYPE_SRV_RFLX   "ice.pref.type.srv_rflx"
 #define NR_ICE_REG_PREF_TYPE_PEER_RFLX  "ice.pref.type.peer_rflx"
+#define NR_ICE_REG_PREF_TYPE_RELAYED_TCP    "ice.pref.type.relayed_tcp"
 
 #define NR_ICE_REG_PREF_INTERFACE_PRFX      "ice.pref.interface"
 #define NR_ICE_REG_SUPPRESS_INTERFACE_PRFX  "ice.suppress.interface"

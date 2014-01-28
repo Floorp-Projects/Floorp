@@ -92,7 +92,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 //       tail position in a JSNative.  Do not call it from any other place.
 //
 template<IsAcceptableThis Test, NativeImpl Impl>
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
@@ -102,7 +102,7 @@ CallNonGenericMethod(JSContext *cx, CallArgs args)
     return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext *cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
 {
     HandleValue thisv = args.thisv();

@@ -47,7 +47,7 @@ struct Kennel {
 // A function for allocating a Kennel and a barker. Only allocating
 // PersistentRooteds on the heap, and in this function, helps ensure that the
 // conservative GC doesn't find stray references to the barker. Ugh.
-JS_NEVER_INLINE static Kennel *
+MOZ_NEVER_INLINE static Kennel *
 Allocate(JSContext *cx)
 {
     RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_, JS::NullPtr(), JS::NullPtr()));

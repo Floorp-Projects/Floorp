@@ -539,7 +539,7 @@ class MOZ_STACK_CLASS TokenStream
     // returns TOK_EOL.  In that case, no token with TOK_EOL is actually
     // created, just a TOK_EOL TokenKind is returned, and currentToken()
     // shouldn't be consulted.  (This is the only place TOK_EOL is produced.)
-    JS_ALWAYS_INLINE TokenKind peekTokenSameLine(Modifier modifier = None) {
+    MOZ_ALWAYS_INLINE TokenKind peekTokenSameLine(Modifier modifier = None) {
        const Token &curr = currentToken();
 
         // If lookahead != 0, we have scanned ahead at least one token, and
@@ -854,7 +854,7 @@ class MOZ_STACK_CLASS TokenStream
     // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
         MOZ_ASSERT(!TokenBuf::isRawEOLChar(expect));
-        return JS_LIKELY(userbuf.hasRawChars()) &&
+        return MOZ_LIKELY(userbuf.hasRawChars()) &&
                userbuf.matchRawChar(expect);
     }
 

@@ -6,8 +6,8 @@
 
 %define menuPanelWidth 22.35em
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],[_moz-menuactive="true"],:active)):hover
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],[_moz-menuactive="true"],:hover:active)
+%define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
 
 %include ../browser.inc
 
@@ -510,7 +510,9 @@ toolbarpaletteitem[place="palette"] > #search-container {
      of 3px. */
   min-width: calc(@menuPanelWidth@ / 3 - 2px);
   max-width: calc(@menuPanelWidth@ / 3 - 2px);
-  height: auto;
+  /* We'd prefer to use height: auto here but it leads to layout bugs in the panel. Cope:
+     1.2em for line height + 2 * .5em padding + margin on the label (2 * 2px) */
+  height: calc(2.2em + 4px);
   max-height: none;
   -moz-box-orient: horizontal;
 }

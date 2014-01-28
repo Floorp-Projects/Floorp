@@ -176,7 +176,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateInvalidateEpilogue();
   protected:
     void postAsmJSCall(LAsmJSCall *lir) {
-#ifndef JS_CPU_ARM_HARDFP
+#ifndef JS_CODEGEN_ARM_HARDFP
         if (lir->mir()->callee().which() == MAsmJSCall::Callee::Builtin) {
             switch (lir->mir()->type()) {
               case MIRType_Double:

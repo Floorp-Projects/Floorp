@@ -11,7 +11,6 @@
   #include <windows.h>
   #define NS_main wmain
   #define NS_tstrrchr wcsrchr
-  #define NS_tsnprintf _snwprintf
   #define NS_T(str) L ## str
   #define PATH_SEPARATOR_CHAR L'\\'
   // On Windows, argv[0] can also have forward slashes instead
@@ -20,7 +19,6 @@
   #include <unistd.h>
   #define NS_main main
   #define NS_tstrrchr strrchr
-  #define NS_tsnprintf snprintf
   #define NS_T(str) str
 #ifdef XP_OS2
   #define PATH_SEPARATOR_CHAR '\\'

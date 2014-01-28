@@ -39,7 +39,7 @@ BEGIN_TEST(testRegExpInstanceProperties)
  * Do this all in a nested function evaluation so as (hopefully) not to get
  * screwed up by the conservative stack scanner when GCing.
  */
-JS_NEVER_INLINE bool helper(JSObject *regexpProto)
+MOZ_NEVER_INLINE bool helper(JSObject *regexpProto)
 {
     CHECK(!regexpProto->inDictionaryMode());
 

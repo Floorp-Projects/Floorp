@@ -430,10 +430,11 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
     void *zeros = calloc(1, checked_byteLength.value());
 
+    GLenum format = WebGLTexelConversions::GLFormatForTexelFormat(texelformat);
     mContext->UpdateWebGLErrorAndClearGLError();
     mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mInternalFormat,
                               imageInfo.mWidth, imageInfo.mHeight,
-                              0, imageInfo.mInternalFormat, imageInfo.mType,
+                              0, format, imageInfo.mType,
                               zeros);
     GLenum error = LOCAL_GL_NO_ERROR;
     mContext->UpdateWebGLErrorAndClearGLError(&error);

@@ -23,6 +23,7 @@ chrome.jar:
   skin/touchcontrols.css                    (touchcontrols.css)
 * skin/netError.css                         (netError.css)
   skin/firstrun.css                         (firstrun.css)
+* skin/start.css                            (start.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
@@ -141,7 +142,11 @@ chrome.jar:
   skin/images/progresscircle-bg.png         (images/progresscircle-bg.png)
 
   skin/images/overlay-back.png              (images/overlay-back.png)
+  skin/images/overlay-back@1.4x.png         (images/overlay-back@1.4x.png)
+  skin/images/overlay-back@1.8x.png         (images/overlay-back@1.8x.png)
   skin/images/overlay-plus.png              (images/overlay-plus.png)
+  skin/images/overlay-plus@1.4x.png         (images/overlay-plus@1.4x.png)
+  skin/images/overlay-plus@1.8x.png         (images/overlay-plus@1.8x.png)
   skin/images/autoscroll.png                (images/autoscroll.png)
 
   skin/images/arrow-top.png                 (images/arrow-top.png)

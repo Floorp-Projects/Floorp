@@ -376,6 +376,9 @@ checkFuncs.push(checkThread.bind(null, ["thread 18-1", "thread 18-2"],
 tasks.push(getAllThreads.bind(null, function(threads) {
   is(threads.length, checkFuncs.length, "number of threads got");
 
+  // Reverse threads as we iterate over them in reverse order
+  threads.reverse();
+
   (function callback() {
     if (!threads.length) {
       tasks.next();

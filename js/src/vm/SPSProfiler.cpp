@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
+#include "jsprf.h"
 #include "jsscript.h"
 
 #include "jit/BaselineJIT.h"
@@ -27,6 +28,11 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
     enabled_(false)
 {
     JS_ASSERT(rt != nullptr);
+#ifdef JS_THREADSAFE
+    lock_ = PR_NewLock();
+    if (lock_ == nullptr)
+        MOZ_CRASH("Couldn't allocate lock!");
+#endif
 }
 
 SPSProfiler::~SPSProfiler()
@@ -35,11 +41,15 @@ SPSProfiler::~SPSProfiler()
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
             js_free(const_cast<char *>(e.front().value()));
     }
+#ifdef JS_THREADSAFE
+    PR_DestroyLock(lock_);
+#endif
 }
 
 void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
+    AutoSPSLock lock(lock_);
     JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
         strings.init();
@@ -76,13 +86,14 @@ SPSProfiler::enable(bool enabled)
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
-SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::profileString(JSScript *script, JSFunction *maybeFun)
 {
+    AutoSPSLock lock(lock_);
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
         return s->value();
-    const char *str = allocProfileString(cx, script, maybeFun);
+    const char *str = allocProfileString(script, maybeFun);
     if (str == nullptr)
         return nullptr;
     if (!strings.add(s, script, str)) {
@@ -102,6 +113,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
      * off, we still want to remove the string, so no check of enabled() is
      * done.
      */
+    AutoSPSLock lock(lock_);
     if (!strings.initialized())
         return;
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
@@ -112,9 +124,9 @@ SPSProfiler::onScriptFinalized(JSScript *script)
 }
 
 bool
-SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::enter(JSScript *script, JSFunction *maybeFun)
 {
-    const char *str = profileString(cx, script, maybeFun);
+    const char *str = profileString(script, maybeFun);
     if (str == nullptr)
         return false;
 
@@ -125,14 +137,14 @@ SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 }
 
 void
-SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
 {
     pop();
 
 #ifdef DEBUG
     /* Sanity check to make sure push/pop balanced */
     if (*size_ < max_) {
-        const char *str = profileString(cx, script, maybeFun);
+        const char *str = profileString(script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
         JS_ASSERT(str != nullptr);
 
@@ -207,44 +219,53 @@ SPSProfiler::pop()
  * some scripts, resize the hash table of profile strings, and invalidate the
  * AddPtr held while invoking allocProfileString.
  */
-const char*
-SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
+const char *
+SPSProfiler::allocProfileString(JSScript *script, JSFunction *maybeFun)
 {
     // Note: this profiler string is regexp-matched by
     // browser/devtools/profiler/cleopatra/js/parserWorker.js.
-    DebugOnly<uint64_t> gcBefore = cx->runtime()->gcNumber;
-    StringBuffer buf(cx);
-    bool hasAtom = maybeFun != nullptr && maybeFun->displayAtom() != nullptr;
-    if (hasAtom) {
-        if (!buf.append(maybeFun->displayAtom()))
-            return nullptr;
-        if (!buf.append(" ("))
-            return nullptr;
-    }
-    if (script->filename()) {
-        if (!buf.appendInflated(script->filename(), strlen(script->filename())))
-            return nullptr;
-    } else if (!buf.append("<unknown>")) {
-        return nullptr;
-    }
-    if (!buf.append(":"))
-        return nullptr;
-    if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno()), buf))
-        return nullptr;
-    if (hasAtom && !buf.append(")"))
-        return nullptr;
 
-    size_t len = buf.length();
+    // Determine if the function (if any) has an explicit or guessed name.
+    bool hasAtom = maybeFun && maybeFun->displayAtom();
+
+    // Get the function name, if any, and its length.
+    const jschar *atom = nullptr;
+    size_t lenAtom = 0;
+    if (hasAtom) {
+        atom = maybeFun->displayAtom()->charsZ();
+        lenAtom = maybeFun->displayAtom()->length();
+    }
+
+    // Get the script filename, if any, and its length.
+    const char *filename = script->filename();
+    if (filename == nullptr)
+        filename = "<unknown>";
+    size_t lenFilename = strlen(filename);
+
+    // Get the line number and its length as a string.
+    uint64_t lineno = script->lineno();
+    size_t lenLineno = 1;
+    for (uint64_t i = lineno; i /= 10; lenLineno++);
+
+    // Determine the required buffer size.
+    size_t len = lenFilename + lenLineno + 1; // +1 for the ":" separating them.
+    if (hasAtom)
+        len += lenAtom + 3; // +3 for the " (" and ")" it adds.
+
+    // Allocate the buffer.
     char *cstr = js_pod_malloc<char>(len + 1);
     if (cstr == nullptr)
         return nullptr;
 
-    const jschar *ptr = buf.begin();
-    for (size_t i = 0; i < len; i++)
-        cstr[i] = ptr[i];
-    cstr[len] = 0;
+    // Construct the descriptive string.
+    size_t ret;
+    if (hasAtom)
+        ret = JS_snprintf(cstr, len + 1, "%hs (%s:%llu)", atom, filename, lineno);
+    else
+        ret = JS_snprintf(cstr, len + 1, "%s:%llu", filename, lineno);
 
-    JS_ASSERT(gcBefore == cx->runtime()->gcNumber);
+    MOZ_ASSERT(ret == len, "Computed length should match actual length!");
+
     return cstr;
 }
 

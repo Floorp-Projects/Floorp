@@ -128,7 +128,7 @@ public:
    * to a window of the given dimensions.
    */
   virtual void PrepareViewport(const gfx::IntSize& aSize,
-                               const gfxMatrix& aWorldTransform) MOZ_OVERRIDE;
+                               const gfx::Matrix& aWorldTransform) MOZ_OVERRIDE;
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE { return true; }
 
