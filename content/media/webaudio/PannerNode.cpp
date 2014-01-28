@@ -172,7 +172,6 @@ public:
   }
 
   void ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation);
-  void DistanceAndConeGain(AudioChunk* aChunk, float aGain);
   float ComputeConeGain();
   // Compute how much the distance contributes to the gain reduction.
   float ComputeDistanceGain();
@@ -363,7 +362,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
     GainStereoToStereo(aInput, aOutput, gainL, gainR, azimuth);
   }
 
-  DistanceAndConeGain(aOutput, distanceGain * coneGain * aInput.mVolume);
+  aOutput->mVolume = aInput.mVolume * distanceGain * coneGain;
 }
 
 void
@@ -387,15 +386,6 @@ PannerNodeEngine::GainStereoToStereo(const AudioChunk& aInput, AudioChunk* aOutp
   const float* inputR = static_cast<float*>(const_cast<void*>(aInput.mChannelData[1]));
 
   AudioBlockPanStereoToStereo(inputL, inputR, aGainL, aGainR, aAzimuth <= 0, outputL, outputR);
-}
-
-void
-PannerNodeEngine::DistanceAndConeGain(AudioChunk* aChunk, float aGain)
-{
-  float* samples = static_cast<float*>(const_cast<void*>(*aChunk->mChannelData.Elements()));
-  uint32_t channelCount = aChunk->mChannelData.Length();
-
-  AudioBlockInPlaceScale(samples, channelCount, aGain);
 }
 
 // This algorithm is specified in the webaudio spec.
