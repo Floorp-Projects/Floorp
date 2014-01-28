@@ -217,7 +217,7 @@ let HomePanels = {
 
     sendMessageToJava({
       type: "HomePanels:Remove",
-      id: panel.id
+      id: id
     });
   },
 
