@@ -832,12 +832,11 @@
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
-                   removable="false"
-                   title="&appmenu.title;">
+                   removable="false">
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
                        label="&brandShortName;"
-                       tooltiptext="&appmenu.title;"/>
+                       tooltiptext="&appmenu.tooltip;"/>
       </toolbaritem>
 
       <hbox id="window-controls" hidden="true" pack="end" skipintoolbarset="true"

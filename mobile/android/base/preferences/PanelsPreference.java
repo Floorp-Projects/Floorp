@@ -20,17 +20,13 @@ public class PanelsPreference extends CustomListPreference {
     private static final int INDEX_SHOW_BUTTON = 1;
     private static final int INDEX_REMOVE_BUTTON = 2;
 
-    private final String LABEL_HIDE;
-    private final String LABEL_SHOW;
+    private String LABEL_HIDE;
+    private String LABEL_SHOW;
 
     protected boolean mIsHidden = false;
 
     public PanelsPreference(Context context, CustomListCategory parentCategory) {
         super(context, parentCategory);
-
-        Resources res = getContext().getResources();
-        LABEL_HIDE = res.getString(R.string.pref_panels_hide);
-        LABEL_SHOW = res.getString(R.string.pref_panels_show);
     }
 
     @Override
@@ -56,6 +52,9 @@ public class PanelsPreference extends CustomListPreference {
     @Override
     protected String[] getDialogStrings() {
         Resources res = getContext().getResources();
+        LABEL_HIDE = res.getString(R.string.pref_panels_hide);
+        LABEL_SHOW = res.getString(R.string.pref_panels_show);
+
         // XXX: Don't provide the "Remove" string for now, because we only support built-in
         // panels, which can only be disabled.
         return new String[] { LABEL_SET_AS_DEFAULT,
