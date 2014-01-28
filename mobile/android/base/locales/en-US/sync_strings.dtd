@@ -110,9 +110,13 @@
 <!-- Firefox Account strings -->
 <!ENTITY firefox.accounts 'Firefox Accounts'>
 <!ENTITY fxaccount.label '&fxaccountBrand.fullName.label;'>
-<!ENTITY fxaccount.policy 'By proceeding you agree with the &lt;a
-         href="http://mozilla.com"&gt;Terms of Service&lt;/a&gt; and &lt;a
-         href="http://mozilla.com"&gt;Privacy Policy&lt;/a&gt;.'>
+<!ENTITY fxaccount.link.tos 'https://accounts.firefox.com/legal/terms'>
+<!ENTITY fxaccount.link.pn 'https://accounts.firefox.com/legal/privacy'>
+<!ENTITY fxaccount.policy.linktos 'Terms of Service'>
+<!ENTITY fxaccount.policy.linkprivacy 'Privacy Notice'>
+
+<!-- Localization note: &formatS1; is fxaccount.policy.linktos, &formatS2; is fxaccount.policy.linkprivacy, both hyperlinked. -->
+<!ENTITY fxaccount.policy.text 'By proceeding you agree with the &formatS1; and &formatS2;.'>
 <!ENTITY fxaccount.forgot.password 'Forgot password?'>
 <!ENTITY fxaccount.create.account.button.label 'Create Account'>
 <!ENTITY fxaccount.sign.in.button.label 'Sign In'>

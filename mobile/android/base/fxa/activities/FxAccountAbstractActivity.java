@@ -7,13 +7,12 @@ package org.mozilla.gecko.fxa.activities;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.SystemClock;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -113,12 +112,13 @@ public abstract class FxAccountAbstractActivity extends Activity {
       } else {
         textView = (TextView) findViewById(id);
       }
+
       if (textView == null) {
         Logger.warn(LOG_TAG, "Could not process links for view with id " + id + ".");
         continue;
       }
-      textView.setMovementMethod(LinkMovementMethod.getInstance());
-      textView.setText(Html.fromHtml(textView.getText().toString()));
+
+      ActivityUtils.linkifyTextView(textView);
     }
   }
 

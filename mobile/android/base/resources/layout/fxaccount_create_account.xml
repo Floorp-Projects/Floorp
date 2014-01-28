@@ -74,7 +74,7 @@
         <TextView
             android:id="@+id/policy"
             style="@style/FxAccountLinkifiedItem"
-            android:text="@string/fxaccount_policy" />
+            android:text="@string/fxaccount_policy_text" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

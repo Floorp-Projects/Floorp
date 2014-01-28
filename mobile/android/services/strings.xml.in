@@ -102,7 +102,11 @@
   <string name="firefox_accounts">&firefox.accounts;</string>
 
   <string name="fxaccount_label">&fxaccount.label;</string>
-  <string name="fxaccount_policy">&fxaccount.policy;</string>
+  <string name="fxaccount_link_tos">&fxaccount.link.tos;</string>
+  <string name="fxaccount_link_pn">&fxaccount.link.pn;</string>
+  <string name="fxaccount_policy_text">&fxaccount.policy.text;</string>
+  <string name="fxaccount_policy_linktos">&fxaccount.policy.linktos;</string>
+  <string name="fxaccount_policy_linkprivacy">&fxaccount.policy.linkprivacy;</string>
   <string name="fxaccount_forgot_password">&fxaccount.forgot.password;</string>
   <string name="fxaccount_create_account_button_label">&fxaccount.create.account.button.label;</string>
   <string name="fxaccount_sign_in_button_label">&fxaccount.sign.in.button.label;</string>
