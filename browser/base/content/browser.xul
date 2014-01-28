@@ -708,6 +708,7 @@
                        type="menu-button"
                        label="&bookmarksMenuButton.label;"
                        tooltiptext="&bookmarksMenuButton.tooltip;"
+                       anchor="dropmarker"
                        ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                        ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
@@ -718,7 +719,6 @@
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
-                     anonanchorclass="toolbarbutton-menubutton-dropmarker"
                      oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);

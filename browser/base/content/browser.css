@@ -283,7 +283,7 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 }
 
 #urlbar-container {
-  min-width: 30ch;
+  min-width: 28ch;
 }
 
 #search-container {
@@ -379,7 +379,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
 }
 
 #identity-icon-labels {
-  max-width: 18em;
+  max-width: 12vw;
 }
 
 #identity-icon-country-label {

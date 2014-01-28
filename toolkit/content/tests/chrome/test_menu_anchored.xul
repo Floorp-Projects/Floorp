@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test for menus with the anchor attribute set
+  -->
+<window title="Anchored Menus Test"
+        align="start"
+        onload="setTimeout(runTest, 0,'tb1');"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="xul_selectcontrol.js"/>
+
+<hbox>
+
+<toolbarbutton id="tb1" type="menu-button" label="Open" anchor="dropmarker">
+  <menupopup id="popup1"
+             onpopupshown="checkPopup(this, document.getAnonymousElementByAttribute(this.parentNode, 'anonid', 'dropmarker'))"
+             onpopuphidden="runTest('tb2')">
+    <menuitem label="Item"/>
+  </menupopup>
+</toolbarbutton>
+
+<toolbarbutton id="tb2" type="menu-button" label="Open" anchor="someanchor">
+  <menupopup id="popup2" onpopupshown="checkPopup(this, $('someanchor'))" onpopuphidden="runTest('tb3')">
+    <menuitem label="Item"/>
+  </menupopup>
+</toolbarbutton>
+
+<toolbarbutton id="tb3" type="menu-button" label="Open" anchor="noexist">
+  <menupopup id="popup3" onpopupshown="checkPopup(this, this.parentNode)" onpopuphidden="SimpleTest.finish()">
+    <menuitem label="Item"/>
+  </menupopup>
+</toolbarbutton>
+
+</hbox>
+
+<hbox pack="end" width="180">
+  <button id="someanchor" label="Anchor"/>
+</hbox>
+
+<!-- test results are displayed in the html:body -->
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript"><![CDATA[
+
+function runTest(menuid)
+{
+  let menu = $(menuid);
+  let dropmarker = document.getAnonymousElementByAttribute(menu, "anonid", "dropmarker");
+
+  synthesizeMouseAtCenter(dropmarker, { });
+}
+
+function isWithinHalfPixel(a, b)
+{
+  return Math.abs(a - b) <= 0.5;
+}
+
+function checkPopup(popup, anchor)
+{
+  let popupRect = popup.getBoundingClientRect();
+  let anchorRect = anchor.getBoundingClientRect();
+
+  ok(isWithinHalfPixel(popupRect.left, anchorRect.left), popup.id + " left");
+  ok(isWithinHalfPixel(popupRect.top, anchorRect.bottom), popup.id + " top");
+
+  popup.hidePopup();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</window>
