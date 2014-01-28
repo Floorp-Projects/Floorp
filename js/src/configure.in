@@ -3415,6 +3415,38 @@ fi
 AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
+dnl = Use ARM JIT code simulator. Requires an x86 build.
+dnl ========================================================
+dnl Also define JS_CODEGEN_ARM in this case. If the simulator is not used,
+dnl JS_CODEGEN_foo is defined if JS_CPU_foo is defined.
+MOZ_ARG_ENABLE_BOOL(arm-simulator,
+[  --enable-arm-simulator Enable ARM simulator for JIT code],
+    JS_ARM_SIMULATOR=1,
+    JS_ARM_SIMULATOR= )
+if test -n "$JS_ARM_SIMULATOR"; then
+    if test "$CPU_ARCH" != "x86"; then
+        AC_MSG_ERROR([The ARM simulator only works on x86.])
+    fi
+    AC_DEFINE(JS_ARM_SIMULATOR)
+    AC_DEFINE(JS_CODEGEN_ARM)
+    JS_CODEGEN_ARM=1
+elif test "$CPU_ARCH" = "x86"; then
+    AC_DEFINE(JS_CODEGEN_X86)
+    JS_CODEGEN_X86=1
+elif test "$CPU_ARCH" = "x86_64"; then
+    AC_DEFINE(JS_CODEGEN_X64)
+    JS_CODEGEN_X64=1
+elif test "$CPU_ARCH" = "arm"; then
+    AC_DEFINE(JS_CODEGEN_ARM)
+    JS_CODEGEN_ARM=1
+fi
+
+AC_SUBST(JS_ARM_SIMULATOR)
+AC_SUBST(JS_CODEGEN_ARM)
+AC_SUBST(JS_CODEGEN_X86)
+AC_SUBST(JS_CODEGEN_X64)
+
+dnl ========================================================
 dnl jprof
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jprof,

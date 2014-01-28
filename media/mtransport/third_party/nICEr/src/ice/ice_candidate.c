@@ -356,8 +356,20 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         stun_priority=0;
         break;
       case RELAYED:
-        if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED,&type_preference))
-          ABORT(r);
+        if(cand->base.protocol == IPPROTO_UDP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED,&type_preference))
+            ABORT(r);
+        }
+        else if(cand->base.protocol == IPPROTO_TCP) {
+          if(r=NR_reg_get_uchar(NR_ICE_REG_PREF_TYPE_RELAYED_TCP,&type_preference))
+            ABORT(r);
+
+        }
+        else {
+          r_log(LOG_ICE,LOG_ERR,"Unknown protocol type %u",
+                (unsigned int)cand->base.protocol);
+          ABORT(R_INTERNAL);
+        }
         stun_priority=255-cand->stun_server->index;
         break;
       case SERVER_REFLEXIVE:

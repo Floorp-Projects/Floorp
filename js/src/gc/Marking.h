@@ -117,7 +117,7 @@ DeclMarker(TypeObject, types::TypeObject)
 /* Return true if the pointer is nullptr, or if it is a tagged pointer to
  * nullptr.
  */
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsNullTaggedPointer(void *p)
 {
     return uintptr_t(p) < 32;

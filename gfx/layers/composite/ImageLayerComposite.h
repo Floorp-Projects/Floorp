@@ -15,7 +15,6 @@
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 #include "nscore.h"                     // for nsACString
 
-class gfx3DMatrix;
 struct nsIntPoint;
 struct nsIntRect;
 
@@ -46,7 +45,7 @@ public:
 
   virtual void RenderLayer(const nsIntRect& aClipRect);
 
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE;
+  virtual void ComputeEffectiveTransforms(const mozilla::gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE;
 
   virtual void CleanupResources() MOZ_OVERRIDE;
 

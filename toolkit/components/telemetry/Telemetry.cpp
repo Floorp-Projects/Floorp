@@ -55,6 +55,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/StartupTimeline.h"
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
 #endif
@@ -202,18 +203,33 @@ CombinedStacks::SizeOfExcludingThis() const {
 class HangReports {
 public:
   size_t SizeOfExcludingThis() const;
-  void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration);
+  void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration,
+               int32_t aSystemUptime, int32_t aFirefoxUptime);
   uint32_t GetDuration(unsigned aIndex) const;
+  int32_t GetSystemUptime(unsigned aIndex) const;
+  int32_t GetFirefoxUptime(unsigned aIndex) const;
   const CombinedStacks& GetStacks() const;
 private:
+  struct HangInfo {
+    // Hang duration (in seconds)
+    uint32_t mDuration;
+    // System uptime (in minutes) at the time of the hang
+    int32_t mSystemUptime;
+    // Firefox uptime (in minutes) at the time of the hang
+    int32_t mFirefoxUptime;
+  };
+  std::vector<HangInfo> mHangInfo;
   CombinedStacks mStacks;
-  std::vector<uint32_t> mDurations;
 };
 
 void
-HangReports::AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration) {
+HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
+                     uint32_t aDuration,
+                     int32_t aSystemUptime,
+                     int32_t aFirefoxUptime) {
+  HangInfo info = { aDuration, aSystemUptime, aFirefoxUptime };
+  mHangInfo.push_back(info);
   mStacks.AddStack(aStack);
-  mDurations.push_back(aDuration);
 }
 
 size_t
@@ -222,7 +238,7 @@ HangReports::SizeOfExcludingThis() const {
   n += mStacks.SizeOfExcludingThis();
   // This is a crude approximation. See comment on
   // CombinedStacks::SizeOfExcludingThis.
-  n += mDurations.capacity() * sizeof(uint32_t);
+  n += mHangInfo.capacity() * sizeof(HangInfo);
   return n;
 }
 
@@ -233,7 +249,17 @@ HangReports::GetStacks() const {
 
 uint32_t
 HangReports::GetDuration(unsigned aIndex) const {
-  return mDurations[aIndex];
+  return mHangInfo[aIndex].mDuration;
+}
+
+int32_t
+HangReports::GetSystemUptime(unsigned aIndex) const {
+  return mHangInfo[aIndex].mSystemUptime;
+}
+
+int32_t
+HangReports::GetFirefoxUptime(unsigned aIndex) const {
+  return mHangInfo[aIndex].mFirefoxUptime;
 }
 
 class TelemetryImpl MOZ_FINAL
@@ -255,8 +281,10 @@ public:
   static void RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
                                   uint32_t delay);
 #if defined(MOZ_ENABLE_PROFILER_SPS)
-  static void RecordChromeHang(uint32_t duration,
-                               Telemetry::ProcessedStack &aStack);
+  static void RecordChromeHang(uint32_t aDuration,
+                               Telemetry::ProcessedStack &aStack,
+                               int32_t aSystemUptime,
+                               int32_t aFirefoxUptime);
 #endif
   static void RecordThreadHangStats(Telemetry::ThreadHangStats& aStats);
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
@@ -1499,9 +1527,12 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
   ret.setObject(*fullReportObj);
 
   JS::Rooted<JSObject*> durationArray(cx, JS_NewArrayObject(cx, 0, nullptr));
-  if (!durationArray) {
+  JS::Rooted<JSObject*> systemUptimeArray(cx, JS_NewArrayObject(cx, 0, nullptr));
+  JS::Rooted<JSObject*> firefoxUptimeArray(cx, JS_NewArrayObject(cx, 0, nullptr));
+  if (!durationArray || !systemUptimeArray || !firefoxUptimeArray) {
     return NS_ERROR_FAILURE;
   }
+
   bool ok = JS_DefineProperty(cx, fullReportObj, "durations",
                               OBJECT_TO_JSVAL(durationArray),
                               nullptr, nullptr, JSPROP_ENUMERATE);
@@ -1509,9 +1540,29 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
     return NS_ERROR_FAILURE;
   }
 
+  ok = JS_DefineProperty(cx, fullReportObj, "systemUptime",
+                         OBJECT_TO_JSVAL(systemUptimeArray),
+                         nullptr, nullptr, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ok = JS_DefineProperty(cx, fullReportObj, "firefoxUptime",
+                         OBJECT_TO_JSVAL(firefoxUptimeArray),
+                         nullptr, nullptr, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
   const size_t length = stacks.GetStackCount();
   for (size_t i = 0; i < length; ++i) {
     if (!JS_SetElement(cx, durationArray, i, mHangReports.GetDuration(i))) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_SetElement(cx, systemUptimeArray, i, mHangReports.GetSystemUptime(i))) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_SetElement(cx, firefoxUptimeArray, i, mHangReports.GetFirefoxUptime(i))) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -2219,15 +2270,18 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 void
-TelemetryImpl::RecordChromeHang(uint32_t duration,
-                                Telemetry::ProcessedStack &aStack)
+TelemetryImpl::RecordChromeHang(uint32_t aDuration,
+                                Telemetry::ProcessedStack &aStack,
+                                int32_t aSystemUptime,
+                                int32_t aFirefoxUptime)
 {
   if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
 
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
-  sTelemetry->mHangReports.AddHang(aStack, duration);
+  sTelemetry->mHangReports.AddHang(aStack, aDuration,
+                                   aSystemUptime, aFirefoxUptime);
 }
 #endif
 
@@ -2401,9 +2455,12 @@ void Init()
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 void RecordChromeHang(uint32_t duration,
-                      ProcessedStack &aStack)
+                      ProcessedStack &aStack,
+                      int32_t aSystemUptime,
+                      int32_t aFirefoxUptime)
 {
-  TelemetryImpl::RecordChromeHang(duration, aStack);
+  TelemetryImpl::RecordChromeHang(duration, aStack,
+                                  aSystemUptime, aFirefoxUptime);
 }
 #endif
 

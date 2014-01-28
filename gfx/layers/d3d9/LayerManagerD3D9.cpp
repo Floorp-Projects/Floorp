@@ -148,7 +148,7 @@ LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
 
     // The results of our drawing always go directly into a pixel buffer,
     // so we don't need to pass any global transform here.
-    mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+    mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
     SetCompositingDisabled(aFlags & END_NO_COMPOSITE);
     Render();

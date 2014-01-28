@@ -158,6 +158,13 @@ public:
                                   uint32_t aOutputChannels,
                                   AudioDataValue* aOutput);
 
+  /**
+   * De-interleaves the aInput data and stores the result into aOutput.
+   * No up-mix or down-mix operations inside.
+   */
+  static void DeInterleaveTrackData(AudioDataValue* aInput, int32_t aDuration,
+                                    int32_t aChannels, AudioDataValue* aOutput);
+
 protected:
   /**
    * Number of samples per channel in a pcm buffer. This is also the value of

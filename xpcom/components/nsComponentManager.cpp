@@ -96,43 +96,15 @@ extern mozilla::Module const *const *const kPStaticModules[];
 #define BIG_REGISTRY_BUFLEN   (512*1024)
 
 // Common Key Names
-const char classIDKeyName[]="classID";
-const char classesKeyName[]="contractID";
-const char componentsKeyName[]="components";
 const char xpcomComponentsKeyName[]="software/mozilla/XPCOM/components";
 const char xpcomKeyName[]="software/mozilla/XPCOM";
 
 // Common Value Names
-const char classIDValueName[]="ClassID";
-const char classNameValueName[]="ClassName";
-const char componentCountValueName[]="ComponentsCount";
-const char componentTypeValueName[]="ComponentType";
-const char contractIDValueName[]="ContractID";
 const char fileSizeValueName[]="FileSize";
-const char inprocServerValueName[]="InprocServer";
 const char lastModValueName[]="LastModTimeStamp";
 const char nativeComponentType[]="application/x-mozilla-native";
 const char staticComponentType[]="application/x-mozilla-static";
-const char jarComponentType[]="application/x-mozilla-jarjs";
-const char versionValueName[]="VersionString";
 
-const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
-const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
-const static char XPCOM_GRECOMPONENT_PREFIX[] = "gre:";
-
-static const char gIDFormat[] =
-  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
-
-
-#define NS_EMPTY_IID                                 \
-{                                                    \
-    0x00000000,                                      \
-    0x0000,                                          \
-    0x0000,                                          \
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 #define UID_STRING_LENGTH 39

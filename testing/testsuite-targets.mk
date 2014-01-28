@@ -497,7 +497,7 @@ endif
 stage-cppunittests:
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
 ifdef STRIP_CPP_TESTS
-	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(STRIP_FLAGS) $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
 else
 	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 endif

@@ -1497,15 +1497,15 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
                        RoundToMatchResidual(scaledOffset.y, data->mAnimatedGeometryRootPosition.y));
   data->mTranslation = pixOffset;
   pixOffset += mParameters.mOffset;
-  gfxMatrix matrix;
-  matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
-  layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
+  Matrix matrix;
+  matrix.Translate(pixOffset.x, pixOffset.y);
+  layer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
-  gfxPoint animatedGeometryRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
+  gfxPoint animatedGeometryRootTopLeft = scaledOffset - ThebesPoint(matrix.GetTranslation()) + mParameters.mOffset;
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
@@ -1552,7 +1552,8 @@ static void
 SetVisibleRegionForLayer(Layer* aLayer, const nsIntRegion& aLayerVisibleRegion,
                          const nsIntRect& aRestrictToRect)
 {
-  gfx3DMatrix transform = aLayer->GetTransform();
+  gfx3DMatrix transform;
+  To3DMatrix(aLayer->GetTransform(), transform);
 
   // if 'transform' is not invertible, then nothing will be displayed
   // for the layer, so it doesn't really matter what we do here
@@ -1714,11 +1715,13 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
 static gfx3DMatrix
 GetTransformToRoot(Layer* aLayer)
 {
-  gfx3DMatrix transform = aLayer->GetTransform();
+  Matrix4x4 transform = aLayer->GetTransform();
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     transform = transform * l->GetTransform();
   }
-  return transform;
+  gfx3DMatrix result;
+  To3DMatrix(transform, result);
+  return result;
 }
 
 static void
@@ -1807,7 +1810,7 @@ ContainerState::PopThebesLayerData()
     layer->SetClipRect(nullptr);
   }
 
-  gfxMatrix transform;
+  Matrix transform;
   if (!layer->GetTransform().Is2D(&transform)) {
     NS_ERROR("Only 2D transformations currently supported");
   }
@@ -2960,9 +2963,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
         // Don't clamp the scale factor when the new desired scale factor matches the old one
         // or it was previously unscaled.
         bool clamp = true;
-        gfxMatrix oldFrameTransform2d;
+        Matrix oldFrameTransform2d;
         if (aLayer->GetBaseTransform().Is2D(&oldFrameTransform2d)) {
-          gfxSize oldScale = RoundToFloatPrecision(oldFrameTransform2d.ScaleFactors(true));
+          gfxSize oldScale = RoundToFloatPrecision(ThebesMatrix(oldFrameTransform2d).ScaleFactors(true));
           if (oldScale == scale || oldScale == gfxSize(1.0, 1.0)) {
             clamp = false;
           }
@@ -2985,7 +2988,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
 
   // Store the inverse of our resolution-scale on the layer
-  aLayer->SetBaseTransform(transform);
+  Matrix4x4 baseTransform;
+  ToMatrix4x4(transform, baseTransform);
+  aLayer->SetBaseTransform(baseTransform);
   aLayer->SetPreScale(1.0f/float(scale.width),
                       1.0f/float(scale.height));
   aLayer->SetInheritedScale(aIncomingScale.mXScale,
@@ -3830,8 +3835,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   maskLayer->SetContainer(container);
 
   maskTransform.Invert();
-  gfx3DMatrix matrix = gfx3DMatrix::From2D(ThebesMatrix(maskTransform));
-  matrix.Translate(gfxPoint3D(mParameters.mOffset.x, mParameters.mOffset.y, 0));
+  Matrix4x4 matrix = Matrix4x4::From2D(maskTransform);
+  matrix.Translate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
   maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data

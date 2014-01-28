@@ -36,7 +36,7 @@ CheckNonAddressThing(uintptr_t *w, Rooted<T> *rootp)
     return w >= (uintptr_t*)rootp->address() && w < (uintptr_t*)(rootp->address() + 1);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 CheckStackRootThing(uintptr_t *w, Rooted<void *> *rootp, ThingRootKind kind)
 {
     if (kind == THING_ROOT_BINDINGS)

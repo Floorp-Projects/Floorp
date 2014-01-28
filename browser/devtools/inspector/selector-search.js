@@ -250,26 +250,23 @@ SelectorSearch.prototype = {
           if (this.searchPopup.isOpen) {
             this.searchPopup.hidePopup();
           }
-        }
-        else {
-          this.showSuggestions();
-        }
-        this.searchBox.classList.remove("devtools-no-search-result");
+          this.searchBox.classList.remove("devtools-no-search-result");
 
-        return this._selectResult(0);
-      }
-      else {
-        if (query.match(/[\s>+]$/)) {
-          this._lastValidSearch = query + "*";
+          return this._selectResult(0);
         }
-        else if (query.match(/[\s>+][\.#a-zA-Z][\.#>\s+]*$/)) {
-          let lastPart = query.match(/[\s+>][\.#a-zA-Z][^>\s+]*$/)[0];
-          this._lastValidSearch = query.slice(0, -1 * lastPart.length + 1) + "*";
-        }
-        this.searchBox.classList.add("devtools-no-search-result");
-        this.showSuggestions();
+        return this._selectResult(0).then(() => {
+          this.searchBox.classList.remove("devtools-no-search-result");
+        }).then( () => this.showSuggestions());
       }
-      return undefined;
+      if (query.match(/[\s>+]$/)) {
+        this._lastValidSearch = query + "*";
+      }
+      else if (query.match(/[\s>+][\.#a-zA-Z][\.#>\s+]*$/)) {
+        let lastPart = query.match(/[\s+>][\.#a-zA-Z][^>\s+]*$/)[0];
+        this._lastValidSearch = query.slice(0, -1 * lastPart.length + 1) + "*";
+      }
+      this.searchBox.classList.add("devtools-no-search-result");
+      return this.showSuggestions();
     });
   },
 
@@ -414,13 +411,6 @@ SelectorSearch.prototype = {
    * Populates the suggestions list and show the suggestion popup.
    */
   _showPopup: function SelectorSearch__showPopup(aList, aFirstPart) {
-    // Sort alphabetically in increaseing order.
-    aList = aList.sort();
-    // Sort based on count= in decreasing order.
-    aList = aList.sort(function([a1,a2], [b1,b2]) {
-      return a2 < b2;
-    });
-
     let total = 0;
     let query = this.searchBox.value;
     let toLowerCase = false;
@@ -471,111 +461,44 @@ SelectorSearch.prototype = {
    * searchbox.
    */
   showSuggestions: function SelectorSearch_showSuggestions() {
-    if (!this.walker.isLocal()) {
-      return;
-    }
     let query = this.searchBox.value;
-    if (this._lastValidSearch != "" &&
-        this._lastToLastValidSearch != this._lastValidSearch) {
-      this._searchSuggestions = {
-        ids: new Map(),
-        classes: new Map(),
-        tags: new Map(),
-      };
-
-      let nodes = [];
-      try {
-        nodes = this.doc.querySelectorAll(this._lastValidSearch);
-      } catch (ex) {}
-      for (let node of nodes) {
-        this._searchSuggestions.ids.set(node.id, 1);
-        this._searchSuggestions.tags
-            .set(node.tagName,
-                 (this._searchSuggestions.tags.get(node.tagName) || 0) + 1);
-        for (let className of node.classList) {
-          this._searchSuggestions.classes
-            .set(className,
-                 (this._searchSuggestions.classes.get(className) || 0) + 1);
-        }
-      }
-      this._lastToLastValidSearch = this._lastValidSearch;
-    }
-    else if (this._lastToLastValidSearch != this._lastValidSearch) {
-      this._searchSuggestions = {
-        ids: new Map(),
-        classes: new Map(),
-        tags: new Map(),
-      };
-
-      if (query.length == 0) {
-        return;
-      }
-
-      let nodes = null;
-      if (this.state == this.States.CLASS) {
-        nodes = this.doc.querySelectorAll("[class]");
-        for (let node of nodes) {
-          for (let className of node.classList) {
-            this._searchSuggestions.classes
-              .set(className,
-                   (this._searchSuggestions.classes.get(className) || 0) + 1);
-          }
-        }
-      }
-      else if (this.state == this.States.ID) {
-        nodes = this.doc.querySelectorAll("[id]");
-        for (let node of nodes) {
-          this._searchSuggestions.ids.set(node.id, 1);
-        }
-      }
-      else if (this.state == this.States.TAG) {
-        nodes = this.doc.getElementsByTagName("*");
-        for (let node of nodes) {
-          this._searchSuggestions.tags
-              .set(node.tagName,
-                   (this._searchSuggestions.tags.get(node.tagName) || 0) + 1);
-        }
-      }
-      else {
-        return;
-      }
-      this._lastToLastValidSearch = this._lastValidSearch;
-    }
-
-    // Filter the suggestions based on search box value.
-    let result = [];
     let firstPart = "";
     if (this.state == this.States.TAG) {
       // gets the tag that is being completed. For ex. 'div.foo > s' returns 's',
       // 'di' returns 'di' and likewise.
-      firstPart = (query.match(/[\s>+]?([a-zA-Z]*)$/) || ["",query])[1];
-      for (let [tag, count] of this._searchSuggestions.tags) {
-        if (tag.toLowerCase().startsWith(firstPart.toLowerCase())) {
-          result.push([tag, count]);
-        }
-      }
+      firstPart = (query.match(/[\s>+]?([a-zA-Z]*)$/) || ["", query])[1];
+      query = query.slice(0, query.length - firstPart.length);
     }
     else if (this.state == this.States.CLASS) {
       // gets the class that is being completed. For ex. '.foo.b' returns 'b'
       firstPart = query.match(/\.([^\.]*)$/)[1];
-      for (let [className, count] of this._searchSuggestions.classes) {
-        if (className.startsWith(firstPart)) {
-          result.push(["." + className, count]);
-        }
-      }
-      firstPart = "." + firstPart;
+      query = query.slice(0, query.length - firstPart.length - 1);
     }
     else if (this.state == this.States.ID) {
       // gets the id that is being completed. For ex. '.foo#b' returns 'b'
       firstPart = query.match(/#([^#]*)$/)[1];
-      for (let [id, count] of this._searchSuggestions.ids) {
-        if (id.startsWith(firstPart)) {
-          result.push(["#" + id, 1]);
-        }
-      }
-      firstPart = "#" + firstPart;
+      query = query.slice(0, query.length - firstPart.length - 1);
     }
-
-    this._showPopup(result, firstPart);
+    // TODO: implement some caching so that over the wire request is not made
+    // everytime.
+    if (/[\s+>~]$/.test(query)) {
+      query += "*";
+    }
+    this._currentSuggesting = query;
+    return this.walker.getSuggestionsForQuery(query, firstPart, this.state).then(result => {
+      if (this._currentSuggesting != result.query) {
+        // This means that this response is for a previous request and the user
+        // as since typed something extra leading to a new request.
+        return;
+      }
+      this._lastToLastValidSearch = this._lastValidSearch;
+      if (this.state == this.States.CLASS) {
+        firstPart = "." + firstPart;
+      }
+      else if (this.state == this.States.ID) {
+        firstPart = "#" + firstPart;
+      }
+      this._showPopup(result.suggestions, firstPart);
+    });
   },
 };

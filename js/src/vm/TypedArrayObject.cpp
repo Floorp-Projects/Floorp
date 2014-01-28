@@ -125,13 +125,13 @@ ToClampedIndex(JSContext *cx, HandleValue v, uint32_t length, uint32_t *out)
  * can be created implicitly by constructing a TypedArrayObject with a size.
  */
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsArrayBuffer(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&ArrayBufferObject::class_);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 ArrayBufferObject::byteLengthGetterImpl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsArrayBuffer(args.thisv()));
@@ -2284,7 +2284,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static NativeType
     nativeFromDouble(double d)
     {
-        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(IsNaN(d)))
+        if (!ArrayTypeIsFloatingPoint() && MOZ_UNLIKELY(IsNaN(d)))
             return NativeType(int32_t(0));
         if (TypeIsFloatingPoint<NativeType>())
             return NativeType(d);

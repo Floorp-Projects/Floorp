@@ -128,6 +128,20 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
   }
 }
 
+/*static*/
+void
+AudioTrackEncoder::DeInterleaveTrackData(AudioDataValue* aInput,
+                                         int32_t aDuration,
+                                         int32_t aChannels,
+                                         AudioDataValue* aOutput)
+{
+  for (int32_t i = 0; i < aChannels; ++i) {
+    for(int32_t j = 0; j < aDuration; ++j) {
+      aOutput[i * aDuration + j] = aInput[i + j * aChannels];
+    }
+  }
+}
+
 void
 VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             TrackID aID,

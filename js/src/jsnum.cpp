@@ -488,7 +488,7 @@ Number(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsNumber(HandleValue v)
 {
     return v.isNumber() || (v.isObject() && v.toObject().is<NumberObject>());
@@ -503,7 +503,7 @@ Extract(const Value &v)
 }
 
 #if JS_HAS_TOSOURCE
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toSource_impl(JSContext *cx, CallArgs args)
 {
     double d = Extract(args.thisv());
@@ -541,7 +541,7 @@ ToCStringBuf::~ToCStringBuf()
     js_free(dbuf);
 }
 
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static JSFlatString *
 LookupDtoaCache(ThreadSafeContext *cx, double d)
 {
@@ -556,7 +556,7 @@ LookupDtoaCache(ThreadSafeContext *cx, double d)
     return nullptr;
 }
 
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static void
 CacheNumber(ThreadSafeContext *cx, double d, JSFlatString *str)
 {
@@ -567,7 +567,7 @@ CacheNumber(ThreadSafeContext *cx, double d, JSFlatString *str)
         comp->dtoaCache.cache(10, d, str);
 }
 
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static JSFlatString *
 LookupInt32ToString(ThreadSafeContext *cx, int32_t si)
 {
@@ -578,7 +578,7 @@ LookupInt32ToString(ThreadSafeContext *cx, int32_t si)
 }
 
 template <typename T>
-JS_ALWAYS_INLINE
+MOZ_ALWAYS_INLINE
 static T *
 BackfillInt32InBuffer(int32_t si, T *buffer, size_t size, size_t *length)
 {
@@ -683,7 +683,7 @@ template <AllowGC allowGC>
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base);
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -720,7 +720,7 @@ js_num_toString(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if !EXPOSE_INTL_API
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -854,7 +854,7 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif /* !EXPOSE_INTL_API */
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_valueOf_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -909,7 +909,7 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
  * In the following three implementations, we allow a larger range of precision
  * than ECMA requires; this is permitted by ECMA-262.
  */
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toFixed_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -932,7 +932,7 @@ num_toFixed(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsNumber, num_toFixed_impl>(cx, args);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toExponential_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));
@@ -958,7 +958,7 @@ num_toExponential(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsNumber, num_toExponential_impl>(cx, args);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 num_toPrecision_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsNumber(args.thisv()));

@@ -552,6 +552,11 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadio.webidl',
     ]
 
+if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+    WEBIDL_FILES += [
+        'CRMFObject.webidl',
+    ]
+
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'CallGroupErrorEvent.webidl',

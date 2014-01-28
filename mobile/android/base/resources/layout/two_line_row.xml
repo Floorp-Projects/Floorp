@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
+                                          android:layout_width="@dimen/favicon_bg"
+                                          android:layout_height="@dimen/favicon_bg"
+                                          android:layout_marginLeft="10dip"
+                                          android:layout_marginRight="10dip"/>
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginRight="10dip"
+                  android:orientation="vertical">
+
+        <org.mozilla.gecko.home.FadedTextView
+                android:id="@+id/primary_text"
+                style="@style/Widget.TwoLineRow.PrimaryText"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                gecko:fadeWidth="30dp"/>
+
+        <TextView android:id="@+id/secondary_text"
+                  style="@style/Widget.TwoLineRow.SecondaryText"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:drawablePadding="5dp"
+                  android:maxLength="1024"/>
+
+    </LinearLayout>
+
+</merge>

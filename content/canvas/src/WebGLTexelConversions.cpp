@@ -16,7 +16,7 @@ namespace {
  * This class is just a helper to implement WebGLContext::ConvertImage below.
  *
  * Design comments:
- * 
+ *
  * WebGLContext::ConvertImage has to handle hundreds of format conversion paths.
  * It is important to minimize executable code size here. Instead of passing around
  * a large number of function parameters hundreds of times, we create a
@@ -381,4 +381,4 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
     }
 }
 
-} // end namespace mozilla 
+} // end namespace mozilla

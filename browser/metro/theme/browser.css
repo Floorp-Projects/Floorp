@@ -163,6 +163,12 @@ documenttab[closing] > .documenttab-container {
   background-image: none!important;
 }
 
+/* TODO: Decide how and where to display private tabs.
+ * For now, display them in the main tab strip but hide the thumbnail. */
+documenttab[private] .documenttab-thumbnail {
+  background-color: purple;
+}
+
 .documenttab-title {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   margin-top: 0;
@@ -220,41 +226,9 @@ documenttab[selected] .documenttab-selection {
   padding-bottom: @toolbar_height@;
 }
 
-#startui-page {
-  overflow-x: scroll;
-  overflow-y: hidden;
-  height: 100%;
-}
-
-#startui-page[viewstate="snapped"],
-#startui-page[viewstate="portrait"] {
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-
-#startui-body {
-  height: 100%;
-  margin: 0;
-}
-
-#start-container {
-  height: 100%;
-}
-
 #urlbar-autocomplete[viewstate="snapped"],
 #urlbar-autocomplete[viewstate="portrait"]{
   -moz-box-orient: vertical;
-}
-
-#start-container[viewstate="snapped"],
-#start-container[viewstate="portrait"] {
-  width: 100%;
-  max-width: 100%; /* ensure page doesn't expand, messing up @media rules */
-  height: auto;
-}
-
-#start-container[viewstate="snapped"] .meta-section:not([expanded]) > richgrid {
-  visibility: collapse;
 }
 
 #autocomplete-overlay {
@@ -387,6 +361,26 @@ documenttab[selected] .documenttab-selection {
 
 #overlay-plus {
   background-image: url(chrome://browser/skin/images/overlay-plus.png);
+}
+
+@media (min-resolution: @min_res_140pc@) {
+  #overlay-back {
+    background-image: url(chrome://browser/skin/images/overlay-back@1.4x.png);
+  }
+
+  #overlay-plus {
+    background-image: url(chrome://browser/skin/images/overlay-plus@1.4x.png);
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  #overlay-back {
+    background-image: url(chrome://browser/skin/images/overlay-back@1.8x.png);
+  }
+
+  #overlay-plus {
+    background-image: url(chrome://browser/skin/images/overlay-plus@1.8x.png);
+  }
 }
 
 #overlay-back:-moz-locale-dir(ltr),

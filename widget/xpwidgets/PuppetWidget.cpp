@@ -490,8 +490,8 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
 
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
-  mozilla::TextComposition* textComposition =
-    nsIMEStateManager::GetTextComposition(this);
+  nsRefPtr<TextComposition> textComposition =
+    nsIMEStateManager::GetTextCompositionFor(this);
   NS_ENSURE_TRUE(textComposition, NS_ERROR_FAILURE);
 
   nsEventStatus status;

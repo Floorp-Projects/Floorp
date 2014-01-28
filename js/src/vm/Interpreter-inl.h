@@ -107,7 +107,7 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
  * undefined and null, throw an error and return nullptr, attributing the
  * problem to the value at |spindex| on the stack.
  */
-JS_ALWAYS_INLINE JSObject *
+MOZ_ALWAYS_INLINE JSObject *
 ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 {
     if (v.isObject())
@@ -289,7 +289,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 NegOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue val,
              MutableHandleValue res)
 {
@@ -311,7 +311,7 @@ NegOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue val
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue objval,
               HandleValue idval, MutableHandleValue res)
 {
@@ -332,7 +332,7 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObject,
                           HandleValue rref, MutableHandleValue res)
 {
@@ -393,7 +393,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
     } while (0);
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (op == JSOP_CALLELEM && JS_UNLIKELY(res.isUndefined()) && wasObject) {
+    if (op == JSOP_CALLELEM && MOZ_UNLIKELY(res.isUndefined()) && wasObject) {
         RootedObject obj(cx, objArg);
         if (!OnUnknownMethod(cx, obj, rref, res))
             return false;
@@ -404,7 +404,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleValue lref,
                           HandleValue rref, MutableHandleValue res, bool *done)
 {
@@ -430,7 +430,7 @@ GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleVa
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
@@ -455,7 +455,7 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
     return GetObjectElementOperation(cx, op, obj, isObject, rref, res);
 }
 
-static JS_ALWAYS_INLINE JSString *
+static MOZ_ALWAYS_INLINE JSString *
 TypeOfOperation(const Value &v, JSRuntime *rt)
 {
     JSType type = js::TypeOfValue(v);
@@ -469,7 +469,7 @@ TypeOfObjectOperation(JSObject *obj, JSRuntime *rt)
     return TypeName(type, rt->atomState);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValue val)
 {
     JS_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
@@ -481,7 +481,7 @@ InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValu
     return JSObject::defineGeneric(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t index, HandleValue val)
 {
     JSOp op = JSOp(*pc);
@@ -542,27 +542,27 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
         return true;                                                          \
     JS_END_MACRO
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 LessThanOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res) {
     RELATIONAL_OP(<);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 LessThanOrEqualOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res) {
     RELATIONAL_OP(<=);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GreaterThanOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res) {
     RELATIONAL_OP(>);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 GreaterThanOrEqualOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res) {
     RELATIONAL_OP(>=);
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitNot(JSContext *cx, HandleValue in, int *out)
 {
     int i;
@@ -572,7 +572,7 @@ BitNot(JSContext *cx, HandleValue in, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitXor(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
@@ -582,7 +582,7 @@ BitXor(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitOr(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
@@ -592,7 +592,7 @@ BitOr(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitAnd(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
@@ -602,7 +602,7 @@ BitAnd(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitLsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int32_t left, right;
@@ -612,7 +612,7 @@ BitLsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 BitRsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int32_t left, right;
@@ -622,7 +622,7 @@ BitRsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
     return true;
 }
 
-static JS_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 UrshOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *out)
 {
     uint32_t left;

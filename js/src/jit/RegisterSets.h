@@ -809,10 +809,10 @@ class ABIArg
 class AsmJSHeapAccess
 {
     uint32_t offset_;
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
     uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
 #endif
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     uint8_t opLength_;  // the length of the load/store instruction
     uint8_t isFloat32Load_;
     AnyRegister::Code loadedReg_ : 8;
@@ -822,13 +822,13 @@ class AsmJSHeapAccess
 
   public:
     AsmJSHeapAccess() {}
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // If 'cmp' equals 'offset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
     AsmJSHeapAccess(uint32_t offset, uint32_t after, ArrayBufferView::ViewType vt,
                     AnyRegister loadedReg, uint32_t cmp = UINT32_MAX)
       : offset_(offset),
-# if defined(JS_CPU_X86)
+# if defined(JS_CODEGEN_X86)
         cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
 # endif
         opLength_(after - offset),
@@ -837,14 +837,14 @@ class AsmJSHeapAccess
     {}
     AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = UINT32_MAX)
       : offset_(offset),
-# if defined(JS_CPU_X86)
+# if defined(JS_CODEGEN_X86)
         cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
 # endif
         opLength_(after - offset),
         isFloat32Load_(false),
         loadedReg_(UINT8_MAX)
     {}
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
     explicit AsmJSHeapAccess(uint32_t offset)
       : offset_(offset)
     {}
@@ -852,12 +852,12 @@ class AsmJSHeapAccess
 
     uint32_t offset() const { return offset_; }
     void setOffset(uint32_t offset) { offset_ = offset; }
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
     bool hasLengthCheck() const { return cmpDelta_ > 0; }
     void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
     void *patchOffsetAt(uint8_t *code) const { return code + (offset_ + opLength_); }
 #endif
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
     bool isFloat32Load() const { return isFloat32Load_; }

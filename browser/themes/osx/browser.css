@@ -1480,7 +1480,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #urlbar,
 .searchbar-textbox {
   font: icon;
-  width: 7em;
   -moz-appearance: none;
   box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px hsla(0,0%,0%,.05);
   margin: 0 4px;

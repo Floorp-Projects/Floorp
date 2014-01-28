@@ -543,7 +543,6 @@ MarionetteServerConnection.prototype = {
           'handlesAlerts': false,
           'javascriptEnabled': true,
           'nativeEvents': false,
-          'platform': Services.appinfo.OS,
           'platformName': Services.appinfo.OS,
           'platformVersion': Services.appinfo.platformVersion,
           'secureSsl': false,
@@ -2444,7 +2443,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getWindowHandle": MarionetteServerConnection.prototype.getWindowHandle,
   "getCurrentWindowHandle":  MarionetteServerConnection.prototype.getWindowHandle,  // Selenium 2 compat
   "getWindow":  MarionetteServerConnection.prototype.getWindowHandle,  // deprecated
-  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,
+  "getCurrentWindowHandles": MarionetteServerConnection.prototype.getWindowHandles,  // Selenium 2 compat
   "getWindows":  MarionetteServerConnection.prototype.getWindowHandles,  // deprecated
   "getActiveFrame": MarionetteServerConnection.prototype.getActiveFrame,
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,

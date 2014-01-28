@@ -553,7 +553,7 @@ class XPCShellTestThread(Thread):
         # class notation).
         if self.tests_root_dir is not None:
             self.tests_root_dir = os.path.normpath(self.tests_root_dir)
-            if self.test_object['here'].find(self.tests_root_dir) != 0:
+            if os.path.normpath(self.test_object['here']).find(self.tests_root_dir) != 0:
                 raise Exception('tests_root_dir is not a parent path of %s' %
                     self.test_object['here'])
             relpath = self.test_object['here'][len(self.tests_root_dir):].lstrip('/\\')

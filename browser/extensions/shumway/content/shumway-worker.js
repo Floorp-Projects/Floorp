@@ -3875,6 +3875,13 @@ function createParsingContext(commitData) {
         command: 'complete',
         stats: stats
       });
+    },
+    onexception: function (e) {
+      commitData({
+        type: 'exception',
+        message: e.message,
+        stack: e.stack
+      });
     }
   };
 }
@@ -5813,7 +5820,7 @@ var readHeader = function readHeader($bytes, $stream, $, swfVersion, tagCode) {
   global['tagHandler'] = tagHandler;
   global['readHeader'] = readHeader;
 }(this));
-function readTags(context, stream, swfVersion, final, onprogress) {
+function readTags(context, stream, swfVersion, final, onprogress, onexception) {
   var tags = context.tags;
   var bytes = stream.bytes;
   var lastSuccessfulPosition;
@@ -5882,6 +5889,7 @@ function readTags(context, stream, swfVersion, final, onprogress) {
     }
   } catch (e) {
     if (e !== StreamNoDataError) {
+      onexception && onexception(e);
       throw e;
     }
     stream.pos = lastSuccessfulPosition;
@@ -6041,7 +6049,7 @@ BodyParser.prototype = {
       finalBlock = progressInfo.bytesLoaded >= progressInfo.bytesTotal;
     }
     var readStartTime = performance.now();
-    readTags(swf, stream, swfVersion, finalBlock, options.onprogress);
+    readTags(swf, stream, swfVersion, finalBlock, options.onprogress, options.onexception);
     swf.parseTime += performance.now() - readStartTime;
     var read = stream.pos;
     buffer.removeHead(read);

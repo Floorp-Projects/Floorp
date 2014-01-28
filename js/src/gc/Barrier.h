@@ -182,14 +182,14 @@ template <typename T>
 class BarrieredCell : public gc::Cell
 {
   public:
-    JS_ALWAYS_INLINE JS::Zone *zone() const { return tenuredZone(); }
-    JS_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
-    JS_ALWAYS_INLINE JS::Zone *zoneFromAnyThread() const { return tenuredZoneFromAnyThread(); }
-    JS_ALWAYS_INLINE JS::shadow::Zone *shadowZoneFromAnyThread() const {
+    MOZ_ALWAYS_INLINE JS::Zone *zone() const { return tenuredZone(); }
+    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
+    MOZ_ALWAYS_INLINE JS::Zone *zoneFromAnyThread() const { return tenuredZoneFromAnyThread(); }
+    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZoneFromAnyThread() const {
         return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
     }
 
-    static JS_ALWAYS_INLINE void readBarrier(T *thing) {
+    static MOZ_ALWAYS_INLINE void readBarrier(T *thing) {
 #ifdef JSGC_INCREMENTAL
         // Off thread Ion compilation never occurs when barriers are active.
         js::AutoThreadSafeAccess ts(thing);
@@ -204,7 +204,7 @@ class BarrieredCell : public gc::Cell
 #endif
     }
 
-    static JS_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone *zone) {
+    static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone *zone) {
 #ifdef JSGC_INCREMENTAL
         return JS::shadow::Zone::asShadowZone(zone)->needsBarrier();
 #else
@@ -212,9 +212,9 @@ class BarrieredCell : public gc::Cell
 #endif
     }
 
-    static JS_ALWAYS_INLINE bool isNullLike(T *thing) { return !thing; }
+    static MOZ_ALWAYS_INLINE bool isNullLike(T *thing) { return !thing; }
 
-    static JS_ALWAYS_INLINE void writeBarrierPre(T *thing) {
+    static MOZ_ALWAYS_INLINE void writeBarrierPre(T *thing) {
 #ifdef JSGC_INCREMENTAL
         if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsBarrier())
             return;
@@ -254,7 +254,7 @@ ShadowZoneOfString(JSString *str)
     return JS::shadow::Zone::asShadowZone(reinterpret_cast<const js::gc::Cell *>(str)->tenuredZone());
 }
 
-JS_ALWAYS_INLINE JS::Zone *
+MOZ_ALWAYS_INLINE JS::Zone *
 ZoneOfValue(const JS::Value &value)
 {
     JS_ASSERT(value.isMarkable());
@@ -279,7 +279,7 @@ ShadowZoneOfStringFromAnyThread(JSString *str)
         reinterpret_cast<const js::gc::Cell *>(str)->tenuredZoneFromAnyThread());
 }
 
-JS_ALWAYS_INLINE JS::Zone *
+MOZ_ALWAYS_INLINE JS::Zone *
 ZoneOfValueFromAnyThread(const JS::Value &value)
 {
     JS_ASSERT(value.isMarkable());

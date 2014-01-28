@@ -1621,7 +1621,8 @@ class InitialShapeSetRef : public BufferableRef
         JSObject *priorMetadata = metadata;
         if (proto.isObject())
             Mark(trc, reinterpret_cast<JSObject**>(&proto), "initialShapes set proto");
-        Mark(trc, &parent, "initialShapes set parent");
+        if (parent)
+            Mark(trc, &parent, "initialShapes set parent");
         if (metadata)
             Mark(trc, &metadata, "initialShapes set metadata");
         if (proto == priorProto && parent == priorParent && metadata == priorMetadata)

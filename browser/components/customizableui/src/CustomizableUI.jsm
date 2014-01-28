@@ -1204,6 +1204,11 @@ let CustomizableUIInternal = {
 
     let target = aEvent.originalTarget;
     let panel = this._getPanelForNode(aEvent.currentTarget);
+    // This can happen in e.g. customize mode. If there's no panel,
+    // there's clearly nothing for us to close; pretend we're interactive.
+    if (!panel) {
+      return true;
+    }
     // We keep track of:
     // whether we're in an input container (text field)
     let inInput = false;

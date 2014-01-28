@@ -9,6 +9,17 @@ if (this.Components) {
 
 // Worker thread for osfile asynchronous front-end
 
+// Exception names to be posted from the worker thread to main thread
+const EXCEPTION_NAMES = {
+  EvalError: "EvalError",
+  InternalError: "InternalError",
+  RangeError: "RangeError",
+  ReferenceError: "ReferenceError",
+  SyntaxError: "SyntaxError",
+  TypeError: "TypeError",
+  URIError: "URIError"
+};
+
 (function(exports) {
   "use strict";
 
@@ -110,6 +121,11 @@ if (this.Components) {
      // (deserialization ensures that we end up with OS-specific
      // instances of |OS.File.Error|)
      post({fail: exports.OS.File.Error.toMsg(exn), id:id, durationMs: durationMs});
+   } else if (exn.constructor.name in EXCEPTION_NAMES) {
+     LOG("Sending back exception", exn.constructor.name);
+     post({fail: {exn: exn.constructor.name, message: exn.message,
+                  fileName: exn.fileName, lineNumber: exn.lineNumber},
+           id: id, durationMs: durationMs});
    } else {
      // Other exceptions do not, and should be propagated through DOM's
      // built-in mechanism for uncaught errors, although this mechanism

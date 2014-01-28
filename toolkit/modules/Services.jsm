@@ -36,6 +36,15 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
            .QueryInterface(Ci.nsIProperties);
 });
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
+  let ns = {};
+  Components.utils.import("resource://gre/modules/CrashManager.jsm", ns);
+
+  return ns.CrashManager.Singleton;
+});
+#endif
+
 let initTable = [
 #ifdef MOZ_WIDGET_ANDROID
   ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge"],

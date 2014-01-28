@@ -21,7 +21,7 @@ using mozilla::ReentrancyGuard;
 
 /*** SlotEdge ***/
 
-JS_ALWAYS_INLINE HeapSlot *
+MOZ_ALWAYS_INLINE HeapSlot *
 StoreBuffer::SlotEdge::slotLocation() const
 {
     if (kind == HeapSlot::Element) {
@@ -34,14 +34,14 @@ StoreBuffer::SlotEdge::slotLocation() const
     return &object->getSlotRef(offset);
 }
 
-JS_ALWAYS_INLINE void *
+MOZ_ALWAYS_INLINE void *
 StoreBuffer::SlotEdge::deref() const
 {
     HeapSlot *loc = slotLocation();
     return (loc && loc->isGCThing()) ? loc->toGCThing() : nullptr;
 }
 
-JS_ALWAYS_INLINE void *
+MOZ_ALWAYS_INLINE void *
 StoreBuffer::SlotEdge::location() const
 {
     return (void *)slotLocation();
@@ -53,7 +53,7 @@ StoreBuffer::SlotEdge::inRememberedSet(const Nursery &nursery) const
     return !nursery.isInside(object) && nursery.isInside(deref());
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 StoreBuffer::SlotEdge::isNullEdge() const
 {
     return !deref();
@@ -110,10 +110,18 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compact(StoreBuffer *owner)
 {
-    if (!storage_)
-        return;
-
+    JS_ASSERT(storage_);
     compactRemoveDuplicates(owner);
+    usedAtLastCompact_ = storage_->used();
+}
+
+template <typename T>
+void
+StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner)
+{
+    JS_ASSERT(storage_);
+    if (storage_->used() != usedAtLastCompact_)
+        compact(owner);
 }
 
 template <typename T>
@@ -125,7 +133,7 @@ StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
     if (!storage_)
         return;
 
-    compact(owner);
+    maybeCompact(owner);
     for (LifoAlloc::Enum e(*storage_); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
         if (edge->isNullEdge())
