@@ -9831,14 +9831,12 @@ IonBuilder::lookupTypeRepresentationSet(MDefinition *typedObj,
     }
 
     types::TemporaryTypeSet *types = typedObj->resultTypeSet();
-    return typeSetToTypeRepresentationSet(types, out,
-                                          types::TypeTypedObject::Datum);
+    return typeSetToTypeRepresentationSet(types, out);
 }
 
 bool
 IonBuilder::typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
-                                           TypeRepresentationSet *out,
-                                           types::TypeTypedObject::Kind kind)
+                                           TypeRepresentationSet *out)
 {
     // Extract TypeRepresentationSet directly if we can
     if (!types || types->getKnownTypeTag() != JSVAL_TYPE_OBJECT)
@@ -9857,10 +9855,8 @@ IonBuilder::typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
         if (!type->hasTypedObject())
             return true;
 
-        if (type->typedObject()->kind != kind)
-            return true;
-
-        TypeRepresentation *typeRepr = type->typedObject()->typeRepr;
+        TypeRepresentation *typeRepr =
+            type->typedObject()->descr().typeRepresentation();
         if (!set.insert(typeRepr))
             return false;
     }
