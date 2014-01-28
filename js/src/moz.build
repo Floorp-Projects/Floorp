@@ -281,7 +281,7 @@ if CONFIG['ENABLE_ION']:
         'jit/ValueNumbering.cpp',
         'jit/VMFunctions.cpp',
     ]
-    if CONFIG['TARGET_CPU'].find('86') != -1:
+    if CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         UNIFIED_SOURCES += [
             'jit/shared/Assembler-x86-shared.cpp',
             'jit/shared/BaselineCompiler-x86-shared.cpp',
@@ -290,7 +290,7 @@ if CONFIG['ENABLE_ION']:
             'jit/shared/Lowering-x86-shared.cpp',
             'jit/shared/MoveEmitter-x86-shared.cpp',
         ]
-        if CONFIG['TARGET_CPU'] == 'x86_64':
+        if CONFIG['JS_CODEGEN_X64']:
             UNIFIED_SOURCES += [
                 'jit/x64/Assembler-x64.cpp',
                 'jit/x64/Bailouts-x64.cpp',
@@ -312,7 +312,7 @@ if CONFIG['ENABLE_ION']:
                 'jit/x86/MacroAssembler-x86.cpp',
                 'jit/x86/Trampoline-x86.cpp',
             ]
-    elif CONFIG['TARGET_CPU'].find('arm') != -1:
+    elif CONFIG['JS_CODEGEN_ARM']:
         UNIFIED_SOURCES += [
             'jit/arm/Architecture-arm.cpp',
             'jit/arm/Assembler-arm.cpp',
@@ -325,6 +325,10 @@ if CONFIG['ENABLE_ION']:
             'jit/arm/MoveEmitter-arm.cpp',
             'jit/arm/Trampoline-arm.cpp',
         ]
+        if CONFIG['JS_ARM_SIMULATOR']:
+            UNIFIED_SOURCES += [
+                'jit/arm/Simulator-arm.cpp'
+            ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
@@ -343,11 +347,11 @@ else:
     ]
 
 if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
-    if '86' in CONFIG['TARGET_CPU']:
+    if CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
         SOURCES += [
             'assembler/assembler/MacroAssemblerX86Common.cpp',
         ]
-    elif CONFIG['CPU_ARCH'] == 'arm':
+    elif CONFIG['JS_CODEGEN_ARM']:
         SOURCES += [
             'assembler/assembler/ARMAssembler.cpp',
             'assembler/assembler/MacroAssemblerARM.cpp',
