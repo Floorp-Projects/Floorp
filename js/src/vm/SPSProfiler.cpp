@@ -28,6 +28,11 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
     enabled_(false)
 {
     JS_ASSERT(rt != nullptr);
+#ifdef JS_THREADSAFE
+    lock_ = PR_NewLock();
+    if (lock_ == nullptr)
+        MOZ_CRASH("Couldn't allocate lock!");
+#endif
 }
 
 SPSProfiler::~SPSProfiler()
@@ -36,11 +41,15 @@ SPSProfiler::~SPSProfiler()
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
             js_free(const_cast<char *>(e.front().value()));
     }
+#ifdef JS_THREADSAFE
+    PR_DestroyLock(lock_);
+#endif
 }
 
 void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
+    AutoSPSLock lock(lock_);
     JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
         strings.init();
@@ -79,6 +88,7 @@ SPSProfiler::enable(bool enabled)
 const char*
 SPSProfiler::profileString(JSScript *script, JSFunction *maybeFun)
 {
+    AutoSPSLock lock(lock_);
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
@@ -103,6 +113,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
      * off, we still want to remove the string, so no check of enabled() is
      * done.
      */
+    AutoSPSLock lock(lock_);
     if (!strings.initialized())
         return;
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
