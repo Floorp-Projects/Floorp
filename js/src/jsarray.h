@@ -27,7 +27,7 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
         return true;
     }
 
-    if (JS_UNLIKELY(!JSID_IS_STRING(id)))
+    if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
         return false;
 
     return js::StringIsArrayIndex(JSID_TO_ATOM(id), indexp);

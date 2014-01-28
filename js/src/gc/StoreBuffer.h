@@ -291,12 +291,12 @@ class StoreBuffer
             return object != other.object || offset != other.offset || kind != other.kind;
         }
 
-        JS_ALWAYS_INLINE HeapSlot *slotLocation() const;
+        MOZ_ALWAYS_INLINE HeapSlot *slotLocation() const;
 
-        JS_ALWAYS_INLINE void *deref() const;
-        JS_ALWAYS_INLINE void *location() const;
+        MOZ_ALWAYS_INLINE void *deref() const;
+        MOZ_ALWAYS_INLINE void *location() const;
         bool inRememberedSet(const Nursery &nursery) const;
-        JS_ALWAYS_INLINE bool isNullEdge() const;
+        MOZ_ALWAYS_INLINE bool isNullEdge() const;
 
         void mark(JSTracer *trc);
     };

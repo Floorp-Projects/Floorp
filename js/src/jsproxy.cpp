@@ -2521,7 +2521,7 @@ Proxy::callProp(JSContext *cx, HandleObject proxy, HandleObject receiver, Handle
         return false;
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(vp.isPrimitive())) {
+    if (MOZ_UNLIKELY(vp.isPrimitive())) {
         if (!OnUnknownMethod(cx, proxy, IdToValue(id), vp))
             return false;
     }

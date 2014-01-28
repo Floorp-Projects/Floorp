@@ -37,14 +37,14 @@ const Class BooleanObject::class_ = {
     JS_ConvertStub
 };
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsBoolean(HandleValue v)
 {
     return v.isBoolean() || (v.isObject() && v.toObject().is<BooleanObject>());
 }
 
 #if JS_HAS_TOSOURCE
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 bool_toSource_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
@@ -71,7 +71,7 @@ bool_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 bool_toString_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
@@ -89,7 +89,7 @@ bool_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsBoolean, bool_toString_impl>(cx, args);
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 bool_valueOf_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();

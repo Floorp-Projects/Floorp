@@ -202,7 +202,7 @@ class DefinitionSingle
 struct AtomDefnMapPtr : public AtomThingMapPtr<AtomDefnMap>
 {
     template <typename ParseHandler>
-    JS_ALWAYS_INLINE
+    MOZ_ALWAYS_INLINE
     typename ParseHandler::DefinitionNode lookupDefn(JSAtom *atom) {
         AtomDefnMap::Ptr p = map_->lookup(atom);
         return p ? p.value().get<ParseHandler>() : ParseHandler::nullDefinition();

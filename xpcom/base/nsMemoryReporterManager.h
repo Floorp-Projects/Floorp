@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsMemoryReporterManager_h__
+#define nsMemoryReporterManager_h__
+
 #include "nsIMemoryReporter.h"
 #include "mozilla/Mutex.h"
 #include "nsTHashtable.h"
@@ -204,3 +207,5 @@ private:
 #define NS_MEMORY_REPORTER_MANAGER_CID \
 { 0xfb97e4f5, 0x32dd, 0x497a, \
 { 0xba, 0xa2, 0x7d, 0x1e, 0x55, 0x7, 0x99, 0x10 } }
+
+#endif // nsMemoryReporterManager_h__

@@ -163,7 +163,7 @@ private:
    * zooming.
    */
   void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
-                                 const gfx3DMatrix& aPreviousTransformForRoot,
+                                 const gfx::Matrix4x4& aPreviousTransformForRoot,
                                  const LayerMargin& aFixedLayerMargins);
 
   /**
