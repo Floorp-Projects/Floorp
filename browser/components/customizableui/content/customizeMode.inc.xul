@@ -5,7 +5,7 @@
 <hbox id="customization-container" flex="1" hidden="true">
   <vbox flex="1" id="customization-palette-container">
     <label id="customization-header">
-      &customizeMode.menuAndToolbars.header;
+      &customizeMode.menuAndToolbars.header2;
     </label>
     <hbox id="customization-empty" hidden="true">
       <label>&customizeMode.menuAndToolbars.empty;</label>

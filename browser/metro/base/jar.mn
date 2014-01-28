@@ -75,7 +75,7 @@ chrome.jar:
   content/appbar.js                            (content/appbar.js)
   content/shell.xul                            (content/jsshell/shell.xul)
   content/shell.html                           (content/jsshell/shell.html)
-  content/browser.css                          (content/browser.css)
+  content/bindings.css                         (content/bindings.css)
   content/cursor.css                           (content/cursor.css)
   content/sanitize.js                          (content/sanitize.js)
   content/sanitizeUI.js                        (content/sanitizeUI.js)

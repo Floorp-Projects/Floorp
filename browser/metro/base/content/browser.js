@@ -476,6 +476,7 @@ var Browser = {
    *   is closed, we will return to a parent or "sibling" tab if possible.
    * @param aParams Object (optional) with optional properties:
    *   index: Number specifying where in the tab list to insert the new tab.
+   *   private: If true, the new tab should be have Private Browsing active.
    *   flags, postData, charset, referrerURI: See loadURIWithFlags.
    */
   addTab: function browser_addTab(aURI, aBringFront, aOwner, aParams) {
@@ -1255,6 +1256,13 @@ function Tab(aURI, aParams, aOwner) {
   this._eventDeferred = null;
   this._updateThumbnailTimeout = null;
 
+  this._private = false;
+  if ("private" in aParams) {
+    this._private = aParams.private;
+  } else if (aOwner) {
+    this._private = aOwner.private;
+  }
+
   this.owner = aOwner || null;
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
@@ -1282,6 +1290,10 @@ Tab.prototype = {
     return this._chromeTab;
   },
 
+  get isPrivate() {
+    return this._private;
+  },
+
   get pageShowPromise() {
     return this._eventDeferred ? this._eventDeferred.promise : null;
   },
@@ -1307,6 +1319,10 @@ Tab.prototype = {
     this._eventDeferred = Promise.defer();
 
     this._chromeTab = Elements.tabList.addTab(aParams.index);
+    if (this.isPrivate) {
+      this._chromeTab.setAttribute("private", "true");
+    }
+
     this._id = Browser.createTabId();
     let browser = this._createBrowser(aURI, null);
 
@@ -1461,6 +1477,11 @@ Tab.prototype = {
      // let the content area manager know about this browser.
     ContentAreaObserver.onBrowserCreated(browser);
 
+    if (this.isPrivate) {
+      let ctx = browser.docShell.QueryInterface(Ci.nsILoadContext);
+      ctx.usePrivateBrowsing = true;
+    }
+
     // stop about:blank from loading
     browser.stop();
 
@@ -1485,7 +1506,9 @@ Tab.prototype = {
   },
 
   updateThumbnail: function updateThumbnail() {
-    PageThumbs.captureToCanvas(this.browser.contentWindow, this._chromeTab.thumbnailCanvas);
+    if (!this.isPrivate) {
+      PageThumbs.captureToCanvas(this.browser.contentWindow, this._chromeTab.thumbnailCanvas);
+    }
   },
 
   updateFavicon: function updateFavicon() {

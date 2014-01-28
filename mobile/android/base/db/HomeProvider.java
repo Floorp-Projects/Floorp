@@ -5,7 +5,7 @@
 package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract.HomeListItems;
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 
@@ -27,8 +27,8 @@ import android.util.Log;
 import java.io.InputStream;
 import java.io.IOException;
 
-public class HomeListsProvider extends SQLiteBridgeContentProvider {
-    private static final String LOGTAG = "GeckoHomeListsProvider";
+public class HomeProvider extends SQLiteBridgeContentProvider {
+    private static final String LOGTAG = "GeckoHomeProvider";
 
     // This should be kept in sync with the db version in mobile/android/modules/HomeProvider.jsm
     private static int DB_VERSION = 1;
@@ -44,12 +44,12 @@ public class HomeListsProvider extends SQLiteBridgeContentProvider {
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        URI_MATCHER.addURI(BrowserContract.HOME_LISTS_AUTHORITY, "items/fake", ITEMS_FAKE);
-        URI_MATCHER.addURI(BrowserContract.HOME_LISTS_AUTHORITY, "items", ITEMS);
-        URI_MATCHER.addURI(BrowserContract.HOME_LISTS_AUTHORITY, "items/#", ITEMS_ID);
+        URI_MATCHER.addURI(BrowserContract.HOME_AUTHORITY, "items/fake", ITEMS_FAKE);
+        URI_MATCHER.addURI(BrowserContract.HOME_AUTHORITY, "items", ITEMS);
+        URI_MATCHER.addURI(BrowserContract.HOME_AUTHORITY, "items/#", ITEMS_ID);
     }
 
-    public HomeListsProvider() {
+    public HomeProvider() {
         super(LOGTAG);
     }
 
@@ -59,10 +59,10 @@ public class HomeListsProvider extends SQLiteBridgeContentProvider {
 
         switch (match) {
             case ITEMS_FAKE: {
-                return HomeListItems.CONTENT_TYPE;
+                return HomeItems.CONTENT_TYPE;
             }
             case ITEMS: {
-                return HomeListItems.CONTENT_TYPE;
+                return HomeItems.CONTENT_TYPE;
             }
             default: {
                 throw new UnsupportedOperationException("Unknown type " + uri);
@@ -91,18 +91,19 @@ public class HomeListsProvider extends SQLiteBridgeContentProvider {
         try {
             items = new JSONArray(getRawFakeItems());
         } catch (IOException e) {
-            Log.e(LOGTAG, "Error getting fake list items", e);
+            Log.e(LOGTAG, "Error getting fake home items", e);
             return null;
         } catch (JSONException e) {
-            Log.e(LOGTAG, "Error parsing fake-list-items.json", e);
+            Log.e(LOGTAG, "Error parsing fake_home_items.json", e);
             return null;
         }
 
         final String[] itemsColumns = new String[] {
-            HomeListItems._ID,
-            HomeListItems.PROVIDER_ID,
-            HomeListItems.URL,
-            HomeListItems.TITLE
+            HomeItems._ID,
+            HomeItems.DATASET_ID,
+            HomeItems.URL,
+            HomeItems.TITLE,
+            HomeItems.DESCRIPTION
         };
 
         final MatrixCursor c = new MatrixCursor(itemsColumns);
@@ -111,19 +112,20 @@ public class HomeListsProvider extends SQLiteBridgeContentProvider {
                 final JSONObject item = items.getJSONObject(i);
                 c.addRow(new Object[] {
                     item.getInt("id"),
-                    item.getString("provider_id"),
+                    item.getString("dataset_id"),
                     item.getString("url"),
-                    item.getString("title")
+                    item.getString("title"),
+                    item.getString("description")
                 });
             } catch (JSONException e) {
-                Log.e(LOGTAG, "Error creating cursor row for fake list item", e);
+                Log.e(LOGTAG, "Error creating cursor row for fake home item", e);
             }
         }
         return c;
     }
 
     private String getRawFakeItems() throws IOException {
-        final InputStream inputStream = getContext().getResources().openRawResource(R.raw.fake_list_items);
+        final InputStream inputStream = getContext().getResources().openRawResource(R.raw.fake_home_items);
         final byte[] buffer = new byte[1024];
         StringBuilder s = new StringBuilder();
         int count;
