@@ -39,8 +39,8 @@ enum DeviceManagerState {
   DeviceOK,
   // The device or swap chain are in a bad state, and we should not render.
   DeviceFail,
-  // The device is lost, the user should forget the current device manager
-  // and create a new one.
+  // The device is lost and cannot be reset, the user should forget the
+  // current device manager and create a new one.
   DeviceMustRecreate,
 };
 
