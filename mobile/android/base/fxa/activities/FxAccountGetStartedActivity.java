@@ -9,6 +9,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.AccountAuthenticatorActivity;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 
 /**
  * Activity which displays sign up/sign in screen to the user.
@@ -36,7 +38,8 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_get_started);
 
-    // linkifyTextViews(null, new int[] { R.id.old_firefox });
+    TextView oldFirefox = (TextView) findViewById(R.id.old_firefox);
+    ActivityUtils.linkTextView(oldFirefox, R.string.fxaccount_old_firefox, R.string.fxaccount_link_old_firefox);
 
     View button = findViewById(R.id.get_started_button);
     button.setOnClickListener(new OnClickListener() {
