@@ -15,22 +15,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         BaseBootstrapper.__init__(self)
         self.version = int(version.split('.')[0])
 
-    def pkg_install(self, *packages):
-        if self.which('pkg'):
-            command = ['pkg', 'install', '-x']
-            command.extend([i[0] for i in packages])
-        else:
-            command = ['pkg_add', '-Fr']
-            command.extend([i[-1] for i in packages])
-
-        self.run_as_root(command)
-
-    def install_system_packages(self):
-        # using clang since 9.0
-        if self.version < 9:
-            self.pkg_install(('gcc',))
-
-        self.pkg_install(
+        self.packages = [
             ('autoconf-2.13', 'autoconf213'),
             ('dbus-glib',),
             ('gmake',),
@@ -42,7 +27,26 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             ('mercurial',),
             ('pulseaudio',),
             ('yasm',),
-            ('zip',))
+            ('zip',),
+        ]
+
+        # using clang since 9.0
+        if self.version < 9:
+            self.packages.append(('gcc',))
+
+
+    def pkg_install(self, *packages):
+        if self.which('pkg'):
+            command = ['pkg', 'install', '-x']
+            command.extend([i[0] for i in packages])
+        else:
+            command = ['pkg_add', '-Fr']
+            command.extend([i[-1] for i in packages])
+
+        self.run_as_root(command)
+
+    def install_system_packages(self):
+        self.pkg_install(*self.packages)
 
     def upgrade_mercurial(self, current):
         self.pkg_install('mercurial')
