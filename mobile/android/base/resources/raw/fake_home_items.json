@@ -1,0 +1,13 @@
+[{
+    "id": 1,
+    "dataset_id": "fake-dataset",
+    "url": "http://example.com/first",
+    "title": "First Example",
+    "description": "This is an example"
+}, {
+    "id": 2,
+    "dataset_id": "fake-dataset",
+    "url": "http://example.com/second",
+    "title": "Second Example",
+    "description": "This is a second example"
+}]

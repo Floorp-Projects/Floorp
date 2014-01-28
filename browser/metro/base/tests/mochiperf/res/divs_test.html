@@ -70,12 +70,15 @@ var frames = 0;
 
 function go() {
   var now = new Date();
+  var evt = document.createEvent("CustomEvent");
+  evt.initCustomEvent("teststarted", true, false, {});
+  window.dispatchEvent(evt);
   function step(timestamp) {
     render();
     frames++;
     var time = new Date();
     var diff = time.getTime() - now.getTime();
-    if (diff < 10000) {
+    if (diff < 5000) {
       window.mozRequestAnimationFrame(step);
     } else {
       var evt = document.createEvent("CustomEvent");

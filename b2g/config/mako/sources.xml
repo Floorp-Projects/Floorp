@@ -6,12 +6,12 @@
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="fce1a137746dbd354bca1918f02f96d51c40bad2">
+  <project name="platform_build" path="build" remote="b2g" revision="317f25e0a4cb3e8e86e2b76c37a14081372f0307">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6586d2b8b43c6997be5cf5895bbdf3dd20490725"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="e314d089d988f0eb1bef2404858c60b734dc4130"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9b6626eddbc85873eaa2a9174a9bd5101e5c05f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="96d2d00165f4561fbde62d1062706eab74b3a01f"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="a887bfabaed83c4588b40c845535c0388c8da0f3"/>
@@ -106,7 +106,7 @@
   <project name="platform/ndk" path="ndk" revision="7666b97bbaf1d645cdd6b4430a367b7a2bb53369"/>
   <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="f6ab40b3257abc07741188fd173ac392575cc8d2"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="e52099755d0bd3a579130eefe8e58066cc6c0cb6"/>
-  <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="42011ad6bfec9978f9a297cf4a754af67b7c478a"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="11663426672fcc46e2a0f29239afa736b90635ba"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="842e33e43a55ea44833b9e23e4d180fa17c843af"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5db24726f0f42124304195a6bdea129039eeeaeb"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="930ae098543881f47eac054677726ee4b998b2f8"/>
