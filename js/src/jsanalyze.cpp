@@ -1791,6 +1791,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 2].v = code->poppedValues[0];
             break;
 
+          case JSOP_MUTATEPROTO:
           case JSOP_INITPROP:
           case JSOP_INITPROP_GETTER:
           case JSOP_INITPROP_SETTER:
