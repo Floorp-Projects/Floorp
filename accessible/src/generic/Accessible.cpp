@@ -581,7 +581,6 @@ Accessible::VisibilityState()
     return states::INVISIBLE;
 
   nsIFrame* curFrame = frame;
-  nsPoint framePos(0, 0);
   do {
     nsView* view = curFrame->GetView();
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
@@ -605,11 +604,11 @@ Accessible::VisibilityState()
 
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
-    framePos += curFrame->GetPosition();
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
     if (scrollableFrame) {
       nsRect scrollPortRect = scrollableFrame->GetScrollPortRect();
-      nsRect frameRect(framePos, frame->GetSize());
+      nsRect frameRect = nsLayoutUtils::TransformFrameRectToAncestor(
+        frame, frame->GetRectRelativeToSelf(), parentFrame);
       if (!scrollPortRect.Contains(frameRect)) {
         const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
         scrollPortRect.Deflate(kMinPixels, kMinPixels);
