@@ -149,11 +149,18 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
         mIsDefaultEngine = isDefault;
         if (isDefault) {
             setOrder(0);
-            setSummary(LABEL_IS_DEFAULT);
         } else {
             setOrder(1);
-            setSummary("");
         }
+
+        final String summary = isDefault ? LABEL_IS_DEFAULT : "";
+        // Set the View text on the UI thread, because this may be called from the Gecko thread.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                SearchEnginePreference.this.setSummary(summary);
+            }
+        });
     }
 
     /**
