@@ -1,0 +1,84 @@
+// Test states to be tested for css state machine in css-autocompelter.js file.
+// Test cases are of the following format:
+// [
+//   [
+//     line, // The line location of the cursor
+//     ch    // The column locaiton of the cursor
+//   ],
+//   [
+//     state,         // one of CSS_STATES
+//     selectorState, // one of SELECTOR_STATES
+//     completing,    // what is being completed
+//     propertyName,  // what property is being completed in case of value state
+//                    // or the current selector that is being completed
+//   ]
+// ]
+[
+  [[0, 10], ['null', '', '', '']],
+  [[4,  3], ['selector', 'class', 'de', '.de']],
+  [[5,  8], ['property', 'null', '-moz-a']],
+  [[5, 21], ['value', 'null', 'no', '-moz-appearance']],
+  [[6, 18], ['property', 'null', 'padding']],
+  [[6, 24], ['value', 'null', '3', 'padding']],
+  [[6, 29], ['property', 'null', 'bo']],
+  [[6, 50], ['value', 'null', '1p', 'border-bottom-width']],
+  [[7, 24], ['value', 'null', 's', 'border-bottom-style']],
+  [[9,  0], ['null', 'null', '', '']],
+  [[10, 6], ['selector', 'id', 'devto', '#devto']],
+  [[10, 17], ['selector', 'class', 'de', '#devtools-menu.de']],
+  [[11,  5], ['selector', 'class', 'devt', '.devt']],
+  [[11, 30], ['selector', 'id', 'devtoo', '.devtools-toolbarbutton#devtoo']],
+  [[12, 10], ['property', 'null', '-moz-app']],
+  [[16, 27], ['value', 'null', 'hsl', 'text-shadow']],
+  [[19, 24], ['value', 'null', 'linear-gra', 'background']],
+  [[19, 55], ['value', 'null', 'hsl', 'background']],
+  [[19, 79], ['value', 'null', 'paddin', 'background']],
+  [[20, 47], ['value', 'null', 'ins', 'box-shadow']],
+  [[22, 15], ['value', 'null', 'inheri', 'color']],
+  [[25, 26], ['selector', 'null', '', '.devtools-toolbarbutton > ']],
+  [[25, 28], ['selector', 'tag', 'hb', '.devtools-toolbarbutton > hb']],
+  [[25, 41], ['selector', 'class', 'toolbarbut', '.devtools-toolbarbutton > hbox.toolbarbut']],
+  [[29, 21], ['selector', 'pseudo', 'ac', '.devtools-menulist:ac']],
+  [[30, 27], ['selector', 'pseudo', 'foc', '#devtools-toolbarbutton:foc']],
+  [[31, 18], ['value', 'null', 'dot', 'outline']],
+  [[32, 25], ['value', 'null', '-4p', 'outline-offset']],
+  [[35, 26], ['selector', 'pseudo', 'no', '.devtools-toolbarbutton:no']],
+  [[35, 28], ['selector', 'null', 'not', '']],
+  [[35, 30], ['selector', 'attribute', 'l', '[l']],
+  [[39, 46], ['selector', 'class', 'toolba', '.devtools-toolbarbutton:not([label]) > .toolba']],
+  [[43, 39], ['selector', 'value', 'tr', '[checked=tr']],
+  [[43, 47], ['selector', 'pseudo', 'hov', '.devtools-toolbarbutton:not([checked=true]):hov']],
+  [[43, 53], ['selector', 'pseudo', 'act', '.devtools-toolbarbutton:not([checked=true]):hover:act']],
+  [[47, 22], ['selector', 'attribute', 'op', '.devtools-menulist[op']],
+  [[47, 33], ['selector', 'value', 'tr', '.devtools-menulist[open =tr']],
+  [[48, 38], ['selector', 'value', 'tr', '.devtools-toolbarbutton[open = tr']],
+  [[49, 40], ['selector', 'value', 'true', '.devtools-toolbarbutton[checked= true']],
+  [[53, 34], ['selector', 'value', '=', '.devtools-toolbarbutton[checked=']],
+  [[58, 38], ['value', 'null', '!impor', 'background-color']],
+  [[61, 41], ['selector', 'pseudo', 'hov', '.devtools-toolbarbutton[checked=true]:hov']],
+  [[65, 47], ['selector', 'class', 'to', '.devtools-toolbarbutton[type=menu-button] > .to']],
+  [[69, 44], ['selector', 'pseudo', 'first-of', '.devtools-sidebar-tabs > tabs > tab:first-of']],
+  [[73, 45], ['selector', 'pseudo', 'last', ':last']],
+  [[77, 27], ['selector', 'class', 'vis', '.vis']],
+  [[78, 34], ['selector', 'class', 'hidd', '.hidden-labels-box.visible ~ .hidd']],
+  [[83,  5], ['media', 'null', 'medi']],
+  [[83, 22], ['media', 'null', '800']],
+  [[84,  9], ['selector', 'class', 'catego', '.catego']],
+  [[89,  9], ['media', 'null', 'al']],
+  [[90,  6], ['selector', 'id', 'err', '#err']],
+  [[93, 11], ['property', 'null', 'backgro']],
+  [[98,  6], ['selector', 'tag', 'butt', 'butt']],
+  [[99, 22], ['value', 'null', '!impor', 'width']],
+  [[103, 5], ['keyframes', 'null', 'ke']],
+  [[104, 7], ['frame', 'null', 'fro']],
+  [[104, 15], ['property', 'null', 'opac']],
+  [[104, 29], ['property', 'null', 'transf']],
+  [[104, 38], ['value', 'null', 'scal', 'transform']],
+  [[105,  8], ['frame', 'null', '']],
+  [[113,  6], ['keyframes', 'null', 'keyfr']],
+  [[114,  4], ['frame', 'null', 'fr']],
+  [[115,  3], ['frame', 'null', '2']],
+  [[117,  8], ['property', 'null', 'opac']],
+  [[117, 16], ['value', 'null', '0', 'opacity']],
+  [[121,  0], ['null', '', '']],
+]
