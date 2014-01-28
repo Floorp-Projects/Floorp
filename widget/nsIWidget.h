@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x7a4ece50, 0x5c52, 0x47c2, \
-  { 0x8c, 0x9e, 0x32, 0xd2, 0x5a, 0x27, 0x53, 0x34 } }
+{ 0x0a157edd, 0xd70b, 0x4242, \
+  { 0xad, 0xd5, 0xcb, 0xce, 0x4c, 0xf3, 0x4b, 0x47 } }
 
 /*
  * Window shadow styles
@@ -742,6 +742,14 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD SetModal(bool aModal) = 0;
+
+    /**
+     * The maximum number of simultaneous touch contacts supported by the device.
+     * In the case of devices with multiple digitizers (e.g. multiple touch screens),
+     * the value will be the maximum of the set of maximum supported contacts by
+     * each individual digitizer.
+     */
+    virtual uint32_t GetMaxTouchPoints() const = 0;
 
     /**
      * Returns whether the window is visible
