@@ -127,10 +127,10 @@ add_test(function test_saveServiceStats() {
                   Math.floor(timestamp / 1000));
       do_check_eq(cachedStats[key2].rxBytes, 50);
       do_check_eq(cachedStats[key2].txBytes, 100);
+
+      run_next_test();
     }
   );
-
-  run_next_test();
 });
 
 add_test(function test_saveStatsWithDifferentDates() {
