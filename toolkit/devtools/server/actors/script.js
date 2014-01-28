@@ -3,7 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 let TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
@@ -621,22 +620,45 @@ ThreadActor.prototype = {
    */
   globalManager: {
     findGlobals: function () {
+      const { gDevToolsExtensions: {
+        getContentGlobals
+      } } = Cu.import("resource://gre/modules/devtools/DevToolsExtensions.jsm", {});
+
       this.globalDebugObject = this._addDebuggees(this.global);
+      // global may not be a window
+      try {
+        let id = getInnerId(this.global);
+        getContentGlobals({ 'inner-window-id': id }).forEach(this.addDebuggee.bind(this));
+      }
+      catch(e) {}
     },
 
     /**
-     * A function that the engine calls when a new global object has been
-     * created.
+     * A function that the engine calls when a new global object
+     * (for example a sandbox) has been created.
      *
      * @param aGlobal Debugger.Object
      *        The new global object that was created.
      */
     onNewGlobal: function (aGlobal) {
+      let metadata = {};
+      try {
+        metadata = Cu.getSandboxMetadata(aGlobal.unsafeDereference());
+      }
+      catch (e) {}
+
+      let id;
+      try {
+        id = getInnerId(this.global);
+      } catch(e) {}
+
       // Content debugging only cares about new globals in the contant window,
       // like iframe children.
-      if (aGlobal.hostAnnotations &&
+      if ((metadata['inner-window-id'] &&
+          metadata['inner-window-id'] == id) ||
+          (aGlobal.hostAnnotations &&
           aGlobal.hostAnnotations.type == "document" &&
-          aGlobal.hostAnnotations.element === this.global) {
+          aGlobal.hostAnnotations.element === this.global)) {
         this.addDebuggee(aGlobal);
         // Notify the client.
         this.conn.send({
@@ -5129,3 +5151,8 @@ function makeDebuggeeValueIfNeeded(obj, value) {
   }
   return value;
 }
+
+function getInnerId(window) {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor).
+                getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+};
