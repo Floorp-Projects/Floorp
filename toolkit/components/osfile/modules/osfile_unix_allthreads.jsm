@@ -41,6 +41,7 @@ let Const = SharedAll.Constants.libc;
 // Open libc
 let libc;
 let libc_candidates =  [ "libc.so",
+                         "libSystem.B.dylib",
                          "a.out" ];
 for (let i = 0; i < libc_candidates.length; ++i) {
   try {
