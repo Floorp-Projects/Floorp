@@ -10,6 +10,8 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TypedArray.h"
 #include <stdint.h>
 
 #include "nsCycleCollectionParticipant.h"
@@ -39,6 +41,17 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
+
+  static ImageData* Constructor(const GlobalObject& aGlobal,
+                                const uint32_t aWidth,
+                                const uint32_t aHeight,
+                                ErrorResult& aRv);
+
+  static ImageData* Constructor(const GlobalObject& aGlobal,
+                                const Uint8ClampedArray& aData,
+                                const uint32_t aWidth,
+                                const Optional<uint32_t>& aHeight,
+                                ErrorResult& aRv);
 
   uint32_t Width() const
   {
