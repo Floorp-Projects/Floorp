@@ -4,7 +4,8 @@
 
 "use strict";
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = devtools;
 const Editor  = require("devtools/sourceeditor/editor");
 
 function setup(cb) {
@@ -44,4 +45,33 @@ function teardown(ed, win) {
   ed.destroy();
   win.close();
   finish();
+}
+
+/**
+ * This method returns the portion of the input string `source` up to the
+ * [line, ch] location.
+ */
+function limit(source, [line, ch]) {
+  line++;
+  let list = source.split("\n");
+  if (list.length < line)
+    return source;
+  if (line == 1)
+    return list[0].slice(0, ch);
+  return [...list.slice(0, line - 1), list[line - 1].slice(0, ch)].join("\n");
+}
+
+function read(url) {
+  let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+    .getService(Ci.nsIScriptableInputStream);
+
+  let channel = Services.io.newChannel(url, null, null);
+  let input = channel.open();
+  scriptableStream.init(input);
+
+  let data = scriptableStream.read(input.available());
+  scriptableStream.close();
+  input.close();
+
+  return data;
 }
