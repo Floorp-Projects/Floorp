@@ -28,7 +28,6 @@ function dump(a) {
 
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
-const STATE_QUITTING = -1;
 
 function SessionStore() { }
 
@@ -76,11 +75,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "final-ui-startup", true);
         observerService.addObserver(this, "domwindowopened", true);
         observerService.addObserver(this, "domwindowclosed", true);
-        observerService.addObserver(this, "browser-lastwindow-close-granted", true);
         observerService.addObserver(this, "browser:purge-session-history", true);
-        observerService.addObserver(this, "quit-application-requested", true);
-        observerService.addObserver(this, "quit-application-granted", true);
-        observerService.addObserver(this, "quit-application", true);
         observerService.addObserver(this, "Session:Restore", true);
         break;
       case "final-ui-startup":
@@ -98,59 +93,8 @@ SessionStore.prototype = {
       case "domwindowclosed": // catch closed windows
         this.onWindowClose(aSubject);
         break;
-      case "browser-lastwindow-close-granted":
-        // If a save has been queued, kill the timer and save state now
-        if (this._saveTimer) {
-          this._saveTimer.cancel();
-          this._saveTimer = null;
-          this.saveState();
-        }
-
-        // Freeze the data at what we've got (ignoring closing windows)
-        this._loadState = STATE_QUITTING;
-        break;
-      case "quit-application-requested":
-        // Get a current snapshot of all windows
-        this._forEachBrowserWindow(function(aWindow) {
-          self._collectWindowData(aWindow);
-        });
-        break;
-      case "quit-application-granted":
-        // Get a current snapshot of all windows
-        this._forEachBrowserWindow(function(aWindow) {
-          self._collectWindowData(aWindow);
-        });
-
-        // Freeze the data at what we've got (ignoring closing windows)
-        this._loadState = STATE_QUITTING;
-        break;
-      case "quit-application":
-        // Freeze the data at what we've got (ignoring closing windows)
-        this._loadState = STATE_QUITTING;
-
-        observerService.removeObserver(this, "domwindowopened");
-        observerService.removeObserver(this, "domwindowclosed");
-        observerService.removeObserver(this, "browser-lastwindow-close-granted");
-        observerService.removeObserver(this, "quit-application-requested");
-        observerService.removeObserver(this, "quit-application-granted");
-        observerService.removeObserver(this, "quit-application");
-        observerService.removeObserver(this, "Session:Restore");
-
-        // If a save has been queued, kill the timer and save state now
-        if (this._saveTimer) {
-          this._saveTimer.cancel();
-          this._saveTimer = null;
-          this.saveState();
-        }
-        break;
       case "browser:purge-session-history": // catch sanitization 
         this._clearDisk();
-
-        // If the browser is shutting down, simply return after clearing the
-        // session data on disk as this notification fires after the
-        // quit-application notification so the browser is about to exit.
-        if (this._loadState == STATE_QUITTING)
-          return;
 
         // Clear all data about closed tabs
         for (let [ssid, win] in Iterator(this._windows))
@@ -237,7 +181,7 @@ SessionStore.prototype = {
       return;
 
     // Ignore non-browser windows and windows opened while shutting down
-    if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser" || this._loadState == STATE_QUITTING)
+    if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser")
       return;
 
     // Assign it a unique identifier (timestamp) and create its data object
