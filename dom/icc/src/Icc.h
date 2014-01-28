@@ -98,6 +98,10 @@ public:
   already_AddRefed<nsISupports>
   IccCloseChannel(int32_t aChannel, ErrorResult& aRv);
 
+  already_AddRefed<nsISupports>
+  MatchMvno(const nsAString& aMvnoType, const nsAString& aMatchData,
+            ErrorResult& aRv);
+
   IMPL_EVENT_HANDLER(iccinfochange)
   IMPL_EVENT_HANDLER(cardstatechange)
   IMPL_EVENT_HANDLER(stkcommand)
