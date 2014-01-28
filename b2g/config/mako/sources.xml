@@ -106,7 +106,7 @@
   <project name="platform/ndk" path="ndk" revision="7666b97bbaf1d645cdd6b4430a367b7a2bb53369"/>
   <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="f6ab40b3257abc07741188fd173ac392575cc8d2"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="e52099755d0bd3a579130eefe8e58066cc6c0cb6"/>
-  <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="42011ad6bfec9978f9a297cf4a754af67b7c478a"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="11663426672fcc46e2a0f29239afa736b90635ba"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="842e33e43a55ea44833b9e23e4d180fa17c843af"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5db24726f0f42124304195a6bdea129039eeeaeb"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="930ae098543881f47eac054677726ee4b998b2f8"/>
