@@ -61,7 +61,8 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
     final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
     policyView.setText(getString(R.string.fxaccount_policy_text, linkedTOS, linkedPN));
-    ActivityUtils.linkifyTextView(policyView);
+    final boolean underlineLinks = true;
+    ActivityUtils.linkifyTextView(policyView, underlineLinks);
 
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
