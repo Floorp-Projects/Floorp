@@ -131,7 +131,8 @@
 <!ENTITY fxaccount.sign.in 'Sign in'>
 <!ENTITY fxaccount.create.account 'Create an account'>
 
-<!ENTITY fxaccount.old.firefox '&lt;a href="http://mozilla.com"&gt;Using &syncBrand.shortName.label; with an older version of &brandShortName;?&lt;/a&gt;'>
+<!ENTITY fxaccount.link.old.firefox 'https://support.mozilla.org/kb/use-sync-with-an-older-version-of-firefox'>
+<!ENTITY fxaccount.old.firefox 'Using &syncBrand.shortName.label; with an older version of &brandShortName;?'>
 
 <!ENTITY fxaccount.when.were.you.born 'When were you born?'>
 <!ENTITY fxaccount.year.of.birth 'Year of birth'>
