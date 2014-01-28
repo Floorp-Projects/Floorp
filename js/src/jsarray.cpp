@@ -871,13 +871,13 @@ AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
 }
 
 #if JS_HAS_TOSOURCE
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 IsArray(HandleValue v)
 {
     return v.isObject() && v.toObject().is<ArrayObject>();
 }
 
-JS_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 array_toSource_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsArray(args.thisv()));
@@ -2338,7 +2338,7 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * another object is first slowified, for type inference's sake.
      */
     types::TypeObject *arrType = arr->getType(cx);
-    if (JS_UNLIKELY(!arrType || arrType->hasAllFlags(OBJECT_FLAG_ITERATED)))
+    if (MOZ_UNLIKELY(!arrType || arrType->hasAllFlags(OBJECT_FLAG_ITERATED)))
         return false;
 
     /*
@@ -3140,7 +3140,7 @@ EnsureNewArrayElements(ExclusiveContext *cx, JSObject *obj, uint32_t length)
 }
 
 template<bool allocateCapacity>
-static JS_ALWAYS_INLINE ArrayObject *
+static MOZ_ALWAYS_INLINE ArrayObject *
 NewArray(ExclusiveContext *cxArg, uint32_t length,
          JSObject *protoArg, NewObjectKind newKind = GenericObject)
 {

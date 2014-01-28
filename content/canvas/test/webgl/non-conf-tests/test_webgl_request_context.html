@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<title>WebGL test: 'webgl' and 'experimental-webgl' context requests succeed,
+    'moz-webgl' context requests fail.</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<body>
+<canvas id="c1"></canvas>
+<canvas id="c2"></canvas>
+<script>
+
+var testFunc = ok;
+if (DriverInfo.getOS() == DriverInfo.OS.B2G) {
+  testFunc = todo;
+}
+
+function testContextRetrieval(canvasId, creationId, shouldSucceed) {
+  var canvas = document.getElementById(canvasId);
+  ok(canvas, 'Invalid `canvasId`: ' + canvasId);
+
+  var createdGL = canvas.getContext(creationId);
+  if (shouldSucceed) {
+    testFunc(createdGL, 'Request for \'' + creationId + '\' should succeed.');
+  } else {
+    ok(!createdGL, 'Request for \'' + creationId + '\' should fail.');
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [
+  ['webgl.force-enabled', true]
+]}, function() {
+  testContextRetrieval('c1', 'experimental-webgl', true);
+  testContextRetrieval('c2', 'moz-webgl', false);
+  SimpleTest.finish();
+});
+
+</script>
+

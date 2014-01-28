@@ -19,7 +19,7 @@ public:
   // XXX: FLAG_LOCAL_ONLY is ignored in the classic verification case
   static const Flags FLAG_LOCAL_ONLY;
   // Don't perform fallback DV validation on EV validation failure.
-  static const Flags FLAG_NO_DV_FALLBACK_FOR_EV;
+  static const Flags FLAG_MUST_BE_EV;
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.

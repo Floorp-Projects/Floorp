@@ -543,7 +543,6 @@ MarionetteServerConnection.prototype = {
           'handlesAlerts': false,
           'javascriptEnabled': true,
           'nativeEvents': false,
-          'platform': Services.appinfo.OS,
           'platformName': Services.appinfo.OS,
           'platformVersion': Services.appinfo.platformVersion,
           'secureSsl': false,

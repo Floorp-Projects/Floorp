@@ -3709,6 +3709,10 @@ nsDisplayScrollLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
     PropagateClip(aBuilder, GetClip(), &mList);
     return true;
   }
+  if (mFrame != mScrolledFrame) {
+    mMergedFrames.AppendElement(mFrame);
+    mFrame = mScrolledFrame;
+  }
   return false;
 }
 

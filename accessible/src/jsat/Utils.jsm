@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Events',
   'resource://gre/modules/accessibility/Constants.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Relations',
   'resource://gre/modules/accessibility/Constants.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'States',
+  'resource://gre/modules/accessibility/Constants.jsm');
 
 this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache', 'SettingCache'];
 
@@ -186,14 +188,36 @@ this.Utils = {
     }
   },
 
-  getStates: function getStates(aAccessible) {
-    if (!aAccessible)
-      return [0, 0];
+  getState: function getState(aAccessibleOrEvent) {
+    function State(aBase, aExtended) {
+      this.base = aBase;
+      this.extended = aExtended;
 
-    let state = {};
-    let extState = {};
-    aAccessible.getState(state, extState);
-    return [state.value, extState.value];
+      this.contains = (other) => {
+        return !!(this.base & other.base || this.extended & other.extended);
+      };
+
+      this.toString = () => {
+        let stateStrings = Utils.AccRetrieval.
+          getStringStates(this.base, this.extended);
+        let statesArray = new Array(stateStrings.length);
+        for (let i = 0; i < statesArray.length; i++) {
+          statesArray[i] = stateStrings.item(i);
+        }
+        return '[' + statesArray.join(', ') + ']';
+      };
+    }
+
+    if (aAccessibleOrEvent instanceof Ci.nsIAccessibleStateChangeEvent) {
+      return new State(
+        aAccessibleOrEvent.isExtraState ? 0 : aAccessibleOrEvent.state,
+        aAccessibleOrEvent.isExtraState ? aAccessibleOrEvent.state : 0);
+    } else {
+      let state = {};
+      let extState = {};
+      aAccessibleOrEvent.getState(state, extState);
+      return new State(state.value, extState.value);
+    }
   },
 
   getAttributes: function getAttributes(aAccessible) {
@@ -251,11 +275,8 @@ this.Utils = {
     }
 
     try {
-      let extstate = {};
-      let state = {};
-      aAccessible.getState(state, extstate);
-      if (extstate.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT ||
-          state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE ||
+      let state = this.getState(aAccessible);
+      if (state.contains(States.DEFUNCT) || state.contains(States.INVISIBLE) ||
           Utils.inHiddenSubtree(aAccessible)) {
         return false;
       }
@@ -409,12 +430,7 @@ this.Logger = {
   },
 
   statesToString: function statesToString(aAccessible) {
-    let [state, extState] = Utils.getStates(aAccessible);
-    let stringArray = [];
-    let stateStrings = Utils.AccRetrieval.getStringStates(state, extState);
-    for (var i=0; i < stateStrings.length; i++)
-      stringArray.push(stateStrings.item(i));
-    return stringArray.join(' ');
+    return Utils.getState(aAccessible).toString();
   },
 
   dumpTree: function dumpTree(aLogLevel, aRootAccessible) {
@@ -587,8 +603,7 @@ PivotContext.prototype = {
       if (this._includeInvisible) {
         include = true;
       } else {
-        let [state,] = Utils.getStates(child);
-        include = !(state & Ci.nsIAccessibleStates.STATE_INVISIBLE);
+        include = !(Utils.getState(child).contains(States.INVISIBLE));
       }
       if (include) {
         if (aPreorder) {
@@ -716,9 +731,7 @@ PivotContext.prototype = {
 
   _isDefunct: function _isDefunct(aAccessible) {
     try {
-      let extstate = {};
-      aAccessible.getState({}, extstate);
-      return !!(extstate.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+      return Utils.getState(aAccessible).contains(States.DEFUNCT);
     } catch (x) {
       return true;
     }

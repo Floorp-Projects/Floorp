@@ -9,7 +9,6 @@
 #include <stdint.h>                     // for uint8_t
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxColor.h"                   // for gfxRGBA
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
 #include "nsDebug.h"                    // for NS_ERROR
 #include "nsPoint.h"                    // for nsIntPoint
@@ -66,31 +65,6 @@ AppendToString(nsACString& s, const gfxRGBA& c,
   s += nsPrintfCString(
     "rgba(%d, %d, %d, %g)",
     uint8_t(c.r*255.0), uint8_t(c.g*255.0), uint8_t(c.b*255.0), c.a);
-  return s += sfx;
-}
-
-nsACString&
-AppendToString(nsACString& s, const gfx3DMatrix& m,
-               const char* pfx, const char* sfx)
-{
-  s += pfx;
-  if (m.IsIdentity())
-    s += "[ I ]";
-  else {
-    gfxMatrix matrix;
-    if (m.Is2D(&matrix)) {
-      s += nsPrintfCString(
-        "[ %g %g; %g %g; %g %g; ]",
-        matrix.xx, matrix.yx, matrix.xy, matrix.yy, matrix.x0, matrix.y0);
-    } else {
-      s += nsPrintfCString(
-        "[ %g %g %g %g; %g %g %g %g; %g %g %g %g; %g %g %g %g; ]",
-        m._11, m._12, m._13, m._14,
-        m._21, m._22, m._23, m._24,
-        m._31, m._32, m._33, m._34,
-        m._41, m._42, m._43, m._44);
-    }
-  }
   return s += sfx;
 }
 

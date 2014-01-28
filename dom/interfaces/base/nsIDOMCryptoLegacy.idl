@@ -5,7 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMCRMFObject;
 interface nsIDOMWindow;
 
 [uuid(c25ecf08-3f46-4420-bee4-8505792fd63a)]

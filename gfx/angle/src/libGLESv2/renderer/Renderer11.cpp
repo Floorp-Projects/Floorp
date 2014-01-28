@@ -12,7 +12,7 @@
 #include "libGLESv2/Buffer.h"
 #include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/Framebuffer.h"
-#include "libGLESv2/RenderBuffer.h"
+#include "libGLESv2/Renderbuffer.h"
 #include "libGLESv2/renderer/Renderer11.h"
 #include "libGLESv2/renderer/RenderTarget11.h"
 #include "libGLESv2/renderer/renderer11_utils.h"
