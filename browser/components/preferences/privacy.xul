@@ -26,9 +26,6 @@
       <preference id="privacy.donottrackheader.enabled"
                   name="privacy.donottrackheader.enabled"
                   type="bool"/>
-      <preference id="privacy.donottrackheader.value"
-                  name="privacy.donottrackheader.value"
-                  type="int"/>
 
       <!-- XXX button prefs -->
       <preference id="pref.privacy.disable_button.cookie_exceptions"
@@ -84,20 +81,19 @@
     <!-- Tracking -->
     <groupbox id="trackingGroup" align="start">
       <caption label="&tracking.label;"/>
-      <radiogroup id="doNotTrackSelection" orient="vertical"
-                  preference="privacy.donottrackheader.value"
-                  onsynctopreference="return gPrivacyPane.setTrackingPrefs()"
-                  onsyncfrompreference="return gPrivacyPane.getTrackingPrefs()">
-        <radio id="dntnotrack" value="1" label="&dntTrackingNotOkay.label2;"
-                accesskey="&dntTrackingNotOkay.accesskey;" />
-        <radio id="dntdotrack" value="0" label="&dntTrackingOkay.label2;"
-                accesskey="&dntTrackingOkay.accesskey;" />
-        <radio id="dntnopref" value="-1" label="&dntTrackingNopref.label2;"
-                accesskey="&dntTrackingNopref.accesskey;" />
-      </radiogroup>
-      <label class="text-link" id="doNotTrackInfo"
-             href="https://www.mozilla.org/dnt"
-             value="&doNotTrackInfo.label;"/>
+      <checkbox id="privacyDoNotTrackCheckbox"
+                label="&dntTrackingNotOkay.label2;"
+                accesskey="&dntTrackingNotOkay.accesskey;"
+                preference="privacy.donottrackheader.enabled"/>
+      <separator class="thin"/>
+      <vbox>
+        <hbox pack="end">
+          <spacer flex="1"/>
+          <label class="text-link" id="doNotTrackInfo"
+                href="https://www.mozilla.org/dnt"
+                value="&doNotTrackInfo.label;"/>
+        </hbox>
+      </vbox>
 
     </groupbox>
 
