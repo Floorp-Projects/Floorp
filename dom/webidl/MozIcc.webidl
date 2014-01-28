@@ -365,4 +365,26 @@ interface MozIcc : EventTarget
    */
   [Throws]
   nsISupports iccCloseChannel(long channel);
+
+  // Integrated Circuit Card Helpers.
+
+  /**
+   * Verify whether the passed data (matchData) matches with some ICC's field
+   * according to the mvno type (mvnoType).
+   *
+   * @param mvnoType
+   *        Mvno type to use to compare the match data.
+   *        Currently, we only support 'imsi'.
+   * @param matchData
+   *        Data to be compared with ICC's field.
+   *
+   * @return a DOMRequest.
+   *         The request's result will be a boolean indicating the matching
+   *         result.
+   *
+   * TODO: change param mvnoType to WebIDL enum after Bug 864489 -
+   *       B2G RIL: use ipdl as IPC in MozIccManager
+   */
+  [Throws]
+  nsISupports matchMvno(DOMString mvnoType, DOMString matchData);
 };
