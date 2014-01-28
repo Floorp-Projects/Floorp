@@ -2556,10 +2556,11 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mLoadAsBlocking || mLoadUnblocked ||
-        (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)) {
+    // Don't consider mLoadUnblocked here, since it's not indication of a demand
+    // to load prioritly. It's mostly used to load XHR requests, but those should
+    // not be considered as influencing the page load performance.
+    if (mLoadAsBlocking || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI))
         cacheEntryOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
-    }
 
     // Only for backward compatibility with the old cache back end.
     // When removed, remove the flags and related code snippets.
