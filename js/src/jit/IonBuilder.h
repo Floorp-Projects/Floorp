@@ -464,8 +464,10 @@ class IonBuilder : public MIRGenerator
                                        TypeRepresentationSet objTypeReprs);
 
     // jsop_setelem() helpers.
-    bool setElemTryTyped(bool *emitted, MDefinition *object,
+    bool setElemTryTypedArray(bool *emitted, MDefinition *object,
                          MDefinition *index, MDefinition *value);
+    bool setElemTryTypedObject(bool *emitted, MDefinition *obj,
+                               MDefinition *index, MDefinition *value);
     bool setElemTryTypedStatic(bool *emitted, MDefinition *object,
                                MDefinition *index, MDefinition *value);
     bool setElemTryDense(bool *emitted, MDefinition *object,
@@ -474,6 +476,13 @@ class IonBuilder : public MIRGenerator
                              MDefinition *index, MDefinition *value);
     bool setElemTryCache(bool *emitted, MDefinition *object,
                          MDefinition *index, MDefinition *value);
+    bool setElemTryScalarPropOfTypedObject(bool *emitted,
+                                           MDefinition *obj,
+                                           MDefinition *index,
+                                           TypeRepresentationSet objTypeReprs,
+                                           MDefinition *value,
+                                           TypeRepresentationSet elemTypeReprs,
+                                           size_t elemSize);
 
     // jsop_getelem() helpers.
     bool getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index);
