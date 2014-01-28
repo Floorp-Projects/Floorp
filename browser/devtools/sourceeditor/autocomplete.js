@@ -30,7 +30,7 @@ function setupAutoCompletion(ctx, walker) {
 
   let keyMap = {
     "Tab": cm => {
-      if (popup && (popup.isOpen || popup._panel.state == "showing")) {
+      if (popup && popup.isOpen) {
         cycleSuggestions(ed);
         return;
       }
@@ -38,7 +38,7 @@ function setupAutoCompletion(ctx, walker) {
       return win.CodeMirror.Pass;
     },
     "Shift-Tab": cm => {
-      if (popup && (popup.isOpen || popup._panel.state == "showing")) {
+      if (popup && popup.isOpen) {
         cycleSuggestions(ed, true);
         return;
       }
