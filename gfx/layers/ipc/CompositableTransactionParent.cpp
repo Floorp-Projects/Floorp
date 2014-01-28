@@ -272,6 +272,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       RefPtr<TextureHost> texture = compositable->GetTextureHost(op.textureID());
       MOZ_ASSERT(texture);
+      if (!texture) {
+        NS_WARNING("Could not find texture");
+        break;
+      }
 
       TextureFlags flags = texture->GetFlags();
 
@@ -302,6 +306,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(compositable);
       RefPtr<TextureHost> texture = compositable->GetTextureHost(op.textureID());
       MOZ_ASSERT(texture);
+      if (!texture) {
+        NS_WARNING("Could not find texture");
+        break;
+      }
 
       texture->Updated(op.region().type() == MaybeRegion::TnsIntRegion
                        ? &op.region().get_nsIntRegion()
