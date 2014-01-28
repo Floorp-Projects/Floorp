@@ -451,12 +451,15 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
 
   nsAutoString osVersion;
 #if defined(XP_WIN)
+#pragma warning(push)
+#pragma warning(disable:4996) // VC12+ deprecates GetVersionEx
   OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
   if (GetVersionEx(&info)) {
     nsTextFormatter::ssprintf(osVersion, MOZ_UTF16("%ld.%ld"),
                                          info.dwMajorVersion,
                                          info.dwMinorVersion);
   }
+#pragma warning(pop)
 #elif defined(MOZ_WIDGET_COCOA)
   SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
   SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();
