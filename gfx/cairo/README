@@ -210,6 +210,8 @@ dasharray-zero-gap.patch: bug 885585, ensure strokes get painted when the gaps i
 
 cairo-mask-extends-bug.patch: bug 918671, sometimes when building a mask we wouldn't clear it properly. This is fixed in cairo 1.12
 
+ft-no-subpixel-if-surface-disables.patch: bug 929451, don't use subpixel aa for ft fonts on surfaces that don't support it
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
