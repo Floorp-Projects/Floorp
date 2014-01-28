@@ -212,6 +212,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-icon,
+.panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
+.customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon {
   min-width: 32px;
   min-height: 32px;
@@ -532,8 +534,8 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-me
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
-  min-width: calc(@menuPanelWidth@ / 3);
-  width: calc(@menuPanelWidth@ / 3);
+  min-width: 7em;
+  width: 7em;
 }
 
 #edit-controls@inAnyPanel@,
