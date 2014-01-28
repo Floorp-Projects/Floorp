@@ -8,6 +8,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
+#include "js/OldDebugAPI.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -177,8 +179,7 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
   // If invoking callback threw an exception, run resolver's reject with the
   // thrown exception as argument and the synchronous flag set.
   JS::Rooted<JS::Value> value(cx,
-    mCallback->Call(mNextPromise->GetParentObject(), aValue, rv,
-                    CallbackObject::eRethrowExceptions));
+    mCallback->Call(aValue, rv, CallbackObject::eRethrowExceptions));
 
   rv.WouldReportJSException();
 
@@ -190,6 +191,67 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
     EnterCompartment(ac2, cx, value);
     mNextPromise->RejectInternal(cx, value, Promise::SyncTask);
     return;
+  }
+
+  // If the return value is the same as the promise itself, throw TypeError.
+  if (value.isObject()) {
+    JS::Rooted<JSObject*> valueObj(cx, &value.toObject());
+    Promise* returnedPromise;
+    nsresult r = UNWRAP_OBJECT(Promise, valueObj, returnedPromise);
+
+    if (NS_SUCCEEDED(r) && returnedPromise == mNextPromise) {
+      const char* fileName = nullptr;
+      uint32_t lineNumber = 0;
+
+      // Try to get some information about the callback to report a sane error,
+      // but don't try too hard (only deals with scripted functions).
+      JS::Rooted<JSObject*> unwrapped(cx,
+        js::CheckedUnwrap(mCallback->Callback()));
+
+      if (unwrapped) {
+        JSAutoCompartment ac(cx, unwrapped);
+        if (JS_ObjectIsFunction(cx, unwrapped)) {
+          JS::Rooted<JS::Value> asValue(cx, JS::ObjectValue(*unwrapped));
+          JS::Rooted<JSFunction*> func(cx, JS_ValueToFunction(cx, asValue));
+
+          MOZ_ASSERT(func);
+          JSScript* script = JS_GetFunctionScript(cx, func);
+          if (script) {
+            fileName = JS_GetScriptFilename(cx, script);
+            lineNumber = JS_GetScriptBaseLineNumber(cx, script);
+          }
+        }
+      }
+
+      // We're back in aValue's compartment here.
+      JS::Rooted<JSString*> stack(cx, JS_GetEmptyString(JS_GetRuntime(cx)));
+      JS::Rooted<JSString*> fn(cx, JS_NewStringCopyZ(cx, fileName));
+      if (!fn) {
+        // Out of memory. Promise will stay unresolved.
+        JS_ClearPendingException(cx);
+        return;
+      }
+
+      JS::Rooted<JSString*> message(cx,
+        JS_NewStringCopyZ(cx,
+          "then() cannot return same Promise that it resolves."));
+      if (!message) {
+        // Out of memory. Promise will stay unresolved.
+        JS_ClearPendingException(cx);
+        return;
+      }
+
+      JS::Rooted<JS::Value> typeError(cx);
+      if (!JS::CreateTypeError(cx, stack, fn, lineNumber, 0,
+                               nullptr, message, &typeError)) {
+        // Out of memory. Promise will stay unresolved.
+        JS_ClearPendingException(cx);
+        return;
+      }
+
+      mNextPromise->RejectInternal(cx, typeError, Promise::SyncTask);
+      return;
+    }
   }
 
   // Otherwise, run resolver's resolve with value and the synchronous flag
