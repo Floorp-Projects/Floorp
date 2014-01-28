@@ -9994,7 +9994,7 @@ IonBuilder::lookupTypedObjectField(MDefinition *typedObj,
 MDefinition *
 IonBuilder::typeObjectForElementFromArrayStructType(MDefinition *typeObj)
 {
-    MInstruction *elemType = MLoadFixedSlot::New(alloc(), typeObj, JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE);
+    MInstruction *elemType = MLoadFixedSlot::New(alloc(), typeObj, JS_DESCR_SLOT_ARRAY_ELEM_TYPE);
     current->add(elemType);
 
     MInstruction *unboxElemType = MUnbox::New(alloc(), elemType, MIRType_Object, MUnbox::Infallible);
@@ -10009,7 +10009,7 @@ IonBuilder::typeObjectForFieldFromStructType(MDefinition *typeObj,
 {
     // Load list of field type objects.
 
-    MInstruction *fieldTypes = MLoadFixedSlot::New(alloc(), typeObj, JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES);
+    MInstruction *fieldTypes = MLoadFixedSlot::New(alloc(), typeObj, JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     current->add(fieldTypes);
 
     MInstruction *unboxFieldTypes = MUnbox::New(alloc(), fieldTypes, MIRType_Object, MUnbox::Infallible);
