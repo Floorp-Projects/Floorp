@@ -30,6 +30,12 @@ const DEFAULT_UA = navigator.userAgent;
 const UA_OVERRIDE = "DummyUserAgent";
 const UA_ALT_OVERRIDE = "AltUserAgent";
 
+const UA_PARTIAL_FROM = "\\wozilla"; // /\wozilla
+const UA_PARTIAL_SEP = "#";
+const UA_PARTIAL_TO = UA_OVERRIDE;
+const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
+const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
+
 function getUA(host) {
   var url = location.pathname;
   url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
@@ -77,6 +83,12 @@ const OVERRIDES = [
     override: '%OS%',
     expected: SpecialPowers.Services.appinfo.OS,
     host: 'http://sub1.test2.example.org'
+  },
+  {
+    domain: 'sub2.test2.example.org',
+    override: UA_PARTIAL_OVERRIDE,
+    expected: UA_PARTIAL_EXPECTED,
+    host: 'http://sub2.test2.example.org'
   },
 ];
 
