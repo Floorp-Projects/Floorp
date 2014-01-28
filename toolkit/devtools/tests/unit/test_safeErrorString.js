@@ -20,7 +20,7 @@ function test_with_error() {
   do_check_true(s.contains("test_with_error"))
   do_check_true(s.contains("test_safeErrorString.js"));
   // Got the lineNumber and columnNumber.
-  do_check_true(s.contains("line"));
+  do_check_true(s.contains("Line"));
   do_check_true(s.contains("column"));
 }
 
