@@ -85,7 +85,7 @@ Parser.prototype = {
       }
     }
 
-    let pool = new SyntaxTreesPool(syntaxTrees);
+    let pool = new SyntaxTreesPool(syntaxTrees, aUrl);
 
     // Cache the syntax trees pool by the specified url. This is entirely
     // optional, but it's strongly encouraged to cache ASTs because
@@ -123,9 +123,12 @@ Parser.prototype = {
  *
  * @param object aSyntaxTrees
  *        A collection of AST nodes generated for a source.
+ * @param string aUrl [optional]
+ *        The source url.
  */
-function SyntaxTreesPool(aSyntaxTrees) {
+function SyntaxTreesPool(aSyntaxTrees, aUrl = "<unknown>") {
   this._trees = aSyntaxTrees;
+  this._url = aUrl;
   this._cache = new Map();
 }
 
@@ -215,7 +218,7 @@ SyntaxTreesPool.prototype = {
         // Can't guarantee that the tree traversal logic is forever perfect :)
         // Language features may be added, in which case the recursive methods
         // need to be updated. If an exception is thrown here, file a bug.
-        DevToolsUtils.reportException("syntax tree", e);
+        DevToolsUtils.reportException("Syntax tree visitor for " + aUrl, e);
       }
     }
     this._cache.set(requestId, results);
