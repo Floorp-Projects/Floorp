@@ -15,6 +15,7 @@ const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devt
 const Editor  = require("devtools/sourceeditor/editor");
 const promise = require("sdk/core/promise");
 const {CssLogic} = require("devtools/styleinspector/css-logic");
+const AutoCompleter = require("devtools/sourceeditor/autocomplete");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -29,6 +30,9 @@ const SAVE_ERROR = "error-save";
 // max update frequency in ms (avoid potential typing lag and/or flicker)
 // @see StyleEditor.updateStylesheet
 const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
+
+// Pref which decides if CSS autocompletion is enabled in Style Editor or not.
+const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
 /**
  * StyleSheetEditor controls the editor linked to a particular StyleSheet
@@ -47,8 +51,10 @@ const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
  *        Optional file that the sheet was imported from
  * @param {boolean} isNew
  *        Optional whether the sheet was created by the user
+ * @param {Walker} walker
+ *        Optional walker used for selectors autocompletion
  */
-function StyleSheetEditor(styleSheet, win, file, isNew) {
+function StyleSheetEditor(styleSheet, win, file, isNew, walker) {
   EventEmitter.decorate(this);
 
   this.styleSheet = styleSheet;
@@ -57,6 +63,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew) {
   this._window = win;
   this._isNew = isNew;
   this.savedFile = file;
+  this.walker = walker;
 
   this.errorMessage = null;
 
@@ -197,6 +204,10 @@ StyleSheetEditor.prototype = {
     let sourceEditor = new Editor(config);
 
     sourceEditor.appendTo(inputElement).then(() => {
+      if (Services.prefs.getBoolPref(AUTOCOMPLETION_PREF)) {
+        sourceEditor.extend(AutoCompleter);
+        sourceEditor.setupAutoCompletion(this.walker);
+      }
       sourceEditor.on("save", () => {
         this.saveToFile();
       });
@@ -396,6 +407,9 @@ StyleSheetEditor.prototype = {
    * Clean up for this editor.
    */
   destroy: function() {
+    if (this.sourceEditor) {
+      this.sourceEditor.destroy();
+    }
     this.styleSheet.off("property-change", this._onPropertyChange);
     this.styleSheet.off("error", this._onError);
   }
