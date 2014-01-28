@@ -66,6 +66,9 @@
           <checkbox label="&options.stylesheetSourceMaps.label;"
                     tooltiptext="&options.stylesheetSourceMaps.tooltip;"
                     data-pref="devtools.styleeditor.source-maps-enabled"/>
+          <checkbox label="&options.stylesheetAutocompletion.label;"
+                    tooltiptext="&options.stylesheetAutocompletion.tooltip;"
+                    data-pref="devtools.styleeditor.autocompletion-enabled"/>
         </vbox>
         <label value="&options.profiler.label;"/>
         <vbox id="profiler-options" class="options-groupbox">
