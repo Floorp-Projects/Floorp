@@ -1,0 +1,35 @@
+// Test states to be tested for css state machine in css-autocompelter.js file.
+// Test cases are of the following format:
+// [
+//   [
+//     line, // The line location of the cursor
+//     ch    // The column locaiton of the cursor
+//   ],
+//   suggestions // Array of expected results
+// ]
+[
+  [[0, 10], []],
+  [[4,  7], ['.devtools-menulist', '.devtools-toolbarbutton']],
+  [[5,  8], ['-moz-animation', '-moz-animation-delay', '-moz-animation-direction',
+             '-moz-animation-duration', '-moz-animation-fill-mode',
+             '-moz-animation-iteration-count', '-moz-animation-name',
+             '-moz-animation-play-state', '-moz-animation-timing-function',
+             '-moz-appearance']],
+  [[12, 20], ['none', 'number-input']],
+  [[12, 22], ['none']],
+  [[17, 22], ['hsl', 'hsla']],
+  [[22,  5], ['color', 'color-interpolation', 'color-interpolation-filters']],
+  [[25, 26], ['.devtools-toolbarbutton > tab',
+              '.devtools-toolbarbutton > .toolbarbutton-menubutton-button',
+              '.devtools-toolbarbutton > hbox']],
+  [[25, 31], ['.devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button']],
+  [[29, 20], ['.devtools-menulist:after', '.devtools-menulist:active']],
+  [[30, 10], ['#devtools-anotherone', '#devtools-itjustgoeson', '#devtools-menu',
+              '#devtools-okstopitnow', '#devtools-toolbarbutton', '#devtools-yetagain']],
+  [[39, 39], ['.devtools-toolbarbutton:not([label]) > tab']],
+  [[43, 51], ['.devtools-toolbarbutton:not([checked=true]):hover:after',
+              '.devtools-toolbarbutton:not([checked=true]):hover:active']],
+  [[58, 36], ['!important;']],
+  [[73, 42], [':last-child', ':lang(', ':last-of-type', ':link']],
+  [[77, 25], ['.visible']],
+]

@@ -58,6 +58,34 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 
+/**
+ * Constructors for decoding standard exceptions
+ * received from the worker.
+ */
+const EXCEPTION_CONSTRUCTORS = {
+  EvalError: function(error) {
+    return new EvalError(error.message, error.fileName, error.lineNumber);
+  },
+  InternalError: function(error) {
+    return new InternalError(error.message, error.fileName, error.lineNumber);
+  },
+  RangeError: function(error) {
+    return new RangeError(error.message, error.fileName, error.lineNumber);
+  },
+  ReferenceError: function(error) {
+    return new ReferenceError(error.message, error.fileName, error.lineNumber);
+  },
+  SyntaxError: function(error) {
+    return new SyntaxError(error.message, error.fileName, error.lineNumber);
+  },
+  TypeError: function(error) {
+    return new TypeError(error.message, error.fileName, error.lineNumber);
+  },
+  URIError: function(error) {
+    return new URIError(error.message, error.fileName, error.lineNumber);
+  }
+};
+
 // It's possible for osfile.jsm to get imported before the profile is
 // set up. In this case, some path constants aren't yet available.
 // Here, we make them lazy loaders.
@@ -216,7 +244,11 @@ let Scheduler = {
         if (method != "Meta_reset") {
           Scheduler.restartTimer();
         }
-
+        // Check and throw EvalError | InternalError | RangeError
+        // | ReferenceError | SyntaxError | TypeError | URIError
+        if (error.data && error.data.exn in EXCEPTION_CONSTRUCTORS) {
+          throw EXCEPTION_CONSTRUCTORS[error.data.exn](error.data);
+        }
         // Decode any serialized error
         if (error instanceof PromiseWorker.WorkerError) {
           throw OS.File.Error.fromMsg(error.data);
@@ -229,6 +261,7 @@ let Scheduler = {
           }
           throw new Error(message, error.filename, error.lineno);
         }
+
         throw error;
       }
     );

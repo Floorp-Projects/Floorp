@@ -1158,6 +1158,7 @@ pref("devtools.scratchpad.enableCodeFolding", true);
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
 pref("devtools.styleeditor.source-maps-enabled", false);
+pref("devtools.styleeditor.autocompletion-enabled", true);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);

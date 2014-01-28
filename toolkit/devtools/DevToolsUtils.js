@@ -29,7 +29,7 @@ this.safeErrorString = function safeErrorString(aError) {
       } catch (ee) { }
 
       if (typeof aError.lineNumber == "number" && typeof aError.columnNumber == "number") {
-        errorString += ", line: " + aError.lineNumber + ", column: " + aError.columnNumber;
+        errorString += "Line: " + aError.lineNumber + ", column: " + aError.columnNumber;
       }
 
       return errorString;
