@@ -5894,11 +5894,8 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /*
      * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
-     * a new object and in source order evaluating each property value and
-     * adding the property to the object, without invoking latent setters.
-     * We use the JSOP_NEWINIT and JSOP_INITELEM/JSOP_INITPROP bytecodes to
-     * ignore setters and to avoid dup'ing and popping the object as each
-     * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
+     * a new object and defining (in source order) each property on the object
+     * (or mutating the object's [[Prototype]], in the case of __proto__).
      */
     ptrdiff_t offset = bce->offset();
     if (!EmitNewInit(cx, bce, JSProto_Object))

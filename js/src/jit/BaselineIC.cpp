@@ -7250,8 +7250,9 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
     RootedShape oldShape(cx, obj->lastProperty());
     uint32_t oldSlots = obj->numDynamicSlots();
 
-    if (op == JSOP_INITPROP && name != cx->names().proto) {
-        JS_ASSERT(obj->is<JSObject>());
+    if (op == JSOP_INITPROP) {
+        MOZ_ASSERT(name != cx->names().proto, "should have used JSOP_MUTATEPROTO");
+        MOZ_ASSERT(obj->is<JSObject>());
         if (!DefineNativeProperty(cx, obj, id, rhs, nullptr, nullptr, JSPROP_ENUMERATE, 0, 0, 0))
             return false;
     } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
@@ -7259,12 +7260,15 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
             return false;
     } else if (op == JSOP_SETALIASEDVAR) {
         obj->as<ScopeObject>().setAliasedVar(cx, pc, name, rhs);
-    } else if (script->strict()) {
-        if (!js::SetProperty<true>(cx, obj, id, rhs))
-            return false;
     } else {
-        if (!js::SetProperty<false>(cx, obj, id, rhs))
-            return false;
+        MOZ_ASSERT(op == JSOP_SETPROP);
+        if (script->strict()) {
+            if (!js::SetProperty<true>(cx, obj, id, rhs))
+                return false;
+        } else {
+            if (!js::SetProperty<false>(cx, obj, id, rhs))
+                return false;
+        }
     }
 
     // Leave the RHS on the stack.
