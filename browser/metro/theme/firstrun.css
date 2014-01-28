@@ -73,6 +73,10 @@ below instruction */
 
 /* Instructions ---------------------- */
 
+.instruction-content-container {
+    width: 380px;
+}
+
 .instruction-label {
   font-size: 16px;
   color: #808080;
@@ -94,12 +98,22 @@ below instruction */
 }
 
 .instruction-arrow.arrow-left,
-.instruction-arrow.arrow-right {
+.instruction-arrow.arrow-right,
+.instruction-arrow.arrow-left-straight,
+.instruction-arrow.arrow-right-straight {
   background-image: url("chrome://browser/skin/images/arrow-left.png");
 }
 
 .instruction-arrow.arrow-right {
   transform: rotate(180deg) scaleY(-1);
+}
+
+.instruction-arrow.arrow-left-straight {
+  transform: rotate(220deg) scaleX(-1);
+}
+
+.instruction-arrow.arrow-right-straight {
+  transform: rotate(-220deg);
 }
 
 #instruction-tabs {
@@ -114,13 +128,35 @@ below instruction */
 
 #start-container[viewstate="landscape"] #instruction-topsites {
   position: absolute;
-  bottom: 20px;
-  transform: translateX(-50%);
-  margin-left: 20px;
+  bottom: 15%;
 }
 
-#start-container[viewstate="portrait"] #instruction-topsites {
-  transform: translateX(calc(150px + 50%)) translateY(-60px);
+#start-container[viewstate="landscape"] #instruction-topsites .instruction-content-container {
+  -moz-box-align: start;
+}
+
+#start-container[viewstate="portrait"] #instruction-topsites-box {
+  margin-bottom: 20px;
+}
+
+#start-container[viewstate="portrait"] #instruction-topsites .instruction-content-container {
+  -moz-box-align: center;
+}
+
+#start-container[viewstate="portrait"] #instruction-topsites .arrow-left-straight {
+  display: none;
+}
+
+#start-container[viewstate="portrait"] #instruction-topsites .arrow-left {
+  display: block;
+}
+
+#start-container[viewstate="landscape"] #instruction-topsites .arrow-left-straight {
+  display: block;
+}
+
+#start-container[viewstate="landscape"] #instruction-topsites .arrow-left {
+  display: none;
 }
 
 #start-container[viewstate="landscape"] #instruction-history,
@@ -131,7 +167,8 @@ below instruction */
 }
 
 #start-container[viewstate="portrait"] #instruction-history,
-#start-container[viewstate="portrait"] #instruction-bookmarks {
+#start-container[viewstate="portrait"] #instruction-bookmarks,
+#start-container[viewstate="portrait"] #instruction-topsites {
   transform: translateX(-55px);
 }
 
@@ -145,6 +182,10 @@ below instruction */
   position: absolute;
   right: 37px;
   transform: translateY(40px);
+}
+
+#start-container #instruction-menu .instruction-label {
+    max-width: 300px;
 }
 
 #start-container[viewstate="landscape"] #start-history {
