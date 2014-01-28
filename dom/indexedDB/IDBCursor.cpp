@@ -20,6 +20,7 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "ProfilerHelpers.h"
+#include "ReportInternalError.h"
 #include "TransactionThreadPool.h"
 
 #include "ipc/IndexedDBChild.h"
@@ -497,7 +498,7 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
 
   nsresult rv = helper->DispatchToTransactionPool();
   if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch!");
+    IDB_WARNING("Failed to dispatch!");
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return;
   }
@@ -998,6 +999,7 @@ CursorHelper::Dispatch(nsIEventTarget* aDatabaseThread)
   // If we've been invalidated then there's no point sending anything to the
   // parent process.
   if (mCursor->Transaction()->Database()->IsInvalidated()) {
+    IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
@@ -1006,11 +1008,11 @@ CursorHelper::Dispatch(nsIEventTarget* aDatabaseThread)
 
   CursorRequestParams params;
   nsresult rv = PackArgumentsForParentProcess(params);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NoDispatchEventTarget target;
   rv = AsyncConnectionHelper::Dispatch(&target);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mActor = new IndexedDBCursorRequestChild(this, mCursor, params.type());
   cursorActor->SendPIndexedDBRequestConstructor(mActor, params);
@@ -1046,19 +1048,19 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   query.AppendInt(mCount);
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
-  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = BindArgumentsToStatement(stmt);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_ASSERTION(mCount > 0, "Not ok!");
 
   bool hasResult;
   for (int32_t index = 0; index < mCount; index++) {
     rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (!hasResult) {
       break;
@@ -1067,7 +1069,7 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   if (hasResult) {
     rv = GatherResultsFromStatement(stmt);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else {
     mKey.Unset();
@@ -1193,7 +1195,7 @@ ContinueHelper::UnpackResponseFromParentProcess(
                "Inconsistent clone info!");
 
   if (!mCloneReadInfo.SetFromSerialized(cloneInfo)) {
-    NS_WARNING("Failed to copy clone buffer!");
+    IDB_WARNING("Failed to copy clone buffer!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
@@ -1212,7 +1214,7 @@ ContinueObjectStoreHelper::BindArgumentsToStatement(
   // Bind object store id.
   nsresult rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"),
                                             mCursor->mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
@@ -1274,7 +1276,7 @@ ContinueIndexHelper::BindArgumentsToStatement(mozIStorageStatement* aStatement)
   // Bind index id.
   nsresult rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"),
                                             mCursor->mIndex->Id());
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
 
