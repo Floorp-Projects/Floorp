@@ -396,8 +396,9 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     stream->mBlocked.AdvanceCurrentTime(nextCurrentTime);
 
     streamHasOutput[i] = blockedTime < nextCurrentTime - prevCurrentTime;
-    NS_ASSERTION(!streamHasOutput[i] || !stream->mNotifiedFinished,
-                 "Shouldn't have already notified of finish *and* have output!");
+    // Make this an assertion when bug 957832 is fixed.
+    NS_WARN_IF_FALSE(!streamHasOutput[i] || !stream->mNotifiedFinished,
+      "Shouldn't have already notified of finish *and* have output!");
 
     if (stream->mFinished && !stream->mNotifiedFinished) {
       streamsReadyToFinish.AppendElement(stream);
