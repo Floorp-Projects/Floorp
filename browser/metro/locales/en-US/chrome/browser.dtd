@@ -9,6 +9,7 @@
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
 <!ENTITY newtab.label          "New Tab">
+<!ENTITY newPrivateTab.label   "New Private Tab">
 <!ENTITY closetab.label        "Close Tab">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
@@ -103,6 +104,8 @@
 <!ENTITY newTab.key "t">
 <!ENTITY newTab2.key "n">
 <!ENTITY closeTab.key "w">
+<!-- Private browsing (control+shift+key) -->
+<!ENTITY newPrivateTab.key "p">
 
 <!-- DEVELOPER SHORTCUTS (control+shift+key) -->
 <!ENTITY jsConsole.key "j">

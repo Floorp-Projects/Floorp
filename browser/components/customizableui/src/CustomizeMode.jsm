@@ -1411,10 +1411,13 @@ CustomizeMode.prototype = {
 
   _setGridDragActive: function(aDragOverNode, aDraggedItem, aValue) {
     let targetArea = this._getCustomizableParent(aDragOverNode);
+    let draggedWrapper = this.document.getElementById("wrapper-" + aDraggedItem.id);
+    let originArea = this._getCustomizableParent(draggedWrapper);
     let positionManager = DragPositionManager.getManagerForArea(targetArea);
     let draggedSize = this._getDragItemSize(aDragOverNode, aDraggedItem);
     let isWide = aDraggedItem.classList.contains(CustomizableUI.WIDE_PANEL_CLASS);
-    positionManager.insertPlaceholder(targetArea, aDragOverNode, isWide, draggedSize);
+    positionManager.insertPlaceholder(targetArea, aDragOverNode, isWide, draggedSize,
+                                      originArea == targetArea);
   },
 
   _getDragItemSize: function(aDragOverNode, aDraggedItem) {
