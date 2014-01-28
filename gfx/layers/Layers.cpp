@@ -807,6 +807,8 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
                (aAfter->Manager() == Manager() &&
                 aAfter->GetParent() == this),
                "aAfter is not our child");
+  NS_ASSERTION(aChild != aAfter,
+               "aChild cannot be the same as aAfter");
 
   Layer* prev = aChild->GetPrevSibling();
   Layer* next = aChild->GetNextSibling();
