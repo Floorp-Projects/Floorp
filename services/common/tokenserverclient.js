@@ -326,8 +326,10 @@ TokenServerClient.prototype = {
         error.message = "Malformed request.";
         error.cause = "malformed-request";
       } else if (response.status == 401) {
+        // Cause can be invalid-credentials, invalid-timestamp, or
+        // invalid-generation.
         error.message = "Authentication failed.";
-        error.cause = "invalid-credentials";
+        error.cause = result.status;
       }
 
       // 403 should represent a "condition acceptance needed" response.
