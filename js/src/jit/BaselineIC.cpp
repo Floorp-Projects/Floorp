@@ -549,7 +549,7 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext *cx, ICStubSpace *space)
 }
 
 bool
-ICMonitoredFallbackStub::addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val)
+ICMonitoredFallbackStub::addMonitorStubForValue(JSContext *cx, JSScript *script, HandleValue val)
 {
     return fallbackMonitorStub_->addMonitorStubForValue(cx, script, val);
 }
@@ -1123,7 +1123,7 @@ ICProfiler_PushFunction::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 bool
-ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val)
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, JSScript *script, HandleValue val)
 {
     bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
     JS_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
@@ -3826,7 +3826,7 @@ TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 }
 
 static bool
-TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetElem_Fallback *stub,
+TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_Fallback *stub,
                      HandleValue lhs, HandleValue rhs, HandleValue res)
 {
     bool isCallElem = (JSOp(*pc) == JSOP_CALLELEM);
@@ -3904,8 +3904,10 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
 
         // Check for NativeObject[id] shape-optimizable accesses.
         if (rhs.isString()) {
-            if (!TryAttachNativeGetElemStub(cx, script, pc, stub, obj, rhs))
+            RootedScript rootedScript(cx, script);
+            if (!TryAttachNativeGetElemStub(cx, rootedScript, pc, stub, obj, rhs))
                 return false;
+            script = rootedScript;
         }
     }
 
@@ -3919,7 +3921,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
             return true;
 #endif
 
-        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+        TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
         if (!cx->runtime()->jitSupportsFloatingPoint &&
             (TypedArrayRequiresFloatingPoint(tarr) || rhs.isDouble()))
         {
@@ -3955,8 +3957,7 @@ static bool
 DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub, HandleValue lhs,
                   HandleValue rhs, MutableHandleValue res)
 {
-    RootedScript script(cx, frame->script());
-    jsbytecode *pc = stub->icEntry()->pc(script);
+    jsbytecode *pc = stub->icEntry()->pc(frame->script());
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetElem(%s)", js_CodeName[op]);
 
@@ -3971,17 +3972,17 @@ DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub,
         if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res, &isOptimizedArgs))
             return false;
         if (isOptimizedArgs)
-            types::TypeScript::Monitor(cx, script, pc, res);
+            types::TypeScript::Monitor(cx, frame->script(), pc, res);
     }
 
     if (!isOptimizedArgs) {
         if (!GetElementOperation(cx, op, &lhsCopy, rhs, res))
             return false;
-        types::TypeScript::Monitor(cx, script, pc, res);
+        types::TypeScript::Monitor(cx, frame->script(), pc, res);
     }
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, script, res))
+    if (!stub->addMonitorStubForValue(cx, frame->script(), res))
         return false;
 
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {
@@ -3991,7 +3992,7 @@ DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub,
     }
 
     // Try to attach an optimized stub.
-    if (!TryAttachGetElemStub(cx, script, pc, stub, lhs, rhs, res))
+    if (!TryAttachGetElemStub(cx, frame->script(), pc, stub, lhs, rhs, res))
         return false;
 
     return true;
@@ -5969,7 +5970,7 @@ ICGetIntrinsic_Constant::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub, HandleValue val,
+TryAttachLengthStub(JSContext *cx, JSScript *script, ICGetProp_Fallback *stub, HandleValue val,
                     HandleValue res, bool *attached)
 {
     JS_ASSERT(!*attached);
@@ -6284,15 +6285,13 @@ static bool
 DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
                   MutableHandleValue val, MutableHandleValue res)
 {
-    RootedScript script(cx, frame->script());
-    jsbytecode *pc = stub->icEntry()->pc(script);
+    jsbytecode *pc = stub->icEntry()->pc(frame->script());
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", js_CodeName[op]);
 
     JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 
-    RootedPropertyName name(cx, script->getName(pc));
-    RootedId id(cx, NameToId(name));
+    RootedPropertyName name(cx, frame->script()->getName(pc));
 
     if (op == JSOP_LENGTH && val.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Handle arguments.length access.
@@ -6300,12 +6299,12 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
             res.setInt32(frame->numActualArgs());
 
             // Monitor result
-            types::TypeScript::Monitor(cx, script, pc, res);
-            if (!stub->addMonitorStubForValue(cx, script, res))
+            types::TypeScript::Monitor(cx, frame->script(), pc, res);
+            if (!stub->addMonitorStubForValue(cx, frame->script(), res))
                 return false;
 
             bool attached = false;
-            if (!TryAttachLengthStub(cx, script, stub, val, res, &attached))
+            if (!TryAttachLengthStub(cx, frame->script(), stub, val, res, &attached))
                 return false;
             JS_ASSERT(attached);
 
@@ -6317,6 +6316,7 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
     if (!obj)
         return false;
 
+    RootedId id(cx, NameToId(name));
     if (!JSObject::getGeneric(cx, obj, obj, id, res))
         return false;
 
@@ -6328,10 +6328,10 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
     }
 #endif
 
-    types::TypeScript::Monitor(cx, script, pc, res);
+    types::TypeScript::Monitor(cx, frame->script(), pc, res);
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, script, res))
+    if (!stub->addMonitorStubForValue(cx, frame->script(), res))
         return false;
 
     if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS) {
@@ -6342,11 +6342,13 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
     bool attached = false;
 
     if (op == JSOP_LENGTH) {
-        if (!TryAttachLengthStub(cx, script, stub, val, res, &attached))
+        if (!TryAttachLengthStub(cx, frame->script(), stub, val, res, &attached))
             return false;
         if (attached)
             return true;
     }
+
+    RootedScript script(cx, frame->script());
 
     if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, res, &attached))
         return false;
