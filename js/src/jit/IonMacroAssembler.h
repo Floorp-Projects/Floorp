@@ -11,11 +11,11 @@
 
 #include "jscompartment.h"
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
 # include "jit/x64/MacroAssembler-x64.h"
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/MacroAssembler-arm.h"
 #endif
 #include "jit/IonInstrumentation.h"
@@ -204,7 +204,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
 
         moveResolver_.setAllocator(*icx->temp);
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
         initWithAllocator();
         m_buffer.id = icx->getNextAssemblerId();
 #endif
@@ -221,7 +221,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
         alloc_.construct(cx);
         moveResolver_.setAllocator(*ionContext_.ref().temp);
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();
 #endif
@@ -236,7 +236,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         embedsNurseryPointers_(false),
         sps_(nullptr)
     {
-#ifdef JS_CPU_ARM
+#ifdef JS_CODEGEN_ARM
         initWithAllocator();
         m_buffer.id = 0;
 #endif

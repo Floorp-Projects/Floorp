@@ -288,7 +288,7 @@ LIRGeneratorX86Shared::lowerUrshD(MUrsh *mir)
     JS_ASSERT(rhs->type() == MIRType_Int32);
     JS_ASSERT(mir->type() == MIRType_Double);
 
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
     JS_ASSERT(ecx == rcx);
 #endif
 

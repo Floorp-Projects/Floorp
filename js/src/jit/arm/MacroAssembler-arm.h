@@ -444,7 +444,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // the initial number of arguments declared was correct.
     uint32_t passedArgs_;
 
-#ifdef JS_CPU_ARM_HARDFP
+#ifdef JS_CODEGEN_ARM_HARDFP
     uint32_t usedIntSlots_;
     uint32_t usedFloatSlots_;
     uint32_t padding_;

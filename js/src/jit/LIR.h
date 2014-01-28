@@ -1541,14 +1541,14 @@ LAllocation::toRegister() const
 #endif
 
 #include "jit/LIR-Common.h"
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-# if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+# if defined(JS_CODEGEN_X86)
 #  include "jit/x86/LIR-x86.h"
-# elif defined(JS_CPU_X64)
+# elif defined(JS_CODEGEN_X64)
 #  include "jit/x64/LIR-x64.h"
 # endif
 # include "jit/shared/LIR-x86-shared.h"
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/LIR-arm.h"
 #endif
 
