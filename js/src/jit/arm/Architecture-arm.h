@@ -12,7 +12,7 @@
 
 // gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
 #ifdef __ARM_PCS_VFP
-#define JS_CPU_ARM_HARDFP
+#define JS_CODEGEN_ARM_HARDFP
 #endif
 namespace js {
 namespace jit {

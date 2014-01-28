@@ -11,11 +11,11 @@
 // MIRGraph.
 
 #include "jit/LIR.h"
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
 # include "jit/x86/Lowering-x86.h"
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
 # include "jit/x64/Lowering-x64.h"
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/Lowering-arm.h"
 #else
 # error "CPU!"

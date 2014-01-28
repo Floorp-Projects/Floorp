@@ -241,7 +241,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
             masm.storeDouble(to.floatReg(), cycleSlot());
         }
         break;
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
       case MoveOp::INT32:
         // x64 can't pop to a 32-bit destination, so don't push.
         if (to.isMemory()) {
@@ -252,7 +252,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
         }
         break;
 #endif
-#ifndef JS_CPU_X64
+#ifndef JS_CODEGEN_X64
       case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
@@ -293,7 +293,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
             masm.loadDouble(cycleSlot(), to.floatReg());
         }
         break;
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
       case MoveOp::INT32:
         JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(int32_t));
@@ -306,7 +306,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         }
         break;
 #endif
-#ifndef JS_CPU_X64
+#ifndef JS_CODEGEN_X64
       case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
@@ -329,7 +329,7 @@ MoveEmitterX86::emitInt32Move(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory gpr move.
         JS_ASSERT(from.isMemory());
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         // x64 has a ScratchReg. Use it.
         masm.load32(toAddress(from), ScratchReg);
         masm.move32(ScratchReg, toOperand(to));
@@ -354,7 +354,7 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand &from, const MoveOperand &to)
             masm.lea(toOperand(from), to.reg());
     } else if (from.isMemory()) {
         // Memory to memory gpr move.
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         // x64 has a ScratchReg. Use it.
         masm.loadPtr(toAddress(from), ScratchReg);
         masm.mov(ScratchReg, toOperand(to));
@@ -366,7 +366,7 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Effective address to memory move.
         JS_ASSERT(from.isEffectiveAddress());
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         // x64 has a ScratchReg. Use it.
         masm.lea(toOperand(from), ScratchReg);
         masm.mov(ScratchReg, toOperand(to));

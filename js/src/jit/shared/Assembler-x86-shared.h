@@ -1165,7 +1165,7 @@ class AssemblerX86Shared
         masm.pop_flags();
     }
 
-#ifdef JS_CPU_X86
+#ifdef JS_CODEGEN_X86
     void pushAllRegs() {
         masm.pusha();
     }

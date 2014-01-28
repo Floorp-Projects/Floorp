@@ -44,7 +44,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
     heapDatum() = heap->dataPointer();
 
     JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
     uint8_t *heapOffset = heap->dataPointer();
     void *heapLength = (void*)heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
@@ -56,7 +56,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
         JS_ASSERT(disp <= INT32_MAX);
         JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
     }
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
     uint32_t heapLength = heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
         jit::Assembler::updateBoundsCheck(heapLength,
@@ -180,7 +180,7 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *
 
 }
 
-#if defined(JS_CPU_ARM)
+#if defined(JS_CODEGEN_ARM)
 extern "C" {
 
 extern int
@@ -227,7 +227,7 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return FuncCast(EnableActivationFromAsmJS);
       case AsmJSImm_DisableActivationFromAsmJS:
         return FuncCast(DisableActivationFromAsmJS);
-#if defined(JS_CPU_ARM)
+#if defined(JS_CODEGEN_ARM)
       case AsmJSImm_aeabi_idivmod:
         return FuncCast(__aeabi_idivmod);
       case AsmJSImm_aeabi_uidivmod:
@@ -732,15 +732,15 @@ GetCPUID(uint32_t *cpuId)
         ARCH_BITS = 2
     };
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CODEGEN_X86)
     JS_ASSERT(uint32_t(JSC::MacroAssembler::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = X86 | (JSC::MacroAssembler::getSSEState() << ARCH_BITS);
     return true;
-#elif defined(JS_CPU_X64)
+#elif defined(JS_CODEGEN_X64)
     JS_ASSERT(uint32_t(JSC::MacroAssembler::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = X64 | (JSC::MacroAssembler::getSSEState() << ARCH_BITS);
     return true;
-#elif defined(JS_CPU_ARM)
+#elif defined(JS_CODEGEN_ARM)
     JS_ASSERT(GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = ARM | (GetARMFlags() << ARCH_BITS);
     return true;

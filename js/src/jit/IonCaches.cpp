@@ -43,7 +43,7 @@ CodeLocationJump::repoint(JitCode *code, MacroAssembler *masm)
     size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
 #endif
     if (masm != nullptr) {
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
         new_off = masm->actualOffset((uintptr_t)raw_);
@@ -64,7 +64,7 @@ CodeLocationLabel::repoint(JitCode *code, MacroAssembler *masm)
      JS_ASSERT(state_ == Relative);
      size_t new_off = (size_t)raw_;
      if (masm != nullptr) {
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
         new_off = masm->actualOffset((uintptr_t)raw_);
