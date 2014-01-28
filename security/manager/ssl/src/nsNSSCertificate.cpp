@@ -1441,7 +1441,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
   resultOidTag = SEC_OID_UNKNOWN;
 
   uint32_t flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY |
-    mozilla::psm::CertVerifier::FLAG_NO_DV_FALLBACK_FOR_EV;
+    mozilla::psm::CertVerifier::FLAG_MUST_BE_EV;
   SECStatus rv = certVerifier->VerifyCert(mCert.get(), nullptr,
     certificateUsageSSLServer, PR_Now(),
     nullptr /* XXX pinarg */,

@@ -4823,7 +4823,7 @@ EmitFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top
     return EmitNormalFor(cx, bce, pn, top);
 }
 
-static JS_NEVER_INLINE bool
+static MOZ_NEVER_INLINE bool
 EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     FunctionBox *funbox = pn->pn_funbox;

@@ -465,7 +465,7 @@ MarkIdInternal(JSTracer *trc, jsid *id)
         JS_SET_TRACING_LOCATION(trc, (void *)id);
         MarkInternal(trc, &str);
         *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
-    } else if (JS_UNLIKELY(JSID_IS_OBJECT(*id))) {
+    } else if (MOZ_UNLIKELY(JSID_IS_OBJECT(*id))) {
         JSObject *obj = JSID_TO_OBJECT(*id);
         JS_SET_TRACING_LOCATION(trc, (void *)id);
         MarkInternal(trc, &obj);
@@ -881,7 +881,7 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
     const BarrieredId &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
-    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
+    else if (MOZ_UNLIKELY(JSID_IS_OBJECT(id)))
         PushMarkStack(gcmarker, JSID_TO_OBJECT(id));
 
     shape = shape->previous();

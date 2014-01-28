@@ -94,14 +94,6 @@
 #define JS_NO_FASTCALL
 #endif
 
-#ifndef JS_ALWAYS_INLINE
-#define JS_ALWAYS_INLINE MOZ_ALWAYS_INLINE
-#endif
-
-#ifndef JS_NEVER_INLINE
-#define JS_NEVER_INLINE MOZ_NEVER_INLINE
-#endif
-
 /***********************************************************************
 ** MACROS:      JS_BEGIN_MACRO
 **              JS_END_MACRO
@@ -118,15 +110,6 @@
 #else
 # define JS_END_MACRO   } while (0)
 #endif
-
-/***********************************************************************
-** MACROS:      JS_BEGIN_EXTERN_C
-**              JS_END_EXTERN_C
-** DESCRIPTION:
-**      Macro shorthands for conditional C++ extern block delimiters.
-***********************************************************************/
-#define JS_BEGIN_EXTERN_C      MOZ_BEGIN_EXTERN_C
-#define JS_END_EXTERN_C        MOZ_END_EXTERN_C
 
 /***********************************************************************
 ** MACROS:      JS_BIT
@@ -178,34 +161,6 @@
 # endif
 #else
 # error "Implement me"
-#endif
-
-/***********************************************************************
-** MACROS:      JS_LIKELY
-**              JS_UNLIKELY
-** DESCRIPTION:
-**      These macros allow you to give a hint to the compiler about branch
-**      probability so that it can better optimize.  Use them like this:
-**
-**      if (JS_LIKELY(v == 1)) {
-**          ... expected code path ...
-**      }
-**
-**      if (JS_UNLIKELY(v == 0)) {
-**          ... non-expected code path ...
-**      }
-**
-***********************************************************************/
-#ifdef __GNUC__
-
-# define JS_LIKELY(x)   (__builtin_expect((x), 1))
-# define JS_UNLIKELY(x) (__builtin_expect((x), 0))
-
-#else
-
-# define JS_LIKELY(x)   (x)
-# define JS_UNLIKELY(x) (x)
-
 #endif
 
 /***********************************************************************

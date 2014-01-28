@@ -82,7 +82,7 @@ js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
         AutoThreadSafeAccess ts1(wrapped->typeRaw());
         AutoThreadSafeAccess ts2(wrapped->lastProperty());
         if (!wrapped->is<WrapperObject>() ||
-            JS_UNLIKELY(stopAtOuter && wrapped->getClass()->ext.innerObject))
+            MOZ_UNLIKELY(stopAtOuter && wrapped->getClass()->ext.innerObject))
         {
             break;
         }
@@ -109,7 +109,7 @@ JS_FRIEND_API(JSObject *)
 js::UnwrapOneChecked(JSObject *obj, bool stopAtOuter)
 {
     if (!obj->is<WrapperObject>() ||
-        JS_UNLIKELY(!!obj->getClass()->ext.innerObject && stopAtOuter))
+        MOZ_UNLIKELY(!!obj->getClass()->ext.innerObject && stopAtOuter))
     {
         return obj;
     }

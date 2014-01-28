@@ -584,15 +584,13 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
 
   nsIntRect scissor = *clipRect;
   if (!container->UseIntermediateSurface()) {
-    gfxMatrix matrix;
-    gfx3DMatrix effectiveTransform;
-    To3DMatrix(container->GetEffectiveTransform(), effectiveTransform);
-    DebugOnly<bool> is2D = effectiveTransform.Is2D(&matrix);
+    gfx::Matrix matrix;
+    DebugOnly<bool> is2D = container->GetEffectiveTransform().Is2D(&matrix);
     // See DefaultComputeEffectiveTransforms below
     NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
                  "Non preserves axis aligned transform with clipped child should have forced intermediate surface");
-    gfxRect r(scissor.x, scissor.y, scissor.width, scissor.height);
-    gfxRect trScissor = matrix.TransformBounds(r);
+    gfx::Rect r(scissor.x, scissor.y, scissor.width, scissor.height);
+    gfxRect trScissor = gfx::ThebesRect(matrix.TransformBounds(r));
     trScissor.Round();
     if (!gfxUtils::GfxRectToIntRect(trScissor, &scissor)) {
       return nsIntRect(currentClip.TopLeft(), nsIntSize(0, 0));
@@ -798,6 +796,8 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
                (aAfter->Manager() == Manager() &&
                 aAfter->GetParent() == this),
                "aAfter is not our child");
+  NS_ASSERTION(aChild != aAfter,
+               "aChild cannot be the same as aAfter");
 
   Layer* prev = aChild->GetPrevSibling();
   Layer* next = aChild->GetNextSibling();
@@ -901,14 +901,12 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
-      gfxMatrix contTransform;
-      gfx3DMatrix effectiveTransform;
-      To3DMatrix(mEffectiveTransform, effectiveTransform);
-      if (!effectiveTransform.Is2D(&contTransform) ||
+      gfx::Matrix contTransform;
+      if (!mEffectiveTransform.Is2D(&contTransform) ||
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         !contTransform.PreservesAxisAlignedRectangles()) {
 #else
-        contTransform.HasNonIntegerTranslation()) {
+        gfx::ThebesMatrix(contTransform).HasNonIntegerTranslation()) {
 #endif
         for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
           const nsIntRect *clipRect = child->GetEffectiveClipRect();

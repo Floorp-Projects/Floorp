@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'PluralForm',
   'resource://gre/modules/PluralForm.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
   'resource://gre/modules/accessibility/Constants.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'States',
+  'resource://gre/modules/accessibility/Constants.jsm');
 
 var gStringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
   getService(Ci.nsIStringBundleService).
@@ -97,7 +99,7 @@ this.OutputGenerator = {
    *    context information for a given accessible and its relationship with
    *    another accessible.
    * @return {Array} Two string array. The first string describes the object
-   *    and its states. The second string is the object's name. Whether the
+   *    and its state. The second string is the object's name. Whether the
    *    object's description or it's role is included is determined by
    *    {@link roleRuleMap}.
    */
@@ -112,11 +114,8 @@ this.OutputGenerator = {
     if (aAccessible.childCount == 0)
       flags |= INCLUDE_NAME;
 
-    let state = {};
-    let extState = {};
-    aAccessible.getState(state, extState);
-    let states = {base: state.value, ext: extState.value};
-    return func.apply(this, [aAccessible, roleString, states, flags, aContext]);
+    return func.apply(this, [aAccessible, roleString,
+                             Utils.getState(aAccessible), flags, aContext]);
   },
 
   /**
@@ -240,7 +239,7 @@ this.OutputGenerator = {
 
   _getLocalizedRole: function _getLocalizedRole(aRoleStr) {},
 
-  _getLocalizedStates: function _getLocalizedStates(aStates) {},
+  _getLocalizedState: function _getLocalizedState(aState) {},
 
   _getPluralFormString: function _getPluralFormString(aString, aCount) {
     let str = gStringBundle.GetStringFromName(this._getOutputName(aString));
@@ -322,11 +321,11 @@ this.OutputGenerator = {
     'definitionlist': INCLUDE_DESC | INCLUDE_NAME},
 
   objectOutputFunctions: {
-    _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aStates, aFlags) {
+    _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aState, aFlags) {
       let output = [];
 
       if (aFlags & INCLUDE_DESC) {
-        let desc = this._getLocalizedStates(aStates);
+        let desc = this._getLocalizedState(aState);
         let roleStr = this._getLocalizedRole(aRoleStr);
         if (roleStr) {
           this._addType(desc, aAccessible, aRoleStr);
@@ -349,7 +348,7 @@ this.OutputGenerator = {
       return output;
     },
 
-    label: function label(aAccessible, aRoleStr, aStates, aFlags, aContext) {
+    label: function label(aAccessible, aRoleStr, aState, aFlags, aContext) {
       if (aContext.isNestedControl ||
           aContext.accessible == Utils.getEmbeddedControl(aAccessible)) {
         // If we are on a nested control, or a nesting label,
@@ -360,20 +359,19 @@ this.OutputGenerator = {
       return this.objectOutputFunctions.defaultFunc.apply(this, arguments);
     },
 
-    entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
-      let rolestr = (aStates.ext & Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE) ?
-            'textarea' : 'entry';
+    entry: function entry(aAccessible, aRoleStr, aState, aFlags) {
+      let rolestr = aState.contains(States.MULTI_LINE) ? 'textarea' : 'entry';
       return this.objectOutputFunctions.defaultFunc.apply(
-        this, [aAccessible, rolestr, aStates, aFlags]);
+        this, [aAccessible, rolestr, aState, aFlags]);
     },
 
-    pagetab: function pagetab(aAccessible, aRoleStr, aStates, aFlags) {
+    pagetab: function pagetab(aAccessible, aRoleStr, aState, aFlags) {
       let localizedRole = this._getLocalizedRole(aRoleStr);
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
       let output = [];
-      let desc = this._getLocalizedStates(aStates);
+      let desc = this._getLocalizedState(aState);
       desc.push(
         gStringBundle.formatStringFromName(
           'objItemOf', [localizedRole, itemno.value, itemof.value], 3));
@@ -385,7 +383,7 @@ this.OutputGenerator = {
       return output;
     },
 
-    table: function table(aAccessible, aRoleStr, aStates, aFlags) {
+    table: function table(aAccessible, aRoleStr, aState, aFlags) {
       let output = [];
       let table;
       try {
@@ -499,11 +497,11 @@ this.UtteranceGenerator = {
 
     __proto__: OutputGenerator.objectOutputFunctions,
 
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
+    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aState, aFlags) {
       return this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
     },
 
-    heading: function heading(aAccessible, aRoleStr, aStates, aFlags) {
+    heading: function heading(aAccessible, aRoleStr, aState, aFlags) {
       let level = {};
       aAccessible.groupPosition(level, {}, {});
       let utterance =
@@ -515,7 +513,7 @@ this.UtteranceGenerator = {
       return utterance;
     },
 
-    listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {
+    listitem: function listitem(aAccessible, aRoleStr, aState, aFlags) {
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
@@ -531,26 +529,26 @@ this.UtteranceGenerator = {
       return utterance;
     },
 
-    list: function list(aAccessible, aRoleStr, aStates, aFlags) {
+    list: function list(aAccessible, aRoleStr, aState, aFlags) {
       return this._getListUtterance
         (aAccessible, aRoleStr, aFlags, aAccessible.childCount);
     },
 
-    definitionlist: function definitionlist(aAccessible, aRoleStr, aStates, aFlags) {
+    definitionlist: function definitionlist(aAccessible, aRoleStr, aState, aFlags) {
       return this._getListUtterance
         (aAccessible, aRoleStr, aFlags, aAccessible.childCount / 2);
     },
 
-    application: function application(aAccessible, aRoleStr, aStates, aFlags) {
+    application: function application(aAccessible, aRoleStr, aState, aFlags) {
       // Don't utter location of applications, it gets tiring.
       if (aAccessible.name != aAccessible.DOMNode.location)
         return this.objectOutputFunctions.defaultFunc.apply(this,
-          [aAccessible, aRoleStr, aStates, aFlags]);
+          [aAccessible, aRoleStr, aState, aFlags]);
 
       return [];
     },
 
-    cell: function cell(aAccessible, aRoleStr, aStates, aFlags, aContext) {
+    cell: function cell(aAccessible, aRoleStr, aState, aFlags, aContext) {
       let utterance = [];
       let cell = aContext.getCellInfo(aAccessible);
       if (cell) {
@@ -612,10 +610,10 @@ this.UtteranceGenerator = {
     }
   },
 
-  _getLocalizedStates: function _getLocalizedStates(aStates) {
+  _getLocalizedState: function _getLocalizedState(aState) {
     let stateUtterances = [];
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_UNAVAILABLE) {
+    if (aState.contains(States.UNAVAILABLE)) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateUnavailable'));
     }
 
@@ -623,31 +621,31 @@ this.UtteranceGenerator = {
     // This is because we expose the checked information on the node itself.
     // XXX: this means the checked state is always appended to the end, regardless
     // of the utterance ordering preference.
-    if (Utils.AndroidSdkVersion < 16 && aStates.base & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
-      let stateStr = (aStates.base & Ci.nsIAccessibleStates.STATE_CHECKED) ?
+    if (Utils.AndroidSdkVersion < 16 && aState.contains(States.CHECKABLE)) {
+      let statetr = aState.contains(States.CHECKED) ?
         'stateChecked' : 'stateNotChecked';
-      stateUtterances.push(gStringBundle.GetStringFromName(stateStr));
+      stateUtterances.push(gStringBundle.GetStringFromName(statetr));
     }
 
-    if (aStates.ext & Ci.nsIAccessibleStates.EXT_STATE_EXPANDABLE) {
-      let stateStr = (aStates.base & Ci.nsIAccessibleStates.STATE_EXPANDED) ?
+    if (aState.contains(States.EXPANDABLE)) {
+      let statetr = aState.contains(States.EXPANDED) ?
         'stateExpanded' : 'stateCollapsed';
-      stateUtterances.push(gStringBundle.GetStringFromName(stateStr));
+      stateUtterances.push(gStringBundle.GetStringFromName(statetr));
     }
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_REQUIRED) {
+    if (aState.contains(States.REQUIRED)) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateRequired'));
     }
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_TRAVERSED) {
+    if (aState.contains(States.TRAVERSED)) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateTraversed'));
     }
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_HASPOPUP) {
+    if (aState.contains(States.HASPOPUP)) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateHasPopup'));
     }
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_SELECTED) {
+    if (aState.contains(States.SELECTED)) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateSelected'));
     }
 
@@ -717,11 +715,11 @@ this.BrailleGenerator = {
 
     __proto__: OutputGenerator.objectOutputFunctions,
 
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
+    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aState, aFlags) {
       return this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
     },
 
-    listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {
+    listitem: function listitem(aAccessible, aRoleStr, aState, aFlags) {
       let braille = [];
 
       this._addName(braille, aAccessible, aFlags);
@@ -730,7 +728,7 @@ this.BrailleGenerator = {
       return braille;
     },
 
-    cell: function cell(aAccessible, aRoleStr, aStates, aFlags, aContext) {
+    cell: function cell(aAccessible, aRoleStr, aState, aFlags, aContext) {
       let braille = [];
       let cell = aContext.getCellInfo(aAccessible);
       if (cell) {
@@ -763,7 +761,7 @@ this.BrailleGenerator = {
       return this.objectOutputFunctions.cell.apply(this, arguments);
     },
 
-    statictext: function statictext(aAccessible, aRoleStr, aStates, aFlags) {
+    statictext: function statictext(aAccessible, aRoleStr, aState, aFlags) {
       // Since we customize the list bullet's output, we add the static
       // text from the first node in each listitem, so skip it here.
       if (aAccessible.parent.role == Roles.LISTITEM) {
@@ -773,10 +771,10 @@ this.BrailleGenerator = {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    _useStateNotRole: function _useStateNotRole(aAccessible, aRoleStr, aStates, aFlags) {
+    _useStateNotRole: function _useStateNotRole(aAccessible, aRoleStr, aState, aFlags) {
       let braille = [];
 
-      let desc = this._getLocalizedStates(aStates);
+      let desc = this._getLocalizedState(aState);
       braille.push(desc.join(' '));
 
       this._addName(braille, aAccessible, aFlags);
@@ -785,15 +783,15 @@ this.BrailleGenerator = {
       return braille;
     },
 
-    checkbutton: function checkbutton(aAccessible, aRoleStr, aStates, aFlags) {
+    checkbutton: function checkbutton(aAccessible, aRoleStr, aState, aFlags) {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    radiobutton: function radiobutton(aAccessible, aRoleStr, aStates, aFlags) {
+    radiobutton: function radiobutton(aAccessible, aRoleStr, aState, aFlags) {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    togglebutton: function radiobutton(aAccessible, aRoleStr, aStates, aFlags) {
+    togglebutton: function radiobutton(aAccessible, aRoleStr, aState, aFlags) {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     }
   },
@@ -823,14 +821,14 @@ this.BrailleGenerator = {
     }
   },
 
-  _getLocalizedStates: function _getLocalizedStates(aStates) {
+  _getLocalizedState: function _getLocalizedState(aState) {
     let stateBraille = [];
 
     let getCheckedState = function getCheckedState() {
       let resultMarker = [];
-      let state = aStates.base;
-      let fill = !!(state & Ci.nsIAccessibleStates.STATE_CHECKED) ||
-                 !!(state & Ci.nsIAccessibleStates.STATE_PRESSED);
+      let state = aState;
+      let fill = state.contains(States.CHECKED) ||
+        state.contains(States.PRESSED);
 
       resultMarker.push('(');
       resultMarker.push(fill ? 'x' : ' ');
@@ -839,7 +837,7 @@ this.BrailleGenerator = {
       return resultMarker.join('');
     };
 
-    if (aStates.base & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
+    if (aState.contains(States.CHECKABLE)) {
       stateBraille.push(getCheckedState());
     }
 

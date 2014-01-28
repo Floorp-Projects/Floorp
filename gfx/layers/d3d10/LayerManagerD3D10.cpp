@@ -859,12 +859,11 @@ LayerD3D10::LoadMaskTexture()
       return SHADER_NO_MASK;
     }
 
-    gfxMatrix maskTransform;
-    gfx3DMatrix effectiveTransform;
-    gfx::To3DMatrix(maskLayer->GetEffectiveTransform(), effectiveTransform);
+    Matrix maskTransform;
+    Matrix4x4 effectiveTransform = maskLayer->GetEffectiveTransform();
     bool maskIs2D = effectiveTransform.CanDraw2D(&maskTransform);
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-    gfxRect bounds = gfxRect(gfxPoint(), ThebesIntSize(size));
+    Rect bounds = Rect(Point(), Size(size));
     bounds = maskTransform.TransformBounds(bounds);
 
     effect()->GetVariableByName("vMaskQuad")->AsVector()->SetFloatVector(
