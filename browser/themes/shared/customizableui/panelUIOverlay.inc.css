@@ -6,8 +6,8 @@
 
 %define menuPanelWidth 22.35em
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
+%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],:active)):-moz-any(:hover,[_moz-menuactive])
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active,[_moz-menuactive]:active)
 
 %include ../browser.inc
 
