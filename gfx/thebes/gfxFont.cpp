@@ -6400,7 +6400,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 
             if (lineBreakHere || hyphenation || wordWrapping) {
                 gfxFloat hyphenatedAdvance = advance;
-                if (!lineBreakHere && !wordWrapping) {
+                if (!lineBreakHere && hyphenation) {
                     hyphenatedAdvance += aProvider->GetHyphenWidth();
                 }
             
@@ -6409,7 +6409,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                     lastBreak = i;
                     lastBreakTrimmableChars = trimmableChars;
                     lastBreakTrimmableAdvance = trimmableAdvance;
-                    lastBreakUsedHyphenation = !lineBreakHere && !wordWrapping;
+                    lastBreakUsedHyphenation = !lineBreakHere && hyphenation;
                     *aBreakPriority = hyphenation || lineBreakHere ?
                         gfxBreakPriority::eNormalBreak : gfxBreakPriority::eWordWrapBreak;
                 }
