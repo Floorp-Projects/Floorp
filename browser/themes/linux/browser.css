@@ -1682,21 +1682,45 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 /* Sync Panel */
 
-#sync-popup {
+.sync-panel {
   padding: 10px;
 }
 
-#sync-popup-icon {
+.sync-panel-icon {
   width: 32px;
-  background: url("chrome://browser/content/abouthome/sync.png") center center no-repeat;
+  background: url("chrome://browser/content/abouthome/sync.png") top left no-repeat;
 }
 
-#sync-popup-inner {
+.sync-panel-inner {
   width: 0;
   padding-left: 10px;
 }
 
-#sync-popup-desc-prefs {
+.sync-panel-button-box {
+  margin-top: 1em;
+}
+
+.sync-panel-button {
+  @hudButton@
+  margin: 0;
+  min-width: 72px;
+  min-height: 22px;
+}
+
+.sync-panel-button:hover:active {
+  @hudButtonPressed@
+}
+
+.sync-panel-button:-moz-focusring {
+  @hudButtonFocused@
+}
+
+#sync-error-panel-title {
+  font-weight: bold;
+}
+
+#sync-start-panel-subtitle,
+#sync-error-panel-subtitle {
   margin: 0;
 }
 
