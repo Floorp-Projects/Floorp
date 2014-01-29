@@ -32,10 +32,12 @@
 #define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 4
 
 // Slots on struct type objects
-#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 3
+#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 3
+#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 4
+#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 5
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS                   5
+#define JS_DESCR_SLOTS                   6
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for type representation objects

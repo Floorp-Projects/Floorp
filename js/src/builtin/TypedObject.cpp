@@ -130,7 +130,6 @@ ConvertAndCopyTo(JSContext *cx, HandleTypedDatum datum, HandleValue val)
  */
 static bool
 Reify(JSContext *cx,
-      TypeRepresentation *typeRepr,
       HandleTypeDescr type,
       HandleTypedDatum datum,
       size_t offset,
@@ -782,36 +781,52 @@ StructMetaTypeDescr::layout(JSContext *cx,
     structType->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR,
                                  ObjectValue(*typeReprObj));
 
-    // Construct for internal use an array with the type object for each field.
-    RootedObject fieldTypeVec(
-        cx, NewDenseCopiedArray(cx, fieldTypeObjs.length(),
-                                fieldTypeObjs.begin()));
-    if (!fieldTypeVec)
-        return false;
-
-    structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES,
-                                 ObjectValue(*fieldTypeVec));
-
-    // Construct the fieldNames vector
-    AutoValueVector fieldNameValues(cx);
-    for (unsigned int i = 0; i < ids.length(); i++) {
-        RootedValue value(cx, IdToValue(ids[i]));
-        if (!fieldNameValues.append(value))
+    // Construct for internal use an array with names of each field
+    {
+        AutoValueVector fieldNameValues(cx);
+        for (unsigned int i = 0; i < ids.length(); i++) {
+            RootedValue value(cx, IdToValue(ids[i]));
+            if (!fieldNameValues.append(value))
+                return false;
+        }
+        RootedObject fieldNamesVec(
+            cx, NewDenseCopiedArray(cx, fieldNameValues.length(),
+                                    fieldNameValues.begin()));
+        if (!fieldNamesVec)
             return false;
+        structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES,
+                                     ObjectValue(*fieldNamesVec));
     }
-    RootedObject fieldNamesVec(
-        cx, NewDenseCopiedArray(cx, fieldNameValues.length(),
-                                fieldNameValues.begin()));
-    if (!fieldNamesVec)
-        return false;
-    RootedValue fieldNamesVecValue(cx, ObjectValue(*fieldNamesVec));
-    if (!JSObject::defineProperty(cx, structType, cx->names().fieldNames,
-                                  fieldNamesVecValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
-        return false;
 
-    // Construct the fieldNames, fieldOffsets and fieldTypes objects:
-    // fieldNames : [ string ]
+    // Construct for internal use an array with the type object for each field.
+    {
+        RootedObject fieldTypeVec(cx);
+        fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
+                                           fieldTypeObjs.begin());
+        if (!fieldTypeVec)
+            return false;
+        structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES,
+                                     ObjectValue(*fieldTypeVec));
+    }
+
+    // Construct for internal use an array with the offset for each field.
+    {
+        AutoValueVector fieldOffsets(cx);
+        for (size_t i = 0; i < typeRepr->fieldCount(); i++) {
+            const StructField &field = typeRepr->field(i);
+            if (!fieldOffsets.append(Int32Value(field.offset)))
+                return false;
+        }
+        RootedObject fieldOffsetsVec(cx);
+        fieldOffsetsVec = NewDenseCopiedArray(cx, fieldOffsets.length(),
+                                              fieldOffsets.begin());
+        if (!fieldOffsetsVec)
+            return false;
+        structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS,
+                                     ObjectValue(*fieldOffsetsVec));
+    }
+
+    // Construct the fieldOffsets and fieldTypes objects:
     // fieldOffsets : { string: integer, ... }
     // fieldTypes : { string: Type, ... }
     RootedObject fieldOffsets(cx);
@@ -912,6 +927,40 @@ StructMetaTypeDescr::construct(JSContext *cx, unsigned int argc, Value *vp)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                          JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS);
     return false;
+}
+
+bool
+StructTypeDescr::fieldIndex(jsid id, size_t *out)
+{
+    JSObject &fieldNames =
+        getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).toObject();
+    size_t l = fieldNames.getDenseInitializedLength();
+    for (size_t i = 0; i < l; i++) {
+        JSAtom &a = fieldNames.getDenseElement(i).toString()->asAtom();
+        if (JSID_IS_ATOM(id, &a)) {
+            *out = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+size_t
+StructTypeDescr::fieldOffset(size_t index)
+{
+    JSObject &fieldOffsets =
+        getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject();
+    JS_ASSERT(index < fieldOffsets.getDenseInitializedLength());
+    return fieldOffsets.getDenseElement(index).toInt32();
+}
+
+SizedTypeDescr&
+StructTypeDescr::fieldDescr(size_t index)
+{
+    JSObject &fieldDescrs =
+        getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES).toObject();
+    JS_ASSERT(index < fieldDescrs.getDenseInitializedLength());
+    return fieldDescrs.getDenseElement(index).toObject().as<SizedTypeDescr>();
 }
 
 /******************************************************************************
@@ -1597,34 +1646,6 @@ TypedDatum::obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId s
     return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
-static SizedTypeDescr *
-StructFieldType(JSContext *cx,
-                HandleStructTypeDescr type,
-                int32_t fieldIndex)
-{
-    // Recover the original type object here (`field` contains
-    // only its canonical form). The difference is observable,
-    // e.g. in a program like:
-    //
-    //     var Point1 = new StructType({x:uint8, y:uint8});
-    //     var Point2 = new StructType({x:uint8, y:uint8});
-    //     var Line1 = new StructType({start:Point1, end: Point1});
-    //     var Line2 = new StructType({start:Point2, end: Point2});
-    //     var line1 = new Line1(...);
-    //     var line2 = new Line2(...);
-    //
-    // In this scenario, line1.start.type() === Point1 and
-    // line2.start.type() === Point2.
-    RootedObject fieldTypes(
-        cx, &type->getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES).toObject());
-    RootedValue fieldTypeVal(cx);
-    if (!JSObject::getElement(cx, fieldTypes, fieldTypes,
-                              fieldIndex, &fieldTypeVal))
-        return nullptr;
-
-    return &fieldTypeVal.toObject().as<SizedTypeDescr>();
-}
-
 bool
 TypedDatum::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                            HandleId id, MutableHandleValue vp)
@@ -1664,20 +1685,15 @@ TypedDatum::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receive
         break;
 
       case TypeRepresentation::Struct: {
-        Rooted<StructTypeDescr*> type(cx);
-        type = &datum->typeDescr().as<StructTypeDescr>();
+        Rooted<StructTypeDescr*> descr(cx, &datum->typeDescr().as<StructTypeDescr>());
 
-        StructTypeRepresentation *structTypeRepr = typeRepr->asStruct();
-        const StructField *field = structTypeRepr->fieldNamed(id);
-        if (!field)
+        size_t fieldIndex;
+        if (!descr->fieldIndex(id, &fieldIndex))
             break;
 
-        Rooted<SizedTypeDescr*> fieldType(cx);
-        fieldType = StructFieldType(cx, type, field->index);
-        if (!fieldType)
-            return false;
-
-        return Reify(cx, field->typeRepr, fieldType, datum, field->offset, vp);
+        size_t offset = descr->fieldOffset(fieldIndex);
+        Rooted<SizedTypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
+        return Reify(cx, fieldType, datum, offset, vp);
       }
     }
 
@@ -1751,7 +1767,7 @@ TypedDatum::obj_getArrayElement(JSContext *cx,
     elementType = &typeDescr->as<T>().elementType();
     SizedTypeRepresentation *elementTypeRepr = elementType->typeRepresentation();
     size_t offset = elementTypeRepr->size() * index;
-    return Reify(cx, elementTypeRepr, elementType, datum, offset, vp);
+    return Reify(cx, elementType, datum, offset, vp);
 }
 
 bool
@@ -1793,17 +1809,15 @@ TypedDatum::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
         break;
 
       case ScalarTypeRepresentation::Struct: {
-        const StructField *field = typeRepr->asStruct()->fieldNamed(id);
-        if (!field)
+        Rooted<StructTypeDescr*> descr(cx, &datum->typeDescr().as<StructTypeDescr>());
+
+        size_t fieldIndex;
+        if (!descr->fieldIndex(id, &fieldIndex))
             break;
 
-        Rooted<StructTypeDescr *> descr(cx, &datum->typeDescr().as<StructTypeDescr>());
-        Rooted<SizedTypeDescr*> fieldType(cx);
-        fieldType = StructFieldType(cx, descr, field->index);
-        if (!fieldType)
-            return false;
-
-        return ConvertAndCopyTo(cx, fieldType, datum, field->offset, vp);
+        size_t offset = descr->fieldOffset(fieldIndex);
+        Rooted<SizedTypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
+        return ConvertAndCopyTo(cx, fieldType, datum, offset, vp);
       }
     }
 
