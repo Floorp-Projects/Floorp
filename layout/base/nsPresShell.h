@@ -162,14 +162,16 @@ public:
                                               nscolor aBackgroundColor,
                                               gfxContext* aThebesContext) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
-                                                   nsIntRegion* aRegion,
-                                                   nsIntPoint& aPoint,
-                                                   nsIntRect* aScreenRect) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderNode(nsIDOMNode* aNode,
+             nsIntRegion* aRegion,
+             nsIntPoint& aPoint,
+             nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
-                                                        nsIntPoint& aPoint,
-                                                        nsIntRect* aScreenRect) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderSelection(nsISelection* aSelection,
+                  nsIntPoint& aPoint,
+                  nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
   virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() MOZ_OVERRIDE;
 
@@ -504,7 +506,7 @@ protected:
    * aScreenRect - [out] set to the area of the screen the painted area should
    *               be displayed at
    */
-  already_AddRefed<gfxASurface>
+  mozilla::TemporaryRef<SourceSurface>
   PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                       nsISelection* aSelection,
                       nsIntRegion* aRegion,
