@@ -679,6 +679,54 @@ function uniqueFile(aLocalFile)
   return aLocalFile;
 }
 
+#ifdef MOZ_JSDOWNLOADS
+/**
+ * Download a URL using the new jsdownloads API.
+ *
+ * @param aURL
+ *        the url to download
+ * @param [optional] aFileName
+ *        the destination file name, if omitted will be obtained from the url.
+ * @param aInitiatingDocument
+ *        The document from which the download was initiated.
+ */
+function DownloadURL(aURL, aFileName, aInitiatingDocument) {
+  // For private browsing, try to get document out of the most recent browser
+  // window, or provide our own if there's no browser window.
+  let isPrivate = aInitiatingDocument.defaultView
+                                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIWebNavigation)
+                                     .QueryInterface(Ci.nsILoadContext)
+                                     .usePrivateBrowsing;
+
+  let fileInfo = new FileInfo(aFileName);
+  initFileInfo(fileInfo, aURL, null, null, null, null);
+
+  let filepickerParams = {
+    fileInfo: fileInfo,
+    saveMode: SAVEMODE_FILEONLY
+  };
+
+  Task.spawn(function* () {
+    let accepted = yield promiseTargetFile(filepickerParams, true, fileInfo.uri);
+    if (!accepted)
+      return;
+
+    let file = filepickerParams.file;
+    let download = yield Downloads.createDownload({
+      source: { url: aURL, isPrivate: isPrivate },
+      target: { path: file.path, partFilePath: file.path + ".part" }
+    });
+    download.tryToKeepPartialData = true;
+    download.start();
+
+    // Add the download to the list, allowing it to be managed.
+    let list = yield Downloads.getList(Downloads.ALL);
+    list.add(download);
+  }).then(null, Components.utils.reportError);
+}
+#endif
+
 // We have no DOM, and can only save the URL as is.
 const SAVEMODE_FILEONLY      = 0x00;
 // We have a DOM and can save as complete.
