@@ -237,7 +237,7 @@ size. -->
 <!ENTITY pref_titlebar_mode_title "Show page title">
 <!ENTITY pref_titlebar_mode_url "Show page address">
 
-<!ENTITY pref_dynamic_toolbar "Hide title bar when scrolling">
+<!ENTITY pref_dynamic_toolbar "Scroll title bar">
 
 <!ENTITY history_removed "Page removed">
 
