@@ -77,7 +77,7 @@ let gFxAccounts = {
     if (topic != FxAccountsCommon.ONVERIFIED_NOTIFICATION) {
       this.updateUI();
     } else if (!this.syncNeedsCustomization) {
-      this.showDoorhanger();
+      this.showSyncStartedDoorhanger();
     }
   },
 
@@ -86,8 +86,8 @@ let gFxAccounts = {
     this.updateUI();
   },
 
-  showDoorhanger: function () {
-    let panel = document.getElementById("sync-popup");
+  showDoorhanger: function (id) {
+    let panel = document.getElementById(id);
     let anchor = document.getElementById("PanelUI-menu-button");
 
     let iconAnchor =
@@ -96,6 +96,14 @@ let gFxAccounts = {
 
     panel.hidden = false;
     panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+  },
+
+  showSyncStartedDoorhanger: function () {
+    this.showDoorhanger("sync-start-panel");
+  },
+
+  showSyncFailedDoorhanger: function () {
+    this.showDoorhanger("sync-error-panel");
   },
 
   updateUI: function () {
@@ -131,11 +139,19 @@ let gFxAccounts = {
 
   toggle: function (event) {
     if (event.originalTarget.hasAttribute("signedin")) {
-      openPreferences("paneSync");
+      this.openPreferences();
     } else {
-      switchToTabHavingURI("about:accounts", true);
+      this.openSignInPage();
     }
 
     PanelUI.hide();
+  },
+
+  openPreferences: function () {
+    openPreferences("paneSync");
+  },
+
+  openSignInPage: function () {
+    switchToTabHavingURI("about:accounts", true);
   }
 };
