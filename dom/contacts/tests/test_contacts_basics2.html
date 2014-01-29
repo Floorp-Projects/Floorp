@@ -800,6 +800,28 @@ var steps = [
     ok(!c.jobTitle, "jobTitle is not set");
     next();
   },
+  function() {
+    ok(true, "mozContacts.remove with an ID works");
+    var c = new mozContact({name: ["Ephemeral Jimmy"]});
+    req = navigator.mozContacts.save(c);
+    req.onsuccess = function() {
+      req = navigator.mozContacts.remove(c.id);
+      req.onsuccess = function() {
+        req = navigator.mozContacts.find({
+          filterBy: ["id"],
+          filterOp: "equals",
+          filterValue: c.id
+        });
+        req.onsuccess = function() {
+          ise(req.result.length, 0, "Successfully removed contact by ID");
+          next();
+        };
+        req.onerror = onFailure;
+      };
+      req.onerror = onFailure;
+    };
+    req.onerror = onFailure;
+  },
   function () {
     ok(true, "all done!\n");
     SimpleTest.finish();
