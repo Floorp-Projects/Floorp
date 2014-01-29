@@ -209,7 +209,7 @@ addDOMTouch(UserInputData& data, WidgetTouchEvent& event, int i)
     const ::Touch& touch = data.motion.touches[i];
     event.touches.AppendElement(
         new dom::Touch(touch.id,
-                       nsIntPoint(touch.coords.getX(), touch.coords.getY()),
+                       nsIntPoint(floor(touch.coords.getX() + 0.5), floor(touch.coords.getY() + 0.5)),
                        nsIntPoint(touch.coords.getAxisValue(AMOTION_EVENT_AXIS_SIZE),
                                   touch.coords.getAxisValue(AMOTION_EVENT_AXIS_SIZE)),
                        0,

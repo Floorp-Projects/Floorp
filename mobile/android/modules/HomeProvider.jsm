@@ -24,7 +24,7 @@ const DB_PATH = OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
 const SQL = {
   createItemsTable:
     "CREATE TABLE items (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+      "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
       "dataset_id TEXT NOT NULL, " +
       "url TEXT," +
       "title TEXT," +
@@ -77,6 +77,7 @@ HomeStorage.prototype = {
         // XXX: Factor this out to some migration path.
         if (!(yield db.tableExists("items"))) {
           yield db.execute(SQL.createItemsTable);
+          yield db.setSchemaVersion(SCHEMA_VERSION);
         }
 
         // Insert data into DB.

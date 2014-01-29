@@ -277,8 +277,11 @@ extern "C" {
             return jEnv;
         }
         JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
-        if (!jVm->GetEnv(reinterpret_cast<void**>(&jEnv), JNI_VERSION_1_2) ||
-            !jVm->AttachCurrentThread(&jEnv, nullptr)) {
+        if (!jVm->GetEnv(reinterpret_cast<void**>(&jEnv), JNI_VERSION_1_2)) {
+            MOZ_ASSERT(jEnv);
+            return jEnv;
+        }
+        if (!jVm->AttachCurrentThread(&jEnv, nullptr)) {
             MOZ_ASSERT(jEnv);
             PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
             return jEnv;
