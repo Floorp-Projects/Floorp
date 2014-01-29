@@ -60,9 +60,8 @@ gTests.push({
     let input = tabDocument.getElementById("textedit1");
 
     input.value = "hellothere";
-    form.action = chromeRoot + "browser_form_auto_complete.html";
 
-    loadedPromise = waitForEvent(Browser.selectedTab.browser, "DOMContentLoaded");
+    loadedPromise = waitForObserver("satchel-storage-changed", null, "formhistory-add");
     form.submit();
     yield loadedPromise;
 
