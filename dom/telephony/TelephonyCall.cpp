@@ -47,8 +47,7 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
 TelephonyCall::TelephonyCall()
   : mCallIndex(kOutgoingPlaceholderCallIndex),
     mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN),
-    mLive(false),
-    mOutgoing(false)
+    mLive(false)
 {
   SetIsDOMBinding();
 }
@@ -106,10 +105,6 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
 
   mState = stateString;
   mCallState = aCallState;
-
-  if (aCallState == nsITelephonyProvider::CALL_STATE_DIALING) {
-    mOutgoing = true;
-  }
 
   if (aCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
     NS_ASSERTION(mLive, "Should be live!");
