@@ -245,6 +245,21 @@ struct nsIMEUpdatePreference {
   {
   }
 
+  bool WantSelectionChange() const
+  {
+    return !!(mWantUpdates & NOTIFY_SELECTION_CHANGE);
+  }
+
+  bool WantTextChange() const
+  {
+    return !!(mWantUpdates & NOTIFY_TEXT_CHANGE);
+  }
+
+  bool WantDuringDeactive() const
+  {
+    return !!(mWantUpdates & NOTIFY_DURING_DEACTIVE);
+  }
+
   Notifications mWantUpdates;
   bool mWantHints;
 };
