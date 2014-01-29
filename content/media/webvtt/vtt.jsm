@@ -8,8 +8,25 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
  * Code below is vtt.js the JS WebVTTParser.
  * Current source code can be found at http://github.com/andreasgal/vtt.js
  *
- * Code taken from commit 33a837b1ceef138a61a3b2f6fac90d5c70bd90d9
+ * Code taken from commit d819872e198d051dfcebcfb7ecf260462c9a9c6f
  */
+/**
+ * Copyright 2013 vtt.js Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 (function(global) {
 
   function ParsingError(message) {
@@ -130,7 +147,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
         throw new ParsingError("Malformed time stamp.");
       }
       // Remove time stamp from input.
-      input = input.replace(/^[^\s-]+/, "");
+      input = input.replace(/^[^\sa-zA-Z-]+/, "");
       return ts;
     }
 
@@ -632,13 +649,19 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
         (cue.snapToLines || (cue.line >= 0 && cue.line <= 100))) {
       return cue.line;
     }
-    if (!cue.track) {
+    if (!cue.track || !cue.track.textTrackList ||
+        !cue.track.textTrackList.mediaElement) {
       return -1;
     }
-    // TODO: Have to figure out a way to determine what the position of the
-    // Track is in the Media element's list of TextTracks and return that + 1,
-    // negated.
-    return 100;
+    var track = cue.track,
+        trackList = track.textTrackList,
+        count = 0;
+    for (var i = 0; i < trackList.length && trackList[i] !== track; i++) {
+      if (trackList[i].mode === "showing") {
+        count++;
+      }
+    }
+    return ++count * -1;
   }
 
   function BoundingBox() {
