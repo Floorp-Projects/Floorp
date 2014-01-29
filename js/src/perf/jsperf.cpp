@@ -224,7 +224,7 @@ GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
 namespace JS {
 
 JSObject*
-RegisterPerfMeasurement(JSContext *cx, JSObject *globalArg)
+RegisterPerfMeasurement(JSContext *cx, HandleObject globalArg)
 {
     RootedObject global(cx, globalArg);
     RootedObject prototype(cx);
