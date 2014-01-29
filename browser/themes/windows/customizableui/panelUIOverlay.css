@@ -14,16 +14,6 @@
   padding-right: 12px;
 }
 
-#BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuitem {
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-
-#BMB_bookmarksPopup > menu > .menu-text,
-#BMB_bookmarksPopup > menuitem > .menu-text,
-#BMB_bookmarksPopup > menu > .menu-iconic-text,
-#BMB_bookmarksPopup > menuitem > .menu-iconic-text,
 #BMB_bookmarksPopup > menuseparator {
   padding-top: 0;
   padding-bottom: 0;
