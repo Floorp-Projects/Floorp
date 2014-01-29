@@ -1639,6 +1639,7 @@ XMLHttpRequest::MaybePin(ErrorResult& aRv)
   JSContext* cx = GetCurrentThreadJSContext();
 
   if (!mWorkerPrivate->AddFeature(cx, this)) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 

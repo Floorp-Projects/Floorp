@@ -96,8 +96,19 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY showAllTabsCmd.label "Show All Tabs">
 <!ENTITY showAllTabsCmd.accesskey "A">
 
-<!ENTITY syncPanel.descriptionSyncing "&brandShortName; is now syncing.">
-<!ENTITY syncPanel.descriptionPrefs "You can manage Sync from your browser's Preferences.">
+<!ENTITY fxaSignIn.label "Sign in to &syncBrand.shortName.label;">
+<!ENTITY syncStartPanel.title "&brandShortName; is now syncing.">
+<!ENTITY syncStartPanel.subTitle "You can manage &syncBrand.shortName.label; in Options.">
+<!ENTITY syncStartPanel.subTitleUnix "You can manage &syncBrand.shortName.label; in Preferences.">
+<!ENTITY syncErrorPanel.title "Cannot connect to &syncBrand.shortName.label;">
+<!ENTITY syncErrorPanel.subTitle "Please sign in to resume syncing.">
+<!ENTITY syncErrorPanel.prefButton.label "Options">
+<!ENTITY syncErrorPanel.prefButton.accesskey "O">
+<!ENTITY syncErrorPanel.prefButtonUnix.label "Preferences">
+<!ENTITY syncErrorPanel.prefButtonUnix.accesskey "P">
+<!ENTITY syncErrorPanel.signInButton.label "Sign In">
+<!ENTITY syncErrorPanel.signInButton.accesskey "S">
+
 
 <!ENTITY fullScreenMinimize.tooltip "Minimize">
 <!ENTITY fullScreenRestore.tooltip "Restore">

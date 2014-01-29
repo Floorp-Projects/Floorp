@@ -19,9 +19,9 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
+                 xbl:inherits="value=label,accesskey,crop,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
-                 xbl:inherits="xbl:text=label,accesskey"/>
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
   </binding>
 
@@ -31,9 +31,9 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop,dragover-top"/>
+                 xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
-                 xbl:inherits="xbl:text=label,accesskey"/>
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
       <xul:dropmarker anonid="dropmarker" type="menu"
                       class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
@@ -47,9 +47,9 @@
         <xul:vbox flex="1" align="center">
           <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
           <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                     xbl:inherits="value=label,accesskey,crop,dragover-top"/>
+                     xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
           <xul:label class="toolbarbutton-multiline-text" flex="1"
-                     xbl:inherits="xbl:text=label,accesskey"/>
+                     xbl:inherits="xbl:text=label,accesskey,wrap"/>
         </xul:vbox>
         <xul:dropmarker anonid="dropmarker" type="menu"
                         class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>

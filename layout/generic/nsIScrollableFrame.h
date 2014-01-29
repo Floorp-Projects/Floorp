@@ -251,6 +251,11 @@ public:
    */
   virtual bool IsScrollingActive() = 0;
   /**
+   * Returns true if the scrollframe is currently processing an async
+   * or smooth scroll.
+   */
+  virtual bool IsProcessingAsyncScroll() = 0;
+  /**
    * Call this when the layer(s) induced by active scrolling are being
    * completely redrawn.
    */
