@@ -296,16 +296,22 @@ const PanelUI = {
       let tempPanel = document.createElement("panel");
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
+      tempPanel.setAttribute("class", "cui-widget-panel");
       tempPanel.setAttribute("level", "top");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
+      // If the view has a footer, set a convenience class on the panel.
+      tempPanel.classList.toggle("cui-widget-panelWithFooter",
+                                 viewNode.querySelector(".panel-subview-footer"));
 
       let multiView = document.createElement("panelmultiview");
       tempPanel.appendChild(multiView);
       multiView.setMainView(viewNode);
+      viewNode.classList.add("cui-widget-panelview");
       CustomizableUI.addPanelCloseListeners(tempPanel);
 
       let panelRemover = function() {
         tempPanel.removeEventListener("popuphidden", panelRemover);
+        viewNode.classList.remove("cui-widget-panelview");
         CustomizableUI.removePanelCloseListeners(tempPanel);
         let evt = new CustomEvent("ViewHiding", {detail: viewNode});
         viewNode.dispatchEvent(evt);

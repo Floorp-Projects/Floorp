@@ -85,11 +85,6 @@
                      command="Browser:AddBookmarkAs"
                      onclick="PanelUI.hide();"/>
       <toolbarseparator/>
-      <toolbarbutton id="panelMenu_showAllBookmarks"
-                     label="&showAllBookmarks2.label;"
-                     class="subviewbutton"
-                     command="Browser:ShowAllBookmarks"
-                     onclick="PanelUI.hide();"/>
       <toolbarbutton id="panelMenu_viewBookmarksSidebar"
                      label="&viewBookmarksSidebar2.label;"
                      class="subviewbutton"
@@ -120,9 +115,13 @@
                    oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
                    flatList="true"
                    tooltip="bhTooltip">
-        <!-- bookmarks menu items -->
+        <!-- bookmarks menu items will go here -->
       </toolbaritem>
-
+      <toolbarbutton id="panelMenu_showAllBookmarks"
+                     label="&showAllBookmarks2.label;"
+                     class="subviewbutton panel-subview-footer"
+                     command="Browser:ShowAllBookmarks"
+                     onclick="PanelUI.hide();"/>
     </panelview>
 
     <panelview id="PanelUI-socialapi" flex="1"/>

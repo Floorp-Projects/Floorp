@@ -753,20 +753,17 @@
                        cui-areatype="toolbar"
                        oncommand="BookmarkingUI.onCommand(event);">
           <menupopup id="BMB_bookmarksPopup"
+                     class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter"
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
                      oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);
-                                     if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
+                                     BookmarkingUI.attachPlacesView(event, this);"
                      tooltip="bhTooltip" popupsinherittooltip="true">
-            <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks2.label;"
-                      command="Browser:ShowAllBookmarks"
-                      key="manBookmarkKb"/>
             <menuitem id="BMB_viewBookmarksSidebar"
+                      class="subviewbutton"
                       label="&viewBookmarksSidebar2.label;"
                       type="checkbox"
                       oncommand="toggleSidebar('viewBookmarksSidebar');">
@@ -775,7 +772,9 @@
             <menuseparator/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
-                      class="menuitem-iconic"
+                      class="menuitem-iconic subviewbutton"
+#else
+                      class="subviewbutton"
 #endif
                       label="&subscribeToPageMenuitem.label;"
                       oncommand="return FeedHandler.subscribeToFeed(null, event);"
@@ -783,7 +782,9 @@
                       observes="singleFeedMenuitemState"/>
             <menu id="BMB_subscribeToPageMenupopup"
 #ifndef XP_MACOSX
-                  class="menu-iconic"
+                  class="menu-iconic subviewbutton"
+#else
+                  class="subviewbutton"
 #endif
                   label="&subscribeToPageMenupopup.label;"
                   observes="multipleFeedsMenuState">
@@ -794,7 +795,7 @@
             </menu>
             <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
-                  class="menu-iconic bookmark-item"
+                  class="menu-iconic bookmark-item subviewbutton"
                   label="&personalbarCmd.label;"
                   container="true">
               <menupopup id="BMB_bookmarksToolbarPopup"
@@ -813,7 +814,7 @@
               </menupopup>
             </menu>
             <menu id="BMB_unsortedBookmarks"
-                  class="menu-iconic bookmark-item"
+                  class="menu-iconic bookmark-item subviewbutton"
                   label="&bookmarksMenuButton.unsorted.label;"
                   container="true">
               <menupopup id="BMB_unsortedBookmarksPopup"
@@ -823,7 +824,12 @@
                                            new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
             </menu>
             <menuseparator/>
-            <!-- Bookmarks menu items -->
+            <!-- Bookmarks menu items will go here -->
+            <menuitem id="BMB_bookmarksShowAll"
+                      class="subviewbutton panel-subview-footer"
+                      label="&showAllBookmarks2.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
           </menupopup>
         </toolbarbutton>
 
