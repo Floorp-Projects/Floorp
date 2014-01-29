@@ -18,6 +18,9 @@ import android.content.ContentResolver;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -27,10 +30,10 @@ import android.widget.ViewFlipper;
 public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   protected static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
 
+  protected TextView syncStatusTextView;
   protected ViewFlipper connectionStatusViewFlipper;
   protected View connectionStatusUnverifiedView;
   protected View connectionStatusSignInView;
-  protected View connectionStatusSyncingView;
   protected TextView emailTextView;
 
   public FxAccountStatusActivity() {
@@ -48,10 +51,10 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_status);
 
+    syncStatusTextView = (TextView) ensureFindViewById(null, R.id.sync_status_text, "sync status text");
     connectionStatusViewFlipper = (ViewFlipper) ensureFindViewById(null, R.id.connection_status_view, "connection status frame layout");
-    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified vie w");
+    connectionStatusUnverifiedView = ensureFindViewById(null, R.id.unverified_view, "unverified view");
     connectionStatusSignInView = ensureFindViewById(null, R.id.sign_in_view, "sign in view");
-    connectionStatusSyncingView = ensureFindViewById(null, R.id.syncing_view, "syncing view");
 
     launchActivityOnClick(connectionStatusSignInView, FxAccountUpdateCredentialsActivity.class);
 
@@ -62,101 +65,6 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
     }
   }
 
-  protected void createDebugButtons() {
-    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-      return;
-    }
-
-    findViewById(R.id.debug_buttons).setVisibility(View.VISIBLE);
-
-    findViewById(R.id.debug_refresh_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Logger.info(LOG_TAG, "Refreshing.");
-        refresh();
-      }
-    });
-
-    findViewById(R.id.debug_dump_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Logger.info(LOG_TAG, "Dumping account details.");
-        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
-        if (accounts.length < 1) {
-          return;
-        }
-        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
-        account.dump();
-      }
-    });
-
-    findViewById(R.id.debug_sync_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Logger.info(LOG_TAG, "Syncing.");
-        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
-        if (accounts.length < 1) {
-          return;
-        }
-        final Bundle extras = new Bundle();
-        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        ContentResolver.requestSync(accounts[0], BrowserContract.AUTHORITY, extras);
-        // No sense refreshing, since the sync will complete in the future.
-      }
-    });
-
-    findViewById(R.id.debug_forget_certificate_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
-        if (accounts.length < 1) {
-          return;
-        }
-        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
-        State state = account.getState();
-        try {
-          Married married = (Married) state;
-          Logger.info(LOG_TAG, "Moving to Cohabiting state: Forgetting certificate.");
-          account.setState(married.makeCohabitingState());
-          refresh();
-        } catch (ClassCastException e) {
-          Logger.info(LOG_TAG, "Not in Married state; can't forget certificate.");
-          // Ignore.
-        }
-      }
-    });
-
-    findViewById(R.id.debug_require_password_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Logger.info(LOG_TAG, "Moving to Separated state: Forgetting password.");
-        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
-        if (accounts.length < 1) {
-          return;
-        }
-        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
-        State state = account.getState();
-        account.setState(state.makeSeparatedState());
-        refresh();
-      }
-    });
-
-    findViewById(R.id.debug_require_upgrade_button).setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Logger.info(LOG_TAG, "Moving to Doghouse state: Requiring upgrade.");
-        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
-        if (accounts.length < 1) {
-          return;
-        }
-        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
-        State state = account.getState();
-        account.setState(state.makeDoghouseState());
-        refresh();
-      }
-    });
-  }
-
   @Override
   public void onResume() {
     super.onResume();
@@ -164,19 +72,26 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
   }
 
   protected void showNeedsUpgrade() {
+    syncStatusTextView.setText(R.string.fxaccount_status_sync);
+    connectionStatusViewFlipper.setVisibility(View.VISIBLE);
     connectionStatusViewFlipper.setDisplayedChild(0);
   }
 
   protected void showNeedsPassword() {
+    syncStatusTextView.setText(R.string.fxaccount_status_sync);
+    connectionStatusViewFlipper.setVisibility(View.VISIBLE);
     connectionStatusViewFlipper.setDisplayedChild(1);
   }
 
   protected void showNeedsVerification() {
+    syncStatusTextView.setText(R.string.fxaccount_status_sync);
+    connectionStatusViewFlipper.setVisibility(View.VISIBLE);
     connectionStatusViewFlipper.setDisplayedChild(2);
   }
 
   protected void showConnected() {
-    connectionStatusViewFlipper.setDisplayedChild(3);
+    syncStatusTextView.setText(R.string.fxaccount_status_sync_enabled);
+    connectionStatusViewFlipper.setVisibility(View.GONE);
   }
 
   protected void refresh(Account account) {
@@ -211,5 +126,129 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity {
       return;
     }
     refresh(accounts[0]);
+  }
+
+
+  protected void createDebugButtons() {
+    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      return;
+    }
+
+    final LinearLayout existingUserView = (LinearLayout) findViewById(R.id.existing_user);
+    if (existingUserView == null) {
+      return;
+    }
+
+    final LinearLayout debugButtonsView = new LinearLayout(this);
+    debugButtonsView.setOrientation(LinearLayout.VERTICAL);
+    debugButtonsView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+    existingUserView.addView(debugButtonsView, existingUserView.getChildCount());
+
+    Button button;
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Refresh status view");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Refreshing.");
+        refresh();
+      }
+    });
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Dump account details");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Dumping account details.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        account.dump();
+      }
+    });
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Force sync");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Syncing.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        final Bundle extras = new Bundle();
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        ContentResolver.requestSync(accounts[0], BrowserContract.AUTHORITY, extras);
+        // No sense refreshing, since the sync will complete in the future.
+      }
+    });
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Forget certificate (if applicable)");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        try {
+          Married married = (Married) state;
+          Logger.info(LOG_TAG, "Moving to Cohabiting state: Forgetting certificate.");
+          account.setState(married.makeCohabitingState());
+          refresh();
+        } catch (ClassCastException e) {
+          Logger.info(LOG_TAG, "Not in Married state; can't forget certificate.");
+          // Ignore.
+        }
+      }
+    });
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Require password");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Moving to Separated state: Forgetting password.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        account.setState(state.makeSeparatedState());
+        refresh();
+      }
+    });
+
+    button = new Button(this);
+    debugButtonsView.addView(button, debugButtonsView.getChildCount());
+    button.setText("Require upgrade");
+    button.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Logger.info(LOG_TAG, "Moving to Doghouse state: Requiring upgrade.");
+        Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(FxAccountStatusActivity.this);
+        if (accounts.length < 1) {
+          return;
+        }
+        AndroidFxAccount account = new AndroidFxAccount(FxAccountStatusActivity.this, accounts[0]);
+        State state = account.getState();
+        account.setState(state.makeDoghouseState());
+        refresh();
+      }
+    });
   }
 }

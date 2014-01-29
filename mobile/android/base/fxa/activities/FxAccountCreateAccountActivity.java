@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -60,7 +62,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     final String linkPrivacy = getString(R.string.fxaccount_link_pn);
     final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
     final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
-    policyView.setText(getString(R.string.fxaccount_policy_text, linkedTOS, linkedPN));
+    policyView.setText(getString(R.string.fxaccount_create_account_policy_text, linkedTOS, linkedPN));
     final boolean underlineLinks = true;
     ActivityUtils.linkifyTextView(policyView, underlineLinks);
 
@@ -116,7 +118,13 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
   }
 
   protected void createYearEdit() {
-    yearItems = getResources().getStringArray(R.array.fxaccount_create_account_ages_array);
+    int year = Calendar.getInstance().get(Calendar.YEAR);
+    LinkedList<String> years = new LinkedList<String>();
+    for (int i = year - 5; i >= 1951; i--) {
+      years.add(Integer.toString(i));
+    }
+    years.add(getResources().getString(R.string.fxaccount_create_account_1950_or_earlier));
+    yearItems = years.toArray(new String[0]);
 
     yearEdit.setOnClickListener(new OnClickListener() {
       @Override
@@ -129,7 +137,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
           }
         };
         final AlertDialog dialog = new AlertDialog.Builder(FxAccountCreateAccountActivity.this)
-        .setTitle(R.string.fxaccount_when_were_you_born)
+        .setTitle(R.string.fxaccount_create_account_year_of_birth)
         .setItems(yearItems, listener)
         .setIcon(R.drawable.fxaccount_icon)
         .create();
