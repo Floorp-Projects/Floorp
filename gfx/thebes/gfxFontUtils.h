@@ -829,15 +829,19 @@ public:
     
     // read all names matching aNameID, returning in aNames array
     static nsresult
-    ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
+    ReadNames(const char *aNameData, uint32_t aDataLen, uint32_t aNameID,
               int32_t aPlatformID, nsTArray<nsString>& aNames);
-      
+
     // reads English or first name matching aNameID, returning in aName
     // platform based on OS
     static nsresult
-    ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID, 
+    ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID,
                       nsString& aName);
-      
+
+    static nsresult
+    ReadCanonicalName(const char *aNameData, uint32_t aDataLen,
+                      uint32_t aNameID, nsString& aName);
+
     // convert a name from the raw name table data into an nsString,
     // provided we know how; return true if successful, or false
     // if we can't handle the encoding
@@ -916,7 +920,7 @@ public:
 
 protected:
     static nsresult
-    ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
+    ReadNames(const char *aNameData, uint32_t aDataLen, uint32_t aNameID,
               int32_t aLangID, int32_t aPlatformID, nsTArray<nsString>& aNames);
 
     // convert opentype name-table platform/encoding/language values to a charset name

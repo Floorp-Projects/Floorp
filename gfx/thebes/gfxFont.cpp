@@ -1147,6 +1147,54 @@ gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch *aMatchData)
     }
 }
 
+/*static*/ void
+gfxFontFamily::ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
+                                           const char *aNameData,
+                                           uint32_t aDataLength,
+                                           nsTArray<nsString>& aOtherFamilyNames,
+                                           bool useFullName)
+{
+    const gfxFontUtils::NameHeader *nameHeader =
+        reinterpret_cast<const gfxFontUtils::NameHeader*>(aNameData);
+
+    uint32_t nameCount = nameHeader->count;
+    if (nameCount * sizeof(gfxFontUtils::NameRecord) > aDataLength) {
+        NS_WARNING("invalid font (name records)");
+        return;
+    }
+    
+    const gfxFontUtils::NameRecord *nameRecord =
+        reinterpret_cast<const gfxFontUtils::NameRecord*>(aNameData + sizeof(gfxFontUtils::NameHeader));
+    uint32_t stringsBase = uint32_t(nameHeader->stringOffset);
+
+    for (uint32_t i = 0; i < nameCount; i++, nameRecord++) {
+        uint32_t nameLen = nameRecord->length;
+        uint32_t nameOff = nameRecord->offset;  // offset from base of string storage
+
+        if (stringsBase + nameOff + nameLen > aDataLength) {
+            NS_WARNING("invalid font (name table strings)");
+            return;
+        }
+
+        uint16_t nameID = nameRecord->nameID;
+        if ((useFullName && nameID == gfxFontUtils::NAME_ID_FULL) ||
+            (!useFullName && (nameID == gfxFontUtils::NAME_ID_FAMILY ||
+                              nameID == gfxFontUtils::NAME_ID_PREFERRED_FAMILY))) {
+            nsAutoString otherFamilyName;
+            bool ok = gfxFontUtils::DecodeFontName(aNameData + stringsBase + nameOff,
+                                                     nameLen,
+                                                     uint32_t(nameRecord->platformID),
+                                                     uint32_t(nameRecord->encodingID),
+                                                     uint32_t(nameRecord->languageID),
+                                                     otherFamilyName);
+            // add if not same as canonical family name
+            if (ok && otherFamilyName != aFamilyName) {
+                aOtherFamilyNames.AppendElement(otherFamilyName);
+            }
+        }
+    }
+}
+
 // returns true if other names were found, false otherwise
 bool
 gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
@@ -1155,51 +1203,18 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontLis
 {
     uint32_t dataLength;
     const char *nameData = hb_blob_get_data(aNameTable, &dataLength);
-    const gfxFontUtils::NameHeader *nameHeader =
-        reinterpret_cast<const gfxFontUtils::NameHeader*>(nameData);
+    nsAutoTArray<nsString,4> otherFamilyNames;
 
-    uint32_t nameCount = nameHeader->count;
-    if (nameCount * sizeof(gfxFontUtils::NameRecord) > dataLength) {
-        NS_WARNING("invalid font (name records)");
-        return false;
-    }
-    
-    const gfxFontUtils::NameRecord *nameRecord =
-        reinterpret_cast<const gfxFontUtils::NameRecord*>(nameData + sizeof(gfxFontUtils::NameHeader));
-    uint32_t stringsBase = uint32_t(nameHeader->stringOffset);
+    ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
+                                otherFamilyNames, useFullName);
 
-    bool foundNames = false;
-    for (uint32_t i = 0; i < nameCount; i++, nameRecord++) {
-        uint32_t nameLen = nameRecord->length;
-        uint32_t nameOff = nameRecord->offset;  // offset from base of string storage
-
-        if (stringsBase + nameOff + nameLen > dataLength) {
-            NS_WARNING("invalid font (name table strings)");
-            return false;
-        }
-
-        uint16_t nameID = nameRecord->nameID;
-        if ((useFullName && nameID == gfxFontUtils::NAME_ID_FULL) ||
-            (!useFullName && (nameID == gfxFontUtils::NAME_ID_FAMILY ||
-                              nameID == gfxFontUtils::NAME_ID_PREFERRED_FAMILY))) {
-            nsAutoString otherFamilyName;
-            bool ok = gfxFontUtils::DecodeFontName(nameData + stringsBase + nameOff,
-                                                     nameLen,
-                                                     uint32_t(nameRecord->platformID),
-                                                     uint32_t(nameRecord->encodingID),
-                                                     uint32_t(nameRecord->languageID),
-                                                     otherFamilyName);
-            // add if not same as canonical family name
-            if (ok && otherFamilyName != mName) {
-                aPlatformFontList->AddOtherFamilyName(this, otherFamilyName);
-                foundNames = true;
-            }
-        }
+    uint32_t n = otherFamilyNames.Length();
+    for (uint32_t i = 0; i < n; i++) {
+        aPlatformFontList->AddOtherFamilyName(this, otherFamilyNames[i]);
     }
 
-    return foundNames;
+    return n != 0;
 }
-
 
 void
 gfxFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList)
@@ -1323,6 +1338,23 @@ gfxFontFamily::FindFont(const nsAString& aPostscriptName)
             return fe;
     }
     return nullptr;
+}
+
+void
+gfxFontFamily::ReadAllCMAPs()
+{
+    uint32_t i, numFonts = mAvailableFonts.Length();
+    for (i = 0; i < numFonts; i++) {
+        gfxFontEntry *fe = mAvailableFonts[i];
+        // don't try to load cmaps for downloadable fonts not yet loaded
+        if (!fe || fe->mIsProxy) {
+            continue;
+        }
+        fe->ReadCMAP();
+        mFamilyCharacterMap.Union(*(fe->mCharacterMap));
+    }
+    mFamilyCharacterMap.Compact();
+    mFamilyCharacterMapInitialized = true;
 }
 
 void

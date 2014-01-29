@@ -713,6 +713,14 @@ public:
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList);
 
+    // helper method for reading localized family names from the name table
+    // of a single face
+    static void ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
+                                            const char *aNameData,
+                                            uint32_t aDataLength,
+                                            nsTArray<nsString>& aOtherFamilyNames,
+                                            bool useFullName);
+
     // set when other family names have been read in
     void SetOtherFamilyNamesInitialized() {
         mOtherFamilyNamesInitialized = true;
@@ -731,20 +739,7 @@ public:
     gfxFontEntry* FindFont(const nsAString& aPostscriptName);
 
     // read in cmaps for all the faces
-    void ReadAllCMAPs() {
-        uint32_t i, numFonts = mAvailableFonts.Length();
-        for (i = 0; i < numFonts; i++) {
-            gfxFontEntry *fe = mAvailableFonts[i];
-            // don't try to load cmaps for downloadable fonts not yet loaded
-            if (!fe || fe->mIsProxy) {
-                continue;
-            }
-            fe->ReadCMAP();
-            mFamilyCharacterMap.Union(*(fe->mCharacterMap));
-        }
-        mFamilyCharacterMap.Compact();
-        mFamilyCharacterMapInitialized = true;
-    }
+    void ReadAllCMAPs();
 
     bool TestCharacterMap(uint32_t aCh) {
         if (!mFamilyCharacterMapInitialized) {
