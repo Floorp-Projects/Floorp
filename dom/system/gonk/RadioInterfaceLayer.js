@@ -2008,15 +2008,27 @@ RadioInterface.prototype = {
     if (!simApnSettings) {
       return;
     }
+    if (this._pendingApnSettings) {
+      // Change of apn settings in process, just update to the newest.
+      this._pengingApnSettings = simApnSettings;
+      return;
+    }
 
+    let isDeactivatingDataCalls = false;
     // Clear all existing connections based on APN types.
     for each (let apnSetting in this.apnSettings.byApn) {
       for each (let type in apnSetting.types) {
         if (this.getDataCallStateByType(type) ==
             RIL.GECKO_NETWORK_STATE_CONNECTED) {
           this.deactivateDataCallByType(type);
+          isDeactivatingDataCalls = true;
         }
       }
+    }
+    if (isDeactivatingDataCalls) {
+      // Defer apn settings setup until all data calls are cleared.
+      this._pendingApnSettings = simApnSettings;
+      return;
     }
     this.setupApnSettings(simApnSettings);
   },
@@ -2034,6 +2046,7 @@ RadioInterface.prototype = {
     if (!simApnSettings) {
       return;
     }
+    if (DEBUG) this.debug("setupApnSettings: " + JSON.stringify(simApnSettings));
 
     // Unregister anything from iface and delete it.
     for each (let apnSetting in this.apnSettings.byApn) {
@@ -2188,6 +2201,10 @@ RadioInterface.prototype = {
     }
     if (wifi_active) {
       if (DEBUG) this.debug("Don't connect data call when Wifi is connected.");
+      return;
+    }
+    if (this._pendingApnSettings) {
+      if (DEBUG) this.debug("We're changing apn settings, ignore any changes.");
       return;
     }
 
@@ -2478,22 +2495,17 @@ RadioInterface.prototype = {
     // Process pending radio power off request after all data calls
     // are disconnected.
     if (datacall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
-        gRadioEnabledController.isDeactivatingDataCalls()) {
-      let anyDataConnected = false;
-      for each (let apnSetting in this.apnSettings.byApn) {
-        for each (let type in apnSetting.types) {
-          if (this.getDataCallStateByType(type) == RIL.GECKO_NETWORK_STATE_CONNECTED) {
-            anyDataConnected = true;
-            break;
-          }
-        }
-        if (anyDataConnected) {
-          break;
-        }
-      }
-      if (!anyDataConnected) {
+        !this.anyDataConnected()) {
+      if (gRadioEnabledController.isDeactivatingDataCalls()) {
         if (DEBUG) this.debug("All data connections are disconnected.");
         gRadioEnabledController.finishDeactivatingDataCalls(this.clientId);
+      }
+
+      if (this._pendingApnSettings) {
+        if (DEBUG) this.debug("Setup pending apn settings.");
+        this.setupApnSettings(this._pendingApnSettings);
+        this._pendingApnSettings = null;
+        this.updateRILNetworkInterface();
       }
     }
   },
@@ -2747,6 +2759,9 @@ RadioInterface.prototype = {
   dataCallSettings: null,
 
   apnSettings: null,
+
+  // Apn settings to be setup after data call are cleared.
+  _pendingApnSettings: null,
 
   // Flag to determine whether to update system clock automatically. It
   // corresponds to the "time.clock.automatic-update.enabled" setting.
