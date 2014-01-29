@@ -216,13 +216,6 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * they should set mWantUpdates to NOTIFY_NOTHING to avoid the cost.
  * If the IME implementation needs notifications even while our process is
  * deactive, it should also set NOTIFY_DURING_DEACTIVE.
- *
- * If mWantHints is true, PuppetWidget will forward the content of text fields
- * to the chrome process to be cached. This way we return the cached content
- * during query events. (see comments in bug 583976). This only makes sense
- * for IME implementations that do use query events, otherwise there's a
- * significant overhead. Platforms that don't use query events should set
- * mWantHints to false.
  */
 struct nsIMEUpdatePreference {
 
@@ -237,11 +230,11 @@ struct nsIMEUpdatePreference {
   };
 
   nsIMEUpdatePreference()
-    : mWantUpdates(NOTIFY_NOTHING), mWantHints(false)
+    : mWantUpdates(NOTIFY_NOTHING)
   {
   }
-  nsIMEUpdatePreference(Notifications aWantUpdates, bool aWantHints)
-    : mWantUpdates(aWantUpdates), mWantHints(aWantHints)
+  nsIMEUpdatePreference(Notifications aWantUpdates)
+    : mWantUpdates(aWantUpdates)
   {
   }
 
@@ -261,7 +254,6 @@ struct nsIMEUpdatePreference {
   }
 
   Notifications mWantUpdates;
-  bool mWantHints;
 };
 
 
