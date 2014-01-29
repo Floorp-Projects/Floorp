@@ -1053,7 +1053,7 @@ InitInt64Class(JSContext* cx,
                const JSFunctionSpec* static_fs)
 {
   // Init type class and constructor
-  RootedObject prototype(cx, JS_InitClass(cx, parent, nullptr, clasp, construct,
+  RootedObject prototype(cx, JS_InitClass(cx, parent, js::NullPtr(), clasp, construct,
                                           0, nullptr, fs, nullptr, static_fs));
   if (!prototype)
     return nullptr;
@@ -5182,7 +5182,7 @@ StructType::FieldsArrayGetter(JSContext* cx, JS::CallArgs args)
   }
 
   MOZ_ASSERT(args.rval().isObject());
-  MOZ_ASSERT(JS_IsArrayObject(cx, &args.rval().toObject()));
+  MOZ_ASSERT(JS_IsArrayObject(cx, args.rval()));
   return true;
 }
 

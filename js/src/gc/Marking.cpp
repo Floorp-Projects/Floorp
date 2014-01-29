@@ -154,6 +154,9 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
                  !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
 
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc),
+                 !(thing->zone()->isGCSweeping() || thing->zone()->isGCFinished()));
+
     /*
      * Try to assert that the thing is allocated.  This is complicated by the
      * fact that allocated things may still contain the poison pattern if that
