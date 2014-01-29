@@ -681,6 +681,9 @@ public:
   /**
    * Transform aPoint relative to aAncestor down to the coordinate system of
    * aFrame.
+   *
+   * Returns nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if no equivalent
+   * point exists in the child frame (can happen with projective transforms).
    */
   static nsPoint TransformAncestorPointToFrame(nsIFrame* aFrame,
                                                const nsPoint& aPoint,
