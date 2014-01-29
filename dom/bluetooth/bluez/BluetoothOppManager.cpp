@@ -62,7 +62,8 @@ public:
   SendFileBatch(const nsAString& aDeviceAddress, BlobParent* aActor)
     : mDeviceAddress(aDeviceAddress)
   {
-    mBlobs.AppendElement(aActor->GetBlob().get());
+    nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+    mBlobs.AppendElement(blob);
   }
 
   nsString mDeviceAddress;
@@ -390,7 +391,8 @@ BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
     SendFileBatch batch(aDeviceAddress, aActor);
     mBatches.AppendElement(batch);
   } else {
-    mBatches[indexTail].mBlobs.AppendElement(aActor->GetBlob().get());
+    nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+    mBatches[indexTail].mBlobs.AppendElement(blob);
   }
 }
 
