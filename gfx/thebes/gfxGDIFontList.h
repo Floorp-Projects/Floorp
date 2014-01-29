@@ -339,6 +339,8 @@ private:
                                           DWORD fontType,
                                           LPARAM lParam);
 
+    virtual already_AddRefed<FontInfoData> CreateFontInfoData();
+
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 
     FontTable mFontSubstitutes;
