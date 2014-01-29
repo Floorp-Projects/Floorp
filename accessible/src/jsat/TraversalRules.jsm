@@ -22,13 +22,14 @@ XPCOMUtils.defineLazyModuleGetter(this, 'States',
 
 let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
-function BaseTraversalRule(aRoles, aMatchFunc) {
+function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter) {
   this._explicitMatchRoles = new Set(aRoles);
   this._matchRoles = aRoles;
   if (aRoles.indexOf(Roles.LABEL) < 0) {
     this._matchRoles.push(Roles.LABEL);
   }
   this._matchFunc = aMatchFunc || function (acc) { return Filters.MATCH; };
+  this.preFilter = aPreFilter || gSimplePreFilter;
 }
 
 BaseTraversalRule.prototype = {
@@ -36,11 +37,6 @@ BaseTraversalRule.prototype = {
       aRules.value = this._matchRoles;
       return aRules.value.length;
     },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-    Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE |
-    Ci.nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN |
-    Ci.nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT,
 
     match: function BaseTraversalRule_match(aAccessible)
     {
@@ -96,59 +92,71 @@ var gSimpleTraversalRoles =
    // Used for traversing in to child OOP frames.
    Roles.INTERNAL_FRAME];
 
-this.TraversalRules = {
-  Simple: new BaseTraversalRule(
-    gSimpleTraversalRoles,
-    function Simple_match(aAccessible) {
-      function hasZeroOrSingleChildDescendants () {
-        for (let acc = aAccessible; acc.childCount > 0; acc = acc.firstChild) {
-          if (acc.childCount > 1) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-
-      switch (aAccessible.role) {
-      case Roles.COMBOBOX:
-        // We don't want to ignore the subtree because this is often
-        // where the list box hangs out.
-        return Filters.MATCH;
-      case Roles.TEXT_LEAF:
-        {
-          // Nameless text leaves are boring, skip them.
-          let name = aAccessible.name;
-          if (name && name.trim())
-            return Filters.MATCH;
-          else
-            return Filters.IGNORE;
-        }
-      case Roles.STATICTEXT:
-        {
-          let parent = aAccessible.parent;
-          // Ignore prefix static text in list items. They are typically bullets or numbers.
-          if (parent.childCount > 1 && aAccessible.indexInParent == 0 &&
-              parent.role == Roles.LISTITEM)
-            return Filters.IGNORE;
-
-          return Filters.MATCH;
-        }
-      case Roles.GRAPHIC:
-        return TraversalRules._shouldSkipImage(aAccessible);
-      case Roles.LINK:
-      case Roles.HEADER:
-      case Roles.HEADING:
-        return hasZeroOrSingleChildDescendants() ?
-          (Filters.MATCH | Filters.IGNORE_SUBTREE) : (Filters.IGNORE);
-      default:
-        // Ignore the subtree, if there is one. So that we don't land on
-        // the same content that was already presented by its parent.
-        return Filters.MATCH |
-          Filters.IGNORE_SUBTREE;
+var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
+  function hasZeroOrSingleChildDescendants () {
+    for (let acc = aAccessible; acc.childCount > 0; acc = acc.firstChild) {
+      if (acc.childCount > 1) {
+        return false;
       }
     }
-  ),
+
+    return true;
+  }
+
+  switch (aAccessible.role) {
+  case Roles.COMBOBOX:
+    // We don't want to ignore the subtree because this is often
+    // where the list box hangs out.
+    return Filters.MATCH;
+  case Roles.TEXT_LEAF:
+    {
+      // Nameless text leaves are boring, skip them.
+      let name = aAccessible.name;
+      if (name && name.trim())
+        return Filters.MATCH;
+      else
+        return Filters.IGNORE;
+    }
+  case Roles.STATICTEXT:
+    {
+      let parent = aAccessible.parent;
+      // Ignore prefix static text in list items. They are typically bullets or numbers.
+      if (parent.childCount > 1 && aAccessible.indexInParent == 0 &&
+          parent.role == Roles.LISTITEM)
+        return Filters.IGNORE;
+
+      return Filters.MATCH;
+    }
+  case Roles.GRAPHIC:
+    return TraversalRules._shouldSkipImage(aAccessible);
+  case Roles.LINK:
+  case Roles.HEADER:
+  case Roles.HEADING:
+    return hasZeroOrSingleChildDescendants() ?
+      (Filters.MATCH | Filters.IGNORE_SUBTREE) : (Filters.IGNORE);
+  default:
+    // Ignore the subtree, if there is one. So that we don't land on
+    // the same content that was already presented by its parent.
+    return Filters.MATCH |
+      Filters.IGNORE_SUBTREE;
+  }
+};
+
+var gSimplePreFilter = Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN |
+  Ci.nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT;
+
+this.TraversalRules = {
+  Simple: new BaseTraversalRule(gSimpleTraversalRoles, gSimpleMatchFunc),
+
+  SimpleOnScreen: new BaseTraversalRule(
+    gSimpleTraversalRoles, gSimpleMatchFunc,
+    Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT |
+      Ci.nsIAccessibleTraversalRule.PREFILTER_OFFSCREEN),
 
   Anchor: new BaseTraversalRule(
     [Roles.LINK],
