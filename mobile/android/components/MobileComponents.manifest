@@ -12,7 +12,6 @@ contract @mozilla.org/network/protocol/about;1?what=downloads {322ba47e-7047-4f7
 contract @mozilla.org/network/protocol/about;1?what=reader {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 contract @mozilla.org/network/protocol/about;1?what=feedback {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 contract @mozilla.org/network/protocol/about;1?what=privatebrowsing {322ba47e-7047-4f71-aebf-cb7d69325cd9}
-contract @mozilla.org/network/protocol/about;1?what=accounts {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #ifdef MOZ_SERVICES_HEALTHREPORT
 contract @mozilla.org/network/protocol/about;1?what=healthreport {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
