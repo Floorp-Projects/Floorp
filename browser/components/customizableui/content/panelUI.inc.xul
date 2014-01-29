@@ -22,19 +22,23 @@
         <hbox id="PanelUI-footer-inner">
           <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;"
                          exitLabel="&appMenuCustomizeExit.label;"
+                         tooltiptext="&appMenuCustomize.tooltip;"
+                         exitTooltiptext="&appMenuCustomizeExit.tooltip;"
                          oncommand="gCustomizeMode.toggle();"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-help" label="&helpMenu.label;"
-                         tooltiptext="&helpMenu.label;"
+                         tooltiptext="&appMenuHelp.tooltip;"
                          oncommand="PanelUI.showHelpView(this.parentNode);"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-quit"
 #ifdef XP_WIN
                          label="&quitApplicationCmdWin.label;"
-                         tooltiptext="&quitApplicationCmdWin.label;"
+#else
+#ifdef XP_MACOSX
+                         label="&quitApplicationCmdMac.label;"
 #else
                          label="&quitApplicationCmd.label;"
-                         tooltiptext="&quitApplicationCmd.label;"
+#endif
 #endif
                          command="cmd_quitApplication"/>
         </hbox>
