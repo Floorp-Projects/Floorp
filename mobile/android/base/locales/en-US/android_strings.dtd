@@ -255,7 +255,9 @@ size. -->
 <!ENTITY pref_titlebar_mode_title "Show page title">
 <!ENTITY pref_titlebar_mode_url "Show page address">
 
-<!ENTITY pref_dynamic_toolbar "Hide title bar when scrolling">
+<!-- Localization note (pref_scroll_title_bar): Label for setting that controls
+     whether or not the dynamic toolbar is enabled. -->
+<!ENTITY pref_scroll_title_bar "Scroll title bar">
 
 <!ENTITY history_removed "Page removed">
 

@@ -278,6 +278,25 @@ let gSyncPane = {
   },
 
   unlinkFirefoxAccount: function(confirm) {
+    if (confirm) {
+      // We use a string bundle shared with aboutAccounts.
+      let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
+      let continueLabel = sb.GetStringFromName("continue.label");
+      let title = sb.GetStringFromName("unlink.verify.title");
+      let body = sb.GetStringFromName("unlink.verify.heading") +
+                 "\n\n" +
+                 sb.GetStringFromName("unlink.verify.description");
+      let ps = Services.prompt;
+      let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
+                        (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
+                        ps.BUTTON_POS_1_DEFAULT;
+      let pressed = Services.prompt.confirmEx(window, title, body, buttonFlags,
+                                         continueLabel, null, null, null,
+                                         {});
+      if (pressed != 0) { // 0 is the "continue" button
+        return;
+      }
+    }
     Components.utils.import('resource://gre/modules/FxAccounts.jsm');
     fxAccounts.signOut().then(() => {
       this.updateWeavePrefs();

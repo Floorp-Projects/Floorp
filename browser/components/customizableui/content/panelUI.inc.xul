@@ -22,19 +22,23 @@
         <hbox id="PanelUI-footer-inner">
           <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;"
                          exitLabel="&appMenuCustomizeExit.label;"
+                         tooltiptext="&appMenuCustomize.tooltip;"
+                         exitTooltiptext="&appMenuCustomizeExit.tooltip;"
                          oncommand="gCustomizeMode.toggle();"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-help" label="&helpMenu.label;"
-                         tooltiptext="&helpMenu.label;"
+                         tooltiptext="&appMenuHelp.tooltip;"
                          oncommand="PanelUI.showHelpView(this.parentNode);"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-quit"
 #ifdef XP_WIN
                          label="&quitApplicationCmdWin.label;"
-                         tooltiptext="&quitApplicationCmdWin.label;"
+#else
+#ifdef XP_MACOSX
+                         label="&quitApplicationCmdMac.label;"
 #else
                          label="&quitApplicationCmd.label;"
-                         tooltiptext="&quitApplicationCmd.label;"
+#endif
 #endif
                          command="cmd_quitApplication"/>
         </hbox>
@@ -85,11 +89,6 @@
                      command="Browser:AddBookmarkAs"
                      onclick="PanelUI.hide();"/>
       <toolbarseparator/>
-      <toolbarbutton id="panelMenu_showAllBookmarks"
-                     label="&showAllBookmarks2.label;"
-                     class="subviewbutton"
-                     command="Browser:ShowAllBookmarks"
-                     onclick="PanelUI.hide();"/>
       <toolbarbutton id="panelMenu_viewBookmarksSidebar"
                      label="&viewBookmarksSidebar2.label;"
                      class="subviewbutton"
@@ -120,9 +119,13 @@
                    oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
                    flatList="true"
                    tooltip="bhTooltip">
-        <!-- bookmarks menu items -->
+        <!-- bookmarks menu items will go here -->
       </toolbaritem>
-
+      <toolbarbutton id="panelMenu_showAllBookmarks"
+                     label="&showAllBookmarks2.label;"
+                     class="subviewbutton panel-subview-footer"
+                     command="Browser:ShowAllBookmarks"
+                     onclick="PanelUI.hide();"/>
     </panelview>
 
     <panelview id="PanelUI-socialapi" flex="1"/>
