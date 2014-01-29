@@ -18,7 +18,14 @@
     </hbox>
     <vbox id="customization-palette" class="customization-palette" flex="1"/>
     <spacer id="customization-spacer" flex="1"/>
-    <hbox>
+    <hbox id="customization-footer">
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <button id="customization-titlebar-visibility-button" class="customizationmode-button"
+              label="&customizeMode.titlebar;" type="checkbox"
+#NB: because oncommand fires after click, by the time we've fired, the checkbox binding
+#    will already have switched the button's state, so this is correct:
+              oncommand="gCustomizeMode.toggleTitlebar(this.hasAttribute('checked'))"/>
+#endif
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
