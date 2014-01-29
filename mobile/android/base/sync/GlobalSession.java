@@ -63,7 +63,6 @@ import ch.boye.httpclientandroidlib.HttpResponse;
 public class GlobalSession implements PrefsSource, HttpResponseObserver {
   private static final String LOG_TAG = "GlobalSession";
 
-  public static final String API_VERSION   = "1.1";
   public static final long STORAGE_VERSION = 5;
 
   public SyncConfiguration config = null;

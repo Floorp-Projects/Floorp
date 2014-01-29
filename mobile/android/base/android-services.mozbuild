@@ -801,6 +801,7 @@ sync_java_files = [
     'sync/stage/ServerSyncStage.java',
     'sync/stage/SyncClientsEngineStage.java',
     'sync/stage/UploadMetaGlobalStage.java',
+    'sync/Sync11Configuration.java',
     'sync/syncadapter/SyncAdapter.java',
     'sync/syncadapter/SyncService.java',
     'sync/SyncConfiguration.java',
