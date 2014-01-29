@@ -318,7 +318,8 @@ this.OutputGenerator = {
     'image map': INCLUDE_DESC,
     'option': INCLUDE_DESC,
     'listbox': INCLUDE_DESC,
-    'definitionlist': INCLUDE_DESC | INCLUDE_NAME},
+    'definitionlist': INCLUDE_DESC | INCLUDE_NAME,
+    'dialog': INCLUDE_DESC | INCLUDE_NAME },
 
   objectOutputFunctions: {
     _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aState, aFlags) {
