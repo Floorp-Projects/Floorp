@@ -50,6 +50,115 @@ enum ShaderProgramType {
   NumProgramTypes
 };
 
+class KnownUniform {
+public:
+  enum KnownUniformName {
+    NotAKnownUniform = -1,
+
+    LayerTransform = 0,
+    MaskQuadTransform,
+    LayerQuadTransform,
+    MatrixProj,
+    TextureTransform,
+    RenderTargetOffset,
+    LayerOpacity,
+    Texture,
+    YTexture,
+    CbTexture,
+    CrTexture,
+    BlackTexture,
+    WhiteTexture,
+    MaskTexture,
+    RenderColor,
+    TexCoordMultiplier,
+
+    KnownUniformCount
+  };
+
+  KnownUniform()
+  {
+    mName = NotAKnownUniform;
+    mNameString = nullptr;
+    mLocation = -1;
+    memset(&mValue, 0, sizeof(mValue));
+  }
+
+  bool UpdateUniform(int32_t i1) {
+    if (mLocation == -1) return false;
+    if (mValue.i1 != i1) {
+      mValue.i1 = i1;
+      return true;
+    }
+    return false;
+  }
+
+  bool UpdateUniform(float f1) {
+    if (mLocation == -1) return false;
+    if (mValue.f1 != f1) {
+      mValue.f1 = f1;
+      return true;
+    }
+    return false;
+  }
+
+  bool UpdateUniform(float f1, float f2) {
+    if (mLocation == -1) return false;
+    if (mValue.f16v[0] != f1 ||
+        mValue.f16v[1] != f2)
+    {
+      mValue.f16v[0] = f1;
+      mValue.f16v[1] = f2;
+      return true;
+    }
+    return false;
+  }
+
+  bool UpdateUniform(float f1, float f2, float f3, float f4) {
+    if (mLocation == -1) return false;
+    if (mValue.f16v[0] != f1 ||
+        mValue.f16v[1] != f2 ||
+        mValue.f16v[2] != f3 ||
+        mValue.f16v[3] != f4)
+    {
+      mValue.f16v[0] = f1;
+      mValue.f16v[1] = f2;
+      mValue.f16v[2] = f3;
+      mValue.f16v[3] = f4;
+      return true;
+    }
+    return false;
+  }
+
+  bool UpdateUniform(int cnt, const float *fp) {
+    if (mLocation == -1) return false;
+    switch (cnt) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 16:
+      if (memcmp(mValue.f16v, fp, sizeof(float) * cnt) != 0) {
+        memcpy(mValue.f16v, fp, sizeof(float) * cnt);
+        return true;
+      }
+      return false;
+    }
+
+    NS_NOTREACHED("cnt must be 1 2 3 4 or 16");
+    return false;
+  }
+
+  KnownUniformName mName;
+  const char *mNameString;
+  int32_t mLocation;
+
+  union {
+    int i1;
+    float f1;
+    float f16v[16];
+  } mValue;
+};
+
 static inline ShaderProgramType
 ShaderProgramFromSurfaceFormat(gfx::SurfaceFormat aFormat)
 {
@@ -149,17 +258,6 @@ struct ProgramProfileOGL
    * respectively. Returns -1 if the named uniform/attribute does not
    * have a location for the shaders represented by this profile.
    */
-  GLint LookupUniformLocation(const char* aName)
-  {
-    for (uint32_t i = 0; i < mUniforms.Length(); ++i) {
-      if (strcmp(mUniforms[i].mName, aName) == 0) {
-        return mUniforms[i].mLocation;
-      }
-    }
-
-    return -1;
-  }
-
   GLint LookupAttributeLocation(const char* aName)
   {
     for (uint32_t i = 0; i < mAttributes.Length(); ++i) {
@@ -184,7 +282,7 @@ struct ProgramProfileOGL
   const char *mVertexShaderString;
   const char *mFragmentShaderString;
 
-  nsTArray<Argument> mUniforms;
+  KnownUniform mUniforms[KnownUniform::KnownUniformCount];
   nsTArray<Argument> mAttributes;
   uint32_t mTextureCount;
   bool mHasMatrixProj;
@@ -247,7 +345,7 @@ public:
   }
 
   GLint GetTexCoordMultiplierUniformLocation() {
-    return mTexCoordMultiplierUniformLocation;
+    return mProfile.mUniforms[KnownUniform::TexCoordMultiplier].mLocation;
   }
 
   /**
@@ -256,11 +354,11 @@ public:
    * an assertion.
    */
   void SetLayerTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uLayerTransform"), aMatrix);
+    SetMatrixUniform(KnownUniform::LayerTransform, aMatrix);
   }
 
   void SetMaskLayerTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uMaskQuadTransform"), aMatrix);
+    SetMatrixUniform(KnownUniform::MaskQuadTransform, aMatrix);
   }
 
   void SetLayerQuadRect(const nsIntRect& aRect) {
@@ -269,7 +367,7 @@ public:
     m._22 = float(aRect.height);
     m._41 = float(aRect.x);
     m._42 = float(aRect.y);
-    SetMatrixUniform(mProfile.LookupUniformLocation("uLayerQuadTransform"), m);
+    SetMatrixUniform(KnownUniform::LayerQuadTransform, m);
   }
 
   void SetLayerQuadRect(const gfx::Rect& aRect) {
@@ -278,7 +376,7 @@ public:
     m._22 = aRect.height;
     m._41 = aRect.x;
     m._42 = aRect.y;
-    SetMatrixUniform(mProfile.LookupUniformLocation("uLayerQuadTransform"), m);
+    SetMatrixUniform(KnownUniform::LayerQuadTransform, m);
   }
 
   // activates this program and sets its projection matrix, if the program uses one
@@ -291,73 +389,73 @@ public:
   }
 
   void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
+    SetMatrixUniform(KnownUniform::MatrixProj, aMatrix);
     mIsProjectionMatrixStale = false;
   }
 
   // sets this program's texture transform, if it uses one
   void SetTextureTransform(const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
+    SetMatrixUniform(KnownUniform::TextureTransform, aMatrix);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
     float vals[4] = { float(aOffset.x), float(aOffset.y), 0.0f, 0.0f };
-    SetUniform(mProfile.LookupUniformLocation("uRenderTargetOffset"), 4, vals);
+    SetUniform(KnownUniform::RenderTargetOffset, 4, vals);
   }
 
   void SetRenderOffset(float aX, float aY) {
     float vals[4] = { aX, aY, 0.0f, 0.0f };
-    SetUniform(mProfile.LookupUniformLocation("uRenderTargetOffset"), 4, vals);
+    SetUniform(KnownUniform::RenderTargetOffset, 4, vals);
   }
 
   void SetLayerOpacity(float aOpacity) {
-    SetUniform(mProfile.LookupUniformLocation("uLayerOpacity"), aOpacity);
+    SetUniform(KnownUniform::LayerOpacity, aOpacity);
   }
 
   void SetTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uTexture"), aUnit);
+    SetUniform(KnownUniform::Texture, aUnit);
   }
   void SetYTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uYTexture"), aUnit);
+    SetUniform(KnownUniform::YTexture, aUnit);
   }
 
   void SetCbTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uCbTexture"), aUnit);
+    SetUniform(KnownUniform::CbTexture, aUnit);
   }
 
   void SetCrTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uCrTexture"), aUnit);
+    SetUniform(KnownUniform::CrTexture, aUnit);
   }
 
   void SetYCbCrTextureUnits(GLint aYUnit, GLint aCbUnit, GLint aCrUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uYTexture"), aYUnit);
-    SetUniform(mProfile.LookupUniformLocation("uCbTexture"), aCbUnit);
-    SetUniform(mProfile.LookupUniformLocation("uCrTexture"), aCrUnit);
+    SetUniform(KnownUniform::YTexture, aYUnit);
+    SetUniform(KnownUniform::CbTexture, aCbUnit);
+    SetUniform(KnownUniform::CrTexture, aCrUnit);
   }
 
   void SetBlackTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uBlackTexture"), aUnit);
+    SetUniform(KnownUniform::BlackTexture, aUnit);
   }
 
   void SetWhiteTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uWhiteTexture"), aUnit);
+    SetUniform(KnownUniform::WhiteTexture, aUnit);
   }
 
   void SetMaskTextureUnit(GLint aUnit) {
-    SetUniform(mProfile.LookupUniformLocation("uMaskTexture"), aUnit);
+    SetUniform(KnownUniform::MaskTexture, aUnit);
   }
 
   void SetRenderColor(const gfxRGBA& aColor) {
-    SetUniform(mProfile.LookupUniformLocation("uRenderColor"), aColor);
+    SetUniform(KnownUniform::RenderColor, aColor);
   }
 
   void SetRenderColor(const gfx::Color& aColor) {
-    SetUniform(mProfile.LookupUniformLocation("uRenderColor"), aColor);
+    SetUniform(KnownUniform::RenderColor, aColor);
   }
 
   void SetTexCoordMultiplier(float aWidth, float aHeight) {
     float f[] = {aWidth, aHeight};
-    SetUniform(mTexCoordMultiplierUniformLocation, 2, f);
+    SetUniform(KnownUniform::TexCoordMultiplier, 2, f);
   }
 
   // the names of attributes
@@ -379,18 +477,16 @@ protected:
     STATE_ERROR
   } mProgramState;
 
-  GLint mTexCoordMultiplierUniformLocation;
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, float aFloatValue);
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfxRGBA& aColor);
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues);
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, GLint aIntValue);
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx3DMatrix& aMatrix);
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues);
 
-  void SetUniform(GLint aLocation, float aFloatValue);
-  void SetUniform(GLint aLocation, const gfxRGBA& aColor);
-  void SetUniform(GLint aLocation, int aLength, float *aFloatValues);
-  void SetUniform(GLint aLocation, GLint aIntValue);
-  void SetMatrixUniform(GLint aLocation, const gfx3DMatrix& aMatrix);
-  void SetMatrixUniform(GLint aLocation, const float *aFloatValues);
-
-  void SetUniform(GLint aLocation, const gfx::Color& aColor);
-  void SetMatrixUniform(GLint aLocation, const gfx::Matrix4x4& aMatrix) {
-    SetMatrixUniform(aLocation, &aMatrix._11);
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Color& aColor);
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Matrix4x4& aMatrix) {
+    SetMatrixUniform(aKnownUniform, &aMatrix._11);
   }
 };
 
