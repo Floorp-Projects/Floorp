@@ -407,6 +407,8 @@ private:
     bool mInitialized;
     virtual nsresult DelayedInitFontList();
 
+    virtual already_AddRefed<FontInfoData> CreateFontInfoData();
+
     gfxFloat mForceGDIClassicMaxFontSize;
 
     // whether to use GDI font table access routines
