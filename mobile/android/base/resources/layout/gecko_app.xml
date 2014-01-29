@@ -36,6 +36,16 @@
                           android:layout_width="fill_parent"
                           android:layout_height="fill_parent"/>
 
+                <org.mozilla.gecko.home.HomeBanner android:id="@+id/home_banner"
+                                                   style="@style/Widget.HomeBanner"
+                                                   android:layout_width="fill_parent"
+                                                   android:layout_height="@dimen/home_banner_height"
+                                                   android:background="@drawable/home_banner"
+                                                   android:layout_gravity="bottom"
+                                                   android:gravity="center_vertical"
+                                                   android:visibility="gone"
+                                                   android:clickable="true"
+                                                   android:focusable="true"/>
 
             </FrameLayout>
 
