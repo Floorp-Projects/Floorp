@@ -17,14 +17,17 @@ function startTest() {
     mediaRecorder.start();
     info("mediaRecorder start");
     mediaRecorder.ondataavailable = function (e) {
-      if (count++ == 30) {
+      ++count;
+      info("got ondataavailable data size = " + e.data.size);
+      // no more requestData() to prevent busy main thread from starving
+      // the encoding thread
+      if (count == 30) {
+        info("stream.stop");
         stream.stop();
-      }
-      if (mediaRecorder.state == 'recording') {
-        info("get data again");
+      } else if (count < 30 && mediaRecorder.state == 'recording') {
+        info("requestData again");
         mediaRecorder.requestData();
       }
-      info("got ondataavailable data size = " + e.data.size);
     }
     mediaRecorder.requestData();
     info("mediaRecorder requestData");

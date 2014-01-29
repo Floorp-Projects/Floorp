@@ -11,7 +11,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="ea7971a9f5bbf63a3977161f09ce7138202c7c62"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="0bc0e703df197d46dfffb9ac65cb85d2e3e10c4a"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9b6626eddbc85873eaa2a9174a9bd5101e5c05f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="e33ea242b4328fb0d1824c951f379332b5021512"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="a887bfabaed83c4588b40c845535c0388c8da0f3"/>
@@ -118,7 +118,7 @@
   <project name="platform/system/vold" path="system/vold" revision="8de05d4a52b5a91e7336e6baa4592f945a6ddbea"/>
   <default remote="caf" revision="refs/tags/android-4.3_r2.1" sync-j="4"/>
   <!-- Nexus 4 specific things -->
-  <project name="device-mako" path="device/lge/mako" remote="b2g" revision="59877c64bb3665441547f9e7a9a990394393bffc"/>
+  <project name="device-mako" path="device/lge/mako" remote="b2g" revision="55a5f7def3310ba245102a97270daf1c052c058d"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device/lge/mako-kernel" path="device/lge/mako-kernel" revision="d1729e53d71d711c8fde25eab8728ff2b9b4df0e"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="f995ccdb7c023b7edd8064c9d06fbea8f7108c45"/>
