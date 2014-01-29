@@ -71,7 +71,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
 // ICBinaryArith_Int32
 
 extern "C" {
-    extern int __aeabi_idivmod(int,int);
+    extern int64_t __aeabi_idivmod(int,int);
 }
 
 bool
