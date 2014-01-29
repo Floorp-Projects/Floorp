@@ -6392,15 +6392,17 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         // could be the first and last break opportunity on the line, and that
         // would trigger an infinite loop.
         if (!aSuppressInitialBreak || i > aStart) {
-            bool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() == 1;
-            bool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
+            bool atNaturalBreak = mCharacterGlyphs[i].CanBreakBefore() == 1;
+            bool atHyphenationBreak =
+                !atNaturalBreak && haveHyphenation && hyphenBuffer[i - bufferStart];
+            bool atBreak = atNaturalBreak || atHyphenationBreak;
             bool wordWrapping =
                 aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
                 *aBreakPriority <= gfxBreakPriority::eWordWrapBreak;
 
-            if (lineBreakHere || hyphenation || wordWrapping) {
+            if (atBreak || wordWrapping) {
                 gfxFloat hyphenatedAdvance = advance;
-                if (!lineBreakHere && hyphenation) {
+                if (atHyphenationBreak) {
                     hyphenatedAdvance += aProvider->GetHyphenWidth();
                 }
             
@@ -6409,9 +6411,9 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                     lastBreak = i;
                     lastBreakTrimmableChars = trimmableChars;
                     lastBreakTrimmableAdvance = trimmableAdvance;
-                    lastBreakUsedHyphenation = !lineBreakHere && hyphenation;
-                    *aBreakPriority = hyphenation || lineBreakHere ?
-                        gfxBreakPriority::eNormalBreak : gfxBreakPriority::eWordWrapBreak;
+                    lastBreakUsedHyphenation = atHyphenationBreak;
+                    *aBreakPriority = atBreak ? gfxBreakPriority::eNormalBreak
+                                              : gfxBreakPriority::eWordWrapBreak;
                 }
 
                 width += advance;
