@@ -8,8 +8,9 @@
 #define mozilla_dom_bluetooth_bluetoothprofilecontroller_h__
 
 #include "BluetoothUuid.h"
-#include "nsAutoPtr.h"
 #include "mozilla/RefPtr.h"
+#include "nsAutoPtr.h"
+#include "nsITimer.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -102,6 +103,11 @@ public:
    */
   void OnDisconnect(const nsAString& aErrorStr);
 
+  /**
+   * It is invoked after a profile has reached timeout, reset mProfiles.
+   */
+  void GiveupAndContinue();
+
 private:
   // Setup data member mProfiles
   void SetupProfiles(bool aAssignServiceClass);
@@ -121,6 +127,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
   BluetoothProfileControllerCallback mCallback;
 
+  bool mCurrentProfileFinished;
   bool mSuccess;
   int8_t mProfilesIndex;
   nsTArray<BluetoothProfileManagerBase*> mProfiles;
@@ -130,6 +137,9 @@ private:
     uint32_t cod;
     BluetoothServiceClass service;
   } mTarget;
+
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimerCallback> mCheckProfileStatusCallback;
 };
 
 END_BLUETOOTH_NAMESPACE
