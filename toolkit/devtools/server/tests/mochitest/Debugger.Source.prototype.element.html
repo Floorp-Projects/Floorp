@@ -1,0 +1,16 @@
+<head>
+  <!-- Static (not dynamically inserted) inline script. -->
+  <script id='franz'>function franz() { debugger; }</script>
+
+  <!-- Static out-of-line script element. -->
+  <script id='heinrich' src='Debugger.Source.prototype.element.js'></script>
+</head>
+
+<!-- HTML requires some body element onfoo attributes to add handlers to the
+     *window*, not the element --- but Debugger.Source.prototype.element
+     should return the element. Here, that rule should apply to the body's
+     'onresize' handler. -->
+<body onresize='debugger;'>
+  <!-- Ordinary content element with event handler. -->
+  <div id='heidi' onclick='heinrichFun();'>Heidi</div>
+</body>
