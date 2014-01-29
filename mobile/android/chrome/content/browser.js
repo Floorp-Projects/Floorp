@@ -292,6 +292,14 @@ var BrowserApp = {
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
 
     this.deck = document.getElementById("browsers");
+    this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
+      try {
+        BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
+        Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+        sendMessageToJava({ type: "Gecko:DelayedStartup" });
+      } catch(ex) { console.log(ex); }
+    }, false);
+
     BrowserEventHandler.init();
     ViewportHandler.init();
 
