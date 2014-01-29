@@ -50,6 +50,7 @@ BackCert::Init()
       // { id-ce x }
       switch (ext->id.data[2]) {
         case 14: out = &dummyEncodedSubjectKeyIdentifier; break; // bug 965136
+        case 15: out = &encodedKeyUsage; break;
         case 19: out = &encodedBasicConstraints; break;
         case 35: out = &dummyEncodedAuthorityKeyIdentifier; break; // bug 965136
       }
@@ -89,6 +90,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            BackCert& subject,
                            PRTime time,
                            EndEntityOrCA endEntityOrCA,
+                           KeyUsages requiredKeyUsagesIfPresent,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
 
@@ -140,6 +142,7 @@ BuildForwardInner(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, potentialIssuer, time, MustBeCA,
+                    KU_KEY_CERT_SIGN,
                     newSubCACount, results);
   if (rv != Success) {
     return rv;
@@ -159,6 +162,7 @@ BuildForward(TrustDomain& trustDomain,
              BackCert& subject,
              PRTime time,
              EndEntityOrCA endEntityOrCA,
+             KeyUsages requiredKeyUsagesIfPresent,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
 {
@@ -187,6 +191,7 @@ BuildForward(TrustDomain& trustDomain,
 
   rv = CheckExtensions(subject, endEntityOrCA,
                        trustLevel == TrustDomain::TrustAnchor,
+                       requiredKeyUsagesIfPresent,
                        subCACount);
   if (rv != Success) {
     return rv;
@@ -235,6 +240,7 @@ SECStatus
 BuildCertChain(TrustDomain& trustDomain,
                CERTCertificate* certToDup,
                PRTime time,
+               /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
                /*out*/ ScopedCERTCertList& results)
 {
   PORT_Assert(certToDup);
@@ -254,6 +260,7 @@ BuildCertChain(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, ee, time, MustBeEndEntity,
+                    requiredKeyUsagesIfPresent,
                     0, results);
   if (rv != Success) {
     results = nullptr;
