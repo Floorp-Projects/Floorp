@@ -36,6 +36,67 @@ CheckTimes(const CERTCertificate* cert, PRTime time)
   return Success;
 }
 
+// 4.2.1.3. Key Usage (id-ce-keyUsage)
+// Modeled after GetKeyUsage in certdb.c
+Result
+CheckKeyUsage(EndEntityOrCA endEntityOrCA,
+              bool isTrustAnchor,
+              const SECItem* encodedKeyUsage,
+              KeyUsages requiredKeyUsagesIfPresent,
+              PLArenaPool* arena)
+{
+  if (!encodedKeyUsage) {
+    // TODO: Reject certificates that are being used to verify certificate
+    // signatures unless the certificate is a trust anchor, to reduce the
+    // chances of an end-entity certificate being abused as a CA certificate.
+    // if (endEntityOrCA == MustBeCA && !isTrustAnchor) {
+    //   return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    // }
+    //
+    // TODO: Users may configure arbitrary certificates as trust anchors, not
+    // just roots. We should only allow a certificate without a key usage to be
+    // used as a CA when it is self-issued and self-signed.
+    return Success;
+  }
+
+  SECItem tmpItem;
+  Result rv = MapSECStatus(SEC_QuickDERDecodeItem(arena, &tmpItem,
+                              SEC_ASN1_GET(SEC_BitStringTemplate),
+                              encodedKeyUsage));
+  if (rv != Success) {
+    return rv;
+  }
+
+  // TODO XXX: Why is tmpItem.len > 1?
+
+  KeyUsages allowedKeyUsages = tmpItem.data[0];
+  if ((allowedKeyUsages & requiredKeyUsagesIfPresent)
+        != requiredKeyUsagesIfPresent) {
+    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+  }
+
+  if (endEntityOrCA == MustBeCA) {
+   // "If the keyUsage extension is present, then the subject public key
+   //  MUST NOT be used to verify signatures on certificates or CRLs unless
+   //  the corresponding keyCertSign or cRLSign bit is set."
+   if ((allowedKeyUsages & KU_KEY_CERT_SIGN) == 0) {
+      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    }
+  } else {
+    // "The keyCertSign bit is asserted when the subject public key is
+    //  used for verifying signatures on public key certificates.  If the
+    //  keyCertSign bit is asserted, then the cA bit in the basic
+    //  constraints extension (Section 4.2.1.9) MUST also be asserted."
+    // TODO XXX: commented out to match classic NSS behavior.
+    //if ((allowedKeyUsages & KU_KEY_CERT_SIGN) != 0) {
+    //  // XXX: better error code.
+    //  return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+    //}
+  }
+
+  return Success;
+}
+
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
 CheckBasicConstraints(const BackCert& cert,
@@ -122,6 +183,7 @@ Result
 CheckExtensions(BackCert& cert,
                 EndEntityOrCA endEntityOrCA,
                 bool isTrustAnchor,
+                KeyUsages requiredKeyUsagesIfPresent,
                 unsigned int subCACount)
 {
   // 4.2.1.1. Authority Key Identifier dealt with as part of path building
@@ -135,6 +197,13 @@ CheckExtensions(BackCert& cert,
   Result rv;
 
   // 4.2.1.3. Key Usage
+
+  rv = CheckKeyUsage(endEntityOrCA, isTrustAnchor, cert.encodedKeyUsage,
+                     requiredKeyUsagesIfPresent, arena);
+  if (rv != Success) {
+    return rv;
+  }
+
   // 4.2.1.4. Certificate Policies
   // 4.2.1.5. Policy Mappings are rejected in BackCert::Init()
   // 4.2.1.6. Subject Alternative Name dealt with elsewhere
