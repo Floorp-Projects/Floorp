@@ -239,14 +239,14 @@ namespace js {
 class ForOfIterator
 {
   private:
-    JSContext *cx;
+    JSContext *cx_;
     RootedObject iterator;
 
     ForOfIterator(const ForOfIterator &) MOZ_DELETE;
     ForOfIterator &operator=(const ForOfIterator &) MOZ_DELETE;
 
   public:
-    ForOfIterator(JSContext *cx) : cx(cx), iterator(cx) { }
+    ForOfIterator(JSContext *cx) : cx_(cx), iterator(cx) { }
 
     bool init(HandleValue iterable);
     bool next(MutableHandleValue val, bool *done);

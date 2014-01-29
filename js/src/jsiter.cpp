@@ -1271,6 +1271,7 @@ const Class StopIterationObject::class_ = {
 bool
 ForOfIterator::init(HandleValue iterable)
 {
+    JSContext *cx = cx_;
     RootedObject iterableObj(cx, ToObject(cx, iterable));
     if (!iterableObj)
         return false;
@@ -1313,6 +1314,7 @@ ForOfIterator::next(MutableHandleValue vp, bool *done)
 {
     JS_ASSERT(iterator);
 
+    JSContext *cx = cx_;
     RootedValue method(cx);
     if (!JSObject::getProperty(cx, iterator, iterator, cx->names().next, &method))
         return false;
