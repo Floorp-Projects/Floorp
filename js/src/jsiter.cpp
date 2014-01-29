@@ -15,7 +15,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -1270,7 +1269,7 @@ const Class StopIterationObject::class_ = {
     nullptr                  /* construct   */
 };
 
-JS_FRIEND_API(bool)
+bool
 ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavior)
 {
     JSContext *cx = cx_;
@@ -1314,7 +1313,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     return true;
 }
 
-JS_FRIEND_API(bool)
+bool
 ForOfIterator::next(MutableHandleValue vp, bool *done)
 {
     JS_ASSERT(iterator);
