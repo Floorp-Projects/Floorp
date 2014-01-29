@@ -18,7 +18,7 @@
 
         <TextView
             style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_account_verified" >
+            android:text="@string/fxaccount_account_verified_sub_header" >
         </TextView>
 
         <ImageView

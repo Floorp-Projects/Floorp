@@ -39,7 +39,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     setContentView(R.layout.fxaccount_get_started);
 
     TextView oldFirefox = (TextView) findViewById(R.id.old_firefox);
-    ActivityUtils.linkTextView(oldFirefox, R.string.fxaccount_old_firefox, R.string.fxaccount_link_old_firefox);
+    ActivityUtils.linkTextView(oldFirefox, R.string.fxaccount_getting_started_old_firefox, R.string.fxaccount_getting_started_link_old_firefox);
 
     View button = findViewById(R.id.get_started_button);
     button.setOnClickListener(new OnClickListener() {
@@ -54,6 +54,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     });
   }
 
+  @Override
   public void onResume() {
     super.onResume();
 
