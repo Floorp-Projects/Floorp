@@ -14,6 +14,12 @@
 
 class nsWindow;
 
+namespace mozilla {
+namespace gfx {
+class SourceSurface;
+}
+}
+
 #ifndef HAVE_NSGOBJECTREFTRAITS
 #define HAVE_NSGOBJECTREFTRAITS
 template <class T>
@@ -183,11 +189,11 @@ private:
 
     // attempts to create a semi-transparent drag image. Returns TRUE if
     // successful, FALSE if not
-    bool SetAlphaPixmap(gfxASurface     *aPixbuf,
-                          GdkDragContext  *aContext,
-                          int32_t          aXOffset,
-                          int32_t          aYOffset,
-                          const nsIntRect &dragRect);
+    bool SetAlphaPixmap(SourceSurface *aPixbuf,
+                        GdkDragContext  *aContext,
+                        int32_t          aXOffset,
+                        int32_t          aYOffset,
+                        const nsIntRect &dragRect);
 
     gboolean Schedule(DragTask aTask, nsWindow *aWindow,
                       GdkDragContext *aDragContext,
