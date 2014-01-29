@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
                                   "resource:///modules/ScrollbarSampler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+                                  "resource://gre/modules/ShortcutUtils.jsm");
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -236,6 +238,7 @@ const PanelUI = {
           this.endBatchUpdate();
         }
       }
+      this._updateQuitTooltip();
       this.panel.hidden = false;
     }.bind(this)).then(null, Cu.reportError);
 
@@ -422,7 +425,26 @@ const PanelUI = {
 
   _onHelpViewHide: function(aEvent) {
     this.removeEventListener("command", PanelUI);
-  }
+  },
+
+  _updateQuitTooltip: function() {
+#ifndef XP_WIN
+#ifdef XP_MACOSX
+    let tooltipId = "quit-button.tooltiptext.mac";
+    let brands = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let stringArgs = [brands.GetStringFromName("brandShortName")];
+#else
+    let tooltipId = "quit-button.tooltiptext.linux";
+    let stringArgs = [];
+#endif
+
+    let key = document.getElementById("key_quitApplication");
+    stringArgs.push(ShortcutUtils.prettifyShortcut(key));
+    let tooltipString = CustomizableUI.getLocalizedProperty({x: tooltipId}, "x", stringArgs);
+    let quitButton = document.getElementById("PanelUI-quit");
+    quitButton.setAttribute("tooltiptext", tooltipString);
+#endif
+  },
 };
 
 /**
