@@ -1699,9 +1699,9 @@ ThreadActor.prototype = {
         // Create a form object for serializing the listener via the protocol.
         let listenerForm = Object.create(null);
         let listener = handler.listenerObject;
-        // Native event listeners don't provide any listenerObject and are not
-        // that useful to a JS debugger.
-        if (!listener) {
+        // Native event listeners don't provide any listenerObject or type and
+        // are not that useful to a JS debugger.
+        if (!listener || !handler.type) {
           continue;
         }
 
