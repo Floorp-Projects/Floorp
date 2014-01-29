@@ -415,9 +415,6 @@ function setupTestCommon() {
   gAppDirOrig = getAppBaseDir();
 
   let applyDir = getApplyDirFile(null, true).parent;
-  if (IS_MACOSX) {
-    applyDir = applyDir.parent;
-  }
 
   // Try to remove the directory used to apply updates and the updates directory
   // on platforms other than Windows. Since the test hasn't ran yet and the
@@ -540,9 +537,6 @@ function cleanupTestCommon() {
   }
 
   let applyDir = getApplyDirFile(null, true).parent;
-  if (IS_MACOSX) {
-    applyDir = applyDir.parent;
-  }
 
   // Try to remove the directory used to apply updates. Since the test has
   // already finished this is non-fatal for the test.
@@ -674,25 +668,18 @@ function getAppVersion() {
 
 /**
  * Helper function for getting the relative path to the directory where the
- * application binary is located.
- * For Mac OS X the path will be:
- *   <test_file_leafname>.app/Contents/MacOS/
- * For other platforms the path will be:
- *   <test_file_leafname>/appdir/
+ * application binary is located (e.g. <test_file_leafname>/dir.app/).
  *
- * Note: The appdir subdirectory is needed for platforms other than Mac OS X so
- *       the tests can run in parallel due to update staging creating a lock
- *       file named moz_update_in_progress.lock in the parent directory of the
- *       installation directory.
+ * Note: The dir.app subdirectory under <test_file_leafname> is needed for
+ *       platforms other than Mac OS X so the tests can run in parallel due to
+ *       update staging creating a lock file named moz_update_in_progress.lock in
+ *       the parent directory of the installation directory.
  *
  * @return  The relative path to the directory where application binary is
  *          located.
  */
 function getApplyDirPath() {
-  if (IS_MACOSX) {
-    return gTestID + DIR_APP_SUFFIX + DIR_APP_REL_PATH;
-  }
-  return gTestID + DIR_APP_REL_PATH;
+  return gTestID + "/dir.app/";
 }
 
 /**
@@ -752,21 +739,7 @@ function getTestDirFile(aRelPath) {
  * that contains the staged update.
  */
 function getUpdatedDirPath() {
-  let updatedDirPath = gTestID;
-  if (IS_MACOSX) {
-    updatedDirPath += DIR_APP_SUFFIX;
-  } else {
-    // The appdir subdirectory is needed so the tests can run in parallel due to
-    // update staging creating a lock file named moz_update_in_progress.lock in
-    // the parent directory of the installation directory.
-    updatedDirPath += DIR_APP_REL_PATH;
-  }
-  if (gStageUpdate) {
-    updatedDirPath += DIR_UPDATED + "/";
-  } else if (IS_MACOSX) {
-    updatedDirPath += DIR_APP_REL_PATH;
-  }
-  return updatedDirPath;
+  return getApplyDirPath() + (gStageUpdate ? DIR_UPDATED +  "/" : "");
 }
 
 /**
@@ -777,13 +750,7 @@ function getUpdatedDirPath() {
  *          modified by the simple.mar update file.
  */
 function getUpdateTestDir() {
-  let updateTestDir = getApplyDirFile(null, true);
-
-  if (IS_MACOSX) {
-    updateTestDir = updateTestDir.parent.parent;
-  }
-  updateTestDir.append("update_test");
-  return updateTestDir;
+  return getApplyDirFile("update_test", true);
 }
 
 /**
@@ -793,13 +760,7 @@ function getUpdateTestDir() {
  * @return  nsIFile for the directory for the updating directory.
  */
 function getUpdatingDir() {
-  let updatingDir = getApplyDirFile(null, true);
-
-  if (IS_MACOSX) {
-    updatingDir = updatingDir.parent.parent;
-  }
-  updatingDir.append("updating");
-  return updatingDir;
+  return getApplyDirFile("updating", true);
 }
 
 #ifdef XP_WIN
@@ -941,7 +902,7 @@ function getMockUpdRootD() {
  * when running a test that launches the application.
  */
 function getMockUpdRootD() {
-  return getApplyDirFile(null, true);
+  return getApplyDirFile(DIR_BIN_REL_PATH, true);
 }
 #endif
 
@@ -1051,6 +1012,7 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   if (gStageUpdate || gSwitchApp) {
     applyToDirPath += "/" + DIR_UPDATED + "/";
   }
+
   if (IS_WIN) {
     // Convert to native path
     applyToDirPath = applyToDirPath.replace(/\//g, "\\");
@@ -1341,16 +1303,17 @@ function copyFileToTestAppDir(aFileRelPath) {
 
   if (IS_MACOSX && !srcFile.exists()) {
     logTestInfo("unable to copy file since it doesn't exist! Checking if " +
-                 fileRelPath + DIR_APP_SUFFIX + " exists. Path: " +
+                 fileRelPath + ".app exists. Path: " +
                  srcFile.path);
     srcFile = gGREDirOrig.clone();
     for (let i = 0; i < pathParts.length; i++) {
       if (pathParts[i]) {
-        srcFile.append(pathParts[i] + (pathParts.length - 1 == i ? DIR_APP_SUFFIX : ""));
+        srcFile.append(pathParts[i] + (pathParts.length - 1 == i ? ".app" : ""));
       }
     }
-    fileRelPath = fileRelPath + DIR_APP_SUFFIX;
+    fileRelPath = fileRelPath + ".app";
   }
+
   if (!srcFile.exists()) {
     do_throw("Unable to copy file since it doesn't exist! Path: " +
              srcFile.path);
@@ -1361,7 +1324,7 @@ function copyFileToTestAppDir(aFileRelPath) {
   let shouldSymlink = (pathParts[pathParts.length - 1] == "XUL" ||
                        fileRelPath.substr(fileRelPath.length - 3) == ".so" ||
                        fileRelPath.substr(fileRelPath.length - 6) == ".dylib");
-  let destFile = getApplyDirFile(fileRelPath, true);
+  let destFile = getApplyDirFile(DIR_BIN_REL_PATH + fileRelPath, true);
   if (!shouldSymlink) {
     if (!destFile.exists()) {
       try {
@@ -2591,7 +2554,7 @@ function getProcessArgs(aExtraArgs) {
     aExtraArgs = [];
   }
 
-  let appBinPath = getApplyDirFile(FILE_APP_BIN, false).path;
+  let appBinPath = getApplyDirFile(DIR_BIN_REL_PATH + FILE_APP_BIN, false).path;
   if (/ /.test(appBinPath)) {
     appBinPath = '"' + appBinPath + '"';
   }
@@ -2661,12 +2624,12 @@ function adjustGeneralPaths() {
       switch (aProp) {
         case NS_GRE_DIR:
           if (gUseTestAppDir) {
-            return getApplyDirFile(null, true);
+            return getApplyDirFile(DIR_BIN_REL_PATH, true);
           }
           break;
         case XRE_EXECUTABLE_FILE:
           if (gUseTestAppDir) {
-            return getApplyDirFile(FILE_APP_BIN, true);
+            return getApplyDirFile(DIR_BIN_REL_PATH + FILE_APP_BIN, true);
           }
           break;
         case XRE_UPDATE_ROOT_DIR:
@@ -2744,7 +2707,7 @@ function adjustGeneralPaths() {
 function launchAppToApplyUpdate() {
   logTestInfo("start - launching application to apply update");
 
-  let appBin = getApplyDirFile(FILE_APP_BIN, false);
+  let appBin = getApplyDirFile(DIR_BIN_REL_PATH + FILE_APP_BIN, false);
 
   if (typeof(customLaunchAppToApplyUpdate) == typeof(Function)) {
     customLaunchAppToApplyUpdate();
