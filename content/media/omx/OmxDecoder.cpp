@@ -178,9 +178,18 @@ VideoGraphicBuffer::VideoGraphicBuffer(const android::wp<android::OmxDecoder> aO
 
 VideoGraphicBuffer::~VideoGraphicBuffer()
 {
-  if (mMediaBuffer) {
+  android::sp<android::OmxDecoder> omxDecoder = mOmxDecoder.promote();
+  if (mMediaBuffer && omxDecoder.get()) {
+    // Post kNotifyPostReleaseVideoBuffer message to OmxDecoder via ALooper.
+    // The message is delivered to OmxDecoder on ALooper thread.
+    // MediaBuffer::release() could take a very long time.
+    // PostReleaseVideoBuffer() prevents long time locking.
+    omxDecoder->PostReleaseVideoBuffer(mMediaBuffer, mReleaseFenceHandle);
+  } else if (mMediaBuffer) {
+    NS_WARNING("OmxDecoder is not present");
     mMediaBuffer->release();
   }
+  mMediaBuffer = nullptr;
 }
 
 void
@@ -766,7 +775,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     {
       Mutex::Autolock autoLock(mSeekLock);
       mIsVideoSeeking = false;
-      ReleaseAllPendingVideoBuffersLocked();
+      PostReleaseVideoBuffer(nullptr, FenceHandle());
     }
 
     aDoSeek = false;
@@ -993,7 +1002,9 @@ void OmxDecoder::PostReleaseVideoBuffer(MediaBuffer *aBuffer, const FenceHandle&
 {
   {
     Mutex::Autolock autoLock(mPendingVideoBuffersLock);
-    mPendingVideoBuffers.push(BufferItem(aBuffer, aReleaseFenceHandle));
+    if (aBuffer) {
+      mPendingVideoBuffers.push(BufferItem(aBuffer, aReleaseFenceHandle));
+    }
   }
 
   sp<AMessage> notify =
