@@ -11,6 +11,7 @@
 #include "nsTHashtable.h"
 
 #include "gfxFontUtils.h"
+#include "gfxFontInfoLoader.h"
 #include "gfxFont.h"
 #include "gfxPlatform.h"
 
@@ -81,7 +82,7 @@ struct FontListSizes {
     uint32_t mCharMapsSize; // memory used for cmap coverage info
 };
 
-class gfxPlatformFontList : protected gfxFontInfoLoader
+class gfxPlatformFontList : public gfxFontInfoLoader
 {
 public:
     static gfxPlatformFontList* PlatformFontList() {
@@ -210,6 +211,9 @@ protected:
     // if system fallback is used, no need to load all cmaps
     virtual bool UsesSystemFallback() { return false; }
 
+    // verifies that a family contains a non-zero font count
+    gfxFontFamily* CheckFamily(gfxFontFamily *aFamily);
+
     // separate initialization for reading in name tables, since this is expensive
     void InitOtherFamilyNames();
 
@@ -240,10 +244,12 @@ protected:
                                 nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                 void* aUserArg);
 
+    virtual void GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames);
+
     // gfxFontInfoLoader overrides, used to load in font cmaps
     virtual void InitLoader();
-    virtual bool RunLoader();
-    virtual void FinishLoader();
+    virtual bool LoadFontInfo();
+    virtual void CleanupLoader();
 
     // read the loader initialization prefs, and start it
     void GetPrefsAndStartLoader();

@@ -147,7 +147,7 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
 }
 
 void
-gfxDWriteFontFamily::FindStyleVariations()
+gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     HRESULT hr;
     if (mHasStyles) {
@@ -159,6 +159,9 @@ gfxDWriteFontFamily::FindStyleVariations()
 
     bool skipFaceNames = mFaceNamesInitialized ||
                          !fp->NeedFullnamePostscriptNames();
+    bool fontInfoShouldHaveFaceNames = !mFaceNamesInitialized &&
+                                       fp->NeedFullnamePostscriptNames() &&
+                                       aFontInfoData;
 
     for (UINT32 i = 0; i < mDWFamily->GetFontCount(); i++) {
         nsRefPtr<IDWriteFont> font;
@@ -190,7 +193,15 @@ gfxDWriteFontFamily::FindStyleVariations()
 
         // postscript/fullname if needed
         nsAutoString psname, fullname;
-        if (!skipFaceNames) {
+        if (fontInfoShouldHaveFaceNames) {
+            aFontInfoData->GetFaceNames(fe->Name(), fullname, psname);
+            if (!fullname.IsEmpty()) {
+                fp->AddFullname(fe, fullname);
+            }
+            if (!psname.IsEmpty()) {
+                fp->AddPostscriptName(fe, psname);
+            }
+        } else if (!skipFaceNames) {
             hr = GetDirectWriteFaceName(font, PSNAME_ID, psname);
             if (FAILED(hr)) {
                 skipFaceNames = true;
@@ -496,30 +507,38 @@ gfxDWriteFontEntry::GetFontTable(uint32_t aTag)
 }
 
 nsresult
-gfxDWriteFontEntry::ReadCMAP()
+gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
-    nsresult rv;
-
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
         return NS_OK;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+    nsRefPtr<gfxCharacterMap> charmap;
+    nsresult rv;
+    bool symbolFont;
 
-    uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
-    AutoTable cmapTable(this, kCMAP);
-    if (cmapTable) {
-        bool unicodeFont = false, symbolFont = false; // currently ignored
-        uint32_t cmapLen;
-        const uint8_t* cmapData =
-            reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
-                                                              &cmapLen));
-        rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
-                                    *charmap, mUVSOffset,
-                                    unicodeFont, symbolFont);
+    if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
+                                                        mUVSOffset,
+                                                        symbolFont))) {
+        rv = NS_OK;
     } else {
-        rv = NS_ERROR_NOT_AVAILABLE;
+        uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+        charmap = new gfxCharacterMap();
+        AutoTable cmapTable(this, kCMAP);
+
+        if (cmapTable) {
+            bool unicodeFont = false, symbolFont = false; // currently ignored
+            uint32_t cmapLen;
+            const uint8_t* cmapData =
+                reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
+                                                                  &cmapLen));
+            rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
+                                        *charmap, mUVSOffset,
+                                        unicodeFont, symbolFont);
+        } else {
+            rv = NS_ERROR_NOT_AVAILABLE;
+        }
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);
@@ -1533,4 +1552,190 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
     }
 
     return nullptr;
+}
+
+// used to load system-wide font info on off-main thread
+class DirectWriteFontInfo : public FontInfoData {
+public:
+    DirectWriteFontInfo(bool aLoadOtherNames,
+                        bool aLoadFaceNames,
+                        bool aLoadCmaps) :
+        FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps)
+    {}
+
+    virtual ~DirectWriteFontInfo() {}
+
+    // loads font data for all members of a given family
+    virtual void LoadFontFamilyData(const nsAString& aFamilyName);
+
+    nsRefPtr<IDWriteFontCollection> mSystemFonts;
+};
+
+void
+DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
+{
+    // lookup the family
+    nsAutoTArray<char16_t, 32> famName;
+
+    uint32_t len = aFamilyName.Length();
+    famName.SetLength(len + 1);
+    memcpy(famName.Elements(), aFamilyName.BeginReading(), len * sizeof(char16_t));
+    famName[len] = 0;
+
+    HRESULT hr;
+    BOOL exists = false;
+
+    uint32_t index;
+    hr = mSystemFonts->FindFamilyName(famName.Elements(), &index, &exists);
+    if (FAILED(hr) || !exists) {
+        return;
+    }
+
+    nsRefPtr<IDWriteFontFamily> family;
+    mSystemFonts->GetFontFamily(index, getter_AddRefs(family));
+    if (!family) {
+        return;
+    }
+
+    // later versions of DirectWrite support querying the fullname/psname
+    bool loadFaceNamesUsingDirectWrite = mLoadFaceNames;
+
+    for (uint32_t i = 0; i < family->GetFontCount(); i++) {
+        // get the font
+        nsRefPtr<IDWriteFont> dwFont;
+        hr = family->GetFont(i, getter_AddRefs(dwFont));
+        if (FAILED(hr)) {
+            // This should never happen.
+            NS_WARNING("Failed to get existing font from family.");
+            continue;
+        }
+
+        if (dwFont->GetSimulations() & DWRITE_FONT_SIMULATIONS_OBLIQUE) {
+            // We don't want these.
+            continue;
+        }
+
+        mLoadStats.fonts++;
+
+        // get the name of the face
+        nsString fullID(aFamilyName);
+        nsAutoString fontName;
+        hr = GetDirectWriteFontName(dwFont, fontName);
+        if (FAILED(hr)) {
+            continue;
+        }
+        fullID.Append(NS_LITERAL_STRING(" "));
+        fullID.Append(fontName);
+
+        FontFaceData fontData;
+        bool haveData = true;
+        nsRefPtr<IDWriteFontFace> dwFontFace;
+
+        if (mLoadFaceNames) {
+            // try to load using DirectWrite first
+            if (loadFaceNamesUsingDirectWrite) {
+                hr = GetDirectWriteFaceName(dwFont, PSNAME_ID, fontData.mPostscriptName);
+                if (FAILED(hr)) {
+                    loadFaceNamesUsingDirectWrite = false;
+                }
+                hr = GetDirectWriteFaceName(dwFont, FULLNAME_ID, fontData.mFullName);
+                if (FAILED(hr)) {
+                    loadFaceNamesUsingDirectWrite = false;
+                }
+            }
+
+            // if DirectWrite read fails, load directly from name table
+            if (!loadFaceNamesUsingDirectWrite) {
+                hr = dwFont->CreateFontFace(getter_AddRefs(dwFontFace));
+                if (SUCCEEDED(hr)) {
+                    uint32_t kNAME =
+                        NativeEndian::swapToBigEndian(TRUETYPE_TAG('n','a','m','e'));
+                    const char *nameData;
+                    BOOL exists;
+                    void* ctx;
+                    uint32_t nameSize;
+
+                    hr = dwFontFace->TryGetFontTable(
+                             kNAME,
+                             (const void**)&nameData, &nameSize, &ctx, &exists);
+
+                    if (SUCCEEDED(hr) && nameData && nameSize > 0) {
+                        gfxFontUtils::ReadCanonicalName(nameData, nameSize,
+                            gfxFontUtils::NAME_ID_FULL,
+                            fontData.mFullName);
+                        gfxFontUtils::ReadCanonicalName(nameData, nameSize,
+                            gfxFontUtils::NAME_ID_POSTSCRIPT,
+                            fontData.mPostscriptName);
+                        dwFontFace->ReleaseFontTable(ctx);
+                    }
+                }
+            }
+
+            haveData = !fontData.mPostscriptName.IsEmpty() ||
+                       !fontData.mFullName.IsEmpty();
+            if (haveData) {
+                mLoadStats.facenames++;
+            }
+        }
+
+        // cmaps
+        if (mLoadCmaps) {
+            if (!dwFontFace) {
+                hr = dwFont->CreateFontFace(getter_AddRefs(dwFontFace));
+                if (!SUCCEEDED(hr)) {
+                    continue;
+                }
+            }
+
+            uint32_t kCMAP =
+                NativeEndian::swapToBigEndian(TRUETYPE_TAG('c','m','a','p'));
+            const uint8_t *cmapData;
+            BOOL exists;
+            void* ctx;
+            uint32_t cmapSize;
+
+            hr = dwFontFace->TryGetFontTable(kCMAP,
+                     (const void**)&cmapData, &cmapSize, &ctx, &exists);
+
+            if (SUCCEEDED(hr)) {
+                bool cmapLoaded = false;
+                bool unicodeFont = false, symbolFont = false;
+                nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+                uint32_t offset;
+
+                if (cmapData &&
+                    cmapSize > 0 &&
+                    NS_SUCCEEDED(
+                        gfxFontUtils::ReadCMAP(cmapData, cmapSize, *charmap,
+                                               offset, unicodeFont, symbolFont))) {
+                    fontData.mCharacterMap = charmap;
+                    fontData.mUVSOffset = offset;
+                    fontData.mSymbolFont = symbolFont;
+                    cmapLoaded = true;
+                    mLoadStats.cmaps++;
+                }
+                dwFontFace->ReleaseFontTable(ctx);
+                haveData = haveData || cmapLoaded;
+           }
+        }
+
+        // if have data, load
+        if (haveData) {
+            mFontFaceData.Put(fullID, fontData);
+        }
+    }
+}
+
+already_AddRefed<FontInfoData>
+gfxDWriteFontList::CreateFontInfoData()
+{
+    bool loadCmaps = !UsesSystemFallback() ||
+        gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
+
+    nsRefPtr<DirectWriteFontInfo> fi =
+        new DirectWriteFontInfo(false, NeedFullnamePostscriptNames(), loadCmaps);
+    gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
+        GetSystemFontCollection(getter_AddRefs(fi->mSystemFonts));
+
+    return fi.forget();
 }

@@ -49,6 +49,7 @@ class gfxShapedText;
 class gfxShapedWord;
 class gfxSVGGlyphs;
 class gfxTextContextPaint;
+class FontInfoData;
 
 class nsILanguageAtomService;
 
@@ -299,7 +300,7 @@ public:
     // ReadCMAP() must *always* set the mCharacterMap pointer to a valid
     // gfxCharacterMap, even if empty, as other code assumes this pointer
     // can be safely dereferenced.
-    virtual nsresult ReadCMAP();
+    virtual nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
 
     bool TryGetSVGData(gfxFont* aFont);
     bool HasSVGGlyph(uint32_t aGlyphId);
@@ -490,6 +491,12 @@ protected:
     // This method assumes aFontData is valid 'sfnt' data; before using this,
     // caller is responsible to do any sanitization/validation necessary.
     hb_blob_t* GetTableFromFontData(const void* aFontData, uint32_t aTableTag);
+
+    // lookup the cmap in cached font data
+    virtual already_AddRefed<gfxCharacterMap>
+    GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
+                        uint32_t& aUVSOffset,
+                        bool& aSymbolFont);
 
     // Font's unitsPerEm from the 'head' table, if available (will be set to
     // kInvalidUPEM for non-sfnt font formats)
@@ -693,6 +700,7 @@ public:
     }
 
     // note that the styles for this family have been added
+    bool HasStyles() { return mHasStyles; }
     void SetHasStyles(bool aHasStyles) { mHasStyles = aHasStyles; }
 
     // choose a specific face to match a style using CSS font matching
@@ -713,6 +721,14 @@ public:
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList);
 
+    // helper method for reading localized family names from the name table
+    // of a single face
+    static void ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
+                                            const char *aNameData,
+                                            uint32_t aDataLength,
+                                            nsTArray<nsString>& aOtherFamilyNames,
+                                            bool useFullName);
+
     // set when other family names have been read in
     void SetOtherFamilyNamesInitialized() {
         mOtherFamilyNamesInitialized = true;
@@ -721,30 +737,18 @@ public:
     // read in other localized family names, fullnames and Postscript names
     // for all faces and append to lookup tables
     virtual void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
-                               bool aNeedFullnamePostscriptNames);
+                               bool aNeedFullnamePostscriptNames,
+                               FontInfoData *aFontInfoData = nullptr);
 
     // find faces belonging to this family (platform implementations override this;
     // should be made pure virtual once all subclasses have been updated)
-    virtual void FindStyleVariations() { }
+    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) { }
 
     // search for a specific face using the Postscript name
     gfxFontEntry* FindFont(const nsAString& aPostscriptName);
 
     // read in cmaps for all the faces
-    void ReadAllCMAPs() {
-        uint32_t i, numFonts = mAvailableFonts.Length();
-        for (i = 0; i < numFonts; i++) {
-            gfxFontEntry *fe = mAvailableFonts[i];
-            // don't try to load cmaps for downloadable fonts not yet loaded
-            if (!fe || fe->mIsProxy) {
-                continue;
-            }
-            fe->ReadCMAP();
-            mFamilyCharacterMap.Union(*(fe->mCharacterMap));
-        }
-        mFamilyCharacterMap.Compact();
-        mFamilyCharacterMapInitialized = true;
-    }
+    void ReadAllCMAPs(FontInfoData *aFontInfoData = nullptr);
 
     bool TestCharacterMap(uint32_t aCh) {
         if (!mFamilyCharacterMapInitialized) {

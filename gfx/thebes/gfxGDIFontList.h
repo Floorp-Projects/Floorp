@@ -108,7 +108,7 @@ class GDIFontEntry : public gfxFontEntry
 public:
     LPLOGFONTW GetLogFont() { return &mLogFont; }
 
-    nsresult ReadCMAP();
+    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
 
     virtual bool IsSymbolFont();
 
@@ -294,7 +294,7 @@ public:
     GDIFontFamily(nsAString &aName) :
         gfxFontFamily(aName) {}
 
-    virtual void FindStyleVariations();
+    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
 private:
     static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
@@ -338,6 +338,8 @@ private:
                                           NEWTEXTMETRICEXW *lpntme,
                                           DWORD fontType,
                                           LPARAM lParam);
+
+    virtual already_AddRefed<FontInfoData> CreateFontInfoData();
 
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 

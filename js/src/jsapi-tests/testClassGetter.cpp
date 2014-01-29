@@ -56,7 +56,7 @@ static const JSFunctionSpec ptestFunctions[] = {
 
 BEGIN_TEST(testClassGetter_isCalled)
 {
-    CHECK(JS_InitClass(cx, global, nullptr, &ptestClass, PTest, 0,
+    CHECK(JS_InitClass(cx, global, js::NullPtr(), &ptestClass, PTest, 0,
                        nullptr, ptestFunctions, nullptr, nullptr));
 
     EXEC("function check() { var o = new PTest(); o.test_fn(); o.test_value1; o.test_value2; o.test_value1; }");

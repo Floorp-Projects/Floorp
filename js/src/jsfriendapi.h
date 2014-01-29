@@ -125,11 +125,11 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 
 /* Safe to call with input obj == nullptr. Returns non-nullptr iff obj != nullptr. */
 extern JS_FRIEND_API(JSObject *)
-JS_ObjectToInnerObject(JSContext *cx, JSObject *obj);
+JS_ObjectToInnerObject(JSContext *cx, JS::HandleObject obj);
 
 /* Requires obj != nullptr. */
 extern JS_FRIEND_API(JSObject *)
-JS_ObjectToOuterObject(JSContext *cx, JSObject *obj);
+JS_ObjectToOuterObject(JSContext *cx, JS::HandleObject obj);
 
 extern JS_FRIEND_API(JSObject *)
 JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent);
@@ -1020,23 +1020,23 @@ JS_NewFloat64Array(JSContext *cx, uint32_t nelements);
  */
 
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt8ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewInt8ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint8ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewUint8ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint8ClampedArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewUint8ClampedArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt16ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewInt16ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint16ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewUint16ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt32ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewInt32ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint32ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewUint32ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewFloat32ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewFloat32ArrayFromArray(JSContext *cx, JS::HandleObject array);
 extern JS_FRIEND_API(JSObject *)
-JS_NewFloat64ArrayFromArray(JSContext *cx, JSObject *array);
+JS_NewFloat64ArrayFromArray(JSContext *cx, JS::HandleObject array);
 
 /*
  * Create a new typed array using the given ArrayBuffer for storage.  The
@@ -1045,31 +1045,31 @@ JS_NewFloat64ArrayFromArray(JSContext *cx, JSObject *array);
  */
 
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt8ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewInt8ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                           uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint8ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewUint8ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                            uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint8ClampedArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewUint8ClampedArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                                   uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt16ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewInt16ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                            uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint16ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewUint16ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                             uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewInt32ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewInt32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                            uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewUint32ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewUint32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                             uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewFloat32ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewFloat32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                              uint32_t byteOffset, int32_t length);
 extern JS_FRIEND_API(JSObject *)
-JS_NewFloat64ArrayWithBuffer(JSContext *cx, JSObject *arrayBuffer,
+JS_NewFloat64ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                              uint32_t byteOffset, int32_t length);
 
 /*
