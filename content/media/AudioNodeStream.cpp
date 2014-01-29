@@ -10,7 +10,6 @@
 #include "ThreeDPoint.h"
 #include "AudioChannelFormat.h"
 #include "AudioParamTimeline.h"
-#include "AudioContext.h"
 
 using namespace mozilla::dom;
 
@@ -31,7 +30,7 @@ AudioNodeStream::~AudioNodeStream()
 }
 
 void
-AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
+AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, MediaStream* aRelativeToStream,
                                         double aStreamTime)
 {
   class Message : public ControlMessage {
@@ -51,9 +50,7 @@ AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
   };
 
   MOZ_ASSERT(this);
-  GraphImpl()->AppendMessage(new Message(this, aIndex,
-      aContext->DestinationStream(),
-      aStreamTime - aContext->ExtraCurrentTime()));
+  GraphImpl()->AppendMessage(new Message(this, aIndex, aRelativeToStream, aStreamTime));
 }
 
 void
