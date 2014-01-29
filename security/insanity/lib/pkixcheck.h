@@ -28,6 +28,7 @@ Result CheckTimes(const CERTCertificate* cert, PRTime time);
 Result CheckExtensions(BackCert& certExt,
                        EndEntityOrCA endEntityOrCA,
                        bool isTrustAnchor,
+                       KeyUsages requiredKeyUsagesIfPresent,
                        unsigned int depth);
 
 } } // namespace insanity::pkix
