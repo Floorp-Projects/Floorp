@@ -32,6 +32,7 @@
 #include "jsalloc.h"
 
 #include "assembler/wtf/Platform.h"
+#include "jit/arm/Simulator-arm.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
@@ -395,6 +396,11 @@ public:
 #if WTF_CPU_X86 || WTF_CPU_X86_64
     static void cacheFlush(void*, size_t)
     {
+    }
+#elif defined(JS_ARM_SIMULATOR)
+    static void cacheFlush(void *code, size_t size)
+    {
+        js::jit::Simulator::FlushICache(code, size);
     }
 #elif WTF_CPU_MIPS
     static void cacheFlush(void* code, size_t size)

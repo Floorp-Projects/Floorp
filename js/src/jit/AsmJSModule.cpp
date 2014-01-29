@@ -183,10 +183,10 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *
 #if defined(JS_CODEGEN_ARM)
 extern "C" {
 
-extern int
+extern int64_t
 __aeabi_idivmod(int, int);
 
-extern int
+extern int64_t
 __aeabi_uidivmod(int, int);
 
 }
@@ -200,85 +200,94 @@ FuncCast(F *pf)
 }
 
 static void *
+RedirectCall(void *fun, ABIFunctionType type)
+{
+#ifdef JS_ARM_SIMULATOR
+    fun = Simulator::RedirectNativeFunction(fun, type);
+#endif
+    return fun;
+}
+
+static void *
 AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
 {
     switch (kind) {
       case AsmJSImm_Runtime:
         return cx->runtimeAddressForJit();
       case AsmJSImm_StackLimit:
-        return cx->stackLimitAddress(StackForUntrustedScript);
+        return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
-        return FuncCast<void (JSContext*)>(js_ReportOverRecursed);
+        return RedirectCall(FuncCast<void (JSContext*)>(js_ReportOverRecursed), Args_General1);
       case AsmJSImm_HandleExecutionInterrupt:
-        return FuncCast(js_HandleExecutionInterrupt);
+        return RedirectCall(FuncCast(js_HandleExecutionInterrupt), Args_General1);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
-        return FuncCast(InvokeFromAsmJS_Ignore);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_Ignore), Args_General4);
       case AsmJSImm_InvokeFromAsmJS_ToInt32:
-        return FuncCast(InvokeFromAsmJS_ToInt32);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_ToInt32), Args_General4);
       case AsmJSImm_InvokeFromAsmJS_ToNumber:
-        return FuncCast(InvokeFromAsmJS_ToNumber);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_ToNumber), Args_General4);
       case AsmJSImm_CoerceInPlace_ToInt32:
-        return FuncCast(CoerceInPlace_ToInt32);
+        return RedirectCall(FuncCast(CoerceInPlace_ToInt32), Args_General2);
       case AsmJSImm_CoerceInPlace_ToNumber:
-        return FuncCast(CoerceInPlace_ToNumber);
+        return RedirectCall(FuncCast(CoerceInPlace_ToNumber), Args_General2);
       case AsmJSImm_ToInt32:
-        return FuncCast<int32_t (double)>(js::ToInt32);
+        return RedirectCall(FuncCast<int32_t (double)>(js::ToInt32), Args_Int_Double);
       case AsmJSImm_EnableActivationFromAsmJS:
-        return FuncCast(EnableActivationFromAsmJS);
+        return RedirectCall(FuncCast(EnableActivationFromAsmJS), Args_General1);
       case AsmJSImm_DisableActivationFromAsmJS:
-        return FuncCast(DisableActivationFromAsmJS);
+        return RedirectCall(FuncCast(DisableActivationFromAsmJS), Args_General1);
 #if defined(JS_CODEGEN_ARM)
       case AsmJSImm_aeabi_idivmod:
-        return FuncCast(__aeabi_idivmod);
+        return RedirectCall(FuncCast(__aeabi_idivmod), Args_General2);
       case AsmJSImm_aeabi_uidivmod:
-        return FuncCast(__aeabi_uidivmod);
+        return RedirectCall(FuncCast(__aeabi_uidivmod), Args_General2);
 #endif
       case AsmJSImm_ModD:
-        return FuncCast(NumberMod);
+        return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
       case AsmJSImm_SinD:
-        return FuncCast<double (double)>(sin);
+        return RedirectCall(FuncCast<double (double)>(sin), Args_Double_Double);
       case AsmJSImm_SinF:
-        return FuncCast<float (float)>(sinf);
+        return RedirectCall(FuncCast<float (float)>(sinf), Args_Float32_Float32);
       case AsmJSImm_CosD:
-        return FuncCast<double (double)>(cos);
+        return RedirectCall(FuncCast<double (double)>(cos), Args_Double_Double);
       case AsmJSImm_CosF:
-        return FuncCast<float (float)>(cosf);
+        return RedirectCall(FuncCast<float (float)>(cosf), Args_Float32_Float32);
       case AsmJSImm_TanD:
-        return FuncCast<double (double)>(tan);
+        return RedirectCall(FuncCast<double (double)>(tan), Args_Double_Double);
       case AsmJSImm_TanF:
-        return FuncCast<float (float)>(tanf);
+        return RedirectCall(FuncCast<float (float)>(tanf), Args_Float32_Float32);
       case AsmJSImm_ASinD:
-        return FuncCast<double (double)>(asin);
+        return RedirectCall(FuncCast<double (double)>(asin), Args_Double_Double);
       case AsmJSImm_ASinF:
-        return FuncCast<float (float)>(asinf);
+        return RedirectCall(FuncCast<float (float)>(asinf), Args_Float32_Float32);
       case AsmJSImm_ACosD:
-        return FuncCast<double (double)>(acos);
+        return RedirectCall(FuncCast<double (double)>(acos), Args_Double_Double);
       case AsmJSImm_ACosF:
-        return FuncCast<float (float)>(acosf);
+        return RedirectCall(FuncCast<float (float)>(acosf), Args_Float32_Float32);
       case AsmJSImm_ATanD:
-        return FuncCast<double (double)>(atan);
+        return RedirectCall(FuncCast<double (double)>(atan), Args_Double_Double);
       case AsmJSImm_ATanF:
-        return FuncCast<float (float)>(atanf);
+        return RedirectCall(FuncCast<float (float)>(atanf), Args_Float32_Float32);
       case AsmJSImm_CeilD:
-        return FuncCast<double (double)>(ceil);
+        return RedirectCall(FuncCast<double (double)>(ceil), Args_Double_Double);
       case AsmJSImm_CeilF:
-        return FuncCast<float (float)>(ceilf);
+        return RedirectCall(FuncCast<float (float)>(ceilf), Args_Float32_Float32);
       case AsmJSImm_FloorD:
-        return FuncCast<double (double)>(floor);
+        return RedirectCall(FuncCast<double (double)>(floor), Args_Double_Double);
       case AsmJSImm_FloorF:
-        return FuncCast<float (float)>(floorf);
+        return RedirectCall(FuncCast<float (float)>(floorf), Args_Float32_Float32);
       case AsmJSImm_ExpD:
-        return FuncCast<double (double)>(exp);
+        return RedirectCall(FuncCast<double (double)>(exp), Args_Double_Double);
       case AsmJSImm_ExpF:
-        return FuncCast<float (float)>(expf);
+        return RedirectCall(FuncCast<float (float)>(expf), Args_Float32_Float32);
       case AsmJSImm_LogD:
-        return FuncCast<double (double)>(log);
+        return RedirectCall(FuncCast<double (double)>(log), Args_Double_Double);
       case AsmJSImm_LogF:
-        return FuncCast<float (float)>(logf);
+        return RedirectCall(FuncCast<float (float)>(logf), Args_Float32_Float32);
       case AsmJSImm_PowD:
-        return FuncCast(ecmaPow);
+        return RedirectCall(FuncCast(ecmaPow), Args_Double_DoubleDouble);
       case AsmJSImm_ATan2D:
-        return FuncCast(ecmaAtan2);
+        return RedirectCall(FuncCast(ecmaAtan2), Args_Double_DoubleDouble);
       case AsmJSImm_Invalid:
         break;
     }
