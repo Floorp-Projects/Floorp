@@ -8,7 +8,7 @@
 #include <cutils/properties.h>
 #include "prinit.h"
 #include "js/CharacterEncoding.h"
-#include "NetUtils.h"
+#include "mozilla/dom/network/NetUtils.h"
 
 using namespace mozilla::dom;
 

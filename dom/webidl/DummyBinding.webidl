@@ -31,6 +31,8 @@ interface DummyInterface : EventTarget {
   void AppNotificationServiceOptions(optional AppNotificationServiceOptions arg);
   void AppInfo(optional AppInfo arg1);
   void DOMFileMetadataParameters(optional DOMFileMetadataParameters arg);
+  void NetworkOptions(optional NetworkCommandOptions arg1,
+                      optional NetworkResultOptions arg2);
 };
 
 interface DummyInterfaceWorkers {
