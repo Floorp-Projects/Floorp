@@ -1362,15 +1362,15 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final Tabs tabs = Tabs.getInstance();
-        final int tabId = tabs.getTabIdForUrl(url, tabs.getSelectedTab().isPrivate());
-        if (tabId < 0) {
+        final Tab tab = tabs.getFirstTabForUrl(url, tabs.getSelectedTab().isPrivate());
+        if (tab == null) {
             return false;
         }
 
         // Set the target tab to null so it does not get selected (on editing
         // mode exit) in lieu of the tab we are about to select.
         mTargetTabForEditingMode = null;
-        Tabs.getInstance().selectTab(tabId);
+        tabs.selectTab(tab.getId());
 
         mBrowserToolbar.cancelEdit();
 

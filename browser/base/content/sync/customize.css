@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  font-size: 80%;
+}
+
+#sync-customize-pane {
+  -moz-padding-start: 74px;
+  background: top left url(chrome://browser/skin/sync-128.png) no-repeat;
+  background-size: 64px;
+}
+
+#sync-customize-title {
+  -moz-margin-start: 0;
+  padding-bottom: 0.5em;
+  font-weight: bold;
+}
+
+#sync-customize-subtitle {
+  font-size: 90%;
+}
+
+checkbox {
+  margin: 0;
+  padding: 0.5em 0 0;
+}

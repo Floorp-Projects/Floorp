@@ -45,3 +45,23 @@
 <!-- Footer stuff -->
 <!ENTITY prefs.tosLink.label        "Terms of Service">
 <!ENTITY prefs.ppLink.label         "Privacy Policy">
+
+<!-- Firefox Accounts stuff -->
+<!ENTITY fxaPrivacyNotice.link.label "Privacy Notice">
+<!ENTITY determiningStatus.label    "Determining your Firefox Account status…">
+<!ENTITY signedInUnverified.beforename.label "">
+<!ENTITY signedInUnverified.aftername.label "is not verified.">
+
+<!ENTITY signedInLoginFailure.beforename.label "Please sign in to reconnect">
+<!ENTITY signedInLoginFailure.aftername.label "">
+
+<!ENTITY notSignedIn.label           "You are not signed in.">
+<!ENTITY signIn.label                "Sign in">
+<!ENTITY manage.label                "Manage">
+<!ENTITY unlink.label                "Unlink This Browser…">
+<!ENTITY verify.label                "Verify Email">
+<!ENTITY forget.label                "Forget this Email">
+
+<!ENTITY welcome.description "Access your tabs, bookmarks, passwords and more wherever you use &brandShortName;.">
+<!ENTITY welcome.startButton.label "Sign in or Create an Account">
+<!ENTITY welcome.useOldSync.label "Using an older version of Sync?">

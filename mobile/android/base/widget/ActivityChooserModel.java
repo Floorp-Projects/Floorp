@@ -31,11 +31,6 @@ import android.util.Log;
 import android.util.Xml;
 
 /**
- * Mozilla: Extra imports.
- */
-import android.content.pm.ApplicationInfo;
-
-/**
  * Mozilla: Unused import.
  */
 //import com.android.internal.content.PackageMonitor;
@@ -261,11 +256,6 @@ public class ActivityChooserModel extends DataSetObservable {
      * Mozilla: Not needed for the application.
      */
     //private final PackageMonitor mPackageMonitor = new DataModelPackageMonitor();
-
-    /**
-     * Mozilla: Count to monitor added and removed packages.
-     */
-    private int mApplicationsCount;
 
     /**
      * Context for accessing resources.
@@ -742,15 +732,6 @@ public class ActivityChooserModel extends DataSetObservable {
      * @return Whether loading was performed.
      */
     private boolean loadActivitiesIfNeeded() {
-        /**
-         * Mozilla: Hack to find change in the installed/uninstalled applications.
-         */
-        List<ApplicationInfo> applications = mContext.getPackageManager().getInstalledApplications(0);
-        if (applications != null && applications.size() != mApplicationsCount) {
-            mApplicationsCount = applications.size();
-            mReloadActivities = true;
-        }
-
         if (mReloadActivities && mIntent != null) {
             mReloadActivities = false;
             mActivities.clear();
