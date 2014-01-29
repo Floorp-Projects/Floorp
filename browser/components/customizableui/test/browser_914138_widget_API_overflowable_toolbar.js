@@ -9,6 +9,7 @@ let overflowList = document.getElementById(navbar.getAttribute("overflowtarget")
 
 const kTestBtn1 = "test-addWidgetToArea-overflow";
 const kTestBtn2 = "test-removeWidgetFromArea-overflow";
+const kTestBtn3 = "test-createWidget-overflow";
 const kHomeBtn = "home-button";
 const kDownloadsBtn = "downloads-button";
 const kSearchBox = "search-container";
@@ -27,49 +28,34 @@ add_task(function() {
   yield waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
-  ok(overflowList.querySelector("#" + kHomeBtn), "Home button should be overflowing");
+  let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
+  ok(homeBtnNode, "Home button should be overflowing");
+  ok(homeBtnNode && homeBtnNode.classList.contains("overflowedItem"), "Home button should have overflowedItem class");
 
   let placementOfHomeButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kHomeBtn);
   CustomizableUI.addWidgetToArea(kTestBtn1, navbar.id, placementOfHomeButton);
   ok(!navbar.querySelector("#" + kTestBtn1), "New button should not be in the navbar");
-  ok(overflowList.querySelector("#" + kTestBtn1), "New button should be overflowing");
-  let nextEl = document.getElementById(kTestBtn1).nextSibling;
+  let newButtonNode = overflowList.querySelector("#" + kTestBtn1);
+  ok(newButtonNode, "New button should be overflowing");
+  ok(newButtonNode && newButtonNode.classList.contains("overflowedItem"), "New button should have overflowedItem class");
+  let nextEl = newButtonNode && newButtonNode.nextSibling;
   is(nextEl && nextEl.id, kHomeBtn, "Test button should be next to home button.");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
   yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
   ok(navbar.querySelector("#" + kHomeBtn), "Home button should be in the navbar");
+  ok(homeBtnNode && !homeBtnNode.classList.contains("overflowedItem"), "Home button should no longer have overflowedItem class");
   ok(!overflowList.querySelector("#" + kHomeBtn), "Home button should no longer be overflowing");
   ok(navbar.querySelector("#" + kTestBtn1), "Test button should be in the navbar");
   ok(!overflowList.querySelector("#" + kTestBtn1), "Test button should no longer be overflowing");
+  ok(newButtonNode && !newButtonNode.classList.contains("overflowedItem"), "New button should no longer have overflowedItem class");
   let el = document.getElementById(kTestBtn1);
   if (el) {
     CustomizableUI.removeWidgetFromArea(kTestBtn1);
     el.remove();
   }
   window.resizeTo(originalWindowWidth, window.outerHeight);
-});
-
-// Removing a widget from the toolbar should try to move items back.
-add_task(function() {
-  // This is pretty weird. We're going to try to move only the home button into the overlay:
-  let downloadsBtn = document.getElementById(kDownloadsBtn);
-  // Guarantee overflow of too much stuff:
-  window.resizeTo(700, window.outerHeight);
-  let inc = 15;
-  while (window.outerWidth < originalWindowWidth &&
-         downloadsBtn.parentNode != navbar.customizationTarget) {
-    window.resizeTo(window.outerWidth + inc, window.outerHeight);
-    yield waitFor(500);
-  }
-  ok(overflowList.querySelector("#home-button"), "Home button should be overflowing");
-  CustomizableUI.removeWidgetFromArea("downloads-button");
-  is(document.getElementById("home-button").parentNode, navbar.customizationTarget, "Home button should move back.");
-  ok(!navbar.hasAttribute("overflowing"), "Navbar is no longer overflowing");
-  window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(function() !navbar.hasAttribute("overflowing"));
-  CustomizableUI.reset();
 });
 
 // Removing a widget should remove it from the overflow list if that is where it is, and update it accordingly.
@@ -103,43 +89,43 @@ add_task(function() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
 });
 
-// Overflow everything that can, then reorganize that list
+// Constructing a widget while overflown should set the right class on it.
 add_task(function() {
+  originalWindowWidth = window.outerWidth;
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
-  window.resizeTo(360, window.outerHeight);
-  yield waitForCondition(() => navbar.getAttribute("overflowing") == "true");
-  ok(!navbar.querySelector("#" + kSearchBox), "Search container should be overflowing");
-  let placements = CustomizableUI.getWidgetIdsInArea(navbar.id);
-  let searchboxPlacement = placements.indexOf(kSearchBox);
-  CustomizableUI.moveWidgetWithinArea(kHomeBtn, searchboxPlacement);
-  yield waitForCondition(() => navbar.querySelector("#" + kHomeBtn));
-  ok(navbar.querySelector("#" + kHomeBtn), "Home button should have moved back");
-  let inc = 15;
-  window.resizeTo(640, window.outerHeight);
-  while (window.outerWidth < originalWindowWidth &&
-         !navbar.querySelector("#" + kSearchBox)) {
-    window.resizeTo(window.outerWidth + inc, window.outerHeight);
-    yield waitFor(500);
-  }
-  ok(!navbar.querySelector("#" + kStarBtn), "Star button should still be overflowed");
-  CustomizableUI.moveWidgetWithinArea(kStarBtn);
-  let starButtonOverflowed = overflowList.querySelector("#" + kStarBtn);
-  ok(starButtonOverflowed && !starButtonOverflowed.nextSibling, "Star button should be last item");
-  window.resizeTo(window.outerWidth + 15, window.outerHeight);
-  yield waitForCondition(() => navbar.querySelector("#" + kDownloadsBtn) && navbar.hasAttribute("overflowing"));
-  ok(navbar.hasAttribute("overflowing"), "navbar should still be overflowing");
-  CustomizableUI.moveWidgetWithinArea(kHomeBtn);
-  let homeButtonOverflowed = overflowList.querySelector("#" + kHomeBtn);
-  ok(homeButtonOverflowed, "Home button should be in overflow list");
-  ok(navbar.hasAttribute("overflowing"), "navbar should still be overflowing");
-  ok(homeButtonOverflowed && !homeButtonOverflowed.nextSibling, "Home button should be last item");
+  window.resizeTo(400, window.outerHeight);
+  yield waitForCondition(() => navbar.hasAttribute("overflowing"));
+  ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
+  ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
+  let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
+  ok(homeBtnNode, "Home button should be overflowing");
+  ok(homeBtnNode && homeBtnNode.classList.contains("overflowedItem"), "Home button should have overflowedItem class");
+
+  let testBtnSpec = {id: kTestBtn3, label: "Overflowable widget test", defaultArea: "nav-bar"};
+  CustomizableUI.createWidget(testBtnSpec);
+  let testNode = overflowList.querySelector("#" + kTestBtn3);
+  ok(testNode, "Test button should be overflowing");
+  ok(testNode && testNode.classList.contains("overflowedItem"), "Test button should have overflowedItem class");
+
+  CustomizableUI.destroyWidget(kTestBtn3);
+  testNode = document.getElementById(kTestBtn3);
+  ok(!testNode, "Test button should be gone");
+
+  CustomizableUI.createWidget(testBtnSpec);
+  testNode = overflowList.querySelector("#" + kTestBtn3);
+  ok(testNode, "Test button should be overflowing");
+  ok(testNode && testNode.classList.contains("overflowedItem"), "Test button should have overflowedItem class");
+
+  CustomizableUI.removeWidgetFromArea(kTestBtn3);
+  testNode = document.getElementById(kTestBtn3);
+  ok(!testNode, "Test button should be gone");
+  CustomizableUI.destroyWidget(kTestBtn3);
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
-  ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
 });
 
 add_task(function asyncCleanup() {
+  window.resizeTo(originalWindowWidth, window.outerHeight);
   yield resetCustomization();
 });

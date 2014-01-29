@@ -5,7 +5,7 @@
 browser.jar:
   content/browser/customizableui/aboutCustomizing.xhtml
   content/browser/customizableui/panelUI.css
-  content/browser/customizableui/panelUI.js
+* content/browser/customizableui/panelUI.js
   content/browser/customizableui/panelUI.xml
   content/browser/customizableui/toolbar.xml
 
