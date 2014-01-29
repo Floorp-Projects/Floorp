@@ -26,6 +26,12 @@
     TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZED_ARRAY_LENGTH))
 #define DESCR_TYPE(obj)   \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
+#define DESCR_STRUCT_FIELD_NAMES(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_NAMES)
+#define DESCR_STRUCT_FIELD_TYPES(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_TYPES)
+#define DESCR_STRUCT_FIELD_OFFSETS(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
 
 // Typed object slots
 
@@ -98,15 +104,15 @@ function DescrToSource(descr) {
 
   case JS_TYPEREPR_STRUCT_KIND:
     var result = "new StructType({";
-    for (var i = 0; i < descr.fieldNames.length; i++) {
+    var fieldNames = DESCR_STRUCT_FIELD_NAMES(descr);
+    var fieldTypes = DESCR_STRUCT_FIELD_TYPES(descr);
+    for (var i = 0; i < fieldNames.length; i++) {
       if (i != 0)
         result += ", ";
 
-      var fieldName = descr.fieldNames[i];
-      var fieldDescr = descr.fieldTypes[fieldName];
-      result += fieldName;
+      result += fieldNames[i];
       result += ": ";
-      result += DescrToSource(fieldDescr);
+      result += DescrToSource(fieldTypes[i]);
     }
     result += "})";
     return result;
@@ -267,21 +273,27 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   return this;
 };
 
+TypedObjectPointer.prototype.moveToField = function(propName) {
+  var fieldNames = DESCR_STRUCT_FIELD_NAMES(this.descr);
+  var index = fieldNames.indexOf(propName);
+  if (index != -1)
+    return this.moveToFieldIndex(index);
+
+  ThrowError(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, propName);
+  return undefined;
+}
+
 // Adjust `this` to point at the field `propName`.  `this` must be a
 // struct type and `propName` must be a valid field name. Returns
 // `this`.
-TypedObjectPointer.prototype.moveToField = function(propName) {
+TypedObjectPointer.prototype.moveToFieldIndex = function(index) {
   assert(this.kind() == JS_TYPEREPR_STRUCT_KIND,
-         "moveToField invoked on non-struct");
-  assert(HAS_PROPERTY(this.descr.fieldTypes, propName),
-         "moveToField invoked with undefined field");
+         "moveToFieldIndex invoked on non-struct");
+  assert(index >= 0 && index < DESCR_STRUCT_FIELD_NAMES(this.descr).length,
+         "moveToFieldIndex invoked with invalid field index " + index);
 
-  // FIXME(Bug 966575) -- the fieldOffsets array that we are using
-  // below is only available on transparent types. This is fixed
-  // in part 6 of this patch series.
-
-  var fieldDescr = this.descr.fieldTypes[propName];
-  var fieldOffset = TO_INT32(this.descr.fieldOffsets[propName]);
+  var fieldDescr = DESCR_STRUCT_FIELD_TYPES(this.descr)[index];
+  var fieldOffset = TO_INT32(DESCR_STRUCT_FIELD_OFFSETS(this.descr)[index]);
 
   assert(IsObject(fieldDescr) && ObjectIsTypeDescr(fieldDescr),
          "bad field descr");
@@ -462,10 +474,10 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
     // Adapt each field.
     var tempPtr = this.copy();
-    var fieldNames = this.descr.fieldNames;
+    var fieldNames = DESCR_STRUCT_FIELD_NAMES(this.descr);
     for (var i = 0; i < fieldNames.length; i++) {
       var fieldName = fieldNames[i];
-      tempPtr.reset(this).moveToField(fieldName).set(fromValue[fieldName]);
+      tempPtr.reset(this).moveToFieldIndex(i).set(fromValue[fieldName]);
     }
     return;
   }

@@ -24,10 +24,11 @@ function runTests() {
     assertEq(S.variable, false);
     assertEq(S.byteLength, 16);
     assertEq(S.byteAlignment, 8);
-    assertEq(S.fieldNames[0], "x");
-    assertEq(S.fieldNames[1], "y");
-    assertEq(S.fieldNames[2], "z");
-    assertEq(S.fieldNames.length, 3);
+    var fieldNames = Object.getOwnPropertyNames(S.fieldTypes);
+    assertEq(fieldNames[0], "x");
+    assertEq(fieldNames[1], "y");
+    assertEq(fieldNames[2], "z");
+    assertEq(fieldNames.length, 3);
     assertEq(S.fieldTypes.x, int32);
     assertEq(S.fieldTypes.y, uint8);
     assertEq(S.fieldTypes.z, float64);

@@ -17,14 +17,10 @@ function assertTypedEqual(type, a_orig, b_orig) {
       for (var i = 0; i < type.length; i++)
         recur(type.elementType, a[i], b[i]);
       } else if (type instanceof StructType) {
-        for (var idx in type.fieldNames) {
-          var fieldName = type.fieldNames[idx];
-          if (type.fieldTypes[fieldName] !== undefined) {
-            recur(type.fieldTypes[fieldName], a[fieldName], b[fieldName]);
-          } else {
-            throw new Error("assertTypedEqual no type for "+
-                            "fieldName: "+fieldName+" in type: "+type.toSource());
-          }
+        var fieldNames = Object.getOwnPropertyNames(type.fieldTypes);
+        for (var i = 0; i < fieldNames.length; i++) {
+          var fieldName = fieldNames[i];
+          recur(type.fieldTypes[fieldName], a[fieldName], b[fieldName]);
         }
       } else {
         assertEq(a, b);
