@@ -65,7 +65,6 @@
     macro(escape, escape, "escape") \
     macro(eval, eval, "eval") \
     macro(false, false_, "false") \
-    macro(fieldNames, fieldNames, "fieldNames") \
     macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
     macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
