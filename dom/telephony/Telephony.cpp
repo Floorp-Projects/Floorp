@@ -218,8 +218,7 @@ Telephony::HasDialingCall()
 {
   for (uint32_t i = 0; i < mCalls.Length(); i++) {
     const nsRefPtr<TelephonyCall>& call = mCalls[i];
-    if (call->IsOutgoing() &&
-        call->CallState() > nsITelephonyProvider::CALL_STATE_UNKNOWN &&
+    if (call->CallState() > nsITelephonyProvider::CALL_STATE_UNKNOWN &&
         call->CallState() < nsITelephonyProvider::CALL_STATE_CONNECTED) {
       return true;
     }
