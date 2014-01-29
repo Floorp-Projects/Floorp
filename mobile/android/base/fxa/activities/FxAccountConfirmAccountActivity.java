@@ -31,7 +31,6 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
   protected static final String LOG_TAG = FxAccountConfirmAccountActivity.class.getSimpleName();
 
   protected byte[] sessionToken;
-  protected TextView emailText;
 
   /**
    * Helper to find view or error if it is missing.
@@ -65,10 +64,11 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_confirm_account);
 
-    emailText = (TextView) ensureFindViewById(null, R.id.email, "email text");
     if (getIntent() != null && getIntent().getExtras() != null) {
       Bundle extras = getIntent().getExtras();
-      emailText.setText(extras.getString("email"));
+      TextView verificationLinkTextView = (TextView) ensureFindViewById(null, R.id.verification_link_text, "verification link text");
+      String text = getResources().getString(R.string.fxaccount_confirm_account_verification_link, extras.getString("email"));
+      verificationLinkTextView.setText(text);
       sessionToken = extras.getByteArray("sessionToken");
     }
 
@@ -109,7 +109,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     @Override
     public void handleError(Exception e) {
       Logger.warn(LOG_TAG, "Got exception requesting fresh confirmation link; ignoring.", e);
-      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_verification_link_not_sent, Toast.LENGTH_LONG).show();
+      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_account_verification_link_not_sent, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -119,7 +119,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
 
     @Override
     public void handleSuccess(Void result) {
-      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_verification_link_sent, Toast.LENGTH_SHORT).show();
+      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_account_verification_link_sent, Toast.LENGTH_SHORT).show();
     }
   }
 

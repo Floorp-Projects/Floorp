@@ -26,4 +26,8 @@
   <color name="fxaccount_link_textColor_inactive">#c0c9d0</color>
   <color name="fxaccount_input_borderActive">#6a7b86</color>
   <color name="fxaccount_input_borderInactive">#c0c9d0</color>
+  <color name="fxaccount_password_show_textcolor">#c0c9d0</color>
+  <color name="fxaccount_password_show_backgroundcolor">#ffffff</color>
+  <color name="fxaccount_password_hide_textcolor">#ffffff</color>
+  <color name="fxaccount_password_hide_backgroundcolor">#424f59</color>
 </resources>

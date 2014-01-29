@@ -68,8 +68,12 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
         passwordEdit.setSelection(start, stop);
         if (isShown) {
           showPasswordButton.setText(R.string.fxaccount_password_show);
+          showPasswordButton.setBackground(getResources().getDrawable(R.drawable.fxaccount_password_button_show_background));
+          showPasswordButton.setTextColor(getResources().getColor(R.color.fxaccount_password_show_textcolor));
         } else {
           showPasswordButton.setText(R.string.fxaccount_password_hide);
+          showPasswordButton.setBackground(getResources().getDrawable(R.drawable.fxaccount_password_button_hide_background));
+          showPasswordButton.setTextColor(getResources().getColor(R.color.fxaccount_password_hide_textcolor));
         }
       }
     });
