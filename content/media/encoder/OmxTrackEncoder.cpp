@@ -207,8 +207,6 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
       isCSD = true;
     } else if (outFlags & OMXCodecWrapper::BUFFER_EOS) { // last frame
       mEncodingComplete = true;
-    } else {
-      MOZ_ASSERT(frameData.Length() == OMXCodecWrapper::kAACFrameSize);
     }
 
     nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
@@ -243,19 +241,31 @@ OmxAudioTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     segment.AppendFrom(&mRawSegment);
   }
 
-  if (!mEosSetInEncoder) {
-    if (mEndOfStream) {
+  nsresult rv;
+  if (segment.GetDuration() == 0) {
+    // Notify EOS at least once, even if segment is empty.
+    if (mEndOfStream && !mEosSetInEncoder) {
       mEosSetInEncoder = true;
-    }
-    if (segment.GetDuration() > 0 || mEndOfStream) {
-      // Notify EOS at least once, even when segment is empty.
-      nsresult rv = mEncoder->Encode(segment,
-                                mEndOfStream ? OMXCodecWrapper::BUFFER_EOS : 0);
+      rv = mEncoder->Encode(segment, OMXCodecWrapper::BUFFER_EOS);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+    // Nothing to encode but encoder could still have encoded data for earlier
+    // input.
+    return AppendEncodedFrames(aData);
   }
 
-  return AppendEncodedFrames(aData);
+  // OMX encoder has limited input buffers only so we have to feed input and get
+  // output more than once if there are too many samples pending in segment.
+  while (segment.GetDuration() > 0) {
+    rv = mEncoder->Encode(segment,
+                          mEndOfStream ? OMXCodecWrapper::BUFFER_EOS : 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = AppendEncodedFrames(aData);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 }
