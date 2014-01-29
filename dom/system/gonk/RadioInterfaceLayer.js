@@ -2003,6 +2003,24 @@ RadioInterface.prototype = {
     }
   },
 
+  updateApnSettings: function(allApnSettings) {
+    let simApnSettings = allApnSettings[this.clientId];
+    if (!simApnSettings) {
+      return;
+    }
+
+    // Clear all existing connections based on APN types.
+    for each (let apnSetting in this.apnSettings.byApn) {
+      for each (let type in apnSetting.types) {
+        if (this.getDataCallStateByType(type) ==
+            RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          this.deactivateDataCallByType(type);
+        }
+      }
+    }
+    this.setupApnSettings(simApnSettings);
+  },
+
   /**
    * This function will do the following steps:
    *   1. Clear the cached APN settings in the RIL.
@@ -2012,21 +2030,13 @@ RadioInterface.prototype = {
    *      corresponding APN setting.
    *   4. Create RilNetworkInterface for each APN setting created at step 2.
    */
-  updateApnSettings: function updateApnSettings(allApnSettings) {
-    let simApnSettings = allApnSettings[this.clientId];
+  setupApnSettings: function(simApnSettings) {
     if (!simApnSettings) {
       return;
     }
 
-    // Clear the cached APN settings in the RIL.
+    // Unregister anything from iface and delete it.
     for each (let apnSetting in this.apnSettings.byApn) {
-      // Clear all existing connections based on APN types.
-      for each (let type in apnSetting.types) {
-        if (this.getDataCallStateByType(type) ==
-            RIL.GECKO_NETWORK_STATE_CONNECTED) {
-          this.deactivateDataCallByType(type);
-        }
-      }
       if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
         gNetworkManager.unregisterNetworkInterface(apnSetting.iface);
       }
