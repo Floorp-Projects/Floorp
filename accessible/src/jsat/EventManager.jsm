@@ -274,9 +274,18 @@ this.EventManager.prototype = {
         let acc = aEvent.accessible;
         let doc = aEvent.accessibleDocument;
         if (acc.role != Roles.DOCUMENT && doc.role != Roles.CHROME_WINDOW) {
+          this.contentScope.content.clearTimeout(this._autoMove);
           let vc = Utils.getVirtualCursor(doc);
           vc.moveNext(TraversalRules.Simple, acc, true);
         }
+        break;
+      }
+      case Events.DOCUMENT_LOAD_COMPLETE:
+      {
+        this._autoMove = this.contentScope.content.setTimeout(() => {
+          Utils.getVirtualCursor(aEvent.accessibleDocument)
+            .moveNext(TraversalRules.Simple, aEvent.accessible, true);
+        }, 500);
         break;
       }
     }
