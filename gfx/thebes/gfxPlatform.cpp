@@ -1515,6 +1515,10 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
     mContentBackend = GetContentBackendPref(mContentBackendBitmask);
     if (!mContentBackend) {
         mContentBackend = aContentDefault;
+        // mContentBackendBitmask is our canonical reference for supported
+        // backends so we need to add the default if we are using it and
+        // overriding the prefs.
+        mContentBackendBitmask |= 1 << aContentDefault;
     }
 }
 
