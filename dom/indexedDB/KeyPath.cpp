@@ -270,8 +270,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
   aKeyPath->SetType(NONEXISTENT);
 
   // See if this is a JS array.
-  if (!JSVAL_IS_PRIMITIVE(aValue) &&
-      JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(aValue))) {
+  if (JS_IsArrayObject(aCx, aValue)) {
 
     JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aValue));
 

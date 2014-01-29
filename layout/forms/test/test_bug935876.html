@@ -1,0 +1,491 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=935876
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 935876</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=935876">Mozilla Bug 935876</a>
+<p id="display"></p>
+<div>
+<select id="listbox" size="3">
+  <option selected>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+</select>
+<select id="multipleListbox" size="3" multiple>
+  <option selected>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+</select>
+<select id="combobox">
+  <option selected>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+</select>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const kIsWin = navigator.platform.indexOf("Win") == 0;
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+const kIsAndroid = navigator.appVersion.indexOf("Android") != 0;
+
+function runTests()
+{
+  var doPreventDefault = false;
+  function onKeydown(aEvent)
+  {
+    if (doPreventDefault) {
+      aEvent.preventDefault();
+    }
+  }
+
+  var keyPressEventFired = false;
+  function onKeypress(aEvent)
+  {
+    keyPressEventFired = true;
+  }
+
+  var keyDownEventConsumedByJS = false;
+  var keyDownEventConsumed = false;
+  function onkeydownInSystemEventGroup(aEvent)
+  {
+    keyDownEventConsumedByJS = aEvent.defaultPrevented;
+    keyDownEventConsumed = aEvent.getPreventDefault();
+  }
+
+  function reset()
+  {
+    keyPressEventFired = false;
+    keyDownEventConsumedByJS = false;
+    keyDownEventConsumed = false;
+  }
+
+  function check(aExpectingKeydownConsumed, aDescription)
+  {
+    if (doPreventDefault) {
+      ok(!keyPressEventFired, "keypress event shouldn't be fired for " + aDescription +
+                              " if preventDefault() of keydown event was called");
+      ok(keyDownEventConsumedByJS, "keydown event of " + aDescription +
+                                   " should be consumed in content level if preventDefault() of keydown event is called");
+      ok(keyDownEventConsumed, "keydown event of " + aDescription +
+                               " should be consumed in system level if preventDefault() of keydown event is called");
+    } else if (aExpectingKeydownConsumed) {
+      ok(!keyPressEventFired, "keypress event shouldn't be fired for " + aDescription);
+      ok(!keyDownEventConsumedByJS, "keydown event of " + aDescription + " shouldn't be consumed in content level");
+      ok(keyDownEventConsumed, "keydown event of " + aDescription + " should be consumed in system level");
+    } else {
+      ok(keyPressEventFired, "keypress event should be fired for " + aDescription);
+      ok(!keyDownEventConsumedByJS, "keydown event of " + aDescription + " shouldn't be consumed in content level");
+      ok(!keyDownEventConsumed, "keydown event of " + aDescription + " should be consumed in system level");
+    }
+  }
+
+  var listbox = document.getElementById("listbox");
+  listbox.addEventListener("keydown", onKeydown, false);
+  listbox.addEventListener("keypress", onKeypress, false);
+  SpecialPowers.addSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
+
+  listbox.focus();
+
+  [ false, true ].forEach(function (consume) {
+    doPreventDefault = consume;
+    for (var i = 0; i < listbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_DOWN", {});
+      check(true, "DownArrow key on listbox #" + i);
+    }
+
+    for (var i = 0; i < listbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_UP", {});
+      check(true, "UpArrow key on listbox #" + i);
+    }
+
+    for (var i = 0; i < listbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_RIGHT", {});
+      check(true, "RightArrow key on listbox #" + i);
+    }
+
+    for (var i = 0; i < listbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_LEFT", {});
+      check(true, "LeftArrow key on listbox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_DOWN", {});
+      check(true, "PageDown key on listbox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_UP", {});
+      check(true, "PageUp key on listbox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_END", {});
+      check(true, "End key on listbox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_HOME", {});
+      check(true, "Home key on listbox #" + i);
+    }
+
+    reset()
+    synthesizeKey("VK_RETURN", {});
+    check(false, "Enter key on listbox");
+
+    reset()
+    synthesizeKey("VK_ESCAPE", {});
+    check(false, "Esc key on listbox");
+
+    reset()
+    synthesizeKey("VK_F4", {});
+    check(false, "F4 key on listbox");
+
+    reset()
+    synthesizeKey("a", {});
+    check(false, "'A' key on listbox");
+  });
+
+  listbox.removeEventListener("keydown", onKeydown, false);
+  listbox.removeEventListener("keypress", onKeypress, false);
+  SpecialPowers.removeSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
+
+
+
+  var multipleListbox = document.getElementById("multipleListbox");
+  multipleListbox.addEventListener("keydown", onKeydown, false);
+  multipleListbox.addEventListener("keypress", onKeypress, false);
+  SpecialPowers.addSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
+
+  multipleListbox.focus();
+
+  [ false, true ].forEach(function (consume) {
+    doPreventDefault = consume;
+    for (var i = 0; i < multipleListbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_DOWN", {});
+      check(true, "DownArrow key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < multipleListbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_UP", {});
+      check(true, "UpArrow key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < multipleListbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_RIGHT", {});
+      check(true, "RightArrow key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < multipleListbox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_LEFT", {});
+      check(true, "LeftArrow key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_DOWN", {});
+      check(true, "PageDown key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_UP", {});
+      check(true, "PageUp key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_END", {});
+      check(true, "End key on multiple listbox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_HOME", {});
+      check(true, "Home key on multiple listbox #" + i);
+    }
+
+    reset()
+    synthesizeKey("VK_RETURN", {});
+    check(true, "Enter key on multiple listbox");
+
+    reset()
+    synthesizeKey("VK_ESCAPE", {});
+    check(false, "Esc key on multiple listbox");
+
+    reset()
+    synthesizeKey("VK_F4", {});
+    check(false, "F4 key on multiple listbox");
+
+    reset()
+    synthesizeKey("a", {});
+    check(false, "'A' key on multiple listbox");
+  });
+
+  multipleListbox.removeEventListener("keydown", onKeydown, false);
+  multipleListbox.removeEventListener("keypress", onKeypress, false);
+  SpecialPowers.removeSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
+
+
+
+  var combobox = document.getElementById("combobox");
+  combobox.addEventListener("keydown", onKeydown, false);
+  combobox.addEventListener("keypress", onKeypress, false);
+  SpecialPowers.addSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
+
+  combobox.focus();
+
+  [ false, true ].forEach(function (consume) {
+    doPreventDefault = consume;
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_DOWN", {});
+      check(true, "DownArrow key on combobox #" + i);
+    }
+
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_UP", {});
+      check(true, "UpArrow key on combobox #" + i);
+    }
+
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_RIGHT", {});
+      check(true, "RightArrow key on combobox #" + i);
+    }
+
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_LEFT", {});
+      check(true, "LeftArrow key on combobox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_DOWN", {});
+      check(true, "PageDown key on combobox #" + i);
+    }
+
+    for (var i = 0; i < 4; i++) {
+      reset()
+      synthesizeKey("VK_PAGE_UP", {});
+      check(true, "PageUp key on combobox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_END", {});
+      check(true, "End key on combobox #" + i);
+    }
+
+    for (var i = 0; i < 2; i++) {
+      reset()
+      synthesizeKey("VK_HOME", {});
+      check(true, "Home key on combobox #" + i);
+    }
+
+    reset()
+    synthesizeKey("VK_RETURN", {});
+    check(true, "Enter key on combobox");
+
+    reset()
+    synthesizeKey("VK_ESCAPE", {});
+    check(true, "Esc key on combobox");
+
+    if (!kIsWin) {
+      reset()
+      synthesizeKey("VK_F4", {});
+      check(false, "F4 key on combobox");
+    }
+
+    reset()
+    synthesizeKey("a", {});
+    check(false, "'A' key on combobox");
+  });
+
+  function finish()
+  {
+    combobox.removeEventListener("keydown", onKeydown, false);
+    combobox.removeEventListener("keypress", onKeypress, false);
+    SpecialPowers.removeSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
+    SimpleTest.finish();
+  }
+
+  // Mac uses native popup for dropdown.  Let's skip the tests for popup
+  // since it's not handled in nsListControlFrame.
+  // Similarly, Android doesn't use popup for dropdown.
+  if (kIsMac || kIsAndroid) {
+    finish();
+    return;
+  }
+
+  function testDropDown(aCallback)
+  {
+    testOpenDropDown(function () {
+      reset()
+      synthesizeKey("VK_DOWN", { altKey: true });
+    }, function () {
+      check(true, "Alt + DownArrow key on combobox at opening dropdown");
+
+      for (var i = 0; i < combobox.options.length + 1; i++) {
+        reset()
+        synthesizeKey("VK_DOWN", {});
+        check(true, "DownArrow key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < combobox.options.length + 1; i++) {
+        reset()
+        synthesizeKey("VK_UP", {});
+        check(true, "UpArrow key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < combobox.options.length + 1; i++) {
+        reset()
+        synthesizeKey("VK_RIGHT", {});
+        check(true, "RightArrow key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < combobox.options.length + 1; i++) {
+        reset()
+        synthesizeKey("VK_LEFT", {});
+        check(true, "LeftArrow key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < 4; i++) {
+        reset()
+        synthesizeKey("VK_PAGE_DOWN", {});
+        check(true, "PageDown key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < 4; i++) {
+        reset()
+        synthesizeKey("VK_PAGE_UP", {});
+        check(true, "PageUp key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < 2; i++) {
+        reset()
+        synthesizeKey("VK_END", {});
+        check(true, "End key on combobox during dropdown open #" + i);
+      }
+
+      for (var i = 0; i < 2; i++) {
+        reset()
+        synthesizeKey("VK_HOME", {});
+        check(true, "Home key on combobox during dropdown open #" + i);
+      }
+
+      testCloseDropDown(function () {
+        reset()
+        synthesizeKey("VK_RETURN", {});
+      }, function () {
+        testOpenDropDown(function () {
+          check(true, "Enter key on combobox at closing dropdown");
+
+          synthesizeKey("VK_UP", { altKey: true });
+        }, function () {
+          check(true, "Alt + UpArrow key on combobox at opening dropdown");
+
+          testCloseDropDown(function () {
+            reset()
+            synthesizeKey("VK_ESCAPE", {});
+          }, function () {
+            check(true, "Esc key on combobox at closing dropdown");
+
+            // F4 key opens/closes dropdown only on Windows. So, other platforms
+            // don't need to do anymore.
+            if (!kIsWin) {
+              aCallback();
+              return;
+            }
+
+            testOpenDropDown(function () {
+              reset()
+              synthesizeKey("VK_F4", {});
+            }, function () {
+              check(true, "F4 key on combobox at opening dropdown on Windows");
+
+              testCloseDropDown(function () {
+                reset()
+                synthesizeKey("VK_F4", {});
+              }, function () {
+                check(true, "F4 key on combobox at closing dropdown on Windows");
+
+                aCallback();
+                return;
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+
+  doPreventDefault = false;
+  testDropDown(function () {
+    // Even if keydown event is consumed by JS, opening/closing dropdown
+    // should work for a11y and security (e.g., cannot close dropdown causes
+    // staying top-most window on the screen).  If it's blocked by JS, this
+    // test would cause permanent timeout.
+    doPreventDefault = true;
+    testDropDown(finish);
+  });
+}
+
+function testOpenDropDown(aTest, aOnOpenDropDown)
+{
+  document.addEventListener("popupshowing", function (aEvent) {
+    document.removeEventListener(aEvent.type, arguments.callee, false);
+    setTimeout(aOnOpenDropDown, 0);
+  }, false);
+  aTest();
+}
+
+function testCloseDropDown(aTest, aOnCloseDropDown)
+{
+  document.addEventListener("popuphiding", function (aEvent) {
+    document.removeEventListener(aEvent.type, arguments.callee, false);
+    setTimeout(aOnCloseDropDown, 0)
+  }, false);
+  aTest();
+}
+
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

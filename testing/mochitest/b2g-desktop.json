@@ -390,6 +390,7 @@
     "layout/forms/test/test_bug571352.html":"shift-click multi-select not working?",
     "layout/forms/test/test_textarea_resize.html":"resizing textarea not available in b2g",
     "layout/forms/test/test_bug903715.html":"select elements don't use an in-page popup in B2G",
+    "layout/forms/test/test_bug935876.html":"Esc key is consumed by another event handler only on desktop B2G",
     "layout/forms/test/test_listcontrol_search.html" : "select elements don't use an in-page popup in B2G",
     "layout/generic/test/test_bug392746.html":"ctrl mouse select not working in b2g",
     "layout/generic/test/test_bug470212.html":"shift mouse select not working in b2g",

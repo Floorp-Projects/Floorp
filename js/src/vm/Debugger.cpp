@@ -342,6 +342,7 @@ BreakpointSite::hasBreakpoint(Breakpoint *bp)
 Breakpoint::Breakpoint(Debugger *debugger, BreakpointSite *site, JSObject *handler)
     : debugger(debugger), site(site), handler(handler)
 {
+    JS_ASSERT(handler->compartment() == debugger->object->compartment());
     JS_APPEND_LINK(&debuggerLinks, &debugger->breakpoints);
     JS_APPEND_LINK(&siteLinks, &site->breakpoints);
 }
@@ -2303,6 +2304,15 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
         debugEnum->removeFront();
     else
         debuggees.remove(global);
+
+    /* Remove all breakpoints for the debuggee. */
+    Breakpoint *nextbp;
+    for (Breakpoint *bp = firstBreakpoint(); bp; bp = nextbp) {
+        nextbp = bp->nextInDebugger();
+        if (bp->site->script->compartment() == global->compartment())
+            bp->destroy(fop);
+    }
+    JS_ASSERT_IF(debuggees.empty(), !firstBreakpoint());
 
     /*
      * The debuggee needs to be removed from the compartment last, as this can
