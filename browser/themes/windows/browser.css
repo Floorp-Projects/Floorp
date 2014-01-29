@@ -725,8 +725,11 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
 
-#sync-button[status="active"] {
-  list-style-image: url("chrome://browser/skin/sync-throbber.png");
+#sync-button[cui-areatype="toolbar"][status="active"] {
+  /* !important because we need to override the glass selectors that trigger
+   * use of the Toolbar-inverted image. Those use a list of all primary toolbar
+   * buttons, so we can't easily fix those selectors. */
+  list-style-image: url("chrome://browser/skin/sync-throbber.png") !important;
   -moz-image-region: rect(0, 18px, 18px, 0);
 }
 
