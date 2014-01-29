@@ -73,7 +73,7 @@ this.CommonUtils = {
     let s = btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
 
     if (!pad) {
-      s = s.replace("=", "");
+      s = s.replace("=", "", "g");
     }
 
     return s;

@@ -199,14 +199,17 @@ add_test(function test_403_no_urls() {
   });
 });
 
-add_test(function test_send_conditions_accepted() {
+add_test(function test_send_extra_headers() {
   _("Ensures that the condition acceptance header is sent when asked.");
 
   let duration = 300;
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
-      do_check_true(request.hasHeader("x-conditions-accepted"));
-      do_check_eq(request.getHeader("x-conditions-accepted"), "1");
+      do_check_true(request.hasHeader("x-foo"));
+      do_check_eq(request.getHeader("x-foo"), "42");
+
+      do_check_true(request.hasHeader("x-bar"));
+      do_check_eq(request.getHeader("x-bar"), "17");
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
@@ -233,7 +236,11 @@ add_test(function test_send_conditions_accepted() {
     server.stop(run_next_test);
   }
 
-  client.getTokenFromBrowserIDAssertion(url, "assertion", onResponse, true);
+  let extra = {
+    "X-Foo": 42,
+    "X-Bar": 17
+  };
+  client.getTokenFromBrowserIDAssertion(url, "assertion", onResponse, extra);
 });
 
 add_test(function test_error_404_empty() {
