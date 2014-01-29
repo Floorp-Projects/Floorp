@@ -19,6 +19,7 @@ XPIDL_SOURCES += [
     'nsINetworkInterfaceListService.idl',
     'nsINetworkManager.idl',
     'nsINetworkService.idl',
+    'nsINetworkWorker.idl',
     'nsISystemWorkerManager.idl',
     'nsIVolume.idl',
     'nsIVolumeMountLock.idl',
@@ -40,6 +41,8 @@ SOURCES += [
     'AutoMounter.cpp',
     'AutoMounterSetting.cpp',
     'GonkGPSGeolocationProvider.cpp',
+    'NetworkUtils.cpp',
+    'NetworkWorker.cpp',
     'nsVolume.cpp',
     'nsVolumeMountLock.cpp',
     'nsVolumeService.cpp',
@@ -68,7 +71,6 @@ EXTRA_PP_COMPONENTS += [
     'NetworkService.js',
 ]
 EXTRA_JS_MODULES += [
-    'net_worker.js',
     'systemlibs.js',
 ]
 
