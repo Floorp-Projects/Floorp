@@ -1607,7 +1607,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     else if (surface) {
         if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
             GdkPixbuf* dragPixbuf =
-              nsImageToPixbuf::SourceSurfaceToPixbuf(surface, dragRect.width, dragrect.height);
+              nsImageToPixbuf::SourceSurfaceToPixbuf(surface, dragRect.width, dragRect.height);
             if (dragPixbuf) {
                 gtk_drag_set_icon_pixbuf(aContext, dragPixbuf, offsetX, offsetY);
                 g_object_unref(dragPixbuf);
