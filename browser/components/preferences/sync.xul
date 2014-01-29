@@ -38,6 +38,8 @@
 
 
       <deck id="weavePrefsDeck">
+
+        <!-- These panels are for the "legacy" sync provider -->
         <vbox id="noAccount" align="center">
           <spacer flex="1"/>
           <description id="syncDesc">
@@ -174,6 +176,137 @@
           <label class="text-link"
                  onclick="gSyncPane.startOver(true); return false;"
                  value="&unlinkDevice.label;"/>
+        </vbox>
+
+        <!-- These panels are for the Firefox Accounts identity provider -->
+        <vbox id="fxaDeterminingStatus" align="center">
+          <spacer flex="1"/>
+          <p>&determiningStatus.label;</p>
+          <spacer flex="1"/>
+        </vbox>
+
+        <vbox id="noFxaAccount">
+          <description>&welcome.description;</description>
+          <label class="text-link"
+                 onclick="gSyncPane.openContentInBrowser('about:accounts?signin=true'); return false;"
+                 value="&welcome.startButton.label;"/>
+          <spacer flex="1"/>
+          <label class="text-link"
+                 onclick="gSyncPane.openOldSyncSupportPage(); return false;"
+                 value="&welcome.useOldSync.label;"/>
+          <spacer flex="10"/>
+        </vbox>
+
+        <vbox id="hasFxaAccount">
+          <groupbox id="fxaGroup">
+            <caption label="&syncBrand.fxa-singular.label;"/>
+
+            <deck id="fxaLoginStatus">
+
+              <!-- logged in and verified and all is good -->
+              <hbox flex="1">
+                <label id="fxaEmailAddress1"/>
+                <label class="text-link"
+                       onclick="gSyncPane.manageFirefoxAccount();"
+                       value="&manage.label;"/>
+                <spacer flex="1"/>
+                <vbox align="end">
+                  <button onclick="gSyncPane.unlinkFirefoxAccount(true);"
+                          label="&unlink.label;" />
+                </vbox>
+              </hbox>
+
+              <!-- logged in to an unverified account -->
+              <hbox flex="1">
+                <description>
+                  &signedInUnverified.beforename.label;
+                  <span id="fxaEmailAddress2"></span>
+                  &signedInUnverified.aftername.label;
+                </description>
+                <spacer flex="1"/>
+                <vbox align="end">
+                  <button onclick="gSyncPane.verifyFirefoxAccount();"
+                          caption="&verify.label;"/>
+                  <label class="text-link"
+                         onclick="/* no warning as account can't have previously synced */ gSyncPane.unlinkFirefoxAccount(false);"
+                         value="&forget.label;"/>
+                </vbox>
+              </hbox>
+
+              <!-- logged in locally but server rejected credentials -->
+              <hbox flex="1">
+                <description>
+                  &signedInLoginFailure.beforename.label;
+                  <span id="fxaEmailAddress3"></span>
+                  &signedInLoginFailure.aftername.label;
+                </description>
+                <spacer flex="1"/>
+                <vbox align="end">
+                  <button onclick="gSyncPane.reSignIn();"
+                         label="&signIn.label;"/>
+                  <label class="text-link"
+                         onclick="gSyncPane.unlinkFirefoxAccount(true);"
+                         value="&forget.label;"/>
+                </vbox>
+              </hbox>
+            </deck>
+          </groupbox>
+
+          <groupbox id="syncOptions">
+            <caption label="&syncBrand.fullName.label;"/>
+            <vbox>
+              <label value="&syncMy.label;" />
+              <richlistbox id="fxaSyncEnginesList"
+                           orient="vertical"
+                           onselect="if (this.selectedCount) this.clearSelection();">
+                <richlistitem>
+                  <checkbox label="&engine.addons.label;"
+                            accesskey="&engine.addons.accesskey;"
+                            preference="engine.addons"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.bookmarks.label;"
+                            accesskey="&engine.bookmarks.accesskey;"
+                            preference="engine.bookmarks"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.passwords.label;"
+                            accesskey="&engine.passwords.accesskey;"
+                            preference="engine.passwords"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.prefs.label;"
+                            accesskey="&engine.prefs.accesskey;"
+                            preference="engine.prefs"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.history.label;"
+                            accesskey="&engine.history.accesskey;"
+                            preference="engine.history"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.tabs.label;"
+                            accesskey="&engine.tabs.accesskey;"
+                            preference="engine.tabs"/>
+                </richlistitem>
+              </richlistbox>
+            </vbox>
+          </groupbox>
+          <vbox>
+            <label value="&syncDeviceName.label;"
+                   accesskey="&syncDeviceName.accesskey;"
+                   control="syncComputerName"/>
+            <textbox id="fxaSyncComputerName"
+                     onchange="gSyncUtils.changeName(this)"/>
+          </vbox>
+          <hbox id="tosPP" pack="center">
+            <label class="text-link"
+                   onclick="event.stopPropagation();gSyncUtils.openToS();"
+                   value="&prefs.tosLink.label;"/>
+            <label class="text-link"
+                   onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
+                   value="&fxaPrivacyNotice.link.label;"/>
+          </hbox>
         </vbox>
       </deck>
   </prefpane>
