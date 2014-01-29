@@ -69,7 +69,9 @@ WeaveService.prototype = {
     // first check if Firefox accounts is available at all.  This is so we can
     // get this landed without forcing Fxa to be used (and require nightly
     // testers to manually set this pref)
-    // Once we decide we want Fxa to be available, we just remove this block.
+    // Once we decide we want Fxa to be available, we just remove this block
+    // (although a fly in this ointment is tests - it might be that we must
+    // just set this as a pref with a default of true)
     let fxAccountsAvailable;
     try {
       fxAccountsAvailable = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
@@ -101,58 +103,12 @@ WeaveService.prototype = {
     return this.fxAccountsEnabled = fxAccountsEnabled;
   },
 
-  maybeInitWithFxAccountsAndEnsureLoaded: function() {
-    Components.utils.import("resource://services-sync/main.js");
-    // FxAccounts imports lots of stuff, so only do this as we need it
-    Cu.import("resource://gre/modules/FxAccounts.jsm");
-
-    // This isn't quite sufficient here to handle all the cases. Cases
-    // we need to handle:
-    //  - User is signed in to FxAccounts, btu hasn't set up sync.
-    return fxAccounts.getSignedInUser().then(
-      (accountData) => {
-        if (accountData) {
-          Cu.import("resource://services-sync/browserid_identity.js");
-          // The Sync Identity module needs to be set in both these places if
-          // it's swapped out as we are doing here. When Weave.Service initializes
-          // it grabs a reference to Weave.Status._authManager, and for references
-          // to Weave.Service.identity to resolve correctly, we also need to reset
-          // Weave.Service.identity as well.
-          Weave.Service.identity = Weave.Status._authManager = new BrowserIDManager(),
-          // Init the identity module with any account data from
-          // firefox accounts. The Identity module will fetch the signed in
-          // user from fxAccounts directly.
-          Weave.Service.identity.initWithLoggedInUser().then(function () {
-            // Set the cluster data that we got from the token
-            Weave.Service.clusterURL = Weave.Service.identity.clusterURL;
-            // checkSetup() will check the auth state of the identity module
-            // and records that status in Weave.Status
-            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-              // This makes sure that Weave.Service is loaded
-              Svc.Obs.notify("weave:service:setup-complete");
-              // TODO: this shouldn't be here. It should be at the end
-              // of the promise chain of the 'fxaccounts:onverified' handler.
-              Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
-              this.ensureLoaded();
-            }
-          }.bind(this));
-        } else if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-          // This makes sure that Weave.Service is loaded
-          this.ensureLoaded();
-        }
-      },
-      (err) => {dump("err in getting logged in account "+err.message)}
-    ).then(null, (err) => {dump("err in processing logged in account "+err.message)});
-  },
-
   observe: function (subject, topic, data) {
     switch (topic) {
     case "app-startup":
       let os = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
       os.addObserver(this, "final-ui-startup", true);
-      os.addObserver(this, "fxaccounts:onverified", true);
-      os.addObserver(this, "fxaccounts:onlogout", true);
       break;
 
     case "final-ui-startup":
@@ -160,52 +116,23 @@ WeaveService.prototype = {
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
         notify: function() {
-          if (this.fxAccountsEnabled) {
-            // init  the fxAccounts identity manager.
-            this.maybeInitWithFxAccountsAndEnsureLoaded();
-          } else {
-            // init the "old" style, sync-specific identity manager.
-            // We only load more if it looks like Sync is configured.
-            let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-            if (!prefs.prefHasUserValue("username")) {
-              return;
-            }
+          // We only load more if it looks like Sync is configured.
+          let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
+          if (!prefs.prefHasUserValue("username")) {
+            return;
+          }
 
-            // We have a username. So, do a more thorough check. This will
-            // import a number of modules and thus increase memory
-            // accordingly. We could potentially copy code performed by
-            // this check into this file if our above code is yielding too
-            // many false positives.
-            Components.utils.import("resource://services-sync/main.js");
-            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-              this.ensureLoaded();
-            }
+          // We have a username. So, do a more thorough check. This will
+          // import a number of modules and thus increase memory
+          // accordingly. We could potentially copy code performed by
+          // this check into this file if our above code is yielding too
+          // many false positives.
+          Components.utils.import("resource://services-sync/main.js");
+          if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+            this.ensureLoaded();
           }
         }.bind(this)
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
-      break;
-
-    case 'fxaccounts:onverified':
-        // Tell sync that if this is a first sync, it should try and sync the
-        // server data with what is on the client - despite the name implying
-        // otherwise, this is what "resetClient" does.
-        // TOOD: This implicitly assumes we're in the CLIENT_NOT_CONFIGURED state, and
-        // if we're not, we should handle it here.
-        Components.utils.import("resource://services-sync/main.js"); // ensure 'Weave' exists
-        Weave.Svc.Prefs.set("firstSync", "resetClient");
-        this.maybeInitWithFxAccountsAndEnsureLoaded().then(() => {
-          // and off we go...
-          // TODO: I have this being done in maybeInitWithFxAccountsAndEnsureLoaded
-          // because I had a bug in the promise chains that was triggering this
-          // too early. This should be fixed.
-          //Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
-        });
-      break;
-    case 'fxaccounts:onlogout':
-      Components.utils.import("resource://services-sync/main.js"); // ensure 'Weave' exists
-      // startOver is throwing some errors and we can't re-log in in this
-      // session - so for now, we don't do this!
-      //Weave.Service.startOver();
       break;
     }
   }

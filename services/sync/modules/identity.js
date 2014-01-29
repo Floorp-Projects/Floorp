@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = ["IdentityManager"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/util.js");
@@ -21,7 +22,8 @@ for (let symbol of ["BulkKeyBundle", "SyncKeyBundle"]) {
 }
 
 /**
- * Manages identity and authentication for Sync.
+ * Manages "legacy" identity and authentication for Sync.
+ * See browserid_identity for the Firefox Accounts based identity manager.
  *
  * The following entities are managed:
  *
@@ -80,6 +82,24 @@ IdentityManager.prototype = {
   _syncKeySet: false,
 
   _syncKeyBundle: null,
+
+  /**
+   * Initialize the identity provider.  Returns a promise that is resolved
+   * when initialization is complete and the provider can be queried for
+   * its state
+   */
+  initialize: function() {
+    // nothing to do for this identity provider
+    return Promise.resolve();
+  },
+
+  /**
+   * Indicates if the identity manager is still initializing
+   */
+  get readyToAuthenticate() {
+    // We initialize in a fully sync manner, so we are always finished.
+    return true;
+  },
 
   get account() {
     return Svc.Prefs.get("account", this.username);
@@ -505,5 +525,10 @@ IdentityManager.prototype = {
   onRESTRequestBasic: function onRESTRequestBasic(request) {
     let up = this.username + ":" + this.basicPassword;
     request.setHeader("authorization", "Basic " + btoa(up));
+  },
+
+  createClusterManager: function(service) {
+    Cu.import("resource://services-sync/stages/cluster.js");
+    return new ClusterManager(service);
   }
 };
