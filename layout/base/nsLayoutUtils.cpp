@@ -1830,15 +1830,6 @@ TransformGfxPointFromAncestor(nsIFrame *aFrame,
 }
 
 static gfxRect
-TransformGfxRectFromAncestor(nsIFrame *aFrame,
-                             const gfxRect &aRect,
-                             const nsIFrame *aAncestor)
-{
-  gfx3DMatrix ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
-  return ctm.Inverse().ProjectRectBounds(aRect);
-}
-
-static gfxRect
 TransformGfxRectToAncestor(nsIFrame *aFrame,
                            const gfxRect &aRect,
                            const nsIFrame *aAncestor,
@@ -1885,33 +1876,6 @@ nsLayoutUtils::TransformAncestorPointToFrame(nsIFrame* aFrame,
 
     return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
                    NSFloatPixelsToAppUnits(float(result.y), factor));
-}
-
-nsRect 
-nsLayoutUtils::TransformAncestorRectToFrame(nsIFrame* aFrame,
-                                            const nsRect &aRect,
-                                            const nsIFrame* aAncestor)
-{
-    SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
-
-    float srcAppUnitsPerDevPixel = aAncestor->PresContext()->AppUnitsPerDevPixel();
-    gfxRect result(NSAppUnitsToFloatPixels(aRect.x, srcAppUnitsPerDevPixel),
-                   NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
-                   NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
-                   NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
-
-    if (text) {
-      result = TransformGfxRectFromAncestor(text, result, aAncestor);
-      result = text->TransformFrameRectToTextChild(result, aFrame);
-    } else {
-      result = TransformGfxRectFromAncestor(aFrame, result, aAncestor);
-    }
-
-    float destAppUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-    return nsRect(NSFloatPixelsToAppUnits(float(result.x), destAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(float(result.y), destAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(float(result.width), destAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
 }
 
 nsRect

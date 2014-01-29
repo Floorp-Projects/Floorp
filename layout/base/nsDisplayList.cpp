@@ -4450,13 +4450,8 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
    * think that it's painting in its original rectangular coordinate space.
    * If we can't untransform, take the entire overflow rect */
   nsRect untransformedVisibleRect;
-  // GetTransform always operates in dev pixels.
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
-      !UntransformRectMatrix(mVisibleRect,
-                             GetTransform(),
-                             factor,
-                             &untransformedVisibleRect))
+      !UntransformVisibleRect(&untransformedVisibleRect))
   {
     untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf();
   }
@@ -4597,8 +4592,6 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
 {
   *aSnap = false;
   nsRect untransformedVisible;
-  // GetTransform always operates in dev pixels.
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   // If we're going to prerender all our content, pretend like we
   // don't have opqaue content so that everything under us is rendered
   // as well.  That will increase graphics memory usage if our frame
@@ -4606,7 +4599,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   // updated extremely cheaply, without invalidating any other
   // content.
   if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
-      !UntransformRectMatrix(mVisibleRect, GetTransform(), factor, &untransformedVisible)) {
+      !UntransformVisibleRect(&untransformedVisible)) {
       return nsRegion();
   }
 
@@ -4630,9 +4623,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
 bool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor)
 {
   nsRect untransformedVisible;
-  // GetTransform always operates in dev pixels.
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  if (!UntransformRectMatrix(mVisibleRect, GetTransform(), factor, &untransformedVisible)) {
+  if (!UntransformVisibleRect(&untransformedVisible)) {
     return false;
   }
   const gfx3DMatrix& matrix = GetTransform();
@@ -4728,41 +4719,25 @@ nsRect nsDisplayTransform::TransformRectOut(const nsRect &aUntransformedBounds,
      factor);
 }
 
-bool nsDisplayTransform::UntransformRectMatrix(const nsRect &aUntransformedBounds,
-                                               const gfx3DMatrix& aMatrix,
-                                               float aAppUnitsPerPixel,
-                                               nsRect *aOutRect)
+bool nsDisplayTransform::UntransformVisibleRect(nsRect *aOutRect)
 {
-  if (aMatrix.IsSingular())
+  const gfx3DMatrix& matrix = GetTransform();
+  if (matrix.IsSingular())
     return false;
 
-  gfxRect result(NSAppUnitsToFloatPixels(aUntransformedBounds.x, aAppUnitsPerPixel),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.y, aAppUnitsPerPixel),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.width, aAppUnitsPerPixel),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.height, aAppUnitsPerPixel));
+  // GetTransform always operates in dev pixels.
+  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxRect result(NSAppUnitsToFloatPixels(mVisibleRect.x, factor),
+                 NSAppUnitsToFloatPixels(mVisibleRect.y, factor),
+                 NSAppUnitsToFloatPixels(mVisibleRect.width, factor),
+                 NSAppUnitsToFloatPixels(mVisibleRect.height, factor));
 
   /* We want to untransform the matrix, so invert the transformation first! */
-  result = aMatrix.Inverse().ProjectRectBounds(result);
+  result = matrix.Inverse().ProjectRectBounds(result);
 
-  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, aAppUnitsPerPixel);
+  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, factor);
 
   return true;
-}
-
-bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
-                                           const nsIFrame* aFrame,
-                                           const nsPoint &aOrigin,
-                                           nsRect* aOutRect)
-{
-  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
-
-  /* Grab the matrix.  If the transform is degenerate, just hand back the
-   * empty rect.
-   */
-  float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
-  gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor);
-
-  return UntransformRectMatrix(aUntransformedBounds, matrix, factor, aOutRect);
 }
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
