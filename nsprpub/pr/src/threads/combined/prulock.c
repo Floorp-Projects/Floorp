@@ -197,15 +197,15 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
     PR_ASSERT(lock != NULL);
 #ifdef _PR_GLOBAL_THREADS_ONLY 
-    PR_ASSERT(lock->owner != me);
     _PR_MD_LOCK(&lock->ilock);
+    PR_ASSERT(lock->owner == 0);
     lock->owner = me;
     return;
 #else  /* _PR_GLOBAL_THREADS_ONLY */
 
 	if (_native_threads_only) {
-		PR_ASSERT(lock->owner != me);
 		_PR_MD_LOCK(&lock->ilock);
+		PR_ASSERT(lock->owner == 0);
 		lock->owner = me;
 		return;
 	}
