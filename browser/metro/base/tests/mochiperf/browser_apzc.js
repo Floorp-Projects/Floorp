@@ -166,8 +166,8 @@ gTests.push({
                           "Displays the low, high, and average FTR frame intervals when flinging a page of text.");
     PerfTest.declareNumericalResults([
       { value: low, desc: "low" },
-      { value: high, desc: "high" },
-      { value: ave, desc: "average" }
+      { value: high, desc: "high", shareAxis: 0 },
+      { value: ave, desc: "average", shareAxis: 0 }
     ]);
   }
 });
@@ -213,8 +213,8 @@ gTests.push({
                           "Displays the low, high, and average FTR frame intervals for about:start.");
     PerfTest.declareNumericalResults([
       { value: results.low, desc: "low" },
-      { value: results.high, desc: "high" },
-      { value: results.ave, desc: "average" }
+      { value: results.high, desc: "high", shareAxis: 0 },
+      { value: results.ave, desc: "average", shareAxis: 0 }
     ]);
   }
 });
