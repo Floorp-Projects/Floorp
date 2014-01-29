@@ -110,6 +110,7 @@ public:
                         StereoMode aStereoMode = STEREO_MODE_MONO);
 
   DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                        gfx::IntSize aSize,
                         CompositorD3D9* aCompositor,
                         IDirect3DTexture9* aTexture,
                         TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
@@ -155,6 +156,11 @@ public:
     mIterating = true;
     mCurrentTile = 0;
   }
+
+  /**
+   * Copy the content of aTexture using the GPU.
+   */
+  bool UpdateFromTexture(IDirect3DTexture9* aTexture, const nsIntRegion* aRegion);
 
   // To use with DIBTextureHostD3D9
 
@@ -335,6 +341,8 @@ public:
   virtual bool Lock() MOZ_OVERRIDE;
 
   virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual void Updated(const nsIntRegion* aRegion) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 

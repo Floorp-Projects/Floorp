@@ -1024,6 +1024,7 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
 }
 
 DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                                             gfx::IntSize aSize,
                                              CompositorD3D9* aCompositor,
                                              IDirect3DTexture9* aTexture,
                                              TextureFlags aFlags)
@@ -1034,6 +1035,7 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
   , mIsTiled(false)
   , mIterating(false)
 {
+  mSize = aSize;
   mTexture = aTexture;
   mStereoMode = STEREO_MODE_MONO;
   MOZ_COUNT_CTOR(DataTextureSourceD3D9);
@@ -1532,11 +1534,78 @@ TextureHostD3D9::TextureHostD3D9(TextureFlags aFlags,
   }
 }
 
-TextureHostD3D9::TextureHostD3D9(TextureFlags aFlags)
-  : TextureHost(aFlags)
-  , mFormat(SurfaceFormat::UNKNOWN)
-  , mIsLocked(false)
-{}
+bool
+DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
+                                         const nsIntRegion* aRegion)
+{
+  MOZ_ASSERT(aTexture);
+
+  D3DSURFACE_DESC desc;
+  HRESULT hr = aTexture->GetLevelDesc(0, &desc);
+  if (!FAILED(hr)) {
+    MOZ_ASSERT(mFormat == D3D9FormatToSurfaceFormat(desc.Format));
+    MOZ_ASSERT(mSize.width == desc.Width);
+    MOZ_ASSERT(mSize.height == desc.Height);
+  }
+
+  DeviceManagerD3D9* dm = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  if (!mTexture) {
+    mTexture = dm->CreateTexture(mSize, SurfaceFormatToD3D9Format(mFormat),
+                                 D3DPOOL_DEFAULT, this);
+    if (!mTexture) {
+      NS_WARNING("Failed to create a texture");
+      return false;
+    }
+  }
+
+  RefPtr<IDirect3DSurface9> srcSurface;
+  RefPtr<IDirect3DSurface9> dstSurface;
+
+  hr = aTexture->GetSurfaceLevel(0, byRef(srcSurface));
+  if (FAILED(hr)) {
+    return false;
+  }
+  hr = mTexture->GetSurfaceLevel(0, byRef(dstSurface));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  if (aRegion) {
+    nsIntRegionRectIterator iter(*aRegion);
+    const nsIntRect *iterRect;
+    while ((iterRect = iter.Next())) {
+      RECT rect;
+      rect.left = iterRect->x;
+      rect.top = iterRect->y;
+      rect.right = iterRect->XMost();
+      rect.bottom = iterRect->YMost();
+
+      POINT point;
+      point.x = iterRect->x;
+      point.y = iterRect->y;
+      dm->device()->UpdateSurface(srcSurface, &rect, dstSurface, &point);
+    }
+  } else {
+    dm->device()->UpdateSurface(srcSurface, nullptr, dstSurface, nullptr);
+  }
+  mIsTiled = false;
+  return true;
+}
+
+void
+TextureHostD3D9::Updated(const nsIntRegion* aRegion)
+{
+  if (!mTexture) {
+    return;
+  }
+
+  if (!mTextureSource) {
+    mTextureSource = new DataTextureSourceD3D9(mFormat, mSize, mCompositor,
+                                               nullptr, mFlags);
+  }
+
+  mTextureSource->UpdateFromTexture(mTexture, aRegion);
+}
 
 IDirect3DDevice9*
 TextureHostD3D9::GetDevice()
@@ -1556,9 +1625,7 @@ TextureHostD3D9::SetCompositor(Compositor* aCompositor)
 NewTextureSource*
 TextureHostD3D9::GetTextureSources()
 {
-  if (!mTextureSource) {
-    mTextureSource = new DataTextureSourceD3D9(mFormat, mCompositor, mTexture, mFlags);
-  }
+  MOZ_ASSERT(mIsLocked);
   return mTextureSource;
 }
 
