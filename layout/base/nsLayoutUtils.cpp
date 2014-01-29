@@ -1820,13 +1820,21 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
   return true;
 }
 
-static gfxPoint
+static bool
 TransformGfxPointFromAncestor(nsIFrame *aFrame,
                               const gfxPoint &aPoint,
-                              nsIFrame *aAncestor)
+                              nsIFrame *aAncestor,
+                              gfxPoint* aOut)
 {
   gfx3DMatrix ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
-  return ctm.Inverse().ProjectPoint(aPoint);
+
+  float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect childBounds = aFrame->GetVisualOverflowRectRelativeToSelf();
+  gfxRect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
+                         NSAppUnitsToFloatPixels(childBounds.y, factor),
+                         NSAppUnitsToFloatPixels(childBounds.width, factor),
+                         NSAppUnitsToFloatPixels(childBounds.height, factor));
+  return ctm.UntransformPoint(aPoint, childGfxBounds, aOut);
 }
 
 static gfxRect
@@ -1868,10 +1876,14 @@ nsLayoutUtils::TransformAncestorPointToFrame(nsIFrame* aFrame,
                     NSAppUnitsToFloatPixels(aPoint.y, factor));
 
     if (text) {
-        result = TransformGfxPointFromAncestor(text, result, aAncestor);
+        if (!TransformGfxPointFromAncestor(text, result, aAncestor, &result)) {
+            return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+        }
         result = text->TransformFramePointToTextChild(result, aFrame);
     } else {
-        result = TransformGfxPointFromAncestor(aFrame, result, nullptr);
+        if (!TransformGfxPointFromAncestor(aFrame, result, nullptr, &result)) {
+            return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+        }
     }
 
     return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
