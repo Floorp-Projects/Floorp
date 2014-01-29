@@ -17,8 +17,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
 
 namespace mozilla {
 namespace dom {
@@ -219,8 +217,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
   , mHasFinished(false)
-  , mExtraCurrentTime(0)
-  , mExtraCurrentTimeUpdatedSinceLastStableState(false)
 {
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance() :
@@ -490,66 +486,6 @@ AudioDestinationNode::CreateAudioChannelAgent()
   mAudioChannelAgent->StartPlaying(&state);
   SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
 }
-
-void
-AudioDestinationNode::NotifyStableState()
-{
-  mExtraCurrentTimeUpdatedSinceLastStableState = false;
-}
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-void
-AudioDestinationNode::ScheduleStableStateNotification()
-{
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
-    appShell->RunInStableState(event);
-  }
-}
-
-double
-AudioDestinationNode::ExtraCurrentTime()
-{
-  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() &&
-      !mExtraCurrentTimeUpdatedSinceLastStableState) {
-    mExtraCurrentTimeUpdatedSinceLastStableState = true;
-    mExtraCurrentTimeSinceLastStartedBlocking =
-      (TimeStamp::Now() - mStartedBlockingDueToBeingOnlyNode).ToSeconds();
-    ScheduleStableStateNotification();
-  }
-  return mExtraCurrentTime + mExtraCurrentTimeSinceLastStartedBlocking;
-}
-
-void
-AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
-{
-  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() == aIsOnlyNode) {
-    return;
-  }
-
-  if (aIsOnlyNode) {
-    if (mStream) {
-      mStream->ChangeExplicitBlockerCount(1);
-    }
-    mStartedBlockingDueToBeingOnlyNode = TimeStamp::Now();
-    mExtraCurrentTimeSinceLastStartedBlocking = 0;
-    // Don't do an update of mExtraCurrentTimeSinceLastStartedBlocking until the next stable state.
-    mExtraCurrentTimeUpdatedSinceLastStableState = true;
-    ScheduleStableStateNotification();
-  } else {
-    // Force update of mExtraCurrentTimeSinceLastStartedBlocking if necessary
-    ExtraCurrentTime();
-    mExtraCurrentTime += mExtraCurrentTimeSinceLastStartedBlocking;
-    if (mStream) {
-      mStream->ChangeExplicitBlockerCount(-1);
-    }
-    mStartedBlockingDueToBeingOnlyNode = TimeStamp();
-  }
-}
-
 }
 
 }
