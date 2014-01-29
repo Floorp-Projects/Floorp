@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
 const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUser";
+const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
 
 function log(msg) {
   //dump("FXA: " + msg + "\n");
@@ -104,7 +105,7 @@ let wrapper = {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
     if (accountData.customizeSync) {
-      Services.prefs.setBoolPref("services.sync.needsCustomization", true);
+      Services.prefs.setBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION, true);
       delete accountData.customizeSync;
     }
 

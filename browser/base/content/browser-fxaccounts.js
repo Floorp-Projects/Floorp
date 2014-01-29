@@ -6,6 +6,8 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
   return Cu.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
+const PREF_SYNC_START_DOORHANGER = "services.sync.ui.showSyncStartDoorhanger";
+
 let gFxAccounts = {
 
   _initialized: false,
@@ -24,21 +26,14 @@ let gFxAccounts = {
     return this.topics = [
       FxAccountsCommon.ONLOGIN_NOTIFICATION,
       FxAccountsCommon.ONVERIFIED_NOTIFICATION,
-      FxAccountsCommon.ONLOGOUT_NOTIFICATION
+      FxAccountsCommon.ONLOGOUT_NOTIFICATION,
+      "weave:service:sync:start"
     ];
   },
 
   get button() {
     delete this.button;
     return this.button = document.getElementById("PanelUI-fxa-status");
-  },
-
-  get syncNeedsCustomization() {
-    try {
-      return Services.prefs.getBoolPref("services.sync.needsCustomization");
-    } catch (e) {
-      return false;
-    }
   },
 
   init: function () {
@@ -74,9 +69,28 @@ let gFxAccounts = {
   },
 
   observe: function (subject, topic) {
-    if (topic != FxAccountsCommon.ONVERIFIED_NOTIFICATION) {
-      this.updateUI();
-    } else if (!this.syncNeedsCustomization) {
+    switch (topic) {
+      case FxAccountsCommon.ONVERIFIED_NOTIFICATION:
+        Services.prefs.setBoolPref(PREF_SYNC_START_DOORHANGER, true);
+        break;
+      case "weave:service:sync:start":
+        this.onSyncStart();
+        break;
+      default:
+        this.updateUI();
+        break;
+    }
+  },
+
+  onSyncStart: function () {
+    let showDoorhanger = false;
+
+    try {
+      showDoorhanger = Services.prefs.getBoolPref(PREF_SYNC_START_DOORHANGER);
+    } catch (e) { /* The pref might not exist. */ }
+
+    if (showDoorhanger) {
+      Services.prefs.clearUserPref(PREF_SYNC_START_DOORHANGER);
       this.showSyncStartedDoorhanger();
     }
   },

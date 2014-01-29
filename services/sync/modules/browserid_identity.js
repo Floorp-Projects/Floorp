@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyGetter(this, 'fxAccountsCommon', function() {
   return ob;
 });
 
+const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
+
 function deriveKeyBundle(kB) {
   let out = CryptoUtils.hkdf(kB, undefined,
                              "identity.mozilla.com/picl/v1/oldsync", 2*32);
@@ -74,7 +76,7 @@ this.BrowserIDManager.prototype = {
 
   get needsCustomization() {
     try {
-      return Services.prefs.getBoolPref("services.sync.needsCustomization");
+      return Services.prefs.getBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION);
     } catch (e) {
       return false;
     }
@@ -113,7 +115,7 @@ this.BrowserIDManager.prototype = {
         win.openDialog(url, "_blank", features, data);
 
         if (data.accepted) {
-          Services.prefs.clearUserPref("services.sync.needsCustomization");
+          Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
         } else {
           // Log out if the user canceled the dialog.
           return fxAccounts.signOut();
