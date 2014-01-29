@@ -127,7 +127,7 @@ PuppetWidget::InitIMEState()
   MOZ_ASSERT(mTabChild);
   if (mNeedIMEStateInit) {
     uint32_t chromeSeqno;
-    mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
+    mTabChild->SendNotifyIMEFocus(false, &mIMEPreferenceOfParent, &chromeSeqno);
     mIMELastBlurSeqno = mIMELastReceivedSeqno = chromeSeqno;
     mNeedIMEStateInit = false;
   }
@@ -464,15 +464,14 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
   }
 
   uint32_t chromeSeqno;
-  mIMEPreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
-  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference, &chromeSeqno))
+  mIMEPreferenceOfParent.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
+  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreferenceOfParent,
+                                     &chromeSeqno)) {
     return NS_ERROR_FAILURE;
+  }
 
   if (aFocus) {
-    if (mIMEPreference.mWantUpdates &
-          nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
-      NotifyIMEOfSelectionChange(); // Update selection
-    }
+    NotifyIMEOfSelectionChange(); // Update selection
   } else {
     mIMELastBlurSeqno = chromeSeqno;
   }
@@ -515,7 +514,15 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
 nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
-  return mIMEPreference;
+#ifdef MOZ_CROSS_PROESS_IME
+  // e10s requires IME information cache into TabParent
+  return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
+                               nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
+                               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE);
+#else
+  // B2G doesn't handle IME as widget-level.
+  return nsIMEUpdatePreference();
+#endif
 }
 
 NS_IMETHODIMP
@@ -539,7 +546,10 @@ PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
   if (queryEvent.mSucceeded) {
     mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
   }
-  if (mIMEPreference.mWantUpdates & nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE) {
+
+  // TabParent doesn't this this to cache.  we don't send the notification
+  // if parent process doesn't request NOTIFY_TEXT_CHANGE.
+  if (mIMEPreferenceOfParent.WantTextChange()) {
     mTabChild->SendNotifyIMETextChange(aStart, aEnd, aNewEnd);
   }
   return NS_OK;
@@ -555,18 +565,15 @@ PuppetWidget::NotifyIMEOfSelectionChange()
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  if (mIMEPreference.mWantUpdates &
-        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
-    nsEventStatus status;
-    WidgetQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
-    InitEvent(queryEvent, nullptr);
-    DispatchEvent(&queryEvent, status);
+  nsEventStatus status;
+  WidgetQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
+  InitEvent(queryEvent, nullptr);
+  DispatchEvent(&queryEvent, status);
 
-    if (queryEvent.mSucceeded) {
-      mTabChild->SendNotifyIMESelection(mIMELastReceivedSeqno,
-                                        queryEvent.GetSelectionStart(),
-                                        queryEvent.GetSelectionEnd());
-    }
+  if (queryEvent.mSucceeded) {
+    mTabChild->SendNotifyIMESelection(mIMELastReceivedSeqno,
+                                      queryEvent.GetSelectionStart(),
+                                      queryEvent.GetSelectionEnd());
   }
   return NS_OK;
 }
