@@ -13,7 +13,6 @@
 #include "nsIDOMDataTransfer.h"
 #include "nsCOMPtr.h"
 #include "nsPoint.h"
-#include "mozilla/RefPtr.h"
 
 #include "gfxImageSurface.h"
 
@@ -27,12 +26,6 @@ class nsPresContext;
 class nsIImageLoadingContent;
 class nsICanvasElementExternal;
 
-namespace mozilla {
-namespace gfx {
-class SourceSurface;
-}
-}
-
 /**
  * XP DragService wrapper base class
  */
@@ -42,8 +35,6 @@ class nsBaseDragService : public nsIDragService,
 {
 
 public:
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-
   nsBaseDragService();
   virtual ~nsBaseDragService();
 
@@ -86,7 +77,7 @@ protected:
                     nsIScriptableRegion* aRegion,
                     int32_t aScreenX, int32_t aScreenY,
                     nsIntRect* aScreenDragRect,
-                    mozilla::RefPtr<SourceSurface>* aSurface,
+                    gfxASurface** aSurface,
                     nsPresContext **aPresContext);
 
   /**
@@ -98,7 +89,7 @@ protected:
                             nsICanvasElementExternal* aCanvas,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            mozilla::RefPtr<SourceSurface>* aSurface);
+                            gfxASurface** aSurface);
 
   /**
    * Convert aScreenX and aScreenY from CSS pixels into unscaled device pixels.
