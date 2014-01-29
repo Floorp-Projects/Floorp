@@ -143,7 +143,7 @@ let wrapper = {
 // Button onclick handlers
 function handleOldSync() {
   // we just want to navigate the current tab to the new location...
-  window.location = "https://services.mozilla.com/legacysync";
+  window.location = Services.urlFormatter.formatURLPref("app.support.baseURL") + "old-sync";
 }
 
 function getStarted() {
