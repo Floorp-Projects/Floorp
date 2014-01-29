@@ -1019,7 +1019,6 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     aPreference->mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
-    aPreference->mWantHints = false;
     return true;
   }
 
