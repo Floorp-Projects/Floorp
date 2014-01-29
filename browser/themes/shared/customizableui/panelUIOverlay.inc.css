@@ -251,13 +251,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: 0 -1px 0 rgba(0,0,0,.15);
 }
 
-#PanelUI-footer > toolbarseparator {
+#PanelUI-footer-inner > toolbarseparator {
   border: 0;
   border-left: 1px solid rgba(0,0,0,0.1);
   margin: 7px 0 7px;
 }
 
-#PanelUI-footer:hover > toolbarseparator {
+#PanelUI-footer-inner:hover > toolbarseparator {
   margin: 0;
 }
 
@@ -279,8 +279,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-fxa-status {
-  width: calc(@menuPanelWidth@ + 20px);
   border-bottom-style: solid;
+}
+
+#PanelUI-fxa-status > .toolbarbutton-text {
+  width: 0; /* Fancy cropping solution for flexbox. */
 }
 
 #PanelUI-fxa-status[signedin] {
@@ -294,6 +297,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-fxa-status > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
+  margin: 0;
+  padding: 0 6px;
   text-align: start;
 }
 
@@ -302,6 +307,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
+#PanelUI-fxa-status > .toolbarbutton-icon,
+#PanelUI-customize > .toolbarbutton-icon,
 #PanelUI-help > .toolbarbutton-icon,
 #PanelUI-quit > .toolbarbutton-icon {
   -moz-margin-end: 0;
