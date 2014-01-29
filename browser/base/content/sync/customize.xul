@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/sync/customize.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % syncCustomizeDTD SYSTEM "chrome://browser/locale/syncCustomize.dtd">
+%syncCustomizeDTD;
+]>
+<dialog id="sync-customize"
+        windowtype="Sync:Customize"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="&syncCustomize.dialog.title;"
+        buttonlabelaccept="&syncCustomize.acceptButton.label;"
+        buttons="accept">
+
+  <prefpane id="sync-customize-pane">
+    <preferences>
+      <preference id="engine.bookmarks" name="services.sync.engine.bookmarks" type="bool"/>
+      <preference id="engine.history"   name="services.sync.engine.history"   type="bool"/>
+      <preference id="engine.tabs"      name="services.sync.engine.tabs"      type="bool"/>
+      <preference id="engine.passwords" name="services.sync.engine.passwords" type="bool"/>
+      <preference id="engine.addons"    name="services.sync.engine.addons"    type="bool"/>
+      <preference id="engine.prefs"     name="services.sync.engine.prefs"     type="bool"/>
+    </preferences>
+
+    <label id="sync-customize-title" value="&syncCustomize.title;"/>
+    <description id="sync-customize-subtitle"
+#ifdef XP_UNIX
+                 value="&syncCustomize.subTitleUnix;"
+#else
+                 value="&syncCustomize.subTitle;"
+#endif
+                 />
+
+    <checkbox label="&engine.bookmarks.label;"
+              accesskey="&engine.bookmarks.accesskey;"
+              preference="engine.bookmarks"/>
+    <checkbox label="&engine.history.label;"
+              accesskey="&engine.history.accesskey;"
+              preference="engine.history"/>
+    <checkbox label="&engine.tabs.label;"
+              accesskey="&engine.tabs.accesskey;"
+              preference="engine.tabs"/>
+    <checkbox label="&engine.passwords.label;"
+              accesskey="&engine.passwords.accesskey;"
+              preference="engine.passwords"/>
+    <checkbox label="&engine.addons.label;"
+              accesskey="&engine.addons.accesskey;"
+              preference="engine.addons"/>
+    <checkbox label="&engine.prefs.label;"
+              accesskey="&engine.prefs.accesskey;"
+              preference="engine.prefs"/>
+  </prefpane>
+
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/customize.js" />
+
+</dialog>

@@ -21,6 +21,16 @@ let wrapper = {
   iframe: null,
 
   init: function () {
+    let weave = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Ci.nsISupports)
+                  .wrappedJSObject;
+
+    // Don't show about:accounts with FxA disabled.
+    if (!weave.fxAccountsEnabled) {
+      document.body.remove();
+      return;
+    }
+
     let iframe = document.getElementById("remote");
     this.iframe = iframe;
     iframe.addEventListener("load", this);
@@ -52,6 +62,11 @@ let wrapper = {
    */
   onLogin: function (accountData) {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
+
+    if (accountData.customizeSync) {
+      Services.prefs.setBoolPref("services.sync.needsCustomization", true);
+      delete accountData.customizeSync;
+    }
 
     fxAccounts.setSignedInUser(accountData).then(
       () => {
@@ -133,7 +148,7 @@ let wrapper = {
 // Button onclick handlers
 function handleOldSync() {
   // we just want to navigate the current tab to the new location...
-  window.location = "https://services.mozilla.com/legacysync";
+  window.location = Services.urlFormatter.formatURLPref("app.support.baseURL") + "old-sync";
 }
 
 function getStarted() {

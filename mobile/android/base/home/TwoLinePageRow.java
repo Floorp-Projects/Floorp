@@ -120,8 +120,8 @@ public class TwoLinePageRow extends TwoLineRow
      */
     private void updateDisplayedUrl() {
         boolean isPrivate = Tabs.getInstance().getSelectedTab().isPrivate();
-        int tabId = Tabs.getInstance().getTabIdForUrl(mPageUrl, isPrivate);
-        if (!mShowIcons || tabId < 0) {
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(mPageUrl, isPrivate);
+        if (!mShowIcons || tab == null) {
             setSecondaryText(mPageUrl);
             setSecondaryIcon(NO_ICON);
         } else {
