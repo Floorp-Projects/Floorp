@@ -16,7 +16,6 @@ namespace dom {
 struct ThreeDPoint;
 class AudioParamTimeline;
 class DelayNodeEngine;
-class AudioContext;
 }
 
 class ThreadSharedFloatArrayBufferList;
@@ -34,8 +33,6 @@ class AudioNodeEngine;
  */
 class AudioNodeStream : public ProcessedMediaStream {
 public:
-  typedef mozilla::dom::AudioContext AudioContext;
-
   enum { AUDIO_TRACK = 1 };
 
   typedef nsAutoTArray<AudioChunk, 1> OutputChunks;
@@ -69,7 +66,7 @@ public:
    * Sets a parameter that's a time relative to some stream's played time.
    * This time is converted to a time relative to this stream when it's set.
    */
-  void SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
+  void SetStreamTimeParameter(uint32_t aIndex, MediaStream* aRelativeToStream,
                               double aStreamTime);
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
