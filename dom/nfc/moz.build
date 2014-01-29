@@ -7,10 +7,10 @@
 
 if CONFIG['MOZ_NFC']:
     EXPORTS.mozilla.dom += [
-        'MozNdefRecord.h',
+        'MozNDEFRecord.h',
     ]
     SOURCES += [
-        'MozNdefRecord.cpp',
+        'MozNDEFRecord.cpp',
     ]
     EXTRA_COMPONENTS += [
       'nsNfc.js',

@@ -6,8 +6,8 @@
 
 /* Copyright © 2013 Deutsche Telekom, Inc. */
 
-#ifndef mozilla_dom_MozNdefRecord_h__
-#define mozilla_dom_MozNdefRecord_h__
+#ifndef mozilla_dom_MozNDEFRecord_h__
+#define mozilla_dom_MozNDEFRecord_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
@@ -26,20 +26,20 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class MozNdefRecord MOZ_FINAL : public nsISupports,
+class MozNDEFRecord MOZ_FINAL : public nsISupports,
                                 public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozNdefRecord)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozNDEFRecord)
 
 public:
 
-  MozNdefRecord(JSContext* aCx, nsPIDOMWindow* aWindow, uint8_t aTnf,
+  MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow, uint8_t aTnf,
                 const Uint8Array& aType, const Uint8Array& aId,
                 const Uint8Array& aPlayload);
 
-  ~MozNdefRecord();
+  ~MozNDEFRecord();
 
   nsIDOMWindow* GetParentObject() const
   {
@@ -49,7 +49,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  static already_AddRefed<MozNdefRecord>
+  static already_AddRefed<MozNDEFRecord>
                   Constructor(const GlobalObject& aGlobal, uint8_t aTnf,
                               const Uint8Array& aType, const Uint8Array& aId,
                               const Uint8Array& aPayload, ErrorResult& aRv);
@@ -90,7 +90,7 @@ public:
   }
 
 private:
-  MozNdefRecord() MOZ_DELETE;
+  MozNDEFRecord() MOZ_DELETE;
   nsRefPtr<nsPIDOMWindow> mWindow;
   void HoldData();
   void DropData();
@@ -104,4 +104,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_MozNdefRecord_h__
+#endif // mozilla_dom_MozNDEFRecord_h__
