@@ -2526,7 +2526,7 @@ struct JSFunctionSpec {
     {name, {call, info}, nargs, flags, selfHostedName}
 
 extern JS_PUBLIC_API(JSObject *)
-JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+JS_InitClass(JSContext *cx, JS::HandleObject obj, JS::HandleObject parent_proto,
              const JSClass *clasp, JSNative constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs);
@@ -3086,7 +3086,10 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, int length, jsval *vector);
 
 extern JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext *cx, JSObject *obj);
+JS_IsArrayObject(JSContext *cx, JS::HandleValue value);
+
+extern JS_PUBLIC_API(bool)
+JS_IsArrayObject(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(bool)
 JS_GetArrayLength(JSContext *cx, JS::Handle<JSObject*> obj, uint32_t *lengthp);
