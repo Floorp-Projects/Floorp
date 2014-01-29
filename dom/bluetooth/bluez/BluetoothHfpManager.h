@@ -153,7 +153,6 @@ private:
 
   bool Init();
   void Notify(const hal::BatteryInformation& aBatteryInfo);
-  void Reset();
 #ifdef MOZ_B2G_RIL
   void ResetCallArray();
   uint32_t FindFirstCall(uint16_t aState);

@@ -46,6 +46,12 @@ BluetoothA2dpManager::Observe(nsISupports* aSubject,
 
 BluetoothA2dpManager::BluetoothA2dpManager()
 {
+  Reset();
+}
+
+void
+BluetoothA2dpManager::Reset()
+{
   ResetA2dp();
   ResetAvrcp();
 }
@@ -230,6 +236,7 @@ BluetoothA2dpManager::OnDisconnect(const nsAString& aErrorStr)
 
   nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->OnDisconnect(aErrorStr);
+  Reset();
 }
 
 /* HandleSinkPropertyChanged update sink state in A2dp

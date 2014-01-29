@@ -1246,6 +1246,7 @@ void
 BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mController);
 
   NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
 
@@ -1254,7 +1255,6 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
   NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
     sBluetoothHfpInterface->disconnect(&deviceBdAddress));
 
-  MOZ_ASSERT(!mController);
   mController = aController;
 }
 

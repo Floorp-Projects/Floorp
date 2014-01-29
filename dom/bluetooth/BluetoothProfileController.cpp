@@ -10,9 +10,10 @@
 #include "BluetoothA2dpManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
-
 #include "BluetoothUtils.h"
+
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "nsComponentManagerUtils.h"
 
 USING_BLUETOOTH_NAMESPACE
 
@@ -22,6 +23,29 @@ USING_BLUETOOTH_NAMESPACE
     mgr->GetName(name);                              \
     BT_LOGR("[%s] " msg, name.get(), ##__VA_ARGS__); \
   } while(0)
+
+#define CONNECTION_TIMEOUT_MS 15000
+
+class CheckProfileStatusCallback : public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+  CheckProfileStatusCallback(BluetoothProfileController* aController)
+    : mController(aController)
+  {
+    MOZ_ASSERT(aController);
+  }
+
+  virtual ~CheckProfileStatusCallback()
+  {
+    mController = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothProfileController> mController;
+};
 
 BluetoothProfileController::BluetoothProfileController(
                                    bool aConnect,
@@ -34,6 +58,7 @@ BluetoothProfileController::BluetoothProfileController(
   , mDeviceAddress(aDeviceAddress)
   , mRunnable(aRunnable)
   , mCallback(aCallback)
+  , mCurrentProfileFinished(false)
   , mSuccess(false)
   , mProfilesIndex(-1)
 {
@@ -41,6 +66,10 @@ BluetoothProfileController::BluetoothProfileController(
   MOZ_ASSERT(aRunnable);
   MOZ_ASSERT(aCallback);
 
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  MOZ_ASSERT(mTimer);
+
+  mCheckProfileStatusCallback = new CheckProfileStatusCallback(this);
   mProfiles.Clear();
 
   /**
@@ -63,6 +92,10 @@ BluetoothProfileController::~BluetoothProfileController()
   mProfiles.Clear();
   mRunnable = nullptr;
   mCallback = nullptr;
+
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 }
 
 void
@@ -164,16 +197,35 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
   }
 }
 
+NS_IMPL_ISUPPORTS1(CheckProfileStatusCallback, nsITimerCallback)
+
+NS_IMETHODIMP
+CheckProfileStatusCallback::Notify(nsITimer* aTimer)
+{
+  MOZ_ASSERT(mController);
+  // Continue on the next profile since we haven't got the callback after
+  // timeout.
+  mController->GiveupAndContinue();
+
+  return NS_OK;
+}
+
 void
 BluetoothProfileController::Start()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex == -1);
+  MOZ_ASSERT(mTimer);
   NS_ENSURE_TRUE_VOID(mProfiles.Length() > 0);
 
   ++mProfilesIndex;
   BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
+
+  if (mTimer) {
+    mTimer->InitWithCallback(mCheckProfileStatusCallback, CONNECTION_TIMEOUT_MS,
+                             nsITimer::TYPE_ONE_SHOT);
+  }
 
   if (mConnect) {
     mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
@@ -188,9 +240,17 @@ BluetoothProfileController::Next()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex < (int)mProfiles.Length());
+  MOZ_ASSERT(mTimer);
 
+  mCurrentProfileFinished = false;
   if (++mProfilesIndex < (int)mProfiles.Length()) {
     BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
+
+    if (mTimer) {
+      mTimer->InitWithCallback(mCheckProfileStatusCallback,
+                               CONNECTION_TIMEOUT_MS,
+                               nsITimer::TYPE_ONE_SHOT);
+    }
 
     if (mConnect) {
       mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
@@ -217,8 +277,15 @@ void
 BluetoothProfileController::OnConnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mTimer);
+
   BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
     NS_ConvertUTF16toUTF8(aErrorStr).get());
+
+  mCurrentProfileFinished = true;
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
@@ -233,8 +300,15 @@ void
 BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mTimer);
+
   BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
     NS_ConvertUTF16toUTF8(aErrorStr).get());
+
+  mCurrentProfileFinished = true;
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
@@ -242,5 +316,16 @@ BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
     mSuccess = true;
   }
 
+  Next();
+}
+
+void
+BluetoothProfileController::GiveupAndContinue()
+{
+  MOZ_ASSERT(!mCurrentProfileFinished);
+  MOZ_ASSERT(mProfilesIndex < (int)mProfiles.Length());
+
+  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], ERR_OPERATION_TIMEOUT);
+  mProfiles[mProfilesIndex]->Reset();
   Next();
 }
