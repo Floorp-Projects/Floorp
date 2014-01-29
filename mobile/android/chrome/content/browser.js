@@ -441,8 +441,6 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
-
     if (this._startupStatus)
       this.onAppUpdated();
 
@@ -712,6 +710,10 @@ var BrowserApp = {
   },
 
   onAppUpdated: function() {
+    // initialize the form history and passwords databases on upgrades
+    Services.obs.notifyObservers(null, "FormHistory:Init", "");
+    Services.obs.notifyObservers(null, "Passwords:Init", "");
+
     // Migrate user-set "plugins.click_to_play" pref. See bug 884694.
     // Because the default value is true, a user-set pref means that the pref was set to false.
     if (Services.prefs.prefHasUserValue("plugins.click_to_play")) {
@@ -1628,22 +1630,10 @@ var BrowserApp = {
         Services.prefs.setCharPref("general.useragent.locale", aData);
         break;
 
-      case "browser-delayed-startup-finished":
-        this._delayedStartup();
-        break;
-
       default:
         dump('BrowserApp.observe: unexpected topic "' + aTopic + '"\n');
         break;
 
-    }
-  },
-
-  _delayedStartup: function() {
-    // initialize the form history and passwords databases on upgrades
-    if (this._startupStatus) {
-      Services.obs.notifyObservers(null, "FormHistory:Init", "");
-      Services.obs.notifyObservers(null, "Passwords:Init", "");
     }
   },
 
