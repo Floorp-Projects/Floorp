@@ -823,7 +823,7 @@ RadioInterfaceLayer.prototype = {
         if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN) {
           let oldRadioInterface =
             this.radioInterfaces[this._currentDataClientId];
-          if (!oldRadioInterface.anyDataConnected() &&
+          if (oldRadioInterface.allDataDisconnected() &&
               typeof this._pendingDataCallRequest === "function") {
             if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
               oldRadioInterface.setDataRegistration(false);
@@ -2092,13 +2092,22 @@ RadioInterface.prototype = {
     }
   },
 
+  allDataDisconnected: function() {
+    for each (let apnSetting in this.apnSettings.byApn) {
+      let iface = apnSetting.iface;
+      if (iface && iface.state != RIL.GECKO_NETWORK_STATE_UNKNOWN &&
+          iface.state != RIL.GECKO_NETWORK_STATE_DISCONNECTED) {
+        return false;
+      }
+    }
+    return true;
+  },
+
   anyDataConnected: function anyDataConnected() {
     for each (let apnSetting in this.apnSettings.byApn) {
-      for each (let type in apnSetting.types) {
-        if (this.getDataCallStateByType(type) ==
-            RIL.GECKO_NETWORK_STATE_CONNECTED) {
-          return true;
-        }
+      let iface = apnSetting.iface;
+      if (iface && iface.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+        return true;
       }
     }
     return false;
@@ -2495,7 +2504,7 @@ RadioInterface.prototype = {
     // Process pending radio power off request after all data calls
     // are disconnected.
     if (datacall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
-        !this.anyDataConnected()) {
+        this.allDataDisconnected()) {
       if (gRadioEnabledController.isDeactivatingDataCalls()) {
         if (DEBUG) this.debug("All data connections are disconnected.");
         gRadioEnabledController.finishDeactivatingDataCalls(this.clientId);
