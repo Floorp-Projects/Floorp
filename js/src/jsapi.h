@@ -4846,14 +4846,14 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
      * of throwing.  Callers should then check valueIsIterable() before
      * continuing with the iteration.
      */
-    JS_PUBLIC_API(bool) init(JS::HandleValue iterable,
-                             NonIterableBehavior nonIterableBehavior = ThrowOnNonIterable);
+    bool init(JS::HandleValue iterable,
+              NonIterableBehavior nonIterableBehavior = ThrowOnNonIterable);
 
     /*
      * Get the next value from the iterator.  If false *done is true
      * after this call, do not examine val.
      */
-    JS_PUBLIC_API(bool) next(JS::MutableHandleValue val, bool *done);
+    bool next(JS::MutableHandleValue val, bool *done);
 
     /*
      * If initialized with throwOnNonCallable = false, check whether
