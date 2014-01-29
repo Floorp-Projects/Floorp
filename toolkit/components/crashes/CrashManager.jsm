@@ -30,6 +30,13 @@ const AGGREGATE_STARTUP_DELAY_MS = 57000;
 
 const MILLISECONDS_IN_DAY = 24 * 60 * 60 * 1000;
 
+// Converts Date to days since UNIX epoch.
+// This was copied from /services/metrics.storage.jsm. The implementation
+// does not account for leap seconds.
+function dateToDays(date) {
+  return Math.floor(date.getTime() / MILLISECONDS_IN_DAY);
+}
+
 
 /**
  * A gateway to crash-related data.
@@ -520,6 +527,17 @@ let gCrashManager;
  * When metadata is updated, the caller must explicitly persist the changes
  * to disk. This prevents excessive I/O during updates.
  *
+ * The store has a mechanism for ensuring it doesn't grow too large. A ceiling
+ * is placed on the number of daily events that can occur for events that can
+ * occur with relatively high frequency, notably plugin crashes and hangs
+ * (plugins can enter cycles where they repeatedly crash). If we've reached
+ * the high water mark and new data arrives, it's silently dropped.
+ * However, the count of actual events is always preserved. This allows
+ * us to report on the severity of problems beyond the storage threshold.
+ *
+ * Main process crashes are excluded from limits because they are both
+ * important and should be rare.
+ *
  * @param storeDir (string)
  *        Directory the store should be located in.
  * @param telemetrySizeKey (string)
@@ -534,25 +552,41 @@ function CrashStore(storeDir, telemetrySizeKey) {
 
   // Holds the read data from disk.
   this._data = null;
+
+  // Maps days since UNIX epoch to a Map of event types to counts.
+  // This data structure is populated when the JSON file is loaded
+  // and is also updated when new events are added.
+  this._countsByDay = new Map();
 }
 
 CrashStore.prototype = Object.freeze({
+  // A crash that occurred in the main process.
   TYPE_MAIN_CRASH: "main-crash",
+
+  // A crash in a plugin process.
   TYPE_PLUGIN_CRASH: "plugin-crash",
+
+  // A hang in a plugin process.
   TYPE_PLUGIN_HANG: "plugin-hang",
+
+  // Maximum number of events to store per day. This establishes a
+  // ceiling on the per-type/per-day records that will be stored.
+  HIGH_WATER_DAILY_THRESHOLD: 100,
 
   /**
    * Load data from disk.
    *
-   * @return Promise<null>
+   * @return Promise
    */
   load: function () {
     return Task.spawn(function* () {
+      // Loading replaces data. So reset data structures.
       this._data = {
         v: 1,
         crashes: new Map(),
         corruptDate: null,
       };
+      this._countsByDay = new Map();
 
       try {
         let decoder = new TextDecoder();
@@ -563,10 +597,42 @@ CrashStore.prototype = Object.freeze({
           this._data.corruptDate = new Date(data.corruptDate);
         }
 
+        // actualCounts is used to validate that the derived counts by
+        // days stored in the payload matches up to actual data.
+        let actualCounts = new Map();
+
         for (let id in data.crashes) {
           let crash = data.crashes[id];
           let denormalized = this._denormalize(crash);
+
           this._data.crashes.set(id, denormalized);
+
+          let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
+          actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
+        }
+
+        // The validation in this loop is arguably not necessary. We perform
+        // it as a defense against unknown bugs.
+        for (let dayKey in data.countsByDay) {
+          let day = parseInt(dayKey, 10);
+          for (let type in data.countsByDay[day]) {
+            this._ensureCountsForDay(day);
+
+            let count = data.countsByDay[day][type];
+            let key = day + "-" + type;
+
+            // If the payload says we have data for a given day but we
+            // don't, the payload is wrong. Ignore it.
+            if (!actualCounts.has(key)) {
+              continue;
+            }
+
+            // If we encountered more data in the payload than what the
+            // data structure says, use the proper value.
+            count = Math.max(count, actualCounts.get(key));
+
+            this._countsByDay.get(day).set(type, count);
+          }
         }
       } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
         // Missing files (first use) are allowed.
@@ -594,8 +660,22 @@ CrashStore.prototype = Object.freeze({
       }
 
       let normalized = {
+        // The version should be incremented whenever the format
+        // changes.
         v: 1,
+        // Maps crash IDs to objects defining the crash.
         crashes: {},
+        // Maps days since UNIX epoch to objects mapping event types to
+        // counts. This is a mirror of this._countsByDay. e.g.
+        // {
+        //    15000: {
+        //        "main-crash": 2,
+        //        "plugin-crash": 1
+        //    }
+        // }
+        countsByDay: {},
+
+        // When the store was last corrupted.
         corruptDate: null,
       };
 
@@ -606,6 +686,13 @@ CrashStore.prototype = Object.freeze({
       for (let [id, crash] of this._data.crashes) {
         let c = this._normalize(crash);
         normalized.crashes[id] = c;
+      }
+
+      for (let [day, m] of this._countsByDay) {
+        normalized.countsByDay[day] = {};
+        for (let [type, count] of m) {
+          normalized.countsByDay[day][type] = count;
+        }
       }
 
       let encoder = new TextEncoder();
@@ -729,16 +816,51 @@ CrashStore.prototype = Object.freeze({
     return null;
   },
 
-  _ensureCrashRecord: function (id) {
+  _ensureCountsForDay: function (day) {
+    if (!this._countsByDay.has(day)) {
+      this._countsByDay.set(day, new Map());
+    }
+  },
+
+  /**
+   * Ensure the crash record is present in storage.
+   *
+   * Returns the crash record if we're allowed to store it or null
+   * if we've hit the high water mark.
+   *
+   * @param id
+   *        (string) The crash ID.
+   * @param type
+   *        (string) One of the this.TYPE_* constants describing the crash type.
+   * @param date
+   *        (Date) When this crash occurred.
+   *
+   * @return null | object crash record
+   */
+  _ensureCrashRecord: function (id, type, date) {
+    let day = dateToDays(date);
+    this._ensureCountsForDay(day);
+
+    let count = (this._countsByDay.get(day).get(type) || 0) + 1;
+    this._countsByDay.get(day).set(type, count);
+
+    if (count > this.HIGH_WATER_DAILY_THRESHOLD && type != this.TYPE_MAIN_CRASH) {
+      return null;
+    }
+
     if (!this._data.crashes.has(id)) {
       this._data.crashes.set(id, {
         id: id,
-        type: null,
-        crashDate: null,
+        type: type,
+        crashDate: date,
       });
     }
 
-    return this._data.crashes.get(id);
+    let crash = this._data.crashes.get(id);
+    crash.type = type;
+    crash.date = date;
+
+    return crash;
   },
 
   /**
@@ -748,9 +870,7 @@ CrashStore.prototype = Object.freeze({
    * @param date (Date) When the crash occurred.
    */
   addMainProcessCrash: function (id, date) {
-    let r = this._ensureCrashRecord(id);
-    r.type = this.TYPE_MAIN_CRASH;
-    r.crashDate = date;
+    this._ensureCrashRecord(id, this.TYPE_MAIN_CRASH, date);
   },
 
   /**
@@ -760,9 +880,7 @@ CrashStore.prototype = Object.freeze({
    * @param date (Date) When the crash occurred.
    */
   addPluginCrash: function (id, date) {
-    let r = this._ensureCrashRecord(id);
-    r.type = this.TYPE_PLUGIN_CRASH;
-    r.crashDate = date;
+    this._ensureCrashRecord(id, this.TYPE_PLUGIN_CRASH, date);
   },
 
   /**
@@ -772,9 +890,7 @@ CrashStore.prototype = Object.freeze({
    * @param date (Date) When the hang was reported.
    */
   addPluginHang: function (id, date) {
-    let r = this._ensureCrashRecord(id);
-    r.type = this.TYPE_PLUGIN_HANG;
-    r.crashDate = date;
+    this._ensureCrashRecord(id, this.TYPE_PLUGIN_HANG, date);
   },
 
   get mainProcessCrashes() {
@@ -844,6 +960,10 @@ CrashRecord.prototype = Object.freeze({
    */
   get newestDate() {
     // We currently only have 1 date, so this is easy.
+    return this._o.crashDate;
+  },
+
+  get oldestDate() {
     return this._o.crashDate;
   },
 
