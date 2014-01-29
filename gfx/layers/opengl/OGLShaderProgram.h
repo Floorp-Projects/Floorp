@@ -6,7 +6,7 @@
 #ifndef GFX_OGLSHADERPROGRAM_H
 #define GFX_OGLSHADERPROGRAM_H
 
-#include "GLDefs.h"                     // for GLint, GLenum, GLuint, etc
+#include "GLContext.h"                  // for fast inlines of glUniform*
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxTypes.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -23,9 +23,6 @@ struct gfxRGBA;
 struct nsIntRect;
 
 namespace mozilla {
-namespace gl {
-class GLContext;
-}
 namespace layers {
 
 class Layer;
@@ -476,14 +473,80 @@ protected:
     STATE_ERROR
   } mProgramState;
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, float aFloatValue);
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfxRGBA& aColor);
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues);
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, GLint aIntValue);
-  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx3DMatrix& aMatrix);
-  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues);
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, float aFloatValue)
+  {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Color& aColor);
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(aFloatValue)) {
+      mGL->fUniform1f(ku.mLocation, aFloatValue);
+    }
+  }
+
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfxRGBA& aColor)
+  {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(aColor.r, aColor.g, aColor.b, aColor.a)) {
+      mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v);
+    }
+  }
+
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Color& aColor) {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(aColor.r, aColor.g, aColor.b, aColor.a)) {
+      mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v);
+    }
+  }
+
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues)
+  {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(aLength, aFloatValues)) {
+      switch (aLength) {
+      case 1: mGL->fUniform1fv(ku.mLocation, 1, ku.mValue.f16v); break;
+      case 2: mGL->fUniform2fv(ku.mLocation, 1, ku.mValue.f16v); break;
+      case 3: mGL->fUniform3fv(ku.mLocation, 1, ku.mValue.f16v); break;
+      case 4: mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v); break;
+      default:
+        NS_NOTREACHED("Bogus aLength param");
+      }
+    }
+  }
+
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, GLint aIntValue) {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(aIntValue)) {
+      mGL->fUniform1i(ku.mLocation, aIntValue);
+    }
+  }
+
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues) {
+    ASSERT_THIS_PROGRAM;
+    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+
+    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
+    if (ku.UpdateUniform(16, aFloatValues)) {
+      mGL->fUniformMatrix4fv(ku.mLocation, 1, false, ku.mValue.f16v);
+    }
+  }
+
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx3DMatrix& aMatrix) {
+    SetMatrixUniform(aKnownUniform, &aMatrix._11);
+  }
+
   void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(aKnownUniform, &aMatrix._11);
   }
