@@ -225,7 +225,7 @@ uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS)
     return 0;
 }
 
-nsresult gfxFontEntry::ReadCMAP()
+nsresult gfxFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     NS_ASSERTION(false, "using default no-op implementation of ReadCMAP");
     mCharacterMap = new gfxCharacterMap();
@@ -562,6 +562,18 @@ gfxFontEntry::GetTableFromFontData(const void* aFontData, uint32_t aTableTag)
 
     }
     return nullptr;
+}
+
+already_AddRefed<gfxCharacterMap>
+gfxFontEntry::GetCMAPFromFontInfo(FontInfoData *aFontInfoData,
+                                  uint32_t& aUVSOffset,
+                                  bool& aSymbolFont)
+{
+    if (!aFontInfoData || !aFontInfoData->mLoadCmaps) {
+        return nullptr;
+    }
+
+    return aFontInfoData->GetCMAP(mName, aUVSOffset, aSymbolFont);
 }
 
 hb_blob_t *
@@ -905,6 +917,11 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 void
 gfxFontFamily::CheckForSimpleFamily()
 {
+    // already checked this family
+    if (mIsSimpleFamily) {
+        return;
+    };
+
     uint32_t count = mAvailableFonts.Length();
     if (count > 4 || count == 0) {
         return; // can't be "simple" if there are >4 faces;
@@ -1266,18 +1283,46 @@ gfxFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList)
 
 void
 gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList, 
-                             bool aNeedFullnamePostscriptNames)
+                             bool aNeedFullnamePostscriptNames,
+                             FontInfoData *aFontInfoData)
 {
     // if all needed names have already been read, skip
     if (mOtherFamilyNamesInitialized &&
         (mFaceNamesInitialized || !aNeedFullnamePostscriptNames))
         return;
 
-    FindStyleVariations();
+    if (!mOtherFamilyNamesInitialized &&
+        aFontInfoData &&
+        aFontInfoData->mLoadOtherNames)
+    {
+        nsAutoTArray<nsString,4> otherFamilyNames;
+        bool foundOtherNames =
+            aFontInfoData->GetOtherFamilyNames(mName, otherFamilyNames);
+        if (foundOtherNames) {
+            uint32_t i, n = otherFamilyNames.Length();
+            for (i = 0; i < n; i++) {
+                aPlatformFontList->AddOtherFamilyName(this, otherFamilyNames[i]);
+            }
+        }
+        mOtherFamilyNamesInitialized = true;
+    }
+
+    // if all needed data has been initialized, return
+    if (mOtherFamilyNamesInitialized &&
+        (mFaceNamesInitialized || !aNeedFullnamePostscriptNames)) {
+        return;
+    }
+
+    FindStyleVariations(aFontInfoData);
+
+    // check again, as style enumeration code may have loaded names
+    if (mOtherFamilyNamesInitialized &&
+        (mFaceNamesInitialized || !aNeedFullnamePostscriptNames)) {
+        return;
+    }
 
     uint32_t i, numFonts = mAvailableFonts.Length();
     const uint32_t kNAME = TRUETYPE_TAG('n','a','m','e');
-    nsAutoString fullname, psname;
 
     bool firstTime = true, readAllFaces = false;
     for (i = 0; i < numFonts; ++i) {
@@ -1285,11 +1330,35 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         if (!fe) {
             continue;
         }
+
+        nsAutoString fullname, psname;
+        bool foundFaceNames = false;
+        if (!mFaceNamesInitialized &&
+            aNeedFullnamePostscriptNames &&
+            aFontInfoData &&
+            aFontInfoData->mLoadFaceNames) {
+            aFontInfoData->GetFaceNames(fe->Name(), fullname, psname);
+            if (!fullname.IsEmpty()) {
+                aPlatformFontList->AddFullname(fe, fullname);
+            }
+            if (!psname.IsEmpty()) {
+                aPlatformFontList->AddPostscriptName(fe, psname);
+            }
+            foundFaceNames = true;
+
+            // found everything needed? skip to next font
+            if (mOtherFamilyNamesInitialized) {
+                continue;
+            }
+        }
+
+        // load directly from the name table
         gfxFontEntry::AutoTable nameTable(fe, kNAME);
         if (!nameTable) {
             continue;
         }
-        if (aNeedFullnamePostscriptNames) {
+
+        if (aNeedFullnamePostscriptNames && !foundFaceNames) {
             if (gfxFontUtils::ReadCanonicalName(
                     nameTable, gfxFontUtils::NAME_ID_FULL, fullname) == NS_OK)
             {
@@ -1341,8 +1410,10 @@ gfxFontFamily::FindFont(const nsAString& aPostscriptName)
 }
 
 void
-gfxFontFamily::ReadAllCMAPs()
+gfxFontFamily::ReadAllCMAPs(FontInfoData *aFontInfoData)
 {
+    FindStyleVariations(aFontInfoData);
+
     uint32_t i, numFonts = mAvailableFonts.Length();
     for (i = 0; i < numFonts; i++) {
         gfxFontEntry *fe = mAvailableFonts[i];
@@ -1350,7 +1421,7 @@ gfxFontFamily::ReadAllCMAPs()
         if (!fe || fe->mIsProxy) {
             continue;
         }
-        fe->ReadCMAP();
+        fe->ReadCMAP(aFontInfoData);
         mFamilyCharacterMap.Union(*(fe->mCharacterMap));
     }
     mFamilyCharacterMap.Compact();

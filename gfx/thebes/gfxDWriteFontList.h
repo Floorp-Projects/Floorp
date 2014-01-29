@@ -43,7 +43,7 @@ public:
       : gfxFontFamily(aName), mDWFamily(aFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
-    virtual void FindStyleVariations();
+    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
     virtual void LocalizedName(nsAString& aLocalizedName);
 
@@ -149,7 +149,7 @@ public:
 
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
 
-    nsresult ReadCMAP();
+    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
 
     bool IsCJKFont();
 

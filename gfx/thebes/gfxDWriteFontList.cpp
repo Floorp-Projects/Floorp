@@ -147,7 +147,7 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
 }
 
 void
-gfxDWriteFontFamily::FindStyleVariations()
+gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     HRESULT hr;
     if (mHasStyles) {
@@ -496,30 +496,38 @@ gfxDWriteFontEntry::GetFontTable(uint32_t aTag)
 }
 
 nsresult
-gfxDWriteFontEntry::ReadCMAP()
+gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
-    nsresult rv;
-
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
         return NS_OK;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+    nsRefPtr<gfxCharacterMap> charmap;
+    nsresult rv;
+    bool symbolFont;
 
-    uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
-    AutoTable cmapTable(this, kCMAP);
-    if (cmapTable) {
-        bool unicodeFont = false, symbolFont = false; // currently ignored
-        uint32_t cmapLen;
-        const uint8_t* cmapData =
-            reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
-                                                              &cmapLen));
-        rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
-                                    *charmap, mUVSOffset,
-                                    unicodeFont, symbolFont);
+    if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
+                                                        mUVSOffset,
+                                                        symbolFont))) {
+        rv = NS_OK;
     } else {
-        rv = NS_ERROR_NOT_AVAILABLE;
+        uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+        charmap = new gfxCharacterMap();
+        AutoTable cmapTable(this, kCMAP);
+
+        if (cmapTable) {
+            bool unicodeFont = false, symbolFont = false; // currently ignored
+            uint32_t cmapLen;
+            const uint8_t* cmapData =
+                reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
+                                                                  &cmapLen));
+            rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
+                                        *charmap, mUVSOffset,
+                                        unicodeFont, symbolFont);
+        } else {
+            rv = NS_ERROR_NOT_AVAILABLE;
+        }
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);

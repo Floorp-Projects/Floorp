@@ -146,7 +146,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
 }
 
 nsresult
-GDIFontEntry::ReadCMAP()
+GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
@@ -163,22 +163,28 @@ GDIFontEntry::ReadCMAP()
         return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
-
-    uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+    nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
+    bool unicodeFont = false, symbolFont = false;
 
-    AutoFallibleTArray<uint8_t,16384> cmap;
-    rv = CopyFontTable(kCMAP, cmap);
+    if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
+                                                        mUVSOffset,
+                                                        symbolFont))) {
+        mSymbolFont = symbolFont;
+        rv = NS_OK;
+    } else {
+        uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+        charmap = new gfxCharacterMap();
+        AutoFallibleTArray<uint8_t,16384> cmap;
+        rv = CopyFontTable(kCMAP, cmap);
 
-    bool unicodeFont = false, symbolFont = false; // currently ignored
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                    *charmap, mUVSOffset,
-                                    unicodeFont, symbolFont);
+        if (NS_SUCCEEDED(rv)) {
+            rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
+                                        *charmap, mUVSOffset,
+                                        unicodeFont, symbolFont);
+        }
+        mSymbolFont = symbolFont;
     }
-    mSymbolFont = symbolFont;
 
     mHasCmapTable = NS_SUCCEEDED(rv);
     if (mHasCmapTable) {
@@ -512,7 +518,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 }
 
 void
-GDIFontFamily::FindStyleVariations()
+GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     if (mHasStyles)
         return;

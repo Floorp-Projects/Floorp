@@ -558,6 +558,25 @@ static void LogRegistryEvent(const wchar_t *msg)
 }
 #endif
 
+gfxFontFamily*
+gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
+{
+    if (aFamily && !aFamily->HasStyles()) {
+        aFamily->FindStyleVariations();
+        aFamily->CheckForSimpleFamily();
+    }
+
+    if (aFamily && aFamily->GetFontList().Length() == 0) {
+        // failed to load any faces for this family, so discard it
+        nsAutoString key;
+        GenerateFontListKey(aFamily->Name(), key);
+        mFontFamilies.Remove(key);
+        return nullptr;
+    }
+
+    return aFamily;
+}
+
 gfxFontFamily* 
 gfxPlatformFontList::FindFamily(const nsAString& aFamily)
 {
@@ -569,12 +588,12 @@ gfxPlatformFontList::FindFamily(const nsAString& aFamily)
 
     // lookup in canonical (i.e. English) family name list
     if ((familyEntry = mFontFamilies.GetWeak(key))) {
-        return familyEntry;
+        return CheckFamily(familyEntry);
     }
 
     // lookup in other family names list (mostly localized names)
     if ((familyEntry = mOtherFamilyNames.GetWeak(key)) != nullptr) {
-        return familyEntry;
+        return CheckFamily(familyEntry);
     }
 
     // name not found and other family names not yet fully initialized so
@@ -585,7 +604,7 @@ gfxPlatformFontList::FindFamily(const nsAString& aFamily)
     if (!mOtherFamilyNamesInitialized && !IsASCII(aFamily)) {
         InitOtherFamilyNames();
         if ((familyEntry = mOtherFamilyNames.GetWeak(key)) != nullptr) {
-            return familyEntry;
+            return CheckFamily(familyEntry);
         }
     }
 
@@ -705,48 +724,58 @@ gfxPlatformFontList::RemoveCmap(const gfxCharacterMap* aCharMap)
     }
 }
 
+static PLDHashOperator AppendFamilyToList(nsStringHashKey::KeyType aKey,
+                                          nsRefPtr<gfxFontFamily>& aFamilyEntry,
+                                          void *aUserArg)
+{
+    nsTArray<nsString> *familyNames = static_cast<nsTArray<nsString> *>(aUserArg);
+    familyNames->AppendElement(aFamilyEntry->Name());
+    return PL_DHASH_NEXT;
+}
+
+void
+gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
+{
+    mFontFamilies.Enumerate(AppendFamilyToList, &aFontFamilyNames);
+}
+
 void 
 gfxPlatformFontList::InitLoader()
 {
-    GetFontFamilyList(mFontFamiliesToLoad);
+    GetFontFamilyNames(mFontInfo->mFontFamiliesToLoad);
     mStartIndex = 0;
-    mNumFamilies = mFontFamiliesToLoad.Length();
+    mNumFamilies = mFontInfo->mFontFamiliesToLoad.Length();
+    memset(&(mFontInfo->mLoadStats), 0, sizeof(mFontInfo->mLoadStats));
 }
 
 #define FONT_LOADER_MAX_TIMESLICE 100  // max time for one pass through RunLoader = 100ms
 
 bool
-gfxPlatformFontList::RunLoader()
+gfxPlatformFontList::LoadFontInfo()
 {
     TimeStamp start = TimeStamp::Now();
-    uint32_t i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
+    uint32_t i, endIndex = mNumFamilies;
     bool loadCmaps = !UsesSystemFallback() ||
         gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
     // for each font family, load in various font info
     for (i = mStartIndex; i < endIndex; i++) {
-        gfxFontFamily* familyEntry = mFontFamiliesToLoad[i];
+        nsAutoString key;
+        gfxFontFamily *familyEntry;
+        GenerateFontListKey(mFontInfo->mFontFamiliesToLoad[i], key);
 
-        // find all faces that are members of this family
-        familyEntry->FindStyleVariations();
-        if (familyEntry->GetFontList().Length() == 0) {
-            // failed to load any faces for this family, so discard it
-            nsAutoString key;
-            GenerateFontListKey(familyEntry->Name(), key);
-            mFontFamilies.Remove(key);
+        // lookup in canonical (i.e. English) family name list
+        if (!(familyEntry = mFontFamilies.GetWeak(key))) {
             continue;
         }
 
+        // read in face names
+        familyEntry->ReadFaceNames(this, NeedFullnamePostscriptNames(), mFontInfo);
+
         // load the cmaps if needed
         if (loadCmaps) {
-            familyEntry->ReadAllCMAPs();
+            familyEntry->ReadAllCMAPs(mFontInfo);
         }
-
-        // read in face names
-        familyEntry->ReadFaceNames(this, NeedFullnamePostscriptNames());
-
-        // check whether the family can be considered "simple" for style matching
-        familyEntry->CheckForSimpleFamily();
 
         // limit the time spent reading fonts in one pass
         TimeDuration elapsed = TimeStamp::Now() - start;
@@ -758,15 +787,42 @@ gfxPlatformFontList::RunLoader()
     }
 
     mStartIndex = endIndex;
+    bool done = mStartIndex >= mNumFamilies;
 
-    return (mStartIndex >= mNumFamilies);
+#ifdef PR_LOGGING
+    if (LOG_FONTINIT_ENABLED()) {
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        LOG_FONTINIT(("(fontinit) fontloader load pass %8.2f ms done %s\n",
+                      elapsed.ToMilliseconds(), (done ? "true" : "false")));
+    }
+#endif
+
+    return done;
 }
 
 void 
-gfxPlatformFontList::FinishLoader()
+gfxPlatformFontList::CleanupLoader()
 {
     mFontFamiliesToLoad.Clear();
     mNumFamilies = 0;
+
+#ifdef PR_LOGGING
+    if (LOG_FONTINIT_ENABLED() && mFontInfo) {
+        LOG_FONTINIT(("(fontinit) fontloader load thread took %8.2f ms "
+                      "%d families %d fonts %d cmaps "
+                      "%d facenames %d othernames",
+                      mLoadTime.ToMilliseconds(),
+                      mFontInfo->mLoadStats.families,
+                      mFontInfo->mLoadStats.fonts,
+                      mFontInfo->mLoadStats.cmaps,
+                      mFontInfo->mLoadStats.facenames,
+                      mFontInfo->mLoadStats.othernames));
+    }
+#endif
+
+    mOtherFamilyNamesInitialized = true;
+    mFaceNamesInitialized = true;
+    gfxFontInfoLoader::CleanupLoader();
 }
 
 void
