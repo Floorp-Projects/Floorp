@@ -3062,7 +3062,7 @@ public:
 
   const gfx3DMatrix& GetTransform();
 
-  float GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsPoint& aPoint);
+  float GetHitDepthAtPoint(const nsPoint& aPoint);
 
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
@@ -3095,8 +3095,15 @@ public:
   /* UntransformRect is like TransformRect, except that it inverts the
    * transform.
    */
-  bool UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
-                              nsRect* aOutRect);
+  static bool UntransformRect(const nsRect &aUntransformedBounds, 
+                                const nsIFrame* aFrame,
+                                const nsPoint &aOrigin,
+                                nsRect* aOutRect);
+  
+  static bool UntransformRectMatrix(const nsRect &aUntransformedBounds, 
+                                    const gfx3DMatrix& aMatrix,
+                                    float aAppUnitsPerPixel,
+                                    nsRect* aOutRect);
 
   static gfxPoint3D GetDeltaToTransformOrigin(const nsIFrame* aFrame,
                                               float aAppUnitsPerPixel,

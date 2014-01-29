@@ -36,11 +36,6 @@
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
-#include "mozilla/gfx/2D.h"
-#include "gfxPlatform.h"
-
-using namespace mozilla;
-using namespace mozilla::gfx;
 
 // This sets how opaque the drag image is
 #define DRAG_IMAGE_ALPHA_LEVEL 0.5
@@ -395,11 +390,11 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 }
 
 bool
-nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
-                              GdkDragContext *aContext,
-                              int32_t aXOffset,
-                              int32_t aYOffset,
-                              const nsIntRect& dragRect)
+nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
+                                 GdkDragContext *aContext,
+                                 int32_t aXOffset,
+                                 int32_t aYOffset,
+                                 const nsIntRect& dragRect)
 {
 #if (MOZ_WIDGET_GTK == 2)
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
@@ -427,21 +422,16 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!xPixmapSurface)
       return false;
 
-    RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->
-      CreateDrawTargetForSurface(xPixmapSurface, IntSize(dragRect.width, dragRect.height));
-    if (!dt)
-      return false;
+    nsRefPtr<gfxContext> xPixmapCtx = new gfxContext(xPixmapSurface);
 
     // Clear it...
-    dt->ClearRect(Rect(0, 0, dragRect.width, dragRect.height));
+    xPixmapCtx->SetOperator(gfxContext::OPERATOR_CLEAR);
+    xPixmapCtx->Paint();
 
     // ...and paint the drag image with translucency
-    dt->DrawSurface(aSurface,
-                    Rect(0, 0, dragRect.width, dragRect.height),
-                    Rect(0, 0, dragRect.width, dragRect.height),
-                    DrawSurfaceOptions(),
-                    DrawOptions(DRAG_IMAGE_ALPHA_LEVEL, CompositionOp::OP_SOURCE));
+    xPixmapCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    xPixmapCtx->SetSource(aSurface);
+    xPixmapCtx->Paint(DRAG_IMAGE_ALPHA_LEVEL);
 
     // The drag transaction addrefs the pixmap, so we can just unref it from us here
     gtk_drag_set_icon_pixmap(aContext, alphaColormap, pixmap, nullptr,
@@ -1575,9 +1565,9 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
 
     nsIntRect dragRect;
     nsPresContext* pc;
-    RefPtr<SourceSurface> surface;
+    nsRefPtr<gfxASurface> surface;
     DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
-             &dragRect, &surface, &pc);
+             &dragRect, getter_AddRefs(surface), &pc);
     if (!pc)
         return;
 
@@ -1607,7 +1597,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     else if (surface) {
         if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
             GdkPixbuf* dragPixbuf =
-              nsImageToPixbuf::SourceSurfaceToPixbuf(surface, dragRect.width, dragRect.height);
+              nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
             if (dragPixbuf) {
                 gtk_drag_set_icon_pixbuf(aContext, dragPixbuf, offsetX, offsetY);
                 g_object_unref(dragPixbuf);

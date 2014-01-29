@@ -40,10 +40,6 @@
 #include "nsRect.h"
 #include "nsMathUtils.h"
 #include "gfxWindowsPlatform.h"
-#include "mozilla/gfx/2D.h"
-
-using namespace mozilla;
-using namespace mozilla::gfx;
 
 //-------------------------------------------------------------------------
 //
@@ -79,11 +75,11 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
   // Prepare the drag image
   nsIntRect dragRect;
-  RefPtr<SourceSurface> surface;
+  nsRefPtr<gfxASurface> surface;
   nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion,
            mScreenX, mScreenY,
-           &dragRect, &surface, &pc);
+           &dragRect, getter_AddRefs(surface), &pc);
   if (!surface)
     return false;
 
@@ -94,27 +90,19 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
   psdi->crColorKey = CLR_NONE;
 
-  RefPtr<DataSourceSurface> data = surface->GetDataSurface();
-  DataSourceSurface::MappedSurface map;
-  if (!data->Map(DataSourceSurface::READ, &map)) {
-    return false;
-  }
-
   nsRefPtr<gfxImageSurface> imgSurface = new gfxImageSurface(
     gfxIntSize(bmWidth, bmHeight), 
     gfxImageFormat::ARGB32);
   if (!imgSurface)
     return false;
 
-  RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->
-      CreateDrawTargetForSurface(imgSurface, IntSize(bmWidth, bmHeight));
-  if (!dt)
+  nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
+  if (!context)
     return false;
 
-  dt->FillRect(Rect(0, 0, bmWidth, bmHeight),
-               SurfacePattern(surface, ExtendMode::CLAMP),
-               DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  context->SetOperator(gfxContext::OPERATOR_SOURCE);
+  context->SetSource(surface);
+  context->Paint();
 
   BITMAPV5HEADER bmih;
   memset((void*)&bmih, 0, sizeof(BITMAPV5HEADER));
@@ -155,8 +143,6 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
     DeleteDC(hdcSrc);
   }
-
-  data->Unmap();
 
   return psdi->hbmpDragImage != nullptr;
 }
