@@ -34,12 +34,14 @@
 #include "nsMenuPopupFrame.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/2D.h"
 
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
@@ -426,7 +428,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            gfxASurface** aSurface,
+                            RefPtr<SourceSurface>* aSurface,
                             nsPresContext** aPresContext)
 {
   *aSurface = nullptr;
@@ -497,9 +499,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // draw the image for selections
   if (mSelection) {
     nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-    nsRefPtr<gfxASurface> surface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect);
-    *aSurface = surface;
-    NS_IF_ADDREF(*aSurface);
+    *aSurface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect);
     return NS_OK;
   }
 
@@ -532,7 +532,6 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     }
   }
 
-  nsRefPtr<gfxASurface> surface;
   if (!mDragPopup) {
     // otherwise, just draw the node
     nsIntRegion clipRegion;
@@ -541,8 +540,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     }
 
     nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-    surface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
-                                    pnt, aScreenDragRect);
+    *aSurface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
+                                      pnt, aScreenDragRect);
   }
 
   // if an image was specified, reposition the drag rectangle to
@@ -551,9 +550,6 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     aScreenDragRect->x = sx - mImageX;
     aScreenDragRect->y = sy - mImageY;
   }
-
-  *aSurface = surface;
-  NS_IF_ADDREF(*aSurface);
 
   return NS_OK;
 }
@@ -564,7 +560,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsICanvasElementExternal* aCanvas,
                                     int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,
-                                    gfxASurface** aSurface)
+                                    RefPtr<SourceSurface>* aSurface)
 {
   nsCOMPtr<imgIContainer> imgContainer;
   if (aImageLoader) {
@@ -620,19 +616,19 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = destSize.height;
   }
 
-  nsRefPtr<gfxASurface> surface =
-    gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(destSize.width, destSize.height),
-                                                       gfxContentType::COLOR_ALPHA);
-  if (!surface)
+  RefPtr<DrawTarget> dt =
+    gfxPlatform::GetPlatform()->
+      CreateOffscreenContentDrawTarget(IntSize(destSize.width, destSize.height),
+
+                                       SurfaceFormat::B8G8R8A8);
+  if (!dt)
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+  nsRefPtr<gfxContext> ctx = new gfxContext(dt);
   if (!ctx)
     return NS_ERROR_FAILURE;
 
-  *aSurface = surface;
-  NS_ADDREF(*aSurface);
-
+  nsresult result = NS_OK;
   if (aImageLoader) {
     gfxRect outRect(0, 0, destSize.width, destSize.height);
     gfxMatrix scale =
@@ -641,10 +637,12 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     imgContainer->Draw(ctx, GraphicsFilter::FILTER_GOOD, scale, outRect, imgSize,
                        destSize, nullptr, imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
-    return NS_OK;
   } else {
-    return aCanvas->RenderContextsExternal(ctx, GraphicsFilter::FILTER_GOOD);
+    result = aCanvas->RenderContextsExternal(ctx, GraphicsFilter::FILTER_GOOD);
   }
+
+  *aSurface = dt->Snapshot();
+  return result;
 }
 
 void
