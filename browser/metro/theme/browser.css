@@ -188,6 +188,12 @@ documenttab[selected] .documenttab-selection {
   background: transparent -moz-image-rect(url("chrome://browser/skin/images/tab-overlay.png"), 50%, 100%, 100%, 0%) 50% 50% no-repeat;
 }
 
+.documenttab-crop:-moz-locale-dir(rtl),
+.documenttab-selection:-moz-locale-dir(rtl),
+documenttab[selected] .documenttab-selection:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .documenttab-close {
   background: none !important;
   padding: @metro_spacing_small@ !important;
@@ -415,8 +421,7 @@ documenttab[selected] .documenttab-selection {
   background-position: right 6px center;
 }
 
-#overlay-plus:-moz-locale-dir(ltr),
-#overlay-back:-moz-locale-dir(rtl) {
+#overlay-plus:-moz-locale-dir(ltr) {
   right: -70px;
   background-position: left 6px center;
 }
@@ -469,10 +474,19 @@ documenttab[selected] .documenttab-selection {
   transform: translateX(40px) scale(1.2);
 }
 
-#overlay-plus:-moz-locale-dir(ltr):hover,
-#overlay-back:-moz-locale-dir(rtl):hover {
+#overlay-plus:-moz-locale-dir(ltr):hover {
   background-position: left 12px center;
   transform: translateX(-40px) scale(1.2);
+}
+
+#overlay-back:-moz-locale-dir(rtl):hover {
+  transform: translateX(-40px) scale(1.2) scaleX(-1);
+}
+
+#overlay-back:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+  right: -70px;
+  background-position: right 9px center;
 }
 
 #overlay-back[mousedrag],
@@ -559,6 +573,11 @@ documenttab[selected] .documenttab-selection {
   position: relative;
   z-index: 1;
   transition: opacity @forward_transition_length@ ease-out;
+}
+
+#back-button:-moz-locale-dir(rtl),
+#forward-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 #back-button[disabled] {
@@ -882,6 +901,10 @@ documenttab[selected] .documenttab-selection {
   -moz-margin-end: 40px;
   list-style-image: url(chrome://browser/skin/images/navbar-back.png);
   -moz-box-pack: center;
+}
+
+#panel-close-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 @media (min-resolution: @min_res_140pc@) {
