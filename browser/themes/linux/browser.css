@@ -1700,21 +1700,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   margin-top: 1em;
 }
 
-.sync-panel-button {
-  @hudButton@
-  margin: 0;
-  min-width: 72px;
-  min-height: 22px;
-}
-
-.sync-panel-button:hover:active {
-  @hudButtonPressed@
-}
-
-.sync-panel-button:-moz-focusring {
-  @hudButtonFocused@
-}
-
 #sync-error-panel-title {
   font-weight: bold;
 }
