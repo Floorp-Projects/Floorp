@@ -531,7 +531,9 @@ AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
   }
 
   if (aIsOnlyNode) {
-    mStream->ChangeExplicitBlockerCount(1);
+    if (mStream) {
+      mStream->ChangeExplicitBlockerCount(1);
+    }
     mStartedBlockingDueToBeingOnlyNode = TimeStamp::Now();
     mExtraCurrentTimeSinceLastStartedBlocking = 0;
     // Don't do an update of mExtraCurrentTimeSinceLastStartedBlocking until the next stable state.
@@ -541,7 +543,9 @@ AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
     // Force update of mExtraCurrentTimeSinceLastStartedBlocking if necessary
     ExtraCurrentTime();
     mExtraCurrentTime += mExtraCurrentTimeSinceLastStartedBlocking;
-    mStream->ChangeExplicitBlockerCount(-1);
+    if (mStream) {
+      mStream->ChangeExplicitBlockerCount(-1);
+    }
     mStartedBlockingDueToBeingOnlyNode = TimeStamp();
   }
 }
