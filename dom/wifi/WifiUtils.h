@@ -13,7 +13,7 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/WifiOptionsBinding.h"
-#include "NetUtils.h"
+#include "mozilla/dom/network/NetUtils.h"
 #include "nsCxPusher.h"
 
 // Needed to add a copy constructor to WifiCommandOptions.
