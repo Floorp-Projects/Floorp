@@ -678,29 +678,47 @@ gfxMacPlatformFontList::InitFontList()
     gfxPlatformFontList::InitFontList();
     
     // iterate over available families
-    NSEnumerator *families = [[sFontManager availableFontFamilies]
-                              objectEnumerator];  // returns "canonical", non-localized family name
 
-    nsAutoString availableFamilyName;
+    CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
 
-    NSString *availableFamily = nil;
-    while ((availableFamily = [families nextObject])) {
+    // iterate over families
+    uint32_t i, numFamilies;
 
-        // make a nsString
-        GetStringForNSString(availableFamily, availableFamilyName);
+    numFamilies = CFArrayGetCount(familyNames);
+    for (i = 0; i < numFamilies; i++) {
+        CFStringRef family = (CFStringRef)CFArrayGetValueAtIndex(familyNames, i);
+
+        // CTFontManager includes weird internal family names and
+        // LastResort, skip over those
+        if (!family ||
+            ::CFStringHasPrefix(family, CFSTR(".")) ||
+            CFStringCompare(family, CFSTR("LastResort"),
+                            kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
+            continue;
+        }
+
+        nsAutoTArray<UniChar, 1024> buffer;
+        CFIndex len = ::CFStringGetLength(family);
+        buffer.SetLength(len+1);
+        ::CFStringGetCharacters(family, ::CFRangeMake(0, len),
+                                buffer.Elements());
+        buffer[len] = 0;
+        nsAutoString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
 
         // create a family entry
-        gfxFontFamily *familyEntry = new gfxMacFontFamily(availableFamilyName);
+        gfxFontFamily *familyEntry = new gfxMacFontFamily(familyName);
         if (!familyEntry) break;
 
         // add the family entry to the hash table
-        ToLowerCase(availableFamilyName);
-        mFontFamilies.Put(availableFamilyName, familyEntry);
+        ToLowerCase(familyName);
+        mFontFamilies.Put(familyName, familyEntry);
 
         // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.Contains(availableFamilyName))
+        if (mBadUnderlineFamilyNames.Contains(familyName))
             familyEntry->SetBadUnderlineFamily();
     }
+
+    CFRelease(familyNames);
 
     InitSingleFaceList();
 
