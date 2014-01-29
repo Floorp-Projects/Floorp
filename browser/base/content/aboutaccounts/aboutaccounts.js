@@ -63,6 +63,11 @@ let wrapper = {
   onLogin: function (accountData) {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
+    if (accountData.customizeSync) {
+      Services.prefs.setBoolPref("services.sync.needsCustomization", true);
+      delete accountData.customizeSync;
+    }
+
     fxAccounts.setSignedInUser(accountData).then(
       () => {
         this.injectData("message", { status: "login" });
