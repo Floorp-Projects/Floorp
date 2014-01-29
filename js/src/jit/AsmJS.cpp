@@ -3290,8 +3290,19 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
     if (!initNode)
         return f.failName(var, "var '%s' needs explicit type declaration via an initial value", name);
 
+    if (initNode->isKind(PNK_NAME)) {
+        PropertyName *initName = initNode->name();
+        if (const ModuleCompiler::Global *global = f.lookupGlobal(initName)) {
+            if (global->which() != ModuleCompiler::Global::ConstantLiteral)
+                return f.failName(initNode, "'%s' isn't a possible global variable initializer, "
+                                            "needs to be a const numeric literal", initName);
+            return f.addVariable(var, name, global->varOrConstType(), global->constLiteralValue());
+        }
+        return f.failName(initNode, "'%s' needs to be a global name", initName);
+    }
+
     if (!IsNumericLiteral(f.m(), initNode))
-        return f.failName(initNode, "initializer for '%s' needs to be a numeric literal", name);
+        return f.failName(initNode, "initializer for '%s' needs to be a numeric literal or a global const literal", name);
 
     NumLit literal = ExtractNumericLiteral(f.m(), initNode);
     if (!literal.hasType())
