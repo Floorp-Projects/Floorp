@@ -53,7 +53,6 @@ AddUniforms(ProgramProfileOGL& aProfile)
 void
 AddCommonArgs(ProgramProfileOGL& aProfile)
 {
-  aProfile.mHasMatrixProj = true;
   aProfile.mAttributes.AppendElement(Argument("aVertexCoord"));
 }
 void
@@ -323,6 +322,8 @@ ShaderProgramOGL::Initialize()
     NS_ASSERTION(mProfile.mAttributes[i].mLocation >= 0, "Bad attribute location.");
   }
 
+  mProfile.mHasMatrixProj = mProfile.mUniforms[KnownUniform::MatrixProj].mLocation != -1;
+
   return true;
 }
 
@@ -439,7 +440,7 @@ ShaderProgramOGL::Activate()
   NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
   mGL->fUseProgram(mProgram);
 
-  // check and set the projection matrix
+  // check if we need to set the projection matrix
   if (mIsProjectionMatrixStale) {
     SetProjectionMatrix(mProjectionMatrix);
   }
