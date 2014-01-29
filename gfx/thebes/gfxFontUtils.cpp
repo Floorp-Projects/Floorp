@@ -1087,40 +1087,53 @@ enum {
 };    
 
 nsresult
-gfxFontUtils::ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
-                        int32_t aPlatformID, nsTArray<nsString>& aNames)
+gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
+                        uint32_t aNameID, int32_t aPlatformID,
+                        nsTArray<nsString>& aNames)
 {
-    return ReadNames(aNameTable, aNameID, LANG_ALL, aPlatformID, aNames);
+    return ReadNames(aNameData, aDataLen, aNameID, LANG_ALL,
+                     aPlatformID, aNames);
 }
 
 nsresult
-gfxFontUtils::ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID, 
+gfxFontUtils::ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID,
                                 nsString& aName)
+{
+    uint32_t nameTableLen;
+    const char *nameTable = hb_blob_get_data(aNameTable, &nameTableLen);
+    return ReadCanonicalName(nameTable, nameTableLen, aNameID, aName);
+}
+
+nsresult
+gfxFontUtils::ReadCanonicalName(const char *aNameData, uint32_t aDataLen,
+                                uint32_t aNameID, nsString& aName)
 {
     nsresult rv;
     
     nsTArray<nsString> names;
     
     // first, look for the English name (this will succeed 99% of the time)
-    rv = ReadNames(aNameTable, aNameID, CANONICAL_LANG_ID, PLATFORM_ID, names);
+    rv = ReadNames(aNameData, aDataLen, aNameID, CANONICAL_LANG_ID, 
+                   PLATFORM_ID, names);
     NS_ENSURE_SUCCESS(rv, rv);
         
     // otherwise, grab names for all languages
     if (names.Length() == 0) {
-        rv = ReadNames(aNameTable, aNameID, LANG_ALL, PLATFORM_ID, names);
+        rv = ReadNames(aNameData, aDataLen, aNameID, LANG_ALL,
+                       PLATFORM_ID, names);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     
 #if defined(XP_MACOSX)
     // may be dealing with font that only has Microsoft name entries
     if (names.Length() == 0) {
-        rv = ReadNames(aNameTable, aNameID, LANG_ID_MICROSOFT_EN_US, 
+        rv = ReadNames(aNameData, aDataLen, aNameID, LANG_ID_MICROSOFT_EN_US,
                        PLATFORM_ID_MICROSOFT, names);
         NS_ENSURE_SUCCESS(rv, rv);
         
         // getting really desperate now, take anything!
         if (names.Length() == 0) {
-            rv = ReadNames(aNameTable, aNameID, LANG_ALL, 
+            rv = ReadNames(aNameData, aDataLen, aNameID, LANG_ALL,
                            PLATFORM_ID_MICROSOFT, names);
             NS_ENSURE_SUCCESS(rv, rv);
         }
@@ -1322,85 +1335,84 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
 }
 
 nsresult
-gfxFontUtils::ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
+gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
+                        uint32_t aNameID,
                         int32_t aLangID, int32_t aPlatformID,
                         nsTArray<nsString>& aNames)
 {
-    uint32_t nameTableLen;
-    const char *nameTable = hb_blob_get_data(aNameTable, &nameTableLen);
-    NS_ASSERTION(nameTableLen != 0, "null name table");
+    NS_ASSERTION(aDataLen != 0, "null name table");
 
-    if (!nameTableLen) {
+    if (!aDataLen) {
         return NS_ERROR_FAILURE;
     }
 
     // -- name table data
-    const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(nameTable);
+    const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(aNameData);
 
     uint32_t nameCount = nameHeader->count;
 
     // -- sanity check the number of name records
-    if (uint64_t(nameCount) * sizeof(NameRecord) > nameTableLen) {
+    if (uint64_t(nameCount) * sizeof(NameRecord) > aDataLen) {
         NS_WARNING("invalid font (name table data)");
         return NS_ERROR_FAILURE;
     }
-    
+
     // -- iterate through name records
-    const NameRecord *nameRecord 
-        = reinterpret_cast<const NameRecord*>(nameTable + sizeof(NameHeader));
+    const NameRecord *nameRecord
+        = reinterpret_cast<const NameRecord*>(aNameData + sizeof(NameHeader));
     uint64_t nameStringsBase = uint64_t(nameHeader->stringOffset);
 
     uint32_t i;
     for (i = 0; i < nameCount; i++, nameRecord++) {
         uint32_t platformID;
-        
+
         // skip over unwanted nameID's
         if (uint32_t(nameRecord->nameID) != aNameID)
             continue;
 
         // skip over unwanted platform data
         platformID = nameRecord->platformID;
-        if (aPlatformID != PLATFORM_ALL 
+        if (aPlatformID != PLATFORM_ALL
             && uint32_t(nameRecord->platformID) != PLATFORM_ID)
             continue;
-            
+
         // skip over unwanted languages
-        if (aLangID != LANG_ALL 
+        if (aLangID != LANG_ALL
               && uint32_t(nameRecord->languageID) != uint32_t(aLangID))
             continue;
-        
+
         // add name to names array
-        
+
         // -- calculate string location
         uint32_t namelen = nameRecord->length;
         uint32_t nameoff = nameRecord->offset;  // offset from base of string storage
 
-        if (nameStringsBase + uint64_t(nameoff) + uint64_t(namelen) 
-                > nameTableLen) {
+        if (nameStringsBase + uint64_t(nameoff) + uint64_t(namelen)
+                > aDataLen) {
             NS_WARNING("invalid font (name table strings)");
             return NS_ERROR_FAILURE;
         }
-        
+
         // -- decode if necessary and make nsString
         nsAutoString name;
-        
-        DecodeFontName(nameTable + nameStringsBase + nameoff, namelen,
+
+        DecodeFontName(aNameData + nameStringsBase + nameoff, namelen,
                        platformID, uint32_t(nameRecord->encodingID),
                        uint32_t(nameRecord->languageID), name);
-            
+
         uint32_t k, numNames;
         bool foundName = false;
-        
+
         numNames = aNames.Length();
         for (k = 0; k < numNames; k++) {
             if (name.Equals(aNames[k])) {
                 foundName = true;
                 break;
-            }    
+            }
         }
-        
+
         if (!foundName)
-            aNames.AppendElement(name);                          
+            aNames.AppendElement(name);
 
     }
 
