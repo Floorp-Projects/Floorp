@@ -33,6 +33,14 @@ let gFxAccounts = {
     return this.button = document.getElementById("PanelUI-fxa-status");
   },
 
+  get syncNeedsCustomization() {
+    try {
+      return Services.prefs.getBoolPref("services.sync.needsCustomization");
+    } catch (e) {
+      return false;
+    }
+  },
+
   init: function () {
     if (this._initialized) {
       return;
@@ -66,10 +74,10 @@ let gFxAccounts = {
   },
 
   observe: function (subject, topic) {
-    if (topic == FxAccountsCommon.ONVERIFIED_NOTIFICATION) {
-      this.showDoorhanger();
-    } else {
+    if (topic != FxAccountsCommon.ONVERIFIED_NOTIFICATION) {
       this.updateUI();
+    } else if (!this.syncNeedsCustomization) {
+      this.showDoorhanger();
     }
   },
 
