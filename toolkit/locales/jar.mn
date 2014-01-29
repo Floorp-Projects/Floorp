@@ -135,3 +135,7 @@
 % locale places @AB_CD@ %locale/@AB_CD@/places/
   locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)
   locale/@AB_CD@/global/search/search.properties          (%chrome/search/search.properties)
+
+relativesrcdir browser/locales:
+  locale/@AB_CD@/global/charsetMenu.dtd                 (%chrome/browser/charsetMenu.dtd)
+  locale/@AB_CD@/global/charsetMenu.properties          (%chrome/browser/charsetMenu.properties)
