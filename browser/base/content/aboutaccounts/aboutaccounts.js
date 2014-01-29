@@ -9,6 +9,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
+const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUser";
+
 function log(msg) {
   //dump("FXA: " + msg + "\n");
 };
@@ -16,6 +18,44 @@ function log(msg) {
 function error(msg) {
   console.log("Firefox Account Error: " + msg + "\n");
 };
+
+function getPreviousAccountName() {
+  try {
+    return Services.prefs.getComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString).data;
+  } catch (_) {
+    return "";
+  }
+}
+
+function setPreviousAccountName(acctName) {
+  let string = Cc["@mozilla.org/supports-string;1"]
+               .createInstance(Ci.nsISupportsString);
+  string.data = acctName;
+  Services.prefs.setComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString, string);
+}
+
+function needRelinkWarning(accountData) {
+  let prevAcct = getPreviousAccountName();
+  return prevAcct && prevAcct != accountData.email;
+}
+
+function promptForRelink() {
+  let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
+  let continueLabel = sb.GetStringFromName("continue.label");
+  let title = sb.GetStringFromName("relink.verify.title");
+  let description = sb.formatStringFromName("relink.verify.description",
+                                            [Services.prefs.getCharPref(PREF_LAST_FXA_USER)], 1);
+  let body = sb.GetStringFromName("relink.verify.heading") +
+             "\n\n" + description;
+  let ps = Services.prompt;
+  let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
+                    (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
+                    ps.BUTTON_POS_1_DEFAULT;
+  let pressed = Services.prompt.confirmEx(window, title, body, buttonFlags,
+                                     continueLabel, null, null, null,
+                                     {});
+  return pressed == 0; // 0 is the "continue" button
+}
 
 let wrapper = {
   iframe: null,
@@ -67,6 +107,23 @@ let wrapper = {
       Services.prefs.setBoolPref("services.sync.needsCustomization", true);
       delete accountData.customizeSync;
     }
+
+    // If the last fxa account used for sync isn't this account, we display
+    // a modal dialog checking they really really want to do this...
+    // (This is sync-specific, so ideally would be in sync's identity module,
+    // but it's a little more seamless to do here, and sync is currently the
+    // only fxa consumer, so...
+    if (needRelinkWarning(accountData) && !promptForRelink()) {
+      // we need to tell the page we successfully received the message, but
+      // then bail without telling fxAccounts
+      this.injectData("message", { status: "login" });
+      // and reload the page or else it remains in a "signed in" state.
+      window.location.reload();
+      return;
+    }
+
+    // Remember who it was so we can log out next time.
+    setPreviousAccountName(accountData.email);
 
     fxAccounts.setSignedInUser(accountData).then(
       () => {
