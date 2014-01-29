@@ -11,6 +11,7 @@
 #include "nsTHashtable.h"
 
 #include "gfxFontUtils.h"
+#include "gfxFontInfoLoader.h"
 #include "gfxFont.h"
 #include "gfxPlatform.h"
 
