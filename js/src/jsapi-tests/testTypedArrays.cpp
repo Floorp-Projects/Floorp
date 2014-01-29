@@ -86,8 +86,8 @@ TestPlainTypedArray(JSContext *cx)
     return true;
 }
 
-template<JSObject *CreateWithBuffer(JSContext *, JSObject *, uint32_t, int32_t),
-         JSObject *CreateFromArray(JSContext *, JSObject *),
+template<JSObject *CreateWithBuffer(JSContext *, JS::HandleObject, uint32_t, int32_t),
+         JSObject *CreateFromArray(JSContext *, JS::HandleObject),
          typename Element,
          Element *GetData(JSObject *)>
 bool
