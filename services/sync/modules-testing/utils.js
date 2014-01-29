@@ -150,7 +150,10 @@ this.configureIdentity = function(identityOverrides) {
   if (ns.Service.identity instanceof BrowserIDManager) {
     // do the FxAccounts thang...
     configureFxAccountIdentity(ns.Service.identity, config);
-    return ns.Service.identity.initWithLoggedInUser();
+    return ns.Service.identity.initializeWithCurrentIdentity().then(() => {
+      // need to wait until this identity manager is readyToAuthenticate.
+      return ns.Service.identity.whenReadyToAuthenticate.promise;
+    });
   }
   // old style identity provider.
   setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
@@ -172,7 +175,9 @@ this.SyncTestingInfrastructure = function (server, username, password, syncKey) 
     config.sync.password = password;
   if (syncKey)
     config.sync.syncKey = syncKey;
-  configureIdentity(config);
+  let cb = Async.makeSpinningCallback();
+  configureIdentity(config).then(cb, cb);
+  cb.wait();
 
   let i = server.identity;
   let uri = i.primaryScheme + "://" + i.primaryHost + ":" +
@@ -224,16 +229,16 @@ this.add_identity_test = function(test, testFunction) {
   test.add_task(function() {
     note("sync");
     let oldIdentity = Status._authManager;
-    Status._authManager = ns.Service.identity = new IdentityManager();
+    Status.__authManager = ns.Service.identity = new IdentityManager();
     yield testFunction();
-    Status._authManager = ns.Service.identity = oldIdentity;
+    Status.__authManager = ns.Service.identity = oldIdentity;
   });
   // another task for the FxAccounts identity manager.
   test.add_task(function() {
     note("FxAccounts");
     let oldIdentity = Status._authManager;
-    Status._authManager = ns.Service.identity = new BrowserIDManager();
+    Status.__authManager = ns.Service.identity = new BrowserIDManager();
     yield testFunction();
-    Status._authManager = ns.Service.identity = oldIdentity;
+    Status.__authManager = ns.Service.identity = oldIdentity;
   });
 }
