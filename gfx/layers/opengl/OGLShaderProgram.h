@@ -379,13 +379,12 @@ public:
     SetMatrixUniform(KnownUniform::LayerQuadTransform, m);
   }
 
-  // activates this program and sets its projection matrix, if the program uses one
-  void CheckAndSetProjectionMatrix(const gfx::Matrix4x4& aMatrix)
+  // Set a projection matrix on the program to be set the next time
+  // the program is activated.
+  void DelayedSetProjectionMatrix(const gfx::Matrix4x4& aMatrix)
   {
-    if (mProfile.mHasMatrixProj) {
-      mIsProjectionMatrixStale = true;
-      mProjectionMatrix = aMatrix;
-    }
+    mIsProjectionMatrixStale = true;
+    mProjectionMatrix = aMatrix;
   }
 
   void SetProjectionMatrix(const gfx::Matrix4x4& aMatrix) {
