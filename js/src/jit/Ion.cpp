@@ -30,6 +30,7 @@
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitCommon.h"
 #include "jit/JitCompartment.h"
 #include "jit/LICM.h"
 #include "jit/LinearScan.h"
@@ -2231,9 +2232,8 @@ EnterIon(JSContext *cx, EnterJitData &data)
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->runtime()->jitRuntime());
 
-        // Single transition point from Interpreter to Baseline.
-        enter(data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */nullptr, data.calleeToken,
-              /* scopeChain = */ nullptr, 0, data.result.address());
+        CALL_GENERATED_CODE(enter, data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */nullptr, data.calleeToken,
+                            /* scopeChain = */ nullptr, 0, data.result.address());
     }
 
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
@@ -2342,8 +2342,9 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     JS_ASSERT(args.length() >= fun->nargs());
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-    enter(jitcode, args.length() + 1, args.array() - 1, nullptr, calleeToken,
-          /* scopeChain = */ nullptr, 0, result.address());
+
+    CALL_GENERATED_CODE(enter, jitcode, args.length() + 1, args.array() - 1, /* osrFrame = */nullptr,
+                        calleeToken, /* scopeChain = */ nullptr, 0, result.address());
 
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 

@@ -10,6 +10,8 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "js/Utility.h"
+
 // gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
 #ifdef __ARM_PCS_VFP
 #define JS_CODEGEN_ARM_HARDFP
@@ -75,6 +77,12 @@ class Registers
                                               "r8", "r9", "r10", "r11", "r12", "sp", "r14", "pc"};
         return Names[code];
     }
+    static const char *GetName(uint32_t i) {
+        MOZ_ASSERT(i < Total);
+        return GetName(Code(i));
+    }
+
+    static Code FromName(const char *name);
 
     static const Code StackPointer = sp;
     static const Code Invalid = invalid_reg;
@@ -180,6 +188,12 @@ class FloatRegisters
                                               "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15"};
         return Names[code];
     }
+    static const char *GetName(uint32_t i) {
+        JS_ASSERT(i < Total);
+        return GetName(Code(i));
+    }
+
+    static Code FromName(const char *name);
 
     static const Code Invalid = invalid_freg;
 

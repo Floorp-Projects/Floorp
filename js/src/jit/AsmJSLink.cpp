@@ -18,6 +18,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "jit/AsmJSModule.h"
 #include "jit/Ion.h"
+#include "jit/JitCommon.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -397,7 +398,8 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
-        if (!module.entryTrampoline(func)(coercedArgs.begin(), module.globalData()))
+        AsmJSModule::CodePtr enter = module.entryTrampoline(func);
+        if (!CALL_GENERATED_ASMJS(enter, coercedArgs.begin(), module.globalData()))
             return false;
     }
 

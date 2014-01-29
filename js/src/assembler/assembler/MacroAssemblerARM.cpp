@@ -34,7 +34,7 @@
 
 #include "assembler/assembler/MacroAssemblerARM.h"
 
-#if WTF_OS_LINUX || WTF_OS_ANDROID
+#if (WTF_OS_LINUX || WTF_OS_ANDROID) && !defined(JS_ARM_SIMULATOR)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -56,6 +56,9 @@ namespace JSC {
 
 static bool isVFPPresent()
 {
+#ifdef JS_ARM_SIMULATOR
+    return true;
+#else
 #if WTF_OS_LINUX
     int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd > 0) {
@@ -85,8 +88,8 @@ static bool isVFPPresent()
     if (strstr(buf, "vfp"))
         return true;
 #endif
-
     return false;
+#endif // JS_ARM_SIMULATOR
 }
 
 const bool MacroAssemblerARM::s_isVFPPresent = isVFPPresent();
