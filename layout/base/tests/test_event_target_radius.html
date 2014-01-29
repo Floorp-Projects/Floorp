@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   .target { position:absolute; left:100px; top:100px; width:100px; height:100px; background:blue; }
   </style>
 </head>
-<body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%">
+<body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%; overflow:hidden">
 <p id="display"></p>
 <div id="content">
   <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
@@ -47,6 +47,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 
   <div id="t9" class="target" ontouchend="x=1" hidden></div>
 
+  <div id="t10_left" class="target" style="left:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_right" class="target" style="left:auto;right:-50px" onmousedown="x=1" hidden></div>
+  <div id="t10_top" class="target" style="top:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_bottom" class="target" style="top:auto;bottom:-50px;" onmousedown="x=1" hidden></div>
+  <div id="t10_over" style="position:absolute; left:0; top:0; width:100%; height:100%; background:yellow;" hidden></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -213,6 +218,33 @@ function test3() {
     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
   });
   setShowing("t9", false);
+
+  setShowing("t10_over", true);
+  setShowing("t10_left", true);
+  setShowing("t10_right", true);
+  setShowing("t10_top", true);
+  setShowing("t10_bottom", true);
+  testMouseClick("t10_left", 51, 10, "t10_over", "element outside of visible area is not selected");
+  if (self.frameElement &&
+      (self.frameElement.offsetLeft + self.innerWidth >
+       SpecialPowers.wrap(top).innerWidth)) {
+    info("WARNING: Window is too narrow, can't test t10_right");
+  } else {
+    testMouseClick("t10_right", 49, 10, "t10_over", "element outside of visible area is not selected");
+  }
+  testMouseClick("t10_top", 10, 51, "t10_over", "element outside of visible area is not selected");
+  if (self.frameElement &&
+      (self.frameElement.offsetTop + self.innerHeight >
+       SpecialPowers.wrap(top).innerHeight)) {
+    info("WARNING: Window is too short, can't test t10_bottom");
+  } else {
+    testMouseClick("t10_bottom", 10, 49, "t10_over", "element outside of visible area is not selected");
+  }
+  setShowing("t10_over", false);
+  setShowing("t10_left", false);
+  setShowing("t10_right", false);
+  setShowing("t10_top", false);
+  setShowing("t10_bottom", false);
 
   // Not yet tested:
   // -- visited link weight
