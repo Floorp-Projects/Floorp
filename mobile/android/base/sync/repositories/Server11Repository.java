@@ -24,7 +24,6 @@ public class Server11Repository extends Repository {
   protected String collection;
   protected URI collectionURI;
   protected final AuthHeaderProvider authHeaderProvider;
-  public static final String VERSION_PATH_FRAGMENT = "1.1/";
 
   /**
    * Construct a new repository that fetches and stores against the Sync 1.1. API.
