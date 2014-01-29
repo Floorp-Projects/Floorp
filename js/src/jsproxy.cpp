@@ -79,7 +79,7 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id)
 BaseProxyHandler::BaseProxyHandler(const void *family)
   : mFamily(family),
     mHasPrototype(false),
-    mHasPolicy(false)
+    mHasSecurityPolicy(false)
 {
 }
 

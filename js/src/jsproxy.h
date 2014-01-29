@@ -89,11 +89,19 @@ class JS_FRIEND_API(BaseProxyHandler)
 {
     const void *mFamily;
     bool mHasPrototype;
-    bool mHasPolicy;
+
+    /*
+     * All proxies indicate whether they have any sort of interesting security
+     * policy that might prevent the caller from doing something it wants to
+     * the object. In the case of wrappers, this distinction is used to
+     * determine whether the caller may strip off the wrapper if it so desires.
+     */
+    bool mHasSecurityPolicy;
+
   protected:
     // Subclasses may set this in their constructor.
     void setHasPrototype(bool aHasPrototype) { mHasPrototype = aHasPrototype; }
-    void setHasPolicy(bool aHasPolicy) { mHasPolicy = aHasPolicy; }
+    void setHasSecurityPolicy(bool aHasPolicy) { mHasSecurityPolicy = aHasPolicy; }
 
   public:
     explicit BaseProxyHandler(const void *family);
@@ -103,8 +111,8 @@ class JS_FRIEND_API(BaseProxyHandler)
         return mHasPrototype;
     }
 
-    bool hasPolicy() {
-        return mHasPolicy;
+    bool hasSecurityPolicy() {
+        return mHasSecurityPolicy;
     }
 
     inline const void *family() {
@@ -449,8 +457,8 @@ class JS_FRIEND_API(AutoEnterPolicy)
         : context(nullptr)
 #endif
     {
-        allow = handler->hasPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
-                                     : true;
+        allow = handler->hasSecurityPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
+                                             : true;
         recordEnter(cx, wrapper, id);
         // We want to throw an exception if all of the following are true:
         // * The policy disallowed access.
