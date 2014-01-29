@@ -41,22 +41,6 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
 const NOT_AVAILABLE = Number.MAX_VALUE;
 
 /**
- * Download a URL.
- *
- * @param aURL
- *        the url to download (nsIURI object)
- * @param [optional] aFileName
- *        the destination file name
- */
-function DownloadURL(aURL, aFileName) {
-  // For private browsing, try to get document out of the most recent browser
-  // window, or provide our own if there's no browser window.
-  let browserWin = RecentWindow.getMostRecentBrowserWindow();
-  let initiatingDoc = browserWin ? browserWin.document : document;
-  saveURL(aURL, aFileName, null, true, true, undefined, initiatingDoc);
-}
-
-/**
  * A download element shell is responsible for handling the commands and the
  * displayed data for a single download view element. The download element
  * could represent either a past download (for which we get data from places)  or
@@ -645,7 +629,10 @@ DownloadElementShell.prototype = {
     // In future we may try to download into the same original target uri, when
     // we have it.  Though that requires verifying the path is still valid and
     // may surprise the user if he wants to be requested every time.
-    DownloadURL(this.downloadURI, this.getDownloadMetaData().fileName);
+    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let initiatingDoc = browserWin ? browserWin.document : document;
+    DownloadURL(this.downloadURI, this.getDownloadMetaData().fileName,
+                initiatingDoc);
   },
 
   /* nsIController */
@@ -1433,7 +1420,9 @@ DownloadsPlacesView.prototype = {
 
   _downloadURLFromClipboard: function DPV__downloadURLFromClipboard() {
     let [url, name] = this._getURLFromClipboardData();
-    DownloadURL(url, name);
+    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let initiatingDoc = browserWin ? browserWin.document : document;
+    DownloadURL(url, name, initiatingDoc);
   },
 
   doCommand: function DPV_doCommand(aCommand) {
@@ -1487,6 +1476,11 @@ DownloadsPlacesView.prototype = {
     else
       contextMenu.removeAttribute("state");
 
+    if (state == nsIDM.DOWNLOAD_DOWNLOADING) {
+      // The resumable property of a download may change at any time, so
+      // ensure we update the related command now.
+      goUpdateCommand("downloadsCmd_pauseResume");
+    }
     return true;
   },
 
@@ -1579,8 +1573,11 @@ DownloadsPlacesView.prototype = {
 
     let name = { };
     let url = Services.droppedLinkHandler.dropLink(aEvent, name);
-    if (url)
-      DownloadURL(url, name.value);
+    if (url) {
+      let browserWin = RecentWindow.getMostRecentBrowserWindow();
+      let initiatingDoc = browserWin ? browserWin.document : document;
+      DownloadURL(url, name.value, initiatingDoc);
+    }
   }
 };
 
