@@ -148,6 +148,7 @@ this.DataSubmissionRequest.prototype = Object.freeze({
   SUBMISSION_SUCCESS: "success",
   SUBMISSION_FAILURE_SOFT: "failure-soft",
   SUBMISSION_FAILURE_HARD: "failure-hard",
+  UPLOAD_IN_PROGRESS: "upload-in-progress",
 
   /**
    * No submission was attempted because no data was available.
@@ -206,6 +207,16 @@ this.DataSubmissionRequest.prototype = Object.freeze({
    */
   onSubmissionFailureHard: function onSubmissionFailureHard(reason=null) {
     this.state = this.SUBMISSION_FAILURE_HARD;
+    this.reason = reason;
+    this.promise.resolve(this);
+    return this.promise.promise;
+  },
+
+  /**
+   * The request was aborted because an upload was already in progress.
+   */
+  onUploadInProgress: function (reason=null) {
+    this.state = this.UPLOAD_IN_PROGRESS;
     this.reason = reason;
     this.promise.resolve(this);
     return this.promise.promise;
