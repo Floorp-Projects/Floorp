@@ -242,6 +242,8 @@ function createSymlink() {
   let args = ["setup-symlink", "moz-foo", "moz-bar", "target",
               getApplyDirFile().path + "/a/b/link"];
   runHelperProcess(args);
+  getApplyDirFile("a/b/link", false).permissions = 0o666;
+  
   args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
           getApplyDirFile().path + "/a/b/link2", "change-perm"];
   runHelperProcess(args);
@@ -288,8 +290,8 @@ function run_test() {
       compareContents  : "test",
       originalFile     : null,
       compareFile      : null,
-      originalPerms    : 0o664,
-      comparePerms     : 0o664
+      originalPerms    : 0o666,
+      comparePerms     : 0o666
     });
   }
 

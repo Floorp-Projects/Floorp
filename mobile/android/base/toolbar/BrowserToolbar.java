@@ -638,7 +638,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         // Set TabCounter based on visibility
-        if (isVisible() && ViewHelper.getAlpha(mTabsCounter) != 0) {
+        if (isVisible() && ViewHelper.getAlpha(mTabsCounter) != 0 && !isEditing()) {
             mTabsCounter.setCountWithAnimation(count);
         } else {
             mTabsCounter.setCount(count);
@@ -862,6 +862,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // This alpha value has to be in sync with the one used
         // in setButtonEnabled().
         final float alpha = (enabled ? 1.0f : 0.24f);
+
+        if (!enabled) {
+            mTabsCounter.onEnterEditingMode();
+        }
 
         mTabs.setEnabled(enabled);
         ViewHelper.setAlpha(mTabsCounter, alpha);

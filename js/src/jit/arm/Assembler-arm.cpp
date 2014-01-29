@@ -2169,7 +2169,7 @@ Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool
     int32_t imm5 = fixedPoint;
     imm5 = (sx ? 32 : 16) - imm5;
     JS_ASSERT(imm5 >= 0);
-    imm5 = imm5 >> 1 | (imm5 & 1) << 6;
+    imm5 = imm5 >> 1 | (imm5 & 1) << 5;
     return writeVFPInst(sf, 0x02BA0040 | VD(vd) | toFixed << 18 | sx << 7 |
                         (!isSigned) << 16 | imm5 | c);
 }

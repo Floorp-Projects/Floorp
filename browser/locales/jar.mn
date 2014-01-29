@@ -18,6 +18,7 @@
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
+    locale/browser/syncCustomize.dtd               (%chrome/browser/syncCustomize.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
 #endif
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)

@@ -84,6 +84,18 @@
       testRelation("tree2_ti1a", RELATION_NODE_CHILD_OF, "tree2_ti1");
       testRelation("tree2_ti1b", RELATION_NODE_CHILD_OF, "tree2_ti1");
 
+      // 'node child of' relation for row role in grid.
+      // Relation for row associated using aria-owns should exist.
+      testRelation("simplegrid-ownrow", RELATION_NODE_CHILD_OF, "simplegrid");
+      // Relation for row associated using aria-level should exist.
+      testRelation("simplegrid-row3", RELATION_NODE_CHILD_OF,
+                   "simplegrid-row2");
+      // Relations for hierarchical children elements shouldn't exist.
+      testAbsentRelation("simplegrid-row1", RELATION_NODE_CHILD_OF,
+                         "simplegrid");
+      testAbsentRelation("simplegrid-row2", RELATION_NODE_CHILD_OF,
+                         "simplegrid");
+
       // 'node child of' relation for row role of treegrid
       testRelation("treegridrow1", RELATION_NODE_CHILD_OF, "treegrid");
       testRelation("treegridrow2", RELATION_NODE_CHILD_OF, "treegrid");
@@ -117,6 +129,14 @@
       testRelation("treegridrow2", RELATION_NODE_PARENT_OF, "treegridrow3");
       testRelation("treegrid", RELATION_NODE_PARENT_OF,
                    ["treegridrow1", "treegridrow2"]);
+
+      // 'node parent of' relation on ARIA grid.
+      // Should only have relation to child added through aria-owns.
+      testRelation("simplegrid", RELATION_NODE_PARENT_OF, "simplegrid-ownrow");
+      // 'node parent of' relation on ARIA grid's row.
+      // Should only have relation to child through aria-level.
+      testRelation("simplegrid-row2", RELATION_NODE_PARENT_OF,
+                   "simplegrid-row3");
 
       // 'node parent of' relation on ARIA list structured by groups
       testRelation("list", RELATION_NODE_PARENT_OF,
@@ -289,6 +309,22 @@
       <div role="treeitem" id="treeitem7">Super light green</div>
     </div>
   </div>
+
+  <div aria-owns="simplegrid-ownrow" role="grid" id="simplegrid">
+    <div role="row" id="simplegrid-row1" aria-level="1">
+      <div role="gridcell">cell 1,1</div>
+      <div role="gridcell">cell 1,2</div>
+    </div>
+    <div role="row" id="simplegrid-row2" aria-level="1">
+      <div role="gridcell">cell 2,1</div>
+      <div role="gridcell">cell 2,2</div>
+    </div>
+    <div role="row" id="simplegrid-row3" aria-level="2">
+      <div role="gridcell">cell 3,1</div>
+      <div role="gridcell">cell 3,2</div>
+    </div>
+  </div>
+  <div role="row" id="simplegrid-ownrow"></div>
 
   <ul role="tree" id="tree2">
     <li role="treeitem" id="tree2_ti1">Item 1

@@ -14,14 +14,13 @@ class CentOSBootstrapper(BaseBootstrapper):
         self.version = version
         self.dist_id = dist_id
 
-    def install_system_packages(self):
-        kern = platform.uname()
-
-        self.yum_groupinstall(
+        self.group_packages = [
             'Development Tools',
             'Development Libraries',
-            'GNOME Software Development')
-        self.yum_install(
+            'GNOME Software Development',
+        ]
+
+        self.packages = [
             'alsa-lib-devel',
             'autoconf213',
             'curl-devel',
@@ -36,7 +35,14 @@ class CentOSBootstrapper(BaseBootstrapper):
             'mesa-libGL-devel',
             'pulseaudio-libs-devel',
             'wireless-tools-devel',
-            'yasm')
+            'yasm',
+        ]
+
+    def install_system_packages(self):
+        kern = platform.uname()
+
+        self.yum_groupinstall(*self.group_packages)
+        self.yum_install(*self.packages)
 
         yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
         if 'x86_64' in kern[2]:
