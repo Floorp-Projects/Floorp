@@ -3165,10 +3165,10 @@ const Class js::OuterWindowProxyObject::class_ = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub,
+    proxy_Convert,
     proxy_Finalize,          /* finalize    */
     nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
+    proxy_HasInstance,       /* hasInstance */
     nullptr,                 /* construct   */
     ProxyObject::trace,      /* trace       */
     {
