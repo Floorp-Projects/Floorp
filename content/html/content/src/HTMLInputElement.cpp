@@ -1777,7 +1777,7 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
       // NOTE: this is currently quite expensive work (too much string
       // manipulation). We should probably optimize that.
       nsAutoString currentValue;
-      GetValueInternal(currentValue);
+      GetValue(currentValue);
 
       SetValueInternal(aValue, false, true);
 
@@ -1789,7 +1789,7 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
       }
 
       if (mFocusedValue.Equals(currentValue)) {
-        GetValueInternal(mFocusedValue);
+        GetValue(mFocusedValue);
       }
     } else {
       SetValueInternal(aValue, false, true);
@@ -2564,8 +2564,8 @@ HTMLInputElement::AfterSetFiles(bool aSetValueChanged)
 void
 HTMLInputElement::FireChangeEventIfNeeded()
 {
-  nsString value;
-  GetValueInternal(value);
+  nsAutoString value;
+  GetValue(value);
 
   if (!MayFireChangeOnBlur() || mFocusedValue.Equals(value)) {
     return;
@@ -3507,7 +3507,7 @@ HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent)
   // because the 'focus' event is handled after the 'mousedown' event that
   // we're being called for (i.e. too late to update mFocusedValue, since we'll
   // have changed it by then).
-  GetValueInternal(mFocusedValue);
+  GetValue(mFocusedValue);
 
   SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
 }
@@ -3721,7 +3721,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT &&
         MayFireChangeOnBlur() &&
         !mIsDraggingRange) { // StartRangeThumbDrag already set mFocusedValue
-      GetValueInternal(mFocusedValue);
+      GetValue(mFocusedValue);
     }
 
     if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
@@ -4436,7 +4436,7 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
   // Otherwise, if the new type doesn't fire a change event on blur, but the
   // previous type does, we should clear out mFocusedValue.
   if (MayFireChangeOnBlur(mType) && !MayFireChangeOnBlur(oldType)) {
-    GetValueInternal(mFocusedValue);
+    GetValue(mFocusedValue);
   } else if (!IsSingleLineTextControl(mType, false) &&
              IsSingleLineTextControl(oldType, false)) {
     mFocusedValue.Truncate();
