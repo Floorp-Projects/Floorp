@@ -10,6 +10,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "xpcprivate.h"
+#include "WorkerPrivate.h"
 
 using mozilla::dom::EventTarget;
 using mozilla::DebugOnly;
@@ -198,9 +199,53 @@ AutoJSContext::operator JSContext*() const
   return mCx;
 }
 
+ThreadsafeAutoJSContext::ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  if (NS_IsMainThread()) {
+    mCx = nullptr;
+    mAutoJSContext.construct();
+  } else {
+    mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
+    mRequest.construct(mCx);
+  }
+}
+
+ThreadsafeAutoJSContext::operator JSContext*() const
+{
+  if (mCx) {
+    return mCx;
+  } else {
+    return mAutoJSContext.ref();
+  }
+}
+
 AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
 {
+}
+
+ThreadsafeAutoSafeJSContext::ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  if (NS_IsMainThread()) {
+    mCx = nullptr;
+    mAutoSafeJSContext.construct();
+  } else {
+    mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
+    mRequest.construct(mCx);
+  }
+}
+
+ThreadsafeAutoSafeJSContext::operator JSContext*() const
+{
+  if (mCx) {
+    return mCx;
+  } else {
+    return mAutoSafeJSContext.ref();
+  }
 }
 
 AutoPushJSContext::AutoPushJSContext(JSContext *aCx) : mCx(aCx)
