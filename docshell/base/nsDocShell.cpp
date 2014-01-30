@@ -4791,6 +4791,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const char16_t *aURL,
       errorPageUrl.AppendASCII(manifestParam.get());
     }
 
+    nsAutoCString frameType(FrameTypeToString(mFrameType));
+    errorPageUrl.AppendLiteral("&f=");
+    errorPageUrl.AppendASCII(frameType.get());
+
     nsCOMPtr<nsIURI> errorPageURI;
     rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
     NS_ENSURE_SUCCESS(rv, rv);
