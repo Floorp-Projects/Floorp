@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2010,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,54 +24,38 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-font-private.hh" /* Shall be first since may include windows.h */
-
-#include "hb-open-type-private.hh"
-
-#include "hb-ot-hhea-table.hh"
-#include "hb-ot-hmtx-table.hh"
-
-#include <string.h>
+#include "hb-ot-shape-complex-private.hh"
 
 
-
-#if 0
-struct hb_tt_font_t
+static const hb_tag_t tibetan_features[] =
 {
-  const struct hhea *hhea;
-  hb_blob_t *hhea_blob;
+  HB_TAG('a','b','v','s'),
+  HB_TAG('b','l','w','s'),
+  HB_TAG('a','b','v','m'),
+  HB_TAG('b','l','w','m'),
+  HB_TAG_NONE
 };
 
-
-static hb_tt_font_t *
-_hb_tt_font_create (hb_font_t *font)
-{
-  /* TODO Remove this object altogether */
-  hb_tt_font_t *tt = (hb_tt_font_t *) calloc (1, sizeof (hb_tt_font_t));
-
-  tt->hhea_blob = Sanitizer<hhea>::sanitize (font->face->reference_table (HB_OT_TAG_hhea));
-  tt->hhea = Sanitizer<hhea>::lock_instance (tt->hhea_blob);
-
-  return tt;
-}
-
 static void
-_hb_tt_font_destroy (hb_tt_font_t *tt)
+collect_features_tibetan (hb_ot_shape_planner_t *plan)
 {
-  hb_blob_destroy (tt->hhea_blob);
-
-  free (tt);
-}
-
-static inline const hhea&
-_get_hhea (hb_face_t *face)
-{
-  return likely (face->tt && face->tt->hhea) ? *face->tt->hhea : Null(hhea);
+  for (const hb_tag_t *script_features = tibetan_features; script_features && *script_features; script_features++)
+    plan->map.add_global_bool_feature (*script_features);
 }
 
 
-/*
- * hb_tt_font_funcs_t
- */
-
-#endif
+const hb_ot_complex_shaper_t _hb_ot_complex_shaper_tibetan =
+{
+  "default",
+  collect_features_tibetan,
+  NULL, /* override_features */
+  NULL, /* data_create */
+  NULL, /* data_destroy */
+  NULL, /* preprocess_text */
+  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
+  NULL, /* decompose */
+  NULL, /* compose */
+  NULL, /* setup_masks */
+  HB_OT_SHAPE_ZERO_WIDTH_MARKS_DEFAULT,
+  true, /* fallback_position */
+};
