@@ -103,9 +103,13 @@ class Touch;
 class ShadowRoot;
 } // namespace dom
 
-namespace layers{
+namespace layers {
 class LayerManager;
 } // namespace layers
+
+namespace gfx {
+class SourceSurface;
+} // namespace gfx
 } // namespace mozilla
 
 // Flags to pass to SetCapturingContent
@@ -128,11 +132,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-
-// db8d5e1e-6392-4ec1-9a29-18ee2ec0889b
+//bccc1c01-5123-4f49-9572-c0bf506b6418
 #define NS_IPRESSHELL_IID \
-{ 0xdb8d5e1e, 0x6392, 0x4ec1, \
-  {0x9a, 0x29, 0x18, 0xee, 0x2e, 0xc0, 0x88, 0x9b}}
+{ 0xbccc1c01, 0x5123, 0x4f49, \
+  {0x95, 0x72, 0xc0, 0xbf, 0x50, 0x6b, 0x64, 0x18}}
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -178,6 +181,7 @@ class nsIPresShell : public nsIPresShell_base
 {
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
 
   enum eRenderFlag {
     STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
@@ -1031,10 +1035,11 @@ public:
    * edge of the presshell area. The aPoint, aScreenRect and aSurface
    * arguments function in a similar manner as RenderSelection.
    */
-  virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
-                                                   nsIntRegion* aRegion,
-                                                   nsIntPoint& aPoint,
-                                                   nsIntRect* aScreenRect) = 0;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderNode(nsIDOMNode* aNode,
+             nsIntRegion* aRegion,
+             nsIntPoint& aPoint,
+             nsIntRect* aScreenRect) = 0;
 
   /**
    * Renders a selection to a surface and returns it. This method is primarily
@@ -1051,9 +1056,10 @@ public:
    * the original. When scaling does not occur, the mouse point isn't used
    * as the position can be determined from the displayed frames.
    */
-  virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
-                                                        nsIntPoint& aPoint,
-                                                        nsIntRect* aScreenRect) = 0;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderSelection(nsISelection* aSelection,
+                  nsIntPoint& aPoint,
+                  nsIntRect* aScreenRect) = 0;
 
   void AddWeakFrameInternal(nsWeakFrame* aWeakFrame);
   virtual void AddWeakFrameExternal(nsWeakFrame* aWeakFrame);
@@ -1322,8 +1328,15 @@ public:
   /**
    * Ensures that the refresh driver is running, and schedules a view 
    * manager flush on the next tick.
+   *
+   * @param aType PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after a delay, and
+   * put FrameLayerBuilder in 'compressed' mode that avoids short cut optimizations.
    */
-  virtual void ScheduleViewManagerFlush() = 0;
+  enum PaintType {
+    PAINT_DEFAULT,
+    PAINT_DELAYED_COMPRESS
+  };
+  virtual void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) = 0;
   virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
   virtual void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent,

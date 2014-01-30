@@ -899,44 +899,6 @@ ScopeIter::ScopeIter(const ScopeIterVal &val, JSContext *cx
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
-ScopeIter::ScopeIter(AbstractFramePtr frame, jsbytecode *pc, ScopeObject &scope, JSContext *cx
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx),
-    frame_(frame),
-    cur_(cx, &scope),
-    block_(cx)
-{
-    /*
-     * Find the appropriate static block for this iterator, given 'scope'. We
-     * know that 'scope' is a (non-optimized) scope on fp's scope chain. We do
-     * not, however, know whether fp->maybeScopeChain() encloses 'scope'. E.g.:
-     *
-     *   let (x = 1) {
-     *     g = function() { eval('debugger') };
-     *     let (y = 1) g();
-     *   }
-     *
-     * g will have x's block in its enclosing scope but not y's. However, at the
-     * debugger statement, both the x's and y's blocks will be on the block
-     * chain. Fortunately, we can compare scope object stack depths to determine
-     * the block (if any) that encloses 'scope'.
-     */
-    if (cur_->is<NestedScopeObject>()) {
-        block_ = frame.script()->getBlockScope(pc);
-        while (block_) {
-            if (block_->stackDepth() <= cur_->as<NestedScopeObject>().stackDepth())
-                break;
-            block_ = block_->enclosingBlock();
-        }
-        JS_ASSERT_IF(cur_->is<ClonedBlockObject>(),
-                     cur_->as<ClonedBlockObject>().staticBlock() == *block_);
-    } else {
-        block_ = nullptr;
-    }
-    settle();
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-}
-
 ScopeObject &
 ScopeIter::scope() const
 {

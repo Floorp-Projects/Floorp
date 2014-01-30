@@ -2178,6 +2178,18 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
     if (!successor)
         return ControlStatus_Error;
 
+    // Test for do {} while(false) and don't create a loop in that case.
+    if (vins->isConstant()) {
+        MConstant *cte = vins->toConstant();
+        if (cte->value().isBoolean() && !cte->value().toBoolean()) {
+            current->end(MGoto::New(alloc(), successor));
+            current = nullptr;
+
+            state.loop.successor = successor;
+            return processBrokenLoop(state);
+        }
+    }
+
     // Create the test instruction and end the current block.
     MTest *test = MTest::New(alloc(), vins, state.loop.entry, successor);
     current->end(test);
@@ -6623,7 +6635,7 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
 
     switch (elemTypeReprs.kind()) {
       case TypeRepresentation::X4:
-        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        // FIXME (bug 894105): load into a MIRType_float32x4 etc
         return true;
 
       case TypeRepresentation::Struct:
@@ -7338,10 +7350,13 @@ IonBuilder::jsop_setelem()
     MDefinition *index = current->pop();
     MDefinition *object = current->pop();
 
+    if (!setElemTryTypedObject(&emitted, object, index, value) || emitted)
+        return emitted;
+
     if (!setElemTryTypedStatic(&emitted, object, index, value) || emitted)
         return emitted;
 
-    if (!setElemTryTyped(&emitted, object, index, value) || emitted)
+    if (!setElemTryTypedArray(&emitted, object, index, value) || emitted)
         return emitted;
 
     if (!setElemTryDense(&emitted, object, index, value) || emitted)
@@ -7362,6 +7377,86 @@ IonBuilder::jsop_setelem()
     current->push(value);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
+                                  MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    TypeRepresentationSet objTypeReprs;
+    if (!lookupTypeRepresentationSet(obj, &objTypeReprs))
+        return false;
+
+    if (!objTypeReprs.allOfArrayKind())
+        return true;
+
+    TypeRepresentationSet elemTypeReprs;
+    if (!objTypeReprs.arrayElementType(*this, &elemTypeReprs))
+        return false;
+    if (elemTypeReprs.empty())
+        return true;
+
+    JS_ASSERT(TypeRepresentation::isSized(elemTypeReprs.kind()));
+
+    size_t elemSize;
+    if (!elemTypeReprs.allHaveSameSize(&elemSize))
+        return true;
+
+    switch (elemTypeReprs.kind()) {
+      case TypeRepresentation::X4:
+        // FIXME (bug 894105): store a MIRType_float32x4 etc
+        return true;
+
+      case TypeRepresentation::Reference:
+      case TypeRepresentation::Struct:
+      case TypeRepresentation::SizedArray:
+      case TypeRepresentation::UnsizedArray:
+        // For now, only optimize storing scalars.
+        return true;
+
+      case TypeRepresentation::Scalar:
+        return setElemTryScalarPropOfTypedObject(emitted,
+                                                 obj,
+                                                 index,
+                                                 objTypeReprs,
+                                                 value,
+                                                 elemTypeReprs,
+                                                 elemSize);
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Bad kind");
+}
+
+bool
+IonBuilder::setElemTryScalarPropOfTypedObject(bool *emitted,
+                                              MDefinition *obj,
+                                              MDefinition *index,
+                                              TypeRepresentationSet objTypeReprs,
+                                              MDefinition *value,
+                                              TypeRepresentationSet elemTypeReprs,
+                                              size_t elemSize)
+{
+    // Must always be storing the same scalar type
+    if (!elemTypeReprs.singleton())
+        return true;
+
+    ScalarTypeRepresentation *elemTypeRepr =
+        elemTypeReprs.getTypeRepresentation()->asScalar();
+
+    MDefinition *indexAsByteOffset;
+    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, &indexAsByteOffset, objTypeReprs))
+        return false;
+
+    // Store the element
+    if (!storeScalarTypedObjectValue(obj, indexAsByteOffset, elemTypeRepr, value))
+        return false;
+
+    current->push(value);
+
+    *emitted = true;
+    return true;
 }
 
 bool
@@ -7416,8 +7511,8 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
 }
 
 bool
-IonBuilder::setElemTryTyped(bool *emitted, MDefinition *object,
-                            MDefinition *index, MDefinition *value)
+IonBuilder::setElemTryTypedArray(bool *emitted, MDefinition *object,
+                                 MDefinition *index, MDefinition *value)
 {
     JS_ASSERT(*emitted == false);
 

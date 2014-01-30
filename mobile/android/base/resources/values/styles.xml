@@ -130,11 +130,13 @@
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
     </style>
 
-    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
+    <style name="Widget.HomeGridView" parent="Widget.GridView">
         <item name="android:padding">7dp</item>
         <item name="android:horizontalSpacing">0dp</item>
         <item name="android:verticalSpacing">7dp</item>
     </style>
+
+    <style name="Widget.TopSitesGridView" parent="Widget.HomeGridView" />
 
     <style name="Widget.TopSitesGridItemView">
       <item name="android:layout_width">fill_parent</item>

@@ -1144,6 +1144,7 @@ AbstractHealthReporter.prototype = Object.freeze({
  */
 this.HealthReporter = function (branch, policy, sessionRecorder, stateLeaf=null) {
   this._stateLeaf = stateLeaf;
+  this._uploadInProgress = false;
 
   AbstractHealthReporter.call(this, branch, policy, sessionRecorder);
 
@@ -1311,6 +1312,7 @@ this.HealthReporter.prototype = Object.freeze({
         onSubmissionSuccess: function () {},
         onSubmissionFailureSoft: function () {},
         onSubmissionFailureHard: function () {},
+        onUploadInProgress: function () {},
       };
 
       this._uploadData(request);
@@ -1374,6 +1376,18 @@ this.HealthReporter.prototype = Object.freeze({
   },
 
   _uploadData: function (request) {
+    // Under ideal circumstances, clients should never race to this
+    // function. However, server logs have observed behavior where
+    // racing to this function could be a cause. So, this lock was
+    // instituted.
+    if (this._uploadInProgress) {
+      this._log.warn("Upload requested but upload already in progress.");
+      let provider = this.getProvider("org.mozilla.healthreport");
+      let promise = provider.recordEvent("uploadAlreadyInProgress");
+      request.onUploadInProgress("Upload already in progress.");
+      return promise;
+    }
+
     let id = CommonUtils.generateUUID();
 
     this._log.info("Uploading data to server: " + this.serverURI + " " +
@@ -1382,40 +1396,48 @@ this.HealthReporter.prototype = Object.freeze({
     let now = this._now();
 
     return Task.spawn(function doUpload() {
-      let payload = yield this.getJSONPayload();
-
-      let histogram = Services.telemetry.getHistogramById(TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED);
-      histogram.add(payload.length);
-
-      let lastID = this.lastSubmitID;
-      yield this._state.addRemoteID(id);
-
-      let hrProvider = this.getProvider("org.mozilla.healthreport");
-      if (hrProvider) {
-        let event = lastID ? "continuationUploadAttempt"
-                           : "firstDocumentUploadAttempt";
-        hrProvider.recordEvent(event, now);
-      }
-
-      TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
-      let result;
       try {
-        let options = {
-          deleteIDs: this._state.remoteIDs.filter((x) => { return x != id; }),
-          telemetryCompressed: TELEMETRY_PAYLOAD_SIZE_COMPRESSED,
-        };
-        result = yield client.uploadJSON(this.serverNamespace, id, payload,
-                                         options);
-        TelemetryStopwatch.finish(TELEMETRY_UPLOAD, this);
-      } catch (ex) {
-        TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);
-        if (hrProvider) {
-          hrProvider.recordEvent("uploadClientFailure", now);
-        }
-        throw ex;
-      }
+        // The test for upload locking monkeypatches getJSONPayload.
+        // If the next two lines change, be sure to verify the test is
+        // accurate!
+        this._uploadInProgress = true;
+        let payload = yield this.getJSONPayload();
 
-      yield this._onBagheeraResult(request, false, now, result);
+        let histogram = Services.telemetry.getHistogramById(TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED);
+        histogram.add(payload.length);
+
+        let lastID = this.lastSubmitID;
+        yield this._state.addRemoteID(id);
+
+        let hrProvider = this.getProvider("org.mozilla.healthreport");
+        if (hrProvider) {
+          let event = lastID ? "continuationUploadAttempt"
+                             : "firstDocumentUploadAttempt";
+          hrProvider.recordEvent(event, now);
+        }
+
+        TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
+        let result;
+        try {
+          let options = {
+            deleteIDs: this._state.remoteIDs.filter((x) => { return x != id; }),
+            telemetryCompressed: TELEMETRY_PAYLOAD_SIZE_COMPRESSED,
+          };
+          result = yield client.uploadJSON(this.serverNamespace, id, payload,
+                                           options);
+          TelemetryStopwatch.finish(TELEMETRY_UPLOAD, this);
+        } catch (ex) {
+          TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);
+          if (hrProvider) {
+            hrProvider.recordEvent("uploadClientFailure", now);
+          }
+          throw ex;
+        }
+
+        yield this._onBagheeraResult(request, false, now, result);
+      } finally {
+        this._uploadInProgress = false;
+      }
     }.bind(this));
   },
 

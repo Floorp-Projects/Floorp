@@ -165,6 +165,18 @@ FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* o
   FillPropertyDescriptor(desc, obj, readonly);
 }
 
+inline void
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc,
+                       JSObject* obj, unsigned attributes, JS::Value v)
+{
+  desc.object().set(obj);
+  desc.value().set(v);
+  desc.setAttributes(attributes);
+  desc.setGetter(nullptr);
+  desc.setSetter(nullptr);
+  desc.setShortId(0);
+}
+
 } // namespace dom
 } // namespace mozilla
 

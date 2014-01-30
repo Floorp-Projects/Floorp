@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dynamic OpenType 'math' script tests</title>
+    <!-- See mathscript-1-ref.html for an explanation of this font -->
+    <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "mathssty";
+      src: url("mathssty.woff");
+    }
+  </style>
+  </head>
+  <body>
+
+  <!-- Demonstrate that it has no effect outside MathML -->
+  <div style="font-family: 'mathssty';" >DD</div>
+
+  <!-- Demonstrate that it works within MathML -->
+  <math>
+    <mstyle style="font-family: 'mathssty';">
+      <mo>CC</mo>
+    </mstyle>
+  </math>
+  </body>
+</html>

@@ -204,7 +204,7 @@ _hb_buffer_serialize_glyphs_text (hb_buffer_t *buffer,
 
       *p++ = '+';
       p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), "%d", pos[i].x_advance));
-      if (pos->y_advance)
+      if (pos[i].y_advance)
 	p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",%d", pos[i].y_advance));
     }
 

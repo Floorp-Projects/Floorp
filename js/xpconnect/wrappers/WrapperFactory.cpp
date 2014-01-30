@@ -174,7 +174,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
         JSProtoKey key = JSProto_Null;
         {
             JSAutoCompartment ac(cx, obj);
-            key = JS_IdentifyClassPrototype(cx, obj);
+            key = JS_IdentifyClassPrototype(obj);
         }
         if (key != JSProto_Null) {
             RootedObject homeProto(cx);

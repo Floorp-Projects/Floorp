@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Mozilla Bug 503926"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=964293"
+     target="_blank">Cu.cloneInto()</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  const Cu = Components.utils;
+  const Ci = Components.interfaces;
+
+  const TypedArrayThings = [
+    'Int8Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'Int16Array',
+    'Uint16Array',
+    'Int32Array',
+    'Uint32Array',
+    'Float32Array',
+    'Float64Array',
+  ];
+
+  function getType(a) {
+    if (a === null || a === undefined)
+      return 'null';
+
+    if (Array.isArray(a))
+      return 'array';
+
+    if (a instanceof Ci.nsIDOMFile)
+      return 'file';
+
+    if (a instanceof Ci.nsIDOMBlob)
+      return 'blob';
+
+    if (TypedArrayThings.indexOf(a.constructor.name) !== -1)
+      return a.constructor.name;
+
+    if (typeof a == 'object')
+      return 'object';
+
+    if (typeof a == 'function')
+      return 'function';
+
+    return 'primitive';
+  }
+
+  function compare(a, b) {
+    is (getType(a), getType(b), 'Type matches');
+
+    var type = getType(a);
+    if (type == 'array') {
+      is (a.length, b.length, 'Array.length matches');
+      for (var i = 0; i < a.length; ++i) {
+        compare(a[i], b[i]);
+      }
+
+      return;
+    }
+
+    if (type == 'file' || type == 'blob') {
+      ok ( a === b, 'They should match');
+      return;
+    }
+
+    if (type == 'object') {
+      ok ( a !== b, 'They should not match');
+
+      var aProps = [];
+      for (var p in a) aProps.push(p);
+
+      var bProps = [];
+      for (var p in b) bProps.push(p);
+
+      is (aProps.length, bProps.length, 'Props match');
+      is (aProps.sort().toSource(), bProps.sort().toSource(), 'Props match - using toSource()');
+
+      for (var p in a) {
+        compare(a[p], b[p]);
+      }
+
+      return;
+    }
+
+    if (type == 'function') {
+      ok ( a !== b, 'They should not match');
+      return;
+    }
+
+    if (type != 'null') {
+      is (a.toSource(), b.toSource(), 'Matching using toSource()');
+    }
+  }
+
+  var sandbox = new Cu.Sandbox(window, { sandboxPrototype: window, wantXrays: true } );
+
+  var tests = [
+    1,
+    null,
+    true,
+    'hello world',
+    [1, 2, 3],
+    { a: 1, b: 2 },
+    { blob: new Blob([]), file: new File(new Blob([])) },
+    new Date(),
+    { a: 1, b: {}, c: [1, 2, 3, { d: new Blob([]) } ], e: 'hello world' },
+  ];
+
+  for (var i = 0; i < tests.length; ++i) {
+    var test = tests[i];
+
+    var output = Cu.cloneInto(test, sandbox);
+    compare(output, test);
+  }
+
+  try {
+    var output = Cu.cloneInto({ a: function() {} }, sandbox);
+    ok(false, 'Function should not be cloned by default');
+  } catch(e) {
+    ok(true, 'Function should not be cloned by default');
+  }
+
+  var test = { a: function() { return 42; } }
+  var output = Cu.cloneInto(test, sandbox, { cloneFunctions: true });
+  compare(test, output);
+
+  ]]>
+  </script>
+</window>

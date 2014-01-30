@@ -44,7 +44,6 @@ const kEncodings = new Set([
   "ISO-8859-2",
   // Chinese, Simplified
   "gbk",
-  "gb18030",
   // Chinese, Traditional
   "Big5",
   // Cyrillic
@@ -217,14 +216,22 @@ let CharsetMenu = {
   },
 
   _getCharsetLabel: function(charset) {
+    if (charset == "gbk") {
+      // Localization key has been revised
+      charset = "gbk.bis";
+    }
     try {
       return gBundle.GetStringFromName(charset);
     } catch (ex) {}
     return charset;
   },
   _getCharsetAccessKey: function(charset) {
+    if (charset == "gbk") {
+      // Localization key has been revised
+      charset = "gbk.bis";
+    }
     try {
-      accesskey = gBundle.GetStringFromName(charset + ".key");
+      return gBundle.GetStringFromName(charset + ".key");
     } catch (ex) {}
     return "";
   },

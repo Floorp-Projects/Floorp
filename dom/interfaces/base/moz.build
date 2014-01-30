@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'nsIDOMLocation.idl',
     'nsIDOMModalContentWindow.idl',
     'nsIDOMNavigator.idl',
-    'nsIDOMPkcs11.idl',
     'nsIDOMScreen.idl',
     'nsIDOMWindow.idl',
     'nsIDOMWindowCollection.idl',

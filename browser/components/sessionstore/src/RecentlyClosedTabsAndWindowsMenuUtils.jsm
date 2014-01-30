@@ -28,9 +28,15 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
   *          The window that the tabs were closed in.
   * @param   aTagName
   *          The tag name that will be used when creating the UI items.
+  * @param   aPrefixRestoreAll (defaults to false)
+  *          Whether the 'restore all tabs' item is suffixed or prefixed to the list.
+  *          If suffixed (the default) a separator will be inserted before it.
+  * @param   aRestoreAllLabel (defaults to "menuRestoreAllTabs.label")
+  *          Which localizable string to use for the 'restore all tabs' item.
   * @returns A document fragment with UI items for each recently closed tab.
   */
-  getTabsFragment: function(aWindow, aTagName) {
+  getTabsFragment: function(aWindow, aTagName, aPrefixRestoreAll=false,
+                            aRestoreAllLabel="menuRestoreAllTabs.label") {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
     if (ss.getClosedTabCount(aWindow) != 0) {
@@ -62,11 +68,17 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
         fragment.appendChild(element);
       }
 
-      fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
-      let restoreAllTabs = fragment.appendChild(doc.createElementNS(kNSXUL, aTagName));
-      restoreAllTabs.setAttribute("label", navigatorBundle.GetStringFromName("menuRestoreAllTabs.label"));
+      let restoreAllTabs = doc.createElementNS(kNSXUL, aTagName);
+      restoreAllTabs.classList.add("restoreallitem");
+      restoreAllTabs.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
       restoreAllTabs.setAttribute("oncommand",
               "for (var i = 0; i < " + closedTabs.length + "; i++) undoCloseTab();");
+      if (!aPrefixRestoreAll) {
+        fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
+        fragment.appendChild(restoreAllTabs);
+      } else {
+        fragment.insertBefore(restoreAllTabs, fragment.firstChild);
+      }
     }
     return fragment;
   },
@@ -77,9 +89,15 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
   *          A window that can be used to create the elements and document fragment.
   * @param   aTagName
   *          The tag name that will be used when creating the UI items.
+  * @param   aPrefixRestoreAll (defaults to false)
+  *          Whether the 'restore all windows' item is suffixed or prefixed to the list.
+  *          If suffixed (the default) a separator will be inserted before it.
+  * @param   aRestoreAllLabel (defaults to "menuRestoreAllWindows.label")
+  *          Which localizable string to use for the 'restore all windows' item.
   * @returns A document fragment with UI items for each recently closed window.
   */
-  getWindowsFragment: function(aWindow, aTagName) {
+  getWindowsFragment: function(aWindow, aTagName, aPrefixRestoreAll=false,
+                            aRestoreAllLabel="menuRestoreAllWindows.label") {
     let closedWindowData = JSON.parse(ss.getClosedWindowData());
     let fragment = aWindow.document.createDocumentFragment();
     if (closedWindowData.length != 0) {
@@ -118,11 +136,17 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
       }
 
       // "Open All in Windows"
-      fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
-      let restoreAllWindows = fragment.appendChild(doc.createElementNS(kNSXUL, aTagName));
-      restoreAllWindows.setAttribute("label", navigatorBundle.GetStringFromName("menuRestoreAllWindows.label"));
+      let restoreAllWindows = doc.createElementNS(kNSXUL, aTagName);
+      restoreAllWindows.classList.add("restoreallitem");
+      restoreAllWindows.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
       restoreAllWindows.setAttribute("oncommand",
         "for (var i = 0; i < " + closedWindowData.length + "; i++) undoCloseWindow();");
+      if (!aPrefixRestoreAll) {
+        fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
+        fragment.appendChild(restoreAllWindows);
+      } else {
+        fragment.insertBefore(restoreAllWindows, fragment.firstChild);
+      }
     }
     return fragment;
   },

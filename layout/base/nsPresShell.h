@@ -162,14 +162,16 @@ public:
                                               nscolor aBackgroundColor,
                                               gfxContext* aThebesContext) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
-                                                   nsIntRegion* aRegion,
-                                                   nsIntPoint& aPoint,
-                                                   nsIntRect* aScreenRect) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderNode(nsIDOMNode* aNode,
+             nsIntRegion* aRegion,
+             nsIntPoint& aPoint,
+             nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
-                                                        nsIntPoint& aPoint,
-                                                        nsIntRect* aScreenRect) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<SourceSurface>
+  RenderSelection(nsISelection* aSelection,
+                  nsIntPoint& aPoint,
+                  nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
   virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() MOZ_OVERRIDE;
 
@@ -201,7 +203,7 @@ public:
   virtual void WillPaint() MOZ_OVERRIDE;
   virtual void WillPaintWindow() MOZ_OVERRIDE;
   virtual void DidPaintWindow() MOZ_OVERRIDE;
-  virtual void ScheduleViewManagerFlush() MOZ_OVERRIDE;
+  virtual void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) MOZ_OVERRIDE;
   virtual void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent,
                                       bool aFlushOnHoverChange) MOZ_OVERRIDE;
   virtual void ClearMouseCaptureOnView(nsView* aView) MOZ_OVERRIDE;
@@ -350,6 +352,8 @@ public:
   virtual bool AssumeAllImagesVisible() MOZ_OVERRIDE;
 
   virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot);
+
+  void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
 protected:
   virtual ~PresShell();
@@ -502,7 +506,7 @@ protected:
    * aScreenRect - [out] set to the area of the screen the painted area should
    *               be displayed at
    */
-  already_AddRefed<gfxASurface>
+  mozilla::TemporaryRef<SourceSurface>
   PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                       nsISelection* aSelection,
                       nsIntRegion* aRegion,
@@ -762,6 +766,8 @@ protected:
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer>        mReflowContinueTimer;
 
+  nsCOMPtr<nsITimer>        mDelayedPaintTimer;
+
   // The `performance.now()` value when we last started to process reflows.
   DOMHighResTimeStamp       mLastReflowStart;
 
@@ -801,6 +807,8 @@ protected:
   bool                      mInResize : 1;
 
   bool                      mImageVisibilityVisited : 1;
+
+  bool                      mNextPaintCompressed : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };
