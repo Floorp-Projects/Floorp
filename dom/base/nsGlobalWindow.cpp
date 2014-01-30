@@ -34,6 +34,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIController.h"
+#include "nsScriptNameSpaceManager.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -4052,6 +4053,43 @@ nsGlobalWindow::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
+bool
+nsGlobalWindow::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                             JS::Handle<jsid> aId,
+                             JS::MutableHandle<JSPropertyDescriptor> aDesc)
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (!JSID_IS_STRING(aId)) {
+    return true;
+  }
+
+  nsresult rv = nsWindowSH::GlobalResolve(this, aCx, aObj, aId, aDesc);
+  if (NS_FAILED(rv)) {
+    return Throw(aCx, rv);
+  }
+
+  return true;
+}
+
+static PLDHashOperator
+EnumerateGlobalName(const nsAString& aName, void* aClosure)
+{
+  nsTArray<nsString>* arr = static_cast<nsTArray<nsString>*>(aClosure);
+  arr->AppendElement(aName);
+  return PL_DHASH_NEXT;
+}
+
+void
+nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                                    ErrorResult& aRv)
+{
+  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
+  if (nameSpaceManager) {
+    nameSpaceManager->EnumerateGlobalNames(EnumerateGlobalName, &aNames);
+  }
+}
+
 nsIDOMOfflineResourceList*
 nsGlobalWindow::GetApplicationCache(ErrorResult& aError)
 {
@@ -4128,13 +4166,6 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
   crypto.forget(aCrypto);
 
   return rv.ErrorCode();
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetPkcs11(nsIDOMPkcs11** aPkcs11)
-{
-  *aPkcs11 = nullptr;
-  return NS_OK;
 }
 
 nsIControllers*
@@ -10488,6 +10519,11 @@ nsGlobalWindow::ShowSlowScriptDialog()
   // script and report a warning.
   if (!nsContentUtils::IsSafeToRunScript()) {
     JS_ReportWarning(cx, "A long running script was terminated");
+    return KillSlowScript;
+  }
+
+  // If our document is not active, just kill the script: we've been unloaded
+  if (!HasActiveDocument()) {
     return KillSlowScript;
   }
 

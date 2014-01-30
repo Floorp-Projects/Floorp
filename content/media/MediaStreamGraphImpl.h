@@ -370,6 +370,14 @@ public:
   {
     mStreamOrderDirty = true;
   }
+  /**
+   * Pause all AudioStreams being written to by MediaStreams
+   */
+  void PauseAllAudioOutputs();
+  /**
+   * Resume all AudioStreams being written to by MediaStreams
+   */
+  void ResumeAllAudioOutputs();
 
   // Data members
 

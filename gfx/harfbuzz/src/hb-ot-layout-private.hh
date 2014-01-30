@@ -31,8 +31,6 @@
 
 #include "hb-private.hh"
 
-#include "hb-ot-layout.h"
-
 #include "hb-font-private.hh"
 #include "hb-buffer-private.hh"
 #include "hb-set-private.hh"

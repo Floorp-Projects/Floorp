@@ -25,9 +25,6 @@
 #define JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY \
   "JavaScript-global-static-nameset"
 
-#define JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY \
-  "JavaScript-global-dynamic-nameset"
-
 #define JAVASCRIPT_DOM_CLASS \
   "JavaScript-DOM-class"
 

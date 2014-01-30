@@ -84,6 +84,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   : nsDOMEventTargetHelper(aWindow)
   , mSampleRate(GetSampleRateForAudioContext(aIsOffline, aSampleRate))
   , mNumberOfChannels(aNumberOfChannels)
+  , mNodeCount(0)
   , mIsOffline(aIsOffline)
   , mIsStarted(!aIsOffline)
   , mIsShutDown(false)
@@ -95,6 +96,10 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   mDestination = new AudioDestinationNode(this, aIsOffline, aNumberOfChannels,
                                           aLength, aSampleRate);
   mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
+  // We skip calling SetIsOnlyNodeForContext during mDestination's constructor,
+  // because we can only call SetIsOnlyNodeForContext after mDestination has
+  // been set up.
+  mDestination->SetIsOnlyNodeForContext(true);
 }
 
 AudioContext::~AudioContext()
@@ -543,7 +548,8 @@ AudioContext::DestinationStream() const
 double
 AudioContext::CurrentTime() const
 {
-  return MediaTimeToSeconds(Destination()->Stream()->GetCurrentTime());
+  return MediaTimeToSeconds(Destination()->Stream()->GetCurrentTime()) +
+      ExtraCurrentTime();
 }
 
 void
@@ -586,6 +592,18 @@ AudioContext::Resume()
   MediaStream* ds = DestinationStream();
   if (ds) {
     ds->ChangeExplicitBlockerCount(-1);
+  }
+}
+
+void
+AudioContext::UpdateNodeCount(int32_t aDelta)
+{
+  bool firstNode = mNodeCount == 0;
+  mNodeCount += aDelta;
+  MOZ_ASSERT(mNodeCount >= 0);
+  // mDestinationNode may be null when we're destroying nodes unlinked by CC
+  if (!firstNode && mDestination) {
+    mDestination->SetIsOnlyNodeForContext(mNodeCount == 1);
   }
 }
 
@@ -677,6 +695,12 @@ AudioContext::CollectReports(nsIHandleReportCallback* aHandleReport,
   int64_t amount = SizeOfIncludingThis(MallocSizeOf);
   return MOZ_COLLECT_REPORT("explicit/webaudio/audiocontext", KIND_HEAP, UNITS_BYTES,
                             amount, "Memory used by AudioContext objects (Web Audio).");
+}
+
+double
+AudioContext::ExtraCurrentTime() const
+{
+  return mDestination->ExtraCurrentTime();
 }
 
 }

@@ -129,37 +129,3 @@ nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
     return pixbuf;
 }
 
-GdkPixbuf*
-nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, int32_t aWidth, int32_t aHeight)
-{
-    if (aSurface->CairoStatus()) {
-        NS_ERROR("invalid surface");
-        return nullptr;
-    }
-
-    nsRefPtr<gfxImageSurface> imgSurface;
-    if (aSurface->GetType() == gfxSurfaceType::Image) {
-        imgSurface = static_cast<gfxImageSurface*>
-                                (static_cast<gfxASurface*>(aSurface));
-    } else {
-        imgSurface = new gfxImageSurface(gfxIntSize(aWidth, aHeight),
-					 gfxImageFormat::ARGB32);
-                                       
-        if (!imgSurface)
-            return nullptr;
-
-        nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
-        if (!context)
-            return nullptr;
-
-        context->SetOperator(gfxContext::OPERATOR_SOURCE);
-        context->SetSource(aSurface);
-        context->Paint();
-    }
-
-    RefPtr<SourceSurface> surface =
-        gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
-                                                               imgSurface);
-
-    return SourceSurfaceToPixbuf(surface, aWidth, aHeight);
-}

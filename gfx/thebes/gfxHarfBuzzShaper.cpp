@@ -796,6 +796,8 @@ AddOpenTypeFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
 
 static hb_font_funcs_t * sHBFontFuncs = nullptr;
 static hb_unicode_funcs_t * sHBUnicodeFuncs = nullptr;
+static const hb_script_t sMathScript =
+    hb_ot_tag_to_script(HB_TAG('m','a','t','h'));
 
 bool
 gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
@@ -940,12 +942,17 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     hb_buffer_set_unicode_funcs(buffer, sHBUnicodeFuncs);
     hb_buffer_set_direction(buffer, isRightToLeft ? HB_DIRECTION_RTL :
                                                     HB_DIRECTION_LTR);
-    // For unresolved "common" or "inherited" runs, default to Latin for now.
-    // (Should we somehow use the language or locale to try and infer
-    // a better default?)
-    hb_script_t scriptTag = (aScript <= MOZ_SCRIPT_INHERITED) ?
-        HB_SCRIPT_LATIN :
-        hb_script_t(GetScriptTagForCode(aScript));
+    hb_script_t scriptTag;
+    if (aShapedText->Flags() & gfxTextRunFactory::TEXT_USE_MATH_SCRIPT) {
+        scriptTag = sMathScript;
+    } else if (aScript <= MOZ_SCRIPT_INHERITED) {
+        // For unresolved "common" or "inherited" runs, default to Latin for
+        // now.  (Should we somehow use the language or locale to try and infer
+        // a better default?)
+        scriptTag = HB_SCRIPT_LATIN;
+    } else {
+        scriptTag = hb_script_t(GetScriptTagForCode(aScript));
+    }
     hb_buffer_set_script(buffer, scriptTag);
 
     hb_language_t language;

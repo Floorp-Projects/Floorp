@@ -2168,7 +2168,7 @@ FinalizeGlobal(JSFreeOp* aFreeOp, JSObject* aObj)
 
 bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
-              JS::MutableHandle<jsid> aId, unsigned aFlags,
+              JS::Handle<jsid> aId, unsigned aFlags,
               JS::MutableHandle<JSObject*> aObjp)
 {
   bool resolved;

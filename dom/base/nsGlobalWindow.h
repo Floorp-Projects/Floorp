@@ -475,6 +475,13 @@ public:
 
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
+  bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                    JS::Handle<jsid> aId,
+                    JS::MutableHandle<JSPropertyDescriptor> aDesc);
+
+  void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                           mozilla::ErrorResult& aRv);
+
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
 
@@ -902,10 +909,6 @@ public:
   int64_t GetMozAnimationStartTime(mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::ErrorResult& aError);
   nsIDOMCrypto* GetCrypto(mozilla::ErrorResult& aError);
-  nsIDOMPkcs11* GetPkcs11()
-  {
-    return nullptr;
-  }
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
   float GetMozInnerScreenX(mozilla::ErrorResult& aError);
   float GetMozInnerScreenY(mozilla::ErrorResult& aError);

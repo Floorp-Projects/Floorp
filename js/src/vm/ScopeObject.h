@@ -575,10 +575,6 @@ class ScopeIter
     ScopeIter(JSObject &enclosingScope, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /* Like ScopeIter(StackFrame *) except start at 'scope'. */
-    ScopeIter(AbstractFramePtr frame, jsbytecode *pc, ScopeObject &scope, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
     ScopeIter(const ScopeIterVal &hashVal, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 

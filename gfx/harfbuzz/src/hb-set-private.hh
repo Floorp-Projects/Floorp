@@ -28,7 +28,6 @@
 #define HB_SET_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-set.h"
 #include "hb-object-private.hh"
 
 
