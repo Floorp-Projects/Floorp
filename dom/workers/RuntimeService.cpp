@@ -184,7 +184,7 @@ const char* gStringChars[] = {
   // thread.
 };
 
-static_assert(NS_ARRAY_LENGTH(gStringChars) == ID_COUNT,
+static_assert(MOZ_ARRAY_LENGTH(gStringChars) == ID_COUNT,
               "gStringChars should have the right length.");
 
 class LiteralRebindingCString : public nsDependentCString
