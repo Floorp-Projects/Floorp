@@ -6,8 +6,8 @@
 
 %define menuPanelWidth 22.35em
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
+%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],:active)):-moz-any(:hover,[_moz-menuactive])
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active,[_moz-menuactive]:active)
 
 %include ../browser.inc
 
@@ -50,6 +50,15 @@
 .subviewbutton.panel-subview-footer {
   margin: 4px -4px -4px;
   box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
+  border-radius: 0;
+}
+
+.cui-widget-panelview .panel-subview-header {
+  display: none;
+}
+
+.cui-widget-panelview .subviewbutton.panel-subview-footer {
+  margin: 4px 0 0;
 }
 
 #PanelUI-mainView {
@@ -76,8 +85,12 @@
 
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
-  padding: 0;
   box-shadow: none;
+}
+
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent,
+.cui-widget-panel > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box {
+  padding: 0;
 }
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
@@ -98,10 +111,18 @@
 }
 
 panelview:not([mainview]) .toolbarbutton-text,
-#customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
+.cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: 8px;
   display: -moz-box;
+}
+
+.cui-widget-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 4px 0;
+}
+
+.cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
+  padding-bottom: 0;
 }
 
 #PanelUI-contents {
@@ -191,6 +212,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-icon,
+.panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
+.customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon {
   min-width: 32px;
   min-height: 32px;
@@ -216,11 +239,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer {
   display: flex;
+  flex-direction: column;
   background-color: rgba(0, 0, 0, 0.05);
   box-shadow: 0 -1px 0 rgba(0,0,0,.15);
   padding: 0;
   margin: 0;
-  min-height: 4em;
+}
+
+#PanelUI-footer-inner {
+  display: flex;
+  box-shadow: 0 -1px 0 rgba(0,0,0,.15);
 }
 
 #PanelUI-footer > toolbarseparator {
@@ -234,10 +262,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-help,
+#PanelUI-fxa-status,
 #PanelUI-customize,
 #PanelUI-quit {
   margin: 0;
   padding: 10px 0;
+  min-height: 2em;
   -moz-appearance: none;
   box-shadow: none;
   background-image: none;
@@ -248,11 +278,21 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-orient: horizontal;
 }
 
+#PanelUI-fxa-status {
+  width: calc(@menuPanelWidth@ + 20px);
+  border-bottom-style: solid;
+}
+
+#PanelUI-fxa-status[signedin] {
+  font-weight: bold;
+}
+
 #PanelUI-help,
 #PanelUI-quit {
   min-width: 46px;
 }
 
+#PanelUI-fxa-status > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
   text-align: start;
 }
@@ -267,6 +307,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-margin-end: 0;
 }
 
+#PanelUI-fxa-status,
 #PanelUI-customize {
   flex: 1;
   -moz-padding-start: 15px;
@@ -283,6 +324,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/menuPanel-exit.png);
 }
 
+#PanelUI-fxa-status,
 #PanelUI-customize,
 #PanelUI-help,
 #PanelUI-quit {
@@ -314,6 +356,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: none;
 }
 
+#PanelUI-fxa-status:not([disabled]):hover {
+  background-color: rgba(0,0,0,0.1);
+  border-bottom-color: rgba(0,0,0,0.1);
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.2);
+}
+
 #PanelUI-quit:not([disabled]):hover {
   background-color: #d94141;
   outline-color: #c23a3a;
@@ -341,14 +389,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 panelview .toolbarbutton-1,
-panelview .subviewbutton,
+.subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
 .customizationmode-button,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton,
-#BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuitem {
+#zoom-controls@inAnyPanel@ > toolbarbutton {
   -moz-appearance: none;
   padding: 2px 6px;
   background-color: hsla(210,4%,10%,0);
@@ -359,27 +405,31 @@ panelview .subviewbutton,
   transition-duration: 150ms;
 }
 
-.PanelUI-subView .subviewbutton.panel-subview-footer {
+.subviewbutton.panel-subview-footer {
   border-radius: 0;
   border: none;
 }
 
-.PanelUI-subView .subviewbutton.panel-subview-footer > .toolbarbutton-text {
+.subviewbutton.panel-subview-footer > .toolbarbutton-text,
+.subviewbutton.panel-subview-footer > .menu-text {
   -moz-padding-start: 0;
   text-align: center;
 }
 
-.PanelUI-subView .subviewbutton:not(.panel-subview-footer) {
+.subviewbutton:not(.panel-subview-footer) {
   margin: 2px 0;
 }
 
-.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text {
+.subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text,
+/* Bookmark items need a more specific selector. */
+.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-text,
+.PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-iconic-text {
   font-size: 1.1em;
 }
 
-.PanelUI-subView .subviewbutton.bookmark-item {
-  font-weight: normal;
-  color: inherit;
+.cui-widget-panelview .subviewbutton:not(.panel-subview-footer) {
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .PanelUI-subView menuseparator,
@@ -398,17 +448,14 @@ panelview .toolbarbutton-1,
 }
 
 panelview .toolbarbutton-1@buttonStateHover@,
-panelview .subviewbutton@buttonStateHover@,
+.subviewbutton@buttonStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .customizationmode-button,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
-#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
-#BMB_bookmarksPopup > menu@buttonStateHover@,
-#BMB_bookmarksPopup > menuitem@buttonStateHover@ {
+#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
   border-color: hsla(210,4%,10%,.1);
 }
-
 
 #edit-controls@inAnyPanel@@buttonStateHover@,
 #zoom-controls@inAnyPanel@@buttonStateHover@ {
@@ -416,25 +463,22 @@ panelview .subviewbutton@buttonStateHover@,
 }
 
 panelview .toolbarbutton-1@buttonStateActive@,
-panelview .subviewbutton@buttonStateActive@,
+.subviewbutton@buttonStateActive@,
 .customizationmode-button@buttonStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
-#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
-#BMB_bookmarksPopup > menu@buttonStateActive@,
-#BMB_bookmarksPopup > menuitem@buttonStateActive@ {
+#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.15);
   border-color: hsla(210,4%,10%,.15);
   box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
 }
 
-#BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuitem {
+#BMB_bookmarksPopup > .subviewbutton {
   font: inherit;
+  font-weight: normal;
 }
 
-#BMB_bookmarksPopup > menu:not([disabled="true"]),
-#BMB_bookmarksPopup > menuitem:not([disabled="true"]) {
+#BMB_bookmarksPopup > .subviewbutton:not([disabled="true"]) {
   color: inherit;
 }
 
@@ -451,6 +495,13 @@ panelview toolbarseparator,
   min-height: 0;
   border-top: 1px solid ThreeDShadow;
   margin: 5px 0;
+}
+
+.subviewbutton > .menu-accel-container {
+  -moz-box-pack: start;
+  -moz-margin-start: 10px;
+  -moz-margin-end: auto;
+  color: hsl(0,0%,50%);
 }
 
 #PanelUI-historyItems > toolbarbutton {
@@ -483,8 +534,8 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-me
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
-  min-width: calc(@menuPanelWidth@ / 3);
-  width: calc(@menuPanelWidth@ / 3);
+  min-width: 7em;
+  width: 7em;
 }
 
 #edit-controls@inAnyPanel@,
@@ -563,10 +614,14 @@ toolbarpaletteitem[place="palette"] > #search-container {
   padding: 0;
 }
 
+.cui-widget-panelview,
 #widget-overflow-scroller {
-  max-height: 30em;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+#widget-overflow-scroller {
+  max-height: 30em;
   margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -627,7 +682,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 #PanelUI-bookmarks > toolbarbutton[checked="true"] > .toolbarbutton-text,
 #PanelUI-history > toolbarbutton[checked="true"] > .toolbarbutton-text,
 .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
-#customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
+.cui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
   -moz-padding-start: 0px;
 }
 

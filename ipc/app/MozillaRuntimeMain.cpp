@@ -22,7 +22,7 @@
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-#include "sandbox/base/basictypes.h"
+#include "sandbox/chromium/base/basictypes.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #endif

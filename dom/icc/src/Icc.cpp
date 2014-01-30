@@ -357,3 +357,25 @@ Icc::IccCloseChannel(int32_t aChannel, ErrorResult& aRv)
 
   return request.forget();
 }
+
+already_AddRefed<nsISupports>
+Icc::MatchMvno(const nsAString& aMvnoType,
+               const nsAString& aMvnoData,
+               ErrorResult& aRv)
+{
+  if (!mProvider) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<nsIDOMDOMRequest> request;
+  nsresult rv = mProvider->MatchMvno(mClientId, GetOwner(),
+                                     aMvnoType, aMvnoData,
+                                     getter_AddRefs(request));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  return request.forget();
+}

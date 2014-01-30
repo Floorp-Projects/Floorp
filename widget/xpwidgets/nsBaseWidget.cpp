@@ -1218,6 +1218,11 @@ NS_METHOD nsBaseWidget::EnableDragDrop(bool aEnable)
   return NS_OK;
 }
 
+uint32_t nsBaseWidget::GetMaxTouchPoints() const
+{
+  return 0;
+}
+
 NS_METHOD nsBaseWidget::SetModal(bool aModal)
 {
   return NS_ERROR_FAILURE;

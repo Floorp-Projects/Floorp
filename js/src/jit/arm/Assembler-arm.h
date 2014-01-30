@@ -1021,15 +1021,6 @@ class Imm16
     }
 };
 
-// FP Instructions use a different set of registers,
-// with a different encoding, so this calls for a different class.
-// which will be implemented later
-// IIRC, this has been subsumed by vfpreg.
-class FloatOp
-{
-    uint32_t data;
-};
-
 /* I would preffer that these do not exist, since there are essentially
 * no instructions that would ever take more than one of these, however,
 * the MIR wants to only have one type of arguments to functions, so bugger.

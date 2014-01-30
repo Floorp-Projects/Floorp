@@ -12,12 +12,30 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/async.js");
 
 this.Status = {
   _log: Log.repository.getLogger("Sync.Status"),
-  _authManager: new IdentityManager(),
+  __authManager: null,
   ready: false,
+
+  get _authManager() {
+    if (this.__authManager) {
+      return this.__authManager;
+    }
+    let service = Components.classes["@mozilla.org/weave/service;1"]
+                    .getService(Components.interfaces.nsISupports)
+                    .wrappedJSObject;
+    let idClass = service.fxAccountsEnabled ? BrowserIDManager : IdentityManager;
+    this.__authManager = new idClass();
+    // .initialize returns a promise, so we need to spin until it resolves.
+    let cb = Async.makeSpinningCallback();
+    this.__authManager.initialize().then(cb, cb);
+    cb.wait();
+    return this.__authManager;
+  },
 
   get service() {
     return this._service;

@@ -1291,6 +1291,15 @@ JSContext::mark(JSTracer *trc)
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
 
+void *
+ThreadSafeContext::stackLimitAddressForJitCode(StackKind kind)
+{
+#ifdef JS_ARM_SIMULATOR
+    return runtime_->mainThread.addressOfSimulatorStackLimit();
+#endif
+    return stackLimitAddress(kind);
+}
+
 JSVersion
 JSContext::findVersion() const
 {

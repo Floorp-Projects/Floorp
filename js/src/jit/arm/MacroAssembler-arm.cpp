@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include "jit/arm/Simulator-arm.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/MoveEmitter.h"
@@ -3479,6 +3480,7 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
     inCall_ = true;
     args_ = args;
     passedArgs_ = 0;
+    passedArgTypes_ = 0;
 #ifdef JS_CODEGEN_ARM_HARDFP
     usedIntSlots_ = 0;
     usedFloatSlots_ = 0;
@@ -3512,6 +3514,7 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, const Register &sc
     ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
     ma_push(scratch);
 }
+
 #ifdef JS_CODEGEN_ARM_HARDFP
 void
 MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
@@ -3537,6 +3540,10 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
             to = MoveOperand(sp, disp);
         }
         usedFloatSlots_++;
+        if (type == MoveOp::FLOAT32)
+            passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
+        else
+            passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
         break;
       }
       case MoveOp::GENERAL: {
@@ -3552,6 +3559,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
             to = MoveOperand(sp, disp);
         }
         usedIntSlots_++;
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       }
       default:
@@ -3575,9 +3583,13 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
         // boundary, even if it is in a register!
         usedSlots_ = (usedSlots_ + 1) & ~1;
         increment = 2;
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
         break;
       case MoveOp::FLOAT32:
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
+        break;
       case MoveOp::GENERAL:
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
@@ -3723,9 +3735,53 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
     inCall_ = false;
 }
 
+#if defined(DEBUG) && defined(JS_ARM_SIMULATOR)
+static void
+AssertValidABIFunctionType(uint32_t passedArgTypes)
+{
+    switch (passedArgTypes) {
+      case Args_General0:
+      case Args_General1:
+      case Args_General2:
+      case Args_General3:
+      case Args_General4:
+      case Args_General5:
+      case Args_General6:
+      case Args_General7:
+      case Args_General8:
+      case Args_Double_None:
+      case Args_Int_Double:
+      case Args_Float32_Float32:
+      case Args_Double_Double:
+      case Args_Double_Int:
+      case Args_Double_DoubleInt:
+      case Args_Double_DoubleDouble:
+      case Args_Double_IntDouble:
+      case Args_Int_IntDouble:
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected type");
+    }
+}
+#endif
+
 void
 MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Type result)
 {
+#ifdef JS_ARM_SIMULATOR
+    MOZ_ASSERT(passedArgs_ <= 15);
+    passedArgTypes_ <<= ArgType_Shift;
+    switch (result) {
+      case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
+      case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
+      case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
+      default: MOZ_ASSUME_UNREACHABLE("Invalid return type");
+    }
+    AssertValidABIFunctionType(passedArgTypes_);
+    ABIFunctionType type = ABIFunctionType(passedArgTypes_);
+    fun = Simulator::RedirectNativeFunction(fun, type);
+#endif
+
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
     ma_call(ImmPtr(fun));

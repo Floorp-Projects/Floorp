@@ -55,8 +55,9 @@ ifdef MOZ_CONTENT_SANDBOX
 LIBS += ../../security/sandbox/$(LIB_PREFIX)sandbox_s.$(LIB_SUFFIX)
 LIBS += $(NSPR_LIBS)
 LOCAL_INCLUDES += \
-  -I$(topsrcdir)/security/sandbox \
   -I$(topsrcdir)/security/ \
+  -I$(topsrcdir)/security/sandbox \
+  -I$(topsrcdir)/security/sandbox/chromium \
   $(NULL)
 endif
 

@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
                                   "resource:///modules/ScrollbarSampler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+                                  "resource://gre/modules/ShortcutUtils.jsm");
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -236,6 +238,7 @@ const PanelUI = {
           this.endBatchUpdate();
         }
       }
+      this._updateQuitTooltip();
       this.panel.hidden = false;
     }.bind(this)).then(null, Cu.reportError);
 
@@ -296,16 +299,22 @@ const PanelUI = {
       let tempPanel = document.createElement("panel");
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
+      tempPanel.setAttribute("class", "cui-widget-panel");
       tempPanel.setAttribute("level", "top");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
+      // If the view has a footer, set a convenience class on the panel.
+      tempPanel.classList.toggle("cui-widget-panelWithFooter",
+                                 viewNode.querySelector(".panel-subview-footer"));
 
       let multiView = document.createElement("panelmultiview");
       tempPanel.appendChild(multiView);
       multiView.setMainView(viewNode);
+      viewNode.classList.add("cui-widget-panelview");
       CustomizableUI.addPanelCloseListeners(tempPanel);
 
       let panelRemover = function() {
         tempPanel.removeEventListener("popuphidden", panelRemover);
+        viewNode.classList.remove("cui-widget-panelview");
         CustomizableUI.removePanelCloseListeners(tempPanel);
         let evt = new CustomEvent("ViewHiding", {detail: viewNode});
         viewNode.dispatchEvent(evt);
@@ -416,7 +425,26 @@ const PanelUI = {
 
   _onHelpViewHide: function(aEvent) {
     this.removeEventListener("command", PanelUI);
-  }
+  },
+
+  _updateQuitTooltip: function() {
+#ifndef XP_WIN
+#ifdef XP_MACOSX
+    let tooltipId = "quit-button.tooltiptext.mac";
+    let brands = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let stringArgs = [brands.GetStringFromName("brandShortName")];
+#else
+    let tooltipId = "quit-button.tooltiptext.linux";
+    let stringArgs = [];
+#endif
+
+    let key = document.getElementById("key_quitApplication");
+    stringArgs.push(ShortcutUtils.prettifyShortcut(key));
+    let tooltipString = CustomizableUI.getLocalizedProperty({x: tooltipId}, "x", stringArgs);
+    let quitButton = document.getElementById("PanelUI-quit");
+    quitButton.setAttribute("tooltiptext", tooltipString);
+#endif
+  },
 };
 
 /**

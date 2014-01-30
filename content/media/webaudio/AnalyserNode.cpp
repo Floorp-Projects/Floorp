@@ -288,7 +288,7 @@ AnalyserNode::AppendChunk(const AudioChunk& aChunk)
                                   mBuffer.Elements() + mWriteIndex);
   }
   if (channelCount > 1) {
-    AudioBlockInPlaceScale(mBuffer.Elements() + mWriteIndex, 1,
+    AudioBlockInPlaceScale(mBuffer.Elements() + mWriteIndex,
                            1.0f / aChunk.mChannelData.Length());
   }
   mWriteIndex += chunkDuration;

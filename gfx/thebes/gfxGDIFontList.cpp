@@ -146,7 +146,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
 }
 
 nsresult
-GDIFontEntry::ReadCMAP()
+GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
@@ -163,22 +163,28 @@ GDIFontEntry::ReadCMAP()
         return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
-
-    uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+    nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
+    bool unicodeFont = false, symbolFont = false;
 
-    AutoFallibleTArray<uint8_t,16384> cmap;
-    rv = CopyFontTable(kCMAP, cmap);
+    if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
+                                                        mUVSOffset,
+                                                        symbolFont))) {
+        mSymbolFont = symbolFont;
+        rv = NS_OK;
+    } else {
+        uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+        charmap = new gfxCharacterMap();
+        AutoFallibleTArray<uint8_t,16384> cmap;
+        rv = CopyFontTable(kCMAP, cmap);
 
-    bool unicodeFont = false, symbolFont = false; // currently ignored
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                    *charmap, mUVSOffset,
-                                    unicodeFont, symbolFont);
+        if (NS_SUCCEEDED(rv)) {
+            rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
+                                        *charmap, mUVSOffset,
+                                        unicodeFont, symbolFont);
+        }
+        mSymbolFont = symbolFont;
     }
-    mSymbolFont = symbolFont;
 
     mHasCmapTable = NS_SUCCEEDED(rv);
     if (mHasCmapTable) {
@@ -512,7 +518,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 }
 
 void
-GDIFontFamily::FindStyleVariations()
+GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     if (mHasStyles)
         return;
@@ -908,4 +914,188 @@ gfxGDIFontList::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
     AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
+// used to load system-wide font info on off-main thread
+class GDIFontInfo : public FontInfoData {
+public:
+    GDIFontInfo(bool aLoadOtherNames,
+                bool aLoadFaceNames,
+                bool aLoadCmaps) :
+        FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps)
+    {}
+
+    virtual ~GDIFontInfo() {}
+
+    virtual void Load() {
+        mHdc = GetDC(nullptr);
+        SetGraphicsMode(mHdc, GM_ADVANCED);
+        FontInfoData::Load();
+        ReleaseDC(nullptr, mHdc);
+    }
+
+    // loads font data for all members of a given family
+    virtual void LoadFontFamilyData(const nsAString& aFamilyName);
+
+    // callback for GDI EnumFontFamiliesExW call
+    static int CALLBACK EnumerateFontsForFamily(const ENUMLOGFONTEXW *lpelfe,
+                                                const NEWTEXTMETRICEXW *nmetrics,
+                                                DWORD fontType, LPARAM data);
+
+    HDC mHdc;
+};
+
+struct EnumerateFontsForFamilyData {
+    EnumerateFontsForFamilyData(const nsAString& aFamilyName,
+                                GDIFontInfo& aFontInfo)
+        : mFamilyName(aFamilyName), mFontInfo(aFontInfo)
+    {}
+
+    nsString mFamilyName;
+    nsTArray<nsString> mOtherFamilyNames;
+    GDIFontInfo& mFontInfo;
+    nsString mPreviousFontName;
+};
+
+int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
+                 const ENUMLOGFONTEXW *lpelfe,
+                 const NEWTEXTMETRICEXW *nmetrics,
+                 DWORD fontType, LPARAM data)
+{
+    EnumerateFontsForFamilyData *famData =
+        reinterpret_cast<EnumerateFontsForFamilyData*>(data);
+    HDC hdc = famData->mFontInfo.mHdc;
+    LOGFONTW logFont = lpelfe->elfLogFont;
+    const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
+
+    AutoSelectFont font(hdc, &logFont);
+    if (!font.IsValid()) {
+        return 1;
+    }
+
+    FontFaceData fontData;
+    nsDependentString fontName(lpelfe->elfFullName);
+
+    // callback called for each style-charset so return if style already seen
+    if (fontName.Equals(famData->mPreviousFontName)) {
+        return 1;
+    }
+    famData->mPreviousFontName = fontName;
+    famData->mFontInfo.mLoadStats.fonts++;
+
+    // read name table info
+    bool nameDataLoaded = false;
+    if (famData->mFontInfo.mLoadFaceNames || famData->mFontInfo.mLoadOtherNames) {
+        uint32_t kNAME =
+            NativeEndian::swapToBigEndian(TRUETYPE_TAG('n','a','m','e'));
+        uint32_t nameSize;
+        nsAutoTArray<uint8_t, 1024> nameData;
+
+        nameSize = ::GetFontData(hdc, kNAME, 0, nullptr, 0);
+        if (nameSize != GDI_ERROR &&
+            nameSize > 0 &&
+            nameData.SetLength(nameSize)) {
+            ::GetFontData(hdc, kNAME, 0, nameData.Elements(), nameSize);
+
+            // face names
+            if (famData->mFontInfo.mLoadFaceNames) {
+                gfxFontUtils::ReadCanonicalName((const char*)(nameData.Elements()), nameSize,
+                                                gfxFontUtils::NAME_ID_FULL,
+                                                fontData.mFullName);
+                gfxFontUtils::ReadCanonicalName((const char*)(nameData.Elements()), nameSize,
+                                                gfxFontUtils::NAME_ID_POSTSCRIPT,
+                                                fontData.mPostscriptName);
+                nameDataLoaded = true;
+                famData->mFontInfo.mLoadStats.facenames++;
+            }
+
+            // other family names
+            if (famData->mFontInfo.mLoadOtherNames) {
+                gfxFontFamily::ReadOtherFamilyNamesForFace(famData->mFamilyName,
+                                                           (const char*)(nameData.Elements()),
+                                                           nameSize,
+                                                           famData->mOtherFamilyNames,
+                                                           false);
+            }
+        }
+    }
+
+    // read cmap
+    bool cmapLoaded = false;
+    gfxWindowsFontType feType =
+        GDIFontEntry::DetermineFontType(metrics, fontType);
+    if (famData->mFontInfo.mLoadCmaps &&
+        (feType == GFX_FONT_TYPE_PS_OPENTYPE ||
+         feType == GFX_FONT_TYPE_TT_OPENTYPE ||
+         feType == GFX_FONT_TYPE_TRUETYPE))
+    {
+        uint32_t kCMAP =
+            NativeEndian::swapToBigEndian(TRUETYPE_TAG('c','m','a','p'));
+        uint32_t cmapSize;
+        nsAutoTArray<uint8_t, 1024> cmapData;
+
+        cmapSize = ::GetFontData(hdc, kCMAP, 0, nullptr, 0);
+        if (cmapSize != GDI_ERROR &&
+            cmapSize > 0 &&
+            cmapData.SetLength(cmapSize)) {
+            ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
+            bool cmapLoaded = false;
+            bool unicodeFont = false, symbolFont = false;
+            nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+            uint32_t offset;
+
+            if (NS_SUCCEEDED(gfxFontUtils::ReadCMAP(cmapData.Elements(),
+                                                    cmapSize, *charmap,
+                                                    offset, unicodeFont,
+                                                    symbolFont))) {
+                fontData.mCharacterMap = charmap;
+                fontData.mUVSOffset = offset;
+                fontData.mSymbolFont = symbolFont;
+                cmapLoaded = true;
+                famData->mFontInfo.mLoadStats.cmaps++;
+            }
+        }
+    }
+
+    if (cmapLoaded || nameDataLoaded) {
+        famData->mFontInfo.mFontFaceData.Put(fontName, fontData);
+    }
+
+    return 1;
+}
+
+void
+GDIFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
+{
+    // iterate over the family
+    LOGFONTW logFont;
+    memset(&logFont, 0, sizeof(LOGFONTW));
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfPitchAndFamily = 0;
+    uint32_t l = std::min<uint32_t>(aFamilyName.Length(), LF_FACESIZE - 1);
+    memcpy(logFont.lfFaceName, aFamilyName.BeginReading(), l * sizeof(char16_t));
+
+    EnumerateFontsForFamilyData data(aFamilyName, *this);
+
+    EnumFontFamiliesExW(mHdc, &logFont,
+                        (FONTENUMPROCW)GDIFontInfo::EnumerateFontsForFamily,
+                        (LPARAM)(&data), 0);
+
+    // if found other names, insert them
+    if (data.mOtherFamilyNames.Length() != 0) {
+        mOtherFamilyNames.Put(aFamilyName, data.mOtherFamilyNames);
+        mLoadStats.othernames += data.mOtherFamilyNames.Length();
+    }
+}
+
+already_AddRefed<FontInfoData>
+gfxGDIFontList::CreateFontInfoData()
+{
+    bool loadCmaps = !UsesSystemFallback() ||
+        gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
+
+    nsRefPtr<GDIFontInfo> fi =
+        new GDIFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
+
+    return fi.forget();
 }

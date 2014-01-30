@@ -6,13 +6,16 @@
 
 #include "jit/arm/Architecture-arm.h"
 
+#ifndef JS_ARM_SIMULATOR
 #include <elf.h>
+#endif
+
 #include <fcntl.h>
 #include <unistd.h>
 
 #include "jit/arm/Assembler-arm.h"
 
-#if !(defined(ANDROID) || defined(MOZ_B2G))
+#if !(defined(ANDROID) || defined(MOZ_B2G)) && !defined(JS_ARM_SIMULATOR)
 #define HWCAP_ARMv7 (1 << 29)
 #include <asm/hwcap.h>
 #else
@@ -35,6 +38,12 @@ uint32_t GetARMFlags()
     static uint32_t flags = 0;
     if (isSet)
         return flags;
+
+#ifdef JS_ARM_SIMULATOR
+    isSet = true;
+    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv4 | HWCAP_NEON;
+    return flags;
+#else
 
 #if WTF_OS_LINUX
     int fd = open("/proc/self/auxv", O_RDONLY);
@@ -105,6 +114,7 @@ uint32_t GetARMFlags()
 #endif
 
     return 0;
+#endif // JS_ARM_SIMULATOR
 }
 
 bool hasMOVWT()
@@ -138,6 +148,37 @@ bool hasIDIV()
 #endif
 }
 
+Registers::Code
+Registers::FromName(const char *name)
+{
+    // Check for some register aliases first.
+    if (strcmp(name, "ip") == 0)
+        return ip;
+    if (strcmp(name, "r13") == 0)
+        return r13;
+    if (strcmp(name, "lr") == 0)
+        return lr;
+    if (strcmp(name, "r15") == 0)
+        return r15;
+
+    for (size_t i = 0; i < Total; i++) {
+        if (strcmp(GetName(i), name) == 0)
+            return Code(i);
+    }
+
+    return Invalid;
+}
+
+FloatRegisters::Code
+FloatRegisters::FromName(const char *name)
+{
+    for (size_t i = 0; i < Total; i++) {
+        if (strcmp(GetName(i), name) == 0)
+            return Code(i);
+    }
+
+    return Invalid;
+}
+
 } // namespace jit
 } // namespace js
-

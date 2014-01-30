@@ -8,7 +8,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMMozIccInfo;
 interface nsIDOMWindow;
 
-[scriptable, uuid(87e9ad03-e8e2-40d1-bf28-a6d287c31b93)]
+[scriptable, uuid(7c0ada3d-d8d4-493e-9243-fa3df39855e4)]
 interface nsIIccListener : nsISupports
 {
   void notifyStkCommand(in DOMString aMessage);
@@ -103,4 +103,12 @@ interface nsIIccProvider : nsISupports
   nsIDOMDOMRequest iccCloseChannel(in unsigned long clientId,
                                    in nsIDOMWindow window,
                                    in long channel);
+
+  /**
+   * Helpers
+   */
+  nsIDOMDOMRequest matchMvno(in unsigned long clientId,
+                             in nsIDOMWindow window,
+                             in DOMString mvnoType,
+                             in DOMString mvnoData);
 };

@@ -235,7 +235,7 @@ static int getId() {
     return NULL_ID;
 }
 #endif
-static void spewEntry(uint8_t *ptr, int length) {
+static inline void spewEntry(uint8_t *ptr, int length) {
 #if IS_LITTLE_ENDIAN
     for (int idx = 0; idx < length; idx++) {
         IonSpewCont(IonSpew_Pools, "%02x", ptr[length - idx - 1]);

@@ -204,6 +204,7 @@ typedef CodeGeneratorARM CodeGeneratorSpecific;
 // An out-of-line bailout thunk.
 class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM>
 {
+  protected: // Silence Clang warning.
     LSnapshot *snapshot_;
     uint32_t frameSize_;
 

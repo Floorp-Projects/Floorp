@@ -113,6 +113,7 @@ this.SystemMessagePermissionsTable = {
   "nfc-powerlevel-change": {
     "settings": ["read", "write"]
   },
+  "wifip2p-pairing-request": { },
 };
 
 this.SystemMessagePermissionsChecker = {

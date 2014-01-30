@@ -332,6 +332,29 @@ static bool IsSignalHandlingBroken() { return false; }
 # define PC_sig(p) R15_sig(p)
 #endif
 
+static bool
+HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *faultingAddress)
+{
+    // If the ARM simulator is enabled, the pc is in the simulator C++ code and
+    // not in the generated code, so we check the simulator's pc manually. Also
+    // note that we can't simply use simulator->set_pc() here because the
+    // simulator could be in the middle of an instruction. On ARM, the signal
+    // handlers are currently only used for Odin code, see bug 964258.
+
+#ifdef JS_ARM_SIMULATOR
+    const AsmJSModule &module = activation->module();
+    if (module.containsPC((void *)rt->mainThread.simulator()->get_pc()) &&
+        module.containsPC(faultingAddress))
+    {
+        activation->setResumePC(nullptr);
+        int32_t nextpc = int32_t(module.operationCallbackExit());
+        rt->mainThread.simulator()->set_resume_pc(nextpc);
+        return true;
+    }
+#endif
+    return false;
+}
+
 #if !defined(XP_MACOSX)
 static uint8_t **
 ContextToPC(CONTEXT *context)
@@ -621,6 +644,11 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
 
     const AsmJSModule &module = activation->module();
+    if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
+        mprotect(module.codeBase(), module.functionBytes(), PROT_EXEC);
+        return true;
+    }
+
     if (!module.containsPC(pc))
         return false;
 
@@ -863,6 +891,11 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return false;
 
     const AsmJSModule &module = activation->module();
+    if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
+        mprotect(module.codeBase(), module.functionBytes(), PROT_EXEC);
+        return true;
+    }
+
     if (!module.containsPC(pc))
         return false;
 
