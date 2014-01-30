@@ -256,7 +256,7 @@ protected:
 
   static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                                 JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                bool *did_resolve);
+                                JS::MutableHandle<JSPropertyDescriptor> desc);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
