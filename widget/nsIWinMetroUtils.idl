@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(148f57d3-51df-4e5c-a40b-7ae5ee76188e)]
+[scriptable, uuid(b6cbef4a-eec1-470b-8e74-9f4120f678c6)]
 interface nsIWinMetroUtils : nsISupports
 {
   /**
@@ -32,6 +32,13 @@ interface nsIWinMetroUtils : nsISupports
    * Windows::ApplicationModel::Activation enumeration.
    */
   readonly attribute long previousExecutionState;
+
+  /**
+   * Helper for our restart logic up in the about flyout. We set this
+   * right before we restart for an update so that MetroAppShell can
+   * communicate this to the ceh.
+   */
+  attribute boolean updatePending;
 
    /**
     * Show the settings flyout
