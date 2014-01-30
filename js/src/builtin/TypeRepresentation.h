@@ -265,6 +265,9 @@ class ScalarTypeRepresentation : public SizedTypeRepresentation {
     explicit ScalarTypeRepresentation(Type type);
 
   public:
+    static size_t size(Type t);
+    static size_t alignment(Type t);
+
     Type type() const {
         return type_;
     }

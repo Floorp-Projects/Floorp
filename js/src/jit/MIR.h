@@ -22,8 +22,8 @@
 #include "jit/IonAllocPolicy.h"
 #include "jit/IonMacroAssembler.h"
 #include "jit/MOpcodes.h"
+#include "jit/TypeDescrSet.h"
 #include "jit/TypePolicy.h"
-#include "jit/TypeRepresentationSet.h"
 #include "vm/ScopeObject.h"
 #include "vm/TypedArrayObject.h"
 
@@ -1559,9 +1559,9 @@ class MNewDerivedTypedObject
                       IntPolicy<2> >
 {
   private:
-    TypeRepresentationSet set_;
+    TypeDescrSet set_;
 
-    MNewDerivedTypedObject(TypeRepresentationSet set,
+    MNewDerivedTypedObject(TypeDescrSet set,
                            MDefinition *type,
                            MDefinition *owner,
                            MDefinition *offset)
@@ -1575,13 +1575,13 @@ class MNewDerivedTypedObject
   public:
     INSTRUCTION_HEADER(NewDerivedTypedObject);
 
-    static MNewDerivedTypedObject *New(TempAllocator &alloc, TypeRepresentationSet set,
+    static MNewDerivedTypedObject *New(TempAllocator &alloc, TypeDescrSet set,
                                        MDefinition *type, MDefinition *owner, MDefinition *offset)
     {
         return new(alloc) MNewDerivedTypedObject(set, type, owner, offset);
     }
 
-    TypeRepresentationSet set() const {
+    TypeDescrSet set() const {
         return set_;
     }
 
