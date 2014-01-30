@@ -165,7 +165,7 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
   }
 
   public void updateCredentials(String email, String password) {
-    String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
+    String serverURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient client = new FxAccountClient20(serverURI, executor);
     PasswordStretcher passwordStretcher = new QuickPasswordStretcher(password);

@@ -124,7 +124,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
   }
 
   protected void resendCode(byte[] sessionToken) {
-    String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
+    String serverURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
     RequestDelegate<Void> delegate = new ResendCodeDelegate();
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient client = new FxAccountClient20(serverURI, executor);

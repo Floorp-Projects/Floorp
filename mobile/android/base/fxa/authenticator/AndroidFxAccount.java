@@ -5,13 +5,13 @@
 package org.mozilla.gecko.fxa.authenticator;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
@@ -286,7 +286,7 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_ACCOUNT_VERSION, "" + CURRENT_ACCOUNT_VERSION);
     userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
-    userdata.putString(ACCOUNT_KEY_AUDIENCE, computeAudience(tokenServerURI));
+    userdata.putString(ACCOUNT_KEY_AUDIENCE, FxAccountUtils.getAudienceForURL(tokenServerURI));
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
 
     ExtendedJSONObject descriptor = new ExtendedJSONObject();
@@ -351,13 +351,6 @@ public class AndroidFxAccount {
       throw new IllegalStateException("could not get state", e);
     }
   }
-
-  // TODO: this is shit.
-  private static String computeAudience(String tokenServerURI) throws URISyntaxException {
-    URI uri = new URI(tokenServerURI);
-    return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
-  }
-
 
   /**
    * <b>For debugging only!</b>
