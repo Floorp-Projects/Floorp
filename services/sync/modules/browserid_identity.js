@@ -127,6 +127,7 @@ this.BrowserIDManager.prototype = {
         this._shouldHaveSyncKeyBundle = true; // and we should actually have one...
         this.whenReadyToAuthenticate.resolve();
         this._log.info("Background fetch for key bundle done");
+        Weave.Service.verifyLogin();
       }).then(null, err => {
         this._shouldHaveSyncKeyBundle = true; // but we probably don't have one...
         this.whenReadyToAuthenticate.reject(err);
