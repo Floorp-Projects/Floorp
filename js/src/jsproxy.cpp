@@ -3134,11 +3134,8 @@ ProxyObject::renew(JSContext *cx, BaseProxyHandler *handler, Value priv)
     JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     JS_ASSERT(getParent() == cx->global());
     JS_ASSERT(getClass() == &uncallableClass_);
+    JS_ASSERT(!getClass()->ext.innerObject);
     JS_ASSERT(getTaggedProto().isLazy());
-#ifdef DEBUG
-    AutoSuppressGC suppressGC(cx);
-    JS_ASSERT(!handler->isOuterWindow());
-#endif
 
     setSlot(HANDLER_SLOT, PrivateValue(handler));
     setCrossCompartmentSlot(PRIVATE_SLOT, priv);

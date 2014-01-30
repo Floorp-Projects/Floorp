@@ -122,10 +122,6 @@ class JS_FRIEND_API(BaseProxyHandler)
         return offsetof(BaseProxyHandler, mFamily);
     }
 
-    virtual bool isOuterWindow() {
-        return false;
-    }
-
     virtual bool finalizeInBackground(Value priv) {
         /*
          * Called on creation of a proxy to determine whether its finalize

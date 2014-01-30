@@ -587,10 +587,6 @@ class nsOuterWindowProxy : public js::Wrapper
 public:
   nsOuterWindowProxy() : js::Wrapper(0) { }
 
-  virtual bool isOuterWindow() {
-    return true;
-  }
-
   virtual bool finalizeInBackground(JS::Value priv) {
     return false;
   }
