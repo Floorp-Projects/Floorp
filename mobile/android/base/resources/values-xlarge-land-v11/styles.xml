@@ -5,13 +5,15 @@
 
 <resources>
 
-    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
+    <style name="Widget.HomeGridView" parent="Widget.GridView">
         <item name="android:paddingLeft">55dp</item>
         <item name="android:paddingRight">55dp</item>
         <item name="android:paddingBottom">30dp</item>
         <item name="android:horizontalSpacing">56dp</item>
         <item name="android:verticalSpacing">20dp</item>
     </style>
+
+    <style name="Widget.TopSitesGridView" parent="Widget.HomeGridView" />
 
     <style name="Widget.Home.HistoryListView">
         <item name="android:paddingLeft">50dp</item>

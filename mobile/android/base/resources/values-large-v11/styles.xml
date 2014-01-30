@@ -77,13 +77,15 @@
         <item name="topDivider">true</item>
     </style>
 
-    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
+    <style name="Widget.HomeGridView" parent="Widget.GridView">
         <item name="android:paddingLeft">5dp</item>
         <item name="android:paddingRight">5dp</item>
         <item name="android:paddingBottom">30dp</item>
         <item name="android:horizontalSpacing">10dp</item>
         <item name="android:verticalSpacing">10dp</item>
     </style>
+
+    <style name="Widget.TopSitesGridView" parent="Widget.HomeGridView" />
 
     <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView">
         <item name="topDivider">false</item>
