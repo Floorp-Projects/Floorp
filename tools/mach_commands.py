@@ -318,13 +318,11 @@ class ReviewboardToolsProvider(MachCommandBase):
 
 @CommandProvider
 class FormatProvider(MachCommandBase):
-    @Command('clang-format', category='devenv', allow_all_args=True,
+    @Command('clang-format', category='misc',
         description='Run clang-format on current changes')
-    @CommandArgument('args', nargs='...', help='Arguments to clang-format tool')
-    def clang_format(self, args):
-        if not args:
-            args = ['help']
-
+    @CommandArgument('--show', '-s', action = 'store_true',
+        help = 'Show diff output on instead of applying changes')
+    def clang_format(self, show=False):
         plat = platform.system()
         fmt = plat.lower() + "/clang-format-3.5"
         fmt_diff = "clang-format-diff-3.5"
@@ -358,7 +356,10 @@ class FormatProvider(MachCommandBase):
         from subprocess import Popen, PIPE
         p1 = Popen(["hg", "diff", "-U0", "-r", "tip^", "--include", "glob:**.c", "--include", "glob:**.cpp",
                    "--include", "glob:**.h", "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
-        p2 = Popen([sys.executable, clang_format_diff, "-i", "-p1", "-style=Mozilla"], stdin=p1.stdout)
+        args = [sys.executable, clang_format_diff, "-p1", "-style=Mozilla"]
+        if not show:
+           args.append("-i")
+        p2 = Popen(args, stdin=p1.stdout)
         return p2.communicate()[0]
 
     def locate_or_fetch(self, root):
