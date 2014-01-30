@@ -478,12 +478,14 @@ BrowserIDClusterManager.prototype = {
     let promiseClusterURL = function() {
       return fxAccounts.getSignedInUser().then(userData => {
         return this.identity._fetchTokenForUser(userData).then(token => {
-          // Set the clusterURI for this user based on the endpoint in the
-          // token. This is a bit of a hack, and we should figure out a better
-          // way of distributing it to components that need it.
-          let clusterURI = Services.io.newURI(token.endpoint, null, null);
-          clusterURI.path = "/";
-          return clusterURI.spec;
+          let endpoint = token.endpoint;
+          // For Sync 1.5 storage endpoints, we use the base endpoint verbatim.
+          // However, it should end in "/" because we will extend it with
+          // well known path components. So we add a "/" if it's missing.
+          if (!endpoint.endsWith("/")) {
+            endpoint += "/";
+          }
+          return endpoint;
         });
       });
     }.bind(this);
@@ -497,4 +499,13 @@ BrowserIDClusterManager.prototype = {
     });
     return cb.wait();
   },
+
+  getUserBaseURL: function() {
+    // Legacy Sync and FxA Sync construct the userBaseURL differently. Legacy
+    // Sync appends path components onto an empty path, and in FxA Sync the
+    // token server constructs this for us in an opaque manner. Since the
+    // cluster manager already sets the clusterURL on Service and also has
+    // access to the current identity, we added this functionality here.
+    return this.service.clusterURL;
+  }
 }
