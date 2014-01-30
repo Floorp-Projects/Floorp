@@ -142,6 +142,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private OnFilterListener mFilterListener;
     private OnStartEditingListener mStartEditingListener;
     private OnStopEditingListener mStopEditingListener;
+    private OnFocusChangeListener mFocusChangeListener;
 
     final private BrowserApp mActivity;
     private boolean mHasSoftMenuButton;
@@ -315,6 +316,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 setSelected(hasFocus);
+                if (mFocusChangeListener != null) {
+                    mFocusChangeListener.onFocusChange(v, hasFocus);
+                }
             }
         });
 
@@ -791,6 +795,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void setOnStopEditingListener(OnStopEditingListener listener) {
         mStopEditingListener = listener;
+    }
+
+    public void setOnFocusChangeListener(OnFocusChangeListener listener) {
+        mFocusChangeListener = listener;
     }
 
     private void showUrlEditLayout() {
