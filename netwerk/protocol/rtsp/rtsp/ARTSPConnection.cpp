@@ -44,6 +44,7 @@ namespace android {
 
 // static
 const int64_t ARTSPConnection::kSelectTimeoutUs = 1000ll;
+const int64_t ARTSPConnection::kSelectTimeoutRetries = 10000ll;
 
 ARTSPConnection::ARTSPConnection(bool uidValid, uid_t uid)
     : mUIDValid(uidValid),
@@ -53,7 +54,8 @@ ARTSPConnection::ARTSPConnection(bool uidValid, uid_t uid)
       mSocket(-1),
       mConnectionID(0),
       mNextCSeq(0),
-      mReceiveResponseEventPending(false) {
+      mReceiveResponseEventPending(false),
+      mNumSelectTimeoutRetries(0) {
     MakeUserAgent(&mUserAgent);
 }
 
@@ -76,8 +78,14 @@ void ARTSPConnection::connect(const char *url, const sp<AMessage> &reply) {
 }
 
 void ARTSPConnection::disconnect(const sp<AMessage> &reply) {
+    int32_t result;
     sp<AMessage> msg = new AMessage(kWhatDisconnect, id());
     msg->setMessage("reply", reply);
+    if (reply->findInt32("result", &result)) {
+      msg->setInt32("result", result);
+    } else {
+      msg->setInt32("result", OK);
+    }
     msg->post();
 }
 
@@ -285,6 +293,7 @@ void ARTSPConnection::onConnect(const sp<AMessage> &msg) {
 
     if (err < 0) {
         if (errno == EINPROGRESS) {
+            mNumSelectTimeoutRetries = 0;
             sp<AMessage> msg = new AMessage(kWhatCompleteConnection, id());
             msg->setMessage("reply", reply);
             msg->setInt32("connection-id", mConnectionID);
@@ -324,20 +333,22 @@ void ARTSPConnection::performDisconnect() {
     mPass.clear();
     mAuthType = NONE;
     mNonce.clear();
+    mNumSelectTimeoutRetries = 0;
 
     mState = DISCONNECTED;
 }
 
 void ARTSPConnection::onDisconnect(const sp<AMessage> &msg) {
+    int32_t result;
     if (mState == CONNECTED || mState == CONNECTING) {
         performDisconnect();
     }
 
     sp<AMessage> reply;
     CHECK(msg->findMessage("reply", &reply));
+    CHECK(msg->findInt32("result", &result));
 
-    reply->setInt32("result", OK);
-
+    reply->setInt32("result", result);
     reply->post();
 }
 
@@ -368,9 +379,19 @@ void ARTSPConnection::onCompleteConnection(const sp<AMessage> &msg) {
     CHECK_GE(res, 0);
 
     if (res == 0) {
-        // Timed out. Not yet connected.
-
-        msg->post();
+        // select() timed out. Not yet connected.
+        if (mNumSelectTimeoutRetries < kSelectTimeoutRetries) {
+            mNumSelectTimeoutRetries++;
+            msg->post();
+        } else {
+            // Connection timeout here.
+            // We cannot establish TCP connection, abort the connect
+            // and reply an error to RTSPConnectionHandler.
+            LOGE("Connection timeout. Failed to connect to the server.");
+            mNumSelectTimeoutRetries = 0;
+            reply->setInt32("result", -ETIMEDOUT);
+            reply->post();
+        }
         return;
     }
 
