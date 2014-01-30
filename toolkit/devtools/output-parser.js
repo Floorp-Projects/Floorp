@@ -11,7 +11,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const MAX_ITERATIONS = 100;
-const REGEX_QUOTES = /^".*?"|^".*/;
+const REGEX_QUOTES = /^".*?"|^".*|^'.*?'|^'.*/;
 const REGEX_URL = /^url\(["']?(.+?)(?::(\d+))?["']?\)/;
 const REGEX_WHITESPACE = /^\s+/;
 const REGEX_FIRST_WORD_OR_CHAR = /^\w+|^./;
@@ -273,10 +273,22 @@ OutputParser.prototype = {
       return match.charAt(1).toUpperCase();
     });
 
+    value = value.replace("!important", "");
+
     let div = doc.createElement("div");
     div.style[name] = value;
 
     return !!div.style[name];
+  },
+
+  /**
+   * Tests if a given colorObject output by CssColor is valid for parsing.
+   * Valid means it's really a color, not any of the CssColor SPECIAL_VALUES
+   * except transparent
+   */
+  _isValidColor: function(colorObj) {
+    return colorObj.valid &&
+      (!colorObj.specialValue || colorObj.specialValue === "transparent");
   },
 
   /**
@@ -294,7 +306,7 @@ OutputParser.prototype = {
   _appendColor: function(color, options={}) {
     let colorObj = new colorUtils.CssColor(color);
 
-    if (colorObj.valid && !colorObj.specialValue) {
+    if (this._isValidColor(colorObj)) {
       if (options.colorSwatchClass) {
         this._appendNode("span", {
           class: options.colorSwatchClass,
@@ -459,5 +471,5 @@ OutputParser.prototype = {
       defaults[item] = overrides[item];
     }
     return defaults;
-  },
+  }
 };
