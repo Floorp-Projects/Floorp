@@ -1759,7 +1759,7 @@ ContainerState::PopThebesLayerData()
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
   if ((data->mIsSolidColorInVisibleRegion || imageContainer) &&
-      data->mLayer->GetValidRegion().IsEmpty()) {
+      (data->mLayer->GetValidRegion().IsEmpty() || mLayerBuilder->CheckInLayerTreeCompressionMode())) {
     NS_ASSERTION(!(data->mIsSolidColorInVisibleRegion && imageContainer),
                  "Can't be a solid color as well as an image!");
     if (imageContainer) {
@@ -2815,6 +2815,20 @@ FrameLayerBuilder::SaveLastPaintOffset(ThebesLayer* aLayer)
     entry->mLastPaintOffset = GetTranslationForThebesLayer(aLayer);
     entry->mHasExplicitLastPaintOffset = true;
   }
+}
+
+bool
+FrameLayerBuilder::CheckInLayerTreeCompressionMode()
+{
+  if (mInLayerTreeCompressionMode) {
+    return true; 
+  }
+
+  // If we wanted to be in layer tree compression mode, but weren't, then scheduled
+  // a delayed repaint where we will be.
+  mRootPresContext->PresShell()->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DELAYED_COMPRESS);
+
+  return false;
 }
 
 void
