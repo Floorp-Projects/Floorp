@@ -52,6 +52,9 @@
         label="&inspectorCopyUniqueSelector.label;"
         accesskey="&inspectorCopyUniqueSelector.accesskey;"
         oncommand="inspector.copyUniqueSelector()"/>
+      <menuitem id="node-menu-copyimagedatauri"
+        label="&inspectorCopyImageDataUri.label;"
+        oncommand="inspector.copyImageDataUri()"/>
       <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
