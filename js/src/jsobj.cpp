@@ -2584,14 +2584,6 @@ js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey ke
         goto bad;
     }
 
-    if (clasp->flags & (JSCLASS_FREEZE_PROTO|JSCLASS_FREEZE_CTOR)) {
-        JS_ASSERT_IF(ctor == proto, !(clasp->flags & JSCLASS_FREEZE_CTOR));
-        if (proto && (clasp->flags & JSCLASS_FREEZE_PROTO) && !JSObject::freeze(cx, proto))
-            goto bad;
-        if (ctor && (clasp->flags & JSCLASS_FREEZE_CTOR) && !JSObject::freeze(cx, ctor))
-            goto bad;
-    }
-
     /* If this is a standard class, cache its prototype. */
     if (!cached && key != JSProto_Null)
         SetClassObject(obj, key, ctor, proto);
