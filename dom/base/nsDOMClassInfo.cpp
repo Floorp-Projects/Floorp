@@ -2846,26 +2846,23 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       name_struct->mType == nsGlobalNameStruct::eTypeClassProto ||
       name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     // Lookup new DOM bindings.
-    mozilla::dom::DefineInterface define =
+    DefineInterface getOrCreateInterfaceObject =
       name_struct->mDefineDOMInterface;
-    if (define) {
+    if (getOrCreateInterfaceObject) {
       if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
           !OldBindingConstructorEnabled(name_struct, aWin, cx)) {
         return NS_OK;
       }
 
+      ConstructorEnabled* checkEnabledForScope = name_struct->mConstructorEnabled;
+      if (checkEnabledForScope && !checkEnabledForScope(cx, obj)) {
+        return NS_OK;
+      }
+
       Maybe<JSAutoCompartment> ac;
       JS::Rooted<JSObject*> global(cx);
-      bool defineOnXray = xpc::WrapperFactory::IsXrayWrapper(obj);
-      if (defineOnXray) {
-        // Check whether to define this property on the Xray first.  This allows
-        // consumers to opt in to defining on the xray even if they don't want
-        // to define on the underlying global.
-        if (name_struct->mConstructorEnabled &&
-            !(*name_struct->mConstructorEnabled)(cx, obj)) {
-          return NS_OK;
-        }
-
+      bool isXray = xpc::WrapperFactory::IsXrayWrapper(obj);
+      if (isXray) {
         global = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!global) {
           return NS_ERROR_DOM_SECURITY_ERR;
@@ -2875,22 +2872,13 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         global = obj;
       }
 
-      // Check whether to define on the global too.  Note that at this point cx
-      // is in the compartment of global even if we were coming in via an Xray.
-      bool defineOnGlobal = !name_struct->mConstructorEnabled ||
-        (*name_struct->mConstructorEnabled)(cx, global);
-
-      if (!defineOnGlobal && !defineOnXray) {
-        return NS_OK;
-      }
-
-      JS::Rooted<JSObject*> interfaceObject(cx, define(cx, global, id,
-                                                       defineOnGlobal));
+      JS::Rooted<JSObject*> interfaceObject(cx,
+        getOrCreateInterfaceObject(cx, global, id, !isXray));
       if (!interfaceObject) {
         return NS_ERROR_FAILURE;
       }
 
-      if (defineOnXray) {
+      if (isXray) {
         // This really should be handled by the Xray for the window.
         ac.destroy();
         if (!JS_WrapObject(cx, &interfaceObject) ||
@@ -3342,6 +3330,22 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
+  if (isXray) {
+    // We promise to resolve on the underlying object first.  That will create
+    // the actual interface object if needed and store it in a data structure
+    // hanging off the global.  Then our second call will wrap up in an Xray as
+    // needed.  We do things this way because we use the existence of the
+    // object in that data structure as a flag that indicates that its name
+    // (and any relevant named constructor names) has been resolved before;
+    // this allows us to avoid re-resolving in the Xray case if the property is
+    // deleted by page script.
+    bool ignored;
+    JS::Rooted<JSObject*> global(cx,
+      js::UncheckedUnwrap(obj, /* stopAtOuter = */ false));
+    JSAutoCompartment ac(cx, global);
+    nsresult rv = GlobalResolve(win, cx, global, id, &ignored);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   bool did_resolve = false;
   nsresult rv = GlobalResolve(win, cx, obj, id, &did_resolve);
   NS_ENSURE_SUCCESS(rv, rv);
