@@ -715,6 +715,25 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
     return true;
 }
 
+JS_FRIEND_API(JSString *)
+js::ErrorReportToString(JSContext *cx, JSErrorReport *reportp)
+{
+    JSExnType type = static_cast<JSExnType>(reportp->exnType);
+    RootedString str(cx, cx->runtime()->emptyString);
+    if (type != JSEXN_NONE)
+        str = ClassName(GetExceptionProtoKey(type), cx);
+    RootedString toAppend(cx, JS_NewUCStringCopyN(cx, MOZ_UTF16(": "), 2));
+    if (!str || !toAppend)
+        return nullptr;
+    str = ConcatStrings<CanGC>(cx, str, toAppend);
+    if (!str)
+        return nullptr;
+    toAppend = JS_NewUCStringCopyZ(cx, reportp->ucmessage);
+    if (toAppend)
+        str = ConcatStrings<CanGC>(cx, str, toAppend);
+    return str;
+}
+
 bool
 js_ReportUncaughtException(JSContext *cx)
 {
@@ -746,8 +765,14 @@ js_ReportUncaughtException(JSContext *cx)
     JSErrorReport *reportp = exnObject ? js_ErrorFromException(cx, exnObject)
                                        : nullptr;
 
-    /* XXX L10N angels cry once again. see also everywhere else */
-    RootedString str(cx, ToString<CanGC>(cx, exn));
+    // Be careful not to invoke ToString if we've already successfully extracted
+    // an error report, since the exception might be wrapped in a security
+    // wrapper, and ToString-ing it might throw.
+    RootedString str(cx);
+    if (reportp)
+        str = ErrorReportToString(cx, reportp);
+    else
+        str = ToString<CanGC>(cx, exn);
     if (str)
         roots[1] = StringValue(str);
 
@@ -768,6 +793,13 @@ js_ReportUncaughtException(JSContext *cx)
         if (JS_GetProperty(cx, exnObject, js_message_str, roots.handleAt(3)) && roots[3].isString())
             msg = roots[3].toString();
 
+        // If we have the right fields, override the ToString we performed on
+        // the exception object above with something built out of its quacks
+        // (i.e. as much of |NameQuack: MessageQuack| as we can make).
+        //
+        // It would be nice to use ErrorReportToString here, but we can't quite
+        // do it - mostly because we'd need to figure out what JSExnType |name|
+        // corresponds to, which may not be any JSExnType at all.
         if (name && msg) {
             RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
             if (!colon)
@@ -811,6 +843,13 @@ js_ReportUncaughtException(JSContext *cx)
         report.exnType = int16_t(JSEXN_NONE);
         report.column = (unsigned) column;
         if (str) {
+            // Note that using |str| for |ucmessage| here is kind of wrong,
+            // because |str| is supposed to be of the format
+            // |ErrorName: ErrorMessage|, and |ucmessage| is supposed to
+            // correspond to |ErrorMessage|. But this is what we've historically
+            // done for duck-typed error objects.
+            //
+            // If only this stuff could get specced one day...
             if (JSStableString *stable = str->ensureStable(cx))
                 report.ucmessage = stable->chars().get();
         }
