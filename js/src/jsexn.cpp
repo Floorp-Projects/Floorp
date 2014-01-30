@@ -744,9 +744,6 @@ js_ReportUncaughtException(JSContext *cx)
     if (!cx->getPendingException(&exn))
         return false;
 
-    AutoValueVector roots(cx);
-    roots.resize(6);
-
     /*
      * Because ToString below could error and an exception object could become
      * unrooted, we must root exnObject.  Later, if exnObject is non-null, we
@@ -758,7 +755,6 @@ js_ReportUncaughtException(JSContext *cx)
         exnObject = nullptr;
     } else {
         exnObject = JSVAL_TO_OBJECT(exn);
-        roots[0] = exn;
     }
 
     JS_ClearPendingException(cx);
@@ -773,8 +769,6 @@ js_ReportUncaughtException(JSContext *cx)
         str = ErrorReportToString(cx, reportp);
     else
         str = ToString<CanGC>(cx, exn);
-    if (str)
-        roots[1] = StringValue(str);
 
     JSErrorReport report;
 
@@ -785,13 +779,16 @@ js_ReportUncaughtException(JSContext *cx)
     JSAutoByteString filename;
     if (!reportp && exnObject && IsDuckTypedErrorObject(cx, exnObject, &filename_str))
     {
+        // Temporary value for pulling properties off of duck-typed objects.
+        RootedValue val(cx);
+
         RootedString name(cx);
-        if (JS_GetProperty(cx, exnObject, js_name_str, roots.handleAt(2)) && roots[2].isString())
-            name = roots[2].toString();
+        if (JS_GetProperty(cx, exnObject, js_name_str, &val) && val.isString())
+            name = val.toString();
 
         RootedString msg(cx);
-        if (JS_GetProperty(cx, exnObject, js_message_str, roots.handleAt(3)) && roots[3].isString())
-            msg = roots[3].toString();
+        if (JS_GetProperty(cx, exnObject, js_message_str, &val) && val.isString())
+            msg = val.toString();
 
         // If we have the right fields, override the ToString we performed on
         // the exception object above with something built out of its quacks
@@ -816,22 +813,22 @@ js_ReportUncaughtException(JSContext *cx)
             str = msg;
         }
 
-        if (JS_GetProperty(cx, exnObject, filename_str, roots.handleAt(4))) {
-            JSString *tmp = ToString<CanGC>(cx, roots.handleAt(4));
+        if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
+            JSString *tmp = ToString<CanGC>(cx, val);
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, roots.handleAt(5)) ||
-            !ToUint32(cx, roots.handleAt(5), &lineno))
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &val) ||
+            !ToUint32(cx, val, &lineno))
         {
             lineno = 0;
         }
 
         uint32_t column;
-        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, roots.handleAt(5)) ||
-            !ToUint32(cx, roots.handleAt(5), &column))
+        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &val) ||
+            !ToUint32(cx, val, &column))
         {
             column = 0;
         }
