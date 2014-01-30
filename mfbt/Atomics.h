@@ -934,7 +934,7 @@ class Atomic;
  * swap method is provided.
  */
 template<typename T, MemoryOrdering Order>
-class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value>::Type>
+class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value && !IsSame<T, bool>::value>::Type>
   : public detail::AtomicBaseIncDec<T, Order>
 {
     typedef typename detail::AtomicBaseIncDec<T, Order> Base;
@@ -1004,6 +1004,44 @@ class Atomic<T, Order, typename EnableIf<IsEnum<T>::value>::Type>
 
   private:
     Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
+};
+
+/**
+ * Atomic<T> implementation for boolean types.
+ *
+ * The atomic store and load operations and the atomic swap method is provided.
+ *
+ * Note:
+ *
+ * - sizeof(Atomic<bool>) != sizeof(bool) for some implementations of
+ *   bool and/or some implementations of std::atomic. This is allowed in
+ *   [atomic.types.generic]p9.
+ *
+ * - It's not obvious whether the 8-bit atomic functions on Windows are always
+ *   inlined or not. If they are not inlined, the corresponding functions in the
+ *   runtime library are not available on Windows XP. This is why we implement
+ *   Atomic<bool> with an underlying type of uint32_t.
+ */
+template<MemoryOrdering Order>
+class Atomic<bool, Order>
+  : protected detail::AtomicBase<uint32_t, Order>
+{
+    typedef typename detail::AtomicBase<uint32_t, Order> Base;
+
+  public:
+    MOZ_CONSTEXPR Atomic() : Base() {}
+    MOZ_CONSTEXPR Atomic(bool aInit) : Base(aInit) {}
+
+    // We provide boolean wrappers for the underlying AtomicBase methods.
+    operator bool() const { return Base::operator uint32_t(); }
+    bool operator=(bool aValue) { return Base::operator=(aValue); }
+    bool exchange(bool aValue) { return Base::exchange(aValue); }
+    bool compareExchange(bool aOldValue, bool aNewValue) {
+      return Base::compareExchange(aOldValue, aNewValue);
+    }
+
+  private:
+    Atomic(Atomic<bool, Order>& aOther) MOZ_DELETE;
 };
 
 } // namespace mozilla
