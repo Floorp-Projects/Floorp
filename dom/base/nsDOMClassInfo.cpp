@@ -2800,12 +2800,20 @@ OldBindingConstructorEnabled(const nsGlobalNameStruct *aStruct,
   return true;
 }
 
+static nsresult
+DefineComponentsShim(JSContext *cx, JS::Handle<JSObject*> global, nsPIDOMWindow *win);
+
 // static
 nsresult
 nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                           JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                           bool *did_resolve)
 {
+  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
+    *did_resolve = true;
+    return DefineComponentsShim(cx, obj, aWin);
+  }
+
   *did_resolve = false;
 
   nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
@@ -3257,11 +3265,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
   MOZ_ASSERT(win->IsInnerWindow());
-
-  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
-    *objp = obj;
-    return DefineComponentsShim(cx, obj, win);
-  }
 
   // Don't resolve standard classes on XrayWrappers, only resolve them if we're
   // resolving on the real global object.
