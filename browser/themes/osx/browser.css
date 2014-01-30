@@ -2609,7 +2609,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /*
  * Draw the bottom border of the tabstrip when core doesn't do it for us:
  */
-#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customizing],[customize-exiting]) #TabsToolbar::after,
+#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customize-entered]) #TabsToolbar::after,
 #main-window:not([tabsintitlebar]) #TabsToolbar::after,
 #TabsToolbar:-moz-lwtheme::after {
   content: '';
@@ -4023,8 +4023,9 @@ window > chatbox {
   padding-top: 0;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
-  padding: 0 2em 2em;
+#main-window[tabsintitlebar][customize-entered] #titlebar-content {
+  margin-bottom: 0px !important;
+  margin-top: 11px !important;
 }
 
 #main-window[customize-entered] #tab-view-deck {
@@ -4069,6 +4070,12 @@ window > chatbox {
   #customization-titlebar-visibility-button > .button-box > .button-icon {
     width: 24px;
   }
+}
+
+#main-window[customizing] #navigator-toolbox::after,
+#main-window[customize-entered] #TabsToolbar::after {
+  margin-left: 2em;
+  margin-right: 2em;
 }
 
 /* End customization mode */

@@ -1921,10 +1921,6 @@ chatbox {
   background-attachment: fixed;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
-  padding: 0 2em 2em;
-}
-
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
 #main-window[customize-entered] #customization-container {
   border: 3px solid hsla(0,0%,0%,.1);
@@ -1945,6 +1941,11 @@ chatbox {
   background-clip: padding-box;
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
+}
+
+#main-window[customizing] #TabsToolbar::after {
+  margin-left: 2em;
+  margin-right: 2em;
 }
 
 /* End customization mode */
