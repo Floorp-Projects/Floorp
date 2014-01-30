@@ -28,11 +28,14 @@
 // Slots on all array descriptors
 #define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    3
 
+// Slots on sized array descriptors
+#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 4
+
 // Slots on struct type objects
 #define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 3
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS                   4
+#define JS_DESCR_SLOTS                   5
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for type representation objects
