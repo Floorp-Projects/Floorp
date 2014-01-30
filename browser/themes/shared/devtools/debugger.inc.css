@@ -21,7 +21,7 @@
 
 .theme-dark #sources-pane > tabs,
 .theme-dark #sources-pane .devtools-toolbar {
-  -moz-border-end-color: black; /* Match the splitter. */
+  -moz-border-end-color: black; /* Match the splitter color. */
 }
 
 .theme-light #sources-pane > tabs,
