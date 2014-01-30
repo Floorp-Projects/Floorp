@@ -8,3 +8,15 @@ FINAL_LIBRARY = 'breakpadinjector'
 
 for var in ('UNICODE', 'UNICODE_', 'BREAKPAD_NO_TERMINATE_THREAD', 'NOMINMAX'):
     DEFINES[var] = True
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+
+include('/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild')
+include('/toolkit/crashreporter/google-breakpad/src/client/windows/handler/objs.mozbuild')
+include('/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/objs.mozbuild')
+
+SOURCES += objs_common
+SOURCES += objs_crash_generation
+SOURCES += objs_handler

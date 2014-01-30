@@ -134,6 +134,13 @@ WebGLFramebuffer::Attachment::RectangleObject() const
 static inline bool
 IsValidFBOTextureColorFormat(GLenum internalFormat)
 {
+    /* These formats are internal formats for each texture -- the actual
+     * low level format, which we might have to do conversions for when
+     * running against desktop GL (e.g. GL_RGBA + GL_FLOAT -> GL_RGBA32F).
+     *
+     * This function just handles all of them whether desktop GL or ES.
+     */
+
     return (
         /* linear 8-bit formats */
         internalFormat == LOCAL_GL_ALPHA ||
@@ -149,7 +156,14 @@ IsValidFBOTextureColorFormat(GLenum internalFormat)
         internalFormat == LOCAL_GL_LUMINANCE32F_ARB ||
         internalFormat == LOCAL_GL_LUMINANCE_ALPHA32F_ARB ||
         internalFormat == LOCAL_GL_RGB32F_ARB ||
-        internalFormat == LOCAL_GL_RGBA32F_ARB);
+        internalFormat == LOCAL_GL_RGBA32F_ARB ||
+        /* texture_half_float formats */
+        internalFormat == LOCAL_GL_ALPHA16F_ARB ||
+        internalFormat == LOCAL_GL_LUMINANCE16F_ARB ||
+        internalFormat == LOCAL_GL_LUMINANCE_ALPHA16F_ARB ||
+        internalFormat == LOCAL_GL_RGB16F_ARB ||
+        internalFormat == LOCAL_GL_RGBA16F_ARB
+    );
 }
 
 static inline bool

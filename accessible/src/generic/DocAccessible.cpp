@@ -1917,8 +1917,10 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
 
   // XXX: do we really want to send focus to focused DOM node not taking into
   // account active item?
-  if (focusedAcc)
+  if (focusedAcc) {
     FocusMgr()->DispatchFocusEvent(this, focusedAcc);
+    SelectionMgr()->SetControlSelectionListener(focusedAcc->GetNode()->AsElement());
+  }
 
   return updateFlags;
 }

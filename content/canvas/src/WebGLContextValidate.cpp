@@ -569,44 +569,9 @@ bool WebGLContext::ValidateTexFormatAndType(GLenum format, GLenum type, int jsAr
         }
     }
 
+    const char invalidTypedArray[] = "%s: invalid typed array type for given texture data type";
 
-    if (type == LOCAL_GL_UNSIGNED_BYTE ||
-        (IsExtensionEnabled(OES_texture_float) && type == LOCAL_GL_FLOAT))
-    {
-        if (jsArrayType != -1) {
-            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::ArrayBufferView::TYPE_UINT8) ||
-                (type == LOCAL_GL_FLOAT && jsArrayType != js::ArrayBufferView::TYPE_FLOAT32))
-            {
-                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
-                return false;
-            }
-        }
-
-        int texMultiplier = type == LOCAL_GL_FLOAT ? 4 : 1;
-        switch (format) {
-            case LOCAL_GL_ALPHA:
-            case LOCAL_GL_LUMINANCE:
-                *texelSize = 1 * texMultiplier;
-                return true;
-            case LOCAL_GL_LUMINANCE_ALPHA:
-                *texelSize = 2 * texMultiplier;
-                return true;
-            case LOCAL_GL_RGB:
-            case LOCAL_GL_SRGB_EXT:
-                *texelSize = 3 * texMultiplier;
-                return true;
-            case LOCAL_GL_RGBA:
-            case LOCAL_GL_SRGB_ALPHA_EXT:
-                *texelSize = 4 * texMultiplier;
-                return true;
-            default:
-                break;
-        }
-
-        ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
-        return false;
-    }
-
+    // First, we check for packed types
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
@@ -639,7 +604,67 @@ bool WebGLContext::ValidateTexFormatAndType(GLenum format, GLenum type, int jsAr
             break;
         }
 
-    ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
+    int texMultiplier = 1;
+
+    // If not a packed types, then it's might be a standard type.
+    if (type == LOCAL_GL_UNSIGNED_BYTE) {
+        if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_UINT8) {
+            ErrorInvalidEnum(invalidTypedArray, info);
+            return false;
+        }
+    } else if (type == LOCAL_GL_FLOAT) {
+        if (!IsExtensionEnabled(OES_texture_float)) {
+            ErrorInvalidEnum("%s: invalid format FLOAT: need OES_texture_float enabled", info);
+            return false;
+        }
+
+        if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_FLOAT32) {
+            ErrorInvalidOperation(invalidTypedArray, info);
+            return false;
+        }
+
+        texMultiplier = 4;
+    } else if (type == LOCAL_GL_HALF_FLOAT_OES) {
+        if (!IsExtensionEnabled(OES_texture_half_float)) {
+            ErrorInvalidEnum("%s: invalid format HALF_FLOAT_OES: need OES_texture_half_float enabled", info);
+            return false;
+        }
+
+        if (jsArrayType != -1)
+        {
+            ErrorInvalidOperation(invalidTypedArray, info);
+            return false;
+        }
+
+        texMultiplier = 2;
+    } else {
+        // We don't know the type
+        ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
+        return false;
+    }
+
+    // Ok we know that is a standard type.
+    switch (format) {
+        case LOCAL_GL_ALPHA:
+        case LOCAL_GL_LUMINANCE:
+            *texelSize = 1 * texMultiplier;
+            return true;
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            *texelSize = 2 * texMultiplier;
+            return true;
+        case LOCAL_GL_RGB:
+        case LOCAL_GL_SRGB_EXT:
+            *texelSize = 3 * texMultiplier;
+            return true;
+        case LOCAL_GL_RGBA:
+        case LOCAL_GL_SRGB_ALPHA_EXT:
+            *texelSize = 4 * texMultiplier;
+            return true;
+        default:
+            break;
+    }
+
+    ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
     return false;
 }
 

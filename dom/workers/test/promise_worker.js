@@ -31,6 +31,30 @@ function promiseResolve() {
   });
 }
 
+function promiseResolveNoArg() {
+  var promise = new Promise(function(resolve, reject) {
+    ok(resolve, "Promise.resolve exists");
+    ok(reject, "Promise.reject exists");
+
+    resolve();
+  }).then(function(what) {
+    ok(true, "Then - resolveCb has been called");
+    is(what, undefined, "ResolveCb received undefined");
+    runTest();
+  }, function() {
+    ok(false, "Then - rejectCb has been called");
+    runTest();
+  });
+}
+
+function promiseRejectNoHandler() {
+  // This test only checks that the code that reports unhandled errors in the
+  // Promises implementation does not crash or leak.
+  var promise = new Promise(function(res, rej) {
+    noSuchMethod();
+  });
+  runTest();
+}
 
 function promiseReject() {
   var promise = new Promise(function(resolve, reject) {
@@ -41,6 +65,19 @@ function promiseReject() {
   }, function(what) {
     ok(true, "Then - rejectCb has been called");
     is(what, 42, "RejectCb received 42");
+    runTest();
+  });
+}
+
+function promiseRejectNoArg() {
+  var promise = new Promise(function(resolve, reject) {
+    reject();
+  }).then(function(what) {
+    ok(false, "Then - resolveCb has been called");
+    runTest();
+  }, function(what) {
+    ok(true, "Then - rejectCb has been called");
+    is(what, undefined, "RejectCb received undefined");
     runTest();
   });
 }
@@ -260,6 +297,66 @@ function promiseThenCatchOrderingReject() {
   });
 }
 
+function promiseThenNoArg() {
+  var promise = new Promise(function(resolve, reject) {
+    resolve(42);
+  });
+
+  var clone = promise.then();
+  isnot(promise, clone, "These 2 promise objs are different");
+  promise.then(function(v) {
+    clone.then(function(cv) {
+      is(v, cv, "Both resolve to the same value");
+      runTest();
+    });
+  });
+}
+
+function promiseThenUndefinedResolveFunction() {
+  var promise = new Promise(function(resolve, reject) {
+    reject(42);
+  });
+
+  try {
+    promise.then(undefined, function(v) {
+      is(v, 42, "Promise rejected with 42");
+      runTest();
+    });
+  } catch (e) {
+    ok(false, "then should not throw on undefined resolve function");
+  }
+}
+
+function promiseThenNullResolveFunction() {
+  var promise = new Promise(function(resolve, reject) {
+    reject(42);
+  });
+
+  try {
+    promise.then(null, function(v) {
+      is(v, 42, "Promise rejected with 42");
+      runTest();
+    });
+  } catch (e) {
+    ok(false, "then should not throw on null resolve function");
+  }
+}
+
+function promiseCatchNoArg() {
+  var promise = new Promise(function(resolve, reject) {
+    reject(42);
+  });
+
+  var clone = promise.catch();
+  isnot(promise, clone, "These 2 promise objs are different");
+  promise.catch(function(v) {
+    clone.catch(function(cv) {
+      is(v, cv, "Both reject to the same value");
+      runTest();
+    });
+  });
+}
+
 function promiseNestedPromise() {
   new Promise(function(resolve, reject) {
     resolve(new Promise(function(resolve, reject) {
@@ -357,6 +454,217 @@ function promiseRejectNoHandler() {
   runTest();
 }
 
+function promiseUtilitiesDefined() {
+  ok(Promise.all, "Promise.all must be defined when Promise is enabled.");
+  ok(Promise.cast, "Promise.cast must be defined when Promise is enabled.");
+  ok(Promise.race, "Promise.race must be defined when Promise is enabled.");
+  runTest();
+}
+
+function promiseAllArray() {
+  var p = Promise.all([1, new Date(), Promise.resolve("firefox")]);
+  ok(p instanceof Promise, "Return value of Promise.all should be a Promise.");
+  p.then(function(values) {
+    ok(Array.isArray(values), "Resolved value should be an array.");
+    is(values.length, 3, "Resolved array length should match iterable's length.");
+    is(values[0], 1, "Array values should match.");
+    ok(values[1] instanceof Date, "Array values should match.");
+    is(values[2], "firefox", "Array values should match.");
+    runTest();
+  }, function() {
+    ok(false, "Promise.all shouldn't fail when iterable has no rejected Promises.");
+    runTest();
+  });
+}
+
+function promiseAllWaitsForAllPromises() {
+  var arr = [
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 1), 50);
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 2), 10);
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, new Promise(function(resolve2) {
+        resolve2(3);
+      })), 10);
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 4), 20);
+    })
+  ];
+
+  var p = Promise.all(arr);
+  p.then(function(values) {
+    ok(Array.isArray(values), "Resolved value should be an array.");
+    is(values.length, 4, "Resolved array length should match iterable's length.");
+    is(values[0], 1, "Array values should match.");
+    is(values[1], 2, "Array values should match.");
+    is(values[2], 3, "Array values should match.");
+    is(values[3], 4, "Array values should match.");
+    runTest();
+  }, function() {
+    ok(false, "Promise.all shouldn't fail when iterable has no rejected Promises.");
+    runTest();
+  });
+}
+
+function promiseAllRejectFails() {
+  var arr = [
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 1), 50);
+    }),
+    new Promise(function(resolve, reject) {
+      setTimeout(reject.bind(undefined, 2), 10);
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 3), 10);
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve.bind(undefined, 4), 20);
+    })
+  ];
+
+  var p = Promise.all(arr);
+  p.then(function(values) {
+    ok(false, "Promise.all shouldn't resolve when iterable has rejected Promises.");
+    runTest();
+  }, function(e) {
+    ok(true, "Promise.all should reject when iterable has rejected Promises.");
+    is(e, 2, "Rejection value should match.");
+    runTest();
+  });
+}
+
+function promiseCastNoArg() {
+  var p = Promise.cast();
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(function(v) {
+    is(v, undefined, "Resolved value should be undefined.");
+    runTest();
+  });
+}
+
+function promiseCastInteger() {
+  var p = Promise.cast(5);
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(function(v) {
+    is(v, 5, "Resolved value should match original.");
+    runTest();
+  });
+}
+
+function promiseCastArray() {
+  var p = Promise.cast([1,2,3]);
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(runTest);
+}
+
+// We don't support thenables, but if we did
+// they'd have to be cast to a trusted Promise.
+function promiseCastThenable() {
+  var p = Promise.cast({ then: function(onFulfill, onReject) { onFulfill(2); } });
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(function(v) {
+    is(v, 2, "Should resolve to 2.");
+    runTest();
+  }, function(e) {
+    ok(false, "promiseCastThenable should've resolved");
+    runTest();
+  });
+}
+
+function promiseCastPromise() {
+  var original = Promise.resolve(true);
+  var cast = Promise.cast(original);
+
+  ok(cast instanceof Promise, "Should cast to a Promise.");
+  is(cast, original, "Should return original Promise.");
+  runTest();
+}
+
+function promiseRaceEmpty() {
+  var p = Promise.race([]);
+  ok(p instanceof Promise, "Should return a Promise.");
+  // An empty race never resolves!
+  runTest();
+}
+
+function promiseRaceValuesArray() {
+  var p = Promise.race([true, new Date(), 3]);
+  ok(p instanceof Promise, "Should return a Promise.");
+  p.then(function(winner) {
+    is(winner, true, "First value should win.");
+    runTest();
+  }, function(err) {
+    ok(false, "Should not fail " + err + ".");
+    runTest();
+  });
+}
+
+function promiseRacePromiseArray() {
+  function timeoutPromise(n) {
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        resolve(n);
+      }, n);
+    });
+  }
+
+  var arr = [
+    timeoutPromise(50),
+    timeoutPromise(20),
+    timeoutPromise(30),
+    timeoutPromise(100)
+  ];
+
+  var p = Promise.race(arr);
+  p.then(function(winner) {
+    is(winner, 20, "Fastest timeout should win.");
+    runTest();
+  });
+}
+
+function promiseRaceReject() {
+  var p = Promise.race([
+    Promise.reject(new Error("Fail bad!")),
+    new Promise(function(resolve) {
+      setTimeout(resolve, 0);
+    })
+  ]);
+
+  p.then(function() {
+    ok(false, "Should not resolve when winning Promise rejected.");
+    runTest();
+  }, function(e) {
+    ok(true, "Should be rejected");
+    ok(e instanceof Error, "Should reject with Error.");
+    ok(e.message == "Fail bad!", "Message should match.");
+    runTest();
+  });
+}
+
+function promiseRaceThrow() {
+  var p = Promise.race([
+    new Promise(function(resolve) {
+      nonExistent();
+    }),
+    new Promise(function(resolve) {
+      setTimeout(resolve, 0);
+    })
+  ]);
+
+  p.then(function() {
+    ok(false, "Should not resolve when winning Promise had an error.");
+    runTest();
+  }, function(e) {
+    ok(true, "Should be rejected");
+    ok(e instanceof ReferenceError, "Should reject with ReferenceError for function nonExistent().");
+    runTest();
+  });
+}
+
 var tests = [
     promiseResolve,
     promiseReject,
@@ -377,7 +685,32 @@ var tests = [
     promiseStaticReject,
     promiseStaticResolve,
     promiseResolveNestedPromise,
+    promiseResolveNoArg,
+    promiseRejectNoArg,
+
+    promiseThenNoArg,
+    promiseThenUndefinedResolveFunction,
+    promiseThenNullResolveFunction,
+    promiseCatchNoArg,
     promiseRejectNoHandler,
+
+    promiseUtilitiesDefined,
+
+    promiseAllArray,
+    promiseAllWaitsForAllPromises,
+    promiseAllRejectFails,
+
+    promiseCastNoArg,
+    promiseCastInteger,
+    promiseCastArray,
+    promiseCastThenable,
+    promiseCastPromise,
+
+    promiseRaceEmpty,
+    promiseRaceValuesArray,
+    promiseRacePromiseArray,
+    promiseRaceReject,
+    promiseRaceThrow,
 ];
 
 function runTest() {

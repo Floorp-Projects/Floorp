@@ -23,6 +23,7 @@ static const char *sExtensionNames[] = {
     "OES_standard_derivatives",
     "OES_texture_float",
     "OES_texture_float_linear",
+    "OES_texture_half_float",
     "OES_vertex_array_object",
     "WEBGL_compressed_texture_atc",
     "WEBGL_compressed_texture_pvrtc",
@@ -86,6 +87,12 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             return gl->IsSupported(GLFeature::texture_float);
         case OES_texture_float_linear:
             return gl->IsSupported(GLFeature::texture_float_linear);
+        case OES_texture_half_float:
+            // If we have Feature::texture_half_float, we must not be on ES2
+            // and need to translate HALF_FLOAT_OES -> HALF_FLOAT.  We do that
+            // right before making the relevant calls.
+            return gl->IsExtensionSupported(GLContext::OES_texture_half_float) ||
+                   gl->IsSupported(GLFeature::texture_half_float);
         case OES_vertex_array_object:
             return WebGLExtensionVertexArray::IsSupported(this);
         case EXT_texture_filter_anisotropic:
@@ -252,6 +259,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case OES_texture_float_linear:
             obj = new WebGLExtensionTextureFloatLinear(this);
+            break;
+        case OES_texture_half_float:
+            obj = new WebGLExtensionTextureHalfFloat(this);
             break;
         case WEBGL_draw_buffers:
             obj = new WebGLExtensionDrawBuffers(this);

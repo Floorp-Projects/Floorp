@@ -31,7 +31,6 @@ class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
   uint32_t mCallIndex;
   uint16_t mCallState;
   bool mLive;
-  bool mOutgoing;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -155,12 +154,6 @@ public:
   UpdateSecondNumber(const nsAString& aNumber)
   {
     mSecondNumber = aNumber;
-  }
-
-  bool
-  IsOutgoing() const
-  {
-    return mOutgoing;
   }
 
   void
