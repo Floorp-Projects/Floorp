@@ -139,16 +139,11 @@ endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
-ifeq ($(HOST_OS_ARCH),WINNT)
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd -W)
-else
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
-endif
 # Hack to force NSS build system to use "normal" object directories
-DEFAULT_GMAKE_FLAGS += ABS_topsrcdir='$(ABS_topsrcdir)'
-# ABS_topsrcdir can't be expanded here because msys path mangling likes to break
+DEFAULT_GMAKE_FLAGS += topsrcdir='$(topsrcdir)'
+# topsrcdir can't be expanded here because msys path mangling likes to break
 # paths in that case.
-DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $$(ABS_topsrcdir)/security/,,$$(CURDIR))'
+DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $$(topsrcdir)/security/,,$$(CURDIR))'
 DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'
 DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(ABS_DIST)
 ifndef MOZ_DEBUG
@@ -226,7 +221,7 @@ DEFAULT_GMAKE_FLAGS += \
 	STANDARDS_CFLAGS='-std=gnu89' \
 	$(NULL)
 
-DEFAULT_GMAKE_FLAGS += ARCHFLAG='$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(ABS_topsrcdir)/security/manager/android_stub.h'
+DEFAULT_GMAKE_FLAGS += ARCHFLAG='$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(topsrcdir)/security/manager/android_stub.h'
 endif
 endif
 
