@@ -224,6 +224,18 @@ static size_t ScalarSizes[] = {
 #undef SCALAR_SIZE
 };
 
+size_t
+ScalarTypeRepresentation::size(Type t)
+{
+    return ScalarSizes[t];
+}
+
+size_t
+ScalarTypeRepresentation::alignment(Type t)
+{
+    return ScalarSizes[t];
+}
+
 ScalarTypeRepresentation::ScalarTypeRepresentation(Type type)
   : SizedTypeRepresentation(Scalar, false, ScalarSizes[type], ScalarSizes[type]),
     type_(type)
