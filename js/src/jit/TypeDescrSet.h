@@ -7,7 +7,7 @@
 #ifndef jit_TypeRepresentationSet_h
 #define jit_TypeRepresentationSet_h
 
-#include "builtin/TypeRepresentation.h"
+#include "builtin/TypedObject.h"
 #include "jit/IonAllocPolicy.h"
 #include "js/HashTable.h"
 
@@ -70,7 +70,7 @@ class TypeDescrSet {
     }
 
     template<typename T>
-    bool genericType(typename T::TypeRepr::Type *out);
+    bool genericType(typename T::Type *out);
 
   public:
     //////////////////////////////////////////////////////////////////////
@@ -86,10 +86,10 @@ class TypeDescrSet {
     // Query the set
 
     bool empty();
-    bool allOfKind(TypeRepresentation::Kind kind);
+    bool allOfKind(TypeDescr::Kind kind);
 
     // Returns true only when non-empty and `kind()` is
-    // `TypeRepresentation::Array`
+    // `TypeDescr::Array`
     bool allOfArrayKind();
 
     // Returns true only if (1) non-empty, (2) for all types t in this
@@ -105,39 +105,39 @@ class TypeDescrSet {
     //////////////////////////////////////////////////////////////////////
     // The following operations are only valid on a non-empty set:
 
-    TypeRepresentation::Kind kind();
+    TypeDescr::Kind kind();
 
     //////////////////////////////////////////////////////////////////////
     // Scalar operations
     //
-    // Only valid when `kind() == TypeRepresentation::Scalar`
+    // Only valid when `kind() == TypeDescr::Scalar`
 
     // If all type descrs in this set have a single type, returns true
     // and sets *out. Else returns false.
-    bool scalarType(ScalarTypeRepresentation::Type *out);
+    bool scalarType(ScalarTypeDescr::Type *out);
 
     //////////////////////////////////////////////////////////////////////
     // Reference operations
     //
-    // Only valid when `kind() == TypeRepresentation::Reference`
+    // Only valid when `kind() == TypeDescr::Reference`
 
     // If all type descrs in this set have a single type, returns true
     // and sets *out. Else returns false.
-    bool referenceType(ReferenceTypeRepresentation::Type *out);
+    bool referenceType(ReferenceTypeDescr::Type *out);
 
     //////////////////////////////////////////////////////////////////////
     // Reference operations
     //
-    // Only valid when `kind() == TypeRepresentation::X4`
+    // Only valid when `kind() == TypeDescr::X4`
 
     // If all type descrs in this set have a single type, returns true
     // and sets *out. Else returns false.
-    bool x4Type(X4TypeRepresentation::Type *out);
+    bool x4Type(X4TypeDescr::Type *out);
 
     //////////////////////////////////////////////////////////////////////
     // SizedArray operations
     //
-    // Only valid when `kind() == TypeRepresentation::SizedArray`
+    // Only valid when `kind() == TypeDescr::SizedArray`
 
     // Determines whether all arrays in this set have the same,
     // statically known, array length and return that length
@@ -152,7 +152,7 @@ class TypeDescrSet {
     //////////////////////////////////////////////////////////////////////
     // Struct operations
     //
-    // Only valid when `kind() == TypeRepresentation::Struct`
+    // Only valid when `kind() == TypeDescr::Struct`
 
     // Searches the type in the set for a field named `id`. All
     // possible types must agree on the offset of the field within the

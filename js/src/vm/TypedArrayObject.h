@@ -9,7 +9,7 @@
 
 #include "jsobj.h"
 
-#include "builtin/TypeRepresentation.h"
+#include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
 
@@ -303,8 +303,8 @@ class TypedArrayObject : public ArrayBufferViewObject
     static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
 
   public:
-    static const Class classes[ScalarTypeRepresentation::TYPE_MAX];
-    static const Class protoClasses[ScalarTypeRepresentation::TYPE_MAX];
+    static const Class classes[ScalarTypeDescr::TYPE_MAX];
+    static const Class protoClasses[ScalarTypeDescr::TYPE_MAX];
 
     static bool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                   MutableHandleObject objp, MutableHandleShape propp);
@@ -364,18 +364,18 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     static uint32_t slotWidth(int atype) {
         switch (atype) {
-          case ScalarTypeRepresentation::TYPE_INT8:
-          case ScalarTypeRepresentation::TYPE_UINT8:
-          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+          case ScalarTypeDescr::TYPE_INT8:
+          case ScalarTypeDescr::TYPE_UINT8:
+          case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
             return 1;
-          case ScalarTypeRepresentation::TYPE_INT16:
-          case ScalarTypeRepresentation::TYPE_UINT16:
+          case ScalarTypeDescr::TYPE_INT16:
+          case ScalarTypeDescr::TYPE_UINT16:
             return 2;
-          case ScalarTypeRepresentation::TYPE_INT32:
-          case ScalarTypeRepresentation::TYPE_UINT32:
-          case ScalarTypeRepresentation::TYPE_FLOAT32:
+          case ScalarTypeDescr::TYPE_INT32:
+          case ScalarTypeDescr::TYPE_UINT32:
+          case ScalarTypeDescr::TYPE_FLOAT32:
             return 4;
-          case ScalarTypeRepresentation::TYPE_FLOAT64:
+          case ScalarTypeDescr::TYPE_FLOAT64:
             return 8;
           default:
             MOZ_ASSUME_UNREACHABLE("invalid typed array type");
@@ -400,14 +400,14 @@ inline bool
 IsTypedArrayClass(const Class *clasp)
 {
     return &TypedArrayObject::classes[0] <= clasp &&
-           clasp < &TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX];
+           clasp < &TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX];
 }
 
 inline bool
 IsTypedArrayProtoClass(const Class *clasp)
 {
     return &TypedArrayObject::protoClasses[0] <= clasp &&
-           clasp < &TypedArrayObject::protoClasses[ScalarTypeRepresentation::TYPE_MAX];
+           clasp < &TypedArrayObject::protoClasses[ScalarTypeDescr::TYPE_MAX];
 }
 
 bool
