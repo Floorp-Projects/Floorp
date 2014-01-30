@@ -303,7 +303,7 @@
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
         <provider android:name="org.mozilla.gecko.db.HomeProvider"
-                  android:authorities="@ANDROID_PACKAGE_NAME@.db.homelists"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.home"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
         <service

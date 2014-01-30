@@ -8,6 +8,7 @@ STL_FLAGS =
 LOCAL_INCLUDES += \
     -I$(topsrcdir)/security \
     -I$(topsrcdir)/security/sandbox \
+    -I$(topsrcdir)/security/sandbox/chromium \
     $(NULL)
 
 SHARED_LIBRARY_LIBS += \

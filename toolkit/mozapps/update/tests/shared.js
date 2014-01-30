@@ -58,16 +58,14 @@ const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 const CRC_ERROR   = 4;
 const WRITE_ERROR = 7;
 
-const DIR_PATCH                      = "0";
-const DIR_UPDATES                    = "updates";
+const DIR_PATCH        = "0";
+const DIR_UPDATES      = "updates";
 #ifdef XP_MACOSX
-const DIR_APP_REL_PATH = "/Contents/MacOS/";
-const DIR_APP_SUFFIX = ".app";
-const DIR_UPDATED = "Updated.app";
+const DIR_BIN_REL_PATH = "Contents/MacOS/";
+const DIR_UPDATED      = "Updated.app";
 #else
-const DIR_APP_REL_PATH = "/appdir/";
-const DIR_APP_SUFFIX = "";
-const DIR_UPDATED = "updated";
+const DIR_BIN_REL_PATH = "";
+const DIR_UPDATED      = "updated";
 #endif
 
 const FILE_BACKUP_LOG                = "backup-update.log";

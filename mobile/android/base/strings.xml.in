@@ -254,7 +254,7 @@
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
   <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
 
-  <string name="pref_dynamic_toolbar">&pref_dynamic_toolbar;</string>
+  <string name="pref_scroll_title_bar">&pref_scroll_title_bar;</string>
 
   <string name="history_removed">&history_removed;</string>
 
@@ -296,18 +296,23 @@
   <string name="filepicker_image_title">&filepicker_image_title;</string>
   <string name="filepicker_video_title">&filepicker_video_title;</string>
 
-  <!-- Default bookmarks. Use bookmarks titles shared with XUL from mobile's
-       profile/bookmarks.inc. Don't expose the URLs to L10N. -->
+  <!-- Default bookmarks. We used to use bookmark titles shared with XUL from mobile's
+       profile/bookmarks.inc (see bug 964946). Don't expose the URLs to L10N. -->
   <string name="bookmarkdefaults_title_aboutfirefox">@bookmarks_aboutBrowser@</string>
   <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
   <string name="bookmarkdefaults_favicon_aboutfirefox">chrome/chrome/content/branding/favicon64.png</string>
 
+  <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_addons -->
   <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
   <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/products/mobile</string>
   <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
+
+  <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_marketplace -->
+  <string name="bookmarkdefaults_title_marketplace">@bookmarks_marketplace@</string>
+  <string name="bookmarkdefaults_url_marketplace">https://marketplace.firefox.com/</string>
 
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>

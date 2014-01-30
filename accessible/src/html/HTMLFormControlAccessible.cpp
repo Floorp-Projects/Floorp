@@ -377,6 +377,10 @@ HTMLTextFieldAccessible::NativeState()
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
+  // Text fields are always editable, even if they are also read only or
+  // disabled.
+  state |= states::EDITABLE;
+
   // can be focusable, focused, protected. readonly, unavailable, selected
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                             nsGkAtoms::password, eIgnoreCase)) {
@@ -392,8 +396,8 @@ HTMLTextFieldAccessible::NativeState()
   state |= input && input->IsSingleLineTextControl() ?
     states::SINGLE_LINE : states::MULTI_LINE;
 
-  if (!(state & states::EDITABLE) ||
-      (state & (states::PROTECTED | states::MULTI_LINE)))
+  if (state & (states::PROTECTED | states::MULTI_LINE | states::READONLY |
+               states::UNAVAILABLE))
     return state;
 
   // Expose autocomplete states if this input is part of autocomplete widget.

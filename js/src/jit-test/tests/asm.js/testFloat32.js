@@ -107,6 +107,7 @@ specials = [NaN, Infinity]
 
 for (v of values) {
     assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var x = toF(" + v + "); function f() {return toF(x);} return f"), this)(), Math.fround(v));
+    assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "const x = toF(" + v + "); function f() {return toF(x);} return f"), this)(), Math.fround(v));
     assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var x = toF(0.); function f() {x = toF(" + v + "); return toF(x);} return f"), this)(), Math.fround(v));
     assertEq(asmLink(asmCompile('glob', 'ffi', USE_ASM + TO_FLOAT32 + "var x = toF(ffi.x); function f() {return toF(x);} return f"), this, {x:v})(), Math.fround(v));
 }

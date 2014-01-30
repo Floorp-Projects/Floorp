@@ -1300,8 +1300,8 @@ class ParallelIonInvoke
 
     bool invoke(PerThreadData *perThread) {
         RootedValue result(perThread);
-        enter_(jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_, nullptr, 0,
-               result.address());
+        CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
+                            nullptr, 0, result.address());
         return !result.isMagic();
     }
 };
@@ -1442,6 +1442,10 @@ ForkJoinShared::executeFromWorker(uint16_t sliceId, uint32_t workerId, uintptr_t
         return false;
     }
     TlsPerThreadData.set(&thisThread);
+
+#ifdef JS_ARM_SIMULATOR
+    stackLimit = Simulator::StackLimit();
+#endif
 
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.

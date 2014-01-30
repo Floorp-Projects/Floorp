@@ -36,6 +36,14 @@ class Registers {
         return Names[code];
     }
 
+    static Code FromName(const char *name) {
+        for (size_t i = 0; i < Total; i++) {
+            if (strcmp(GetName(Code(i)), name) == 0)
+                return Code(i);
+        }
+        return Invalid;
+    }
+
     static const Code StackPointer = JSC::X86Registers::esp;
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
@@ -114,6 +122,14 @@ class FloatRegisters {
                                               "xmm8",  "xmm9",  "xmm10", "xmm11",
                                               "xmm12", "xmm13", "xmm14", "xmm15" };
         return Names[code];
+    }
+
+    static Code FromName(const char *name) {
+        for (size_t i = 0; i < Total; i++) {
+            if (strcmp(GetName(Code(i)), name) == 0)
+                return Code(i);
+        }
+        return Invalid;
     }
 
     static const Code Invalid = JSC::X86Registers::invalid_xmm;

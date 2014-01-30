@@ -420,7 +420,7 @@ private:
 };
 
 nsresult
-OMXAudioEncoder::Encode(const AudioSegment& aSegment, int aInputFlags)
+OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
 {
 #ifndef MOZ_SAMPLE_TYPE_S16
 #error MediaCodec accepts only 16-bit PCM data.
@@ -433,6 +433,11 @@ OMXAudioEncoder::Encode(const AudioSegment& aSegment, int aInputFlags)
   // Get input buffer.
   InputBufferHelper buffer(mCodec, mInputBufs);
   status_t result = buffer.Dequeue();
+  if (result == -EAGAIN) {
+    // All input buffers are full. Caller can try again later after consuming
+    // some output buffers.
+    return NS_OK;
+  }
   NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
   size_t samplesCopied = 0; // Number of copied samples.
@@ -448,14 +453,20 @@ OMXAudioEncoder::Encode(const AudioSegment& aSegment, int aInputFlags)
       if (bytesToCopy > buffer.AvailableSize()) {
         // Not enough space left in input buffer. Send it to encoder and get a
         // new one.
-        // Don't signal EOS since there is more data to copy.
         result = buffer.Enqueue(mTimestamp, aInputFlags & ~BUFFER_EOS);
         NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
+
+        result = buffer.Dequeue();
+        if (result == -EAGAIN) {
+          // All input buffers are full. Caller can try again later after
+          // consuming some output buffers.
+          aSegment.RemoveLeading(samplesCopied);
+          return NS_OK;
+        }
 
         mTimestamp += samplesCopied * mSampleDuration;
         samplesCopied = 0;
 
-        result = buffer.Dequeue();
         NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
       }
 
@@ -473,6 +484,9 @@ OMXAudioEncoder::Encode(const AudioSegment& aSegment, int aInputFlags)
       buffer.IncreaseOffset(bytesToCopy);
       iter.Next();
     }
+    if (samplesCopied > 0) {
+      aSegment.RemoveLeading(samplesCopied);
+    }
   } else if (aInputFlags & BUFFER_EOS) {
     // No audio data left in segment but we still have to feed something to
     // MediaCodec in order to notify EOS.
@@ -483,7 +497,12 @@ OMXAudioEncoder::Encode(const AudioSegment& aSegment, int aInputFlags)
   }
 
   if (samplesCopied > 0) {
-    result = buffer.Enqueue(mTimestamp, aInputFlags);
+    int flags = aInputFlags;
+    if (aSegment.GetDuration() > 0) {
+      // Don't signal EOS until source segment is empty.
+      flags &= ~BUFFER_EOS;
+    }
+    result = buffer.Enqueue(mTimestamp, flags);
     NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
     mTimestamp += samplesCopied * mSampleDuration;

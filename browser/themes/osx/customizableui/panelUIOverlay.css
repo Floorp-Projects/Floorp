@@ -43,13 +43,12 @@
 }
 
 #BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuitem {
+#BMB_bookmarksPopup > menuitem:not(.panel-subview-footer) {
   padding-top: 5px;
   padding-bottom: 5px;
 }
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
-#BMB_bookmarksPopup > menuitem > .menu-accel-container,
 #BMB_bookmarksPopup > menu > .menu-right {
   -moz-margin-end: 0;
 }

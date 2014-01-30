@@ -137,6 +137,10 @@ toolbarpaletteitem[place="toolbar"] {
   display: none;
 }
 
+#wrapper-personal-bookmarks:not([place="toolbar"]) > #personal-bookmarks {
+  -moz-box-pack: center;
+}
+
 #customization-palette > toolbarpaletteitem > label {
   text-align: center;
   margin-left: 0;

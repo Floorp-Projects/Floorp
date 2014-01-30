@@ -366,6 +366,13 @@
 
 #endif /* ARM */
 
+#if defined(JS_ARM_SIMULATOR)
+#  undef WTF_CPU_X86
+#  undef WTF_CPU_X64
+#  define WTF_CPU_ARM_TRADITIONAL 1
+#  define WTF_CPU_ARM 1
+#endif
+
 #if WTF_CPU_ARM || WTF_CPU_MIPS
 #define WTF_CPU_NEEDS_ALIGNED_ACCESS 1
 #endif

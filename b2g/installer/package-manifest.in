@@ -403,6 +403,8 @@
 #ifdef MOZ_WIDGET_GONK
 @BINPATH@/components/DOMWifiManager.js
 @BINPATH@/components/DOMWifiManager.manifest
+@BINPATH@/components/DOMWifiP2pManager.js
+@BINPATH@/components/DOMWifiP2pManager.manifest
 @BINPATH@/components/NetworkInterfaceListService.js
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkManager.js

@@ -564,6 +564,15 @@ function promiseWithThenReplaced() {
   });
 }
 
+function promiseStrictHandlers() {
+  var promise = Promise.resolve(5);
+  promise.then(function() {
+    "use strict";
+    ok(this === undefined, "Strict mode callback should have this === undefined.");
+    runTest();
+  });
+}
+
 var tests = [ promiseResolve, promiseReject,
               promiseException, promiseGC, promiseAsync,
               promiseDoubleThen, promiseThenException,
@@ -589,6 +598,7 @@ var tests = [ promiseResolve, promiseReject,
               promiseThenableThrowsAfterCallback,
               promiseThenableRejectThenResolve,
               promiseWithThenReplaced,
+              promiseStrictHandlers,
             ];
 
 function runTest() {
