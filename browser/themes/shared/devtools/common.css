@@ -27,7 +27,7 @@
   background-image: none;
   background-color: transparent;
   border: 0;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #aaa;
   min-height: 3px;
   height: 3px;
   margin-top: -3px;
@@ -39,7 +39,7 @@
   background-image: none;
   background-color: transparent;
   border: 0;
-  -moz-border-end: 1px solid black;
+  -moz-border-end: 1px solid #aaa;
   min-width: 3px;
   width: 3px;
   -moz-margin-start: -3px;
