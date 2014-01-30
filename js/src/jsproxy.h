@@ -341,9 +341,7 @@ extern JS_FRIEND_DATA(const js::Class* const) OuterWindowProxyClassPtr;
 
 inline bool IsProxyClass(const Class *clasp)
 {
-    return clasp == CallableProxyClassPtr ||
-           clasp == UncallableProxyClassPtr ||
-           clasp == OuterWindowProxyClassPtr;
+    return clasp->isProxy();
 }
 
 inline bool IsProxy(JSObject *obj)
