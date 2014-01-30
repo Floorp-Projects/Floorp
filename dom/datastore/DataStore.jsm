@@ -25,7 +25,6 @@ const MAX_REQUESTS = 25;
 
 Cu.import("resource://gre/modules/DataStoreCursor.jsm");
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.importGlobalProperties(["indexedDB"]);
@@ -142,7 +141,7 @@ this.DataStore.prototype = {
 
     function getInternalSuccess(aEvent, aPos) {
       debug("GetInternal success. Record: " + aEvent.target.result);
-      results[aPos] = ObjectWrapper.wrap(aEvent.target.result, self._window);
+      results[aPos] = Cu.cloneInto(aEvent.target.result, self._window);
       if (!--pendingIds) {
         aCallback(results);
         return;
