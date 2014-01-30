@@ -3237,25 +3237,45 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
     return true;
 }
 
-bool
-js_GetClassObject(ExclusiveContext *cxArg, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
+static bool
+MaybeResolveConstructor(ExclusiveContext *cxArg, Handle<GlobalObject*> global, JSProtoKey key)
 {
-    Rooted<GlobalObject*> global(cxArg, &obj->global());
+    if (global->isStandardClassResolved(key))
+        return true;
+    if (!cxArg->shouldBeJSContext())
+        return false;
 
-    // We can only resolve constructors with a real JSContext.
-    if (!global->isStandardClassResolved(key)) {
-        if (!cxArg->shouldBeJSContext())
-            return false;
-        JSContext *cx = cxArg->asJSContext();
-        RootedId name(cx, NameToId(ClassName(key, cx)));
-        AutoResolving resolving(cx, global, name);
-        if (!resolving.alreadyStarted() && !global->ensureConstructor(cx, key))
-            return false;
-    }
+    JSContext *cx = cxArg->asJSContext();
+    RootedId name(cx, NameToId(ClassName(key, cx)));
+    AutoResolving resolving(cx, global, name);
+    if (resolving.alreadyStarted())
+       return true;
+    return global->ensureConstructor(cx, key);
+}
+
+bool
+js_GetClassObject(ExclusiveContext *cx, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
+{
+    Rooted<GlobalObject*> global(cx, &obj->global());
+    if (!MaybeResolveConstructor(cx, global, key))
+        return false;
 
     Value v = global->getConstructor(key);
     if (v.isObject())
         objp.set(&v.toObject());
+    return true;
+}
+
+bool
+js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey key, MutableHandleObject protop)
+{
+    Rooted<GlobalObject*> global(cx, cx->global());
+    if (!MaybeResolveConstructor(cx, global, key))
+        return false;
+
+    Value v = global->getPrototype(key);
+    if (v.isObject())
+        protop.set(&v.toObject());
     return true;
 }
 
@@ -5428,12 +5448,14 @@ js::GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey)
  * NewBuiltinClassInstance in jsobjinlines.h.
  */
 bool
-js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
-                     MutableHandleObject protop, const Class *clasp)
+js_FindClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
+                      MutableHandleObject protop, const Class *clasp)
 {
-    if (JSObject *proto = GetClassPrototypePure(cx->global(), protoKey)) {
-        protop.set(proto);
-        return true;
+    if (protoKey != JSProto_Null) {
+        if (!js_GetClassPrototype(cx, protoKey, protop))
+            return false;
+        if (protop)
+            return true;
     }
 
     RootedValue v(cx);
