@@ -24,10 +24,12 @@ browser.jar:
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
+  skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
+  skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)
+  skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
-  skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen-darknoise.png
   skin/classic/browser/Geolocation-16.png

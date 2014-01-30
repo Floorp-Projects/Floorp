@@ -4434,6 +4434,12 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
       return LAYER_ACTIVE;
     }
   }
+
+  const nsStyleDisplay* disp = mFrame->StyleDisplay();
+  if ((disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM)) {
+    return LAYER_ACTIVE;
+  }
+
   return mStoredList.RequiredLayerStateForChildren(aBuilder,
                                                    aManager,
                                                    aParameters,

@@ -38,6 +38,94 @@
 
 namespace mozilla {
 
+// single precision float
+// seeeeeeeemmmmmmmmmmmmmmmmmmmmmmm
+
+// half precision float
+// seeeeemmmmmmmmmm
+
+// IEEE 16bits floating point:
+const uint16_t kFloat16Value_Zero     = 0x0000; // = 0000000000000000b
+const uint16_t kFloat16Value_One      = 0x3C00; // = 0011110000000000b
+const uint16_t kFloat16Value_Infinity = 0x7C00; // = 0111110000000000b
+const uint16_t kFloat16Value_NaN      = 0x7FFF; // = 011111yyyyyyyyyyb (nonzero y)
+
+MOZ_ALWAYS_INLINE uint16_t
+packToFloat16(float v)
+{
+    union {
+        float f32Value;
+        uint32_t f32Bits;
+    };
+
+    f32Value = v;
+
+    // pull the sign from v into f16bits
+    uint16_t f16Bits = uint16_t(f32Bits >> 16) & 0x8000;
+
+    // handle +/- 0
+    if ((f32Bits & 0x7FFFFFFF) == 0x00000000) {
+        return f16Bits;
+    }
+
+    // handle NaN
+    if (f32Value != f32Value) {
+        return f16Bits | kFloat16Value_NaN;
+    }
+
+    int32_t exp = int32_t(f32Bits >> 23) - 127;
+
+    // too small, we clamp it to -0 or +0
+    if (exp < -14) {
+        return f16Bits;
+    }
+
+    // too big, we clamp it to -inf/+inf
+    if (exp > 15) {
+        return f16Bits | kFloat16Value_Infinity;
+    }
+
+    f16Bits |= uint16_t(exp + 15) << 10;
+    f16Bits |= uint16_t(f32Bits >> 13) & 0x03FF;
+
+    return f16Bits;
+}
+
+MOZ_ALWAYS_INLINE float
+unpackFromFloat16(uint16_t v)
+{
+    union
+    {
+        float f32Value;
+        uint32_t f32Bits;
+    };
+
+    // grab sign bit
+    f32Bits = uint32_t(v & 0x8000) << 16;
+
+    if ((v & 0x7FFF) == 0x0000) {
+        // +0 or -0
+        return f32Value;
+    }
+
+    uint16_t exp = (v >> 10) & 0x001F;
+    if (exp == 0x001F) {
+        if (v & 0x03FF) {
+            // this is a NaN
+            f32Bits |= 0x7FFFFFFF;
+        } else {
+            // this is -inf or +inf
+            f32Bits |= 0x7F800000;
+        }
+        return f32Value;
+    }
+
+    f32Bits |= uint32_t(exp + (-15 + 127)) << 10;
+    f32Bits |= uint32_t(v & 0x03FF) << 13;
+
+    return f32Value;
+}
+
 MOZ_BEGIN_ENUM_CLASS(WebGLTexelPremultiplicationOp, int)
     None,
     Premultiply,
@@ -58,6 +146,17 @@ struct IsFloatFormat
 };
 
 template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
+struct IsHalfFloatFormat
+{
+    static const bool Value =
+        Format == WebGLTexelFormat::RGBA16F ||
+        Format == WebGLTexelFormat::RGB16F ||
+        Format == WebGLTexelFormat::RA16F ||
+        Format == WebGLTexelFormat::R16F ||
+        Format == WebGLTexelFormat::A16F;
+};
+
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct Is16bppFormat
 {
     static const bool Value =
@@ -68,20 +167,27 @@ struct Is16bppFormat
 
 template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format,
          bool IsFloat = IsFloatFormat<Format>::Value,
-         bool Is16bpp = Is16bppFormat<Format>::Value>
+         bool Is16bpp = Is16bppFormat<Format>::Value,
+         bool IsHalfFloat = IsHalfFloatFormat<Format>::Value>
 struct DataTypeForFormat
 {
     typedef uint8_t Type;
 };
 
 template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
-struct DataTypeForFormat<Format, true, false>
+struct DataTypeForFormat<Format, true, false, false>
 {
     typedef float Type;
 };
 
 template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
-struct DataTypeForFormat<Format, false, true>
+struct DataTypeForFormat<Format, false, true, false>
+{
+    typedef uint16_t Type;
+};
+
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
+struct DataTypeForFormat<Format, false, false, true>
 {
     typedef uint16_t Type;
 };
@@ -92,7 +198,8 @@ struct IntermediateFormat
     static const MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Value
         = IsFloatFormat<Format>::Value
           ? WebGLTexelFormat::RGBA32F
-          : WebGLTexelFormat::RGBA8;
+          : IsHalfFloatFormat<Format>::Value ? WebGLTexelFormat::RGBA16F
+                                             : WebGLTexelFormat::RGBA8;
 };
 
 inline GLenum
@@ -116,6 +223,11 @@ GLFormatForTexelFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::RA32F:       return LOCAL_GL_LUMINANCE_ALPHA;
         case WebGLTexelFormat::RGB32F:      return LOCAL_GL_RGB;
         case WebGLTexelFormat::RGBA32F:     return LOCAL_GL_RGBA;
+        case WebGLTexelFormat::R16F:        return LOCAL_GL_LUMINANCE;
+        case WebGLTexelFormat::A16F:        return LOCAL_GL_ALPHA;
+        case WebGLTexelFormat::RA16F:       return LOCAL_GL_LUMINANCE_ALPHA;
+        case WebGLTexelFormat::RGB16F:      return LOCAL_GL_RGB;
+        case WebGLTexelFormat::RGBA16F:     return LOCAL_GL_RGBA;
         default:
             MOZ_CRASH("Unknown texel format. Coding mistake?");
             return LOCAL_GL_INVALID_ENUM;
@@ -131,6 +243,8 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::RGBA5551:
         case WebGLTexelFormat::RGBA4444:
         case WebGLTexelFormat::RGB565:
+        case WebGLTexelFormat::R16F:
+        case WebGLTexelFormat::A16F:
         case WebGLTexelFormat::D16:
             return 2;
         case WebGLTexelFormat::RGB8:
@@ -142,7 +256,11 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::A32F:
         case WebGLTexelFormat::D32:
         case WebGLTexelFormat::D24S8:
+        case WebGLTexelFormat::RA16F:
             return 4;
+        case WebGLTexelFormat::RGB16F:
+            return 6;
+        case WebGLTexelFormat::RGBA16F:
         case WebGLTexelFormat::RA32F:
             return 8;
         case WebGLTexelFormat::RGB32F:
@@ -157,11 +275,14 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
 
 MOZ_ALWAYS_INLINE bool HasAlpha(WebGLTexelFormat format) {
     return format == WebGLTexelFormat::A8 ||
+           format == WebGLTexelFormat::A16F ||
            format == WebGLTexelFormat::A32F ||
            format == WebGLTexelFormat::RA8 ||
+           format == WebGLTexelFormat::RA16F ||
            format == WebGLTexelFormat::RA32F ||
            format == WebGLTexelFormat::RGBA8 ||
            format == WebGLTexelFormat::BGRA8 ||
+           format == WebGLTexelFormat::RGBA16F ||
            format == WebGLTexelFormat::RGBA32F ||
            format == WebGLTexelFormat::RGBA4444 ||
            format == WebGLTexelFormat::RGBA5551;
@@ -169,15 +290,19 @@ MOZ_ALWAYS_INLINE bool HasAlpha(WebGLTexelFormat format) {
 
 MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
     return format == WebGLTexelFormat::R8 ||
+           format == WebGLTexelFormat::R16F ||
            format == WebGLTexelFormat::R32F ||
            format == WebGLTexelFormat::RA8 ||
+           format == WebGLTexelFormat::RA16F ||
            format == WebGLTexelFormat::RA32F ||
            format == WebGLTexelFormat::RGB8 ||
            format == WebGLTexelFormat::BGRX8 ||
            format == WebGLTexelFormat::RGB565 ||
+           format == WebGLTexelFormat::RGB16F ||
            format == WebGLTexelFormat::RGB32F ||
            format == WebGLTexelFormat::RGBA8 ||
            format == WebGLTexelFormat::BGRA8 ||
+           format == WebGLTexelFormat::RGBA16F ||
            format == WebGLTexelFormat::RGBA32F ||
            format == WebGLTexelFormat::RGBA4444 ||
            format == WebGLTexelFormat::RGBA5551;
@@ -345,6 +470,51 @@ unpack<WebGLTexelFormat::A32F, float, float>(const float* __restrict src, float*
     dst[0] = 0;
     dst[1] = 0;
     dst[2] = 0;
+    dst[3] = src[0];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+unpack<WebGLTexelFormat::RGBA16F, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+unpack<WebGLTexelFormat::RGB16F, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = kFloat16Value_One;
+}
+
+template<> MOZ_ALWAYS_INLINE void
+unpack<WebGLTexelFormat::R16F, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[0];
+    dst[2] = src[0];
+    dst[3] = kFloat16Value_One;
+}
+
+template<> MOZ_ALWAYS_INLINE void
+unpack<WebGLTexelFormat::RA16F, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[0];
+    dst[2] = src[0];
+    dst[3] = src[1];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+unpack<WebGLTexelFormat::A16F, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = kFloat16Value_Zero;
+    dst[1] = kFloat16Value_Zero;
+    dst[2] = kFloat16Value_Zero;
     dst[3] = src[0];
 }
 
@@ -678,6 +848,82 @@ pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Premultiply, float,
     dst[1] = scaleFactor;
 }
 
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGB16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGB16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float scaleFactor = unpackFromFloat16(src[3]);
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+    dst[1] = packToFloat16(unpackFromFloat16(src[1]) * scaleFactor);
+    dst[2] = packToFloat16(unpackFromFloat16(src[2]) * scaleFactor);
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGBA16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGBA16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float scaleFactor = unpackFromFloat16(src[3]);
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+    dst[1] = packToFloat16(unpackFromFloat16(src[1]) * scaleFactor);
+    dst[2] = packToFloat16(unpackFromFloat16(src[2]) * scaleFactor);
+    dst[3] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::A16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::A16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::R16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::R16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float scaleFactor = unpackFromFloat16(src[3]);
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RA16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RA16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float scaleFactor = unpackFromFloat16(src[3]);
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+    dst[1] = scaleFactor;
+}
+
 /****** END CODE SHARED WITH WEBKIT ******/
 
 template<typename SrcType, typename DstType> MOZ_ALWAYS_INLINE void
@@ -688,6 +934,15 @@ convertType(const SrcType* __restrict src, DstType* __restrict dst)
 
 template<> MOZ_ALWAYS_INLINE void
 convertType<uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+convertType<uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -712,6 +967,16 @@ convertType<uint8_t, float>(const uint8_t* __restrict src, float* __restrict dst
     dst[1] = src[1] * scaleFactor;
     dst[2] = src[2] * scaleFactor;
     dst[3] = src[3] * scaleFactor;
+}
+
+template<> MOZ_ALWAYS_INLINE void
+convertType<uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+{
+    const float scaleFactor = 1.f / 255.0f;
+    dst[0] = packToFloat16(src[0] * scaleFactor);
+    dst[1] = packToFloat16(src[1] * scaleFactor);
+    dst[2] = packToFloat16(src[2] * scaleFactor);
+    dst[3] = packToFloat16(src[3] * scaleFactor);
 }
 
 } // end namespace WebGLTexelConversions

@@ -4056,6 +4056,21 @@ window > chatbox {
   border-left: 3px solid transparent;
 }
 
+@media (min-resolution: 2dppx) {
+  #customization-titlebar-visibility-button {
+    list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png");
+    -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #customization-titlebar-visibility-button[checked] {
+    -moz-image-region: rect(0, 96px, 48px, 48px);
+  }
+
+  #customization-titlebar-visibility-button > .button-box > .button-icon {
+    width: 24px;
+  }
+}
+
 /* End customization mode */
 
 #main-window[privatebrowsingmode=temporary] {
