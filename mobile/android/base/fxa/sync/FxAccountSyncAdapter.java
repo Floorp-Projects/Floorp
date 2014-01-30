@@ -216,9 +216,16 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
   };
 
-  protected void syncWithAssertion(final String audience, final String assertion, URI tokenServerEndpointURI, final String prefsPath, final SharedPreferences sharedPrefs, final KeyBundle syncKeyBundle, final BaseGlobalSessionCallback callback) {
+  protected void syncWithAssertion(final String audience,
+                                   final String assertion,
+                                   URI tokenServerEndpointURI,
+                                   final String prefsPath,
+                                   final SharedPreferences sharedPrefs,
+                                   final KeyBundle syncKeyBundle,
+                                   final String clientState,
+                                   final BaseGlobalSessionCallback callback) {
     TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
-    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
+    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, new TokenServerClientDelegate() {
       @Override
       public void handleSuccess(final TokenServerToken token) {
         FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
@@ -382,7 +389,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                 now + skewHandler.getSkewInMillis(),
                 this.getAssertionDurationInMilliseconds());
             final BaseGlobalSessionCallback sessionCallback = new SessionCallback(syncDelegate);
-            syncWithAssertion(audience, assertion, tokenServerEndpointURI, prefsPath, sharedPrefs, married.getSyncKeyBundle(), sessionCallback);
+            syncWithAssertion(audience, assertion, tokenServerEndpointURI, prefsPath, sharedPrefs, married.getSyncKeyBundle(), married.getClientState(), sessionCallback);
           } catch (Exception e) {
             syncDelegate.handleError(e);
             return;

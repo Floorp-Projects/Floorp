@@ -139,4 +139,23 @@ public class FxAccountUtils {
     }
     return kB;
   }
+
+  /**
+   * The token server accepts an X-Client-State header, which is the
+   * lowercase-hex-encoded first 16 bytes of the SHA-256 hash of the
+   * bytes of kB.
+   * @param kB a byte array, expected to be 32 bytes long.
+   * @return a 32-character string.
+   * @throws NoSuchAlgorithmException
+   */
+  public static String computeClientState(byte[] kB) throws NoSuchAlgorithmException {
+    if (kB == null ||
+        kB.length != 32) {
+      throw new IllegalArgumentException("Unexpected kB.");
+    }
+    byte[] sha256 = Utils.sha256(kB);
+    byte[] truncated = new byte[16];
+    System.arraycopy(sha256, 0, truncated, 0, 16);
+    return Utils.byte2Hex(truncated);    // This is automatically lowercase.
+  }
 }
