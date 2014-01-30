@@ -231,7 +231,7 @@ let CharsetMenu = {
       charset = "gbk.bis";
     }
     try {
-      accesskey = gBundle.GetStringFromName(charset + ".key");
+      return gBundle.GetStringFromName(charset + ".key");
     } catch (ex) {}
     return "";
   },

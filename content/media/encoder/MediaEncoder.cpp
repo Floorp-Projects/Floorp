@@ -100,8 +100,8 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
 #ifdef MOZ_WEBM_ENCODER
   else if (MediaEncoder::IsWebMEncoderEnabled() &&
           (aMIMEType.EqualsLiteral(VIDEO_WEBM) ||
-          (aTrackTypes & ContainerWriter::HAS_VIDEO))) {
-    if (aTrackTypes & ContainerWriter::HAS_AUDIO) {
+          (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
       audioEncoder = new VorbisTrackEncoder();
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
@@ -115,8 +115,8 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
 #ifdef MOZ_OMX_ENCODER
   else if (MediaEncoder::IsOMXEncoderEnabled() &&
           (aMIMEType.EqualsLiteral(VIDEO_MP4) ||
-          (aTrackTypes & ContainerWriter::HAS_VIDEO))) {
-    if (aTrackTypes & ContainerWriter::HAS_AUDIO) {
+          (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
       audioEncoder = new OmxAudioTrackEncoder();
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
@@ -130,7 +130,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
 #ifdef MOZ_OGG
   else if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled() &&
            (aMIMEType.EqualsLiteral(AUDIO_OGG) ||
-           (aTrackTypes & ContainerWriter::HAS_AUDIO))) {
+           (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK))) {
     writer = new OggWriter();
     audioEncoder = new OpusTrackEncoder();
     NS_ENSURE_TRUE(writer, nullptr);
