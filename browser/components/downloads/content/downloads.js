@@ -505,8 +505,7 @@ const DownloadsPanel = {
 
       let uri = NetUtil.newURI(url);
       DownloadsCommon.log("Pasted URL seems valid. Starting download.");
-      saveURL(uri.spec, name || uri.spec, null, true, true,
-              undefined, document);
+      DownloadURL(uri.spec, name, document);
     } catch (ex) {}
   },
 
