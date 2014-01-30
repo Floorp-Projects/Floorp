@@ -28,7 +28,7 @@ Tests of DOM Worker Threads
     event.preventDefault();
     var found = false;
     for (var index in errors) {
-      if (event.message == "uncaught exception: " + errors[index]) {
+      if (event.message == "InternalError: uncaught exception: " + errors[index]) {
         errors.splice(index, 1);
         found = true;
         break;
