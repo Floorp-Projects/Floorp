@@ -1374,11 +1374,8 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 }
 
 JS_PUBLIC_API(JSProtoKey)
-JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
+JS_IdentifyClassPrototype(JSObject *obj)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
     JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
     return js_IdentifyClassPrototype(obj);
 }
