@@ -50,7 +50,7 @@ if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('aurora', 'beta', 'release', 'esr'):
 
 # This is used in multiple places, so is defined here to avoid it getting
 # out of sync.
-DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 15
+DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 16
 
 # Additional debugging info is exposed in debug builds
 if CONFIG['MOZ_DEBUG']:
