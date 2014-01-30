@@ -1321,7 +1321,7 @@ js_PopulateObject(JSContext *cx, js::HandleObject newborn, js::HandleObject prop
  * Fast access to immutable standard objects (constructors and prototypes).
  */
 extern bool
-js_GetClassObject(js::ExclusiveContext *cx, JSObject *obj, JSProtoKey key,
+js_GetClassObject(js::ExclusiveContext *cx, JSProtoKey key,
                   js::MutableHandleObject objp);
 
 extern bool
@@ -1336,23 +1336,18 @@ extern JSProtoKey
 js_IdentifyClassPrototype(JSObject *obj);
 
 /*
- * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
- * JSProto_Null, clasp must non-null.
+ * Property-lookup-based access to interface and prototype objects for classes.
+ * If the class is built-in (and has a non-null JSProtoKey), these forward to
+ * js_GetClass{Object,Prototype}.
  */
-bool
-js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
-                   const js::Class *clasp = nullptr);
 
-/*
- * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
- * JSProto_Null, clasp must non-null.
- *
- * If protoKey is constant and scope is non-null, use GlobalObject's prototype
- * methods instead.
- */
+bool
+js_FindClassObject(js::ExclusiveContext *cx, js::MutableHandleObject protop,
+                   const js::Class *clasp);
+
 extern bool
-js_FindClassPrototype(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleObject protop,
-                      const js::Class *clasp = nullptr);
+js_FindClassPrototype(js::ExclusiveContext *cx, js::MutableHandleObject protop,
+                      const js::Class *clasp);
 
 
 namespace js {
