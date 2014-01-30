@@ -1690,12 +1690,6 @@ clear_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
 }
 
 
-static hb_ot_shape_normalization_mode_t
-normalization_preference_indic (const hb_segment_properties_t *props HB_UNUSED)
-{
-  return HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT;
-}
-
 static bool
 decompose_indic (const hb_ot_shape_normalize_context_t *c,
 		 hb_codepoint_t  ab,
@@ -1806,7 +1800,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
   data_create_indic,
   data_destroy_indic,
   NULL, /* preprocess_text */
-  normalization_preference_indic,
+  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT,
   decompose_indic,
   compose_indic,
   setup_masks_indic,

@@ -1996,8 +1996,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if (useStickyPosition) {
     resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, this,
-                                               &resultList));
+        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, &resultList));
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap 
@@ -4886,7 +4885,7 @@ nsIFrame::IsInvalid(nsRect& aRect)
 }
 
 void
-nsIFrame::SchedulePaint(uint32_t aFlags)
+nsIFrame::SchedulePaint(PaintType aType)
 {
   nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   nsPresContext *pres = displayRoot->PresContext()->GetRootPresContext();
@@ -4897,8 +4896,15 @@ nsIFrame::SchedulePaint(uint32_t aFlags)
     return;
   }
   
-  pres->PresShell()->ScheduleViewManagerFlush();
-  if (!(aFlags & PAINT_COMPOSITE_ONLY)) {
+  pres->PresShell()->ScheduleViewManagerFlush(aType == PAINT_DELAYED_COMPRESS ?
+                                              nsIPresShell::PAINT_DELAYED_COMPRESS :
+                                              nsIPresShell::PAINT_DEFAULT);
+
+  if (aType == PAINT_DELAYED_COMPRESS) {
+    return;
+  }
+
+  if (aType == PAINT_DEFAULT) {
     displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
   nsIPresShell* shell = PresContext()->PresShell();

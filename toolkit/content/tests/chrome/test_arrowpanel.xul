@@ -231,26 +231,26 @@ function checkPanelPosition(panel)
     case "top":
       adj = vwinpos + parseInt(getComputedStyle(panel, "").marginTop);
       if (iscentered)
-        adj += anchorRect.height / 2;
-      is(Math.round(panelRect.top), Math.round(anchorRect.top * zoomFactor +  + adj), "anchored on top");
+        adj += Math.round(anchorRect.height) / 2;
+      isWithinHalfPixel(panelRect.top, anchorRect.top * zoomFactor + adj, "anchored on top");
       break;
     case "bottom":
       adj = vwinpos + parseInt(getComputedStyle(panel, "").marginBottom);
       if (iscentered)
-        adj += anchorRect.height / 2;
-      is(Math.round(panelRect.bottom), Math.round(anchorRect.bottom * zoomFactor +  - adj), "anchored on bottom");
+        adj += Math.round(anchorRect.height) / 2;
+      isWithinHalfPixel(panelRect.bottom, anchorRect.bottom * zoomFactor - adj, "anchored on bottom");
       break;
     case "left":
       adj = hwinpos + parseInt(getComputedStyle(panel, "").marginLeft);
       if (iscentered)
-        adj += anchorRect.width / 2;
-      is(Math.round(panelRect.left), Math.round((anchorRect.left * zoomFactor + adj)), "anchored on left ");
+        adj += Math.round(anchorRect.width) / 2;
+      isWithinHalfPixel(panelRect.left, anchorRect.left * zoomFactor + adj, "anchored on left ");
       break;
     case "right":
       adj = hwinpos + parseInt(getComputedStyle(panel, "").marginRight);
       if (iscentered)
-        adj += anchorRect.width / 2;
-      is(Math.round(panelRect.right), Math.round(anchorRect.right * zoomFactor +  - adj), "anchored on right");
+        adj += Math.round(anchorRect.width) / 2;
+      isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, "anchored on right");
       break;
   }
 
@@ -263,6 +263,11 @@ function checkPanelPosition(panel)
   is(panel.alignmentPosition, expectedAlignment, "panel alignmentPosition");
 
   panel.hidePopup();
+}
+
+function isWithinHalfPixel(a, b)
+{
+  return Math.abs(a - b) <= 0.5;
 }
 
 function checkBigPanel(panel)

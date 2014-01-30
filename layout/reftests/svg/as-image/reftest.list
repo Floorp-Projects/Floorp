@@ -42,7 +42,7 @@ skip-if(B2G) == canvas-drawImage-scale-1b.html lime100x100-ref.html
 skip-if(B2G) == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
 # Fuzzyness and fails for scaling should be fixed by bug 941467
-fuzzy(1,2) fails-if(Android&&AndroidVersion!=15) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fails-if(Android&&AndroidVersion<15) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
 fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
 skip-if(B2G) == canvas-drawImage-slice-1a.html lime100x100-ref.html

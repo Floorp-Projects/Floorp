@@ -388,7 +388,8 @@ public final class HomeConfig {
     }
 
     public static enum ViewType implements Parcelable {
-        LIST("list");
+        LIST("list"),
+        GRID("grid");
 
         private final String mId;
 

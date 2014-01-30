@@ -730,9 +730,9 @@ bool
 js_ThrowStopIteration(JSContext *cx)
 {
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    RootedValue v(cx);
-    if (js_FindClassObject(cx, JSProto_StopIteration, &v))
-        cx->setPendingException(v);
+    RootedObject ctor(cx);
+    if (js_GetClassObject(cx, JSProto_StopIteration, &ctor) && ctor)
+        cx->setPendingException(ObjectValue(*ctor));
     return false;
 }
 
