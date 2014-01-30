@@ -20,7 +20,7 @@ public class ClientRecord extends Record {
   public static final String DEFAULT_CLIENT_NAME = "Default Name";
 
   public static final String PROTOCOL_LEGACY_SYNC = "1.1";
-  // public static final String PROTOCOL_FXA_SYNC = "1.5";
+  public static final String PROTOCOL_FXA_SYNC = "1.5";
 
   /**
    * Each of these fields is 'owned' by the client it represents. For example,
