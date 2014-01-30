@@ -3764,34 +3764,6 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/*
- * Internal class for testing hasPrototype easily.
- * Uses passed in prototype instead of target's.
- */
-class WrapperWithProto : public Wrapper
-{
-  public:
-    explicit WrapperWithProto(unsigned flags)
-      : Wrapper(flags, true)
-    { }
-
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
-                         Wrapper *handler);
-};
-
-/* static */ JSObject *
-WrapperWithProto::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
-                      Wrapper *handler)
-{
-    JS_ASSERT(parent);
-    AutoMarkInDeadZone amd(cx->zone());
-
-    RootedValue priv(cx, ObjectValue(*obj));
-    ProxyOptions options;
-    options.selectDefaultClass(obj->isCallable());
-    return NewProxyObject(cx, handler, priv, proto, parent, options);
-}
-
 static bool
 Wrap(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3825,9 +3797,11 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSObject *wrapped = WrapperWithProto::New(cx, &obj.toObject(), proto.toObjectOrNull(),
-                                              &obj.toObject().global(),
-                                              &Wrapper::singletonWithPrototype);
+    WrapperOptions options(cx);
+    options.setProto(proto.toObjectOrNull());
+    options.selectDefaultClass(obj.toObject().isCallable());
+    JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), &obj.toObject().global(),
+                                     &Wrapper::singletonWithPrototype, &options);
     if (!wrapped)
         return false;
 
