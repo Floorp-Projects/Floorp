@@ -337,7 +337,6 @@ class Proxy
 // Use these in places where you don't want to #include vm/ProxyObject.h.
 extern JS_FRIEND_DATA(const js::Class* const) CallableProxyClassPtr;
 extern JS_FRIEND_DATA(const js::Class* const) UncallableProxyClassPtr;
-extern JS_FRIEND_DATA(const js::Class* const) OuterWindowProxyClassPtr;
 
 inline bool IsProxyClass(const Class *clasp)
 {

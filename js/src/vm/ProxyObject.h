@@ -103,12 +103,6 @@ class ProxyObject : public JSObject
     static const Class uncallableClass_;
 };
 
-class OuterWindowProxyObject : public ProxyObject
-{
-  public:
-    static const Class class_;
-};
-
 } // namespace js
 
 // Note: the following |JSObject::is<T>| methods are implemented in terms of
