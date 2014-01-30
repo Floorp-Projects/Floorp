@@ -1031,9 +1031,10 @@
     <handlers>
       <handler event="dialogaccept">
       <![CDATA[
-        if (!this._fireEvent("beforeaccept", this)) 
-          return;
-        
+        if (!this._fireEvent("beforeaccept", this)){
+          return false;
+        }
+
         if (this.type == "child" && window.opener) {
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
@@ -1096,6 +1097,8 @@
                                .getService(Components.interfaces.nsIPrefService);
           psvc.savePrefFile(null);
         }
+
+        return true;
       ]]>
       </handler>
       <handler event="command">

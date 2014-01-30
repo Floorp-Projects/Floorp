@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Preferences Window beforeaccept Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    // No instant-apply for this test
+    SpecialPowers.setBoolPref("browser.preferences.instantApply", false);
+
+    var prefWindow = openDialog("window_preferences_beforeaccept.xul", "", "", windowOnload);
+
+    SimpleTest.registerCleanupFunction(() => {
+      SpecialPowers.clearUserPref("browser.preferences.instantApply");
+      SpecialPowers.clearUserPref("tests.beforeaccept.dialogShown");
+      SpecialPowers.clearUserPref("tests.beforeaccept.called");
+    });
+
+    function windowOnload() {
+      var dialogShown = prefWindow.document.getElementById("tests.beforeaccept.dialogShown");
+      var called = prefWindow.document.getElementById("tests.beforeaccept.called");
+      is(dialogShown.value, true, "dialog opened, shown pref set");
+      is(dialogShown.valueFromPreferences, null, "shown pref not committed");
+      is(called.value, null, "beforeaccept not yet called");
+      is(called.valueFromPreferences, null, "beforeaccept not yet called, pref not committed");
+
+      // try to accept the dialog, should fail the first time
+      prefWindow.document.documentElement.acceptDialog();
+      is(prefWindow.closed, false, "window not closed");
+      is(dialogShown.value, true, "shown pref still set");
+      is(dialogShown.valueFromPreferences, null, "shown pref still not committed");
+      is(called.value, true, "beforeaccept called");
+      is(called.valueFromPreferences, null, "called pref not committed");
+
+      // try again, this one should succeed
+      prefWindow.document.documentElement.acceptDialog();
+      is(prefWindow.closed, true, "window now closed");
+      is(dialogShown.valueFromPreferences, true, "shown pref committed");
+      is(called.valueFromPreferences, true, "called pref committed");
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+</window>

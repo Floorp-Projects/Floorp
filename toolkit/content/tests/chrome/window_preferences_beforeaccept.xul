@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!--
+  XUL Widget Test for preferences window with beforeaccept
+-->
+<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="preferences window"
+            width="300" height="300"
+            windowtype="test:preferences"
+            buttons="accept,cancel"
+            onbeforeaccept="return beforeAccept();"
+            onload="onDialogLoad();"
+>
+  <script type="application/javascript">
+  <![CDATA[
+    function onDialogLoad() {
+      var pref = document.getElementById("tests.beforeaccept.dialogShown");
+      pref.value = true;
+
+      // call the onload handler we were passed
+      window.arguments[0]();
+    }
+
+    function beforeAccept() {
+      var beforeAcceptPref = document.getElementById("tests.beforeaccept.called");
+      var oldValue = beforeAcceptPref.value;
+      beforeAcceptPref.value = true;
+
+      return !!oldValue;
+    }
+  ]]>
+  </script>
+
+  <prefpane id="sample_pane" label="Sample Prefpane">
+    <preferences id="sample_preferences">
+      <preference id="tests.beforeaccept.called"
+                  name="tests.beforeaccept.called"
+                  type="bool"/>
+      <preference id="tests.beforeaccept.dialogShown"
+                  name="tests.beforeaccept.dialogShown"
+                  type="bool"/>
+    </preferences>
+  </prefpane>
+  <label>Test Prefpane</label>
+</prefwindow>
