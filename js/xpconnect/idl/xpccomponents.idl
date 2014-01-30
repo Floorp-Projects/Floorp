@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(06530fdd-1c47-46b0-b438-ec9d696e18ce)]
+[scriptable, uuid(6a334332-a1b5-42e4-a601-863d5dfdc0d3)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -529,6 +529,16 @@ interface nsIXPCComponents_Utils : nsISupports
       *   "WatchdogHibernateStop"   - Watchdog stops hibernating
       */
     PRTime getWatchdogTimestamp(in AString aCategory);
+
+    /*
+     * Clone an object into a scope.
+     * The 3rd argument is an optional options object:
+     * - cloneFunction: boolean. If true, any function in the value is are
+     *   wrapped in a function forwarder that appears to be a native function in
+     *   the content scope.
+     */
+    [implicit_jscontext]
+    jsval cloneInto(in jsval value, in jsval scope, [optional] in jsval options);
 };
 
 /**
