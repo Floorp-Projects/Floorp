@@ -206,6 +206,7 @@ select {
   text-shadow: none;
   /* No text-decoration reaching inside, by default */
   display: inline-block;
+  page-break-inside: avoid;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
