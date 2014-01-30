@@ -33,9 +33,7 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
         proto_.construct(cx);
     }
 
-    JSObject *proto() const {
-        return proto_.empty() ? Wrapper::defaultProto : proto_.ref();
-    }
+    inline JSObject *proto() const;
     WrapperOptions &setProto(JSObject *protoArg) {
         JS_ASSERT(!proto_.empty());
         proto_.ref() = protoArg;
@@ -94,6 +92,12 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static JSObject *defaultProto;
 };
+
+inline JSObject *
+WrapperOptions::proto() const
+{
+    return proto_.empty() ? Wrapper::defaultProto : proto_.ref();
+}
 
 /* Base class for all cross compartment wrapper handlers. */
 class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
