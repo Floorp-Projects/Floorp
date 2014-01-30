@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c9ab0d20-8499-11e3-baa7-0800200c9a66)]
+[scriptable, uuid(cd4bccf4-3433-492e-8dfd-dfdb3fe9efa1)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -551,6 +551,16 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     jsval getJSEngineTelemetryValue();
+
+    /*
+     * Clone an object into a scope.
+     * The 3rd argument is an optional options object:
+     * - cloneFunction: boolean. If true, any function in the value is are
+     *   wrapped in a function forwarder that appears to be a native function in
+     *   the content scope.
+     */
+    [implicit_jscontext]
+    jsval cloneInto(in jsval value, in jsval scope, [optional] in jsval options);
 };
 
 /**
