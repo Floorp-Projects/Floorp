@@ -53,10 +53,11 @@ function compareChannels(buf1, buf2,
     }
   };
 
-  is(difference, 0, "Found " + difference + " different samples, maxDifference: " +
-     maxDifference + ", first bad index: " + firstBadIndex +
-     " with source offset " + sourceOffset + " and destination offset " +
-     destOffset);
+  is(difference, 0, "maxDifference: " + maxDifference +
+     ", first bad index: " + firstBadIndex +
+     " with test-data offset " + sourceOffset + " and expected-data offset " +
+     destOffset + "; corresponding values " + buf1[firstBadIndex + sourceOffset] +
+     " and " + buf2[firstBadIndex + destOffset] + " --- differences");
 }
 
 function compareBuffers(got, expected) {
