@@ -191,9 +191,11 @@ const CustomizableWidgets = [{
         windowsFragment.children[elementCount].classList.add("subviewbutton");
       }
       recentlyClosedWindows.appendChild(windowsFragment);
+      aEvent.target.addEventListener("command", win.PanelUI);
     },
     onViewHiding: function(aEvent) {
       LOG("History view is being hidden!");
+      aEvent.target.removeEventListener("command", win.PanelUI);
     }
   }, {
     id: "privatebrowsing-button",
