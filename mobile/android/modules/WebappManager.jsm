@@ -168,7 +168,8 @@ this.WebappManager = {
 
     let message = aData.request || {
       app: {
-        origin: origin
+        origin: origin,
+        receipts: [],
       }
     };
 
