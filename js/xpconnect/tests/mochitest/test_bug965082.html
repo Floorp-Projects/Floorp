@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=965082
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 965082</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 965082 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function checkThrows(f, msg) {
+    try { f(); ok(false, "Should have thrown: " + msg); }
+    catch (e) { ok(/denied|insecure/.test(e), "Should throw security exception: " + e + " (" + msg + ")"); }
+  }
+
+  function go() {
+    var protoSetter = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set;
+    checkThrows(function() { protoSetter.call(window[0], new Object()); }, "Setting cross-origin Window prototype");
+    checkThrows(function() { protoSetter.call(window[0].location, new Object()); }, "Setting cross-origin Location prototype");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=965082">Mozilla Bug 965082</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

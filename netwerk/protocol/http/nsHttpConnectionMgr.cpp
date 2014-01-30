@@ -2600,7 +2600,8 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     }
 
     if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
-        (ignoreIdle || !ent->mIdleConns.Length()) &&
+        ((ignoreIdle && (ent->mIdleConns.Length() < parallelSpeculativeConnectLimit)) ||
+         !ent->mIdleConns.Length()) &&
         !RestrictConnections(ent, ignorePossibleSpdyConnections) &&
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
         CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true);

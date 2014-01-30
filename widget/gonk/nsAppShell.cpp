@@ -878,6 +878,10 @@ nsAppShell::Init()
         android::FakeSurfaceComposer::instantiate();
 #endif
         GonkPermissionService::instantiate();
+
+        // Causes the kernel timezone to be set, which in turn causes the
+        // timestamps on SD cards to have the local time rather than UTC time.
+        hal::SetTimezone(hal::GetTimezone());
     }
 
     nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
