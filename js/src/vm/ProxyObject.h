@@ -71,6 +71,12 @@ class ProxyObject : public JSObject
         return &getReservedSlotRef(EXTRA_SLOT + n);
     }
 
+    HeapSlot *slotOfClassSpecific(size_t n) {
+        JS_ASSERT(n >= PROXY_MINIMUM_SLOTS);
+        JS_ASSERT(n < JSCLASS_RESERVED_SLOTS(getClass()));
+        return &getReservedSlotRef(n);
+    }
+
   public:
     static unsigned grayLinkSlot(JSObject *obj);
 

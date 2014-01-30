@@ -3022,6 +3022,14 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
      */
     if (!proxy->is<CrossCompartmentWrapperObject>())
         MarkSlot(trc, proxy->slotOfExtra(1), "extra1");
+
+    /*
+     * Allow for people to add extra slots to "proxy" classes, without allowing
+     * them to set their own trace hook. Trace the extras.
+     */
+    unsigned numSlots = JSCLASS_RESERVED_SLOTS(proxy->getClass());
+    for (unsigned i = PROXY_MINIMUM_SLOTS; i < numSlots; i++)
+        MarkSlot(trc, proxy->slotOfClassSpecific(i), "class-specific");
 }
 
 static JSObject *
