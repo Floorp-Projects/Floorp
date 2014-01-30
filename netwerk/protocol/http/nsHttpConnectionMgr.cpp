@@ -380,7 +380,6 @@ public: // intentional!
     bool mOverridesOK;
     uint32_t mParallelSpeculativeConnectLimit;
     bool mIgnoreIdle;
-    bool mIgnorePossibleSpdyConnections;
     bool mIsFromPredictor;
     bool mAllow1918;
 
@@ -437,8 +436,6 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
         overrider->GetParallelSpeculativeConnectLimit(
             &args->mParallelSpeculativeConnectLimit);
         overrider->GetIgnoreIdle(&args->mIgnoreIdle);
-        overrider->GetIgnorePossibleSpdyConnections(
-            &args->mIgnorePossibleSpdyConnections);
         overrider->GetIsFromPredictor(&args->mIsFromPredictor);
         overrider->GetAllow1918(&args->mAllow1918);
     }
@@ -655,8 +652,6 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     if (!ent)
         return;
 
-    ent->mTestedSpdy = true;
-
     if (!usingSpdy)
         return;
 
@@ -677,11 +672,11 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     nsConnectionEntry *preferred =
         mSpdyPreferredHash.Get(ent->mCoalescingKey);
 
-    LOG(("ReportSpdyConnection %s %s ent=%p preferred=%p\n",
-         ent->mConnInfo->Host(), ent->mCoalescingKey.get(),
-         ent, preferred));
+    LOG(("ReportSpdyConnection conn=%p %s %s ent=%p preferred=%p\n",conn,
+         ent->mConnInfo->Host(), ent->mCoalescingKey.get(), ent, preferred));
 
     if (!preferred) {
+        preferred = ent;
         if (!ent->mCoalescingKey.IsEmpty()) {
             mSpdyPreferredHash.Put(ent->mCoalescingKey, ent);
             ent->mSpdyPreferred = true;
@@ -696,13 +691,41 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
         // new transactions migrate over.
 
         LOG(("ReportSpdyConnection graceful close of conn=%p ent=%p to "
-                 "migrate to preferred\n", conn, ent));
-
+                 "migrate to preferred (desharding)\n", conn, ent));
         conn->DontReuse();
     } else if (preferred != ent) {
         LOG (("ReportSpdyConnection preferred host may be in false start or "
               "may have insufficient cert. Leave mapping in place but do not "
               "abandon this connection yet."));
+    }
+
+    if ((preferred == ent) && conn->CanDirectlyActivate()) {
+        // this is a new spdy connection to the preferred entry
+
+        // Cancel any other pending connections - their associated transactions
+        // are in the pending queue and will be dispatched onto this connection
+        for (int32_t index = ent->mHalfOpens.Length() - 1;
+             index >= 0; --index) {
+            // this will shorten mHalfOpens by one at the tail
+            ent->mHalfOpens[index]->Abandon();
+        }
+
+        if (ent->mActiveConns.Length() > 1) {
+            // this is a new connection to an established preferred spdy host.
+            // if there is more than 1 live and established spdy connection (e.g.
+            // some could still be handshaking, shutting down, etc..) then close
+            // this one down after any transactions that are on it are complete.
+            // This probably happened due to the parallel connection algorithm
+            // that is used only before the host is known to speak spdy.
+            for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
+                nsHttpConnection *otherConn = ent->mActiveConns[index];
+                if (otherConn != conn) {
+                    LOG(("ReportSpdyConnection shutting down connection (%p) because new "
+                         "spdy connection (%p) takes precedence\n", otherConn, conn));
+                    otherConn->DontReuse();
+                }
+            }
+        }
     }
 
     ProcessPendingQ(ent->mConnInfo);
@@ -1027,9 +1050,7 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(const nsACString &key,
         ent->mActiveConns.Length() == 0 &&
         ent->mHalfOpens.Length()   == 0 &&
         ent->mPendingQ.Length()    == 0 &&
-        ((!ent->mTestedSpdy && !ent->mUsingSpdy) ||
-         !gHttpHandler->IsSpdyEnabled() ||
-         self->mCT.Count() > 300)) {
+        (!ent->mUsingSpdy || self->mCT.Count() > 300)) {
         LOG(("    removing empty connection entry\n"));
         return PL_DHASH_REMOVE;
     }
@@ -1409,8 +1430,7 @@ nsHttpConnectionMgr::ClosePersistentConnectionsCB(const nsACString &key,
 }
 
 bool
-nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent,
-                                         bool ignorePossibleSpdyConnections)
+nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1420,8 +1440,7 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent,
 
     bool doRestrict = ent->mConnInfo->FirstHopSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
-        ((!ent->mTestedSpdy && !ignorePossibleSpdyConnections) ||
-         ent->mUsingSpdy) &&
+        ent->mUsingSpdy &&
         (ent->mHalfOpens.Length() || ent->mActiveConns.Length());
 
     // If there are no restrictions, we are done
@@ -1430,8 +1449,9 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent,
 
     // If the restriction is based on a tcp handshake in progress
     // let that connect and then see if it was SPDY or not
-    if (ent->UnconnectedHalfOpens() && !ignorePossibleSpdyConnections)
+    if (ent->UnconnectedHalfOpens()) {
         return true;
+    }
 
     // There is a concern that a host is using a mix of HTTP/1 and SPDY.
     // In that case we don't want to restrict connections just because
@@ -2956,14 +2976,12 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
 
     uint32_t parallelSpeculativeConnectLimit =
         gHttpHandler->ParallelSpeculativeConnectLimit();
-    bool ignorePossibleSpdyConnections = false;
     bool ignoreIdle = false;
     bool isFromPredictor = false;
     bool allow1918 = false;
 
     if (args->mOverridesOK) {
         parallelSpeculativeConnectLimit = args->mParallelSpeculativeConnectLimit;
-        ignorePossibleSpdyConnections = args->mIgnorePossibleSpdyConnections;
         ignoreIdle = args->mIgnoreIdle;
         isFromPredictor = args->mIsFromPredictor;
         allow1918 = args->mAllow1918;
@@ -2973,7 +2991,7 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
         ((ignoreIdle && (ent->mIdleConns.Length() < parallelSpeculativeConnectLimit)) ||
          !ent->mIdleConns.Length()) &&
-        !(keepAlive && RestrictConnections(ent, ignorePossibleSpdyConnections)) &&
+        !(keepAlive && RestrictConnections(ent)) &&
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
         CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true, isFromPredictor, allow1918);
     }
@@ -3337,8 +3355,9 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mStreamOut = nullptr;
         mStreamIn = nullptr;
         mSocketTransport = nullptr;
-    }
-    else {
+    } else {
+        MOZ_ASSERT(!mTransaction->IsNullTransaction(),
+                   "null transactions dont have backup timers");
         TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
         rv = conn->Init(mEnt->mConnInfo,
                         gHttpHandler->ConnMgr()->mMaxRequestDelay,
@@ -3568,7 +3587,6 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mPipeliningPenalty(0)
     , mSpdyCWND(0)
     , mUsingSpdy(false)
-    , mTestedSpdy(false)
     , mSpdyPreferred(false)
     , mPreferIPv4(false)
     , mPreferIPv6(false)
@@ -3970,7 +3988,6 @@ nsHttpConnectionMgr::MoveToWildCardConnEntry(nsHttpConnectionInfo *specificCI,
         return;
     }
     wcEnt->mUsingSpdy = true;
-    wcEnt->mTestedSpdy = true;
 
     LOG(("nsHttpConnectionMgr::MakeConnEntryWildCard ent %p "
          "idle=%d active=%d half=%d pending=%d\n", ent,
