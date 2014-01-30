@@ -89,7 +89,7 @@ class __declspec(uuid("5100FEC1-212B-4BF5-9BF8-3E650FD794A3"))
 public:
 
   CExecuteCommandVerb() :
-    mRef(1),
+    mRef(0),
     mShellItemArray(nullptr),
     mUnkSite(nullptr),
     mTargetIsFileSystemLink(false),
@@ -97,7 +97,7 @@ public:
     mTargetIsBrowser(false),
     mRequestType(DEFAULT_LAUNCH),
     mRequestMet(false),
-    mRelaunchDesktopDelayedRequested(false),
+    mDelayedLaunchType(NONE),
     mVerb(L"open")
   {
   }
@@ -393,6 +393,7 @@ private:
   void LaunchDesktopBrowser();
   bool LaunchMetroBrowser();
   bool SetTargetPath(IShellItem* aItem);
+  bool TestForUpdateLock();
 
   /*
    * Defines the type of startup request we receive.
@@ -406,6 +407,17 @@ private:
 
   RequestType mRequestType;
 
+  /*
+   * Defines the type of delayed launch we might do.
+   */
+  enum DelayedLaunchType {
+    NONE,
+    DESKTOP,
+    METRO,
+  };
+
+  DelayedLaunchType mDelayedLaunchType;
+
   long mRef;
   IShellItemArray *mShellItemArray;
   IUnknown *mUnkSite;
@@ -417,7 +429,6 @@ private:
   bool mTargetIsBrowser;
   DWORD mKeyState;
   bool mRequestMet;
-  bool mRelaunchDesktopDelayedRequested;
 };
 
 /*
@@ -650,11 +661,15 @@ CExecuteCommandVerb::LaunchDesktopBrowser()
 void
 CExecuteCommandVerb::HeartBeat()
 {
-  if (mRequestType == METRO_UPDATE &&
-      mRelaunchDesktopDelayedRequested &&
+  if (mRequestType == METRO_UPDATE && mDelayedLaunchType == DESKTOP &&
       !IsMetroProcessRunning()) {
-    mRelaunchDesktopDelayedRequested = false;
+    mDelayedLaunchType = NONE;
     LaunchDesktopBrowser();
+    mRequestMet = true;
+  }
+  if (mDelayedLaunchType == METRO && !TestForUpdateLock()) {
+    mDelayedLaunchType = NONE;
+    LaunchMetroBrowser();
     mRequestMet = true;
   }
 }
@@ -677,6 +692,24 @@ PrepareActivationManager(CComPtr<IApplicationActivationManager> &activateMgr)
     return false;
   }
 
+  return true;
+}
+
+bool
+CExecuteCommandVerb::TestForUpdateLock()
+{
+  CStringW browserPath;
+  if (!GetDefaultBrowserPath(browserPath)) {
+    return false;
+  }
+
+  HANDLE hFile = CreateFileW(browserPath,
+                             FILE_EXECUTE, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                             nullptr, OPEN_EXISTING, 0, nullptr);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    CloseHandle(hFile);
+    return false;
+  }
   return true;
 }
 
@@ -743,21 +776,27 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     // sync. So we want to make sure it's completely shutdown before we do
     // the update.
     mParameters = kMetroUpdateCmdLine;
-    mRelaunchDesktopDelayedRequested = true;
+    mDelayedLaunchType = DESKTOP;
     return S_OK;
   }
-
-  // We shut down when this flips to true
-  AutoSetRequestMet asrm(&mRequestMet);
 
   // Launch on the desktop
   if (mRequestType == DESKTOP_RESTART ||
       (mRequestType == DEFAULT_LAUNCH && DefaultLaunchIsDesktop())) {
     LaunchDesktopBrowser();
+    mRequestMet = true;
+    return S_OK;
+  }
+
+  // If we have an update in the works, don't try to activate yet,
+  // delay until the lock is removed.
+  if (TestForUpdateLock()) {
+    mDelayedLaunchType = METRO;
     return S_OK;
   }
 
   LaunchMetroBrowser();
+  mRequestMet = true;
   return S_OK;
 }
 
@@ -845,8 +884,6 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR pszCmdLine, int)
 #if defined(SHOW_CONSOLE)
   SetupConsole();
 #endif
-  //Log(pszCmdLine);
-
   if (!wcslen(pszCmdLine) || StrStrI(pszCmdLine, L"-Embedding"))
   {
       CoInitialize(nullptr);
