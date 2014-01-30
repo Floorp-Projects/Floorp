@@ -64,8 +64,7 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
     return nullptr;
   }
 
-  ImageFormat format = ImageFormat::SHARED_RGB;
-  nsRefPtr<Image> image = aImageContainer->CreateImage(&format, 1);
+  nsRefPtr<Image> image = aImageContainer->CreateImage(ImageFormat::SHARED_RGB);
 
   if (!image) {
     NS_WARNING("Failed to create DeprecatedSharedRGBImage");

@@ -154,8 +154,7 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                          getter_AddRefs(surface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  ImageFormat format = ImageFormat::D3D9_RGB32_TEXTURE;
-  nsRefPtr<Image> image = aImageContainer->CreateImage(&format, 1);
+  nsRefPtr<Image> image = aImageContainer->CreateImage(ImageFormat::D3D9_RGB32_TEXTURE);
   NS_ENSURE_TRUE(image, E_FAIL);
   NS_ASSERTION(image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE,
                "Wrong format?");
