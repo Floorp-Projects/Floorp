@@ -368,9 +368,10 @@ inline bool IsScriptedProxy(JSObject *obj)
  * needs to store one slot's worth of data doesn't need to branch on what sort
  * of object it has.
  */
-const uint32_t PROXY_PRIVATE_SLOT = 0;
-const uint32_t PROXY_HANDLER_SLOT = 1;
-const uint32_t PROXY_EXTRA_SLOT   = 2;
+const uint32_t PROXY_PRIVATE_SLOT   = 0;
+const uint32_t PROXY_HANDLER_SLOT   = 1;
+const uint32_t PROXY_EXTRA_SLOT     = 2;
+const uint32_t PROXY_MINIMUM_SLOTS  = 4;
 
 inline BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
