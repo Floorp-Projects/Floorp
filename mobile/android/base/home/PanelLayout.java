@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 
@@ -58,6 +59,7 @@ abstract class PanelLayout extends FrameLayout {
 
     private final List<ViewEntry> mViewEntries;
     private final DatasetHandler mDatasetHandler;
+    private final OnUrlOpenListener mUrlOpenListener;
 
     /**
      * To be used by panel views to express that they are
@@ -86,10 +88,15 @@ abstract class PanelLayout extends FrameLayout {
         public void resetDataset(String datasetId);
     }
 
-    public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler) {
+    public interface PanelView {
+        public void setOnUrlOpenListener(OnUrlOpenListener listener);
+    }
+
+    public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler, OnUrlOpenListener urlOpenListener) {
         super(context);
         mViewEntries = new ArrayList<ViewEntry>();
         mDatasetHandler = datasetHandler;
+        mUrlOpenListener = urlOpenListener;
     }
 
     /**
@@ -154,6 +161,8 @@ abstract class PanelLayout extends FrameLayout {
 
         final ViewEntry entry = new ViewEntry(view, viewConfig);
         mViewEntries.add(entry);
+
+        ((PanelView) view).setOnUrlOpenListener(mUrlOpenListener);
 
         return view;
     }
