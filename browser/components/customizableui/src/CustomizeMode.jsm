@@ -1373,6 +1373,10 @@ CustomizeMode.prototype = {
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     draggedWrapper.hidden = false;
     draggedWrapper.removeAttribute("mousedown");
+    if (this._dragOverItem) {
+      this._cancelDragActive(this._dragOverItem);
+      this._dragOverItem = null;
+    }
     this._showPanelCustomizationPlaceholders();
   },
 

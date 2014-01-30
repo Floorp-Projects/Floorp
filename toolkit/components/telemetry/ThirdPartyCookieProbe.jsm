@@ -8,8 +8,8 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 let Cr = Components.results;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 this.EXPORTED_SYMBOLS = ["ThirdPartyCookieProbe"];
 
