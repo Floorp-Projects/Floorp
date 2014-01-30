@@ -3104,6 +3104,7 @@ proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
 #define PROXY_CLASS(callOp, constructOp) {          \
     "Proxy",                                        \
     Class::NON_NATIVE |                             \
+           JSCLASS_IS_PROXY |                       \
            JSCLASS_IMPLEMENTS_BARRIERS |            \
            JSCLASS_HAS_RESERVED_SLOTS(4) |          \
     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),        \
@@ -3157,7 +3158,7 @@ const Class* const js::UncallableProxyClassPtr = &ProxyObject::uncallableClass_;
 
 const Class js::OuterWindowProxyObject::class_ = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4),
+    Class::NON_NATIVE | JSCLASS_IS_PROXY | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
