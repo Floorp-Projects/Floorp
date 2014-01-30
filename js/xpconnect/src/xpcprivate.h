@@ -712,14 +712,12 @@ public:
 
     nsresult GetException(nsIException** e)
         {
-            NS_IF_ADDREF(mException);
-            *e = mException;
+            nsCOMPtr<nsIException> rval = mException;
+            rval.forget(e);
             return NS_OK;
         }
     void SetException(nsIException* e)
         {
-            NS_IF_ADDREF(e);
-            NS_IF_RELEASE(mException);
             mException = e;
         }
 
@@ -750,7 +748,7 @@ private:
     JSContext*  mJSContext;
     nsresult mLastResult;
     nsresult mPendingResult;
-    nsIException* mException;
+    nsCOMPtr<nsIException> mException;
     LangType mCallingLangType;
     bool mErrorUnreported;
 
