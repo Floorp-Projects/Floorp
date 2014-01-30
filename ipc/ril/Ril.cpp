@@ -20,6 +20,7 @@
 #endif
 
 #include "jsfriendapi.h"
+#include "mozilla/ArrayUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
@@ -172,8 +173,8 @@ DispatchRILEvent::RunTask(JSContext *aCx)
 
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
     JS::Value argv[] = { OBJECT_TO_JSVAL(array) };
-    return JS_CallFunctionName(aCx, obj, "onRILMessage", NS_ARRAY_LENGTH(argv),
-                               argv, argv);
+    return JS_CallFunctionName(aCx, obj, "onRILMessage",
+                               mozilla::ArrayLength(argv), argv, argv);
 }
 
 class RilConnector : public mozilla::ipc::UnixSocketConnector

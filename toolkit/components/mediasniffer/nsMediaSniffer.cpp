@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMediaSniffer.h"
-#include "nsMemory.h"
 #include "nsIHttpChannel.h"
 #include "nsString.h"
 #include "nsMimeTypes.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mp3sniff.h"
 #ifdef MOZ_WEBM
@@ -114,7 +114,7 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
 
   const uint32_t clampedLength = std::min(aLength, MAX_BYTES_SNIFFED);
 
-  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
+  for (uint32_t i = 0; i < mozilla::ArrayLength(sSnifferEntries); ++i) {
     const nsMediaSnifferEntry& currentEntry = sSnifferEntries[i];
     if (clampedLength < currentEntry.mLength || currentEntry.mLength == 0) {
       continue;
