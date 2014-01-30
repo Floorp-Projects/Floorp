@@ -68,7 +68,7 @@ extern bool
 js_ReportUncaughtException(JSContext *cx);
 
 extern JSErrorReport *
-js_ErrorFromException(jsval exn);
+js_ErrorFromException(JSContext *cx, js::HandleObject obj);
 
 extern const JSErrorFormatString *
 js_GetLocalizedErrorMessage(js::ExclusiveContext *cx, void *userRef, const char *locale,

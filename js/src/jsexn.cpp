@@ -270,18 +270,15 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 }
 
 JSErrorReport *
-js_ErrorFromException(jsval exn)
+js_ErrorFromException(JSContext *cx, HandleObject objArg)
 {
-    if (JSVAL_IS_PRIMITIVE(exn))
-        return nullptr;
-
     // It's ok to UncheckedUnwrap here, since all we do is get the
     // JSErrorReport, and consumers are careful with the information they get
     // from that anyway.  Anyone doing things that would expose anything in the
     // JSErrorReport to page script either does a security check on the
     // JSErrorReport's principal or also tries to do toString on our object and
     // will fail if they can't unwrap it.
-    JSObject *obj = UncheckedUnwrap(JSVAL_TO_OBJECT(exn));
+    RootedObject obj(cx, UncheckedUnwrap(objArg));
     if (!obj->is<ErrorObject>())
         return nullptr;
 
@@ -746,7 +743,8 @@ js_ReportUncaughtException(JSContext *cx)
     }
 
     JS_ClearPendingException(cx);
-    JSErrorReport *reportp = js_ErrorFromException(exn);
+    JSErrorReport *reportp = exnObject ? js_ErrorFromException(cx, exnObject)
+                                       : nullptr;
 
     /* XXX L10N angels cry once again. see also everywhere else */
     RootedString str(cx, ToString<CanGC>(cx, exn));
