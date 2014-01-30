@@ -475,6 +475,10 @@ public:
 
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
+  bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                    JS::Handle<jsid> aId,
+                    JS::MutableHandle<JSPropertyDescriptor> aDesc);
+
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
 

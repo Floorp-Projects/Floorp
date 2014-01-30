@@ -258,6 +258,7 @@ protected:
                                 JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                 JS::MutableHandle<JSPropertyDescriptor> desc);
 
+  friend class nsGlobalWindow;
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
