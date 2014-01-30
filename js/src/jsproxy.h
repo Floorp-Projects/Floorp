@@ -418,15 +418,9 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 
 class MOZ_STACK_CLASS ProxyOptions {
   public:
-    ProxyOptions() : callable_(false),
-                     singleton_(false)
+    ProxyOptions() : singleton_(false),
+                     clasp_(UncallableProxyClassPtr)
     {}
-
-    bool callable() const { return callable_; }
-    ProxyOptions &setCallable(bool flag) {
-        callable_ = flag;
-        return *this;
-    }
 
     bool singleton() const { return singleton_; }
     ProxyOptions &setSingleton(bool flag) {
@@ -434,9 +428,22 @@ class MOZ_STACK_CLASS ProxyOptions {
         return *this;
     }
 
+    const Class *clasp() const {
+        return clasp_;
+    }
+    ProxyOptions &setClass(const Class *claspArg) {
+        clasp_ = claspArg;
+        return *this;
+    }
+    ProxyOptions &selectDefaultClass(bool callable) {
+        const Class *classp = callable? CallableProxyClassPtr :
+                                        UncallableProxyClassPtr;
+        return setClass(classp);
+    }
+
   private:
-    bool callable_;
     bool singleton_;
+    const Class *clasp_;
 };
 
 JS_FRIEND_API(JSObject *)
