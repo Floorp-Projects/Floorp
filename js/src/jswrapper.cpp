@@ -53,7 +53,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
         opts.ref().selectDefaultClass(obj->isCallable());
         options = opts.addr();
     }
-    return NewProxyObject(cx, handler, priv, TaggedProto::LazyProto, parent, *options);
+    return NewProxyObject(cx, handler, priv, options->proto(), parent, *options);
 }
 
 JSObject *
@@ -142,6 +142,7 @@ Wrapper::~Wrapper()
 
 Wrapper Wrapper::singleton((unsigned)0);
 Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
+JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
 
 /* Compartments. */
 
