@@ -3254,9 +3254,10 @@ MaybeResolveConstructor(ExclusiveContext *cxArg, Handle<GlobalObject*> global, J
 }
 
 bool
-js_GetClassObject(ExclusiveContext *cx, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
+js_GetClassObject(ExclusiveContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
-    Rooted<GlobalObject*> global(cx, &obj->global());
+    MOZ_ASSERT(key != JSProto_Null);
+    Rooted<GlobalObject*> global(cx, cx->global());
     if (!MaybeResolveConstructor(cx, global, key))
         return false;
 
@@ -3269,6 +3270,7 @@ js_GetClassObject(ExclusiveContext *cx, JSObject *obj, JSProtoKey key, MutableHa
 bool
 js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey key, MutableHandleObject protop)
 {
+    MOZ_ASSERT(key != JSProto_Null);
     Rooted<GlobalObject*> global(cx, cx->global());
     if (!MaybeResolveConstructor(cx, global, key))
         return false;
@@ -3303,20 +3305,19 @@ js_IdentifyClassPrototype(JSObject *obj)
 }
 
 bool
-js_FindClassObject(ExclusiveContext *cx, JSProtoKey protoKey, MutableHandleValue vp, const Class *clasp)
+js_FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp)
 {
+    MOZ_ASSERT(clasp);
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
     RootedId id(cx);
-
     if (protoKey != JSProto_Null) {
         JS_ASSERT(JSProto_Null < protoKey);
         JS_ASSERT(protoKey < JSProto_LIMIT);
         RootedObject cobj(cx);
-        if (!js_GetClassObject(cx, cx->global(), protoKey, &cobj))
+        if (!js_GetClassObject(cx, protoKey, protop))
             return false;
-        if (cobj) {
-            vp.set(ObjectValue(*cobj));
+        if (cobj)
             return true;
-        }
         id = NameToId(ClassName(protoKey, cx));
     } else {
         JSAtom *atom = Atomize(cx, clasp->name, strlen(clasp->name));
@@ -3331,13 +3332,11 @@ js_FindClassObject(ExclusiveContext *cx, JSProtoKey protoKey, MutableHandleValue
         return false;
     RootedValue v(cx, UndefinedValue());
     if (shape && pobj->isNative()) {
-        if (shape->hasSlot()) {
+        if (shape->hasSlot())
             v = pobj->nativeGetSlot(shape->slot());
-            if (v.get().isPrimitive())
-                v.get().setUndefined();
-        }
     }
-    vp.set(v);
+    if (v.isObject())
+        protop.set(&v.toObject());
     return true;
 }
 
@@ -5448,9 +5447,10 @@ js::GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey)
  * NewBuiltinClassInstance in jsobjinlines.h.
  */
 bool
-js_FindClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
-                      MutableHandleObject protop, const Class *clasp)
+js_FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp)
 {
+    protop.set(nullptr);
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (protoKey != JSProto_Null) {
         if (!js_GetClassPrototype(cx, protoKey, protop))
             return false;
@@ -5458,12 +5458,12 @@ js_FindClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
             return true;
     }
 
-    RootedValue v(cx);
-    if (!js_FindClassObject(cx, protoKey, &v, clasp))
+    RootedObject ctor(cx);
+    if (!js_FindClassObject(cx, &ctor, clasp))
         return false;
 
-    if (IsFunctionObject(v)) {
-        RootedObject ctor(cx, &v.get().toObject());
+    if (ctor && ctor->is<JSFunction>()) {
+        RootedValue v(cx);
         if (cx->isJSContext()) {
             if (!JSObject::getProperty(cx->asJSContext(),
                                        ctor, ctor, cx->names().prototype, &v))
@@ -5475,9 +5475,9 @@ js_FindClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
             if (!shape || !NativeGetPureInline(ctor, shape, v.address()))
                 return false;
         }
+        if (v.isObject())
+            protop.set(&v.toObject());
     }
-
-    protop.set(v.get().isObject() ? &v.get().toObject() : nullptr);
     return true;
 }
 
