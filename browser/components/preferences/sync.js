@@ -127,10 +127,7 @@ let gSyncPane = {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_UNVERIFIED;
           enginesListDisabled = true;
         // So we think we are logged in, so login problems are next.
-        // (Although if the Sync identity manager is still initializing, we
-        // ignore login errors and assume all will eventually be good.)
-        } else if (Weave.Service.identity.readyToAuthenticate &&
-                   Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+        } else if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
           enginesListDisabled = true;
         // Else we must be golden!
