@@ -495,7 +495,7 @@ AsyncPanZoomController::IsDestroyed()
 /* static */float
 AsyncPanZoomController::GetTouchStartTolerance()
 {
-  return gTouchStartTolerance;
+  return (gTouchStartTolerance * APZCTreeManager::GetDPI());
 }
 
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
@@ -652,7 +652,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      float panThreshold = gTouchStartTolerance * APZCTreeManager::GetDPI();
+      float panThreshold = GetTouchStartTolerance();
       UpdateWithTouchAtDevicePoint(aEvent);
 
       if (PanDistance() < panThreshold) {
