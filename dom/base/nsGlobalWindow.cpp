@@ -4168,13 +4168,6 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
   return rv.ErrorCode();
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::GetPkcs11(nsIDOMPkcs11** aPkcs11)
-{
-  *aPkcs11 = nullptr;
-  return NS_OK;
-}
-
 nsIControllers*
 nsGlobalWindow::GetControllers(ErrorResult& aError)
 {
