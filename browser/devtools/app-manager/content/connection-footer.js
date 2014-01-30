@@ -13,6 +13,7 @@ const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const {getDeviceFront} = require("devtools/server/actors/device");
 const ConnectionStore = require("devtools/app-manager/connection-store");
 const DeviceStore = require("devtools/app-manager/device-store");
 const simulatorsStore = require("devtools/app-manager/simulators-store");
@@ -186,5 +187,23 @@ let UI = {
       this.connection.port = port;
       this.connect();
     });
+  },
+  
+  screenshot: function() {
+    this.connection.client.listTabs(
+      response => {
+        let front = getDeviceFront(this.connection.client, response);
+        front.screenshotToBlob().then(blob => {
+          let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
+          let gBrowser = topWindow.gBrowser;
+          let url = topWindow.URL.createObjectURL(blob);
+          let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+          tab.addEventListener("TabClose", function onTabClose() {
+            tab.removeEventListener("TabClose", onTabClose, false);
+            topWindow.URL.revokeObjectURL(url);
+          }, false);
+        }).then(null, console.error);
+      }
+    );
   },
 }
