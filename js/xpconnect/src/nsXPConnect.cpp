@@ -78,7 +78,6 @@ const char XPC_XPCONNECT_CONTRACTID[]     = "@mozilla.org/js/xpc/XPConnect;1";
 
 nsXPConnect::nsXPConnect()
     :   mRuntime(nullptr),
-        mDefaultSecurityManager(nullptr),
         mShuttingDown(false),
         mEventDepth(0)
 {
@@ -112,7 +111,7 @@ nsXPConnect::~nsXPConnect()
     // maps that our finalize callback depends on.
     JS_GC(mRuntime->Runtime());
 
-    NS_IF_RELEASE(mDefaultSecurityManager);
+    mDefaultSecurityManager = nullptr;
     gScriptSecurityManager = nullptr;
 
     // shutdown the logging system
@@ -798,8 +797,6 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
 NS_IMETHODIMP
 nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager)
 {
-    NS_IF_ADDREF(aManager);
-    NS_IF_RELEASE(mDefaultSecurityManager);
     mDefaultSecurityManager = aManager;
 
     nsCOMPtr<nsIScriptSecurityManager> ssm =
@@ -948,7 +945,7 @@ nsXPConnect::DebugDump(int16_t depth)
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gSelf @ %x", gSelf));
         XPC_LOG_ALWAYS(("gOnceAliveNowDead is %d", (int)gOnceAliveNowDead));
-        XPC_LOG_ALWAYS(("mDefaultSecurityManager @ %x", mDefaultSecurityManager));
+        XPC_LOG_ALWAYS(("mDefaultSecurityManager @ %x", mDefaultSecurityManager.get()));
         if (mRuntime) {
             if (depth)
                 mRuntime->DebugDump(depth);

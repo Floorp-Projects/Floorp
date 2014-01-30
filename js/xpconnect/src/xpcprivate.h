@@ -343,12 +343,12 @@ protected:
 
 private:
     // Singleton instance
-    static nsXPConnect*      gSelf;
-    static bool              gOnceAliveNowDead;
+    static nsXPConnect*             gSelf;
+    static bool                     gOnceAliveNowDead;
 
-    XPCJSRuntime*            mRuntime;
-    nsIXPCSecurityManager*   mDefaultSecurityManager;
-    bool                     mShuttingDown;
+    XPCJSRuntime*                   mRuntime;
+    nsRefPtr<nsIXPCSecurityManager> mDefaultSecurityManager;
+    bool                            mShuttingDown;
 
     // nsIThreadInternal doesn't remember which observers it called
     // OnProcessNextEvent on when it gets around to calling AfterProcessNextEvent.
