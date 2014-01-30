@@ -284,7 +284,7 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     if (!js_GetClassObject(cx, cx->global(), JSProto_Function, &obj) ||
         !js_GetClassObject(cx, cx->global(), JSProto_Array, &obj) ||
         !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_GeneratorFunction, &obj))
+        !js_GetClassObject(cx, cx->global(), JSProto_Iterator, &obj))
     {
         return false;
     }
@@ -293,7 +293,7 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
         if (!js_GetClassObject(cx, global, JSProto_Function, &obj) ||
             !js_GetClassObject(cx, global, JSProto_Array, &obj) ||
             !js_GetClassObject(cx, global, JSProto_RegExp, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_GeneratorFunction, &obj))
+            !js_GetClassObject(cx, global, JSProto_Iterator, &obj))
         {
             return false;
         }
