@@ -595,6 +595,17 @@ nsNumberControlFrame::GetValueOfAnonTextControl(nsAString& aValue)
 #endif
 }
 
+bool
+nsNumberControlFrame::AnonTextControlIsEmpty()
+{
+  if (!mTextField) {
+    return true;
+  }
+  nsAutoString value;
+  HTMLInputElement::FromContent(mTextField)->GetValue(value);
+  return value.IsEmpty();
+}
+
 Element*
 nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {

@@ -13,7 +13,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#validitystate
  */
 
-[scriptable, uuid(5e62197a-9b74-4812-b5a2-ca102e886f7a)]
+[scriptable, uuid(00bed276-f1f7-492f-a039-dbd9b9efc10b)]
 interface nsIDOMValidityState : nsISupports
 {
   readonly attribute boolean valueMissing;
@@ -23,6 +23,7 @@ interface nsIDOMValidityState : nsISupports
   readonly attribute boolean rangeUnderflow;
   readonly attribute boolean rangeOverflow;
   readonly attribute boolean stepMismatch;
+  readonly attribute boolean badInput;
   readonly attribute boolean customError;
   readonly attribute boolean valid;
 };
