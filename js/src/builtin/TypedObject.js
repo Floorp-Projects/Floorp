@@ -22,6 +22,8 @@
     REPR_KIND(DESCR_TYPE_REPR(obj))
 #define DESCR_SIZE(obj) \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZE)
+#define DESCR_SIZED_ARRAY_LENGTH(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZED_ARRAY_LENGTH))
 #define DESCR_TYPE(obj)   \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
 
@@ -116,7 +118,7 @@ function DescrToSource(descr) {
     var result = ".array";
     var sep = "(";
     while (DESCR_KIND(descr) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
-      result += sep + descr.length;
+      result += sep + DESCR_SIZED_ARRAY_LENGTH(descr);
       descr = descr.elementType;
       sep = ", ";
     }
@@ -188,7 +190,7 @@ TypedObjectPointer.prototype.kind = function() {
 TypedObjectPointer.prototype.length = function() {
   switch (this.kind()) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return this.descr.length;
+    return DESCR_SIZED_ARRAY_LENGTH(this.descr);
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
     return this.datum.length;
@@ -213,7 +215,7 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
     break;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return this.moveToArray(propName, this.descr.length);
+    return this.moveToArray(propName, DESCR_SIZED_ARRAY_LENGTH(this.descr));
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
     return this.moveToArray(propName, this.datum.length);
@@ -445,7 +447,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
     return;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    if (this.setArray(fromValue, this.descr.length))
+    if (this.setArray(fromValue, DESCR_SIZED_ARRAY_LENGTH(this.descr)))
       return;
     break;
 
@@ -614,7 +616,7 @@ function FillTypedArrayWithValue(destArray, fromValue) {
          "FillTypedArrayWithValue: not typed handle");
 
   var descr = DATUM_TYPE_DESCR(destArray);
-  var length = descr.length;
+  var length = DESCR_SIZED_ARRAY_LENGTH(descr);
   if (length === 0)
     return;
 

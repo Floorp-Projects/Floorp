@@ -289,6 +289,10 @@ class SizedArrayTypeDescr : public SizedTypeDescr
     SizedTypeDescr &elementType() {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
+
+    size_t length() {
+        return (size_t) getReservedSlot(JS_DESCR_SLOT_SIZED_ARRAY_LENGTH).toInt32();
+    }
 };
 
 /*
