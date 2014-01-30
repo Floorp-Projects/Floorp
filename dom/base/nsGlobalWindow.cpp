@@ -10491,6 +10491,11 @@ nsGlobalWindow::ShowSlowScriptDialog()
     return KillSlowScript;
   }
 
+  // If our document is not active, just kill the script: we've been unloaded
+  if (!HasActiveDocument()) {
+    return KillSlowScript;
+  }
+
   // Get the nsIPrompt interface from the docshell
   nsCOMPtr<nsIDocShell> ds = GetDocShell();
   NS_ENSURE_TRUE(ds, KillSlowScript);
