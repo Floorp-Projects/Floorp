@@ -1872,13 +1872,6 @@ pref("dom.max_script_run_time", 10);
 // If true, ArchiveReader will be enabled
 pref("dom.archivereader.enabled", false);
 
-// If true, Promise will be enabled
-#ifdef RELEASE_BUILD
-pref("dom.promise.enabled", false);
-#else
-pref("dom.promise.enabled", true);
-#endif
-
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
 // Disabled on all platforms per bug 705748 until the found issues are
