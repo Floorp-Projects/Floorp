@@ -697,8 +697,19 @@ function SelectDetector(event)
   }
 }
 
+function FoldCharset(charset) {
+  // For substantially similar encodings, treat two encodings as the same
+  // for the purpose of the check mark.
+  if (charset == "ISO-8859-8-I") {
+    return "windows-1255";
+  } else if (charset == "gb18030") {
+    return "gbk";
+  }
+  return charset;
+}
+
 function UpdateCurrentCharset() {
-  var menuitem = document.getElementById("charset." + content.document.characterSet);
+  var menuitem = document.getElementById("charset." + FoldCharset(content.document.characterSet));
   if (menuitem)
     menuitem.setAttribute("checked", "true");
 }
