@@ -214,6 +214,7 @@ public:
   struct PaintState {
     PaintState()
       : mMode(SurfaceMode::SURFACE_NONE)
+      , mContentType(gfxContentType::SENTINEL)
       , mDidSelfCopy(false)
     {}
 
@@ -221,6 +222,7 @@ public:
     nsIntRegion mRegionToInvalidate;
     SurfaceMode mMode;
     DrawRegionClip mClip;
+    ContentType mContentType;
     bool mDidSelfCopy;
   };
 
