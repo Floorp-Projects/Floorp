@@ -16,6 +16,9 @@
 
 namespace js {
 class ErrorObject;
+
+extern JSErrorReport *
+CopyErrorReport(JSContext *cx, JSErrorReport *report);
 }
 
 /*
