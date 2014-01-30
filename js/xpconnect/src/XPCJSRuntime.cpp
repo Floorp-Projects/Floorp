@@ -591,6 +591,7 @@ nsGlobalWindow*
 WindowOrNull(JSObject *aObj)
 {
     MOZ_ASSERT(aObj);
+    MOZ_ASSERT(!js::IsWrapper(aObj));
 
     // This will always return null until we have Window on WebIDL bindings,
     // at which point it will do the right thing.
@@ -1389,15 +1390,12 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     // Get the DOM window associated with the running script. If the script is
     // running in a non-DOM scope, we have to just let it keep running.
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    nsCOMPtr<nsPIDOMWindow> win;
-    if (IS_WN_REFLECTOR(global))
-        win = do_QueryWrappedNative(XPCWrappedNative::Get(global));
+    nsRefPtr<nsGlobalWindow> win = WindowOrNull(global);
     if (!win)
         return true;
 
     // Show the prompt to the user, and kill if requested.
-    nsGlobalWindow::SlowScriptResponse response =
-      static_cast<nsGlobalWindow*>(win.get())->ShowSlowScriptDialog();
+    nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog();
     if (response == nsGlobalWindow::KillSlowScript)
         return false;
 
