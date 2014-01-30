@@ -45,6 +45,8 @@ public:
   Promise(nsPIDOMWindow* aWindow);
   ~Promise();
 
+  static bool EnabledForScope(JSContext* aCx, JSObject* /* unused */);
+
   void MaybeResolve(JSContext* aCx,
                     JS::Handle<JS::Value> aValue);
   void MaybeReject(JSContext* aCx,
