@@ -314,6 +314,10 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     if (cache)
       pushedStream = cache->RemovePushedStreamHttp2(hashkey);
 
+    LOG3(("Pushed Stream Lookup "
+          "session=%p key=%s loadgroupci=%p cache=%p hit=%p\n",
+          mSession, hashkey.get(), loadGroupCI, cache, pushedStream));
+
     if (pushedStream) {
       LOG3(("Pushed Stream Match located id=0x%X key=%s\n",
             pushedStream->StreamID(), hashkey.get()));
