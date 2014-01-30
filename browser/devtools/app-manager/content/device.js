@@ -141,23 +141,6 @@ let UI = {
     if (panel) panel.classList.add("selected");
   },
 
-  screenshot: function() {
-    if (!this.connected) {
-      return;
-    }
-    let front = getDeviceFront(this.connection.client, this.listTabsResponse);
-    front.screenshotToBlob().then(blob => {
-      let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      let gBrowser = topWindow.gBrowser;
-      let url = topWindow.URL.createObjectURL(blob);
-      let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-      tab.addEventListener("TabClose", function onTabClose() {
-        tab.removeEventListener("TabClose", onTabClose, false);
-        topWindow.URL.revokeObjectURL(url);
-      }, false);
-    }).then(null, console.error);
-  },
-
   openToolbox: function(manifest) {
     if (!this.connected) {
       return;
