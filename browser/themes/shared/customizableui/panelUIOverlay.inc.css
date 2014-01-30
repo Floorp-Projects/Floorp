@@ -391,7 +391,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
-.customizationmode-button,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #edit-controls@inAnyPanel@ > toolbarbutton,
 #zoom-controls@inAnyPanel@ > toolbarbutton {
@@ -450,7 +449,6 @@ panelview .toolbarbutton-1,
 panelview .toolbarbutton-1@buttonStateHover@,
 .subviewbutton@buttonStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
-.customizationmode-button,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
@@ -464,7 +462,6 @@ panelview .toolbarbutton-1@buttonStateHover@,
 
 panelview .toolbarbutton-1@buttonStateActive@,
 .subviewbutton@buttonStateActive@,
-.customizationmode-button@buttonStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {

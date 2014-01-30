@@ -49,8 +49,8 @@ this.BrowserIDManager = function BrowserIDManager() {
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
   this._log = Log.repository.getLogger("Sync.BrowserIDManager");
-  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")];
-
+  this._log.addAppender(new Log.DumpAppender());
+  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
 };
 
 this.BrowserIDManager.prototype = {

@@ -79,6 +79,10 @@ flyoutpanel[visible] {
   -moz-image-region: rect(0 32px 32px 0);
 }
 
+.flyout-close-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .flyout-close-button:hover {
   -moz-image-region: rect(0 64px 32px 32px);
 }

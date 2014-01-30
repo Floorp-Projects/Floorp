@@ -235,14 +235,6 @@ class FullParseHandler
         return literal;
     }
 
-    bool addPrototypeMutation(ParseNode *literal, uint32_t begin, ParseNode *expr) {
-        ParseNode *mutation = newUnary(PNK_MUTATEPROTO, JSOP_NOP, begin, expr);
-        if (!mutation)
-            return false;
-        literal->append(mutation);
-        return true;
-    }
-
     bool addPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *expr) {
         ParseNode *propdef = newBinary(PNK_COLON, name, expr, JSOP_INITPROP);
         if (!propdef)
@@ -254,12 +246,7 @@ class FullParseHandler
     bool addShorthandPropertyDefinition(ParseNode *literal, ParseNode *name) {
         JS_ASSERT(literal->isArity(PN_LIST));
         literal->pn_xflags |= PNX_DESTRUCT | PNX_NONCONST;  // XXX why PNX_DESTRUCT?
-
-        ParseNode *propdef = newBinary(PNK_COLON, name, name, JSOP_INITPROP);
-        if (!propdef)
-            return false;
-        literal->append(propdef);
-        return true;
+        return addPropertyDefinition(literal, name, name);
     }
 
     bool addAccessorPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)

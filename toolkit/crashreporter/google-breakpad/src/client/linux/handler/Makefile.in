@@ -16,8 +16,6 @@ OS_CXXFLAGS += -fomit-frame-pointer
 MOZ_FRAMEPTR_FLAGS := -fomit-frame-pointer
 endif #}
 
-VPATH += $(srcdir)/../log
-
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
   $(NULL)

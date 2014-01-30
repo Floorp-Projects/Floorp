@@ -1794,6 +1794,12 @@ struct nsStyleDisplay {
   uint8_t mClipFlags;           // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
+  uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a bitfield
+                                // representation of the property that
+                                // are frequently queried. This should match
+                                // mWillChange
+  nsAutoTArray<nsString, 1> mWillChange;
+
   uint8_t mTouchAction;         // [reset] see nsStyleConsts.h
 
   // mSpecifiedTransform is the list of transform functions as
@@ -1896,9 +1902,10 @@ struct nsStyleDisplay {
   /* Returns whether the element has the -moz-transform property
    * or a related property. */
   bool HasTransformStyle() const {
-    return mSpecifiedTransform != nullptr || 
+    return mSpecifiedTransform != nullptr ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-           mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
+           mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN ||
+           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
 
   // These are defined in nsStyleStructInlines.h.

@@ -541,9 +541,9 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
 #define JSCLASS_INTERNAL_FLAG3          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
-// Indicate whether the proto or ctor should be frozen.
-#define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
-#define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
+#define JSCLASS_IS_PROXY                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+
+// Bit 22 unused.
 
 // Reserved for embeddings.
 #define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
@@ -614,6 +614,10 @@ struct Class
 
     bool isCallable() const {
         return this == js::FunctionClassPtr || call;
+    }
+
+    bool isProxy() const {
+        return flags & JSCLASS_IS_PROXY;
     }
 
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
