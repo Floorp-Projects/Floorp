@@ -993,13 +993,6 @@ public:
   }
 
   bool
-  PromiseEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_PROMISE];
-  }
-
-  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();
