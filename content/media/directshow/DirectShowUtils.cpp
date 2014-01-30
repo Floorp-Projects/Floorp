@@ -9,8 +9,8 @@
 #include "dmoreg.h"
 #include "DirectShowUtils.h"
 #include "nsAutoPtr.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
-#include "nsMemory.h"
 
 namespace mozilla {
 
@@ -38,7 +38,7 @@ static const GuidToName GuidToNameTable[] = {
 const char*
 GetDirectShowGuidName(const GUID& aGuid)
 {
-  size_t len = NS_ARRAY_LENGTH(GuidToNameTable);
+  const size_t len = ArrayLength(GuidToNameTable);
   for (unsigned i = 0; i < len; i++) {
     if (IsEqualGUID(aGuid, GuidToNameTable[i].guid)) {
       return GuidToNameTable[i].name;

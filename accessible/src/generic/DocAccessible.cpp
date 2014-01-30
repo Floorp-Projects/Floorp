@@ -40,6 +40,7 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
@@ -65,7 +66,7 @@ static nsIAtom** kRelationAttrs[] =
   &nsGkAtoms::control
 };
 
-static const uint32_t kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
+static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor

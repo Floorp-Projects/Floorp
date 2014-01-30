@@ -1627,7 +1627,7 @@ static const nsEventStates sPseudoClassStates[] = {
   nsEventStates(),
   nsEventStates()
 };
-static_assert(NS_ARRAY_LENGTH(sPseudoClassStates) ==
+static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
               nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
               "ePseudoClass_NotPseudoClass is no longer at the end of"
               "sPseudoClassStates");
