@@ -6635,15 +6635,15 @@ typename ParseHandler::Node
 Parser<ParseHandler>::newRegExp()
 {
     // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
+    const jschar *chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
-    const StableCharPtr chars(tokenStream.getTokenbuf().begin(), length);
     RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
     if (RegExpStatics *res = context->global()->getRegExpStatics())
-        reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
+        reobj = RegExpObject::create(context, res, chars, length, flags, &tokenStream);
     else
-        reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
+        reobj = RegExpObject::createNoStatics(context, chars, length, flags, &tokenStream);
 
     if (!reobj)
         return null();
