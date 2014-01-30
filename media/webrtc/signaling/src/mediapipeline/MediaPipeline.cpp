@@ -1203,7 +1203,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
 #else
   ImageFormat format = ImageFormat::PLANAR_YCBCR;
 #endif
-  nsRefPtr<layers::Image> image = image_container_->CreateImage(&format, 1);
+  nsRefPtr<layers::Image> image = image_container_->CreateImage(format);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
   uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));

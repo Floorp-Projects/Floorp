@@ -118,11 +118,11 @@ class Fake_VideoGenerator {
     const uint32_t HEIGHT = 480;
 
     // Allocate a single blank Image
-    mozilla::ImageFormat format = mozilla::ImageFormat::PLANAR_YCBCR;
     nsRefPtr<mozilla::layers::ImageContainer> container =
       mozilla::layers::LayerManager::CreateImageContainer();
 
-    nsRefPtr<mozilla::layers::Image> image = container->CreateImage(&format, 1);
+    nsRefPtr<mozilla::layers::Image> image =
+      container->CreateImage(mozilla::ImageFormat::PLANAR_YCBCR);
 
     int len = ((WIDTH * HEIGHT) * 3 / 2);
     mozilla::layers::PlanarYCbCrImage* planar =

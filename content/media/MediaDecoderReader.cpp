@@ -72,6 +72,7 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mStride > 0;
 }
 
+#if 0
 static bool
 IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
              const VideoData::YCbCrBuffer::Plane& aCbPlane,
@@ -85,6 +86,7 @@ IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
     aCbPlane.mWidth == aCrPlane.mWidth &&
     aCbPlane.mHeight == aCrPlane.mHeight;
 }
+#endif
 
 bool
 VideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
@@ -223,11 +225,13 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   if (!aImage) {
     // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
     // format.
-    ImageFormat format[2] = {ImageFormat::PLANAR_YCBCR, ImageFormat::GRALLOC_PLANAR_YCBCR};
+#if 0
     if (IsYV12Format(Y, Cb, Cr)) {
-      v->mImage = aContainer->CreateImage(format, 2);
-    } else {
-      v->mImage = aContainer->CreateImage(format, 1);
+      v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
+    }
+#endif
+    if (!v->mImage) {
+      v->mImage = aContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
     }
   } else {
     v->mImage = aImage;
@@ -363,8 +367,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                        aTimecode,
                                        aInfo.mDisplay));
 
-  ImageFormat format = ImageFormat::GRALLOC_PLANAR_YCBCR;
-  v->mImage = aContainer->CreateImage(&format, 1);
+  v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
   if (!v->mImage) {
     return nullptr;
   }
