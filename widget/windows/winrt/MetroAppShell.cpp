@@ -21,6 +21,7 @@
 #include "nsIPowerManagerService.h"
 #include "mozilla/StaticPtr.h"
 #include <windows.system.display.h>
+#include "nsWinMetroUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -154,7 +155,7 @@ HRESULT SHCreateShellItemArrayFromShellItemDynamic(IShellItem *psi, REFIID riid,
 HRESULT
 WinLaunchDeferredMetroFirefox()
 {
-  // Create an instance of the Firefox Metro DEH which is used to launch the browser
+  // Create an instance of the Firefox Metro CEH which is used to launch the browser
   const CLSID CLSID_FirefoxMetroDEH = {0x5100FEC1,0x212B, 0x4BF5 ,{0x9B,0xF8, 0x3E,0x65, 0x0F,0xD7,0x94,0xA3}};
 
   nsRefPtr<IExecuteCommand> executeCommand;
@@ -198,11 +199,15 @@ WinLaunchDeferredMetroFirefox()
   if (FAILED(hr))
     return hr;
 
-  hr = executeCommand->SetParameters(L"--metro-restart");
+  if (nsWinMetroUtils::sUpdatePending) {
+    hr = executeCommand->SetParameters(L"--metro-update");
+  } else {
+    hr = executeCommand->SetParameters(L"--metro-restart");
+  }
   if (FAILED(hr))
     return hr;
 
-  // Run the default browser through the DEH
+  // Run the default browser through the CEH
   return executeCommand->Execute();
 }
 
@@ -267,14 +272,17 @@ MetroAppShell::Run(void)
       // Handle update restart or browser switch requests
       if (restartingInDesktop) {
         WinUtils::Log("Relaunching desktop browser");
+        // We can't call into the ceh to do this. Microsoft prevents switching to
+        // desktop unless we go through shell execute.
         SHELLEXECUTEINFOW sinfo;
         memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
         sinfo.cbSize       = sizeof(SHELLEXECUTEINFOW);
-        // Per the Metro style enabled desktop browser, for some reason,
-        // SEE_MASK_FLAG_LOG_USAGE is needed to change from immersive mode
-        // to desktop.
+        // Per microsoft's metro style enabled desktop browser documentation
+        // SEE_MASK_FLAG_LOG_USAGE is needed if we want to change from immersive
+        // mode to desktop mode.
         sinfo.fMask        = SEE_MASK_FLAG_LOG_USAGE;
-        sinfo.lpFile       = L"http://-desktop";
+        // The ceh will filter out this fake target.
+        sinfo.lpFile       = L"http://-desktop/";
         sinfo.lpVerb       = L"open";
         sinfo.lpParameters = L"--desktop-restart";
         sinfo.nShow        = SW_SHOWNORMAL;
