@@ -220,6 +220,11 @@ let SessionHistoryListener = {
     addEventListener("load", this, true);
     addEventListener("hashchange", this, true);
     Services.obs.addObserver(this, "browser:purge-session-history", false);
+
+    // Collect data if we start with a non-empty shistory.
+    if (!SessionHistory.isEmpty(docShell)) {
+      this.collect();
+    }
   },
 
   uninit: function () {
