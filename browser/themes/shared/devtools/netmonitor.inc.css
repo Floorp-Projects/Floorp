@@ -3,20 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#body {
-  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
-}
-
 #requests-menu-empty-notice {
-  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
+  margin: 0;
   padding: 12px;
   font-size: 110%;
+}
+
+.theme-dark #requests-menu-empty-notice {
   color: #f5f7fa; /* Light foreground text */
 }
 
+.theme-light #requests-menu-empty-notice {
+  color: #585959; /* Grey foreground text */
+}
+
 %filter substitution
-%define tableBorderLight rgba(0,0,0,0.2)
-%define tableBorderDark rgba(128,128,128,0.15)
+%define table_itemDarkStartBorder rgba(0,0,0,0.2)
+%define table_itemDarkEndBorder rgba(128,128,128,0.15)
+%define table_itemLightStartBorder rgba(128,128,128,0.25)
+%define table_itemLightEndBorder transparent
 
 /* Network requests table */
 
@@ -33,16 +38,26 @@
   padding: 3px;
 }
 
-.requests-menu-header:not(:last-child):-moz-locale-dir(ltr),
-.requests-menu-subitem:not(:last-child):-moz-locale-dir(ltr) {
-  -moz-border-end: 1px solid @tableBorderLight@;
-  box-shadow: 1px 0 0 @tableBorderDark@;
+.theme-dark .requests-menu-header:not(:last-child),
+.theme-dark .requests-menu-subitem:not(:last-child) {
+  -moz-border-end: 1px solid @table_itemDarkStartBorder@;
+  box-shadow: 1px 0 0 @table_itemDarkEndBorder@;
 }
 
-.requests-menu-header:not(:last-child):-moz-locale-dir(rtl),
-.requests-menu-subitem:not(:last-child):-moz-locale-dir(rtl) {
-  -moz-border-end: 1px solid @tableBorderLight@;
-  box-shadow: -1px 0 0 @tableBorderDark@;
+.theme-dark .requests-menu-header:not(:last-child):-moz-locale-dir(rtl),
+.theme-dark .requests-menu-subitem:not(:last-child):-moz-locale-dir(rtl) {
+  box-shadow: -1px 0 0 @table_itemDarkEndBorder@;
+}
+
+.theme-light .requests-menu-header:not(:last-child),
+.theme-light .requests-menu-subitem:not(:last-child) {
+  -moz-border-end: 1px solid @table_itemLightStartBorder@;
+  box-shadow: 1px 0 0 @table_itemLightEndBorder@;
+}
+
+.theme-light .requests-menu-header:not(:last-child):-moz-locale-dir(rtl),
+.theme-light .requests-menu-subitem:not(:last-child):-moz-locale-dir(rtl) {
+  box-shadow: -1px 0 0 @table_itemLightEndBorder@;
 }
 
 .requests-menu-header-button {
@@ -130,46 +145,82 @@ box.requests-menu-status {
   transition: box-shadow 0.5s ease-in-out;
 }
 
-box.requests-menu-status:not([code]) {
+.theme-dark box.requests-menu-status:not([code]) {
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.4) inset,
     0 -6px 4px 0 rgba(32,32,32,1.0) inset,
     0 0 8px 0 rgba(32,0,0,0.4);
 }
 
-box.requests-menu-status[code^="1"] {
+.theme-light box.requests-menu-status:not([code]) {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.4) inset,
+    0 -6px 4px 0 rgba(32,32,32, 0.5) inset;
+}
+
+.theme-dark box.requests-menu-status[code^="1"] {
   box-shadow:
     0 0 2px 1px rgba(255,255,255,0.8) inset,
     0 -6px 4px 0 rgba(0,0,64,1.0) inset,
     0 0 8px 0 rgba(0,0,128,1.0);
 }
 
-box.requests-menu-status[code^="2"] {
+.theme-light box.requests-menu-status[code^="1"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(0,0,128,1) inset;
+}
+
+.theme-dark box.requests-menu-status[code^="2"] {
   box-shadow:
     0 0 2px 1px rgba(255,255,255,0.8) inset,
     0 -6px 4px 0 rgba(0,64,0,1.0) inset,
     0 0 8px 0 rgba(0,128,0,1.0);
 }
 
-box.requests-menu-status[code^="3"] {
+.theme-light box.requests-menu-status[code^="2"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(0,128,0,1) inset;
+}
+
+.theme-dark box.requests-menu-status[code^="3"] {
   box-shadow:
     0 0 2px 1px rgba(255,255,255,0.8) inset,
     0 -6px 4px 0 rgba(64,32,0,1.0) inset,
     0 0 8px 0 rgba(128,128,0,1.0);
 }
 
-box.requests-menu-status[code^="4"] {
+.theme-light box.requests-menu-status[code^="3"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(128,64,0,1) inset;
+}
+
+.theme-dark box.requests-menu-status[code^="4"] {
   box-shadow:
     0 0 2px 1px rgba(255,255,255,0.8) inset,
     0 -6px 4px 0 rgba(64,0,0,1.0) inset,
     0 0 8px 0 rgba(128,0,0,1.0);
 }
 
-box.requests-menu-status[code^="5"] {
+.theme-light box.requests-menu-status[code^="4"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(128,0,0,1) inset;
+}
+
+.theme-dark box.requests-menu-status[code^="5"] {
   box-shadow:
     0 0 2px 1px rgba(255,255,255,0.8) inset,
     0 -6px 4px 0 rgba(64,0,64,1.0) inset,
     0 0 8px 0 rgba(128,0,128,1.0);
+}
+
+.theme-light box.requests-menu-status[code^="5"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(128,0,128,1.0) inset;
 }
 
 /* Network requests table: waterfall header */
@@ -183,12 +234,12 @@ box.requests-menu-status[code^="5"] {
   width: 100px;
   padding-top: 2px;
   -moz-padding-start: 4px;
-  -moz-border-start: 1px dotted #999;
   font-size: 75%;
   pointer-events: none;
 }
 
 .requests-menu-timings-division:not(:first-child) {
+  -moz-border-start: 1px dotted;
   -moz-margin-start: -100px !important; /* Don't affect layout. */
 }
 
@@ -200,17 +251,31 @@ box.requests-menu-status[code^="5"] {
   transform-origin: right center;
 }
 
-.requests-menu-timings-division[division-scale=millisecond] {
+.theme-dark .requests-menu-timings-division[division-scale=millisecond] {
   -moz-border-start-color: #f5f7fa !important; /* Light foreground text */
 }
 
-.requests-menu-timings-division[division-scale=second] {
+.theme-light .requests-menu-timings-division[division-scale=millisecond] {
+  -moz-border-start-color: #585959 !important; /* Grey foreground text */
+}
+
+.theme-dark .requests-menu-timings-division[division-scale=second] {
   -moz-border-start-color: #d99b28 !important; /* Light orange highlight color */
   font-weight: 600;
 }
 
-.requests-menu-timings-division[division-scale=minute] {
+.theme-light .requests-menu-timings-division[division-scale=second] {
+  -moz-border-start-color: #d97e00 !important; /* Light orange highlight color */
+  font-weight: 600;
+}
+
+.theme-dark .requests-menu-timings-division[division-scale=minute] {
   -moz-border-start-color: #eb5368 !important; /* Red highlight color */
+  font-weight: 600;
+}
+
+.theme-light .requests-menu-timings-division[division-scale=minute] {
+  -moz-border-start-color: #ed2655 !important; /* Red highlight color */
   font-weight: 600;
 }
 
@@ -220,6 +285,7 @@ box.requests-menu-status[code^="5"] {
   -moz-padding-start: 4px;
   -moz-padding-end: 4px;
   background-repeat: repeat-y; /* Background created on a <canvas> in js. */
+  background-position: -1px center;
   margin-top: -1px; /* Compensate borders. */
   margin-bottom: -1px;
 }
@@ -252,8 +318,16 @@ box.requests-menu-status[code^="5"] {
 
 .requests-menu-timings-cap {
   width: 4px;
-  height: 9px;
-  border: 1px solid #fff;
+  height: 8px;
+  box-shadow: none !important;
+}
+
+.theme-dark .requests-menu-timings-cap {
+  border: 1px solid #b8c8d9; /* Light content text */
+}
+
+.theme-light .requests-menu-timings-cap {
+  border: 1px solid #292e33; /* Dark content text */
 }
 
 .requests-menu-timings-cap.start {
@@ -285,51 +359,81 @@ box.requests-menu-status[code^="5"] {
 }
 
 .requests-menu-timings-box {
-  height: 9px;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #fff;
+  height: 8px;
+}
+
+.theme-dark .requests-menu-timings-box {
+  border-top: 1px solid #b8c8d9; /* Light content text */
+  border-bottom: 1px solid #b8c8d9;
+}
+
+.theme-light .requests-menu-timings-box {
+  border-top: 1px solid #292e33; /* Dark content text */
+  border-bottom: 1px solid #292e33;
 }
 
 .requests-menu-timings-box.blocked,
 .requests-menu-timings-cap.blocked {
   background-color: rgba(255,32,32,0.8);
-  box-shadow: 0 0 8px 0 rgba(128,32,32,0.8),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,32,32,0.8),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
 }
 
 .requests-menu-timings-box.dns,
 .requests-menu-timings-cap.dns {
   background-color: rgba(255,128,255,0.6);
-  box-shadow: 0 0 8px 0 rgba(128,128,255,1.0),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,128,255,1.0),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
 }
 
 .requests-menu-timings-box.connect,
 .requests-menu-timings-cap.connect {
   background-color: rgba(255,128,16,0.4);
-  box-shadow: 0 0 8px 0 rgba(128,128,16,0.8),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,128,16,0.8),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
 }
 
-.requests-menu-timings-box.send,
-.requests-menu-timings-cap.send {
+/* Use custom colors for dark and light theme on remaining timing types. */
+.theme-dark .requests-menu-timings-box.send,
+.theme-dark .requests-menu-timings-cap.send {
   background-color: rgba(255,255,128,0.4);
-  box-shadow: 0 0 8px 0 rgba(128,255,128,0.8),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,255,128,0.8),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
 }
 
-.requests-menu-timings-box.wait,
-.requests-menu-timings-cap.wait {
+.theme-light .requests-menu-timings-box.send,
+.theme-light .requests-menu-timings-cap.send {
+  background-color: rgba(255,255,128,0.4);
+  box-shadow: 0 0 2px 0 rgba(128,255,128,0.8),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
+}
+
+.theme-dark .requests-menu-timings-box.wait,
+.theme-dark .requests-menu-timings-cap.wait {
   background-color: rgba(255,255,255,0.2);
-  box-shadow: 0 0 8px 0 rgba(128,255,255,0.4),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,255,255,0.4),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
 }
 
-.requests-menu-timings-box.receive,
-.requests-menu-timings-cap.receive {
+.theme-light .requests-menu-timings-box.wait,
+.theme-light .requests-menu-timings-cap.wait {
+  background-color: rgba(200, 200, 200, 0.8);
+  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.4),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
+}
+
+.theme-dark .requests-menu-timings-box.receive,
+.theme-dark .requests-menu-timings-cap.receive {
   background-color: rgba(255,255,255,1.0);
-  box-shadow: 0 0 8px 0 rgba(128,255,255,1.0),
-              0 0 4px 0 rgba(255,255,255,1.0) inset;
+  box-shadow: 0 0 2px 0 rgba(128,255,255,1.0),
+              0 0 1px 0 rgba(255,255,255,1.0) inset;
+}
+
+.theme-light .requests-menu-timings-box.receive,
+.theme-light .requests-menu-timings-cap.receive {
+  background-color: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.8),
+              0 0 1px 0 rgba(0,0,0,1.0) inset;
 }
 
 /* SideMenuWidget */
@@ -338,31 +442,17 @@ box.requests-menu-status[code^="5"] {
   padding: 0px;
 }
 
-.side-menu-widget-item:not(.selected)[odd] {
+.theme-dark .side-menu-widget-item:not(.selected)[odd] {
   background: rgba(255,255,255,0.05);
 }
 
-/* The network monitor table is temporarily always dark.
-   The redesign will be taken care of in bug 909251. */
-
-.theme-light .side-menu-widget-container {
-  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
-}
-
-.theme-light .side-menu-widget-item {
-  border-top: 1px solid @tableBorderLight@;
-  border-bottom: 1px solid @tableBorderDark@;
-  color: #f5f7fa; /* Light foreground text */
-}
-
-.theme-light .side-menu-widget-item:last-of-type {
-  box-shadow: inset 0 -1px 0 @tableBorderLight@;
+.theme-light .side-menu-widget-item:not(.selected)[odd] {
+  background: rgba(128,128,128,0.05);
 }
 
 /* Network request details */
 
 #details-pane {
-  background: #343c45; /* Dark toolbars */
   max-width: 500px;
 }
 
@@ -384,9 +474,12 @@ box.requests-menu-status[code^="5"] {
 
 /* Network request details tabpanels */
 
-.tabpanel-content {
-  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
+.theme-dark .tabpanel-content {
   color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-dark .tabpanel-summary-label {
+  color: #f5f7fa; /* Dark foreground text */
 }
 
 .tabpanel-summary-container {
@@ -397,7 +490,6 @@ box.requests-menu-status[code^="5"] {
   -moz-padding-start: 4px;
   -moz-padding-end: 3px;
   font-weight: 600;
-  color: #f5f7fa; /* Dark foreground text */
 }
 
 .tabpanel-summary-value {
@@ -449,6 +541,7 @@ box.requests-menu-status[code^="5"] {
 
 #timings-tabpanel .requests-menu-timings-box {
   transition: transform 0.2s ease-out;
+  border: none;
   min-width: 1px;
 }
 
@@ -477,7 +570,7 @@ box.requests-menu-status[code^="5"] {
 /* Footer */
 
 #requests-menu-footer {
-  box-shadow: inset 0 1px 16px hsla(210,5%,5%,.3);
+  border-top: solid 1px hsla(210,5%,5%,.3);
 }
 
 .requests-menu-footer-button,
@@ -486,17 +579,32 @@ box.requests-menu-status[code^="5"] {
   margin: 0;
   border: none;
   padding: 2px 1.5vw;
+}
+
+.theme-dark .requests-menu-footer-button,
+.theme-dark .requests-menu-footer-label {
   color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .requests-menu-footer-button,
+.theme-light .requests-menu-footer-label {
+  color: #18191a; /* Dark foreground text */
 }
 
 .requests-menu-footer-spacer {
   min-width: 2px;
 }
 
-.requests-menu-footer-spacer:not(:first-of-type),
-.requests-menu-footer-button:not(:first-of-type) {
-  -moz-border-start: 1px solid @tableBorderDark@;
-  box-shadow: -1px 0 0 @tableBorderLight@;
+.theme-dark .requests-menu-footer-spacer:not(:first-of-type),
+.theme-dark .requests-menu-footer-button:not(:first-of-type) {
+  -moz-border-start: 1px solid @table_itemDarkStartBorder@;
+  box-shadow: -1px 0 0 @table_itemDarkEndBorder@;
+}
+
+.theme-light .requests-menu-footer-spacer:not(:first-of-type),
+.theme-light .requests-menu-footer-button:not(:first-of-type) {
+  -moz-border-start: 1px solid @table_itemLightStartBorder@;
+  box-shadow: -1px 0 0 @table_itemLightEndBorder@;
 }
 
 .requests-menu-footer-button {
