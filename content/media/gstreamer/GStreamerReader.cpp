@@ -921,7 +921,7 @@ GstFlowReturn GStreamerReader::AllocateVideoBufferFull(GstPad* aPad,
 {
   /* allocate an image using the container */
   ImageContainer* container = mDecoder->GetImageContainer();
-  ImageFormat format = PLANAR_YCBCR;
+  ImageFormat format = ImageFormat::PLANAR_YCBCR;
   PlanarYCbCrImage* img = reinterpret_cast<PlanarYCbCrImage*>(container->CreateImage(&format, 1).get());
   nsRefPtr<PlanarYCbCrImage> image = dont_AddRef(img);
 

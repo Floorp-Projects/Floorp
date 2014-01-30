@@ -221,9 +221,9 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
 
   if (!aImage) {
-    // Currently our decoder only knows how to output to PLANAR_YCBCR
+    // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
     // format.
-    ImageFormat format[2] = {PLANAR_YCBCR, GRALLOC_PLANAR_YCBCR};
+    ImageFormat format[2] = {ImageFormat::PLANAR_YCBCR, ImageFormat::GRALLOC_PLANAR_YCBCR};
     if (IsYV12Format(Y, Cb, Cr)) {
       v->mImage = aContainer->CreateImage(format, 2);
     } else {
@@ -236,8 +236,8 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == PLANAR_YCBCR ||
-               v->mImage->GetFormat() == GRALLOC_PLANAR_YCBCR,
+  NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR ||
+               v->mImage->GetFormat() == ImageFormat::GRALLOC_PLANAR_YCBCR,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
@@ -363,12 +363,12 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                        aTimecode,
                                        aInfo.mDisplay));
 
-  ImageFormat format = GRALLOC_PLANAR_YCBCR;
+  ImageFormat format = ImageFormat::GRALLOC_PLANAR_YCBCR;
   v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
     return nullptr;
   }
-  NS_ASSERTION(v->mImage->GetFormat() == GRALLOC_PLANAR_YCBCR,
+  NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::GRALLOC_PLANAR_YCBCR,
                "Wrong format?");
   typedef mozilla::layers::GrallocImage GrallocImage;
   GrallocImage* videoImage = static_cast<GrallocImage*>(v->mImage.get());
@@ -389,7 +389,7 @@ void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
     return nullptr;
   }
 
-  if (v->mImage->GetFormat() == PLANAR_YCBCR) {
+  if (v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
     mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
     mResult += vi->GetDataSize();
   }

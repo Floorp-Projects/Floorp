@@ -59,7 +59,7 @@ public:
    */
   virtual void UpdatePictureRect(nsIntRect aPictureRect);
 
-  virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
+  virtual already_AddRefed<Image> CreateImage(const ImageFormat *aFormats,
                                               uint32_t aNumFormats) = 0;
 
   /**
@@ -97,7 +97,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE;
 
-  virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
+  virtual already_AddRefed<Image> CreateImage(const ImageFormat *aFormats,
                                               uint32_t aNumFormats) MOZ_OVERRIDE;
 
   virtual void FlushAllImages(bool aExceptFront) MOZ_OVERRIDE;
@@ -166,7 +166,7 @@ public:
     return mTextureInfo;
   }
 
-  virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
+  virtual already_AddRefed<Image> CreateImage(const ImageFormat *aFormats,
                                               uint32_t aNumFormats) MOZ_OVERRIDE;
 
 private:
@@ -203,7 +203,7 @@ public:
     MOZ_ASSERT(!aChild, "ImageClientBridge should not have IPDL actor");
   }
 
-  virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
+  virtual already_AddRefed<Image> CreateImage(const ImageFormat *aFormats,
                                               uint32_t aNumFormats) MOZ_OVERRIDE
   {
     NS_WARNING("Should not create an image through an ImageClientBridge");

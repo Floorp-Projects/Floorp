@@ -638,9 +638,9 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         surface->MarkDirty(ur);
 
         ImageContainer *container = GetImageContainer();
-        ImageFormat format = CAIRO_SURFACE;
+        ImageFormat format = ImageFormat::CAIRO_SURFACE;
         nsRefPtr<Image> image = container->CreateImage(&format, 1);
-        NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
+        NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
         CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
         CairoImage::Data cairoData;
         cairoData.mDeprecatedSurface = surface;
@@ -719,13 +719,13 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        ImageFormat format = MAC_IOSURFACE;
+        ImageFormat format = ImageFormat::MAC_IOSURFACE;
         nsRefPtr<Image> image = container->CreateImage(&format, 1);
         if (!image) {
             return NS_ERROR_FAILURE;
         }
 
-        NS_ASSERTION(image->GetFormat() == MAC_IOSURFACE, "Wrong format?");
+        NS_ASSERTION(image->GetFormat() == ImageFormat::MAC_IOSURFACE, "Wrong format?");
 
         MacIOSurfaceImage* pluginImage = static_cast<MacIOSurfaceImage*>(image.get());
         pluginImage->SetSurface(ioSurface);

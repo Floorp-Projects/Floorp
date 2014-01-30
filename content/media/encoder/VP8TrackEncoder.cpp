@@ -248,7 +248,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
       return NS_ERROR_NULL_POINTER;
     }
     ImageFormat format = img->GetFormat();
-    if (format != PLANAR_YCBCR) {
+    if (format != ImageFormat::PLANAR_YCBCR) {
       VP8LOG("Unsupported video format\n");
       return NS_ERROR_FAILURE;
     }

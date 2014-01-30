@@ -958,7 +958,7 @@ RasterImage::GetCurrentImage()
   GetHeight(&cairoData.mSize.height);
   cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, imageSurface);
 
-  ImageFormat cairoFormat = CAIRO_SURFACE;
+  ImageFormat cairoFormat = ImageFormat::CAIRO_SURFACE;
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&cairoFormat, 1);
   NS_ASSERTION(image, "Failed to create Image");
 

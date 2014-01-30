@@ -955,7 +955,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
 
     if (frame->GetForceBlack()) {
-      static const ImageFormat formats[1] = { PLANAR_YCBCR };
+      static const ImageFormat formats[1] = { ImageFormat::PLANAR_YCBCR };
       nsRefPtr<Image> image =
         output->GetImageContainer()->CreateImage(formats, 1);
       if (image) {

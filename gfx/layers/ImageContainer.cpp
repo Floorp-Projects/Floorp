@@ -68,31 +68,31 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
   }
   nsRefPtr<Image> img;
 #ifdef MOZ_WIDGET_GONK
-  if (FormatInList(aFormats, aNumFormats, GRALLOC_PLANAR_YCBCR)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::GRALLOC_PLANAR_YCBCR)) {
     img = new GrallocImage();
     return img.forget();
   }
 #endif
-  if (FormatInList(aFormats, aNumFormats, PLANAR_YCBCR)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::PLANAR_YCBCR)) {
     img = new PlanarYCbCrImage(aRecycleBin);
     return img.forget();
   }
-  if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::CAIRO_SURFACE)) {
     img = new CairoImage();
     return img.forget();
   }
-  if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::SHARED_TEXTURE)) {
     img = new SharedTextureImage();
     return img.forget();
   }
 #ifdef XP_MACOSX
-  if (FormatInList(aFormats, aNumFormats, MAC_IOSURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::MAC_IOSURFACE)) {
     img = new MacIOSurfaceImage();
     return img.forget();
   }
 #endif
 #ifdef XP_WIN
-  if (FormatInList(aFormats, aNumFormats, D3D9_RGB32_TEXTURE)) {
+  if (FormatInList(aFormats, aNumFormats, ImageFormat::D3D9_RGB32_TEXTURE)) {
     img = new D3D9SurfaceImage();
     return img.forget();
   }
@@ -168,8 +168,7 @@ ImageContainer::CreateImage(const ImageFormat *aFormats,
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (mImageClient) {
-    nsRefPtr<Image> img = mImageClient->CreateImage((uint32_t*)aFormats,
-                                                            aNumFormats);
+    nsRefPtr<Image> img = mImageClient->CreateImage(aFormats, aNumFormats);
     if (img) {
       return img.forget();
     }
@@ -316,7 +315,7 @@ ImageContainer::DeprecatedLockCurrentAsSurface(gfx::IntSize *aSize, Image** aCur
       return nullptr;
     } 
 
-    if (mActiveImage->GetFormat() == REMOTE_IMAGE_BITMAP) {
+    if (mActiveImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
       nsRefPtr<gfxImageSurface> newSurf =
         new gfxImageSurface(mRemoteData->mBitmap.mData,
                             ThebesIntSize(mRemoteData->mSize),
@@ -367,7 +366,7 @@ ImageContainer::LockCurrentAsSourceSurface(gfx::IntSize *aSize, Image** aCurrent
       return nullptr;
     }
 
-    if (mActiveImage->GetFormat() == REMOTE_IMAGE_BITMAP) {
+    if (mActiveImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
       gfxImageFormat fmt = mRemoteData->mFormat == RemoteImageData::BGRX32
                            ? gfxImageFormat::ARGB32
                            : gfxImageFormat::RGB24;
@@ -524,7 +523,7 @@ ImageContainer::EnsureActiveImage()
 
 
 PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
-  : Image(nullptr, PLANAR_YCBCR)
+  : Image(nullptr, ImageFormat::PLANAR_YCBCR)
   , mBufferSize(0)
   , mOffscreenFormat(gfxImageFormat::Unknown)
   , mRecycleBin(aRecycleBin)
