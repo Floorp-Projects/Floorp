@@ -678,10 +678,12 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
 void
 CompositorOGL::SetLayerProgramProjectionMatrix(const Matrix4x4& aMatrix)
 {
+  // Update the projection matrix in all of the programs, without activating them.
+  // The uniform will actually be set the next time the program is activated.
   for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
     for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
       if (mPrograms[i].mVariations[mask]) {
-        mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
+        mPrograms[i].mVariations[mask]->DelayedSetProjectionMatrix(aMatrix);
       }
     }
   }
