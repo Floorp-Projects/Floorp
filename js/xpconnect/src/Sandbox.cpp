@@ -1233,18 +1233,14 @@ GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
     *out = nullptr;
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-    xpc->GetWrappedNativeOfJSObject(cx, from,
-                                    getter_AddRefs(wrapper));
+    nsISupports* native = xpc->GetNativeOfWrapper(cx, from);
 
-    NS_ENSURE_TRUE(wrapper, false);
-
-    if (nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryWrappedNative(wrapper)) {
+    if (nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(native)) {
         sop.forget(out);
         return true;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = do_QueryWrappedNative(wrapper);
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(native);
     principal.forget(out);
     NS_ENSURE_TRUE(*out, false);
 
