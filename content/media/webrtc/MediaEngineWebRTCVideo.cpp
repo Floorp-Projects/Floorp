@@ -67,9 +67,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
   }
 
   // Create a video frame and append it to the track.
-  ImageFormat format = ImageFormat::PLANAR_YCBCR;
-
-  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
 

@@ -262,21 +262,6 @@ private:
   uint32_t mRecycledBufferSize;
 };
 
-/**
- * Returns true if aFormat is in the given format array.
- */
-static inline bool
-FormatInList(const ImageFormat* aFormats, uint32_t aNumFormats,
-             ImageFormat aFormat)
-{
-  for (uint32_t i = 0; i < aNumFormats; ++i) {
-    if (aFormats[i] == aFormat) {
-      return true;
-    }
-  }
-  return false;
-}
-
 class CompositionNotifySink
 {
 public:
@@ -309,8 +294,7 @@ protected:
   ImageFactory() {}
   virtual ~ImageFactory() {}
 
-  virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
-                                              uint32_t aNumFormats,
+  virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat,
                                               const gfx::IntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin);
 
@@ -411,8 +395,7 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
-                                      uint32_t aNumFormats);
+  already_AddRefed<Image> CreateImage(ImageFormat aFormat);
 
   /**
    * Set an Image as the current image to display. The Image must have

@@ -492,53 +492,45 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 }
 
 already_AddRefed<Image>
-ImageClientSingle::CreateImage(const ImageFormat *aFormats,
-                               uint32_t aNumFormats)
+ImageClientSingle::CreateImage(ImageFormat aFormat)
 {
   nsRefPtr<Image> img;
-  for (uint32_t i = 0; i < aNumFormats; i++) {
-    switch (aFormats[i]) {
-      case ImageFormat::PLANAR_YCBCR:
-        img = new SharedPlanarYCbCrImage(this);
-        return img.forget();
-      case ImageFormat::SHARED_RGB:
-        img = new SharedRGBImage(this);
-        return img.forget();
+  switch (aFormat) {
+    case ImageFormat::PLANAR_YCBCR:
+      img = new SharedPlanarYCbCrImage(this);
+      return img.forget();
+    case ImageFormat::SHARED_RGB:
+      img = new SharedRGBImage(this);
+      return img.forget();
 #ifdef MOZ_WIDGET_GONK
-      case ImageFormat::GRALLOC_PLANAR_YCBCR:
-        img = new GrallocImage();
-        return img.forget();
+    case ImageFormat::GRALLOC_PLANAR_YCBCR:
+      img = new GrallocImage();
+      return img.forget();
 #endif
-      default:
-        continue; // keep iterating over aFormats
-    }
+    default:
+      return nullptr;
   }
-  return nullptr;
 }
 
 already_AddRefed<Image>
-DeprecatedImageClientSingle::CreateImage(const ImageFormat *aFormats,
-                                         uint32_t aNumFormats)
+DeprecatedImageClientSingle::CreateImage(ImageFormat aFormat)
 {
   nsRefPtr<Image> img;
-  for (uint32_t i = 0; i < aNumFormats; i++) {
-    switch (aFormats[i]) {
-      case ImageFormat::PLANAR_YCBCR:
-        img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
-        return img.forget();
-      case ImageFormat::SHARED_RGB:
-        img = new DeprecatedSharedRGBImage(GetForwarder());
-        return img.forget();
+  switch (aFormat) {
+    case ImageFormat::PLANAR_YCBCR:
+      img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
+      return img.forget();
+    case ImageFormat::SHARED_RGB:
+      img = new DeprecatedSharedRGBImage(GetForwarder());
+      return img.forget();
 #ifdef MOZ_WIDGET_GONK
-      case ImageFormat::GRALLOC_PLANAR_YCBCR:
-        img = new GrallocImage();
-        return img.forget();
+    case ImageFormat::GRALLOC_PLANAR_YCBCR:
+      img = new GrallocImage();
+      return img.forget();
 #endif
-      default:
-        continue; // keep iterating over aFormats
-    }
+    default:
+      return nullptr;
   }
-  return nullptr;
 }
 
 
