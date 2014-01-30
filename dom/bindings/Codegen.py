@@ -7732,6 +7732,29 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                                          callArgs="")
     def generate_code(self):
         return CGIndenter(CGGeneric(
+                "{\n"
+                "  // Since we're dealing with an Xray, do the resolve on the\n"
+                "  // underlying object first.  That gives it a chance to\n"
+                "  // define properties on the actual object as needed, and\n"
+                "  // then use the fact that it created the objects as a flag\n"
+                "  // o avoid re-resolving the properties if someone deletes\n"
+                "  // them.\n"
+                "  JSAutoCompartment ac(cx, obj);\n"
+                "  JS::Rooted<JSPropertyDescriptor> objDesc(cx);\n"
+                "  if (!self->DoNewResolve(cx, obj, id, &objDesc)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "  // If desc.value() is undefined, then the DoNewResolve call\n"
+                "  // has already defined the property on the object.  Don't\n"
+                "  // try to also define it.\n"
+                "  if (objDesc.object() &&\n"
+                "      !objDesc.value().isUndefined() &&\n"
+                "      !JS_DefinePropertyById(cx, obj, id, objDesc.value(),\n"
+                "                             objDesc.getter(), objDesc.setter(),\n"
+                "                             objDesc.attributes())) {\n"
+                "    return false;\n"
+                "  }\n"
+                "}\n"
                 "return self->DoNewResolve(cx, wrapper, id, desc);"))
 
 class CGEnumerateOwnProperties(CGAbstractStaticMethod):
