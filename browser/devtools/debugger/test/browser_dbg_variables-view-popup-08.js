@@ -50,14 +50,16 @@ function test() {
     verifyContents("\"second scope\"", "token-string");
     checkView(0, 20);
 
-    // Change frame.
+    // Hide the popup and change the frame.
+    yield hideVarPopup(panel);
+
     let updatedFrame = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);
     frames.selectedDepth = 1;
     yield updatedFrame;
     checkView(1, 15);
 
     // Inspect variable in oldest frame.
-    yield reopenVarPopup(panel, { line: 13, ch: 12 });
+    yield openVarPopup(panel, { line: 13, ch: 12 });
     verifyContents("\"first scope\"", "token-string");
     checkView(1, 15);
 
