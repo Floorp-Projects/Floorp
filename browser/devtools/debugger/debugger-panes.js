@@ -1909,6 +1909,16 @@ VariableBubbleView.prototype = {
   },
 
   /**
+   * Checks whether the inspection popup is shown.
+   *
+   * @return boolean
+   *         True if the panel is shown or showing, false otherwise.
+   */
+  contentsShown: function() {
+    return this._tooltip.isShown();
+  },
+
+  /**
    * Functions for getting customized variables view evaluation macros.
    *
    * @param string aPrefix

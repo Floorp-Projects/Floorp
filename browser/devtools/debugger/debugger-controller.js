@@ -835,7 +835,9 @@ StackFrames.prototype = {
     // Don't change the editor's location if the execution was paused by a
     // public client evaluation. This is useful for adding overlays on
     // top of the editor, like a variable inspection popup.
-    if (this._currentFrameDescription != FRAME_TYPE.PUBLIC_CLIENT_EVAL) {
+    let isClientEval = this._currentFrameDescription == FRAME_TYPE.PUBLIC_CLIENT_EVAL;
+    let isPopupShown = DebuggerView.VariableBubble.contentsShown();
+    if (!isClientEval && !isPopupShown) {
       // Move the editor's caret to the proper url and line.
       DebuggerView.setEditorLocation(where.url, where.line);
       // Highlight the breakpoint at the specified url and line if it exists.

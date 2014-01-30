@@ -89,6 +89,7 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "refresh",
+  "getScrollInfo",
   "getOption",
   "setOption"
 ];
