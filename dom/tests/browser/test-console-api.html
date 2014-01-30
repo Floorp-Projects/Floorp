@@ -50,7 +50,9 @@
       }
 
       function nativeCallback() {
-        new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
+        SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, function() {
+          new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
+        });
       }
     </script>
   </head>

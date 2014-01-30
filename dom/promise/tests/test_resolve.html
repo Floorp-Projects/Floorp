@@ -58,7 +58,7 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-runTest();
+SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
 // -->
 </script>
 </pre>

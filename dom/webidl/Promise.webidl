@@ -15,7 +15,7 @@ callback PromiseInit = void (object resolve, object reject);
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
-[Constructor(PromiseInit init)]
+[Func="mozilla::dom::Promise::EnabledForScope", Constructor(PromiseInit init)]
 interface Promise {
   // TODO bug 875289 - static Promise fulfill(any value);
 
@@ -24,9 +24,9 @@ interface Promise {
   // the proto of a promise object or someone screws up and manages to create a
   // Promise object in this scope without having resolved the interface object
   // first.
-  [NewObject, Throws]
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
   static Promise resolve(optional any value);
-  [NewObject, Throws]
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
   static Promise reject(optional any value);
 
   // The [TreatNonCallableAsNull] annotation is required since then() should do
@@ -38,12 +38,12 @@ interface Promise {
   [NewObject]
   Promise catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
-  [NewObject, Throws]
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
   static Promise all(sequence<any> iterable);
 
-  [NewObject, Throws]
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
   static Promise cast(optional any value);
 
-  [NewObject, Throws]
+  [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
   static Promise race(sequence<any> iterable);
 };
