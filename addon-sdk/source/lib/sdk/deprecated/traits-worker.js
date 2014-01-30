@@ -160,10 +160,7 @@ const WorkerSandbox = EventEmitter.compose({
       wantXrays: true,
       wantGlobalProperties: wantGlobalProperties,
       sameZoneAs: window,
-      metadata: {
-        SDKContentScript: true,
-        'inner-window-id': getInnerId(window)
-      }
+      metadata: { SDKContentScript: true }
     });
     // We have to ensure that window.top and window.parent are the exact same
     // object than window object, i.e. the sandbox global object. But not
