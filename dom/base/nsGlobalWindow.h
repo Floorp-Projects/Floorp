@@ -479,6 +479,9 @@ public:
                     JS::Handle<jsid> aId,
                     JS::MutableHandle<JSPropertyDescriptor> aDesc);
 
+  void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                           mozilla::ErrorResult& aRv);
+
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
 
