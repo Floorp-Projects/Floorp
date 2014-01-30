@@ -93,7 +93,7 @@ public :
    * Ogg+Opus if it is empty.
    */
   static already_AddRefed<MediaEncoder> CreateEncoder(const nsAString& aMIMEType,
-                                                      uint8_t aTrackTypes = ContainerWriter::HAS_AUDIO);
+                                                      uint8_t aTrackTypes = ContainerWriter::CREATE_AUDIO_TRACK);
   /**
    * Encodes the raw track data and returns the final container data. Assuming
    * it is called on a single worker thread. The buffer of container data is
