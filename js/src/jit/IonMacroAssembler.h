@@ -912,11 +912,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
         // of the branches are taken, we can check class flags directly.
         loadObjClass(objReg, scratch);
-        branchPtr(Assembler::Equal, scratch, ImmPtr(&ProxyObject::callableClass_), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmPtr(&ProxyObject::uncallableClass_), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmPtr(&OuterWindowProxyObject::class_), slowCheck);
+        Address flags(scratch, Class::offsetOfFlags());
 
-        test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
+        branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_IS_PROXY), slowCheck);
+
+        test32(flags, Imm32(JSCLASS_EMULATES_UNDEFINED));
         return truthy ? Assembler::Zero : Assembler::NonZero;
     }
 

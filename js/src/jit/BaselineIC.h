@@ -917,7 +917,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 
   public:
     bool initMonitoringChain(JSContext *cx, ICStubSpace *space);
-    bool addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val);
+    bool addMonitorStubForValue(JSContext *cx, JSScript *script, HandleValue val);
 
     inline ICTypeMonitor_Fallback *fallbackMonitorStub() const {
         return fallbackMonitorStub_;
@@ -1453,7 +1453,7 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Create a new monitor stub for the type of the given value, and
     // add it to this chain.
-    bool addMonitorStubForValue(JSContext *cx, HandleScript script, HandleValue val);
+    bool addMonitorStubForValue(JSContext *cx, JSScript *script, HandleValue val);
 
     void resetMonitorStubChain(Zone *zone);
 
