@@ -22,7 +22,7 @@ interface Pkcs11;
 typedef any Transferable;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[Global]
+[Global, NeedNewResolve]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Throws,
