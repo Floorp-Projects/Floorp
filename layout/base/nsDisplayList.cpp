@@ -1124,6 +1124,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
   layerBuilder->Init(aBuilder, layerManager);
 
+  if (aFlags & PAINT_COMPRESSED) {
+    layerBuilder->SetLayerTreeCompressionMode();
+  }
+
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }

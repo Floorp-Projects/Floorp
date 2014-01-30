@@ -1322,8 +1322,15 @@ public:
   /**
    * Ensures that the refresh driver is running, and schedules a view 
    * manager flush on the next tick.
+   *
+   * @param aType PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after a delay, and
+   * put FrameLayerBuilder in 'compressed' mode that avoids short cut optimizations.
    */
-  virtual void ScheduleViewManagerFlush() = 0;
+  enum PaintType {
+    PAINT_DEFAULT,
+    PAINT_DELAYED_COMPRESS
+  };
+  virtual void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) = 0;
   virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
   virtual void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent,

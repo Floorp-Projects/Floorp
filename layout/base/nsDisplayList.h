@@ -1512,6 +1512,9 @@ public:
    * layer manager has already had BeginTransaction() called on it and
    * we should not call it again.
    *
+   * If PAINT_COMPRESSED is set, the FrameLayerBuilder should be set to compressed mode
+   * to avoid short cut optimizations.
+   *
    * ComputeVisibility must be called before Paint.
    * 
    * This must only be called on the root display list of the display list
@@ -1522,7 +1525,8 @@ public:
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_FLUSH_LAYERS = 0x02,
     PAINT_EXISTING_TRANSACTION = 0x04,
-    PAINT_NO_COMPOSITE = 0x08
+    PAINT_NO_COMPOSITE = 0x08,
+    PAINT_COMPRESSED = 0x10
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                  uint32_t aFlags) const;
