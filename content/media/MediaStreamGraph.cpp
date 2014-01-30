@@ -1557,7 +1557,8 @@ MediaStreamGraphImpl::RunInStableState()
       }
     }
 
-    if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
+    if (mForceShutDown &&
+        mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
       for (uint32_t i = 0; i < mMessageQueue.Length(); ++i) {
         MessageBlock& mb = mMessageQueue[i];
