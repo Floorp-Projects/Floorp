@@ -117,14 +117,6 @@ public:
     NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
 
 /**
- * Helpful array length function for calculating the length of a
- * statically declared array.
- */
-
-#define NS_ARRAY_LENGTH(array_) \
-  (sizeof(array_)/sizeof(array_[0]))
-
-/**
  * A macro, NS_ALIGNMENT_OF(t_) that determines the alignment
  * requirements of a type.
  */
