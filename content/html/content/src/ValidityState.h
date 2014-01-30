@@ -60,6 +60,10 @@ public:
   {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
   }
+  bool BadInput() const
+  {
+    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_BAD_INPUT);
+  }
   bool CustomError() const
   {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
