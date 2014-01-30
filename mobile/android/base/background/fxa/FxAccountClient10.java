@@ -57,7 +57,6 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 public class FxAccountClient10 {
   protected static final String LOG_TAG = FxAccountClient10.class.getSimpleName();
 
-  protected static final String VERSION_FRAGMENT = "v1/";
   protected static final String ACCEPT_HEADER = "application/json;charset=utf-8";
 
   public static final String JSON_KEY_EMAIL = "email";
@@ -92,7 +91,7 @@ public class FxAccountClient10 {
     if (executor == null) {
       throw new IllegalArgumentException("Must provide a non-null executor.");
     }
-    this.serverURI = (serverURI.endsWith("/") ? serverURI : serverURI + "/") + VERSION_FRAGMENT;
+    this.serverURI = serverURI.endsWith("/") ? serverURI : serverURI + "/";
     if (!this.serverURI.endsWith("/")) {
       throw new IllegalArgumentException("Constructed serverURI must end with a trailing slash: " + this.serverURI);
     }

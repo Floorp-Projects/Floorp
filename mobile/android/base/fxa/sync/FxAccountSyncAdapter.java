@@ -353,7 +353,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         @Override
         public long getCertificateDurationInMilliseconds() {
-          return 60 * 60 * 1000;
+          return 12 * 60 * 60 * 1000;
         }
 
         @Override

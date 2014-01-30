@@ -214,7 +214,7 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
       AndroidFxAccount fxAccount;
       try {
         final String profile = Constants.DEFAULT_PROFILE;
-        final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_URI;
+        final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT;
         // It is crucial that we use the email address provided by the server
         // (rather than whatever the user entered), because the user's keys are
         // wrapped and salted with the initial email they provided to
