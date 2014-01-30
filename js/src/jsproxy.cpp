@@ -3120,22 +3120,6 @@ const Class js::ProxyObject::callableClass_ = PROXY_CLASS(proxy_Call, proxy_Cons
 const Class* const js::CallableProxyClassPtr = &ProxyObject::callableClass_;
 const Class* const js::UncallableProxyClassPtr = &ProxyObject::uncallableClass_;
 
-const Class js::OuterWindowProxyObject::class_ =
-    PROXY_CLASS_WITH_EXT(
-        "Proxy",
-        0, /* additional slots */
-        0, /* JSClass flags */
-        nullptr, /* call */
-        nullptr, /* construct */
-        PROXY_MAKE_EXT(
-            nullptr, /* outerObject */
-            proxy_innerObject,
-            nullptr, /* IteratorObject */
-            false /* isWrappedNative */
-        ));
-
-const Class* const js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
-
 JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
                    JSObject *parent_, const ProxyOptions &options)
