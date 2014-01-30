@@ -47,7 +47,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler)
 
     RootedValue priv(cx, ObjectValue(*obj));
     ProxyOptions options;
-    options.setCallable(obj->isCallable());
+    options.selectDefaultClass(obj->isCallable());
     return NewProxyObject(cx, handler, priv, TaggedProto::LazyProto, parent, options);
 }
 
@@ -867,14 +867,6 @@ DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandle
 
 DeadObjectProxy DeadObjectProxy::singleton;
 const char DeadObjectProxy::sDeadObjectFamily = 0;
-
-JSObject *
-js::NewDeadProxyObject(JSContext *cx, JSObject *parent,
-                       const ProxyOptions &options)
-{
-    return NewProxyObject(cx, &DeadObjectProxy::singleton, JS::NullHandleValue,
-                          nullptr, parent, options);
-}
 
 bool
 js::IsDeadProxyObject(JSObject *obj)
