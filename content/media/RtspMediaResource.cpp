@@ -540,10 +540,9 @@ RtspMediaResource::OnDisconnected(uint8_t aTrackIdx, nsresult aReason)
 
   if (aReason == NS_ERROR_NOT_INITIALIZED ||
       aReason == NS_ERROR_CONNECTION_REFUSED ||
-      aReason == NS_ERROR_NOT_CONNECTED) {
-
+      aReason == NS_ERROR_NOT_CONNECTED ||
+      aReason == NS_ERROR_NET_TIMEOUT) {
     RTSPMLOG("Error in OnDisconnected 0x%x", aReason);
-
     mDecoder->NetworkError();
     return NS_OK;
   }

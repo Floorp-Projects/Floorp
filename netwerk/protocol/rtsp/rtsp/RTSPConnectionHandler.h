@@ -427,7 +427,9 @@ struct RtspConnectionHandler : public AHandler {
                     sp<AMessage> reply = new AMessage('desc', id());
                     mConn->sendRequest(request.c_str(), reply);
                 } else {
-                    (new AMessage('disc', id()))->post();
+                    sp<AMessage> reply = new AMessage('disc', id());
+                    reply->setInt32("result", result);
+                    mConn->disconnect(reply);
                 }
                 break;
             }
@@ -441,7 +443,11 @@ struct RtspConnectionHandler : public AHandler {
                     sp<AMessage> reply = new AMessage('conn', id());
                     mConn->connect(mOriginalSessionURL.c_str(), reply);
                 } else {
-                    (new AMessage('quit', id()))->post();
+                    int32_t result;
+                    CHECK(msg->findInt32("result", &result));
+                    sp<AMessage> reply = new AMessage('quit', id());
+                    reply->setInt32("result", result);
+                    reply->post();
                 }
                 break;
             }
@@ -550,6 +556,7 @@ struct RtspConnectionHandler : public AHandler {
 
                 if (result != OK) {
                     sp<AMessage> reply = new AMessage('disc', id());
+                    reply->setInt32("result", result);
                     mConn->disconnect(reply);
                 }
                 break;
@@ -681,6 +688,7 @@ struct RtspConnectionHandler : public AHandler {
                     msg->post();
                 } else {
                     sp<AMessage> reply = new AMessage('disc', id());
+                    reply->setInt32("result", result);
                     mConn->disconnect(reply);
                 }
                 break;
@@ -723,6 +731,7 @@ struct RtspConnectionHandler : public AHandler {
 
                 if (result != OK) {
                     sp<AMessage> reply = new AMessage('disc', id());
+                    reply->setInt32("result", result);
                     mConn->disconnect(reply);
                 }
 
@@ -841,6 +850,7 @@ struct RtspConnectionHandler : public AHandler {
                      result, strerror(-result));
 
                 sp<AMessage> reply = new AMessage('disc', id());
+                reply->setInt32("result", result);
 
                 int32_t reconnect;
                 if (msg->findInt32("reconnect", &reconnect) && reconnect) {
@@ -853,9 +863,11 @@ struct RtspConnectionHandler : public AHandler {
 
             case 'quit':
             {
+                int32_t result;
+                CHECK(msg->findInt32("result", &result));
                 sp<AMessage> msg = mNotify->dup();
                 msg->setInt32("what", kWhatDisconnected);
-                msg->setInt32("result", UNKNOWN_ERROR);
+                msg->setInt32("result", result);
                 msg->post();
                 break;
             }
