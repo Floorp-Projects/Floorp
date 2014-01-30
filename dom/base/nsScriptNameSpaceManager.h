@@ -50,7 +50,6 @@ struct nsGlobalNameStruct
     eTypeNavigatorProperty,
     eTypeExternalConstructor,
     eTypeStaticNameSet,
-    eTypeDynamicNameSet,
     eTypeClassConstructor,
     eTypeClassProto,
     eTypeExternalClassInfoCreator,
