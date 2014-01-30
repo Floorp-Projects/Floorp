@@ -2,6 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY aboutAccountsSetup.description "Sign in to backup and sync your tabs, bookmarks, and more.">
-<!ENTITY aboutAccountsSetup.startButton.label "Get Started">
-<!ENTITY aboutAccountsSetup.useOldSync.label "Using Sync on an older version of &brandShortName;?">
+<!ENTITY aboutAccounts.pageTitle "Welcome to Sync">
+
+<!ENTITY aboutAccountsSetup.description "Sign in to sync your tabs, bookmarks, passwords &amp; more.">
+<!ENTITY aboutAccountsSetup.startButton.label "Get started">
+<!ENTITY aboutAccountsSetup.useOldSync.label "Using an older version of Sync?">
