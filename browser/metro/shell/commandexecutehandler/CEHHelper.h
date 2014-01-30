@@ -31,4 +31,5 @@ bool IsDX10Available();
 bool GetDWORDRegKey(LPCWSTR name, DWORD &value);
 bool SetDWORDRegKey(LPCWSTR name, DWORD value);
 bool IsImmersiveProcessDynamic(HANDLE process);
-bool IsProcessRunning(const wchar_t *processName, bool bCheckIfMetro);
+bool IsMetroProcessRunning();
+bool IsDesktopProcessRunning();
