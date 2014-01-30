@@ -2477,6 +2477,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             regetMember = ("\n"
                            "JS::Rooted<JS::Value> temp(aCx);\n"
                            "JSJitGetterCallArgs args(&temp);\n"
+                           "JSAutoCompartment ac(aCx, obj);\n"
                            "if (!get_%s(aCx, obj, aObject, args)) {\n"
                            "  js::SetReservedSlot(obj, %s, oldValue);\n"
                            "  nsJSUtils::ReportPendingException(aCx);\n"
