@@ -6021,6 +6021,20 @@ class CGNewResolveHook(CGAbstractBindingMethod):
                 "objp.set(obj);\n"
                 "return true;"))
 
+    def definition_body(self):
+        if self.descriptor.interface.getExtendedAttribute("Global"):
+            # Resolve standard classes
+            prefix = CGIndenter(CGGeneric(
+                    "if (!ResolveGlobal(cx, obj, id, flags, objp)) {\n"
+                    "  return false;\n"
+                    "}\n"
+                    "if (objp) {\n"
+                    "  return true;\n"
+                    "}\n\n")).define()
+        else:
+            prefix = ""
+        return prefix + CGAbstractBindingMethod.definition_body(self)
+
 class CGEnumerateHook(CGAbstractBindingMethod):
     """
     Enumerate hook for objects with custom hooks.
@@ -6051,6 +6065,17 @@ class CGEnumerateHook(CGAbstractBindingMethod):
                 "  }\n"
                 "}\n"
                 "return true;"))
+
+    def definition_body(self):
+        if self.descriptor.interface.getExtendedAttribute("Global"):
+            # Enumerate standard classes
+            prefix = CGIndenter(CGGeneric(
+                    "if (!EnumerateGlobal(cx, obj)) {\n"
+                    "  return false;\n"
+                    "}\n\n")).define()
+        else:
+            prefix = ""
+        return prefix + CGAbstractBindingMethod.definition_body(self)
 
 class CppKeywords():
     """
