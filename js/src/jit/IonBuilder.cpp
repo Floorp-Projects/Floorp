@@ -10,7 +10,6 @@
 
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
-#include "builtin/TypeRepresentation.h"
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
@@ -6628,26 +6627,26 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
     if (elemDescrs.empty())
         return true;
 
-    JS_ASSERT(TypeRepresentation::isSized(elemDescrs.kind()));
+    JS_ASSERT(TypeDescr::isSized(elemDescrs.kind()));
 
     size_t elemSize;
     if (!elemDescrs.allHaveSameSize(&elemSize))
         return true;
 
     switch (elemDescrs.kind()) {
-      case TypeRepresentation::X4:
+      case TypeDescr::X4:
         // FIXME (bug 894105): load into a MIRType_float32x4 etc
         return true;
 
-      case TypeRepresentation::Struct:
-      case TypeRepresentation::SizedArray:
+      case TypeDescr::Struct:
+      case TypeDescr::SizedArray:
         return getElemTryComplexElemOfTypedObject(emitted,
                                                   obj,
                                                   index,
                                                   objDescrs,
                                                   elemDescrs,
                                                   elemSize);
-      case TypeRepresentation::Scalar:
+      case TypeDescr::Scalar:
         return getElemTryScalarElemOfTypedObject(emitted,
                                                  obj,
                                                  index,
@@ -6655,10 +6654,10 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
                                                  elemDescrs,
                                                  elemSize);
 
-      case TypeRepresentation::Reference:
+      case TypeDescr::Reference:
         return true;
 
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::UnsizedArray:
         MOZ_ASSUME_UNREACHABLE("Unsized arrays cannot be element types");
     }
 
@@ -6666,7 +6665,7 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
 }
 
 static MIRType
-MIRTypeForTypedArrayRead(ScalarTypeRepresentation::Type arrayType,
+MIRTypeForTypedArrayRead(ScalarTypeDescr::Type arrayType,
                          bool observedDouble);
 
 bool
@@ -6721,10 +6720,10 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     JS_ASSERT(objDescrs.allOfArrayKind());
 
     // Must always be loading the same scalar type
-    ScalarTypeRepresentation::Type elemType;
+    ScalarTypeDescr::Type elemType;
     if (!elemDescrs.scalarType(&elemType))
         return true;
-    JS_ASSERT(elemSize == ScalarTypeRepresentation::alignment(elemType));
+    JS_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
 
     MDefinition *indexAsByteOffset;
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, &indexAsByteOffset, objDescrs))
@@ -6737,10 +6736,10 @@ bool
 IonBuilder::pushScalarLoadFromTypedObject(bool *emitted,
                                           MDefinition *obj,
                                           MDefinition *offset,
-                                          ScalarTypeRepresentation::Type elemType)
+                                          ScalarTypeDescr::Type elemType)
 {
-    size_t size = ScalarTypeRepresentation::size(elemType);
-    JS_ASSERT(size == ScalarTypeRepresentation::alignment(elemType));
+    size_t size = ScalarTypeDescr::size(elemType);
+    JS_ASSERT(size == ScalarTypeDescr::alignment(elemType));
 
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
@@ -6870,7 +6869,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
 {
     JS_ASSERT(*emitted == false);
 
-    ScalarTypeRepresentation::Type arrayType;
+    ScalarTypeDescr::Type arrayType;
     if (!ElementAccessIsTypedArray(obj, index, &arrayType))
         return true;
 
@@ -6931,7 +6930,7 @@ IonBuilder::getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *i
 {
     JS_ASSERT(*emitted == false);
 
-    ScalarTypeRepresentation::Type arrayType;
+    ScalarTypeDescr::Type arrayType;
     if (!ElementAccessIsTypedArray(obj, index, &arrayType))
         return true;
 
@@ -7280,22 +7279,22 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
 }
 
 static MIRType
-MIRTypeForTypedArrayRead(ScalarTypeRepresentation::Type arrayType,
+MIRTypeForTypedArrayRead(ScalarTypeDescr::Type arrayType,
                          bool observedDouble)
 {
     switch (arrayType) {
-      case ScalarTypeRepresentation::TYPE_INT8:
-      case ScalarTypeRepresentation::TYPE_UINT8:
-      case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
-      case ScalarTypeRepresentation::TYPE_INT16:
-      case ScalarTypeRepresentation::TYPE_UINT16:
-      case ScalarTypeRepresentation::TYPE_INT32:
+      case ScalarTypeDescr::TYPE_INT8:
+      case ScalarTypeDescr::TYPE_UINT8:
+      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+      case ScalarTypeDescr::TYPE_INT16:
+      case ScalarTypeDescr::TYPE_UINT16:
+      case ScalarTypeDescr::TYPE_INT32:
         return MIRType_Int32;
-      case ScalarTypeRepresentation::TYPE_UINT32:
+      case ScalarTypeDescr::TYPE_UINT32:
         return observedDouble ? MIRType_Double : MIRType_Int32;
-      case ScalarTypeRepresentation::TYPE_FLOAT32:
+      case ScalarTypeDescr::TYPE_FLOAT32:
         return (LIRGenerator::allowFloat32Optimizations()) ? MIRType_Float32 : MIRType_Double;
-      case ScalarTypeRepresentation::TYPE_FLOAT64:
+      case ScalarTypeDescr::TYPE_FLOAT64:
         return MIRType_Double;
     }
     MOZ_ASSUME_UNREACHABLE("Unknown typed array type");
@@ -7303,7 +7302,7 @@ MIRTypeForTypedArrayRead(ScalarTypeRepresentation::Type arrayType,
 
 bool
 IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
-                               ScalarTypeRepresentation::Type arrayType)
+                               ScalarTypeDescr::Type arrayType)
 {
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
@@ -7356,18 +7355,18 @@ IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index,
         // will bailout when we read a double.
         bool needsBarrier = true;
         switch (arrayType) {
-          case ScalarTypeRepresentation::TYPE_INT8:
-          case ScalarTypeRepresentation::TYPE_UINT8:
-          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
-          case ScalarTypeRepresentation::TYPE_INT16:
-          case ScalarTypeRepresentation::TYPE_UINT16:
-          case ScalarTypeRepresentation::TYPE_INT32:
-          case ScalarTypeRepresentation::TYPE_UINT32:
+          case ScalarTypeDescr::TYPE_INT8:
+          case ScalarTypeDescr::TYPE_UINT8:
+          case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+          case ScalarTypeDescr::TYPE_INT16:
+          case ScalarTypeDescr::TYPE_UINT16:
+          case ScalarTypeDescr::TYPE_INT32:
+          case ScalarTypeDescr::TYPE_UINT32:
             if (types->hasType(types::Type::Int32Type()))
                 needsBarrier = false;
             break;
-          case ScalarTypeRepresentation::TYPE_FLOAT32:
-          case ScalarTypeRepresentation::TYPE_FLOAT64:
+          case ScalarTypeDescr::TYPE_FLOAT32:
+          case ScalarTypeDescr::TYPE_FLOAT64:
             if (allowDouble)
                 needsBarrier = false;
             break;
@@ -7444,25 +7443,25 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
     if (elemTypeDescrs.empty())
         return true;
 
-    JS_ASSERT(TypeRepresentation::isSized(elemTypeDescrs.kind()));
+    JS_ASSERT(TypeDescr::isSized(elemTypeDescrs.kind()));
 
     size_t elemSize;
     if (!elemTypeDescrs.allHaveSameSize(&elemSize))
         return true;
 
     switch (elemTypeDescrs.kind()) {
-      case TypeRepresentation::X4:
+      case TypeDescr::X4:
         // FIXME (bug 894105): store a MIRType_float32x4 etc
         return true;
 
-      case TypeRepresentation::Reference:
-      case TypeRepresentation::Struct:
-      case TypeRepresentation::SizedArray:
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::Reference:
+      case TypeDescr::Struct:
+      case TypeDescr::SizedArray:
+      case TypeDescr::UnsizedArray:
         // For now, only optimize storing scalars.
         return true;
 
-      case TypeRepresentation::Scalar:
+      case TypeDescr::Scalar:
         return setElemTryScalarPropOfTypedObject(emitted,
                                                  obj,
                                                  index,
@@ -7485,10 +7484,10 @@ IonBuilder::setElemTryScalarPropOfTypedObject(bool *emitted,
                                               size_t elemSize)
 {
     // Must always be loading the same scalar type
-    ScalarTypeRepresentation::Type elemType;
+    ScalarTypeDescr::Type elemType;
     if (!elemTypeDescrs.scalarType(&elemType))
         return true;
-    JS_ASSERT(elemSize == ScalarTypeRepresentation::alignment(elemType));
+    JS_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
 
     MDefinition *indexAsByteOffset;
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, &indexAsByteOffset, objTypeDescrs))
@@ -7510,7 +7509,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
 {
     JS_ASSERT(*emitted == false);
 
-    ScalarTypeRepresentation::Type arrayType;
+    ScalarTypeDescr::Type arrayType;
     if (!ElementAccessIsTypedArray(object, index, &arrayType))
         return true;
 
@@ -7561,7 +7560,7 @@ IonBuilder::setElemTryTypedArray(bool *emitted, MDefinition *object,
 {
     JS_ASSERT(*emitted == false);
 
-    ScalarTypeRepresentation::Type arrayType;
+    ScalarTypeDescr::Type arrayType;
     if (!ElementAccessIsTypedArray(object, index, &arrayType))
         return true;
 
@@ -7781,7 +7780,7 @@ IonBuilder::jsop_setelem_dense(types::TemporaryTypeSet::DoubleConversion convers
 
 
 bool
-IonBuilder::jsop_setelem_typed(ScalarTypeRepresentation::Type arrayType,
+IonBuilder::jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
                                SetElemSafety safety,
                                MDefinition *obj, MDefinition *id, MDefinition *value)
 {
@@ -7816,7 +7815,7 @@ IonBuilder::jsop_setelem_typed(ScalarTypeRepresentation::Type arrayType,
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
     MDefinition *toWrite = value;
-    if (arrayType == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
+    if (arrayType == ScalarTypeDescr::TYPE_UINT8_CLAMPED) {
         toWrite = MClampToUint8::New(alloc(), value);
         current->add(toWrite->toInstruction());
     }
@@ -7889,7 +7888,7 @@ IonBuilder::jsop_length_fastPath()
             return true;
         }
 
-        if (objTypes && objTypes->getTypedArrayType() != ScalarTypeRepresentation::TYPE_MAX) {
+        if (objTypes && objTypes->getTypedArrayType() != ScalarTypeDescr::TYPE_MAX) {
             current->pop();
             MInstruction *length = getTypedArrayLength(obj);
             current->add(length);
@@ -8453,28 +8452,28 @@ IonBuilder::getPropTryTypedObject(bool *emitted, PropertyName *name,
         return true;
 
     switch (fieldDescrs.kind()) {
-      case TypeRepresentation::Reference:
+      case TypeDescr::Reference:
         return true;
 
-      case TypeRepresentation::X4:
+      case TypeDescr::X4:
         // FIXME (bug 894104): load into a MIRType_float32x4 etc
         return true;
 
-      case TypeRepresentation::Struct:
-      case TypeRepresentation::SizedArray:
+      case TypeDescr::Struct:
+      case TypeDescr::SizedArray:
         return getPropTryComplexPropOfTypedObject(emitted,
                                                   fieldOffset,
                                                   fieldDescrs,
                                                   fieldIndex,
                                                   resultTypes);
 
-      case TypeRepresentation::Scalar:
+      case TypeDescr::Scalar:
         return getPropTryScalarPropOfTypedObject(emitted,
                                                  fieldOffset,
                                                  fieldDescrs,
                                                  resultTypes);
 
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::UnsizedArray:
         MOZ_ASSUME_UNREACHABLE("Field of unsized array type");
     }
 
@@ -8488,7 +8487,7 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted,
                                               types::TemporaryTypeSet *resultTypes)
 {
     // Must always be loading the same scalar type
-    ScalarTypeRepresentation::Type fieldType;
+    ScalarTypeDescr::Type fieldType;
     if (!fieldDescrs.scalarType(&fieldType))
         return true;
 
@@ -8985,18 +8984,18 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
     switch (fieldDescrs.kind()) {
-      case TypeRepresentation::X4:
+      case TypeDescr::X4:
         // FIXME (bug 894104): store into a MIRType_float32x4 etc
         return true;
 
-      case TypeRepresentation::Reference:
-      case TypeRepresentation::Struct:
-      case TypeRepresentation::SizedArray:
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::Reference:
+      case TypeDescr::Struct:
+      case TypeDescr::SizedArray:
+      case TypeDescr::UnsizedArray:
         // For now, only optimize storing scalars.
         return true;
 
-      case TypeRepresentation::Scalar:
+      case TypeDescr::Scalar:
         return setPropTryScalarPropOfTypedObject(emitted, obj, fieldOffset,
                                                  value, fieldDescrs);
     }
@@ -9012,7 +9011,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
                                               TypeDescrSet fieldDescrs)
 {
     // Must always be loading the same scalar type
-    ScalarTypeRepresentation::Type fieldType;
+    ScalarTypeDescr::Type fieldType;
     if (!fieldDescrs.scalarType(&fieldType))
         return true;
 
@@ -9961,7 +9960,7 @@ IonBuilder::lookupTypedObjectField(MDefinition *typedObj,
         return false;
 
     // Must be accessing a struct.
-    if (!objDescrs.allOfKind(TypeRepresentation::Struct))
+    if (!objDescrs.allOfKind(TypeDescr::Struct))
         return true;
 
     // Determine the type/offset of the field `name`, if any.
@@ -10027,17 +10026,17 @@ IonBuilder::typeObjectForFieldFromStructType(MDefinition *typeObj,
 bool
 IonBuilder::storeScalarTypedObjectValue(MDefinition *typedObj,
                                         MDefinition *offset,
-                                        ScalarTypeRepresentation::Type type,
+                                        ScalarTypeDescr::Type type,
                                         MDefinition *value)
 {
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
-    size_t alignment = ScalarTypeRepresentation::alignment(type);
+    size_t alignment = ScalarTypeDescr::alignment(type);
     loadTypedObjectElements(typedObj, offset, alignment, &elements, &scaledOffset);
 
     // Clamp value to [0, 255] when type is Uint8Clamped
     MDefinition *toWrite = value;
-    if (type == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
+    if (type == ScalarTypeDescr::TYPE_UINT8_CLAMPED) {
         toWrite = MClampToUint8::New(alloc(), value);
         current->add(toWrite->toInstruction());
     }

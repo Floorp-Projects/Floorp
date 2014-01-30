@@ -21,7 +21,6 @@
 #include "jsworkers.h"
 #include "prmjtime.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "jit/BaselineJIT.h"
@@ -1713,7 +1712,7 @@ TemporaryTypeSet::getTypedArrayType()
 
     if (clasp && IsTypedArrayClass(clasp))
         return clasp - &TypedArrayObject::classes[0];
-    return ScalarTypeRepresentation::TYPE_MAX;
+    return ScalarTypeDescr::TYPE_MAX;
 }
 
 bool

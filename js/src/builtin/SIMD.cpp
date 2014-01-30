@@ -47,7 +47,7 @@ extern const JSFunctionSpec Int32x4Methods[];
         } \
         TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
         TypeRepresentation *typeRepr = datum.typeRepresentation(); \
-        if (typeRepr->kind() != TypeRepresentation::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
+        if (typeRepr->kind() != TypeDescr::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, laneNames[lane], \
                                  InformalValueTypeName(args.thisv())); \
@@ -78,7 +78,7 @@ extern const JSFunctionSpec Int32x4Methods[];
         } \
         TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
         TypeRepresentation *typeRepr = datum.typeRepresentation(); \
-        if (typeRepr->kind() != TypeRepresentation::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
+        if (typeRepr->kind() != TypeDescr::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, "signMask", \
                                  InformalValueTypeName(args.thisv())); \
@@ -118,14 +118,14 @@ const Class X4TypeDescr::class_ = {
 namespace js {
 class Int32x4Defn {
   public:
-    static const X4TypeRepresentation::Type type = X4TypeRepresentation::TYPE_INT32;
+    static const X4TypeDescr::Type type = X4TypeDescr::TYPE_INT32;
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedDatumProperties[];
     static const JSFunctionSpec TypedDatumMethods[];
 };
 class Float32x4Defn {
   public:
-    static const X4TypeRepresentation::Type type = X4TypeRepresentation::TYPE_FLOAT32;
+    static const X4TypeDescr::Type type = X4TypeDescr::TYPE_FLOAT32;
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedDatumProperties[];
     static const JSFunctionSpec TypedDatumMethods[];
@@ -368,7 +368,7 @@ ObjectIsVector(JSObject &obj) {
     if (!obj.is<TypedDatum>())
         return false;
     TypeRepresentation *typeRepr = obj.as<TypedDatum>().typeRepresentation();
-    if (typeRepr->kind() != TypeRepresentation::X4)
+    if (typeRepr->kind() != TypeDescr::X4)
         return false;
     return typeRepr->asX4()->type() == V::type;
 }

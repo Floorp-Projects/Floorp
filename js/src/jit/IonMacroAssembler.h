@@ -698,17 +698,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<typename S, typename T>
     void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
         switch (arrayType) {
-          case ScalarTypeRepresentation::TYPE_INT8:
-          case ScalarTypeRepresentation::TYPE_UINT8:
-          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+          case ScalarTypeDescr::TYPE_INT8:
+          case ScalarTypeDescr::TYPE_UINT8:
+          case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
             store8(value, dest);
             break;
-          case ScalarTypeRepresentation::TYPE_INT16:
-          case ScalarTypeRepresentation::TYPE_UINT16:
+          case ScalarTypeDescr::TYPE_INT16:
+          case ScalarTypeDescr::TYPE_UINT16:
             store16(value, dest);
             break;
-          case ScalarTypeRepresentation::TYPE_INT32:
-          case ScalarTypeRepresentation::TYPE_UINT32:
+          case ScalarTypeDescr::TYPE_INT32:
+          case ScalarTypeDescr::TYPE_UINT32:
             store32(value, dest);
             break;
           default:

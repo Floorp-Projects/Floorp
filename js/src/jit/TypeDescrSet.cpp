@@ -176,14 +176,14 @@ TypeDescrSet::allOfArrayKind()
         return false;
 
     switch (kind()) {
-      case TypeRepresentation::SizedArray:
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::SizedArray:
+      case TypeDescr::UnsizedArray:
         return true;
 
-      case TypeRepresentation::X4:
-      case TypeRepresentation::Reference:
-      case TypeRepresentation::Scalar:
-      case TypeRepresentation::Struct:
+      case TypeDescr::X4:
+      case TypeDescr::Reference:
+      case TypeDescr::Scalar:
+      case TypeDescr::Struct:
         return false;
     }
 
@@ -191,7 +191,7 @@ TypeDescrSet::allOfArrayKind()
 }
 
 bool
-TypeDescrSet::allOfKind(TypeRepresentation::Kind aKind)
+TypeDescrSet::allOfKind(TypeDescr::Kind aKind)
 {
     if (empty())
         return false;
@@ -205,7 +205,7 @@ TypeDescrSet::allHaveSameSize(size_t *out)
     if (empty())
         return false;
 
-    JS_ASSERT(TypeRepresentation::isSized(kind()));
+    JS_ASSERT(TypeDescr::isSized(kind()));
 
     size_t size = get(0)->as<SizedTypeDescr>().size();
     for (size_t i = 1; i < length(); i++) {
@@ -217,7 +217,7 @@ TypeDescrSet::allHaveSameSize(size_t *out)
     return true;
 }
 
-TypeRepresentation::Kind
+TypeDescr::Kind
 TypeDescrSet::kind()
 {
     JS_ASSERT(!empty());
@@ -226,11 +226,11 @@ TypeDescrSet::kind()
 
 template<typename T>
 bool
-TypeDescrSet::genericType(typename T::TypeRepr::Type *out)
+TypeDescrSet::genericType(typename T::Type *out)
 {
-    JS_ASSERT(allOfKind(TypeRepresentation::Scalar));
+    JS_ASSERT(allOfKind(TypeDescr::Scalar));
 
-    typename T::TypeRepr::Type type = get(0)->as<T>().type();
+    typename T::Type type = get(0)->as<T>().type();
     for (size_t i = 1; i < length(); i++) {
         if (get(i)->as<T>().type() != type)
             return false;
@@ -241,19 +241,19 @@ TypeDescrSet::genericType(typename T::TypeRepr::Type *out)
 }
 
 bool
-TypeDescrSet::scalarType(ScalarTypeRepresentation::Type *out)
+TypeDescrSet::scalarType(ScalarTypeDescr::Type *out)
 {
     return genericType<ScalarTypeDescr>(out);
 }
 
 bool
-TypeDescrSet::referenceType(ReferenceTypeRepresentation::Type *out)
+TypeDescrSet::referenceType(ReferenceTypeDescr::Type *out)
 {
     return genericType<ReferenceTypeDescr>(out);
 }
 
 bool
-TypeDescrSet::x4Type(X4TypeRepresentation::Type *out)
+TypeDescrSet::x4Type(X4TypeDescr::Type *out)
 {
     return genericType<X4TypeDescr>(out);
 }
@@ -262,10 +262,10 @@ bool
 TypeDescrSet::hasKnownArrayLength(size_t *l)
 {
     switch (kind()) {
-      case TypeRepresentation::UnsizedArray:
+      case TypeDescr::UnsizedArray:
         return false;
 
-      case TypeRepresentation::SizedArray:
+      case TypeDescr::SizedArray:
       {
         const size_t result = get(0)->as<SizedArrayTypeDescr>().length();
         for (size_t i = 1; i < length(); i++) {
@@ -288,12 +288,12 @@ TypeDescrSet::arrayElementType(IonBuilder &builder, TypeDescrSet *out)
     TypeDescrSetBuilder elementTypes;
     for (size_t i = 0; i < length(); i++) {
         switch (kind()) {
-          case TypeRepresentation::UnsizedArray:
+          case TypeDescr::UnsizedArray:
             if (!elementTypes.insert(&get(i)->as<UnsizedArrayTypeDescr>().elementType()))
                 return false;
             break;
 
-          case TypeRepresentation::SizedArray:
+          case TypeDescr::SizedArray:
             if (!elementTypes.insert(&get(i)->as<SizedArrayTypeDescr>().elementType()))
                 return false;
             break;
@@ -312,7 +312,7 @@ TypeDescrSet::fieldNamed(IonBuilder &builder,
                          TypeDescrSet *out,
                          size_t *index)
 {
-    JS_ASSERT(kind() == TypeRepresentation::Struct);
+    JS_ASSERT(kind() == TypeDescr::Struct);
 
     // Initialize `*offset` and `*out` for the case where incompatible
     // or absent fields are found.
