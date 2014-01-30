@@ -3158,24 +3158,6 @@ JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t newcap)
     elements = newheader->elements();
 }
 
-static JSObject *
-js_InitNullClass(JSContext *cx, HandleObject obj)
-{
-    JS_ASSERT(0);
-    return nullptr;
-}
-
-#define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init,clasp) \
-    extern JSObject *init(JSContext *cx, Handle<JSObject*> obj);
-JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
-#undef DECLARE_PROTOTYPE_CLASS_INIT
-
-static const ClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
-#define LAZY_PROTOTYPE_INIT(name,code,init,clasp) init,
-    JS_FOR_EACH_PROTOTYPE(LAZY_PROTOTYPE_INIT)
-#undef LAZY_PROTOTYPE_INIT
-};
-
 bool
 js::SetClassAndProto(JSContext *cx, HandleObject obj,
                      const Class *clasp, Handle<js::TaggedProto> proto,
@@ -3260,36 +3242,20 @@ js_GetClassObject(ExclusiveContext *cxArg, JSObject *obj, JSProtoKey key, Mutabl
 {
     Rooted<GlobalObject*> global(cxArg, &obj->global());
 
-    Value v = global->getConstructor(key);
-    if (v.isObject()) {
-        objp.set(&v.toObject());
-        return true;
-    }
-
-    // Classes can only be initialized on the main thread.
-    if (!cxArg->shouldBeJSContext())
-        return false;
-
-    JSContext *cx = cxArg->asJSContext();
-
-    RootedId name(cx, NameToId(ClassName(key, cx)));
-    AutoResolving resolving(cx, global, name);
-    if (resolving.alreadyStarted()) {
-        /* Already caching id in global -- suppress recursion. */
-        objp.set(nullptr);
-        return true;
-    }
-
-    RootedObject cobj(cx, nullptr);
-    if (ClassInitializerOp init = lazy_prototype_init[key]) {
-        if (!init(cx, global))
+    // We can only resolve constructors with a real JSContext.
+    if (!global->isStandardClassResolved(key)) {
+        if (!cxArg->shouldBeJSContext())
             return false;
-        v = global->getConstructor(key);
-        if (v.isObject())
-            cobj = &v.toObject();
+        JSContext *cx = cxArg->asJSContext();
+        RootedId name(cx, NameToId(ClassName(key, cx)));
+        AutoResolving resolving(cx, global, name);
+        if (!resolving.alreadyStarted() && !global->ensureConstructor(cx, key))
+            return false;
     }
 
-    objp.set(cobj);
+    Value v = global->getConstructor(key);
+    if (v.isObject())
+        objp.set(&v.toObject());
     return true;
 }
 
