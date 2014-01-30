@@ -448,12 +448,6 @@ class MOZ_STACK_CLASS ProxyOptions {
     const Class *clasp_;
 };
 
-class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
-  public:
-    WrapperOptions() : ProxyOptions(false, nullptr)
-    {}
-};
-
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
                JSObject *proto, JSObject *parent, const ProxyOptions &options = ProxyOptions());

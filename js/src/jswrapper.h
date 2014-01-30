@@ -16,6 +16,37 @@ namespace js {
 class DummyFrameGuard;
 
 /*
+ * Helper for Wrapper::New default options.
+ *
+ * Callers of Wrapper::New() who wish to specify a prototype for the created
+ * Wrapper, *MUST* construct a WrapperOptions with a JSContext.
+ */
+class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
+  public:
+    WrapperOptions() : ProxyOptions(false, nullptr),
+                       proto_()
+    {}
+
+    WrapperOptions(JSContext *cx) : ProxyOptions(false, nullptr),
+                                    proto_()
+    {
+        proto_.construct(cx);
+    }
+
+    JSObject *proto() const {
+        return proto_.empty() ? Wrapper::defaultProto : proto_.ref();
+    }
+    WrapperOptions &setProto(JSObject *protoArg) {
+        JS_ASSERT(!proto_.empty());
+        proto_.ref() = protoArg;
+        return *this;
+    }
+
+  private:
+    mozilla::Maybe<JS::RootedObject> proto_;
+};
+
+/*
  * A wrapper is a proxy with a target object to which it generally forwards
  * operations, but may restrict access to certain operations or instrument
  * the trap operations in various ways. A wrapper is distinct from a Direct Proxy
@@ -60,6 +91,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static Wrapper singleton;
     static Wrapper singletonWithPrototype;
+
+    static JSObject *defaultProto;
 };
 
 /* Base class for all cross compartment wrapper handlers. */
