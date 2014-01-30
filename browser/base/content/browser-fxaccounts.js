@@ -11,7 +11,6 @@ const PREF_SYNC_START_DOORHANGER = "services.sync.ui.showSyncStartDoorhanger";
 let gFxAccounts = {
 
   _initialized: false,
-  _originalLabel: null,
   _inCustomizationMode: false,
 
   get weave() {
@@ -24,16 +23,25 @@ let gFxAccounts = {
   get topics() {
     delete this.topics;
     return this.topics = [
+      "weave:service:sync:start",
+      "weave:service:login:error",
       FxAccountsCommon.ONLOGIN_NOTIFICATION,
       FxAccountsCommon.ONVERIFIED_NOTIFICATION,
-      FxAccountsCommon.ONLOGOUT_NOTIFICATION,
-      "weave:service:sync:start"
+      FxAccountsCommon.ONLOGOUT_NOTIFICATION
     ];
   },
 
   get button() {
     delete this.button;
     return this.button = document.getElementById("PanelUI-fxa-status");
+  },
+
+  get loginFailed() {
+    if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+      Weave.Service.verifyLogin();
+    }
+    return Weave.Service.identity.readyToAuthenticate &&
+           Weave.Status.login != Weave.LOGIN_SUCCEEDED;
   },
 
   init: function () {
@@ -48,9 +56,6 @@ let gFxAccounts = {
     gNavToolbox.addEventListener("customizationstarting", this);
     gNavToolbox.addEventListener("customizationending", this);
 
-    // Save the button's original label so that
-    // we can restore it if overridden later.
-    this._originalLabel = this.button.getAttribute("label");
     this._initialized = true;
 
     this.updateUI();
@@ -136,17 +141,27 @@ let gFxAccounts = {
       this.button.removeAttribute("disabled");
     }
 
+    let defaultLabel = this.button.getAttribute("defaultlabel");
+    let errorLabel = this.button.getAttribute("errorlabel");
+
     // If the user is signed into their Firefox account and we are not
     // currently in customization mode, show their email address.
     fxAccounts.getSignedInUser().then(userData => {
-      if (userData && !this._inCustomizationMode) {
-        this.button.setAttribute("signedin", "true");
-        this.button.setAttribute("label", userData.email);
-        this.button.setAttribute("tooltiptext", userData.email);
-      } else {
-        this.button.removeAttribute("signedin");
-        this.button.setAttribute("label", this._originalLabel);
-        this.button.removeAttribute("tooltiptext");
+      // Reset the button to its original state.
+      this.button.setAttribute("label", defaultLabel);
+      this.button.removeAttribute("tooltiptext");
+      this.button.removeAttribute("signedin");
+      this.button.removeAttribute("failed");
+
+      if (!this._inCustomizationMode) {
+        if (this.loginFailed) {
+          this.button.setAttribute("failed", "true");
+          this.button.setAttribute("label", errorLabel);
+        } else if (userData) {
+          this.button.setAttribute("signedin", "true");
+          this.button.setAttribute("label", userData.email);
+          this.button.setAttribute("tooltiptext", userData.email);
+        }
       }
     });
   },
