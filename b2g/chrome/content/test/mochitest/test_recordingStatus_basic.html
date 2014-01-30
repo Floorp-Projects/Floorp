@@ -107,10 +107,8 @@ function test() {
   });
 }
 
-// ensure Promise API is enabled
 SpecialPowers.pushPrefEnv({
   "set": [
-    ["dom.promise.enabled", true],
     ['media.navigator.permission.disabled', true]
   ]
 }, test);
