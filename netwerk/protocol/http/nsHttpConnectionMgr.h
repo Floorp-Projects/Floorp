@@ -629,6 +629,7 @@ private:
     // Disabled when there are no active or half open connections.
     nsCOMPtr<nsITimer> mTimeoutTick;
     bool mTimeoutTickArmed;
+    uint32_t mTimeoutTickNext;
 
     //
     // the connection table
