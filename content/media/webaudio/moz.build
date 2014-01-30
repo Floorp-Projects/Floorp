@@ -9,6 +9,7 @@ PARALLEL_DIRS += ['blink', 'test']
 TEST_TOOL_DIRS += ['compiledtest']
 
 EXPORTS += [
+    'AudioContext.h',
     'AudioParamTimeline.h',
     'MediaBufferDecoder.h',
     'ThreeDPoint.h',

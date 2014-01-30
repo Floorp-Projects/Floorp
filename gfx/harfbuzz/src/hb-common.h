@@ -94,6 +94,7 @@ typedef uint32_t hb_tag_t;
 #define HB_UNTAG(tag)   ((uint8_t)((tag)>>24)), ((uint8_t)((tag)>>16)), ((uint8_t)((tag)>>8)), ((uint8_t)(tag))
 
 #define HB_TAG_NONE HB_TAG(0,0,0,0)
+#define HB_TAG_MAX HB_TAG(0xff,0xff,0xff,0xff)
 
 /* len=-1 means str is NUL-terminated. */
 hb_tag_t
@@ -270,7 +271,12 @@ typedef enum
   /*6.1*/ HB_SCRIPT_TAKRI			= HB_TAG ('T','a','k','r'),
 
   /* No script set. */
-  /*---*/ HB_SCRIPT_INVALID			= HB_TAG_NONE
+  /*---*/ HB_SCRIPT_INVALID			= HB_TAG_NONE,
+
+  /* Dummy value to ensure any hb_tag_t value can be passed/stored as hb_script_t
+   * without risking undefined behavior. */
+  /*---*/ _HB_SCRIPT_MAX_VALUE			= HB_TAG_MAX
+
 } hb_script_t;
 
 /* These are moved out of hb_script_t because glib-mkenums chokes otherwise. */

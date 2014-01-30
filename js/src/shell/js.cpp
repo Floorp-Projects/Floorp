@@ -60,6 +60,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
+#include "jit/arm/Simulator-arm.h"
 #include "jit/Ion.h"
 #include "js/OldDebugAPI.h"
 #include "js/StructuredClone.h"
@@ -5844,6 +5845,10 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
+#ifdef JS_ARM_SIMULATOR
+        || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
+                             "simulator.")
+#endif
     )
     {
         return EXIT_FAILURE;
@@ -5890,6 +5895,11 @@ main(int argc, char **argv, char **envp)
         PropagateFlagToNestedShells("--no-sse4");
     }
 #endif
+#endif
+
+#ifdef JS_ARM_SIMULATOR
+    if (op.getBoolOption("arm-sim-icache-checks"))
+        jit::Simulator::ICacheCheckingEnabled = true;
 #endif
 
     // Start the engine.
