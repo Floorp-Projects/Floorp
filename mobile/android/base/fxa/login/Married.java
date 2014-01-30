@@ -29,11 +29,18 @@ public class Married extends TokensAndKeysState {
   private static final String LOG_TAG = Married.class.getSimpleName();
 
   protected final String certificate;
+  protected final String clientState;
 
   public Married(String email, String uid, byte[] sessionToken, byte[] kA, byte[] kB, BrowserIDKeyPair keyPair, String certificate) {
     super(StateLabel.Married, email, uid, sessionToken, kA, kB, keyPair);
     Utils.throwIfNull(certificate);
     this.certificate = certificate;
+    try {
+      this.clientState = FxAccountUtils.computeClientState(kB);
+    } catch (NoSuchAlgorithmException e) {
+      // This should never occur.
+      throw new IllegalStateException("Unable to compute client state from kB.");
+    }
   }
 
   @Override
@@ -94,6 +101,13 @@ public class Married extends TokensAndKeysState {
   public KeyBundle getSyncKeyBundle() throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
     // TODO Document this choice for deriving from kB.
     return FxAccountUtils.generateSyncKeyBundle(kB);
+  }
+
+  public String getClientState() {
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      FxAccountConstants.pii(LOG_TAG, "Client state: " + this.clientState);
+    }
+    return this.clientState;
   }
 
   public State makeCohabitingState() {
