@@ -1026,32 +1026,6 @@ nsNSSComponent::setEnabledTLSVersions()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSSComponent::SkipOcsp()
-{
-  nsNSSShutDownPreventionLock locker;
-  CERTCertDBHandle* certdb = CERT_GetDefaultCertDB();
-
-  SECStatus rv = CERT_DisableOCSPChecking(certdb);
-  return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::SkipOcspOff()
-{
-  MutexAutoLock lock(mutex);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mNSSInitialized);
-  NS_ENSURE_TRUE(mNSSInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  CertVerifier::ocsp_download_config odc; // ignored
-  CertVerifier::ocsp_strict_config osc; // ignored
-  CertVerifier::ocsp_get_config ogc; // ignored
-  SetClassicOCSPBehaviorFromPrefs(&odc, &osc, &ogc, lock);
-
-  return NS_OK;
-}
-
 nsresult
 nsNSSComponent::InitializeNSS()
 {
