@@ -810,14 +810,6 @@ JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
 
 /*
- * ErrorFromException takes a raw Value so that it's possible to call it during
- * GC/CC/whatever, when it may not be possible to get a JSContext to create a
- * Rooted.  It promises to never ever GC.
- */
-JS_FRIEND_API(JSErrorReport*)
-ErrorFromException(JS::Value val);
-
-/*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
  * operand of JSOP_ITER, so don't change them without advancing vm/Xdr.h's
  * XDR_BYTECODE_VERSION.
