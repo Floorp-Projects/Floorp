@@ -95,7 +95,6 @@ this.BrowserIDManager.prototype = {
     // Reset the world before we do anything async.
     this.whenReadyToAuthenticate = Promise.defer();
     this._shouldHaveSyncKeyBundle = false;
-    this.username = ""; // this calls resetCredentials which drops the key bundle.
 
     return fxAccounts.getSignedInUser().then(accountData => {
       if (!accountData) {
