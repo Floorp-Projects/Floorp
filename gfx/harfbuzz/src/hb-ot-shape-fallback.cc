@@ -430,14 +430,12 @@ _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
 			    hb_font_t *font,
 			    hb_buffer_t  *buffer)
 {
-  hb_mask_t kern_mask = plan->map.get_1_mask (HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction) ?
-					      HB_TAG ('k','e','r','n') : HB_TAG ('v','k','r','n'));
-  if (!kern_mask) return;
+  if (!plan->has_kern) return;
 
   unsigned int count = buffer->len;
 
   OT::hb_apply_context_t c (1, font, buffer);
-  c.set_lookup_mask (kern_mask);
+  c.set_lookup_mask (plan->kern_mask);
   c.set_lookup_props (OT::LookupFlag::IgnoreMarks);
 
   hb_glyph_info_t *info = buffer->info;

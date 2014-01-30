@@ -15,13 +15,17 @@
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
 #include "jsfriendapi.h"
+#include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "nsZipArchive.h"
+#include "nsIDOMFile.h"
+#include "nsIDOMFileList.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3462,6 +3466,161 @@ nsXPCComponents_Utils::GetJSEngineTelemetryValue(JSContext *cx, MutableHandleVal
         return NS_ERROR_OUT_OF_MEMORY;
 
     rval.setObject(*obj);
+    return NS_OK;
+}
+
+class MOZ_STACK_CLASS CloneIntoOptions : public OptionsBase
+{
+public:
+    CloneIntoOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                     JSObject *options = nullptr)
+        : OptionsBase(cx, options)
+        , cloneFunctions(false)
+    {}
+
+    virtual bool Parse()
+    {
+        return ParseBoolean("cloneFunctions", &cloneFunctions);
+    }
+
+    bool cloneFunctions;
+};
+
+class MOZ_STACK_CLASS CloneIntoCallbacksData
+{
+public:
+    CloneIntoCallbacksData(JSContext *aCx, CloneIntoOptions *aOptions)
+        : mOptions(aOptions)
+        , mFunctions(aCx)
+    {}
+
+    CloneIntoOptions *mOptions;
+    AutoObjectVector mFunctions;
+};
+
+static JSObject*
+CloneIntoReadStructuredClone(JSContext *cx,
+                             JSStructuredCloneReader *reader,
+                             uint32_t tag,
+                             uint32_t value,
+                             void* closure)
+{
+    CloneIntoCallbacksData* data = static_cast<CloneIntoCallbacksData*>(closure);
+    MOZ_ASSERT(data);
+
+    if (tag == mozilla::dom::SCTAG_DOM_BLOB || tag == mozilla::dom::SCTAG_DOM_FILELIST) {
+        MOZ_ASSERT(!value, "Data should be empty");
+
+        nsISupports *supports;
+        if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
+            RootedObject global(cx, CurrentGlobalOrNull(cx));
+            if (global) {
+                RootedValue val(cx);
+                if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports, &val)))
+                    return val.toObjectOrNull();
+            }
+        }
+    }
+
+    if (tag == mozilla::dom::SCTAG_DOM_FUNCTION) {
+      MOZ_ASSERT(value < data->mFunctions.length());
+
+      RootedValue functionValue(cx);
+      RootedObject obj(cx, data->mFunctions[value]);
+
+      if (!JS_WrapObject(cx, &obj))
+          return nullptr;
+
+      if (!xpc::NewFunctionForwarder(cx, obj, false, &functionValue))
+          return nullptr;
+
+      return &functionValue.toObject();
+    }
+
+    return nullptr;
+}
+
+static bool
+CloneIntoWriteStructuredClone(JSContext *cx,
+                              JSStructuredCloneWriter *writer,
+                              HandleObject obj,
+                              void *closure)
+{
+    CloneIntoCallbacksData* data = static_cast<CloneIntoCallbacksData*>(closure);
+    MOZ_ASSERT(data);
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
+    nsContentUtils::XPConnect()->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrappedNative));
+    if (wrappedNative) {
+        uint32_t scTag = 0;
+        nsISupports *supports = wrappedNative->Native();
+
+        nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
+        if (blob)
+            scTag = mozilla::dom::SCTAG_DOM_BLOB;
+        else {
+            nsCOMPtr<nsIDOMFileList> list = do_QueryInterface(supports);
+            if (list)
+                scTag = mozilla::dom::SCTAG_DOM_FILELIST;
+        }
+
+        if (scTag) {
+            return JS_WriteUint32Pair(writer, scTag, 0) &&
+                   JS_WriteBytes(writer, &supports, sizeof(supports));
+        }
+    }
+
+    if (data->mOptions->cloneFunctions && JS_ObjectIsCallable(cx, obj)) {
+        data->mFunctions.append(obj);
+        return JS_WriteUint32Pair(writer, mozilla::dom::SCTAG_DOM_FUNCTION,
+                                  data->mFunctions.length() - 1);
+    }
+
+    return false;
+}
+
+// These functions serialize raw XPCOM pointers in the data stream, and thus
+// should only be used when the read and write are done together
+// synchronously.
+static JSStructuredCloneCallbacks CloneIntoCallbacks = {
+    CloneIntoReadStructuredClone,
+    CloneIntoWriteStructuredClone,
+    nullptr
+};
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CloneInto(HandleValue aValue, HandleValue aScope,
+                                 HandleValue aOptions, JSContext *aCx,
+                                 MutableHandleValue aCloned)
+{
+    if (!aScope.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    RootedObject scope(aCx, &aScope.toObject());
+    scope = js::CheckedUnwrap(scope);
+    NS_ENSURE_TRUE(scope, NS_ERROR_FAILURE);
+
+    if (!aOptions.isUndefined() && !aOptions.isObject()) {
+        JS_ReportError(aCx, "Invalid argument");
+        return NS_ERROR_FAILURE;
+    }
+
+    RootedObject optionsObject(aCx, aOptions.isObject() ? &aOptions.toObject()
+                                                        : nullptr);
+    CloneIntoOptions options(aCx, optionsObject);
+    if (aOptions.isObject() && !options.Parse())
+        return NS_ERROR_FAILURE;
+
+    {
+        CloneIntoCallbacksData data(aCx, &options);
+        JSAutoCompartment ac(aCx, scope);
+        if (!JS_StructuredClone(aCx, aValue, aCloned, &CloneIntoCallbacks, &data))
+            return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_WrapValue(aCx, aCloned))
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 

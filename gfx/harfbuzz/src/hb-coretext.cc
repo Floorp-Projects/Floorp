@@ -591,7 +591,6 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 
   CFMutableAttributedStringRef attr_string = CFAttributedStringCreateMutable (NULL, chars_len);
   CFAttributedStringReplaceString (attr_string, CFRangeMake (0, 0), string_ref);
-  CFRelease (string_ref);
   CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
 				  kCTFontAttributeName, font_data->ct_font);
 
@@ -671,23 +670,33 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	if (buffer->in_error)
 	  FAIL ("Buffer resize failed");
 	hb_glyph_info_t *info = buffer->info + buffer->len;
-	buffer->len += range.length;
 
-        for (CFIndex j = 0; j < range.length; j++)
+	CGGlyph notdef = 0;
+	double advance = CTFontGetAdvancesForGlyphs (font_data->ct_font, kCTFontHorizontalOrientation, &notdef, NULL, 1);
+
+        for (CFIndex j = range.location; j < range.location + range.length; j++)
 	{
-            CGGlyph notdef = 0;
-            double advance = CTFontGetAdvancesForGlyphs (font_data->ct_font, kCTFontHorizontalOrientation, &notdef, NULL, 1);
+	    UniChar ch = CFStringGetCharacterAtIndex (string_ref, j);
+	    if (hb_in_range<UniChar> (ch, 0xDC00, 0xDFFF) && range.location < j)
+	    {
+	      ch = CFStringGetCharacterAtIndex (string_ref, j - 1);
+	      if (hb_in_range<UniChar> (ch, 0xD800, 0xDBFF))
+	        /* This is the second of a surrogate pair.  Don't need .notdef
+		 * for this one. */
+	        continue;
+	    }
 
             info->codepoint = notdef;
 	    /* TODO We have to fixup clusters later.  See vis_clusters in
 	     * hb-uniscribe.cc for example. */
-            info->cluster = range.location + j;
+            info->cluster = j;
 
             info->mask = advance;
             info->var1.u32 = 0;
             info->var2.u32 = 0;
 
 	    info++;
+	    buffer->len++;
         }
         continue;
     }
@@ -796,6 +805,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     }
   }
 
+  CFRelease (string_ref);
   CFRelease (line);
 
   return true;

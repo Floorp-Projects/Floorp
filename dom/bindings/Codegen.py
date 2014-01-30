@@ -2477,6 +2477,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             regetMember = ("\n"
                            "JS::Rooted<JS::Value> temp(aCx);\n"
                            "JSJitGetterCallArgs args(&temp);\n"
+                           "JSAutoCompartment ac(aCx, obj);\n"
                            "if (!get_%s(aCx, obj, aObject, args)) {\n"
                            "  js::SetReservedSlot(obj, %s, oldValue);\n"
                            "  nsJSUtils::ReportPendingException(aCx);\n"
@@ -6021,6 +6022,20 @@ class CGNewResolveHook(CGAbstractBindingMethod):
                 "objp.set(obj);\n"
                 "return true;"))
 
+    def definition_body(self):
+        if self.descriptor.interface.getExtendedAttribute("Global"):
+            # Resolve standard classes
+            prefix = CGIndenter(CGGeneric(
+                    "if (!ResolveGlobal(cx, obj, id, flags, objp)) {\n"
+                    "  return false;\n"
+                    "}\n"
+                    "if (objp) {\n"
+                    "  return true;\n"
+                    "}\n\n")).define()
+        else:
+            prefix = ""
+        return prefix + CGAbstractBindingMethod.definition_body(self)
+
 class CGEnumerateHook(CGAbstractBindingMethod):
     """
     Enumerate hook for objects with custom hooks.
@@ -6051,6 +6066,17 @@ class CGEnumerateHook(CGAbstractBindingMethod):
                 "  }\n"
                 "}\n"
                 "return true;"))
+
+    def definition_body(self):
+        if self.descriptor.interface.getExtendedAttribute("Global"):
+            # Enumerate standard classes
+            prefix = CGIndenter(CGGeneric(
+                    "if (!EnumerateGlobal(cx, obj)) {\n"
+                    "  return false;\n"
+                    "}\n\n")).define()
+        else:
+            prefix = ""
+        return prefix + CGAbstractBindingMethod.definition_body(self)
 
 class CppKeywords():
     """
@@ -7732,6 +7758,29 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                                          callArgs="")
     def generate_code(self):
         return CGIndenter(CGGeneric(
+                "{\n"
+                "  // Since we're dealing with an Xray, do the resolve on the\n"
+                "  // underlying object first.  That gives it a chance to\n"
+                "  // define properties on the actual object as needed, and\n"
+                "  // then use the fact that it created the objects as a flag\n"
+                "  // o avoid re-resolving the properties if someone deletes\n"
+                "  // them.\n"
+                "  JSAutoCompartment ac(cx, obj);\n"
+                "  JS::Rooted<JSPropertyDescriptor> objDesc(cx);\n"
+                "  if (!self->DoNewResolve(cx, obj, id, &objDesc)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "  // If desc.value() is undefined, then the DoNewResolve call\n"
+                "  // has already defined the property on the object.  Don't\n"
+                "  // try to also define it.\n"
+                "  if (objDesc.object() &&\n"
+                "      !objDesc.value().isUndefined() &&\n"
+                "      !JS_DefinePropertyById(cx, obj, id, objDesc.value(),\n"
+                "                             objDesc.getter(), objDesc.setter(),\n"
+                "                             objDesc.attributes())) {\n"
+                "    return false;\n"
+                "  }\n"
+                "}\n"
                 "return self->DoNewResolve(cx, wrapper, id, desc);"))
 
 class CGEnumerateOwnProperties(CGAbstractStaticMethod):

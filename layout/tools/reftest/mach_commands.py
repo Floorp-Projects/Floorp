@@ -8,6 +8,7 @@ import mozpack.path
 import os
 import re
 import sys
+import warnings
 import which
 
 from mozbuild.base import (
@@ -25,8 +26,43 @@ from mach.decorators import (
 
 DEBUGGER_HELP = 'Debugger binary to run test in. Program name or path.'
 
-ADB_NOT_FOUND = """The %s command requires the adb binary to be on your path.
-This can be found in '%s/out/host/<platform>/bin'."""
+ADB_NOT_FOUND = '''
+The %s command requires the adb binary to be on your path.
+
+If you have a B2G build, this can be found in
+'%s/out/host/<platform>/bin'.
+'''.lstrip()
+
+GAIA_PROFILE_NOT_FOUND = '''
+The %s command requires a non-debug gaia profile. Either pass in --profile,
+or set the GAIA_PROFILE environment variable.
+
+If you do not have a non-debug gaia profile, you can build one:
+    $ git clone https://github.com/mozilla-b2g/gaia
+    $ cd gaia
+    $ make
+
+The profile should be generated in a directory called 'profile'.
+'''.lstrip()
+
+GAIA_PROFILE_IS_DEBUG = '''
+The %s command requires a non-debug gaia profile. The specified profile,
+%s, is a debug profile.
+
+If you do not have a non-debug gaia profile, you can build one:
+    $ git clone https://github.com/mozilla-b2g/gaia
+    $ cd gaia
+    $ make
+
+The profile should be generated in a directory called 'profile'.
+'''.lstrip()
+
+MARIONETTE_DISABLED = '''
+The %s command requires a marionette enabled build.
+
+Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
+Your currently active mozconfig is %s.
+'''.lstrip()
 
 class ReftestRunner(MozbuildObject):
     """Easily run reftests.
@@ -72,7 +108,8 @@ class ReftestRunner(MozbuildObject):
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
 
-    def run_b2g_test(self, b2g_home, xre_path, test_file=None, suite=None, **kwargs):
+    def run_b2g_test(self, b2g_home=None, xre_path=None, test_file=None,
+                     suite=None, **kwargs):
         """Runs a b2g reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -84,12 +121,6 @@ class ReftestRunner(MozbuildObject):
         """
         if suite not in ('reftest', 'crashtest'):
             raise Exception('None or unrecognized reftest suite type.')
-
-        try:
-            which.which('adb')
-        except which.WhichError:
-            # TODO Find adb automatically if it isn't on the path
-            raise Exception(ADB_NOT_FOUND % ('%s-remote' % suite, b2g_home))
 
         # Find the manifest file
         if not test_file:
@@ -109,24 +140,20 @@ class ReftestRunner(MozbuildObject):
         # Need to chdir to reftest_dir otherwise imports fail below.
         os.chdir(self.reftest_dir)
 
-        import imp
-        path = os.path.join(self.reftest_dir, 'runreftestb2g.py')
-        with open(path, 'r') as fh:
-            imp.load_module('reftest', fh, path, ('.py', 'r', imp.PY_SOURCE))
-        import reftest
+        # The imp module can spew warnings if the modules below have
+        # already been imported, ignore them.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            import imp
+            path = os.path.join(self.reftest_dir, 'runreftestb2g.py')
+            with open(path, 'r') as fh:
+                imp.load_module('reftest', fh, path, ('.py', 'r', imp.PY_SOURCE))
+            import reftest
 
         # Set up the reftest options.
         parser = reftest.B2GOptions()
         options, args = parser.parse_args([])
-
-        options.b2gPath = b2g_home
-        options.logcat_dir = self.reftest_dir
-        options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
-        options.ignoreWindowSize = True
-        options.xrePath = xre_path
-
-        for k, v in kwargs.iteritems():
-            setattr(options, k, v)
 
         # Tests need to be served from a subdirectory of the server. Symlink
         # topsrcdir here to get around this.
@@ -135,6 +162,47 @@ class ReftestRunner(MozbuildObject):
             os.symlink(self.topsrcdir, tests)
         args.insert(0, os.path.join('tests', manifest))
 
+        for k, v in kwargs.iteritems():
+            setattr(options, k, v)
+
+        if conditions.is_b2g_desktop(self):
+            if self.substs.get('ENABLE_MARIONETTE') != '1':
+                print(MARIONETTE_DISABLED % ('mochitest-b2g-desktop',
+                                             self.mozconfig['path']))
+                return 1
+
+            options.profile = options.profile or os.environ.get('GAIA_PROFILE')
+            if not options.profile:
+                print(GAIA_PROFILE_NOT_FOUND % 'reftest-b2g-desktop')
+                return 1
+
+            if os.path.isfile(os.path.join(options.profile, 'extensions', \
+                    'httpd@gaiamobile.org')):
+                print(GAIA_PROFILE_IS_DEBUG % ('mochitest-b2g-desktop',
+                                               options.profile))
+                return 1
+
+            options.desktop = True
+            options.app = self.get_binary_path()
+            if not options.app.endswith('-bin'):
+                options.app = '%s-bin' % options.app
+            if not os.path.isfile(options.app):
+                options.app = options.app[:-len('-bin')]
+
+            return reftest.run_desktop_reftests(parser, options, args)
+
+
+        try:
+            which.which('adb')
+        except which.WhichError:
+            # TODO Find adb automatically if it isn't on the path
+            raise Exception(ADB_NOT_FOUND % ('%s-remote' % suite, b2g_home))
+
+        options.b2gPath = b2g_home
+        options.logcat_dir = self.reftest_dir
+        options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
+        options.xrePath = xre_path
+        options.ignoreWindowSize = True
         return reftest.run_remote_reftests(parser, options, args)
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,
@@ -305,6 +373,13 @@ class B2GCommands(MachCommandBase):
         conditions=[conditions.is_b2g, is_emulator])
     @B2GCommand
     def run_reftest_remote(self, test_file, **kwargs):
+        return self._run_reftest(test_file, suite='reftest', **kwargs)
+
+    @Command('reftest-b2g-desktop', category='testing',
+        description='Run a b2g desktop reftest.',
+        conditions=[conditions.is_b2g_desktop])
+    @B2GCommand
+    def run_reftest_b2g_desktop(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
 
     @Command('crashtest-remote', category='testing',

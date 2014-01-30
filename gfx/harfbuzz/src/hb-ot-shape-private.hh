@@ -40,6 +40,10 @@ struct hb_ot_shape_plan_t
   const struct hb_ot_complex_shaper_t *shaper;
   hb_ot_map_t map;
   const void *data;
+  hb_mask_t rtlm_mask, frac_mask, numr_mask, dnom_mask;
+  hb_mask_t kern_mask;
+  unsigned int has_frac : 1;
+  unsigned int has_kern : 1;
 
   inline void collect_lookups (hb_tag_t table_tag, hb_set_t *lookups) const
   {
@@ -77,6 +81,17 @@ struct hb_ot_shape_planner_t
     plan.props = props;
     plan.shaper = shaper;
     map.compile (plan.map);
+
+    plan.rtlm_mask = plan.map.get_1_mask (HB_TAG ('r','t','l','m'));
+    plan.frac_mask = plan.map.get_1_mask (HB_TAG ('f','r','a','c'));
+    plan.numr_mask = plan.map.get_1_mask (HB_TAG ('n','u','m','r'));
+    plan.dnom_mask = plan.map.get_1_mask (HB_TAG ('d','n','o','m'));
+
+    plan.kern_mask = plan.map.get_mask (HB_DIRECTION_IS_HORIZONTAL (plan.props.direction) ?
+					HB_TAG ('k','e','r','n') : HB_TAG ('v','k','r','n'));
+
+    plan.has_frac = plan.frac_mask || (plan.numr_mask && plan.dnom_mask);
+    plan.has_kern = !!plan.kern_mask;
   }
 
   private:
