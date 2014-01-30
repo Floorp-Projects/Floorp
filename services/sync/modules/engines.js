@@ -651,7 +651,8 @@ SyncEngine.prototype = {
   // How many records to process in a single batch.
   applyIncomingBatchSize: DEFAULT_STORE_BATCH_SIZE,
 
-  get storageURL() this.service.storageURL,
+  get storageURL() Svc.Prefs.get("clusterURL") + SYNC_API_VERSION +
+    "/" + this.service.identity.username + "/storage/",
 
   get engineURL() this.storageURL + this.name,
 
