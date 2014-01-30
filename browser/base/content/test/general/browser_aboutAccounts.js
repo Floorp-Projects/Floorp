@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
 
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
-  Services.prefs.clearUserPref("identity.fxaccounts.enabled");
   Services.prefs.clearUserPref("identity.fxaccounts.remote.uri");
 });
 
@@ -21,7 +20,6 @@ let gTests = [
   desc: "Test the remote commands",
   setup: function ()
   {
-    Services.prefs.setBoolPref("identity.fxaccounts.enabled", true);
     Services.prefs.setCharPref("identity.fxaccounts.remote.uri",
                                "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
   },
