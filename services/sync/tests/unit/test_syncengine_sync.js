@@ -48,6 +48,7 @@ function createServerAndConfigureClient() {
   Service.serverURL = server.baseURI;
   Service.clusterURL = server.baseURI;
   Service.identity.username = USER;
+  Service._updateCachedURLs();
 
   return [engine, server, USER];
 }
