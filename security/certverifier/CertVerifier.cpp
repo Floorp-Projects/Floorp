@@ -60,6 +60,37 @@ InitCertVerifierLog()
 #endif
 }
 
+// Once we migrate to insanity::pkix or change the overridable error
+// logic this will become unnecesary.
+static SECStatus
+insertErrorIntoVerifyLog(CERTCertificate* cert, const PRErrorCode err,
+                         CERTVerifyLog* verifyLog){
+  CERTVerifyLogNode* node;
+  node = (CERTVerifyLogNode *)PORT_ArenaAlloc(verifyLog->arena,
+                                              sizeof(CERTVerifyLogNode));
+  if (!node) {
+    PR_SetError(PR_UNKNOWN_ERROR, 0);
+    return SECFailure;
+  }
+  node->cert = CERT_DupCertificate(cert);
+  node->error = err;
+  node->depth = 0;
+  node->arg = nullptr;
+  //and at to head!
+  node->prev = nullptr;
+  node->next = verifyLog->head;
+  if (verifyLog->head) {
+    verifyLog->head->prev = node;
+  }
+  verifyLog->head = node;
+  if (!verifyLog->tail) {
+    verifyLog->tail = node;
+  }
+  verifyLog->count++;
+
+  return SECSuccess;
+}
+
 static SECStatus
 ClassicVerifyCert(CERTCertificate* cert,
                   const SECCertificateUsage usage,

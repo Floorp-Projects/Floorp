@@ -318,13 +318,11 @@ class ReviewboardToolsProvider(MachCommandBase):
 
 @CommandProvider
 class FormatProvider(MachCommandBase):
-    @Command('clang-format', category='devenv', allow_all_args=True,
+    @Command('clang-format', category='misc',
         description='Run clang-format on current changes')
-    @CommandArgument('args', nargs='...', help='Arguments to clang-format tool')
-    def clang_format(self, args):
-        if not args:
-            args = ['help']
-
+    @CommandArgument('--show', '-s', action = 'store_true',
+        help = 'Show diff output on instead of applying changes')
+    def clang_format(self, show=False):
         plat = platform.system()
         fmt = plat.lower() + "/clang-format-3.5"
         fmt_diff = "clang-format-diff-3.5"
@@ -356,10 +354,22 @@ class FormatProvider(MachCommandBase):
             return 1
 
         from subprocess import Popen, PIPE
-        p1 = Popen(["hg", "diff", "-U0", "-r", "tip^", "--include", "glob:**.c", "--include", "glob:**.cpp",
-                   "--include", "glob:**.h", "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
-        p2 = Popen([sys.executable, clang_format_diff, "-i", "-p1", "-style=Mozilla"], stdin=p1.stdout)
-        return p2.communicate()[0]
+
+        if os.path.exists(".hg"):
+            diff_process = Popen(["hg", "diff", "-U0", "-r", "tip^",
+                                  "--include", "glob:**.c", "--include", "glob:**.cpp", "--include", "glob:**.h",
+                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
+        else:
+            git_process = Popen(["git", "diff", "-U0", "HEAD^"], stdout=PIPE)
+            diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
+                                  "--exclude-from-file=.clang-format-ignore"],
+                                 stdin=git_process.stdout, stdout=PIPE)
+
+        args = [sys.executable, clang_format_diff, "-p1"]
+        if not show:
+           args.append("-i")
+        cf_process = Popen(args, stdin=diff_process.stdout)
+        return cf_process.communicate()[0]
 
     def locate_or_fetch(self, root):
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))

@@ -16,6 +16,35 @@ namespace js {
 class DummyFrameGuard;
 
 /*
+ * Helper for Wrapper::New default options.
+ *
+ * Callers of Wrapper::New() who wish to specify a prototype for the created
+ * Wrapper, *MUST* construct a WrapperOptions with a JSContext.
+ */
+class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
+  public:
+    WrapperOptions() : ProxyOptions(false, nullptr),
+                       proto_()
+    {}
+
+    WrapperOptions(JSContext *cx) : ProxyOptions(false, nullptr),
+                                    proto_()
+    {
+        proto_.construct(cx);
+    }
+
+    inline JSObject *proto() const;
+    WrapperOptions &setProto(JSObject *protoArg) {
+        JS_ASSERT(!proto_.empty());
+        proto_.ref() = protoArg;
+        return *this;
+    }
+
+  private:
+    mozilla::Maybe<JS::RootedObject> proto_;
+};
+
+/*
  * A wrapper is a proxy with a target object to which it generally forwards
  * operations, but may restrict access to certain operations or instrument
  * the trap operations in various ways. A wrapper is distinct from a Direct Proxy
@@ -27,7 +56,6 @@ class DummyFrameGuard;
 class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 {
     unsigned mFlags;
-    bool mSafeToUnwrap;
 
   public:
     using BaseProxyHandler::Action;
@@ -40,16 +68,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
 
-    /*
-     * Wrappers can explicitly specify that they are unsafe to unwrap from a
-     * security perspective (as is the case for SecurityWrappers). If a wrapper
-     * is not safe to unwrap, operations requiring full access to the underlying
-     * object (via CheckedUnwrap) will throw. Otherwise, they will succeed.
-     */
-    void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; }
-    bool isSafeToUnwrap() { return mSafeToUnwrap; }
-
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler);
+    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
+                         const WrapperOptions *options = nullptr);
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler);
 
@@ -69,7 +89,15 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static Wrapper singleton;
     static Wrapper singletonWithPrototype;
+
+    static JSObject *defaultProto;
 };
+
+inline JSObject *
+WrapperOptions::proto() const
+{
+    return proto_.empty() ? Wrapper::defaultProto : proto_.ref();
+}
 
 /* Base class for all cross compartment wrapper handlers. */
 class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper

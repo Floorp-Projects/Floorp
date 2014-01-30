@@ -659,7 +659,7 @@ nsCategoryManager::AddCategoryEntry(const char *aCategoryName,
   if (NS_SUCCEEDED(rv)) {
     if (oldEntry) {
       NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
-                      aCategoryName, oldEntry);
+                      aCategoryName, aEntryName);
     }
     NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID,
                     aCategoryName, aEntryName);

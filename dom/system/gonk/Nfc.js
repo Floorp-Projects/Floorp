@@ -59,7 +59,8 @@ const NFC_IPC_PEER_MSG_NAMES = [
   "NFC:RegisterPeerTarget",
   "NFC:UnregisterPeerTarget",
   "NFC:CheckP2PRegistration",
-  "NFC:NotifyUserAcceptedP2P"
+  "NFC:NotifyUserAcceptedP2P",
+  "NFC:NotifySendFileStatus"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
@@ -309,10 +310,12 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           return null;
         }
 
-        // Add extra permission check for below IPC Peer events:
-        // 'NFC:CheckP2PRegistration' , 'NFC:NotifyUserAcceptedP2P'
+        // Add extra permission check for below events:
+        // 'NFC:CheckP2PRegistration' , 'NFC:NotifyUserAcceptedP2P',
+        // 'NFC:NotifySendFileStatus'
         if ((msg.name == "NFC:CheckP2PRegistration") ||
-            (msg.name == "NFC:NotifyUserAcceptedP2P")) {
+            (msg.name == "NFC:NotifyUserAcceptedP2P") ||
+            (msg.name == "NFC:NotifySendFileStatus")) {
           // ONLY privileged Content can send these events
           if (!msg.target.assertPermission("nfc-manager")) {
             debug("NFC message " + message.name +
@@ -355,6 +358,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:NotifyUserAcceptedP2P":
           // Notify the 'NFC_PEER_EVENT_READY' since user has acknowledged
           this.notifyPeerEvent(msg.json.appId, NFC.NFC_PEER_EVENT_READY);
+          break;
+        case "NFC:NotifySendFileStatus":
+          // Upon receiving the status of sendFile operation, send the response
+          // to appropriate content process.
+          this.sendNfcResponseMessage(msg.name + "Response", msg.json);
           break;
       }
       return null;

@@ -5,8 +5,6 @@
 
 INTERNAL_TOOLS = 1
 
-VPATH += $(topsrcdir)/build
-
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
 WRAP_LDFLAGS=

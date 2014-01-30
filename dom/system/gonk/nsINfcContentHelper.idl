@@ -24,7 +24,7 @@ interface nsINfcPeerCallback : nsISupports
                          in DOMString sessionToken);
 };
 
-[scriptable, uuid(91c2760a-f41c-4174-ad68-614840d4e201)]
+[scriptable, uuid(70cac000-7e3c-11e3-baa7-0800200c9a66)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -118,4 +118,21 @@ interface nsINfcContentHelper : nsISupports
   *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
   */
   void notifyUserAcceptedP2P(in nsIDOMWindow window, in unsigned long appId);
+
+ /**
+  * Notify the status of sendFile operation to Chrome process
+  *
+  * @param window
+  *        Current window
+  *
+  * @param status
+  *        Status of sendFile operation
+  *        (GECKO_NFC_ERROR_SUCCESS, GECKO_NFC_ERROR_GENERIC_FAILURE)
+  *
+  * @param requestId
+  *        Request ID of SendFile DOM Request
+  */
+  void notifySendFileStatus(in nsIDOMWindow window,
+                            in octet status,
+                            in DOMString requestId);
 };
