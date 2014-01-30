@@ -356,7 +356,7 @@ class FormatProvider(MachCommandBase):
         from subprocess import Popen, PIPE
         p1 = Popen(["hg", "diff", "-U0", "-r", "tip^", "--include", "glob:**.c", "--include", "glob:**.cpp",
                    "--include", "glob:**.h", "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
-        args = [sys.executable, clang_format_diff, "-p1", "-style=Mozilla"]
+        args = [sys.executable, clang_format_diff, "-p1"]
         if not show:
            args.append("-i")
         p2 = Popen(args, stdin=p1.stdout)
