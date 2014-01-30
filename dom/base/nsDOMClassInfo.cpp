@@ -3079,19 +3079,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     return ok ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  if (name_struct->mType == nsGlobalNameStruct::eTypeDynamicNameSet) {
-    nsCOMPtr<nsIScriptExternalNameSet> nameset =
-      do_CreateInstance(name_struct->mCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIScriptContext *context = aWin->GetContext();
-    NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-
-    rv = nameset->InitializeNameSet(context);
-
-    *did_resolve = true;
-  }
-
   return rv;
 }
 
