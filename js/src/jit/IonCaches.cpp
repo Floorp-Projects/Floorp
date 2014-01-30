@@ -1528,17 +1528,10 @@ static void
 GenerateProxyClassGuards(MacroAssembler &masm, Register object, Register scratchReg,
                          Label *failures)
 {
-    Label success;
-    // Ensure that the incoming object has one of the magic class pointers, i.e,
-    // that it is one of an ObjectProxy, FunctionProxy, or OuterWindowProxy.
-    // This is equivalent to obj->is<ProxyObject>().
-    masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            CallableProxyClassPtr, &success);
-    masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            UncallableProxyClassPtr, &success);
-    masm.branchTestObjClass(Assembler::NotEqual, object, scratchReg,
-                            OuterWindowProxyClassPtr, failures);
-    masm.bind(&success);
+    masm.loadObjClass(object, scratchReg);
+    masm.branchTest32(Assembler::Zero,
+                      Address(scratchReg, Class::offsetOfFlags()),
+                      Imm32(JSCLASS_IS_PROXY), failures);
 }
 
 bool

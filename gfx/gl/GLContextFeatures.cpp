@@ -292,6 +292,24 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "texture_half_float",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_texture_float,
+            GLContext::NV_half_float,
+            GLContext::Extensions_End
+        }
+        /**
+         * We are not including OES_texture_half_float in this feature, because:
+         *   GL_HALF_FLOAT     = 0x140B
+         *   GL_HALF_FLOAT_ARB = 0x140B == GL_HALF_FLOAT
+         *   GL_HALF_FLOAT_NV  = 0x140B == GL_HALF_FLOAT
+         *   GL_HALF_FLOAT_OES = 0x8D61 != GL_HALF_FLOAT
+         * WebGL handles this specifically with an OES_texture_half_float check.
+         */
+    },
+    {
         "texture_non_power_of_two",
         200, // OpenGL version
         300, // OpenGL ES version
