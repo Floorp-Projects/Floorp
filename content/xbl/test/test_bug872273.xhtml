@@ -1,0 +1,53 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=872273
+-->
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="foo">
+      <implementation>
+        <method name="throwSomething" exposeToUntrustedContent="true">
+          <body>
+            throw new Error("foopy");
+          </body>
+        </method>
+      </implementation>
+    </binding>
+  </bindings>
+  <title>Test for Bug 872273</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=872273">Mozilla Bug 872273</a>
+<p id="display" style="-moz-binding: url(#foo)"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 872273 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  // Prevent the test from failing when the exception hits onerror.
+  SimpleTest.expectUncaughtException();
+
+  // Tell the test to expect exactly one console error with the given parameters,
+  // with SimpleTest.finish as a continuation function.
+  SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('foopy')}]);
+
+  // Schedule the console accounting (and continuation) to run next, right
+  // after we throw (below).
+  SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
+
+  // Throw.
+  $('display').throwSomething();
+});
+
+]]>
+</script>
+</pre>
+</body>
+</html>
