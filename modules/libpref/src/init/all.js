@@ -4099,6 +4099,12 @@ pref("layers.use-deprecated-textures", true);
 pref("layers.async-video.enabled",false);
 #endif
 
+#ifdef MOZ_X11
+// OMTC off by default on Linux, but if activated, use new textures and async-video.
+pref("layers.use-deprecated-textures", false);
+pref("layers.async-video.enabled", true);
+#endif
+
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.use-deprecated-textures", false);
