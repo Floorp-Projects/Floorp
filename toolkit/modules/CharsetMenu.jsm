@@ -224,7 +224,7 @@ let CharsetMenu = {
   },
   _getCharsetAccessKey: function(charset) {
     try {
-      accesskey = gBundle.GetStringFromName(charset + ".key");
+      return gBundle.GetStringFromName(charset + ".key");
     } catch (ex) {}
     return "";
   },
