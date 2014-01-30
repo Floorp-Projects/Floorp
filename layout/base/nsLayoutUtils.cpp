@@ -2335,6 +2335,9 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (aFlags & PAINT_NO_COMPOSITE) {
     flags |= nsDisplayList::PAINT_NO_COMPOSITE;
   }
+  if (aFlags & PAINT_COMPRESSED) {
+    flags |= nsDisplayList::PAINT_COMPRESSED;
+  }
 
   list.PaintRoot(&builder, aRenderingContext, flags);
 
