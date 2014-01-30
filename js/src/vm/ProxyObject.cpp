@@ -20,14 +20,11 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
     Rooted<TaggedProto> proto(cx, proto_);
     RootedObject parent(cx, parent_);
 
+    const Class *clasp = options.clasp();
+
+    JS_ASSERT(isValidProxyClass(clasp));
     JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
     JS_ASSERT_IF(parent, cx->compartment() == parent->compartment());
-    const Class *clasp;
-    if (handler->isOuterWindow())
-        clasp = &OuterWindowProxyObject::class_;
-    else
-        clasp = options.callable() ? &ProxyObject::callableClass_
-                                   : &ProxyObject::uncallableClass_;
 
     /*
      * Eagerly mark properties unknown for proxies, so we don't try to track

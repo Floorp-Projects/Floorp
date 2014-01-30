@@ -77,6 +77,19 @@ class ProxyObject : public JSObject
         return &getReservedSlotRef(n);
     }
 
+    static bool isValidProxyClass(const Class *clasp) {
+        // Since we can take classes from the outside, make sure that they
+        // are "sane". They have to quack enough like proxies for us to belive
+        // they should be treated as such.
+
+        // proxy_Trace is just a trivial wrapper around ProxyObject::trace for
+        // friend api exposure.
+        return clasp->isProxy() &&
+               (clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS) &&
+               clasp->trace == proxy_Trace &&
+               JSCLASS_RESERVED_SLOTS(clasp) >= PROXY_MINIMUM_SLOTS;
+    }
+
   public:
     static unsigned grayLinkSlot(JSObject *obj);
 

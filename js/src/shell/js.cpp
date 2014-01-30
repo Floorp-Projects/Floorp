@@ -3788,7 +3788,7 @@ WrapperWithProto::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *p
 
     RootedValue priv(cx, ObjectValue(*obj));
     ProxyOptions options;
-    options.setCallable(obj->isCallable());
+    options.selectDefaultClass(obj->isCallable());
     return NewProxyObject(cx, handler, priv, proto, parent, options);
 }
 

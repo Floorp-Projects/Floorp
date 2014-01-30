@@ -3179,7 +3179,7 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     RootedValue priv(cx, ObjectValue(*target));
     ProxyOptions options;
-    options.setCallable(target->isCallable());
+    options.selectDefaultClass(target->isCallable());
     ProxyObject *proxy =
         ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
                          priv, TaggedProto(TaggedProto::LazyProto), cx->global(),
@@ -3264,7 +3264,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue priv(cx, ObjectValue(*handler));
     ProxyOptions options;
-    options.setCallable(true);
+    options.selectDefaultClass(true);
     JSObject *proxy =
         ProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
                          priv, TaggedProto(proto), parent, options);
