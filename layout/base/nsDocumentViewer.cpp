@@ -3540,15 +3540,11 @@ NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-
-#ifdef MOZ_XUL
-  // Temporary code for Bug 136185 / Bug 240490
+  // Printing XUL documents is not supported.
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
-    nsPrintEngine::ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL);
     return NS_ERROR_FAILURE;
   }
-#endif
 
   if (!mContainer) {
     PR_PL(("Container was destroyed yet we are still trying to use it!"));
@@ -3655,15 +3651,12 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef MOZ_XUL
-  // Temporary code for Bug 136185 / Bug 240490
+  // Printing XUL documents is not supported.
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
     nsPrintEngine::CloseProgressDialog(aWebProgressListener);
-    nsPrintEngine::ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL, false);
     return NS_ERROR_FAILURE;
   }
-#endif
 
   nsCOMPtr<nsIDocShell> docShell(mContainer);
   if (!docShell || !mDeviceContext) {
