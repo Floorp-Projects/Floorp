@@ -32,13 +32,6 @@
 // Pulled from desktop browser's shell
 #define APP_REG_NAME L"Firefox"
 
-// If we have a restart request, attempt to wait up to RESTART_WAIT_TIMEOUT
-// until the previous instance closes.  We don't want to wait too long
-// because the browser could appear to randomly start for the user. We want
-// it to also be long enough so the browser has time to close.
-#define RESTART_WAIT_PER_RETRY 50
-#define RESTART_WAIT_TIMEOUT 38000
-
 static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kMetroFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
@@ -666,46 +659,6 @@ PrepareActivationManager(CComPtr<IApplicationActivationManager> &activateMgr)
   return S_OK;
 }
 
-DWORD WINAPI
-DelayedExecuteThread(LPVOID param)
-{
-  Log(L"Starting delayed execute thread...");
-  bool &bRequestMet(*(bool*)param);
-  AutoSetRequestMet asrm(&bRequestMet);
-
-  CoInitialize(nullptr);
-
-  CComPtr<IApplicationActivationManager> activateMgr;
-  if (FAILED(PrepareActivationManager(activateMgr))) {
-      Log(L"Warning: Could not prepare activation manager");
-  }
-
-  size_t currentWaitTime = 0;
-  while(currentWaitTime < RESTART_WAIT_TIMEOUT) {
-    if (!IsProcessRunning(kMetroFirefoxExe, true))
-      break;
-    currentWaitTime += RESTART_WAIT_PER_RETRY;
-    Sleep(RESTART_WAIT_PER_RETRY);
-  }
-
-  Log(L"Done waiting, getting app ID");
-  // Activate the application as long as we can obtian the appModelID
-  WCHAR appModelID[256];
-  if (GetDefaultBrowserAppModelID(appModelID)) {
-    Log(L"Activating application");
-    DWORD processID;
-    HRESULT hr = activateMgr->ActivateApplication(appModelID, L"", AO_NOERRORUI, &processID);
-    if (SUCCEEDED(hr)) {
-      Log(L"Activate application succeeded");
-    } else {
-      Log(L"Activate application failed! (%x)", hr);
-    }
-  }
-
-  CoUninitialize();
-  return 0;
-}
-
 IFACEMETHODIMP CExecuteCommandVerb::Execute()
 {
   Log(L"Execute()");
@@ -714,13 +667,6 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     // We shut down when this flips to true
     mRequestMet = true;
     return E_FAIL;
-  }
-
-  if (mIsRestartMetroRequest) {
-    HANDLE thread = CreateThread(nullptr, 0, DelayedExecuteThread,
-                                 &mRequestMet, 0, nullptr);
-    CloseHandle(thread);
-    return S_OK;
   }
 
   if (mIsRestartDesktopRequest) {
