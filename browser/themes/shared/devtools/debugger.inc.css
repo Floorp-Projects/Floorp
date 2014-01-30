@@ -103,10 +103,6 @@
 
 /* Breadcrumbs stack frames view */
 
-.breadcrumbs-widget-item {
-  max-width: none;
-}
-
 .dbg-stackframe-details {
   -moz-padding-start: 4px;
 }
