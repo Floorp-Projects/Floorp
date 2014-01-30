@@ -67,7 +67,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
   }
 
   // Create a video frame and append it to the track.
-  ImageFormat format = PLANAR_YCBCR;
+  ImageFormat format = ImageFormat::PLANAR_YCBCR;
 
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
 
@@ -88,7 +88,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
   data.mPicX = 0;
   data.mPicY = 0;
   data.mPicSize = IntSize(mWidth, mHeight);
-  data.mStereoMode = STEREO_MODE_MONO;
+  data.mStereoMode = StereoMode::MONO;
 
   videoImage->SetData(data);
 

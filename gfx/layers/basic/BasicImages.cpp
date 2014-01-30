@@ -77,7 +77,7 @@ public:
     }
 
     nsRefPtr<Image> image;
-    if (aFormats[0] == PLANAR_YCBCR) {
+    if (aFormats[0] == ImageFormat::PLANAR_YCBCR) {
       image = new BasicPlanarYCbCrImage(aScaleHint, gfxPlatform::GetPlatform()->GetOffscreenFormat(), aRecycleBin);
       return image.forget();
     }

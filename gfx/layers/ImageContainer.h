@@ -790,7 +790,7 @@ struct PlanarYCbCrData {
     : mYChannel(nullptr), mYStride(0), mYSize(0, 0), mYSkip(0)
     , mCbChannel(nullptr), mCrChannel(nullptr)
     , mCbCrStride(0), mCbCrSize(0, 0) , mCbSkip(0), mCrSkip(0)
-    , mPicX(0), mPicY(0), mPicSize(0, 0), mStereoMode(STEREO_MODE_MONO)
+    , mPicX(0), mPicY(0), mPicSize(0, 0), mStereoMode(StereoMode::MONO)
   {}
 };
 
@@ -958,7 +958,7 @@ public:
 
   gfx::IntSize GetSize() { return mSize; }
 
-  CairoImage() : Image(nullptr, CAIRO_SURFACE) {}
+  CairoImage() : Image(nullptr, ImageFormat::CAIRO_SURFACE) {}
 
   nsCountedRef<nsMainThreadSurfaceRef> mDeprecatedSurface;
   gfx::IntSize mSize;
@@ -970,7 +970,7 @@ public:
 
 class RemoteBitmapImage : public Image {
 public:
-  RemoteBitmapImage() : Image(nullptr, REMOTE_IMAGE_BITMAP) {}
+  RemoteBitmapImage() : Image(nullptr, ImageFormat::REMOTE_IMAGE_BITMAP) {}
 
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
