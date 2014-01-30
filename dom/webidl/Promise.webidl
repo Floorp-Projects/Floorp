@@ -15,6 +15,7 @@ callback PromiseInit = void (object resolve, object reject);
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
+// REMOVE THE RELEVANT ENTRY FROM test_interfaces.html WHEN THIS IS IMPLEMENTED IN JS.
 [Constructor(PromiseInit init)]
 interface Promise {
   // TODO bug 875289 - static Promise fulfill(any value);
