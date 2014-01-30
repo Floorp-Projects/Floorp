@@ -12,7 +12,8 @@ this.EXPORTED_SYMBOLS = [
   "checkDeprecated",
   "checkRenamed",
   "getRandomId",
-  "objectCopy"
+  "objectCopy",
+  "makeMessageObject",
 ];
 
 const Cu = Components.utils;
@@ -73,3 +74,38 @@ this.objectCopy = function objectCopy(source, target){
     }
   });
 };
+
+this.makeMessageObject = function makeMessageObject(aRpCaller) {
+  let options = {};
+
+  options.id = aRpCaller.id;
+  options.origin = aRpCaller.origin;
+
+  // Backwards compatibility with Persona beta:
+  // loggedInUser can be undefined, null, or a string
+  options.loggedInUser = aRpCaller.loggedInUser;
+
+  // Special flag for internal calls for Persona in b2g
+  options._internal = aRpCaller._internal;
+
+  Object.keys(aRpCaller).forEach(function(option) {
+    // Duplicate the callerobject, scrubbing out functions and other
+    // internal variables (like _mm, the message manager object)
+    if (!Object.hasOwnProperty(this, option)
+        && option[0] !== '_'
+        && typeof aRpCaller[option] !== 'function') {
+      options[option] = aRpCaller[option];
+    }
+  });
+
+  // check validity of message structure
+  if ((typeof options.id === 'undefined') ||
+      (typeof options.origin === 'undefined')) {
+    let err = "id and origin required in relying-party message: " + JSON.stringify(options);
+    reportError(err);
+    throw new Error(err);
+  }
+
+  return options;
+}
+

@@ -7,7 +7,7 @@ const Cu = Components.utils;
 const INT_MAX = 0x7FFFFFFF;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 function test_expired_histogram() {
   var histogram_id = "FOOBAR";

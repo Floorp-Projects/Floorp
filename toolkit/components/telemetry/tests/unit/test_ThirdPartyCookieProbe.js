@@ -5,11 +5,11 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 
 let TOPIC_ACCEPTED = "third-party-cookie-accepted";
 let TOPIC_REJECTED = "third-party-cookie-rejected";
