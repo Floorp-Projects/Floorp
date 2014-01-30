@@ -102,6 +102,11 @@ gTests.push({
     edit.select();
 
     let editCoords = logicalCoordsForElement(edit);
+
+    // wait for popup animation to complete, it interferes with edit selection testing
+    let autocompletePopup = document.getElementById("urlbar-autocomplete-scroll");
+    yield waitForEvent(autocompletePopup, "transitionend");
+
     SelectionHelperUI.attachEditSession(ChromeSelectionHandler, editCoords.x, editCoords.y);
     ok(SelectionHelperUI.isSelectionUIVisible, "selection enabled");
 
