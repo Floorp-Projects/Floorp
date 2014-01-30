@@ -430,7 +430,7 @@ class ScriptSource
         return argumentsNotIncluded_;
     }
     const jschar *chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp);
-    JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    JSFlatString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     // XDR handling

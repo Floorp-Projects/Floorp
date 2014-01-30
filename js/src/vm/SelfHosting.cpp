@@ -909,10 +909,10 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     } else if (srcObj->is<NumberObject>()) {
         clone = NumberObject::create(cx, srcObj->as<NumberObject>().unbox());
     } else if (srcObj->is<StringObject>()) {
-        Rooted<JSStableString*> str(cx, srcObj->as<StringObject>().unbox()->ensureStable(cx));
+        Rooted<JSFlatString*> str(cx, srcObj->as<StringObject>().unbox()->ensureFlat(cx));
         if (!str)
             return nullptr;
-        str = js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length())->ensureStable(cx);
+        str = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
         if (!str)
             return nullptr;
         clone = StringObject::create(cx, str);
@@ -947,10 +947,10 @@ CloneValue(JSContext *cx, MutableHandleValue vp, CloneMemory &clonedObjects)
     } else if (vp.isBoolean() || vp.isNumber() || vp.isNullOrUndefined()) {
         // Nothing to do here: these are represented inline in the value
     } else if (vp.isString()) {
-        Rooted<JSStableString*> str(cx, vp.toString()->ensureStable(cx));
+        Rooted<JSFlatString*> str(cx, vp.toString()->ensureFlat(cx));
         if (!str)
             return false;
-        RootedString clone(cx, js_NewStringCopyN<CanGC>(cx, str->chars().get(), str->length()));
+        RootedString clone(cx, js_NewStringCopyN<CanGC>(cx, str->chars(), str->length()));
         if (!clone)
             return false;
         vp.setString(clone);
