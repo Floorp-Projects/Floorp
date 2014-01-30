@@ -374,7 +374,7 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     }
   }
 
-  audiodata->SetFrameData(&frameData);
+  audiodata->SwapInFrameData(frameData);
   aData.AppendEncodedFrame(audiodata);
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }

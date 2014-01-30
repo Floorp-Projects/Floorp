@@ -121,6 +121,7 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   }
 
   // Dequeue an encoded frame from the output buffers of OMXCodecWrapper.
+  nsresult rv;
   nsTArray<uint8_t> buffer;
   int outFlags = 0;
   int64_t outTimeStampUs = 0;
@@ -134,7 +135,8 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       videoData->SetFrameType((outFlags & OMXCodecWrapper::BUFFER_SYNC_FRAME) ?
                               EncodedFrame::I_FRAME : EncodedFrame::P_FRAME);
     }
-    videoData->SetFrameData(&buffer);
+    rv = videoData->SwapInFrameData(buffer);
+    NS_ENSURE_SUCCESS(rv, rv);
     videoData->SetTimeStamp(outTimeStampUs);
     aData.AppendEncodedFrame(videoData);
   }
@@ -213,7 +215,8 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
     audiodata->SetFrameType(isCSD ?
       EncodedFrame::AAC_CSD : EncodedFrame::AUDIO_FRAME);
     audiodata->SetTimeStamp(outTimeUs);
-    audiodata->SetFrameData(&frameData);
+    rv = audiodata->SwapInFrameData(frameData);
+    NS_ENSURE_SUCCESS(rv, rv);
     aContainer.AppendEncodedFrame(audiodata);
   }
 

@@ -56,13 +56,24 @@ public:
     AVC_CSD,      // AVC codec specific data
     UNKNOW        // FrameType not set
   };
+  nsresult SwapInFrameData(nsTArray<uint8_t>& aData)
+  {
+    mFrameData.SwapElements(aData);
+    return NS_OK;
+  }
+  nsresult SwapOutFrameData(nsTArray<uint8_t>& aData)
+  {
+    if (mFrameType != UNKNOW) {
+      // Reset this frame type to UNKNOW once the data is swapped out.
+      mFrameData.SwapElements(aData);
+      mFrameType = UNKNOW;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
   const nsTArray<uint8_t>& GetFrameData() const
   {
     return mFrameData;
-  }
-  void SetFrameData(nsTArray<uint8_t> *aData)
-  {
-    mFrameData.SwapElements(*aData);
   }
   uint64_t GetTimeStamp() const { return mTimeStamp; }
   void SetTimeStamp(uint64_t aTimeStamp) { mTimeStamp = aTimeStamp; }

@@ -365,17 +365,9 @@ pref("gfx.font_rendering.graphite.enabled", true);
 // (see http://mxr.mozilla.org/mozilla-central/ident?i=ShapingType)
 // Scripts not listed are grouped in the default category.
 // Set the pref to 255 to have all text shaped via the harfbuzz backend.
-#ifdef XP_WIN
-// Use harfbuzz for everything except Hangul (0x08). Harfbuzz doesn't yet
-// have a Hangul shaper, which means that the marks U+302E/302F would not
-// reorder properly in Malgun Gothic or similar fonts.
-pref("gfx.font_rendering.harfbuzz.scripts", 247);
-#else
-// Use harfbuzz for all scripts (except when using AAT fonts on OS X).
-// AFAICT, Core Text doesn't support full OpenType Hangul shaping anyway,
-// so there's no benefit to excluding it here.
+// Default setting:
+// We use harfbuzz for all scripts (except when using AAT fonts on OS X).
 pref("gfx.font_rendering.harfbuzz.scripts", 255);
-#endif
 
 #ifdef XP_WIN
 pref("gfx.font_rendering.directwrite.enabled", false);
@@ -4105,6 +4097,12 @@ pref("layers.use-deprecated-textures", true);
 // requires off-main-thread compositing.
 // Never works on Windows, so no point pref'ing it on.
 pref("layers.async-video.enabled",false);
+#endif
+
+#ifdef MOZ_X11
+// OMTC off by default on Linux, but if activated, use new textures and async-video.
+pref("layers.use-deprecated-textures", false);
+pref("layers.async-video.enabled", true);
 #endif
 
 #ifdef XP_MACOSX

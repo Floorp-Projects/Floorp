@@ -595,6 +595,7 @@ hb_ot_layout_script_get_language_tags
 hb_ot_layout_table_choose_script
 hb_ot_layout_table_get_script_tags
 hb_ot_tag_to_language
+hb_ot_tag_to_script
 hb_ot_tags_from_script
 hb_set_add
 hb_set_clear

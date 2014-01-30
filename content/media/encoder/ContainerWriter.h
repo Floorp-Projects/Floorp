@@ -24,8 +24,8 @@ public:
   virtual ~ContainerWriter() {}
   // Mapping to DOMLocalMediaStream::TrackTypeHints
   enum {
-    HAS_AUDIO = 1 << 0,
-    HAS_VIDEO = 1 << 1,
+    CREATE_AUDIO_TRACK = 1 << 0,
+    CREATE_VIDEO_TRACK = 1 << 1,
   };
   enum {
     END_OF_STREAM = 1 << 0

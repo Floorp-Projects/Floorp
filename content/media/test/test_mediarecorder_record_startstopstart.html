@@ -1,0 +1,76 @@
+ <!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder crash on sequence start stop start method</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content" style="display: none">
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var ac = new window.AudioContext();
+  var dest = ac.createMediaStreamDestination();
+  var recorder = new MediaRecorder(dest.stream);
+  var stopCount = 0;
+  var dataavailable = 0;
+  // mobile device may produce another format, but not landed.
+  // In audio only case, we should produce opus type.
+  var expectedMimeType = 'audio/ogg';
+  recorder.onstop = function (e) {
+    info('onstop fired');
+    is(recorder.stream, dest.stream,
+       'Media recorder stream = element stream post recording');
+    stopCount++;
+    if (stopCount == 2) {
+      is(2, dataavailable, 'Should has two dataavailable event');
+      SimpleTest.finish();
+    }
+  }
+  recorder.ondataavailable = function (evt) {
+    info('ondataavailable fired');
+    ok(evt instanceof BlobEvent,
+       'Events fired from ondataavailable should be BlobEvent');
+    is(evt.type, 'dataavailable',
+       'Event type should dataavailable');
+    // If script runs slower, it may generate header data in blob from encoder
+    if (evt.data.size > 0) {
+     info('blob size = ' + evt.data.size);
+     is(evt.data.type, expectedMimeType,
+       'Blob data received should have type = ' + expectedMimeType);
+    } else {
+      is(evt.data.type, '',
+         'Blob data received should have empty type');
+    }
+    dataavailable++;
+  }
+  recorder.onerror = function (e) {
+    ok(false, 'it should execute normally without exception');
+  }
+  recorder.onwarning = function() {
+    ok(false, 'onwarning unexpectedly fired');
+  };
+
+  recorder.start(2000);
+  is(recorder.state, 'recording', 'Media recorder should be recording');
+  recorder.stop();
+  is(recorder.state, 'inactive', 'check recording status is inactive');
+  recorder.start(10000); // This bug would crash on this line without this fix.
+  is(recorder.state, 'recording', 'check recording status is recording');
+  // Simulate delay stop, only delay stop no no stop can trigger crash.
+  setTimeout(function() {
+    recorder.stop();
+    is(recorder.state, 'inactive','check recording status is recording');
+  }, 1000);
+}
+
+startTest();
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

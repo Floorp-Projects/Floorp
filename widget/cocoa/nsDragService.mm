@@ -30,6 +30,11 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "nsCocoaUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "gfxPlatform.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* sCocoaLog;
@@ -141,12 +146,12 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
-  nsRefPtr<gfxASurface> surface;
+  RefPtr<SourceSurface> surface;
   nsPresContext* pc;
   nsresult rv = DrawDrag(aDOMNode, aRegion,
                          NSToIntRound(screenPoint.x),
                          NSToIntRound(screenPoint.y),
-                         aDragRect, getter_AddRefs(surface), &pc);
+                         aDragRect, &surface, &pc);
   if (!aDragRect->width || !aDragRect->height) {
     // just use some suitable defaults
     int32_t size = nsCocoaUtils::CocoaPointsToDevPixels(20, scaleFactor);
@@ -166,13 +171,15 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   if (!imgSurface)
     return nil;
 
-  nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
-  if (!context)
+  RefPtr<DrawTarget> dt =
+    gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(imgSurface, IntSize(width, height));
+  if (!dt)
     return nil;
 
-  context->SetOperator(gfxContext::OPERATOR_SOURCE);
-  context->SetSource(surface);
-  context->Paint();
+  dt->FillRect(gfx::Rect(0, 0, width, height),
+               SurfacePattern(surface, ExtendMode::CLAMP),
+               DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
   uint32_t* imageData = (uint32_t*)imgSurface->Data();
   int32_t stride = imgSurface->Stride();

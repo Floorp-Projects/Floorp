@@ -44,6 +44,9 @@ protected:
  * The implementation records a mCurrent (the value at the current time)
  * and an array of "change times" (greater than the current time) and the
  * new value for each change time. This is a simple but dumb implementation.
+ * We maintain the invariant that each change entry in the array must have
+ * a different value to the value in the previous change entry (or, for
+ * the first change entry, mCurrent).
  */
 template <typename Time, typename T, uint32_t ReservedChanges>
 class TimeVarying : public TimeVaryingBase {
@@ -78,6 +81,9 @@ public:
         return;
       }
       mChanges.RemoveElementAt(i);
+    }
+    if (mCurrent == aValue) {
+      return;
     }
     mChanges.InsertElementAt(0, Entry(aTime, aValue));
   }

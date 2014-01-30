@@ -7772,6 +7772,7 @@ blogspot.tw
 codespot.com
 googleapis.com
 googlecode.com
+withgoogle.com
 
 // Heroku : https://www.heroku.com/
 // Submitted by Tom Maher <tmaher@heroku.com> 2013-05-02
@@ -7788,6 +7789,12 @@ info.at
 
 // Michau Enterprises Limited : http://www.co.pl/
 co.pl
+
+// Microsoft : http://microsoft.com
+// Submitted by Barry Dorrans <bdorrans@microsoft.com> 2014-01-24
+azurewebsites.net
+azure-mobile.net
+cloudapp.net
 
 // NYC.mn : http://www.information.nyc.mn
 // Submitted by Matthew Brown <mattbrown@nyc.mn> 2013-03-11

@@ -1367,6 +1367,27 @@ HealthReportSubmissionMeasurement1.prototype = Object.freeze({
   },
 });
 
+function HealthReportSubmissionMeasurement2() {
+  Metrics.Measurement.call(this);
+}
+
+HealthReportSubmissionMeasurement2.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "submissions",
+  version: 2,
+
+  fields: {
+    firstDocumentUploadAttempt: DAILY_COUNTER_FIELD,
+    continuationUploadAttempt: DAILY_COUNTER_FIELD,
+    uploadSuccess: DAILY_COUNTER_FIELD,
+    uploadTransportFailure: DAILY_COUNTER_FIELD,
+    uploadServerFailure: DAILY_COUNTER_FIELD,
+    uploadClientFailure: DAILY_COUNTER_FIELD,
+    uploadAlreadyInProgress: DAILY_COUNTER_FIELD,
+  },
+});
+
 this.HealthReportProvider = function () {
   Metrics.Provider.call(this);
 }
@@ -1376,10 +1397,13 @@ HealthReportProvider.prototype = Object.freeze({
 
   name: "org.mozilla.healthreport",
 
-  measurementTypes: [HealthReportSubmissionMeasurement1],
+  measurementTypes: [
+    HealthReportSubmissionMeasurement1,
+    HealthReportSubmissionMeasurement2,
+  ],
 
   recordEvent: function (event, date=new Date()) {
-    let m = this.getMeasurement("submissions", 1);
+    let m = this.getMeasurement("submissions", 2);
     return this.enqueueStorageOperation(function recordCounter() {
       return m.incrementDailyCounter(event, date);
     });

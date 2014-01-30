@@ -281,19 +281,19 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     // Initialize all classes needed for parsing while we are still on the main
     // thread. Do this for both the target and the new global so that prototype
     // pointers can be changed infallibly after parsing finishes.
-    if (!js_GetClassObject(cx, cx->global(), JSProto_Function, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_Array, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_GeneratorFunction, &obj))
+    if (!js_GetClassObject(cx, JSProto_Function, &obj) ||
+        !js_GetClassObject(cx, JSProto_Array, &obj) ||
+        !js_GetClassObject(cx, JSProto_RegExp, &obj) ||
+        !js_GetClassObject(cx, JSProto_Iterator, &obj))
     {
         return false;
     }
     {
         AutoCompartment ac(cx, global);
-        if (!js_GetClassObject(cx, global, JSProto_Function, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_Array, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_RegExp, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_GeneratorFunction, &obj))
+        if (!js_GetClassObject(cx, JSProto_Function, &obj) ||
+            !js_GetClassObject(cx, JSProto_Array, &obj) ||
+            !js_GetClassObject(cx, JSProto_RegExp, &obj) ||
+            !js_GetClassObject(cx, JSProto_Iterator, &obj))
         {
             return false;
         }

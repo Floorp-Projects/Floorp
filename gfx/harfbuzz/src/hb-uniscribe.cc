@@ -709,7 +709,7 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
     for (unsigned int i = 0; i < range_records.len; i++)
     {
       range_record_t *range = &range_records[i];
-      range->props.potfRecords = feature_records.array + reinterpret_cast<unsigned int> (range->props.potfRecords);
+      range->props.potfRecords = feature_records.array + reinterpret_cast<uintptr_t> (range->props.potfRecords);
     }
   }
   else
@@ -776,13 +776,14 @@ retry:
     }
   }
 
-  /* All the following types are sized in multiples of sizeof(int). */
-  unsigned int glyphs_size = scratch_size / ((sizeof (WORD) +
-					      sizeof (SCRIPT_GLYPHPROP) +
-					      sizeof (int) +
-					      sizeof (GOFFSET) +
-					      sizeof (uint32_t))
-					     / sizeof (int));
+  /* The -2 in the following is to compensate for possible
+   * alignment needed after the WORD array.  sizeof(WORD) == 2. */
+  unsigned int glyphs_size = (scratch_size * sizeof (int) - 2)
+			   / (sizeof (WORD) +
+			      sizeof (SCRIPT_GLYPHPROP) +
+			      sizeof (int) +
+			      sizeof (GOFFSET) +
+			      sizeof (uint32_t));
 
   ALLOCATE_ARRAY (WORD, glyphs, glyphs_size);
   ALLOCATE_ARRAY (SCRIPT_GLYPHPROP, glyph_props, glyphs_size);
