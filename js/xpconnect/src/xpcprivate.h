@@ -2376,7 +2376,7 @@ private:
 
 private:
     XPCJSRuntime* mRuntime;
-    nsIInterfaceInfo* mInfo;
+    nsCOMPtr<nsIInterfaceInfo> mInfo;
     char* mName;
     nsIID mIID;
     uint32_t* mDescriptors;
