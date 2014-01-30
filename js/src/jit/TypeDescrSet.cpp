@@ -4,20 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/TypeRepresentationSet.h"
+#include "jit/TypeDescrSet.h"
 
 #include "mozilla/HashFunctions.h"
 
+#include "builtin/TypedObject.h"
 #include "jit/IonBuilder.h"
 
 using namespace js;
 using namespace jit;
 
 ///////////////////////////////////////////////////////////////////////////
-// TypeRepresentationSet hasher
+// TypeDescrSet hasher
 
 HashNumber
-TypeRepresentationSetHasher::hash(TypeRepresentationSet key)
+TypeDescrSetHasher::hash(TypeDescrSet key)
 {
     HashNumber hn = mozilla::HashGeneric(key.length());
     for (size_t i = 0; i < key.length(); i++)
@@ -26,8 +27,7 @@ TypeRepresentationSetHasher::hash(TypeRepresentationSet key)
 }
 
 bool
-TypeRepresentationSetHasher::match(TypeRepresentationSet key1,
-                                   TypeRepresentationSet key2)
+TypeDescrSetHasher::match(TypeDescrSet key1, TypeDescrSet key2)
 {
     if (key1.length() != key2.length())
         return false;
@@ -42,54 +42,54 @@ TypeRepresentationSetHasher::match(TypeRepresentationSet key1,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// TypeRepresentationSetBuilder
+// TypeDescrSetBuilder
 
-TypeRepresentationSetBuilder::TypeRepresentationSetBuilder()
+TypeDescrSetBuilder::TypeDescrSetBuilder()
   : invalid_(false)
 {}
 
 bool
-TypeRepresentationSetBuilder::insert(TypeRepresentation *typeRepr)
+TypeDescrSetBuilder::insert(TypeDescr *descr)
 {
     if (invalid_)
         return true;
 
     if (entries_.empty())
-        return entries_.append(typeRepr);
+        return entries_.append(descr);
 
     // Check that this new type repr is of the same basic kind as the
     // ones we have seen thus far. If not, for example if we have an
     // `int` and a `struct`, then convert this set to the invalid set.
-    TypeRepresentation *entry0 = entries_[0];
-    if (typeRepr->kind() != entry0->kind()) {
+    TypeDescr *entry0 = entries_[0];
+    if (descr->kind() != entry0->kind()) {
         invalid_ = true;
         entries_.clear();
         return true;
     }
 
     // Otherwise, use binary search to find the right place to insert
-    // the type descriptor. We keep list sorted by the *address* of
-    // the type representations within.
-    uintptr_t typeReprAddr = (uintptr_t) typeRepr;
+    // the TypeDescr. We keep the list sorted by the *address* of
+    // the TypeDescrs within.
+    uintptr_t descrAddr = (uintptr_t) descr;
     size_t min = 0;
     size_t max = entries_.length();
     while (min != max) {
         size_t i = min + ((max - min) >> 1); // average w/o fear of overflow
 
         uintptr_t entryiaddr = (uintptr_t) entries_[i];
-        if (entryiaddr == typeReprAddr)
-            return true; // typeRepr already present in the set
+        if (entryiaddr == descrAddr)
+            return true; // descr already present in the set
 
-        if (entryiaddr < typeReprAddr) {
-            // typeRepr lies to the right of entry i
+        if (entryiaddr < descrAddr) {
+            // descr lies to the right of entry i
             min = i + 1;
         } else {
-            // typeRepr lies to the left of entry i
+            // descr lies to the left of entry i
             max = i;
         }
     }
 
-    // As a sanity check, give up if the TypeRepresentationSet grows too large.
+    // As a sanity check, give up if the TypeDescrSet grows too large.
     if (entries_.length() >= 512) {
         invalid_ = true;
         entries_.clear();
@@ -98,41 +98,40 @@ TypeRepresentationSetBuilder::insert(TypeRepresentation *typeRepr)
 
     // Not present. Insert at position `min`.
     if (min == entries_.length())
-        return entries_.append(typeRepr);
-    TypeRepresentation **insertLoc = &entries_[min];
-    return entries_.insert(insertLoc, typeRepr) != nullptr;
+        return entries_.append(descr);
+    TypeDescr **insertLoc = &entries_[min];
+    return entries_.insert(insertLoc, descr) != nullptr;
 }
 
 bool
-TypeRepresentationSetBuilder::build(IonBuilder &builder,
-                                    TypeRepresentationSet *out)
+TypeDescrSetBuilder::build(IonBuilder &builder, TypeDescrSet *out)
 {
     if (invalid_) {
-        *out = TypeRepresentationSet();
+        *out = TypeDescrSet();
         return true;
     }
 
-    TypeRepresentationSetHash *table = builder.getOrCreateReprSetHash();
+    TypeDescrSetHash *table = builder.getOrCreateDescrSetHash();
     if (!table)
         return false;
 
     // Check if there is already a copy in the hashtable.
     size_t length = entries_.length();
-    TypeRepresentationSet tempSet(length, entries_.begin());
-    TypeRepresentationSetHash::AddPtr p = table->lookupForAdd(tempSet);
+    TypeDescrSet tempSet(length, entries_.begin());
+    TypeDescrSetHash::AddPtr p = table->lookupForAdd(tempSet);
     if (p) {
         *out = *p;
         return true;
     }
 
     // If not, allocate a permanent copy in Ion temp memory and add it.
-    size_t space = sizeof(TypeRepresentation*) * length;
-    TypeRepresentation **array = (TypeRepresentation**)
+    size_t space = sizeof(TypeDescr*) * length;
+    TypeDescr **array = (TypeDescr**)
         GetIonContext()->temp->allocate(space);
     if (!array)
         return false;
     memcpy(array, entries_.begin(), space);
-    TypeRepresentationSet permSet(length, array);
+    TypeDescrSet permSet(length, array);
     if (!table->add(p, permSet))
         return false;
 
@@ -141,45 +140,32 @@ TypeRepresentationSetBuilder::build(IonBuilder &builder,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// TypeRepresentationSet
+// TypeDescrSet
 
-TypeRepresentationSet::TypeRepresentationSet(const TypeRepresentationSet &c)
+TypeDescrSet::TypeDescrSet(const TypeDescrSet &c)
   : length_(c.length_),
     entries_(c.entries_)
 {}
 
-TypeRepresentationSet::TypeRepresentationSet(size_t length,
-                                             TypeRepresentation **entries)
+TypeDescrSet::TypeDescrSet(size_t length,
+                           TypeDescr **entries)
   : length_(length),
     entries_(entries)
 {}
 
-TypeRepresentationSet::TypeRepresentationSet()
+TypeDescrSet::TypeDescrSet()
   : length_(0),
     entries_(nullptr)
 {}
 
 bool
-TypeRepresentationSet::empty()
+TypeDescrSet::empty()
 {
     return length_ == 0;
 }
 
 bool
-TypeRepresentationSet::singleton()
-{
-    return length_ == 1;
-}
-
-TypeRepresentation *
-TypeRepresentationSet::getTypeRepresentation()
-{
-    JS_ASSERT(singleton());
-    return get(0);
-}
-
-bool
-TypeRepresentationSet::allOfArrayKind()
+TypeDescrSet::allOfArrayKind()
 {
     if (empty())
         return false;
@@ -196,11 +182,11 @@ TypeRepresentationSet::allOfArrayKind()
         return false;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Invalid kind() in TypeRepresentationSet");
+    MOZ_ASSUME_UNREACHABLE("Invalid kind() in TypeDescrSet");
 }
 
 bool
-TypeRepresentationSet::allOfKind(TypeRepresentation::Kind aKind)
+TypeDescrSet::allOfKind(TypeRepresentation::Kind aKind)
 {
     if (empty())
         return false;
@@ -209,16 +195,16 @@ TypeRepresentationSet::allOfKind(TypeRepresentation::Kind aKind)
 }
 
 bool
-TypeRepresentationSet::allHaveSameSize(size_t *out)
+TypeDescrSet::allHaveSameSize(size_t *out)
 {
     if (empty())
         return false;
 
     JS_ASSERT(TypeRepresentation::isSized(kind()));
 
-    size_t size = get(0)->asSized()->size();
+    size_t size = get(0)->as<SizedTypeDescr>().size();
     for (size_t i = 1; i < length(); i++) {
-        if (get(i)->asSized()->size() != size)
+        if (get(i)->as<SizedTypeDescr>().size() != size)
             return false;
     }
 
@@ -227,14 +213,48 @@ TypeRepresentationSet::allHaveSameSize(size_t *out)
 }
 
 TypeRepresentation::Kind
-TypeRepresentationSet::kind()
+TypeDescrSet::kind()
 {
     JS_ASSERT(!empty());
     return get(0)->kind();
 }
 
+template<typename T>
 bool
-TypeRepresentationSet::hasKnownArrayLength(size_t *l)
+TypeDescrSet::genericType(typename T::TypeRepr::Type *out)
+{
+    JS_ASSERT(allOfKind(TypeRepresentation::Scalar));
+
+    typename T::TypeRepr::Type type = get(0)->as<T>().type();
+    for (size_t i = 1; i < length(); i++) {
+        if (get(i)->as<T>().type() != type)
+            return false;
+    }
+
+    *out = type;
+    return true;
+}
+
+bool
+TypeDescrSet::scalarType(ScalarTypeRepresentation::Type *out)
+{
+    return genericType<ScalarTypeDescr>(out);
+}
+
+bool
+TypeDescrSet::referenceType(ReferenceTypeRepresentation::Type *out)
+{
+    return genericType<ReferenceTypeDescr>(out);
+}
+
+bool
+TypeDescrSet::x4Type(X4TypeRepresentation::Type *out)
+{
+    return genericType<X4TypeDescr>(out);
+}
+
+bool
+TypeDescrSet::hasKnownArrayLength(size_t *l)
 {
     switch (kind()) {
       case TypeRepresentation::UnsizedArray:
@@ -242,9 +262,10 @@ TypeRepresentationSet::hasKnownArrayLength(size_t *l)
 
       case TypeRepresentation::SizedArray:
       {
-        const size_t result = get(0)->asSizedArray()->length();
+        const size_t result = get(0)->as<SizedArrayTypeDescr>().length();
         for (size_t i = 1; i < length(); i++) {
-            if (get(i)->asSizedArray()->length() != result)
+            size_t l = get(i)->as<SizedArrayTypeDescr>().length();
+            if (l != result)
                 return false;
         }
         *l = result;
@@ -257,19 +278,18 @@ TypeRepresentationSet::hasKnownArrayLength(size_t *l)
 }
 
 bool
-TypeRepresentationSet::arrayElementType(IonBuilder &builder,
-                                        TypeRepresentationSet *out)
+TypeDescrSet::arrayElementType(IonBuilder &builder, TypeDescrSet *out)
 {
-    TypeRepresentationSetBuilder elementTypes;
+    TypeDescrSetBuilder elementTypes;
     for (size_t i = 0; i < length(); i++) {
         switch (kind()) {
           case TypeRepresentation::UnsizedArray:
-            if (!elementTypes.insert(get(i)->asUnsizedArray()->element()))
+            if (!elementTypes.insert(&get(i)->as<UnsizedArrayTypeDescr>().elementType()))
                 return false;
             break;
 
           case TypeRepresentation::SizedArray:
-            if (!elementTypes.insert(get(i)->asSizedArray()->element()))
+            if (!elementTypes.insert(&get(i)->as<SizedArrayTypeDescr>().elementType()))
                 return false;
             break;
 
@@ -281,11 +301,11 @@ TypeRepresentationSet::arrayElementType(IonBuilder &builder,
 }
 
 bool
-TypeRepresentationSet::fieldNamed(IonBuilder &builder,
-                                  jsid id,
-                                  size_t *offset,
-                                  TypeRepresentationSet *out,
-                                  size_t *index)
+TypeDescrSet::fieldNamed(IonBuilder &builder,
+                         jsid id,
+                         size_t *offset,
+                         TypeDescrSet *out,
+                         size_t *index)
 {
     JS_ASSERT(kind() == TypeRepresentation::Struct);
 
@@ -293,37 +313,40 @@ TypeRepresentationSet::fieldNamed(IonBuilder &builder,
     // or absent fields are found.
     *offset = SIZE_MAX;
     *index = SIZE_MAX;
-    *out = TypeRepresentationSet();
+    *out = TypeDescrSet();
 
     // Remember offset of the first field.
     size_t offset0;
     size_t index0;
-    TypeRepresentationSetBuilder fieldTypes;
+    TypeDescrSetBuilder fieldTypes;
     {
-        const StructField *field = get(0)->asStruct()->fieldNamed(id);
-        if (!field)
+        StructTypeDescr &descr0 = get(0)->as<StructTypeDescr>();
+        if (!descr0.fieldIndex(id, &index0))
             return true;
 
-        offset0 = field->offset;
-        index0 = field->index;
-        if (!fieldTypes.insert(field->typeRepr))
+        offset0 = descr0.fieldOffset(index0);
+        if (!fieldTypes.insert(&descr0.fieldDescr(index0)))
             return false;
     }
 
     // Check that all subsequent fields are at the same offset
     // and compute the union of their types.
     for (size_t i = 1; i < length(); i++) {
-        const StructField *field = get(i)->asStruct()->fieldNamed(id);
-        if (!field)
+        StructTypeDescr &descri = get(0)->as<StructTypeDescr>();
+
+        size_t indexi;
+        if (!descri.fieldIndex(id, &indexi))
             return true;
 
-        if (field->offset != offset0)
-            return true;
-
-        if (field->index != index0)
+        // Track whether all indices agree, but do not require it to be true
+        if (indexi != index0)
             index0 = SIZE_MAX;
 
-        if (!fieldTypes.insert(field->typeRepr))
+        // Require that all offsets agree
+        if (descri.fieldOffset(indexi) != offset0)
+            return true;
+
+        if (!fieldTypes.insert(&descri.fieldDescr(indexi)))
             return false;
     }
 

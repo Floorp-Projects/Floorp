@@ -190,6 +190,10 @@ class ScalarTypeDescr : public SimpleTypeDescr
     static const JSFunctionSpec typeObjectMethods[];
     typedef ScalarTypeRepresentation TypeRepr;
 
+    ScalarTypeRepresentation::Type type() const {
+        return (ScalarTypeRepresentation::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    }
+
     static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
 
@@ -203,6 +207,10 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     static const JSFunctionSpec typeObjectMethods[];
     typedef ReferenceTypeRepresentation TypeRepr;
 
+    ReferenceTypeRepresentation::Type type() const {
+        return (ReferenceTypeRepresentation::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    }
+
     static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
 
@@ -214,6 +222,11 @@ class X4TypeDescr : public SizedTypeDescr
   private:
   public:
     static const Class class_;
+    typedef X4TypeRepresentation TypeRepr;
+
+    X4TypeRepresentation::Type type() const {
+        return (X4TypeRepresentation::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    }
 
     static bool call(JSContext *cx, unsigned argc, Value *vp);
     static bool is(const Value &v);
