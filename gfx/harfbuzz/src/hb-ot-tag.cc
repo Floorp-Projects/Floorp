@@ -27,7 +27,6 @@
  */
 
 #include "hb-private.hh"
-#include "hb-ot.h"
 
 #include <string.h>
 

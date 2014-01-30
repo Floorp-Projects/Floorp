@@ -12,6 +12,7 @@ EXPORTS.harfbuzz += [
     'hb-face.h',
     'hb-font.h',
     'hb-ot-layout.h',
+    'hb-ot-shape.h',
     'hb-ot-tag.h',
     'hb-ot.h',
     'hb-set.h',
@@ -25,6 +26,7 @@ EXPORTS.harfbuzz += [
 SOURCES += [
     'hb-blob.cc', # error: use of undeclared identifier 'snprintf' (FreeBSD)
     'hb-common.cc', # error: use of undeclared identifier 'strdup'
+    'hb-ot-shape-complex-hangul.cc', # error: redefinition of enumerator 'NONE'
     'hb-ot-shape-complex-indic.cc', # error: redefinition of enumerator 'INIT'
     'hb-ot-shape-complex-sea.cc', # error: redefinition of 'basic_features'
     'hb-ot-shape.cc', # error: functions that differ only in their return type cannot be overloaded
@@ -40,9 +42,11 @@ UNIFIED_SOURCES += [
     'hb-ot-map.cc',
     'hb-ot-shape-complex-arabic.cc',
     'hb-ot-shape-complex-default.cc',
+    'hb-ot-shape-complex-hebrew.cc',
     'hb-ot-shape-complex-indic-table.cc',
     'hb-ot-shape-complex-myanmar.cc',
     'hb-ot-shape-complex-thai.cc',
+    'hb-ot-shape-complex-tibetan.cc',
     'hb-ot-shape-fallback.cc',
     'hb-ot-shape-normalize.cc',
     'hb-ot-tag.cc',

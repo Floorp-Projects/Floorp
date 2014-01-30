@@ -109,11 +109,13 @@ struct ValueFormat : USHORT
     if (format & xPlacement) glyph_pos.x_offset  += font->em_scale_x (get_short (values++));
     if (format & yPlacement) glyph_pos.y_offset  += font->em_scale_y (get_short (values++));
     if (format & xAdvance) {
-      if (likely (horizontal)) glyph_pos.x_advance += font->em_scale_x (get_short (values++)); else values++;
+      if (likely (horizontal)) glyph_pos.x_advance += font->em_scale_x (get_short (values));
+      values++;
     }
     /* y_advance values grow downward but font-space grows upward, hence negation */
     if (format & yAdvance) {
-      if (unlikely (!horizontal)) glyph_pos.y_advance -= font->em_scale_y (get_short (values++)); else values++;
+      if (unlikely (!horizontal)) glyph_pos.y_advance -= font->em_scale_y (get_short (values));
+      values++;
     }
 
     if (!has_device ()) return;
@@ -125,17 +127,21 @@ struct ValueFormat : USHORT
 
     /* pixel -> fractional pixel */
     if (format & xPlaDevice) {
-      if (x_ppem) glyph_pos.x_offset  += (base + get_device (values++)).get_x_delta (font); else values++;
+      if (x_ppem) glyph_pos.x_offset  += (base + get_device (values)).get_x_delta (font);
+      values++;
     }
     if (format & yPlaDevice) {
-      if (y_ppem) glyph_pos.y_offset  += (base + get_device (values++)).get_y_delta (font); else values++;
+      if (y_ppem) glyph_pos.y_offset  += (base + get_device (values)).get_y_delta (font);
+      values++;
     }
     if (format & xAdvDevice) {
-      if (horizontal && x_ppem) glyph_pos.x_advance += (base + get_device (values++)).get_x_delta (font); else values++;
+      if (horizontal && x_ppem) glyph_pos.x_advance += (base + get_device (values)).get_x_delta (font);
+      values++;
     }
     if (format & yAdvDevice) {
       /* y_advance values grow downward but font-space grows upward, hence negation */
-      if (!horizontal && y_ppem) glyph_pos.y_advance -= (base + get_device (values++)).get_y_delta (font); else values++;
+      if (!horizontal && y_ppem) glyph_pos.y_advance -= (base + get_device (values)).get_y_delta (font);
+      values++;
     }
   }
 
@@ -240,12 +246,12 @@ struct AnchorFormat2
       unsigned int x_ppem = font->x_ppem;
       unsigned int y_ppem = font->y_ppem;
       hb_position_t cx, cy;
-      hb_bool_t ret = false;
+      hb_bool_t ret;
 
-      if (x_ppem || y_ppem)
-	ret = font->get_glyph_contour_point_for_origin (glyph_id, anchorPoint, HB_DIRECTION_LTR, &cx, &cy);
-      *x = x_ppem && ret ? cx : font->em_scale_x (xCoordinate);
-      *y = y_ppem && ret ? cy : font->em_scale_y (yCoordinate);
+      ret = (x_ppem || y_ppem) &&
+             font->get_glyph_contour_point_for_origin (glyph_id, anchorPoint, HB_DIRECTION_LTR, &cx, &cy);
+      *x = ret && x_ppem ? cx : font->em_scale_x (xCoordinate);
+      *y = ret && y_ppem ? cy : font->em_scale_y (yCoordinate);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
