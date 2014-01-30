@@ -16,9 +16,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+  "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
+
+XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
+  const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
+  return Services.strings.createBundle(kCharsetBundle);
+});
 XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
   const kBrandBundle = "chrome://branding/locale/brand.properties";
   return Services.strings.createBundle(kBrandBundle);
@@ -32,13 +39,26 @@ let gModuleName = "[CustomizableWidgets]";
 #include logging.js
 
 function setAttributes(aNode, aAttrs) {
+  let doc = aNode.ownerDocument;
   for (let [name, value] of Iterator(aAttrs)) {
     if (!value) {
       if (aNode.hasAttribute(name))
         aNode.removeAttribute(name);
     } else {
-      if (name == "label" || name == "tooltiptext")
-        value = CustomizableUI.getLocalizedProperty({id: aAttrs.id}, name);
+      if (name == "shortcutId") {
+        continue;
+      }
+      if (name == "label" || name == "tooltiptext") {
+        let stringId = (typeof value == "string") ? value : name;
+        let additionalArgs = [];
+        if (aAttrs.shortcutId) {
+          let shortcut = doc.getElementById(aAttrs.shortcutId);
+          if (doc) {
+            additionalArgs.push(ShortcutUtils.prettifyShortcut(shortcut));
+          }
+        }
+        value = CustomizableUI.getLocalizedProperty({id: aAttrs.id}, stringId, additionalArgs);
+      }
       aNode.setAttribute(name, value);
     }
   }
@@ -63,6 +83,7 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-history",
     shortcutId: "key_gotoHistory",
+    tooltiptext: "history-panelmenu.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate our list of history
@@ -190,6 +211,7 @@ const CustomizableWidgets = [{
   }, {
     id: "save-page-button",
     shortcutId: "key_savePage",
+    tooltiptext: "save-page-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -202,6 +224,7 @@ const CustomizableWidgets = [{
   }, {
     id: "find-button",
     shortcutId: "key_find",
+    tooltiptext: "find-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -214,6 +237,7 @@ const CustomizableWidgets = [{
   }, {
     id: "open-file-button",
     shortcutId: "openFileKb",
+    tooltiptext: "open-file-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target
@@ -289,6 +313,7 @@ const CustomizableWidgets = [{
   }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
+    tooltiptext: "add-ons-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -303,7 +328,14 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
 #ifdef XP_WIN
     label: "preferences-button.labelWin",
-    tooltiptext: "preferences-button.tooltipWin",
+    tooltiptext: "preferences-button.tooltipWin2",
+#else
+#ifdef XP_MACOSX
+    tooltiptext: "preferences-button.tooltiptext.withshortcut",
+    shortcutId: "key_preferencesCmdMac",
+#else
+    tooltiptext: "preferences-button.tooltiptext",
+#endif
 #endif
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -334,20 +366,23 @@ const CustomizableWidgets = [{
         command: "cmd_fullZoomReduce",
         class: cls,
         label: true,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_fullZoomReduce",
       }, {
         id: "zoom-reset-button",
         closemenu: closeMenu,
         command: "cmd_fullZoomReset",
         class: cls,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_fullZoomReset",
       }, {
         id: "zoom-in-button",
         closemenu: closeMenu,
         command: "cmd_fullZoomEnlarge",
         class: cls,
         label: true,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_fullZoomEnlarge",
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
@@ -490,19 +525,22 @@ const CustomizableWidgets = [{
         command: "cmd_cut",
         class: cls,
         label: true,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_cut",
       }, {
         id: "copy-button",
         command: "cmd_copy",
         class: cls,
         label: true,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_copy",
       }, {
         id: "paste-button",
         command: "cmd_paste",
         class: cls,
         label: true,
-        tooltiptext: true
+        tooltiptext: "tooltiptext2",
+        shortcutId: "key_paste",
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
@@ -610,6 +648,7 @@ const CustomizableWidgets = [{
     id: "characterencoding-button",
     type: "view",
     viewId: "PanelUI-characterEncodingView",
+    tooltiptext: "characterencoding-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     maybeDisableMenu: function(aDocument) {
       let window = aDocument.defaultView;
@@ -731,6 +770,11 @@ const CustomizableWidgets = [{
     onViewShowing: function(aEvent) {
       let document = aEvent.target.ownerDocument;
 
+      let autoDetectLabelId = "PanelUI-characterEncodingView-autodetect-label";
+      let autoDetectLabel = document.getElementById(autoDetectLabelId);
+      let label = CharsetBundle.GetStringFromName("charsetMenuAutodet");
+      autoDetectLabel.setAttribute("value", label);
+
       this.populateList(document,
                         "PanelUI-characterEncodingView-customlist",
                         "browser");
@@ -817,6 +861,7 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "email-link-button",
+    tooltiptext: "email-link-button.tooltiptext2",
     onCommand: function(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);

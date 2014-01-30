@@ -230,6 +230,8 @@ function init() {
       if (user) {
         show("stage");
         show("manage");
+        let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
+        document.title = sb.GetStringFromName("manage.pageTitle");
       } else {
         show("stage");
         show("intro");
