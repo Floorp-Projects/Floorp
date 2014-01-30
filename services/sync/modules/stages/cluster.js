@@ -91,5 +91,21 @@ ClusterManager.prototype = {
 
     return true;
   },
+
+  getUserBaseURL: function getUserBaseURL() {
+    // Legacy Sync and FxA Sync construct the userBaseURL differently. Legacy
+    // Sync appends path components onto an empty path, and in FxA Sync, the
+    // token server constructs this for us in an opaque manner. Since the
+    // cluster manager already sets the clusterURL on Service and also has
+    // access to the current identity, we added this functionality here.
+
+    // If the clusterURL hasn't been set, the userBaseURL shouldn't be set
+    // either. Some tests expect "undefined" to be returned here.
+    if (!this.service.clusterURL) {
+      return undefined;
+    }
+    let storageAPI = this.service.clusterURL + SYNC_API_VERSION + "/";
+    return storageAPI + this.identity.username + "/";
+  }
 };
 Object.freeze(ClusterManager.prototype);

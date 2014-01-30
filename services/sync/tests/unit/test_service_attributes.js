@@ -7,7 +7,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 
 function test_urls() {
-  _("URL related Service properties corresopnd to preference settings.");
+  _("URL related Service properties correspond to preference settings.");
   try {
     do_check_true(!!Service.serverURL); // actual value may change
     do_check_eq(Service.clusterURL, "");
