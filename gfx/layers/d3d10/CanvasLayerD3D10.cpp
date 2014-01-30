@@ -63,10 +63,6 @@ CanvasLayerD3D10::Initialize(const Data& aData)
         factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext,
                                                           device(),
                                                           screen->Caps());
-      } else {
-        factory = new SurfaceFactory_GLTexture(mGLContext,
-                                               nullptr,
-                                               screen->Caps());
       }
     }
 
