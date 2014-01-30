@@ -64,7 +64,8 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !ImageDataBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessageEventBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessagePortBinding::GetConstructorObject(aCx, aGlobal) ||
-      !PromiseBinding::GetConstructorObject(aCx, aGlobal) ||
+      (PromiseEnabled() &&
+        !PromiseBinding::GetConstructorObject(aCx, aGlobal)) ||
       !TextDecoderBinding::GetConstructorObject(aCx, aGlobal) ||
       !TextEncoderBinding::GetConstructorObject(aCx, aGlobal) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, aGlobal) ||

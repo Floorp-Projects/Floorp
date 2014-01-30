@@ -611,8 +611,13 @@ function runTest() {
   test();
 }
 
+var p = SpecialPowers.getBoolPref("dom.promise.enabled");
+SpecialPowers.setBoolPref("dom.promise.enabled", false);
+ok(!("Promise" in window), "Promise object should not exist if disabled by pref");
+SpecialPowers.setBoolPref("dom.promise.enabled", p);
+
 SimpleTest.waitForExplicitFinish();
-runTest();
+SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
 // -->
 </script>
 </pre>
