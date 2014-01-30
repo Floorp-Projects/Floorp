@@ -5184,8 +5184,18 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   uint32_t lineNumber, columnNumber, flags, errorNumber;
 
   if (aReport) {
-    if (aReport->ucmessage) {
-      message = aReport->ucmessage;
+    // ErrorEvent objects don't have a |name| field the way ES |Error| objects
+    // do. Traditionally (and mostly by accident), the |message| field of
+    // ErrorEvent has corresponded to |Name: Message| of the original Error
+    // object. Things have been cleaned up in the JS engine, so now we need to
+    // format this string explicitly.
+    JS::Rooted<JSString*> messageStr(aCx,
+                                     js::ErrorReportToString(aCx, aReport));
+    if (messageStr) {
+      nsDependentJSString depStr;
+      if (depStr.init(aCx, messageStr)) {
+        message = depStr;
+      }
     }
     filename = NS_ConvertUTF8toUTF16(aReport->filename);
     line = aReport->uclinebuf;
