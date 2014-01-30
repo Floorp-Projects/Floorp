@@ -40,20 +40,6 @@ namespace JS {
 class Latin1CharsZ;
 class TwoByteChars;
 
-typedef mozilla::RangedPtr<const jschar> CharPtr;
-
-class StableCharPtr : public CharPtr {
-  public:
-    StableCharPtr(const StableCharPtr &s) : CharPtr(s) {}
-    StableCharPtr(const mozilla::RangedPtr<const jschar> &s) : CharPtr(s) {}
-    StableCharPtr(const jschar *s, size_t len) : CharPtr(s, len) {}
-    StableCharPtr(const jschar *pos, const jschar *start, size_t len)
-      : CharPtr(pos, start, len)
-    {}
-
-    using CharPtr::operator=;
-};
-
 #if defined JS_THREADSAFE && defined JS_DEBUG
 
 class JS_PUBLIC_API(AutoCheckRequestDepth)

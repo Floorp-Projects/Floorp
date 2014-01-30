@@ -1260,7 +1260,7 @@ ScriptSource::chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp
     return data.source;
 }
 
-JSStableString *
+JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(start <= stop);
@@ -1268,10 +1268,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
     const jschar *chars = this->chars(cx, asp);
     if (!chars)
         return nullptr;
-    JSFlatString *flatStr = js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
-    if (!flatStr)
-        return nullptr;
-    return flatStr->ensureStable(cx);
+    return js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
 }
 
 bool

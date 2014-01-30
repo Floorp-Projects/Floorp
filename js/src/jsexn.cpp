@@ -847,8 +847,8 @@ js_ReportUncaughtException(JSContext *cx)
             // done for duck-typed error objects.
             //
             // If only this stuff could get specced one day...
-            if (JSStableString *stable = str->ensureStable(cx))
-                report.ucmessage = stable->chars().get();
+            if (JSFlatString *flat = str->ensureFlat(cx))
+                report.ucmessage = flat->chars();
         }
     }
 
