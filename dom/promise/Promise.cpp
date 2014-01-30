@@ -244,28 +244,6 @@ Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return PromiseBinding::Wrap(aCx, aScope, this);
 }
 
-/* static */ bool
-Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
-{
-  if (NS_IsMainThread()) {
-    // No direct return so the chrome/certified app checks happen below.
-    if (Preferences::GetBool("dom.promise.enabled", false)) {
-      return true;
-    }
-  } else {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    return workerPrivate->PromiseEnabled() || workerPrivate->UsesSystemPrincipal();
-  }
-  // Enable if the pref is enabled or if we're chrome or if we're a
-  // certified app.
-  // Note that we have no concept of a certified app in workers.
-  // XXXbz well, why not?
-  // FIXME(nsm): Remove these checks once promises are enabled by default.
-  nsIPrincipal* prin = nsContentUtils::GetSubjectPrincipal();
-  return nsContentUtils::IsSystemPrincipal(prin) ||
-    prin->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
-}
-
 void
 Promise::MaybeResolve(JSContext* aCx,
                       JS::Handle<JS::Value> aValue)
