@@ -3378,8 +3378,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       js::UncheckedUnwrap(obj, /* stopAtOuter = */ false));
     JSAutoCompartment ac(cx, global);
     JS::Rooted<JSPropertyDescriptor> desc(cx);
-    nsresult rv = GlobalResolve(win, cx, global, id, &desc);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!win->DoNewResolve(cx, global, id, &desc)) {
+      return NS_ERROR_FAILURE;
+    }
     // If we have an object here, that means we resolved the property.
     // But if the value is undefined, that means that GlobalResolve
     // also already defined it, so we don't have to.
@@ -3392,8 +3393,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   JS::Rooted<JSPropertyDescriptor> desc(cx);
-  nsresult rv = GlobalResolve(win, cx, obj, id, &desc);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!win->DoNewResolve(cx, obj, id, &desc)) {
+    return NS_ERROR_FAILURE;
+  }
   if (desc.object()) {
     // If we have an object here, that means we resolved the property.
     // But if the value is undefined, that means that GlobalResolve
@@ -3414,8 +3416,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
     nsCOMPtr<nsIDocument> document = win->GetDoc();
     JS::Rooted<JS::Value> v(cx);
-    rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
-                    &NS_GET_IID(nsIDOMDocument), &v, false);
+    nsresult rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
+                             &NS_GET_IID(nsIDOMDocument), &v, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // nsIDocument::WrapObject will handle defining the property.
