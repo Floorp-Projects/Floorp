@@ -39,16 +39,21 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
 }
 
 JSObject *
-Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler)
+Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
+             const WrapperOptions *options)
 {
     JS_ASSERT(parent);
 
     AutoMarkInDeadZone amd(cx->zone());
 
     RootedValue priv(cx, ObjectValue(*obj));
-    ProxyOptions options;
-    options.selectDefaultClass(obj->isCallable());
-    return NewProxyObject(cx, handler, priv, TaggedProto::LazyProto, parent, options);
+    mozilla::Maybe<WrapperOptions> opts;
+    if (!options) {
+        opts.construct();
+        opts.ref().selectDefaultClass(obj->isCallable());
+        options = opts.addr();
+    }
+    return NewProxyObject(cx, handler, priv, TaggedProto::LazyProto, parent, *options);
 }
 
 JSObject *

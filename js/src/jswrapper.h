@@ -39,7 +39,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
 
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler);
+    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
+                         const WrapperOptions *options = nullptr);
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler);
 
