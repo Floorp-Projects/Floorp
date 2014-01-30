@@ -314,7 +314,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
 {
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
-        MOZ_ASSERT(handler->isSafeToUnwrap());
+        MOZ_ASSERT(!handler->hasSecurityPolicy());
     } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
         // The rules for SOWs are complicated enough. Just skip double-checking them here.
     } else if (handler == &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton) {
@@ -323,7 +323,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
         // this case.
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
-        MOZ_ASSERT(handler->isSafeToUnwrap() == AccessCheck::subsumes(target, origin));
+        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumes(target, origin));
     }
 }
 #else
