@@ -141,7 +141,6 @@ class TypeRepresentation {
     static void obj_finalize(js::FreeOp *fop, JSObject *object);
 
     HeapPtrObject ownerObject_;
-    HeapPtrTypeObject typeObject_;
     void traceFields(JSTracer *tracer);
 
   public:
@@ -149,7 +148,6 @@ class TypeRepresentation {
     bool opaque() const { return opaque_; }
     bool transparent() const { return !opaque_; }
     JSObject *ownerObject() const { return ownerObject_.get(); }
-    types::TypeObject *typeObject() const { return typeObject_.get(); }
 
     static bool isOwnerObject(JSObject &obj);
     static TypeRepresentation *fromOwnerObject(JSObject &obj);

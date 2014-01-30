@@ -364,20 +364,7 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     Rooted<GlobalObject*> global(cx, cx->global());
     JSCompartment *comp = cx->compartment();
 
-    // First, try to create the TI type object to associate with this
-    // type representation. Since nothing is in the table yet, if this
-    // fails we can just return and pretend this whole endeavor was
-    // just a bad dream.
-    RootedObject proto(cx);
-    const Class *clasp;
-    if (!TypedObjectModuleObject::getSuitableClaspAndProto(cx, kind(), &clasp, &proto)) {
-        return nullptr;
-    }
-    RootedTypeObject typeObject(cx, comp->types.newTypeObject(cx, clasp, proto));
-    if (!typeObject)
-        return nullptr;
-
-    // Next, attempt to add the type representation to the table.
+    // First, attempt to add the type representation to the table.
     if (!comp->typeReprs.relookupOrAdd(p, this, this)) {
         js_ReportOutOfMemory(cx);
         js_free(this); // do not finalize, not present in the table
@@ -442,7 +429,6 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     }
 
     ownerObject_.init(ownerObject);
-    typeObject_.init(typeObject);
     return &*ownerObject;
 }
 
@@ -617,7 +603,6 @@ TypeRepresentation::mark(JSTracer *trace)
     // contents. This is the typical scheme for marking objects.  See
     // gc/Marking.cpp for more details.
     gc::MarkObject(trace, &ownerObject_, "typeRepresentation_ownerObject");
-    gc::MarkTypeObject(trace, &typeObject_, "typeRepresentation_typeObject");
 }
 
 /*static*/ void
