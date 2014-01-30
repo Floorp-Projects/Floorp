@@ -136,6 +136,17 @@ class BaseBootstrapper(object):
 
         self.run_as_root(command)
 
+    def apt_update(self):
+        command = ['apt-get', 'update']
+
+        self.run_as_root(command)
+
+    def apt_add_architecture(self, arch):
+        command = ['dpkg', '--add-architecture']
+        command.extemd(arch)
+
+        self.run_as_root(command)
+
     def check_output(self, *args, **kwargs):
         """Run subprocess.check_output even if Python doesn't provide it."""
         fn = getattr(subprocess, 'check_output', BaseBootstrapper._check_output)

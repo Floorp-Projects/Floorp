@@ -118,7 +118,7 @@ interface ContactManager : EventTarget {
   DOMCursor  getAll(optional ContactFindSortOptions options);
   DOMRequest clear();
   DOMRequest save(mozContact contact);
-  DOMRequest remove(mozContact contact);
+  DOMRequest remove((mozContact or DOMString) contactOrId);
   DOMRequest getRevision();
   DOMRequest getCount();
 

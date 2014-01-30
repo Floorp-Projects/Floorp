@@ -89,6 +89,8 @@ namespace jit {
 class JitRuntime;
 class JitActivation;
 struct PcScriptCache;
+class Simulator;
+class SimulatorRuntime;
 }
 
 /*
@@ -546,6 +548,11 @@ class PerThreadData : public PerThreadDataFriendFields,
     /* See AsmJSActivation comment. Protected by rt->operationCallbackLock. */
     js::AsmJSActivation *asmJSActivationStack_;
 
+#ifdef JS_ARM_SIMULATOR
+    js::jit::Simulator *simulator_;
+    uintptr_t simulatorStackLimit_;
+#endif
+
   public:
     js::Activation *const *addressOfActivation() const {
         return &activation_;
@@ -600,6 +607,13 @@ class PerThreadData : public PerThreadDataFriendFields,
     inline bool exclusiveThreadsPresent();
     inline void addActiveCompilation();
     inline void removeActiveCompilation();
+
+#ifdef JS_ARM_SIMULATOR
+    js::jit::Simulator *simulator() const;
+    void setSimulator(js::jit::Simulator *sim);
+    js::jit::SimulatorRuntime *simulatorRuntime() const;
+    uintptr_t *addressOfSimulatorStackLimit();
+#endif
 };
 
 template<class Client>
@@ -1336,6 +1350,10 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> gcMallocGCTriggered;
 
+#ifdef JS_ARM_SIMULATOR
+    js::jit::SimulatorRuntime *simulatorRuntime_;
+#endif
+
   public:
     void setNeedsBarrier(bool needs) {
         needsBarrier_ = needs;
@@ -1352,6 +1370,11 @@ struct JSRuntime : public JS::shadow::Runtime,
           : op(op), data(data)
         {}
     };
+
+#ifdef JS_ARM_SIMULATOR
+    js::jit::SimulatorRuntime *simulatorRuntime() const;
+    void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
+#endif
 
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
@@ -1651,10 +1674,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
     // has been noticed by Ion/Baseline.
-    void resetIonStackLimit() {
-        AutoLockForOperationCallback lock(this);
-        mainThread.setIonStackLimit(mainThread.nativeStackLimit[js::StackForUntrustedScript]);
-    }
+    void resetIonStackLimit();
 
     // Cache for jit::GetPcScript().
     js::jit::PcScriptCache *ionPcScriptCache;

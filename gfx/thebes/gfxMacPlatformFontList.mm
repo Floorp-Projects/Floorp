@@ -222,30 +222,38 @@ SupportsScriptInGSUB(gfxFontEntry* aFontEntry, const hb_tag_t* aScriptTags)
 }
 
 nsresult
-MacOSFontEntry::ReadCMAP()
+MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
         return NS_OK;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
-
-    uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
-
-    AutoTable cmapTable(this, kCMAP);
+    nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
+    bool symbolFont;
 
-    if (cmapTable) {
-        bool unicodeFont = false, symbolFont = false; // currently ignored
-
-        uint32_t cmapLen;
-        const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
-        rv = gfxFontUtils::ReadCMAP((const uint8_t*)cmapData, cmapLen,
-                                    *charmap, mUVSOffset,
-                                    unicodeFont, symbolFont);
+    if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
+                                                        mUVSOffset,
+                                                        symbolFont))) {
+        rv = NS_OK;
     } else {
-        rv = NS_ERROR_NOT_AVAILABLE;
+        uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+        charmap = new gfxCharacterMap();
+        AutoTable cmapTable(this, kCMAP);
+
+        if (cmapTable) {
+            bool unicodeFont = false, symbolFont = false; // currently ignored
+            uint32_t cmapLen;
+            const uint8_t* cmapData =
+                reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
+                                                                  &cmapLen));
+            rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
+                                        *charmap, mUVSOffset,
+                                        unicodeFont, symbolFont);
+        } else {
+            rv = NS_ERROR_NOT_AVAILABLE;
+        }
     }
 
     if (NS_SUCCEEDED(rv) && !HasGraphiteTables()) {
@@ -446,7 +454,7 @@ public:
 
     virtual void LocalizedName(nsAString& aLocalizedName);
 
-    virtual void FindStyleVariations();
+    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 };
 
 void
@@ -474,7 +482,7 @@ gfxMacFontFamily::LocalizedName(nsAString& aLocalizedName)
 }
 
 void
-gfxMacFontFamily::FindStyleVariations()
+gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     if (mHasStyles)
         return;
@@ -678,29 +686,47 @@ gfxMacPlatformFontList::InitFontList()
     gfxPlatformFontList::InitFontList();
     
     // iterate over available families
-    NSEnumerator *families = [[sFontManager availableFontFamilies]
-                              objectEnumerator];  // returns "canonical", non-localized family name
 
-    nsAutoString availableFamilyName;
+    CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
 
-    NSString *availableFamily = nil;
-    while ((availableFamily = [families nextObject])) {
+    // iterate over families
+    uint32_t i, numFamilies;
 
-        // make a nsString
-        GetStringForNSString(availableFamily, availableFamilyName);
+    numFamilies = CFArrayGetCount(familyNames);
+    for (i = 0; i < numFamilies; i++) {
+        CFStringRef family = (CFStringRef)CFArrayGetValueAtIndex(familyNames, i);
+
+        // CTFontManager includes weird internal family names and
+        // LastResort, skip over those
+        if (!family ||
+            ::CFStringHasPrefix(family, CFSTR(".")) ||
+            CFStringCompare(family, CFSTR("LastResort"),
+                            kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
+            continue;
+        }
+
+        nsAutoTArray<UniChar, 1024> buffer;
+        CFIndex len = ::CFStringGetLength(family);
+        buffer.SetLength(len+1);
+        ::CFStringGetCharacters(family, ::CFRangeMake(0, len),
+                                buffer.Elements());
+        buffer[len] = 0;
+        nsAutoString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
 
         // create a family entry
-        gfxFontFamily *familyEntry = new gfxMacFontFamily(availableFamilyName);
+        gfxFontFamily *familyEntry = new gfxMacFontFamily(familyName);
         if (!familyEntry) break;
 
         // add the family entry to the hash table
-        ToLowerCase(availableFamilyName);
-        mFontFamilies.Put(availableFamilyName, familyEntry);
+        ToLowerCase(familyName);
+        mFontFamilies.Put(familyName, familyEntry);
 
         // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.Contains(availableFamilyName))
+        if (mBadUnderlineFamilyNames.Contains(familyName))
             familyEntry->SetBadUnderlineFamily();
     }
+
+    CFRelease(familyNames);
 
     InitSingleFaceList();
 
@@ -996,3 +1022,139 @@ gfxMacPlatformFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
     return nullptr;
 }
+
+// used to load system-wide font info on off-main thread
+class MacFontInfo : public FontInfoData {
+public:
+    MacFontInfo(bool aLoadOtherNames,
+                bool aLoadFaceNames,
+                bool aLoadCmaps) :
+        FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps)
+    {}
+
+    virtual ~MacFontInfo() {}
+
+    virtual void Load() {
+        nsAutoreleasePool localPool;
+        FontInfoData::Load();
+    }
+
+    // loads font data for all members of a given family
+    virtual void LoadFontFamilyData(const nsAString& aFamilyName);
+};
+
+void
+MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
+{
+    // family name ==> CTFontDescriptor
+    NSString *famName = GetNSStringForString(aFamilyName);
+    CFStringRef family = CFStringRef(famName);
+
+    CFMutableDictionaryRef attr =
+        CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+                                  &kCFTypeDictionaryValueCallBacks);
+    CFDictionaryAddValue(attr, kCTFontFamilyNameAttribute, family);
+    CTFontDescriptorRef fd = CTFontDescriptorCreateWithAttributes(attr);
+    CFRelease(attr);
+    CFArrayRef matchingFonts =
+        CTFontDescriptorCreateMatchingFontDescriptors(fd, NULL);
+    CFRelease(fd);
+    if (!matchingFonts) {
+        return;
+    }
+
+    nsTArray<nsString> otherFamilyNames;
+    bool hasOtherFamilyNames = true;
+
+    // iterate over faces in the family
+    int f, numFaces = (int) CFArrayGetCount(matchingFonts);
+    for (f = 0; f < numFaces; f++) {
+        mLoadStats.fonts++;
+
+        CTFontDescriptorRef faceDesc =
+            (CTFontDescriptorRef)CFArrayGetValueAtIndex(matchingFonts, f);
+        if (!faceDesc) {
+            continue;
+        }
+        CTFontRef fontRef = CTFontCreateWithFontDescriptor(faceDesc,
+                                                           0.0, nullptr);
+
+        if (mLoadCmaps) {
+            // face name
+            CFStringRef faceName = (CFStringRef)
+                CTFontDescriptorCopyAttribute(faceDesc, kCTFontNameAttribute);
+
+            nsAutoTArray<UniChar, 1024> buffer;
+            CFIndex len = CFStringGetLength(faceName);
+            buffer.SetLength(len+1);
+            CFStringGetCharacters(faceName, ::CFRangeMake(0, len),
+                                    buffer.Elements());
+            buffer[len] = 0;
+            nsAutoString fontName(reinterpret_cast<char16_t*>(buffer.Elements()),
+                                  len);
+
+            // load the cmap data
+            FontFaceData fontData;
+            CFDataRef cmapTable = CTFontCopyTable(fontRef, kCTFontTableCmap,
+                                                 kCTFontTableOptionNoOptions);
+            if (cmapTable) {
+                bool unicodeFont = false, symbolFont = false; // ignored
+                const uint8_t *cmapData =
+                    (const uint8_t*)CFDataGetBytePtr(cmapTable);
+                uint32_t cmapLen = CFDataGetLength(cmapTable);
+                nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+                uint32_t offset;
+                nsresult rv;
+
+                rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, offset,
+                                            unicodeFont, symbolFont);
+                if (NS_SUCCEEDED(rv)) {
+                    fontData.mCharacterMap = charmap;
+                    fontData.mUVSOffset = offset;
+                    fontData.mSymbolFont = symbolFont;
+                    mLoadStats.cmaps++;
+                }
+                CFRelease(cmapTable);
+            }
+
+            mFontFaceData.Put(fontName, fontData);
+            CFRelease(faceName);
+        }
+
+        if (mLoadOtherNames && hasOtherFamilyNames) {
+            CFDataRef nameTable = CTFontCopyTable(fontRef, kCTFontTableName,
+                                                  kCTFontTableOptionNoOptions);
+            if (nameTable) {
+                const char *nameData = (const char*)CFDataGetBytePtr(nameTable);
+                uint32_t nameLen = CFDataGetLength(nameTable);
+                gfxFontFamily::ReadOtherFamilyNamesForFace(aFamilyName,
+                                                           nameData, nameLen,
+                                                           otherFamilyNames,
+                                                           false);
+                hasOtherFamilyNames = otherFamilyNames.Length() != 0;
+                CFRelease(nameTable);
+            }
+        }
+
+        CFRelease(fontRef);
+    }
+    CFRelease(matchingFonts);
+
+    // if found other names, insert them in the hash table
+    if (otherFamilyNames.Length() != 0) {
+        mOtherFamilyNames.Put(aFamilyName, otherFamilyNames);
+        mLoadStats.othernames += otherFamilyNames.Length();
+    }
+}
+
+already_AddRefed<FontInfoData>
+gfxMacPlatformFontList::CreateFontInfoData()
+{
+    bool loadCmaps = !UsesSystemFallback() ||
+        gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
+
+    nsRefPtr<MacFontInfo> fi =
+        new MacFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
+    return fi.forget();
+}
+

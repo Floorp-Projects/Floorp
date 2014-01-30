@@ -170,8 +170,7 @@ MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
                            uint8_t aArgc,
                            JS::MutableHandle<JS::Value> aReturn)
 {
-  if (!aNumber.isString() &&
-      !(aNumber.isObject() && JS_IsArrayObject(aCx, &aNumber.toObject()))) {
+  if (!aNumber.isString() && !JS_IsArrayObject(aCx, aNumber)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -340,7 +339,7 @@ MobileMessageManager::Delete(JS::Handle<JS::Value> aParam, JSContext* aCx,
 
     size = 1;
     idArray = &id;
-  } else if (!JS_IsArrayObject(aCx, &aParam.toObject())) {
+  } else if (!JS_IsArrayObject(aCx, aParam)) {
     // Single SmsMessage/MmsMessage object
     rv = GetMessageId(aCx, aParam, &id);
     NS_ENSURE_SUCCESS(rv, rv);

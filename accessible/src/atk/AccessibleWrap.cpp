@@ -848,6 +848,10 @@ getIndexInParentCB(AtkObject *aAtkObj)
 static void
 TranslateStates(uint64_t aState, AtkStateSet* aStateSet)
 {
+  // atk doesn't have a read only state so read only things shouldn't be
+  // editable.
+  if (aState & states::READONLY)
+    aState &= ~states::EDITABLE;
 
   // Convert every state to an entry in AtkStateMap
   uint32_t stateIndex = 0;

@@ -383,13 +383,50 @@
     </panel>
 
     <!-- Sync Panel -->
-    <panel id="sync-popup" type="arrow" hidden="true" noautofocus="true"
-           level="top" onclick="this.hidePopup();">
-      <hbox id="sync-popup-outer">
-        <image id="sync-popup-icon"/>
-        <vbox id="sync-popup-inner">
-          <description id="sync-popup-desc-syncing" value="&syncPanel.descriptionSyncing;"/>
-          <description id="sync-popup-desc-prefs">&syncPanel.descriptionPrefs;</description>
+    <panel id="sync-start-panel" class="sync-panel" type="arrow" hidden="true"
+           noautofocus="true" level="top" onclick="this.hidePopup();">
+      <hbox class="sync-panel-outer">
+        <image class="sync-panel-icon"/>
+        <vbox class="sync-panel-inner">
+          <description id="sync-start-panel-title"
+                       value="&syncStartPanel.title;"/>
+          <description id="sync-start-panel-subtitle">
+#ifdef XP_UNIX
+            &syncStartPanel.subTitleUnix;
+#else
+            &syncStartPanel.subTitle;
+#endif
+          </description>
+        </vbox>
+      </hbox>
+    </panel>
+
+    <!-- Sync Error Panel -->
+    <panel id="sync-error-panel" class="sync-panel" type="arrow" hidden="true"
+           noautofocus="true" level="top" onclick="this.hidePopup();">
+      <hbox class="sync-panel-outer">
+        <image class="sync-panel-icon"/>
+        <vbox class="sync-panel-inner">
+          <description id="sync-error-panel-title"
+                       value="&syncErrorPanel.title;"/>
+          <description id="sync-error-panel-subtitle"
+                       value="&syncErrorPanel.subTitle;"/>
+          <hbox class="sync-panel-button-box">
+            <button class="sync-panel-button"
+#ifdef XP_UNIX
+                    label="&syncErrorPanel.prefButtonUnix.label;"
+                    accesskey="&syncErrorPanel.prefButtonUnix.accesskey;"
+#else
+                    label="&syncErrorPanel.prefButton.label;"
+                    accesskey="&syncErrorPanel.prefButton.accesskey;"
+#endif
+                    onclick="gFxAccounts.openPreferences();"/>
+            <spacer flex="1"/>
+            <button class="sync-panel-button"
+                    label="&syncErrorPanel.signInButton.label;"
+                    accesskey="&syncErrorPanel.signInButton.accesskey;"
+                    onclick="gFxAccounts.openSignInPage();"/>
+          </hbox>
         </vbox>
       </hbox>
     </panel>
@@ -716,20 +753,17 @@
                        cui-areatype="toolbar"
                        oncommand="BookmarkingUI.onCommand(event);">
           <menupopup id="BMB_bookmarksPopup"
+                     class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter"
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
                      oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);
-                                     if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
+                                     BookmarkingUI.attachPlacesView(event, this);"
                      tooltip="bhTooltip" popupsinherittooltip="true">
-            <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks2.label;"
-                      command="Browser:ShowAllBookmarks"
-                      key="manBookmarkKb"/>
             <menuitem id="BMB_viewBookmarksSidebar"
+                      class="subviewbutton"
                       label="&viewBookmarksSidebar2.label;"
                       type="checkbox"
                       oncommand="toggleSidebar('viewBookmarksSidebar');">
@@ -738,7 +772,9 @@
             <menuseparator/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
-                      class="menuitem-iconic"
+                      class="menuitem-iconic subviewbutton"
+#else
+                      class="subviewbutton"
 #endif
                       label="&subscribeToPageMenuitem.label;"
                       oncommand="return FeedHandler.subscribeToFeed(null, event);"
@@ -746,7 +782,9 @@
                       observes="singleFeedMenuitemState"/>
             <menu id="BMB_subscribeToPageMenupopup"
 #ifndef XP_MACOSX
-                  class="menu-iconic"
+                  class="menu-iconic subviewbutton"
+#else
+                  class="subviewbutton"
 #endif
                   label="&subscribeToPageMenupopup.label;"
                   observes="multipleFeedsMenuState">
@@ -757,7 +795,7 @@
             </menu>
             <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
-                  class="menu-iconic bookmark-item"
+                  class="menu-iconic bookmark-item subviewbutton"
                   label="&personalbarCmd.label;"
                   container="true">
               <menupopup id="BMB_bookmarksToolbarPopup"
@@ -776,7 +814,7 @@
               </menupopup>
             </menu>
             <menu id="BMB_unsortedBookmarks"
-                  class="menu-iconic bookmark-item"
+                  class="menu-iconic bookmark-item subviewbutton"
                   label="&bookmarksMenuButton.unsorted.label;"
                   container="true">
               <menupopup id="BMB_unsortedBookmarksPopup"
@@ -786,7 +824,12 @@
                                            new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
             </menu>
             <menuseparator/>
-            <!-- Bookmarks menu items -->
+            <!-- Bookmarks menu items will go here -->
+            <menuitem id="BMB_bookmarksShowAll"
+                      class="subviewbutton panel-subview-footer"
+                      label="&showAllBookmarks2.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
           </menupopup>
         </toolbarbutton>
 

@@ -174,6 +174,8 @@ CustomizeMode.prototype = {
       let customizeButton = document.getElementById("PanelUI-customize");
       customizeButton.setAttribute("enterLabel", customizeButton.getAttribute("label"));
       customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
+      customizeButton.setAttribute("enterTooltiptext", customizeButton.getAttribute("tooltiptext"));
+      customizeButton.setAttribute("tooltiptext", customizeButton.getAttribute("exitTooltiptext"));
 
       this._transitioning = true;
 
@@ -325,6 +327,8 @@ CustomizeMode.prototype = {
       let customizeButton = document.getElementById("PanelUI-customize");
       customizeButton.setAttribute("exitLabel", customizeButton.getAttribute("label"));
       customizeButton.setAttribute("label", customizeButton.getAttribute("enterLabel"));
+      customizeButton.setAttribute("exitTooltiptext", customizeButton.getAttribute("tooltiptext"));
+      customizeButton.setAttribute("tooltiptext", customizeButton.getAttribute("enterTooltiptext"));
 
       // We have to use setAttribute/removeAttribute here instead of the
       // property because the XBL property will be set later, and right
@@ -633,9 +637,6 @@ CustomizeMode.prototype = {
 
     if (aNode.hasAttribute("flex")) {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
-      if (aPlace == "palette") {
-        aNode.removeAttribute("flex");
-      }
     }
 
 
@@ -700,10 +701,6 @@ CustomizeMode.prototype = {
 
     if (aWrapper.hasAttribute("itemchecked")) {
       toolbarItem.checked = true;
-    }
-
-    if (aWrapper.hasAttribute("flex") && !toolbarItem.hasAttribute("flex")) {
-      toolbarItem.setAttribute("flex", aWrapper.getAttribute("flex"));
     }
 
     if (aWrapper.hasAttribute("itemcommand")) {

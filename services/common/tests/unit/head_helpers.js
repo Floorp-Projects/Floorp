@@ -172,3 +172,13 @@ function uninstallFakePAC() {
   let CID = PACSystemSettings.CID;
   Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
 }
+
+// We want to ensure the legacy provider is used for most of these tests; the
+// tests that know how to deal with the Firefox Accounts identity hack things
+// to ensure that still works.
+function setDefaultIdentityConfig() {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("identity.fxaccounts.enabled", false);
+//  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
+}
+setDefaultIdentityConfig();
