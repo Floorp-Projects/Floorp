@@ -1606,7 +1606,7 @@ nsStyleSet::AppendFontFeatureValuesRules(nsPresContext* aPresContext,
 {
   NS_ENSURE_FALSE(mInShutdown, false);
 
-  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc &&
@@ -1659,7 +1659,7 @@ nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
 {
   NS_ENSURE_FALSE(mInShutdown, false);
 
-  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
     nsCSSRuleProcessor* ruleProc = static_cast<nsCSSRuleProcessor*>

@@ -4229,6 +4229,9 @@ MOZ_ARG_WITH_BOOL(system-icu,
 if test -n "$MOZ_NATIVE_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_SHARED_ICU=1
+else
+    MOZ_ICU_CFLAGS='-I$(topsrcdir)/intl/icu/source/common -I$(topsrcdir)/intl/icu/source/i18n'
+    AC_SUBST(MOZ_ICU_CFLAGS)
 fi
 
 MOZ_ARG_WITH_STRING(intl-api,

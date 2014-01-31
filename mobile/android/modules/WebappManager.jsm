@@ -168,7 +168,8 @@ this.WebappManager = {
 
     let message = aData.request || {
       app: {
-        origin: origin
+        origin: origin,
+        receipts: [],
       }
     };
 
@@ -204,26 +205,20 @@ this.WebappManager = {
   },
 
   autoUninstall: function(aData) {
-    let mm = {
-      sendAsyncMessage: function (aMessageName, aData) {
-        // TODO hook this back to Java to report errors.
-        dump("autoUninstall sendAsyncMessage " + aMessageName + ": " + JSON.stringify(aData));
-      }
-    };
-
     DOMApplicationRegistry.registryReady.then(() => {
-      let installed = {};
-      DOMApplicationRegistry.doGetAll(installed, mm);
-
-      for (let app in installed.apps) {
-        if (aData.apkPackageNames.indexOf(installed.apps[app].apkPackageName) > -1) {
-          let appToRemove = installed.apps[app];
-          dump("should remove: " + appToRemove.name);
-          DOMApplicationRegistry.uninstall(appToRemove.manifestURL, function() {
-            dump(appToRemove.name + " uninstalled");
-          }, function() {
-            dump(appToRemove.name + " did not uninstall");
-          });
+      for (let id in DOMApplicationRegistry.webapps) {
+        let app = DOMApplicationRegistry.webapps[id];
+        if (aData.apkPackageNames.indexOf(app.apkPackageName) > -1) {
+          dump("attempting to uninstall " + app.name);
+          DOMApplicationRegistry.uninstall(
+            app.manifestURL,
+            function() {
+              dump("success uninstalling " + app.name);
+            },
+            function(error) {
+              dump("error uninstalling " + app.name + ": " + error);
+            }
+          );
         }
       }
     });

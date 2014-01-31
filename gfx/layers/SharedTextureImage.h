@@ -44,7 +44,7 @@ public:
     return nullptr;
   }
 
-  SharedTextureImage() : Image(nullptr, SHARED_TEXTURE) {}
+  SharedTextureImage() : Image(nullptr, ImageFormat::SHARED_TEXTURE) {}
 
 private:
   Data mData;

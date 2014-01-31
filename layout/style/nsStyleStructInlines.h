@@ -18,37 +18,13 @@
 #include "nsIContent.h"
 
 inline void
-nsStyleBorder::SetBorderImage(imgRequestProxy* aImage)
+nsStyleImage::SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const
 {
-  mBorderImageSource = aImage;
-  mSubImages.Clear();
-}
-
-inline imgRequestProxy*
-nsStyleBorder::GetBorderImage() const
-{
-  NS_ABORT_IF_FALSE(!mBorderImageSource || mImageTracked,
-                    "Should be tracking any images we're going to use!");
-  return mBorderImageSource;
-}
-
-inline bool nsStyleBorder::IsBorderImageLoaded() const
-{
-  uint32_t status;
-  return mBorderImageSource &&
-         NS_SUCCEEDED(mBorderImageSource->GetImageStatus(&status)) &&
-         (status & imgIRequest::STATUS_LOAD_COMPLETE) &&
-         !(status & imgIRequest::STATUS_ERROR);
-}
-
-inline void
-nsStyleBorder::SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const
-{
-  const_cast<nsStyleBorder*>(this)->mSubImages.ReplaceObjectAt(aSubImage, aIndex);
+  const_cast<nsStyleImage*>(this)->mSubImages.ReplaceObjectAt(aSubImage, aIndex);
 }
 
 inline imgIContainer*
-nsStyleBorder::GetSubImage(uint8_t aIndex) const
+nsStyleImage::GetSubImage(uint8_t aIndex) const
 {
   imgIContainer* subImage = nullptr;
   if (aIndex < mSubImages.Count())
