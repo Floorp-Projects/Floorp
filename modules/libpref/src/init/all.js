@@ -4125,8 +4125,6 @@ pref("layers.offmainthreadcomposition.force-basic", false);
 
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", false);
-// Whether to prefer normal memory over shared memory. Ignored with cross-process compositing
-pref("layers.prefer-memory-over-shmem", true);
 
 pref("layers.bufferrotation.enabled", true);
 
