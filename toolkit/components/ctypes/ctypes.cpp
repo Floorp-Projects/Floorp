@@ -65,7 +65,7 @@ Module::~Module()
 #include "xpc_map_end.h"
 
 static bool
-SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
+SealObjectAndPrototype(JSContext* cx, JS::Handle<JSObject *> parent, const char* name)
 {
   JS::Rooted<JS::Value> prop(cx);
   if (!JS_GetProperty(cx, parent, name, &prop))

@@ -328,16 +328,16 @@ protected:
   virtual ~nsGenericArraySH()
   {
   }
-  
+
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, uint32_t flags,
                         JSObject **objp, bool *_retval) MOZ_OVERRIDE;
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, bool *_retval) MOZ_OVERRIDE;
-  
+
   virtual nsresult GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, uint32_t *length);
+                             JS::Handle<JSObject*> obj, uint32_t *length);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

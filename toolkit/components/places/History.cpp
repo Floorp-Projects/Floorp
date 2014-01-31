@@ -293,7 +293,7 @@ GetJSValueAsURI(JSContext* aCtx,
  */
 already_AddRefed<nsIURI>
 GetURIFromJSObject(JSContext* aCtx,
-                   JSObject* aObject,
+                   JS::Handle<JSObject *> aObject,
                    const char* aProperty)
 {
   JS::Rooted<JS::Value> uriVal(aCtx);
@@ -350,7 +350,7 @@ GetJSValueAsString(JSContext* aCtx,
  */
 void
 GetStringFromJSObject(JSContext* aCtx,
-                      JSObject* aObject,
+                      JS::Handle<JSObject *> aObject,
                       const char* aProperty,
                       nsString& _string)
 {
@@ -380,7 +380,7 @@ GetStringFromJSObject(JSContext* aCtx,
 template <typename IntType>
 nsresult
 GetIntFromJSObject(JSContext* aCtx,
-                   JSObject* aObject,
+                   JS::Handle<JSObject *> aObject,
                    const char* aProperty,
                    IntType* _int)
 {
