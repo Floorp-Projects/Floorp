@@ -10,6 +10,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // The minimum and maximum integers that can be set as preferences.
 // The range of valid values is narrower than the range of valid JS values
@@ -20,6 +21,7 @@ const MIN_INT = -0x80000000;
 
 this.Preferences =
   function Preferences(args) {
+    this._cachedPrefBranch = null;
     if (isObject(args)) {
       if (args.branch)
         this._prefBranch = args.branch;
@@ -30,9 +32,8 @@ this.Preferences =
     }
     else if (args)
       this._prefBranch = args;
-}
+  };
 
-Preferences.prototype = {
   /**
    * Get the value of a pref, if any; otherwise return the default value.
    *
@@ -47,14 +48,14 @@ Preferences.prototype = {
    *
    * @returns the value of the pref, if any; otherwise the default value
    */
-  get: function(prefName, defaultValue, valueType = Ci.nsISupportsString) {
+  Preferences.get = function(prefName, defaultValue, valueType = Ci.nsISupportsString) {
     if (Array.isArray(prefName))
       return prefName.map(function(v) this.get(v, defaultValue), this);
 
     return this._get(prefName, defaultValue, valueType);
-  },
+  };
 
-  _get: function(prefName, defaultValue, valueType) {
+  Preferences._get = function(prefName, defaultValue, valueType) {
     switch (this._prefSvc.getPrefType(prefName)) {
       case Ci.nsIPrefBranch.PREF_STRING:
         return this._prefSvc.getComplexValue(prefName, valueType).data;
@@ -74,7 +75,7 @@ Preferences.prototype = {
               this._prefSvc.getPrefType(prefName) + ", which I don't know " +
               "how to handle.";
     }
-  },
+  };
 
   /**
    * Set a preference to a value.
@@ -98,7 +99,7 @@ Preferences.prototype = {
    *   Preferences.set("pi", 3.14159.toString())
    *   Preferences.set("big", Math.pow(2, 31).toString()).
    */
-  set: function(prefName, prefValue) {
+  Preferences.set = function(prefName, prefValue) {
     if (isObject(prefName)) {
       for (let [name, value] in Iterator(prefName))
         this.set(name, value);
@@ -106,9 +107,9 @@ Preferences.prototype = {
     }
 
     this._set(prefName, prefValue);
-  },
+  };
 
-  _set: function(prefName, prefValue) {
+  Preferences._set = function(prefName, prefValue) {
     let prefType;
     if (typeof prefValue != "undefined" && prefValue != null)
       prefType = prefValue.constructor.name;
@@ -150,7 +151,7 @@ Preferences.prototype = {
         throw "can't set pref " + prefName + " to value '" + prefValue +
               "'; it isn't a String, Number, or Boolean";
     }
-  },
+  };
 
   /**
    * Whether or not the given pref has a value.  This is different from isSet
@@ -166,16 +167,16 @@ Preferences.prototype = {
    *          an array of pref names, an array of booleans indicating whether
    *          or not the prefs have values
    */
-  has: function(prefName) {
+  Preferences.has = function(prefName) {
     if (Array.isArray(prefName))
       return prefName.map(this.has, this);
 
     return this._has(prefName);
-  },
+  };
 
-  _has: function(prefName) {
+  Preferences._has = function(prefName) {
     return (this._prefSvc.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
-  },
+  };
 
   /**
    * Whether or not the given pref has a user-set value.  This is different
@@ -191,7 +192,7 @@ Preferences.prototype = {
    *          provided an array of pref names, an array of booleans indicating
    *          whether or not the prefs have user-set values
    */
-  isSet: function(prefName) {
+  Preferences.isSet = function(prefName) {
     if (Array.isArray(prefName))
       return prefName.map(this.isSet, this);
 
@@ -203,16 +204,16 @@ Preferences.prototype = {
    * which is equivalent.
    * @deprecated
    */
-  modified: function(prefName) { return this.isSet(prefName) },
+  Preferences.modified = function(prefName) { return this.isSet(prefName) },
 
-  reset: function(prefName) {
+  Preferences.reset = function(prefName) {
     if (Array.isArray(prefName)) {
       prefName.map(function(v) this.reset(v), this);
       return;
     }
 
     this._prefSvc.clearUserPref(prefName);
-  },
+  };
 
   /**
    * Lock a pref so it can't be changed.
@@ -220,12 +221,12 @@ Preferences.prototype = {
    * @param   prefName  {String|Array}
    *          the pref to lock, or an array of prefs to lock
    */
-  lock: function(prefName) {
+  Preferences.lock = function(prefName) {
     if (Array.isArray(prefName))
       prefName.map(this.lock, this);
 
     this._prefSvc.lockPref(prefName);
-  },
+  };
 
   /**
    * Unlock a pref so it can be changed.
@@ -233,12 +234,12 @@ Preferences.prototype = {
    * @param   prefName  {String|Array}
    *          the pref to lock, or an array of prefs to lock
    */
-  unlock: function(prefName) {
+  Preferences.unlock = function(prefName) {
     if (Array.isArray(prefName))
       prefName.map(this.unlock, this);
 
     this._prefSvc.unlockPref(prefName);
-  },
+  };
 
   /**
    * Whether or not the given pref is locked against changes.
@@ -251,12 +252,12 @@ Preferences.prototype = {
    *          provided an array of pref names, an array of booleans indicating
    *          whether or not the prefs have user-set values
    */
-  locked: function(prefName) {
+  Preferences.locked = function(prefName) {
     if (Array.isArray(prefName))
       return prefName.map(this.locked, this);
 
     return this._prefSvc.prefIsLocked(prefName);
-  },
+  };
 
   /**
    * Start observing a pref.
@@ -276,7 +277,7 @@ Preferences.prototype = {
    *
    * @returns the wrapped observer
    */
-  observe: function(prefName, callback, thisObject) {
+  Preferences.observe = function(prefName, callback, thisObject) {
     let fullPrefName = this._prefBranch + (prefName || "");
 
     let observer = new PrefObserver(fullPrefName, callback, thisObject);
@@ -284,7 +285,7 @@ Preferences.prototype = {
     observers.push(observer);
 
     return observer;
-  },
+  };
 
   /**
    * Stop observing a pref.
@@ -308,7 +309,7 @@ Preferences.prototype = {
    * @param   thisObject  {Object}  [optional]
    *          the object being used as |this| when calling a Function callback
    */
-  ignore: function(prefName, callback, thisObject) {
+  Preferences.ignore = function(prefName, callback, thisObject) {
     let fullPrefName = this._prefBranch + (prefName || "");
 
     // This seems fairly inefficient, but I'm not sure how much better we can
@@ -323,9 +324,9 @@ Preferences.prototype = {
       Preferences._prefSvc.removeObserver(fullPrefName, observer);
       observers.splice(observers.indexOf(observer), 1);
     }
-  },
+  };
 
-  resetBranch: function(prefBranch = "") {
+  Preferences.resetBranch = function(prefBranch = "") {
     try {
       this._prefSvc.resetBranch(prefBranch);
     }
@@ -340,45 +341,43 @@ Preferences.prototype = {
   },
 
   /**
-   * The branch of the preferences tree to which this instance provides access.
+   * A string identifying the branch of the preferences tree to which this
+   * instance provides access.
    * @private
    */
-  _prefBranch: "",
+  Preferences._prefBranch = "";
 
   /**
-   * Preferences Service
+   * The cached preferences branch object this instance encapsulates, or null.
+   * Do not use!  Use _prefSvc below instead.
    * @private
    */
-  get _prefSvc() {
-    let prefSvc = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Ci.nsIPrefService);
-    if (this._defaultBranch) {
-      prefSvc = prefSvc.getDefaultBranch(this._prefBranch);
-    } else {
-      prefSvc = prefSvc.getBranch(this._prefBranch);
-    }
-
-    this.__defineGetter__("_prefSvc", function() prefSvc);
-    return this._prefSvc;
-  },
+  Preferences._cachedPrefBranch = null;
 
   /**
-   * IO Service
+   * The preferences branch object for this instance.
    * @private
    */
-  get _ioSvc() {
-    let ioSvc = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-    this.__defineGetter__("_ioSvc", function() ioSvc);
-    return this._ioSvc;
-  }
+  Object.defineProperty(Preferences, "_prefSvc",
+  {
+    get: function _prefSvc() {
+      if (!this._cachedPrefBranch) {
+        let prefSvc = Services.prefs;
+        this._cachedPrefBranch = this._defaultBranch ?
+                                 prefSvc.getDefaultBranch(this._prefBranch) :
+                                 prefSvc.getBranch(this._prefBranch);
+      }
+      return this._cachedPrefBranch;
+    },
+    enumerable: true,
+    configurable: true
+  });
 
-};
-
-// Give the constructor the same prototype as its instances, so users can access
-// preferences directly via the constructor without having to create an instance
-// first.
-Preferences.__proto__ = Preferences.prototype;
+// Constructor-based access (Preferences.get(...) and set) is preferred over
+// instance-based access (new Preferences().get(...) and set) and when using the
+// root preferences branch, as it's desirable not to allocate the extra object.
+// But both forms are acceptable.
+Preferences.prototype = Preferences;
 
 /**
  * A cache of pref observers.
