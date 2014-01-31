@@ -1,8 +1,3 @@
-
-// This test is temporarily disabled in GGC builds (bug 950931).
-if (getBuildConfiguration()['generational-gc'])
-    quit();
-
 // The ray tracer code in this file is written by Adam Burmister. It
 // is available in its original form from:
 //
