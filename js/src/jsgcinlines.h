@@ -53,7 +53,7 @@ template <typename T>
 inline bool
 ThreadSafeContext::isThreadLocal(T thing) const
 {
-    if (!isForkJoinSlice())
+    if (!isForkJoinContext())
         return true;
 
     if (!IsInsideNursery(runtime_, thing) &&

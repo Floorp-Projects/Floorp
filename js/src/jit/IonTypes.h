@@ -89,8 +89,8 @@ enum MIRType
     MIRType_Elements,      // An elements vector
     MIRType_Pointer,       // An opaque pointer that receives no special treatment
     MIRType_Shape,         // A Shape pointer.
-    MIRType_ForkJoinSlice, // js::ForkJoinSlice*
-    MIRType_Last = MIRType_ForkJoinSlice,
+    MIRType_ForkJoinContext, // js::ForkJoinContext*
+    MIRType_Last = MIRType_ForkJoinContext,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Int32x4   = MIRType_Int32   | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Doublex2  = MIRType_Double  | (1 << VECTOR_SCALE_SHIFT)
@@ -199,8 +199,8 @@ StringFromMIRType(MIRType type)
       return "Elements";
     case MIRType_Pointer:
       return "Pointer";
-    case MIRType_ForkJoinSlice:
-      return "ForkJoinSlice";
+    case MIRType_ForkJoinContext:
+      return "ForkJoinContext";
     default:
       MOZ_ASSUME_UNREACHABLE("Unknown MIRType.");
   }

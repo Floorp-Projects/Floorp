@@ -22,25 +22,25 @@ using parallel::SpewBailouts;
 using parallel::SpewBailoutIR;
 
 // Load the current thread context.
-ForkJoinSlice *
-jit::ForkJoinSlicePar()
+ForkJoinContext *
+jit::ForkJoinContextPar()
 {
-    return ForkJoinSlice::current();
+    return ForkJoinContext::current();
 }
 
 // NewGCThingPar() is called in place of NewGCThing() when executing
 // parallel code.  It uses the ArenaLists for the current thread and
 // allocates from there.
 JSObject *
-jit::NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind)
+jit::NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind)
 {
-    JS_ASSERT(ForkJoinSlice::current() == slice);
+    JS_ASSERT(ForkJoinContext::current() == cx);
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
-    return gc::NewGCThing<JSObject, NoGC>(slice, allocKind, thingSize, gc::DefaultHeap);
+    return gc::NewGCThing<JSObject, NoGC>(cx, allocKind, thingSize, gc::DefaultHeap);
 }
 
 bool
-jit::ParallelWriteGuard(ForkJoinSlice *slice, JSObject *object)
+jit::ParallelWriteGuard(ForkJoinContext *cx, JSObject *object)
 {
     // Implements the most general form of the write guard, which is
     // suitable for writes to any object O. There are two cases to
@@ -81,7 +81,7 @@ jit::ParallelWriteGuard(ForkJoinSlice *slice, JSObject *object)
     //    (which is a span of bytes within the output buffer) and not
     //    just the output buffer itself.
 
-    JS_ASSERT(ForkJoinSlice::current() == slice);
+    JS_ASSERT(ForkJoinContext::current() == cx);
 
     if (IsTypedDatum(*object)) {
         TypedDatum &datum = AsTypedDatum(*object);
@@ -90,16 +90,16 @@ jit::ParallelWriteGuard(ForkJoinSlice *slice, JSObject *object)
         // This is because `datum` may point to some subregion of the
         // owner and we only care if that *subregion* is within the
         // target region, not the entire owner.
-        if (IsInTargetRegion(slice, &datum))
+        if (IsInTargetRegion(cx, &datum))
             return true;
 
         // Also check whether owner is thread-local.
         TypedDatum *owner = datum.owner();
-        return owner && slice->isThreadLocal(owner);
+        return owner && cx->isThreadLocal(owner);
     }
 
     // For other kinds of writable objects, must be thread-local.
-    return slice->isThreadLocal(object);
+    return cx->isThreadLocal(object);
 }
 
 // Check that |object| (which must be a typed datum) maps
@@ -111,12 +111,12 @@ jit::ParallelWriteGuard(ForkJoinSlice *slice, JSObject *object)
 // it. This invariant is maintained by the PJS APIs, where the target
 // region and handles are always elements of the same output array.
 bool
-jit::IsInTargetRegion(ForkJoinSlice *slice, TypedDatum *datum)
+jit::IsInTargetRegion(ForkJoinContext *cx, TypedDatum *datum)
 {
     JS_ASSERT(IsTypedDatum(*datum)); // in case JIT supplies something bogus
     uint8_t *typedMem = datum->typedMem();
-    return (typedMem >= slice->targetRegionStart &&
-            typedMem <  slice->targetRegionEnd);
+    return (typedMem >= cx->targetRegionStart &&
+            typedMem <  cx->targetRegionEnd);
 }
 
 #ifdef DEBUG
@@ -160,7 +160,7 @@ jit::TraceLIR(IonLIRTraceData *current)
     if (current->execModeInt == 0)
         cached = &seqTraceData;
     else
-        cached = &ForkJoinSlice::current()->traceData;
+        cached = &ForkJoinContext::current()->traceData;
 
     if (current->blockIndex == 0xDEADBEEF) {
         if (current->execModeInt == 0)
@@ -177,9 +177,9 @@ jit::TraceLIR(IonLIRTraceData *current)
 }
 
 bool
-jit::CheckOverRecursedPar(ForkJoinSlice *slice)
+jit::CheckOverRecursedPar(ForkJoinContext *cx)
 {
-    JS_ASSERT(ForkJoinSlice::current() == slice);
+    JS_ASSERT(ForkJoinContext::current() == cx);
     int stackDummy_;
 
     // When an interrupt is triggered, the main thread stack limit is
@@ -193,30 +193,30 @@ jit::CheckOverRecursedPar(ForkJoinSlice *slice)
 
 #ifdef JS_ARM_SIMULATOR
     if (Simulator::Current()->overRecursed()) {
-        slice->bailoutRecord->setCause(ParallelBailoutOverRecursed);
+        cx->bailoutRecord->setCause(ParallelBailoutOverRecursed);
         return false;
     }
 #endif
 
     uintptr_t realStackLimit;
-    if (slice->isMainThread())
-        realStackLimit = GetNativeStackLimit(slice);
+    if (cx->isMainThread())
+        realStackLimit = GetNativeStackLimit(cx);
     else
-        realStackLimit = slice->perThreadData->ionStackLimit;
+        realStackLimit = cx->perThreadData->ionStackLimit;
 
     if (!JS_CHECK_STACK_SIZE(realStackLimit, &stackDummy_)) {
-        slice->bailoutRecord->setCause(ParallelBailoutOverRecursed);
+        cx->bailoutRecord->setCause(ParallelBailoutOverRecursed);
         return false;
     }
 
-    return CheckInterruptPar(slice);
+    return CheckInterruptPar(cx);
 }
 
 bool
-jit::CheckInterruptPar(ForkJoinSlice *slice)
+jit::CheckInterruptPar(ForkJoinContext *cx)
 {
-    JS_ASSERT(ForkJoinSlice::current() == slice);
-    bool result = slice->check();
+    JS_ASSERT(ForkJoinContext::current() == cx);
+    bool result = cx->check();
     if (!result) {
         // Do not set the cause here.  Either it was set by this
         // thread already by some code that then triggered an abort,
@@ -229,20 +229,20 @@ jit::CheckInterruptPar(ForkJoinSlice *slice)
 }
 
 JSObject *
-jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
+jit::ExtendArrayPar(ForkJoinContext *cx, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
-        array->ensureDenseElementsPreservePackedFlag(slice, 0, length);
+        array->ensureDenseElementsPreservePackedFlag(cx, 0, length);
     if (res != JSObject::ED_OK)
         return nullptr;
     return array;
 }
 
 bool
-jit::SetPropertyPar(ForkJoinSlice *slice, HandleObject obj, HandlePropertyName name,
+jit::SetPropertyPar(ForkJoinContext *cx, HandleObject obj, HandlePropertyName name,
                     HandleValue value, bool strict, jsbytecode *pc)
 {
-    JS_ASSERT(slice->isThreadLocal(obj));
+    JS_ASSERT(cx->isThreadLocal(obj));
 
     if (*pc == JSOP_SETALIASEDVAR) {
         // See comment in jit::SetProperty.
@@ -255,16 +255,16 @@ jit::SetPropertyPar(ForkJoinSlice *slice, HandleObject obj, HandlePropertyName n
     if (obj->getOps()->setProperty)
         return TP_RETRY_SEQUENTIALLY;
 
-    RootedValue v(slice, value);
-    RootedId id(slice, NameToId(name));
-    return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, strict);
+    RootedValue v(cx, value);
+    RootedId id(cx, NameToId(name));
+    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, strict);
 }
 
 bool
-jit::SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index, HandleValue value,
+jit::SetElementPar(ForkJoinContext *cx, HandleObject obj, HandleValue index, HandleValue value,
                    bool strict)
 {
-    RootedId id(slice);
+    RootedId id(cx);
     if (!ValueToIdPure(index, id.address()))
         return false;
 
@@ -273,44 +273,44 @@ jit::SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index, Ha
     // holes and non-indexed element accesses. We don't do that here, as we
     // can't modify any TI state anyways. If we need to add a new type, we
     // would bail out.
-    RootedValue v(slice, value);
-    return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, strict);
+    RootedValue v(cx, value);
+    return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, strict);
 }
 
 JSString *
-jit::ConcatStringsPar(ForkJoinSlice *slice, HandleString left, HandleString right)
+jit::ConcatStringsPar(ForkJoinContext *cx, HandleString left, HandleString right)
 {
-    return ConcatStrings<NoGC>(slice, left, right);
+    return ConcatStrings<NoGC>(cx, left, right);
 }
 
 JSFlatString *
-jit::IntToStringPar(ForkJoinSlice *slice, int i)
+jit::IntToStringPar(ForkJoinContext *cx, int i)
 {
-    return Int32ToString<NoGC>(slice, i);
+    return Int32ToString<NoGC>(cx, i);
 }
 
 JSString *
-jit::DoubleToStringPar(ForkJoinSlice *slice, double d)
+jit::DoubleToStringPar(ForkJoinContext *cx, double d)
 {
-    return NumberToString<NoGC>(slice, d);
+    return NumberToString<NoGC>(cx, d);
 }
 
 JSString *
-jit::PrimitiveToStringPar(ForkJoinSlice *slice, HandleValue input)
+jit::PrimitiveToStringPar(ForkJoinContext *cx, HandleValue input)
 {
     // All other cases are handled in assembly.
     JS_ASSERT(input.isDouble() || input.isInt32());
 
     if (input.isInt32())
-        return Int32ToString<NoGC>(slice, input.toInt32());
+        return Int32ToString<NoGC>(cx, input.toInt32());
 
-    return NumberToString<NoGC>(slice, input.toDouble());
+    return NumberToString<NoGC>(cx, input.toDouble());
 }
 
 bool
-jit::StringToNumberPar(ForkJoinSlice *slice, JSString *str, double *out)
+jit::StringToNumberPar(ForkJoinContext *cx, JSString *str, double *out)
 {
-    return StringToNumber(slice, str, out);
+    return StringToNumber(cx, str, out);
 }
 
 #define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
@@ -335,7 +335,7 @@ do {                                                                            
         *res = (l OP r) == EXPECTED;                                            \
     } else {                                                                    \
         int32_t vsZero;                                                         \
-        if (!CompareMaybeStringsPar(slice, lhs, rhs, &vsZero))                  \
+        if (!CompareMaybeStringsPar(cx, lhs, rhs, &vsZero))                  \
             return false;                                                       \
         *res = (vsZero OP 0) == EXPECTED;                                       \
     }                                                                           \
@@ -343,11 +343,11 @@ do {                                                                            
 } while(0)
 
 static bool
-CompareStringsPar(ForkJoinSlice *slice, JSString *left, JSString *right, int32_t *res)
+CompareStringsPar(ForkJoinContext *cx, JSString *left, JSString *right, int32_t *res)
 {
     ScopedThreadSafeStringInspector leftInspector(left);
     ScopedThreadSafeStringInspector rightInspector(right);
-    if (!leftInspector.ensureChars(slice) || !rightInspector.ensureChars(slice))
+    if (!leftInspector.ensureChars(cx) || !rightInspector.ensureChars(cx))
         return false;
 
     *res = CompareChars(leftInspector.chars(), left->length(),
@@ -356,37 +356,37 @@ CompareStringsPar(ForkJoinSlice *slice, JSString *left, JSString *right, int32_t
 }
 
 static bool
-CompareMaybeStringsPar(ForkJoinSlice *slice, HandleValue v1, HandleValue v2, int32_t *res)
+CompareMaybeStringsPar(ForkJoinContext *cx, HandleValue v1, HandleValue v2, int32_t *res)
 {
     if (!v1.isString())
         return false;
     if (!v2.isString())
         return false;
-    return CompareStringsPar(slice, v1.toString(), v2.toString(), res);
+    return CompareStringsPar(cx, v1.toString(), v2.toString(), res);
 }
 
 template<bool Equal>
 bool
-LooselyEqualImplPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+LooselyEqualImplPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     PAR_RELATIONAL_OP(==, Equal);
 }
 
 bool
-js::jit::LooselyEqualPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::LooselyEqualPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
-    return LooselyEqualImplPar<true>(slice, lhs, rhs, res);
+    return LooselyEqualImplPar<true>(cx, lhs, rhs, res);
 }
 
 bool
-js::jit::LooselyUnequalPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::LooselyUnequalPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
-    return LooselyEqualImplPar<false>(slice, lhs, rhs, res);
+    return LooselyEqualImplPar<false>(cx, lhs, rhs, res);
 }
 
 template<bool Equal>
 bool
-StrictlyEqualImplPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+StrictlyEqualImplPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     if (lhs.isNumber()) {
         if (rhs.isNumber()) {
@@ -415,7 +415,7 @@ StrictlyEqualImplPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandle
         }
     } else if (lhs.isString()) {
         if (rhs.isString())
-            return LooselyEqualImplPar<Equal>(slice, lhs, rhs, res);
+            return LooselyEqualImplPar<Equal>(cx, lhs, rhs, res);
     }
 
     *res = false;
@@ -423,47 +423,47 @@ StrictlyEqualImplPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandle
 }
 
 bool
-js::jit::StrictlyEqualPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::StrictlyEqualPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
-    return StrictlyEqualImplPar<true>(slice, lhs, rhs, res);
+    return StrictlyEqualImplPar<true>(cx, lhs, rhs, res);
 }
 
 bool
-js::jit::StrictlyUnequalPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::StrictlyUnequalPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
-    return StrictlyEqualImplPar<false>(slice, lhs, rhs, res);
+    return StrictlyEqualImplPar<false>(cx, lhs, rhs, res);
 }
 
 bool
-js::jit::LessThanPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::LessThanPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     PAR_RELATIONAL_OP(<, true);
 }
 
 bool
-js::jit::LessThanOrEqualPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::LessThanOrEqualPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     PAR_RELATIONAL_OP(<=, true);
 }
 
 bool
-js::jit::GreaterThanPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::GreaterThanPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     PAR_RELATIONAL_OP(>, true);
 }
 
 bool
-js::jit::GreaterThanOrEqualPar(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
+js::jit::GreaterThanOrEqualPar(ForkJoinContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res)
 {
     PAR_RELATIONAL_OP(>=, true);
 }
 
 template<bool Equal>
 bool
-StringsEqualImplPar(ForkJoinSlice *slice, HandleString lhs, HandleString rhs, bool *res)
+StringsEqualImplPar(ForkJoinContext *cx, HandleString lhs, HandleString rhs, bool *res)
 {
     int32_t vsZero;
-    bool ret = CompareStringsPar(slice, lhs, rhs, &vsZero);
+    bool ret = CompareStringsPar(cx, lhs, rhs, &vsZero);
     if (ret != true)
         return ret;
     *res = (vsZero == 0) == Equal;
@@ -471,24 +471,24 @@ StringsEqualImplPar(ForkJoinSlice *slice, HandleString lhs, HandleString rhs, bo
 }
 
 bool
-js::jit::StringsEqualPar(ForkJoinSlice *slice, HandleString v1, HandleString v2, bool *res)
+js::jit::StringsEqualPar(ForkJoinContext *cx, HandleString v1, HandleString v2, bool *res)
 {
-    return StringsEqualImplPar<true>(slice, v1, v2, res);
+    return StringsEqualImplPar<true>(cx, v1, v2, res);
 }
 
 bool
-js::jit::StringsUnequalPar(ForkJoinSlice *slice, HandleString v1, HandleString v2, bool *res)
+js::jit::StringsUnequalPar(ForkJoinContext *cx, HandleString v1, HandleString v2, bool *res)
 {
-    return StringsEqualImplPar<false>(slice, v1, v2, res);
+    return StringsEqualImplPar<false>(cx, v1, v2, res);
 }
 
 bool
-jit::BitNotPar(ForkJoinSlice *slice, HandleValue in, int32_t *out)
+jit::BitNotPar(ForkJoinContext *cx, HandleValue in, int32_t *out)
 {
     if (in.isObject())
         return false;
     int i;
-    if (!NonObjectToInt32(slice, in, &i))
+    if (!NonObjectToInt32(cx, in, &i))
         return false;
     *out = ~i;
     return true;
@@ -499,8 +499,8 @@ jit::BitNotPar(ForkJoinSlice *slice, HandleValue in, int32_t *out)
     int32_t left, right;                                                \
     if (lhs.isObject() || rhs.isObject())                               \
         return TP_RETRY_SEQUENTIALLY;                                   \
-    if (!NonObjectToInt32(slice, lhs, &left) ||                         \
-        !NonObjectToInt32(slice, rhs, &right))                          \
+    if (!NonObjectToInt32(cx, lhs, &left) ||                         \
+        !NonObjectToInt32(cx, rhs, &right))                          \
     {                                                                   \
         return false;                                                   \
     }                                                                   \
@@ -509,31 +509,31 @@ jit::BitNotPar(ForkJoinSlice *slice, HandleValue in, int32_t *out)
     JS_END_MACRO
 
 bool
-jit::BitXorPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+jit::BitXorPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
     BIT_OP(left ^ right);
 }
 
 bool
-jit::BitOrPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+jit::BitOrPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
     BIT_OP(left | right);
 }
 
 bool
-jit::BitAndPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+jit::BitAndPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
     BIT_OP(left & right);
 }
 
 bool
-jit::BitLshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+jit::BitLshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
     BIT_OP(left << (right & 31));
 }
 
 bool
-jit::BitRshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out)
+jit::BitRshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
     BIT_OP(left >> (right & 31));
 }
@@ -541,14 +541,14 @@ jit::BitRshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *
 #undef BIT_OP
 
 bool
-jit::UrshValuesPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
+jit::UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs,
                    Value *out)
 {
     uint32_t left;
     int32_t right;
     if (lhs.isObject() || rhs.isObject())
         return false;
-    if (!NonObjectToUint32(slice, lhs, &left) || !NonObjectToInt32(slice, rhs, &right))
+    if (!NonObjectToUint32(cx, lhs, &left) || !NonObjectToInt32(cx, rhs, &right))
         return false;
     left >>= right & 31;
     out->setNumber(uint32_t(left));
@@ -573,10 +573,10 @@ jit::AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *c
     JS_ASSERT(currentScript != nullptr);
     JS_ASSERT(outermostScript->hasParallelIonScript());
 
-    ForkJoinSlice *slice = ForkJoinSlice::current();
+    ForkJoinContext *cx = ForkJoinContext::current();
 
-    JS_ASSERT(slice->bailoutRecord->depth == 0);
-    slice->bailoutRecord->setCause(cause, outermostScript, currentScript, bytecode);
+    JS_ASSERT(cx->bailoutRecord->depth == 0);
+    cx->bailoutRecord->setCause(cause, outermostScript, currentScript, bytecode);
 }
 
 void
@@ -592,9 +592,9 @@ jit::PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript)
 
     outermostScript->parallelIonScript()->setHasUncompiledCallTarget();
 
-    ForkJoinSlice *slice = ForkJoinSlice::current();
+    ForkJoinContext *cx = ForkJoinContext::current();
     if (currentScript)
-        slice->bailoutRecord->addTrace(currentScript, nullptr);
+        cx->bailoutRecord->addTrace(currentScript, nullptr);
 }
 
 void
@@ -642,7 +642,7 @@ jit::CallToUncompiledScriptPar(JSObject *obj)
 }
 
 JSObject *
-jit::InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,
+jit::InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest,
                           HandleObject templateObj, HandleObject res)
 {
     // In parallel execution, we should always have succeeded in allocation
@@ -655,7 +655,7 @@ jit::InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,
 
     if (length > 0) {
         JSObject::EnsureDenseResult edr =
-            res->ensureDenseElementsPreservePackedFlag(slice, 0, length);
+            res->ensureDenseElementsPreservePackedFlag(cx, 0, length);
         if (edr != JSObject::ED_OK)
             return nullptr;
         res->initDenseElementsUnbarriered(0, rest, length);

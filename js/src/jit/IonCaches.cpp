@@ -1841,17 +1841,17 @@ GetPropertyParIC::attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JS
 }
 
 bool
-GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
+GetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex,
                          HandleObject obj, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetPropertyParCache", slice->runtime()->jitRuntime());
+    AutoFlushCache afc("GetPropertyParCache", cx->runtime()->jitRuntime());
 
-    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     GetPropertyParIC &cache = ion->getCache(cacheIndex).toGetPropertyPar();
 
     // Grab the property early, as the pure path is fast anyways and doesn't
     // need a lock. If we can't do it purely, bail out of parallel execution.
-    if (!GetPropertyPure(slice, obj, NameToId(cache.name()), vp.address()))
+    if (!GetPropertyPure(cx, obj, NameToId(cache.name()), vp.address()))
         return false;
 
     // Avoid unnecessary locking if cannot attach stubs.
@@ -1862,12 +1862,12 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
         // Lock the context before mutating the cache. Ideally we'd like to do
         // finer-grained locking, with one lock per cache. However, generating
         // new jitcode uses a global ExecutableAllocator tied to the runtime.
-        LockedJSContext cx(slice);
+        LockedJSContext ncx(cx);
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
-            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (!cache.hasOrAddStubbedShape(ncx, obj->lastProperty(), &alreadyStubbed))
+                return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed)
                 return true;
 
@@ -1875,32 +1875,32 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
             bool attachedStub = false;
 
             {
-                RootedShape shape(cx);
-                RootedObject holder(cx);
-                RootedPropertyName name(cx, cache.name());
+                RootedShape shape(ncx);
+                RootedObject holder(ncx);
+                RootedPropertyName name(ncx, cache.name());
 
                 GetPropertyIC::NativeGetPropCacheability canCache =
-                    CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
+                    CanAttachNativeGetProp(ncx, cache, obj, name, &holder, &shape);
 
                 if (canCache == GetPropertyIC::CanAttachReadSlot) {
-                    if (!cache.attachReadSlot(cx, ion, obj, holder, shape))
-                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                    if (!cache.attachReadSlot(ncx, ion, obj, holder, shape))
+                        return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
 
                 if (!attachedStub && canCache == GetPropertyIC::CanAttachArrayLength) {
-                    if (!cache.attachArrayLength(cx, ion, obj))
-                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                    if (!cache.attachArrayLength(ncx, ion, obj))
+                        return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
             }
 
             if (!attachedStub && !cache.hasTypedArrayLengthStub() &&
-                obj->is<TypedArrayObject>() && slice->names().length == cache.name() &&
+                obj->is<TypedArrayObject>() && cx->names().length == cache.name() &&
                 (cache.output().type() == MIRType_Value || cache.output().type() == MIRType_Int32))
             {
-                if (!cache.attachTypedArrayLength(cx, ion, obj))
-                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                if (!cache.attachTypedArrayLength(ncx, ion, obj))
+                    return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
         }
@@ -2837,22 +2837,22 @@ SetPropertyIC::reset()
 }
 
 bool
-SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                          HandleValue value)
 {
-    JS_ASSERT(slice->isThreadLocal(obj));
+    JS_ASSERT(cx->isThreadLocal(obj));
 
-    AutoFlushCache afc("SetPropertyParCache", slice->runtime()->jitRuntime());
+    AutoFlushCache afc("SetPropertyParCache", cx->runtime()->jitRuntime());
 
-    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     SetPropertyParIC &cache = ion->getCache(cacheIndex).toSetPropertyPar();
 
-    RootedValue v(slice, value);
-    RootedId id(slice, AtomToId(cache.name()));
+    RootedValue v(cx, value);
+    RootedId id(cx, AtomToId(cache.name()));
 
     // Avoid unnecessary locking if cannot attach stubs.
     if (!cache.canAttachStub()) {
-        return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+        return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0,
                                                              &v, cache.strict());
     }
 
@@ -2860,14 +2860,14 @@ SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject o
     bool attachedStub = false;
 
     {
-        LockedJSContext cx(slice);
+        LockedJSContext ncx(cx);
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
-            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (!cache.hasOrAddStubbedShape(ncx, obj->lastProperty(), &alreadyStubbed))
+                return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed) {
-                return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+                return baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0,
                                                                      &v, cache.strict());
             }
 
@@ -2877,15 +2877,15 @@ SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject o
                 return false;
 
             {
-                RootedShape shape(slice);
-                RootedObject holder(slice);
+                RootedShape shape(cx);
+                RootedObject holder(cx);
                 bool checkTypeset;
                 canCache = CanAttachNativeSetProp(obj, id, cache.value(), cache.needsTypeBarrier(),
                                                   &holder, &shape, &checkTypeset);
 
                 if (canCache == SetPropertyIC::CanAttachSetSlot) {
-                    if (!cache.attachSetSlot(cx, ion, obj, shape, checkTypeset))
-                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                    if (!cache.attachSetSlot(ncx, ion, obj, shape, checkTypeset))
+                        return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
             }
@@ -2893,9 +2893,9 @@ SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject o
     }
 
     uint32_t oldSlots = obj->numDynamicSlots();
-    RootedShape oldShape(slice, obj->lastProperty());
+    RootedShape oldShape(cx, obj->lastProperty());
 
-    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, cache.strict()))
+    if (!baseops::SetPropertyHelper<ParallelExecution>(cx, obj, obj, id, 0, &v, cache.strict()))
         return false;
 
     bool checkTypeset;
@@ -2903,9 +2903,9 @@ SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject o
         IsPropertyAddInlineable(obj, id, cache.value(), oldSlots, oldShape, cache.needsTypeBarrier(),
                                 &checkTypeset))
     {
-        LockedJSContext cx(slice);
-        if (cache.canAttachStub() && !cache.attachAddSlot(cx, ion, obj, oldShape, checkTypeset))
-            return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+        LockedJSContext ncx(cx);
+        if (cache.canAttachStub() && !cache.attachAddSlot(ncx, ion, obj, oldShape, checkTypeset))
+            return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
     }
 
     return true;
@@ -2913,7 +2913,7 @@ SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject o
 
 bool
 SetPropertyParIC::attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
-                                  bool checkTypeset)
+                                bool checkTypeset)
 {
     MacroAssembler masm(cx, ion);
     DispatchStubPrepender attacher(*this);
@@ -3857,41 +3857,41 @@ SetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
 }
 
 bool
-SetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+SetElementParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                         HandleValue idval, HandleValue value)
 {
-    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     SetElementParIC &cache = ion->getCache(cacheIndex).toSetElementPar();
 
     // Avoid unnecessary locking if cannot attach stubs.
     if (!cache.canAttachStub())
-        return SetElementPar(slice, obj, idval, value, cache.strict());
+        return SetElementPar(cx, obj, idval, value, cache.strict());
 
     {
-        LockedJSContext cx(slice);
+        LockedJSContext ncx(cx);
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
-            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (!cache.hasOrAddStubbedShape(ncx, obj->lastProperty(), &alreadyStubbed))
+                return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed)
-                return SetElementPar(slice, obj, idval, value, cache.strict());
+                return SetElementPar(cx, obj, idval, value, cache.strict());
 
             bool attachedStub = false;
             if (IsDenseElementSetInlineable(obj, idval)) {
-                if (!cache.attachDenseElement(cx, ion, obj, idval))
-                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                if (!cache.attachDenseElement(ncx, ion, obj, idval))
+                    return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
             if (!attachedStub && IsTypedArrayElementSetInlineable(obj, idval, value)) {
                 TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
-                if (!cache.attachTypedArrayElement(cx, ion, tarr))
-                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                if (!cache.attachTypedArrayElement(ncx, ion, tarr))
+                    return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
             }
         }
     }
 
-    return SetElementPar(slice, obj, idval, value, cache.strict());
+    return SetElementPar(cx, obj, idval, value, cache.strict());
 }
 
 bool
@@ -3937,17 +3937,17 @@ GetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
 }
 
 bool
-GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+GetElementParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                         HandleValue idval, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetElementParCache", slice->runtime()->jitRuntime());
+    AutoFlushCache afc("GetElementParCache", cx->runtime()->jitRuntime());
 
-    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     GetElementParIC &cache = ion->getCache(cacheIndex).toGetElementPar();
 
     // Try to get the element early, as the pure path doesn't need a lock. If
     // we can't do it purely, bail out of parallel execution.
-    if (!GetObjectElementOperationPure(slice, obj, idval, vp.address()))
+    if (!GetObjectElementOperationPure(cx, obj, idval, vp.address()))
         return false;
 
     // Avoid unnecessary locking if cannot attach stubs.
@@ -3955,12 +3955,12 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
         return true;
 
     {
-        LockedJSContext cx(slice);
+        LockedJSContext ncx(cx);
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
-            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (!cache.hasOrAddStubbedShape(ncx, obj->lastProperty(), &alreadyStubbed))
+                return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed)
                 return true;
 
@@ -3972,32 +3972,32 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
             if (cache.monitoredResult() &&
                 GetElementIC::canAttachGetProp(obj, idval, id))
             {
-                RootedShape shape(cx);
-                RootedObject holder(cx);
-                RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
+                RootedShape shape(ncx);
+                RootedObject holder(ncx);
+                RootedPropertyName name(ncx, JSID_TO_ATOM(id)->asPropertyName());
 
                 GetPropertyIC::NativeGetPropCacheability canCache =
-                    CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
+                    CanAttachNativeGetProp(ncx, cache, obj, name, &holder, &shape);
 
                 if (canCache == GetPropertyIC::CanAttachReadSlot)
                 {
-                    if (!cache.attachReadSlot(cx, ion, obj, idval, name, holder, shape))
-                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                    if (!cache.attachReadSlot(ncx, ion, obj, idval, name, holder, shape))
+                        return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
             }
             if (!attachedStub &&
                 GetElementIC::canAttachDenseElement(obj, idval))
             {
-                if (!cache.attachDenseElement(cx, ion, obj, idval))
-                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                if (!cache.attachDenseElement(ncx, ion, obj, idval))
+                    return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
             if (!attachedStub &&
                 GetElementIC::canAttachTypedArrayElement(obj, idval, cache.output()))
             {
-                if (!cache.attachTypedArrayElement(cx, ion, &obj->as<TypedArrayObject>(), idval))
-                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                if (!cache.attachTypedArrayElement(ncx, ion, &obj->as<TypedArrayObject>(), idval))
+                    return cx->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
         }

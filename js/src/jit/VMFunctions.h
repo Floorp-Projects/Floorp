@@ -15,7 +15,7 @@
 namespace js {
 
 class DeclEnvObject;
-class ForkJoinSlice;
+class ForkJoinContext;
 
 namespace jit {
 
@@ -113,7 +113,7 @@ struct VMFunction
     // The root type of the out param if outParam == Type_Handle.
     RootType outParamRootType;
 
-    // Does this function take a ForkJoinSlice * or a JSContext *?
+    // Does this function take a ForkJoinContext * or a JSContext *?
     ExecutionMode executionMode;
 
     // Number of Values the VM wrapper should pop from the stack when it returns.
@@ -386,7 +386,7 @@ template <> struct MatchContext<JSContext *> {
 template <> struct MatchContext<ExclusiveContext *> {
     static const ExecutionMode execMode = SequentialExecution;
 };
-template <> struct MatchContext<ForkJoinSlice *> {
+template <> struct MatchContext<ForkJoinContext *> {
     static const ExecutionMode execMode = ParallelExecution;
 };
 template <> struct MatchContext<ThreadSafeContext *> {
