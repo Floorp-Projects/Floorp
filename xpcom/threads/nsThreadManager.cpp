@@ -56,6 +56,12 @@ NS_IMPL_CI_INTERFACE_GETTER1(nsThreadManager, nsIThreadManager)
 nsresult
 nsThreadManager::Init()
 {
+  // Child processes need to initialize the thread manager before they
+  // initialize XPCOM in order to set up the crash reporter. This leads to
+  // situations where we get initialized twice.
+  if (mInitialized)
+    return NS_OK;
+
   if (PR_NewThreadPrivateIndex(&mCurThreadIndex, ReleaseObject) == PR_FAILURE)
     return NS_ERROR_FAILURE;
 
@@ -72,8 +78,6 @@ nsThreadManager::Init()
 
   // Setup "main" thread
   mMainThread = new nsThread(nsThread::MAIN_THREAD, 0);
-  if (!mMainThread)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
