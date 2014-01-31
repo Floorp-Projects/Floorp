@@ -31,11 +31,12 @@ BEGIN_TEST(testStructuredClone_object)
 
         CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
         CHECK(v2.isObject());
+        JS::RootedObject obj(cx, &v2.toObject());
 
         JS::RootedValue prop(cx);
-        CHECK(JS_GetProperty(cx, &v2.toObject(), "prop", &prop));
+        CHECK(JS_GetProperty(cx, obj, "prop", &prop));
         CHECK(prop.isInt32());
-        CHECK(&v1.toObject() != &v2.toObject());
+        CHECK(&v1.toObject() != obj);
         CHECK_EQUAL(prop.toInt32(), 1337);
     }
 
