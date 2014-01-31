@@ -362,6 +362,7 @@ gbjar.sources += [
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
     'widget/IconTabWidget.java',
+    'widget/SquaredImageView.java',
     'widget/TabRow.java',
     'widget/ThumbnailView.java',
     'widget/TwoWayView.java',
