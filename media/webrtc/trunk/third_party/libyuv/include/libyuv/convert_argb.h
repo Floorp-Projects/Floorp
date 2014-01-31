@@ -4,7 +4,7 @@
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
+ *  in the file PATENTS. All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -18,8 +18,8 @@
 #include "libyuv/rotate.h"
 
 // TODO(fbarchard): This set of functions should exactly match convert.h
-// Add missing V210 and Q420.
-// TODO(fbarchard): Add tests.  Create random content of right size and convert
+// Add missing Q420.
+// TODO(fbarchard): Add tests. Create random content of right size and convert
 // with C vs Opt and or to I420 and compare.
 // TODO(fbarchard): Some of these functions lack parameter setting.
 
@@ -75,7 +75,10 @@ int I400ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
-// Convert I400 to ARGB.  Reverse of ARGBToI400.
+// Alias.
+#define YToARGB I400ToARGB_Reference
+
+// Convert I400 to ARGB. Reverse of ARGBToI400.
 LIBYUV_API
 int I400ToARGB_Reference(const uint8* src_y, int src_stride_y,
                          uint8* dst_argb, int dst_stride_argb,
@@ -119,12 +122,6 @@ LIBYUV_API
 int UYVYToARGB(const uint8* src_uyvy, int src_stride_uyvy,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
-
-// TODO(fbarchard): Convert V210 to ARGB.
-// LIBYUV_API
-// int V210ToARGB(const uint8* src_uyvy, int src_stride_uyvy,
-//                uint8* dst_argb, int dst_stride_argb,
-//                int width, int height);
 
 // BGRA little endian (argb in memory) to ARGB.
 LIBYUV_API
@@ -205,19 +202,19 @@ int MJPGToARGB(const uint8* sample, size_t sample_size,
 //              crop_y = (src_height - dst_height) / 2
 // "src_width" / "src_height" is size of src_frame in pixels.
 //   "src_height" can be negative indicating a vertically flipped image source.
-// "dst_width" / "dst_height" is size of destination to crop to.
+// "crop_width" / "crop_height" is the size to crop the src to.
 //    Must be less than or equal to src_width/src_height
 //    Cropping parameters are pre-rotation.
 // "rotation" can be 0, 90, 180 or 270.
-// "format" is a fourcc.  ie 'I420', 'YUY2'
+// "format" is a fourcc. ie 'I420', 'YUY2'
 // Returns 0 for successful; -1 for invalid parameter. Non-zero for failure.
 LIBYUV_API
 int ConvertToARGB(const uint8* src_frame, size_t src_size,
                   uint8* dst_argb, int dst_stride_argb,
                   int crop_x, int crop_y,
                   int src_width, int src_height,
-                  int dst_width, int dst_height,
-                  RotationMode rotation,
+                  int crop_width, int crop_height,
+                  enum RotationMode rotation,
                   uint32 format);
 
 #ifdef __cplusplus
