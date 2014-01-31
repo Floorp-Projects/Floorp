@@ -427,26 +427,30 @@ CustomizeMode.prototype = {
    */
   _doTransition: function(aEntering) {
     let deferred = Promise.defer();
-    let deck = this.document.getElementById("tab-view-deck");
+    let deck = this.document.getElementById("content-deck");
 
     let customizeTransitionEnd = function(aEvent) {
       if (aEvent != "timedout" &&
-          (aEvent.originalTarget != deck || aEvent.propertyName != "padding-bottom")) {
+          (aEvent.originalTarget != deck || aEvent.propertyName != "margin-left")) {
         return;
       }
       this.window.clearTimeout(catchAllTimeout);
-      deck.removeEventListener("transitionend", customizeTransitionEnd);
+      // Bug 962677: We let the event loop breathe for before we do the final
+      // stage of the transition to improve perceived performance.
+      this.window.setTimeout(function () {
+        deck.removeEventListener("transitionend", customizeTransitionEnd);
 
-      if (!aEntering) {
-        this.document.documentElement.removeAttribute("customize-exiting");
-        this.document.documentElement.removeAttribute("customizing");
-      } else {
-        this.document.documentElement.setAttribute("customize-entered", true);
-        this.document.documentElement.removeAttribute("customize-entering");
-      }
-      this.dispatchToolboxEvent("customization-transitionend", aEntering);
+        if (!aEntering) {
+          this.document.documentElement.removeAttribute("customize-exiting");
+          this.document.documentElement.removeAttribute("customizing");
+        } else {
+          this.document.documentElement.setAttribute("customize-entered", true);
+          this.document.documentElement.removeAttribute("customize-entering");
+        }
+        this.dispatchToolboxEvent("customization-transitionend", aEntering);
 
-      deferred.resolve();
+        deferred.resolve();
+      }.bind(this), 0);
     }.bind(this);
     deck.addEventListener("transitionend", customizeTransitionEnd);
 
