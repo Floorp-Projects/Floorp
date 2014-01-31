@@ -238,8 +238,11 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         {
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
-            jsval args[1] = {OBJECT_TO_JSVAL(id)};
-            success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, retval.address());
+            JS::AutoValueVector argv(cx);
+            MOZ_ALWAYS_TRUE(argv.resize(1));
+            argv[0].setObject(*id);
+            success = JS_CallFunctionValue(cx, jsobj, fun, 1, argv.begin(),
+                                           retval.address());
         }
 
         if (!success && JS_IsExceptionPending(cx)) {
