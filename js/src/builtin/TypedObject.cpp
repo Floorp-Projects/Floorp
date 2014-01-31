@@ -2239,13 +2239,14 @@ TypedObject::createZeroed(JSContext *cx,
     // Allocate and initialize the memory for this instance.
     // Also initialize the JS_DATUM_SLOT_LENGTH slot.
     TypeRepresentation *typeRepr = descr->typeRepresentation();
-    switch (typeRepr->kind()) {
+    switch (descr->kind()) {
       case TypeDescr::Scalar:
       case TypeDescr::Reference:
       case TypeDescr::Struct:
       case TypeDescr::X4:
       {
-        uint8_t *memory = (uint8_t*) cx->malloc_(typeRepr->asSized()->size());
+        uint8_t *memory =
+            (uint8_t*) cx->malloc_(descr->as<SizedTypeDescr>().size());
         if (!memory)
             return nullptr;
         typeRepr->asSized()->initInstance(cx->runtime(), memory, 1);
@@ -2255,7 +2256,8 @@ TypedObject::createZeroed(JSContext *cx,
 
       case TypeDescr::SizedArray:
       {
-        uint8_t *memory = (uint8_t*) cx->malloc_(typeRepr->asSizedArray()->size());
+        uint8_t *memory =
+            (uint8_t*) cx->malloc_(descr->as<SizedTypeDescr>().size());
         if (!memory)
             return nullptr;
         typeRepr->asSizedArray()->initInstance(cx->runtime(), memory, 1);
