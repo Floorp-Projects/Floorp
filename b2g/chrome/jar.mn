@@ -13,6 +13,7 @@ chrome.jar:
 * content/settings.js                   (content/settings.js)
 * content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)
+  content/devtools.js                   (content/devtools.js)
 #ifndef ANDROID
   content/desktop.js                    (content/desktop.js)
   content/screen.js                     (content/screen.js)
