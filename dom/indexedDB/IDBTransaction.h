@@ -367,11 +367,39 @@ public:
   NS_DECL_MOZISTORAGEFUNCTION
 
   UpdateRefcountFunction(FileManager* aFileManager)
-  : mFileManager(aFileManager)
+  : mFileManager(aFileManager), mInSavepoint(false)
   { }
 
   ~UpdateRefcountFunction()
   { }
+
+  void StartSavepoint()
+  {
+    MOZ_ASSERT(!mInSavepoint);
+    MOZ_ASSERT(!mSavepointEntriesIndex.Count());
+
+    mInSavepoint = true;
+  }
+
+  void ReleaseSavepoint()
+  {
+    MOZ_ASSERT(mInSavepoint);
+
+    mSavepointEntriesIndex.Clear();
+
+    mInSavepoint = false;
+  }
+
+  void RollbackSavepoint()
+  {
+    MOZ_ASSERT(mInSavepoint);
+
+    mInSavepoint = false;
+
+    mSavepointEntriesIndex.EnumerateRead(RollbackSavepointCallback, nullptr);
+
+    mSavepointEntriesIndex.Clear();
+  }
 
   void ClearFileInfoEntries()
   {
@@ -387,7 +415,7 @@ private:
   {
   public:
     FileInfoEntry(FileInfo* aFileInfo)
-    : mFileInfo(aFileInfo), mDelta(0)
+    : mFileInfo(aFileInfo), mDelta(0), mSavepointDelta(0)
     { }
 
     ~FileInfoEntry()
@@ -395,6 +423,7 @@ private:
 
     nsRefPtr<FileInfo> mFileInfo;
     int32_t mDelta;
+    int32_t mSavepointDelta;
   };
 
   enum UpdateType {
@@ -447,12 +476,20 @@ private:
                          FileInfoEntry* aValue,
                          void* aUserArg);
 
+  static PLDHashOperator
+  RollbackSavepointCallback(const uint64_t& aKey,
+                            FileInfoEntry* aValue,
+                            void* aUserArg);
+
   FileManager* mFileManager;
   nsClassHashtable<nsUint64HashKey, FileInfoEntry> mFileInfoEntries;
+  nsDataHashtable<nsUint64HashKey, FileInfoEntry*> mSavepointEntriesIndex;
 
   nsTArray<int64_t> mJournalsToCreateBeforeCommit;
   nsTArray<int64_t> mJournalsToRemoveAfterCommit;
   nsTArray<int64_t> mJournalsToRemoveAfterAbort;
+
+  bool mInSavepoint;
 };
 
 END_INDEXEDDB_NAMESPACE
