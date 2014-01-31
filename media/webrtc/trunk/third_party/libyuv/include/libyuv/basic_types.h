@@ -13,25 +13,11 @@
 
 #include <stddef.h>  // for NULL, size_t
 
-#if !(defined(_MSC_VER) && (_MSC_VER < 1600))
+#if defined(__ANDROID__) || (defined(_MSC_VER) && (_MSC_VER < 1600))
+#include <sys/types.h>  // for uintptr_t on x86
+#else
 #include <stdint.h>  // for uintptr_t
 #endif
-
-typedef uint64_t uint64;
-typedef int64_t  int64;
-#if defined(_MSC_VER)
-// nsprpub/pr/include/obsolete/protypes.h defines these weirdly
-typedef long int32;
-typedef unsigned long uint32;
-#else
-typedef uint32_t uint32;
-typedef int32_t  int32;
-#endif
-typedef uint16_t uint16;
-typedef int16_t  int16;
-typedef uint8_t  uint8;
-typedef int8_t   int8;
-#define INT_TYPES_DEFINED 1
 
 #ifndef GG_LONGLONG
 #ifndef INT_TYPES_DEFINED
