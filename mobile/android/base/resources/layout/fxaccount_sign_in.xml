@@ -50,7 +50,7 @@
 
             <TextView
                 android:id="@+id/forgot_password_link"
-                style="@style/FxAccountLinkItem"
+                style="@style/FxAccountLinkifiedItem"
                 android:layout_gravity="left"
                 android:layout_weight="1"
                 android:gravity="left"

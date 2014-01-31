@@ -16,6 +16,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.SyncConfiguration;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
@@ -122,6 +123,12 @@ public class FxAccountStatusActivity extends FxAccountAbstractActivity implement
         // SyncAdapter.requestImmediateSync(fxAccount.getAndroidAccount(), null);
       }
     };
+
+    TextView privacyView = (TextView) findViewById(R.id.fxaccount_status_linkprivacy);
+    ActivityUtils.linkTextView(privacyView, R.string.fxaccount_policy_linkprivacy, R.string.fxaccount_link_pn);
+
+    TextView tosView = (TextView) findViewById(R.id.fxaccount_status_linktos);
+    ActivityUtils.linkTextView(tosView, R.string.fxaccount_policy_linktos, R.string.fxaccount_link_tos);
 
     if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       createDebugButtons();

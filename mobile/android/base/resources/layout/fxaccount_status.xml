@@ -117,14 +117,14 @@
             android:orientation="vertical" />
 
         <TextView
-            style="@style/FxAccountLinkItem"
-            android:text="@string/fxaccount_policy_linktos" >
-        </TextView>
+            android:id="@+id/fxaccount_status_linktos"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_policy_linktos" />
 
         <TextView
-            style="@style/FxAccountLinkItem"
-            android:text="@string/fxaccount_policy_linkprivacy" >
-        </TextView>
+            android:id="@+id/fxaccount_status_linkprivacy"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_policy_linkprivacy" />
     </LinearLayout>
 
 </ScrollView>

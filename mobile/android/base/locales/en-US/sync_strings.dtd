@@ -132,15 +132,12 @@
 <!ENTITY fxaccount_password_hide 'Hide'>
 <!ENTITY fxaccount_password_show 'Show'>
 
-<!ENTITY fxaccount_link_tos 'https://accounts.firefox.com/legal/terms'>
-<!ENTITY fxaccount_link_pn 'https://accounts.firefox.com/legal/privacy'>
 <!ENTITY fxaccount_policy_linktos 'Terms of Service'>
 <!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
 
 <!ENTITY fxaccount_getting_started_welcome_to_sync 'Welcome to &syncBrand.shortName.label;'>
 <!ENTITY fxaccount_getting_started_description 'Sign in to sync your tabs, bookmarks, passwords &amp; more.'>
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
-<!ENTITY fxaccount_getting_started_link_old_firefox 'https://support.mozilla.org/kb/use-sync-with-an-older-version-of-firefox'>
 <!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
 <!ENTITY fxaccount_create_account_sub_header 'Create an account'>
@@ -156,7 +153,6 @@
 
 <!ENTITY fxaccount_account_create_not_allowed 'Cannot create account'>
 <!ENTITY fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements 'You must meet certain age requirements to create an account.'>
-<!ENTITY fxaccount_link_create_not_allowed 'http://www.ftc.gov/news-events/media-resources/protecting-consumer-privacy/kids-privacy-coppa'>
 <!ENTITY fxaccount_account_create_not_allowed_learn_more 'Learn more'>
 
 <!ENTITY fxaccount_confirm_account_header 'Confirm your account'>

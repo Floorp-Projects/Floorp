@@ -102,6 +102,14 @@
 <string name="firefox_accounts">&firefox_accounts;</string>
 <string name="firefox_account">&firefox_account;</string>
 
+<!-- Firefox Account links. -->
+<!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/old-sync -->
+<string name="fxaccount_link_old_firefox">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/old-sync</string>
+<string name="fxaccount_link_create_not_allowed">http://www.consumer.ftc.gov/articles/0031-protecting-your-childs-privacy-online</string>
+<string name="fxaccount_link_tos">https://accounts.firefox.com/legal/terms</string>
+<string name="fxaccount_link_pn">https://accounts.firefox.com/legal/privacy</string>
+<string name="fxaccount_link_forgot_password">https://accounts.firefox.com/reset_password</string>
+
 <string name="fxaccount_checkbox_contentDescription">&fxaccount_checkbox_contentDescription;</string>
 <string name="fxaccount_icon_contentDescription">&fxaccount_icon_contentDescription;</string>
 <string name="fxaccount_intro_contentDescription">&fxaccount_intro_contentDescription;</string>
@@ -112,15 +120,12 @@
 <string name="fxaccount_password_hide">&fxaccount_password_hide;</string>
 <string name="fxaccount_password_show">&fxaccount_password_show;</string>
 
-<string name="fxaccount_link_tos">&fxaccount_link_tos;</string>
-<string name="fxaccount_link_pn">&fxaccount_link_pn;</string>
 <string name="fxaccount_policy_linktos">&fxaccount_policy_linktos;</string>
 <string name="fxaccount_policy_linkprivacy">&fxaccount_policy_linkprivacy;</string>
 
 <string name="fxaccount_getting_started_welcome_to_sync">&fxaccount_getting_started_welcome_to_sync;</string>
 <string name="fxaccount_getting_started_description">&fxaccount_getting_started_description;</string>
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
-<string name="fxaccount_getting_started_link_old_firefox">&fxaccount_getting_started_link_old_firefox;</string>
 <string name="fxaccount_getting_started_old_firefox">&fxaccount_getting_started_old_firefox;</string>
 
 <string name="fxaccount_create_account_sub_header">&fxaccount_create_account_sub_header;</string>
@@ -136,7 +141,6 @@
 
 <string name="fxaccount_account_create_not_allowed">&fxaccount_account_create_not_allowed;</string>
 <string name="fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements">&fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements;</string>
-<string name="fxaccount_link_create_not_allowed">&fxaccount_link_create_not_allowed;</string>
 <string name="fxaccount_account_create_not_allowed_learn_more">&fxaccount_account_create_not_allowed_learn_more;</string>
 
 <string name="fxaccount_confirm_account_header">&fxaccount_confirm_account_header;</string>
@@ -185,6 +189,4 @@
 <string name="fxaccount_remote_error_COULD_NOT_CONNECT">&fxaccount_remote_error_COULD_NOT_CONNECT;</string>
 
 <string name="fxaccount_sync_sign_in_error_notification_title">&fxaccount_sync_sign_in_error_notification_title;</string>
-<!-- Note to translators: the format string below will be replaced
-     with the Firefox Account's email address. -->
 <string name="fxaccount_sync_sign_in_error_notification_text">&fxaccount_sync_sign_in_error_notification_text;</string>
