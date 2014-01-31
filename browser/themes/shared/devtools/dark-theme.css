@@ -11,6 +11,11 @@
   color: #8fa1b2;
 }
 
+.theme-sidebar {
+  background: #131c26;
+  color: #8fa1b2;
+}
+
 ::-moz-selection {
   background-color: #1d4f73;
   color: #f5f7fa;
@@ -148,10 +153,11 @@
 }
 
 .theme-toolbar,
-.devtools-toolbar { /* General toolbar styling */
-  color: hsl(210,30%,85%);
+.devtools-toolbar,
+.devtools-sidebar-tabs > tabs { /* General toolbar styling */
+  color: #b6babf;
   background-color: #343c45;
-  border-color: #060a0d;
+  border-color: hsla(210,8%,5%,.6);
 }
 
 .theme-fg-contrast { /* To be used for text on theme-bg-contrast */
@@ -300,6 +306,20 @@ div.CodeMirror span.eval-text {
 
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
+}
+
+.devtools-horizontal-splitter {
+  border-bottom: 1px solid black;
+}
+
+.devtools-side-splitter {
+  -moz-border-end: 1px solid black;
+}
+
+.devtools-textinput,
+.devtools-searchinput {
+  background-color: rgba(24, 29, 32, 1);
+  color: rgba(184, 200, 217, 1);
 }
 
 %include toolbars.inc.css

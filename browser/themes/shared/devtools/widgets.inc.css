@@ -20,6 +20,8 @@
 
 .breadcrumbs-widget-container {
   -moz-margin-end: 3px;
+  max-height: 25px; /* Set max-height for proper sizing on linux */
+  height: 25px; /* Set height to prevent starting small waiting for content */
   /* A fake 1px-shadow is included in the border-images of the
      breadcrumbs-widget-items, to match toolbar-buttons style.
      This negative margin compensates the extra row of pixels created
@@ -27,77 +29,41 @@
   margin-bottom: -1px;
 }
 
-/* Preloading hack, LTR */
-
-.breadcrumbs-widget-container:-moz-locale-dir(ltr)::after {
-  content: '';
-  display: block;
-  background-image:
-    url(breadcrumbs/ltr-start.png),
-    url(breadcrumbs/ltr-start-selected.png),
-    url(breadcrumbs/ltr-start-pressed.png),
-    url(breadcrumbs/ltr-start-selected-pressed.png),
-    url(breadcrumbs/ltr-middle.png),
-    url(breadcrumbs/ltr-middle-selected.png),
-    url(breadcrumbs/ltr-middle-pressed.png),
-    url(breadcrumbs/ltr-middle-selected-pressed.png),
-    url(breadcrumbs/ltr-end.png),
-    url(breadcrumbs/ltr-end-selected.png),
-    url(breadcrumbs/ltr-end-pressed.png),
-    url(breadcrumbs/ltr-end-selected-pressed.png);
-}
-
-/* Preloading hack, RTL */
-
-.breadcrumbs-widget-container:-moz-locale-dir(rtl)::after {
-  content: '';
-  display: block;
-  background-image:
-    url(breadcrumbs/rtl-start.png),
-    url(breadcrumbs/rtl-start-selected.png),
-    url(breadcrumbs/rtl-start-pressed.png),
-    url(breadcrumbs/rtl-start-selected-pressed.png),
-    url(breadcrumbs/rtl-middle.png),
-    url(breadcrumbs/rtl-middle-selected.png),
-    url(breadcrumbs/rtl-middle-pressed.png),
-    url(breadcrumbs/rtl-middle-selected-pressed.png),
-    url(breadcrumbs/rtl-end.png),
-    url(breadcrumbs/rtl-end-selected.png),
-    url(breadcrumbs/rtl-end-pressed.png),
-    url(breadcrumbs/rtl-end-selected-pressed.png);
-}
-
 .scrollbutton-up,
 .scrollbutton-down {
   -moz-appearance: none;
-  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
-  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
-              0 0 0 1px hsla(210,16%,76%,.15) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-  border: 1px solid hsla(210,8%,5%,.45);
-  margin: 0 0 1px;
-}
-
-.scrollbutton-up:not([disabled]):active:hover,
-.scrollbutton-down:not([disabled]):active:hover {
-  background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
-  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset,
-              0 1px 3px hsla(210,8%,5%,.25) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-  border-color: hsla(210,8%,5%,.6);
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  list-style-image: none;
+  margin: 0;
+  padding: 0;
 }
 
 .scrollbutton-up > .toolbarbutton-icon,
 .scrollbutton-down > .toolbarbutton-icon {
   -moz-appearance: none;
-  list-style-image: url("breadcrumbs-scrollbutton.png");
-  -moz-image-region: rect(0px,7px,16px,0px);
-  margin: 0 5px;
+  width: 7px;
+  height: 16px;
+  background-size: 14px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
+  background-image: url("breadcrumbs-scrollbutton.png");
+  list-style-image: none;
+  margin: 0 8px;
+  padding: 0;
+}
+
+@media (min-resolution: 2dppx) {
+  .scrollbutton-up > .toolbarbutton-icon,
+  .scrollbutton-down > .toolbarbutton-icon {
+    background-image: url("breadcrumbs-scrollbutton@2x.png");
+  }
 }
 
 .scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
 .scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
-  -moz-image-region: rect(0px,14px,16px,7px);
+  background-position: -7px center;
 }
 
 .scrollbutton-up[disabled] > .toolbarbutton-icon,
@@ -105,165 +71,185 @@
   opacity: 0.5;
 }
 
+
+/* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
+.scrollbutton-up:-moz-locale-dir(ltr),
+.scrollbutton-down:-moz-locale-dir(rtl) {
+  border-right: solid 1px rgba(255, 255, 255, .1);
+  border-left: solid 1px transparent;
+  box-shadow: 3px 0px 3px -3px #181d20;
+}
+
+.scrollbutton-down:-moz-locale-dir(ltr),
+.scrollbutton-up:-moz-locale-dir(rtl) {
+  border-right: solid 1px transparent;
+  border-left: solid 1px rgba(255, 255, 255, .1);
+  box-shadow: -3px 0px 3px -3px #181d20;
+}
+
+.scrollbutton-up[disabled],
+.scrollbutton-down[disabled] {
+  box-shadow: none;
+  border-color: transparent;
+}
+
 .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
 .scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
   transform: scaleX(-1);
 }
 
+/* The breadcrumb separator elements are used as background images with
+ * -moz-element, so we position them offscreen since we don't care about
+ * seeing the original elements.
+ */
+.breadcrumb-separator-container {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+}
+
+#breadcrumb-separator-before,
+#breadcrumb-separator-after,
+#breadcrumb-separator-normal {
+  width: 12px;
+  height: 25px;
+  overflow: hidden;
+}
+
+#breadcrumb-separator-before,
+#breadcrumb-separator-after:after {
+  background: #1d4f73; /* Select Highlight Blue */
+}
+
+#breadcrumb-separator-after,
+#breadcrumb-separator-before:after {
+  background: #343c45; /* Toolbars */
+}
+
+/* This chevron arrow cannot be replicated easily in CSS, so we are using
+ * a background image for it (still keeping it in a separate element so
+ * we can handle RTL support with a CSS transform).
+ */
+#breadcrumb-separator-normal {
+  background: url(breadcrumbs-divider@2x.png) no-repeat center right;
+  background-size: 12px 24px;
+}
+
+/* Fake a triangle by rotating a rectangle inside the elements */
+#breadcrumb-separator-before:after,
+#breadcrumb-separator-after:after {
+  content: "";
+  display: block;
+  width: 25px;
+  height: 25px;
+  transform: translateX(-18px) rotate(45deg);
+  -moz-box-sizing: border-box;
+}
+
 .breadcrumbs-widget-item {
   background-color: transparent;
   -moz-appearance: none;
-  overflow: hidden;
-  min-width: 85px;
-  max-width: 250px;
   min-height: 25px;
-  border-style: solid;
-  border-width: 1px 13px 2px 13px;
-  margin: 0 -11px 0 0;
-  padding: 0 9px;
+  min-width: 65px;
+  margin: 0;
+  padding: 0 8px 0 20px;
+  border: none;
   outline: none;
   color: hsl(210,30%,85%);
 }
 
-.breadcrumbs-widget-item:-moz-focusring > label {
-  border-bottom: 1px dotted hsla(210,30%,85%,0.4);
+.breadcrumbs-widget-item:not([checked]) {
+  background: -moz-element(#breadcrumb-separator-normal) no-repeat center left;
 }
 
-.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag {
-  color: hsl(208,100%,60%);
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item {
+  background: -moz-element(#breadcrumb-separator-after) no-repeat 0 0;
 }
 
-.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id {
-  color: hsl(205,100%,70%);
+.breadcrumbs-widget-item[checked] {
+  background: -moz-element(#breadcrumb-separator-before) no-repeat 0 0;
+  background-color: #1d4f73; /* Select Highlight Blue */
 }
 
-.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes {
-  color: hsl(20,100%,70%);
+.breadcrumbs-widget-item:first-child {
+  background-image: none;
 }
 
-.breadcrumbs-widget-item-id,
-.breadcrumbs-widget-item-classes {
-  color: #8d99a6;
-}
-
-.breadcrumbs-widget-item-pseudo-classes {
-  color: hsl(20,100%,85%);
-}
-
-/* Breadcrumbs LTR */
-
-.breadcrumbs-widget-item:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-middle.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:not([checked]):hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-middle-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item[checked]:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-middle-selected.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item[checked]:hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-middle-selected-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:first-of-type:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-start.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:first-of-type:not([checked]):hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-start-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:first-of-type[checked]:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-start-selected.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:first-of-type[checked]:hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-start-selected-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:last-of-type:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-end.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:last-of-type:not([checked]):hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-end-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:last-of-type[checked]:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-end-selected.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-item:last-of-type[checked]:hover:active:-moz-locale-dir(ltr) {
-  border-image: url("breadcrumbs/ltr-end-selected-pressed.png") 1 13 2 13 fill stretch;
-}
-
-.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:first-of-type:-moz-locale-dir(ltr) {
-  border-left-width: 0;
-}
-
-.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:last-of-type:-moz-locale-dir(ltr) {
-  border-right-width: 0;
-}
-
-/* Breadcrumbs RTL */
-
+/* RTL support: move the images that were on the left to the right,
+ * and move images that were on the right to the left.
+ */
 .breadcrumbs-widget-item:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-middle.png") 1 13 2 13 fill stretch;
+  padding: 0 20px 0 8px;
 }
 
-.breadcrumbs-widget-item:not([checked]):hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-middle-pressed.png") 1 13 2 13 fill stretch;
+.breadcrumbs-widget-item:-moz-locale-dir(rtl),
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:-moz-locale-dir(rtl) {
+  background-position: center right;
 }
 
-.breadcrumbs-widget-item[checked]:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-middle-selected.png") 1 13 2 13 fill stretch;
+#breadcrumb-separator-before:-moz-locale-dir(rtl),
+#breadcrumb-separator-after:-moz-locale-dir(rtl),
+#breadcrumb-separator-normal:-moz-locale-dir(rtl) {
+  transform:  scaleX(-1);
 }
 
-.breadcrumbs-widget-item[checked]:hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-middle-selected-pressed.png") 1 13 2 13 fill stretch;
+#breadcrumb-separator-before:-moz-locale-dir(rtl):after,
+#breadcrumb-separator-after:-moz-locale-dir(rtl):after {
+  transform: translateX(-5px) rotate(45deg);
 }
 
-.breadcrumbs-widget-item:first-of-type:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-start.png") 1 13 2 13 fill stretch;
+.breadcrumbs-widget-item:not([checked]):hover label {
+  color: white;
 }
 
-.breadcrumbs-widget-item:first-of-type:not([checked]):hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-start-pressed.png") 1 13 2 13 fill stretch;
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+  color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.breadcrumbs-widget-item:first-of-type[checked]:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-start-selected.png") 1 13 2 13 fill stretch;
+.theme-dark .breadcrumbs-widget-item-id,
+.theme-dark .breadcrumbs-widget-item-classes,
+.theme-dark .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+  color: #b6babf; /* Foreground (Text) - Grey */
 }
 
-.breadcrumbs-widget-item:first-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-start-selected-pressed.png") 1 13 2 13 fill stretch;
+.theme-dark .breadcrumbs-widget-item-pseudo-classes {
+  color: #d99b28; /* Light Orange */
 }
 
-.breadcrumbs-widget-item:last-of-type:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-end.png") 1 13 2 13 fill stretch;
+.theme-light .breadcrumbs-widget-item[checked] {
+  background: -moz-element(#breadcrumb-separator-before) no-repeat 0 0;
+  background-color: #4c9ed9; /* Select Highlight Blue */
 }
 
-.breadcrumbs-widget-item:last-of-type:not([checked]):hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-end-pressed.png") 1 13 2 13 fill stretch;
+.theme-light .breadcrumbs-widget-item:first-child {
+  background-image: none;
 }
 
-.breadcrumbs-widget-item:last-of-type[checked]:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-end-selected.png") 1 13 2 13 fill stretch;
+.theme-light #breadcrumb-separator-before,
+.theme-light #breadcrumb-separator-after:after {
+  background: #4c9ed9; /* Select Highlight Blue */
 }
 
-.breadcrumbs-widget-item:last-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
-  border-image: url("breadcrumbs/rtl-end-selected-pressed.png") 1 13 2 13 fill stretch;
+.theme-light #breadcrumb-separator-after,
+.theme-light #breadcrumb-separator-before:after {
+  background: #f0f1f2; /*  Toolbars */
 }
 
-.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:first-of-type:-moz-locale-dir(rtl) {
-  border-right-width: 0;
+.theme-light .breadcrumbs-widget-item,
+.theme-light .breadcrumbs-widget-item-id,
+.theme-light .breadcrumbs-widget-item-classes {
+  color: #585959; /* Foreground (Text) - Grey */
 }
 
-.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:last-of-type:-moz-locale-dir(rtl) {
-  border-left-width: 0;
+.theme-light .breadcrumbs-widget-item-pseudo-classes {
+  color: #585959; /* Foreground (Text) - Grey */
+}
+
+.theme-light .breadcrumbs-widget-item:not([checked]):hover label {
+  color: #18191a; /* Foreground (Text) - Dark */
 }
 
 /* SimpleListWidget */
@@ -327,9 +313,9 @@
 /* SideMenuWidget */
 
 %filter substitution
-%define smw_selectionGradient linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%))
-%define smw_selectionTextColor #fff
-%define smw_margin #222426
+%define smw_selectionTextColor #f5f7fa
+%define smw_marginDark #222426
+%define smw_marginLight #aaa
 %define smw_itemDarkTopBorder rgba(0,0,0,0.2)
 %define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
 %define smw_itemLightTopBorder rgba(128,128,128,0.15)
@@ -340,21 +326,31 @@
   transform: translateZ(1px);
 }
 
+/* SideMenuWidget container */
+
 .theme-dark .side-menu-widget-container,
 .theme-dark .side-menu-widget-empty-text {
   background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
 }
 
-/* SideMenuWidget container */
+.theme-dark .side-menu-widget-container:-moz-locale-dir(ltr),
+.theme-dark .side-menu-widget-empty-text:-moz-locale-dir(ltr) {
+  box-shadow: inset -1px 0 0 @smw_marginDark@;
+}
+
+.theme-dark .side-menu-widget-container:-moz-locale-dir(rtl),
+.theme-dark .side-menu-widget-empty-text:-moz-locale-dir(rtl) {
+  box-shadow: inset 1px 0 0 @smw_marginDark@;
+}
 
 .side-menu-widget-container:-moz-locale-dir(ltr),
 .side-menu-widget-empty-text:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 @smw_margin@;
+  box-shadow: inset -1px 0 0 @smw_marginLight@;
 }
 
 .side-menu-widget-container:-moz-locale-dir(rtl),
 .side-menu-widget-empty-text:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 @smw_margin@;
+  box-shadow: inset 1px 0 0 @smw_marginLight@;
 }
 
 .side-menu-widget-group {
@@ -389,6 +385,7 @@
   /* To compensate for the top and bottom borders */
   margin-top: -1px;
   margin-bottom: -1px;
+  background-clip: padding-box;
 }
 
 .theme-dark .side-menu-widget-item {
@@ -411,14 +408,22 @@
   box-shadow: inset 0 -1px 0 @smw_itemLightTopBorder@;
 }
 
-.side-menu-widget-item.selected {
-  background: @smw_selectionGradient@ repeat-x top left;
+.theme-dark .side-menu-widget-item.selected {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: @smw_selectionTextColor@;
+}
+
+.theme-light .side-menu-widget-item.selected {
+  background-color: #4c9ed9; /* Select Highlight Blue */
   color: @smw_selectionTextColor@;
 }
 
 .side-menu-widget-item-arrow {
   -moz-margin-start: -7px;
   width: 7px; /* The image's width is 7 pixels */
+  /* Cover the border of the side-menu-widget-item */
+  margin-top: -1px;
+  margin-bottom: -1px;
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow {
@@ -435,19 +440,19 @@
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-dark-ltr.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+  background-image: url(itemArrow-dark-ltr.png), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-dark-rtl.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+  background-image: url(itemArrow-dark-rtl.png), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-ltr.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+  background-image: url(itemArrow-ltr.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-rtl.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+  background-image: url(itemArrow-rtl.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
 }
 
 /* SideMenuWidget items contents */
@@ -521,7 +526,7 @@
 }
 
 .theme-dark .side-menu-widget-empty-text {
-  color: #b6babf; /* Light foreground text */
+  color: #b6babf; /* Foreground (Text) - Grey */
 }
 
 .theme-light .side-menu-widget-empty-text {
@@ -540,7 +545,7 @@
 }
 
 .theme-dark .variables-view-empty-notice {
-  color: #b6babf; /* Light foreground text */
+  color: #b6babf; /* Foreground (Text) - Grey */
 }
 
 .theme-light .variables-view-empty-notice {
@@ -548,7 +553,9 @@
 }
 
 .variables-view-scope > .title {
-  color: #fff;
+  border-top-width: 1px;
+  border-top-style: solid;
+  margin-top: -1px;
 }
 
 /* Generic variables traits */

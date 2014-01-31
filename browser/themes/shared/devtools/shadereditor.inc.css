@@ -2,16 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#body {
-  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
-}
-
 /* Reload and waiting notices */
 
 .notice-container {
-  background: transparent;
   margin-top: -50vh;
-  color: #fff;
+}
+
+.theme-dark .notice-container {
+  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .notice-container {
+  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+  color: #585959; /* Grey foreground text */
 }
 
 #reload-notice {
@@ -80,21 +84,33 @@
   background-position: 0 0;
 }
 
-.side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
-  color: rgba(255,255,255,0.4);
-}
-
 /* Shader source editors */
 
 .editor-label {
-  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
-  border-top: 1px solid #222426;
   padding: 1px 12px;
-  color: #fff;
+  border-top: 1px solid;
 }
 
-.editor-label[selected] {
-  background: linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%)) repeat-x top left;
+.theme-dark .editor-label {
+  background: #343c45; /* Dark toolbars */
+  border-color: #222426; /* Match the splitter color. */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .editor-label {
+  background: #f0f1f2; /* Light toolbars */
+  border-color: #aaa; /* Match the splitter color. */
+  color: #585959; /* Grey foreground text */
+}
+
+.theme-dark .editor-label[selected] {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .editor-label[selected] {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
 }
 
 /* Responsive sidebar */
@@ -102,6 +118,10 @@
 @media (max-width: 700px) {
   #shaders-pane {
     max-height: 60vh;
+  }
+
+  #editors-splitter {
+    border-color: transparent;
   }
 
   .side-menu-widget-container {
@@ -114,5 +134,6 @@
 
   .editor-label {
     -moz-box-ordinal-group: 0;
+    border-bottom: 1px solid;
   }
 }

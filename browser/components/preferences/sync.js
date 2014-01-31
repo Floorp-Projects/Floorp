@@ -5,6 +5,10 @@
 Components.utils.import("resource://services-sync/main.js");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
+  return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
+});
+
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
 const PAGE_NEEDS_UPDATE = 2;
@@ -83,7 +87,8 @@ let gSyncPane = {
                   "weave:service:login:finish",
                   "weave:service:start-over",
                   "weave:service:setup-complete",
-                  "weave:service:logout:finish"];
+                  "weave:service:logout:finish",
+                  FxAccountsCommon.ONVERIFIED_NOTIFICATION];
 
     // Add the observers now and remove them on unload
     //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
@@ -127,7 +132,10 @@ let gSyncPane = {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_UNVERIFIED;
           enginesListDisabled = true;
         // So we think we are logged in, so login problems are next.
-        } else if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+        // (Although if the Sync identity manager is still initializing, we
+        // ignore login errors and assume all will eventually be good.)
+        } else if (Weave.Service.identity.readyToAuthenticate &&
+                   Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
           enginesListDisabled = true;
         // Else we must be golden!

@@ -226,7 +226,7 @@
                 <spacer flex="1"/>
                 <vbox align="end">
                   <button onclick="gSyncPane.verifyFirefoxAccount();"
-                          caption="&verify.label;"/>
+                          label="&verify.label;"/>
                   <label class="text-link"
                          onclick="/* no warning as account can't have previously synced */ gSyncPane.unlinkFirefoxAccount(false);"
                          value="&forget.label;"/>
@@ -253,9 +253,8 @@
           </groupbox>
 
           <groupbox id="syncOptions">
-            <caption label="&syncBrand.fullName.label;"/>
+            <caption label="&syncBrand.shortName.label;"/>
             <vbox>
-              <label value="&syncMy.label;" />
               <richlistbox id="fxaSyncEnginesList"
                            orient="vertical"
                            onselect="if (this.selectedCount) this.clearSelection();">
