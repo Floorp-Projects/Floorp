@@ -909,7 +909,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
       mGLContext->fCopyTexImage2D(mFBOTextureTarget,
                                   0,
                                   LOCAL_GL_RGBA,
-                                  aRect.x, aRect.y,
+                                  aRect.x, FlipY(aRect.y + aRect.height),
                                   aRect.width, aRect.height,
                                   0);
     } else {

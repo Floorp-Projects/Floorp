@@ -9,7 +9,9 @@
 #include "vhea.h"
 
 // vmtx - Vertical Metrics Table
-// http://www.microsoft.com/opentype/otspec/vmtx.htm
+// http://www.microsoft.com/typography/otspec/vmtx.htm
+
+#define TABLE_NAME "vmtx"
 
 namespace ots {
 
@@ -19,12 +21,12 @@ bool ots_vmtx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   file->vmtx = vmtx;
 
   if (!file->vhea || !file->maxp) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("vhea or maxp table missing as needed by vmtx");
   }
 
-  if (!ParseMetricsTable(&table, file->maxp->num_glyphs,
+  if (!ParseMetricsTable(file, &table, file->maxp->num_glyphs,
                          &file->vhea->header, &vmtx->metrics)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to parse vmtx metrics");
   }
 
   return true;
@@ -38,8 +40,8 @@ bool ots_vmtx_should_serialise(OpenTypeFile *file) {
 }
 
 bool ots_vmtx_serialise(OTSStream *out, OpenTypeFile *file) {
-  if (!SerialiseMetricsTable(out, &file->vmtx->metrics)) {
-    return OTS_FAILURE();
+  if (!SerialiseMetricsTable(file, out, &file->vmtx->metrics)) {
+    return OTS_FAILURE_MSG("Failed to write vmtx metrics");
   }
   return true;
 }
