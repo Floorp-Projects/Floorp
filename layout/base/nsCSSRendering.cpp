@@ -4508,21 +4508,30 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Element:
     {
+      nsRefPtr<gfxDrawable> drawable;
       if (mPaintServerFrame) {
-        nsSVGIntegrationUtils::DrawPaintServer(
-            &aRenderingContext, mForFrame, mPaintServerFrame, graphicsFilter,
-            aDest, aFill, aDest.TopLeft(), aDirtyRect, mSize,
-            mFlags & FLAG_SYNC_DECODE_IMAGES ?
-              nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES : 0);
+        int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
+        nsRect destSize = aDest - aDest.TopLeft();
+        nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
+        gfxIntSize imageSize(roundedOut.width, roundedOut.height);
+        drawable = nsSVGIntegrationUtils::DrawableFromPaintServer(
+                          mPaintServerFrame, mForFrame, mSize, imageSize,
+                          aRenderingContext.ThebesContext()->CurrentMatrix(),
+                          mFlags & FLAG_SYNC_DECODE_IMAGES
+                            ? nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES
+                            : 0);
+
+        if (!drawable) {
+          return;
+        }
       } else {
         NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
-        nsRefPtr<gfxDrawable> surfaceDrawable =
+        drawable =
           new gfxSurfaceDrawable(mImageElementSurface.mSourceSurface,
                                  mImageElementSurface.mSize);
-        nsLayoutUtils::DrawPixelSnapped(
-            &aRenderingContext, surfaceDrawable, graphicsFilter,
-            aDest, aFill, aDest.TopLeft(), aDirtyRect);
       }
+      nsLayoutUtils::DrawPixelSnapped(&aRenderingContext, drawable, graphicsFilter,
+                                      aDest, aFill, aSrc.TopLeft(), aDirtyRect);
       return;
     }
     case eStyleImageType_Null:
