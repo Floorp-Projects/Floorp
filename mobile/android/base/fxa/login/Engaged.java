@@ -11,9 +11,11 @@ import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
+import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.AccountVerified;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LocalError;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LogMessage;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.RemoteError;
+import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
@@ -68,7 +70,10 @@ public class Engaged extends State {
           delegate.handleTransition(new RemoteError(e), new Separated(email, uid, verified));
           return;
         }
-        delegate.handleTransition(new LogMessage("keys succeeded"), new Cohabiting(email, uid, sessionToken, result.kA, kB, keyPair));
+        Transition transition = verified
+            ? new LogMessage("keys succeeded")
+            : new AccountVerified();
+        delegate.handleTransition(transition, new Cohabiting(email, uid, sessionToken, result.kA, kB, keyPair));
       }
     });
   }
@@ -79,5 +84,9 @@ public class Engaged extends State {
       return Action.NeedsVerification;
     }
     return Action.None;
+  }
+
+  public byte[] getSessionToken() {
+    return sessionToken;
   }
 }

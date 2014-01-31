@@ -20,13 +20,10 @@ import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignInTask;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.fxa.login.Engaged;
-import org.mozilla.gecko.fxa.login.Separated;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 
-import android.accounts.Account;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,7 +39,6 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
   protected static final String LOG_TAG = FxAccountUpdateCredentialsActivity.class.getSimpleName();
 
   protected AndroidFxAccount fxAccount;
-  protected Separated accountState;
 
   public FxAccountUpdateCredentialsActivity() {
     // We want to share code with the other setup activities, but this activity
@@ -84,29 +80,21 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
   @Override
   public void onResume() {
     super.onResume();
-    Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
-    if (accounts.length < 1 || accounts[0] == null) {
-      Logger.warn(LOG_TAG, "No Android accounts.");
-      setResult(RESULT_CANCELED);
-      finish();
-      return;
-    }
-    this.fxAccount = new AndroidFxAccount(this, accounts[0]);
+    this.fxAccount = getAndroidFxAccount();
     if (fxAccount == null) {
-      Logger.warn(LOG_TAG, "Could not get Firefox Account from Android account.");
+      Logger.warn(LOG_TAG, "Could not get Firefox Account.");
       setResult(RESULT_CANCELED);
       finish();
       return;
     }
     State state = fxAccount.getState();
     if (state.getStateLabel() != StateLabel.Separated) {
-      Logger.warn(LOG_TAG, "Could not get state from Firefox Account.");
+      Logger.warn(LOG_TAG, "Cannot update credentials from Firefox Account in state: " + state.getStateLabel());
       setResult(RESULT_CANCELED);
       finish();
       return;
     }
-    this.accountState = (Separated) state;
-    emailEdit.setText(fxAccount.getAndroidAccount().name);
+    emailEdit.setText(fxAccount.getEmail());
   }
 
   protected class UpdateCredentialsDelegate implements RequestDelegate<LoginResponse> {
@@ -165,7 +153,7 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
   }
 
   public void updateCredentials(String email, String password) {
-    String serverURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
+    String serverURI = fxAccount.getAccountServerURI();
     Executor executor = Executors.newSingleThreadExecutor();
     FxAccountClient client = new FxAccountClient20(serverURI, executor);
     PasswordStretcher passwordStretcher = new QuickPasswordStretcher(password);
