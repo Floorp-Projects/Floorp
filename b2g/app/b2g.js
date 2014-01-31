@@ -869,3 +869,7 @@ pref("apz.asyncscroll.throttle", 40);
 // Using a software canvas can save memory when JS calls getImageData()
 // on the canvas frequently. See bug 884226.
 pref("gfx.canvas.willReadFrequently.enable", true);
+
+// Disable autofocus until we can have it not bring up the keyboard.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=965763
+pref("browser.autofocus", false);
