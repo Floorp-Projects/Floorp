@@ -7,7 +7,9 @@
 #include "head.h"
 
 // OS/2 - OS/2 and Windows Metrics
-// http://www.microsoft.com/opentype/otspec/os2.htm
+// http://www.microsoft.com/typography/otspec/os2.htm
+
+#define TABLE_NAME "OS/2"
 
 namespace ots {
 
@@ -33,11 +35,11 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadS16(&os2->strikeout_size) ||
       !table.ReadS16(&os2->strikeout_position) ||
       !table.ReadS16(&os2->family_class)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed toi read basic os2 elements");
   }
 
   if (os2->version > 4) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("os2 version too high %d", os2->version);
   }
 
   // Some linux fonts (e.g., Kedage-t.ttf and LucidaSansDemiOblique.ttf) have
@@ -94,7 +96,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   for (unsigned i = 0; i < 10; ++i) {
     if (!table.ReadU8(&os2->panose[i])) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read panose in os2 table");
     }
   }
 
@@ -111,7 +113,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadS16(&os2->typo_linegap) ||
       !table.ReadU16(&os2->win_ascent) ||
       !table.ReadU16(&os2->win_descent)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read more basic os2 fields");
   }
 
   // If bit 6 is set, then bits 0 and 5 must be clear.
@@ -122,7 +124,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   // the settings of bits 0 and 1 must be reflected in the macStyle bits
   // in the 'head' table.
   if (!file->head) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Head table missing from font as needed by os2 table");
   }
   if ((os2->selection & 0x1) &&
       !(file->head->mac_style & 0x2)) {
@@ -146,14 +148,14 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   if ((os2->version < 4) &&
       (os2->selection & 0x300)) {
     // bit 8 and 9 must be unset in OS/2 table versions less than 4.
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("OS2 version %d incompatible with selection %d", os2->version, os2->selection);
   }
 
   // mask reserved bits. use only 0..9 bits.
   os2->selection &= 0x3ff;
 
   if (os2->first_char_index > os2->last_char_index) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("first char index %d > last char index %d in os2", os2->first_char_index, os2->last_char_index);
   }
   if (os2->typo_linegap < 0) {
     OTS_WARNING("bad linegap: %d", os2->typo_linegap);
@@ -175,7 +177,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   if (!table.ReadU32(&os2->code_page_range_1) ||
       !table.ReadU32(&os2->code_page_range_2)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read codepage ranges");
   }
 
   if (os2->version < 2) {
@@ -196,7 +198,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadU16(&os2->default_char) ||
       !table.ReadU16(&os2->break_char) ||
       !table.ReadU16(&os2->max_context)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read os2 version 2 information");
   }
 
   if (os2->x_height < 0) {
@@ -234,12 +236,12 @@ bool ots_os2_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteS16(os2->strikeout_size) ||
       !out->WriteS16(os2->strikeout_position) ||
       !out->WriteS16(os2->family_class)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write basic OS2 information");
   }
 
   for (unsigned i = 0; i < 10; ++i) {
     if (!out->Write(&os2->panose[i], 1)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write os2 panose information");
     }
   }
 
@@ -256,7 +258,7 @@ bool ots_os2_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteS16(os2->typo_linegap) ||
       !out->WriteU16(os2->win_ascent) ||
       !out->WriteU16(os2->win_descent)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write os2 version 1 information");
   }
 
   if (os2->version < 1) {
@@ -265,7 +267,7 @@ bool ots_os2_serialise(OTSStream *out, OpenTypeFile *file) {
 
   if (!out->WriteU32(os2->code_page_range_1) ||
       !out->WriteU32(os2->code_page_range_2)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write codepage ranges");
   }
 
   if (os2->version < 2) {
@@ -277,7 +279,7 @@ bool ots_os2_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteU16(os2->default_char) ||
       !out->WriteU16(os2->break_char) ||
       !out->WriteU16(os2->max_context)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write os2 version 2 information");
   }
 
   return true;

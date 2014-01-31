@@ -1,14 +1,10 @@
 This is the Sanitiser for OpenType project, from http://code.google.com/p/ots/.
 
-Current revision: r95
+Our reference repository is https://github.com/khaledhosny/ots/.
+
+Current revision: d7d831edd171054c7974f5e0dec2fc19bf869574
 
 Applied local patches:
-    ots-fix-vc10.patch - workaround for VS10 STL wrappers (bug 602558)
-
-    ots-fix-sparc64.patch - fix alignment error on sparc64 (bug 643137)
-
-    ots-graphite.patch - preserve Graphite layout tables (bug 631479)
-
     ots-visibility.patch - make Process function externally visible for Windows DLL (bug 711079)
 
-Patches from https://bugzilla.mozilla.org/show_bug.cgi?id=670901.
+    ots-woff2 - disable WOFF2 support (bug 941019)

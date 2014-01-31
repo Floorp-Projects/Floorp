@@ -2060,7 +2060,7 @@ class MAssertFloat32 : public MUnaryInstruction
 
 class MGetDynamicName
   : public MAryInstruction<2>,
-    public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >
+    public MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >
 {
   protected:
     MGetDynamicName(MDefinition *scopeChain, MDefinition *name)
@@ -3112,6 +3112,12 @@ class MToString : public MUnaryInstruction
     MToString(MDefinition *def)
       : MUnaryInstruction(def)
     {
+        // Converting an object to a string might be effectful.
+        JS_ASSERT(!def->mightBeType(MIRType_Object));
+
+        // NOP
+        JS_ASSERT(def->type() != MIRType_String);
+
         setResultType(MIRType_String);
         setMovable();
     }
@@ -3129,7 +3135,7 @@ class MToString : public MUnaryInstruction
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        JS_ASSERT(input()->type() < MIRType_Object);
+        JS_ASSERT(!input()->mightBeType(MIRType_Object));
         return AliasSet::None();
     }
 };
@@ -4223,11 +4229,14 @@ class MMod : public MBinaryArithInstruction
 
 class MConcat
   : public MBinaryInstruction,
-    public BinaryStringPolicy
+    public MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1>>
 {
     MConcat(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
     {
+        // At least one input should be definitely string
+        JS_ASSERT(left->type() == MIRType_String || right->type() == MIRType_String);
+
         setMovable();
         setResultType(MIRType_String);
     }
@@ -4250,12 +4259,15 @@ class MConcat
 };
 
 class MConcatPar
-  : public MTernaryInstruction,
-    public MixPolicy<StringPolicy<1>, StringPolicy<2> >
+  : public MTernaryInstruction
 {
     MConcatPar(MDefinition *slice, MDefinition *left, MDefinition *right)
       : MTernaryInstruction(slice, left, right)
     {
+        // Type analysis has already run, before replacing with the parallel
+        // variant.
+        JS_ASSERT(left->type() == MIRType_String && right->type() == MIRType_String);
+
         setMovable();
         setResultType(MIRType_String);
     }
@@ -4277,9 +4289,6 @@ class MConcatPar
         return getOperand(2);
     }
 
-    TypePolicy *typePolicy() {
-        return this;
-    }
     bool congruentTo(MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
@@ -4872,7 +4881,7 @@ class MRegExp : public MNullaryInstruction
 
 class MRegExpExec
   : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<1>, StringPolicy<0> >
+    public MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1>>
 {
   private:
 
@@ -4909,7 +4918,7 @@ class MRegExpExec
 
 class MRegExpTest
   : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<1>, StringPolicy<0> >
+    public MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >
 {
   private:
 
@@ -8967,7 +8976,7 @@ class MNewCallObjectPar : public MBinaryInstruction
 
 class MNewStringObject :
   public MUnaryInstruction,
-  public StringPolicy<0>
+  public ConvertToStringPolicy<0>
 {
     CompilerRootObject templateObj_;
 
