@@ -35,7 +35,7 @@ JSObject *
 jit::NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind)
 {
     JS_ASSERT(ForkJoinContext::current() == cx);
-    return js_NewGCObject<NoGC>(cx, allocKind, gc::TenuredHeap);
+    return js::NewGCObject<NoGC>(cx, allocKind, 0, gc::TenuredHeap);
 }
 
 bool

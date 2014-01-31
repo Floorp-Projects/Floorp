@@ -379,27 +379,26 @@ typedef CompartmentsIterT<GCZoneGroupIter> GCCompartmentGroupIter;
  * Attempt to allocate a new GC thing out of the nursery. If there is not enough
  * room in the nursery or there is an OOM, this method will return nullptr.
  */
-template <typename T, AllowGC allowGC>
-inline T *
-TryNewNurseryGCThing(ThreadSafeContext *cxArg, size_t thingSize)
+template <AllowGC allowGC>
+inline JSObject *
+TryNewNurseryObject(ThreadSafeContext *cxArg, size_t thingSize, size_t nDynamicSlots)
 {
-    /* TODO: Integrate PJS with generational GC. */
     JSContext *cx = cxArg->asJSContext();
 
     JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
     JSRuntime *rt = cx->runtime();
     Nursery &nursery = rt->gcNursery;
-    T *t = static_cast<T *>(nursery.allocate(thingSize));
-    if (t)
-        return t;
+    JSObject *obj = nursery.allocateObject(cx, thingSize, nDynamicSlots);
+    if (obj)
+        return obj;
     if (allowGC && !rt->mainThread.suppressGC) {
         MinorGC(cx, JS::gcreason::OUT_OF_NURSERY);
 
         /* Exceeding gcMaxBytes while tenuring can disable the Nursery. */
         if (nursery.isEnabled()) {
-            t = static_cast<T *>(nursery.allocate(thingSize));
-            JS_ASSERT(t);
-            return t;
+            JSObject *obj = nursery.allocateObject(cx, thingSize, nDynamicSlots);
+            JS_ASSERT(obj);
+            return obj;
         }
     }
     return nullptr;
@@ -459,9 +458,9 @@ CheckIncrementalZoneState(ThreadSafeContext *cx, T *t)
  * in the partially initialized thing.
  */
 
-template <typename T, AllowGC allowGC>
-inline T *
-AllocateObject(ThreadSafeContext *cx, AllocKind kind, InitialHeap heap)
+template <AllowGC allowGC>
+inline JSObject *
+AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, InitialHeap heap)
 {
     size_t thingSize = Arena::thingSize(kind);
 
@@ -471,18 +470,31 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, InitialHeap heap)
 
 #ifdef JSGC_GENERATIONAL
     if (cx->hasNursery() && ShouldNurseryAllocate(cx->nursery(), kind, heap)) {
-        T *t = TryNewNurseryGCThing<T, allowGC>(cx, thingSize);
-        if (t)
-            return t;
+        JSObject *obj = TryNewNurseryObject<allowGC>(cx, thingSize, nDynamicSlots);
+        if (obj)
+            return obj;
     }
 #endif
 
-    T *t = static_cast<T *>(cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
-    if (!t)
-        t = static_cast<T *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
+    HeapSlot *slots = nullptr;
+    if (nDynamicSlots) {
+        slots = cx->pod_malloc<HeapSlot>(nDynamicSlots);
+        if (MOZ_UNLIKELY(!slots))
+            return nullptr;
+        js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
+    }
 
-    CheckIncrementalZoneState(cx, t);
-    return t;
+    JSObject *obj = static_cast<JSObject *>(cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
+    if (!obj)
+        obj = static_cast<JSObject *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
+
+    if (obj)
+        obj->setInitialSlots(slots);
+    else
+        js_free(slots);
+
+    CheckIncrementalZoneState(cx, obj);
+    return obj;
 }
 
 template <typename T, AllowGC allowGC>
@@ -507,6 +519,14 @@ AllocateNonObject(ThreadSafeContext *cx)
 } /* namespace gc */
 
 template <js::AllowGC allowGC>
+inline JSObject *
+NewGCObject(js::ThreadSafeContext *cx, js::gc::AllocKind kind, size_t nDynamicSlots, js::gc::InitialHeap heap)
+{
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    return js::gc::AllocateObject<allowGC>(cx, kind, nDynamicSlots, heap);
+}
+
+template <js::AllowGC allowGC>
 inline jit::JitCode *
 NewJitCode(js::ThreadSafeContext *cx)
 {
@@ -521,14 +541,6 @@ NewTypeObject(js::ThreadSafeContext *cx)
 }
 
 } /* namespace js */
-
-template <js::AllowGC allowGC>
-inline JSObject *
-js_NewGCObject(js::ThreadSafeContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap)
-{
-    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    return js::gc::AllocateObject<JSObject, allowGC>(cx, kind, heap);
-}
 
 template <js::AllowGC allowGC>
 inline JSString *
