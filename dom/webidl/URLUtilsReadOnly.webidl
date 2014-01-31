@@ -25,4 +25,5 @@ interface URLUtilsReadOnly {
   readonly attribute DOMString pathname;
   readonly attribute DOMString search;
   readonly attribute DOMString hash;
+  readonly attribute DOMString origin;
 };
