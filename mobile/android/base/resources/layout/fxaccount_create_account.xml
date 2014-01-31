@@ -27,7 +27,7 @@
         <include layout="@layout/fxaccount_email_password_view" />
 
         <TextView
-            style="@style/FxAccountLinkifiedItem"
+            style="@style/FxAccountTextItem"
             android:layout_marginTop="10dp"
             android:text="@string/fxaccount_create_account_password_length_restriction" />
 

@@ -18,6 +18,7 @@ import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountSignInTask;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -80,8 +81,8 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
       passwordEdit.setText(bundle.getString("password"));
     }
 
-    // Not yet implemented.
-    // this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
+    TextView view = (TextView) findViewById(R.id.forgot_password_link);
+    ActivityUtils.linkTextView(view, R.string.fxaccount_sign_in_forgot_password, R.string.fxaccount_link_forgot_password);
   }
 
   /**
