@@ -35,8 +35,7 @@ JSObject *
 jit::NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind)
 {
     JS_ASSERT(ForkJoinContext::current() == cx);
-    uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
-    return gc::NewGCThing<JSObject, NoGC>(cx, allocKind, thingSize, gc::DefaultHeap);
+    return js_NewGCObject<NoGC>(cx, allocKind, gc::TenuredHeap);
 }
 
 bool
