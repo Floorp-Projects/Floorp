@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
                                   "resource://gre/modules/CharsetMenu.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+                                  "resource://gre/modules/ShortcutUtils.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -4820,6 +4822,44 @@ var gHomeButton = {
                              homeButton.className.replace("bookmark-item", "toolbarbutton-1");
   },
 };
+
+const nodeToTooltipMap = {
+  "bookmarks-menu-button": "bookmarksMenuButton.tooltip",
+#ifdef XP_MACOSX
+  "print-button": "printButton.tooltip",
+#endif
+  "new-window-button": "newWindowButton.tooltip",
+  "fullscreen-button": "fullscreenButton.tooltip",
+  "tabview-button": "tabviewButton.tooltip",
+};
+const nodeToShortcutMap = {
+  "bookmarks-menu-button": "manBookmarkKb",
+#ifdef XP_MACOSX
+  "print-button": "printKb",
+#endif
+  "new-window-button": "key_newNavigator",
+  "fullscreen-button": "key_fullScreen",
+  "tabview-button": "key_tabview",
+};
+const gDynamicTooltipCache = new Map();
+function UpdateDynamicShortcutTooltipText(popupTriggerNode) {
+  let label = document.getElementById("dynamic-shortcut-tooltip-label");
+  let nodeId = popupTriggerNode.id;
+  if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
+    let strId = nodeToTooltipMap[nodeId];
+    let args = [];
+    if (nodeId in nodeToShortcutMap) {
+      let shortcutId = nodeToShortcutMap[nodeId];
+      let shortcut = document.getElementById(shortcutId);
+      if (shortcut) {
+        args.push(ShortcutUtils.prettifyShortcut(shortcut));
+      }
+    }
+    gDynamicTooltipCache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
+  }
+  let desiredLabel = gDynamicTooltipCache.get(nodeId);
+  label.setAttribute("value", desiredLabel);
+}
 
 /**
  * Gets the selected text in the active browser. Leading and trailing
