@@ -46,8 +46,10 @@ extern const JSFunctionSpec Int32x4Methods[];
             return false; \
         } \
         TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
-        TypeRepresentation *typeRepr = datum.typeRepresentation(); \
-        if (typeRepr->kind() != TypeDescr::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
+        TypeDescr &descr = datum.typeDescr(); \
+        if (descr.kind() != TypeDescr::X4 || \
+            descr.as<X4TypeDescr>().type() != Type32x4::type) \
+        {  \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, laneNames[lane], \
                                  InformalValueTypeName(args.thisv())); \
@@ -77,8 +79,10 @@ extern const JSFunctionSpec Int32x4Methods[];
             return false; \
         } \
         TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
-        TypeRepresentation *typeRepr = datum.typeRepresentation(); \
-        if (typeRepr->kind() != TypeDescr::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
+        TypeDescr &descr = datum.typeDescr(); \
+        if (descr.kind() != TypeDescr::X4 || \
+            descr.as<X4TypeDescr>().type() != Type32x4::type) \
+        { \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, "signMask", \
                                  InformalValueTypeName(args.thisv())); \
@@ -243,13 +247,12 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    Rooted<X4TypeDescr*> typeObj(cx, &args.callee().as<X4TypeDescr>());
-    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeObj, 0));
+    Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
+    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
 
-    X4TypeRepresentation *typeRepr = typeObj->typeRepresentation()->asX4();
-    switch (typeRepr->type()) {
+    switch (descr->type()) {
 #define STORE_LANES(_constant, _type, _name)                                  \
       case _constant:                                                         \
       {                                                                       \
@@ -367,10 +370,10 @@ static bool
 ObjectIsVector(JSObject &obj) {
     if (!obj.is<TypedDatum>())
         return false;
-    TypeRepresentation *typeRepr = obj.as<TypedDatum>().typeRepresentation();
-    if (typeRepr->kind() != TypeDescr::X4)
+    TypeDescr &typeRepr = obj.as<TypedDatum>().typeDescr();
+    if (typeRepr.kind() != TypeDescr::X4)
         return false;
-    return typeRepr->asX4()->type() == V::type;
+    return typeRepr.as<X4TypeDescr>().type() == V::type;
 }
 
 template<typename V>
