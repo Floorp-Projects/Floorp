@@ -1385,21 +1385,21 @@ nsXULPopupManager::GetVisiblePopups(nsTArray<nsIFrame *>& aPopups)
 {
   aPopups.Clear();
 
+  // Iterate over both lists of popups
   nsMenuChainItem* item = mPopups;
-  while (item) {
-    if (item->Frame()->PopupState() == ePopupOpenAndVisible)
-      aPopups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
-    item = item->GetParent();
-  }
+  for (int32_t list = 0; list < 2; list++) {
+    while (item) {
+      // Skip panels which are not open and visible as well as popups that
+      // are transparent to mouse events.
+      if (item->Frame()->PopupState() == ePopupOpenAndVisible &&
+          !item->Frame()->IsMouseTransparent()) {
+        aPopups.AppendElement(item->Frame());
+      }
 
-  item = mNoHidePanels;
-  while (item) {
-    // skip panels which are not open and visible as well as draggable popups,
-    // as those don't respond to events.
-    if (item->Frame()->PopupState() == ePopupOpenAndVisible && !item->Frame()->IsDragPopup()) {
-      aPopups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
+      item = item->GetParent();
     }
-    item = item->GetParent();
+
+    item = mNoHidePanels;
   }
 }
 
