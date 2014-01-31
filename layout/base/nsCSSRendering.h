@@ -217,6 +217,15 @@ public:
   bool IsReady() { return mIsReady; }
 
 private:
+  /**
+   * Helper method for creating a gfxDrawable from mPaintServerFrame or 
+   * mImageElementSurface.
+   * Requires mType is eStyleImageType_Element.
+   * Returns null if we cannot create the drawable.
+   */
+  already_AddRefed<gfxDrawable> DrawableForElement(const nsRect& aImageRect,
+                                                   nsRenderingContext&  aRenderingContext);
+
   nsIFrame*                 mForFrame;
   const nsStyleImage*       mImage;
   nsStyleImageType          mType;
