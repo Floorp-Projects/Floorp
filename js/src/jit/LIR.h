@@ -546,7 +546,7 @@ class LDefinition
             return LDefinition::SLOTS;
           case MIRType_Pointer:
             return LDefinition::GENERAL;
-          case MIRType_ForkJoinSlice:
+          case MIRType_ForkJoinContext:
             return LDefinition::GENERAL;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected type");

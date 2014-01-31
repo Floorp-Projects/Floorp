@@ -115,10 +115,10 @@
 //
 // Operation callback:
 //
-// During parallel execution, |slice.check()| must be periodically
+// During parallel execution, |cx.check()| must be periodically
 // invoked to check for the operation callback. This is automatically
 // done by the Ion-generated code. If the operation callback is
-// necessary, |slice.check()| abort the parallel execution.
+// necessary, |cx.check()| abort the parallel execution.
 //
 // Transitive compilation:
 //
@@ -143,7 +143,7 @@
 // Bailout tracing and recording:
 //
 // When a bailout occurs, we record a bit of state so that we can
-// recover with grace. Each |ForkJoinSlice| has a pointer to a
+// recover with grace. Each |ForkJoinContext| has a pointer to a
 // |ParallelBailoutRecord| pre-allocated for this purpose. This
 // structure is used to record the cause of the bailout, the JSScript
 // which was executing, as well as the location in the source where
@@ -162,13 +162,13 @@
 //
 // To deal with this, the forkjoin code creates a distinct |Allocator|
 // object for each slice.  You can access the appropriate object via
-// the |ForkJoinSlice| object that is provided to the callbacks.  Once
+// the |ForkJoinContext| object that is provided to the callbacks.  Once
 // the execution is complete, all the objects found in these distinct
 // |Allocator| is merged back into the main compartment lists and
 // things proceed normally.
 //
 // In Ion-generated code, we will do allocation through the
-// |Allocator| found in |ForkJoinSlice| (which is obtained via TLS).
+// |Allocator| found in |ForkJoinContext| (which is obtained via TLS).
 // Also, no write barriers are emitted.  Conceptually, we should never
 // need a write barrier because we only permit writes to objects that
 // are newly allocated, and such objects are always black (to use
@@ -217,7 +217,7 @@ class ForkJoinActivation : public Activation
     ~ForkJoinActivation();
 };
 
-class ForkJoinSlice;
+class ForkJoinContext;
 
 bool ForkJoin(JSContext *cx, CallArgs &args);
 
@@ -298,7 +298,7 @@ struct ParallelBailoutRecord {
 
 struct ForkJoinShared;
 
-class ForkJoinSlice : public ThreadSafeContext
+class ForkJoinContext : public ThreadSafeContext
 {
   public:
     // The slice that is being processed.
@@ -336,9 +336,9 @@ class ForkJoinSlice : public ThreadSafeContext
     uint8_t *targetRegionStart;
     uint8_t *targetRegionEnd;
 
-    ForkJoinSlice(PerThreadData *perThreadData, uint16_t sliceId, uint32_t workerId,
-                  Allocator *allocator, ForkJoinShared *shared,
-                  ParallelBailoutRecord *bailoutRecord);
+    ForkJoinContext(PerThreadData *perThreadData, uint16_t sliceId, uint32_t workerId,
+                    Allocator *allocator, ForkJoinShared *shared,
+                    ParallelBailoutRecord *bailoutRecord);
 
     // True if this is the main thread, false if it is one of the parallel workers.
     bool isMainThread() const;
@@ -385,27 +385,27 @@ class ForkJoinSlice : public ThreadSafeContext
     JSRuntime *runtime();
 
     // Acquire and release the JSContext from the runtime.
-    JSContext *acquireContext();
-    void releaseContext();
-    bool hasAcquiredContext() const;
+    JSContext *acquireJSContext();
+    void releaseJSContext();
+    bool hasAcquiredJSContext() const;
 
     // Check the current state of parallel execution.
-    static inline ForkJoinSlice *current();
+    static inline ForkJoinContext *current();
 
     // Initializes the thread-local state.
     static bool initialize();
 
   private:
-    friend class AutoSetForkJoinSlice;
+    friend class AutoSetForkJoinContext;
 
     // Initialized by initialize()
-    static mozilla::ThreadLocal<ForkJoinSlice*> tlsForkJoinSlice;
+    static mozilla::ThreadLocal<ForkJoinContext*> tlsForkJoinContext;
 
     ForkJoinShared *const shared;
 
-    bool acquiredContext_;
+    bool acquiredJSContext_;
 
-    // ForkJoinSlice is allocated on the stack. It would be dangerous to GC
+    // ForkJoinContext is allocated on the stack. It would be dangerous to GC
     // with it live because of the GC pointer fields stored in the context.
     JS::AutoAssertNoGC nogc_;
 };
@@ -422,28 +422,28 @@ class ForkJoinSlice : public ThreadSafeContext
 class LockedJSContext
 {
 #if defined(JS_THREADSAFE) && defined(JS_ION)
-    ForkJoinSlice *slice_;
+    ForkJoinContext *cx_;
 #endif
-    JSContext *cx_;
+    JSContext *jscx_;
 
   public:
-    LockedJSContext(ForkJoinSlice *slice)
+    LockedJSContext(ForkJoinContext *cx)
 #if defined(JS_THREADSAFE) && defined(JS_ION)
-      : slice_(slice),
-        cx_(slice->acquireContext())
+      : cx_(cx),
+        jscx_(cx->acquireJSContext())
 #else
-      : cx_(nullptr)
+      : jscx_(nullptr)
 #endif
     { }
 
     ~LockedJSContext() {
 #if defined(JS_THREADSAFE) && defined(JS_ION)
-        slice_->releaseContext();
+        cx_->releaseJSContext();
 #endif
     }
 
-    operator JSContext *() { return cx_; }
-    JSContext *operator->() { return cx_; }
+    operator JSContext *() { return jscx_; }
+    JSContext *operator->() { return jscx_; }
 };
 
 bool InExclusiveParallelSection();
@@ -516,10 +516,10 @@ static inline void SpewBailoutIR(IonLIRTraceData *data) { }
 } // namespace parallel
 } // namespace js
 
-/* static */ inline js::ForkJoinSlice *
-js::ForkJoinSlice::current()
+/* static */ inline js::ForkJoinContext *
+js::ForkJoinContext::current()
 {
-    return tlsForkJoinSlice.get();
+    return tlsForkJoinContext.get();
 }
 
 namespace js {
@@ -527,7 +527,7 @@ namespace js {
 static inline bool
 InParallelSection()
 {
-    return ForkJoinSlice::current() != nullptr;
+    return ForkJoinContext::current() != nullptr;
 }
 
 } // namespace js
