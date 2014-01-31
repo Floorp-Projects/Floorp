@@ -9102,9 +9102,11 @@ if (cx) {
         if memberInits:
             body += (
                 "bool isNull = val.isNullOrUndefined();\n"
-                "// We only need |temp| if !isNull, in which case we have |cx|.\n"
+                "// We only need these if !isNull, in which case we have |cx|.\n"
+                "Maybe<JS::Rooted<JSObject *> > object;\n"
                 "Maybe<JS::Rooted<JS::Value> > temp;\n"
                 "if (!isNull) {\n"
+                "  object.construct(cx, &val.toObject());\n"
                 "  temp.construct(cx);\n"
                 "}\n")
             body += "\n\n".join(memberInits) + "\n"
@@ -9170,7 +9172,7 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
 
     def initIdsMethod(self):
         assert self.needToInitIds
-        idinit = [CGGeneric('!InternJSString(cx, atomsCache->%s, "%s")' %
+        idinit = [CGGeneric('!atomsCache->%s.init(cx, "%s")' %
                             (m.identifier.name + "_id", m.identifier.name))
                   for m in self.dictionary.members]
         idinit.reverse();
@@ -9355,7 +9357,7 @@ if (""",
             replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
 
         propId = self.makeIdName(member.identifier.name);
-        propGet = ("JS_GetPropertyById(cx, &val.toObject(), atomsCache->%s, &temp.ref())" %
+        propGet = ("JS_GetPropertyById(cx, object.ref(), atomsCache->%s, &temp.ref())" %
                    propId)
 
         conversionReplacements = {
@@ -11432,7 +11434,8 @@ class CallbackGetter(CallbackAccessor):
                                                                 self.attrName)
             }
         return string.Template(
-            'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
+            'JS::Rooted<JSObject *> callback(cx, mCallback);\n'
+            'if (!JS_GetProperty(cx, callback, "${attrName}", &rval)) {\n'
             '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
             '  return${errorReturn};\n'
             '}\n').substitute(replacements);
@@ -11499,9 +11502,8 @@ class GlobalGenRoots():
                 continue
 
             classMembers = [ClassMember(m.identifier.name + "_id",
-                                        "jsid",
-                                        visibility="public",
-                                        body="JSID_VOID") for m in dictMembers]
+                                        "InternedStringId",
+                                        visibility="public") for m in dictMembers]
 
             structName = dict.identifier.name + "Atoms"
             structs.append((structName,
@@ -11524,6 +11526,11 @@ class GlobalGenRoots():
         curr = CGNamespace.build(['mozilla', 'dom'],
                                   CGWrapper(structs, pre='\n'))
         curr = CGWrapper(curr, post='\n')
+
+        # Add include statement for InternedStringId.
+        declareIncludes = ['mozilla/dom/BindingUtils.h']
+        curr = CGHeaders([], [], [], [], declareIncludes, [], 'GeneratedAtomList',
+                         curr)
 
         # Add include guards.
         curr = CGIncludeGuard('GeneratedAtomList', curr)
