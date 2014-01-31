@@ -129,21 +129,14 @@ let gSyncPane = {
         // So we think we are logged in, so login problems are next.
         // (Although if the Sync identity manager is still initializing, we
         // ignore login errors and assume all will eventually be good.)
+        } else if (Weave.Service.identity.readyToAuthenticate &&
+                   Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+          fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
+          enginesListDisabled = true;
+        // Else we must be golden!
         } else {
-          // Weave might not have got around to re-checking if auth is OK,
-          // so tell it to do that now.
-          if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
-            Weave.Service.verifyLogin();
-          }
-          if (Weave.Service.identity.readyToAuthenticate &&
-              Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
-            fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
-            enginesListDisabled = true;
-          // Else we must be golden!
-          } else {
-            fxaLoginStatus.selectedIndex = FXA_LOGIN_VERIFIED;
-            enginesListDisabled = false;
-          }
+          fxaLoginStatus.selectedIndex = FXA_LOGIN_VERIFIED;
+          enginesListDisabled = false;
         }
         document.getElementById("fxaEmailAddress1").textContent = data.email;
         document.getElementById("fxaEmailAddress2").textContent = data.email;
