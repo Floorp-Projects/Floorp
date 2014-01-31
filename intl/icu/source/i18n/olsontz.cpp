@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2003-2013, International Business Machines
+* Copyright (c) 2003-2012, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -25,7 +25,6 @@
 #include <float.h> // DBL_MAX
 #include "uresimp.h" // struct UResourceBundle
 #include "zonemeta.h"
-#include "umutex.h"
 
 #ifdef U_DEBUG_TZ
 # include <stdio.h>
@@ -119,7 +118,7 @@ OlsonTimeZone::OlsonTimeZone(const UResourceBundle* top,
                              const UResourceBundle* res,
                              const UnicodeString& tzid,
                              UErrorCode& ec) :
-  BasicTimeZone(tzid), finalZone(NULL)
+  BasicTimeZone(tzid), finalZone(NULL), transitionRulesInitialized(FALSE)
 {
     clearTransitionRules();
     U_DEBUG_TZ_MSG(("OlsonTimeZone(%s)\n", ures_getKey((UResourceBundle*)res)));
@@ -400,7 +399,7 @@ void OlsonTimeZone::getOffset(UDate date, UBool local, int32_t& rawoff,
 
 void
 OlsonTimeZone::getOffsetFromLocal(UDate date, int32_t nonExistingTimeOpt, int32_t duplicatedTimeOpt,
-                                  int32_t& rawoff, int32_t& dstoff, UErrorCode& ec) const {
+                                  int32_t& rawoff, int32_t& dstoff, UErrorCode& ec) /*const*/ {
     if (U_FAILURE(ec)) {
         return;
     }
@@ -464,11 +463,6 @@ OlsonTimeZone::transitionTimeInSeconds(int16_t transIdx) const {
         | ((int64_t)((uint32_t)transitionTimesPost32[(transIdx << 1) + 1]));
 }
 
-// Maximum absolute offset in seconds (86400 seconds = 1 day)
-// getHistoricalOffset uses this constant as safety margin of
-// quick zone transition checking.
-#define MAX_OFFSET_SECONDS 86400
-
 void
 OlsonTimeZone::getHistoricalOffset(UDate date, UBool local,
                                    int32_t NonExistingTimeOpt, int32_t DuplicatedTimeOpt,
@@ -493,7 +487,7 @@ OlsonTimeZone::getHistoricalOffset(UDate date, UBool local,
             for (transIdx = transCount - 1; transIdx >= 0; transIdx--) {
                 int64_t transition = transitionTimeInSeconds(transIdx);
 
-                if (local && (sec >= (transition - MAX_OFFSET_SECONDS))) {
+                if (local) {
                     int32_t offsetBefore = zoneOffsetAt(transIdx - 1);
                     UBool dstBefore = dstOffsetAt(transIdx - 1) != 0;
 
@@ -577,7 +571,7 @@ UBool OlsonTimeZone::useDaylightTime() const {
     // Return TRUE if DST is observed at any time during the current
     // year.
     for (int16_t i = 0; i < transitionCount(); ++i) {
-        double transition = (double)transitionTimeInSeconds(i);
+        double transition = transitionTimeInSeconds(i);
         if (transition >= limit) {
             break;
         }
@@ -658,7 +652,7 @@ OlsonTimeZone::clearTransitionRules(void) {
     historicRuleCount = 0;
     finalZoneWithStartYear = NULL;
     firstTZTransitionIdx = 0;
-    transitionRulesInitOnce.reset();
+    transitionRulesInitialized = FALSE;
 }
 
 void
@@ -686,23 +680,12 @@ OlsonTimeZone::deleteTransitionRules(void) {
     clearTransitionRules();
 }
 
-/*
- * Lazy transition rules initializer
- */
-
-static void U_CALLCONV initRules(OlsonTimeZone *This, UErrorCode &status) {
-    This->initTransitionRules(status);
-}
-    
-void
-OlsonTimeZone::checkTransitionRules(UErrorCode& status) const {
-    OlsonTimeZone *ncThis = const_cast<OlsonTimeZone *>(this);
-    umtx_initOnce(ncThis->transitionRulesInitOnce, &initRules, ncThis, status);
-}
-
 void
 OlsonTimeZone::initTransitionRules(UErrorCode& status) {
     if(U_FAILURE(status)) {
+        return;
+    }
+    if (transitionRulesInitialized) {
         return;
     }
     deleteTransitionRules();
@@ -873,12 +856,13 @@ OlsonTimeZone::initTransitionRules(UErrorCode& status) {
         firstFinalTZTransition->adoptFrom(prevRule->clone());
         firstFinalTZTransition->adoptTo(firstFinalRule);
     }
+    transitionRulesInitialized = TRUE;
 }
 
 UBool
-OlsonTimeZone::getNextTransition(UDate base, UBool inclusive, TimeZoneTransition& result) const {
+OlsonTimeZone::getNextTransition(UDate base, UBool inclusive, TimeZoneTransition& result) /*const*/ {
     UErrorCode status = U_ZERO_ERROR;
-    checkTransitionRules(status);
+    initTransitionRules(status);
     if (U_FAILURE(status)) {
         return FALSE;
     }
@@ -941,9 +925,9 @@ OlsonTimeZone::getNextTransition(UDate base, UBool inclusive, TimeZoneTransition
 }
 
 UBool
-OlsonTimeZone::getPreviousTransition(UDate base, UBool inclusive, TimeZoneTransition& result) const {
+OlsonTimeZone::getPreviousTransition(UDate base, UBool inclusive, TimeZoneTransition& result) /*const*/ {
     UErrorCode status = U_ZERO_ERROR;
-    checkTransitionRules(status);
+    initTransitionRules(status);
     if (U_FAILURE(status)) {
         return FALSE;
     }
@@ -1002,11 +986,11 @@ OlsonTimeZone::getPreviousTransition(UDate base, UBool inclusive, TimeZoneTransi
 }
 
 int32_t
-OlsonTimeZone::countTransitionRules(UErrorCode& status) const {
+OlsonTimeZone::countTransitionRules(UErrorCode& status) /*const*/ {
     if (U_FAILURE(status)) {
         return 0;
     }
-    checkTransitionRules(status);
+    initTransitionRules(status);
     if (U_FAILURE(status)) {
         return 0;
     }
@@ -1035,11 +1019,11 @@ void
 OlsonTimeZone::getTimeZoneRules(const InitialTimeZoneRule*& initial,
                                 const TimeZoneRule* trsrules[],
                                 int32_t& trscount,
-                                UErrorCode& status) const {
+                                UErrorCode& status) /*const*/ {
     if (U_FAILURE(status)) {
         return;
     }
-    checkTransitionRules(status);
+    initTransitionRules(status);
     if (U_FAILURE(status)) {
         return;
     }

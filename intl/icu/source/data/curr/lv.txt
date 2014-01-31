@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/lv.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/lv.xml
+ *  ICU <specials> source: <path>/xml/main/lv.xml
  */
 lv{
     Currencies{
@@ -53,7 +53,7 @@ lv{
         }
         AZM{
             "AZM",
-            "Azerbaidžānas manats (1993–2006)",
+            "Azerbaidžānas manats (1993-2006)",
         }
         AZN{
             "AZN",
@@ -141,7 +141,7 @@ lv{
         }
         CNY{
             "CN¥",
-            "Ķīnas juaņs",
+            "Ķīnas juaņa renminbi",
         }
         COP{
             "COP",
@@ -497,7 +497,7 @@ lv{
         }
         NIO{
             "NIO",
-            "Nikaragvas kordoba",
+            "Kordovas oro",
         }
         NLG{
             "NLG",
@@ -713,7 +713,7 @@ lv{
         }
         VEB{
             "VEB",
-            "Venecuēlas bolivārs (1871–2008)",
+            "Venecuēlas bolivārs (1871-2008)",
         }
         VEF{
             "VEF",
@@ -813,10 +813,6 @@ lv{
         }
         ZMK{
             "ZMK",
-            "Zambijas kvača (1968–2012)",
-        }
-        ZMW{
-            "ZMW",
             "Zambijas kvača",
         }
         ZWD{
@@ -875,9 +871,9 @@ lv{
             zero{"Arubas guldeņi"}
         }
         AZM{
-            one{"Azerbaidžānas manats (1993–2006)"}
-            other{"Azerbaidžānas manati (1993–2006)"}
-            zero{"Azerbaidžānas manati (1993–2006)"}
+            one{"Azerbaidžānas manats (1993-2006)"}
+            other{"Azerbaidžānas manati (1993-2006)"}
+            zero{"Azerbaidžānas manati (1993-2006)"}
         }
         AZN{
             one{"Azerbaidžānas manats"}
@@ -985,9 +981,9 @@ lv{
             zero{"Čīles peso"}
         }
         CNY{
-            one{"Ķīnas juaņs"}
-            other{"Ķīnas juaņi"}
-            zero{"Ķīnas juaņi"}
+            one{"Ķīnas juaņa renminbi"}
+            other{"Ķīnas juaņa renminbi"}
+            zero{"Ķīnas juaņa renminbi"}
         }
         COP{
             one{"Kolumbijas peso"}
@@ -1345,9 +1341,9 @@ lv{
             zero{"Nigērijas nairas"}
         }
         NIO{
-            one{"Nikaragvas kordoba"}
-            other{"Nikaragvas kordobas"}
-            zero{"Nikaragvas kordobas"}
+            one{"Kordovas oro"}
+            other{"Kordovas oro"}
+            zero{"Kordovas oro"}
         }
         NOK{
             one{"Norvēģijas krona"}
@@ -1516,8 +1512,8 @@ lv{
         }
         TMT{
             one{"Turkmenistānas jaunais manats"}
-            other{"Turkmenistānas manati"}
-            zero{"Turkmenistānas manati"}
+            other{"Turkmenistānas jaunie manati"}
+            zero{"Turkmenistānas jaunie manati"}
         }
         TND{
             one{"Tunisijas dinārs"}
@@ -1531,8 +1527,8 @@ lv{
         }
         TRY{
             one{"Turcijas jaunā lira"}
-            other{"Turcijas liras"}
-            zero{"Turcijas liras"}
+            other{"Turcijas jaunās liras"}
+            zero{"Turcijas jaunās liras"}
         }
         TTD{
             one{"Trinidādas un Tobāgo dolārs"}
@@ -1575,9 +1571,9 @@ lv{
             zero{"Uzbekistānas sumi"}
         }
         VEB{
-            one{"Venecuēlas bolivārs (1871–2008)"}
-            other{"Venecuēlas bolivāri (1871–2008)"}
-            zero{"Venecuēlas bolivāri (1871–2008)"}
+            one{"Venecuēlas bolivārs (1871-2008)"}
+            other{"Venecuēlas bolivāri (1871-2008)"}
+            zero{"Venecuēlas bolivāri (1871-2008)"}
         }
         VEF{
             one{"Venecuēlas bolivārs"}
@@ -1655,11 +1651,6 @@ lv{
             zero{"Dienvidāfrikas randi"}
         }
         ZMK{
-            one{"Zambijas kvača (1968–2012)"}
-            other{"Zambijas kvačas (1968–2012)"}
-            zero{"Zambijas kvačas (1968–2012)"}
-        }
-        ZMW{
             one{"Zambijas kvača"}
             other{"Zambijas kvačas"}
             zero{"Zambijas kvačas"}
@@ -1675,5 +1666,5 @@ lv{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.0.78.39"}
 }

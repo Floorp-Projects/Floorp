@@ -1,20 +1,19 @@
 /*
 **********************************************************************
-*   Copyright (C) 2008-2013, International Business Machines
+*   Copyright (C) 2008-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
 
 #include "unicode/utypes.h"
 #include "unicode/uspoof.h"
+#include "unicode/unorm.h"
 #include "unicode/uchar.h"
 #include "unicode/uniset.h"
 #include "unicode/utf16.h"
 #include "utrie2.h"
 #include "cmemory.h"
 #include "cstring.h"
-#include "identifier_info.h"
-#include "scriptset.h"
 #include "udatamem.h"
 #include "umutex.h"
 #include "udataswp.h"
@@ -29,41 +28,37 @@ U_NAMESPACE_BEGIN
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(SpoofImpl)
 
 SpoofImpl::SpoofImpl(SpoofData *data, UErrorCode &status) :
-        fMagic(0), fChecks(USPOOF_ALL_CHECKS), fSpoofData(NULL), fAllowedCharsSet(NULL) , 
-        fAllowedLocales(NULL), fCachedIdentifierInfo(NULL) {
+    fMagic(0), fSpoofData(NULL), fAllowedCharsSet(NULL) , fAllowedLocales(uprv_strdup("")) {
     if (U_FAILURE(status)) {
         return;
     }
+    fMagic = USPOOF_MAGIC;
     fSpoofData = data;
-    fRestrictionLevel = USPOOF_HIGHLY_RESTRICTIVE;
-
+    fChecks = USPOOF_ALL_CHECKS;
     UnicodeSet *allowedCharsSet = new UnicodeSet(0, 0x10ffff);
-    allowedCharsSet->freeze();
-    fAllowedCharsSet = allowedCharsSet;
-    fAllowedLocales  = uprv_strdup("");
-    if (fAllowedCharsSet == NULL || fAllowedLocales == NULL) {
+    if (allowedCharsSet == NULL || fAllowedLocales == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
         return;
     }
-    fMagic = USPOOF_MAGIC;
+    allowedCharsSet->freeze();
+    fAllowedCharsSet = allowedCharsSet;
 }
 
 
-SpoofImpl::SpoofImpl() :
-        fMagic(USPOOF_MAGIC), fChecks(USPOOF_ALL_CHECKS), fSpoofData(NULL), fAllowedCharsSet(NULL) , 
-        fAllowedLocales(NULL), fCachedIdentifierInfo(NULL) {
+SpoofImpl::SpoofImpl() {
+    fMagic = USPOOF_MAGIC;
+    fSpoofData = NULL;
+    fChecks = USPOOF_ALL_CHECKS;
     UnicodeSet *allowedCharsSet = new UnicodeSet(0, 0x10ffff);
     allowedCharsSet->freeze();
     fAllowedCharsSet = allowedCharsSet;
     fAllowedLocales  = uprv_strdup("");
-    fRestrictionLevel = USPOOF_HIGHLY_RESTRICTIVE;
 }
 
 
 // Copy Constructor, used by the user level clone() function.
 SpoofImpl::SpoofImpl(const SpoofImpl &src, UErrorCode &status)  :
-        fMagic(0), fChecks(USPOOF_ALL_CHECKS), fSpoofData(NULL), fAllowedCharsSet(NULL) , 
-        fAllowedLocales(NULL), fCachedIdentifierInfo(NULL) {
+    fMagic(0), fSpoofData(NULL), fAllowedCharsSet(NULL) {
     if (U_FAILURE(status)) {
         return;
     }
@@ -77,7 +72,6 @@ SpoofImpl::SpoofImpl(const SpoofImpl &src, UErrorCode &status)  :
         status = U_MEMORY_ALLOCATION_ERROR;
     }
     fAllowedLocales = uprv_strdup(src.fAllowedLocales);
-    fRestrictionLevel = src.fRestrictionLevel;
 }
 
 SpoofImpl::~SpoofImpl() {
@@ -88,7 +82,6 @@ SpoofImpl::~SpoofImpl() {
     }
     delete fAllowedCharsSet;
     uprv_free((void *)fAllowedLocales);
-    delete fCachedIdentifierInfo;
 }
 
 //
@@ -102,7 +95,7 @@ const SpoofImpl *SpoofImpl::validateThis(const USpoofChecker *sc, UErrorCode &st
     if (sc == NULL) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return NULL;
-    }
+    };
     SpoofImpl *This = (SpoofImpl *)sc;
     if (This->fMagic != USPOOF_MAGIC ||
         This->fSpoofData == NULL) {
@@ -128,10 +121,10 @@ SpoofImpl *SpoofImpl::validateThis(USpoofChecker *sc, UErrorCode &status) {
 //                        implementation.
 //
 //                        Given a source character, produce the corresponding
-//                        replacement character(s), appending them to the dest string.
+//                        replacement character(s)
 //
 //---------------------------------------------------------------------------------------
-int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeString &dest) const {
+int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UChar *destBuf) const {
 
     // Binary search the spoof data key table for the inChar
     int32_t  *low   = fSpoofData->fCFUKeys;
@@ -155,7 +148,7 @@ int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeSt
     if (inChar != midc) {
         // Char not found.  It maps to itself.
         int i = 0;
-        dest.append(inChar);
+        U16_APPEND_UNSAFE(destBuf, i, inChar)
         return i;
     } 
   foundChar:
@@ -183,7 +176,7 @@ int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeSt
         // No key entry for this char & table.
         // The input char maps to itself.
         int i = 0;
-        dest.append(inChar);
+        U16_APPEND_UNSAFE(destBuf, i, inChar)
         return i;
     }
 
@@ -195,7 +188,7 @@ int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeSt
     //                 an index into the string table (for longer strings)
     uint16_t value = fSpoofData->fCFUValues[keyTableIndex];
     if (stringLen == 1) {
-        dest.append((UChar)value);
+        destBuf[0] = value;
         return 1;
     }
 
@@ -219,7 +212,9 @@ int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeSt
 
     U_ASSERT(value + stringLen <= fSpoofData->fRawData->fCFUStringTableLen);
     UChar *src = &fSpoofData->fCFUStrings[value];
-    dest.append(src, stringLen);
+    for (ix=0; ix<stringLen; ix++) {
+        destBuf[ix] = src[ix];
+    }
     return stringLen;
 }
 
@@ -236,15 +231,16 @@ int32_t SpoofImpl::confusableLookup(UChar32 inChar, int32_t tableMask, UnicodeSt
 //
 //---------------------------------------------------------------------------------------
 void SpoofImpl::wholeScriptCheck(
-        const UnicodeString &text, ScriptSet *result, UErrorCode &status) const {
+    const UChar *text, int32_t length, ScriptSet *result, UErrorCode &status) const {
+
+    int32_t       inputIdx = 0;
+    UChar32       c;
 
     UTrie2 *table =
         (fChecks & USPOOF_ANY_CASE) ? fSpoofData->fAnyCaseTrie : fSpoofData->fLowerCaseTrie;
     result->setAll();
-    int32_t length = text.length();
-    for (int32_t inputIdx=0; inputIdx < length;) {
-        UChar32 c = text.char32At(inputIdx);
-        inputIdx += U16_LENGTH(c);
+    while (inputIdx < length) {
+        U16_NEXT(text, inputIdx, length, c);
         uint32_t index = utrie2_get32(table, c);
         if (index == 0) {
             // No confusables in another script for this char.
@@ -253,7 +249,7 @@ void SpoofImpl::wholeScriptCheck(
             //        Until then, grab the script from the char and intersect it with the set.
             UScriptCode cpScript = uscript_getScript(c, &status);
             U_ASSERT(cpScript > USCRIPT_INHERITED);
-            result->intersect(cpScript, status);
+            result->intersect(cpScript);
         } else if (index == 1) {
             // Script == Common or Inherited.  Nothing to do.
         } else {
@@ -375,6 +371,47 @@ void SpoofImpl::addScriptChars(const char *locale, UnicodeSet *allowedChars, UEr
 }
 
 
+int32_t SpoofImpl::scriptScan
+        (const UChar *text, int32_t length, int32_t &pos, UErrorCode &status) const {
+    if (U_FAILURE(status)) {
+        return 0;
+    }
+    int32_t       inputIdx = 0;
+    UChar32       c;
+    int32_t       scriptCount = 0;
+    UScriptCode   lastScript = USCRIPT_INVALID_CODE;
+    UScriptCode   sc = USCRIPT_INVALID_CODE;
+    while ((inputIdx < length || length == -1) && scriptCount < 2) {
+        U16_NEXT(text, inputIdx, length, c);
+        if (c == 0 && length == -1) {
+            break;
+        }
+        sc = uscript_getScript(c, &status);
+        if (sc == USCRIPT_COMMON || sc == USCRIPT_INHERITED || sc == USCRIPT_UNKNOWN) {
+            continue;
+        }
+
+        // Temporary fix: fold Japanese Hiragana and Katakana into Han.
+        //   Names are allowed to mix these scripts.
+        //   A more general solution will follow later for characters that are
+        //   used with multiple scripts.
+
+        if (sc == USCRIPT_HIRAGANA || sc == USCRIPT_KATAKANA || sc == USCRIPT_HANGUL) {
+            sc = USCRIPT_HAN;
+        }
+
+        if (sc != lastScript) {
+           scriptCount++;
+           lastScript = sc;
+        }
+    }
+    if (scriptCount == 2) {
+        pos = inputIdx;
+    }
+    return scriptCount;
+}
+
+
 // Convert a text format hex number.  Utility function used by builder code.  Static.
 // Input: UChar *string text.  Output: a UChar32
 // Input has been pre-checked, and will have no non-hex chars.
@@ -405,54 +442,6 @@ UChar32 SpoofImpl::ScanHex(const UChar *s, int32_t start, int32_t limit, UErrorC
     }
     return (UChar32)val;
 }
-
-// IdentifierInfo Cache. IdentifierInfo objects are somewhat expensive to create.
-//                       Maintain a one-element cache, which is sufficient to avoid repeatedly
-//                       creating new ones unless we get multi-thread concurrency in spoof
-//                       check operations, which should be statistically uncommon.
-
-// These functions are used in place of new & delete of an IdentifierInfo.
-// They will recycle the IdentifierInfo when possible.
-// They are logically const, and used within const functions that must be thread safe.
-IdentifierInfo *SpoofImpl::getIdentifierInfo(UErrorCode &status) const {
-    IdentifierInfo *returnIdInfo = NULL;
-    if (U_FAILURE(status)) {
-        return returnIdInfo;
-    }
-    SpoofImpl *nonConstThis = const_cast<SpoofImpl *>(this);
-    {
-        Mutex m;
-        returnIdInfo = nonConstThis->fCachedIdentifierInfo;
-        nonConstThis->fCachedIdentifierInfo = NULL;
-    }
-    if (returnIdInfo == NULL) {
-        returnIdInfo = new IdentifierInfo(status);
-        if (U_SUCCESS(status) && returnIdInfo == NULL) {
-            status = U_MEMORY_ALLOCATION_ERROR;
-        }
-        if (U_FAILURE(status) && returnIdInfo != NULL) {
-            delete returnIdInfo;
-            returnIdInfo = NULL;
-        }
-    }
-    return returnIdInfo;
-}
-
-
-void SpoofImpl::releaseIdentifierInfo(IdentifierInfo *idInfo) const {
-    if (idInfo != NULL) {
-        SpoofImpl *nonConstThis = const_cast<SpoofImpl *>(this);
-        {
-            Mutex m;
-            if (nonConstThis->fCachedIdentifierInfo == NULL) {
-                nonConstThis->fCachedIdentifierInfo = idInfo;
-                idInfo = NULL;
-            }
-        }
-        delete idInfo;
-    }
-}
-
 
 
 
@@ -682,6 +671,149 @@ void *SpoofData::reserveSpace(int32_t numBytes,  UErrorCode &status) {
     initPtrs(status);
     return (char *)fRawData + returnOffset;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  ScriptSet implementation
+//
+//----------------------------------------------------------------------------
+ScriptSet::ScriptSet() {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] = 0;
+    }
+}
+
+ScriptSet::~ScriptSet() {
+}
+
+UBool ScriptSet::operator == (const ScriptSet &other) {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        if (bits[i] != other.bits[i]) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+void ScriptSet::Union(UScriptCode script) {
+    uint32_t index = script / 32;
+    uint32_t bit   = 1 << (script & 31);
+    U_ASSERT(index < sizeof(bits)*4);
+    bits[index] |= bit;
+}
+
+
+void ScriptSet::Union(const ScriptSet &other) {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] |= other.bits[i];
+    }
+}
+
+void ScriptSet::intersect(const ScriptSet &other) {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] &= other.bits[i];
+    }
+}
+
+void ScriptSet::intersect(UScriptCode script) {
+    uint32_t index = script / 32;
+    uint32_t bit   = 1 << (script & 31);
+    U_ASSERT(index < sizeof(bits)*4);
+    uint32_t i;
+    for (i=0; i<index; i++) {
+        bits[i] = 0;
+    }
+    bits[index] &= bit;
+    for (i=index+1; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] = 0;
+    }
+}
+
+
+ScriptSet & ScriptSet::operator =(const ScriptSet &other) {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] = other.bits[i];
+    }
+    return *this;
+}
+
+
+void ScriptSet::setAll() {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] = 0xffffffffu;
+    }
+}
+
+
+void ScriptSet::resetAll() {
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        bits[i] = 0;
+    }
+}
+
+int32_t ScriptSet::countMembers() {
+    // This bit counter is good for sparse numbers of '1's, which is
+    //  very much the case that we will usually have.
+    int32_t count = 0;
+    for (uint32_t i=0; i<sizeof(bits)/sizeof(uint32_t); i++) {
+        uint32_t x = bits[i];
+        while (x > 0) {
+            count++;
+            x &= (x - 1);    // and off the least significant one bit.
+        }
+    }
+    return count;
+}
+
+
+
+//-----------------------------------------------------------------------------
+//
+//  NFDBuffer Implementation.
+//
+//-----------------------------------------------------------------------------
+
+NFDBuffer::NFDBuffer(const UChar *text, int32_t length, UErrorCode &status) {
+    fNormalizedText = NULL;
+    fNormalizedTextLength = 0;
+    fOriginalText = text;
+    if (U_FAILURE(status)) {
+        return;
+    }
+    fNormalizedText = fSmallBuf;
+    fNormalizedTextLength = unorm_normalize(
+        text, length, UNORM_NFD, 0, fNormalizedText, USPOOF_STACK_BUFFER_SIZE, &status);
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        status = U_ZERO_ERROR;
+        fNormalizedText = (UChar *)uprv_malloc((fNormalizedTextLength+1)*sizeof(UChar));
+        if (fNormalizedText == NULL) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+        } else {
+            fNormalizedTextLength = unorm_normalize(text, length, UNORM_NFD, 0,
+                                        fNormalizedText, fNormalizedTextLength+1, &status);
+        }
+    }
+}
+
+
+NFDBuffer::~NFDBuffer() {
+    if (fNormalizedText != fSmallBuf) {
+        uprv_free(fNormalizedText);
+    }
+    fNormalizedText = 0;
+}
+
+const UChar *NFDBuffer::getBuffer() {
+    return fNormalizedText;
+}
+
+int32_t NFDBuffer::getLength() {
+    return fNormalizedTextLength;
+}
+
+
+
 
 
 U_NAMESPACE_END

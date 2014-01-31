@@ -1,22 +1,19 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/is.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/is.xml
+ *  ICU <specials> source: <path>/xml/main/is.xml
  */
 is{
-    Version{"2.0.92.87"}
+    Version{"2.0.78.32"}
     zoneStrings{
         "Africa:Algiers"{
             ec{"Algeirsborg"}
-        }
-        "Africa:Asmera"{
-            ec{"Asmara"}
         }
         "Africa:Bissau"{
             ec{"Bissá"}
@@ -36,32 +33,17 @@ is{
         "Africa:Tunis"{
             ec{"Túnisborg"}
         }
-        "America:Anguilla"{
-            ec{"Angvilla"}
-        }
-        "America:Antigua"{
-            ec{"Antígva"}
-        }
         "America:Aruba"{
             ec{"Arúba"}
         }
         "America:Asuncion"{
             ec{"Asunción"}
         }
-        "America:Belize"{
-            ec{"Belís"}
-        }
         "America:Cancun"{
             ec{"Kankún"}
         }
-        "America:Cayman"{
-            ec{"Cayman-eyjar"}
-        }
-        "America:Coral_Harbour"{
-            ec{"Atikokan"}
-        }
         "America:Costa_Rica"{
-            ec{"Kostaríka"}
+            ec{"Kosta ríka"}
         }
         "America:Dominica"{
             ec{"Dóminíka"}
@@ -75,59 +57,20 @@ is{
         "America:Guatemala"{
             ec{"Gvatemala"}
         }
-        "America:Guyana"{
-            ec{"Gvæjana"}
-        }
-        "America:Indiana:Knox"{
-            ec{"Knox, Indiana"}
-        }
-        "America:Indiana:Marengo"{
-            ec{"Marengo, Indiana"}
-        }
-        "America:Indiana:Petersburg"{
-            ec{"Petersburg, Indiana"}
-        }
-        "America:Indiana:Tell_City"{
-            ec{"Tell City, Indiana"}
-        }
-        "America:Indiana:Vevay"{
-            ec{"Vevay, Indiana"}
-        }
-        "America:Indiana:Vincennes"{
-            ec{"Vincennes, Indiana"}
-        }
-        "America:Indiana:Winamac"{
-            ec{"Winamac, Indiana"}
-        }
         "America:Jamaica"{
             ec{"Jamaíka"}
-        }
-        "America:Kentucky:Monticello"{
-            ec{"Monticello, Kentucky"}
         }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
         }
-        "America:Martinique"{
-            ec{"Martiník"}
-        }
         "America:Mexico_City"{
             ec{"Mexíkóborg"}
-        }
-        "America:North_Dakota:Beulah"{
-            ec{"Beulah, North Dakota"}
-        }
-        "America:North_Dakota:Center"{
-            ec{"Center, North Dakota"}
-        }
-        "America:North_Dakota:New_Salem"{
-            ec{"New Salem, North Dakota"}
         }
         "America:Puerto_Rico"{
             ec{"Púertó Ríkó"}
         }
-        "America:Scoresbysund"{
-            ec{"Ittoqqortoormiit"}
+        "America:Regina"{
+            ec{"Regína"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
@@ -136,16 +79,16 @@ is{
             ec{"St. John’s"}
         }
         "America:St_Kitts"{
-            ec{"Ankti Kristófer"}
+            ec{"St. Kitts"}
         }
         "America:St_Lucia"{
-            ec{"Sankti Lúsía"}
+            ec{"St. Lucia"}
         }
         "America:St_Thomas"{
             ec{"St. Thomas"}
         }
         "America:St_Vincent"{
-            ec{"Sankti Vinsent"}
+            ec{"St. Vincent"}
         }
         "Antarctica:DumontDUrville"{
             ec{"Dumont d’Urville"}
@@ -156,68 +99,29 @@ is{
         "Asia:Baghdad"{
             ec{"Bagdad"}
         }
-        "Asia:Bahrain"{
-            ec{"Barein"}
-        }
-        "Asia:Baku"{
-            ec{"Bakú"}
-        }
         "Asia:Beirut"{
             ec{"Beirút"}
         }
         "Asia:Brunei"{
             ec{"Brúnei"}
         }
-        "Asia:Calcutta"{
-            ec{"Kalkútta"}
-        }
-        "Asia:Colombo"{
-            ec{"Kólombó"}
-        }
         "Asia:Damascus"{
             ec{"Damaskus"}
-        }
-        "Asia:Dhaka"{
-            ec{"Dakka"}
         }
         "Asia:Jakarta"{
             ec{"Djakarta"}
         }
-        "Asia:Jerusalem"{
-            ec{"Jerúsalem"}
-        }
         "Asia:Kabul"{
             ec{"Kabúl"}
         }
-        "Asia:Katmandu"{
-            ec{"Katmandú"}
-        }
-        "Asia:Kuala_Lumpur"{
-            ec{"Kúala Lúmpúr"}
-        }
         "Asia:Kuwait"{
             ec{"Kúveit"}
-        }
-        "Asia:Macau"{
-            ec{"Makaó"}
-        }
-        "Asia:Nicosia"{
-            ec{"Níkósía"}
         }
         "Asia:Qatar"{
             ec{"Katar"}
         }
         "Asia:Saigon"{
             ec{"Ho Chi Minh-borg"}
-        }
-        "Asia:Seoul"{
-            ec{"Seúl"}
-        }
-        "Asia:Singapore"{
-            ec{"Singapúr"}
-        }
-        "Asia:Tehran"{
-            ec{"Teheran"}
         }
         "Asia:Tokyo"{
             ec{"Tókýó"}
@@ -247,16 +151,13 @@ is{
             ec{"Suður-Georgía"}
         }
         "Atlantic:St_Helena"{
-            ec{"Sankti Helena"}
+            ec{"St. Helena"}
         }
         "Etc:Unknown"{
             ec{"Óþekkt borg"}
         }
         "Europe:Athens"{
             ec{"Aþena"}
-        }
-        "Europe:Belgrade"{
-            ec{"Belgrad"}
         }
         "Europe:Berlin"{
             ec{"Berlín"}
@@ -273,24 +174,14 @@ is{
         "Europe:Copenhagen"{
             ec{"Kaupmannahöfn"}
         }
-        "Europe:Dublin"{
-            ld{"Sumartími á Írlandi"}
-        }
         "Europe:Gibraltar"{
             ec{"Gíbraltar"}
-        }
-        "Europe:Isle_of_Man"{
-            ec{"Mön"}
         }
         "Europe:Istanbul"{
             ec{"Istanbúl"}
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
-        }
-        "Europe:London"{
-            ec{"Lundúnir"}
-            ld{"Sumartími í Bretlandi"}
         }
         "Europe:Luxembourg"{
             ec{"Lúxemborg"}
@@ -310,26 +201,14 @@ is{
         "Europe:Paris"{
             ec{"París"}
         }
-        "Europe:Prague"{
-            ec{"Prag"}
-        }
         "Europe:Rome"{
             ec{"Róm"}
-        }
-        "Europe:San_Marino"{
-            ec{"San Marínó"}
-        }
-        "Europe:Sarajevo"{
-            ec{"Sarajevó"}
         }
         "Europe:Sofia"{
             ec{"Sófía"}
         }
         "Europe:Stockholm"{
             ec{"Stokkhólmur"}
-        }
-        "Europe:Vatican"{
-            ec{"Vatíkanið"}
         }
         "Europe:Vienna"{
             ec{"Vín"}
@@ -342,12 +221,6 @@ is{
         }
         "Europe:Zurich"{
             ec{"Zürich"}
-        }
-        "Indian:Christmas"{
-            ec{"Jólaey"}
-        }
-        "Indian:Cocos"{
-            ec{"Kókoseyjar"}
         }
         "Indian:Maldives"{
             ec{"Maldíveyjar"}
@@ -376,15 +249,6 @@ is{
         "Pacific:Palau"{
             ec{"Palá"}
         }
-        "Pacific:Ponape"{
-            ec{"Pohnpei"}
-        }
-        "Pacific:Tahiti"{
-            ec{"Tahítí"}
-        }
-        "Pacific:Truk"{
-            ec{"Chuuk"}
-        }
         "meta:Afghanistan"{
             ls{"Afganistantími"}
         }
@@ -395,7 +259,7 @@ is{
             ls{"Austur-Afríkutími"}
         }
         "meta:Africa_Southern"{
-            ls{"Suður-Afríkutími"}
+            ls{"Staðaltími í Suður-Afríku"}
         }
         "meta:Africa_Western"{
             ld{"Sumartími í Vestur-Afríku"}
@@ -409,13 +273,13 @@ is{
         }
         "meta:Amazon"{
             ld{"Sumartími á Amasónsvæðinu"}
-            lg{"Amasóntími"}
+            lg{"Amasontími"}
             ls{"Staðaltími á Amasónsvæðinu"}
         }
         "meta:America_Central"{
-            ld{"Sumartími í miðhluta Bandaríkjanna og Kanada"}
-            lg{"Tími í miðhluta Bandaríkjanna og Kanada"}
-            ls{"Staðaltími í miðhluta Bandaríkjanna og Kanada"}
+            ld{"Sumartími í Mið-Ameríku"}
+            lg{"Tími í Mið-Ameríku"}
+            ls{"Staðaltími í Mið-Ameríku"}
         }
         "meta:America_Eastern"{
             ld{"Sumartími í austurhluta Bandaríkjanna og Kanada"}
@@ -509,7 +373,7 @@ is{
             ls{"Staðaltími í Brasilíu"}
         }
         "meta:Brunei"{
-            ls{"Brúneitími"}
+            ls{"Brunei-tími"}
         }
         "meta:Cape_Verde"{
             ld{"Sumartími á Grænhöfðaeyjum"}
@@ -520,14 +384,14 @@ is{
             ls{"Chamorro-staðaltími"}
         }
         "meta:Chatham"{
-            ld{"Sumartími í Chatham"}
+            ld{"Chatham-sumartími"}
             lg{"Chatham-tími"}
-            ls{"Staðaltími í Chatham"}
+            ls{"Chatham-staðaltími"}
         }
         "meta:Chile"{
-            ld{"Sumartími í Síle"}
-            lg{"Síletími"}
-            ls{"Staðaltími í Síle"}
+            ld{"Sumartími í Chile"}
+            lg{"Chile-tími"}
+            ls{"Staðaltími í Chile"}
         }
         "meta:China"{
             ld{"Sumartími í Kína"}
@@ -609,7 +473,7 @@ is{
             ls{"Tími á frönsku suðurhafssvæðum og Suðurskautslandssvæði"}
         }
         "meta:GMT"{
-            ls{"Greenwich-staðaltími"}
+            ls{"Greenwich-tími"}
         }
         "meta:Galapagos"{
             ls{"Galapagos-tími"}
@@ -657,7 +521,7 @@ is{
             ls{"Staðaltími í Hovd"}
         }
         "meta:India"{
-            ls{"Indlandstími"}
+            ls{"Staðaltími á Indlandi"}
         }
         "meta:Indian_Ocean"{
             ls{"Indlandshafstími"}
@@ -682,7 +546,7 @@ is{
         "meta:Irkutsk"{
             ld{"Sumartími í Irkutsk"}
             lg{"Tími í Irkutsk"}
-            ls{"Staðaltími í Irkutsk"}
+            ls{"Staðaltími í Irkútsk"}
         }
         "meta:Israel"{
             ld{"Sumartími í Ísrael"}
@@ -716,7 +580,7 @@ is{
         "meta:Krasnoyarsk"{
             ld{"Sumartími í Krasnoyarsk"}
             lg{"Tími í Krasnoyarsk"}
-            ls{"Staðaltími í Krasnoyarsk"}
+            ls{"Staðaltími í Krasnojarsk"}
         }
         "meta:Kyrgystan"{
             ls{"Kirgisistantími"}
@@ -768,7 +632,7 @@ is{
             ls{"Staðaltími í Moskvu"}
         }
         "meta:Myanmar"{
-            ls{"Mjanmartími"}
+            ls{"Búrmatími"}
         }
         "meta:Nauru"{
             ls{"Nárútími"}
@@ -795,7 +659,7 @@ is{
             ls{"Niue-tími"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk-eyjartími"}
+            ls{"Norfolk-eyjatími"}
         }
         "meta:Noronha"{
             ld{"Sumartími í Fernando de Noronha"}
@@ -853,7 +717,7 @@ is{
             ls{"Ponape-tími"}
         }
         "meta:Reunion"{
-            ls{"Réunion-tími"}
+            ls{"Reunion-tími"}
         }
         "meta:Rothera"{
             ls{"Rothera-tími"}
@@ -861,7 +725,7 @@ is{
         "meta:Sakhalin"{
             ld{"Sumartími í Sakhalin"}
             lg{"Tími í Sakhalin"}
-            ls{"Staðaltími í Sakhalin"}
+            ls{"Staðaltími á Sakhalin"}
         }
         "meta:Samara"{
             ld{"Sumartími í Samara"}
@@ -869,15 +733,13 @@ is{
             ls{"Staðaltími í Samara"}
         }
         "meta:Samoa"{
-            ld{"Sumartími í Samóa"}
-            lg{"Tími í Samóa"}
             ls{"Staðaltími á Samóa"}
         }
         "meta:Seychelles"{
             ls{"Seychelles-eyjatími"}
         }
         "meta:Singapore"{
-            ls{"Singapúrtími"}
+            ls{"Staðaltími í Singapúr"}
         }
         "meta:Solomon"{
             ls{"Salómonseyjatími"}
@@ -961,19 +823,18 @@ is{
         "meta:Yakutsk"{
             ld{"Sumartími í Yakutsk"}
             lg{"Tími í Yakutsk"}
-            ls{"Staðaltími í Yakutsk"}
+            ls{"Staðaltími í Jakútsk"}
         }
         "meta:Yekaterinburg"{
             ld{"Sumartími í Yekaterinburg"}
             lg{"Tími í Yekaterinburg"}
-            ls{"Staðaltími í Yekaterinborg"}
+            ls{"Staðaltími í Jekaterínborg"}
         }
         fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"{1}Tími ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (sumartími)"}
-        regionFormatStandard{"{0} (staðaltími)"}
+        hourFormat{"+HH:mm;−HH:mm"}
+        regionFormat{"{0} Tími"}
     }
 }

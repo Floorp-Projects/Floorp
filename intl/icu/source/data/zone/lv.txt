@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/lv.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/lv.xml
+ *  ICU <specials> source: <path>/xml/main/lv.xml
  */
 lv{
-    Version{"2.0.92.87"}
+    Version{"2.0.78.39"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžana"}
@@ -77,9 +77,6 @@ lv{
         }
         "Africa:Johannesburg"{
             ec{"Johannesburga"}
-        }
-        "Africa:Juba"{
-            ec{"Džūba"}
         }
         "Africa:Khartoum"{
             ec{"Hartūma"}
@@ -168,9 +165,6 @@ lv{
         "America:Bahia"{
             ec{"Baija"}
         }
-        "America:Bahia_Banderas"{
-            ec{"Bajabanderasa"}
-        }
         "America:Barbados"{
             ec{"Barbadosa"}
         }
@@ -211,7 +205,7 @@ lv{
             ec{"Kajenna"}
         }
         "America:Cayman"{
-            ec{"Kaimanu salas"}
+            ec{"Kaimanu Salas"}
         }
         "America:Chicago"{
             ec{"Čikāga"}
@@ -227,9 +221,6 @@ lv{
         }
         "America:Costa_Rica"{
             ec{"Kostarika"}
-        }
-        "America:Creston"{
-            ec{"Krestona"}
         }
         "America:Cuiaba"{
             ec{"Kujaba"}
@@ -342,9 +333,6 @@ lv{
         "America:Kentucky:Monticello"{
             ec{"Montiselo, Kentuki"}
         }
-        "America:Kralendijk"{
-            ec{"Krālendeika"}
-        }
         "America:La_Paz"{
             ec{"Lapasa"}
         }
@@ -371,9 +359,6 @@ lv{
         }
         "America:Martinique"{
             ec{"Martinika"}
-        }
-        "America:Matamoros"{
-            ec{"Matamorosa"}
         }
         "America:Mazatlan"{
             ec{"Masatlāna"}
@@ -426,9 +411,6 @@ lv{
         "America:North_Dakota:New_Salem"{
             ec{"Ņūsalema, Ziemeļdakota"}
         }
-        "America:Ojinaga"{
-            ec{"Ohinaga"}
-        }
         "America:Pangnirtung"{
             ec{"Pangnirtanga"}
         }
@@ -464,9 +446,6 @@ lv{
         }
         "America:Rio_Branco"{
             ec{"Riobranko"}
-        }
-        "America:Santa_Isabel"{
-            ec{"Santaizabela"}
         }
         "America:Santarem"{
             ec{"Santarena"}
@@ -507,9 +486,6 @@ lv{
         "America:Swift_Current"{
             ec{"Sviftkarenta"}
         }
-        "America:Tegucigalpa"{
-            ec{"Tegusigalpa"}
-        }
         "America:Thule"{
             ec{"Tūle"}
         }
@@ -542,9 +518,6 @@ lv{
         }
         "Antarctica:DumontDUrville"{
             ec{"Dimondirvila"}
-        }
-        "Antarctica:Macquarie"{
-            ec{"Makvori"}
         }
         "Antarctica:Mawson"{
             ec{"Mavsona"}
@@ -636,9 +609,6 @@ lv{
         "Asia:Harbin"{
             ec{"Harbina"}
         }
-        "Asia:Hebron"{
-            ec{"Hebrona"}
-        }
         "Asia:Hong_Kong"{
             ec{"Honkonga"}
         }
@@ -672,9 +642,6 @@ lv{
         "Asia:Katmandu"{
             ec{"Katmandu"}
         }
-        "Asia:Khandyga"{
-            ec{"Handiga"}
-        }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarska"}
         }
@@ -701,9 +668,6 @@ lv{
         }
         "Asia:Nicosia"{
             ec{"Nikozija"}
-        }
-        "Asia:Novokuznetsk"{
-            ec{"Novokuzņecka"}
         }
         "Asia:Novosibirsk"{
             ec{"Novosibirska"}
@@ -770,9 +734,6 @@ lv{
         }
         "Asia:Urumqi"{
             ec{"Urumči"}
-        }
-        "Asia:Ust-Nera"{
-            ec{"Ustjņera"}
         }
         "Asia:Vientiane"{
             ec{"Vjenčana"}
@@ -875,9 +836,6 @@ lv{
         }
         "Europe:Budapest"{
             ec{"Budapešta"}
-        }
-        "Europe:Busingen"{
-            ec{"Bīzingene"}
         }
         "Europe:Chisinau"{
             ec{"Kišiņeva"}
@@ -1008,7 +966,7 @@ lv{
             ec{"Čagosa"}
         }
         "Indian:Christmas"{
-            ec{"Ziemsvētku sala"}
+            ec{"Ziemsvētku Sala"}
         }
         "Indian:Cocos"{
             ec{"Kokosa sala"}
@@ -1171,9 +1129,9 @@ lv{
             ls{"Anadiras ziemas laiks"}
         }
         "meta:Arabian"{
-            ld{"Saūda Arābijas vasaras laiks"}
-            lg{"Saūda Arābijas laiks"}
-            ls{"Saūda Arābijas ziemas laiks"}
+            ld{"Arābu vasaras laiks"}
+            lg{"Arābu laiks"}
+            ls{"Arābu ziemas laiks"}
         }
         "meta:Argentina"{
             ld{"Argentīnas vasaras laiks"}
@@ -1189,6 +1147,11 @@ lv{
             ld{"Armēnijas vasaras laiks"}
             lg{"Armēnijas laiks"}
             ls{"Armēnijas ziemas laiks"}
+        }
+        "meta:Ashkhabad"{
+            ld{"Ašhabadas vasaras laiks"}
+            lg{"Ašhabadas laiks"}
+            ls{"Ašhabadas ziemas laiks"}
         }
         "meta:Atlantic"{
             ld{"Atlantijas vasaras laiks"}
@@ -1225,6 +1188,11 @@ lv{
             lg{"Azoru salu laiks"}
             ls{"Azoru salu ziemas laiks"}
         }
+        "meta:Baku"{
+            ld{"Baku vasaras laiks"}
+            lg{"Baku laiks"}
+            ls{"Baku ziemas laiks"}
+        }
         "meta:Bangladesh"{
             ld{"Bangladešas vasaras laiks"}
             lg{"Bangladešas laiks"}
@@ -1235,6 +1203,11 @@ lv{
         }
         "meta:Bolivia"{
             ls{"Bolīvijas laiks"}
+        }
+        "meta:Borneo"{
+            ld{"Borneo vasaras laiks"}
+            lg{"Borneo laiks"}
+            ls{"Borneo ziemas laiks"}
         }
         "meta:Brasilia"{
             ld{"Brazīlijas vasaras laiks"}
@@ -1299,6 +1272,11 @@ lv{
         "meta:DumontDUrville"{
             ls{"Dimondirvilas laiks"}
         }
+        "meta:Dushanbe"{
+            ld{"Dušanbe vasaras laiks"}
+            lg{"Dušanbe laiks"}
+            ls{"Dušanbe ziemas laiks"}
+        }
         "meta:East_Timor"{
             ls{"Austrumtimoras laiks"}
         }
@@ -1350,6 +1328,11 @@ lv{
         "meta:French_Southern"{
             ls{"Francijas Dienidjūru un Antarktikas teritorijas laiks"}
         }
+        "meta:Frunze"{
+            ld{"Frunzes vasaras laiks"}
+            lg{"Frunzes laiks"}
+            ls{"Frunzes ziemas laiks"}
+        }
         "meta:GMT"{
             ls{"Griničas laiks"}
         }
@@ -1384,9 +1367,9 @@ lv{
             ls{"Gvijānas laiks"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Havaju–Aleutu vasaras laiks"}
-            lg{"Havaju–Aleutu laiks"}
-            ls{"Havaju–Aleutu ziemas laiks"}
+            ld{"Havaju — Aleutu vasaras laiks"}
+            lg{"Havaju — Aleutu laiks"}
+            ls{"Havaju — Aleutu ziemas laiks"}
         }
         "meta:Hong_Kong"{
             ld{"Honkongas vasaras laiks"}
@@ -1408,13 +1391,13 @@ lv{
             ls{"Indoķīnas laiks"}
         }
         "meta:Indonesia_Central"{
-            ls{"Centrālindonēzijas laiks"}
+            ls{"Indonēzijas centrālais laiks"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"Austrumindonēzijas laiks"}
+            ls{"Indonēzijas austrumu laiks"}
         }
         "meta:Indonesia_Western"{
-            ls{"Rietumindonēzijas laiks"}
+            ls{"Indonēzijas rietumu laiks"}
         }
         "meta:Iran"{
             ld{"Irānas vasaras laiks"}
@@ -1459,6 +1442,11 @@ lv{
             ld{"Krasnojarskas vasaras laiks"}
             lg{"Krasnojarskas laiks"}
             ls{"Krasnojarskas ziemas laiks"}
+        }
+        "meta:Kuybyshev"{
+            ld{"Kuibiševas vasaras laiks"}
+            lg{"Kuibiševas laiks"}
+            ls{"Kuibiševas ziemas laiks"}
         }
         "meta:Kyrgystan"{
             ls{"Kirgizstānas laiks"}
@@ -1537,7 +1525,7 @@ lv{
             ls{"Niue laiks"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkas salas laiks"}
+            ls{"Norfolkas salu laiks"}
         }
         "meta:Noronha"{
             ld{"Fernandu di Noroņas vasaras laiks"}
@@ -1610,9 +1598,12 @@ lv{
             lg{"Samaras laiks"}
             ls{"Samaras ziemas laiks"}
         }
+        "meta:Samarkand"{
+            ld{"Samarkandas vasaras laiks"}
+            lg{"Samarkandas laiks"}
+            ls{"Samarkandas ziemas laiks"}
+        }
         "meta:Samoa"{
-            ld{"Samoa vasaras laiks"}
-            lg{"Samoa laiks"}
             ls{"Samoa standarta laiks"}
         }
         "meta:Seychelles"{
@@ -1630,6 +1621,11 @@ lv{
         "meta:Suriname"{
             ls{"Surinamas laiks"}
         }
+        "meta:Sverdlovsk"{
+            ld{"Sverdlovskas vasaras laiks"}
+            lg{"Sverdlovskas laiks"}
+            ls{"Sverdlovskas ziemas laiks"}
+        }
         "meta:Syowa"{
             ls{"Šovas laiks"}
         }
@@ -1644,6 +1640,16 @@ lv{
         "meta:Tajikistan"{
             ls{"Tadžikistānas laiks"}
         }
+        "meta:Tashkent"{
+            ld{"Taškentas vasaras laiks"}
+            lg{"Taškentas laiks"}
+            ls{"Taškentas ziemas laiks"}
+        }
+        "meta:Tbilisi"{
+            ld{"Tbilisi vasaras laiks"}
+            lg{"Tbilisi laiks"}
+            ls{"Tbilisi ziemas laiks"}
+        }
         "meta:Tokelau"{
             ls{"Tokelau laiks"}
         }
@@ -1654,6 +1660,11 @@ lv{
         }
         "meta:Truk"{
             ls{"Čūkas laiks"}
+        }
+        "meta:Turkey"{
+            ld{"Turcijas vasaras laiks"}
+            lg{"Turcijas laiks"}
+            ls{"Turcijas ziemas laiks"}
         }
         "meta:Turkmenistan"{
             ld{"Turkmenistānas vasaras laiks"}
@@ -1710,12 +1721,21 @@ lv{
             lg{"Jekaterinburgas laiks"}
             ls{"Jekaterinburgas ziemas laiks"}
         }
+        "meta:Yerevan"{
+            ld{"Erevānas vasaras laiks"}
+            lg{"Erevānas laiks"}
+            ls{"Erevānas ziemas laiks"}
+        }
+        "meta:Yukon"{
+            ld{"Jukonas vasaras laiks"}
+            lg{"Jukonas laiks"}
+            ls{"Jukonas ziemas laiks"}
+        }
         fallbackFormat{"{0} ({1})"}
+        fallbackRegionFormat{"Laika josla: {1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Laika josla: {0}"}
-        regionFormatDaylight{"{0}: vasaras laiks"}
-        regionFormatStandard{"{0}: standarta laiks"}
     }
 }

@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 2009-2013, International Business Machines
+*   Copyright (C) 2009-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -18,13 +18,14 @@
 
 #include "unicode/utypes.h"
 
+#ifndef U_HIDE_DRAFT_API
 /**
- * @stable ICU 49
+ * @draft ICU 49
  */
 #define U_ICU_VERSION_BUNDLE "icuver"
 
 /**
- * @stable ICU 49
+ * @draft ICU 49
  */
 #define U_ICU_DATA_KEY "DataVersion"
 
@@ -34,8 +35,9 @@
  * @param dataVersionFillin icuver data version information to be filled in if not-null
  * @param status stores the error code from the calls to resource bundle
  * 
- * @stable ICU 49
+ * @draft ICU 49
  */
-U_STABLE void U_EXPORT2 u_getDataVersion(UVersionInfo dataVersionFillin, UErrorCode *status);
+U_DRAFT void U_EXPORT2 u_getDataVersion(UVersionInfo dataVersionFillin, UErrorCode *status);
+#endif  /* U_HIDE_DRAFT_API */
 
 #endif

@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/am.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/am.xml
+ *  ICU <specials> source: <path>/xml/main/am.xml
  */
 am{
     Currencies{
@@ -649,10 +649,6 @@ am{
         }
         ZMK{
             "ZMK",
-            "የዛምቢያ ክዋቻ (1968–2012)",
-        }
-        ZMW{
-            "ZMW",
             "የዛምቢያ ክዋቻ",
         }
         ZWD{
@@ -1270,10 +1266,6 @@ am{
             other{"የደቡብ አፍሪካ ራንድ"}
         }
         ZMK{
-            one{"የዛምቢያ ክዋቻ (1968–2012)"}
-            other{"የዛምቢያ ክዋቻ (1968–2012)"}
-        }
-        ZMW{
             one{"የዛምቢያ ክዋቻ"}
             other{"የዛምቢያ ክዋቻ"}
         }
@@ -1282,5 +1274,5 @@ am{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.0.78.39"}
 }

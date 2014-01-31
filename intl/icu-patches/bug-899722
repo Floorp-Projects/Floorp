@@ -1,0 +1,29 @@
+Bug 899722 Part 1: Fix ECMAScript intl on BSD by stripping the extra 's' added to the library name, as done on linux. r=norbert
+
+diff --git a/intl/icu/source/config/mh-bsd-gcc b/intl/icu/source/config/mh-bsd-gcc
+--- a/intl/icu/source/config/mh-bsd-gcc
++++ b/intl/icu/source/config/mh-bsd-gcc
+@@ -58,10 +58,22 @@ STATIC_O = ao
+ 
+ ## Versioned libraries rules
+ 
+ %.$(SO).$(SO_TARGET_VERSION_MAJOR): %.$(SO).$(SO_TARGET_VERSION)
+ 	$(RM) $@ && ln -s ${<F} $@
+ %.$(SO): %.$(SO).$(SO_TARGET_VERSION_MAJOR)
+ 	$(RM) $@ && ln -s ${*F}.$(SO).$(SO_TARGET_VERSION) $@
+ 
+-## End FreeBSD-specific setup
++##  Bind internal references
+ 
++# LDflags that pkgdata will use
++BIR_LDFLAGS= -Wl,-Bsymbolic
++
++# Dependencies [i.e. map files] for the final library
++BIR_DEPS=
++
++## Remove shared library 's'
++STATIC_PREFIX_WHEN_USED = 
++STATIC_PREFIX = 
++
++## End BSD-specific setup
++

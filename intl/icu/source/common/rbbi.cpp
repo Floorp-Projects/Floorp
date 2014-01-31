@@ -1,6 +1,6 @@
 /*
 ***************************************************************************
-*   Copyright (C) 1999-2013 International Business Machines Corporation
+*   Copyright (C) 1999-2012 International Business Machines Corporation
 *   and others. All rights reserved.
 ***************************************************************************
 */
@@ -270,6 +270,7 @@ RuleBasedBreakIterator::operator=(const RuleBasedBreakIterator& that) {
 //-----------------------------------------------------------------------------
 void RuleBasedBreakIterator::init() {
     UErrorCode  status    = U_ZERO_ERROR;
+    fBufferClone          = FALSE;
     fText                 = utext_openUChars(NULL, NULL, 0, &status);
     fCharIter             = NULL;
     fSCharIter            = NULL;
@@ -1514,7 +1515,19 @@ const uint8_t  *RuleBasedBreakIterator::getBinaryRules(uint32_t &length) {
 }
 
 
-BreakIterator *  RuleBasedBreakIterator::createBufferClone(void * /*stackBuffer*/,
+
+
+//-------------------------------------------------------------------------------
+//
+//  BufferClone       TODO:  In my (Andy) opinion, this function should be deprecated.
+//                    Saving one heap allocation isn't worth the trouble.
+//                    Cloning shouldn't be done in tight loops, and
+//                    making the clone copy involves other heap operations anyway.
+//                    And the application code for correctly dealing with buffer
+//                    size problems and the eventual object destruction is ugly.
+//
+//-------------------------------------------------------------------------------
+BreakIterator *  RuleBasedBreakIterator::createBufferClone(void *stackBuffer,
                                    int32_t &bufferSize,
                                    UErrorCode &status)
 {
@@ -1522,18 +1535,51 @@ BreakIterator *  RuleBasedBreakIterator::createBufferClone(void * /*stackBuffer*
         return NULL;
     }
 
+    //
+    //  If user buffer size is zero this is a preflight operation to
+    //    obtain the needed buffer size, allowing for worst case misalignment.
+    //
     if (bufferSize == 0) {
-        bufferSize = 1;  // preflighting for deprecated functionality
+        bufferSize = sizeof(RuleBasedBreakIterator) + U_ALIGNMENT_OFFSET_UP(0);
         return NULL;
     }
 
-    BreakIterator *clonedBI = clone();
-    if (clonedBI == NULL) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-    } else {
-        status = U_SAFECLONE_ALLOCATED_WARNING;
+
+    //
+    //  Check the alignment and size of the user supplied buffer.
+    //  Allocate heap memory if the user supplied memory is insufficient.
+    //
+    char    *buf   = (char *)stackBuffer;
+    uint32_t s      = bufferSize;
+
+    if (stackBuffer == NULL) {
+        s = 0;   // Ignore size, force allocation if user didn't give us a buffer.
     }
-    return (RuleBasedBreakIterator *)clonedBI;
+    if (U_ALIGNMENT_OFFSET(stackBuffer) != 0) {
+        uint32_t offsetUp = (uint32_t)U_ALIGNMENT_OFFSET_UP(buf);
+        s   -= offsetUp;
+        buf += offsetUp;
+    }
+    if (s < sizeof(RuleBasedBreakIterator)) {
+        // Not enough room in the caller-supplied buffer.
+        // Do a plain-vanilla heap based clone and return that, along with
+        //   a warning that the clone was allocated.
+        RuleBasedBreakIterator *clonedBI = new RuleBasedBreakIterator(*this);
+        if (clonedBI == 0) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+        } else {
+            status = U_SAFECLONE_ALLOCATED_WARNING;
+        }
+        return clonedBI;
+    }
+
+    //
+    //  Clone the source BI into the caller-supplied buffer.
+    //
+    RuleBasedBreakIterator *clone = new(buf) RuleBasedBreakIterator(*this);
+    clone->fBufferClone = TRUE;   // Flag to prevent deleting storage on close (From C code)
+
+    return clone;
 }
 
 
@@ -1742,13 +1788,11 @@ int32_t RuleBasedBreakIterator::checkDictionary(int32_t startPos,
     return (reverse ? startPos : endPos);
 }
 
-// defined in ucln_cmn.h
-
 U_NAMESPACE_END
 
+// defined in ucln_cmn.h
 
 static icu::UStack *gLanguageBreakFactories = NULL;
-static icu::UInitOnce gLanguageBreakFactoriesInitOnce = U_INITONCE_INITIALIZER;
 
 /**
  * Release all static memory held by breakiterator.  
@@ -1759,7 +1803,6 @@ static UBool U_CALLCONV breakiterator_cleanup_dict(void) {
         delete gLanguageBreakFactories;
         gLanguageBreakFactories = NULL;
     }
-    gLanguageBreakFactoriesInitOnce.reset();
     return TRUE;
 }
 U_CDECL_END
@@ -1771,28 +1814,35 @@ static void U_CALLCONV _deleteFactory(void *obj) {
 U_CDECL_END
 U_NAMESPACE_BEGIN
 
-static void U_CALLCONV initLanguageFactories() {
-    UErrorCode status = U_ZERO_ERROR;
-    U_ASSERT(gLanguageBreakFactories == NULL);
-    gLanguageBreakFactories = new UStack(_deleteFactory, NULL, status);
-    if (gLanguageBreakFactories != NULL && U_SUCCESS(status)) {
-        ICULanguageBreakFactory *builtIn = new ICULanguageBreakFactory(status);
-        gLanguageBreakFactories->push(builtIn, status);
-#ifdef U_LOCAL_SERVICE_HOOK
-        LanguageBreakFactory *extra = (LanguageBreakFactory *)uprv_svc_hook("languageBreakFactory", &status);
-        if (extra != NULL) {
-            gLanguageBreakFactories->push(extra, status);
-        }
-#endif
-    }
-    ucln_common_registerCleanup(UCLN_COMMON_BREAKITERATOR_DICT, breakiterator_cleanup_dict);
-}
-
-
 static const LanguageBreakEngine*
 getLanguageBreakEngineFromFactory(UChar32 c, int32_t breakType)
 {
-    umtx_initOnce(gLanguageBreakFactoriesInitOnce, &initLanguageFactories);
+    UBool       needsInit;
+    UErrorCode  status = U_ZERO_ERROR;
+    UMTX_CHECK(NULL, (UBool)(gLanguageBreakFactories == NULL), needsInit);
+    
+    if (needsInit) {
+        UStack  *factories = new UStack(_deleteFactory, NULL, status);
+        if (factories != NULL && U_SUCCESS(status)) {
+            ICULanguageBreakFactory *builtIn = new ICULanguageBreakFactory(status);
+            factories->push(builtIn, status);
+#ifdef U_LOCAL_SERVICE_HOOK
+            LanguageBreakFactory *extra = (LanguageBreakFactory *)uprv_svc_hook("languageBreakFactory", &status);
+            if (extra != NULL) {
+                factories->push(extra, status);
+            }
+#endif
+        }
+        umtx_lock(NULL);
+        if (gLanguageBreakFactories == NULL) {
+            gLanguageBreakFactories = factories;
+            factories = NULL;
+            ucln_common_registerCleanup(UCLN_COMMON_BREAKITERATOR_DICT, breakiterator_cleanup_dict);
+        }
+        umtx_unlock(NULL);
+        delete factories;
+    }
+    
     if (gLanguageBreakFactories == NULL) {
         return NULL;
     }
