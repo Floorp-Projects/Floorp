@@ -148,6 +148,18 @@ template <> struct MapTypeToTraceKind<JSLinearString>   { static const JSGCTrace
 template <> struct MapTypeToTraceKind<PropertyName>     { static const JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<jit::JitCode>     { static const JSGCTraceKind kind = JSTRACE_JITCODE; };
 
+/* Map from C++ type to finalize kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
+template <typename T> struct MapTypeToFinalizeKind {};
+template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = FINALIZE_SCRIPT; };
+template <> struct MapTypeToFinalizeKind<LazyScript>        { static const AllocKind kind = FINALIZE_LAZY_SCRIPT; };
+template <> struct MapTypeToFinalizeKind<Shape>             { static const AllocKind kind = FINALIZE_SHAPE; };
+template <> struct MapTypeToFinalizeKind<BaseShape>         { static const AllocKind kind = FINALIZE_BASE_SHAPE; };
+template <> struct MapTypeToFinalizeKind<types::TypeObject> { static const AllocKind kind = FINALIZE_TYPE_OBJECT; };
+template <> struct MapTypeToFinalizeKind<JSShortString>     { static const AllocKind kind = FINALIZE_SHORT_STRING; };
+template <> struct MapTypeToFinalizeKind<JSString>          { static const AllocKind kind = FINALIZE_STRING; };
+template <> struct MapTypeToFinalizeKind<JSExternalString>  { static const AllocKind kind = FINALIZE_EXTERNAL_STRING; };
+template <> struct MapTypeToFinalizeKind<jit::JitCode>      { static const AllocKind kind = FINALIZE_JITCODE; };
+
 #if defined(JSGC_GENERATIONAL) || defined(DEBUG)
 static inline bool
 IsNurseryAllocable(AllocKind kind)

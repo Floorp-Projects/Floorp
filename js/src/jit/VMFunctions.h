@@ -566,8 +566,7 @@ class AutoDetectInvalidation
 };
 
 bool InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Value *rval);
-JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize,
-                     gc::InitialHeap initialHeap);
+JSObject *NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap);
 
 bool CheckOverRecursed(JSContext *cx);
 bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
