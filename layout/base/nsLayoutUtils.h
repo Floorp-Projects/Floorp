@@ -654,6 +654,14 @@ public:
                                    uint32_t aFlags = 0);
 
   /**
+   * Transform aRect relative to aAncestor down to the coordinate system of
+   * aFrame. Computes the bounding-box of the true quadrilateral.
+   */
+  static nsRect TransformAncestorRectToFrame(nsIFrame* aFrame,
+                                             const nsRect& aRect,
+                                             const nsIFrame* aAncestor);
+
+  /**
    * Transform aRect relative to aFrame up to the coordinate system of
    * aAncestor. Computes the bounding-box of the true quadrilateral.
    * Pass non-null aPreservesAxisAlignedRectangles and it will be set to true if
@@ -698,9 +706,6 @@ public:
   /**
    * Transform aPoint relative to aAncestor down to the coordinate system of
    * aFrame.
-   *
-   * Returns nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if no equivalent
-   * point exists in the child frame (can happen with projective transforms).
    */
   static nsPoint TransformAncestorPointToFrame(nsIFrame* aFrame,
                                                const nsPoint& aPoint,
