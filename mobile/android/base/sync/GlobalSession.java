@@ -63,7 +63,6 @@ import ch.boye.httpclientandroidlib.HttpResponse;
 public class GlobalSession implements PrefsSource, HttpResponseObserver {
   private static final String LOG_TAG = "GlobalSession";
 
-  public static final String API_VERSION   = "1.1";
   public static final long STORAGE_VERSION = 5;
 
   public SyncConfiguration config = null;
@@ -918,7 +917,29 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
       return config.enabledEngineNames;
     }
 
-    return SyncConfiguration.validEngineNames();
+    // These are the default set of engine names.
+    Set<String> validEngineNames = SyncConfiguration.validEngineNames();
+
+    // If the user hasn't set any selected engines, that's okay -- default to
+    // everything.
+    if (config.userSelectedEngines == null) {
+      return validEngineNames;
+    }
+
+    // userSelectedEngines has keys that are engine names, and boolean values
+    // corresponding to whether the user asked for the engine to sync or not. If
+    // an engine is not present, that means the user didn't change its sync
+    // setting. Since we default to everything on, that means the user didn't
+    // turn it off; therefore, it's included in the set of engines to sync.
+    Set<String> validAndSelectedEngineNames = new HashSet<String>();
+    for (String engineName : validEngineNames) {
+      if (config.userSelectedEngines.containsKey(engineName) &&
+          !config.userSelectedEngines.get(engineName)) {
+        continue;
+      }
+      validAndSelectedEngineNames.add(engineName);
+    }
+    return validAndSelectedEngineNames;
   }
 
   /**

@@ -28,7 +28,7 @@ namespace mozilla {
 namespace layers {
 
 DeprecatedSharedRGBImage::DeprecatedSharedRGBImage(ISurfaceAllocator *aAllocator) :
-  Image(nullptr, SHARED_RGB),
+  Image(nullptr, ImageFormat::SHARED_RGB),
   mSize(0, 0),
   mSurfaceAllocator(aAllocator),
   mAllocated(false),
@@ -64,8 +64,7 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
     return nullptr;
   }
 
-  ImageFormat format = SHARED_RGB;
-  nsRefPtr<Image> image = aImageContainer->CreateImage(&format, 1);
+  nsRefPtr<Image> image = aImageContainer->CreateImage(ImageFormat::SHARED_RGB);
 
   if (!image) {
     NS_WARNING("Failed to create DeprecatedSharedRGBImage");
@@ -185,7 +184,7 @@ DeprecatedSharedRGBImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescri
 }
 
 SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
-: Image(nullptr, SHARED_RGB)
+: Image(nullptr, ImageFormat::SHARED_RGB)
 , mCompositable(aCompositable)
 {
   MOZ_COUNT_CTOR(SharedRGBImage);

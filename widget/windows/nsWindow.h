@@ -137,7 +137,6 @@ public:
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
   NS_IMETHOD              Invalidate(const nsIntRect & aRect);
-  virtual void            Update() MOZ_OVERRIDE;
   virtual void*           GetNativeData(uint32_t aDataType);
   virtual void            FreeNativeData(void * data, uint32_t aDataType);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);

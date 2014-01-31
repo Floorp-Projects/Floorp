@@ -1351,6 +1351,20 @@ if test "$GNU_CC"; then
                      AC_MSG_RESULT([no]))
     CFLAGS=$_SAVE_CFLAGS
 
+    case "${CPU_ARCH}" in
+    x86 | x86_64)
+      AC_MSG_CHECKING(for x86 AVX2 asm support in compiler)
+      AC_TRY_COMPILE([],
+                     [asm volatile ("vpermq      \$0xd8,%ymm0,%ymm0 \n");],
+                     result="yes", result="no")
+      AC_MSG_RESULT("$result")
+      if test "$result" = "yes"; then
+          HAVE_X86_AVX2=1
+          AC_DEFINE(HAVE_X86_AVX2)
+          AC_SUBST(HAVE_X86_AVX2)
+      fi
+    esac
+
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
     # -Wpointer-arith - good to have
@@ -3932,6 +3946,9 @@ if test -n "$MOZ_NATIVE_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
     MOZ_SHARED_ICU=1
+else
+    MOZ_ICU_CFLAGS='-I$(topsrcdir)/intl/icu/source/common -I$(topsrcdir)/intl/icu/source/i18n'
+    AC_SUBST(MOZ_ICU_CFLAGS)
 fi
 
 AC_SUBST(MOZ_NATIVE_ICU)

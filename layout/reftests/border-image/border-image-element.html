@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: element</title>
+<style>
+div.border {
+  border: 30px solid black;
+  border-image: -moz-element(#src);
+  width: 180px;
+  height: 180px;
+}
+div.border2 {
+  border: 30px solid black;
+  border-image: -moz-element(#src);
+  border-image-slice: 5;
+  width: 180px;
+  height: 180px;
+}
+</style>
+</head>
+<body>
+<div class="border"></div><br>
+<div class="border2"></div><br>
+<img id="src" src="diamonds.png">
+</body>
+</html>

@@ -67,12 +67,34 @@ static bool GetIntPref(const char* aPref, int32_t* aResult)
   return NS_SUCCEEDED(NS_DispatchToMainThread(event, NS_DISPATCH_SYNC));
 }
 
+static bool
+GetSystemInfoString(const char *aKey, char *aResult, size_t aResultLength)
+{
+  NS_ENSURE_TRUE(aKey, false);
+  NS_ENSURE_TRUE(aResult, false);
+
+  nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+  NS_ASSERTION(infoService, "Could not find a system info service");
+
+  nsAutoCString key(aKey);
+  nsAutoCString info;
+  nsresult rv = infoService->GetPropertyAsACString(NS_ConvertUTF8toUTF16(key),
+                                                  info);
+
+  NS_ENSURE_SUCCESS(rv, false);
+
+  strncpy(aResult, info.get(), aResultLength);
+
+  return true;
+}
+
 static PluginHost sPluginHost = {
   nullptr,
   nullptr,
   nullptr,
   nullptr,
-  GetIntPref
+  GetIntPref,
+  GetSystemInfoString,
 };
 
 // Return true if Omx decoding is supported on the device. This checks the

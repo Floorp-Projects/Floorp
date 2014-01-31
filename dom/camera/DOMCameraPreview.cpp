@@ -191,8 +191,7 @@ DOMCameraPreview::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder 
     return false;
   }
 
-  ImageFormat format = aFormat;
-  nsRefPtr<Image> image = mImageContainer->CreateImage(&format, 1);
+  nsRefPtr<Image> image = mImageContainer->CreateImage(aFormat);
   aBuilder(image, aBuffer, mWidth, mHeight);
 
   mInput->SetCurrentFrame(gfxIntSize(mWidth, mHeight), image);

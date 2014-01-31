@@ -25,7 +25,7 @@ Tests of DOM Worker Threads
 
   worker.onerror = function(event) {
     is(event.target, worker);
-    is(event.message, "Script file not found: nonexistent_worker.js");
+    is(event.message, "Error: Script file not found: nonexistent_worker.js");
     event.preventDefault();
     SimpleTest.finish();
   };

@@ -137,7 +137,6 @@ gbjar.sources += [
     'FilePickerResultHandler.java',
     'FilePickerResultHandlerSync.java',
     'FindInPageBar.java',
-    'FirefoxAccountsHelper.java',
     'FormAssistPopup.java',
     'GeckoAccessibility.java',
     'GeckoActivity.java',

@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsTArray.h"
-#include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "nsStringAPI.h"
 #include "nsDirectoryServiceDefs.h"
@@ -314,7 +313,7 @@ static bool test_string_array() {
   if (strArray.BinaryIndexOf(EmptyCString()) != strArray.NoIndex)
     return false;
 
-  nsCString rawArray[NS_ARRAY_LENGTH(kdata) - 1];
+  nsCString rawArray[MOZ_ARRAY_LENGTH(kdata) - 1];
   for (i = 0; i < ArrayLength(rawArray); ++i)
     rawArray[i].Assign(kdata + i);  // substrings of kdata
   return test_basic_array(rawArray, ArrayLength(rawArray),
@@ -439,12 +438,12 @@ static bool test_ptrarray() {
 #ifdef DEBUG
 static bool test_autoarray() {
   uint32_t data[] = {4,6,8,2,4,1,5,7,3};
-  nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data)> array;
+  nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
   if (hdr == nsTArray<uint32_t>().DebugGetHeader())
     return false;
-  if (hdr == nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data)>().DebugGetHeader())
+  if (hdr == nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader())
     return false;
 
   array.AppendElement(1u);
@@ -486,7 +485,7 @@ static bool test_autoarray() {
   array.Compact();
   array.AppendElements(data, ArrayLength(data));
   uint32_t data3[] = {5, 7, 11};
-  nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data3)> array3;
+  nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data3)> array3;
   array3.AppendElements(data3, ArrayLength(data3));  
   array.SwapElements(array3);
   for (i = 0; i < ArrayLength(data); ++i) {
