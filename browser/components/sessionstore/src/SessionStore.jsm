@@ -57,6 +57,9 @@ const MESSAGES = [
   // be saved to disk.
   "SessionStore:update",
 
+  // A "load" event happened.
+  "SessionStore:load",
+
   // The restoreHistory code has run. This is a good time to run SSTabRestoring.
   "SessionStore:restoreHistoryComplete",
 
@@ -589,6 +592,9 @@ let SessionStoreInternal = {
         this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
+        break;
+      case "SessionStore:load":
+        this.onTabLoad(win, browser);
         break;
       case "SessionStore:restoreHistoryComplete":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
@@ -1370,6 +1376,26 @@ let SessionStoreInternal = {
       if (length > this._max_tabs_undo)
         this._windows[aWindow.__SSi]._closedTabs.splice(this._max_tabs_undo, length - this._max_tabs_undo);
     }
+  },
+
+  /**
+   * When a tab loads, invalidate its cached state, trigger async save.
+   *
+   * @param aWindow
+   *        Window reference
+   * @param aBrowser
+   *        Browser reference
+   */
+  onTabLoad: function ssi_onTabLoad(aWindow, aBrowser) {
+    // It's possible to get a load event after calling stop on a browser (when
+    // overwriting tabs). We want to return early if the tab hasn't been restored yet.
+    if (aBrowser.__SS_restoreState &&
+        aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+      return;
+    }
+
+    delete aBrowser.__SS_data;
+    this.saveStateDelayed(aWindow);
   },
 
   /**
