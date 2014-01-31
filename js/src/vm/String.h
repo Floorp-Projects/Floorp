@@ -986,7 +986,7 @@ class AutoNameVector : public AutoVectorRooter<PropertyName *>
     }
 
     HandlePropertyName operator[](size_t i) const {
-        return HandlePropertyName::fromMarkedLocation(&BaseType::operator[](i));
+        return HandlePropertyName::fromMarkedLocation(&begin()[i]);
     }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

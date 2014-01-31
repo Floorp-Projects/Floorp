@@ -7,10 +7,16 @@
 #include "maxp.h"
 
 // hdmx - Horizontal Device Metrics
-// http://www.microsoft.com/opentype/otspec/hdmx.htm
+// http://www.microsoft.com/typography/otspec/hdmx.htm
+
+#define TABLE_NAME "hdmx"
 
 #define DROP_THIS_TABLE \
-  do { delete file->hdmx; file->hdmx = 0; } while (0)
+  do { \
+    delete file->hdmx; \
+    file->hdmx = 0; \
+    OTS_FAILURE_MSG("Table discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -20,7 +26,7 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   OpenTypeHDMX * const hdmx = file->hdmx;
 
   if (!file->head || !file->maxp) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Missing maxp or head tables in font, needed by hdmx");
   }
 
   if ((file->head->flags & 0x14) == 0) {
@@ -35,7 +41,7 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   if (!table.ReadU16(&hdmx->version) ||
       !table.ReadS16(&num_recs) ||
       !table.ReadS32(&hdmx->size_device_record)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read hdmx header");
   }
   if (hdmx->version != 0) {
     OTS_WARNING("bad version: %u", hdmx->version);
@@ -56,7 +62,7 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   hdmx->pad_len = hdmx->size_device_record - actual_size_device_record;
   if (hdmx->pad_len > 3) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad padding %d", hdmx->pad_len);
   }
 
   uint8_t last_pixel_size = 0;
@@ -66,7 +72,7 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
     if (!table.ReadU8(&rec.pixel_size) ||
         !table.ReadU8(&rec.max_width)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read hdmx record %d", i);
     }
     if ((i != 0) &&
         (rec.pixel_size <= last_pixel_size)) {
@@ -80,14 +86,14 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     for (unsigned j = 0; j < file->maxp->num_glyphs; ++j) {
       uint8_t width;
       if (!table.ReadU8(&width)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to read glyph width %d in record %d", j, i);
       }
       rec.widths.push_back(width);
     }
 
     if ((hdmx->pad_len > 0) &&
         !table.Skip(hdmx->pad_len)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to skip padding %d", hdmx->pad_len);
     }
 
     hdmx->records.push_back(rec);
@@ -108,7 +114,7 @@ bool ots_hdmx_serialise(OTSStream *out, OpenTypeFile *file) {
   if (!out->WriteU16(hdmx->version) ||
       !out->WriteS16(hdmx->records.size()) ||
       !out->WriteS32(hdmx->size_device_record)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write hdmx header");
   }
 
   for (unsigned i = 0; i < hdmx->records.size(); ++i) {
@@ -116,11 +122,11 @@ bool ots_hdmx_serialise(OTSStream *out, OpenTypeFile *file) {
     if (!out->Write(&rec.pixel_size, 1) ||
         !out->Write(&rec.max_width, 1) ||
         !out->Write(&rec.widths[0], rec.widths.size())) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write hdmx record %d", i);
     }
     if ((hdmx->pad_len > 0) &&
         !out->Write((const uint8_t *)"\x00\x00\x00", hdmx->pad_len)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write hdmx padding of length %d", hdmx->pad_len);
     }
   }
 

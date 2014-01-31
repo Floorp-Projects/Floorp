@@ -1,0 +1,134 @@
+diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
+--- a/gfx/ots/include/opentype-sanitiser.h
++++ b/gfx/ots/include/opentype-sanitiser.h
+@@ -236,14 +236,16 @@ typedef TableAction (*TableActionFunc)(u
+ // Set a callback function that will be called when OTS needs to decide what to
+ // do for a font table.
+ void OTS_API SetTableActionCallback(TableActionFunc func, void *user_data);
+ 
+ // Force to disable debug output even when the library is compiled with
+ // -DOTS_DEBUG.
+ void DisableDebugOutput();
+ 
++#ifdef MOZ_OTS_WOFF2
+ // Enable WOFF2 support(experimental).
+ void EnableWOFF2();
++#endif
+ 
+ }  // namespace ots
+ 
+ #endif  // OPENTYPE_SANITISER_H_
+diff --git a/gfx/ots/src/ots.cc b/gfx/ots/src/ots.cc
+--- a/gfx/ots/src/ots.cc
++++ b/gfx/ots/src/ots.cc
+@@ -9,25 +9,29 @@
+ 
+ #include <algorithm>
+ #include <cstdlib>
+ #include <cstring>
+ #include <limits>
+ #include <map>
+ #include <vector>
+ 
++#ifdef MOZ_OTS_WOFF2
+ #include "woff2.h"
++#endif
+ 
+ // The OpenType Font File
+ // http://www.microsoft.com/typography/otspec/cmap.htm
+ 
+ namespace {
+ 
+ bool g_debug_output = true;
++#ifdef MOZ_OTS_WOFF2
+ bool g_enable_woff2 = false;
++#endif
+ 
+ ots::MessageFunc  g_message_func = NULL;
+ void             *g_message_user_data = NULL;
+ 
+ ots::TableActionFunc  g_table_action_func = NULL;
+ void                 *g_table_action_user_data = NULL;
+ 
+ // Generate a message with or without a table tag, when 'header' is the OpenTypeFile pointer
+@@ -395,16 +399,17 @@ bool ProcessWOFF(ots::OpenTypeFile *head
+   }
+   if (block_end != ots::Round4(length)) {
+     return OTS_FAILURE_MSG_HDR("file length mismatch (trailing junk?)");
+   }
+ 
+   return ProcessGeneric(header, woff_tag, output, data, length, tables, file);
+ }
+ 
++#ifdef MOZ_OTS_WOFF2
+ bool ProcessWOFF2(ots::OpenTypeFile *header,
+                   ots::OTSStream *output, const uint8_t *data, size_t length) {
+   size_t decompressed_size = ots::ComputeWOFF2FinalSize(data, length);
+   if (decompressed_size == 0) {
+     return OTS_FAILURE();
+   }
+   // decompressed font must be <= 30MB
+   if (decompressed_size > 30 * 1024 * 1024) {
+@@ -413,16 +418,17 @@ bool ProcessWOFF2(ots::OpenTypeFile *hea
+ 
+   std::vector<uint8_t> decompressed_buffer(decompressed_size);
+   if (!ots::ConvertWOFF2ToTTF(&decompressed_buffer[0], decompressed_size,
+                               data, length)) {
+     return OTS_FAILURE();
+   }
+   return ProcessTTF(header, output, &decompressed_buffer[0], decompressed_size);
+ }
++#endif
+ 
+ ots::TableAction GetTableAction(uint32_t tag) {
+   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
+ 
+   if (g_table_action_func != NULL) {
+     action = g_table_action_func(htonl(tag), g_table_action_user_data);
+   }
+ 
+@@ -795,19 +801,21 @@ bool IsValidVersionTag(uint32_t tag) {
+          tag == Tag("true") ||
+          tag == Tag("typ1");
+ }
+ 
+ void DisableDebugOutput() {
+   g_debug_output = false;
+ }
+ 
++#ifdef MOZ_OTS_WOFF2
+ void EnableWOFF2() {
+   g_enable_woff2 = true;
+ }
++#endif
+ 
+ void SetMessageCallback(MessageFunc func, void *user_data) {
+   g_message_func = func;
+   g_message_user_data = user_data;
+ }
+ 
+ void SetTableActionCallback(TableActionFunc func, void *user_data) {
+   g_table_action_func = func;
+@@ -822,20 +830,22 @@ bool Process(OTSStream *output, const ui
+ 
+   if (length < 4) {
+     return OTS_FAILURE_MSG_(&header, "file less than 4 bytes");
+   }
+ 
+   bool result;
+   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {
+     result = ProcessWOFF(&header, output, data, length);
++#ifdef MOZ_OTS_WOFF2
+   } else if (g_enable_woff2 &&
+              data[0] == 'w' && data[1] == 'O' && data[2] == 'F' &&
+              data[3] == '2') {
+     result = ProcessWOFF2(&header, output, data, length);
++#endif
+   } else {
+     result = ProcessTTF(&header, output, data, length);
+   }
+ 
+   for (unsigned i = 0; ; ++i) {
+     if (table_parsers[i].parse == NULL) break;
+     table_parsers[i].free(&header);
+   }

@@ -5,10 +5,16 @@
 #include "gasp.h"
 
 // gasp - Grid-fitting And Scan-conversion Procedure
-// http://www.microsoft.com/opentype/otspec/gasp.htm
+// http://www.microsoft.com/typography/otspec/gasp.htm
+
+#define TABLE_NAME "gasp"
 
 #define DROP_THIS_TABLE \
-  do { delete file->gasp; file->gasp = 0; } while (0)
+  do { \
+    delete file->gasp; \
+    file->gasp = 0; \
+    OTS_FAILURE_MSG("Table discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -21,7 +27,7 @@ bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   uint16_t num_ranges = 0;
   if (!table.ReadU16(&gasp->version) ||
       !table.ReadU16(&num_ranges)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read table header");
   }
 
   if (gasp->version > 1) {
@@ -43,7 +49,7 @@ bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     uint16_t behavior = 0;
     if (!table.ReadU16(&max_ppem) ||
         !table.ReadU16(&behavior)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read subrange %d", i);
     }
     if ((i > 0) && (gasp->gasp_ranges[i - 1].first >= max_ppem)) {
       // The records in the gaspRange[] array must be sorted in order of
@@ -86,13 +92,13 @@ bool ots_gasp_serialise(OTSStream *out, OpenTypeFile *file) {
 
   if (!out->WriteU16(gasp->version) ||
       !out->WriteU16(gasp->gasp_ranges.size())) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("failed to write gasp header");
   }
 
   for (unsigned i = 0; i < gasp->gasp_ranges.size(); ++i) {
     if (!out->WriteU16(gasp->gasp_ranges[i].first) ||
         !out->WriteU16(gasp->gasp_ranges[i].second)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write gasp subtable %d", i);
     }
   }
 
