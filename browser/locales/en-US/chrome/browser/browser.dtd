@@ -97,7 +97,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY showAllTabsCmd.accesskey "A">
 
 <!ENTITY fxaSignIn.label "Sign in to &syncBrand.shortName.label;">
-<!ENTITY fxaSignInError.label "Reconnect to &syncBrand.shortName.label;">
 <!ENTITY syncStartPanel.title "&brandShortName; is now syncing.">
 <!ENTITY syncStartPanel.subTitle "You can manage &syncBrand.shortName.label; in Options.">
 <!ENTITY syncStartPanel.subTitleUnix "You can manage &syncBrand.shortName.label; in Preferences.">
