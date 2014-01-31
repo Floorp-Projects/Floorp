@@ -298,6 +298,10 @@ IDBTransaction::StartSavepoint()
   nsresult rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, false);
 
+  if (IsWriteAllowed()) {
+    mUpdateFileRefcountFunction->StartSavepoint();
+  }
+
   ++mSavepointCount;
 
   return true;
@@ -320,6 +324,10 @@ IDBTransaction::ReleaseSavepoint()
 
   nsresult rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  if (IsWriteAllowed()) {
+    mUpdateFileRefcountFunction->ReleaseSavepoint();
+  }
 
   --mSavepointCount;
 
@@ -344,6 +352,10 @@ IDBTransaction::RollbackSavepoint()
 
   nsresult rv = stmt->Execute();
   NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (IsWriteAllowed()) {
+    mUpdateFileRefcountFunction->RollbackSavepoint();
+  }
 }
 
 nsresult
@@ -1078,12 +1090,22 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
       entry = newEntry.forget();
     }
 
+    if (mInSavepoint) {
+      mSavepointEntriesIndex.Put(id, entry);
+    }
+
     switch (aUpdateType) {
       case eIncrement:
         entry->mDelta++;
+        if (mInSavepoint) {
+          entry->mSavepointDelta++;
+        }
         break;
       case eDecrement:
         entry->mDelta--;
+        if (mInSavepoint) {
+          entry->mSavepointDelta--;
+        }
         break;
       default:
         NS_NOTREACHED("Unknown update type!");
@@ -1161,6 +1183,16 @@ UpdateRefcountFunction::FileInfoUpdateCallback(const uint64_t& aKey,
   if (aValue->mDelta) {
     aValue->mFileInfo->UpdateDBRefs(aValue->mDelta);
   }
+
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+UpdateRefcountFunction::RollbackSavepointCallback(const uint64_t& aKey,
+                                                  FileInfoEntry* aValue,
+                                                  void* aUserArg)
+{
+  aValue->mDelta -= aValue->mSavepointDelta;
 
   return PL_DHASH_NEXT;
 }
