@@ -529,6 +529,7 @@ nsTextStore::nsTextStore()
   mInputScopeRequested = false;
   mIsRecordingActionsWithoutLock = false;
   mNotifySelectionChange = false;
+  mNativeCaretIsCreated = false;
   mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
   // We hope that 5 or more actions don't occur at once.
   mPendingActions.SetCapacity(5);
@@ -876,9 +877,7 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
        "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
        "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",
        this, GetLockFlagNameStr(mLock).get()));
-    if (IsReadWriteLocked()) {
-      FlushPendingActions();
-    }
+    DidLockGranted();
     while (mLockQueued) {
       mLock = mLockQueued;
       mLockQueued = 0;
@@ -893,9 +892,7 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
          "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
          "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",
          this, GetLockFlagNameStr(mLock).get()));
-      if (IsReadWriteLocked()) {
-        FlushPendingActions();
-      }
+      DidLockGranted();
     }
     mLock = 0;
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -923,6 +920,18 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
      "*phrSession=TS_E_SYNCHRONOUS", this));
   *phrSession = TS_E_SYNCHRONOUS;
   return E_FAIL;
+}
+
+void
+nsTextStore::DidLockGranted()
+{
+  if (mNativeCaretIsCreated) {
+    ::DestroyCaret();
+    mNativeCaretIsCreated = false;
+  }
+  if (IsReadWriteLocked()) {
+    FlushPendingActions();
+  }
 }
 
 void
@@ -2413,6 +2422,20 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   // not equal if text rect was clipped
   *pfClipped = !::EqualRect(prc, &textRect);
 
+  // ATOK refers native caret position and size on Desktop applications for
+  // deciding candidate window.  Therefore, we need to create native caret
+  // for hacking the bug.
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop &&
+      mComposition.IsComposing() &&
+      mComposition.mStart <= acpStart && mComposition.EndOffset() >= acpStart &&
+      mComposition.mStart <= acpEnd && mComposition.EndOffset() >= acpEnd) {
+    if (mNativeCaretIsCreated) {
+      ::DestroyCaret();
+      mNativeCaretIsCreated = false;
+    }
+    CreateNativeCaret();
+  }
+
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::GetTextExt() succeeded: "
           "*prc={ left=%ld, top=%ld, right=%ld, bottom=%ld }, *pfClipped=%s",
@@ -3188,6 +3211,69 @@ nsTextStore::OnLayoutChange()
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   return NS_OK;
+}
+
+void
+nsTextStore::CreateNativeCaret()
+{
+  // This method must work only on desktop application.
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Desktop) {
+    return;
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p nsTextStore::CreateNativeCaret(), "
+          "mComposition.IsComposing()=%s",
+          this, GetBoolName(mComposition.IsComposing())));
+
+  Selection& currentSel = CurrentSelection();
+  if (currentSel.IsDirty()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::CreateNativeCaret() FAILED due to "
+            "CurrentSelection() failure", this));
+    return;
+  }
+
+  // XXX If this is called without composition and the selection isn't
+  //     collapsed, is it OK?
+  uint32_t caretOffset = currentSel.MaxOffset();
+
+  WidgetQueryContentEvent queryCaretRect(true, NS_QUERY_CARET_RECT, mWidget);
+  queryCaretRect.InitForQueryCaretRect(caretOffset);
+  mWidget->InitEvent(queryCaretRect);
+  mWidget->DispatchWindowEvent(&queryCaretRect);
+  if (!queryCaretRect.mSucceeded) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::CreateNativeCaret() FAILED due to "
+            "NS_QUERY_CARET_RECT failure (offset=%d)", this, caretOffset));
+    return;
+  }
+
+  nsIntRect& caretRect = queryCaretRect.mReply.mRect;
+  mNativeCaretIsCreated = ::CreateCaret(mWidget->GetWindowHandle(), nullptr,
+                                        caretRect.width, caretRect.height);
+  if (!mNativeCaretIsCreated) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::CreateNativeCaret() FAILED due to "
+            "CreateCaret() failure", this));
+    return;
+  }
+
+  nsWindow* window = static_cast<nsWindow*>(mWidget.get());
+  nsWindow* toplevelWindow = window->GetTopLevelWindow(false);
+  if (!toplevelWindow) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::CreateNativeCaret() FAILED due to "
+            "no top level window", this));
+    return;
+  }
+
+  if (toplevelWindow != window) {
+    caretRect.MoveBy(toplevelWindow->WidgetToScreenOffset());
+    caretRect.MoveBy(-window->WidgetToScreenOffset());
+  }
+
+  ::SetCaretPos(caretRect.x, caretRect.y);
 }
 
 void
