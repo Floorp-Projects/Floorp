@@ -5,7 +5,6 @@
 
 /* Sources and breakpoints pane */
 
-
 #sources-pane[selectedIndex="0"] + #sources-and-editor-splitter {
   border-color: transparent;
 }
