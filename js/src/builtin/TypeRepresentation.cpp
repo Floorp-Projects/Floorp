@@ -387,47 +387,8 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
         js_free(this);
         return nullptr;
     }
-
     ownerObject->setPrivate(this);
-
-    // Assign the various reserved slots:
     ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_KIND, Int32Value(kind()));
-
-    if (isSized()) {
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_SIZE,
-                                      Int32Value(asSized()->size()));
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_ALIGNMENT,
-                                      Int32Value(asSized()->alignment()));
-    }
-
-    switch (kind()) {
-      case TypeDescr::UnsizedArray:
-        break;
-
-      case TypeDescr::SizedArray:
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_LENGTH,
-                                      Int32Value(asSizedArray()->length()));
-        break;
-
-      case TypeDescr::Scalar:
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
-                                      Int32Value(asScalar()->type()));
-        break;
-
-      case TypeDescr::Reference:
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
-                                      Int32Value(asReference()->type()));
-        break;
-
-      case TypeDescr::X4:
-        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
-                                      Int32Value(asX4()->type()));
-        break;
-
-      case TypeDescr::Struct:
-        break;
-    }
-
     ownerObject_.init(ownerObject);
     return &*ownerObject;
 }
