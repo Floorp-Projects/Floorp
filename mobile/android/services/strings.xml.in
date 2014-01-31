@@ -179,7 +179,7 @@
 <string name="fxaccount_options_configure_title">&fxaccount_options_configure_title;</string>
 
 <string name="fxaccount_remote_error_UPGRADE_REQUIRED">&fxaccount_remote_error_UPGRADE_REQUIRED;</string>
-<string name="fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS">&fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS;</string>
+<string name="fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS">&fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS_2;</string>
 <string name="fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST">&fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST;</string>
 <string name="fxaccount_remote_error_INCORRECT_PASSWORD">&fxaccount_remote_error_INCORRECT_PASSWORD;</string>
 <string name="fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT">&fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT;</string>
