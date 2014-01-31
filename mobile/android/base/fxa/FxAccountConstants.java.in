@@ -16,7 +16,7 @@ public class FxAccountConstants {
 
   // For extra debugging.  Not final so it can be changed from Fennec, or from
   // an add-on.
-  public static boolean LOG_PERSONAL_INFORMATION = true;
+  public static boolean LOG_PERSONAL_INFORMATION = false;
 
   public static void pii(String tag, String message) {
     if (LOG_PERSONAL_INFORMATION) {
