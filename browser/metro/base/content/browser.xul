@@ -227,7 +227,7 @@ Desktop browser's sync prefs.
 
       <vbox id="toolbar-overlay" flex="1">
         <!-- Autocomplete -->
-        <scrollbox flex="1">
+        <scrollbox flex="1" id="urlbar-autocomplete-scroll" observes="bcast_urlbarState">
           <hbox id="urlbar-autocomplete" observes="bcast_windowState"/>
         </scrollbox>
 

@@ -33,6 +33,15 @@ this.UITour = {
 
   highlightEffects: ["random", "wobble", "zoom", "color"],
   targets: new Map([
+    ["accountStatus", {
+      query: (aDocument) => {
+        let statusButton = aDocument.getElementById("PanelUI-fxa-status");
+        return aDocument.getAnonymousElementByAttribute(statusButton,
+                                                        "class",
+                                                        "toolbarbutton-icon");
+      },
+      widgetName: "PanelUI-fxa-status",
+    }],
     ["addons",      {query: "#add-ons-button"}],
     ["appMenu",     {query: "#PanelUI-menu-button"}],
     ["backForward", {
@@ -156,6 +165,9 @@ this.UITour = {
 
                 if (typeof buttonData.icon == "string")
                   button.iconURL = this.resolveURL(contentDocument, buttonData.icon);
+
+                if (typeof buttonData.style == "string")
+                  button.style = buttonData.style;
 
                 buttons.push(button);
 
@@ -295,6 +307,14 @@ this.UITour = {
         if (aEvent.target.id == "urlbar") {
           let window = aEvent.target.ownerDocument.defaultView;
           this.handleUrlbarInput(window);
+        }
+        break;
+      }
+
+      case "command": {
+        if (aEvent.target.id == "UITourTooltipClose") {
+          let window = aEvent.target.ownerDocument.defaultView;
+          this.hideInfo(window);
         }
         break;
       }
@@ -628,6 +648,9 @@ this.UITour = {
         if (button.iconURL)
           el.setAttribute("image", button.iconURL);
 
+        if (button.style == "link")
+          el.setAttribute("class", "button-link");
+
         let callbackID = button.callbackID;
         el.addEventListener("command", event => {
           tooltip.hidePopup();
@@ -638,6 +661,9 @@ this.UITour = {
       }
 
       tooltipButtons.hidden = !aButtons.length;
+
+      let tooltipClose = document.getElementById("UITourTooltipClose");
+      tooltipClose.addEventListener("command", this);
 
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";

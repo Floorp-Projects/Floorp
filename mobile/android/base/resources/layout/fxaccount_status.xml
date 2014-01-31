@@ -16,7 +16,7 @@
 
         <TextView
             style="@style/FxAccountHeaderItem"
-            android:text="@string/firefox_accounts" >
+            android:text="@string/firefox_account" >
         </TextView>
 
         <TextView
@@ -25,28 +25,29 @@
         </TextView>
 
         <TextView
-            android:id="@+id/change_password"
-            style="@style/FxAccountLinkItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/fxaccount_change_password" >
+            android:id="@+id/sync_status_text"
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/fxaccount_status_sync" >
         </TextView>
+
+        <LinearLayout
+            android:id="@+id/spacer1"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp"
+            android:orientation="vertical" />
 
         <ViewFlipper
             android:id="@+id/connection_status_view"
             style="@style/FxAccountTextItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp" >
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
 
             <TextView
-                android:id="@+id/unverified_view"
+                android:id="@+id/needs_upgrade_view"
                 style="@style/FxAccountTextItem"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="10dp"
                 android:background="#fad4d2"
                 android:drawablePadding="10dp"
                 android:drawableStart="@drawable/fxaccount_sync_error"
@@ -61,7 +62,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="10dp"
                 android:background="#fad4d2"
                 android:drawablePadding="10dp"
                 android:drawableStart="@drawable/fxaccount_sync_error"
@@ -76,7 +76,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="10dp"
                 android:background="#fad4d2"
                 android:drawablePadding="10dp"
                 android:drawableStart="@drawable/fxaccount_sync_error"
@@ -84,100 +83,48 @@
                 android:padding="10dp"
                 android:text="@string/fxaccount_status_needs_verification" >
             </TextView>
-
-            <TextView
-                android:id="@+id/syncing_view"
-                style="@style/FxAccountTextItem"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="10dp"
-                android:background="#d1e7fe"
-                android:drawablePadding="10dp"
-                android:drawableStart="@drawable/fxaccount_sync_icon"
-                android:gravity="center_vertical"
-                android:padding="10dp"
-                android:text="@string/fxaccount_status_syncing" >
-            </TextView>
         </ViewFlipper>
-
-        <TextView
-            style="@style/FxAccountHeaderItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/fxaccount_status_sync" >
-        </TextView>
 
         <CheckBox
             android:id="@+id/bookmarks_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            style="@style/FxAccountCheckBox"
             android:text="@string/fxaccount_status_bookmarks" />
 
         <CheckBox
             android:id="@+id/history_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            style="@style/FxAccountCheckBox"
             android:text="@string/fxaccount_status_history" />
 
         <CheckBox
-            android:id="@+id/passwords_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/fxaccount_status_passwords" />
-
-        <CheckBox
             android:id="@+id/tabs_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            style="@style/FxAccountCheckBox"
             android:text="@string/fxaccount_status_tabs" />
 
+        <CheckBox
+            android:id="@+id/passwords_checkbox"
+            style="@style/FxAccountCheckBox"
+            android:text="@string/fxaccount_status_passwords" />
+
+        <TextView
+            style="@style/FxAccountHeaderItem"
+            android:text="@string/fxaccount_status_legal" >
+        </TextView>
+
         <LinearLayout
-            android:id="@+id/debug_buttons"
-            style="@style/FxAccountMiddle"
-            android:visibility="gone" >
+            android:id="@+id/spacer2"
+            android:layout_width="fill_parent"
+            android:layout_height="20dp"
+            android:orientation="vertical" />
 
-            <Button
-                android:id="@+id/debug_refresh_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_refresh_button_label" />
+        <TextView
+            android:id="@+id/fxaccount_status_linktos"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_policy_linktos" />
 
-            <Button
-                android:id="@+id/debug_dump_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_dump_button_label" />
-
-            <Button
-                android:id="@+id/debug_sync_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_sync_button_label" />
-
-            <Button
-                android:id="@+id/debug_forget_certificate_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_forget_certificate_button_label" />
-
-            <Button
-                android:id="@+id/debug_require_password_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_require_password_button_label" />
-
-            <Button
-                android:id="@+id/debug_require_upgrade_button"
-                style="@style/FxAccountButton"
-                android:layout_marginBottom="10dp"
-                android:text="@string/fxaccount_status_debug_require_upgrade_button_label" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/fxaccount_status_linkprivacy"
+            style="@style/FxAccountLinkifiedItem"
+            android:text="@string/fxaccount_policy_linkprivacy" />
     </LinearLayout>
 
 </ScrollView>

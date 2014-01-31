@@ -17,40 +17,33 @@
 
         <TextView
             style="@style/FxAccountHeaderItem"
-            android:text="@string/firefox_accounts" >
-        </TextView>
-
-        <TextView
-            style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_get_started" >
+            android:text="@string/fxaccount_getting_started_welcome_to_sync" >
         </TextView>
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="30dp"
+            android:layout_marginTop="30dp"
             android:contentDescription="@string/fxaccount_intro_contentDescription"
             android:src="@drawable/fxaccount_intro" >
         </ImageView>
 
         <TextView
             style="@style/FxAccountTextItem"
-            android:layout_marginBottom="45dp"
-            android:text="@string/fxaccount_description" >
+            android:text="@string/fxaccount_getting_started_description" >
         </TextView>
 
         <Button
             android:id="@+id/get_started_button"
             style="@style/FxAccountButton"
-            android:layout_marginBottom="20dp"
-            android:onClick="onClickGetStarted"
-            android:text="@string/fxaccount_get_started" />
+            android:text="@string/fxaccount_getting_started_get_started" />
 
         <TextView
             android:id="@+id/old_firefox"
             style="@style/FxAccountLinkifiedItem"
-            android:text="@string/fxaccount_old_firefox" />
+            android:text="@string/fxaccount_getting_started_old_firefox" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

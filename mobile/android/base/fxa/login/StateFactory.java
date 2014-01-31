@@ -20,13 +20,6 @@ public class StateFactory {
       throw new IllegalStateException("version must be 1");
     }
     switch (stateLabel) {
-    case Promised:
-      return new Promised(
-          o.getString("email"),
-          o.getString("uid"),
-          o.getBoolean("verified"),
-          Utils.hex2Byte(o.getString("unwrapkB")),
-          Utils.hex2Byte(o.getString("quickStretchedPW")));
     case Engaged:
       return new Engaged(
           o.getString("email"),
