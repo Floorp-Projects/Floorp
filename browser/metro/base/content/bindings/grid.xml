@@ -808,7 +808,7 @@
         <body><![CDATA[
           // apply the transform to the contentBox element of the item
           let bendNode = this.isItem(aItem) ? aItem._contentBox : null;
-          if (!bendNode)
+          if (!bendNode || aItem.hasAttribute("bending"))
             return;
 
           let event = aEvent;
@@ -872,6 +872,7 @@
       <handler event="mouseup" button="0" action="this.unbendItem(event.target)"/>
       <handler event="mouseout" button="0" action="this.unbendItem(event.target)"/>
       <handler event="touchend" action="this.unbendItem(event.target)"/>
+      <handler event="touchcancel" action="this.unbendItem(event.target)"/>
       <!--  /item bend effect handler -->
 
       <handler event="context-action">
