@@ -424,7 +424,7 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   // but the channels check is intentionally limited to mono or stereo
   // when the media is intended for direct playback because that's what the
   // audio backend currently supports.
-  unsigned int actualFrameSize = sampleFormat == 8 ? 1 : 2 * channels;
+  unsigned int actualFrameSize = (sampleFormat == 8 ? 1 : 2) * channels;
   if (rate < 100 || rate > 96000 ||
       (((channels < 1 || channels > MAX_CHANNELS) ||
        (frameSize != 1 && frameSize != 2 && frameSize != 4)) &&
