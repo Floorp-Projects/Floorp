@@ -1,0 +1,45 @@
+<!doctype html>
+<head>
+
+  <!-- This font only has glyphs defined for 'A', 'B', 'C' and 'D', and is
+       designed purely for testing ssty  and OpenType 'math' script
+       functionality 
+       The glyphs for 'A' and 'D' are identical, the difference between them is
+       that 'A' supports the ssty font feature. 
+       'A' with ssty = 1 maps to 'B'
+       'A' with ssty = 2 maps to 'C'
+       The difference between this font and ssty.woff is that the font feature
+       is contained within the OpenType 'math' script.  -->
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "mathssty";
+      src: url("mathssty.woff");
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demonstrate that it has no effect outside MathML -->
+  <div style="font-family: 'mathssty';">D</div>
+  <div style="font-family: 'mathssty';">D</div>
+
+  <!-- Demonstrate that it works within MathML -->
+  <math>
+    <mstyle style="font-family: 'mathssty';">
+    <mrow>
+      <mo>D</mo>
+      <mo>B</mo>
+      <mo>C</mo>
+    </mrow>
+    </mstyle>
+  </math>
+  <p>
+  <!-- verify it works for the other elements except mtext -->
+  <math>
+    <mstyle style="font-family: 'mathssty';">
+      <mi mathvariant="normal">C</mi>
+      <mn>C</mn>
+      <mtext>D</mtext>
+    </mstyle>
+  </math>
+</body>

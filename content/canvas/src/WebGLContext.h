@@ -900,6 +900,7 @@ protected:
         OES_standard_derivatives,
         OES_texture_float,
         OES_texture_float_linear,
+        OES_texture_half_float,
         OES_vertex_array_object,
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,

@@ -105,8 +105,9 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
    * shaper which many people unfortunately still request.
    */
 
+  bool has_space;
   hb_codepoint_t space;
-  font->get_glyph (' ', 0, &space);
+  has_space = font->get_glyph (' ', 0, &space);
 
   buffer->clear_positions ();
 
@@ -114,7 +115,7 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
 
   for (unsigned int i = 0; i < count; i++)
   {
-    if (buffer->unicode->is_default_ignorable (buffer->info[i].codepoint)) {
+    if (has_space && buffer->unicode->is_default_ignorable (buffer->info[i].codepoint)) {
       buffer->info[i].codepoint = space;
       buffer->pos[i].x_advance = 0;
       buffer->pos[i].y_advance = 0;

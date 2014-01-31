@@ -18,11 +18,10 @@
 interface ApplicationCache;
 interface MozFrameRequestCallback;
 interface nsIDOMCrypto;
-interface Pkcs11;
 typedef any Transferable;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[Global]
+[Global, NeedNewResolve]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Throws,
@@ -256,8 +255,6 @@ partial interface Window {
    * Method for sizing this window to the content in the window.
    */
   [Throws] void             sizeToContent();
-
-  readonly attribute Pkcs11?                      pkcs11;
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute MozControllers controllers;

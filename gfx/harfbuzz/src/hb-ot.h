@@ -32,16 +32,9 @@
 
 #include "hb-ot-layout.h"
 #include "hb-ot-tag.h"
+#include "hb-ot-shape.h"
 
 HB_BEGIN_DECLS
-
-/* TODO remove */
-void
-hb_ot_shape_glyphs_closure (hb_font_t          *font,
-			    hb_buffer_t        *buffer,
-			    const hb_feature_t *features,
-			    unsigned int        num_features,
-			    hb_set_t           *glyphs);
 
 HB_END_DECLS
 

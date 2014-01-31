@@ -28,8 +28,6 @@
 
 #include "hb-private.hh"
 
-#include "hb-version.h"
-
 #include "hb-mutex-private.hh"
 #include "hb-object-private.hh"
 

@@ -206,8 +206,7 @@ TokenServerClient.prototype = {
    *         (bool) Whether to send acceptance to service conditions.
    */
   getTokenFromBrowserIDAssertion:
-    function getTokenFromBrowserIDAssertion(url, assertion, cb,
-                                            conditionsAccepted=false) {
+    function getTokenFromBrowserIDAssertion(url, assertion, cb, addHeaders={}) {
     if (!url) {
       throw new TokenServerClientError("url argument is not valid.");
     }
@@ -226,9 +225,8 @@ TokenServerClient.prototype = {
     req.setHeader("Accept", "application/json");
     req.setHeader("Authorization", "BrowserID " + assertion);
 
-    if (conditionsAccepted) {
-      // Value is irrelevant.
-      req.setHeader("X-Conditions-Accepted", "1");
+    for (let header in addHeaders) {
+      req.setHeader(header, addHeaders[header]);
     }
 
     let client = this;
@@ -326,8 +324,10 @@ TokenServerClient.prototype = {
         error.message = "Malformed request.";
         error.cause = "malformed-request";
       } else if (response.status == 401) {
+        // Cause can be invalid-credentials, invalid-timestamp, or
+        // invalid-generation.
         error.message = "Authentication failed.";
-        error.cause = "invalid-credentials";
+        error.cause = result.status;
       }
 
       // 403 should represent a "condition acceptance needed" response.

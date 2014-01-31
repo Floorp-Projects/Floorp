@@ -164,6 +164,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
   vpx_codec_iter_t iter = nullptr;
   EncodedFrame::FrameType frameType = EncodedFrame::P_FRAME;
   nsTArray<uint8_t> frameData;
+  nsresult rv;
   const vpx_codec_cx_pkt_t *pkt = nullptr;
   while ((pkt = vpx_codec_get_cx_data(mVPXContext, &iter)) != nullptr) {
     switch (pkt->kind) {
@@ -202,7 +203,8 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
       videoData->SetDuration(
         (uint64_t)FramesToUsecs(pkt->data.frame.duration, mTrackRate).value());
     }
-    videoData->SetFrameData(&frameData);
+    rv = videoData->SwapInFrameData(frameData);
+    NS_ENSURE_SUCCESS(rv, rv);
     VP8LOG("GetEncodedPartitions TimeStamp %lld Duration %lld\n",
            videoData->GetTimeStamp(), videoData->GetDuration());
     VP8LOG("frameType %d\n", videoData->GetFrameType());

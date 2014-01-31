@@ -996,6 +996,16 @@ org.mozilla.healthreport.submissions
 This measurement contains a history of FHR's own data submission activity.
 It was added in Firefox 23 in early May 2013.
 
+Version 2
+^^^^^^^^^
+
+This is the same as version 1 except an additional field has been added.
+
+uploadAlreadyInProgress
+   A request for upload was initiated while another upload was in progress.
+   This should not occur in well-behaving clients. It (along with a lock
+   preventing simultaneous upload) was added to ensure this never occurs.
+
 Version 1
 ^^^^^^^^^
 

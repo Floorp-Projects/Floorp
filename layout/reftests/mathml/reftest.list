@@ -168,3 +168,5 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == ssty-2.html ssty-2-ref.html
 == ssty-3.html ssty-3-ref.html
 == ssty-4.html ssty-4-ref.html
+== mathscript-1.html mathscript-1-ref.html
+== mathscript-2.html mathscript-2-ref.html

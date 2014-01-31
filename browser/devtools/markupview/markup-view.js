@@ -28,6 +28,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyGetter(this, "DOMParser", function() {
  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
@@ -1279,36 +1280,54 @@ MarkupContainer.prototype = {
     return "[MarkupContainer for " + this.node + "]";
   },
 
-  _prepareImagePreview: function() {
+  isPreviewable: function() {
     if (this.node.tagName) {
       let tagName = this.node.tagName.toLowerCase();
       let srcAttr = this.editor.getAttributeElement("src");
       let isImage = tagName === "img" && srcAttr;
       let isCanvas = tagName === "canvas";
 
+      return isImage || isCanvas;
+    } else {
+      return false;
+    }
+  },
+
+  _prepareImagePreview: function() {
+    if (this.isPreviewable()) {
       // Get the image data for later so that when the user actually hovers over
       // the element, the tooltip does contain the image
-      if (isImage || isCanvas) {
-        let def = promise.defer();
+      let def = promise.defer();
 
-        this.tooltipData = {
-          target: isImage ? srcAttr : this.editor.tag,
-          data: def.promise
-        };
+      this.tooltipData = {
+        target: this.editor.getAttributeElement("src") || this.editor.tag,
+        data: def.promise
+      };
 
-        this.node.getImageData(IMAGE_PREVIEW_MAX_DIM).then(data => {
-          if (data) {
-            data.data.string().then(str => {
-              let res = {data: str, size: data.size};
-              // Resolving the data promise and, to always keep tooltipData.data
-              // as a promise, create a new one that resolves immediately
-              def.resolve(res);
-              this.tooltipData.data = promise.resolve(res);
-            });
-          }
+      this.node.getImageData(IMAGE_PREVIEW_MAX_DIM).then(data => {
+        if (data) {
+          data.data.string().then(str => {
+            let res = {data: str, size: data.size};
+            // Resolving the data promise and, to always keep tooltipData.data
+            // as a promise, create a new one that resolves immediately
+            def.resolve(res);
+            this.tooltipData.data = promise.resolve(res);
+          });
+        }
+      });
+    }
+  },
+
+  copyImageDataUri: function() {
+    // We need to send again a request to gettooltipData even if one was sent for
+    // the tooltip, because we want the full-size image
+    this.node.getImageData().then(data => {
+      if (data) {
+        data.data.string().then(str => {
+          clipboardHelper.copyString(str, this.markup.doc);
         });
       }
-    }
+    });
   },
 
   _buildTooltipContent: function(target, tooltip) {
@@ -2068,3 +2087,8 @@ function parseAttributeValues(attr, doc) {
 loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
   "chrome://browser/locale/devtools/inspector.properties"
 ));
+
+XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
+  return Cc["@mozilla.org/widget/clipboardhelper;1"].
+    getService(Ci.nsIClipboardHelper);
+});

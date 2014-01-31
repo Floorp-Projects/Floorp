@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/identity.js");
@@ -42,15 +43,14 @@ function deriveKeyBundle(kB) {
   return bundle;
 }
 
-
 this.BrowserIDManager = function BrowserIDManager() {
   this._fxaService = fxAccounts;
   this._tokenServerClient = new TokenServerClient();
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
   this._log = Log.repository.getLogger("Sync.BrowserIDManager");
-  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")];
-
+  this._log.addAppender(new Log.DumpAppender());
+  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
 };
 
 this.BrowserIDManager.prototype = {
@@ -161,6 +161,25 @@ this.BrowserIDManager.prototype = {
       Weave.Service.logout();
       break;
     }
+  },
+
+   /**
+   * Compute the sha256 of the message bytes.  Return bytes.
+   */
+  _sha256: function(message) {
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                    .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    return CryptoUtils.digestBytes(message, hasher);
+  },
+
+  /**
+   * Compute the X-Client-State header given the byte string kB.
+   *
+   * Return string: hex(first16Bytes(sha256(kBbytes)))
+   */
+  _computeXClientState: function(kBbytes) {
+    return CommonUtils.bytesAsHex(this._sha256(kBbytes).slice(0, 16), false);
   },
 
   /**
@@ -388,6 +407,10 @@ this.BrowserIDManager.prototype = {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
     let log = this._log;
     let client = this._tokenServerClient;
+
+    // Both Jelly and FxAccounts give us kB as hex
+    let kBbytes = CommonUtils.hexToBytes(userData.kB);
+    let headers = {"X-Client-State": this._computeXClientState(kBbytes)};
     log.info("Fetching Sync token from: " + tokenServerURI);
 
     function getToken(tokenServerURI, assertion) {
@@ -400,7 +423,8 @@ this.BrowserIDManager.prototype = {
           return deferred.resolve(token);
         }
       };
-      client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, cb);
+
+      client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, cb, headers);
       return deferred.promise;
     }
 
