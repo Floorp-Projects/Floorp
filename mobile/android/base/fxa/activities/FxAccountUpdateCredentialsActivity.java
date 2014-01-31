@@ -23,6 +23,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.os.Bundle;
 import android.view.View;
@@ -73,8 +74,8 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
 
     emailEdit.setEnabled(false);
 
-    // Not yet implemented.
-    // this.launchActivityOnClick(ensureFindViewById(null, R.id.forgot_password_link, "forgot password link"), null);
+    TextView view = (TextView) findViewById(R.id.forgot_password_link);
+    ActivityUtils.linkTextView(view, R.string.fxaccount_sign_in_forgot_password, R.string.fxaccount_link_forgot_password);
   }
 
   @Override

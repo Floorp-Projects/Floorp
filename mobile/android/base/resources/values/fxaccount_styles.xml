@@ -75,7 +75,7 @@
         <item name="android:textColorHint">@color/fxaccount_input_textColorHint</item>
     </style>
 
-    <style name="FxAccountLinkifiedItem" parent="@android:style/TextAppearance.Small">
+    <style name="FxAccountLinkifiedItem" parent="@style/FxAccountTextItem">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textColor">@color/fxaccount_linkified_textColor</item>

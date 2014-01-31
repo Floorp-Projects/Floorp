@@ -4,11 +4,15 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import java.util.Locale;
+
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.AccountAuthenticatorActivity;
@@ -38,8 +42,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_get_started);
 
-    TextView oldFirefox = (TextView) findViewById(R.id.old_firefox);
-    ActivityUtils.linkTextView(oldFirefox, R.string.fxaccount_getting_started_old_firefox, R.string.fxaccount_getting_started_link_old_firefox);
+    linkifyOldFirefoxLink();
 
     View button = findViewById(R.id.get_started_button);
     button.setOnClickListener(new OnClickListener() {
@@ -91,5 +94,17 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
       this.setAccountAuthenticatorResult(data.getExtras());
     }
     this.setResult(requestCode, data);
+  }
+
+  protected void linkifyOldFirefoxLink() {
+    TextView oldFirefox = (TextView) findViewById(R.id.old_firefox);
+    String text = getResources().getString(R.string.fxaccount_getting_started_old_firefox);
+    String VERSION = AppConstants.MOZ_APP_VERSION;
+    String OS = AppConstants.OS_TARGET;
+    // We'll need to adjust this when we have active locale switching.
+    String LOCALE = Utils.getLanguageTag(Locale.getDefault());
+    String url = getResources().getString(R.string.fxaccount_link_old_firefox, VERSION, OS, LOCALE);
+    FxAccountConstants.pii(LOG_TAG, "Old Firefox url is: " + url); // Don't want to leak locale in particular.
+    ActivityUtils.linkTextView(oldFirefox, text, url);
   }
 }
