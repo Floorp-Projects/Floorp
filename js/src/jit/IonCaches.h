@@ -1074,7 +1074,7 @@ class GetPropertyParIC : public ParallelIonCache
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
     bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
 
-    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+    static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        MutableHandleValue vp);
 };
 
@@ -1135,7 +1135,7 @@ class GetElementParIC : public ParallelIonCache
     bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr,
                                  const Value &idval);
 
-    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj, HandleValue idval,
+    static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                        MutableHandleValue vp);
 
 };
@@ -1189,7 +1189,7 @@ class SetPropertyParIC : public ParallelIonCache
     bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape,
                        bool checkTypeset);
 
-    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+    static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        HandleValue value);
 };
 
@@ -1256,7 +1256,7 @@ class SetElementParIC : public ParallelIonCache
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
     bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr);
 
-    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+    static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        HandleValue idval, HandleValue value);
 };
 

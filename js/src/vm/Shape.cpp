@@ -653,7 +653,7 @@ JSObject::addPropertyInternal<SequentialExecution>(ExclusiveContext *cx,
                                                    unsigned flags, int shortid, Shape **spp,
                                                    bool allowDictionary);
 template /* static */ Shape *
-JSObject::addPropertyInternal<ParallelExecution>(ForkJoinSlice *cx,
+JSObject::addPropertyInternal<ParallelExecution>(ForkJoinContext *cx,
                                                  HandleObject obj, HandleId id,
                                                  PropertyOp getter, StrictPropertyOp setter,
                                                  uint32_t slot, unsigned attrs,
@@ -939,7 +939,7 @@ JSObject::putProperty<SequentialExecution>(ExclusiveContext *cx,
                                            uint32_t slot, unsigned attrs,
                                            unsigned flags, int shortid);
 template /* static */ Shape *
-JSObject::putProperty<ParallelExecution>(ForkJoinSlice *cx,
+JSObject::putProperty<ParallelExecution>(ForkJoinContext *cx,
                                          HandleObject obj, HandleId id,
                                          PropertyOp getter, StrictPropertyOp setter,
                                          uint32_t slot, unsigned attrs,
@@ -999,7 +999,7 @@ JSObject::changeProperty<SequentialExecution>(ExclusiveContext *cx,
                                               unsigned attrs, unsigned mask,
                                               PropertyOp getter, StrictPropertyOp setter);
 template /* static */ Shape *
-JSObject::changeProperty<ParallelExecution>(ForkJoinSlice *slice,
+JSObject::changeProperty<ParallelExecution>(ForkJoinContext *cx,
                                             HandleObject obj, HandleShape shape,
                                             unsigned attrs, unsigned mask,
                                             PropertyOp getter, StrictPropertyOp setter);
