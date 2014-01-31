@@ -1974,29 +1974,33 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               nsRenderingContext& aRenderingContext,
                               nsStyleGradient* aGradient,
                               const nsRect& aDirtyRect,
-                              const nsRect& aOneCellArea,
-                              const nsRect& aFillArea)
+                              const nsRect& aDest,
+                              const nsRect& aFillArea,
+                              const CSSIntRect& aSrc,
+                              const nsSize& aIntrinsicSize)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintGradient");
   Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
-  if (aOneCellArea.IsEmpty())
+  if (aDest.IsEmpty() || aFillArea.IsEmpty()) {
     return;
+  }
 
   gfxContext *ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-  gfxRect oneCellArea =
-    nsLayoutUtils::RectToGfxRect(aOneCellArea, appUnitsPerPixel);
+  nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
+  gfxSize srcSize = gfxSize(gfxFloat(aIntrinsicSize.width)/appUnitsPerDevPixel,
+                            gfxFloat(aIntrinsicSize.height)/appUnitsPerDevPixel);
 
-  bool cellContainsFill = aOneCellArea.Contains(aFillArea);
+  bool cellContainsFill = aDest.Contains(aFillArea);
 
-  // Compute "gradient line" start and end relative to oneCellArea
+  // Compute "gradient line" start and end relative to the intrinsic size of
+  // the gradient.
   gfxPoint lineStart, lineEnd;
   double radiusX = 0, radiusY = 0; // for radial gradients only
   if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
-    ComputeLinearGradientLine(aPresContext, aGradient, oneCellArea.Size(),
+    ComputeLinearGradientLine(aPresContext, aGradient, srcSize,
                               &lineStart, &lineEnd);
   } else {
-    ComputeRadialGradientLine(aPresContext, aGradient, oneCellArea.Size(),
+    ComputeRadialGradientLine(aPresContext, aGradient, srcSize,
                               &lineStart, &lineEnd, &radiusX, &radiusY);
   }
   gfxFloat lineLength = NS_hypot(lineEnd.x - lineStart.x,
@@ -2039,14 +2043,14 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       break;
     case eStyleUnit_Coord:
       position = lineLength < 1e-6 ? 0.0 :
-          stop.mLocation.GetCoordValue() / appUnitsPerPixel / lineLength;
+          stop.mLocation.GetCoordValue() / appUnitsPerDevPixel / lineLength;
       break;
     case eStyleUnit_Calc:
       nsStyleCoord::Calc *calc;
       calc = stop.mLocation.GetCalcValue();
       position = calc->mPercent +
           ((lineLength < 1e-6) ? 0.0 :
-          (NSAppUnitsToFloatPixels(calc->mLength, appUnitsPerPixel) / lineLength));
+          (NSAppUnitsToFloatPixels(calc->mLength, appUnitsPerDevPixel) / lineLength));
       break;
     default:
       NS_ABORT_IF_FALSE(false, "Unknown stop position type");
@@ -2170,6 +2174,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   // Create the gradient pattern.
   nsRefPtr<gfxPattern> gradientPattern;
   bool forceRepeatToCoverTiles = false;
+  gfxMatrix matrix;
   if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
     // Compute the actual gradient line ends we need to pass to cairo after
     // stops have been normalized.
@@ -2197,9 +2202,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // gradient.
     if (!cellContainsFill &&
         ((gradientStopStart.y == gradientStopEnd.y && gradientStopStart.x == 0 &&
-          gradientStopEnd.x == oneCellArea.width) ||
+          gradientStopEnd.x == srcSize.width) ||
           (gradientStopStart.x == gradientStopEnd.x && gradientStopStart.y == 0 &&
-          gradientStopEnd.y == oneCellArea.height))) {
+          gradientStopEnd.y == srcSize.height))) {
       forceRepeatToCoverTiles = true;
     }
   } else {
@@ -2216,20 +2221,25 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       outerRadius = innerRadius + 1;
     }
     gradientPattern = new gfxPattern(lineStart.x, lineStart.y, innerRadius,
-                                      lineStart.x, lineStart.y, outerRadius);
+                                     lineStart.x, lineStart.y, outerRadius);
     if (radiusX != radiusY) {
       // Stretch the circles into ellipses vertically by setting a transform
       // in the pattern.
       // Recall that this is the transform from user space to pattern space.
       // So to stretch the ellipse by factor of P vertically, we scale
       // user coordinates by 1/P.
-      gfxMatrix matrix;
       matrix.Translate(lineStart);
       matrix.Scale(1.0, radiusX/radiusY);
       matrix.Translate(-lineStart);
-      gradientPattern->SetMatrix(matrix);
     }
   }
+  // Use a pattern transform to take account of source and dest rects
+  matrix.Translate(gfxPoint(aPresContext->CSSPixelsToDevPixels(aSrc.x),
+                            aPresContext->CSSPixelsToDevPixels(aSrc.y)));
+  matrix.Scale(gfxFloat(aPresContext->CSSPixelsToAppUnits(aSrc.width))/aDest.width,
+               gfxFloat(aPresContext->CSSPixelsToAppUnits(aSrc.height))/aDest.height);
+  gradientPattern->SetMatrix(matrix);
+
   if (gradientPattern->CairoStatus())
     return;
 
@@ -2290,23 +2300,23 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     return;
 
   gfxRect areaToFill =
-    nsLayoutUtils::RectToGfxRect(aFillArea, appUnitsPerPixel);
+    nsLayoutUtils::RectToGfxRect(aFillArea, appUnitsPerDevPixel);
   gfxMatrix ctm = ctx->CurrentMatrix();
   bool isCTMPreservingAxisAlignedRectangles = ctm.PreservesAxisAlignedRectangles();
 
   // xStart/yStart are the top-left corner of the top-left tile.
-  nscoord xStart = FindTileStart(dirty.x, aOneCellArea.x, aOneCellArea.width);
-  nscoord yStart = FindTileStart(dirty.y, aOneCellArea.y, aOneCellArea.height);
-  nscoord xEnd = forceRepeatToCoverTiles ? xStart + aOneCellArea.width : dirty.XMost();
-  nscoord yEnd = forceRepeatToCoverTiles ? yStart + aOneCellArea.height : dirty.YMost();
+  nscoord xStart = FindTileStart(dirty.x, aDest.x, aDest.width);
+  nscoord yStart = FindTileStart(dirty.y, aDest.y, aDest.height);
+  nscoord xEnd = forceRepeatToCoverTiles ? xStart + aDest.width : dirty.XMost();
+  nscoord yEnd = forceRepeatToCoverTiles ? yStart + aDest.height : dirty.YMost();
 
   // x and y are the top-left corner of the tile to draw
-  for (nscoord y = yStart; y < yEnd; y += aOneCellArea.height) {
-    for (nscoord x = xStart; x < xEnd; x += aOneCellArea.width) {
+  for (nscoord y = yStart; y < yEnd; y += aDest.height) {
+    for (nscoord x = xStart; x < xEnd; x += aDest.width) {
       // The coordinates of the tile
       gfxRect tileRect = nsLayoutUtils::RectToGfxRect(
-                      nsRect(x, y, aOneCellArea.width, aOneCellArea.height),
-                      appUnitsPerPixel);
+                      nsRect(x, y, aDest.width, aDest.height),
+                      appUnitsPerDevPixel);
       // The actual area to fill with this tile is the intersection of this
       // tile with the overall area we're supposed to be filling
       gfxRect fillRect =
@@ -3068,19 +3078,16 @@ DrawBorderImage(nsPresContext*       aPresContext,
   nsSize imageSize = nsImageRenderer::ComputeConcreteSize(CSSSizeOrRatio(),
                                                           intrinsicSize,
                                                           borderImgArea.Size());
-  renderer.SetPreferredSize(intrinsicSize, borderImgArea.Size());
-  nsIntSize imageCSSSize =
-    nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(imageSize.width),
-              nsPresContext::AppUnitsToIntCSSPixels(imageSize.height));
+  renderer.SetPreferredSize(intrinsicSize, imageSize);
 
   // Compute the used values of 'border-image-slice' and 'border-image-width';
   // we do them together because the latter can depend on the former.
-  nsIntMargin slice;
+  nsMargin slice;
   nsMargin border;
   NS_FOR_CSS_SIDES(s) {
     nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
     int32_t imgDimension = NS_SIDE_IS_VERTICAL(s)
-                           ? imageCSSSize.width : imageCSSSize.height;
+                           ? imageSize.width : imageSize.height;
     nscoord borderDimension = NS_SIDE_IS_VERTICAL(s)
                            ? borderImgArea.width : borderImgArea.height;
     double value;
@@ -3089,7 +3096,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
         value = coord.GetPercentValue() * imgDimension;
         break;
       case eStyleUnit_Factor:
-        value = coord.GetFactorValue();
+        value = nsPresContext::CSSPixelsToAppUnits(
+          NS_lround(coord.GetFactorValue()));
         break;
       default:
         NS_NOTREACHED("unexpected CSS unit for image slice");
@@ -3100,7 +3108,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
       value = 0;
     if (value > imgDimension)
       value = imgDimension;
-    slice.Side(s) = NS_lround(value);
+    slice.Side(s) = value;
 
     nsMargin borderWidths(aStyleBorder.GetComputedBorder());
     coord = aStyleBorder.mBorderImageWidth.Get(s);
@@ -3115,7 +3123,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
         value = coord.GetFactorValue() * borderWidths.Side(s);
         break;
       case eStyleUnit_Auto:  // same as the slice value, in CSS pixels
-        value = nsPresContext::CSSPixelsToAppUnits(slice.Side(s));
+        value = slice.Side(s);
         break;
       default:
         NS_NOTREACHED("unexpected CSS unit for border image area division");
@@ -3181,33 +3189,26 @@ DrawBorderImage(nsPresContext*       aPresContext,
   const int32_t sliceX[3] = {
     0,
     slice.left,
-    imageCSSSize.width - slice.right,
+    imageSize.width - slice.right,
   };
   const int32_t sliceY[3] = {
     0,
     slice.top,
-    imageCSSSize.height - slice.bottom,
+    imageSize.height - slice.bottom,
   };
   const int32_t sliceWidth[3] = {
     slice.left,
-    std::max(imageCSSSize.width - slice.left - slice.right, 0),
+    std::max(imageSize.width - slice.left - slice.right, 0),
     slice.right,
   };
   const int32_t sliceHeight[3] = {
     slice.top,
-    std::max(imageCSSSize.height - slice.top - slice.bottom, 0),
+    std::max(imageSize.height - slice.top - slice.bottom, 0),
     slice.bottom,
   };
 
-  // In all the 'factor' calculations below, 'border' measurements are
-  // in app units but 'slice' measurements are in image/CSS pixels, so
-  // the factor corresponding to no additional scaling is
-  // CSSPixelsToAppUnits(1), not simply 1.
   for (int i = LEFT; i <= RIGHT; i++) {
     for (int j = TOP; j <= BOTTOM; j++) {
-      nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
-      nsIntRect subArea(sliceX[i], sliceY[j], sliceWidth[i], sliceHeight[j]);
-
       uint8_t fillStyleH, fillStyleV;
       nsSize unitSize;
 
@@ -3238,14 +3239,14 @@ DrawBorderImage(nsPresContext*       aPresContext,
         else if (0 < border.right && 0 < slice.right)
           vFactor = gfxFloat(border.right)/slice.right;
         else
-          vFactor = nsPresContext::CSSPixelsToAppUnits(1);
+          vFactor = 1;
 
         if (0 < border.top && 0 < slice.top)
           hFactor = gfxFloat(border.top)/slice.top;
         else if (0 < border.bottom && 0 < slice.bottom)
           hFactor = gfxFloat(border.bottom)/slice.bottom;
         else
-          hFactor = nsPresContext::CSSPixelsToAppUnits(1);
+          hFactor = 1;
 
         unitSize.width = sliceWidth[i]*hFactor;
         unitSize.height = sliceHeight[j]*vFactor;
@@ -3259,7 +3260,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
         if (0 < borderHeight[j] && 0 < sliceHeight[j])
           factor = gfxFloat(borderHeight[j])/sliceHeight[j];
         else
-          factor = nsPresContext::CSSPixelsToAppUnits(1);
+          factor = 1;
 
         unitSize.width = sliceWidth[i]*factor;
         unitSize.height = borderHeight[j];
@@ -3271,7 +3272,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
         if (0 < borderWidth[i] && 0 < sliceWidth[i])
           factor = gfxFloat(borderWidth[i])/sliceWidth[i];
         else
-          factor = nsPresContext::CSSPixelsToAppUnits(1);
+          factor = 1;
 
         unitSize.width = borderWidth[i];
         unitSize.height = sliceHeight[j]*factor;
@@ -3286,11 +3287,18 @@ DrawBorderImage(nsPresContext*       aPresContext,
         fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
       }
 
+      nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
+      nsRect subArea(sliceX[i], sliceY[j], sliceWidth[i], sliceHeight[j]);
+      nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
+
       renderer.DrawBorderImageComponent(aPresContext,
                                         aRenderingContext, aDirtyRect,
-                                        destArea, subArea,
+                                        destArea, CSSIntRect(intSubArea.x,
+                                                             intSubArea.y,
+                                                             intSubArea.width,
+                                                             intSubArea.height),
                                         fillStyleH, fillStyleV,
-                                        unitSize, i * (RIGHT + 1) + j);
+                                        unitSize, j * (RIGHT + 1) + i);
     }
   }
 }
@@ -4467,7 +4475,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
                       const nsRect&        aDirtyRect,
                       const nsRect&        aFill,
-                      const nsRect&        aDest)
+                      const nsRect&        aDest,
+                      const CSSIntRect&    aSrc)
 {
   if (!mIsReady) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -4493,7 +4502,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     case eStyleImageType_Gradient:
     {
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
-                                    mGradientData, aDirtyRect, aDest, aFill);
+                                    mGradientData, aDirtyRect,
+                                    aDest, aFill, aSrc, mSize);
       return;
     }
     case eStyleImageType_Element:
@@ -4543,14 +4553,19 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
       nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
     nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, mImageContainer,
-        nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                  nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-        graphicsFilter,
-        aDest, aFill, aAnchor, aDirty, ConvertImageRendererToDrawFlags(mFlags));
+                nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+                graphicsFilter,
+                aDest, aFill, aAnchor, aDirty,
+                ConvertImageRendererToDrawFlags(mFlags));
     return;
   }
 
-  Draw(aPresContext, aRenderingContext, aDirty, aFill, aDest);
+  Draw(aPresContext, aRenderingContext,
+       aDirty, aFill, aDest,
+       CSSIntRect(0, 0,
+                  nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                  nsPresContext::AppUnitsToIntCSSPixels(mSize.height)));
 }
 
 /**
@@ -4629,7 +4644,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                           nsRenderingContext&  aRenderingContext,
                                           const nsRect&        aDirtyRect,
                                           const nsRect&        aFill,
-                                          const nsIntRect&     aSrc,
+                                          const CSSIntRect&    aSrc,
                                           uint8_t              aHFill,
                                           uint8_t              aVFill,
                                           const nsSize&        aUnitSize,
@@ -4646,7 +4661,10 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
   if (mType == eStyleImageType_Image) {
     nsCOMPtr<imgIContainer> subImage;
     if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
-      subImage = ImageOps::Clip(mImageContainer, aSrc);
+      subImage = ImageOps::Clip(mImageContainer, nsIntRect(aSrc.x,
+                                                           aSrc.y,
+                                                           aSrc.width,
+                                                           aSrc.height));
       mImage->SetSubImage(aIndex, subImage);
     }
 
@@ -4654,14 +4672,19 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
-      nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
-                                     graphicsFilter, aFill, aDirtyRect,
-                                     nullptr, imgIContainer::FLAG_NONE);
+      nsLayoutUtils::DrawSingleImage(&aRenderingContext,
+                                     subImage,
+                                     graphicsFilter,
+                                     aFill, aDirtyRect,
+                                     nullptr,
+                                     imgIContainer::FLAG_NONE);
       return;
     }
 
     nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
-    nsLayoutUtils::DrawImage(&aRenderingContext, subImage, graphicsFilter,
+    nsLayoutUtils::DrawImage(&aRenderingContext,
+                             subImage,
+                             graphicsFilter,
                              tile, aFill, tile.TopLeft(), aDirtyRect,
                              imgIContainer::FLAG_NONE);
     return;
@@ -4670,7 +4693,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
   nsRect tile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
                   ? ComputeTile(aFill, aHFill, aVFill, aUnitSize)
                   : aFill;
-  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, tile);
+  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, tile, aSrc);
 }
 
 bool
