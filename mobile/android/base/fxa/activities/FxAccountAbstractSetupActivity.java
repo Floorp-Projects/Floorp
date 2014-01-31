@@ -189,9 +189,7 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
       successIntent = new Intent(this, FxAccountVerifiedAccountActivity.class);
     } else {
       successIntent = new Intent(this, FxAccountConfirmAccountActivity.class);
-      successIntent.putExtra("sessionToken", result.sessionToken);
     }
-    successIntent.putExtra("email", email);
     // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
     // the soft keyboard not being shown for the started activity. Why, Android, why?
     successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

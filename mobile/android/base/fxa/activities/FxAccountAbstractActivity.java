@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
@@ -129,5 +130,16 @@ public abstract class FxAccountAbstractActivity extends Activity {
         FxAccountAbstractActivity.this.launchActivity(activityClass);
       }
     });
+  }
+
+  /**
+   * Helper to fetch (unique) Android Firefox Account if one exists, or return null.
+   */
+  protected AndroidFxAccount getAndroidFxAccount() {
+    Account accounts[] = FxAccountAuthenticator.getFirefoxAccounts(this);
+    if (accounts.length < 1 || accounts[0] == null) {
+      return null;
+    }
+    return new AndroidFxAccount(this, accounts[0]);
   }
 }

@@ -120,4 +120,11 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="FxAccountCheckBox">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:textColor">@drawable/fxaccount_checkbox_textcolor</item>
+    </style>
+
 </resources>
