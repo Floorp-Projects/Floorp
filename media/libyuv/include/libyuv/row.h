@@ -174,8 +174,8 @@ extern "C" {
 // The following are available on all x86 platforms, but
 // require VS2012, clang 3.4 or gcc 4.7.
 // The code supports NaCL but requires a new compiler and validator.
-#if !defined(LIBYUV_DISABLE_X86) && (defined(VISUALC_HAS_AVX2) || \
-    defined(CLANG_HAS_AVX2) || defined(GCC_HAS_AVX2))
+#if !defined(LIBYUV_DISABLE_AVX2) && !defined(LIBYUV_DISABLE_X86) &&    \
+    (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2) || defined(GCC_HAS_AVX2))
 // Effects:
 #define HAS_ARGBPOLYNOMIALROW_AVX2
 #define HAS_ARGBSHUFFLEROW_AVX2
