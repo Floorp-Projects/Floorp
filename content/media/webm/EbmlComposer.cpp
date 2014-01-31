@@ -38,17 +38,14 @@ void EbmlComposer::GenerateHeader()
         EbmlLoc trackLoc;
         Ebml_StartSubElement(&ebml, &trackLoc, Tracks);
         {
-          char cid_string[8];
           // Video
           if (mWidth > 0 && mHeight > 0) {
-            strcpy(cid_string, "V_VP8");
-            writeVideoTrack(&ebml, 0x1, 0, cid_string,
+            writeVideoTrack(&ebml, 0x1, 0, "V_VP8",
                             mWidth, mHeight, mFrameRate);
           }
           // Audio
           if (mCodecPrivateData.Length() > 0) {
-            strcpy(cid_string, "A_VORBIS");
-            writeAudioTrack(&ebml, 0x2, 0x0, cid_string, mSampleFreq,
+            writeAudioTrack(&ebml, 0x2, 0x0, "A_VORBIS", mSampleFreq,
                             mChannels, mCodecPrivateData.Elements(),
                             mCodecPrivateData.Length());
           }
