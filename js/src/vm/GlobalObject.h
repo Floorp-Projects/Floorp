@@ -474,34 +474,45 @@ class GlobalObject : public JSObject
 
   public:
     JSObject *getOrCreateIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_LIMIT + JSProto_Iterator,
-                                 initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(APPLICATION_SLOTS + JSProto_LIMIT + JSProto_Iterator).toObject();
     }
 
     JSObject *getOrCreateArrayIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, ARRAY_ITERATOR_PROTO, initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(ARRAY_ITERATOR_PROTO).toObject();
     }
 
     JSObject *getOrCreateStringIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, STRING_ITERATOR_PROTO, initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(STRING_ITERATOR_PROTO).toObject();
     }
 
     JSObject *getOrCreateLegacyGeneratorObjectPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, LEGACY_GENERATOR_OBJECT_PROTO, initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(LEGACY_GENERATOR_OBJECT_PROTO).toObject();
     }
 
     JSObject *getOrCreateStarGeneratorObjectPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, STAR_GENERATOR_OBJECT_PROTO, initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(STAR_GENERATOR_OBJECT_PROTO).toObject();
     }
 
     JSObject *getOrCreateStarGeneratorFunctionPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_LIMIT + JSProto_GeneratorFunction,
-                                 initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(APPLICATION_SLOTS + JSProto_LIMIT + JSProto_GeneratorFunction).toObject();
     }
 
     JSObject *getOrCreateStarGeneratorFunction(JSContext *cx) {
-        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_GeneratorFunction,
-                                 initIteratorClasses);
+        if (!ensureConstructor(cx, JSProto_Iterator))
+            return nullptr;
+        return &getSlot(APPLICATION_SLOTS + JSProto_GeneratorFunction).toObject();
     }
 
     JSObject *getOrCreateMapIteratorPrototype(JSContext *cx) {
