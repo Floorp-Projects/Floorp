@@ -6046,7 +6046,7 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
 
   nsCOMPtr<nsIPrompt> prompt;
   aError = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
-                                reinterpret_cast<void**>(&prompt));
+                                getter_AddRefs(prompt));
   if (aError.Failed()) {
     return false;
   }
@@ -6056,9 +6056,7 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
     promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
 
   bool result = false;
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
-                             GetCurrentInnerWindowInternal()->mDoc :
-                             nullptr);
+  nsAutoSyncOperation sync(mDoc);
   if (ShouldPromptToBlockDialogs()) {
     bool disallowDialog = false;
     nsXPIDLString label;
@@ -6163,7 +6161,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   nsCOMPtr<nsIPrompt> prompt;
   aError = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
-                                reinterpret_cast<void**>(&prompt));
+                                getter_AddRefs(prompt));
   if (aError.Failed()) {
     return;
   }
@@ -6182,9 +6180,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                                        "ScriptDialogLabel", label);
   }
 
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
-                             GetCurrentInnerWindowInternal()->mDoc :
-                             nullptr);
+  nsAutoSyncOperation sync(mDoc);
   bool ok;
   aError = prompt->Prompt(title.get(), fixedMessage.get(),
                           &inoutValue, label.get(), &disallowDialog, &ok);
