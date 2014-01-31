@@ -6729,9 +6729,21 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, &indexAsByteOffset, objTypeReprs))
         return false;
 
+    return pushScalarLoadFromTypedObject(emitted, obj, indexAsByteOffset, elemTypeRepr);
+}
+
+bool
+IonBuilder::pushScalarLoadFromTypedObject(bool *emitted,
+                                          MDefinition *obj,
+                                          MDefinition *offset,
+                                          ScalarTypeRepresentation *elemTypeRepr)
+{
+    size_t size = elemTypeRepr->size();
+    JS_ASSERT(size == elemTypeRepr->alignment());
+
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
-    loadTypedObjectElements(obj, indexAsByteOffset, elemSize, &elements, &scaledOffset);
+    loadTypedObjectElements(obj, offset, size, &elements, &scaledOffset);
 
     // Load the element.
     MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(alloc(), elements, scaledOffset, elemTypeRepr->type());
@@ -6744,9 +6756,11 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     // uint32 reads that may produce either doubles or integers.
     types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
     bool allowDouble = resultTypes->hasType(types::Type::DoubleType());
+
     // Note: knownType is not necessarily in resultTypes; e.g. if we
     // have only observed integers coming out of float array.
     MIRType knownType = MIRTypeForTypedArrayRead(elemTypeRepr->type(), allowDouble);
+
     // Note: we can ignore the type barrier here, we know the type must
     // be valid and unbarriered. Also, need not set resultTypeSet,
     // because knownType is scalar and a resultTypeSet would provide
@@ -6768,27 +6782,58 @@ IonBuilder::getElemTryComplexElemOfTypedObject(bool *emitted,
     JS_ASSERT(objTypeReprs.allOfArrayKind());
 
     MDefinition *type = loadTypedObjectType(obj);
-    MDefinition *elemType = typeObjectForElementFromArrayStructType(type);
+    MDefinition *elemTypeObj = typeObjectForElementFromArrayStructType(type);
 
     MDefinition *indexAsByteOffset;
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, &indexAsByteOffset, objTypeReprs))
         return false;
 
+    return pushDerivedTypedObject(emitted, obj, indexAsByteOffset,
+                                  elemTypeReprs, elemTypeObj);
+}
+
+bool
+IonBuilder::pushDerivedTypedObject(bool *emitted,
+                                   MDefinition *obj,
+                                   MDefinition *offset,
+                                   TypeRepresentationSet derivedTypeReprs,
+                                   MDefinition *derivedTypeObj)
+{
     // Find location within the owner object.
     MDefinition *owner, *ownerOffset;
-    loadTypedObjectData(obj, indexAsByteOffset, &owner, &ownerOffset);
+    loadTypedObjectData(obj, offset, &owner, &ownerOffset);
 
-    // Create the derived type object.
-    MInstruction *derived = MNewDerivedTypedObject::New(alloc(),
-                                                        elemTypeReprs,
-                                                        elemType,
-                                                        owner,
-                                                        ownerOffset);
+    // Create the derived datum.
+    MInstruction *derivedTypedObj = MNewDerivedTypedObject::New(alloc(),
+                                                                derivedTypeReprs,
+                                                                derivedTypeObj,
+                                                                owner,
+                                                                ownerOffset);
+    current->add(derivedTypedObj);
+    current->push(derivedTypedObj);
 
+    // Insert a barrier. This is necessary because, while we know from
+    // the inputs that the result of this access operation will be a
+    // derived typed object, and we know the set of type descriptor(s)
+    // it will be associated with (`derivedDescrs`), we do *not* know
+    // precisely what TI type object the result will have at
+    // runtime. The observed type set could be incomplete for two
+    // reasons:
+    //
+    // 1. We may simply not have executed this instruction yet.
+    //    This occurs frequently with --ion-eager but can happen
+    //    under other scenarios as well.
+    //
+    // 2. Users can mutate the prototypes of descriptors,
+    //    and hence a single descriptor can be associated with multiple
+    //    type objects over the course of the execution. Therefore,
+    //    even if we have executed this instruction, the TI type object
+    //    of the result might be different this time around from
+    //    previous executions.
     types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
-    derived->setResultTypeSet(resultTypes);
-    current->add(derived);
-    current->push(derived);
+    if (!pushTypeBarrier(derivedTypedObj, resultTypes, true))
+        return false;
+
     *emitted = true;
     return true;
 }
@@ -8451,29 +8496,8 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted,
 
     MDefinition *typedObj = current->pop();
 
-    // Find location within the owner object.
-    MDefinition *elements, *scaledOffset;
-    loadTypedObjectElements(typedObj, constantInt(fieldOffset),
-                            fieldTypeRepr->alignment(),
-                            &elements, &scaledOffset);
-
-    // Reading from an Uint32Array will result in a double for values
-    // that don't fit in an int32. We have to bailout if this happens
-    // and the instruction is not known to return a double.
-    bool allowDouble = resultTypes->hasType(types::Type::DoubleType());
-    MIRType knownType = MIRTypeForTypedArrayRead(fieldTypeRepr->type(), allowDouble);
-
-    MLoadTypedArrayElement *load =
-        MLoadTypedArrayElement::New(alloc(), elements, scaledOffset,
-                                    fieldTypeRepr->type());
-
-    // Note: need not set resultTypeSet because knownType is scalar
-    // and a resultTypeSet would provide no useful additional info.
-    load->setResultType(knownType);
-    current->add(load);
-    current->push(load);
-    *emitted = true;
-    return true;
+    return pushScalarLoadFromTypedObject(emitted, typedObj, constantInt(fieldOffset),
+                                         fieldTypeRepr);
 }
 
 bool
@@ -8494,24 +8518,10 @@ IonBuilder::getPropTryComplexPropOfTypedObject(bool *emitted,
 
     // Identify the type object for the field.
     MDefinition *type = loadTypedObjectType(typedObj);
-    MDefinition *fieldType = typeObjectForFieldFromStructType(type, fieldIndex);
+    MDefinition *fieldTypeObj = typeObjectForFieldFromStructType(type, fieldIndex);
 
-    // Find location within the owner object.
-    MDefinition *owner, *ownerOffset;
-    loadTypedObjectData(typedObj, constantInt(fieldOffset),
-                        &owner, &ownerOffset);
-
-    // Create the derived type object.
-    MInstruction *derived = MNewDerivedTypedObject::New(alloc(),
-                                                        fieldTypeReprs,
-                                                        fieldType,
-                                                        owner,
-                                                        ownerOffset);
-    derived->setResultTypeSet(resultTypes);
-    current->add(derived);
-    current->push(derived);
-    *emitted = true;
-    return true;
+    return pushDerivedTypedObject(emitted, typedObj, constantInt(fieldOffset),
+                                  fieldTypeReprs, fieldTypeObj);
 }
 
 bool
@@ -9895,7 +9905,6 @@ IonBuilder::loadTypedObjectData(MDefinition *typedObj,
     // pulled from the operands of the instruction and combined with
     // `offset`.
     if (typedObj->isNewDerivedTypedObject()) {
-        // If we see that the
         MNewDerivedTypedObject *ins = typedObj->toNewDerivedTypedObject();
 
         MAdd *offsetAdd = MAdd::NewAsmJS(alloc(), ins->offset(), offset, MIRType_Int32);
