@@ -13,6 +13,7 @@
   'variables': {
     'use_system_libjpeg%': 0,
     'yuv_disable_asm%': 0,
+    'yuv_disable_avx2%': 0,
     'build_neon': 0,
     'conditions': [
        ['target_arch == "arm" and arm_version >= 7 and (arm_neon == 1 or arm_neon_optional == 1)', {
@@ -120,6 +121,11 @@
             'LIBYUV_DISABLE_MIPS',
           ],
         }],
+        [ 'yuv_disable_avx2==1', {
+          'defines': [
+            'LIBYUV_DISABLE_AVX2',
+          ]
+        }],
         ['build_with_mozilla==1', {
           'include_dirs': [
             '$(DEPTH)/dist/include',
@@ -136,6 +142,8 @@
         # 'LIBYUV_DISABLE_X86',
         # 'LIBYUV_DISABLE_NEON',
         # 'LIBYUV_DISABLE_MIPS',
+        # This disables AVX2 (Haswell) support, overriding compiler checks
+        # 'LIBYUV_DISABLE_AVX2',
         # Enable the following macro to build libyuv as a shared library (dll).
         # 'LIBYUV_USING_SHARED_LIBRARY',
       ],
