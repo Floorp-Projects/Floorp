@@ -4,7 +4,7 @@
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
+ *  in the file PATENTS. All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -20,94 +20,19 @@ namespace libyuv {
 extern "C" {
 #endif
 
-// Note: to do this with Neon vld4.8 would load ARGB values into 4 registers
-// and vst would select which 2 components to write.  The low level would need
-// to be ARGBToBG, ARGBToGB, ARGBToRG, ARGBToGR
-
-#if !defined(YUV_DISABLE_ASM) && defined(_M_IX86)
-#define HAS_ARGBTOBAYERROW_SSSE3
-__declspec(naked) __declspec(align(16))
-static void ARGBToBayerRow_SSSE3(const uint8* src_argb,
-                                 uint8* dst_bayer, uint32 selector, int pix) {
-  __asm {
-    mov        eax, [esp + 4]    // src_argb
-    mov        edx, [esp + 8]    // dst_bayer
-    movd       xmm5, [esp + 12]  // selector
-    mov        ecx, [esp + 16]   // pix
-    pshufd     xmm5, xmm5, 0
-
-    align      16
-  wloop:
-    movdqa     xmm0, [eax]
-    lea        eax, [eax + 16]
-    pshufb     xmm0, xmm5
-    sub        ecx, 4
-    movd       [edx], xmm0
-    lea        edx, [edx + 4]
-    jg         wloop
-    ret
-  }
-}
-
-#elif !defined(YUV_DISABLE_ASM) && (defined(__x86_64__) || defined(__i386__))
-
-#define HAS_ARGBTOBAYERROW_SSSE3
-static void ARGBToBayerRow_SSSE3(const uint8* src_argb, uint8* dst_bayer,
-                                 uint32 selector, int pix) {
-  asm volatile (
-    "movd   %3,%%xmm5                          \n"
-    "pshufd $0x0,%%xmm5,%%xmm5                 \n"
-    ".p2align  4                               \n"
-"1:                                            \n"
-    "movdqa (%0),%%xmm0                        \n"
-    "lea    0x10(%0),%0                        \n"
-    "pshufb %%xmm5,%%xmm0                      \n"
-    "sub    $0x4,%2                            \n"
-    "movd   %%xmm0,(%1)                        \n"
-    "lea    0x4(%1),%1                         \n"
-    "jg     1b                                 \n"
-  : "+r"(src_argb),  // %0
-    "+r"(dst_bayer), // %1
-    "+r"(pix)        // %2
-  : "g"(selector)    // %3
-  : "memory", "cc"
-#if defined(__SSE2__)
-    , "xmm0", "xmm5"
-#endif
-
-);
-}
-#endif
-
-static void ARGBToBayerRow_C(const uint8* src_argb,
-                             uint8* dst_bayer, uint32 selector, int pix) {
-  int index0 = selector & 0xff;
-  int index1 = (selector >> 8) & 0xff;
-  // Copy a row of Bayer.
-  for (int x = 0; x < pix - 1; x += 2) {
-    dst_bayer[0] = src_argb[index0];
-    dst_bayer[1] = src_argb[index1];
-    src_argb += 8;
-    dst_bayer += 2;
-  }
-  if (pix & 1) {
-    dst_bayer[0] = src_argb[index0];
-  }
-}
-
 // generate a selector mask useful for pshufb
 static uint32 GenerateSelector(int select0, int select1) {
-  return static_cast<uint32>(select0) |
-         static_cast<uint32>((select1 + 4) << 8) |
-         static_cast<uint32>((select0 + 8) << 16) |
-         static_cast<uint32>((select1 + 12) << 24);
+  return (uint32)(select0) |
+         (uint32)((select1 + 4) << 8) |
+         (uint32)((select0 + 8) << 16) |
+         (uint32)((select1 + 12) << 24);
 }
 
 static int MakeSelectors(const int blue_index,
                          const int green_index,
                          const int red_index,
                          uint32 dst_fourcc_bayer,
-                         uint32 *index_map) {
+                         uint32* index_map) {
   // Now build a lookup table containing the indices for the four pixels in each
   // 2x2 Bayer grid.
   switch (dst_fourcc_bayer) {
@@ -147,10 +72,19 @@ int ARGBToBayer(const uint8* src_argb, int src_stride_argb,
   void (*ARGBToBayerRow)(const uint8* src_argb, uint8* dst_bayer,
                          uint32 selector, int pix) = ARGBToBayerRow_C;
 #if defined(HAS_ARGBTOBAYERROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) &&
-      IS_ALIGNED(width, 4) &&
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8 &&
       IS_ALIGNED(src_argb, 16) && IS_ALIGNED(src_stride_argb, 16)) {
-    ARGBToBayerRow = ARGBToBayerRow_SSSE3;
+    ARGBToBayerRow = ARGBToBayerRow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToBayerRow = ARGBToBayerRow_SSSE3;
+    }
+  }
+#elif defined(HAS_ARGBTOBAYERROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && width >= 8) {
+    ARGBToBayerRow = ARGBToBayerRow_Any_NEON;
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToBayerRow = ARGBToBayerRow_NEON;
+    }
   }
 #endif
   const int blue_index = 0;  // Offsets for ARGB format
@@ -340,7 +274,7 @@ int BayerToARGB(const uint8* src_bayer, int src_stride_bayer,
     dst_argb += dst_stride_argb * 2;
   }
   if (height & 1) {
-    BayerRow0(src_bayer, -src_stride_bayer, dst_argb, width);
+    BayerRow0(src_bayer, src_stride_bayer, dst_argb, width);
   }
   return 0;
 }
@@ -353,9 +287,6 @@ int BayerToI420(const uint8* src_bayer, int src_stride_bayer,
                 uint8* dst_v, int dst_stride_v,
                 int width, int height,
                 uint32 src_fourcc_bayer) {
-  if (width * 4 > kMaxStride) {
-    return -1;  // Size too large for row buffer
-  }
   // Negative height means invert the image.
   if (height < 0) {
     height = -height;
@@ -371,22 +302,35 @@ int BayerToI420(const uint8* src_bayer, int src_stride_bayer,
                     uint8* dst_argb, int pix);
   void (*BayerRow1)(const uint8* src_bayer, int src_stride_bayer,
                     uint8* dst_argb, int pix);
-  void (*ARGBToYRow)(const uint8* src_argb, uint8* dst_y, int pix) =
-      ARGBToYRow_C;
+
   void (*ARGBToUVRow)(const uint8* src_argb0, int src_stride_argb,
                       uint8* dst_u, uint8* dst_v, int width) = ARGBToUVRow_C;
-  SIMD_ALIGNED(uint8 row[kMaxStride * 2]);
-
-#if defined(HAS_ARGBTOYROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) &&
-      IS_ALIGNED(width, 16) &&
-      IS_ALIGNED(dst_y, 16) && IS_ALIGNED(dst_stride_y, 16)) {
-    ARGBToYRow = ARGBToYRow_SSSE3;
+  void (*ARGBToYRow)(const uint8* src_argb, uint8* dst_y, int pix) =
+      ARGBToYRow_C;
+#if defined(HAS_ARGBTOYROW_SSSE3) && defined(HAS_ARGBTOUVROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 16) {
+    ARGBToUVRow = ARGBToUVRow_Any_SSSE3;
+    ARGBToYRow = ARGBToYRow_Any_SSSE3;
+    if (IS_ALIGNED(width, 16)) {
+      ARGBToYRow = ARGBToYRow_Unaligned_SSSE3;
+      ARGBToUVRow = ARGBToUVRow_SSSE3;
+      if (IS_ALIGNED(dst_y, 16) && IS_ALIGNED(dst_stride_y, 16)) {
+        ARGBToYRow = ARGBToYRow_SSSE3;
+      }
+    }
   }
-#endif
-#if defined(HAS_ARGBTOUVROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) && IS_ALIGNED(width, 16)) {
-    ARGBToUVRow = ARGBToUVRow_SSSE3;
+#elif defined(HAS_ARGBTOYROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && width >= 8) {
+    ARGBToYRow = ARGBToYRow_Any_NEON;
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToYRow = ARGBToYRow_NEON;
+    }
+    if (width >= 16) {
+      ARGBToUVRow = ARGBToUVRow_Any_NEON;
+      if (IS_ALIGNED(width, 16)) {
+        ARGBToUVRow = ARGBToUVRow_NEON;
+      }
+    }
   }
 #endif
 
@@ -411,13 +355,16 @@ int BayerToI420(const uint8* src_bayer, int src_stride_bayer,
       return -1;  // Bad FourCC
   }
 
+  // Allocate 2 rows of ARGB.
+  const int kRowSize = (width * 4 + 15) & ~15;
+  align_buffer_64(row, kRowSize * 2);
   for (int y = 0; y < height - 1; y += 2) {
     BayerRow0(src_bayer, src_stride_bayer, row, width);
     BayerRow1(src_bayer + src_stride_bayer, -src_stride_bayer,
-              row + kMaxStride, width);
-    ARGBToUVRow(row, kMaxStride, dst_u, dst_v, width);
+              row + kRowSize, width);
+    ARGBToUVRow(row, kRowSize, dst_u, dst_v, width);
     ARGBToYRow(row, dst_y, width);
-    ARGBToYRow(row + kMaxStride, dst_y + dst_stride_y, width);
+    ARGBToYRow(row + kRowSize, dst_y + dst_stride_y, width);
     src_bayer += src_stride_bayer * 2;
     dst_y += dst_stride_y * 2;
     dst_u += dst_stride_u;
@@ -428,6 +375,7 @@ int BayerToI420(const uint8* src_bayer, int src_stride_bayer,
     ARGBToUVRow(row, 0, dst_u, dst_v, width);
     ARGBToYRow(row, dst_y, width);
   }
+  free_aligned_buffer_64(row);
   return 0;
 }
 
@@ -455,23 +403,57 @@ int I420ToBayer(const uint8* src_y, int src_stride_y,
                         const uint8* v_buf,
                         uint8* rgb_buf,
                         int width) = I422ToARGBRow_C;
-#if defined(HAS_I422TOARGBROW_NEON)
-  if (TestCpuFlag(kCpuHasNEON)) {
-    I422ToARGBRow = I422ToARGBRow_NEON;
-  }
-#elif defined(HAS_I422TOARGBROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3)) {
-    I422ToARGBRow = I422ToARGBRow_SSSE3;
+#if defined(HAS_I422TOARGBROW_SSSE3)
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8) {
+    I422ToARGBRow = I422ToARGBRow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      I422ToARGBRow = I422ToARGBRow_SSSE3;
+    }
   }
 #endif
-  SIMD_ALIGNED(uint8 row[kMaxStride]);
+#if defined(HAS_I422TOARGBROW_AVX2)
+  if (TestCpuFlag(kCpuHasAVX2) && width >= 16) {
+    I422ToARGBRow = I422ToARGBRow_Any_AVX2;
+    if (IS_ALIGNED(width, 16)) {
+      I422ToARGBRow = I422ToARGBRow_AVX2;
+    }
+  }
+#endif
+#if defined(HAS_I422TOARGBROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && width >= 8) {
+    I422ToARGBRow = I422ToARGBRow_Any_NEON;
+    if (IS_ALIGNED(width, 8)) {
+      I422ToARGBRow = I422ToARGBRow_NEON;
+    }
+  }
+#endif
+#if defined(HAS_I422TOARGBROW_MIPS_DSPR2)
+  if (TestCpuFlag(kCpuHasMIPS_DSPR2) && IS_ALIGNED(width, 4) &&
+      IS_ALIGNED(src_y, 4) && IS_ALIGNED(src_stride_y, 4) &&
+      IS_ALIGNED(src_u, 2) && IS_ALIGNED(src_stride_u, 2) &&
+      IS_ALIGNED(src_v, 2) && IS_ALIGNED(src_stride_v, 2)) {
+    I422ToARGBRow = I422ToARGBRow_MIPS_DSPR2;
+  }
+#endif
+
   void (*ARGBToBayerRow)(const uint8* src_argb, uint8* dst_bayer,
                          uint32 selector, int pix) = ARGBToBayerRow_C;
 #if defined(HAS_ARGBTOBAYERROW_SSSE3)
-  if (TestCpuFlag(kCpuHasSSSE3) && IS_ALIGNED(width, 4)) {
-    ARGBToBayerRow = ARGBToBayerRow_SSSE3;
+  if (TestCpuFlag(kCpuHasSSSE3) && width >= 8) {
+    ARGBToBayerRow = ARGBToBayerRow_Any_SSSE3;
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToBayerRow = ARGBToBayerRow_SSSE3;
+    }
+  }
+#elif defined(HAS_ARGBTOBAYERROW_NEON)
+  if (TestCpuFlag(kCpuHasNEON) && width >= 8) {
+    ARGBToBayerRow = ARGBToBayerRow_Any_NEON;
+    if (IS_ALIGNED(width, 8)) {
+      ARGBToBayerRow = ARGBToBayerRow_NEON;
+    }
   }
 #endif
+
   const int blue_index = 0;  // Offsets for ARGB format
   const int green_index = 1;
   const int red_index = 2;
@@ -480,7 +462,8 @@ int I420ToBayer(const uint8* src_y, int src_stride_y,
                     dst_fourcc_bayer, index_map)) {
     return -1;  // Bad FourCC
   }
-
+  // Allocate a row of ARGB.
+  align_buffer_64(row, width * 4);
   for (int y = 0; y < height; ++y) {
     I422ToARGBRow(src_y, src_u, src_v, row, width);
     ARGBToBayerRow(row, dst_bayer, index_map[y & 1], width);
@@ -491,6 +474,7 @@ int I420ToBayer(const uint8* src_y, int src_stride_y,
       src_v += src_stride_v;
     }
   }
+  free_aligned_buffer_64(row);
   return 0;
 }
 
