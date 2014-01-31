@@ -253,9 +253,8 @@
           </groupbox>
 
           <groupbox id="syncOptions">
-            <caption label="&syncBrand.fullName.label;"/>
+            <caption label="&syncBrand.shortName.label;"/>
             <vbox>
-              <label value="&syncMy.label;" />
               <richlistbox id="fxaSyncEnginesList"
                            orient="vertical"
                            onselect="if (this.selectedCount) this.clearSelection();">
