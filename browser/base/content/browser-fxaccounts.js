@@ -21,7 +21,6 @@ let gFxAccounts = {
   },
 
   get topics() {
-    // Do all this dance to lazy-load FxAccountsCommon.
     delete this.topics;
     return this.topics = [
       "weave:service:sync:start",
@@ -30,16 +29,6 @@ let gFxAccounts = {
       FxAccountsCommon.ONVERIFIED_NOTIFICATION,
       FxAccountsCommon.ONLOGOUT_NOTIFICATION
     ];
-  },
-
-  // The set of topics that only the active window should handle.
-  get activeWindowTopics() {
-    // Do all this dance to lazy-load FxAccountsCommon.
-    delete this.activeWindowTopics;
-    return this.activeWindowTopics = new Set([
-      "weave:service:sync:start",
-      FxAccountsCommon.ONVERIFIED_NOTIFICATION
-    ]);
   },
 
   get button() {
@@ -55,15 +44,8 @@ let gFxAccounts = {
            Weave.Status.login != Weave.LOGIN_SUCCEEDED;
   },
 
-  get isActiveWindow() {
-    let mostRecentNonPopupWindow =
-      RecentWindow.getMostRecentBrowserWindow({allowPopups: false});
-    return window == mostRecentNonPopupWindow;
-  },
-
   init: function () {
-    // Bail out if we're already initialized and for pop-up windows.
-    if (this._initialized || !window.toolbar.visible) {
+    if (this._initialized) {
       return;
     }
 
@@ -92,11 +74,6 @@ let gFxAccounts = {
   },
 
   observe: function (subject, topic) {
-    // Ignore certain topics if we're not the active window.
-    if (this.activeWindowTopics.has(topic) && !this.isActiveWindow) {
-      return;
-    }
-
     switch (topic) {
       case FxAccountsCommon.ONVERIFIED_NOTIFICATION:
         Services.prefs.setBoolPref(PREF_SYNC_START_DOORHANGER, true);
