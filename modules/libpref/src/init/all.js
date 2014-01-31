@@ -2556,6 +2556,11 @@ pref("intl.tsf.support_imm", true);
 // We need to notify the layout change to TSF, but we cannot check the actual
 // change now, therefore, we always notify it by this fequency.
 pref("intl.tsf.on_layout_change_interval", 100);
+
+// Enables/Disables hack for specific TIP.
+
+// Whether creates native caret for ATOK or not.
+pref("intl.tsf.hack.atok.create_native_caret", true);
 #endif
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
