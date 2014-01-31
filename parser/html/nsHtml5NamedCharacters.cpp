@@ -24,8 +24,8 @@
 #include "jArray.h"
 #include "nscore.h"
 #include "nsDebug.h"
+#include "mozilla/ArrayUtils.h"
 #include "prlog.h"
-#include "nsMemory.h"
 
 #include "nsHtml5NamedCharacters.h"
 
@@ -100,7 +100,7 @@ NAME_##N##_END = NAME_##N##_START + LEN + FLAG,
 };
 
 /* check that the start positions will fit in 16 bits */
-PR_STATIC_ASSERT(NS_ARRAY_LENGTH(ALL_NAMES) < 0x10000);
+PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(ALL_NAMES) < 0x10000);
 
 const nsHtml5CharacterName nsHtml5NamedCharacters::NAMES[] = {
 #ifdef DEBUG

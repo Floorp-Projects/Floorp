@@ -7,6 +7,7 @@
 #include "nsAboutRedirector.h"
 #include "nsNetUtil.h"
 #include "nsAboutProtocolUtils.h"
+#include "mozilla/ArrayUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsAboutRedirector, nsIAboutModule)
 
@@ -73,7 +74,7 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
       nsIAboutModule::HIDE_FROM_ABOUTABOUT }
 };
-static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
+static const int kRedirTotal = mozilla::ArrayLength(kRedirMap);
 
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)

@@ -9,12 +9,15 @@ import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
-import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.Engaged;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.StateLabel;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
@@ -26,32 +29,18 @@ import android.widget.Toast;
  * Activity which displays account created successfully screen to the user, and
  * starts them on the email verification path.
  */
-public class FxAccountConfirmAccountActivity extends Activity implements OnClickListener {
-  protected static final String LOG_TAG = FxAccountConfirmAccountActivity.class.getSimpleName();
+public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity implements OnClickListener {
+  private static final String LOG_TAG = FxAccountConfirmAccountActivity.class.getSimpleName();
 
-  protected byte[] sessionToken;
-  protected TextView emailText;
+  // Set in onCreate.
+  protected TextView verificationLinkTextView;
+  protected View resendLink;
 
-  /**
-   * Helper to find view or error if it is missing.
-   *
-   * @param id of view to find.
-   * @param description to print in error.
-   * @return non-null <code>View</code> instance.
-   */
-  public View ensureFindViewById(View v, int id, String description) {
-    View view;
-    if (v != null) {
-      view = v.findViewById(id);
-    } else {
-      view = findViewById(id);
-    }
-    if (view == null) {
-      String message = "Could not find view " + description + ".";
-      Logger.error(LOG_TAG, message);
-      throw new RuntimeException(message);
-    }
-    return view;
+  // Set in onResume.
+  protected AndroidFxAccount fxAccount;
+
+  public FxAccountConfirmAccountActivity() {
+    super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST);
   }
 
   /**
@@ -64,20 +53,36 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_confirm_account);
 
-    emailText = (TextView) ensureFindViewById(null, R.id.email, "email text");
-    if (getIntent() != null && getIntent().getExtras() != null) {
-      Bundle extras = getIntent().getExtras();
-      emailText.setText(extras.getString("email"));
-      sessionToken = extras.getByteArray("sessionToken");
-    }
-
-    View resendLink = ensureFindViewById(null, R.id.resend_confirmation_email_link, "resend confirmation email link");
+    verificationLinkTextView = (TextView) ensureFindViewById(null, R.id.verification_link_text, "verification link text");
+    resendLink = ensureFindViewById(null, R.id.resend_confirmation_email_link, "resend confirmation email link");
     resendLink.setOnClickListener(this);
+  }
 
-    if (sessionToken == null) {
-      resendLink.setEnabled(false);
-      resendLink.setClickable(false);
+  @Override
+  public void onResume() {
+    super.onResume();
+    this.fxAccount = getAndroidFxAccount();
+    if (fxAccount == null) {
+      Logger.warn(LOG_TAG, "Could not get Firefox Account.");
+      setResult(RESULT_CANCELED);
+      finish();
+      return;
     }
+    State state = fxAccount.getState();
+    if (state.getStateLabel() != StateLabel.Engaged) {
+      Logger.warn(LOG_TAG, "Cannot confirm Firefox Account in state: " + state.getStateLabel());
+      setResult(RESULT_CANCELED);
+      finish();
+      return;
+    }
+
+    final String email = fxAccount.getEmail();
+    final String text = getResources().getString(R.string.fxaccount_confirm_account_verification_link, email);
+    verificationLinkTextView.setText(text);
+
+    boolean resendLinkShouldBeEnabled = ((Engaged) state).getSessionToken() != null;
+    resendLink.setEnabled(resendLinkShouldBeEnabled);
+    resendLink.setClickable(resendLinkShouldBeEnabled);
   }
 
   public static class FxAccountResendCodeTask extends FxAccountSetupTask<Void> {
@@ -85,7 +90,7 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
 
     protected final byte[] sessionToken;
 
-    public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient20 client, RequestDelegate<Void> delegate) {
+    public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient client, RequestDelegate<Void> delegate) {
       super(context, null, client, delegate);
       this.sessionToken = sessionToken;
     }
@@ -104,11 +109,17 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
     }
   }
 
-  protected class ResendCodeDelegate implements RequestDelegate<Void> {
+  protected static class ResendCodeDelegate implements RequestDelegate<Void> {
+    public final Context context;
+
+    public ResendCodeDelegate(Context context) {
+      this.context = context;
+    }
+
     @Override
     public void handleError(Exception e) {
       Logger.warn(LOG_TAG, "Got exception requesting fresh confirmation link; ignoring.", e);
-      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_verification_link_not_sent, Toast.LENGTH_LONG).show();
+      Toast.makeText(context, R.string.fxaccount_confirm_account_verification_link_not_sent, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -118,20 +129,32 @@ public class FxAccountConfirmAccountActivity extends Activity implements OnClick
 
     @Override
     public void handleSuccess(Void result) {
-      Toast.makeText(getApplicationContext(), R.string.fxaccount_confirm_verification_link_sent, Toast.LENGTH_SHORT).show();
+      Toast.makeText(context, R.string.fxaccount_confirm_account_verification_link_sent, Toast.LENGTH_SHORT).show();
     }
   }
 
-  protected void resendCode(byte[] sessionToken) {
-    String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
-    RequestDelegate<Void> delegate = new ResendCodeDelegate();
+  public static void resendCode(Context context, AndroidFxAccount fxAccount) {
+    RequestDelegate<Void> delegate = new ResendCodeDelegate(context);
+
+    byte[] sessionToken;
+    try {
+      sessionToken = ((Engaged) fxAccount.getState()).getSessionToken();
+    } catch (Exception e) {
+      delegate.handleError(e);
+      return;
+    }
+    if (sessionToken == null) {
+      delegate.handleError(new IllegalStateException("sessionToken should not be null"));
+      return;
+    }
+
     Executor executor = Executors.newSingleThreadExecutor();
-    FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
-    new FxAccountResendCodeTask(this, sessionToken, client, delegate).execute();
+    FxAccountClient client = new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
+    new FxAccountResendCodeTask(context, sessionToken, client, delegate).execute();
   }
 
   @Override
   public void onClick(View v) {
-    resendCode(sessionToken);
+    resendCode(this, fxAccount);
   }
 }

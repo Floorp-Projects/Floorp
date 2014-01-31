@@ -20,7 +20,7 @@
 
         <TextView
             style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_confirm_your_account" >
+            android:text="@string/fxaccount_confirm_account_header" >
         </TextView>
 
         <ImageView
@@ -31,28 +31,20 @@
             android:background="@android:color/transparent"
             android:contentDescription="@string/fxaccount_mail_contentDescription"
             android:src="@drawable/fxaccount_mail" >
-
         </ImageView>
 
         <TextView
+            android:id="@+id/verification_link_text"
             style="@style/FxAccountTextItem"
             android:layout_marginBottom="15dp"
-            android:text="@string/fxaccount_verification_link_awaits_at"
+            android:text="@string/fxaccount_confirm_account_verification_link"
             android:textSize="18sp" >
-        </TextView>
-
-        <TextView
-            android:id="@+id/email"
-            style="@style/FxAccountTextItem"
-            android:layout_marginBottom="45dp"
-            android:textSize="20sp"
-            android:textStyle="bold" >
         </TextView>
 
         <TextView
             android:id="@+id/resend_confirmation_email_link"
             style="@style/FxAccountLinkItem"
-            android:text="@string/fxaccount_verification_link_not_showing_up_offer_resend" />
+            android:text="@string/fxaccount_confirm_account_resend_email" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

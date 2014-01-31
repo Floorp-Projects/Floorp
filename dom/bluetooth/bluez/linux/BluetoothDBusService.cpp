@@ -1382,7 +1382,7 @@ public:
       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
       DBUS_ADAPTER_IFACE, "AddReservedServiceRecords",
       DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
-      &services, NS_ARRAY_LENGTH(sServices), DBUS_TYPE_INVALID);
+      &services, ArrayLength(sServices), DBUS_TYPE_INVALID);
 
     NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 

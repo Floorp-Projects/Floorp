@@ -7,9 +7,9 @@
 #define MOZILLA_SVGPATHSEGUTILS_H__
 
 #include "gfxPoint.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Point.h"
 #include "nsDebug.h"
-#include "nsMemory.h"
 
 namespace mozilla {
 
@@ -152,7 +152,7 @@ public:
       char16_t('T'),  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
       char16_t('t')   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
     };
-    static_assert(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
+    static_assert(MOZ_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
 
     return table[aType];
   }
@@ -182,7 +182,7 @@ public:
       2,  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
       2   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
     };
-    static_assert(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
+    static_assert(MOZ_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
 
     return table[aType];
   }

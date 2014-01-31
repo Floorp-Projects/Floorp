@@ -65,6 +65,7 @@ public class SelectEnginesActivity extends Activity implements
   protected Account account;
   protected SharedPreferences accountPrefs;
 
+  @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mContext = getApplicationContext();
@@ -123,7 +124,7 @@ public class SelectEnginesActivity extends Activity implements
     dialog.show();
   }
 
-  private Set<String> getEnginesFromPrefs(SharedPreferences syncPrefs) {
+  private static Set<String> getEnginesFromPrefs(SharedPreferences syncPrefs) {
     Set<String> engines = SyncConfiguration.getEnabledEngineNames(syncPrefs);
     if (engines == null) {
       engines = SyncConfiguration.validEngineNames();
@@ -142,7 +143,7 @@ public class SelectEnginesActivity extends Activity implements
    * @return Set<String> of engine names to display as selected. Should never be
    *         null.
    */
-  private Set<String> getEnginesToSelect(SharedPreferences syncPrefs) {
+  public static Set<String> getEnginesToSelect(SharedPreferences syncPrefs) {
     Set<String> engines = getEnginesFromPrefs(syncPrefs);
     Map<String, Boolean> engineSelections = SyncConfiguration.getUserSelectedEngines(syncPrefs);
     if (engineSelections != null) {

@@ -1,7 +1,21 @@
 . "$topsrcdir/build/mozconfig.common"
 
-CC="/tools/gcc-4.7.3-0moz1/bin/gcc"
-CXX="/tools/gcc-4.7.3-0moz1/bin/g++"
+# some b2g desktop builds still happen on i686 machines, and the tooltool
+# toolchain is x86_64 only.
+# We also deal with valgrind builds here, they don't use tooltool manifests at
+# all yet.
+if [ -z "$no_tooltool" ]
+then
+  CC="$topsrcdir/gcc/bin/gcc"
+  CXX="$topsrcdir/gcc/bin/g++"
+
+  # We want to make sure we use binutils and other binaries in the tooltool
+  # package.
+  mk_add_options PATH="$topsrcdir/gcc/bin:$PATH"
+else
+  CC="/tools/gcc-4.7.3-0moz1/bin/gcc"
+  CXX="/tools/gcc-4.7.3-0moz1/bin/g++"
+fi
 
 ac_add_options --enable-elf-hack
 

@@ -4,25 +4,27 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.fxa.PasswordStretcher;
+import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.Promised;
-import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
-import android.accounts.AccountManager;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -32,7 +34,9 @@ import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -46,6 +50,9 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
 
   protected String[] yearItems;
   protected EditText yearEdit;
+  protected CheckBox chooseCheckBox;
+
+  protected Map<String, Boolean> selectedEngines;
 
   /**
    * {@inheritDoc}
@@ -57,7 +64,14 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_create_account);
 
-    linkifyTextViews(null, new int[] { R.id.policy });
+    TextView policyView = (TextView) ensureFindViewById(null, R.id.policy, "policy links");
+    final String linkTerms = getString(R.string.fxaccount_link_tos);
+    final String linkPrivacy = getString(R.string.fxaccount_link_pn);
+    final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
+    final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
+    policyView.setText(getString(R.string.fxaccount_create_account_policy_text, linkedTOS, linkedPN));
+    final boolean underlineLinks = true;
+    ActivityUtils.linkifyTextView(policyView, underlineLinks);
 
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
@@ -66,12 +80,15 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     remoteErrorTextView = (TextView) ensureFindViewById(null, R.id.remote_error, "remote error text view");
     button = (Button) ensureFindViewById(null, R.id.button, "create account button");
     progressBar = (ProgressBar) ensureFindViewById(null, R.id.progress, "progress bar");
+    chooseCheckBox = (CheckBox) ensureFindViewById(null, R.id.choose_what_to_sync_checkbox, "choose what to sync check box");
+    selectedEngines = new HashMap<String, Boolean>();
 
     createCreateAccountButton();
     createYearEdit();
     addListeners();
     updateButtonState();
     createShowPasswordButton();
+    createChooseCheckBox();
 
     View signInInsteadLink = ensureFindViewById(null, R.id.sign_in_instead_link, "sign in instead link");
     signInInsteadLink.setOnClickListener(new OnClickListener() {
@@ -111,7 +128,13 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
   }
 
   protected void createYearEdit() {
-    yearItems = getResources().getStringArray(R.array.fxaccount_create_account_ages_array);
+    int year = Calendar.getInstance().get(Calendar.YEAR);
+    LinkedList<String> years = new LinkedList<String>();
+    for (int i = year - 5; i >= 1951; i--) {
+      years.add(Integer.toString(i));
+    }
+    years.add(getResources().getString(R.string.fxaccount_create_account_1950_or_earlier));
+    yearItems = years.toArray(new String[0]);
 
     yearEdit.setOnClickListener(new OnClickListener() {
       @Override
@@ -124,7 +147,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
           }
         };
         final AlertDialog dialog = new AlertDialog.Builder(FxAccountCreateAccountActivity.this)
-        .setTitle(R.string.fxaccount_when_were_you_born)
+        .setTitle(R.string.fxaccount_create_account_year_of_birth)
         .setItems(yearItems, listener)
         .setIcon(R.drawable.fxaccount_icon)
         .create();
@@ -134,85 +157,28 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     });
   }
 
-  protected class CreateAccountDelegate implements RequestDelegate<String> {
-    public final String email;
-    public final String password;
-    public final String serverURI;
-
-    public CreateAccountDelegate(String email, String password, String serverURI) {
-      this.email = email;
-      this.password = password;
-      this.serverURI = serverURI;
-    }
-
-    @Override
-    public void handleError(Exception e) {
-      showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
-    }
-
-    @Override
-    public void handleFailure(final FxAccountClientRemoteException e) {
-      showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
-    }
-
-    @Override
-    public void handleSuccess(String uid) {
-      Activity activity = FxAccountCreateAccountActivity.this;
-      Logger.info(LOG_TAG, "Got success creating account.");
-
-      // We're on the UI thread, but it's okay to create the account here.
-      AndroidFxAccount fxAccount;
-      try {
-        final String profile = Constants.DEFAULT_PROFILE;
-        final String tokenServerURI = FxAccountConstants.DEFAULT_TOKEN_SERVER_URI;
-        // TODO: This is wasteful.  We should be able to thread these through so they don't get recomputed.
-        byte[] quickStretchedPW = FxAccountUtils.generateQuickStretchedPW(email.getBytes("UTF-8"), password.getBytes("UTF-8"));
-        byte[] unwrapkB = FxAccountUtils.generateUnwrapBKey(quickStretchedPW);
-        State state = new Promised(email, uid, false, unwrapkB, quickStretchedPW);
-        fxAccount = AndroidFxAccount.addAndroidAccount(activity, email, password,
-            profile,
-            serverURI,
-            tokenServerURI,
-            state);
-        if (fxAccount == null) {
-          throw new RuntimeException("Could not add Android account.");
-        }
-      } catch (Exception e) {
-        handleError(e);
-        return;
+  public void createAccount(String email, String password, Map<String, Boolean> engines) {
+    String serverURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
+    PasswordStretcher passwordStretcher = new QuickPasswordStretcher(password);
+    // This delegate creates a new Android account on success, opens the
+    // appropriate "success!" activity, and finishes this activity.
+    RequestDelegate<LoginResponse> delegate = new AddAccountDelegate(email, passwordStretcher, serverURI, engines) {
+      @Override
+      public void handleError(Exception e) {
+        showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
       }
 
-      // For great debugging.
-      if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-        fxAccount.dump();
+      @Override
+      public void handleFailure(FxAccountClientRemoteException e) {
+        showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
       }
+    };
 
-      // The GetStarted activity has called us and needs to return a result to the authenticator.
-      final Intent intent = new Intent();
-      intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, email);
-      intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, FxAccountConstants.ACCOUNT_TYPE);
-      // intent.putExtra(AccountManager.KEY_AUTHTOKEN, accountType);
-      setResult(RESULT_OK, intent);
-      finish();
-
-      // Show success activity.
-      Intent successIntent = new Intent(FxAccountCreateAccountActivity.this, FxAccountConfirmAccountActivity.class);
-      successIntent.putExtra("email", email);
-      // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-      // the soft keyboard not being shown for the started activity. Why, Android, why?
-      successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-      startActivity(successIntent);
-    }
-  }
-
-  public void createAccount(String email, String password) {
-    String serverURI = FxAccountConstants.DEFAULT_IDP_ENDPOINT;
-    RequestDelegate<String> delegate = new CreateAccountDelegate(email, password, serverURI);
     Executor executor = Executors.newSingleThreadExecutor();
-    FxAccountClient20 client = new FxAccountClient20(serverURI, executor);
+    FxAccountClient client = new FxAccountClient20(serverURI, executor);
     try {
       hideRemoteError();
-      new FxAccountCreateAccountTask(this, this, email, password, client, delegate).execute();
+      new FxAccountCreateAccountTask(this, this, email, passwordStretcher, client, delegate).execute();
     } catch (Exception e) {
       showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
     }
@@ -233,15 +199,106 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
         }
         final String email = emailEdit.getText().toString();
         final String password = passwordEdit.getText().toString();
+        // Only include selected engines if the user currently has the option checked.
+        final Map<String, Boolean> engines = chooseCheckBox.isChecked()
+            ? selectedEngines
+            : null;
         if (FxAccountAgeLockoutHelper.passesAgeCheck(yearEdit.getText().toString(), yearItems)) {
           FxAccountConstants.pii(LOG_TAG, "Passed age check.");
-          createAccount(email, password);
+          createAccount(email, password, engines);
         } else {
           FxAccountConstants.pii(LOG_TAG, "Failed age check!");
           FxAccountAgeLockoutHelper.lockOut(SystemClock.elapsedRealtime());
           setResult(RESULT_CANCELED);
           redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
         }
+      }
+    });
+  }
+
+  /**
+   * The "Choose what to sync" checkbox pops up a multi-choice dialog when it is
+   * unchecked. It toggles to unchecked from checked.
+   */
+  protected void createChooseCheckBox() {
+    final int INDEX_BOOKMARKS = 0;
+    final int INDEX_HISTORY = 1;
+    final int INDEX_TABS = 2;
+    final int INDEX_PASSWORDS = 3;
+    final int NUMBER_OF_ENGINES = 4;
+
+    final String items[] = new String[NUMBER_OF_ENGINES];
+    final boolean checkedItems[] = new boolean[NUMBER_OF_ENGINES];
+    items[INDEX_BOOKMARKS] = getResources().getString(R.string.fxaccount_status_bookmarks);
+    items[INDEX_HISTORY] = getResources().getString(R.string.fxaccount_status_history);
+    items[INDEX_TABS] = getResources().getString(R.string.fxaccount_status_tabs);
+    items[INDEX_PASSWORDS] = getResources().getString(R.string.fxaccount_status_passwords);
+    // Default to everything checked.
+    for (int i = 0; i < NUMBER_OF_ENGINES; i++) {
+      checkedItems[i] = true;
+    }
+
+    final DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        if (which != DialogInterface.BUTTON_POSITIVE) {
+          Logger.debug(LOG_TAG, "onClick: not button positive, unchecking.");
+          chooseCheckBox.setChecked(false);
+          return;
+        }
+        // We only check the box on success.
+        Logger.debug(LOG_TAG, "onClick: button positive, checking.");
+        chooseCheckBox.setChecked(true);
+        // And then remember for future use.
+        ListView selectionsList = ((AlertDialog) dialog).getListView();
+        for (int i = 0; i < NUMBER_OF_ENGINES; i++) {
+          checkedItems[i] = selectionsList.isItemChecked(i);
+        }
+        selectedEngines.put("bookmarks", checkedItems[INDEX_BOOKMARKS]);
+        selectedEngines.put("history", checkedItems[INDEX_HISTORY]);
+        selectedEngines.put("tabs", checkedItems[INDEX_TABS]);
+        selectedEngines.put("passwords", checkedItems[INDEX_PASSWORDS]);
+        FxAccountConstants.pii(LOG_TAG, "Updating selectedEngines: " + selectedEngines.toString());
+      }
+    };
+
+    final DialogInterface.OnMultiChoiceClickListener multiChoiceClickListener = new DialogInterface.OnMultiChoiceClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+        // Display multi-selection clicks in UI.
+        ListView selectionsList = ((AlertDialog) dialog).getListView();
+        selectionsList.setItemChecked(which, isChecked);
+      }
+    };
+
+    final AlertDialog dialog = new AlertDialog.Builder(this)
+        .setTitle(R.string.fxaccount_create_account_choose_what_to_sync)
+        .setIcon(R.drawable.icon)
+        .setMultiChoiceItems(items, checkedItems, multiChoiceClickListener)
+        .setPositiveButton(android.R.string.ok, clickListener)
+        .setNegativeButton(android.R.string.cancel, clickListener)
+        .create();
+
+    dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+      @Override
+      public void onCancel(DialogInterface dialog) {
+        Logger.debug(LOG_TAG, "onCancel: unchecking.");
+        chooseCheckBox.setChecked(false);
+      }
+    });
+
+    chooseCheckBox.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        // There appears to be no way to stop Android interpreting the click
+        // first. So, if the user clicked on an unchecked box, it's checked by
+        // the time we get here.
+        if (!chooseCheckBox.isChecked()) {
+          Logger.debug(LOG_TAG, "onClick: was checked, not showing dialog.");
+          return;
+        }
+        Logger.debug(LOG_TAG, "onClick: was unchecked, showing dialog.");
+        dialog.show();
       }
     });
   }

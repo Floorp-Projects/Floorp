@@ -571,4 +571,36 @@ public class Utils {
       }
     }
   }
+
+  /**
+   * Gecko uses locale codes like "es-ES", whereas a Java {@link Locale}
+   * stringifies as "es_ES".
+   *
+   * This method approximates the Java 7 method <code>Locale#toLanguageTag()</code>.
+   * <p>
+   * <b>Warning:</b> all consumers of this method will need to be audited when
+   * we have active locale switching.
+   *
+   * @return a locale string suitable for passing to Gecko.
+   */
+  public static String getLanguageTag(final Locale locale) {
+    // If this were Java 7:
+    // return locale.toLanguageTag();
+
+    String language = locale.getLanguage();  // Can, but should never be, an empty string.
+    // Modernize certain language codes.
+    if (language.equals("iw")) {
+      language = "he";
+    } else if (language.equals("in")) {
+      language = "id";
+    } else if (language.equals("ji")) {
+      language = "yi";
+    }
+
+    String country = locale.getCountry();    // Can be an empty string.
+    if (country.equals("")) {
+      return language;
+    }
+    return language + "-" + country;
+  }
 }

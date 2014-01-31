@@ -802,9 +802,6 @@ pref("browser.ui.linkify.phone", false);
 // Enables/disables Spatial Navigation
 pref("snav.enabled", true);
 
-// URL to fetch about:accounts web content from.
-pref("identity.fxaccounts.remote.uri", "https://accounts.dev.lcip.org/mobile");
-
 // This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
 // this page over http opens us up to a man-in-the-middle attack that we'd rather not face. If you are a downstream
 // repackager of this code using an alternate snippet url, please keep your users safe
