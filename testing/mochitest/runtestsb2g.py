@@ -113,6 +113,8 @@ class B2GMochitest(MochitestUtilsMixin):
         self.startWebServer(options)
         self.startWebSocketServer(options, None)
         self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
+        self.test_script_args.append(not options.emulator)
+        self.test_script_args.append(options.wifi)
 
         if options.debugger or not options.autorun:
             timeout = None
