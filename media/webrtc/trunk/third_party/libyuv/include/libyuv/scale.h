@@ -4,7 +4,7 @@
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS. All contributing project authors may
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -18,13 +18,12 @@ namespace libyuv {
 extern "C" {
 #endif
 
-// Supported filtering.
-typedef enum FilterMode {
+// Supported filtering
+enum FilterMode {
   kFilterNone = 0,  // Point sample; Fastest.
-  kFilterLinear = 1,  // Filter horizontally only.
-  kFilterBilinear = 2,  // Faster than box, but lower quality scaling down.
-  kFilterBox = 3  // Highest quality.
-} FilterModeEnum;
+  kFilterBilinear = 1,  // Faster than box, but lower quality scaling down.
+  kFilterBox = 2  // Highest quality.
+};
 
 // Scale a YUV plane.
 LIBYUV_API
@@ -32,7 +31,7 @@ void ScalePlane(const uint8* src, int src_stride,
                 int src_width, int src_height,
                 uint8* dst, int dst_stride,
                 int dst_width, int dst_height,
-                enum FilterMode filtering);
+                FilterMode filtering);
 
 // Scales a YUV 4:2:0 image from the src width and height to the
 // dst width and height.
@@ -53,9 +52,8 @@ int I420Scale(const uint8* src_y, int src_stride_y,
               uint8* dst_u, int dst_stride_u,
               uint8* dst_v, int dst_stride_v,
               int dst_width, int dst_height,
-              enum FilterMode filtering);
+              FilterMode filtering);
 
-#ifdef __cplusplus
 // Legacy API.  Deprecated.
 LIBYUV_API
 int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
@@ -64,18 +62,17 @@ int Scale(const uint8* src_y, const uint8* src_u, const uint8* src_v,
           uint8* dst_y, uint8* dst_u, uint8* dst_v,
           int dst_stride_y, int dst_stride_u, int dst_stride_v,
           int dst_width, int dst_height,
-          LIBYUV_BOOL interpolate);
+          bool interpolate);
 
 // Legacy API.  Deprecated.
 LIBYUV_API
-int ScaleOffset(const uint8* src_i420, int src_width, int src_height,
-                uint8* dst_i420, int dst_width, int dst_height, int dst_yoffset,
-                LIBYUV_BOOL interpolate);
+int ScaleOffset(const uint8* src, int src_width, int src_height,
+                uint8* dst, int dst_width, int dst_height, int dst_yoffset,
+                bool interpolate);
 
 // For testing, allow disabling of specialized scalers.
 LIBYUV_API
-void SetUseReferenceImpl(LIBYUV_BOOL use);
-#endif  // __cplusplus
+void SetUseReferenceImpl(bool use);
 
 #ifdef __cplusplus
 }  // extern "C"
