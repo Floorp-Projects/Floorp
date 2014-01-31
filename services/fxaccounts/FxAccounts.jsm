@@ -143,16 +143,10 @@ InternalMethods.prototype = {
         return data;
       }
       if (!this.whenKeysReadyPromise) {
-        this.whenKeysReadyPromise = Promise.defer();
-        return this.fetchAndUnwrapKeys(data.keyFetchToken)
-          .then((data) => {
-            if (this.whenKeysReadyPromise) {
-              this.whenKeysReadyPromise.resolve(data);
-            }
-          });
+        this.whenKeysReadyPromise = this.fetchAndUnwrapKeys(data.keyFetchToken);
       }
-      return this.whenKeysReadyPromise.promise;
-      });
+      return this.whenKeysReadyPromise;
+    });
    },
 
   fetchAndUnwrapKeys: function(keyFetchToken) {
