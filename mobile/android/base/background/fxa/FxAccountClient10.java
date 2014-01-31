@@ -264,7 +264,7 @@ public class FxAccountClient10 {
 
       // The basics.
       final Locale locale = Locale.getDefault();
-      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, locale.toString());
+      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, Utils.getLanguageTag(locale));
       request.addHeader(HttpHeaders.ACCEPT, ACCEPT_HEADER);
     }
   }
