@@ -217,7 +217,7 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
     data = mozilla::void_t();
 
   } else if (aDataVal.isObject()) {
-    JS::Rooted<JSObject *> obj(aCx, &aDataVal.toObject());
+    JSObject* obj = &aDataVal.toObject();
     if (JS_IsArrayBufferObject(obj)) {
       uint32_t nbytes = JS_GetArrayBufferByteLength(obj);
       uint8_t* buffer = JS_GetArrayBufferData(obj);

@@ -2422,6 +2422,7 @@ class InternedStringId
   InternedStringId() : id(JSID_VOID) {}
 
   bool init(JSContext *cx, const char *string) {
+    MOZ_ASSERT(id == JSID_VOID);
     JSString* str = JS_InternString(cx, string);
     if (!str)
       return false;

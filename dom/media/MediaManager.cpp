@@ -98,8 +98,7 @@ static nsresult CompareDictionaries(JSContext* aCx, JSObject *aA,
 
   for (size_t i = 0; i < props.length(); i++) {
     JS::Rooted<JS::Value> bprop(aCx);
-    JS::Rooted<jsid> id(aCx, props[i]);
-    if (!JS_GetPropertyById(aCx, b, id, &bprop)) {
+    if (!JS_GetPropertyById(aCx, b, props[i], &bprop)) {
       LOG(("Error parsing dictionary!\n"));
       return NS_ERROR_UNEXPECTED;
     }
