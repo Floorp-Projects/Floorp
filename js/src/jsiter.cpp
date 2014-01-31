@@ -1551,14 +1551,14 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
             return nullptr;
         JSObject *proto = pval.isObject() ? &pval.toObject() : nullptr;
         if (!proto) {
-            proto = global->getOrCreateStarGeneratorObjectPrototype(cx);
+            proto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
             if (!proto)
                 return nullptr;
         }
         obj = NewObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto, global);
     } else {
         JS_ASSERT(stackfp->script()->isLegacyGenerator());
-        JSObject *proto = global->getOrCreateLegacyGeneratorObjectPrototype(cx);
+        JSObject *proto = GlobalObject::getOrCreateLegacyGeneratorObjectPrototype(cx, global);
         if (!proto)
             return nullptr;
         obj = NewObjectWithGivenProto(cx, &LegacyGeneratorObject::class_, proto, global);

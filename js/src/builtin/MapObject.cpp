@@ -897,7 +897,7 @@ MapIteratorObject::kind() const
 bool
 GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
 {
-    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
     Rooted<JSObject*> proto(cx,
@@ -916,7 +916,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
                           MapObject::IteratorKind kind)
 {
     Rooted<GlobalObject *> global(cx, &mapobj->global());
-    Rooted<JSObject*> proto(cx, global->getOrCreateMapIteratorPrototype(cx));
+    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateMapIteratorPrototype(cx, global));
     if (!proto)
         return nullptr;
 
@@ -1492,7 +1492,7 @@ SetIteratorObject::kind() const
 bool
 GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
 {
-    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
     RootedObject proto(cx, NewObjectWithGivenProto(cx, &SetIteratorObject::class_, base, global));
@@ -1510,7 +1510,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data,
                           SetObject::IteratorKind kind)
 {
     Rooted<GlobalObject *> global(cx, &setobj->global());
-    Rooted<JSObject*> proto(cx, global->getOrCreateSetIteratorPrototype(cx));
+    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateSetIteratorPrototype(cx, global));
     if (!proto)
         return nullptr;
 
