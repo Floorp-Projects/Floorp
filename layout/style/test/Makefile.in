@@ -29,7 +29,6 @@ ifdef COMPILE_ENVIRONMENT
 MOCHITEST_FILES += \
 		test_property_database.html \
 		css_properties.js \
-		support/external-variable-url.css \
 		$(NULL)
 
 css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
