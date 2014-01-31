@@ -597,7 +597,7 @@ template <AllowGC allowGC>
 JitCode *
 JitCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
 {
-    JitCode *codeObj = gc::NewGCThing<JitCode, allowGC>(cx, gc::FINALIZE_JITCODE, sizeof(JitCode), gc::DefaultHeap);
+    JitCode *codeObj = js::NewJitCode<allowGC>(cx);
     if (!codeObj) {
         pool->release();
         return nullptr;
