@@ -12,7 +12,6 @@ public abstract class State {
   public static final long CURRENT_VERSION = 1L;
 
   public enum StateLabel {
-    Promised,
     Engaged,
     Cohabiting,
     Married,
@@ -42,10 +41,6 @@ public abstract class State {
 
   public StateLabel getStateLabel() {
     return this.stateLabel;
-  }
-
-  public boolean isVerified() {
-    return this.verified;
   }
 
   public ExtendedJSONObject toJSONObject() {

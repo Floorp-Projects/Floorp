@@ -57,9 +57,6 @@ const MESSAGES = [
   // be saved to disk.
   "SessionStore:update",
 
-  // A "load" event happened.
-  "SessionStore:load",
-
   // The restoreHistory code has run. This is a good time to run SSTabRestoring.
   "SessionStore:restoreHistoryComplete",
 
@@ -130,11 +127,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource:///modules/sessionstore/Utils.jsm");
-
-#ifdef MOZ_CRASHREPORTER
-XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
-  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
-#endif
 
 /**
  * |true| if we are in debug mode, |false| otherwise.
@@ -597,9 +589,6 @@ let SessionStoreInternal = {
         this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
-        break;
-      case "SessionStore:load":
-        this.onTabLoad(win, browser);
         break;
       case "SessionStore:restoreHistoryComplete":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
@@ -1300,8 +1289,6 @@ let SessionStoreInternal = {
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
-
-    this._updateCrashReportURL(aWindow);
   },
 
   /**
@@ -1386,29 +1373,6 @@ let SessionStoreInternal = {
   },
 
   /**
-   * When a tab loads, invalidate its cached state, trigger async save.
-   *
-   * @param aWindow
-   *        Window reference
-   * @param aBrowser
-   *        Browser reference
-   */
-  onTabLoad: function ssi_onTabLoad(aWindow, aBrowser) {
-    // It's possible to get a load event after calling stop on a browser (when
-    // overwriting tabs). We want to return early if the tab hasn't been restored yet.
-    if (aBrowser.__SS_restoreState &&
-        aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
-      return;
-    }
-
-    delete aBrowser.__SS_data;
-    this.saveStateDelayed(aWindow);
-
-    // attempt to update the current URL we send in a crash report
-    this._updateCrashReportURL(aWindow);
-  },
-
-  /**
    * When a tab is selected, save session data
    * @param aWindow
    *        Window reference
@@ -1424,9 +1388,6 @@ let SessionStoreInternal = {
       if (tab.linkedBrowser.__SS_restoreState &&
           tab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
         this.restoreTabContent(tab);
-
-      // attempt to update the current URL we send in a crash report
-      this._updateCrashReportURL(aWindow);
     }
   },
 
@@ -3064,29 +3025,6 @@ let SessionStoreInternal = {
    */
   _getURIFromString: function ssi_getURIFromString(aString) {
     return Services.io.newURI(aString, null, null);
-  },
-
-  /**
-   * Annotate a breakpad crash report with the currently selected tab's URL.
-   */
-  _updateCrashReportURL: function ssi_updateCrashReportURL(aWindow) {
-#ifdef MOZ_CRASHREPORTER
-    try {
-      var currentURI = aWindow.gBrowser.currentURI.clone();
-      // if the current URI contains a username/password, remove it
-      try {
-        currentURI.userPass = "";
-      }
-      catch (ex) { } // ignore failures on about: URIs
-
-      CrashReporter.annotateCrashReport("URL", currentURI.spec);
-    }
-    catch (ex) {
-      // don't make noise when crashreporter is built but not enabled
-      if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
-        debug(ex);
-    }
-#endif
   },
 
   /**

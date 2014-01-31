@@ -20,13 +20,46 @@
   -moz-box-align: center;
   min-width: 78px;
   min-height: 22px;
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  text-shadow: none;
   border: 1px solid hsla(210,8%,5%,.45);
   border-radius: 3px;
-  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
-  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
   margin: 0 3px;
+}
+
+.theme-dark .devtools-menulist,
+.theme-dark .devtools-toolbarbutton {
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
   color: inherit;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+.theme-light .devtools-menulist,
+.theme-light .devtools-toolbarbutton {
+  background: #f7f7f7;
+  color: #18191a;
+  border-color: #bbb;
+}
+
+.theme-light .devtools-menulist[open=true],
+.theme-light .devtools-toolbarbutton[open=true],
+.theme-light .devtools-toolbarbutton[open=true]:hover,
+.theme-light .devtools-toolbarbutton[open=true]:hover:active,
+.theme-light .devtools-toolbarbutton[checked=true],
+.theme-light .devtools-toolbarbutton[checked=true]:hover,
+.theme-light .devtools-toolbarbutton[checked=true]:hover:active  {
+  background: #ddd;
+}
+
+.theme-light .devtools-toolbarbutton:hover {
+  background: #eee;
+}
+
+.theme-light .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  color: #667380;
+}
+
+.theme-light .devtools-toolbarbutton[type=menu-button][checked=true] > .toolbarbutton-menubutton-button {
+  color: #18191a;
 }
 
 .devtools-toolbarbutton > .toolbarbutton-menubutton-button {
@@ -51,15 +84,15 @@
   display: none;
 }
 
-.devtools-toolbarbutton:not([checked]):hover:active {
+.theme-dark .devtools-toolbarbutton:not([checked]):hover:active {
   border-color: hsla(210,8%,5%,.6);
   background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
   box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
 }
 
-.devtools-menulist[open=true],
-.devtools-toolbarbutton[open=true],
-.devtools-toolbarbutton[checked=true] {
+.theme-dark .devtools-menulist[open=true],
+.theme-dark .devtools-toolbarbutton[open=true],
+.theme-dark .devtools-toolbarbutton[checked=true] {
   border-color: hsla(210,8%,5%,.6) !important;
   background: linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
   box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
@@ -105,12 +138,19 @@
   -moz-appearance: none;
   color: inherit;
   border-width: 0;
+}
+
+.theme-dark .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
   -moz-border-end: 1px solid hsla(210,8%,5%,.45);
   box-shadow: -1px 0 0 hsla(210,16%,76%,.15) inset, 1px 0 0 hsla(210,16%,76%,.15);
 }
 
-.devtools-toolbarbutton[type=menu-button]:-moz-locale-dir(rtl) > .toolbarbutton-menubutton-button {
+.theme-dark .devtools-toolbarbutton[type=menu-button]:-moz-locale-dir(rtl) > .toolbarbutton-menubutton-button {
   box-shadow: 1px 0 0 hsla(210,16%,76%,.15) inset, -1px 0 0 hsla(210,16%,76%,.15);
+}
+
+.theme-light .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-border-end: 1px solid #bbb;
 }
 
 .devtools-toolbarbutton[type=menu-button] {
@@ -138,9 +178,7 @@
 %else
   border-radius: 2px;
 %endif
-  background-color: rgba(24, 29, 32, 1);
   padding: 4px 6px;
-  color: rgba(184, 200, 217, 1);
 }
 
 .devtools-searchinput {
@@ -219,19 +257,22 @@
   border: 0;
 }
 
+.theme-light .devtools-sidebar-tabs > tabpanels {
+  background: #f7f7f7;
+  color: #18191a;
+}
+
 .devtools-sidebar-tabs > tabs {
   -moz-appearance: none;
   position: static;
   font: inherit;
-  color: #b6babf;
   margin-bottom: 0;
   padding: 0;
-  background-color: #343c45;
   border-width: 0 0 1px 0;
-  border-color: hsla(210,8%,5%,.6);
   border-style: solid;
   overflow: hidden;
 }
+
 
 .devtools-sidebar-tabs > tabs > .tabs-right,
 .devtools-sidebar-tabs > tabs > .tabs-left {
@@ -252,7 +293,6 @@
    * -1px because the parent element (<tabs>) comes with a 1px bottom border.
    */
   min-height: 32px;
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   text-align: center;
   color: inherit;
   -moz-box-flex: 1;
@@ -284,37 +324,59 @@
   background-image: linear-gradient(transparent, transparent), @smallSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab:hover {
+.theme-dark .devtools-sidebar-tabs > tabs > tab:hover {
   background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @smallSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab:hover:active {
+.theme-dark .devtools-sidebar-tabs > tabs > tab:hover:active {
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected] + tab {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab {
   background-image: linear-gradient(transparent, transparent), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
   background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected] {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] {
   color: #f5f7fa;
   background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected]:hover {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover {
   background-image: linear-gradient(#274f64, #274f64), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparator@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab:hover {
+  background-image: linear-gradient(#ddd, #ddd), @smallSeparator@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab:hover:active {
+  background-image: linear-gradient(#ddd, #ddd), @smallSeparator@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab {
+  background-image: linear-gradient(transparent, transparent), @solidSeparator@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
+  background-image: linear-gradient(#ddd, #ddd), @solidSeparator@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab[selected],
+.theme-light .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
+  color: #f5f7fa;
+  background-image: linear-gradient(#4c9ed9, #4c9ed9), @solidSeparator@;
 }
 
 /* Toolbox - moved from toolbox.css.
@@ -505,6 +567,30 @@
   -moz-box-align: center;
 }
 
+.theme-light .devtools-tabbar {
+  background: #ebeced;
+  border-bottom-color: #aaa;
+}
+
+.theme-light .devtools-tab,
+.theme-light .devtools-tab:hover {
+  color: #18191a;
+  border-color: #aaa;
+}
+
+.theme-light .devtools-tab:hover {
+  background-color: #ddd;
+  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
+}
+
+.theme-light .devtools-tab:not([selected])[highlighted] {
+  background-color: rgba(44, 187, 15, .2);
+}
+
+.theme-light .devtools-tab:last-child {
+  -moz-border-end: 1px solid #aaa;
+}
+
 .devtools-tab:first-child {
   -moz-border-start-width: 0;
 }
@@ -557,6 +643,10 @@
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
+.theme-light #toolbox-tabs .devtools-tab[selected] {
+  background-color: #4c9ed9;
+}
+
 .devtools-tab[selected]:not(:first-child),
 .devtools-tab[highlighted]:not(:first-child) {
   border-width: 0;
@@ -574,10 +664,13 @@
   -moz-padding-start: 1px;
 }
 
-.devtools-tab:not([selected])[highlighted] {
-  color: #f5f7fa;
+.theme-dark .devtools-tab:not([selected])[highlighted] {
   background-color: hsla(99,100%,14%,.2);
   box-shadow: 0 2px 0 #7bc107 inset;
+}
+
+.theme-dark #toolbox-tabs .devtools-tab[selected] {
+  color: #f5f7fa;
 }
 
 .devtools-tab:not([highlighted]) > .highlighted-icon,
@@ -586,7 +679,47 @@
   visibility: collapse;
 }
 
+/* Invert the colors of certain dark theme images for displaying
+ * inside of the light theme.
+ */
+.theme-light .devtools-tab > image,
+.theme-light #toolbox-dock-buttons > toolbarbutton > image,
+.theme-light .command-button > image,
+.theme-light .command-button:active > image,
+.theme-light .devtools-closebutton > image,
+.theme-light .devtools-toolbarbutton > image,
+.theme-light .devtools-option-toolbarbutton > image,
+.theme-light #breadcrumb-separator-normal,
+.theme-light .scrollbutton-up > .toolbarbutton-icon,
+.theme-light .scrollbutton-down > .toolbarbutton-icon,
+.theme-light #black-boxed-message-button .button-icon {
+  filter: url(filters.svg#invert);
+}
+
+/* Since selected backgrounds are blue, we want to use the normal
+ * (light) icons. */
+.theme-light .command-button[checked=true]:not(:active) > image,
+.theme-light .devtools-tab[selected] > image,
+.theme-light .devtools-tab[highlighted] > image,
+.theme-light .devtools-option-toolbarbutton[open] > image,
+.theme-light #resume[checked] > image {
+  filter: none !important;
+}
+
+.theme-light .command-button:hover {
+  background-color: inherit;
+}
+
+.theme-light .command-button:hover:active,
+.theme-light .command-button[checked=true]:not(:hover) {
+  background-color: inherit;
+}
+
 .hidden-labels-box:not(.visible) > label,
 .hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
   display: none;
+}
+
+.devtools-invisible-splitter {
+  border-color: transparent;
 }

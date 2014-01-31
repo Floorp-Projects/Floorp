@@ -58,8 +58,6 @@ chrome.jar:
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
 * content/aboutHealthReport.js         (content/aboutHealthReport.js)
 #endif
-  content/aboutAccounts.xhtml          (content/aboutAccounts.xhtml)
-* content/aboutAccounts.js             (content/aboutAccounts.js)
 
 % content branding %content/branding/
 

@@ -3,6 +3,7 @@
             android:icon="@drawable/fxaccount_icon"
             android:label="Status"
             android:clearTaskOnLaunch="true"
+            android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountStatusActivity"
             android:windowSoftInputMode="adjustResize">
             <!-- Adding a launcher will make this activity appear on the
@@ -18,6 +19,7 @@
             android:icon="@drawable/fxaccount_icon"
             android:label="Setup"
             android:clearTaskOnLaunch="true"
+            android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity"
             android:windowSoftInputMode="adjustResize">
             <!-- Adding a launcher will make this activity appear on the

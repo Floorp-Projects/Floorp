@@ -12,6 +12,9 @@ const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+const MAX_LABEL_LENGTH = 40;
 
 let promise = require("sdk/core/promise");
 
@@ -72,6 +75,17 @@ HTMLBreadcrumbs.prototype = {
   _init: function BC__init()
   {
     this.container = this.chromeDoc.getElementById("inspector-breadcrumbs");
+
+    // These separators are used for CSS purposes only, and are positioned
+    // off screen, but displayed with -moz-element.
+    this.separators = this.chromeDoc.createElement("box");
+    this.separators.className = "breadcrumb-separator-container";
+    this.separators.innerHTML =
+                      "<box id='breadcrumb-separator-before'></box>" +
+                      "<box id='breadcrumb-separator-after'></box>" +
+                      "<box id='breadcrumb-separator-normal'></box>";
+    this.container.parentNode.appendChild(this.separators);
+
     this.container.addEventListener("mousedown", this, true);
     this.container.addEventListener("keypress", this, true);
 
@@ -184,16 +198,15 @@ HTMLBreadcrumbs.prototype = {
     let pseudosLabel = this.chromeDoc.createElement("label");
     pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes plain";
 
-    tagLabel.textContent = aNode.tagName.toLowerCase();
-    idLabel.textContent = aNode.id ? ("#" + aNode.id) : "";
+    let tagText = aNode.tagName.toLowerCase();
+    let idText = aNode.id ? ("#" + aNode.id) : "";
+    let classesText = "";
 
     if (aNode.className) {
-      let classesText = "";
       let classList = aNode.className.split(/\s+/);
       for (let i = 0; i < classList.length; i++) {
         classesText += "." + classList[i];
       }
-      classesLabel.textContent = classesText;
     }
 
     // XXX: Until we have pseudoclass lock in the node.
@@ -201,6 +214,26 @@ HTMLBreadcrumbs.prototype = {
 
     }
 
+    // Figure out which element (if any) needs ellipsing.
+    // Substring for that element, then clear out any extras
+    // (except for pseudo elements).
+    let maxTagLength = MAX_LABEL_LENGTH;
+    let maxIdLength = MAX_LABEL_LENGTH - tagText.length;
+    let maxClassLength = MAX_LABEL_LENGTH - tagText.length - idText.length;
+
+    if (tagText.length > maxTagLength) {
+       tagText = tagText.substr(0, maxTagLength) + ELLIPSIS;
+       idText = classesText = "";
+    } else if (idText.length > maxIdLength) {
+       idText = idText.substr(0, maxIdLength) + ELLIPSIS;
+       classesText = "";
+    } else if (classesText.length > maxClassLength) {
+      classesText = classesText.substr(0, maxClassLength) + ELLIPSIS;
+    }
+
+    tagLabel.textContent = tagText;
+    idLabel.textContent = idText;
+    classesLabel.textContent = classesText;
     pseudosLabel.textContent = aNode.pseudoClassLocks.join("");
 
     fragment.appendChild(tagLabel);
@@ -360,6 +393,10 @@ HTMLBreadcrumbs.prototype = {
     this.container.removeEventListener("mousedown", this, true);
     this.container.removeEventListener("keypress", this, true);
     this.container = null;
+
+    this.separators.remove();
+    this.separators = null;
+
     this.nodeHierarchy = null;
   },
 
