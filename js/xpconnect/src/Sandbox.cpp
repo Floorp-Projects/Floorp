@@ -1789,17 +1789,6 @@ xpc::NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, boo
     return true;
 }
 
-bool
-xpc::NewFunctionForwarder(JSContext *cx, HandleObject callable, bool doclone,
-                          MutableHandleValue vp)
-{
-    RootedId emptyId(cx);
-    if (!JS_ValueToId(cx, JS_GetEmptyStringValue(cx), &emptyId))
-        return false;
-
-    return NewFunctionForwarder(cx, emptyId, callable, doclone, vp);
-}
-
 
 nsresult
 xpc::GetSandboxMetadata(JSContext *cx, HandleObject sandbox, MutableHandleValue rval)
