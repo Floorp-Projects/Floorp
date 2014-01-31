@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: linear-gradient with border-image-outset</title>
+<style>
+div {
+  border: 30px solid black;
+  width: 90px;
+  height: 90px;
+  margin: 90px;
+}
+div.border {
+  border-image: linear-gradient(to bottom right, red, blue);
+  border-image-outset: 0.5 1 2 60px;
+}
+div.border30 {
+  border-image: linear-gradient(to bottom right, red, blue);
+  border-image-outset: 0.5 1 2 60px;
+  border-image-slice: 30 30;
+}
+div.border1260 {
+  border-image: linear-gradient(to bottom right, red, blue);
+  border-image-outset: 0.5 1 2 60px;
+  border-image-slice: 12 60;
+}
+</style>
+</head>
+<body>
+<div class="border"></div>
+<div class="border30"></div>
+<div class="border1260"></div>
+</body>
+</html>

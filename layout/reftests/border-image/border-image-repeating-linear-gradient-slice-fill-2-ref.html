@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: linear-gradient with border-image-slice and fill</title>
+<style>
+table { margin: 0; padding: 0; border-spacing: 0; empty-cells: show; }
+td { padding: 0; }
+</style>
+</head>
+<body>
+<table>
+  <col style="width: 30px">
+  <col style="width: 180px">
+  <col style="width: 30px">
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 600px; background-position: 0px 0px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 360px 600px; background-position: -90px 0px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 600px; background-position: -90px 0px;"></td>
+  </tr>
+  <tr style="height: 180px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 200px; background-position: 0px -10px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 360px 200px; background-position: -90px -10px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 200px; background-position: -210px -10px;"></td>
+  </tr>
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 600px; background-position: 0px -570px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 360px 600px; background-position: -90px -570px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 120px 600px; background-position: -90px -570px;"></td>
+  </tr>
+</table>
+<table>
+  <col style="width: 30px">
+  <col style="width: 180px">
+  <col style="width: 30px">
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 120px; background-position: 0px 0px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 200px 120px; background-position: -10px 0px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 120px; background-position: -570px 0px;"></td>
+  </tr>
+  <tr style="height: 180px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 360px; background-position: 0px -90px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 200px 360px; background-position: -10px -90px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 360px; background-position: -570px -90px;"></td>
+  </tr>
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 120px; background-position: 0px -90px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 200px 120px; background-position: -10px -210px;"></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size: 600px 120px; background-position: -570px -90px;"></td>
+  </tr>
+</table>
+</body>
+</html>

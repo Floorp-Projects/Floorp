@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: radial-gradient with border-image-slice and border-image-width</title>
+<style>
+div {
+  border: 30px solid black;
+  border-image: repeating-radial-gradient(ellipse farthest-corner, red, blue 20%, red 40%);
+  border-image-width: 0.5 1 2 3;
+  width: 180px;
+  height: 180px;
+}
+div.border12 {
+  border-image-slice: 12 12;
+}
+div.border30 {
+  border-image-slice: 30 30;
+}
+div.border60 {
+  border-image-slice: 60 60;
+}
+</style>
+</head>
+<body>
+<div class="border12"></div>
+<div class="border30"></div>
+<div class="border60"></div>
+</body>
+</html>

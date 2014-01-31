@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: radial-gradient with border-image-width</title>
+<style>
+div.border {
+  border: 30px solid black;
+  border-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%);
+  border-image-width: 0.5 1 2 3;
+  width: 180px;
+  height: 180px;
+}
+</style>
+</head>
+<body>
+<div class="border"></div>
+</body>
+</html>
