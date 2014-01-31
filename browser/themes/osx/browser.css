@@ -424,7 +424,7 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 #nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 + .toolbarbutton-1::before {
   content: "";
   display: -moz-box;
-  position: absolute;
+  position: relative;
   top: calc(50% - 9px);
   width: 1px;
   height: 18px;
@@ -435,6 +435,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   background-repeat: no-repeat;
   background-size: 1px 18px;
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
+}
+
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-box-orient: horizontal;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
