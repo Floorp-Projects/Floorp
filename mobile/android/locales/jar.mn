@@ -7,7 +7,6 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/about.dtd                (%chrome/about.dtd)
-  locale/@AB_CD@/browser/aboutAccounts.dtd        (%chrome/aboutAccounts.dtd)
   locale/@AB_CD@/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
   locale/@AB_CD@/browser/aboutAddons.properties   (%chrome/aboutAddons.properties)
   locale/@AB_CD@/browser/aboutApps.dtd            (%chrome/aboutApps.dtd)

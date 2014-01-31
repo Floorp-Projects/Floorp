@@ -6,6 +6,7 @@
 
 #include "WMFUtils.h"
 #include <stdint.h>
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "prlog.h"
@@ -184,7 +185,7 @@ GuidToName GuidToNameTable[] = {
 
 nsCString GetGUIDName(const GUID& guid)
 {
-  unsigned numTypes = NS_ARRAY_LENGTH(GuidToNameTable);
+  const unsigned numTypes = ArrayLength(GuidToNameTable);
   for (unsigned i = 0; i < numTypes; i++) {
     if (guid == GuidToNameTable[i].guid) {
       return nsDependentCString(GuidToNameTable[i].name);
@@ -446,7 +447,7 @@ LoadDLLs()
   }
 
   // Try to load all the required DLLs.
-  uint32_t dllLength = NS_ARRAY_LENGTH(sDLLs);
+  const uint32_t dllLength = ArrayLength(sDLLs);
   for (uint32_t i = 0; i < dllLength; i++) {
     sDLLs[i].handle = LoadLibrarySystem32(sDLLs[i].name);
     if (!sDLLs[i].handle) {
@@ -476,7 +477,7 @@ UnloadDLLs()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  uint32_t length = NS_ARRAY_LENGTH(sDLLs);
+  const uint32_t length = ArrayLength(sDLLs);
   for (uint32_t i = 0; i < length; i++) {
     if (sDLLs[i].handle) {
       FreeLibrary(sDLLs[i].handle);

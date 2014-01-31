@@ -38,7 +38,7 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions={}) {
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
-  this._list.className = "side-menu-widget-container theme-body";
+  this._list.className = "side-menu-widget-container theme-sidebar";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
   this._list.setAttribute("with-arrows", this._showArrows);

@@ -108,8 +108,6 @@
   ERROR(NS_ERROR_GFX_PRINTER_STARTPAGE,                   FAILURE(6)),
   /* The document is still being loaded */
   ERROR(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY,                 FAILURE(7)),
-  /* Cannot Print or Print Preview XUL Documents (bug 136185 / bug 240490) */
-  ERROR(NS_ERROR_GFX_PRINTER_NO_XUL,                      FAILURE(8)),
 
   /* Font cmap is strangely structured - avoid this font! */
   ERROR(NS_ERROR_GFX_CMAP_MALFORMED,                      FAILURE(51)),

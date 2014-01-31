@@ -1958,3 +1958,20 @@ chatbox {
 }
 
 %include ../shared/UITour.inc.css
+
+#UITourTooltipDescription {
+  font-size: 1.05rem;
+}
+
+#UITourTooltipClose {
+  -moz-appearance: toolbarbutton;
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+#UITourTooltipClose > .toolbarbutton-icon {
+  margin: -4px;
+}
+
+#UITourTooltipButtons {
+  margin-bottom: 0;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: linear-gradient with border-image-repeat</title>
+<style>
+div {
+  border: 30px solid black;
+  border-image: linear-gradient(to bottom right, red, blue);
+  width: 180px;
+  height: 180px;
+}
+div.border60round {
+  border-image-repeat: round;
+  border-image-slice: 60;
+}
+div.border60fillround {
+  border-image-repeat: round;
+  border-image-slice: 60 fill;
+}
+div.border30fill2round {
+  border-image-repeat: round;
+  border-image-slice: 30 fill;
+  border-image-width: 2;
+}
+</style>
+</head>
+<body>
+<div class="border60round"></div>
+<div class="border60fillround"></div>
+<div class="border30fill2round"></div>
+</body>
+</html>

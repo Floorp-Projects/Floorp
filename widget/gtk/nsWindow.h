@@ -138,7 +138,6 @@ public:
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect);
-    virtual void       Update() MOZ_OVERRIDE;
     virtual void*      GetNativeData(uint32_t aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);

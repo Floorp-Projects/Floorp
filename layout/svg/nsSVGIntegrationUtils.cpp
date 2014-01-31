@@ -662,13 +662,13 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   return true;
 }
 
-static already_AddRefed<gfxDrawable>
-DrawableFromPaintServer(nsIFrame*         aFrame,
-                        nsIFrame*         aTarget,
-                        const nsSize&     aPaintServerSize,
-                        const gfxIntSize& aRenderSize,
-                        const gfxMatrix&  aContextMatrix,
-                        uint32_t          aFlags)
+/* static */ already_AddRefed<gfxDrawable>
+nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
+                                               nsIFrame*         aTarget,
+                                               const nsSize&     aPaintServerSize,
+                                               const gfxIntSize& aRenderSize,
+                                               const gfxMatrix&  aContextMatrix,
+                                               uint32_t          aFlags)
 {
   // aPaintServerSize is the size that would be filled when using
   // background-repeat:no-repeat and background-size:auto. For normal background
@@ -713,33 +713,4 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
     new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize, aFlags);
   nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
   return drawable.forget();
-}
-
-/* static */ void
-nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
-                                       nsIFrame*            aTarget,
-                                       nsIFrame*            aPaintServer,
-                                       GraphicsFilter aFilter,
-                                       const nsRect&        aDest,
-                                       const nsRect&        aFill,
-                                       const nsPoint&       aAnchor,
-                                       const nsRect&        aDirty,
-                                       const nsSize&        aPaintServerSize,
-                                       uint32_t             aFlags)
-{
-  if (aDest.IsEmpty() || aFill.IsEmpty())
-    return;
-
-  int32_t appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
-  nsRect destSize = aDest - aDest.TopLeft();
-  nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
-  gfxIntSize imageSize(roundedOut.width, roundedOut.height);
-  nsRefPtr<gfxDrawable> drawable =
-    DrawableFromPaintServer(aPaintServer, aTarget, aPaintServerSize, imageSize,
-                          aRenderingContext->ThebesContext()->CurrentMatrix(), aFlags);
-
-  if (drawable) {
-    nsLayoutUtils::DrawPixelSnapped(aRenderingContext, drawable, aFilter,
-                                    aDest, aFill, aAnchor, aDirty);
-  }
 }

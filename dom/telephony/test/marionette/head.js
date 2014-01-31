@@ -89,7 +89,6 @@ let emulator = (function() {
 function _startTest(permissions, test) {
   function permissionSetUp() {
     SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
-    SpecialPowers.setBoolPref("dom.promise.enabled", true);
     for (let per of permissions) {
       SpecialPowers.addPermission(per, true, document);
     }
@@ -97,7 +96,6 @@ function _startTest(permissions, test) {
 
   function permissionTearDown() {
     SpecialPowers.clearUserPref("dom.mozSettings.enabled");
-    SpecialPowers.clearUserPref("dom.promise.enabled");
     for (let per of permissions) {
       SpecialPowers.removePermission(per, document);
     }

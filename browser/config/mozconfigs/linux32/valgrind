@@ -1,3 +1,5 @@
+no_tooltool=1
+
 . $topsrcdir/browser/config/mozconfigs/linux32/nightly
 
 ac_add_options --enable-valgrind

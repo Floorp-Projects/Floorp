@@ -344,19 +344,19 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
       switch (params.stereo_mode) {
       case NESTEGG_VIDEO_MONO:
-        mInfo.mVideo.mStereoMode = STEREO_MODE_MONO;
+        mInfo.mVideo.mStereoMode = StereoMode::MONO;
         break;
       case NESTEGG_VIDEO_STEREO_LEFT_RIGHT:
-        mInfo.mVideo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
+        mInfo.mVideo.mStereoMode = StereoMode::LEFT_RIGHT;
         break;
       case NESTEGG_VIDEO_STEREO_BOTTOM_TOP:
-        mInfo.mVideo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
+        mInfo.mVideo.mStereoMode = StereoMode::BOTTOM_TOP;
         break;
       case NESTEGG_VIDEO_STEREO_TOP_BOTTOM:
-        mInfo.mVideo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
+        mInfo.mVideo.mStereoMode = StereoMode::TOP_BOTTOM;
         break;
       case NESTEGG_VIDEO_STEREO_RIGHT_LEFT:
-        mInfo.mVideo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
+        mInfo.mVideo.mStereoMode = StereoMode::RIGHT_LEFT;
         break;
       }
     }

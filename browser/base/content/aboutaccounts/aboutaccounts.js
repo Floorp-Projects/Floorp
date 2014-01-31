@@ -9,7 +9,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
-const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUser";
+const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
+const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
 
 function log(msg) {
   //dump("FXA: " + msg + "\n");
@@ -19,7 +20,7 @@ function error(msg) {
   console.log("Firefox Account Error: " + msg + "\n");
 };
 
-function getPreviousAccountName() {
+function getPreviousAccountNameHash() {
   try {
     return Services.prefs.getComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString).data;
   } catch (_) {
@@ -27,24 +28,39 @@ function getPreviousAccountName() {
   }
 }
 
-function setPreviousAccountName(acctName) {
+function setPreviousAccountNameHash(acctName) {
   let string = Cc["@mozilla.org/supports-string;1"]
                .createInstance(Ci.nsISupportsString);
-  string.data = acctName;
+  string.data = sha256(acctName);
   Services.prefs.setComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString, string);
 }
 
-function needRelinkWarning(accountData) {
-  let prevAcct = getPreviousAccountName();
-  return prevAcct && prevAcct != accountData.email;
+function needRelinkWarning(acctName) {
+  let prevAcctHash = getPreviousAccountNameHash();
+  return prevAcctHash && prevAcctHash != sha256(acctName);
 }
 
-function promptForRelink() {
+// Given a string, returns the SHA265 hash in base64
+function sha256(str) {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  // Data is an array of bytes.
+  let data = converter.convertToByteArray(str, {});
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(true);
+}
+
+function promptForRelink(acctName) {
   let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
   let continueLabel = sb.GetStringFromName("continue.label");
   let title = sb.GetStringFromName("relink.verify.title");
   let description = sb.formatStringFromName("relink.verify.description",
-                                            [Services.prefs.getCharPref(PREF_LAST_FXA_USER)], 1);
+                                            [acctName], 1);
   let body = sb.GetStringFromName("relink.verify.heading") +
              "\n\n" + description;
   let ps = Services.prompt;
@@ -104,7 +120,7 @@ let wrapper = {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
     if (accountData.customizeSync) {
-      Services.prefs.setBoolPref("services.sync.needsCustomization", true);
+      Services.prefs.setBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION, true);
       delete accountData.customizeSync;
     }
 
@@ -113,7 +129,8 @@ let wrapper = {
     // (This is sync-specific, so ideally would be in sync's identity module,
     // but it's a little more seamless to do here, and sync is currently the
     // only fxa consumer, so...
-    if (needRelinkWarning(accountData) && !promptForRelink()) {
+    let newAccountEmail = accountData.email;
+    if (needRelinkWarning(newAccountEmail) && !promptForRelink(newAccountEmail)) {
       // we need to tell the page we successfully received the message, but
       // then bail without telling fxAccounts
       this.injectData("message", { status: "login" });
@@ -123,7 +140,7 @@ let wrapper = {
     }
 
     // Remember who it was so we can log out next time.
-    setPreviousAccountName(accountData.email);
+    setPreviousAccountNameHash(newAccountEmail);
 
     fxAccounts.setSignedInUser(accountData).then(
       () => {

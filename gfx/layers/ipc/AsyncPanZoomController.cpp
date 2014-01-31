@@ -495,7 +495,7 @@ AsyncPanZoomController::IsDestroyed()
 /* static */float
 AsyncPanZoomController::GetTouchStartTolerance()
 {
-  return gTouchStartTolerance;
+  return (gTouchStartTolerance * APZCTreeManager::GetDPI());
 }
 
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
@@ -652,7 +652,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      float panThreshold = gTouchStartTolerance * APZCTreeManager::GetDPI();
+      float panThreshold = GetTouchStartTolerance();
       UpdateWithTouchAtDevicePoint(aEvent);
 
       if (PanDistance() < panThreshold) {
@@ -1299,6 +1299,15 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   CSSPoint scrollOffset = aFrameMetrics.mScrollOffset;
   CSSRect displayPort(scrollOffset, compositionBounds.Size());
   CSSPoint velocity = aVelocity / aFrameMetrics.mZoom;
+
+  // If scrolling is disabled here then our actual velocity is going
+  // to be zero, so treat the displayport accordingly.
+  if (aFrameMetrics.GetDisableScrollingX()) {
+    velocity.x = 0;
+  }
+  if (aFrameMetrics.GetDisableScrollingY()) {
+    velocity.y = 0;
+  }
 
   // Enlarge the displayport along both axes depending on how fast we're moving
   // on that axis and how long it takes to paint. Apply some heuristics to try

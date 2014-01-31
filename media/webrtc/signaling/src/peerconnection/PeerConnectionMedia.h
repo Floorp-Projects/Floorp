@@ -118,11 +118,11 @@ class Fake_VideoGenerator {
     const uint32_t HEIGHT = 480;
 
     // Allocate a single blank Image
-    mozilla::ImageFormat format = mozilla::PLANAR_YCBCR;
     nsRefPtr<mozilla::layers::ImageContainer> container =
       mozilla::layers::LayerManager::CreateImageContainer();
 
-    nsRefPtr<mozilla::layers::Image> image = container->CreateImage(&format, 1);
+    nsRefPtr<mozilla::layers::Image> image =
+      container->CreateImage(mozilla::ImageFormat::PLANAR_YCBCR);
 
     int len = ((WIDTH * HEIGHT) * 3 / 2);
     mozilla::layers::PlanarYCbCrImage* planar =
@@ -145,7 +145,7 @@ class Fake_VideoGenerator {
     data.mPicX = 0;
     data.mPicY = 0;
     data.mPicSize = IntSize(WIDTH, HEIGHT);
-    data.mStereoMode = mozilla::STEREO_MODE_MONO;
+    data.mStereoMode = mozilla::StereoMode::MONO;
 
     // SetData copies data, so we can free the frame
     planar->SetData(data);

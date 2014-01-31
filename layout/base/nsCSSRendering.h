@@ -165,13 +165,15 @@ public:
 
   /**
    * Draws the image to the target rendering context.
+   * aSrc is a rect on the source image which will be mapped to aDest.
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
   void Draw(nsPresContext*       aPresContext,
             nsRenderingContext&  aRenderingContext,
             const nsRect&        aDirtyRect,
             const nsRect&        aFill,
-            const nsRect&        aDest);
+            const nsRect&        aDest,
+            const mozilla::CSSIntRect& aSrc);
   /**
    * Draws the image to the target rendering context using background-specific
    * arguments.
@@ -184,6 +186,30 @@ public:
                       const nsPoint&       aAnchor,
                       const nsRect&        aDirty);
 
+  /**
+   * Draw the image to a single component of a border-image style rendering.
+   * aFill The destination rect to be drawn into
+   * aSrc is the part of the image to be rendered into a tile (aUnitSize in
+   * aFill), if aSrc and the dest tile are different sizes, the image will be
+   * scaled to map aSrc onto the dest tile.
+   * aHFill and aVFill are the repeat patterns for the component -
+   * NS_STYLE_BORDER_IMAGE_REPEAT_*
+   * aUnitSize The scaled size of a single source rect (in destination coords)
+   * aIndex identifies the component: 0 1 2
+   *                                  3 4 5
+   *                                  6 7 8
+   */
+  void
+  DrawBorderImageComponent(nsPresContext*       aPresContext,
+                           nsRenderingContext&  aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           const nsRect&        aFill,
+                           const mozilla::CSSIntRect& aSrc,
+                           uint8_t              aHFill,
+                           uint8_t              aVFill,
+                           const nsSize&        aUnitSize,
+                           uint8_t              aIndex);
+
   bool IsRasterImage();
   bool IsAnimatedImage();
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
@@ -191,6 +217,15 @@ public:
   bool IsReady() { return mIsReady; }
 
 private:
+  /**
+   * Helper method for creating a gfxDrawable from mPaintServerFrame or 
+   * mImageElementSurface.
+   * Requires mType is eStyleImageType_Element.
+   * Returns null if we cannot create the drawable.
+   */
+  already_AddRefed<gfxDrawable> DrawableForElement(const nsRect& aImageRect,
+                                                   nsRenderingContext&  aRenderingContext);
+
   nsIFrame*                 mForFrame;
   const nsStyleImage*       mImage;
   nsStyleImageType          mType;
@@ -323,13 +358,22 @@ struct nsCSSRendering {
 
   /**
    * Render a gradient for an element.
+   * aDest is the rect for a single tile of the gradient on the destination.
+   * aFill is the rect on the destination to be covered by repeated tiling of
+   * the gradient.
+   * aSrc is the part of the gradient to be rendered into a tile (aDest), if
+   * aSrc and aDest are different sizes, the image will be scaled to map aSrc
+   * onto aDest.
+   * aIntrinsicSize is the size of the source gradient.
    */
   static void PaintGradient(nsPresContext* aPresContext,
                             nsRenderingContext& aRenderingContext,
                             nsStyleGradient* aGradient,
                             const nsRect& aDirtyRect,
-                            const nsRect& aOneCellArea,
-                            const nsRect& aFillArea);
+                            const nsRect& aDest,
+                            const nsRect& aFill,
+                            const mozilla::CSSIntRect& aSrc,
+                            const nsSize& aIntrinsiceSize);
 
   /**
    * Find the frame whose background style should be used to draw the

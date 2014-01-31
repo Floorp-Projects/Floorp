@@ -43,6 +43,7 @@
 
 #include "Hal.h"
 #include "HalImpl.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/battery/Constants.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
@@ -1108,7 +1109,7 @@ OomVictimLogger::Observe(
     ".*send sigkill to.*",
     ".*lowmem_shrink.*, return",
     ".*lowmem_shrink.*, ofree.*"};
-  const size_t regex_count = NS_ARRAY_LENGTH(regexes_raw);
+  const size_t regex_count = ArrayLength(regexes_raw);
 
   // Compile our regex just in time
   if (!mRegexes) {

@@ -154,7 +154,7 @@ Fake_VideoStreamSource::Notify(nsITimer* aTimer)
   data.mPicX = 0;
   data.mPicY = 0;
   data.mPicSize = gfxIntSize(WIDTH, HEIGHT);
-  data.mStereoMode = mozilla::layers::STEREO_MODE_MONO;
+  data.mStereoMode = mozilla::layers::StereoMode::MONO;
 
   mozilla::VideoSegment segment;
   segment.AppendFrame(image.forget(), USECS_PER_S / FPS, gfxIntSize(WIDTH, HEIGHT));
@@ -182,7 +182,7 @@ uint8_t *mozilla::layers::BufferRecycleBin::GetBuffer(uint32_t size) {
 
 // YCbCrImage constructor (from ImageLayers.cpp)
 mozilla::layers::PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
-  : Image(nsnull, PLANAR_YCBCR)
+  : Image(nsnull, ImageFormat::PLANAR_YCBCR)
   , mBufferSize(0)
   , mRecycleBin(aRecycleBin)
 {

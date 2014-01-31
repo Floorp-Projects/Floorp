@@ -1,0 +1,37 @@
+diff --git a/WebMElement.c b/WebMElement.c
+--- a/WebMElement.c
++++ b/WebMElement.c
+@@ -56,7 +56,7 @@
+ }
+ 
+ void writeVideoTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+-                     char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
++                     const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
+                      double frameRate) {
+   EbmlLoc start;
+   UInt64 trackID;
+@@ -79,7 +79,7 @@
+   Ebml_EndSubElement(glob, &start); // Track Entry
+ }
+ void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+-                     char *codecId, double samplingFrequency, unsigned int channels,
++                     const char *codecId, double samplingFrequency, unsigned int channels,
+                      unsigned char *private, unsigned long privateSize) {
+   EbmlLoc start;
+   UInt64 trackID;
+diff --git a/WebMElement.h b/WebMElement.h
+--- a/WebMElement.h
++++ b/WebMElement.h
+@@ -20,10 +20,10 @@
+ void writeSegmentInformation(EbmlGlobal *ebml, EbmlLoc *startInfo, unsigned long timeCodeScale, double duration);
+ // this function is a helper only, it assumes a lot of defaults
+ void writeVideoTrack(EbmlGlobal *ebml, unsigned int trackNumber, int flagLacing,
+-                     char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
++                     const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
+                      double frameRate);
+ void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+-                     char *codecId, double samplingFrequency, unsigned int channels,
++                     const char *codecId, double samplingFrequency, unsigned int channels,
+                      unsigned char *private_, unsigned long privateSize);
+ 
+ void writeSimpleBlock(EbmlGlobal *ebml, unsigned char trackNumber, short timeCode,
