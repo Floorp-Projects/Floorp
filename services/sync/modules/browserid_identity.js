@@ -136,7 +136,7 @@ this.BrowserIDManager.prototype = {
         this._log.info("Background fetch for key bundle done");
         if (isInitialSync) {
           this._log.info("Doing initial sync actions");
-          Weave.Service.resetClient();
+          Svc.Prefs.set("firstSync", "resetClient");
           Services.obs.notifyObservers(null, "weave:service:setup-complete", null);
           Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
         }
