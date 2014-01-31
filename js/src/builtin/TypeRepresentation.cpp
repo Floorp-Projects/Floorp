@@ -386,14 +386,17 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
         return nullptr;
     }
 
+    RootedObject objectProto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!objectProto)
+        return nullptr;
+
     // Now that the object is in the table, try to make the owner
     // object. If this succeeds, then the owner will remove from the
     // table once it is finalized. Otherwise, if this fails, we must
     // remove ourselves from the table ourselves and report an error.
-    RootedObject ownerObject(cx,
-        NewBuiltinClassInstance(cx,
-                                &class_,
-                                gc::GetGCObjectKind(&class_)));
+    RootedObject ownerObject(cx);
+    ownerObject = NewObjectWithGivenProto(cx, &class_, objectProto,
+                                          cx->global());
     if (!ownerObject) {
         comp->typeReprs.remove(this);
         js_free(this);

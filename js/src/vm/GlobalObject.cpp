@@ -511,6 +511,9 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 #if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
 #endif
+#ifdef ENABLE_BINARYDATA
+           js_InitTypedObjectModuleObject(cx, global) &&
+#endif
            true;
 }
 
