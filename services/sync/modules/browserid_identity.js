@@ -83,12 +83,12 @@ this.BrowserIDManager.prototype = {
   },
 
   initialize: function() {
-    Services.obs.addObserver(this, fxAccountsCommon.ONVERIFIED_NOTIFICATION, false);
+    Services.obs.addObserver(this, fxAccountsCommon.ONLOGIN_NOTIFICATION, false);
     Services.obs.addObserver(this, fxAccountsCommon.ONLOGOUT_NOTIFICATION, false);
     return this.initializeWithCurrentIdentity();
   },
 
-  initializeWithCurrentIdentity: function() {
+  initializeWithCurrentIdentity: function(isInitialSync=false) {
     this._log.trace("initializeWithCurrentIdentity");
     Components.utils.import("resource://services-sync/main.js");
 
@@ -103,31 +103,43 @@ this.BrowserIDManager.prototype = {
         return;
       }
 
-      if (this.needsCustomization) {
-        // If the user chose to "Customize sync options" when signing
-        // up with Firefox Accounts, ask them to choose what to sync.
-        const url = "chrome://browser/content/sync/customize.xul";
-        const features = "centerscreen,chrome,modal,dialog,resizable=no";
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-
-        let data = {accepted: false};
-        win.openDialog(url, "_blank", features, data);
-
-        if (data.accepted) {
-          Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
-        } else {
-          // Log out if the user canceled the dialog.
-          return fxAccounts.signOut();
-        }
-      }
-
       this._account = accountData.email;
-      // We start a background keybundle fetch...
-      this._log.info("Starting background fetch for key bundle.");
-      this._fetchSyncKeyBundle().then(() => {
+      // The user must be verified before we can do anything at all; we kick
+      // this and the rest of initialization off in the background (ie, we
+      // don't return the promise)
+      this._log.info("Waiting for user to be verified.");
+      fxAccounts.whenVerified(accountData).then(accountData => {
+        // We do the background keybundle fetch...
+        this._log.info("Starting fetch for key bundle.");
+        if (this.needsCustomization) {
+          // If the user chose to "Customize sync options" when signing
+          // up with Firefox Accounts, ask them to choose what to sync.
+          const url = "chrome://browser/content/sync/customize.xul";
+          const features = "centerscreen,chrome,modal,dialog,resizable=no";
+          let win = Services.wm.getMostRecentWindow("navigator:browser");
+
+          let data = {accepted: false};
+          win.openDialog(url, "_blank", features, data);
+
+          if (data.accepted) {
+            Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
+          } else {
+            // Log out if the user canceled the dialog.
+            return fxAccounts.signOut();
+          }
+        }
+      }).then(() => {
+        return this._fetchSyncKeyBundle();
+      }).then(() => {
         this._shouldHaveSyncKeyBundle = true; // and we should actually have one...
         this.whenReadyToAuthenticate.resolve();
         this._log.info("Background fetch for key bundle done");
+        if (isInitialSync) {
+          this._log.info("Doing initial sync actions");
+          Weave.Service.resetClient();
+          Services.obs.notifyObservers(null, "weave:service:setup-complete", null);
+          Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
+        }
       }).then(null, err => {
         this._shouldHaveSyncKeyBundle = true; // but we probably don't have one...
         this.whenReadyToAuthenticate.reject(err);
@@ -143,14 +155,8 @@ this.BrowserIDManager.prototype = {
 
   observe: function (subject, topic, data) {
     switch (topic) {
-    case fxAccountsCommon.ONVERIFIED_NOTIFICATION:
     case fxAccountsCommon.ONLOGIN_NOTIFICATION:
-      // For now, we just assume it's the same user logging back in.
-      // Bug 958927 exists to work out what to do if that's not true.  It might
-      // be that the :onlogout observer does a .startOver (or maybe not - TBD)
-      // But for now, do nothing, and sync will just start re-synching in its
-      // own sweet time...
-      this.initializeWithCurrentIdentity();
+      this.initializeWithCurrentIdentity(true);
       break;
 
     case fxAccountsCommon.ONLOGOUT_NOTIFICATION:
@@ -352,58 +358,25 @@ this.BrowserIDManager.prototype = {
 
   _fetchSyncKeyBundle: function() {
     // Fetch a sync token for the logged in user from the token server.
-    return this._refreshTokenForLoggedInUser(
-    ).then(token => {
-      this._token = token;
-      return this._fxaService.getKeys();
-    }).then(userData => {
+    return this._fxaService.getKeys().then(userData => {
       // unlikely, but if the logged in user somehow changed between these
       // calls we better fail.
       if (!userData || userData.email !== this.account) {
         throw new Error("The currently logged-in user has changed.");
       }
-      // Set the username to be the uid returned by the token server.
-      this.username = this._token.uid.toString();
-      // both Jelly and FxAccounts give us kA/kB as hex.
-      let kB = Utils.hexToBytes(userData.kB);
-      this._syncKeyBundle = deriveKeyBundle(kB);
+      return this._fetchTokenForUser(userData).then(token => {
+        this._token = token;
+        // Set the username to be the uid returned by the token server.
+        this.username = this._token.uid.toString();
+        // both Jelly and FxAccounts give us kA/kB as hex.
+        let kB = Utils.hexToBytes(userData.kB);
+        this._syncKeyBundle = deriveKeyBundle(kB);
+        return;
+      });
     });
   },
 
-  // Refresh the sync token for the currently logged in Firefox Accounts user.
-  // This method requires that this module has been intialized for a user.
-  _refreshTokenForLoggedInUser: function() {
-    return this._fxaService.getSignedInUser().then(function (userData) {
-      if (!userData || userData.email !== this.account) {
-        // This means the logged in user changed or the identity module
-        // wasn't properly initialized. TODO: figure out what needs to
-        // happen here.
-        this._log.error("Currently logged in FxA user differs from what was locally noted. TODO: do proper error handling.");
-        return null;
-      }
-      return this._fetchTokenForUser(userData);
-    }.bind(this));
-  },
-
-  _refreshTokenForLoggedInUserSync: function() {
-    let cb = Async.makeSpinningCallback();
-
-    this._refreshTokenForLoggedInUser().then(function (token) {
-      cb(null, token);
-    },
-    function (err) {
-      cb(err);
-    });
-
-    try {
-      return cb.wait();
-    } catch (err) {
-      this._log.info("refreshTokenForLoggedInUserSync: " + err.message);
-      return null;
-    }
-  },
-
-  // This is a helper to fetch a sync token for the given user data.
+  // Refresh the sync token for the specified Firefox Accounts user.
   _fetchTokenForUser: function(userData) {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
     let log = this._log;
@@ -438,7 +411,29 @@ this.BrowserIDManager.prototype = {
       .then(token => {
         token.expiration = this._now() + (token.duration * 1000);
         return token;
+      })
+      .then(null, err => {
+        Cu.reportError("Failed to fetch token: " + err);
+        // XXX - TODO - work out how to set sync to an error state.
       });
+  },
+
+  _fetchTokenForLoggedInUserSync: function() {
+    let cb = Async.makeSpinningCallback();
+
+    this._fxaService.getSignedInUser().then(userData => {
+      this._fetchTokenForUser(userData).then(token => {
+        cb(null, token);
+      }, err => {
+        cb(err);
+      });
+    });
+    try {
+      return cb.wait();
+    } catch (err) {
+      this._log.info("_fetchTokenForLoggedInUserSync: " + err.message);
+      return null;
+    }
   },
 
   getResourceAuthenticator: function () {
@@ -459,7 +454,7 @@ this.BrowserIDManager.prototype = {
   _getAuthenticationHeader: function(httpObject, method) {
     if (!this.hasValidToken()) {
       // Refresh token for the currently logged in FxA user
-      this._token = this._refreshTokenForLoggedInUserSync();
+      this._token = this._fetchTokenForLoggedInUserSync();
       if (!this._token) {
         return null;
       }
