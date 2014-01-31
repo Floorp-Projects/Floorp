@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: linear-gradient</title>
+<style>
+table { margin: 0; padding: 0; border-spacing: 0; empty-cells: show; }
+td { padding: 0; }
+</style>
+</head>
+<body>
+<table>
+  <col style="width: 30px">
+  <col style="width: 180px">
+  <col style="width: 30px">
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size:30px 30px;"></td>
+    <td></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size:30px 30px;"></td>
+  </tr>
+  <tr style="height: 180px">
+    <td></td>
+    <td style="background: white"></td>
+    <td></td>
+  </tr>
+  <tr style="height: 30px">
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size:30px 30px;"></td>
+    <td></td>
+    <td style="background-image: repeating-linear-gradient(to bottom right, red, blue 10%, red 20%); background-size:30px 30px;"></td>
+  </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: linear-gradient with border-image-repeat</title>
+<style>
+table { margin: 0; padding: 0; border-spacing: 0; empty-cells: show; }
+td { padding: 0; }
+</style>
+</head>
+<body>
+<table>
+<col style="width: 30.0px;">
+<col style="width: 60.0px;">
+<col style="width: 60.0px;">
+<col style="width: 60.0px;">
+<col style="width: 30.0px;">
+<tr style="height: 30.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: 0px 0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px 0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: white;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 30.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: 0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -90.0px;"></td>
+</tr>
+</table>
+<table>
+<col style="width: 30.0px;">
+<col style="width: 60.0px;">
+<col style="width: 60.0px;">
+<col style="width: 60.0px;">
+<col style="width: 30.0px;">
+<tr style="height: 30.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: 0px 0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px 0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -0.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -30.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -30.0px;"></td>
+</tr>
+<tr style="height: 30.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: 0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -30.0px -90.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 120.0px 120.0px; background-position: -90.0px -90.0px;"></td>
+</tr>
+</table>
+<table>
+<col style="width: 60.0px;">
+<col style="width: 120.0px;">
+<col style="width: 60.0px;">
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: 0px 0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -180.0px -0.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -420.0px 0px;"></td>
+</tr>
+<tr style="height: 120.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -0.0px -180.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -180.0px -180.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -420.0px -180.0px;"></td>
+</tr>
+<tr style="height: 60.0px;">
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: 0px -420.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -180.0px -420.0px;"></td>
+  <td style="background-image: linear-gradient(to bottom right, red, blue); background-size: 480.0px 480.0px; background-position: -420.0px -420.0px;"></td>
+</tr>
+</table>
+</body>
+</html>
