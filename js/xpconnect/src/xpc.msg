@@ -210,8 +210,6 @@ XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_STARTDOC             , "Printing failed while s
 XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_ENDDOC               , "Printing failed while completing the print job.")
 XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_STARTPAGE            , "Printing failed while starting a new page.")
 XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY          , "Cannot print this document yet, it is still being loaded.")
-XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_NO_XUL               , "Printing XUL documents is not supported.") // bugs 136185 & 240490
 
 /* Codes related to content */
 XPC_MSG_DEF(NS_ERROR_CONTENT_CRASHED                  , "The process that hosted this content has crashed.")
-

@@ -18,7 +18,6 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
         mJSContext(aJSContext),
         mLastResult(NS_OK),
         mPendingResult(NS_OK),
-        mException(nullptr),
         mCallingLangType(LANG_UNKNOWN)
 {
     MOZ_COUNT_CTOR(XPCContext);
@@ -34,7 +33,6 @@ XPCContext::~XPCContext()
     MOZ_COUNT_DTOR(XPCContext);
     MOZ_ASSERT(JS_GetSecondContextPrivate(mJSContext) == this, "Must match this");
     JS_SetSecondContextPrivate(mJSContext, nullptr);
-    NS_IF_RELEASE(mException);
 
     // Iterate over our scopes and tell them that we have been destroyed
     for (PRCList *scopeptr = PR_NEXT_LINK(&mScopes);
@@ -57,7 +55,7 @@ XPCContext::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mJSContext @ %x", mJSContext));
         XPC_LOG_ALWAYS(("mLastResult of %x", mLastResult));
         XPC_LOG_ALWAYS(("mPendingResult of %x", mPendingResult));
-        XPC_LOG_ALWAYS(("mException @ %x", mException));
+        XPC_LOG_ALWAYS(("mException @ %x", mException.get()));
         if (depth && mException) {
             // XXX show the exception here...
         }

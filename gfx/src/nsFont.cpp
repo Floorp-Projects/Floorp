@@ -11,9 +11,9 @@
 #include "nsCRT.h"                      // for nsCRT
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupports.h"
-#include "nsMemory.h"                   // for NS_ARRAY_LENGTH
 #include "nsUnicharUtils.h"
 #include "nscore.h"                     // for char16_t
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/2D.h"
 
 nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
@@ -254,7 +254,7 @@ const gfxFontFeature eastAsianDefaults[] = {
   { TRUETYPE_TAG('r','u','b','y'), 1 }
 };
 
-static_assert(NS_ARRAY_LENGTH(eastAsianDefaults) ==
+static_assert(MOZ_ARRAY_LENGTH(eastAsianDefaults) ==
               eFeatureEastAsian_numFeatures,
               "eFeatureEastAsian_numFeatures should be correct");
 
@@ -271,7 +271,7 @@ const gfxFontFeature ligDefaults[] = {
   { TRUETYPE_TAG('c','a','l','t'), 0 }
 };
 
-static_assert(NS_ARRAY_LENGTH(ligDefaults) ==
+static_assert(MOZ_ARRAY_LENGTH(ligDefaults) ==
               eFeatureLigatures_numFeatures,
               "eFeatureLigatures_numFeatures should be correct");
 
@@ -287,7 +287,7 @@ const gfxFontFeature numericDefaults[] = {
   { TRUETYPE_TAG('o','r','d','n'), 1 }
 };
 
-static_assert(NS_ARRAY_LENGTH(numericDefaults) ==
+static_assert(MOZ_ARRAY_LENGTH(numericDefaults) ==
               eFeatureNumeric_numFeatures,
               "eFeatureNumeric_numFeatures should be correct");
 

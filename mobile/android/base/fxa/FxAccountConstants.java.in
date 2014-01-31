@@ -11,14 +11,12 @@ public class FxAccountConstants {
   public static final String GLOBAL_LOG_TAG = "FxAccounts";
   public static final String ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
 
-  public static final String DEFAULT_IDP_ENDPOINT = "https://api-accounts.dev.lcip.org";
-  public static final String DEFAULT_TOKEN_SERVER_ENDPOINT = "https://token.dev.lcip.org";
-  public static final String DEFAULT_TOKEN_SERVER_URI = DEFAULT_TOKEN_SERVER_ENDPOINT +
-            (DEFAULT_TOKEN_SERVER_ENDPOINT.endsWith("/") ? "" : "/") + "1.0/sync/1.5";
+  public static final String DEFAULT_AUTH_SERVER_ENDPOINT = "https://api.accounts.firefox.com/v1";
+  public static final String DEFAULT_TOKEN_SERVER_ENDPOINT = "https://token.services.mozilla.com/1.0/sync/1.5";
 
   // For extra debugging.  Not final so it can be changed from Fennec, or from
   // an add-on.
-  public static boolean LOG_PERSONAL_INFORMATION = true;
+  public static boolean LOG_PERSONAL_INFORMATION = false;
 
   public static void pii(String tag, String message) {
     if (LOG_PERSONAL_INFORMATION) {

@@ -6,8 +6,10 @@ package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.os.Bundle;
+import android.widget.TextView;
 
 /**
  * Activity which displays sign up/sign in screen to the user.
@@ -28,7 +30,7 @@ public class FxAccountCreateAccountNotAllowedActivity extends FxAccountAbstractA
 
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_create_account_not_allowed);
-
-    linkifyTextViews(null, new int[] { R.id.learn_more_link });
+    TextView view = (TextView) findViewById(R.id.learn_more_link);
+    ActivityUtils.linkTextView(view, R.string.fxaccount_account_create_not_allowed_learn_more, R.string.fxaccount_link_create_not_allowed);
   }
 }

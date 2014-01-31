@@ -11,6 +11,7 @@
 
   <color name="fxaccount_linkified_textColor">#c0c9d0</color>
   <color name="fxaccount_linkified_textColorLink">#0096dd</color>
+  <color name="fxaccount_linkified_textColorLinkSubdued">#c0c9d0</color>
 
   <color name="fxaccount_error">#d63920</color>
   <color name="fxaccount_button_textColor">#ffffff</color>
@@ -19,10 +20,16 @@
   <color name="fxaccount_button_background_loading">#424f59</color>
   <color name="fxaccount_button_background_inactive">#c0c9d0</color>
   <color name="fxaccount_input_textColor">#424f59</color>
+  <color name="fxaccount_input_textColor_pressed">#424f59</color>
+  <color name="fxaccount_input_textColor_inactive">#c0c9d0</color>
   <color name="fxaccount_input_textColorHint">#c0c9d0</color>
   <color name="fxaccount_link_textColor">#0096dd</color>
   <color name="fxaccount_link_textColor_pressed">#00767d</color>
   <color name="fxaccount_link_textColor_inactive">#c0c9d0</color>
   <color name="fxaccount_input_borderActive">#6a7b86</color>
   <color name="fxaccount_input_borderInactive">#c0c9d0</color>
+  <color name="fxaccount_password_show_textcolor">#c0c9d0</color>
+  <color name="fxaccount_password_show_backgroundcolor">#ffffff</color>
+  <color name="fxaccount_password_hide_textcolor">#ffffff</color>
+  <color name="fxaccount_password_hide_backgroundcolor">#424f59</color>
 </resources>

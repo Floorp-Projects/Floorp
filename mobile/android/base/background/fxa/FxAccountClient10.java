@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 
 import javax.crypto.Mac;
@@ -31,8 +32,11 @@ import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
+import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 
 /**
  * An HTTP client for talking to an FxAccount server.
@@ -53,7 +57,7 @@ import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 public class FxAccountClient10 {
   protected static final String LOG_TAG = FxAccountClient10.class.getSimpleName();
 
-  protected static final String VERSION_FRAGMENT = "v1/";
+  protected static final String ACCEPT_HEADER = "application/json;charset=utf-8";
 
   public static final String JSON_KEY_EMAIL = "email";
   public static final String JSON_KEY_KEYFETCHTOKEN = "keyFetchToken";
@@ -70,7 +74,14 @@ public class FxAccountClient10 {
   protected static final String[] requiredErrorStringFields = { JSON_KEY_ERROR, JSON_KEY_MESSAGE, JSON_KEY_INFO };
   protected static final String[] requiredErrorLongFields = { JSON_KEY_CODE, JSON_KEY_ERRNO };
 
+  /**
+   * The server's URI.
+   * <p>
+   * We assume throughout that this ends with a trailing slash (and guarantee as
+   * much in the constructor).
+   */
   protected final String serverURI;
+
   protected final Executor executor;
 
   public FxAccountClient10(String serverURI, Executor executor) {
@@ -80,7 +91,10 @@ public class FxAccountClient10 {
     if (executor == null) {
       throw new IllegalArgumentException("Must provide a non-null executor.");
     }
-    this.serverURI = (serverURI.endsWith("/") ? serverURI : serverURI + "/") + VERSION_FRAGMENT;
+    this.serverURI = serverURI.endsWith("/") ? serverURI : serverURI + "/";
+    if (!this.serverURI.endsWith("/")) {
+      throw new IllegalArgumentException("Constructed serverURI must end with a trailing slash: " + this.serverURI);
+    }
     this.executor = executor;
   }
 
@@ -243,6 +257,16 @@ public class FxAccountClient10 {
     public void handleTransportException(GeneralSecurityException e) {
       invokeHandleError(delegate, e);
     }
+
+    @Override
+    public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
+      super.addHeaders(request, client);
+
+      // The basics.
+      final Locale locale = Locale.getDefault();
+      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, Utils.getLanguageTag(locale));
+      request.addHeader(HttpHeaders.ACCEPT, ACCEPT_HEADER);
+    }
   }
 
   protected <T> void post(BaseResource resource, final JSONObject requestBody, final RequestDelegate<T> delegate) {
@@ -282,8 +306,9 @@ public class FxAccountClient10 {
     String error;
     String message;
     String info;
+    ExtendedJSONObject body;
     try {
-      ExtendedJSONObject body = new SyncStorageResponse(response).jsonObjectBody();
+      body = new SyncStorageResponse(response).jsonObjectBody();
       body.throwIfFieldsMissingOrMisTyped(requiredErrorStringFields, String.class);
       body.throwIfFieldsMissingOrMisTyped(requiredErrorLongFields, Long.class);
       code = body.getLong(JSON_KEY_CODE).intValue();
@@ -294,7 +319,7 @@ public class FxAccountClient10 {
     } catch (Exception e) {
       throw new FxAccountClientMalformedResponseException(response);
     }
-    throw new FxAccountClientRemoteException(response, code, errno, error, message, info);
+    throw new FxAccountClientRemoteException(response, code, errno, error, message, info, body);
   }
 
   public void createAccount(final String email, final byte[] stretchedPWBytes,

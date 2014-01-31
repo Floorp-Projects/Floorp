@@ -588,12 +588,6 @@ js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
     rt->preserveWrapperCallback = callback;
 }
 
-JS_FRIEND_API(JSErrorReport*)
-js::ErrorFromException(Value val)
-{
-    return js_ErrorFromException(val);
-}
-
 /*
  * The below code is for temporary telemetry use. It can be removed when
  * sufficient data has been harvested.

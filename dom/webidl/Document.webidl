@@ -341,6 +341,8 @@ partial interface Document {
   void obsoleteSheet(DOMString sheetURI);
 
   [ChromeOnly] readonly attribute nsIDocShell? docShell;
+
+  [ChromeOnly] readonly attribute DOMString contentLanguage;
 };
 
 // Extension to give chrome JS the ability to determine when a document was

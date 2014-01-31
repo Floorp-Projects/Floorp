@@ -105,14 +105,7 @@ include $(topsrcdir)/config/rules.mk
 # ICU headers need to be available whether we build with the complete
 # Internationalization API or not - ICU stubs rely on them.
 
-ifdef MOZ_NATIVE_ICU
 LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
-else
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/intl/icu/source/common \
-  -I$(topsrcdir)/intl/icu/source/i18n \
-  $(NULL)
-endif
 
 ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU

@@ -613,7 +613,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
                              nullptr)
           && parseSizeKeywords) {
         static const char sizes[3][7] = { "small", "normal", "big" };
-        static const int32_t values[NS_ARRAY_LENGTH(sizes)] = {
+        static const int32_t values[MOZ_ARRAY_LENGTH(sizes)] = {
           NS_STYLE_FONT_SIZE_SMALL, NS_STYLE_FONT_SIZE_MEDIUM,
           NS_STYLE_FONT_SIZE_LARGE
         };
@@ -730,7 +730,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         "bold-sans-serif", "sans-serif-italic", "sans-serif-bold-italic",
         "monospace", "initial", "tailed", "looped", "stretched"
       };
-      static const int32_t values[NS_ARRAY_LENGTH(sizes)] = {
+      static const int32_t values[MOZ_ARRAY_LENGTH(sizes)] = {
         NS_MATHML_MATHVARIANT_NORMAL, NS_MATHML_MATHVARIANT_BOLD,
         NS_MATHML_MATHVARIANT_ITALIC, NS_MATHML_MATHVARIANT_BOLD_ITALIC,
         NS_MATHML_MATHVARIANT_SCRIPT, NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
@@ -876,7 +876,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         direction->GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
       static const char dirs[][4] = { "ltr", "rtl" };
-      static const int32_t dirValues[NS_ARRAY_LENGTH(dirs)] = {
+      static const int32_t dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
         NS_STYLE_DIRECTION_LTR, NS_STYLE_DIRECTION_RTL
       };
       for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {

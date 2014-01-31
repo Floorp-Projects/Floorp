@@ -289,19 +289,19 @@ ImageLayerD3D10::RenderLayer()
     if (GetNv3DVUtils()) {
       Nv_Stereo_Mode mode;
       switch (yuvImage->GetData()->mStereoMode) {
-      case STEREO_MODE_LEFT_RIGHT:
+      case StereoMode::LEFT_RIGHT:
         mode = NV_STEREO_MODE_LEFT_RIGHT;
         break;
-      case STEREO_MODE_RIGHT_LEFT:
+      case StereoMode::RIGHT_LEFT:
         mode = NV_STEREO_MODE_RIGHT_LEFT;
         break;
-      case STEREO_MODE_BOTTOM_TOP:
+      case StereoMode::BOTTOM_TOP:
         mode = NV_STEREO_MODE_BOTTOM_TOP;
         break;
-      case STEREO_MODE_TOP_BOTTOM:
+      case StereoMode::TOP_BOTTOM:
         mode = NV_STEREO_MODE_TOP_BOTTOM;
         break;
-      case STEREO_MODE_MONO:
+      case StereoMode::MONO:
         mode = NV_STEREO_MODE_MONO;
         break;
       }
@@ -309,7 +309,7 @@ ImageLayerD3D10::RenderLayer()
       // Send control data even in mono case so driver knows to leave stereo mode.
       GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
-      if (yuvImage->GetData()->mStereoMode != STEREO_MODE_MONO) {
+      if (yuvImage->GetData()->mStereoMode != StereoMode::MONO) {
         // Dst resource is optional
         GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->GetData()->mYSize.width,
                                            (unsigned int)yuvImage->GetData()->mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(nullptr));

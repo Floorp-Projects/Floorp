@@ -29,7 +29,7 @@
             style="@style/FxAccountTextItem"
             android:layout_marginBottom="45dp"
             android:layout_marginTop="45dp"
-            android:text="@string/fxaccount_account_create_not_allowed_description" >
+            android:text="@string/fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements" >
         </TextView>
 
         <TextView
