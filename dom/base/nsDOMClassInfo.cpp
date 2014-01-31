@@ -3620,7 +3620,7 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsresult
 nsGenericArraySH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, uint32_t *length)
+                            JS::Handle<JSObject*> obj, uint32_t *length)
 {
   *length = 0;
 
@@ -3995,7 +3995,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 
   // If we are called via document.all(id) instead of document.all.item(i) or
   // another method, use the document.all callee object as self.
-  JSObject *self;
+  JS::Rooted<JSObject*> self(cx);
   if (args.calleev().isObject() &&
       JS_GetClass(&args.calleev().toObject()) == &sHTMLDocumentAllClass) {
     self = &args.calleev().toObject();
