@@ -3,6 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Customization mode */
+
+#main-window:-moz-any([customize-entering],[customize-entered]) #content-deck {
+  margin: 0 2em 2em;
+}
+
+#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox > toolbar:not(#TabsToolbar) {
+  margin-left: 2em;
+  margin-right: 2em;
+}
+
 #main-window:-moz-any([customize-entering],[customize-exiting]) #tab-view-deck {
   pointer-events: none;
 }
