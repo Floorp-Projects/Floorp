@@ -79,10 +79,10 @@ class Nursery
     }
 
     /*
-     * Allocate and return a pointer to a new GC thing. Returns nullptr if the
-     * Nursery is full.
+     * Allocate and return a pointer to a new GC object with its |slots|
+     * pointer pre-filled. Returns nullptr if the Nursery is full.
      */
-    void *allocate(size_t size);
+    JSObject *allocateObject(JSContext *cx, size_t size, size_t numDynamic);
 
     /* Allocate a slots array for the given object. */
     HeapSlot *allocateSlots(JSContext *cx, JSObject *obj, uint32_t nslots);
@@ -183,7 +183,7 @@ class Nursery
     HugeSlotsSet hugeSlots;
 
     /* The maximum number of slots allowed to reside inline in the nursery. */
-    static const size_t MaxNurserySlots = 100;
+    static const size_t MaxNurserySlots = 128;
 
     /* The amount of space in the mapped nursery available to allocations. */
     static const size_t NurseryChunkUsableSize = gc::ChunkSize - sizeof(gc::ChunkTrailer);
@@ -252,6 +252,9 @@ class Nursery
     void *allocateFromTenured(JS::Zone *zone, gc::AllocKind thingKind);
 
     struct TenureCountCache;
+
+    /* Common internal allocator function. */
+    void *allocate(size_t size);
 
     /*
      * Move the object at |src| in the Nursery to an already-allocated cell

@@ -129,6 +129,37 @@ js::Nursery::isEmpty() const
     return position() == currentStart_;
 }
 
+JSObject *
+js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
+{
+    /* Attempt to allocate slots contiguously after object, if possible. */
+    if (numDynamic && numDynamic <= MaxNurserySlots) {
+        size_t totalSize = size + sizeof(HeapSlot) * numDynamic;
+        JSObject *obj = static_cast<JSObject *>(allocate(totalSize));
+        if (obj) {
+            obj->setInitialSlots(reinterpret_cast<HeapSlot *>(size_t(obj) + size));
+            return obj;
+        }
+        /* If we failed to allocate as a block, retry with out-of-line slots. */
+    }
+
+    HeapSlot *slots = nullptr;
+    if (numDynamic) {
+        slots = allocateHugeSlots(cx, numDynamic);
+        if (MOZ_UNLIKELY(!slots))
+            return nullptr;
+    }
+
+    JSObject *obj = static_cast<JSObject *>(allocate(size));
+
+    if (obj)
+        obj->setInitialSlots(slots);
+    else
+        freeSlots(cx, slots);
+
+    return obj;
+}
+
 void *
 js::Nursery::allocate(size_t size)
 {
