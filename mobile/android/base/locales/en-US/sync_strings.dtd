@@ -7,8 +7,6 @@
 <!ENTITY syncBrand.fullName.label "Firefox Sync">
 <!ENTITY syncBrand.shortName.label "Sync">
 
-<!ENTITY fxaccountBrand.fullName.label "Firefox Account">
-
 <!-- Main titles. -->
 <!ENTITY sync.app.name.label '&syncBrand.fullName.label;'>
 <!ENTITY sync.title.connect.label 'Connect to &syncBrand.shortName.label;'>
@@ -72,10 +70,10 @@
 <!ENTITY sync.button.cancel.label 'Cancel'>
 <!ENTITY sync.button.connect.label 'Connect'>
 <!ENTITY sync.button.ok.label 'OK'>
-  
+
 <!-- Account strings -->
-<!ENTITY sync.account.label.label '&syncBrand.fullName.label;'>
-  
+<!ENTITY sync.account.label '&syncBrand.fullName.label; (deprecated)'>
+
 <!-- Bookmark folder strings -->
 <!ENTITY bookmarks.folder.menu.label 'Bookmarks Menu'>
 <!ENTITY bookmarks.folder.places.label ''>
@@ -107,22 +105,14 @@
 <!ENTITY sync.text.tab.sent.label 'Your tab was sent!'>
 <!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>
 
-<!-- Firefox Account strings -->
-
-<!-- Localization note: this is the brand title, shown at the top of most screens. -->
-<!ENTITY firefox_accounts 'Firefox Accounts'>
-
-<!-- Localization note: this refers to a single Firefox Account, shown
-     at the top of the account status activity. That activity allows
-     to configure the current Firefox Account. -->
-<!ENTITY firefox_account 'Firefox Account'>
+<!-- Firefox account strings. -->
 
 <!-- Localization note: these describe icons and graphics, and are
      consumed by assistive devices. -->
-<!ENTITY fxaccount_checkbox_contentDescription 'Firefox Accounts checkbox graphic'>
-<!ENTITY fxaccount_icon_contentDescription 'Firefox Accounts icon'>
-<!ENTITY fxaccount_intro_contentDescription 'Firefox Accounts introduction graphics'>
-<!ENTITY fxaccount_mail_contentDescription 'Firefox Accounts envelope graphic'>
+<!ENTITY fxaccount_checkbox_contentDescription2 'Firefox accounts checkbox graphic'>
+<!ENTITY fxaccount_icon_contentDescription2 'Firefox accounts icon'>
+<!ENTITY fxaccount_intro_contentDescription2 'Firefox accounts introduction graphics'>
+<!ENTITY fxaccount_mail_contentDescription2 'Firefox accounts envelope graphic'>
 
 <!-- Localization note: these are shown in all screens that query the
      user for an email address and password. Hide and show are button
@@ -132,6 +122,11 @@
 <!ENTITY fxaccount_password_hide 'Hide'>
 <!ENTITY fxaccount_password_show 'Show'>
 
+<!-- Localization note: these are shown in screens after the user has
+     created or signed in to an account, and take the user back to
+     Firefox. -->
+<!ENTITY fxaccount_back_to_browsing 'Back to browsing'>
+
 <!ENTITY fxaccount_policy_linktos 'Terms of Service'>
 <!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
 
@@ -140,7 +135,10 @@
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
 <!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
-<!ENTITY fxaccount_create_account_sub_header 'Create an account'>
+<!-- Localization note: the Firefox below should not change with the
+     particular version of Firefox installed (Release, Beta, Aurora,
+     etc).  The account remains a "Firefox" account. -->
+<!ENTITY fxaccount_create_account_header 'Create a Firefox account'>
 <!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
 <!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
 <!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
@@ -148,7 +146,7 @@
 <!ENTITY fxaccount_create_account_button 'Next'>
 <!ENTITY fxaccount_create_account_choose_what_to_sync 'Choose what to sync'>
 <!ENTITY fxaccount_create_account_sign_in_instead 'Already have an account? Sign in'>
-<!ENTITY fxaccount_create_account_1950_or_earlier '1950 or earlier'>
+<!ENTITY fxaccount_create_account_1990_or_earlier '1990 or earlier'>
 <!ENTITY fxaccount_create_account_unknown_error 'Could not create account'>
 
 <!ENTITY fxaccount_account_create_not_allowed 'Cannot create account'>
@@ -156,11 +154,11 @@
 <!ENTITY fxaccount_account_create_not_allowed_learn_more 'Learn more'>
 
 <!ENTITY fxaccount_confirm_account_header 'Confirm your account'>
-<!-- Localization note: &formatS; is the Firefox Account's email address. -->
+<!-- Localization note: &formatS; is the Firefox account's email address. -->
 <!ENTITY fxaccount_confirm_account_verification_link 'A verification link has been sent to &formatS;'>
 <!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
-<!ENTITY fxaccount_confirm_account_verification_link_sent 'Sent fresh verification link'>
-<!ENTITY fxaccount_confirm_account_verification_link_not_sent 'Couldn\&apos;t send a fresh verification link'>
+<!ENTITY fxaccount_confirm_account_verification_link_sent2 'Verification email sent'>
+<!ENTITY fxaccount_confirm_account_verification_link_not_sent2 'Couldn\&apos;t send verification email'>
 
 <!ENTITY fxaccount_sign_in_sub_header 'Sign in'>
 <!ENTITY fxaccount_sign_in_button_label 'Sign in'>
@@ -169,15 +167,16 @@
 <!ENTITY fxaccount_sign_in_unknown_error 'Could not sign in'>
 
 <!ENTITY fxaccount_account_verified_sub_header 'Account verified'>
-<!ENTITY fxaccount_account_verified_description 'You are now ready to use &syncBrand.shortName.label;.'>
+<!ENTITY fxaccount_account_verified_description2 'Your data will begin syncing momentarily.'>
 
-<!ENTITY fxaccount_update_credentials_sub_header 'Sign in to continue'>
+<!ENTITY fxaccount_update_credentials_header 'Sign in'>
 <!ENTITY fxaccount_update_credentials_button_label 'Sign in'>
 <!ENTITY fxaccount_update_credentials_unknown_error 'Could not sign in'>
 
+<!ENTITY fxaccount_status_header 'Firefox account'>
 <!ENTITY fxaccount_status_sync '&syncBrand.shortName.label;'>
 <!ENTITY fxaccount_status_sync_enabled '&syncBrand.shortName.label;: enabled'>
-<!ENTITY fxaccount_status_needs_verification 'Your account needs to be verified. Tap to verify.'>
+<!ENTITY fxaccount_status_needs_verification2 'Your account needs to be verified. Tap to resend verification email.'>
 <!ENTITY fxaccount_status_needs_credentials 'Cannot connect. Tap to sign in.'>
 <!ENTITY fxaccount_status_needs_upgrade 'You need to upgrade &brandShortName; to sign in.'>
 <!ENTITY fxaccount_status_bookmarks 'Bookmarks'>
@@ -187,14 +186,14 @@
 <!ENTITY fxaccount_status_legal 'Legal' >
 
 <!-- Localization note: this is the name shown by the Android system
-     itself for a Firefox Account. It should be singular. -->
-<!ENTITY fxaccount_label '&fxaccountBrand.fullName.label;'>
+     itself for a Firefox account. Don't localize this. -->
+<!ENTITY fxaccount_account_type_label 'Firefox'>
 
 <!-- Localization note: these are shown by the Android system itself,
      when the user navigates to the Android > Accounts > [Firefox
-     Account] Screen. The link takes the user to the Firefox Account
+     Account] Screen. The link takes the user to the Firefox account
      status activity, which lets them manage their Firefox
-     Account. -->
+     account. -->
 <!ENTITY fxaccount_options_title '&syncBrand.shortName.label; Options'>
 <!ENTITY fxaccount_options_configure_title 'Configure &syncBrand.shortName.label;'>
 
@@ -213,7 +212,7 @@
 <!ENTITY fxaccount_remote_error_UNKNOWN_ERROR 'There was a problem'>
 <!ENTITY fxaccount_remote_error_COULD_NOT_CONNECT 'Cannot connect to network'>
 
-<!ENTITY fxaccount_sync_sign_in_error_notification_title '&syncBrand.fullName.label; is not connected'>
+<!ENTITY fxaccount_sync_sign_in_error_notification_title2 '&syncBrand.shortName.label; is not connected'>
 <!-- Note to translators: the format string below will be replaced
-     with the Firefox Account's email address. -->
-<!ENTITY fxaccount_sync_sign_in_error_notification_text 'Tap to sign in to &formatS;'>
+     with the Firefox account's email address. -->
+<!ENTITY fxaccount_sync_sign_in_error_notification_text2 'Tap to sign in as &formatS;'>

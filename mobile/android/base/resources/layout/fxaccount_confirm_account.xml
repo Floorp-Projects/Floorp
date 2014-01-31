@@ -15,11 +15,6 @@
 
         <TextView
             style="@style/FxAccountHeaderItem"
-            android:text="@string/firefox_accounts" >
-        </TextView>
-
-        <TextView
-            style="@style/FxAccountSubHeaderItem"
             android:text="@string/fxaccount_confirm_account_header" >
         </TextView>
 
@@ -27,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="45dp"
+            android:layout_marginBottom="40dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/fxaccount_mail_contentDescription"
             android:src="@drawable/fxaccount_mail" >
@@ -36,10 +31,14 @@
         <TextView
             android:id="@+id/verification_link_text"
             style="@style/FxAccountTextItem"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="40dp"
             android:text="@string/fxaccount_confirm_account_verification_link"
-            android:textSize="18sp" >
-        </TextView>
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/button"
+            style="@style/FxAccountButton"
+            android:text="@string/fxaccount_back_to_browsing" />
 
         <TextView
             android:id="@+id/resend_confirmation_email_link"
