@@ -19,7 +19,7 @@
 
   <script type="application/javascript" src="shadereditor.js"/>
 
-  <vbox id="body" flex="1">
+  <vbox class="theme-body" flex="1">
     <hbox id="reload-notice"
           class="notice-container"
           align="center"
@@ -44,8 +44,10 @@
              value="&shaderEditorUI.emptyNotice;"/>
     </hbox>
 
-    <box id="content" flex="1" hidden="true"
-        class="devtools-responsive-container theme-body">
+    <box id="content"
+         class="devtools-responsive-container"
+         flex="1"
+         hidden="true">
       <vbox id="shaders-pane"/>
       <splitter class="devtools-side-splitter"/>
       <box id="shaders-editors" class="devtools-responsive-container" flex="1">

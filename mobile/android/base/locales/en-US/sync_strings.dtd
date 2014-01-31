@@ -108,82 +108,110 @@
 <!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>
 
 <!-- Firefox Account strings -->
-<!ENTITY firefox.accounts 'Firefox Accounts'>
-<!ENTITY fxaccount.label '&fxaccountBrand.fullName.label;'>
-<!ENTITY fxaccount.policy 'By proceeding you agree with the &lt;a
-         href="http://mozilla.com"&gt;Terms of Service&lt;/a&gt; and &lt;a
-         href="http://mozilla.com"&gt;Privacy Policy&lt;/a&gt;.'>
-<!ENTITY fxaccount.forgot.password 'Forgot password?'>
-<!ENTITY fxaccount.create.account.button.label 'Create Account'>
-<!ENTITY fxaccount.sign.in.button.label 'Sign In'>
-<!ENTITY fxaccount.email.hint 'Email'>
-<!ENTITY fxaccount.password.hint 'Password'>
-<!ENTITY fxaccount.password2.hint 'Confirm password'>
-<!ENTITY fxaccount.bad.email 'We need a real email address.'>
-<!ENTITY fxaccount.bad.passwords 'Your passwords must match.'>
-<!ENTITY fxaccount.sign.in.instead 'Already have an account? Sign in!'>
-<!ENTITY fxaccount.sign.up.instead 'Don\&apos;t have an account? Sign up instead.'>
 
-<!ENTITY fxaccount.sign.in 'Sign in'>
-<!ENTITY fxaccount.create.account 'Create an account'>
+<!-- Localization note: this is the brand title, shown at the top of most screens. -->
+<!ENTITY firefox_accounts 'Firefox Accounts'>
 
-<!ENTITY fxaccount.old.firefox '&lt;a href="http://mozilla.com"&gt;Using &syncBrand.shortName.label; with an older version of &brandShortName;?&lt;/a&gt;'>
+<!-- Localization note: this refers to a single Firefox Account, shown
+     at the top of the account status activity. That activity allows
+     to configure the current Firefox Account. -->
+<!ENTITY firefox_account 'Firefox Account'>
 
-<!ENTITY fxaccount.when.were.you.born 'When were you born?'>
-<!ENTITY fxaccount.year.of.birth 'Year of birth'>
+<!-- Localization note: these describe icons and graphics, and are
+     consumed by assistive devices. -->
+<!ENTITY fxaccount_checkbox_contentDescription 'Firefox Accounts checkbox graphic'>
+<!ENTITY fxaccount_icon_contentDescription 'Firefox Accounts icon'>
+<!ENTITY fxaccount_intro_contentDescription 'Firefox Accounts introduction graphics'>
+<!ENTITY fxaccount_mail_contentDescription 'Firefox Accounts envelope graphic'>
 
-<!ENTITY fxaccount.icon.contentDescription 'Firefox Accounts icon'>
-<!ENTITY fxaccount.password.hide 'Hide'>
-<!ENTITY fxaccount.password.show 'Show'>
-<!ENTITY fxaccount.get.started 'Get started'>
-<!ENTITY fxaccount.description 'Sign in to backup and sync all your settings and bookmarks!'>
-<!ENTITY fxaccount.sign.up 'Sign up'>
+<!-- Localization note: these are shown in all screens that query the
+     user for an email address and password. Hide and show are button
+     labels. -->
+<!ENTITY fxaccount_email_hint 'Email'>
+<!ENTITY fxaccount_password_hint 'Password'>
+<!ENTITY fxaccount_password_hide 'Hide'>
+<!ENTITY fxaccount_password_show 'Show'>
 
-<!-- Android > Accounts > [Firefox Account] Screen -->
-<!ENTITY fxaccount.options.title 'Options'>
-<!ENTITY fxaccount.options.configure.title 'Configure your Firefox Account'>
-<!ENTITY fxaccount.intro.contentDescription 'Firefox Accounts introduction graphics'>
-<!ENTITY fxaccount.confirmation.email.sent 'Confirmation email sent!'>
-<!ENTITY fxaccount.mail.contentDescription 'Firefox Accounts envelope graphic'>
-<!ENTITY fxaccount.confirmation.description 'Your confirmation link awaits at:'>
-<!ENTITY fxaccount.offer.resend.confirmation.email 'Don\&apos;t see an email? Resend.'>
-<!ENTITY fxaccount.password.length.restriction 'Must be at least 8 characters.'>
-<!ENTITY fxaccount.change.password 'Change password'>
-<!ENTITY fxaccount.status.needs.verification 'Your account needs to be verified. Tap here to verify and start syncing.'>
-<!ENTITY fxaccount.status.needs.credentials 'Your account details are out of date. Tap here to sign in again and resume syncing.'>
-<!ENTITY fxaccount.status.syncing 'Firefox is syncing...'>
-<!ENTITY fxaccount.status.sync 'Sync' >
-<!ENTITY fxaccount.status.bookmarks 'Bookmarks'>
-<!ENTITY fxaccount.status.history 'History'>
-<!ENTITY fxaccount.status.passwords 'Passwords'>
-<!ENTITY fxaccount.status.tabs 'Open tabs'>
-<!ENTITY fxaccount.update.credentials 'Update password'>
-<!ENTITY fxaccount.update.credentials.button.label 'Re-connect'>
-<!ENTITY fxaccount.account.create.not.allowed 'Cannot create account'>
-<!ENTITY fxaccount.account.create.not.allowed.description 'You must meet certain age requirements to create a Firefox Account.'>
+<!ENTITY fxaccount_policy_linktos 'Terms of Service'>
+<!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
 
-<!-- Note to translators:
+<!ENTITY fxaccount_getting_started_welcome_to_sync 'Welcome to &syncBrand.shortName.label;'>
+<!ENTITY fxaccount_getting_started_description 'Sign in to sync your tabs, bookmarks, passwords &amp; more.'>
+<!ENTITY fxaccount_getting_started_get_started 'Get started'>
+<!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
-These strings represent ranges of birth years, used to determine if a
-potential user is old enough to meet legal requirements. A user born
-in 1984 should understand that they should pick the translation of
-"1980s".
+<!ENTITY fxaccount_create_account_sub_header 'Create an account'>
+<!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
+<!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
+<!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
+<!ENTITY fxaccount_create_account_policy_text 'By proceeding, I agree to the &formatS1; and &formatS2; of Firefox online services.'>
+<!ENTITY fxaccount_create_account_button 'Next'>
+<!ENTITY fxaccount_create_account_choose_what_to_sync 'Choose what to sync'>
+<!ENTITY fxaccount_create_account_sign_in_instead 'Already have an account? Sign in'>
+<!ENTITY fxaccount_create_account_1950_or_earlier '1950 or earlier'>
+<!ENTITY fxaccount_create_account_unknown_error 'Could not create account'>
 
-Any years that are *not* old enough to create an account must be
-appear as individual numbers, so that they can be converted to a year
-and compared to the current year.  Year ranges (any entry that cannot
-be converted to a number) are *always* considered old enough to create
-an account.  -->
+<!ENTITY fxaccount_account_create_not_allowed 'Cannot create account'>
+<!ENTITY fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements 'You must meet certain age requirements to create an account.'>
+<!ENTITY fxaccount_account_create_not_allowed_learn_more 'Learn more'>
 
-<!ENTITY fxaccount.create.account.age.1960s '1960s or earlier'>
-<!ENTITY fxaccount.create.account.age.1970s '1970s'>
-<!ENTITY fxaccount.create.account.age.1980s '1980s'>
-<!ENTITY fxaccount.create.account.age.1990s '1990s'>
-<!ENTITY fxaccount.create.account.age.2000 '2000'>
-<!ENTITY fxaccount.create.account.age.2001 '2001'>
-<!ENTITY fxaccount.create.account.age.2002 '2002'>
-<!ENTITY fxaccount.create.account.age.2003 '2003'>
-<!ENTITY fxaccount.create.account.age.2004 '2004'>
-<!ENTITY fxaccount.create.account.age.2005 '2005'>
-<!ENTITY fxaccount.create.account.age.2006 '2006'>
-<!ENTITY fxaccount.create.account.age.2007 '2007'>
+<!ENTITY fxaccount_confirm_account_header 'Confirm your account'>
+<!-- Localization note: &formatS; is the Firefox Account's email address. -->
+<!ENTITY fxaccount_confirm_account_verification_link 'A verification link has been sent to &formatS;'>
+<!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
+<!ENTITY fxaccount_confirm_account_verification_link_sent 'Sent fresh verification link'>
+<!ENTITY fxaccount_confirm_account_verification_link_not_sent 'Couldn\&apos;t send a fresh verification link'>
+
+<!ENTITY fxaccount_sign_in_sub_header 'Sign in'>
+<!ENTITY fxaccount_sign_in_button_label 'Sign in'>
+<!ENTITY fxaccount_sign_in_forgot_password 'Forgot password?'>
+<!ENTITY fxaccount_sign_in_create_account_instead 'Create an account'>
+<!ENTITY fxaccount_sign_in_unknown_error 'Could not sign in'>
+
+<!ENTITY fxaccount_account_verified_sub_header 'Account verified'>
+<!ENTITY fxaccount_account_verified_description 'You are now ready to use &syncBrand.shortName.label;.'>
+
+<!ENTITY fxaccount_update_credentials_sub_header 'Sign in to continue'>
+<!ENTITY fxaccount_update_credentials_button_label 'Sign in'>
+<!ENTITY fxaccount_update_credentials_unknown_error 'Could not sign in'>
+
+<!ENTITY fxaccount_status_sync '&syncBrand.shortName.label;'>
+<!ENTITY fxaccount_status_sync_enabled '&syncBrand.shortName.label;: enabled'>
+<!ENTITY fxaccount_status_needs_verification 'Your account needs to be verified. Tap to verify.'>
+<!ENTITY fxaccount_status_needs_credentials 'Cannot connect. Tap to sign in.'>
+<!ENTITY fxaccount_status_needs_upgrade 'You need to upgrade &brandShortName; to sign in.'>
+<!ENTITY fxaccount_status_bookmarks 'Bookmarks'>
+<!ENTITY fxaccount_status_history 'History'>
+<!ENTITY fxaccount_status_passwords 'Passwords'>
+<!ENTITY fxaccount_status_tabs 'Open tabs'>
+<!ENTITY fxaccount_status_legal 'Legal' >
+
+<!-- Localization note: this is the name shown by the Android system
+     itself for a Firefox Account. It should be singular. -->
+<!ENTITY fxaccount_label '&fxaccountBrand.fullName.label;'>
+
+<!-- Localization note: these are shown by the Android system itself,
+     when the user navigates to the Android > Accounts > [Firefox
+     Account] Screen. The link takes the user to the Firefox Account
+     status activity, which lets them manage their Firefox
+     Account. -->
+<!ENTITY fxaccount_options_title '&syncBrand.shortName.label; Options'>
+<!ENTITY fxaccount_options_configure_title 'Configure &syncBrand.shortName.label;'>
+
+<!-- Localization note: these error messages are shown after a request
+     has been made to the remote server, and an error of some type has
+     been returned. -->
+<!ENTITY fxaccount_remote_error_UPGRADE_REQUIRED 'You need to upgrade Firefox'>
+<!ENTITY fxaccount_remote_error_ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS 'Account already exists'>
+<!ENTITY fxaccount_remote_error_ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST 'Invalid email or password'>
+<!ENTITY fxaccount_remote_error_INCORRECT_PASSWORD 'Invalid email or password'>
+<!ENTITY fxaccount_remote_error_ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT 'Account is not verified'>
+<!ENTITY fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS 'Server busy, try again soon'>
+<!ENTITY fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD 'Server busy, try again soon'>
+<!ENTITY fxaccount_remote_error_UNKNOWN_ERROR 'There was a problem'>
+<!ENTITY fxaccount_remote_error_COULD_NOT_CONNECT 'Cannot connect to network'>
+
+<!ENTITY fxaccount_sync_sign_in_error_notification_title '&syncBrand.fullName.label; is not connected'>
+<!-- Note to translators: the format string below will be replaced
+     with the Firefox Account's email address. -->
+<!ENTITY fxaccount_sync_sign_in_error_notification_text 'Tap to sign in to &formatS;'>

@@ -60,7 +60,6 @@ Sync11Service.prototype = {
   _locked: false,
   _loggedIn: false,
 
-  userBaseURL: null,
   infoURL: null,
   storageURL: null,
   metaURL: null,
@@ -156,13 +155,18 @@ Sync11Service.prototype = {
     return Utils.catch.call(this, func, lockExceptions);
   },
 
+  get userBaseURL() {
+    if (!this._clusterManager) {
+      return null;
+    }
+    return this._clusterManager.getUserBaseURL();
+  },
+
   _updateCachedURLs: function _updateCachedURLs() {
     // Nothing to cache yet if we don't have the building blocks
     if (this.clusterURL == "" || this.identity.username == "")
       return;
 
-    let storageAPI = this.clusterURL + SYNC_API_VERSION + "/";
-    this.userBaseURL = storageAPI + this.identity.username + "/";
     this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
     // Generate and cache various URLs under the storage API for this user
