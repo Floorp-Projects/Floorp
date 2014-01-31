@@ -241,8 +241,10 @@ void OTS_API SetTableActionCallback(TableActionFunc func, void *user_data);
 // -DOTS_DEBUG.
 void DisableDebugOutput();
 
+#ifdef MOZ_OTS_WOFF2
 // Enable WOFF2 support(experimental).
 void EnableWOFF2();
+#endif
 
 }  // namespace ots
 
