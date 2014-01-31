@@ -152,8 +152,14 @@ interface nsIMemoryInfoDumper : nsISupports
    * @param aDumpChildProcesses indicates whether we should call
    *   DumpGCAndCCLogsToFile in our child processes.  If so, the child processes
    *   will dump their children, and so on.
+   *
+   * @param aGCLogPath The full path of the file that the GC log was written to.
+   *
+   * @param aCCLogPath The full path of the file that the CC log was written to.
    */
   void dumpGCAndCCLogsToFile(in AString aIdentifier,
                              in bool aDumpAllTraces,
-                             in bool aDumpChildProcesses);
+                             in bool aDumpChildProcesses,
+                             out AString aGCLogPath,
+                             out AString aCCLogPath);
 };
