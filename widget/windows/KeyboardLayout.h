@@ -338,6 +338,42 @@ private:
   {
     return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
   }
+  bool IsKeyUpMessage() const
+  {
+    return (mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP);
+  }
+  bool IsPrintableCharMessage(const MSG& aMSG) const
+  {
+    return IsPrintableCharMessage(aMSG.message);
+  }
+  bool IsPrintableCharMessage(UINT aMessage) const
+  {
+    return (aMessage == WM_CHAR || aMessage == WM_SYSCHAR);
+  }
+  bool IsCharMessage(const MSG& aMSG) const
+  {
+    return IsCharMessage(aMSG.message);
+  }
+  bool IsCharMessage(UINT aMessage) const
+  {
+    return (IsPrintableCharMessage(aMessage) || IsDeadCharMessage(aMessage));
+  }
+  bool IsDeadCharMessage(const MSG& aMSG) const
+  {
+    return IsDeadCharMessage(aMSG.message);
+  }
+  bool IsDeadCharMessage(UINT aMessage) const
+  {
+    return (aMessage == WM_DEADCHAR || aMessage == WM_SYSDEADCHAR);
+  }
+  bool IsSysCharMessage(const MSG& aMSG) const
+  {
+    return IsSysCharMessage(aMSG.message);
+  }
+  bool IsSysCharMessage(UINT aMessage) const
+  {
+    return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
+  }
   bool IsFollowedByCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
   MSG RemoveFollowingCharMessage() const;
