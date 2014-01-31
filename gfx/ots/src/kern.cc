@@ -5,10 +5,16 @@
 #include "kern.h"
 
 // kern - Kerning
-// http://www.microsoft.com/opentype/otspec/kern.htm
+// http://www.microsoft.com/typography/otspec/kern.htm
+
+#define TABLE_NAME "kern"
 
 #define DROP_THIS_TABLE \
-  do { delete file->kern; file->kern = 0; } while (0)
+  do { \
+    delete file->kern; \
+    file->kern = 0; \
+    OTS_FAILURE_MSG("Table discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -21,7 +27,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   uint16_t num_tables = 0;
   if (!table.ReadU16(&kern->version) ||
       !table.ReadU16(&num_tables)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read kern header");
   }
 
   if (kern->version > 0) {
@@ -42,7 +48,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
     if (!table.ReadU16(&subtable.version) ||
         !table.ReadU16(&sub_length)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read kern subtable %d header", i);
     }
 
     if (subtable.version > 0) {
@@ -52,11 +58,11 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
     const size_t current_offset = table.offset();
     if (current_offset - 4 + sub_length > length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad kern subtable %d offset %ld", i, current_offset);
     }
 
     if (!table.ReadU16(&subtable.coverage)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Cailed to read kern subtable %d coverage", i);
     }
 
     if (!(subtable.coverage & 0x1)) {
@@ -81,7 +87,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
         !table.ReadU16(&subtable.search_range) ||
         !table.ReadU16(&subtable.entry_selector) ||
         !table.ReadU16(&subtable.range_shift)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read kern subtable %d format 0 fields", i);
     }
 
     if (!num_pairs) {
@@ -109,7 +115,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       subtable.search_range = expected_search_range;
     }
     if (subtable.entry_selector != max_pow2) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad subtable %d entry selector %d", i, subtable.entry_selector);
     }
     const uint32_t expected_range_shift
         = kFormat0PairSize * num_pairs - subtable.search_range;
@@ -126,7 +132,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       if (!table.ReadU16(&kerning_pair.left) ||
           !table.ReadU16(&kerning_pair.right) ||
           !table.ReadS16(&kerning_pair.value)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to read subtable %d kerning pair %d", i, j);
       }
       const uint32_t current_pair
           = (kerning_pair.left << 16) + kerning_pair.right;
@@ -163,7 +169,7 @@ bool ots_kern_serialise(OTSStream *out, OpenTypeFile *file) {
 
   if (!out->WriteU16(kern->version) ||
       !out->WriteU16(kern->subtables.size())) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Can't write kern table header");
   }
 
   for (unsigned i = 0; i < kern->subtables.size(); ++i) {
@@ -175,13 +181,13 @@ bool ots_kern_serialise(OTSStream *out, OpenTypeFile *file) {
         !out->WriteU16(kern->subtables[i].search_range) ||
         !out->WriteU16(kern->subtables[i].entry_selector) ||
         !out->WriteU16(kern->subtables[i].range_shift)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write kern subtable %d", i);
     }
     for (unsigned j = 0; j < kern->subtables[i].pairs.size(); ++j) {
       if (!out->WriteU16(kern->subtables[i].pairs[j].left) ||
           !out->WriteU16(kern->subtables[i].pairs[j].right) ||
           !out->WriteS16(kern->subtables[i].pairs[j].value)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to write kern pair %d for subtable %d", j, i);
       }
     }
   }

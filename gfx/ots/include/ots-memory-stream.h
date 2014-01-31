@@ -71,7 +71,7 @@ class ExpandingMemoryStream : public OTSStream {
       if (new_length > limit_)
         new_length = limit_;
       uint8_t* new_buf = new uint8_t[new_length];
-      memcpy(new_buf, ptr_, length_);
+      std::memcpy(new_buf, ptr_, length_);
       length_ = new_length;
       delete[] static_cast<uint8_t*>(ptr_);
       ptr_ = new_buf;
