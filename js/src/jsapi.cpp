@@ -3366,11 +3366,8 @@ JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsi
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
+JS_GetPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-
     return JS_ForwardGetPropertyTo(cx, obj, id, obj, vp);
 }
 
@@ -3388,7 +3385,7 @@ JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
 }
 
 JS_PUBLIC_API(bool)
-JS_GetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
+JS_GetElement(JSContext *cx, HandleObject objArg, uint32_t index, MutableHandleValue vp)
 {
     return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
 }
@@ -3408,20 +3405,24 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
 }
 
 JS_PUBLIC_API(bool)
-JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
+JS_GetProperty(JSContext *cx, HandleObject obj, const char *name, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_GetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                  MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3550,10 +3551,9 @@ JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *resu
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_DeleteUCProperty2(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                      bool *result)
 {
-    RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, 0);

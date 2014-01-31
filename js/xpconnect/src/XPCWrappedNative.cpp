@@ -1854,18 +1854,18 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
         jsval arg = paramIndex < mArgc ? mArgv[paramIndex] : JSVAL_NULL;
-        if (paramIndex < mArgc &&
-            (JSVAL_IS_PRIMITIVE(arg) ||
-             !JS_GetPropertyById(mCallContext,
-                                 JSVAL_TO_OBJECT(arg),
-                                 mIdxValueId,
-                                 srcp))) {
-            // Explicitly passed in unusable value for out param.  Note
-            // that if i >= mArgc we already know that |arg| is JSVAL_NULL,
-            // and that's ok.
-            ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, paramIndex,
-                          mCallContext);
-            return false;
+        if (paramIndex < mArgc) {
+            RootedObject obj(mCallContext);
+            if (!arg.isPrimitive())
+                obj = &arg.toObject();
+            if (!obj || !JS_GetPropertyById(mCallContext, obj, mIdxValueId, srcp)) {
+                // Explicitly passed in unusable value for out param.  Note
+                // that if i >= mArgc we already know that |arg| is JSVAL_NULL,
+                // and that's ok.
+                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, paramIndex,
+                              mCallContext);
+                return false;
+            }
         }
     }
 
