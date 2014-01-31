@@ -537,8 +537,14 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-me
   display: none;
 }
 
-#search-container[cui-areatype="menu-panel"] {
+#search-container[cui-areatype="menu-panel"],
+#wrapper-search-container[place="panel"] {
   width: @menuPanelWidth@;
+}
+
+#search-container[cui-areatype="menu-panel"] {
+  margin-top: 6px;
+  margin-bottom: 6px;
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
