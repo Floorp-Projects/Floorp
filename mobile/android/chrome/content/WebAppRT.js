@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 Cu.import("resource://gre/modules/ContactService.jsm");
 #ifdef MOZ_ANDROID_SYNTHAPKS
 Cu.import("resource://gre/modules/AppsUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
 #endif
 
 function pref(name, value) {
@@ -62,6 +64,13 @@ let WebAppRT = {
         }
       });
     }
+
+#ifdef MOZ_ANDROID_SYNTHAPKS
+    // If the app is in debug mode, configure and enable the remote debugger.
+    if (sendMessageToJava({ type: "NativeApp:IsDebuggable" })) {
+      this._enableRemoteDebugger(aUrl);
+    }
+#endif
 
     this.findManifestUrlFor(aUrl, aCallback);
   },
@@ -146,6 +155,40 @@ let WebAppRT = {
         break;
     }
   },
+
+#ifdef MOZ_ANDROID_SYNTHAPKS
+  _enableRemoteDebugger: function(aUrl) {
+    // Skip the connection prompt in favor of notifying the user below.
+    Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
+
+    // Automagically find a free port and configure the debugger to use it.
+    let serv = Cc['@mozilla.org/network/server-socket;1'].createInstance(Ci.nsIServerSocket);
+    serv.init(-1, true, -1);
+    let port = serv.port;
+    serv.close();
+    Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+
+    Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
+
+    // Notify the user that we enabled the debugger and which port it's using
+    // so they can use the DevTools Connect… dialog to connect the client to it.
+    DOMApplicationRegistry.registryReady.then(() => {
+      let name;
+      let app = DOMApplicationRegistry.getAppByManifestURL(aUrl);
+      if (app) {
+        name = app.name;
+      } else {
+        name = Strings.browser.GetStringFromName("remoteNotificationGenericName");
+      }
+
+      Notifications.create({
+        title: Strings.browser.formatStringFromName("remoteNotificationTitle", [name], 1),
+        message: Strings.browser.formatStringFromName("remoteNotificationMessage", [port], 1),
+        icon: "drawable://warning_doorhanger",
+      });
+    });
+  },
+#endif
 
   handleEvent: function(event) {
     let target = event.target;

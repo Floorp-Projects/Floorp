@@ -61,6 +61,10 @@ public class ApkResources {
         return "packaged".equals(getWebAppType());
     }
 
+    public boolean isDebuggable() {
+        return (mInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+    }
+
     private String readResource(Context context, String resourceName) {
         Uri resourceUri = Uri.parse("android.resource://" + mPackageName
                 + "/raw/" + resourceName);

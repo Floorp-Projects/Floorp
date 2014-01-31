@@ -331,4 +331,9 @@ public class WebAppImpl extends GeckoApp implements InstallCallback {
             Log.e(LOGTAG, "Error populating launch message", e);
         }
     }
+
+    @Override
+    protected boolean getIsDebuggable() {
+        return mApkResources.isDebuggable();
+    }
 }
