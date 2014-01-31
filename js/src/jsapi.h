@@ -3027,10 +3027,10 @@ JS_GetPropertyDescriptor(JSContext *cx, JSObject *obj, const char *name, unsigne
                          JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
-JS_GetProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::MutableHandleValue vp);
+JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_GetPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp);
+JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject onBehalfOf,
@@ -3082,7 +3082,7 @@ JS_LookupUCProperty(JSContext *cx, JS::HandleObject obj,
                     JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_GetUCProperty(JSContext *cx, JS::HandleObject obj,
+JS_GetUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  JS::MutableHandleValue vp);
 
@@ -3092,7 +3092,7 @@ JS_SetUCProperty(JSContext *cx, JS::HandleObject obj,
                  JS::HandleValue v);
 
 extern JS_PUBLIC_API(bool)
-JS_DeleteUCProperty2(JSContext *cx, JS::HandleObject obj, const jschar *name, size_t namelen,
+JS_DeleteUCProperty2(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                      bool *succeeded);
 
 extern JS_PUBLIC_API(JSObject *)
@@ -3124,7 +3124,7 @@ extern JS_PUBLIC_API(bool)
 JS_LookupElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_GetElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
+JS_GetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf,
