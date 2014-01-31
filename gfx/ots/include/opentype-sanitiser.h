@@ -5,6 +5,26 @@
 #ifndef OPENTYPE_SANITISER_H_
 #define OPENTYPE_SANITISER_H_
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+  #define OTS_DLL_IMPORT __declspec(dllimport)
+  #define OTS_DLL_EXPORT __declspec(dllexport)
+#else
+  #if __GNUC__ >= 4
+    #define OTS_DLL_IMPORT __attribute__((visibility ("default")))
+    #define OTS_DLL_EXPORT __attribute__((visibility ("default")))
+  #endif
+#endif
+
+#ifdef OTS_DLL
+  #ifdef OTS_DLL_EXPORTS
+    #define OTS_API OTS_DLL_EXPORT
+  #else
+    #define OTS_API OTS_DLL_IMPORT
+  #endif
+#else
+  #define OTS_API
+#endif
+
 #if defined(_WIN32)
 #include <stdlib.h>
 typedef signed char int8_t;
@@ -187,7 +207,7 @@ class OTSStream {
 //   input: the OpenType file
 //   length: the size, in bytes, of |input|
 // -----------------------------------------------------------------------------
-bool Process(OTSStream *output, const uint8_t *input, size_t length);
+bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length);
 
 // Signature of the function to be provided by the client in order to report errors.
 // The return type is a boolean so that it can be used within an expression,
@@ -200,7 +220,7 @@ bool Process(OTSStream *output, const uint8_t *input, size_t length);
 typedef bool (*MessageFunc)(void *user_data, const char *format, ...)  MSGFUNC_FMT_ATTR;
 
 // Set a callback function that will be called when OTS is reporting an error.
-void SetMessageCallback(MessageFunc func, void *user_data);
+void OTS_API SetMessageCallback(MessageFunc func, void *user_data);
 
 enum TableAction {
   TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
@@ -215,7 +235,7 @@ typedef TableAction (*TableActionFunc)(uint32_t tag, void *user_data);
 
 // Set a callback function that will be called when OTS needs to decide what to
 // do for a font table.
-void SetTableActionCallback(TableActionFunc func, void *user_data);
+void OTS_API SetTableActionCallback(TableActionFunc func, void *user_data);
 
 // Force to disable debug output even when the library is compiled with
 // -DOTS_DEBUG.
