@@ -157,6 +157,9 @@ this.UITour = {
                 if (typeof buttonData.icon == "string")
                   button.iconURL = this.resolveURL(contentDocument, buttonData.icon);
 
+                if (typeof buttonData.style == "string")
+                  button.style = buttonData.style;
+
                 buttons.push(button);
 
                 if (buttons.length == MAX_BUTTONS)
@@ -295,6 +298,14 @@ this.UITour = {
         if (aEvent.target.id == "urlbar") {
           let window = aEvent.target.ownerDocument.defaultView;
           this.handleUrlbarInput(window);
+        }
+        break;
+      }
+
+      case "command": {
+        if (aEvent.target.id == "UITourTooltipClose") {
+          let window = aEvent.target.ownerDocument.defaultView;
+          this.hideInfo(window);
         }
         break;
       }
@@ -628,6 +639,9 @@ this.UITour = {
         if (button.iconURL)
           el.setAttribute("image", button.iconURL);
 
+        if (button.style == "link")
+          el.setAttribute("class", "button-link");
+
         let callbackID = button.callbackID;
         el.addEventListener("command", event => {
           tooltip.hidePopup();
@@ -638,6 +652,9 @@ this.UITour = {
       }
 
       tooltipButtons.hidden = !aButtons.length;
+
+      let tooltipClose = document.getElementById("UITourTooltipClose");
+      tooltipClose.addEventListener("command", this);
 
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";
