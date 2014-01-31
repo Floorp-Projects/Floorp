@@ -7,12 +7,6 @@
 
 #define REPR_KIND(obj)   \
     TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_KIND))
-#define REPR_SIZE(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_SIZE))
-#define REPR_LENGTH(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_LENGTH))
-#define REPR_TYPE(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_TYPE))
 
 // Type object slots
 
