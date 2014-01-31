@@ -3,6 +3,7 @@
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
+<link rel="stylesheet" href="external-variable-url.css" type="text/css">
 
 <style id="test1">
 p { var-a:123!important; }
@@ -15,6 +16,8 @@ p { var-a: a !important; }
 <style id="test3">
 p { border-left-style: inset; padding: 1px; var-decoration: line-through; }
 </style>
+
+<div id="t4"></div>
 
 <script>
 var tests = [
@@ -36,6 +39,16 @@ var tests = [
     // https://bugzilla.mozilla.org/show_bug.cgi?id=955913
     var declaration = document.getElementById("test3").sheet.cssRules[0].style;
     is(declaration[declaration.length - 1], "var-decoration");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=959973
+    var element = document.getElementById("t4");
+    var path = window.location.pathname;
+    var currentDir = path.substring(0, path.lastIndexOf('/'));
+    var imageURL = "http://mochi.test:8888" + currentDir + "/image.png";
+
+    is(window.getComputedStyle(element).getPropertyValue("background-image"), "url(\"" + imageURL +"\")");
   },
 ];
 
