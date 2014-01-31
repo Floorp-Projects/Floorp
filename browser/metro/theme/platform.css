@@ -728,6 +728,45 @@ tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
   transition-property: none;
 }
 
+/* Autocomplete ----------------------------------------------------------------- */
+
+#urlbar-autocomplete-scroll:not([autocomplete]) {
+  transform: translateY(calc(3 * @grid_row_height@ + 64px));
+  visibility: collapse;
+}
+
+#urlbar-autocomplete-scroll[autocomplete] {
+  height: calc(3 * @grid_row_height@ + 64px);
+  max-height: calc(3 * @grid_row_height@ + 64px);
+  transform: translateY(0);
+  transition-timing-function: @metro_animation_easing@;
+  transition-property: transform;
+  transition-duration: @metro_animation_duration@;
+  transition-delay: 0s;
+  visibility: visible;
+}
+
+#urlbar-autocomplete-scroll:not([autocomplete]) > .meta-section-container > .meta-section {
+  opacity: 0;
+}
+
+#urlbar-autocomplete > .meta-section {
+  opacity: 1;
+  transition-property: opacity;
+  transition-timing-function: @metro_animation_easing@;
+  transition-duration: @metro_animation_duration@;
+  transition-delay: 0s;
+  visibility: visible;
+}
+
+#urlbar-autocomplete[nomatch] > .meta-section[anonid="results-container"] {
+  opacity: 0;
+  visibility: collapse;
+}
+
+#urlbar-autocomplete richgriditem:not([value]) {
+  visibility: collapse;
+}
 
 /* App bars ----------------------------------------------------------------- */
 
