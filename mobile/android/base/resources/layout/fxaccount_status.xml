@@ -87,31 +87,23 @@
 
         <CheckBox
             android:id="@+id/bookmarks_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            style="@style/FxAccountCheckBox"
             android:text="@string/fxaccount_status_bookmarks" />
 
         <CheckBox
             android:id="@+id/history_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            style="@style/FxAccountCheckBox"
             android:text="@string/fxaccount_status_history" />
 
         <CheckBox
-            android:id="@+id/passwords_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:text="@string/fxaccount_status_passwords" />
+            android:id="@+id/tabs_checkbox"
+            style="@style/FxAccountCheckBox"
+            android:text="@string/fxaccount_status_tabs" />
 
         <CheckBox
-            android:id="@+id/tabs_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/fxaccount_status_tabs" />
+            android:id="@+id/passwords_checkbox"
+            style="@style/FxAccountCheckBox"
+            android:text="@string/fxaccount_status_passwords" />
 
         <TextView
             style="@style/FxAccountHeaderItem"

@@ -371,4 +371,16 @@ public class AndroidFxAccount {
       FxAccountConstants.pii(LOG_TAG, key + ": " + o.get(key));
     }
   }
+
+  /**
+   * Return the Firefox Account's local email address.
+   * <p>
+   * It is important to note that this is the local email address, and not
+   * necessarily the normalized remote email address that the server expects.
+   *
+   * @return local email address.
+   */
+  public String getEmail() {
+    return account.name;
+  }
 }

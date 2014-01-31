@@ -43,10 +43,6 @@ public abstract class State {
     return this.stateLabel;
   }
 
-  public boolean isVerified() {
-    return this.verified;
-  }
-
   public ExtendedJSONObject toJSONObject() {
     ExtendedJSONObject o = new ExtendedJSONObject();
     o.put("version", State.CURRENT_VERSION);
