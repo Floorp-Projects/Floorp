@@ -184,6 +184,28 @@ public:
                       const nsPoint&       aAnchor,
                       const nsRect&        aDirty);
 
+  /**
+   * Draw the image to a single component of a border-image style rendering.
+   * aFill The destination rect to be drawn into
+   * aSrc The source rect of the component to be drawn
+   * aHFill and aVFill are the repeat patterns for the component -
+   * NS_STYLE_BORDER_IMAGE_REPEAT_*
+   * aUnitSize The scaled size of a single source rect (in destination coords)
+   * aIndex identifies the component: 0 1 2
+   *                                  3 4 5
+   *                                  6 7 8
+   */
+  void
+  DrawBorderImageComponent(nsPresContext*       aPresContext,
+                           nsRenderingContext&  aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           const nsRect&        aFill,
+                           const nsIntRect&     aSrc,
+                           uint8_t              aHFill,
+                           uint8_t              aVFill,
+                           const nsSize&        aUnitSize,
+                           uint8_t              aIndex);
+
   bool IsRasterImage();
   bool IsAnimatedImage();
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);

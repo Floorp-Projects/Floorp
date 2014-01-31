@@ -50,6 +50,7 @@
 #include "gfxUtils.h"
 #include "gfxColor.h"
 #include "gfxGradientCache.h"
+#include "GraphicsFilter.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -304,18 +305,6 @@ static void DrawBorderImage(nsPresContext* aPresContext,
                             const nsStyleBorder& aStyleBorder,
                             const nsRect& aDirtyRect);
 
-static void DrawBorderImageComponent(nsRenderingContext& aRenderingContext,
-                                     nsIFrame* aForFrame,
-                                     imgIContainer* aImage,
-                                     const nsRect& aDirtyRect,
-                                     const nsRect& aFill,
-                                     const nsIntRect& aSrc,
-                                     uint8_t aHFill,
-                                     uint8_t aVFill,
-                                     const nsSize& aUnitSize,
-                                     const nsStyleBorder& aStyleBorder,
-                                     uint8_t aIndex);
-
 static nscolor MakeBevelColor(mozilla::css::Side whichSide, uint8_t style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
@@ -428,11 +417,6 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
-  // We're making an ephemeral stack copy here, so just copy this debug-only
-  // member to prevent assertions.
-#ifdef DEBUG
-  newStyleBorder.mImageTracked = styleBorder->mImageTracked;
-#endif
 
   NS_FOR_CSS_SIDES(side) {
     newStyleBorder.SetBorderColor(side,
@@ -442,10 +426,6 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                              aDirtyRect, aBorderArea, newStyleBorder,
                              aStyleContext, aSkipSides);
-
-#ifdef DEBUG
-  newStyleBorder.mImageTracked = false;
-#endif
 }
 
 void
@@ -1463,7 +1443,7 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::css::Side aSide)
   // because we may not even have the image loaded at this point, and
   // even if we did, checking whether the relevant tile is fully
   // opaque would be too much work.
-  if (aBorder.GetBorderImage())
+  if (aBorder.mBorderImageSource.GetType() != eStyleImageType_Null)
     return false;
 
   nscolor color;
@@ -3064,38 +3044,34 @@ DrawBorderImage(nsPresContext*       aPresContext,
   if (aDirtyRect.IsEmpty())
     return;
 
+  nsImageRenderer renderer(aForFrame, &aStyleBorder.mBorderImageSource, 0);
+
   // Ensure we get invalidated for loads and animations of the image.
   // We need to do this here because this might be the only code that
   // knows about the association of the style data with the frame.
   // XXX We shouldn't really... since if anybody is passing in a
   // different style, they'll potentially have the wrong size for the
   // border too.
-  imgIRequest *req = aStyleBorder.GetBorderImage();
-  ImageLoader* loader = aPresContext->Document()->StyleImageLoader();
+  aForFrame->AssociateImage(aStyleBorder.mBorderImageSource, aPresContext);
 
-  // If this fails there's not much we can do ...
-  loader->AssociateRequestToFrame(req, aForFrame);
-
-  // Get the actual image.
-
-  nsCOMPtr<imgIContainer> imgContainer;
-  DebugOnly<nsresult> rv = req->GetImage(getter_AddRefs(imgContainer));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && imgContainer, "no image to draw");
-
-  nsIntSize imageSize;
-  if (NS_FAILED(imgContainer->GetWidth(&imageSize.width))) {
-    imageSize.width =
-      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.width);
-  }
-  if (NS_FAILED(imgContainer->GetHeight(&imageSize.height))) {
-    imageSize.height =
-      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.height);
+  if (!renderer.PrepareImage()) {
+    return;
   }
 
   // Determine the border image area, which by default corresponds to the
   // border box but can be modified by 'border-image-outset'.
   nsRect borderImgArea(aBorderArea);
   borderImgArea.Inflate(aStyleBorder.GetImageOutset());
+
+  // Calculate the image size used to compute slice points.
+  CSSSizeOrRatio intrinsicSize = renderer.ComputeIntrinsicSize();
+  nsSize imageSize = nsImageRenderer::ComputeConcreteSize(CSSSizeOrRatio(),
+                                                          intrinsicSize,
+                                                          borderImgArea.Size());
+  renderer.SetPreferredSize(intrinsicSize, borderImgArea.Size());
+  nsIntSize imageCSSSize =
+    nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(imageSize.width),
+              nsPresContext::AppUnitsToIntCSSPixels(imageSize.height));
 
   // Compute the used values of 'border-image-slice' and 'border-image-width';
   // we do them together because the latter can depend on the former.
@@ -3104,7 +3080,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
   NS_FOR_CSS_SIDES(s) {
     nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
     int32_t imgDimension = NS_SIDE_IS_VERTICAL(s)
-                           ? imageSize.width : imageSize.height;
+                           ? imageCSSSize.width : imageCSSSize.height;
     nscoord borderDimension = NS_SIDE_IS_VERTICAL(s)
                            ? borderImgArea.width : borderImgArea.height;
     double value;
@@ -3205,21 +3181,21 @@ DrawBorderImage(nsPresContext*       aPresContext,
   const int32_t sliceX[3] = {
     0,
     slice.left,
-    imageSize.width - slice.right,
+    imageCSSSize.width - slice.right,
   };
   const int32_t sliceY[3] = {
     0,
     slice.top,
-    imageSize.height - slice.bottom,
+    imageCSSSize.height - slice.bottom,
   };
   const int32_t sliceWidth[3] = {
     slice.left,
-    std::max(imageSize.width - slice.left - slice.right, 0),
+    std::max(imageCSSSize.width - slice.left - slice.right, 0),
     slice.right,
   };
   const int32_t sliceHeight[3] = {
     slice.top,
-    std::max(imageSize.height - slice.top - slice.bottom, 0),
+    std::max(imageCSSSize.height - slice.top - slice.bottom, 0),
     slice.bottom,
   };
 
@@ -3310,91 +3286,13 @@ DrawBorderImage(nsPresContext*       aPresContext,
         fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
       }
 
-      DrawBorderImageComponent(aRenderingContext, aForFrame,
-                               imgContainer, aDirtyRect,
-                               destArea, subArea,
-                               fillStyleH, fillStyleV,
-                               unitSize, aStyleBorder, i * (RIGHT + 1) + j);
+      renderer.DrawBorderImageComponent(aPresContext,
+                                        aRenderingContext, aDirtyRect,
+                                        destArea, subArea,
+                                        fillStyleH, fillStyleV,
+                                        unitSize, i * (RIGHT + 1) + j);
     }
   }
-}
-
-static void
-DrawBorderImageComponent(nsRenderingContext&  aRenderingContext,
-                         nsIFrame*            aForFrame,
-                         imgIContainer*       aImage,
-                         const nsRect&        aDirtyRect,
-                         const nsRect&        aFill,
-                         const nsIntRect&     aSrc,
-                         uint8_t              aHFill,
-                         uint8_t              aVFill,
-                         const nsSize&        aUnitSize,
-                         const nsStyleBorder& aStyleBorder,
-                         uint8_t              aIndex)
-{
-  if (aFill.IsEmpty() || aSrc.IsEmpty())
-    return;
-
-  nsCOMPtr<imgIContainer> subImage;
-  if ((subImage = aStyleBorder.GetSubImage(aIndex)) == nullptr) {
-    subImage = ImageOps::Clip(aImage, aSrc);
-    aStyleBorder.SetSubImage(aIndex, subImage);
-  }
-
-  GraphicsFilter graphicsFilter =
-    nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame);
-
-  // If we have no tiling in either direction, we can skip the intermediate
-  // scaling step.
-  if ((aHFill == NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH &&
-       aVFill == NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH) ||
-      (aUnitSize.width == aFill.width &&
-       aUnitSize.height == aFill.height)) {
-    nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
-                                   graphicsFilter, aFill, aDirtyRect,
-                                   nullptr, imgIContainer::FLAG_NONE);
-    return;
-  }
-
-  // Compute the scale and position of the master copy of the image.
-  nsRect tile;
-  switch (aHFill) {
-  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
-    tile.x = aFill.x;
-    tile.width = aFill.width;
-    break;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
-    tile.x = aFill.x + aFill.width/2 - aUnitSize.width/2;
-    tile.width = aUnitSize.width;
-    break;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
-    tile.x = aFill.x;
-    tile.width = aFill.width / ceil(gfxFloat(aFill.width)/aUnitSize.width);
-    break;
-  default:
-    NS_NOTREACHED("unrecognized border-image fill style");
-  }
-
-  switch (aVFill) {
-  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
-    tile.y = aFill.y;
-    tile.height = aFill.height;
-    break;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
-    tile.y = aFill.y + aFill.height/2 - aUnitSize.height/2;
-    tile.height = aUnitSize.height;
-    break;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
-    tile.y = aFill.y;
-    tile.height = aFill.height/ceil(gfxFloat(aFill.height)/aUnitSize.height);
-    break;
-  default:
-    NS_NOTREACHED("unrecognized border-image fill style");
-  }
-
-  nsLayoutUtils::DrawImage(&aRenderingContext, subImage, graphicsFilter,
-                           tile, aFill, tile.TopLeft(), aDirtyRect,
-                           imgIContainer::FLAG_NONE);
 }
 
 // Begin table border-collapsing section
@@ -4653,6 +4551,126 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
   }
 
   Draw(aPresContext, aRenderingContext, aDirty, aFill, aDest);
+}
+
+/**
+ * Compute the size and position of the master copy of the image. I.e., a single
+ * tile used to fill the dest rect.
+ * aFill The destination rect to be filled
+ * aHFill and aVFill are the repeat patterns for the component -
+ * NS_STYLE_BORDER_IMAGE_REPEAT_* - i.e., how a tiling unit is used to fill aFill
+ * aUnitSize The size of the source rect in dest coords.
+ */
+static nsRect
+ComputeTile(const nsRect&        aFill,
+            uint8_t              aHFill,
+            uint8_t              aVFill,
+            const nsSize&        aUnitSize)
+{
+  nsRect tile;
+  switch (aHFill) {
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
+    tile.x = aFill.x;
+    tile.width = aFill.width;
+    break;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
+    tile.x = aFill.x + aFill.width/2 - aUnitSize.width/2;
+    tile.width = aUnitSize.width;
+    break;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
+    tile.x = aFill.x;
+    tile.width = aFill.width / ceil(gfxFloat(aFill.width)/aUnitSize.width);
+    break;
+  default:
+    NS_NOTREACHED("unrecognized border-image fill style");
+  }
+
+  switch (aVFill) {
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
+    tile.y = aFill.y;
+    tile.height = aFill.height;
+    break;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
+    tile.y = aFill.y + aFill.height/2 - aUnitSize.height/2;
+    tile.height = aUnitSize.height;
+    break;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
+    tile.y = aFill.y;
+    tile.height = aFill.height/ceil(gfxFloat(aFill.height)/aUnitSize.height);
+    break;
+  default:
+    NS_NOTREACHED("unrecognized border-image fill style");
+  }
+
+  return tile;
+}
+
+/**
+ * Returns true if the given set of arguments will require the tiles which fill
+ * the dest rect to be scaled from the source tile. See comment on ComputeTile
+ * for argument descriptions.
+ */
+static bool
+RequiresScaling(const nsRect&        aFill,
+                uint8_t              aHFill,
+                uint8_t              aVFill,
+                const nsSize&        aUnitSize)
+{
+  // If we have no tiling in either direction, we can skip the intermediate
+  // scaling step.
+  return (aHFill != NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH ||
+          aVFill != NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH) &&
+         (aUnitSize.width != aFill.width ||
+          aUnitSize.height != aFill.height);
+}
+
+void
+nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
+                                          nsRenderingContext&  aRenderingContext,
+                                          const nsRect&        aDirtyRect,
+                                          const nsRect&        aFill,
+                                          const nsIntRect&     aSrc,
+                                          uint8_t              aHFill,
+                                          uint8_t              aVFill,
+                                          const nsSize&        aUnitSize,
+                                          uint8_t              aIndex)
+{
+  if (!mIsReady) {
+    NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
+    return;
+  }
+  if (aFill.IsEmpty() || aSrc.IsEmpty()) {
+    return;
+  }
+
+  if (mType == eStyleImageType_Image) {
+    nsCOMPtr<imgIContainer> subImage;
+    if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
+      subImage = ImageOps::Clip(mImageContainer, aSrc);
+      mImage->SetSubImage(aIndex, subImage);
+    }
+
+    GraphicsFilter graphicsFilter =
+      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+
+    if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
+      nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
+                                     graphicsFilter, aFill, aDirtyRect,
+                                     nullptr, imgIContainer::FLAG_NONE);
+      return;
+    }
+
+    nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
+    nsLayoutUtils::DrawImage(&aRenderingContext, subImage, graphicsFilter,
+                             tile, aFill, tile.TopLeft(), aDirtyRect,
+                             imgIContainer::FLAG_NONE);
+    return;
+  }
+
+  nsRect tile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
+                  ? ComputeTile(aFill, aHFill, aVFill, aUnitSize)
+                  : aFill;
+  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, tile);
 }
 
 bool
