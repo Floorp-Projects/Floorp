@@ -1471,10 +1471,9 @@ nsFlexContainerFrame::SanityCheckAnonymousFlexItems() const
 // Based on the sign of aTotalViolation, this function freezes a subset of our
 // flexible sizes, and restores the remaining ones to their initial pref sizes.
 static void
-FreezeOrRestoreEachFlexibleSize(
-  const nscoord aTotalViolation,
-  nsTArray<FlexItem>& aItems,
-  bool aFinalIteration)
+FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
+                                nsTArray<FlexItem>& aItems,
+                                bool aFinalIteration)
 {
   enum FreezeType {
     eFreezeEverything,

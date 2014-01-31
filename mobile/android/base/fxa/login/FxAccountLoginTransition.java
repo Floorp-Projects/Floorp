@@ -28,6 +28,12 @@ public class FxAccountLoginTransition {
     }
   }
 
+  public static class AccountVerified extends LogMessage {
+    public AccountVerified() {
+      super(null);
+    }
+  }
+
   public static class PasswordRequired extends LogMessage {
     public PasswordRequired() {
       super(null);

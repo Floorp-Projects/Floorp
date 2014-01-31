@@ -5,17 +5,28 @@
 
 /* Sources and breakpoints pane */
 
-#sources-pane > tabs {
-  -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
-}
 
 #sources-pane[selectedIndex="0"] + #sources-and-editor-splitter {
   border-color: transparent;
 }
 
+#sources-pane > tabs {
+  -moz-border-end: 1px solid;
+}
+
 #sources-pane .devtools-toolbar {
-  border: none; /* Remove the devtools-toolbar's black bottom border. */
-  -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
+  border: none; /* Remove the devtools-toolbar bottom border. */
+  -moz-border-end: 1px solid;
+}
+
+.theme-dark #sources-pane > tabs,
+.theme-dark #sources-pane .devtools-toolbar {
+  -moz-border-end-color: black; /* Match the splitter color. */
+}
+
+.theme-light #sources-pane > tabs,
+.theme-light #sources-pane .devtools-toolbar {
+  -moz-border-end-color: #aaa; /* Match the splitter color. */
 }
 
 /* Sources and breakpoints list */
@@ -68,6 +79,10 @@
 }
 
 #sources .black-boxed {
+  color: rgba(128,128,128,0.4);
+}
+
+#sources .selected > .black-boxed {
   color: rgba(255,255,255,0.4);
 }
 
@@ -102,10 +117,6 @@
 }
 
 /* Breadcrumbs stack frames view */
-
-.breadcrumbs-widget-item {
-  max-width: none;
-}
 
 .dbg-stackframe-details {
   -moz-padding-start: 4px;

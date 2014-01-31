@@ -8,7 +8,6 @@ chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
-  skin/aboutAccounts.css                    (aboutAccounts.css)
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutApps.css                        (aboutApps.css)
   skin/aboutBase.css                        (aboutBase.css)

@@ -10,6 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
@@ -27,6 +29,7 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineD
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.Action;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -45,15 +48,22 @@ import org.mozilla.gecko.tokenserver.TokenServerException;
 import org.mozilla.gecko.tokenserver.TokenServerToken;
 
 import android.accounts.Account;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat.Builder;
 
 public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
+
+  public static final int NOTIFICATION_ID = LOG_TAG.hashCode();
 
   protected final ExecutorService executor;
 
@@ -62,16 +72,16 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     this.executor = Executors.newSingleThreadExecutor();
   }
 
-  /**
-   * A trivial global session callback that ignores backoff requests, upgrades,
-   * and authorization errors. It simply waits until the sync completes.
-   */
-  protected static class SessionCallback implements BaseGlobalSessionCallback {
+  protected static class SyncDelegate {
+    protected final Context context;
     protected final CountDownLatch latch;
     protected final SyncResult syncResult;
     protected final AndroidFxAccount fxAccount;
 
-    public SessionCallback(CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount) {
+    public SyncDelegate(Context context, CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount) {
+      if (context == null) {
+        throw new IllegalArgumentException("context must not be null");
+      }
       if (latch == null) {
         throw new IllegalArgumentException("latch must not be null");
       }
@@ -81,30 +91,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       if (fxAccount == null) {
         throw new IllegalArgumentException("fxAccount must not be null");
       }
+      this.context = context;
       this.latch = latch;
       this.syncResult = syncResult;
       this.fxAccount = fxAccount;
-    }
-
-    @Override
-    public boolean shouldBackOff() {
-      return false;
-    }
-
-    @Override
-    public void requestBackoff(long backoff) {
-    }
-
-    @Override
-    public void informUpgradeRequiredResponse(GlobalSession session) {
-    }
-
-    @Override
-    public void informUnauthorizedResponse(GlobalSession globalSession, URI oldClusterURL) {
-    }
-
-    @Override
-    public void handleStageCompleted(Stage currentState, GlobalSession globalSession) {
     }
 
     /**
@@ -131,15 +121,15 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       syncResult.stats.numAuthExceptions += 1;
     }
 
-    @Override
-    public void handleSuccess(GlobalSession globalSession) {
-      setSyncResultSuccess();
+    public void handleSuccess() {
       Logger.info(LOG_TAG, "Sync succeeded.");
+      setSyncResultSuccess();
       latch.countDown();
     }
 
-    @Override
-    public void handleError(GlobalSession globalSession, Exception e) {
+    public void handleError(Exception e) {
+      Logger.error(LOG_TAG, "Got exception syncing.", e);
+      setSyncResultSoftError();
       // This is awful, but we need to propagate bad assertions back up the
       // chain somehow, and this will do for now.
       if (e instanceof TokenServerException) {
@@ -150,22 +140,91 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           fxAccount.setState(married.makeCohabitingState());
         }
       }
-      setSyncResultSoftError();
-      Logger.warn(LOG_TAG, "Sync failed.", e);
       latch.countDown();
+    }
+
+    /**
+     * When the login machine terminates, we might not be in the
+     * <code>Married</code> state, and therefore we can't sync. This method
+     * messages as much to the user.
+     * <p>
+     * To avoid stopping us syncing altogether, we set a soft error rather than
+     * a hard error. In future, we would like to set a hard error if we are in,
+     * for example, the <code>Separated</code> state, and then have some user
+     * initiated activity mark the Android account as ready to sync again. This
+     * is tricky, though, so we play it safe for now.
+     *
+     * @param finalState
+     *          that login machine ended in.
+     */
+    public void handleCannotSync(State finalState) {
+      Logger.warn(LOG_TAG, "Cannot sync from state: " + finalState.getStateLabel());
+      showNotification(context, finalState);
+      setSyncResultSoftError();
+      latch.countDown();
+    }
+  }
+
+  /**
+   * A trivial global session callback that ignores backoff requests, upgrades,
+   * and authorization errors. It simply waits until the sync completes.
+   */
+  protected static class SessionCallback implements BaseGlobalSessionCallback {
+    protected final SyncDelegate syncDelegate;
+
+    public SessionCallback(SyncDelegate syncDelegate) {
+      this.syncDelegate = syncDelegate;
+    }
+
+    @Override
+    public boolean shouldBackOff() {
+      return false;
+    }
+
+    @Override
+    public void requestBackoff(long backoff) {
+    }
+
+    @Override
+    public void informUpgradeRequiredResponse(GlobalSession session) {
+    }
+
+    @Override
+    public void informUnauthorizedResponse(GlobalSession globalSession, URI oldClusterURL) {
+    }
+
+    @Override
+    public void handleStageCompleted(Stage currentState, GlobalSession globalSession) {
+    }
+
+    @Override
+    public void handleSuccess(GlobalSession globalSession) {
+      Logger.info(LOG_TAG, "Global session succeeded.");
+      syncDelegate.handleSuccess();
+    }
+
+    @Override
+    public void handleError(GlobalSession globalSession, Exception e) {
+      Logger.warn(LOG_TAG, "Global session failed."); // Exception will be dumped by delegate below.
+      syncDelegate.handleError(e);
     }
 
     @Override
     public void handleAborted(GlobalSession globalSession, String reason) {
-      setSyncResultSoftError();
-      Logger.warn(LOG_TAG, "Sync aborted: " + reason);
-      latch.countDown();
+      Logger.warn(LOG_TAG, "Global session aborted: " + reason);
+      syncDelegate.handleError(null);
     }
   };
 
-  protected void syncWithAssertion(final String audience, final String assertion, URI tokenServerEndpointURI, final String prefsPath, final SharedPreferences sharedPrefs, final KeyBundle syncKeyBundle, final BaseGlobalSessionCallback callback) {
+  protected void syncWithAssertion(final String audience,
+                                   final String assertion,
+                                   URI tokenServerEndpointURI,
+                                   final SharedPreferences sharedPrefs,
+                                   final KeyBundle syncKeyBundle,
+                                   final String clientState,
+                                   final BaseGlobalSessionCallback callback) {
     TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
-    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, new TokenServerClientDelegate() {
+    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, new TokenServerClientDelegate() {
       @Override
       public void handleSuccess(final TokenServerToken token) {
         FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
@@ -209,6 +268,34 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     });
   }
 
+  protected static void showNotification(Context context, State state) {
+    final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+    final Action action = state.getNeededAction();
+    if (action == Action.None) {
+      Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs no action; cancelling any existing notification.");
+      notificationManager.cancel(NOTIFICATION_ID);
+      return;
+    }
+
+    final String title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
+    final String text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
+    Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs action; offering notification with title: " + title);
+    FxAccountConstants.pii(LOG_TAG, "And text: " + text);
+
+    final Intent notificationIntent = new Intent(context, FxAccountStatusActivity.class);
+    final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
+
+    final Builder builder = new NotificationCompat.Builder(context);
+    builder
+      .setContentTitle(title)
+      .setContentText(text)
+      .setSmallIcon(R.drawable.ic_status_logo)
+      .setAutoCancel(true)
+      .setContentIntent(pendingIntent);
+    notificationManager.notify(NOTIFICATION_ID, builder.build());
+  }
+
   /**
    * A trivial Sync implementation that does not cache client keys,
    * certificates, or tokens.
@@ -217,12 +304,12 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
    * token implementation.
    */
   @Override
-  public void onPerformSync(final Account account, final Bundle extras, final String authority, ContentProviderClient provider, SyncResult syncResult) {
+  public void onPerformSync(final Account account, final Bundle extras, final String authority, ContentProviderClient provider, final SyncResult syncResult) {
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.resetLogging();
 
     Logger.info(LOG_TAG, "Syncing FxAccount" +
-        " account named " + account.name +
+        " account named like " + Utils.obfuscateEmail(account.name) +
         " for authority " + authority +
         " with instance " + this + ".");
 
@@ -231,22 +318,21 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       fxAccount.dump();
     }
+
     final CountDownLatch latch = new CountDownLatch(1);
-    final BaseGlobalSessionCallback callback = new SessionCallback(latch, syncResult, fxAccount);
+    final SyncDelegate syncDelegate = new SyncDelegate(getContext(), latch, syncResult, fxAccount);
 
     try {
       State state;
       try {
         state = fxAccount.getState();
       } catch (Exception e) {
-        callback.handleError(null, e);
+        syncDelegate.handleError(e);
         return;
       }
 
-      final String prefsPath = fxAccount.getSyncPrefsPath();
-
       // This will be the same chunk of SharedPreferences that GlobalSession/SyncConfiguration will later create.
-      final SharedPreferences sharedPrefs = context.getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
+      final SharedPreferences sharedPrefs = fxAccount.getSyncPrefs();
 
       final String audience = fxAccount.getAudience();
       final String authServerEndpoint = fxAccount.getAccountServerURI();
@@ -264,7 +350,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         @Override
         public long getCertificateDurationInMilliseconds() {
-          return 60 * 60 * 1000;
+          return 12 * 60 * 60 * 1000;
         }
 
         @Override
@@ -279,17 +365,17 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         @Override
         public void handleTransition(Transition transition, State state) {
-          Logger.warn(LOG_TAG, "handleTransition: " + transition + " to " + state);
+          Logger.info(LOG_TAG, "handleTransition: " + transition + " to " + state.getStateLabel());
         }
 
         @Override
         public void handleFinal(State state) {
-          Logger.warn(LOG_TAG, "handleFinal: in " + state);
+          Logger.info(LOG_TAG, "handleFinal: in " + state.getStateLabel());
           fxAccount.setState(state);
 
           try {
             if (state.getStateLabel() != StateLabel.Married) {
-              callback.handleError(null, new RuntimeException("Cannot sync from state: " + state));
+              syncDelegate.handleCannotSync(state);
               return;
             }
 
@@ -299,9 +385,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER,
                 now + skewHandler.getSkewInMillis(),
                 this.getAssertionDurationInMilliseconds());
-            syncWithAssertion(audience, assertion, tokenServerEndpointURI, prefsPath, sharedPrefs, married.getSyncKeyBundle(), callback);
+            final BaseGlobalSessionCallback sessionCallback = new SessionCallback(syncDelegate);
+            syncWithAssertion(audience, assertion, tokenServerEndpointURI, sharedPrefs, married.getSyncKeyBundle(), married.getClientState(), sessionCallback);
           } catch (Exception e) {
-            callback.handleError(null, e);
+            syncDelegate.handleError(e);
             return;
           }
         }
@@ -310,7 +397,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       latch.await();
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Got error syncing.", e);
-      callback.handleError(null, e);
+      syncDelegate.handleError(e);
     }
 
     Logger.error(LOG_TAG, "Syncing done.");

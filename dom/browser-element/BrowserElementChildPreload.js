@@ -186,6 +186,11 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
+    addEventListener('DOMMetaAdded',
+                     this._metaAddedHandler.bind(this),
+                     /* useCapture = */ true,
+                     /* wantsUntrusted = */ false);
+
     // This listens to unload events from our message manager, but /not/ from
     // the |content| window.  That's because the window's unload event doesn't
     // bubble, and we're not using a capturing listener.  If we'd used
@@ -499,6 +504,54 @@ BrowserElementChild.prototype = {
         handlers[token](e);
       }
     }, this);
+  },
+
+  _metaAddedHandler: function(e) {
+    let win = e.target.ownerDocument.defaultView;
+    // Ignore metas which don't come from the top-level
+    // <iframe mozbrowser> window.
+    if (win != content) {
+      debug('Not top level!');
+      return;
+    }
+
+    if (!e.target.name) {
+      return;
+    }
+
+    debug('Got metaAdded: (' + e.target.name + ') ' + e.target.content);
+    if (e.target.name == 'application-name') {
+      let meta = { name: e.target.name,
+                   content: e.target.content };
+
+      let lang;
+      let elm;
+
+      for (elm = e.target;
+           !lang && elm && elm.nodeType == e.target.ELEMENT_NODE;
+           elm = elm.parentNode) {
+        if (elm.hasAttribute('lang')) {
+          lang = elm.getAttribute('lang');
+          continue;
+        }
+
+        if (elm.hasAttributeNS('http://www.w3.org/XML/1998/namespace', 'lang')) {
+          lang = elm.getAttributeNS('http://www.w3.org/XML/1998/namespace', 'lang');
+          continue;
+        }
+      }
+
+      // No lang has been detected.
+      if (!lang && elm.nodeType == e.target.DOCUMENT_NODE) {
+        lang = elm.contentLanguage;
+      }
+
+      if (lang) {
+        meta.lang = lang;
+      }
+
+      sendAsyncMsg('metachange', meta);
+    }
   },
 
   _addMozAfterPaintHandler: function(callback) {

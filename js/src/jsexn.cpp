@@ -61,8 +61,8 @@ const Class ErrorObject::class_ = {
     nullptr                  /* construct   */
 };
 
-static JSErrorReport *
-CopyErrorReport(JSContext *cx, JSErrorReport *report)
+JSErrorReport *
+js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
 {
     /*
      * We use a single malloc block to make a deep copy of JSErrorReport with
@@ -270,22 +270,19 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 }
 
 JSErrorReport *
-js_ErrorFromException(jsval exn)
+js_ErrorFromException(JSContext *cx, HandleObject objArg)
 {
-    if (JSVAL_IS_PRIMITIVE(exn))
-        return nullptr;
-
     // It's ok to UncheckedUnwrap here, since all we do is get the
     // JSErrorReport, and consumers are careful with the information they get
     // from that anyway.  Anyone doing things that would expose anything in the
     // JSErrorReport to page script either does a security check on the
     // JSErrorReport's principal or also tries to do toString on our object and
     // will fail if they can't unwrap it.
-    JSObject *obj = UncheckedUnwrap(JSVAL_TO_OBJECT(exn));
+    RootedObject obj(cx, UncheckedUnwrap(objArg));
     if (!obj->is<ErrorObject>())
         return nullptr;
 
-    return obj->as<ErrorObject>().getErrorReport();
+    return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
 }
 
 static bool
@@ -718,6 +715,25 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
     return true;
 }
 
+JS_FRIEND_API(JSString *)
+js::ErrorReportToString(JSContext *cx, JSErrorReport *reportp)
+{
+    JSExnType type = static_cast<JSExnType>(reportp->exnType);
+    RootedString str(cx, cx->runtime()->emptyString);
+    if (type != JSEXN_NONE)
+        str = ClassName(GetExceptionProtoKey(type), cx);
+    RootedString toAppend(cx, JS_NewUCStringCopyN(cx, MOZ_UTF16(": "), 2));
+    if (!str || !toAppend)
+        return nullptr;
+    str = ConcatStrings<CanGC>(cx, str, toAppend);
+    if (!str)
+        return nullptr;
+    toAppend = JS_NewUCStringCopyZ(cx, reportp->ucmessage);
+    if (toAppend)
+        str = ConcatStrings<CanGC>(cx, str, toAppend);
+    return str;
+}
+
 bool
 js_ReportUncaughtException(JSContext *cx)
 {
@@ -727,9 +743,6 @@ js_ReportUncaughtException(JSContext *cx)
     RootedValue exn(cx);
     if (!cx->getPendingException(&exn))
         return false;
-
-    AutoValueVector roots(cx);
-    roots.resize(6);
 
     /*
      * Because ToString below could error and an exception object could become
@@ -742,32 +755,48 @@ js_ReportUncaughtException(JSContext *cx)
         exnObject = nullptr;
     } else {
         exnObject = JSVAL_TO_OBJECT(exn);
-        roots[0] = exn;
     }
 
     JS_ClearPendingException(cx);
-    JSErrorReport *reportp = js_ErrorFromException(exn);
+    JSErrorReport *reportp = exnObject ? js_ErrorFromException(cx, exnObject)
+                                       : nullptr;
 
-    /* XXX L10N angels cry once again. see also everywhere else */
-    RootedString str(cx, ToString<CanGC>(cx, exn));
-    if (str)
-        roots[1] = StringValue(str);
+    // Be careful not to invoke ToString if we've already successfully extracted
+    // an error report, since the exception might be wrapped in a security
+    // wrapper, and ToString-ing it might throw.
+    RootedString str(cx);
+    if (reportp)
+        str = ErrorReportToString(cx, reportp);
+    else
+        str = ToString<CanGC>(cx, exn);
 
     JSErrorReport report;
 
+    // If js_ErrorFromException didn't get us a JSErrorReport, then the object
+    // was not an ErrorObject, security-wrapped or otherwise. However, it might
+    // still quack like one. Give duck-typing a chance.
     const char *filename_str = js_fileName_str;
     JSAutoByteString filename;
-    if (!reportp && exnObject &&
-        (exnObject->is<ErrorObject>() || IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
+    if (!reportp && exnObject && IsDuckTypedErrorObject(cx, exnObject, &filename_str))
     {
+        // Temporary value for pulling properties off of duck-typed objects.
+        RootedValue val(cx);
+
         RootedString name(cx);
-        if (JS_GetProperty(cx, exnObject, js_name_str, roots.handleAt(2)) && roots[2].isString())
-            name = roots[2].toString();
+        if (JS_GetProperty(cx, exnObject, js_name_str, &val) && val.isString())
+            name = val.toString();
 
         RootedString msg(cx);
-        if (JS_GetProperty(cx, exnObject, js_message_str, roots.handleAt(3)) && roots[3].isString())
-            msg = roots[3].toString();
+        if (JS_GetProperty(cx, exnObject, js_message_str, &val) && val.isString())
+            msg = val.toString();
 
+        // If we have the right fields, override the ToString we performed on
+        // the exception object above with something built out of its quacks
+        // (i.e. as much of |NameQuack: MessageQuack| as we can make).
+        //
+        // It would be nice to use ErrorReportToString here, but we can't quite
+        // do it - mostly because we'd need to figure out what JSExnType |name|
+        // corresponds to, which may not be any JSExnType at all.
         if (name && msg) {
             RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
             if (!colon)
@@ -784,22 +813,22 @@ js_ReportUncaughtException(JSContext *cx)
             str = msg;
         }
 
-        if (JS_GetProperty(cx, exnObject, filename_str, roots.handleAt(4))) {
-            JSString *tmp = ToString<CanGC>(cx, roots.handleAt(4));
+        if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
+            JSString *tmp = ToString<CanGC>(cx, val);
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, roots.handleAt(5)) ||
-            !ToUint32(cx, roots.handleAt(5), &lineno))
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &val) ||
+            !ToUint32(cx, val, &lineno))
         {
             lineno = 0;
         }
 
         uint32_t column;
-        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, roots.handleAt(5)) ||
-            !ToUint32(cx, roots.handleAt(5), &column))
+        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &val) ||
+            !ToUint32(cx, val, &column))
         {
             column = 0;
         }
@@ -811,6 +840,13 @@ js_ReportUncaughtException(JSContext *cx)
         report.exnType = int16_t(JSEXN_NONE);
         report.column = (unsigned) column;
         if (str) {
+            // Note that using |str| for |ucmessage| here is kind of wrong,
+            // because |str| is supposed to be of the format
+            // |ErrorName: ErrorMessage|, and |ucmessage| is supposed to
+            // correspond to |ErrorMessage|. But this is what we've historically
+            // done for duck-typed error objects.
+            //
+            // If only this stuff could get specced one day...
             if (JSStableString *stable = str->ensureStable(cx))
                 report.ucmessage = stable->chars().get();
         }

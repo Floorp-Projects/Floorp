@@ -38,3 +38,45 @@
 == border-image-style-none.html border-image-style-none-ref.html
 == border-image-style-none-length.html border-image-style-none-length-ref.html
 == border-image-style-none-auto.html border-image-style-none-auto-ref.html
+
+# border images with gradients
+== border-image-linear-gradient.html border-image-linear-gradient-ref.html
+fuzzy(1,98) == border-image-linear-gradient-slice-1.html border-image-linear-gradient-slice-1-ref.html
+fuzzy(1,149) fuzzy-if(OSX,1,10595) == border-image-linear-gradient-slice-2.html border-image-linear-gradient-slice-2-ref.html
+fuzzy(1,433) == border-image-linear-gradient-slice-fill-1.html border-image-linear-gradient-slice-fill-1-ref.html
+fuzzy(1,177) fuzzy-if(OSX,1,25771) == border-image-linear-gradient-slice-fill-2.html border-image-linear-gradient-slice-fill-2-ref.html
+fuzzy(1,48)  fuzzy-if(OSX,5,1676) == border-image-linear-gradient-width.html border-image-linear-gradient-width-ref.html
+fuzzy(1,5000) fuzzy-if(OSX,1,15000) == border-image-linear-gradient-slice-width.html border-image-linear-gradient-slice-width-ref.html
+fuzzy(1,3000) fuzzy-if(OSX,1,6000) == border-image-linear-gradient-outset.html border-image-linear-gradient-outset-ref.html
+fuzzy(1,12) == border-image-linear-gradient-repeat-repeat-1.html border-image-linear-gradient-repeat-repeat-1-ref.html
+fuzzy(1,13) == border-image-linear-gradient-repeat-round-1.html border-image-linear-gradient-repeat-round-1-ref.html
+== border-image-linear-gradient-repeat-repeat-2.html border-image-linear-gradient-repeat-repeat-2-ref.html
+fuzzy(1,576) == border-image-linear-gradient-repeat-round-2.html border-image-linear-gradient-repeat-round-2-ref.html
+fuzzy(1,6440) == border-image-linear-gradient-repeat-repeat-3.html border-image-linear-gradient-repeat-repeat-3-ref.html
+fuzzy(1,7161) == border-image-linear-gradient-repeat-round-3.html border-image-linear-gradient-repeat-round-3-ref.html
+
+== border-image-radial-gradient.html border-image-radial-gradient-ref.html
+fuzzy(1,42) == border-image-radial-gradient-slice-1.html border-image-radial-gradient-slice-1-ref.html
+fuzzy(1,46) fuzzy-if(OSX,2,4472) == border-image-radial-gradient-slice-2.html border-image-radial-gradient-slice-2-ref.html
+fuzzy(1,105) == border-image-radial-gradient-slice-fill-1.html border-image-radial-gradient-slice-fill-1-ref.html
+fuzzy(1,139) fuzzy-if(OSX,2,4478) == border-image-radial-gradient-slice-fill-2.html border-image-radial-gradient-slice-fill-2-ref.html
+== border-image-radial-gradient-width.html border-image-radial-gradient-width-ref.html
+fuzzy(1,9000) == border-image-radial-gradient-slice-width.html border-image-radial-gradient-slice-width-ref.html
+
+# OS X failures tracked in bug 957025
+fails-if(OSX) == border-image-repeating-linear-gradient.html border-image-repeating-linear-gradient-ref.html
+fuzzy(1,5608) fails-if(OSX) == border-image-repeating-linear-gradient-slice-fill-2.html border-image-repeating-linear-gradient-slice-fill-2-ref.html
+fuzzy(1,19200) fails-if(OSX) == border-image-repeating-linear-gradient-repeat-round-2.html border-image-repeating-linear-gradient-repeat-round-2-ref.html
+
+fuzzy(1,657) == border-image-repeating-radial-gradient.html border-image-repeating-radial-gradient-ref.html
+fuzzy(1,510) fails-if(OSX) == border-image-repeating-radial-gradient-slice-1.html border-image-repeating-radial-gradient-slice-1-ref.html
+fuzzy(1,437) fails-if(OSX) == border-image-repeating-radial-gradient-slice-2.html border-image-repeating-radial-gradient-slice-2-ref.html
+fuzzy(1,1357) fails-if(OSX) == border-image-repeating-radial-gradient-slice-fill-1.html border-image-repeating-radial-gradient-slice-fill-1-ref.html
+fuzzy(1,1058) fails-if(OSX) == border-image-repeating-radial-gradient-slice-fill-2.html border-image-repeating-radial-gradient-slice-fill-2-ref.html
+fuzzy(1,602) fails-if(OSX) == border-image-repeating-radial-gradient-width.html border-image-repeating-radial-gradient-width-ref.html
+fuzzy(3,18000) fails-if(OSX) == border-image-repeating-radial-gradient-slice-width.html border-image-repeating-radial-gradient-slice-width-ref.html
+fails-if(OSX) == border-image-repeating-radial-gradient-repeat-repeat-2.html border-image-repeating-radial-gradient-repeat-repeat-2-ref.html
+fuzzy(1,1054) fails-if(OSX) == border-image-repeating-radial-gradient-repeat-round-2.html border-image-repeating-radial-gradient-repeat-round-2-ref.html
+
+# border-image-source (-moz-)element
+fuzzy(125,5807) == border-image-element.html border-image-element-ref.html

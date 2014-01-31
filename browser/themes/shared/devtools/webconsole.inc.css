@@ -303,6 +303,10 @@ a {
   border: none;
 }
 
+.devtools-side-splitter ~ #webconsole-sidebar[hidden] {
+  display: none;
+}
+
 /* Security styles */
 
 .message[category=security] > .icon {

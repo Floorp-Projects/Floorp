@@ -26,7 +26,6 @@
      { "type": "webapps-manage", "allow": 1, "context": document }],
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
-                                         ["dom.promise.enabled", true],
                                          ["dom.testing.ignore_ipc_principal", true],
                                          ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, function() {
         gGenerator.next(); });

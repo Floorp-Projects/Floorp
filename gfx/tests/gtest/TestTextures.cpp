@@ -247,7 +247,7 @@ TEST(Layers, TextureYCbCrSerialization) {
   clientData.mCbCrSize = cbSurface->GetSize().ToIntSize();
   clientData.mYStride = ySurface->Stride();
   clientData.mCbCrStride = cbSurface->Stride();
-  clientData.mStereoMode = STEREO_MODE_MONO;
+  clientData.mStereoMode = StereoMode::MONO;
   clientData.mYSkip = 0;
   clientData.mCbSkip = 0;
   clientData.mCrSkip = 0;

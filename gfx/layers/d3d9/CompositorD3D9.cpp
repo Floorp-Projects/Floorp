@@ -360,19 +360,19 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       if (mDeviceManager->GetNv3DVUtils()) {
         Nv_Stereo_Mode mode;
         switch (source->AsSourceD3D9()->GetStereoMode()) {
-        case STEREO_MODE_LEFT_RIGHT:
+        case StereoMode::LEFT_RIGHT:
           mode = NV_STEREO_MODE_LEFT_RIGHT;
           break;
-        case STEREO_MODE_RIGHT_LEFT:
+        case StereoMode::RIGHT_LEFT:
           mode = NV_STEREO_MODE_RIGHT_LEFT;
           break;
-        case STEREO_MODE_BOTTOM_TOP:
+        case StereoMode::BOTTOM_TOP:
           mode = NV_STEREO_MODE_BOTTOM_TOP;
           break;
-        case STEREO_MODE_TOP_BOTTOM:
+        case StereoMode::TOP_BOTTOM:
           mode = NV_STEREO_MODE_TOP_BOTTOM;
           break;
-        case STEREO_MODE_MONO:
+        case StereoMode::MONO:
           mode = NV_STEREO_MODE_MONO;
           break;
         }
@@ -380,7 +380,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
         // Send control data even in mono case so driver knows to leave stereo mode.
         mDeviceManager->GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
-        if (source->AsSourceD3D9()->GetStereoMode() != STEREO_MODE_MONO) {
+        if (source->AsSourceD3D9()->GetStereoMode() != StereoMode::MONO) {
           mDeviceManager->GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
           nsRefPtr<IDirect3DSurface9> renderTarget;

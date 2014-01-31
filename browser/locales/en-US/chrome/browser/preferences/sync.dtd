@@ -58,7 +58,7 @@
 <!ENTITY notSignedIn.label           "You are not signed in.">
 <!ENTITY signIn.label                "Sign in">
 <!ENTITY manage.label                "Manage">
-<!ENTITY unlink.label                "Unlink This Browser…">
+<!ENTITY unlink.label                "Unlink this Browser…">
 <!ENTITY verify.label                "Verify Email">
 <!ENTITY forget.label                "Forget this Email">
 

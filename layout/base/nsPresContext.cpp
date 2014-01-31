@@ -5,6 +5,7 @@
 
 /* a presentation of a document, part 1 */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 
 #include "base/basictypes.h"
@@ -600,7 +601,7 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
     &prefs->mDefaultCursiveFont,
     &prefs->mDefaultFantasyFont
   };
-  static_assert(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
+  static_assert(MOZ_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
                 "FontTypes array count is not correct");
 
   // Get attributes specific to each generic font. We do not get the user's

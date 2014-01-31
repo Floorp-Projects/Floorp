@@ -7,8 +7,13 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=715472#c17
  */
 .theme-body {
-  background: white;
-  color: black;
+  background: #fcfcfc; /* Background - Editor */
+  color: #18191a;
+}
+
+.theme-sidebar {
+  background: #f7f7f7; /* Background - Sidebars */
+  color: #18191a;
 }
 
 ::-moz-selection {
@@ -151,10 +156,11 @@
 }
 
 .theme-toolbar,
-.devtools-toolbar { /* General toolbar styling */
-  color: hsl(210,30%,85%);
-  background-color: #343c45;
-  border-color: #060a0d;
+.devtools-toolbar,
+.devtools-sidebar-tabs > tabs { /* General toolbar styling */
+  color: #585959;
+  background-color: #f0f1f2;
+  border-color: #aaa;
 }
 
 .ruleview-colorswatch,
@@ -165,8 +171,8 @@
 
 .variables-view-scope:focus > .title,
 .variable-or-property:focus > .title {
-  background:  hsl(208,56%,40%); /* fg-color2 */
-  color: white;
+  background:  #4c9ed9; /* fg-color2 */
+  color: #f5f7fa;
 }
 
 /* CodeMirror specific styles.

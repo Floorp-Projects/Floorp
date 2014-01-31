@@ -135,7 +135,7 @@ static void
 StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
   MOZ_ASSERT(strncmp(aPrefName, STICKY_ENABLED_PREF_NAME,
-                     NS_ARRAY_LENGTH(STICKY_ENABLED_PREF_NAME)) == 0,
+                     ArrayLength(STICKY_ENABLED_PREF_NAME)) == 0,
              "We only registered this callback for a single pref, so it "
              "should only be called for that pref");
 

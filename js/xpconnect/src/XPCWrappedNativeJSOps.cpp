@@ -1168,6 +1168,20 @@ XPCNativeScriptableShared::PopulateJSClass()
     // We have to figure out resolve strategy at call time
     mJSClass.base.resolve = (JSResolveOp) XPC_WN_Helper_NewResolve;
 
+    // We need to respect content-defined toString() hooks on Window objects.
+    // In particular, js::DefaultValue checks for a convert stub, and the one
+    // we would install below ignores anything implemented in JS.
+    //
+    // We've always had this behavior for most XPCWrappedNative-implemented
+    // objects. However, Window was special, because the outer-window proxy
+    // had a null convert hook, which means that we'd end up with the default
+    // JS-engine behavior (which respects toString() overrides). We've fixed
+    // the convert hook on the outer-window proxy to invoke the defaultValue
+    // hook on the proxy, which in this case invokes js::DefaultValue on the
+    // target. So now we need to special-case this for Window to maintain
+    // consistent behavior. This can go away once Window is on WebIDL bindings.
+    //
+    // Note that WantOuterObject() is true if and only if this is a Window object.
     if (mFlags.WantConvert())
         mJSClass.base.convert = XPC_WN_Helper_Convert;
     else if (mFlags.WantOuterObject())

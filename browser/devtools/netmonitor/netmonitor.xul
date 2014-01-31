@@ -35,7 +35,7 @@
   </popupset>
 
   <box id="body"
-       class="devtools-responsive-container theme-body"
+       class="devtools-responsive-container theme-sidebar"
        flex="1">
     <vbox id="network-table" flex="1">
       <toolbar id="requests-menu-toolbar"
@@ -119,6 +119,7 @@
                        tabindex="0"/>
       </toolbar>
       <label id="requests-menu-empty-notice"
+             class="side-menu-widget-empty-text"
              value="&netmonitorUI.emptyNotice2;"/>
       <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
         <hbox id="requests-menu-item-template" hidden="true">

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
@@ -21,14 +22,24 @@ class SyncPreference extends Preference {
         mContext = context;
     }
 
-    @Override
-    protected void onClick() {
+    private void openSync11Settings() {
         // Show Sync setup if no accounts exist; otherwise, show account settings.
         if (SyncAccounts.syncAccountsExist(mContext)) {
             SyncAccounts.openSyncSettings(mContext);
-        } else {
-            Intent intent = new Intent(mContext, SetupSyncActivity.class);
-            mContext.startActivity(intent);
+            return;
         }
+        Intent intent = new Intent(mContext, SetupSyncActivity.class);
+        mContext.startActivity(intent);
+    }
+
+    private void launchFxASetup() {
+        Intent intent = new Intent(mContext, FxAccountGetStartedActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
+    }
+
+    @Override
+    protected void onClick() {
+        openSync11Settings();
     }
 }

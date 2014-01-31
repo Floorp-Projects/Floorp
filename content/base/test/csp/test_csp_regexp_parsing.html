@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 916054 - URLs with path are ignored by FF's CSP parser</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var policies = [
+  ["allowed", "*"],
+  ["allowed", "test1.example.com"],
+  ["allowed", "test1.example.com/"],
+  ["allowed", "test1.example.com/path-1"],
+  ["allowed", "test1.example.com/path-1/"],
+  ["allowed", "test1.example.com/path-1/path_2/"],
+  ["allowed", "test1.example.com/path-1/path_2/file.js"],
+  ["allowed", "test1.example.com/path-1/path_2/file_1.js"],
+  ["allowed", "test1.example.com/path-1/path_2/file-2.js"],
+  ["allowed", "test1.example.com/path-1/path_2/f.js"],
+  ["allowed", "*.example.com"],
+  ["allowed", "*.example.com/"],
+  ["allowed", "*.example.com/path-1"],
+  ["allowed", "*.example.com/path-1/"],
+  ["allowed", "*.example.com/path-1/path_2/"],
+  ["allowed", "*.example.com/path-1/path_2/file.js"],
+  ["allowed", "*.example.com/path-1/path_2/file_1.js"],
+  ["allowed", "*.example.com/path-1/path_2/file-2.js"],
+  ["allowed", "*.example.com/path-1/path_2/f.js"],
+  ["allowed", "test1.example.com:80"],
+  ["allowed", "test1.example.com:80/"],
+  ["allowed", "test1.example.com:80/path-1"],
+  ["allowed", "test1.example.com:80/path-1/"],
+  ["allowed", "test1.example.com:80/path-1/path_2"],
+  ["allowed", "test1.example.com:80/path-1/path_2/"],
+  ["allowed", "test1.example.com:80/path-1/path_2/file.js"],
+  ["allowed", "test1.example.com:*"],
+  ["allowed", "test1.example.com:*/"],
+  ["allowed", "test1.example.com:*/path-1"],
+  ["allowed", "test1.example.com:*/path-1/"],
+  ["allowed", "test1.example.com:*/path-1/path_2"],
+  ["allowed", "test1.example.com:*/path-1/path_2/"],
+  ["allowed", "test1.example.com:*/path-1/path_2/file.js"],
+  // the following tests should fail
+  ["blocked", "test1.example.com/path-1//path_2"],
+  ["blocked", "test1.example.com/path-1/file.js.cpp"],
+  ["blocked", "test1.example.com:88path-1/"],
+  ["blocked", "test1.example.com:80//"],
+  ["blocked", "test1.example.com:80//path-1"],
+  ["blocked", "test1.example.com:80/.js"],
+  ["blocked", "test1.example.com:80.js"],
+  ["blocked", "test1.example.com:*.js"],
+  ["blocked", "test1.example.com:*."]
+]
+
+var counter = 0;
+var policy;
+
+function loadNextTest() {
+  if (counter == policies.length) {
+    SimpleTest.finish();
+  }
+  else {
+    policy = policies[counter++];
+    var src = "file_csp_testserver.sjs";
+    // append the file that should be served
+    src += "?file=" + escape("tests/content/base/test/csp/file_csp_regexp_parsing.html");
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape("default-src 'none'; script-src " + policy[1]);
+
+    document.getElementById("testframe").addEventListener("load", test, false);
+    document.getElementById("testframe").src = src;
+  }
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, policy[0], "should be " + policy[0] + " in test " + (counter - 1) + "!");
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content in test " + (counter - 1) + "!");
+  }
+  loadNextTest();
+}
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function () {
+    loadNextTest();
+  }
+);
+
+</script>
+</body>
+</html>

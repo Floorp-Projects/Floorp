@@ -249,7 +249,7 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
     MOZ_ASSERT(aWidth == img->GetSize().width &&
                aHeight == img->GetSize().height);
 
-    if (format == GRALLOC_PLANAR_YCBCR) {
+    if (format == ImageFormat::GRALLOC_PLANAR_YCBCR) {
       // Get graphic buffer pointer.
       void* imgPtr = nullptr;
       GrallocImage* nativeImage = static_cast<GrallocImage*>(img);
@@ -284,7 +284,7 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
       ConvertPlanarYCbCrToNV12(&nv21, dst);
 
       graphicBuffer->unlock();
-    } else if (format == PLANAR_YCBCR) {
+    } else if (format == ImageFormat::PLANAR_YCBCR) {
       ConvertPlanarYCbCrToNV12(static_cast<PlanarYCbCrImage*>(img)->GetData(),
                              dst);
     } else {

@@ -72,7 +72,7 @@
 
   <xul:keyset id="sourceEditorKeys"/>
 
-  <xul:box id="style-editor-chrome" class="splitview-root loading"
+  <xul:box id="style-editor-chrome" class="theme-body splitview-root loading"
            context="sidebar-context">
     <xul:box class="splitview-controller">
       <xul:box class="splitview-main">
@@ -87,7 +87,7 @@
                       label="&importButton.label;"/>
         </xul:toolbar>
       </xul:box>
-      <xul:box id="splitview-resizer-target" class="splitview-nav-container"
+      <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
               persist="height">
         <ol class="splitview-nav" tabindex="0"></ol>
         <div class="splitview-nav placeholder empty">
@@ -99,7 +99,7 @@
         </div>
       </xul:box> <!-- .splitview-nav-container -->
     </xul:box>   <!-- .splitview-controller -->
-    <xul:splitter class="devtools-side-splitter splitview-landscape-splitter"/>
+    <xul:splitter class="devtools-side-splitter splitview-landscape-splitter devtools-invisible-splitter"/>
     <xul:box class="splitview-side-details"/>
 
     <div id="splitview-templates" hidden="true">

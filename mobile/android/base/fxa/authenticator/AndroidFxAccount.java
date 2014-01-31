@@ -5,13 +5,13 @@
 package org.mozilla.gecko.fxa.authenticator;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
@@ -22,6 +22,7 @@ import org.mozilla.gecko.sync.Utils;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 /**
@@ -239,6 +240,10 @@ public class AndroidFxAccount {
     return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
   }
 
+  public SharedPreferences getSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
+    return context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+  }
+
   /**
    * Extract a JSON dictionary of the string values associated to this account.
    * <p>
@@ -262,7 +267,6 @@ public class AndroidFxAccount {
   public static AndroidFxAccount addAndroidAccount(
       Context context,
       String email,
-      String password,
       String profile,
       String idpServerURI,
       String tokenServerURI,
@@ -270,9 +274,6 @@ public class AndroidFxAccount {
           throws UnsupportedEncodingException, GeneralSecurityException, URISyntaxException {
     if (email == null) {
       throw new IllegalArgumentException("email must not be null");
-    }
-    if (password == null) {
-      throw new IllegalArgumentException("password must not be null");
     }
     if (idpServerURI == null) {
       throw new IllegalArgumentException("idpServerURI must not be null");
@@ -290,7 +291,7 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_ACCOUNT_VERSION, "" + CURRENT_ACCOUNT_VERSION);
     userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
-    userdata.putString(ACCOUNT_KEY_AUDIENCE, computeAudience(tokenServerURI));
+    userdata.putString(ACCOUNT_KEY_AUDIENCE, FxAccountUtils.getAudienceForURL(tokenServerURI));
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
 
     ExtendedJSONObject descriptor = new ExtendedJSONObject();
@@ -303,7 +304,10 @@ public class AndroidFxAccount {
 
     Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
     AccountManager accountManager = AccountManager.get(context);
-    boolean added = accountManager.addAccountExplicitly(account, null, userdata); // XXX what should the password be?
+    // We don't set an Android password, because we don't want to persist the
+    // password (or anything else as powerful as the password). Instead, we
+    // internally manage a sessionToken with a remotely owned lifecycle.
+    boolean added = accountManager.addAccountExplicitly(account, null, userdata);
     if (!added) {
       return null;
     }
@@ -316,7 +320,7 @@ public class AndroidFxAccount {
   }
 
   public void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
-    context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE).edit().clear().commit();
+    getSyncPrefs().edit().clear().commit();
   }
 
   public void enableSyncing() {
@@ -353,13 +357,6 @@ public class AndroidFxAccount {
     }
   }
 
-  // TODO: this is shit.
-  private static String computeAudience(String tokenServerURI) throws URISyntaxException {
-    URI uri = new URI(tokenServerURI);
-    return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
-  }
-
-
   /**
    * <b>For debugging only!</b>
    */
@@ -373,5 +370,17 @@ public class AndroidFxAccount {
     for (String key : list) {
       FxAccountConstants.pii(LOG_TAG, key + ": " + o.get(key));
     }
+  }
+
+  /**
+   * Return the Firefox Account's local email address.
+   * <p>
+   * It is important to note that this is the local email address, and not
+   * necessarily the normalized remote email address that the server expects.
+   *
+   * @return local email address.
+   */
+  public String getEmail() {
+    return account.name;
   }
 }

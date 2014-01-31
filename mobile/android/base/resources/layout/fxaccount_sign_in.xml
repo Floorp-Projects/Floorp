@@ -22,7 +22,7 @@
 
         <TextView
             style="@style/FxAccountSubHeaderItem"
-            android:text="@string/fxaccount_sign_in" />
+            android:text="@string/fxaccount_sign_in_sub_header" />
 
         <include layout="@layout/fxaccount_email_password_view" />
 
@@ -45,17 +45,16 @@
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp" >
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal" >
 
             <TextView
                 android:id="@+id/forgot_password_link"
-                style="@style/FxAccountLinkItem"
+                style="@style/FxAccountLinkifiedItem"
                 android:layout_gravity="left"
                 android:layout_weight="1"
                 android:gravity="left"
-                android:text="@string/fxaccount_forgot_password" />
+                android:text="@string/fxaccount_sign_in_forgot_password" />
 
             <TextView
                 android:id="@+id/create_account_link"
@@ -63,7 +62,7 @@
                 android:layout_gravity="right"
                 android:layout_weight="1"
                 android:gravity="right"
-                android:text="@string/fxaccount_create_account" />
+                android:text="@string/fxaccount_sign_in_create_account_instead" />
         </LinearLayout>
 
         <LinearLayout style="@style/FxAccountSpacer" />
