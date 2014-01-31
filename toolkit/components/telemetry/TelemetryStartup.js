@@ -7,8 +7,8 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm")
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this)
 
 /**
  * TelemetryStartup is needed to forward the "profile-after-change" notification

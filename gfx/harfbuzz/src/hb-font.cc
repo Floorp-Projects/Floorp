@@ -31,7 +31,6 @@
 #include "hb-ot-layout-private.hh"
 
 #include "hb-font-private.hh"
-#include "hb-blob.h"
 #include "hb-open-file-private.hh"
 #include "hb-ot-head-table.hh"
 #include "hb-ot-maxp-table.hh"

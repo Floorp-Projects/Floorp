@@ -165,6 +165,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
 #include "nsIFrameInlines.h"
+#include "mozilla/gfx/2D.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"
@@ -177,6 +178,7 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
@@ -1054,6 +1056,11 @@ PresShell::Destroy()
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
     mReflowContinueTimer = nullptr;
+  }
+
+  if (mDelayedPaintTimer) {
+    mDelayedPaintTimer->Cancel();
+    mDelayedPaintTimer = nullptr;
   }
 
   mSynthMouseMoveEvent.Revoke();
@@ -3541,9 +3548,41 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
   return nsRectVisibility_kVisible;
 }
 
-void
-PresShell::ScheduleViewManagerFlush()
+class PaintTimerCallBack MOZ_FINAL : public nsITimerCallback
 {
+public:
+  PaintTimerCallBack(PresShell* aShell) : mShell(aShell) {}
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHODIMP Notify(nsITimer* aTimer) MOZ_FINAL
+  {
+    mShell->SetNextPaintCompressed();
+    mShell->AddInvalidateHiddenPresShellObserver(mShell->GetPresContext()->RefreshDriver());
+    mShell->ScheduleViewManagerFlush();
+    return NS_OK;
+  }
+
+private:
+  PresShell* mShell;
+};
+
+NS_IMPL_ISUPPORTS1(PaintTimerCallBack, nsITimerCallback)
+
+void
+PresShell::ScheduleViewManagerFlush(PaintType aType)
+{
+  if (aType == PAINT_DELAYED_COMPRESS) {
+    // Delay paint for 1 second.
+    static const uint32_t kPaintDelayPeriod = 1000;
+    if (!mDelayedPaintTimer) {
+      mDelayedPaintTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+      nsRefPtr<PaintTimerCallBack> cb = new PaintTimerCallBack(this);
+      mDelayedPaintTimer->InitWithCallback(cb, kPaintDelayPeriod, nsITimer::TYPE_ONE_SHOT);
+    }
+    return;
+  }
+
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
@@ -4809,7 +4848,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   return info;
 }
 
-already_AddRefed<gfxASurface>
+TemporaryRef<SourceSurface>
 PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                                nsISelection* aSelection,
                                nsIntRegion* aRegion,
@@ -4878,8 +4917,14 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   context.Rectangle(gfxRect(0, 0, pixelArea.width, pixelArea.height));
   context.Fill();
 
+
+  RefPtr<DrawTarget> dt =
+    gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(surface, gfx::IntSize(pixelArea.width, pixelArea.height));
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(dt);
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
-  rc->Init(deviceContext, surface);
+  rc->Init(deviceContext, ctx);
 
   if (aRegion) {
     // Convert aRegion from CSS pixels to dev pixels
@@ -4927,10 +4972,10 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   // restore the old selection display state
   frameSelection->SetDisplaySelection(oldDisplaySelection);
 
-  return surface.forget();
+  return dt->Snapshot();
 }
 
-already_AddRefed<gfxASurface>
+TemporaryRef<SourceSurface>
 PresShell::RenderNode(nsIDOMNode* aNode,
                       nsIntRegion* aRegion,
                       nsIntPoint& aPoint,
@@ -4976,7 +5021,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
                              aScreenRect);
 }
 
-already_AddRefed<gfxASurface>
+TemporaryRef<SourceSurface>
 PresShell::RenderSelection(nsISelection* aSelection,
                            nsIntPoint& aPoint,
                            nsIntRect* aScreenRect)
@@ -5800,7 +5845,8 @@ PresShell::Paint(nsView*        aViewToPaint,
       layerManager->BeginTransaction();
     }
 
-    if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
+    if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE) &&
+        !mNextPaintCompressed) {
       NotifySubDocInvalidationFunc computeInvalidFunc =
         presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
       bool computeInvalidRect = computeInvalidFunc ||
@@ -5850,6 +5896,9 @@ PresShell::Paint(nsView*        aViewToPaint,
   uint32_t flags = nsLayoutUtils::PAINT_WIDGET_LAYERS | nsLayoutUtils::PAINT_EXISTING_TRANSACTION;
   if (!(aFlags & PAINT_COMPOSITE)) {
     flags |= nsLayoutUtils::PAINT_NO_COMPOSITE;
+  }
+  if (mNextPaintCompressed) {
+    flags |= nsLayoutUtils::PAINT_COMPRESSED;
   }
 
   if (frame) {

@@ -904,22 +904,22 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
     case POPUPALIGNMENT_LEFTCENTER:
       pnt = nsPoint(anchorRect.x, anchorRect.y + anchorRect.height / 2);
       anchorRect.y = pnt.y;
-      anchorRect.height = 0;
+      anchorRect.height = 1;
       break;
     case POPUPALIGNMENT_RIGHTCENTER:
       pnt = nsPoint(anchorRect.XMost(), anchorRect.y + anchorRect.height / 2);
       anchorRect.y = pnt.y;
-      anchorRect.height = 0;
+      anchorRect.height = 1;
       break;
     case POPUPALIGNMENT_TOPCENTER:
       pnt = nsPoint(anchorRect.x + anchorRect.width / 2, anchorRect.y);
       anchorRect.x = pnt.x;
-      anchorRect.width = 0;
+      anchorRect.width = 1;
       break;
     case POPUPALIGNMENT_BOTTOMCENTER:
       pnt = nsPoint(anchorRect.x + anchorRect.width / 2, anchorRect.YMost());
       anchorRect.x = pnt.x;
-      anchorRect.width = 0;
+      anchorRect.width = 1;
       break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt = anchorRect.TopRight();

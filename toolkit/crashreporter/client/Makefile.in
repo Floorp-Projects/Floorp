@@ -17,8 +17,6 @@ endif
 
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
-VPATH += $(topsrcdir)/build/
-
 ifeq ($(OS_ARCH),WINNT)
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)

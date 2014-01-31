@@ -31,8 +31,6 @@
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
 
-#include "hb-blob.h"
-
 #include <string.h>
 
 

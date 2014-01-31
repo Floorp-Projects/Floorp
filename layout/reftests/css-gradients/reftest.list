@@ -85,6 +85,7 @@ fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1c.html radial-shape-fa
 == radial-zero-length-1h.html radial-zero-length-1-ref.html
 == radial-zero-length-1i.html radial-zero-length-1-ref.html
 == radial-zero-length-1j.html radial-zero-length-1-ref.html
+== repeated-final-stop-1.html repeated-final-stop-1-ref.html
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-linear-2a.html repeating-linear-2-ref.html

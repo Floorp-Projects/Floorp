@@ -369,9 +369,6 @@ nsScriptNameSpaceManager::Init()
   rv = FillHash(cm, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = FillHash(cm, JAVASCRIPT_NAVIGATOR_PROPERTY_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -626,8 +623,6 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
     type = nsGlobalNameStruct::eTypeNavigatorProperty;
   } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY) == 0) {
     type = nsGlobalNameStruct::eTypeStaticNameSet;
-  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeDynamicNameSet;
   } else {
     return NS_OK;
   }

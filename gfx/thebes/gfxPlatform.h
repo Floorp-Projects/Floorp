@@ -510,6 +510,7 @@ public:
     static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
+    static int  GetPrefLayersCompositionFrameRate();
     static bool GetPrefLayersDump();
     static bool GetPrefLayersScrollGraph();
     static bool GetPrefLayersEnableTiles();
@@ -684,6 +685,9 @@ protected:
     mozilla::gfx::BackendType GetContentBackend() {
       return mContentBackend;
     }
+
+    static mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
+      GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
 
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;

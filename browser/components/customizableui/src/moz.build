@@ -9,6 +9,9 @@ EXTRA_JS_MODULES += [
     'ScrollbarSampler.jsm',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
+    DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
+
 EXTRA_PP_JS_MODULES += [
     'CustomizableUI.jsm',
     'CustomizableWidgets.jsm',

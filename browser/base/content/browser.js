@@ -5221,10 +5221,21 @@ function UpdateCurrentCharset(target) {
           pref_item.setAttribute('checked', 'false');
     }
 
-    var menuitem = charsetMenuGetElement(target, "charset." + wnd.document.characterSet);
+    var menuitem = charsetMenuGetElement(target, "charset." + FoldCharset(wnd.document.characterSet));
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
     }
+}
+
+function FoldCharset(charset) {
+  // For substantially similar encodings, treat two encodings as the same
+  // for the purpose of the check mark.
+  if (charset == "ISO-8859-8-I") {
+    return "windows-1255";
+  } else if (charset == "gb18030") {
+    return "gbk";
+  }
+  return charset;
 }
 
 function UpdateCharsetDetector(target) {
@@ -5249,7 +5260,7 @@ function UpdateMenus(event) {
 }
 
 function charsetLoadListener() {
-  var charset = window.content.document.characterSet;
+  var charset = FoldCharset(window.content.document.characterSet);
 
   if (charset.length > 0 && (charset != gLastBrowserCharset)) {
     gPrevCharset = gLastBrowserCharset;

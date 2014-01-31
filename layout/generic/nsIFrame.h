@@ -2328,15 +2328,18 @@ public:
    * do not trigger a reflow should have this called for them by
    * DoApplyRenderingChangeToTree.
    *
-   * @param aFlags PAINT_COMPOSITE_ONLY : No changes have been made
+   * @param aType PAINT_COMPOSITE_ONLY : No changes have been made
    * that require a layer tree update, so only schedule a layer
    * tree composite.
+   * PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after a delay, and
+   * put FrameLayerBuilder in 'compressed' mode that avoids short cut optimizations.
    */
-  enum {
+  enum PaintType {
     PAINT_DEFAULT = 0,
-    PAINT_COMPOSITE_ONLY = 1 << 0
+    PAINT_COMPOSITE_ONLY,
+    PAINT_DELAYED_COMPRESS
   };
-  void SchedulePaint(uint32_t aFlags = PAINT_DEFAULT);
+  void SchedulePaint(PaintType aType = PAINT_DEFAULT);
 
   /**
    * Checks if the layer tree includes a dedicated layer for this 
