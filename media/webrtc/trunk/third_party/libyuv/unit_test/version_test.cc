@@ -4,7 +4,7 @@
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
+ *  in the file PATENTS. All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -32,7 +32,7 @@ TEST_F(libyuvTest, TestVersion) {
   }
   int svn_revision = atoi(ver);  // NOLINT
   printf("LIBYUV_SVNREVISION %d\n", svn_revision);
-  EXPECT_NEAR(LIBYUV_VERSION, svn_revision, 3);  // Allow version to be close.
+  EXPECT_NEAR(LIBYUV_VERSION, svn_revision, 20);  // Allow version to be close.
   if (LIBYUV_VERSION != svn_revision) {
     printf("WARNING - Versions do not match.\n");
   }
