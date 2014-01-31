@@ -4,10 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-  <color name="fxaccount_error_dark">#FDEBE5</color>
-  <color name="fxaccount_error_light">#E24B03</color>
-
-  <color name="fxaccount_textColor">#3c454d</color>
+  <color name="fxaccount_textColor">#424f59</color>
+  <color name="fxaccount_textColorSubdued">#c0c9d0</color>
 
   <color name="fxaccount_linkified_textColor">#c0c9d0</color>
   <color name="fxaccount_linkified_textColorLink">#0096dd</color>
