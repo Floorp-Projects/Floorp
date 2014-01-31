@@ -112,7 +112,7 @@ public class TokenServerClient {
     // Responses should *always* be JSON, even in the case of 4xx and 5xx
     // errors. If we don't see JSON, the server is likely very unhappy.
     String contentType = response.getEntity().getContentType().getValue();
-    if (contentType != "application/json" && !contentType.startsWith("application/json;")) {
+    if (!contentType.equals("application/json") && !contentType.startsWith("application/json;")) {
       Logger.warn(LOG_TAG, "Got non-JSON response with Content-Type " +
           contentType + ". Misconfigured server?");
       throw new TokenServerMalformedResponseException(null, "Non-JSON response Content-Type.");
