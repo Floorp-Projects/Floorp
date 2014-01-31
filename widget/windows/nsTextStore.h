@@ -50,6 +50,7 @@ struct MSGResult;
 
 class nsTextStore MOZ_FINAL : public ITextStoreACP,
                               public ITfContextOwnerCompositionSink,
+                              public ITfActiveLanguageProfileNotifySink,
                               public ITfInputProcessorProfileActivationSink
 {
 public: /*IUnknown*/
@@ -94,6 +95,10 @@ public: /*ITfContextOwnerCompositionSink*/
   STDMETHODIMP OnStartComposition(ITfCompositionView*, BOOL*);
   STDMETHODIMP OnUpdateComposition(ITfCompositionView*, ITfRange*);
   STDMETHODIMP OnEndComposition(ITfCompositionView*);
+
+public: /*ITfActiveLanguageProfileNotifySink*/
+  STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
+                           BOOL fActivated);
 
 public: /*ITfInputProcessorProfileActivationSink*/
   STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
@@ -195,8 +200,10 @@ public:
 
   static bool     IsIMM_IME()
   {
-    return sTsfTextStore ? sTsfTextStore->mIsIMM_IME :
-                           IsIMM_IME(::GetKeyboardLayout(0));
+    if (!sTsfTextStore || !sTsfTextStore->EnsureInitActiveTIPKeyboard()) {
+      return IsIMM_IME(::GetKeyboardLayout(0));
+    }
+    return sTsfTextStore->mIsIMM_IME;
   }
 
   static bool     IsIMM_IME(HKL aHKL)
@@ -213,8 +220,15 @@ protected:
   nsTextStore();
   ~nsTextStore();
 
+  bool Init(ITfThreadMgr* aThreadMgr);
+
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
+
+  static bool IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
+                                    REFGUID aProfile);
+  static void GetTIPDescription(REFCLSID aTextService, LANGID aLangID,
+                                REFGUID aProfile, nsAString& aDescription);
 
   bool     Create(nsWindowBase* aWidget);
   bool     Destroy(void);
@@ -229,6 +243,10 @@ protected:
   }
   bool     IsReadLocked() const { return IsReadLock(mLock); }
   bool     IsReadWriteLocked() const { return IsReadWriteLock(mLock); }
+
+  // This is called immediately after a call of OnLockGranted() of mSink.
+  // Note that mLock isn't cleared yet when this is called.
+  void     DidLockGranted();
 
   bool     GetScreenExtInternal(RECT &aScreenExt);
   // If aDispatchTextEvent is true, this method will dispatch text event if
@@ -265,6 +283,12 @@ protected:
                                const TS_ATTRID *paFilterAttrs);
   void     SetInputScope(const nsString& aHTMLInputType);
 
+  // Creates native caret over our caret.  This method only works on desktop
+  // application.  Otherwise, this does nothing.
+  void     CreateNativeCaret();
+
+  bool     EnsureInitActiveTIPKeyboard();
+
   // Holds the pointer to our current win32 or metro widget
   nsRefPtr<nsWindowBase>       mWidget;
   // Document manager for the currently focused editor
@@ -273,6 +297,8 @@ protected:
   DWORD                        mEditCookie;
   // Cookie of installing ITfInputProcessorProfileActivationSink
   DWORD                        mIPProfileCookie;
+  // Cookie of installing ITfActiveLanguageProfileNotifySink
+  DWORD                        mLangProfileCookie;
   // Editing context at the bottom of mDocumentMgr's context stack
   nsRefPtr<ITfContext>         mContext;
   // Currently installed notification sink
@@ -283,6 +309,9 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
+  // Active TIP keyboard's description.  If active language profile isn't TIP,
+  // i.e., IMM-IME or just a keyboard layout, this is empty.
+  nsString                     mActiveTIPKeyboardDescription;
 
   class Composition MOZ_FINAL
   {
@@ -644,9 +673,13 @@ protected:
   // during recoding actions and then, FlushPendingActions() will call
   // mSink->OnSelectionChange().
   bool                         mNotifySelectionChange;
+  // While there is native caret, this is true.  Otherwise, false.
+  bool                         mNativeCaretIsCreated;
 
   // True if current IME is implemented with IMM.
-  bool mIsIMM_IME;
+  bool                         mIsIMM_IME;
+  // True if OnActivated() is already called
+  bool                         mOnActivatedCalled;
 
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
@@ -671,6 +704,9 @@ protected:
   static ITfContext* sTsfDisabledContext;
 
   static ITfInputProcessorProfiles* sInputProcessorProfiles;
+
+  // Enables/Disables hack for specific TIP.
+  static bool sCreateNativeCaretForATOK;
 
   // Message the Tablet Input Panel uses to flush text during blurring.
   // See comments in Destroy

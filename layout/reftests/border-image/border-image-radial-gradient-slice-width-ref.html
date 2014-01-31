@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of border-image-source: radial-gradient with border-image-slice and border-image-width</title>
+<style>
+table { margin: 0; padding: 0; border-spacing: 0; empty-cells: show; }
+td { padding: 0; }
+</style>
+</head>
+<body>
+<table>
+  <col style="width: 90px">
+  <col style="width: 120px">
+  <col style="width: 30px">
+  <tr style="height: 15px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 1800px 300px; background-position: 0px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 133.33px 300px; background-position: -6.67px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 600px 300px; background-position: -570px 0px;"></td>
+  </tr>
+  <tr style="height: 165px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 1800px 183.33px; background-position: 0px -9.17px;"></td>
+    <td style="background: white"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 600px 183.33px; background-position: -570px -9.17px;"></td>
+  </tr>
+  <tr style="height: 60px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 1800px 1200px; background-position: 0px -1140px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 133.33px 1200px; background-position: -6.67px -1140px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 600px 1200px; background-position: -570px -1140px;"></td>
+  </tr>
+</table>
+<table>
+  <col style="width: 90px">
+  <col style="width: 120px">
+  <col style="width: 30px">
+  <tr style="height: 15px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:720px 120px; background-position: 0px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:160px 120px; background-position: -20px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:240px 120px; background-position: -210px 0px;"></td>
+  </tr>
+  <tr style="height: 165px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:720px 220px; background-position: 0px -27.5px;"></td>
+    <td style="background: white"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:240px 220px; background-position: -210px -27.5px;"></td>
+  </tr>
+  <tr style="height: 60px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:720px 480px; background-position: 0px -420px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:160px 480px; background-position: -20px -420px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size:240px 480px; background-position: -210px -420px;"></td>
+  </tr>
+</table>
+<table>
+  <col style="width: 90px">
+  <col style="width: 120px">
+  <col style="width: 30px">
+  <tr style="height: 15px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 360px 60px; background-position: 0px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 240px 60px; background-position: -60px 0px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 120px 60px; background-position: -90px 0px;"></td>
+  </tr>
+  <tr style="height: 165px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 360px 330px; background-position: 0px -82.5px;"></td>
+    <td style="background: white"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 120px 330px; background-position: -90px -82.5px;"></td>
+  </tr>
+  <tr style="height: 60px">
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 360px 240px; background-position: 0px -180px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 240px 240px; background-position: -60px -180px;"></td>
+    <td style="background-image: radial-gradient(ellipse 100% 50% at 50% 50%, blue 0%, red 100%); background-size: 120px 240px; background-position: -90px -180px;"></td>
+  </tr>
+</table>
+</body>
+</html>

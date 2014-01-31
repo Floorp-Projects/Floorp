@@ -68,7 +68,7 @@ static const char *XAtomNames[] = {
   MOZILLA_PROGRAM_PROP,
   MOZILLA_COMMANDLINE_PROP
 };
-static Atom XAtoms[NS_ARRAY_LENGTH(XAtomNames)];
+static Atom XAtoms[MOZ_ARRAY_LENGTH(XAtomNames)];
 
 Atom nsXRemoteService::sMozVersionAtom;
 Atom nsXRemoteService::sMozLockAtom;

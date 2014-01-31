@@ -1165,7 +1165,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             // If it is an engine Error with an error report then let's
             // extract the report and build an xpcexception from that
             const JSErrorReport* report;
-            if (nullptr != (report = JS_ErrorFromException(cx, s))) {
+            if (nullptr != (report = JS_ErrorFromException(cx, obj))) {
                 JSAutoByteString message;
                 JSString* str;
                 if (nullptr != (str = ToString(cx, s)))

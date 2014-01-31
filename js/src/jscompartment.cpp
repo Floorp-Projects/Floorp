@@ -306,28 +306,26 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
         return true;
     }
 
-    /* No dice. Make a copy, and cache it. */
-    Rooted<JSLinearString *> linear(cx, str->ensureLinear(cx));
-    if (!linear)
-        return false;
-    JSString *copy = js_NewStringCopyN<CanGC>(cx, linear->chars(),
-                                              linear->length());
+    /*
+     * No dice. Make a copy, and cache it. Directly allocate the copy in the
+     * destination compartment, rather than first flattening it (and possibly
+     * allocating in source compartment), because we don't know whether the
+     * flattening will pay off later.
+     */
+    JSString *copy;
+    if (str->hasPureChars()) {
+        copy = js_NewStringCopyN<CanGC>(cx, str->pureChars(), str->length());
+    } else {
+        ScopedJSFreePtr<jschar> copiedChars;
+        if (!str->copyNonPureCharsZ(cx, copiedChars))
+            return false;
+        copy = js_NewString<CanGC>(cx, copiedChars.forget(), str->length());
+    }
+
     if (!copy)
         return false;
     if (!putWrapper(cx, key, StringValue(copy)))
         return false;
-
-    if (linear->zone()->isGCMarking()) {
-        /*
-         * All string wrappers are dropped when collection starts, but we
-         * just created a new one.  Mark the wrapped string to stop it being
-         * finalized, because if it was then the pointer in this
-         * compartment's wrapper map would be left dangling.
-         */
-        JSString *tmp = linear;
-        MarkStringUnbarriered(&cx->runtime()->gcMarker, &tmp, "wrapped string");
-        JS_ASSERT(tmp == linear);
-    }
 
     *strp = copy;
     return true;
