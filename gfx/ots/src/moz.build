@@ -18,6 +18,7 @@ SOURCES += [
     'hdmx.cc',
     'kern.cc',
     'ltsh.cc',
+    'math.cc',
     'vdmx.cc',
     'vorg.cc',
 ]
@@ -29,7 +30,6 @@ UNIFIED_SOURCES += [
     'cvt.cc',
     'fpgm.cc',
     'glyf.cc',
-    'graphite.cc',
     'head.cc',
     'hhea.cc',
     'hmtx.cc',
@@ -42,7 +42,6 @@ UNIFIED_SOURCES += [
     'ots.cc',
     'post.cc',
     'prep.cc',
-    'svg.cc',
     'vhea.cc',
     'vmtx.cc',
 ]
@@ -57,7 +56,6 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['PACKAGE_VERSION'] = '"moz"'
 DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 DEFINES['NOMINMAX'] = True
-DEFINES['MOZ_OTS_REPORT_ERRORS'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['OTS_DLL'] = True
