@@ -81,6 +81,8 @@ public:
   bool Is2D(gfxMatrix* aMatrix) const;
   bool Is2D() const;
 
+  bool IsProjective() const;
+
   /**
    * Returns true if the matrix can be reduced to a 2D affine transformation
    * (i.e. as obtained by From2D). If it is, optionally returns the 2D

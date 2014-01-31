@@ -722,6 +722,14 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
 }
 
 bool
+gfx3DMatrix::IsProjective() const
+{
+  return _14 != 0.0f || _24 != 0.0f ||
+         _34 != 0.0f || _44 != 1.0f;
+}
+
+
+bool
 gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
 {
   if (_14 != 0.0f ||
@@ -810,6 +818,9 @@ gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
 
 gfxRect gfx3DMatrix::UntransformBounds(const gfxRect& aRect, const gfxRect& aChildBounds) const
 {
+  if (!IsProjective()) {
+    return Inverse().TransformBounds(aRect);
+  }
   gfxRect bounds = TransformBounds(aChildBounds);
 
   gfxRect rect = aRect.Intersect(bounds);
@@ -819,6 +830,10 @@ gfxRect gfx3DMatrix::UntransformBounds(const gfxRect& aRect, const gfxRect& aChi
 
 bool gfx3DMatrix::UntransformPoint(const gfxPoint& aPoint, const gfxRect& aChildBounds, gfxPoint* aOut) const
 {
+  if (!IsProjective()) {
+    *aOut = Inverse().Transform(aPoint);
+    return true;
+  }
   gfxRect bounds = TransformBounds(aChildBounds);
 
   if (!bounds.Contains(aPoint)) {
