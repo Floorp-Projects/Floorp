@@ -14,7 +14,9 @@
 #include <map>
 #include <vector>
 
+#ifdef MOZ_OTS_WOFF2
 #include "woff2.h"
+#endif
 
 // The OpenType Font File
 // http://www.microsoft.com/typography/otspec/cmap.htm
@@ -22,7 +24,9 @@
 namespace {
 
 bool g_debug_output = true;
+#ifdef MOZ_OTS_WOFF2
 bool g_enable_woff2 = false;
+#endif
 
 ots::MessageFunc  g_message_func = NULL;
 void             *g_message_user_data = NULL;
@@ -400,6 +404,7 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   return ProcessGeneric(header, woff_tag, output, data, length, tables, file);
 }
 
+#ifdef MOZ_OTS_WOFF2
 bool ProcessWOFF2(ots::OpenTypeFile *header,
                   ots::OTSStream *output, const uint8_t *data, size_t length) {
   size_t decompressed_size = ots::ComputeWOFF2FinalSize(data, length);
@@ -418,6 +423,7 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
   }
   return ProcessTTF(header, output, &decompressed_buffer[0], decompressed_size);
 }
+#endif
 
 ots::TableAction GetTableAction(uint32_t tag) {
   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
@@ -800,9 +806,11 @@ void DisableDebugOutput() {
   g_debug_output = false;
 }
 
+#ifdef MOZ_OTS_WOFF2
 void EnableWOFF2() {
   g_enable_woff2 = true;
 }
+#endif
 
 void SetMessageCallback(MessageFunc func, void *user_data) {
   g_message_func = func;
@@ -827,10 +835,12 @@ bool Process(OTSStream *output, const uint8_t *data, size_t length) {
   bool result;
   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {
     result = ProcessWOFF(&header, output, data, length);
+#ifdef MOZ_OTS_WOFF2
   } else if (g_enable_woff2 &&
              data[0] == 'w' && data[1] == 'O' && data[2] == 'F' &&
              data[3] == '2') {
     result = ProcessWOFF2(&header, output, data, length);
+#endif
   } else {
     result = ProcessTTF(&header, output, data, length);
   }
