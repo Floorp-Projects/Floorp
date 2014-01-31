@@ -210,7 +210,11 @@
         <vbox flex="1">
           <label id="UITourTooltipTitle" flex="1"/>
           <description id="UITourTooltipDescription" flex="1"/>
-          <hbox id="UITourTooltipButtons" flex="1" align="end"/>
+          <hbox id="UITourTooltipButtons" flex="1" align="center"/>
+        </vbox>
+        <vbox align="start">
+          <toolbarbutton id="UITourTooltipClose" class="close-icon"
+                         tooltiptext="&uiTour.infoPanel.close;"/>
         </vbox>
       </hbox>
     </panel>

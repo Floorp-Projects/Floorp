@@ -4129,3 +4129,17 @@ window > chatbox {
 }
 
 %include ../shared/UITour.inc.css
+
+#UITourTooltipIcon {
+  -moz-margin-start: 0;
+}
+
+#UITourTooltipDescription {
+  font-size: 1.1rem;
+  line-height: 1.9rem;
+}
+
+#UITourTooltipClose {
+  -moz-margin-end: -15px;
+  margin-top: -12px;
+}

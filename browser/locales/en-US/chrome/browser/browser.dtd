@@ -736,6 +736,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY tabCrashed.checkSendReport "Tell &vendorShortName; about this crash so they can fix it.">
 <!ENTITY tabCrashed.tryAgain "Try Again">
 
+<!ENTITY uiTour.infoPanel.close "Close">
+
 <!-- LOCALIZATION NOTE: the following strings are unused in Australis, they're
      kept here to avoid warnings from l10n tools like compare-locales on
      l10n-central. They will be definitely removed when Australis is ready
