@@ -4301,8 +4301,8 @@ nsImageRenderer::ComputeIntrinsicSize()
     {
       // XXX element() should have the width/height of the referenced element,
       //     and that element's ratio, if it matches.  If it doesn't match, it
-      //     should have no width/height or ratio.  See element() in CSS3:
-      //     <http://dev.w3.org/csswg/css3-images/#element-reference>.
+      //     should have no width/height or ratio.  See element() in CSS images:
+      //     <http://dev.w3.org/csswg/css-images-4/#element-notation>.
       //     Make sure to change nsStyleBackground::Size::DependsOnFrameSize
       //     when fixing this!
       if (mPaintServerFrame) {
@@ -4508,36 +4508,48 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Element:
     {
-      nsRefPtr<gfxDrawable> drawable;
-      if (mPaintServerFrame) {
-        int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
-        nsRect destSize = aDest - aDest.TopLeft();
-        nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
-        gfxIntSize imageSize(roundedOut.width, roundedOut.height);
-        drawable = nsSVGIntegrationUtils::DrawableFromPaintServer(
-                          mPaintServerFrame, mForFrame, mSize, imageSize,
-                          aRenderingContext.ThebesContext()->CurrentMatrix(),
-                          mFlags & FLAG_SYNC_DECODE_IMAGES
-                            ? nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES
-                            : 0);
-
-        if (!drawable) {
-          return;
-        }
-      } else {
-        NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
-        drawable =
-          new gfxSurfaceDrawable(mImageElementSurface.mSourceSurface,
-                                 mImageElementSurface.mSize);
+      nsRefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
+                                                          aRenderingContext);
+      if (!drawable) {
+        NS_WARNING("Could not create drawable for element");
+        return;
       }
       nsLayoutUtils::DrawPixelSnapped(&aRenderingContext, drawable, graphicsFilter,
-                                      aDest, aFill, aSrc.TopLeft(), aDirtyRect);
+                                      aDest, aFill, aDest.TopLeft(), aDirtyRect);
       return;
     }
     case eStyleImageType_Null:
     default:
       return;
   }
+}
+
+already_AddRefed<gfxDrawable>
+nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
+                                    nsRenderingContext&  aRenderingContext)
+{
+  NS_ASSERTION(mType == eStyleImageType_Element,
+               "DrawableForElement only makes sense if backed by an element");
+  if (mPaintServerFrame) {
+    int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
+    nsRect destRect = aImageRect - aImageRect.TopLeft();
+    nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
+    gfxIntSize imageSize(roundedOut.width, roundedOut.height);
+    nsRefPtr<gfxDrawable> drawable =
+      nsSVGIntegrationUtils::DrawableFromPaintServer(
+        mPaintServerFrame, mForFrame, mSize, imageSize,
+        aRenderingContext.ThebesContext()->CurrentMatrix(),
+        mFlags & FLAG_SYNC_DECODE_IMAGES
+          ? nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES
+          : 0);
+
+    return drawable.forget();
+  }
+  NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
+  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
+                                mImageElementSurface.mSourceSurface,
+                                mImageElementSurface.mSize);
+  return drawable.forget();
 }
 
 void
@@ -4699,10 +4711,74 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     return;
   }
 
-  nsRect tile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
+  nsRect destTile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
                   ? ComputeTile(aFill, aHFill, aVFill, aUnitSize)
                   : aFill;
-  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, tile, aSrc);
+
+  if (mType == eStyleImageType_Element) {
+    // This path is horribly slow - we read and copy the source nine times(!)
+    // It could be easily optimised by only reading the source once and caching
+    // it. It could be further optimised by caching the sub-images between draws
+    // but that would be a bit harder because you would have to know when to
+    // invalidate the cache. A special case optimisation would be when
+    // border-image-slice is proportional to the border widths, in which case
+    // the subimages do not need to be independently scaled, then we don't need
+    // subimages at all.
+    // In any case, such optimisations are probably not worth doing because it
+    // seems unlikely anyone would use -moz-element as the source for a border
+    // image.
+
+    // draw the source image slice into an intermediate surface
+    nsPresContext* presContext = mForFrame->PresContext();
+    gfxRect srcRect = gfxRect(presContext->CSSPixelsToDevPixels(aSrc.x),
+                              presContext->CSSPixelsToDevPixels(aSrc.y),
+                              presContext->CSSPixelsToDevPixels(aSrc.width),
+                              presContext->CSSPixelsToDevPixels(aSrc.height));
+    nsRefPtr<gfxASurface> srcSlice = gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(gfxIntSize(srcRect.width, srcRect.height),
+                             gfxContentType::COLOR_ALPHA);
+    nsRefPtr<gfxContext> ctx = new gfxContext(srcSlice);
+
+    // grab the entire source
+    nsRefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
+                                                        aRenderingContext);
+    if (!drawable) {
+      NS_WARNING("Could not create drawable for element");
+      return;
+    }
+
+    // draw the source into our intermediate surface
+    GraphicsFilter graphicsFilter =
+      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+    gfxMatrix transform;
+    transform.Translate(gfxPoint(srcRect.x, srcRect.y));
+    bool success = drawable->Draw(ctx,
+                                  gfxRect(0, 0, srcRect.width, srcRect.height),
+                                  false,
+                                  graphicsFilter,
+                                  transform);
+    if (!success) {
+      NS_WARNING("Could not copy element image");
+      return;
+    }
+
+    // Ensure that drawing the image gets flushed to the target.
+    ctx = nullptr;
+
+    // draw the slice
+    nsRefPtr<gfxSurfaceDrawable> srcSliceDrawable =
+      new gfxSurfaceDrawable(srcSlice,
+                             gfxIntSize(srcRect.width, srcRect.height));
+    nsPoint anchor(nsPresContext::CSSPixelsToAppUnits(aSrc.x),
+                   nsPresContext::CSSPixelsToAppUnits(aSrc.y));
+    nsLayoutUtils::DrawPixelSnapped(&aRenderingContext, srcSliceDrawable,
+                                    graphicsFilter, destTile, aFill,
+                                    anchor, aDirtyRect);
+
+    return;
+  }
+
+  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, destTile, aSrc);
 }
 
 bool
