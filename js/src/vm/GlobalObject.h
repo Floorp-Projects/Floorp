@@ -123,11 +123,6 @@ class GlobalObject : public JSObject
     static_assert(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS,
                   "global object slot counts are inconsistent");
 
-    friend JSObject *
-    ::js_InitObjectClass(JSContext *cx, js::HandleObject);
-    friend JSObject *
-    ::js_InitFunctionClass(JSContext *cx, js::HandleObject);
-
     /* Initialize the Function and Object classes.  Must only be called once! */
     JSObject *
     initFunctionAndObjectClasses(JSContext *cx);
@@ -344,10 +339,8 @@ class GlobalObject : public JSObject
     }
 
     JSObject *getOrCreateArrayPrototype(JSContext *cx) {
-        if (arrayClassInitialized())
-            return &getPrototype(JSProto_Array).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitArrayClass(cx, self))
+        if (!ensureConstructor(cx, JSProto_Array))
             return nullptr;
         return &self->getPrototype(JSProto_Array).toObject();
     }
@@ -359,37 +352,29 @@ class GlobalObject : public JSObject
     }
 
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
-        if (booleanClassInitialized())
-            return &getPrototype(JSProto_Boolean).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitBooleanClass(cx, self))
+        if (!ensureConstructor(cx, JSProto_Boolean))
             return nullptr;
         return &self->getPrototype(JSProto_Boolean).toObject();
     }
 
     JSObject *getOrCreateNumberPrototype(JSContext *cx) {
-        if (numberClassInitialized())
-            return &getPrototype(JSProto_Number).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitNumberClass(cx, self))
+        if (!ensureConstructor(cx, JSProto_Number))
             return nullptr;
         return &self->getPrototype(JSProto_Number).toObject();
     }
 
     JSObject *getOrCreateStringPrototype(JSContext *cx) {
-        if (stringClassInitialized())
-            return &getPrototype(JSProto_String).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitStringClass(cx, self))
+        if (!ensureConstructor(cx, JSProto_String))
             return nullptr;
         return &self->getPrototype(JSProto_String).toObject();
     }
 
     JSObject *getOrCreateRegExpPrototype(JSContext *cx) {
-        if (regexpClassInitialized())
-            return &getPrototype(JSProto_RegExp).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitRegExpClass(cx, self))
+        if (!ensureConstructor(cx, JSProto_RegExp))
             return nullptr;
         return &self->getPrototype(JSProto_RegExp).toObject();
     }
@@ -401,20 +386,16 @@ class GlobalObject : public JSObject
     }
 
     JSObject *getOrCreateArrayBufferPrototype(JSContext *cx) {
-        if (arrayBufferClassInitialized())
-            return &getPrototype(JSProto_ArrayBuffer).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, self))
+        if (!ensureConstructor(cx, JSProto_ArrayBuffer))
             return nullptr;
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
 
     JSObject *getOrCreateCustomErrorPrototype(JSContext *cx, JSExnType exnType) {
         JSProtoKey key = GetExceptionProtoKey(exnType);
-        if (errorClassesInitialized())
-            return &getPrototype(key).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitExceptionClasses(cx, self))
+        if (!ensureConstructor(cx, key))
             return nullptr;
         return &self->getPrototype(key).toObject();
     }
@@ -532,10 +513,8 @@ class GlobalObject : public JSObject
     }
 
     JSObject *getOrCreateDataViewPrototype(JSContext *cx) {
-        if (dataViewClassInitialized())
-            return &getPrototype(JSProto_DataView).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, self))
+        if (!ensureConstructor(cx, JSProto_DataView))
             return nullptr;
         return &self->getPrototype(JSProto_DataView).toObject();
     }
