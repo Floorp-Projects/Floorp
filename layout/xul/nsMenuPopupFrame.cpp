@@ -240,12 +240,10 @@ nsMenuPopupFrame::CreateWidgetForView(nsView* aView)
 
   if (!mInContentShell) {
     // A drag popup may be used for non-static translucent drag feedback
-    bool isDragPopup = false;
     if (mPopupType == ePopupTypePanel &&
         mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                               nsGkAtoms::drag, eIgnoreCase)) {
       widgetData.mIsDragPopup = true;
-      isDragPopup = true;
     }
 
     // If mousethrough="always" is set directly on the popup, then the widget
