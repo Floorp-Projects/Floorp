@@ -603,12 +603,7 @@ nsFrameSelection::SetCaretBidiLevel(uint8_t aLevel)
 {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
-  bool afterInsert = !!(mCaretBidiLevel & BIDI_LEVEL_UNDEFINED);
   mCaretBidiLevel = aLevel;
-  
-  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  if (bidiKeyboard && !afterInsert)
-    bidiKeyboard->SetLangFromBidiLevel(aLevel);
   return;
 }
 

@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(44d9ef13-83be-4ab9-a2a1-95d9cbd96acd)]
+[scriptable, uuid(0d53579c-8f40-4bcf-9b87-61979c09f924)]
 interface nsIBidiKeyboard : nsISupports
 {
   /**
@@ -19,13 +19,6 @@ interface nsIBidiKeyboard : nsISupports
    * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
    */
   boolean isLangRTL();
-
-  /**
-   * Sets the keyboard language to left-to-right or right-to-left
-   * @param aLevel - if odd set the keyboard to RTL, if even set LTR 
-   * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
-   */
-  void setLangFromBidiLevel(in uint8_t aLevel);
 
   /**
    * Determines whether the system has at least one keyboard of each direction
