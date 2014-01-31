@@ -15,10 +15,6 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
   -moz-image-region: rect(0px, 160px, 32px, 128px);
 }
 
-#bookmarks-menu-button[starred][cui-areatype="menu-panel"] {
-  -moz-image-region: rect(0px, 192px, 32px, 160px);
-}
-
 #history-panelmenu[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #history-panelmenu {
   -moz-image-region: rect(0px, 224px, 32px, 192px);

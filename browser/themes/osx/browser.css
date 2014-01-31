@@ -962,10 +962,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(0px, 320px, 64px, 256px);
   }
 
-  #bookmarks-menu-button[starred][cui-areatype="menu-panel"] {
-    -moz-image-region: rect(0px, 384px, 64px, 320px);
-  }
-
   #history-panelmenu[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #history-panelmenu {
     -moz-image-region: rect(0px, 448px, 64px, 384px);

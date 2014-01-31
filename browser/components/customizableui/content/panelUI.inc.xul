@@ -88,8 +88,8 @@
     <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
       <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
       <toolbarbutton id="panelMenuBookmarkThisPage"
-                     label="&bookmarkThisPageCmd.label;"
                      class="subviewbutton"
+                     observes="bookmarkThisPageBroadcaster"
                      command="Browser:AddBookmarkAs"
                      onclick="PanelUI.hide();"/>
       <toolbarseparator/>
