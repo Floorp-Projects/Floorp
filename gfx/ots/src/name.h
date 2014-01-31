@@ -18,12 +18,12 @@ struct NameRecord {
   NameRecord() {
   }
 
-  NameRecord(uint16_t platform_id, uint16_t encoding_id,
-             uint16_t language_id, uint16_t name_id)
-    : platform_id(platform_id),
-      encoding_id(encoding_id),
-      language_id(language_id),
-      name_id(name_id) {
+  NameRecord(uint16_t platformID, uint16_t encodingID,
+             uint16_t languageID, uint16_t nameID)
+    : platform_id(platformID),
+      encoding_id(encodingID),
+      language_id(languageID),
+      name_id(nameID) {
   }
 
   uint16_t platform_id;
