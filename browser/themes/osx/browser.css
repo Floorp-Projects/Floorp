@@ -2561,6 +2561,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: @loweredShadow@;
 }
 
+.tabbrowser-tab[selected=true]:-moz-lwtheme {
+  text-shadow: inherit;
+}
+
 .tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
   display: -moz-box;
   visibility: hidden;
