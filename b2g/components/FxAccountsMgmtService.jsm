@@ -39,7 +39,7 @@ this.FxAccountsMgmtService = {
     this._shell.sendCustomEvent(aEventName, aMsg);
   },
 
-  _onFullfill: function(aMsgId, aData) {
+  _onFulfill: function(aMsgId, aData) {
     this._sendChromeEvent("mozFxAccountsChromeEvent", {
       id: aMsgId,
       data: aData ? aData : null
@@ -100,7 +100,7 @@ this.FxAccountsMgmtService = {
         FxAccountsManager.getAccount().then(
           account => {
             // We only expose the email and verification status so far.
-            self._onFullfill(msg.id, account);
+            self._onFulfill(msg.id, account);
           },
           reason => {
             self._onReject(msg.id, reason);
@@ -110,7 +110,7 @@ this.FxAccountsMgmtService = {
       case "logout":
         FxAccountsManager.signOut().then(
           () => {
-            self._onFullfill(msg.id);
+            self._onFulfill(msg.id);
           },
           reason => {
             self._onReject(msg.id, reason);
@@ -120,7 +120,7 @@ this.FxAccountsMgmtService = {
       case "queryAccount":
         FxAccountsManager.queryAccount(data.accountId).then(
           result => {
-            self._onFullfill(msg.id, result);
+            self._onFulfill(msg.id, result);
           },
           reason => {
             self._onReject(msg.id, reason);
@@ -132,7 +132,7 @@ this.FxAccountsMgmtService = {
       case "refreshAuthentication":
         FxAccountsManager[data.method](data.accountId, data.password).then(
           user => {
-            self._onFullfill(msg.id, user);
+            self._onFulfill(msg.id, user);
           },
           reason => {
             self._onReject(msg.id, reason);
