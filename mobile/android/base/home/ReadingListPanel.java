@@ -45,7 +45,7 @@ public class ReadingListPanel extends HomeFragment {
     private ReadingListAdapter mAdapter;
 
     // The view shown by the fragment
-    private ListView mList;
+    private HomeListView mList;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
@@ -89,7 +89,7 @@ public class ReadingListPanel extends HomeFragment {
 
         mTopView = view;
 
-        mList = (ListView) view.findViewById(R.id.list);
+        mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_READING_LIST);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -108,6 +108,17 @@ public class ReadingListPanel extends HomeFragment {
             }
         });
 
+        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+                info.bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+                info.inReadingList = true;
+                return info;
+            }
+        });
         registerForContextMenu(mList);
     }
 
