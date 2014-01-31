@@ -71,7 +71,6 @@
   opacity: 0.5;
 }
 
-
 /* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
 .scrollbutton-up:-moz-locale-dir(ltr),
 .scrollbutton-down:-moz-locale-dir(rtl) {
@@ -116,14 +115,24 @@
   overflow: hidden;
 }
 
-#breadcrumb-separator-before,
-#breadcrumb-separator-after:after {
+.theme-dark #breadcrumb-separator-before,
+.theme-dark #breadcrumb-separator-after:after {
   background: #1d4f73; /* Select Highlight Blue */
 }
 
-#breadcrumb-separator-after,
-#breadcrumb-separator-before:after {
+.theme-dark #breadcrumb-separator-after,
+.theme-dark #breadcrumb-separator-before:after {
   background: #343c45; /* Toolbars */
+}
+
+.theme-light #breadcrumb-separator-before,
+.theme-light #breadcrumb-separator-after:after {
+  background: #4c9ed9; /* Select Highlight Blue */
+}
+
+.theme-light #breadcrumb-separator-after,
+.theme-light #breadcrumb-separator-before:after {
+  background: #f0f1f2; /* Toolbars */
 }
 
 /* This chevron arrow cannot be replicated easily in CSS, so we are using
@@ -168,7 +177,14 @@
 
 .breadcrumbs-widget-item[checked] {
   background: -moz-element(#breadcrumb-separator-before) no-repeat 0 0;
+}
+
+.theme-dark .breadcrumbs-widget-item[checked] {
   background-color: #1d4f73; /* Select Highlight Blue */
+}
+
+.theme-light .breadcrumbs-widget-item[checked] {
+  background-color: #4c9ed9; /* Select Highlight Blue */
 }
 
 .breadcrumbs-widget-item:first-child {
@@ -190,7 +206,7 @@
 #breadcrumb-separator-before:-moz-locale-dir(rtl),
 #breadcrumb-separator-after:-moz-locale-dir(rtl),
 #breadcrumb-separator-normal:-moz-locale-dir(rtl) {
-  transform:  scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #breadcrumb-separator-before:-moz-locale-dir(rtl):after,
@@ -198,58 +214,45 @@
   transform: translateX(-5px) rotate(45deg);
 }
 
-.breadcrumbs-widget-item:not([checked]):hover label {
-  color: white;
-}
-
-.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
   color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.theme-dark .breadcrumbs-widget-item-id,
-.theme-dark .breadcrumbs-widget-item-classes,
-.theme-dark .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
+.theme-dark .breadcrumbs-widget-item,
+.theme-dark .breadcrumbs-widget-item-classes {
+  color: #f5f7fa; /* Foreground (Text) - Light */
+}
+
+.theme-light .breadcrumbs-widget-item,
+.theme-light .breadcrumbs-widget-item-classes {
+  color: #18191a; /* Foreground (Text) - Dark */
+}
+
+.theme-dark .breadcrumbs-widget-item-id {
   color: #b6babf; /* Foreground (Text) - Grey */
+}
+
+.theme-light .breadcrumbs-widget-item-id {
+  color: #585959; /* Foreground (Text) - Grey */
 }
 
 .theme-dark .breadcrumbs-widget-item-pseudo-classes {
   color: #d99b28; /* Light Orange */
 }
 
-.theme-light .breadcrumbs-widget-item[checked] {
-  background: -moz-element(#breadcrumb-separator-before) no-repeat 0 0;
-  background-color: #4c9ed9; /* Select Highlight Blue */
-}
-
-.theme-light .breadcrumbs-widget-item:first-child {
-  background-image: none;
-}
-
-.theme-light #breadcrumb-separator-before,
-.theme-light #breadcrumb-separator-after:after {
-  background: #4c9ed9; /* Select Highlight Blue */
-}
-
-.theme-light #breadcrumb-separator-after,
-.theme-light #breadcrumb-separator-before:after {
-  background: #f0f1f2; /*  Toolbars */
-}
-
-.theme-light .breadcrumbs-widget-item,
-.theme-light .breadcrumbs-widget-item-id,
-.theme-light .breadcrumbs-widget-item-classes {
-  color: #585959; /* Foreground (Text) - Grey */
-}
-
 .theme-light .breadcrumbs-widget-item-pseudo-classes {
-  color: #585959; /* Foreground (Text) - Grey */
+  color: #d97e00; /* Light Orange */
+}
+
+.theme-dark .breadcrumbs-widget-item:not([checked]):hover label {
+  color: white;
 }
 
 .theme-light .breadcrumbs-widget-item:not([checked]):hover label {
-  color: #18191a; /* Foreground (Text) - Dark */
+  color: black;
 }
 
 /* SimpleListWidget */
