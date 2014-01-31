@@ -554,8 +554,9 @@ ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
 {
     nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
 
+    nsString gcLogPath, ccLogPath;
     dumper->DumpGCAndCCLogsToFile(aIdentifier, aDumpAllTraces,
-                                  aDumpChildProcesses);
+                                  aDumpChildProcesses, gcLogPath, ccLogPath);
     return true;
 }
 

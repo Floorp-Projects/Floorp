@@ -283,6 +283,13 @@ function onLoad()
                  "process to reduce memory usage in other ways, e.g. by " +
                  "flushing various caches.";
 
+  const GCAndCCLogDesc = "Save garbage collection log and concise cycle " +
+                         "collection log.\n" +
+                         "WARNING: These logs may be large (>1GB).";
+  const GCAndCCAllLogDesc = "Save garbage collection log and verbose cycle " +
+                            "collection log.\n" +
+                            "WARNING: These logs may be large (>1GB).";
+
   let ops = appendElement(header, "div", "");
 
   let row1 = appendElement(ops, "div", "opsRow");
@@ -318,10 +325,19 @@ function onLoad()
   appendButton(row3, CCDesc, doCC,  "CC");
   appendButton(row3, MMDesc, doMMU, "Minimize memory usage");
 
+  let row4 = appendElement(ops, "div", "opsRow");
+
+  appendElementWithText(row4, "div", "opsRowLabel", "Save GC & CC logs");
+  appendButton(row4, GCAndCCLogDesc,
+               saveGCLogAndConciseCCLog, "Save concise", 'saveLogsConcise');
+  appendButton(row4, GCAndCCAllLogDesc,
+               saveGCLogAndVerboseCCLog, "Save verbose", 'saveLogsVerbose');
+
   // Generate the main div, where content ("section" divs) will go.  It's
   // hidden at first.
 
   gMain = appendElement(document.body, 'div', '');
+  gMain.id = 'mainDiv';
 
   // Generate the footer.  It's hidden at first.
 
@@ -383,6 +399,39 @@ function doMMU()
 function doMeasure()
 {
   updateAboutMemoryFromReporters();
+}
+
+function saveGCLogAndConciseCCLog()
+{
+  dumpGCLogAndCCLog(false);
+}
+
+function saveGCLogAndVerboseCCLog()
+{
+  dumpGCLogAndCCLog(true);
+}
+
+function dumpGCLogAndCCLog(aVerbose)
+{
+  let gcLogPath = {};
+  let ccLogPath = {};
+
+  let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
+                .getService(Ci.nsIMemoryInfoDumper);
+
+  updateMainAndFooter("Saving logs...", HIDE_FOOTER);
+
+  dumper.dumpGCAndCCLogsToFile("", aVerbose, /* dumpChildProcesses = */ false,
+                               gcLogPath, ccLogPath);
+
+  updateMainAndFooter("", HIDE_FOOTER);
+  let section = appendElement(gMain, 'div', "section");
+  appendElementWithText(section, 'div', "",
+                        "Saved GC log to " + gcLogPath.value);
+
+  let ccLogType = aVerbose ? "verbose" : "concise";
+  appendElementWithText(section, 'div', "",
+                        "Saved " + ccLogType + " CC log to " + ccLogPath.value);
 }
 
 /**
