@@ -210,7 +210,11 @@
         <vbox flex="1">
           <label id="UITourTooltipTitle" flex="1"/>
           <description id="UITourTooltipDescription" flex="1"/>
-          <hbox id="UITourTooltipButtons" flex="1" align="end"/>
+          <hbox id="UITourTooltipButtons" flex="1" align="center"/>
+        </vbox>
+        <vbox align="start">
+          <toolbarbutton id="UITourTooltipClose" class="close-icon"
+                         tooltiptext="&uiTour.infoPanel.close;"/>
         </vbox>
       </hbox>
     </panel>
@@ -463,6 +467,11 @@
         <vbox id="downloads-indicator-notification"/>
       </vbox>
     </hbox>
+
+    <tooltip id="dynamic-shortcut-tooltip"
+             onpopupshowing="UpdateDynamicShortcutTooltipText(this.triggerNode)">
+      <label id="dynamic-shortcut-tooltip-label"/>
+    </tooltip>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -744,7 +753,7 @@
                        removable="true"
                        type="menu-button"
                        label="&bookmarksMenuButton.label;"
-                       tooltiptext="&bookmarksMenuButton.tooltip;"
+                       tooltip="dynamic-shortcut-tooltip"
                        anchor="dropmarker"
                        ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
@@ -964,17 +973,17 @@
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
 #ifdef XP_MACOSX
-                     command="cmd_print"
+                     command="cmd_print" tooltip="dynamic-shortcut-tooltip"
 #else
-                     command="cmd_printPreview"
+                     command="cmd_printPreview" tooltiptext="&printButton.tooltip;"
 #endif
-                     label="&printButton.label;" tooltiptext="&printButton.tooltip;"/>
+                     label="&printButton.label;"/>
 
 
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
                      command="key_newNavigator"
-                     tooltiptext="&newWindowButton.tooltip;"
+                     tooltip="dynamic-shortcut-tooltip"
                      ondrop="newWindowButtonObserver.onDrop(event)"
                      ondragover="newWindowButtonObserver.onDragOver(event)"
                      ondragenter="newWindowButtonObserver.onDragOver(event)"
@@ -984,7 +993,7 @@
                      observes="View:FullScreen"
                      type="checkbox"
                      label="&fullScreenCmd.label;"
-                     tooltiptext="&fullScreenButton.tooltip;"/>
+                     tooltip="dynamic-shortcut-tooltip"/>
 
 #ifdef MOZ_SERVICES_SYNC
       <toolbarbutton id="sync-button"
