@@ -90,12 +90,16 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
     if (e instanceof IOException) {
       remoteErrorTextView.setText(R.string.fxaccount_remote_error_COULD_NOT_CONNECT);
     } else if (e instanceof FxAccountClientRemoteException) {
-      remoteErrorTextView.setText(((FxAccountClientRemoteException) e).getErrorMessageStringResource());
+      showClientRemoteException((FxAccountClientRemoteException) e);
     } else {
       remoteErrorTextView.setText(defaultResourceId);
     }
     Logger.warn(LOG_TAG, "Got exception; showing error message: " + remoteErrorTextView.getText().toString(), e);
     remoteErrorTextView.setVisibility(View.VISIBLE);
+  }
+
+  protected void showClientRemoteException(final FxAccountClientRemoteException e) {
+    remoteErrorTextView.setText(e.getErrorMessageStringResource());
   }
 
   protected void addListeners() {

@@ -103,6 +103,7 @@
         <item name="android:padding">5dp</item>
         <item name="android:text">Error</item>
         <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorLink">@android:color/white</item>
         <item name="android:textSize">18sp</item>
         <item name="android:visibility">invisible</item>
     </style>
