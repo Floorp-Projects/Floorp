@@ -72,7 +72,7 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mStride > 0;
 }
 
-#ifdef MOZ_WIDGET_GONK
+#if 0
 static bool
 IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
              const VideoData::YCbCrBuffer::Plane& aCbPlane,
@@ -225,7 +225,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   if (!aImage) {
     // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
     // format.
-#ifdef MOZ_WIDGET_GONK
+#if 0
     if (IsYV12Format(Y, Cb, Cr)) {
       v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
     }
