@@ -7,10 +7,16 @@
 #include <vector>
 
 // VORG - Vertical Origin Table
-// http://www.microsoft.com/opentype/otspec/vorg.htm
+// http://www.microsoft.com/typography/otspec/vorg.htm
+
+#define TABLE_NAME "VORG"
 
 #define DROP_THIS_TABLE \
-  do { delete file->vorg; file->vorg = 0; } while (0)
+  do { \
+    delete file->vorg; \
+    file->vorg = 0; \
+    OTS_FAILURE_MSG("Table discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -24,7 +30,7 @@ bool ots_vorg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadU16(&vorg->minor_version) ||
       !table.ReadS16(&vorg->default_vert_origin_y) ||
       !table.ReadU16(&num_recs)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read header");
   }
   if (vorg->major_version != 1) {
     OTS_WARNING("bad major version: %u", vorg->major_version);
@@ -49,7 +55,7 @@ bool ots_vorg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
     if (!table.ReadU16(&rec.glyph_index) ||
         !table.ReadS16(&rec.vert_origin_y)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read record %d", i);
     }
     if ((i != 0) && (rec.glyph_index <= last_glyph_index)) {
       OTS_WARNING("the table is not sorted");
@@ -76,14 +82,14 @@ bool ots_vorg_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteU16(vorg->minor_version) ||
       !out->WriteS16(vorg->default_vert_origin_y) ||
       !out->WriteU16(vorg->metrics.size())) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write table header");
   }
 
   for (unsigned i = 0; i < vorg->metrics.size(); ++i) {
     const OpenTypeVORGMetrics& rec = vorg->metrics[i];
     if (!out->WriteU16(rec.glyph_index) ||
         !out->WriteS16(rec.vert_origin_y)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write record %d", i);
     }
   }
 

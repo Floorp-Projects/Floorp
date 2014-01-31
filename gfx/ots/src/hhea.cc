@@ -8,7 +8,9 @@
 #include "maxp.h"
 
 // hhea - Horizontal Header
-// http://www.microsoft.com/opentype/otspec/hhea.htm
+// http://www.microsoft.com/typography/otspec/hhea.htm
+
+#define TABLE_NAME "hhea"
 
 namespace ots {
 
@@ -18,14 +20,14 @@ bool ots_hhea_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   file->hhea = hhea;
 
   if (!table.ReadU32(&hhea->header.version)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read hhea version");
   }
   if (hhea->header.version >> 16 != 1) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad hhea version of %d", hhea->header.version);
   }
 
   if (!ParseMetricsHeader(file, &table, &hhea->header)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to parse horizontal metrics");
   }
 
   return true;
@@ -36,8 +38,8 @@ bool ots_hhea_should_serialise(OpenTypeFile *file) {
 }
 
 bool ots_hhea_serialise(OTSStream *out, OpenTypeFile *file) {
-  if (!SerialiseMetricsHeader(out, &file->hhea->header)) {
-    return OTS_FAILURE();
+  if (!SerialiseMetricsHeader(file, out, &file->hhea->header)) {
+    return OTS_FAILURE_MSG("Failed to serialise horizontal metrics");
   }
   return true;
 }
