@@ -1,0 +1,44 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Console
+-->
+<head>
+  <title>Test for DOM Worker Console</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+  var worker = new Worker("consoleReplaceable_worker.js");
+
+  worker.onmessage = function(event) {
+    is(event.target, worker, "Worker and target match!");
+    ok(event.data.status, event.data.event);
+
+    if (event.data.last)
+      SimpleTest.finish();
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.message);
+    SimpleTest.finish();
+  }
+
+  worker.postMessage(true);
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
