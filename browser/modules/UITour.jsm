@@ -33,6 +33,15 @@ this.UITour = {
 
   highlightEffects: ["random", "wobble", "zoom", "color"],
   targets: new Map([
+    ["accountStatus", {
+      query: (aDocument) => {
+        let statusButton = aDocument.getElementById("PanelUI-fxa-status");
+        return aDocument.getAnonymousElementByAttribute(statusButton,
+                                                        "class",
+                                                        "toolbarbutton-icon");
+      },
+      widgetName: "PanelUI-fxa-status",
+    }],
     ["addons",      {query: "#add-ons-button"}],
     ["appMenu",     {query: "#PanelUI-menu-button"}],
     ["backForward", {
