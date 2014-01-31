@@ -273,7 +273,6 @@
   overflow: hidden;
 }
 
-
 .devtools-sidebar-tabs > tabs > .tabs-right,
 .devtools-sidebar-tabs > tabs > .tabs-left {
   display: none;
@@ -299,6 +298,7 @@
   border-width: 0;
   position: static;
   -moz-margin-start: -1px;
+  text-shadow: none;
 }
 
 .devtools-sidebar-tabs > tabs > tab:first-of-type {
