@@ -23,7 +23,6 @@ import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
-import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -68,15 +67,6 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_create_account);
 
-    TextView policyView = (TextView) ensureFindViewById(null, R.id.policy, "policy links");
-    final String linkTerms = getString(R.string.fxaccount_link_tos);
-    final String linkPrivacy = getString(R.string.fxaccount_link_pn);
-    final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
-    final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
-    policyView.setText(getString(R.string.fxaccount_create_account_policy_text, linkedTOS, linkedPN));
-    final boolean underlineLinks = true;
-    ActivityUtils.linkifyTextView(policyView, underlineLinks);
-
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
@@ -92,6 +82,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     addListeners();
     updateButtonState();
     createShowPasswordButton();
+    linkifyPolicy();
     createChooseCheckBox();
 
     View signInInsteadLink = ensureFindViewById(null, R.id.sign_in_instead_link, "sign in instead link");
@@ -173,14 +164,24 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     this.finish();
   }
 
-  protected void createYearEdit() {
+  /**
+   * Return years to display in picker.
+   *
+   * @return 1990 or earlier, 1991, 1992, up to five years before current year.
+   *         (So, if it is currently 2014, up to 2009.)
+   */
+  protected String[] getYearItems() {
     int year = Calendar.getInstance().get(Calendar.YEAR);
     LinkedList<String> years = new LinkedList<String>();
-    for (int i = year - 5; i >= 1951; i--) {
+    years.add(getResources().getString(R.string.fxaccount_create_account_1990_or_earlier));
+    for (int i = 1991; i <= year - 5; i++) {
       years.add(Integer.toString(i));
     }
-    years.add(getResources().getString(R.string.fxaccount_create_account_1950_or_earlier));
-    yearItems = years.toArray(new String[0]);
+    return years.toArray(new String[0]);
+  }
+
+  protected void createYearEdit() {
+    yearItems = getYearItems();
 
     yearEdit.setOnClickListener(new OnClickListener() {
       @Override

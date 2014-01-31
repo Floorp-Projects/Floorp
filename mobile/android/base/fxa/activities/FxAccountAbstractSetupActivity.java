@@ -21,6 +21,7 @@ import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.AccountManager;
 import android.content.Intent;
@@ -80,6 +81,17 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
         }
       }
     });
+  }
+
+  protected void linkifyPolicy() {
+    TextView policyView = (TextView) ensureFindViewById(null, R.id.policy, "policy links");
+    final String linkTerms = getString(R.string.fxaccount_link_tos);
+    final String linkPrivacy = getString(R.string.fxaccount_link_pn);
+    final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
+    final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
+    policyView.setText(getString(R.string.fxaccount_create_account_policy_text, linkedTOS, linkedPN));
+    final boolean underlineLinks = true;
+    ActivityUtils.linkifyTextView(policyView, underlineLinks);
   }
 
   protected void hideRemoteError() {
