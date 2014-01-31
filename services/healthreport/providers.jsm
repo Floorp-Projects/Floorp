@@ -19,8 +19,9 @@
 this.EXPORTED_SYMBOLS = [
   "AddonsProvider",
   "AppInfoProvider",
-  "CrashDirectoryService",
+#ifdef MOZ_CRASHREPORTER
   "CrashesProvider",
+#endif
   "HealthReportProvider",
   "PlacesProvider",
   "SearchesProvider",
@@ -992,12 +993,13 @@ AddonsProvider.prototype = Object.freeze({
   },
 });
 
+#ifdef MOZ_CRASHREPORTER
 
-function DailyCrashesMeasurement() {
+function DailyCrashesMeasurement1() {
   Metrics.Measurement.call(this);
 }
 
-DailyCrashesMeasurement.prototype = Object.freeze({
+DailyCrashesMeasurement1.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "crashes",
@@ -1009,8 +1011,26 @@ DailyCrashesMeasurement.prototype = Object.freeze({
   },
 });
 
+function DailyCrashesMeasurement2() {
+  Metrics.Measurement.call(this);
+}
+
+DailyCrashesMeasurement2.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "crashes",
+  version: 2,
+
+  fields: {
+    mainCrash: DAILY_LAST_NUMERIC_FIELD,
+  },
+});
+
 this.CrashesProvider = function () {
   Metrics.Provider.call(this);
+
+  // So we can unit test.
+  this._manager = Services.crashmanager;
 };
 
 CrashesProvider.prototype = Object.freeze({
@@ -1018,163 +1038,41 @@ CrashesProvider.prototype = Object.freeze({
 
   name: "org.mozilla.crashes",
 
-  measurementTypes: [DailyCrashesMeasurement],
+  measurementTypes: [
+    DailyCrashesMeasurement1,
+    DailyCrashesMeasurement2,
+  ],
 
   pullOnly: true,
 
-  collectConstantData: function () {
+  collectDailyData: function () {
     return this.storage.enqueueTransaction(this._populateCrashCounts.bind(this));
   },
 
   _populateCrashCounts: function () {
-    let now = new Date();
-    let service = new CrashDirectoryService();
-
-    let pending = yield service.getPendingFiles();
-    let submitted = yield service.getSubmittedFiles();
-
-    function getAgeLimit() {
-      return 0;
-    }
-
-    let lastCheck = yield this.getState("lastCheck");
-    if (!lastCheck) {
-      lastCheck = getAgeLimit();
-    } else {
-      lastCheck = parseInt(lastCheck, 10);
-      if (Number.isNaN(lastCheck)) {
-        lastCheck = getAgeLimit();
-      }
-    }
-
-    let m = this.getMeasurement("crashes", 1);
-
-    // Aggregate counts locally to avoid excessive storage interaction.
-    let counts = {
-      pending: new Metrics.DailyValues(),
-      submitted: new Metrics.DailyValues(),
+    this._log.info("Grabbing crash counts from crash manager.");
+    let crashCounts = yield this._manager.getCrashCountsByDay();
+    let fields = {
+      "main-crash": "mainCrash",
     };
 
-    // FUTURE detect mtimes in the future and react more intelligently.
-    for (let filename in pending) {
-      let modified = pending[filename].modified;
+    let m = this.getMeasurement("crashes", 2);
 
-      if (modified.getTime() < lastCheck) {
-        continue;
+    for (let [day, types] of crashCounts) {
+      let date = Metrics.daysToDate(day);
+      for (let [type, count] of types) {
+        if (!(type in fields)) {
+          this._log.warn("Unknown crash type encountered: " + type);
+          continue;
+        }
+
+        yield m.setDailyLastNumeric(fields[type], count, date);
       }
-
-      counts.pending.appendValue(modified, 1);
     }
-
-    for (let filename in submitted) {
-      let modified = submitted[filename].modified;
-
-      if (modified.getTime() < lastCheck) {
-        continue;
-      }
-
-      counts.submitted.appendValue(modified, 1);
-    }
-
-    for (let [date, values] in counts.pending) {
-      yield m.incrementDailyCounter("pending", date, values.length);
-    }
-
-    for (let [date, values] in counts.submitted) {
-      yield m.incrementDailyCounter("submitted", date, values.length);
-    }
-
-    yield this.setState("lastCheck", "" + now.getTime());
   },
 });
 
-
-/**
- * Helper for interacting with the crashes directory.
- *
- * FUTURE Extract to JSM alongside crashreporter. Use in about:crashes.
- */
-this.CrashDirectoryService = function () {
-  let base = Cc["@mozilla.org/file/directory_service;1"]
-               .getService(Ci.nsIProperties)
-               .get("UAppData", Ci.nsIFile);
-
-  let cr = base.clone();
-  cr.append("Crash Reports");
-
-  let submitted = cr.clone();
-  submitted.append("submitted");
-
-  let pending = cr.clone();
-  pending.append("pending");
-
-  this._baseDir = base.path;
-  this._submittedDir = submitted.path;
-  this._pendingDir = pending.path;
-};
-
-CrashDirectoryService.prototype = Object.freeze({
-  RE_SUBMITTED_FILENAME: /^bp-.+\.txt$/,
-  RE_PENDING_FILENAME: /^.+\.dmp$/,
-
-  getPendingFiles: function () {
-    return this._getDirectoryEntries(this._pendingDir,
-                                     this.RE_PENDING_FILENAME);
-  },
-
-  getSubmittedFiles: function () {
-    return this._getDirectoryEntries(this._submittedDir,
-                                     this.RE_SUBMITTED_FILENAME);
-  },
-
-  _getDirectoryEntries: function (path, re) {
-    let files = {};
-
-    return Task.spawn(function iterateDirectory() {
-      // If the directory doesn't exist, exit immediately. Else, re-throw
-      // any errors.
-      try {
-        yield OS.File.stat(path);
-      } catch (ex if ex instanceof OS.File.Error) {
-        if (ex.becauseNoSuchFile) {
-          throw new Task.Result({});
-        }
-
-        throw ex;
-      }
-
-      let iterator = new OS.File.DirectoryIterator(path);
-
-      try {
-        while (true) {
-          let entry;
-          try {
-            entry = yield iterator.next();
-          } catch (ex if ex == StopIteration) {
-            break;
-          }
-
-          if (!entry.name.match(re)) {
-            continue;
-          }
-
-          let info = yield OS.File.stat(entry.path);
-
-          files[entry.name] = {
-            // Last modified should be adequate, because crash files aren't
-            // modified after they're first written.
-            modified: info.lastModificationDate,
-            size: info.size,
-          };
-        }
-
-        throw new Task.Result(files);
-      } finally {
-        iterator.close();
-      }
-    });
-  },
-});
+#endif
 
 
 /**
