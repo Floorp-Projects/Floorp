@@ -2423,22 +2423,6 @@ QuotaManager::Observe(nsISupports* aSubject,
         }
       }
 
-      // Give clients a chance to cleanup IO thread only objects.
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
-      if (!runnable) {
-        NS_WARNING("Failed to create runnable!");
-      }
-
-      if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
-        NS_WARNING("Failed to dispatch runnable!");
-      }
-
-      // Make sure to join with our IO thread.
-      if (NS_FAILED(mIOThread->Shutdown())) {
-        NS_WARNING("Failed to shutdown IO thread!");
-      }
-
       // Kick off the shutdown timer.
       if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
                                          nsITimer::TYPE_ONE_SHOT))) {
@@ -2454,6 +2438,22 @@ QuotaManager::Observe(nsISupports* aSubject,
       // Cancel the timer regardless of whether it actually fired.
       if (NS_FAILED(mShutdownTimer->Cancel())) {
         NS_WARNING("Failed to cancel shutdown timer!");
+      }
+
+      // Give clients a chance to cleanup IO thread only objects.
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
+      if (!runnable) {
+        NS_WARNING("Failed to create runnable!");
+      }
+
+      if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+        NS_WARNING("Failed to dispatch runnable!");
+      }
+
+      // Make sure to join with our IO thread.
+      if (NS_FAILED(mIOThread->Shutdown())) {
+        NS_WARNING("Failed to shutdown IO thread!");
       }
     }
 
