@@ -34,8 +34,11 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_BrowserWindowNamespace.html \
 		file_browserElement_BrowserWindowNamespace.html \
 		browserElement_Iconchange.js \
+		browserElement_Metachange.js \
+		file_browserElement_Metachange.sjs \
 		browserElement_Opensearch.js \
 		test_browserElement_inproc_Iconchange.html \
+		test_browserElement_inproc_Metachange.html \
 		test_browserElement_inproc_Opensearch.html \
 		browserElement_GetScreenshot.js \
 		test_browserElement_inproc_GetScreenshot.html \
@@ -206,6 +209,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_BrowserWindowNamespace.html \
 		test_browserElement_oop_TopBarrier.html \
 		test_browserElement_oop_Iconchange.html \
+		test_browserElement_oop_Metachange.html \
 		test_browserElement_oop_Opensearch.html \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_BadScreenshot.html \

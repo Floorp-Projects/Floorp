@@ -2990,7 +2990,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   gfxSize scale;
   // XXX Should we do something for 3D transforms?
   if (canDraw2D) {
-    // If the container's transform is animated off main thread, then use the
+//     // If the container's transform is animated off main thread, then use the
     // maximum scale.
     if (aContainerFrame->GetContent() &&
         nsLayoutUtils::HasAnimationsForCompositor(
@@ -3868,8 +3868,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
-    static const ImageFormat format = CAIRO_SURFACE;
-    nsRefPtr<Image> image = container->CreateImage(&format, 1);
+    nsRefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
     NS_ASSERTION(image, "Could not create image container for mask layer.");
     CairoImage::Data data;
     data.mDeprecatedSurface = surface;

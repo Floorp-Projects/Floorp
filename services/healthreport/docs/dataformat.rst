@@ -537,10 +537,17 @@ version number is incremented.
 
 All measurements are defined alphabetically in the sections below.
 
-org.mozilla.addons.active
+org.mozilla.addons.addons
 -------------------------
 
 This measurement contains information about the currently-installed add-ons.
+
+Version 2
+^^^^^^^^^
+
+This version adds the human-readable fields *name* and *description*, both
+coming directly from the Addon instance as most properties in version 1.
+Also, all plugin details are now in org.mozilla.addons.plugins.
 
 Version 1
 ^^^^^^^^^
@@ -576,32 +583,99 @@ Example
 ^^^^^^^
 ::
 
-    "org.mozilla.addons.active": {
-      "_v": 1,
-      "SQLiteManager@mrinalkant.blogspot.com": {
+    "org.mozilla.addons.addons": {
+      "_v": 2,
+      "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}": {
         "userDisabled": false,
         "appDisabled": false,
-        "version": "0.7.7",
+        "name": "Adblock Plus",
+        "version": "2.4.1",
         "type": "extension",
         "scope": 1,
+        "description": "Ads were yesterday!",
         "foreignInstall": false,
         "hasBinaryComponents": false,
-        "installDay": 15196,
-        "updateDay": 15307
+        "installDay": 16093,
+        "updateDay": 16093
       },
-      "testpilot@labs.mozilla.com": {
-        "userDisabled": false,
+      "{e4a8a97b-f2ed-450b-b12d-ee082ba24781}": {
+        "userDisabled": true,
         "appDisabled": false,
-        "version": "1.2.2",
+        "name": "Greasemonkey",
+        "version": "1.14",
         "type": "extension",
         "scope": 1,
+        "description": "A User Script Manager for Firefox",
         "foreignInstall": false,
         "hasBinaryComponents": false,
-        "installDay": 15176,
-        "updateDay": 15595
+        "installDay": 16093,
+        "updateDay": 16093
       }
     }
 
+org.mozilla.addons.plugins
+-------------------------
+
+This measurement contains information about the currently-installed plugins.
+
+Version 1
+^^^^^^^^^
+
+The measurement object is a mapping of plugin IDs to objects containing
+plugin metadata.
+
+The plugin ID is constructed of the plugins filename, name, version and
+description. Every plugin has at least a filename and a name.
+
+Each plugin contains the following properties:
+
+* name
+* version
+* description
+* blocklisted
+* disabled
+* clicktoplay
+* mimeTypes
+* updateDay
+
+With the exception of *updateDay* and *mimeTypes*, all these properties come
+directly from ``nsIPluginTag`` via ``nsIPluginHost``.
+*updateDay* is the number of days since UNIX epoch of the plugins last modified
+time.
+*mimeTypes* is the list of mimetypes the plugin supports, see
+``nsIPluginTag.getMimeTypes()`.
+
+Example
+^^^^^^^
+
+::
+
+    "org.mozilla.addons.plugins": {
+      "_v": 1,
+      "Flash Player.plugin:Shockwave Flash:12.0.0.38:Shockwave Flash 12.0 r0": {
+        "mimeTypes": [
+          "application/x-shockwave-flash",
+          "application/futuresplash"
+        ],
+        "name": "Shockwave Flash",
+        "version": "12.0.0.38",
+        "description": "Shockwave Flash 12.0 r0",
+        "blocklisted": false,
+        "disabled": false,
+        "clicktoplay": false
+      },
+      "Default Browser.plugin:Default Browser Helper:537:Provides information about the default web browser": {
+        "mimeTypes": [
+          "application/apple-default-browser"
+        ],
+        "name": "Default Browser Helper",
+        "version": "537",
+        "description": "Provides information about the default web browser",
+        "blocklisted": false,
+        "disabled": true,
+        "clicktoplay": false
+      }
+    }
 
 org.mozilla.addons.counts
 -------------------------

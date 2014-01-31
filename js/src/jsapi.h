@@ -4594,14 +4594,14 @@ extern JS_PUBLIC_API(void)
 JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
 
 /*
- * If the given value is an exception object that originated from an error,
- * the exception will contain an error report struct, and this API will return
- * the address of that struct.  Otherwise, it returns nullptr.  The lifetime
+ * If the given object is an exception object, the exception will have (or be
+ * able to lazily create) an error report struct, and this function will return
+ * the address of that struct.  Otherwise, it returns nullptr. The lifetime
  * of the error report struct that might be returned is the same as the
  * lifetime of the exception object.
  */
 extern JS_PUBLIC_API(JSErrorReport *)
-JS_ErrorFromException(JSContext *cx, JS::HandleValue v);
+JS_ErrorFromException(JSContext *cx, JS::HandleObject obj);
 
 /*
  * Throws a StopIteration exception on cx.

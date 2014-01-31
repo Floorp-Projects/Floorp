@@ -18,6 +18,7 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGUtils.h"
+#include "mozilla/ArrayUtils.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGGraphicsElement.h"
 
@@ -486,7 +487,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
         properties.GetMarkerMidFrame(),
         properties.GetMarkerEndFrame(),
       };
-      PR_STATIC_ASSERT(NS_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
+      PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
 
       for (uint32_t i = 0; i < num; i++) {
         nsSVGMark& mark = marks[i];
@@ -707,7 +708,7 @@ nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext)
           properties.GetMarkerMidFrame(),
           properties.GetMarkerEndFrame(),
         };
-        PR_STATIC_ASSERT(NS_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
+        PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
 
         for (uint32_t i = 0; i < num; i++) {
           nsSVGMark& mark = marks[i];

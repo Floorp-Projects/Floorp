@@ -238,8 +238,8 @@ class WaitUntilTest(MarionetteTestCase):
         except errors.TimeoutException as e:
             exc = e
 
-        s = str(exc)
-        self.assertIn("seconds with message: hooba, caused by", s)
+        result = str(exc)
+        self.assertIn("seconds with message: hooba, caused by", result)
 
     def test_no_message(self):
         self.w.exceptions = (TypeError,)
@@ -249,5 +249,17 @@ class WaitUntilTest(MarionetteTestCase):
         except errors.TimeoutException as e:
             exc = e
 
-        s = str(e)
-        self.assertIn("seconds, caused by", s)
+        result = str(exc)
+        self.assertIn("seconds, caused by", result)
+
+    def test_message_has_none_as_its_value(self):
+        self.w.exceptions = (TypeError,)
+        exc = None
+        try:
+            self.w.until(False, None, None)
+        except errors.TimeoutException as e:
+            exc = e
+
+        result = str(exc)
+        self.assertNotIn("with message:", result)
+        self.assertNotIn("secondsNone", result)

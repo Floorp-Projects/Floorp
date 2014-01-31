@@ -204,11 +204,17 @@ SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, Handle
 bool
 MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value)
 {
-    // Copy the incoming value. This may be overwritten; the return value is discarded.
-    RootedValue rval(cx, value);
+    MOZ_ASSERT(obj->is<JSObject>(), "must only be used with object literals");
+    if (!value.isObjectOrNull())
+        return true;
 
-    RootedId id(cx, NameToId(cx->names().proto));
-    return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval, false);
+    RootedObject newProto(cx, value.toObjectOrNull());
+
+    bool succeeded;
+    if (!JSObject::setProto(cx, obj, newProto, &succeeded))
+        return false;
+    MOZ_ASSERT(succeeded);
+    return true;
 }
 
 bool

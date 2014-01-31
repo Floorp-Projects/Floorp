@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+no_tooltool=1
+
 # This file is included at the top of all b2g mozconfigs
 
 . "$topsrcdir/build/mozconfig.common"
