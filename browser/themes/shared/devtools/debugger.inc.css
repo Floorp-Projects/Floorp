@@ -290,6 +290,22 @@
   color: inherit;
 }
 
+.dbg-expression-button {
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.theme-dark .dbg-expression-button {
+  color: #46afe3; /* Blue highlight color */
+}
+
+.theme-light .dbg-expression-button {
+  color: #0088cc; /* Blue highlight color */
+}
+
 /* Event listeners view */
 
 .dbg-event-listener-type {
