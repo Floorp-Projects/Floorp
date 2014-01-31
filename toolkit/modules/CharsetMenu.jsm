@@ -12,6 +12,14 @@ XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
   const kUrl = "chrome://global/locale/charsetMenu.properties";
   return Services.strings.createBundle(kUrl);
 });
+
+const kAutoDetectors = [
+  ["off", "off"],
+  ["ja", "ja_parallel_state_machine"],
+  ["ru", "ruprob"],
+  ["uk", "ukprob"]
+];
+
 /**
  * This set contains encodings that are in the Encoding Standard, except:
  *  - XSS-dangerous encodings (except ISO-2022-JP which is assumed to be
@@ -36,7 +44,6 @@ const kEncodings = new Set([
   "ISO-8859-2",
   // Chinese, Simplified
   "gbk",
-  "gb18030",
   // Chinese, Traditional
   "Big5",
   // Cyrillic
@@ -80,53 +87,94 @@ const kPinned = [
   "windows-1252"
 ];
 
-this.CharsetMenu = Object.freeze({
-  build: function BuildCharsetMenu(event, idPrefix="", showAccessKeys=true) {
-    let parent = event.target;
-    if (parent.lastChild.localName != "menuseparator") {
+kPinned.forEach(x => kEncodings.delete(x));
+
+
+let gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
+
+let CharsetMenu = {
+  build: function(parent, idPrefix="", showAccessKeys=true) {
+    function createDOMNode(doc, nodeInfo) {
+      let node = doc.createElement("menuitem");
+      node.setAttribute("type", "radio");
+      node.setAttribute("name", nodeInfo.name);
+      node.setAttribute("label", nodeInfo.label);
+      if (showAccessKeys && nodeInfo.accesskey) {
+        node.setAttribute("accesskey", nodeInfo.accesskey);
+      }
+      if (idPrefix) {
+        node.id = idPrefix + nodeInfo.id;
+      } else {
+        node.id = nodeInfo.id;
+      }
+      return node;
+    }
+
+    if (parent.childElementCount > 0) {
       // Detector menu or charset menu already built
       return;
     }
     let doc = parent.ownerDocument;
 
-    function createItem(encoding) {
-      let menuItem = doc.createElement("menuitem");
-      menuItem.setAttribute("type", "radio");
-      menuItem.setAttribute("name", "charsetGroup");
-      try {
-        menuItem.setAttribute("label", gBundle.GetStringFromName(encoding));
-      } catch (e) {
-        // Localization error but put *something* in the menu to recover.
-        menuItem.setAttribute("label", encoding);
-      }
-      if (showAccessKeys) {
-        try {
-          menuItem.setAttribute("accesskey",
-                                gBundle.GetStringFromName(encoding + ".key"));
-        } catch (e) {
-          // Some items intentionally don't have an accesskey
-        }
-      }
-      menuItem.setAttribute("id", idPrefix + "charset." + encoding);
-      return menuItem;
+    let menuNode = doc.createElement("menu");
+    menuNode.setAttribute("label", gBundle.GetStringFromName("charsetMenuAutodet"));
+    if (showAccessKeys) {
+      menuNode.setAttribute("accesskey", gBundle.GetStringFromName("charsetMenuAutodet.key"));
     }
+    parent.appendChild(menuNode);
 
-    // Clone the set in order to be able to remove the pinned encodings from
-    // the cloned set.
-    let encodings = new Set(kEncodings);
-    for (let encoding of kPinned) {
-      encodings.delete(encoding);
-      parent.appendChild(createItem(encoding));
-    }
+    let menuPopupNode = doc.createElement("menupopup");
+    menuNode.appendChild(menuPopupNode);
+
+    this._ensureDataReady();
+    gDetectorInfoCache.forEach(detectorInfo => menuPopupNode.appendChild(createDOMNode(doc, detectorInfo)));
     parent.appendChild(doc.createElement("menuseparator"));
-    let list = [];
-    for (let encoding of encodings) {
-      list.push(createItem(encoding));
+    gPinnedInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
+    parent.appendChild(doc.createElement("menuseparator"));
+    gCharsetInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
+  },
+
+  getData: function() {
+    this._ensureDataReady();
+    return {
+      detectors: gDetectorInfoCache,
+      pinnedCharsets: gPinnedInfoCache,
+      otherCharsets: gCharsetInfoCache
+    };
+  },
+
+  _ensureDataReady: function() {
+    if (!gDetectorInfoCache) {
+      gDetectorInfoCache = this.getDetectorInfo();
+      gPinnedInfoCache = this.getCharsetInfo(kPinned, false);
+      gCharsetInfoCache = this.getCharsetInfo([...kEncodings]);
+    }
+  },
+
+  getDetectorInfo: function() {
+    return kAutoDetectors.map(([detectorName, nodeId]) => ({
+      id: "chardet." + nodeId,
+      label: this._getDetectorLabel(detectorName),
+      accesskey: this._getDetectorAccesskey(detectorName),
+      name: "detectorGroup",
+    }));
+  },
+
+  getCharsetInfo: function(charsets, sort=true) {
+    let list = charsets.map(charset => ({
+      id: "charset." + charset,
+      label: this._getCharsetLabel(charset),
+      accesskey: this._getCharsetAccessKey(charset),
+      name: "charsetGroup",
+    }));
+
+    if (!sort) {
+      return list;
     }
 
     list.sort(function (a, b) {
-      let titleA = a.getAttribute("label");
-      let titleB = b.getAttribute("label");
+      let titleA = a.label;
+      let titleB = b.label;
       // Normal sorting sorts the part in parenthesis in an order that
       // happens to make the less frequently-used items first.
       let index;
@@ -143,19 +191,51 @@ this.CharsetMenu = Object.freeze({
       // secondarily reverse sort by encoding name to sort "windows" or
       // "shift_jis" first. This works regardless of localization, because
       // the ids aren't localized.
-      let idA = a.getAttribute("id");
-      let idB = b.getAttribute("id");
-      if (idA < idB) {
+      if (a.id < b.id) {
         return 1;
       }
-      if (idB < idA) {
+      if (b.id < a.id) {
         return -1;
       }
       return 0;
     });
-
-    for (let item of list) {
-      parent.appendChild(item);
-    }
+    return list;
   },
-});
+
+  _getDetectorLabel: function(detector) {
+    try {
+      return gBundle.GetStringFromName("charsetMenuAutodet." + detector);
+    } catch (ex) {}
+    return detector;
+  },
+  _getDetectorAccesskey: function(detector) {
+    try {
+      return gBundle.GetStringFromName("charsetMenuAutodet." + detector + ".key");
+    } catch (ex) {}
+    return "";
+  },
+
+  _getCharsetLabel: function(charset) {
+    if (charset == "gbk") {
+      // Localization key has been revised
+      charset = "gbk.bis";
+    }
+    try {
+      return gBundle.GetStringFromName(charset);
+    } catch (ex) {}
+    return charset;
+  },
+  _getCharsetAccessKey: function(charset) {
+    if (charset == "gbk") {
+      // Localization key has been revised
+      charset = "gbk.bis";
+    }
+    try {
+      return gBundle.GetStringFromName(charset + ".key");
+    } catch (ex) {}
+    return "";
+  },
+};
+
+Object.freeze(CharsetMenu);
+

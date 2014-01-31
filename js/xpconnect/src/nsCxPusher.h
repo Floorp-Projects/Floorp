@@ -115,12 +115,43 @@ private:
 };
 
 /**
+ * Use ThreadsafeAutoJSContext when you want an AutoJSContext but might be
+ * running on a worker thread.
+ */
+class MOZ_STACK_CLASS ThreadsafeAutoJSContext {
+public:
+  ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*() const;
+
+private:
+  JSContext* mCx; // Used on workers.  Null means mainthread.
+  Maybe<JSAutoRequest> mRequest; // Used on workers.
+  Maybe<AutoJSContext> mAutoJSContext; // Used on main thread.
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/**
  * AutoSafeJSContext is similar to AutoJSContext but will only return the safe
  * JS context. That means it will never call ::GetCurrentJSContext().
  */
 class MOZ_STACK_CLASS AutoSafeJSContext : public AutoJSContext {
 public:
   AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+};
+
+/**
+ * Like AutoSafeJSContext but can be used safely on worker threads.
+ */
+class MOZ_STACK_CLASS ThreadsafeAutoSafeJSContext {
+public:
+  ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*() const;
+
+private:
+  JSContext* mCx; // Used on workers.  Null means mainthread.
+  Maybe<JSAutoRequest> mRequest; // Used on workers.
+  Maybe<AutoSafeJSContext> mAutoSafeJSContext; // Used on main thread.
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /**

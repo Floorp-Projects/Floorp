@@ -75,6 +75,8 @@ const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
 
+const PREF_CHECKCOMAT_THEMEOVERRIDE   = "extensions.checkCompatibility.temporaryThemeOverride_minAppVersion";
+
 const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
@@ -603,8 +605,22 @@ function isUsableAddon(aAddon) {
       return false;
   }
   else {
-    if (!aAddon.matchingTargetApplication)
+    let app = aAddon.matchingTargetApplication;
+    if (!app)
       return false;
+
+    // XXX Temporary solution to let applications opt-in to make themes safer
+    //     following significant UI changes even if checkCompatibility=false has
+    //     been set, until we get bug 962001.
+    if (aAddon.type == "theme" && app.id == Services.appinfo.ID) {
+      try {
+        let minCompatVersion = Services.prefs.getCharPref(PREF_CHECKCOMAT_THEMEOVERRIDE);
+        if (minCompatVersion &&
+            Services.vc.compare(minCompatVersion, app.maxVersion) > 0) {
+          return false;
+        }
+      } catch (e) {}
+    }
   }
 
   return true;

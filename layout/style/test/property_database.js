@@ -4884,6 +4884,17 @@ if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
 	};
 }
 
+if (SpecialPowers.getBoolPref("layout.css.will-change.enabled")) {
+	gCSSProperties["will-change"] = {
+		domProp: "willChange",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "scroll-position", "contents", "transform", "opacity", "scroll-position, transform", "transform, opacity", "contents, transform", "property-that-doesnt-exist-yet" ],
+		invalid_values: [ "none", "all", "default", "auto, scroll-position", "scroll-position, auto", "transform scroll-position", ",", "trailing," ]
+	};
+}
+
 if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");

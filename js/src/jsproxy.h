@@ -89,11 +89,19 @@ class JS_FRIEND_API(BaseProxyHandler)
 {
     const void *mFamily;
     bool mHasPrototype;
-    bool mHasPolicy;
+
+    /*
+     * All proxies indicate whether they have any sort of interesting security
+     * policy that might prevent the caller from doing something it wants to
+     * the object. In the case of wrappers, this distinction is used to
+     * determine whether the caller may strip off the wrapper if it so desires.
+     */
+    bool mHasSecurityPolicy;
+
   protected:
     // Subclasses may set this in their constructor.
     void setHasPrototype(bool aHasPrototype) { mHasPrototype = aHasPrototype; }
-    void setHasPolicy(bool aHasPolicy) { mHasPolicy = aHasPolicy; }
+    void setHasSecurityPolicy(bool aHasPolicy) { mHasSecurityPolicy = aHasPolicy; }
 
   public:
     explicit BaseProxyHandler(const void *family);
@@ -103,8 +111,8 @@ class JS_FRIEND_API(BaseProxyHandler)
         return mHasPrototype;
     }
 
-    bool hasPolicy() {
-        return mHasPolicy;
+    bool hasSecurityPolicy() {
+        return mHasSecurityPolicy;
     }
 
     inline const void *family() {
@@ -112,10 +120,6 @@ class JS_FRIEND_API(BaseProxyHandler)
     }
     static size_t offsetOfFamily() {
         return offsetof(BaseProxyHandler, mFamily);
-    }
-
-    virtual bool isOuterWindow() {
-        return false;
     }
 
     virtual bool finalizeInBackground(Value priv) {
@@ -329,13 +333,10 @@ class Proxy
 // Use these in places where you don't want to #include vm/ProxyObject.h.
 extern JS_FRIEND_DATA(const js::Class* const) CallableProxyClassPtr;
 extern JS_FRIEND_DATA(const js::Class* const) UncallableProxyClassPtr;
-extern JS_FRIEND_DATA(const js::Class* const) OuterWindowProxyClassPtr;
 
 inline bool IsProxyClass(const Class *clasp)
 {
-    return clasp == CallableProxyClassPtr ||
-           clasp == UncallableProxyClassPtr ||
-           clasp == OuterWindowProxyClassPtr;
+    return clasp->isProxy();
 }
 
 inline bool IsProxy(JSObject *obj)
@@ -362,9 +363,10 @@ inline bool IsScriptedProxy(JSObject *obj)
  * needs to store one slot's worth of data doesn't need to branch on what sort
  * of object it has.
  */
-const uint32_t PROXY_PRIVATE_SLOT = 0;
-const uint32_t PROXY_HANDLER_SLOT = 1;
-const uint32_t PROXY_EXTRA_SLOT   = 2;
+const uint32_t PROXY_PRIVATE_SLOT   = 0;
+const uint32_t PROXY_HANDLER_SLOT   = 1;
+const uint32_t PROXY_EXTRA_SLOT     = 2;
+const uint32_t PROXY_MINIMUM_SLOTS  = 4;
 
 inline BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
@@ -410,16 +412,17 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 }
 
 class MOZ_STACK_CLASS ProxyOptions {
-  public:
-    ProxyOptions() : callable_(false),
-                     singleton_(false)
+  protected:
+    /* protected constructor for subclass */
+    ProxyOptions(bool singletonArg, const Class *claspArg)
+      : singleton_(singletonArg),
+        clasp_(claspArg)
     {}
 
-    bool callable() const { return callable_; }
-    ProxyOptions &setCallable(bool flag) {
-        callable_ = flag;
-        return *this;
-    }
+  public:
+    ProxyOptions() : singleton_(false),
+                     clasp_(UncallableProxyClassPtr)
+    {}
 
     bool singleton() const { return singleton_; }
     ProxyOptions &setSingleton(bool flag) {
@@ -427,9 +430,22 @@ class MOZ_STACK_CLASS ProxyOptions {
         return *this;
     }
 
+    const Class *clasp() const {
+        return clasp_;
+    }
+    ProxyOptions &setClass(const Class *claspArg) {
+        clasp_ = claspArg;
+        return *this;
+    }
+    ProxyOptions &selectDefaultClass(bool callable) {
+        const Class *classp = callable? CallableProxyClassPtr :
+                                        UncallableProxyClassPtr;
+        return setClass(classp);
+    }
+
   private:
-    bool callable_;
     bool singleton_;
+    const Class *clasp_;
 };
 
 JS_FRIEND_API(JSObject *)
@@ -449,8 +465,8 @@ class JS_FRIEND_API(AutoEnterPolicy)
         : context(nullptr)
 #endif
     {
-        allow = handler->hasPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
-                                     : true;
+        allow = handler->hasSecurityPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
+                                             : true;
         recordEnter(cx, wrapper, id);
         // We want to throw an exception if all of the following are true:
         // * The policy disallowed access.

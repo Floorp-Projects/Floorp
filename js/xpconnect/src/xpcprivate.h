@@ -3333,6 +3333,10 @@ bool
 NewFunctionForwarder(JSContext *cx, JS::HandleId id, JS::HandleObject callable,
                      bool doclone, JS::MutableHandleValue vp);
 
+bool
+NewFunctionForwarder(JSContext *cx, JS::HandleObject callable,
+                     bool doclone, JS::MutableHandleValue vp);
+
 // Old fashioned xpc error reporter. Try to use JS_ReportError instead.
 nsresult
 ThrowAndFail(nsresult errNum, JSContext *cx, bool *retval);

@@ -76,6 +76,11 @@ nsDOMIdentity.prototype = {
 
   watch: function nsDOMIdentity_watch(aOptions) {
     if (this._rpWatcher) {
+      // For the initial release of Firefox Accounts, we support callers who
+      // invoke watch() either for Firefox Accounts, or Persona, but not both.
+      // In the future, we may wish to support the dual invocation (say, for
+      // packaged apps so they can sign users in who reject the app's request
+      // to sign in with their Firefox Accounts identity).
       throw new Error("navigator.id.watch was already called");
     }
 
@@ -83,19 +88,28 @@ nsDOMIdentity.prototype = {
       throw new Error("options argument to watch is required");
     }
 
-    // Check for required callbacks
-    let requiredCallbacks = ["onlogin", "onlogout"];
-    for (let cbName of requiredCallbacks) {
-      if ((!(cbName in aOptions))
-          || typeof(aOptions[cbName]) !== "function") {
-           throw new Error(cbName + " callback is required.");
-         }
+    // The relying party (RP) provides callbacks on watch().
+    //
+    // In the future, BrowserID will probably only require an onlogin()
+    // callback [1], lifting the requirement that BrowserID handle logged-in
+    // state management for RPs.  See
+    // https://github.com/mozilla/id-specs/blob/greenfield/browserid/api-rp.md
+    //
+    // However, Firefox Accounts will almost certainly require RPs to provide
+    // onlogout(), onready(), and possibly an onerror() callback.
+    // XXX Bug 945278
+    //
+    // To accomodate the more and less lenient uses of the API, we will simply
+    // be strict about checking for onlogin here.
+    if (typeof(aOptions["onlogin"]) != "function") {
+      throw new Error("onlogin() callback is required.");
     }
 
-    // Optional callback "onready"
-    if (aOptions["onready"]
-        && typeof(aOptions['onready']) !== "function") {
-      throw new Error("onready must be a function");
+    // Optional callbacks
+    for (let cb of ["onready", "onlogout"]) {
+      if (aOptions[cb] && typeof(aOptions[cb]) != "function") {
+        throw new Error(cb + " must be a function");
+      }
     }
 
     let message = this.DOMIdentityMessage(aOptions);
@@ -379,6 +393,7 @@ nsDOMIdentity.prototype = {
     // Store window and origin URI.
     this._window = aWindow;
     this._origin = aWindow.document.nodePrincipal.origin;
+    this._appStatus = aWindow.document.nodePrincipal.appStatus;
 
     // Setup identifiers for current window.
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -535,6 +550,11 @@ nsDOMIdentity.prototype = {
 
     // window origin
     message.origin = this._origin;
+
+    // On b2g, an app's status can be NOT_INSTALLED, INSTALLED, PRIVILEGED, or
+    // CERTIFIED.  Compare the appStatus value to the constants enumerated in
+    // Ci.nsIPrincipal.APP_STATUS_*.
+    message.appStatus = this._appStatus;
 
     return message;
   },

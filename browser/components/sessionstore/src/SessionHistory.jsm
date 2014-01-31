@@ -24,6 +24,10 @@ function debug(msg) {
  * The external API exported by this module.
  */
 this.SessionHistory = Object.freeze({
+  isEmpty: function (docShell) {
+    return SessionHistoryInternal.isEmpty(docShell);
+  },
+
   collect: function (docShell) {
     return SessionHistoryInternal.collect(docShell);
   },
@@ -37,6 +41,19 @@ this.SessionHistory = Object.freeze({
  * The internal API for the SessionHistory module.
  */
 let SessionHistoryInternal = {
+  /**
+   * Returns whether the given docShell's session history is empty.
+   *
+   * @param docShell
+   *        The docShell that owns the session history.
+   */
+  isEmpty: function (docShell) {
+    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+    let history = webNavigation.sessionHistory;
+    let uri = webNavigation.currentURI.spec;
+    return uri == "about:blank" && history.count == 0;
+  },
+
   /**
    * Collects session history data for a given docShell.
    *

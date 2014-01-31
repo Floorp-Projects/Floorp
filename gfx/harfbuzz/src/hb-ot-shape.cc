@@ -88,6 +88,10 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
       break;
   }
 
+  map->add_feature (HB_TAG ('f','r','a','c'), 1, F_NONE);
+  map->add_feature (HB_TAG ('n','u','m','r'), 1, F_NONE);
+  map->add_feature (HB_TAG ('d','n','o','m'), 1, F_NONE);
+
   if (planner->shaper->collect_features)
     planner->shaper->collect_features (planner);
 
@@ -234,8 +238,7 @@ hb_insert_dotted_circle (hb_buffer_t *buffer, hb_font_t *font)
       HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
     return;
 
-  hb_codepoint_t dottedcircle_glyph;
-  if (!font->get_glyph (0x25CC, 0, &dottedcircle_glyph))
+  if (!font->has_glyph (0x25CC))
     return;
 
   hb_glyph_info_t dottedcircle;
@@ -292,7 +295,7 @@ hb_ot_mirror_chars (hb_ot_shape_context_t *c)
 
   hb_buffer_t *buffer = c->buffer;
   hb_unicode_funcs_t *unicode = buffer->unicode;
-  hb_mask_t rtlm_mask = c->plan->map.get_1_mask (HB_TAG ('r','t','l','m'));
+  hb_mask_t rtlm_mask = c->plan->rtlm_mask;
 
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
@@ -306,13 +309,58 @@ hb_ot_mirror_chars (hb_ot_shape_context_t *c)
 }
 
 static inline void
-hb_ot_shape_setup_masks (hb_ot_shape_context_t *c)
+hb_ot_shape_setup_masks_fraction (hb_ot_shape_context_t *c)
+{
+  if (!c->plan->has_frac)
+    return;
+
+  hb_buffer_t *buffer = c->buffer;
+
+  /* TODO look in pre/post context text also. */
+  unsigned int count = buffer->len;
+  hb_glyph_info_t *info = buffer->info;
+  for (unsigned int i = 0; i < count; i++)
+  {
+    if (info[i].codepoint == 0x2044) /* FRACTION SLASH */
+    {
+      unsigned int start = i, end = i + 1;
+      while (start &&
+	     _hb_glyph_info_get_general_category (&info[start - 1]) ==
+	     HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER)
+        start--;
+      while (end < count &&
+	     _hb_glyph_info_get_general_category (&info[end]) ==
+	     HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER)
+        end++;
+
+      for (unsigned int j = start; j < i; j++)
+        info[j].mask |= c->plan->numr_mask | c->plan->frac_mask;
+      info[i].mask |= c->plan->frac_mask;
+      for (unsigned int j = i + 1; j < end; j++)
+        info[j].mask |= c->plan->frac_mask | c->plan->dnom_mask;
+
+      i = end - 1;
+    }
+  }
+}
+
+static inline void
+hb_ot_shape_initialize_masks (hb_ot_shape_context_t *c)
 {
   hb_ot_map_t *map = &c->plan->map;
   hb_buffer_t *buffer = c->buffer;
 
   hb_mask_t global_mask = map->get_global_mask ();
   buffer->reset_masks (global_mask);
+}
+
+static inline void
+hb_ot_shape_setup_masks (hb_ot_shape_context_t *c)
+{
+  hb_ot_map_t *map = &c->plan->map;
+  hb_buffer_t *buffer = c->buffer;
+
+  hb_ot_shape_setup_masks_fraction (c);
 
   if (c->plan->shaper->setup_masks)
     c->plan->shaper->setup_masks (c->plan, buffer, c->font);
@@ -357,6 +405,8 @@ hb_ot_substitute_default (hb_ot_shape_context_t *c)
 
   if (c->plan->shaper->preprocess_text)
     c->plan->shaper->preprocess_text (c->plan, buffer, c->font);
+
+  hb_ot_shape_initialize_masks (c);
 
   hb_ot_mirror_chars (c);
 

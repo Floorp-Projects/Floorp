@@ -730,9 +730,9 @@ bool
 js_ThrowStopIteration(JSContext *cx)
 {
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    RootedValue v(cx);
-    if (js_FindClassObject(cx, JSProto_StopIteration, &v))
-        cx->setPendingException(v);
+    RootedObject ctor(cx);
+    if (js_GetClassObject(cx, JSProto_StopIteration, &ctor) && ctor)
+        cx->setPendingException(ObjectValue(*ctor));
     return false;
 }
 
@@ -1254,8 +1254,7 @@ stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool
 
 const Class StopIterationObject::class_ = {
     "StopIteration",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration) |
-    JSCLASS_FREEZE_PROTO,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */

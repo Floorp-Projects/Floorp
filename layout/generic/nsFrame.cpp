@@ -1001,7 +1001,10 @@ nsIFrame::IsTransformed() const
 bool
 nsIFrame::HasOpacity() const
 {
-  return StyleDisplay()->mOpacity < 1.0f || (mContent &&
+  const nsStyleDisplay* displayStyle = StyleDisplay();
+  return StyleDisplay()->mOpacity < 1.0f ||
+         (displayStyle->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
+         (mContent &&
            nsLayoutUtils::HasAnimationsForCompositor(mContent,
                                                      eCSSProperty_opacity) &&
            mContent->GetPrimaryFrame() == this);
@@ -1807,6 +1810,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // need to have display items built for them.
   if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&
+      !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasAnimations(mContent, eCSSProperty_opacity)) {
     return;
   }
@@ -1992,8 +1996,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if (useStickyPosition) {
     resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, this,
-                                               &resultList));
+        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, &resultList));
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap 
@@ -2144,7 +2147,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // If the child is a scrollframe that we want to ignore, then we need
     // to descend into it because its scrolled child may intersect the dirty
     // area even if the scrollframe itself doesn't.
-    if (child != aBuilder->GetIgnoreScrollFrame()) {
+    // There are cases where the "ignore scroll frame" on the builder is not set
+    // correctly, and so we additionally want to catch cases where the child is
+    // a root scrollframe and we are ignoring scrolling on the viewport.
+    nsIPresShell* shell = PresContext()->PresShell();
+    bool keepDescending = child == aBuilder->GetIgnoreScrollFrame() ||
+        (shell->IgnoringViewportScrolling() && child == shell->GetRootScrollFrame());
+    if (!keepDescending) {
       nsRect childDirty;
       if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect()))
         return;
@@ -4876,7 +4885,7 @@ nsIFrame::IsInvalid(nsRect& aRect)
 }
 
 void
-nsIFrame::SchedulePaint(uint32_t aFlags)
+nsIFrame::SchedulePaint(PaintType aType)
 {
   nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   nsPresContext *pres = displayRoot->PresContext()->GetRootPresContext();
@@ -4887,8 +4896,15 @@ nsIFrame::SchedulePaint(uint32_t aFlags)
     return;
   }
   
-  pres->PresShell()->ScheduleViewManagerFlush();
-  if (!(aFlags & PAINT_COMPOSITE_ONLY)) {
+  pres->PresShell()->ScheduleViewManagerFlush(aType == PAINT_DELAYED_COMPRESS ?
+                                              nsIPresShell::PAINT_DELAYED_COMPRESS :
+                                              nsIPresShell::PAINT_DEFAULT);
+
+  if (aType == PAINT_DELAYED_COMPRESS) {
+    return;
+  }
+
+  if (aType == PAINT_DEFAULT) {
     displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
   nsIPresShell* shell = PresContext()->PresShell();

@@ -194,11 +194,6 @@ hb_ot_layout_collect_lookups (hb_face_t      *face,
 			      hb_set_t       *lookup_indexes /* OUT */);
 
 void
-hb_ot_shape_plan_collect_lookups (hb_shape_plan_t *shape_plan,
-				  hb_tag_t         table_tag,
-				  hb_set_t        *lookup_indexes /* OUT */);
-
-void
 hb_ot_layout_lookup_collect_glyphs (hb_face_t    *face,
 				    hb_tag_t      table_tag,
 				    unsigned int  lookup_index,

@@ -1151,7 +1151,10 @@ public:
          */
         TEXT_INCOMING_ARABICCHAR = 0x40000000,
 
-        TEXT_UNUSED_FLAGS = 0x90000000
+        // Set if the textrun should use the OpenType 'math' script.
+        TEXT_USE_MATH_SCRIPT = 0x80000000,
+
+        TEXT_UNUSED_FLAGS = 0x10000000
     };
 
     /**

@@ -109,6 +109,10 @@ gfxQtPlatform::gfxQtPlatform()
     if (pixmap.paintEngine())
         sDefaultQtPaintEngineType = pixmap.paintEngine()->type();
 #endif
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    InitBackendPrefs(canvasMask, BackendType::CAIRO,
+                     contentMask, BackendType::CAIRO);
 }
 
 gfxQtPlatform::~gfxQtPlatform()
@@ -306,3 +310,8 @@ gfxQtPlatform::GetScreenDepth() const
     return mScreenDepth;
 }
 
+TemporaryRef<ScaledFont>
+gfxQtPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont* aFont)
+{
+    return GetScaledFontForFontWithCairoSkia(aTarget, aFont);
+}

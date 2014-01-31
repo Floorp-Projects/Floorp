@@ -11,6 +11,10 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+# Ensure that $Date$ in the checked-out svn files expands timezone-agnostically,
+# so that this script's behavior is consistent when run from any time zone.
+export TZ=UTC
+
 icu_dir=`dirname $0`/icu
 rm -rf ${icu_dir}
 svn export $1 ${icu_dir}
@@ -35,8 +39,12 @@ rm ${icu_dir}/source/data/region/*.mk
 rm ${icu_dir}/source/data/region/*.txt
 rm ${icu_dir}/source/data/translit/*
 
-# Record `svn info`
-svn info $1 > ${icu_dir}/SVN-INFO
+# Record `svn info`, eliding the line that changes every time the entire ICU
+# repository (not just the path within it we care about) receives a commit.
+# (This ensures that if ICU modifications are performed properly, it's always
+# possible to run the command at the top of this script and make no changes to
+# the tree.)
+svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-853706
