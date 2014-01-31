@@ -11,7 +11,7 @@ interface nsIFinishDumpingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(fd5de30a-e3d6-4965-8244-86709e1ed23b)]
+[scriptable, builtinclass, uuid(294df03b-e2ae-4fdd-b4fc-4c66a501e0ef)]
 interface nsIMemoryInfoDumper : nsISupports
 {
   /**
@@ -152,8 +152,14 @@ interface nsIMemoryInfoDumper : nsISupports
    * @param aDumpChildProcesses indicates whether we should call
    *   DumpGCAndCCLogsToFile in our child processes.  If so, the child processes
    *   will dump their children, and so on.
+   *
+   * @param aGCLogPath The full path of the file that the GC log was written to.
+   *
+   * @param aCCLogPath The full path of the file that the CC log was written to.
    */
   void dumpGCAndCCLogsToFile(in AString aIdentifier,
                              in bool aDumpAllTraces,
-                             in bool aDumpChildProcesses);
+                             in bool aDumpChildProcesses,
+                             out AString aGCLogPath,
+                             out AString aCCLogPath);
 };
