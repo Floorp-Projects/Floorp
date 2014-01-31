@@ -4,6 +4,13 @@
 
 let outOfProcess = __marionetteParams[0]
 let mochitestUrl = __marionetteParams[1]
+let onDevice = __marionetteParams[2]
+let wifiSettings = __marionetteParams[3]
+let prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                            getService(Components.interfaces.nsIPrefBranch)
+
+if (wifiSettings)
+  wifiSettings = JSON.parse(wifiSettings);
 
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
 const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
@@ -77,4 +84,29 @@ if (outOfProcess) {
   specialPowersObserver._isFrameScriptLoaded = true;
 }
 
-container.src = mochitestUrl;
+
+if (onDevice) {
+  let manager = navigator.mozWifiManager;
+  let con = manager.connection;
+  if(wifiSettings) {
+    if (manager.enabled) {
+      manager.associate(wifiSettings);
+    } else {
+      manager.onenabled = function () {
+        manager.associate(wifiSettings);
+      };
+    }
+  }
+  else if (con.status == 'connected') {
+    container.src = mochitestUrl;
+  }
+
+  manager.onstatuschange = function (event) {
+    if (event.status == 'connected') {
+      prefs.setIntPref("network.proxy.type", 2);
+      container.src = mochitestUrl;
+    }
+  }
+} else {
+  container.src = mochitestUrl;
+}
