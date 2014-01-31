@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2007-2013, International Business Machines Corporation and
+* Copyright (C) 2007-2012, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 */
@@ -18,7 +18,6 @@
 #include "cmemory.h"
 #include "uvector.h"
 #include "gregoimp.h"
-#include "uassert.h"
 
 U_NAMESPACE_BEGIN
 
@@ -1162,14 +1161,14 @@ VTimeZone::write(UnicodeString& result, UErrorCode& status) const {
 }
 
 void
-VTimeZone::write(UDate start, UnicodeString& result, UErrorCode& status) const {
+VTimeZone::write(UDate start, UnicodeString& result, UErrorCode& status) /*const*/ {
     result.remove();
     VTZWriter writer(result);
     write(start, writer, status);
 }
 
 void
-VTimeZone::writeSimple(UDate time, UnicodeString& result, UErrorCode& status) const {
+VTimeZone::writeSimple(UDate time, UnicodeString& result, UErrorCode& status) /*const*/ {
     result.remove();
     VTZWriter writer(result);
     writeSimple(time, writer, status);
@@ -1225,24 +1224,24 @@ VTimeZone::hasSameRules(const TimeZone& other) const {
 }
 
 UBool
-VTimeZone::getNextTransition(UDate base, UBool inclusive, TimeZoneTransition& result) const {
+VTimeZone::getNextTransition(UDate base, UBool inclusive, TimeZoneTransition& result) /*const*/ {
     return tz->getNextTransition(base, inclusive, result);
 }
 
 UBool
-VTimeZone::getPreviousTransition(UDate base, UBool inclusive, TimeZoneTransition& result) const {
+VTimeZone::getPreviousTransition(UDate base, UBool inclusive, TimeZoneTransition& result) /*const*/ {
     return tz->getPreviousTransition(base, inclusive, result);
 }
 
 int32_t
-VTimeZone::countTransitionRules(UErrorCode& status) const {
+VTimeZone::countTransitionRules(UErrorCode& status) /*const*/ {
     return tz->countTransitionRules(status);
 }
 
 void
 VTimeZone::getTimeZoneRules(const InitialTimeZoneRule*& initial,
                             const TimeZoneRule* trsrules[], int32_t& trscount,
-                            UErrorCode& status) const {
+                            UErrorCode& status) /*const*/ {
     tz->getTimeZoneRules(initial, trsrules, trscount, status);
 }
 
@@ -1769,7 +1768,7 @@ VTimeZone::write(VTZWriter& writer, UErrorCode& status) const {
 }
 
 void
-VTimeZone::write(UDate start, VTZWriter& writer, UErrorCode& status) const {
+VTimeZone::write(UDate start, VTZWriter& writer, UErrorCode& status) /*const*/ {
     if (U_FAILURE(status)) {
         return;
     }
@@ -1834,7 +1833,7 @@ cleanupWritePartial:
 }
 
 void
-VTimeZone::writeSimple(UDate time, VTZWriter& writer, UErrorCode& status) const {
+VTimeZone::writeSimple(UDate time, VTZWriter& writer, UErrorCode& status) /*const*/ {
     if (U_FAILURE(status)) {
         return;
     }
@@ -2110,13 +2109,8 @@ VTimeZone::writeZone(VTZWriter& w, BasicTimeZone& basictz,
                         if (U_FAILURE(status)) {
                             goto cleanupWriteZone;
                         }
-                        UDate nextStart;
-                        UBool nextStartAvail = finalDstRule->getNextStart(dstUntilTime, dstFromOffset - dstFromDSTSavings, dstFromDSTSavings, false, nextStart);
-                        U_ASSERT(nextStartAvail);
-                        if (nextStartAvail) {
-                            writeFinalRule(w, TRUE, finalDstRule,
-                                    dstFromOffset - dstFromDSTSavings, dstFromDSTSavings, nextStart, status);
-                        }
+                        writeFinalRule(w, TRUE, finalDstRule,
+                                dstFromOffset - dstFromDSTSavings, dstFromDSTSavings, dstStartTime, status);
                     }
                 }
                 if (U_FAILURE(status)) {
@@ -2144,7 +2138,7 @@ VTimeZone::writeZone(VTZWriter& w, BasicTimeZone& basictz,
                     // Use a single rule if possible
                     if (isEquivalentDateRule(stdMonth, stdWeekInMonth, stdDayOfWeek, finalStdRule->getRule())) {
                         writeZonePropsByDOW(w, FALSE, stdName, stdFromOffset, stdToOffset,
-                                stdMonth, stdWeekInMonth, stdDayOfWeek, stdStartTime, MAX_MILLIS, status);
+                                stdMonth, stdWeekInMonth, stdDayOfWeek, stdStartTime, MAX_MILLIS, status);                            
                     } else {
                         // Not equivalent rule - write out two different rules
                         writeZonePropsByDOW(w, FALSE, stdName, stdFromOffset, stdToOffset,
@@ -2152,13 +2146,8 @@ VTimeZone::writeZone(VTZWriter& w, BasicTimeZone& basictz,
                         if (U_FAILURE(status)) {
                             goto cleanupWriteZone;
                         }
-                        UDate nextStart;
-                        UBool nextStartAvail = finalStdRule->getNextStart(stdUntilTime, stdFromOffset - stdFromDSTSavings, stdFromDSTSavings, false, nextStart);
-                        U_ASSERT(nextStartAvail);
-                        if (nextStartAvail) {
-                            writeFinalRule(w, FALSE, finalStdRule,
-                                    stdFromOffset - stdFromDSTSavings, stdFromDSTSavings, nextStart, status);
-                        }
+                        writeFinalRule(w, FALSE, finalStdRule,
+                                stdFromOffset - stdFromDSTSavings, stdFromDSTSavings, stdStartTime, status);
                     }
                 }
                 if (U_FAILURE(status)) {

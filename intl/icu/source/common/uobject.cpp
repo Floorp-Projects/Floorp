@@ -91,7 +91,23 @@ void U_EXPORT2 UMemory::operator delete(void* p, const char* /*file*/, int /*lin
 
 UObject::~UObject() {}
 
-UClassID UObject::getDynamicClassID() const { return NULL; }
+// Future implementation for RTTI that support subtyping. [alan]
+// 
+// UClassID UObject::getStaticClassID() {
+//     return (UClassID) NULL;
+// }
+// 
+// UBool UObject::instanceOf(UClassID type) const {
+//     UClassID c = getDynamicClassID();
+//     for (;;) {
+//         if (c == type) {
+//             return TRUE;
+//         } else if (c == (UClassID) NULL) {
+//             return FALSE;
+//         }
+//         c = * (UClassID*) c;
+//     }
+// }
 
 U_NAMESPACE_END
 

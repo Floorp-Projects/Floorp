@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 2008-2013, Google, International Business Machines Corporation
+ * Copyright (C) 2008-2012, Google, International Business Machines Corporation
  * and others. All Rights Reserved.
  *******************************************************************************
  */
@@ -252,7 +252,6 @@ private:
     // get time unit name, such as "year", from time unit field enum, such as
     // UTIMEUNIT_YEAR.
     static const char* getTimeUnitName(TimeUnit::UTimeUnitFields field, UErrorCode& status);
-
 };
 
 

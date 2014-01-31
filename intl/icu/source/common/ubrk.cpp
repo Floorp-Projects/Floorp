@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1996-2013, International Business Machines
+*   Copyright (C) 1996-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 */
@@ -123,31 +123,25 @@ ubrk_openRules(  const UChar        *rules,
 U_CAPI UBreakIterator * U_EXPORT2
 ubrk_safeClone(
           const UBreakIterator *bi,
-          void * /*stackBuffer*/,
+          void *stackBuffer,
           int32_t *pBufferSize,
           UErrorCode *status)
 {
     if (status == NULL || U_FAILURE(*status)){
-        return NULL;
+        return 0;
     }
-    if (bi == NULL) {
+    if (!pBufferSize || !bi){
        *status = U_ILLEGAL_ARGUMENT_ERROR;
-        return NULL;
+        return 0;
     }
-    if (pBufferSize != NULL) {
-        int32_t inputSize = *pBufferSize;
-        *pBufferSize = 1;
-        if (inputSize == 0) {
-            return NULL;  // preflighting for deprecated functionality
-        }
+    // Clear any incoming Safe Clone Allocated warning.
+    //  Propagating this through to our return would really
+    //  confuse our caller.
+    if (*status==U_SAFECLONE_ALLOCATED_WARNING) {
+        *status = U_ZERO_ERROR;
     }
-    BreakIterator *newBI = ((BreakIterator *)bi)->clone();
-    if (newBI == NULL) {
-        *status = U_MEMORY_ALLOCATION_ERROR;
-    } else {
-        *status = U_SAFECLONE_ALLOCATED_WARNING;
-    }
-    return (UBreakIterator *)newBI;
+    return (UBreakIterator *)(((BreakIterator*)bi)->
+        createBufferClone(stackBuffer, *pBufferSize, *status));
 }
 
 
@@ -155,7 +149,15 @@ ubrk_safeClone(
 U_CAPI void U_EXPORT2
 ubrk_close(UBreakIterator *bi)
 {
-    delete (BreakIterator *)bi;
+    BreakIterator *ubi = (BreakIterator*) bi;
+    if (ubi) {
+        if (ubi->isBufferClone()) {
+            ubi->~BreakIterator();
+            *(uint32_t *)ubi = 0xdeadbeef;
+        } else {
+            delete ubi;
+        }
+    }
 }
 
 U_CAPI void U_EXPORT2
@@ -168,7 +170,7 @@ ubrk_setText(UBreakIterator* bi,
     UText  ut = UTEXT_INITIALIZER;
     utext_openUChars(&ut, text, textLength, status);
     brit->setText(&ut, *status);
-    // A stack allocated UText wrapping a UChar * string
+    // A stack allocated UText wrapping a UCHar * string
     //   can be dumped without explicitly closing it.
 }
 

@@ -109,6 +109,8 @@ IDNA::nameToUnicodeUTF8(const StringPiece &name, ByteSink &dest,
     }
 }
 
+UOBJECT_DEFINE_NO_RTTI_IMPLEMENTATION(IDNA)
+
 // UTS46 class declaration ------------------------------------------------- ***
 
 class UTS46 : public IDNA {

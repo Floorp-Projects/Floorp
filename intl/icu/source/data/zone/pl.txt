@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/pl.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/pl.xml
+ *  ICU <specials> source: <path>/xml/main/pl.xml
  */
 pl{
-    Version{"2.0.92.87"}
+    Version{"2.0.78.39"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidżan"}
@@ -99,20 +99,11 @@ pl{
         "America:Belem"{
             ec{"Belém"}
         }
-        "America:Cancun"{
-            ec{"Cancún"}
-        }
         "America:Cayenne"{
             ec{"Kajenna"}
         }
         "America:Cayman"{
             ec{"Kajmany"}
-        }
-        "America:Coral_Harbour"{
-            ec{"Atikokan"}
-        }
-        "America:Cordoba"{
-            ec{"Kordoba"}
         }
         "America:Costa_Rica"{
             ec{"Kostaryka"}
@@ -153,9 +144,6 @@ pl{
         "America:Indiana:Petersburg"{
             ec{"Petersburg"}
         }
-        "America:Indiana:Tell_City"{
-            ec{"Tell City, Indiana"}
-        }
         "America:Indiana:Vevay"{
             ec{"Vevay"}
         }
@@ -193,16 +181,13 @@ pl{
             ec{"Center, Dakota Północna"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"New Salem, Dakota Północna"}
+            ec{"New Salem"}
         }
         "America:Port_of_Spain"{
             ec{"Port-of-Spain"}
         }
         "America:Puerto_Rico"{
             ec{"Portoryko"}
-        }
-        "America:Scoresbysund"{
-            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint-Barthélemy"}
@@ -222,17 +207,11 @@ pl{
         "America:St_Vincent"{
             ec{"Saint Vincent"}
         }
-        "America:Thule"{
-            ec{"Qaanaaq"}
-        }
         "Antarctica:Casey"{
             ec{"Stacja Casey"}
         }
         "Antarctica:Davis"{
             ec{"Stacja Davis"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
         }
         "Antarctica:Mawson"{
             ec{"Wybrzeże Mawsona"}
@@ -253,7 +232,7 @@ pl{
             ec{"Stacja Syowa"}
         }
         "Antarctica:Vostok"{
-            ec{"Stacja Wostok"}
+            ec{"Stacja Vostok"}
         }
         "Asia:Almaty"{
             ec{"Ałma Ata"}
@@ -330,9 +309,6 @@ pl{
         "Asia:Katmandu"{
             ec{"Katmandu"}
         }
-        "Asia:Khandyga"{
-            ec{"Chandyga"}
-        }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
         }
@@ -350,9 +326,6 @@ pl{
         }
         "Asia:Nicosia"{
             ec{"Nikozja"}
-        }
-        "Asia:Novokuznetsk"{
-            ec{"Nowokuźnieck"}
         }
         "Asia:Novosibirsk"{
             ec{"Nowosybirsk"}
@@ -376,7 +349,7 @@ pl{
             ec{"Rijad"}
         }
         "Asia:Saigon"{
-            ec{"Ho Chi Minh (miasto)"}
+            ec{"Sajgon"}
         }
         "Asia:Sakhalin"{
             ec{"Sachalin"}
@@ -424,7 +397,7 @@ pl{
             ec{"Jekaterynburg"}
         }
         "Asia:Yerevan"{
-            ec{"Erywań"}
+            ec{"Erewan"}
         }
         "Atlantic:Azores"{
             ec{"Azory"}
@@ -628,12 +601,6 @@ pl{
         "Pacific:Pitcairn"{
             ec{"Wyspy Pitcairn"}
         }
-        "Pacific:Ponape"{
-            ec{"Pohnpei"}
-        }
-        "Pacific:Truk"{
-            ec{"Chuuk"}
-        }
         "meta:Afghanistan"{
             ls{"Afganistan"}
         }
@@ -649,51 +616,46 @@ pl{
         "meta:Africa_Western"{
             ld{"Czas zachodnioafrykański letni"}
             lg{"Czas zachodnioafrykański"}
-            ls{"Czas zachodnioafrykański standardowy"}
+            ls{"Czas standardowy zachodnioafrykański"}
         }
         "meta:Alaska"{
-            ld{"Alaska (czas letni)"}
+            ld{"Czas Alaska letni"}
             lg{"Czas Alaska"}
-            ls{"Alaska (czas standardowy)"}
+            ls{"Czas standardowy Alaska"}
         }
         "meta:Amazon"{
             ld{"Czas amazoński letni"}
             lg{"Czas amazoński"}
-            ls{"Czas amazoński standardowy"}
+            ls{"Czas standardowy amazoński"}
         }
         "meta:America_Central"{
             ld{"Czas środkowoamerykański letni"}
             lg{"Czas środkowoamerykański"}
-            ls{"Czas środkowoamerykański standardowy"}
+            ls{"Czas standardowy środkowoamerykański"}
         }
         "meta:America_Eastern"{
             ld{"Czas wschodnioamerykański letni"}
             lg{"Czas wschodnioamerykański"}
-            ls{"Czas wschodnioamerykański standardowy"}
+            ls{"Czas standardowy wschodnioamerykański"}
         }
         "meta:America_Mountain"{
             ld{"Czas górski letni"}
             lg{"Czas górski"}
-            ls{"Czas górski standardowy"}
+            ls{"Czas standardowy górski"}
         }
         "meta:America_Pacific"{
             ld{"Czas pacyficzny letni"}
             lg{"Czas pacyficzny"}
-            ls{"Czas pacyficzny standardowy"}
+            ls{"Czas standardowy pacyficzny"}
         }
         "meta:Anadyr"{
             ld{"Czas Anadyr letni"}
             lg{"Czas Anadyr"}
             ls{"Czas standardowy Anadyr"}
         }
-        "meta:Arabian"{
-            ld{"Półwysep Arabski (czas letni)"}
-            lg{"Półwysep Arabski"}
-            ls{"Półwysep Arabski (czas standardowy)"}
-        }
         "meta:Argentina"{
-            ld{"Argentyna (czas letni)"}
-            lg{"Czas argentyński"}
+            ld{"Czas Argentyna letni"}
+            lg{"Czas Argentyna"}
             ls{"Argentyna (czas standardowy)"}
         }
         "meta:Argentina_Western"{
@@ -714,12 +676,12 @@ pl{
         "meta:Australia_Central"{
             ld{"Czas środkowoaustralijski letni"}
             lg{"Czas środkowoaustralijski"}
-            ls{"Czas środkowoaustralijski standardowy"}
+            ls{"Czas standardowy środkowoaustralijski"}
         }
         "meta:Australia_CentralWestern"{
             ld{"Czas środkowo-zachodnioaustralijski letni"}
             lg{"Czas środkowo-zachodnioaustralijski"}
-            ls{"Czas środkowo-zachodnioaustralijski standardowy"}
+            ls{"Czas standardowy środkowo-zachodnioaustralijski"}
         }
         "meta:Australia_Eastern"{
             ld{"Czas wschodnioaustraliski letni"}
@@ -729,7 +691,7 @@ pl{
         "meta:Australia_Western"{
             ld{"Czas zachodnioaustralijski letni"}
             lg{"Czas zachodnioaustralijski"}
-            ls{"Czas zachodnioaustralijski standardowy"}
+            ls{"Czas standardowy zachodnioaustralijski"}
         }
         "meta:Azerbaijan"{
             ld{"Azerbejdżan (czas letni)"}
@@ -760,14 +722,6 @@ pl{
         "meta:Brunei"{
             ls{"Brunei Darussalam"}
         }
-        "meta:Cape_Verde"{
-            ld{"Republika Zielonego Przylądka (czas letni)"}
-            lg{"Republika Zielonego Przylądka"}
-            ls{"Republika Zielonego Przylądka (czas standardowy)"}
-        }
-        "meta:Chamorro"{
-            ls{"Czamorro"}
-        }
         "meta:Chatham"{
             ld{"Chatham (czas letni)"}
             lg{"Chatham"}
@@ -784,8 +738,8 @@ pl{
             ls{"Chiny (czas standardowy)"}
         }
         "meta:Choibalsan"{
-            ld{"Czojbalsan (czas letni)"}
-            lg{"Czojbalsan"}
+            ld{"Czas Czojbalsan letni"}
+            lg{"Czas Czojbalsan"}
             ls{"Czojbalsan (czas standardowy)"}
         }
         "meta:Christmas"{
@@ -829,7 +783,7 @@ pl{
         "meta:Europe_Central"{
             ld{"Czas środkowoeuropejski letni"}
             lg{"Czas środkowoeuropejski"}
-            ls{"Czas środkowoeuropejski standardowy"}
+            ls{"Czas standardowy środkowoeuropejski"}
             sd{"CEST"}
             sg{"CET"}
             ss{"CET"}
@@ -837,7 +791,7 @@ pl{
         "meta:Europe_Eastern"{
             ld{"Czas wschodnioeuropejski letni"}
             lg{"Czas wschodnioeuropejski"}
-            ls{"Czas wschodnioeuropejski standardowy"}
+            ls{"Czas standardowy wschodnioeuropejski"}
             sd{"EEST"}
             sg{"EET"}
             ss{"EET"}
@@ -845,7 +799,7 @@ pl{
         "meta:Europe_Western"{
             ld{"Czas zachodnioeuropejski letni"}
             lg{"Czas zachodnioeuropejski"}
-            ls{"Czas zachodnioeuropejski standardowy"}
+            ls{"Czas standardowy zachodnioeuropejski"}
             sd{"WEST"}
             sg{"WET"}
             ss{"WET"}
@@ -866,9 +820,6 @@ pl{
         "meta:French_Southern"{
             ls{"Francuskie Terytoria Południowe i Antarktyczne"}
         }
-        "meta:GMT"{
-            ls{"Czas uniwersalny"}
-        }
         "meta:Galapagos"{
             ls{"Galapagos"}
         }
@@ -883,6 +834,11 @@ pl{
         "meta:Gilbert_Islands"{
             ls{"Wyspy Gilberta"}
         }
+        "meta:Greenland_Central"{
+            ld{"Czas centralnogrenlandzki letni"}
+            lg{"Czas centralnogrenlandzki"}
+            ls{"Czas standardowy centralnogrenlandzki"}
+        }
         "meta:Greenland_Eastern"{
             ld{"Grenlandia Wschodnia (czas letni)"}
             lg{"Grenlandia Wschodnia"}
@@ -892,9 +848,6 @@ pl{
             ld{"Grenlandia Zachodnia (czas letni)"}
             lg{"Grenlandia Zachodnia"}
             ls{"Grenlandia Zachodnia (czas standardowy)"}
-        }
-        "meta:Gulf"{
-            ls{"Zatoka Perska"}
         }
         "meta:Guyana"{
             ls{"Gujana"}
@@ -910,18 +863,12 @@ pl{
             ls{"Hongkong (czas standardowy)"}
         }
         "meta:Hovd"{
-            ld{"Kobdo (czas letni)"}
-            lg{"Kobdo"}
+            ld{"Czas Kobdo letni"}
+            lg{"Czas Kobdo"}
             ls{"Kobdo (czas standardowy)"}
-        }
-        "meta:India"{
-            ls{"Czas indyjski"}
         }
         "meta:Indian_Ocean"{
             ls{"Ocean Indyjski"}
-        }
-        "meta:Indochina"{
-            ls{"Czas indochiński"}
         }
         "meta:Indonesia_Central"{
             ls{"Indonezja Środkowa"}
@@ -938,8 +885,8 @@ pl{
             ls{"Iran (czas standardowy)"}
         }
         "meta:Irkutsk"{
-            ld{"Irkuck (czas letni)"}
-            lg{"Irkuck"}
+            ld{"Czas Irkuck letni"}
+            lg{"Czas Irkuck"}
             ls{"Irkuck (czas standardowy)"}
         }
         "meta:Israel"{
@@ -972,27 +919,24 @@ pl{
             ls{"Kosrae"}
         }
         "meta:Krasnoyarsk"{
-            ld{"Krasnojarsk (czas letni)"}
-            lg{"Krasnojarsk"}
+            ld{"Czas Krasnojarsk letni"}
+            lg{"Czas Krasnojarsk"}
             ls{"Krasnojarsk (czas standardowy)"}
         }
         "meta:Kyrgystan"{
             ls{"Kirgistan"}
         }
-        "meta:Line_Islands"{
-            ls{"Sporady Środkowopolinezyjskie"}
-        }
         "meta:Lord_Howe"{
-            ld{"Lord Howe (czas letni)"}
-            lg{"Lord Howe"}
-            ls{"Lord Howe (czas standardowy)"}
+            ld{"Czas Lord Howe letni"}
+            lg{"Czas Lord Howe"}
+            ls{"Czas standardowy Lord Howe"}
         }
         "meta:Macquarie"{
             ls{"Macquarie"}
         }
         "meta:Magadan"{
-            ld{"Magadan (czas letni)"}
-            lg{"Magadan"}
+            ld{"Czas Magadan letni"}
+            lg{"Czas Magadan"}
             ls{"Magadan (czas standardowy)"}
         }
         "meta:Malaysia"{
@@ -1016,17 +960,17 @@ pl{
             ls{"Mawson"}
         }
         "meta:Mongolia"{
-            ld{"Ułan Bator (czas letni)"}
+            ld{"Czas Ułan Bator letni"}
             lg{"Ułan Bator"}
             ls{"Ułan Bator (czas standardowy)"}
         }
         "meta:Moscow"{
             ld{"Czas moskiewski letni"}
             lg{"Czas moskiewski"}
-            ls{"Czas moskiewski standardowy"}
+            ls{"Czas standardowy moskiewski"}
         }
         "meta:Myanmar"{
-            ls{"Mjanma"}
+            ls{"Birma"}
         }
         "meta:Nauru"{
             ls{"Nauru"}
@@ -1045,9 +989,9 @@ pl{
             ls{"Nowa Zelandia (czas standardowy)"}
         }
         "meta:Newfoundland"{
-            ld{"Nowa Fundlandia (czas letni)"}
-            lg{"Czas nowofunlandzki"}
-            ls{"Nowa Fundlandia (czas standardowy)"}
+            ld{"Czas Nowa Funlandia letni"}
+            lg{"Czas Nowa Funlandia"}
+            ls{"Czas standardowy Nowa Funlandia"}
         }
         "meta:Niue"{
             ls{"Niue"}
@@ -1056,18 +1000,18 @@ pl{
             ls{"Norfolk"}
         }
         "meta:Noronha"{
-            ld{"Fernando de Noronha (czas letni)"}
+            ld{"Czas Fernando de Noronha letni"}
             lg{"Fernando de Noronha"}
             ls{"Fernando de Noronha (czas standardowy)"}
         }
         "meta:Novosibirsk"{
-            ld{"Nowosybirsk (czas letni)"}
-            lg{"Nowosybirsk"}
+            ld{"Czas Nowosybirsk letni"}
+            lg{"Czas Nowosybirsk"}
             ls{"Nowosybirsk (czas standardowy)"}
         }
         "meta:Omsk"{
-            ld{"Omsk (czas letni)"}
-            lg{"Omsk"}
+            ld{"Czas Omsk letni"}
+            lg{"Czas Omsk"}
             ls{"Omsk (czas standardowy)"}
         }
         "meta:Pakistan"{
@@ -1107,9 +1051,6 @@ pl{
         "meta:Pitcairn"{
             ls{"Pitcairn"}
         }
-        "meta:Ponape"{
-            ls{"Pohnpei"}
-        }
         "meta:Reunion"{
             ls{"Reunion"}
         }
@@ -1117,8 +1058,8 @@ pl{
             ls{"Rothera"}
         }
         "meta:Sakhalin"{
-            ld{"Sachalin (czas letni)"}
-            lg{"Sachalin"}
+            ld{"Czas Sachalin letni"}
+            lg{"Czas Sachalin"}
             ls{"Sachalin (czas standardowy)"}
         }
         "meta:Samara"{
@@ -1126,16 +1067,8 @@ pl{
             lg{"Czas Samara"}
             ls{"Czas standardowy Samara"}
         }
-        "meta:Samoa"{
-            ld{"Samoa (czas letni)"}
-            lg{"Samoa"}
-            ls{"Samoa (czas standardowy)"}
-        }
         "meta:Seychelles"{
             ls{"Seszele"}
-        }
-        "meta:Singapore"{
-            ls{"Singapur"}
         }
         "meta:Solomon"{
             ls{"Wyspy Salomona"}
@@ -1198,13 +1131,13 @@ pl{
             ls{"Wenezuela"}
         }
         "meta:Vladivostok"{
-            ld{"Władywostok (czas letni)"}
-            lg{"Władywostok"}
+            ld{"Czas Władywostok letni"}
+            lg{"Czas Władywostok"}
             ls{"Władywostok (czas standardowy)"}
         }
         "meta:Volgograd"{
-            ld{"Wołgograd (czas letni)"}
-            lg{"Wołgograd"}
+            ld{"Czas Wołgograd letni"}
+            lg{"Czas Wołgograd"}
             ls{"Wołgograd (czas standardowy)"}
         }
         "meta:Vostok"{
@@ -1217,21 +1150,20 @@ pl{
             ls{"Wallis i Futuna"}
         }
         "meta:Yakutsk"{
-            ld{"Jakuck (czas letni)"}
-            lg{"Jakuck"}
+            ld{"Czas Jakuck letni"}
+            lg{"Czas Jakuck"}
             ls{"Jakuck (czas standardowy)"}
         }
         "meta:Yekaterinburg"{
-            ld{"Jekaterynburg (czas letni)"}
-            lg{"Jekaterynburg"}
+            ld{"Czas Jekaterynburg letni"}
+            lg{"Czas Jekaterynburg"}
             ls{"Jekaterynburg (czas standardowy)"}
         }
         fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"Czas: {1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Czas: {0}"}
-        regionFormatDaylight{"{0} (czas letni)"}
-        regionFormatStandard{"{0} (czas standardowy)"}
     }
 }

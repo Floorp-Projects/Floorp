@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
-* Copyright (C) 1997-2013, International Business Machines Corporation and
-* others. All Rights Reserved.
+* Copyright (C) 1997-2012, International Business Machines Corporation and   *
+* others. All Rights Reserved.                                               *
 ******************************************************************************
 *
 * File URESBUND.C
@@ -21,7 +21,6 @@
 
 #include "unicode/ustring.h"
 #include "unicode/ucnv.h"
-#include "charstr.h"
 #include "uresimp.h"
 #include "ustr_imp.h"
 #include "cwchar.h"
@@ -34,7 +33,6 @@
 #include "ulocimp.h"
 #include "umutex.h"
 #include "putilimp.h"
-#include "uassert.h"
 
 
 /*
@@ -43,7 +41,6 @@ TODO: This cache should probably be removed when the deprecated code is
       completely removed.
 */
 static UHashtable *cache = NULL;
-static icu::UInitOnce gCacheInitOnce;
 
 static UMutex resbMutex = U_MUTEX_INITIALIZER;
 
@@ -258,22 +255,34 @@ static UBool U_CALLCONV ures_cleanup(void)
 {
     if (cache != NULL) {
         ures_flushCache();
-        uhash_close(cache);
-        cache = NULL;
+        if (cache != NULL && uhash_count(cache) == 0) {
+            uhash_close(cache);
+            cache = NULL;
+        }
     }
-    gCacheInitOnce.reset();
-    return TRUE;
+    return (cache == NULL);
 }
 
 /** INTERNAL: Initializes the cache for resources */
-static void createCache(UErrorCode &status) {
-    U_ASSERT(cache == NULL);
-    cache = uhash_open(hashEntry, compareEntries, NULL, &status);
-    ucln_common_registerCleanup(UCLN_COMMON_URES, ures_cleanup);
-}
-     
 static void initCache(UErrorCode *status) {
-    umtx_initOnce(gCacheInitOnce, &createCache, *status);
+    UBool makeCache = FALSE;
+    UMTX_CHECK(&resbMutex, (cache ==  NULL), makeCache);
+    if(makeCache) {
+        UHashtable *newCache = uhash_open(hashEntry, compareEntries, NULL, status);
+        if (U_FAILURE(*status)) {
+            return;
+        }
+        umtx_lock(&resbMutex);
+        if(cache == NULL) {
+            cache = newCache;
+            newCache = NULL;
+            ucln_common_registerCleanup(UCLN_COMMON_URES, ures_cleanup);
+        }
+        umtx_unlock(&resbMutex);
+        if(newCache != NULL) {
+            uhash_close(newCache);
+        }
+    }
 }
 
 /** INTERNAL: sets the name (locale) of the resource bundle to given name */
@@ -1661,52 +1670,14 @@ ures_getStringByKeyWithFallback(const UResourceBundle *resB,
     const UChar* retVal = NULL;
     ures_initStackObject(&stack);
     ures_getByKeyWithFallback(resB, inKey, &stack, status);
-    int32_t length;
-    retVal = ures_getString(&stack, &length, status);
+    retVal = ures_getString(&stack, len, status);
     ures_close(&stack);
-    if (U_FAILURE(*status)) {
-        return NULL;
-    }
-    if (length == 3 && retVal[0] == EMPTY_SET && retVal[1] == EMPTY_SET && retVal[2] == EMPTY_SET ) {
+    if ( retVal != NULL && u_strlen(retVal) == 3 && retVal[0] == EMPTY_SET && retVal[1] == EMPTY_SET && retVal[2] == EMPTY_SET ) {
         retVal = NULL;
-        length = 0;
+        *len = 0;
         *status = U_MISSING_RESOURCE_ERROR;
     }
-    if (len != NULL) {
-        *len = length;
-    }
     return retVal;
-}
-
-/*
-  Like res_getTableItemByKey but accepts full paths like "NumberElements/latn/patternsShort".
-*/  
-static Resource getTableItemByKeyPath(const ResourceData *pResData, Resource table, const char *key) {
-  Resource resource = table;  /* The current resource */
-  icu::CharString path;
-  UErrorCode errorCode = U_ZERO_ERROR;
-  path.append(key, errorCode);
-  if (U_FAILURE(errorCode)) { return RES_BOGUS; }
-  char *pathPart = path.data();  /* Path from current resource to desired resource */
-  UResType type = (UResType)RES_GET_TYPE(resource);  /* the current resource type */
-  while (*pathPart && resource != RES_BOGUS && URES_IS_CONTAINER(type)) {
-    char *nextPathPart = uprv_strchr(pathPart, RES_PATH_SEPARATOR);
-    if (nextPathPart != NULL) {
-      *nextPathPart = 0;  /* Terminating null for this part of path. */
-      nextPathPart++;
-    } else {
-      nextPathPart = uprv_strchr(pathPart, 0);
-    }
-    int32_t t;
-    const char *pathP = pathPart;
-    resource = res_getTableItemByKey(pResData, resource, &t, &pathP);
-    type = (UResType)RES_GET_TYPE(resource);
-    pathPart = nextPathPart; 
-  }
-  if (*pathPart) {
-    return RES_BOGUS;
-  }
-  return resource;
 }
 
 U_CAPI UResourceBundle* U_EXPORT2 
@@ -1716,6 +1687,7 @@ ures_getByKeyWithFallback(const UResourceBundle *resB,
                           UErrorCode *status) {
     Resource res = RES_BOGUS, rootRes = RES_BOGUS;
     /*UResourceDataEntry *realData = NULL;*/
+    const char *key = inKey;
     UResourceBundle *helper = NULL;
 
     if (status==NULL || U_FAILURE(*status)) {
@@ -1728,14 +1700,15 @@ ures_getByKeyWithFallback(const UResourceBundle *resB,
 
     int32_t type = RES_GET_TYPE(resB->fRes);
     if(URES_IS_TABLE(type)) {
-        res = getTableItemByKeyPath(&(resB->fResData), resB->fRes, inKey);
-        const char* key = inKey;
+        int32_t t;
+        res = res_getTableItemByKey(&(resB->fResData), resB->fRes, &t, &key);
         if(res == RES_BOGUS) {
             UResourceDataEntry *dataEntry = resB->fData;
             char path[256];
             char* myPath = path;
             const char* resPath = resB->fResPath;
             int32_t len = resB->fResPathLen;
+
             while(res == RES_BOGUS && dataEntry->fParent != NULL) { /* Otherwise, we'll look in parents */
                 dataEntry = dataEntry->fParent;
                 rootRes = dataEntry->fData.rootRes;

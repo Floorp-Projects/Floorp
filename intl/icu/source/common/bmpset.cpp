@@ -690,9 +690,16 @@ BMPSet::spanBackUTF8(const uint8_t *s, int32_t length, USetSpanCondition spanCon
 
         int32_t prev=length;
         UChar32 c;
-        // trail byte: collect a multi-byte character
-        // (or  lead byte in last-trail position)
-        c=utf8_prevCharSafeBody(s, 0, &length, b, -3);
+        if(b<0xc0) {
+            // trail byte: collect a multi-byte character
+            c=utf8_prevCharSafeBody(s, 0, &length, b, -1);
+            if(c<0) {
+                c=0xfffd;
+            }
+        } else {
+            // lead byte in last-trail position
+            c=0xfffd;
+        }
         // c is a valid code point, not ASCII, not a surrogate
         if(c<=0x7ff) {
             if((USetSpanCondition)((table7FF[c&0x3f]&((uint32_t)1<<(c>>6)))!=0) != spanCondition) {

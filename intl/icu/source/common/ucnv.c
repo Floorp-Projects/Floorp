@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1998-2013, International Business Machines
+*   Copyright (C) 1998-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -154,7 +154,6 @@ U_CAPI UConverter* U_EXPORT2
 ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, UErrorCode *status)
 {
     UConverter *localConverter, *allocatedConverter;
-    int32_t stackBufferSize;
     int32_t bufferSizeNeeded;
     char *stackBufferChars = (char *)stackBuffer;
     UErrorCode cbErr;
@@ -183,13 +182,13 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
 
     if (status == NULL || U_FAILURE(*status)){
         UTRACE_EXIT_STATUS(status? *status: U_ILLEGAL_ARGUMENT_ERROR);
-        return NULL;
+        return 0;
     }
 
-    if (cnv == NULL) {
+    if (!pBufferSize || !cnv){
         *status = U_ILLEGAL_ARGUMENT_ERROR;
         UTRACE_EXIT_STATUS(*status);
-        return NULL;
+        return 0;
     }
 
     UTRACE_DATA3(UTRACE_OPEN_CLOSE, "clone converter %s at %p into stackBuffer %p",
@@ -199,10 +198,6 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
         /* call the custom safeClone function for sizing */
         bufferSizeNeeded = 0;
         cnv->sharedData->impl->safeClone(cnv, NULL, &bufferSizeNeeded, status);
-        if (U_FAILURE(*status)) {
-            UTRACE_EXIT_STATUS(*status);
-            return NULL;
-        }
     }
     else
     {
@@ -210,16 +205,10 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
         bufferSizeNeeded = sizeof(UConverter);
     }
 
-    if (pBufferSize == NULL) {
-        stackBufferSize = 1;
-        pBufferSize = &stackBufferSize;
-    } else {
-        stackBufferSize = *pBufferSize;
-        if (stackBufferSize <= 0){ /* 'preflighting' request - set needed size into *pBufferSize */
-            *pBufferSize = bufferSizeNeeded;
-            UTRACE_EXIT_VALUE(bufferSizeNeeded);
-            return NULL;
-        }
+    if (*pBufferSize <= 0){ /* 'preflighting' request - set needed size into *pBufferSize */
+        *pBufferSize = bufferSizeNeeded;
+        UTRACE_EXIT_VALUE(bufferSizeNeeded);
+        return 0;
     }
 
 
@@ -228,19 +217,19 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
      */
     if (U_ALIGNMENT_OFFSET(stackBuffer) != 0) {
         int32_t offsetUp = (int32_t)U_ALIGNMENT_OFFSET_UP(stackBufferChars);
-        if(stackBufferSize > offsetUp) {
-            stackBufferSize -= offsetUp;
+        if(*pBufferSize > offsetUp) {
+            *pBufferSize -= offsetUp;
             stackBufferChars += offsetUp;
         } else {
             /* prevent using the stack buffer but keep the size > 0 so that we do not just preflight */
-            stackBufferSize = 1;
+            *pBufferSize = 1;
         }
     }
 
     stackBuffer = (void *)stackBufferChars;
     
     /* Now, see if we must allocate any memory */
-    if (stackBufferSize < bufferSizeNeeded || stackBuffer == NULL)
+    if (*pBufferSize < bufferSizeNeeded || stackBuffer == NULL)
     {
         /* allocate one here...*/
         localConverter = allocatedConverter = (UConverter *) uprv_malloc (bufferSizeNeeded);
@@ -250,8 +239,11 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
             UTRACE_EXIT_STATUS(*status);
             return NULL;
         }
-        *status = U_SAFECLONE_ALLOCATED_WARNING;
-
+        
+        if (U_SUCCESS(*status)) {
+            *status = U_SAFECLONE_ALLOCATED_WARNING;
+        }
+        
         /* record the fact that memory was allocated */
         *pBufferSize = bufferSizeNeeded;
     } else {
@@ -688,7 +680,7 @@ ucnv_getCCSID(const UConverter * converter,
     ccsid = converter->sharedData->staticData->codepage;
     if (ccsid == 0) {
         /* Rare case. This is for cases like gb18030,
-        which doesn't have an IBM canonical name, but does have an IBM alias. */
+        which doesn't have an IBM cannonical name, but does have an IBM alias. */
         const char *standardName = ucnv_getStandardName(ucnv_getName(converter, err), "IBM", err);
         if (U_SUCCESS(*err) && standardName) {
             const char *ccsidStr = uprv_strchr(standardName, '-');
