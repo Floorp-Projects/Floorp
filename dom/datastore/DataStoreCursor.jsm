@@ -27,6 +27,7 @@ const REVISION_REMOVED = 'removed';
 const REVISION_VOID = 'void';
 const REVISION_SKIP = 'skip'
 
+Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 /**
@@ -150,7 +151,7 @@ this.DataStoreCursor.prototype = {
       self._revision = aEvent.target.result.value;
       self._objectId = 0;
       self._state = STATE_SEND_ALL;
-      aResolve(Cu.cloneInto({ operation: 'clear' }, self._window));
+      aResolve(ObjectWrapper.wrap({ operation: 'clear' }, self._window));
     }
   },
 
@@ -290,7 +291,7 @@ this.DataStoreCursor.prototype = {
       if (self._revision.revisionId != aEvent.target.result.value.revisionId) {
         self._revision = aEvent.target.result.value;
         self._objectId = 0;
-        aResolve(Cu.cloneInto({ operation: 'clear' }, self._window));
+        aResolve(ObjectWrapper.wrap({ operation: 'clear' }, self._window));
         return;
       }
 
@@ -304,8 +305,8 @@ this.DataStoreCursor.prototype = {
         }
 
         self._objectId = cursor.key;
-        aResolve(Cu.cloneInto({ operation: 'add', id: self._objectId,
-                                data: cursor.value }, self._window));
+        aResolve(ObjectWrapper.wrap({ operation: 'add', id: self._objectId,
+                                      data: cursor.value }, self._window));
       };
     };
   },
@@ -323,8 +324,8 @@ this.DataStoreCursor.prototype = {
 
     switch (this._revision.operation) {
       case REVISION_REMOVED:
-        aResolve(Cu.cloneInto({ operation: 'remove', id: this._revision.objectId },
-                              this._window));
+        aResolve(ObjectWrapper.wrap({ operation: 'remove', id: this._revision.objectId },
+                                    this._window));
         break;
 
       case REVISION_ADDED: {
@@ -336,8 +337,8 @@ this.DataStoreCursor.prototype = {
             return;
           }
 
-          aResolve(Cu.cloneInto({ operation: 'add', id: self._revision.objectId,
-                                  data: aEvent.target.result }, self._window));
+          aResolve(ObjectWrapper.wrap({ operation: 'add', id: self._revision.objectId,
+                                        data: aEvent.target.result }, self._window));
         }
         break;
       }
@@ -356,8 +357,8 @@ this.DataStoreCursor.prototype = {
             return;
           }
 
-          aResolve(Cu.cloneInto({ operation: 'update', id: self._revision.objectId,
-                                  data: aEvent.target.result }, self._window));
+          aResolve(ObjectWrapper.wrap({ operation: 'update', id: self._revision.objectId,
+                                        data: aEvent.target.result }, self._window));
         }
         break;
       }
@@ -376,8 +377,8 @@ this.DataStoreCursor.prototype = {
 
   stateMachineDone: function(aStore, aRevisionStore, aResolve, aReject) {
     this.close();
-    aResolve(Cu.cloneInto({ revisionId: this._revision.revisionId,
-                            operation: 'done' }, this._window));
+    aResolve(ObjectWrapper.wrap({ revisionId: this._revision.revisionId,
+                                  operation: 'done' }, this._window));
   },
 
   // public interface
