@@ -174,6 +174,13 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.open = true;
       window.PanelUI.beginBatchUpdate();
 
+      // The menu panel is lazy, and registers itself when the popup shows. We
+      // need to force the menu panel to register itself, or else customization
+      // is really not going to work. We pass "true" to ensureRegistered to
+      // indicate that we're handling calling startBatchUpdate and
+      // endBatchUpdate.
+      yield window.PanelUI.ensureReady(true);
+
       // Hide the palette before starting the transition for increased perf.
       this.visiblePalette.hidden = true;
 
@@ -199,13 +206,6 @@ CustomizeMode.prototype = {
 
       // Let everybody in this window know that we're about to customize.
       this.dispatchToolboxEvent("customizationstarting");
-
-      // The menu panel is lazy, and registers itself when the popup shows. We
-      // need to force the menu panel to register itself, or else customization
-      // is really not going to work. We pass "true" to ensureRegistered to
-      // indicate that we're handling calling startBatchUpdate and
-      // endBatchUpdate.
-      yield window.PanelUI.ensureReady(true);
 
       this._mainViewContext = mainView.getAttribute("context");
       if (this._mainViewContext) {
