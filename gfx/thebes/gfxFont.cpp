@@ -3329,17 +3329,6 @@ gfxFont::ShapeFragmentWithoutWordCache(gfxContext *aContext,
     return ok;
 }
 
-// Check if aCh is an unhandled control character that should be displayed
-// as a hexbox rather than rendered by some random font on the system.
-// We exclude \r as stray &#13;s are rather common (bug 941940).
-// Note that \n and \t don't come through here, as they have specific
-// meanings that have already been handled.
-static bool
-IsInvalidControlChar(uint32_t aCh)
-{
-    return aCh != '\r' && ((aCh & 0x7f) < 0x20 || aCh == 0x7f);
-}
-
 template<typename T>
 bool
 gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
@@ -3373,14 +3362,11 @@ gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
         }
 
         // fragment was terminated by an invalid char: skip it,
-        // unless it's a control char that we want to show as a hexbox,
         // but record where TAB or NEWLINE occur
         if (ch == '\t') {
             aTextRun->SetIsTab(aOffset + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aOffset + i);
-        } else if (IsInvalidControlChar(ch)) {
-            aTextRun->SetMissingGlyph(aOffset + i, ch, this);
         }
         fragStart = i + 1;
     }
@@ -3542,14 +3528,11 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                      "how did we get here except via an invalid char?");
 
         // word was terminated by an invalid char: skip it,
-        // unless it's a control char that we want to show as a hexbox,
         // but record where TAB or NEWLINE occur
         if (ch == '\t') {
             aTextRun->SetIsTab(aRunStart + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aRunStart + i);
-        } else if (IsInvalidControlChar(ch)) {
-            aTextRun->SetMissingGlyph(aRunStart + i, ch, this);
         }
 
         hash = 0;
@@ -4228,14 +4211,14 @@ gfxFontGroup::Copy(const gfxFontStyle *aStyle)
 bool 
 gfxFontGroup::IsInvalidChar(uint8_t ch)
 {
-    return ((ch & 0x7f) < 0x20 || ch == 0x7f);
+    return ((ch & 0x7f) < 0x20);
 }
 
 bool 
 gfxFontGroup::IsInvalidChar(PRUnichar ch)
 {
     // All printable 7-bit ASCII values are OK
-    if (ch >= ' ' && ch < 0x7f) {
+    if (ch >= ' ' && ch < 0x80) {
         return false;
     }
     // No point in sending non-printing control chars through font shaping
