@@ -213,6 +213,12 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   return null;
 });
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
+#endif
+
 XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
@@ -3727,22 +3733,6 @@ var XULBrowserWindow = {
       setTimeout(function () { XULBrowserWindow.asyncUpdateUI(); }, 0);
     else
       this.asyncUpdateUI();
-
-#ifdef MOZ_CRASHREPORTER
-    if (aLocationURI) {
-      let uri = aLocationURI.clone();
-      try {
-        // If the current URI contains a username/password, remove it.
-        uri.userPass = "";
-      } catch (ex) { /* Ignore failures on about: URIs. */ }
-
-      try {
-        Services.appinfo.annotateCrashReport("URL", uri.spec);
-      } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
-        // Don't make noise when the crash reporter is built but not enabled.
-      }
-    }
-#endif
   },
 
   asyncUpdateUI: function () {
@@ -4002,6 +3992,15 @@ var CombinedStopReload = {
 
 var TabsProgressListener = {
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+#ifdef MOZ_CRASHREPORTER
+    if (aRequest instanceof Ci.nsIChannel &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
+        gCrashReporter.enabled) {
+      gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
+    }
+#endif
+
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
