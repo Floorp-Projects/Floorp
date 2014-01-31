@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 
 Cu.import("resource://gre/modules/Metrics.jsm");
@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 let gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
-  Components.utils.import("resource://gre/modules/Services.jsm", ns);
+  Cu.import("resource://gre/modules/Services.jsm", ns);
   let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
   let file = do_get_file(head);
   let uri = ns.Services.io.newFileURI(file);
@@ -64,7 +64,7 @@ add_task(function test_collect() {
   let now = new Date();
 
   // FUTURE install add-on via AddonManager and don't use monkeypatching.
-  let addons = [
+  let testAddons = [
     {
       id: "addon0",
       userDisabled: false,
@@ -77,6 +77,7 @@ add_task(function test_collect() {
       installDate: now,
       updateDate: now,
     },
+    // This plugin entry should get ignored.
     {
       id: "addon1",
       userDisabled: false,
@@ -113,15 +114,54 @@ add_task(function test_collect() {
       hasBinaryComponents: false,
       installDate: now,
       updateDate: now,
+      description: "addon3 description"
     },
   ];
 
-  monkeypatchAddons(provider, addons);
+  monkeypatchAddons(provider, testAddons);
+
+  let testPlugins = {
+    "Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Plug-in for testing purposes.™ (हिन्दी 中文 العربية)",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-test"
+      ],
+    },
+    "Second Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Second plug-in for testing purposes.",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-second-test"
+      ],
+    },
+  };
+
+  let pluginTags = Cc["@mozilla.org/plugin/host;1"]
+                    .getService(Ci.nsIPluginHost)
+                    .getPluginTags({});
+
+  for (let tag of pluginTags) {
+    if (tag.name in testPlugins) {
+      let p = testPlugins[tag.name];
+      p.id = tag.filename+":"+tag.name+":"+p.version+":"+p.description;
+    }
+  }
 
   yield provider.collectConstantData();
 
-  let active = provider.getMeasurement("active", 1);
-  let data = yield active.getValues();
+  // Test addons measurement.
+
+  let addons = provider.getMeasurement("addons", 2);
+  let data = yield addons.getValues();
 
   do_check_eq(data.days.size, 0);
   do_check_eq(data.singular.size, 1);
@@ -130,19 +170,62 @@ add_task(function test_collect() {
   let json = data.singular.get("addons")[1];
   let value = JSON.parse(json);
   do_check_eq(typeof(value), "object");
-  do_check_eq(Object.keys(value).length, 3);
+  do_check_eq(Object.keys(value).length, 2);
   do_check_true("addon0" in value);
-  do_check_true("addon1" in value);
+  do_check_true(!("addon1" in value));
+  do_check_true(!("addon2" in value));
   do_check_true("addon3" in value);
 
-  let serializer = active.serializer(active.SERIALIZE_JSON);
+  let serializer = addons.serializer(addons.SERIALIZE_JSON);
   let serialized = serializer.singular(data.singular);
   do_check_eq(typeof(serialized), "object");
-  do_check_eq(Object.keys(serialized).length, 4);   // Our three keys, plus _v.
+  do_check_eq(Object.keys(serialized).length, 3); // Our entries, plus _v.
   do_check_true("addon0" in serialized);
-  do_check_true("addon1" in serialized);
   do_check_true("addon3" in serialized);
+  do_check_eq(serialized._v, 2);
+
+  // Test plugins measurement.
+
+  let plugins = provider.getMeasurement("plugins", 1);
+  data = yield plugins.getValues();
+
+  do_check_eq(data.days.size, 0);
+  do_check_eq(data.singular.size, 1);
+  do_check_true(data.singular.has("plugins"));
+
+  json = data.singular.get("plugins")[1];
+  value = JSON.parse(json);
+  do_check_eq(typeof(value), "object");
+  do_check_eq(Object.keys(value).length, 2);
+
+  do_check_true(testPlugins["Test Plug-in"].id in value);
+  do_check_true(testPlugins["Second Test Plug-in"].id in value);
+
+  for (let id in value) {
+    let item = value[id];
+    let testData = testPlugins[item.name];
+    for (let prop in testData) {
+      if (prop == "mimeTypes" || prop == "id") {
+        continue;
+      }
+      do_check_eq(testData[prop], item[prop]);
+    }
+
+    for (let mime of testData.mimeTypes) {
+      do_check_true(item.mimeTypes.indexOf(mime) != -1);
+    }
+  }
+
+  serializer = plugins.serializer(plugins.SERIALIZE_JSON);
+  serialized = serializer.singular(data.singular);
+  do_check_eq(typeof(serialized), "object");
+  do_check_eq(Object.keys(serialized).length, 3); // Our entries, plus _v.
+  for (let name in testPlugins) {
+    do_check_true(testPlugins[name].id in serialized);
+  }
   do_check_eq(serialized._v, 1);
+
+  // Test counts measurement.
 
   let counts = provider.getMeasurement("counts", 2);
   data = yield counts.getValues();
@@ -153,7 +236,7 @@ add_task(function test_collect() {
   value = data.days.getDay(now);
   do_check_eq(value.size, 4);
   do_check_eq(value.get("extension"), 1);
-  do_check_eq(value.get("plugin"), 1);
+  do_check_eq(value.get("plugin"), 2);
   do_check_eq(value.get("theme"), 1);
   do_check_eq(value.get("service"), 1);
 

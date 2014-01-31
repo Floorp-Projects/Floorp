@@ -467,7 +467,7 @@ IID2ThisTranslatorMap::Entry::Match(PLDHashTable *table,
 void
 IID2ThisTranslatorMap::Entry::Clear(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-    NS_IF_RELEASE(((Entry*)entry)->value);
+    static_cast<Entry*>(entry)->value = nullptr;
     memset(entry, 0, table->entrySize);
 }
 

@@ -310,6 +310,11 @@ var FullZoom = {
       if (token.isCurrent) {
         ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
         this._ignorePendingZoomAccesses(browser);
+        this._executeSoon(function () {
+          // _getGlobalValue may be either sync or async, so notify asyncly so
+          // observers are guaranteed consistent behavior.
+          Services.obs.notifyObservers(null, "browser-fullZoom:reset", "");
+        });
       }
     });
     this._removePref(browser);

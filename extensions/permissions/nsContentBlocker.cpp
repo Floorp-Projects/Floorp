@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIObjectLoadingContent.h"
+#include "mozilla/ArrayUtils.h"
 
 // Possible behavior pref values
 // Those map to the nsIPermissionManager values where possible
@@ -40,7 +41,7 @@ static const char *kTypeString[] = {"other",
                                     "csp_report",
                                     "xslt"};
 
-#define NUMBER_OF_TYPES NS_ARRAY_LENGTH(kTypeString)
+#define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 
 NS_IMPL_ISUPPORTS3(nsContentBlocker, 

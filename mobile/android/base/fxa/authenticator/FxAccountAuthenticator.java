@@ -22,13 +22,6 @@ import android.os.Bundle;
 public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   public static final String LOG_TAG = FxAccountAuthenticator.class.getSimpleName();
 
-  public static final String JSON_KEY_UID = "uid";
-  public static final String JSON_KEY_SESSION_TOKEN = "session_token";
-  public static final String JSON_KEY_KA = "kA";
-  public static final String JSON_KEY_KB = "kB";
-  public static final String JSON_KEY_IDP_ENDPOINT = "idp_endpoint";
-  public static final String JSON_KEY_AUTH_ENDPOINT = "auth_endpoint";
-
   protected final Context context;
   protected final AccountManager accountManager;
 
@@ -53,25 +46,6 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     }) {
       ContentResolver.setSyncAutomatically(account, authority, false);
     }
-  }
-
-  public static Account addAccount(Context context, String email, String uid, String sessionToken, String kA, String kB) {
-    final AccountManager accountManager = AccountManager.get(context);
-    final Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
-    final Bundle userData = new Bundle();
-    userData.putString(JSON_KEY_UID, uid);
-    userData.putString(JSON_KEY_SESSION_TOKEN, sessionToken);
-    userData.putString(JSON_KEY_KA, kA);
-    userData.putString(JSON_KEY_KB, kB);
-    userData.putString(JSON_KEY_IDP_ENDPOINT, FxAccountConstants.DEFAULT_IDP_ENDPOINT);
-    userData.putString(JSON_KEY_AUTH_ENDPOINT, FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
-    if (!accountManager.addAccountExplicitly(account, sessionToken, userData)) {
-      Logger.warn(LOG_TAG, "Error adding account named " + account.name + " of type " + account.type);
-      return null;
-    }
-    // Enable syncing by default.
-    enableSyncing(context, account);
-    return account;
   }
 
   @Override

@@ -47,7 +47,7 @@ Tests of DOM Worker Threads
 
   worker.onerror = function(event) {
     event.preventDefault();
-    if (event.message == "too much recursion") {
+    if (event.message == "InternalError: too much recursion") {
       ok(true, "got correct error message");
       ++errorCount;
     }

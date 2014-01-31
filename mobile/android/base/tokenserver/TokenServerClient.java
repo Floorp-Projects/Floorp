@@ -29,6 +29,7 @@ import org.mozilla.gecko.tokenserver.TokenServerException.TokenServerMalformedRe
 import org.mozilla.gecko.tokenserver.TokenServerException.TokenServerMalformedResponseException;
 import org.mozilla.gecko.tokenserver.TokenServerException.TokenServerUnknownServiceException;
 
+import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
@@ -56,6 +57,9 @@ public class TokenServerClient {
   public static final String JSON_KEY_ID = "id";
   public static final String JSON_KEY_KEY = "key";
   public static final String JSON_KEY_UID = "uid";
+
+  public static final String HEADER_CONDITIONS_ACCEPTED = "X-Conditions-Accepted";
+  public static final String HEADER_CLIENT_STATE = "X-Client-State";
 
   protected final Executor executor;
   protected final URI uri;
@@ -108,7 +112,7 @@ public class TokenServerClient {
     // Responses should *always* be JSON, even in the case of 4xx and 5xx
     // errors. If we don't see JSON, the server is likely very unhappy.
     String contentType = response.getEntity().getContentType().getValue();
-    if (contentType != "application/json" && !contentType.startsWith("application/json;")) {
+    if (!contentType.equals("application/json") && !contentType.startsWith("application/json;")) {
       Logger.warn(LOG_TAG, "Got non-JSON response with Content-Type " +
           contentType + ". Misconfigured server?");
       throw new TokenServerMalformedResponseException(null, "Non-JSON response Content-Type.");
@@ -202,54 +206,81 @@ public class TokenServerClient {
         result.getString(JSON_KEY_API_ENDPOINT));
   }
 
-  public void getTokenFromBrowserIDAssertion(final String assertion, final boolean conditionsAccepted,
-      final TokenServerClientDelegate delegate) {
-    final BaseResource r = new BaseResource(uri);
+  public static class TokenFetchResourceDelegate extends BaseResourceDelegate {
+    private final TokenServerClient         client;
+    private final TokenServerClientDelegate delegate;
+    private final String                    assertion;
+    private final String                    clientState;
+    private final BaseResource              resource;
+    private final boolean                   conditionsAccepted;
 
-    r.delegate = new BaseResourceDelegate(r) {
-      @Override
-      public void handleHttpResponse(HttpResponse response) {
-        SkewHandler skewHandler = SkewHandler.getSkewHandlerForResource(r);
-        skewHandler.updateSkew(response, System.currentTimeMillis());
-        try {
-          TokenServerToken token = processResponse(response);
-          invokeHandleSuccess(delegate, token);
-        } catch (TokenServerException e) {
-          invokeHandleFailure(delegate, e);
-        }
+    public TokenFetchResourceDelegate(TokenServerClient client,
+                                      BaseResource resource,
+                                      TokenServerClientDelegate delegate,
+                                      String assertion, String clientState,
+                                      boolean conditionsAccepted) {
+      super(resource);
+      this.client = client;
+      this.delegate = delegate;
+      this.assertion = assertion;
+      this.clientState = clientState;
+      this.resource = resource;
+      this.conditionsAccepted = conditionsAccepted;
+    }
+
+    @Override
+    public void handleHttpResponse(HttpResponse response) {
+      SkewHandler skewHandler = SkewHandler.getSkewHandlerForResource(resource);
+      skewHandler.updateSkew(response, System.currentTimeMillis());
+      try {
+        TokenServerToken token = client.processResponse(response);
+        client.invokeHandleSuccess(delegate, token);
+      } catch (TokenServerException e) {
+        client.invokeHandleFailure(delegate, e);
       }
+    }
 
-      @Override
-      public void handleTransportException(GeneralSecurityException e) {
-        invokeHandleError(delegate, e);
+    @Override
+    public void handleTransportException(GeneralSecurityException e) {
+      client.invokeHandleError(delegate, e);
+    }
+
+    @Override
+    public void handleHttpProtocolException(ClientProtocolException e) {
+      client.invokeHandleError(delegate, e);
+    }
+
+    @Override
+    public void handleHttpIOException(IOException e) {
+      client.invokeHandleError(delegate, e);
+    }
+
+    @Override
+    public AuthHeaderProvider getAuthHeaderProvider() {
+      return new BrowserIDAuthHeaderProvider(assertion);
+    }
+
+    @Override
+    public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
+      String host = request.getURI().getHost();
+      request.setHeader(new BasicHeader(HttpHeaders.HOST, host));
+      if (clientState != null) {
+        request.setHeader(new BasicHeader(HEADER_CLIENT_STATE, clientState));
       }
-
-      @Override
-      public void handleHttpProtocolException(ClientProtocolException e) {
-        invokeHandleError(delegate, e);
+      if (conditionsAccepted) {
+        request.addHeader(HEADER_CONDITIONS_ACCEPTED, "1");
       }
+    }
+  }
 
-      @Override
-      public void handleHttpIOException(IOException e) {
-        invokeHandleError(delegate, e);
-      }
-
-      @Override
-      public AuthHeaderProvider getAuthHeaderProvider() {
-        return new BrowserIDAuthHeaderProvider(assertion);
-      }
-
-      @Override
-      public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
-        String host = request.getURI().getHost();
-        request.setHeader(new BasicHeader("Host", host));
-
-        if (conditionsAccepted) {
-          request.addHeader("X-Conditions-Accepted", "1");
-        }
-      }
-    };
-
-    r.get();
+  public void getTokenFromBrowserIDAssertion(final String assertion,
+                                             final boolean conditionsAccepted,
+                                             final String clientState,
+                                             final TokenServerClientDelegate delegate) {
+    final BaseResource resource = new BaseResource(this.uri);
+    resource.delegate = new TokenFetchResourceDelegate(this, resource, delegate,
+                                                       assertion, clientState,
+                                                       conditionsAccepted);
+    resource.get();
   }
 }

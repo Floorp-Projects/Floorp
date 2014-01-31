@@ -500,11 +500,11 @@
   </binding>
 
   <binding id="urlbar-autocomplete">
-    <content class="meta-section-container">
-      <xul:vbox class="meta-section" anonid="results-container" flex="1">
+    <content class="meta-section-container" pack="end">
+      <xul:vbox class="meta-section" anonid="results-container" flex="2">
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
-        <richgrid anonid="results" rows="3" flex="1" minSlots="1"
+        <richgrid anonid="results" rows="3" minSlots="8"
                   seltype="single" nocontext="true" deferlayout="true"/>
       </xul:vbox>
 
@@ -600,6 +600,17 @@
             this.clearSelection();
             this.invalidate();
 
+            let viewstate = this.getAttribute("viewstate");
+            switch (viewstate) {
+              case "portrait":
+              case "snapped":
+                this._results.setAttribute("vertical", true);
+                break;
+              default:
+                this._results.removeAttribute("vertical");
+                break;
+            }
+
             this._results.arrangeItemsNow();
             this._searches.arrangeItemsNow();
 
@@ -658,8 +669,8 @@
             if (!this.popupOpen)
               return;
 
-            this.updateResults();
             this.updateSearchEngineHeader();
+            this.updateResults();
           ]]>
         </body>
       </method>
@@ -676,12 +687,16 @@
               return;
 
             let haveNoResults = (this.matchCount == 0);
-            this._resultsContainer.hidden = haveNoResults;
 
             if (haveNoResults) {
               this._results.clearAll();
+              this.setAttribute("nomatch", true);
+              this._resultsContainer.removeAttribute("flex");
               return;
             }
+
+            this.removeAttribute("nomatch");
+            this._resultsContainer.setAttribute("flex", 1);
 
             let controller = this.input.controller;
             let lastMatch = this.matchCount - 1;
@@ -689,9 +704,10 @@
 
             // Swap out existing items for new search hit results
             for (let i = 0; i < iterCount; i++) {
+              let item = this._results._slotAt(i);
               if (i > lastMatch) {
-                let lastItem = this._results.itemCount - 1;
-                this._results.removeItemAt(lastItem, true);
+                item.removeAttribute("value");
+                item.removeAttribute("autocomplete");
                 continue;
               }
 
@@ -699,15 +715,9 @@
               let label = controller.getCommentAt(i) || value;
               let iconURI = controller.getImageAt(i);
 
-              let item = this._results.getItemAtIndex(i);
-              if (item == null) {
-                item = this._results.appendItem(label, value, true);
-                item.setAttribute("autocomplete", "true");
-              } else {
-                item.setAttribute("label", label);
-                item.setAttribute("value", value);
-              }
-
+              item.setAttribute("autocomplete", true);
+              item.setAttribute("label", label);
+              item.setAttribute("value", value);
               item.setAttribute("iconURI", iconURI);
             }
 

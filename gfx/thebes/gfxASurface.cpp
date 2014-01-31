@@ -5,6 +5,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Attributes.h"
@@ -618,7 +619,7 @@ static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
     {"gfx-surface-d2d", nullptr},
 };
 
-PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
+PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
                  size_t(gfxSurfaceType::Max));
 #ifdef CAIRO_HAS_D2D_SURFACE
 PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_D2D) ==
@@ -639,7 +640,7 @@ public:
     NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
                               nsISupports *aClosure)
     {
-        size_t len = NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs);
+        const size_t len = ArrayLength(sSurfaceMemoryReporterAttrs);
         for (size_t i = 0; i < len; i++) {
             int64_t amount = gSurfaceMemoryUsed[i];
 

@@ -165,7 +165,6 @@ struct JSSettings
 enum WorkerPreference
 {
   WORKERPREF_DUMP = 0, // browser.dom.window.dump.enabled
-  WORKERPREF_PROMISE,  // dom.promise.enabled
   WORKERPREF_COUNT
 };
 

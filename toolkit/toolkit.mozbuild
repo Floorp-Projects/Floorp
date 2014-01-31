@@ -73,6 +73,7 @@ if CONFIG['MOZ_WEBRTC']:
         'media/mtransport/third_party',
         'media/mtransport/build',
         'media/mtransport/standalone',
+        'media/libyuv',
     ])
 
 if CONFIG['MOZ_OMX_PLUGIN']:

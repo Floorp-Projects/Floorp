@@ -410,7 +410,7 @@
           <button id="black-boxed-message-button"
                   class="devtools-toolbarbutton"
                   label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                  image="chrome://browser/skin/devtools/debugger-blackboxMessageEye.png"
+                  image="chrome://browser/skin/devtools/debugger-blackbox-eye.png"
                   command="unBlackBoxCommand"/>
         </vbox>
         <vbox id="source-progress-container"
@@ -432,7 +432,7 @@
         <tabpanels flex="1">
           <tabpanel id="variables-tabpanel">
             <vbox id="expressions"/>
-            <splitter class="devtools-horizontal-splitter"/>
+            <splitter class="devtools-horizontal-splitter devtools-invisible splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
           <tabpanel id="events-tabpanel">

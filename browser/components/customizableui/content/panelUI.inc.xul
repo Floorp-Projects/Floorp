@@ -15,7 +15,9 @@
       </vbox>
 
       <footer id="PanelUI-footer">
-        <toolbarbutton id="PanelUI-fxa-status" label="&fxaSignIn.label;"
+        <toolbarbutton id="PanelUI-fxa-status"
+                       defaultlabel="&fxaSignIn.label;"
+                       errorlabel="&fxaSignInError.label;"
                        oncommand="gFxAccounts.toggle(event);"
                        hidden="true"/>
 

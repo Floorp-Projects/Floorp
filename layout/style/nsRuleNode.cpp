@@ -1083,6 +1083,10 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
                           nsStyleImage& aResult,
                           bool& aCanStoreInRuleTree)
 {
+  if (aValue.GetUnit() == eCSSUnit_Null) {
+    return;
+  }
+
   aResult.SetNull();
 
   switch (aValue.GetUnit()) {
@@ -1111,6 +1115,8 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
     case eCSSUnit_Element:
       aResult.SetElementId(aValue.GetStringBufferValue());
       break;
+    case eCSSUnit_Initial:
+    case eCSSUnit_Unset:
     case eCSSUnit_None:
       break;
     default:
@@ -6691,18 +6697,14 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 
   // border-image-source
   const nsCSSValue* borderImageSource = aRuleData->ValueForBorderImageSource();
-  if (borderImageSource->GetUnit() == eCSSUnit_Image) {
-    NS_SET_IMAGE_REQUEST_WITH_DOC(border->SetBorderImage,
-                                  aContext,
-                                  borderImageSource->GetImageValue);
-  } else if (borderImageSource->GetUnit() == eCSSUnit_Inherit) {
+  if (borderImageSource->GetUnit() == eCSSUnit_Inherit) {
     canStoreInRuleTree = false;
-    NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
-                         parentBorder->GetBorderImage());
-  } else if (borderImageSource->GetUnit() == eCSSUnit_Initial ||
-             borderImageSource->GetUnit() == eCSSUnit_Unset ||
-             borderImageSource->GetUnit() == eCSSUnit_None) {
-    border->SetBorderImage(nullptr);
+    border->mBorderImageSource = parentBorder->mBorderImageSource;
+  } else {
+    SetStyleImage(aContext,
+                  *borderImageSource,
+                  border->mBorderImageSource,
+                  canStoreInRuleTree);
   }
 
   nsCSSValue borderImageSliceValue;
@@ -6780,8 +6782,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
               parentBorder->mBorderImageRepeatV,
               NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH, 0, 0, 0, 0);
 
-  if (border->HasBorderImage())
-    border->TrackImage(aContext->PresContext());
+  border->TrackImage(aContext->PresContext());
 
   COMPUTE_END_RESET(Border, border)
 }
@@ -8662,15 +8663,15 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   // Number of properties we care about
   size_t nValues = 0;
 
-  nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
-                     NS_ARRAY_LENGTH(borderValues) +
-                     NS_ARRAY_LENGTH(paddingValues) +
-                     NS_ARRAY_LENGTH(textShadowValues)];
+  nsCSSValue* values[MOZ_ARRAY_LENGTH(backgroundValues) +
+                     MOZ_ARRAY_LENGTH(borderValues) +
+                     MOZ_ARRAY_LENGTH(paddingValues) +
+                     MOZ_ARRAY_LENGTH(textShadowValues)];
 
-  nsCSSProperty properties[NS_ARRAY_LENGTH(backgroundValues) +
-                           NS_ARRAY_LENGTH(borderValues) +
-                           NS_ARRAY_LENGTH(paddingValues) +
-                           NS_ARRAY_LENGTH(textShadowValues)];
+  nsCSSProperty properties[MOZ_ARRAY_LENGTH(backgroundValues) +
+                           MOZ_ARRAY_LENGTH(borderValues) +
+                           MOZ_ARRAY_LENGTH(paddingValues) +
+                           MOZ_ARRAY_LENGTH(textShadowValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     for (uint32_t i = 0, i_end = ArrayLength(backgroundValues);

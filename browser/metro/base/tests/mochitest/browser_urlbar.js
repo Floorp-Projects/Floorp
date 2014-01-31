@@ -325,15 +325,16 @@ gTests.push({
     let opened = yield waitForCondition(() => gEdit.popup.popupOpen);
     yield waitForCondition(() => gEdit.popup._results.itemCount > 0);
 
-    ok(!gEdit.popup._resultsContainer.hidden, "'Your results' are visible");
+    ok(!gEdit.popup.hasAttribute("nomatch"), "'Popup doesnt have nomatch attribute when there are results");
+    ok(gEdit.popup._resultsContainer.getBoundingClientRect().width, "'Your results' are visible");
     ok(gEdit.popup._results.itemCount > 0, "'Your results' are populated");
 
     // Append a string to make sure it doesn't match anything in 'your results'
     EventUtils.sendString("zzzzzzzzzzzzzzzzzz", window);
 
-    yield waitForCondition(() => gEdit.popup._resultsContainer.hidden);
+    yield waitForCondition(() => gEdit.popup.hasAttribute("nomatch"));
 
-    ok(gEdit.popup._resultsContainer.hidden, "'Your results' are hidden");
+    is(gEdit.popup._resultsContainer.getBoundingClientRect().width, 0, "'Your results' are hidden");
     ok(gEdit.popup._results.itemCount === 0, "'Your results' are empty");
 
     EventUtils.synthesizeKey("VK_DOWN", {}, window);

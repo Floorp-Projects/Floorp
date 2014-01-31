@@ -815,9 +815,6 @@ pref("network.sntp.pools", // Servers separated by ';'.
 pref("network.sntp.port", 123);
 pref("network.sntp.timeout", 30); // In seconds.
 
-// Enable promise
-pref("dom.promise.enabled", false);
-
 // Enable dataStore
 #ifdef RELEASE_BUILD
 pref("dom.datastore.enabled", false);

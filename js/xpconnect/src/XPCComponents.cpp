@@ -2565,7 +2565,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
 
     const uint64_t innerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
 
-    JSErrorReport *err = JS_ErrorFromException(cx, error);
+    RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
+    JSErrorReport *err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
     if (err) {
         // It's a proper JS Error
         nsAutoString fileUni;
