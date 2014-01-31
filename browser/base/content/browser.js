@@ -3743,7 +3743,7 @@ var XULBrowserWindow = {
       } catch (ex) { /* Ignore failures on about: URIs. */ }
 
       try {
-        Services.appinfo.annotateCrashReport("URL", uri.spec);
+        gCrashReporter.annotateCrashReport("URL", uri.spec);
       } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
         // Don't make noise when the crash reporter is built but not enabled.
       }
