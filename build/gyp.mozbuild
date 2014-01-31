@@ -22,6 +22,9 @@ gyp_vars = {
     'use_system_libvpx': 0,
     'build_libjpeg': 0,
     'build_libvpx': 0,
+    'build_libyuv': 0,
+    'libyuv_dir': '/media/libyuv',
+
     # saves 4MB when webrtc_trace is off
     'enable_lazy_trace_alloc': 1,
 
