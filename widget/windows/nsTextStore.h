@@ -230,6 +230,10 @@ protected:
   bool     IsReadLocked() const { return IsReadLock(mLock); }
   bool     IsReadWriteLocked() const { return IsReadWriteLock(mLock); }
 
+  // This is called immediately after a call of OnLockGranted() of mSink.
+  // Note that mLock isn't cleared yet when this is called.
+  void     DidLockGranted();
+
   bool     GetScreenExtInternal(RECT &aScreenExt);
   // If aDispatchTextEvent is true, this method will dispatch text event if
   // this is called during IME composing.  aDispatchTextEvent should be true
@@ -264,6 +268,10 @@ protected:
                                ULONG cFilterAttrs,
                                const TS_ATTRID *paFilterAttrs);
   void     SetInputScope(const nsString& aHTMLInputType);
+
+  // Creates native caret over our caret.  This method only works on desktop
+  // application.  Otherwise, this does nothing.
+  void     CreateNativeCaret();
 
   // Holds the pointer to our current win32 or metro widget
   nsRefPtr<nsWindowBase>       mWidget;
@@ -644,6 +652,8 @@ protected:
   // during recoding actions and then, FlushPendingActions() will call
   // mSink->OnSelectionChange().
   bool                         mNotifySelectionChange;
+  // While there is native caret, this is true.  Otherwise, false.
+  bool                         mNativeCaretIsCreated;
 
   // True if current IME is implemented with IMM.
   bool mIsIMM_IME;
