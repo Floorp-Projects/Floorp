@@ -722,14 +722,6 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
 }
 
 bool
-gfx3DMatrix::IsProjective() const
-{
-  return _14 != 0.0f || _24 != 0.0f ||
-         _34 != 0.0f || _44 != 1.0f;
-}
-
-
-bool
 gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
 {
   if (_14 != 0.0f ||
@@ -796,9 +788,10 @@ gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
   gfxPoint points[4];
 
   points[0] = ProjectPoint(aRect.TopLeft());
-  points[1] = ProjectPoint(aRect.TopRight());
-  points[2] = ProjectPoint(aRect.BottomLeft());
-  points[3] = ProjectPoint(aRect.BottomRight());
+  points[1] = ProjectPoint(gfxPoint(aRect.X() + aRect.Width(), aRect.Y()));
+  points[2] = ProjectPoint(gfxPoint(aRect.X(), aRect.Y() + aRect.Height()));
+  points[3] = ProjectPoint(gfxPoint(aRect.X() + aRect.Width(),
+                                    aRect.Y() + aRect.Height()));
 
   gfxFloat min_x, max_x;
   gfxFloat min_y, max_y;
@@ -814,34 +807,6 @@ gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
   }
 
   return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
-}
-
-gfxRect gfx3DMatrix::UntransformBounds(const gfxRect& aRect, const gfxRect& aChildBounds) const
-{
-  if (!IsProjective()) {
-    return Inverse().TransformBounds(aRect);
-  }
-  gfxRect bounds = TransformBounds(aChildBounds);
-
-  gfxRect rect = aRect.Intersect(bounds);
-
-  return Inverse().ProjectRectBounds(rect);
-}
-
-bool gfx3DMatrix::UntransformPoint(const gfxPoint& aPoint, const gfxRect& aChildBounds, gfxPoint* aOut) const
-{
-  if (!IsProjective()) {
-    *aOut = Inverse().Transform(aPoint);
-    return true;
-  }
-  gfxRect bounds = TransformBounds(aChildBounds);
-
-  if (!bounds.Contains(aPoint)) {
-    return false;
-  }
-
-  *aOut = Inverse().ProjectPoint(aPoint);
-  return true;
 }
 
 gfxPoint3D gfx3DMatrix::GetNormalVector() const
