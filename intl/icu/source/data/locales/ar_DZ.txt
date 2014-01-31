@@ -1,19 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar_DZ.xml
 // *
 // ***************************************************************************
 ar_DZ{
     NumberElements{
-        arab{
-            symbols{
-                decimal{"٫"}
-                group{"٬"}
-            }
-        }
         default{"latn"}
         latn{
             symbols{
@@ -22,45 +16,8 @@ ar_DZ{
             }
         }
     }
-    Version{"2.0.92.80"}
+    Version{"2.0.77.46"}
     calendar{
-        generic{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE، d MMMM، y G",
-                "d MMMM، y G",
-                "G y/MM/dd",
-                "GGGGG y/M/d",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            availableFormats{
-                MMdd{"MM/dd"}
-                Md{"M/d"}
-                yyyyM{"G y/M"}
-                yyyyMM{"G y/MM"}
-            }
-            intervalFormats{
-                M{
-                    M{"M‏-M"}
-                }
-                MMMd{
-                    d{"d‏-d MMM"}
-                }
-                d{
-                    d{"d‏-d"}
-                }
-                y{
-                    y{"G y‏-y"}
-                }
-            }
-        }
         gregorian{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -69,8 +26,8 @@ ar_DZ{
                 "h:mm a",
                 "EEEE، d MMMM، y",
                 "d MMMM، y",
-                "y/MM/dd",
-                "y/M/d",
+                "yyyy/MM/dd",
+                "yyyy/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -80,8 +37,8 @@ ar_DZ{
             availableFormats{
                 MMdd{"MM/dd"}
                 Md{"M/d"}
-                yM{"y/M"}
-                yMM{"y/MM"}
+                yM{"yyyy/M"}
+                yyyyMM{"yyyy/MM"}
             }
             intervalFormats{
                 M{

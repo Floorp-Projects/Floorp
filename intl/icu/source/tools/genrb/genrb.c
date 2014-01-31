@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2014, International Business Machines
+*   Copyright (C) 1998-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -280,7 +280,7 @@ main(int argc,
         }
     }
 
-    initParser();
+    initParser(options[NO_COLLATION_RULES].doesOccur);
 
     /*added by Jing*/
     if(options[LANGUAGE].doesOccur) {
@@ -557,8 +557,7 @@ processFile(
         printf("autodetected encoding %s\n", cp);
     }
     /* Parse the data into an SRBRoot */
-    data = parse(ucbuf, inputDir, outputDir,
-                 !omitBinaryCollation, options[NO_COLLATION_RULES].doesOccur, status);
+    data = parse(ucbuf, inputDir, outputDir, !omitBinaryCollation, status);
 
     if (data == NULL || U_FAILURE(*status)) {
         fprintf(stderr, "couldn't parse the file %s. Error:%s\n", filename,u_errorName(*status));

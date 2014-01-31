@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2002-2013, International Business Machines
+*   Copyright (C) 2002-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -37,14 +37,13 @@
 #include <string.h>
 
 #include "putilimp.h"
-UDate startTime;
+UDate startTime = -1.0;
 
 static int elapsedTime() {
   return (int)uprv_floor((uprv_getRawUTCtime()-startTime)/1000.0);
 }
 
 #if U_PLATFORM_IMPLEMENTS_POSIX && !U_PLATFORM_HAS_WIN32_API
-
 #include <signal.h>
 #include <unistd.h>
 
@@ -65,6 +64,9 @@ static void install_watchdog(const char *toolName, const char *outFileName) {
   wToolname=toolName;
   wOutname=outFileName;
 
+  if(startTime<0) { // uninitialized
+    startTime = uprv_getRawUTCtime();
+  }
   signal(SIGALRM, &alarm_fn);
 
   alarm(firstSeconds); // set the alarm
@@ -299,7 +301,6 @@ int  main(int argc, char **argv) {
     const char *outFileName  = argv[2];
     const char *wordFileName = argv[1];
 
-    startTime = uprv_getRawUTCtime(); // initialize start timer
     // set up the watchdog
     install_watchdog(progName, outFileName);
 
@@ -365,9 +366,6 @@ int  main(int argc, char **argv) {
     UBool hasValues = FALSE;
     UBool hasValuelessContents = FALSE;
     int lineCount = 0;
-    int wordCount = 0;
-    int minlen = 255;
-    int maxlen = 0;
     UBool isOk = TRUE;
     while (readLine(f, fileLine, status)) {
         lineCount++;
@@ -404,15 +402,9 @@ int  main(int argc, char **argv) {
             }
             dict.addWord(fileLine.tempSubString(0, keyLen), (int32_t)value, status);
             hasValues = TRUE;
-            wordCount++;
-            if (keyLen < minlen) minlen = keyLen;
-            if (keyLen > maxlen) maxlen = keyLen;
         } else {
             dict.addWord(fileLine.tempSubString(0, keyLen), 0, status);
-            hasValuelessContents = TRUE;
-            wordCount++;
-            if (keyLen < minlen) minlen = keyLen;
-            if (keyLen > maxlen) maxlen = keyLen;
+            hasValuelessContents = FALSE;
         }
 
         if (status.isFailure()) {
@@ -421,7 +413,6 @@ int  main(int argc, char **argv) {
             exit(status.reset());
         }
     }
-    if (verbose) { printf("Processed %d lines, added %d words, minlen %d, maxlen %d\n", lineCount, wordCount, minlen, maxlen); }
 
     if (!isOk && status.isSuccess()) {
         status.set(U_ILLEGAL_ARGUMENT_ERROR);
@@ -430,7 +421,7 @@ int  main(int argc, char **argv) {
         fprintf(stderr, "warning: file contained both valued and unvalued strings!\n");
     }
 
-    if (verbose) { printf("Serializing data...isBytesTrie? %d\n", isBytesTrie); }
+    if (verbose) { puts("Serializing data..."); }
     int32_t outDataSize;
     const void *outData;
     UnicodeString usp;
@@ -444,7 +435,7 @@ int  main(int argc, char **argv) {
         outData = usp.getBuffer();
     }
     if (status.isFailure()) {
-        fprintf(stderr, "gendict: got failure of type %s while serializing, if U_ILLEGAL_ARGUMENT_ERROR possibly due to duplicate dictionary entries\n", status.errorName());
+        fprintf(stderr, "gendict: got failure of type %s while serializing\n", status.errorName());
         exit(status.reset());
     }
     if (verbose) { puts("Opening output file..."); }

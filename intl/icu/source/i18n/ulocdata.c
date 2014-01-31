@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *                                                                            *
-* Copyright (C) 2003-2013, International Business Machines                   *
+* Copyright (C) 2003-2012, International Business Machines                   *
 *                Corporation and others. All Rights Reserved.                *
 *                                                                            *
 ******************************************************************************
@@ -16,9 +16,8 @@
 
 #include "cmemory.h"
 #include "unicode/ustring.h"
-#include "unicode/ures.h"
-#include "unicode/uloc.h"
 #include "unicode/ulocdata.h"
+#include "umutex.h"
 #include "uresimp.h"
 #include "ureslocs.h"
 
@@ -103,8 +102,7 @@ ulocdata_getExemplarSet(ULocaleData *uld, USet *fillIn,
 
     static const char* const exemplarSetTypes[] = { "ExemplarCharacters", 
                                                     "AuxExemplarCharacters", 
-                                                    "ExemplarCharactersIndex",
-                                                    "ExemplarCharactersPunctuation"};
+                                                    "ExemplarCharactersIndex"};
     const UChar *exemplarChars = NULL;
     int32_t len = 0;
     UErrorCode localStatus = U_ZERO_ERROR;
@@ -188,42 +186,10 @@ ulocdata_getDelimiter(ULocaleData *uld, ULocaleDataDelimiterType type,
     return len;
 }
 
-static UResourceBundle * measurementTypeBundleForLocale(const char *localeID, const char *measurementType, UErrorCode *status){
-    char fullLoc[ULOC_FULLNAME_CAPACITY];
-    char region[ULOC_COUNTRY_CAPACITY];
-    UResourceBundle *rb;
-    UResourceBundle *measTypeBundle = NULL;
-    
-    /* The following code is basically copied from Calendar::setWeekData and
-     * Calendar::getCalendarTypeForLocale with adjustments for resource name
-     */
-    uloc_addLikelySubtags(localeID, fullLoc, ULOC_FULLNAME_CAPACITY, status);
-    uloc_getCountry(fullLoc, region, ULOC_COUNTRY_CAPACITY, status);
-    
-    rb = ures_openDirect(NULL, "supplementalData", status);
-    ures_getByKey(rb, "measurementData", rb, status);
-    if (rb != NULL) {
-        UResourceBundle *measDataBundle = ures_getByKey(rb, region, NULL, status);
-        if (U_SUCCESS(*status)) {
-        	measTypeBundle = ures_getByKey(measDataBundle, measurementType, NULL, status);
-        }
-        if (*status == U_MISSING_RESOURCE_ERROR) {
-            *status = U_ZERO_ERROR;
-            if (measDataBundle != NULL) {
-                ures_close(measDataBundle);
-            }
-            measDataBundle = ures_getByKey(rb, "001", NULL, status);
-            measTypeBundle = ures_getByKey(measDataBundle, measurementType, NULL, status);
-        }
-        ures_close(measDataBundle);
-    }
-    ures_close(rb);
-    return measTypeBundle;
-}
-
 U_CAPI UMeasurementSystem U_EXPORT2
 ulocdata_getMeasurementSystem(const char *localeID, UErrorCode *status){
 
+    UResourceBundle* bundle=NULL;
     UResourceBundle* measurement=NULL;
     UMeasurementSystem system = UMS_LIMIT;
 
@@ -231,9 +197,13 @@ ulocdata_getMeasurementSystem(const char *localeID, UErrorCode *status){
         return system;
     }
 
-    measurement = measurementTypeBundleForLocale(localeID, MEASUREMENT_SYSTEM, status);
+    bundle = ures_open(NULL, localeID, status);
+
+    measurement = ures_getByKeyWithFallback(bundle, MEASUREMENT_SYSTEM, NULL, status);
+
     system = (UMeasurementSystem) ures_getInt(measurement, status);
 
+    ures_close(bundle);
     ures_close(measurement);
 
     return system;
@@ -242,6 +212,7 @@ ulocdata_getMeasurementSystem(const char *localeID, UErrorCode *status){
 
 U_CAPI void U_EXPORT2
 ulocdata_getPaperSize(const char* localeID, int32_t *height, int32_t *width, UErrorCode *status){
+    UResourceBundle* bundle=NULL;
     UResourceBundle* paperSizeBundle = NULL;
     const int32_t* paperSize=NULL;
     int32_t len = 0;
@@ -250,7 +221,8 @@ ulocdata_getPaperSize(const char* localeID, int32_t *height, int32_t *width, UEr
         return;
     }
 
-    paperSizeBundle = measurementTypeBundleForLocale(localeID, PAPER_SIZE, status);
+    bundle = ures_open(NULL, localeID, status);
+    paperSizeBundle = ures_getByKeyWithFallback(bundle, PAPER_SIZE, NULL, status);
     paperSize = ures_getIntVector(paperSizeBundle, &len,  status);
 
     if(U_SUCCESS(*status)){
@@ -262,6 +234,7 @@ ulocdata_getPaperSize(const char* localeID, int32_t *height, int32_t *width, UEr
         }
     }
 
+    ures_close(bundle);
     ures_close(paperSizeBundle);
 
 }
@@ -331,10 +304,6 @@ ulocdata_getLocaleSeparator(ULocaleData *uld,
     int32_t len = 0;
     const UChar *separator = NULL;
     UErrorCode localStatus = U_ZERO_ERROR;
-    UChar *p0, *p1;
-    static const UChar sub0[4] = { 0x007b, 0x0030, 0x007d , 0x0000 }; /* {0} */
-    static const UChar sub1[4] = { 0x007b, 0x0031, 0x007d , 0x0000 }; /* {1} */
-    static const int32_t subLen = 3;
 
     if (U_FAILURE(*status))
         return 0;
@@ -367,20 +336,6 @@ ulocdata_getLocaleSeparator(ULocaleData *uld,
 
     if (U_FAILURE(*status)){
         return 0;
-    }
-
-    /* For backwards compatibility, if we have a pattern, return the portion between {0} and {1} */
-    p0=u_strstr(separator, sub0);
-    p1=u_strstr(separator, sub1);
-    if (p0!=NULL && p1!=NULL && p0<=p1) {
-        separator = (const UChar *)p0 + subLen;
-        len = p1 - separator;
-        /* Desired separator is no longer zero-terminated; handle that if necessary */
-        if (len < resultCapacity) {
-            u_strncpy(result, separator, len);
-            result[len] = 0;
-            return len;
-        }
     }
 
     u_strncpy(result, separator, resultCapacity);

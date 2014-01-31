@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fi.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/fi.xml
+ *  ICU <specials> source: <path>/xml/main/fi.xml
  */
 fi{
-    Version{"2.0.92.87"}
+    Version{"2.0.78.39"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
@@ -47,9 +47,6 @@ fi{
         }
         "America:Asuncion"{
             ec{"Asunción"}
-        }
-        "America:Bahia_Banderas"{
-            ec{"Bahía de Banderas"}
         }
         "America:Bogota"{
             ec{"Bogotá"}
@@ -162,9 +159,6 @@ fi{
         "Antarctica:DumontDUrville"{
             ec{"Dumont d’Urville"}
         }
-        "Antarctica:Macquarie"{
-            ec{"Macquariensaari"}
-        }
         "Antarctica:South_Pole"{
             ec{"Etelänapa"}
         }
@@ -206,9 +200,6 @@ fi{
         }
         "Asia:Katmandu"{
             ec{"Kathmandu"}
-        }
-        "Asia:Khandyga"{
-            ec{"Handyga"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
@@ -287,6 +278,51 @@ fi{
         }
         "Atlantic:St_Helena"{
             ec{"Saint Helena"}
+        }
+        "Etc:GMT"{
+            ec{"UTC"}
+        }
+        "Etc:GMT-1"{
+            ec{"UTC-1"}
+        }
+        "Etc:GMT-10"{
+            ec{"UTC-10"}
+        }
+        "Etc:GMT-11"{
+            ec{"UTC-11"}
+        }
+        "Etc:GMT-12"{
+            ec{"UTC-12"}
+        }
+        "Etc:GMT-13"{
+            ec{"UTC-13"}
+        }
+        "Etc:GMT-14"{
+            ec{"UTC-14"}
+        }
+        "Etc:GMT-2"{
+            ec{"UTC-2"}
+        }
+        "Etc:GMT-3"{
+            ec{"UTC-3"}
+        }
+        "Etc:GMT-4"{
+            ec{"UTC-4"}
+        }
+        "Etc:GMT-5"{
+            ec{"UTC-5"}
+        }
+        "Etc:GMT-6"{
+            ec{"UTC-6"}
+        }
+        "Etc:GMT-7"{
+            ec{"UTC-7"}
+        }
+        "Etc:GMT-8"{
+            ec{"UTC-8"}
+        }
+        "Etc:GMT-9"{
+            ec{"UTC-9"}
         }
         "Etc:Unknown"{
             ec{"tuntematon"}
@@ -391,9 +427,6 @@ fi{
         "Indian:Kerguelen"{
             ec{"Kerguelensaaret"}
         }
-        "Indian:Mahe"{
-            ec{"Mahé"}
-        }
         "Indian:Maldives"{
             ec{"Malediivit"}
         }
@@ -408,12 +441,6 @@ fi{
         }
         "Pacific:Fiji"{
             ec{"Fidži"}
-        }
-        "Pacific:Gambier"{
-            ec{"Gambiersaaret"}
-        }
-        "Pacific:Marquesas"{
-            ec{"Marquesassaaret"}
         }
         "Pacific:Noumea"{
             ec{"Nouméa"}
@@ -439,17 +466,27 @@ fi{
             ls{"Itä-Afrikan aika"}
         }
         "meta:Africa_Southern"{
-            ls{"Etelä-Afrikan aika"}
+            ls{"Etelä-Afrikan normaaliaika"}
         }
         "meta:Africa_Western"{
             ld{"Länsi-Afrikan kesäaika"}
             lg{"Länsi-Afrikan aika"}
             ls{"Länsi-Afrikan normaaliaika"}
         }
+        "meta:Aktyubinsk"{
+            ld{"Aktjubinskin kesäaika"}
+            lg{"Aktjubinskin aika"}
+            ls{"Aktjubinskin normaaliaika"}
+        }
         "meta:Alaska"{
             ld{"Alaskan kesäaika"}
             lg{"Alaskan aika"}
             ls{"Alaskan normaaliaika"}
+        }
+        "meta:Alaska_Hawaii"{
+            ld{"Alaskan ja Havaijin kesäaika"}
+            lg{"Alaskan ja Havaijin aika"}
+            ls{"Alaskan ja Havaijin normaaliaika"}
         }
         "meta:Almaty"{
             ld{"Almatyn kesäaika"}
@@ -516,6 +553,11 @@ fi{
             lg{"Armenian aika"}
             ls{"Armenian normaaliaika"}
         }
+        "meta:Ashkhabad"{
+            ld{"Ašgabatin kesäaika"}
+            lg{"Ašgabatin aika"}
+            ls{"Ašgabatin normaaliaika"}
+        }
         "meta:Atlantic"{
             ld{"Kanadan Atlantin kesäaika"}
             lg{"Kanadan Atlantin aika"}
@@ -551,16 +593,31 @@ fi{
             lg{"Azorien aika"}
             ls{"Azorien normaaliaika"}
         }
+        "meta:Baku"{
+            ld{"Bakun kesäaika"}
+            lg{"Bakun aika"}
+            ls{"Bakun normaaliaika"}
+        }
         "meta:Bangladesh"{
             ld{"Bangladeshin kesäaika"}
             lg{"Bangladeshin aika"}
             ls{"Bangladeshin normaaliaika"}
+        }
+        "meta:Bering"{
+            ld{"Beringin kesäaika"}
+            lg{"Beringin aika"}
+            ls{"Beringin normaaliaika"}
         }
         "meta:Bhutan"{
             ls{"Bhutanin aika"}
         }
         "meta:Bolivia"{
             ls{"Bolivian aika"}
+        }
+        "meta:Borneo"{
+            ld{"Borneon kesäaika"}
+            lg{"Borneon aika"}
+            ls{"Borneon normaaliaika"}
         }
         "meta:Brasilia"{
             ld{"Brasilian kesäaika"}
@@ -580,6 +637,9 @@ fi{
         }
         "meta:Chamorro"{
             ls{"Tšamorron aika"}
+        }
+        "meta:Changbai"{
+            ls{"Changbain aika"}
         }
         "meta:Chatham"{
             ld{"Chathamin kesäaika"}
@@ -622,11 +682,22 @@ fi{
             lg{"Kuuban aika"}
             ls{"Kuuban normaaliaika"}
         }
+        "meta:Dacca"{
+            ls{"Daccan aika"}
+        }
         "meta:Davis"{
             ls{"Davisin aika"}
         }
         "meta:DumontDUrville"{
             ls{"Dumont-d'Urvillen aika"}
+        }
+        "meta:Dushanbe"{
+            ld{"Dušanben kesäaika"}
+            lg{"Dušanben aika"}
+            ls{"Dušanben normaaliaika"}
+        }
+        "meta:Dutch_Guiana"{
+            ls{"Hollannin Guianan aika"}
         }
         "meta:East_Timor"{
             ls{"Itä-Timorin aika"}
@@ -670,6 +741,11 @@ fi{
         "meta:French_Southern"{
             ls{"Ranskan eteläisten ja antarktisten alueiden aika"}
         }
+        "meta:Frunze"{
+            ld{"Biškekin kesäaika"}
+            lg{"Biškekin aika"}
+            ls{"Biškekin normaaliaika"}
+        }
         "meta:GMT"{
             ls{"Greenwichin normaaliaika"}
         }
@@ -686,6 +762,11 @@ fi{
         }
         "meta:Gilbert_Islands"{
             ls{"Gilbertsaarten aika"}
+        }
+        "meta:Greenland_Central"{
+            ld{"Keski-Grönlannin kesäaika"}
+            lg{"Keski-Grönlannin aika"}
+            ls{"Keski-Grönlannin normaaliaika"}
         }
         "meta:Greenland_Eastern"{
             ld{"Itä-Grönlannin kesäaika"}
@@ -764,11 +845,22 @@ fi{
             lg{"Kamtšatkan aika"}
             ls{"Kamtšatkan normaaliaika"}
         }
+        "meta:Karachi"{
+            ls{"Karachin aika"}
+        }
+        "meta:Kashgar"{
+            ls{"Kašgarin aika"}
+        }
         "meta:Kazakhstan_Eastern"{
             ls{"Itä-Kazakstanin aika"}
         }
         "meta:Kazakhstan_Western"{
             ls{"Länsi-Kazakstanin aika"}
+        }
+        "meta:Kizilorda"{
+            ld{"Kyzyl-Ordan kesäaika"}
+            lg{"Kyzyl-Ordan aika"}
+            ls{"Kyzyl-Ordan normaaliaika"}
         }
         "meta:Korea"{
             ld{"Korean kesäaika"}
@@ -783,6 +875,14 @@ fi{
             lg{"Krasnojarskin aika"}
             ls{"Krasnojarskin normaaliaika"}
         }
+        "meta:Kuybyshev"{
+            ld{"Kuibyševin kesäaika"}
+            lg{"Kuibyševin aika"}
+            ls{"Kuibyševin normaaliaika"}
+        }
+        "meta:Kwajalein"{
+            ls{"Kwajaleinin aika"}
+        }
         "meta:Kyrgystan"{
             ls{"Kirgisian aika"}
         }
@@ -791,6 +891,9 @@ fi{
         }
         "meta:Line_Islands"{
             ls{"Linesaarten aika"}
+        }
+        "meta:Long_Shu"{
+            ls{"Long-Shun aika"}
         }
         "meta:Lord_Howe"{
             ld{"Lord Howen kesäaika"}
@@ -809,6 +912,9 @@ fi{
             ld{"Magadanin kesäaika"}
             lg{"Magadanin aika"}
             ls{"Magadanin normaaliaika"}
+        }
+        "meta:Malaya"{
+            ls{"Malaijan aika"}
         }
         "meta:Malaysia"{
             ls{"Malesian aika"}
@@ -949,13 +1055,21 @@ fi{
             lg{"Samaran aika"}
             ls{"Samaran normaaliaika"}
         }
+        "meta:Samarkand"{
+            ld{"Samarkandin kesäaika"}
+            lg{"Samarkandin aika"}
+            ls{"Samarkandin normaaliaika"}
+        }
         "meta:Samoa"{
-            ld{"Samoan kesäaika"}
-            lg{"Samoan aika"}
-            ls{"Samoan normaaliaika"}
+            ls{"Samoan aika"}
         }
         "meta:Seychelles"{
             ls{"Seychellien aika"}
+        }
+        "meta:Shevchenko"{
+            ld{"Ševtšenkon kesäaika"}
+            lg{"Ševtšenkon aika"}
+            ls{"Ševtšenkon normaaliaika"}
         }
         "meta:Singapore"{
             ls{"Singaporen aika"}
@@ -968,6 +1082,11 @@ fi{
         }
         "meta:Suriname"{
             ls{"Surinamin aika"}
+        }
+        "meta:Sverdlovsk"{
+            ld{"Sverdlovskin kesäaika"}
+            lg{"Sverdlovskin aika"}
+            ls{"Sverdlovskin normaaliaika"}
         }
         "meta:Syowa"{
             ls{"Syowan aika"}
@@ -983,6 +1102,16 @@ fi{
         "meta:Tajikistan"{
             ls{"Tadžikistanin aika"}
         }
+        "meta:Tashkent"{
+            ld{"Taškentin kesäaika"}
+            lg{"Taškentin aika"}
+            ls{"Taškentin normaaliaika"}
+        }
+        "meta:Tbilisi"{
+            ld{"Tbilisin kesäaika"}
+            lg{"Tbilisin aika"}
+            ls{"Tbilisin normaaliaika"}
+        }
         "meta:Tokelau"{
             ls{"Tokelaun aika"}
         }
@@ -994,6 +1123,11 @@ fi{
         "meta:Truk"{
             ls{"Chuukin aika"}
         }
+        "meta:Turkey"{
+            ld{"Turkin kesäaika"}
+            lg{"Turkin aika"}
+            ls{"Turkin normaaliaika"}
+        }
         "meta:Turkmenistan"{
             ld{"Turkmenistanin kesäaika"}
             lg{"Turkmenistanin aika"}
@@ -1002,10 +1136,18 @@ fi{
         "meta:Tuvalu"{
             ls{"Tuvalun aika"}
         }
+        "meta:Uralsk"{
+            ld{"Uralskin kesäaika"}
+            lg{"Uralskin aika"}
+            ls{"Uralskin normaaliaika"}
+        }
         "meta:Uruguay"{
             ld{"Uruguayn kesäaika"}
             lg{"Uruguayn aika"}
             ls{"Uruguayn normaaliaika"}
+        }
+        "meta:Urumqi"{
+            ls{"Ürümqin aika"}
         }
         "meta:Uzbekistan"{
             ld{"Uzbekistanin kesäaika"}
@@ -1049,12 +1191,21 @@ fi{
             lg{"Jekaterinburgin aika"}
             ls{"Jekaterinburgin normaaliaika"}
         }
+        "meta:Yerevan"{
+            ld{"Jerevanin kesäaika"}
+            lg{"Jerevanin aika"}
+            ls{"Jerevanin normaaliaika"}
+        }
+        "meta:Yukon"{
+            ld{"Yukonin kesäaika"}
+            lg{"Yukonin aika"}
+            ls{"Yukonin normaaliaika"}
+        }
         fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"{1} ({0})"}
         gmtFormat{"UTC{0}"}
         gmtZeroFormat{"UTC"}
         hourFormat{"+H.mm;-H.mm"}
-        regionFormat{"aikavyöhyke: {0}"}
-        regionFormatDaylight{"{0} (kesäaika)"}
-        regionFormatStandard{"{0} (normaaliaika)"}
+        regionFormat{"Aikavyöhyke: {0}"}
     }
 }

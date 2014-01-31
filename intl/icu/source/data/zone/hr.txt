@@ -1,34 +1,22 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
-// * Corporation and others. All Rights Reserved.
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/hr.xml
 // *
 // ***************************************************************************
 /**
- * ICU <specials> source: <path>/common/main/hr.xml
+ *  ICU <specials> source: <path>/xml/main/hr.xml
  */
 hr{
-    Version{"2.0.92.87"}
+    Version{"2.0.78.38"}
     zoneStrings{
-        "Africa:Addis_Ababa"{
-            ec{"Addis Abeba"}
-        }
         "Africa:Algiers"{
-            ec{"Alžir"}
-        }
-        "Africa:Asmera"{
-            ec{"Asmara"}
-        }
-        "Africa:Cairo"{
-            ec{"Kairo"}
+            ec{"alžirsko"}
         }
         "Africa:Djibouti"{
             ec{"Džibuti"}
-        }
-        "Africa:Khartoum"{
-            ec{"Kartum"}
         }
         "Africa:Kinshasa"{
             ec{"Kinšasa"}
@@ -39,17 +27,11 @@ hr{
         "Africa:Sao_Tome"{
             ec{"São Tomé"}
         }
-        "America:Anguilla"{
-            ec{"Angvila"}
+        "America:Anchorage"{
+            ec{"Alaska vremenska zona"}
         }
         "America:Asuncion"{
             ec{"Asunción"}
-        }
-        "America:Cayman"{
-            ec{"Kajman"}
-        }
-        "America:Coral_Harbour"{
-            ec{"Atikokan"}
         }
         "America:Costa_Rica"{
             ec{"Kostarika"}
@@ -60,68 +42,26 @@ hr{
         "America:Dominica"{
             ec{"Dominika"}
         }
-        "America:Godthab"{
-            ec{"Nuuk"}
-        }
-        "America:Guadeloupe"{
-            ec{"Guadalupa"}
-        }
         "America:Guatemala"{
             ec{"Gvatemala"}
         }
         "America:Guyana"{
             ec{"Gvajana"}
         }
-        "America:Indiana:Knox"{
-            ec{"Knox, Indiana"}
-        }
-        "America:Indiana:Marengo"{
-            ec{"Marengo, Indiana"}
-        }
-        "America:Indiana:Petersburg"{
-            ec{"Petersburg, Indiana"}
-        }
-        "America:Indiana:Tell_City"{
-            ec{"Tell City, Indiana"}
-        }
-        "America:Indiana:Vevay"{
-            ec{"Vevay, Indiana"}
-        }
-        "America:Indiana:Vincennes"{
-            ec{"Vincennes, Indiana"}
-        }
-        "America:Indiana:Winamac"{
-            ec{"Winamac, Indiana"}
-        }
         "America:Jamaica"{
             ec{"Jamajka"}
-        }
-        "America:Kentucky:Monticello"{
-            ec{"Monticello, Kentucky"}
         }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
         }
-        "America:Martinique"{
-            ec{"Martinik"}
-        }
-        "America:Mexico_City"{
-            ec{"Ciudad de México"}
-        }
-        "America:North_Dakota:Beulah"{
-            ec{"Beulah, Sjeverna Dakota"}
-        }
         "America:North_Dakota:Center"{
-            ec{"Center, Sjeverna Dakota"}
+            ec{"Središnja, Sjeverna Dakota"}
         }
         "America:North_Dakota:New_Salem"{
             ec{"New Salem, Sjeverna Dakota"}
         }
         "America:Puerto_Rico"{
             ec{"Portoriko"}
-        }
-        "America:Scoresbysund"{
-            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
@@ -142,58 +82,19 @@ hr{
             ec{"St. Vincent"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
+            ec{"Dumont D'Urville"}
         }
         "Antarctica:South_Pole"{
             ec{"Južni pol"}
         }
-        "Asia:Almaty"{
-            ec{"Alma Ata"}
-        }
         "Asia:Anadyr"{
             ec{"Anadir"}
-        }
-        "Asia:Aqtau"{
-            ec{"Aktau"}
-        }
-        "Asia:Aqtobe"{
-            ec{"Aktobe"}
-        }
-        "Asia:Baghdad"{
-            ec{"Bagdad"}
         }
         "Asia:Bahrain"{
             ec{"Bahrein"}
         }
-        "Asia:Bishkek"{
-            ec{"Biškek"}
-        }
-        "Asia:Brunei"{
-            ec{"Brunej"}
-        }
-        "Asia:Calcutta"{
-            ec{"Kolkata"}
-        }
-        "Asia:Damascus"{
-            ec{"Damask"}
-        }
-        "Asia:Dushanbe"{
-            ec{"Dušanbe"}
-        }
-        "Asia:Jakarta"{
-            ec{"Džakarta"}
-        }
-        "Asia:Jerusalem"{
-            ec{"Jeruzalem"}
-        }
         "Asia:Kamchatka"{
             ec{"Kamčatka"}
-        }
-        "Asia:Katmandu"{
-            ec{"Kathmandu"}
-        }
-        "Asia:Khandyga"{
-            ec{"Handiga"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
@@ -201,32 +102,11 @@ hr{
         "Asia:Kuwait"{
             ec{"Kuvajt"}
         }
-        "Asia:Macau"{
-            ec{"Makao"}
-        }
         "Asia:Nicosia"{
             ec{"Nikozija"}
         }
-        "Asia:Novokuznetsk"{
-            ec{"Novokuznjeck"}
-        }
-        "Asia:Pyongyang"{
-            ec{"Pjongjang"}
-        }
         "Asia:Qatar"{
             ec{"Katar"}
-        }
-        "Asia:Qyzylorda"{
-            ec{"Kizilorda"}
-        }
-        "Asia:Riyadh"{
-            ec{"Rijad"}
-        }
-        "Asia:Saigon"{
-            ec{"Ho Ši Min"}
-        }
-        "Asia:Sakhalin"{
-            ec{"Sahalin"}
         }
         "Asia:Shanghai"{
             ec{"Šangaj"}
@@ -237,38 +117,17 @@ hr{
         "Asia:Tashkent"{
             ec{"Taškent"}
         }
-        "Asia:Tehran"{
-            ec{"Teheran"}
-        }
         "Asia:Tokyo"{
             ec{"Tokio"}
-        }
-        "Asia:Ulaanbaatar"{
-            ec{"Ulan Bator"}
-        }
-        "Asia:Yakutsk"{
-            ec{"Jakutsk"}
-        }
-        "Asia:Yekaterinburg"{
-            ec{"Ekaterinburg"}
-        }
-        "Asia:Yerevan"{
-            ec{"Erevan"}
         }
         "Atlantic:Azores"{
             ec{"Azorski otoci"}
         }
         "Atlantic:Canary"{
-            ec{"Kanari"}
+            ec{"Kanarska Otočja"}
         }
         "Atlantic:Cape_Verde"{
             ec{"Zelenortski Otoci"}
-        }
-        "Atlantic:Faeroe"{
-            ec{"Ferojski otoci"}
-        }
-        "Atlantic:South_Georgia"{
-            ec{"Južna Georgija"}
         }
         "Atlantic:St_Helena"{
             ec{"St. Helena"}
@@ -282,26 +141,14 @@ hr{
         "Europe:Athens"{
             ec{"Atena"}
         }
-        "Europe:Belgrade"{
-            ec{"Beograd"}
-        }
-        "Europe:Brussels"{
-            ec{"Bruxelles"}
-        }
         "Europe:Bucharest"{
             ec{"Bukurešt"}
         }
         "Europe:Budapest"{
             ec{"Budimpešta"}
         }
-        "Europe:Copenhagen"{
-            ec{"Kopenhagen"}
-        }
         "Europe:Dublin"{
             ld{"irsko ljetno vrijeme"}
-        }
-        "Europe:Isle_of_Man"{
-            ec{"Otok Man"}
         }
         "Europe:Kaliningrad"{
             ec{"Kalinjingrad"}
@@ -327,23 +174,14 @@ hr{
         "Europe:Paris"{
             ec{"Pariz"}
         }
-        "Europe:Prague"{
-            ec{"Prag"}
-        }
         "Europe:Rome"{
             ec{"Rim"}
         }
         "Europe:Sofia"{
             ec{"Sofija"}
         }
-        "Europe:Tirane"{
-            ec{"Tirana"}
-        }
         "Europe:Uzhgorod"{
             ec{"Uzgorod"}
-        }
-        "Europe:Vatican"{
-            ec{"Vatikan"}
         }
         "Europe:Vienna"{
             ec{"Beč"}
@@ -353,18 +191,6 @@ hr{
         }
         "Europe:Zaporozhye"{
             ec{"Zaporožje"}
-        }
-        "Europe:Zurich"{
-            ec{"Zürich"}
-        }
-        "Indian:Christmas"{
-            ec{"Božićni otok"}
-        }
-        "Indian:Cocos"{
-            ec{"Kokosovi otoci"}
-        }
-        "Indian:Comoro"{
-            ec{"Komori"}
         }
         "Indian:Maldives"{
             ec{"Maldivi"}
@@ -377,18 +203,6 @@ hr{
         }
         "Pacific:Easter"{
             ec{"Uskrsni Otok"}
-        }
-        "Pacific:Fiji"{
-            ec{"Fidži"}
-        }
-        "Pacific:Marquesas"{
-            ec{"Markižansko otočje"}
-        }
-        "Pacific:Ponape"{
-            ec{"Pohnpei"}
-        }
-        "Pacific:Truk"{
-            ec{"Chuuk"}
         }
         "meta:Acre"{
             ld{"Acre ljetno vrijeme"}
@@ -473,9 +287,9 @@ hr{
             ls{"atlantsko standardno vrijeme"}
         }
         "meta:Australia_Central"{
-            ld{"srednjoaustralsko ljetno vrijeme"}
-            lg{"srednjoaustralsko vrijeme"}
-            ls{"srednjoaustralsko standardno vrijeme"}
+            ld{"središnje australsko ljetno vrijeme"}
+            lg{"središnje australsko vrijeme"}
+            ls{"središnje australsko standardno vrijeme"}
         }
         "meta:Australia_CentralWestern"{
             ld{"australsko središnje zapadno ljetno vrijeme"}
@@ -483,14 +297,14 @@ hr{
             ls{"australsko središnje zapadno standardno vrijeme"}
         }
         "meta:Australia_Eastern"{
-            ld{"istočnoaustralsko ljetno vrijeme"}
-            lg{"istočnoaustralsko vrijeme"}
-            ls{"istočnoaustralsko standardno vrijeme"}
+            ld{"istočno australsko ljetno vrijeme"}
+            lg{"istočno australsko vrijeme"}
+            ls{"istočno australsko standardno vrijeme"}
         }
         "meta:Australia_Western"{
-            ld{"zapadnoaustralsko ljetno vrijeme"}
-            lg{"zapadnoaustralsko vrijeme"}
-            ls{"zapadnoaustralsko standardno vrijeme"}
+            ld{"zapadno australsko ljetno vrijeme"}
+            lg{"zapadno australsko vrijeme"}
+            ls{"zapadno australsko standardno vrijeme"}
         }
         "meta:Azerbaijan"{
             ld{"azerbajdžansko ljetno vrijeme"}
@@ -519,7 +333,7 @@ hr{
             ls{"brazilijsko standardno vrijeme"}
         }
         "meta:Brunei"{
-            ls{"vrijeme za Brunej Darussalam"}
+            ls{"vrijeme za Brunei Darussalam"}
         }
         "meta:Cape_Verde"{
             ld{"ljetno vrijeme Zelenortskog otočja"}
@@ -550,7 +364,7 @@ hr{
             ls{"choibalsansko standardno vrijeme"}
         }
         "meta:Christmas"{
-            ls{"vrijeme Božićnog otoka"}
+            ls{"vrijeme Božićnog Otoka"}
         }
         "meta:Cocos"{
             ls{"vrijeme Kokosovih Otoka"}
@@ -561,7 +375,7 @@ hr{
             ls{"kolumbijsko standardno vrijeme"}
         }
         "meta:Cook"{
-            ld{"Cookovo otočje, polusatni pomak, ljetno vrijeme"}
+            ld{"poluljetno vrijeme Cookovih Otoka"}
             lg{"vrijeme Cookovih Otoka"}
             ls{"standardno vrijeme Cookovih Otoka"}
         }
@@ -574,15 +388,15 @@ hr{
             ls{"vrijeme Davisa"}
         }
         "meta:DumontDUrville"{
-            ls{"vrijeme Dumont-d'Urvillea"}
+            ls{"vrijeme Dumont-d'Urville"}
         }
         "meta:East_Timor"{
             ls{"istočnotimorsko vrijeme"}
         }
         "meta:Easter"{
-            ld{"ljetno vrijeme Uskršnjeg otoka"}
-            lg{"vrijeme Uskršnjeg otoka"}
-            ls{"standardno vrijeme Uskršnjeg otoka"}
+            ld{"ljetno vrijeme Uskršnjih Otoka"}
+            lg{"vrijeme Uskršnjih Otoka"}
+            ls{"standardno vrijeme Uskršnjih Otoka"}
         }
         "meta:Ecuador"{
             ls{"ekvadorsko vrijeme"}
@@ -625,7 +439,7 @@ hr{
             ls{"vrijeme Francuske Gvajane"}
         }
         "meta:French_Southern"{
-            ls{"južnofrancusko i antarktičko vrijeme"}
+            ls{"južno francusko i antarktičko vrijeme"}
         }
         "meta:GMT"{
             ls{"univerzalno vrijeme"}
@@ -723,10 +537,10 @@ hr{
             ls{"Petropavlovsk-kamčatsko standardno vrijeme"}
         }
         "meta:Kazakhstan_Eastern"{
-            ls{"istočnokazahstansko vrijeme"}
+            ls{"istočno kazahstansko vrijeme"}
         }
         "meta:Kazakhstan_Western"{
-            ls{"zapadnokazahstansko vrijeme"}
+            ls{"zapadno kazahstansko vrijeme"}
         }
         "meta:Korea"{
             ld{"korejsko ljetno vrijeme"}
@@ -741,6 +555,14 @@ hr{
             lg{"krasnojarsko vrijeme"}
             ls{"krasnojarsko standardno vrijeme"}
         }
+        "meta:Kuybyshev"{
+            ld{"kujbiševsko ljetno vrijeme"}
+            lg{"kujbiševsko vrijeme"}
+            ls{"kujbiševsko standardno vrijeme"}
+        }
+        "meta:Kwajalein"{
+            ls{"kwajaleinsko vrijeme"}
+        }
         "meta:Kyrgystan"{
             ls{"kirgistansko vrijeme"}
         }
@@ -753,11 +575,11 @@ hr{
             ls{"standardno vrijeme otoka Lord Howe"}
         }
         "meta:Macquarie"{
-            ls{"vrijeme otoka Macquarie"}
+            ls{"vrijeme prema gradu Macquarie"}
         }
         "meta:Magadan"{
             ld{"magadansko ljetno vrijeme"}
-            lg{"magadansko vrijeme"}
+            lg{"magadanska vrijeme"}
             ls{"magadansko standardno vrijeme"}
         }
         "meta:Malaysia"{
@@ -767,7 +589,7 @@ hr{
             ls{"vrijeme Maldiva"}
         }
         "meta:Marquesas"{
-            ls{"markižansko vrijeme"}
+            ls{"vrijeme Marquesasa"}
         }
         "meta:Marshall_Islands"{
             ls{"vrijeme Maršalovih Otoka"}
@@ -778,7 +600,7 @@ hr{
             ls{"standardno vrijeme Mauricijusa"}
         }
         "meta:Mawson"{
-            ls{"mawsonsko vrijeme"}
+            ls{"vrijeme Mawson"}
         }
         "meta:Mongolia"{
             ld{"ulan-batorsko ljetno vrijeme"}
@@ -805,9 +627,9 @@ hr{
             ls{"standardno vrijeme Nove Kaledonije"}
         }
         "meta:New_Zealand"{
-            ld{"novozelandsko ljetno vrijeme"}
-            lg{"novozelandsko vrijeme"}
-            ls{"novozelandsko standardno vrijeme"}
+            ld{"ljetno vrijeme Novog Zelanda"}
+            lg{"vrijeme Novog Zelanda"}
+            ls{"standardno vrijeme Novog Zelanda"}
         }
         "meta:Newfoundland"{
             ld{"newfoundlandsko ljetno vrijeme"}
@@ -821,7 +643,7 @@ hr{
             ls{"vrijeme Otoka Norfolk"}
         }
         "meta:Noronha"{
-            ld{"ljetno vrijeme grada Fernando de Noronha"}
+            ld{"ljetno vrijeme prema gradu Fernando de Noronha"}
             lg{"vrijeme grada Fernando de Noronha"}
             ls{"standardno vrijeme grada Fernando de Noronha"}
         }
@@ -882,7 +704,7 @@ hr{
             ls{"vrijeme Reuniona"}
         }
         "meta:Rothera"{
-            ls{"vrijeme Rothere"}
+            ls{"vrijeme Rothera"}
         }
         "meta:Sakhalin"{
             ld{"sahalinsko ljetno vrijeme"}
@@ -895,9 +717,7 @@ hr{
             ls{"samarsko standardno vrijeme"}
         }
         "meta:Samoa"{
-            ld{"samoansko ljetno vrijeme"}
-            lg{"samoansko vrijeme"}
-            ls{"samoansko standardno vrijeme"}
+            ls{"samoansko vrijeme"}
         }
         "meta:Seychelles"{
             ls{"sejšelsko vrijeme"}
@@ -906,16 +726,16 @@ hr{
             ls{"singapursko vrijeme"}
         }
         "meta:Solomon"{
-            ls{"vrijeme Salamunovih Otoka"}
+            ls{"vrijeme Solomonovih otoka"}
         }
         "meta:South_Georgia"{
-            ls{"vrijeme Južne Georgije"}
+            ls{"vrijeme Južne Džordžije"}
         }
         "meta:Suriname"{
             ls{"surinamsko vrijeme"}
         }
         "meta:Syowa"{
-            ls{"vrijeme Syowe"}
+            ls{"vrijeme Syowa"}
         }
         "meta:Tahiti"{
             ls{"vrijeme Tahitija"}
@@ -929,15 +749,20 @@ hr{
             ls{"tadžikistansko vrijeme"}
         }
         "meta:Tokelau"{
-            ls{"vrijeme Tokelaua"}
+            ls{"vrijeme Tokelau"}
         }
         "meta:Tonga"{
-            ld{"ljetno vrijeme Tonge"}
-            lg{"vrijeme Tonge"}
-            ls{"standardno vrijeme Tonge"}
+            ld{"ljetno vrijeme Tonga"}
+            lg{"vrijeme Tonga"}
+            ls{"standardno vrijeme Tonga"}
         }
         "meta:Truk"{
-            ls{"vrijeme Chuuka"}
+            ls{"vrijeme Truka"}
+        }
+        "meta:Turkey"{
+            ld{"tursko ljetno vrijeme"}
+            lg{"tursko vrijeme"}
+            ls{"tursko standardno vrijeme"}
         }
         "meta:Turkmenistan"{
             ld{"turkmenistansko ljetno vrijeme"}
@@ -945,7 +770,7 @@ hr{
             ls{"turkmenistansko standardno vrijeme"}
         }
         "meta:Tuvalu"{
-            ls{"vrijeme Tuvalua"}
+            ls{"vrijeme Tuvalu"}
         }
         "meta:Uruguay"{
             ld{"urugvajsko ljetno vrijeme"}
@@ -976,7 +801,7 @@ hr{
             ls{"volgogradsko standardno vrijeme"}
         }
         "meta:Vostok"{
-            ls{"vostočko vrijeme"}
+            ls{"vrijeme Vostok"}
         }
         "meta:Wake"{
             ls{"vrijeme Otoka Wake"}
@@ -995,11 +820,10 @@ hr{
             ls{"ekaterinburško standardno vrijeme"}
         }
         fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"{1} - vremenska zona ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm; -HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0}, ljetno vrijeme"}
-        regionFormatStandard{"{0}, standardno vrijeme"}
+        regionFormat{"{0} - vremenska zona"}
     }
 }

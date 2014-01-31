@@ -3,10 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-set -e
-
 # Usage: update-icu.sh <URL of ICU SVN with release>
-# E.g., for ICU 52.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-52-1/
+# E.g., for ICU 50.1.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-50-1-1/
 
 if [ $# -lt 1 ]; then
   echo "Usage: update-icu.sh <URL of ICU SVN with release>"
@@ -18,10 +16,8 @@ fi
 export TZ=UTC
 
 icu_dir=`dirname $0`/icu
-
-# Remove intl/icu/source, then replace it with a clean export.
-rm -rf ${icu_dir}/source
-svn export $1/source/ ${icu_dir}/source
+rm -rf ${icu_dir}
+svn export $1 ${icu_dir}
 
 # remove layout, tests, and samples, but leave makefiles in place
 find ${icu_dir}/source/layout -name '*Makefile.in' -prune -or -type f -print | xargs rm
@@ -51,8 +47,9 @@ rm ${icu_dir}/source/data/translit/*
 svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-853706
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-2
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-4
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/genrb-omitCollationRules.diff
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/qualify-uinitonce-windows.diff
 
 hg addremove ${icu_dir}

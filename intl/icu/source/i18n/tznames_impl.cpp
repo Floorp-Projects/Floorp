@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2011-2013, International Business Machines Corporation and
+* Copyright (C) 2011-2012, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -20,7 +20,6 @@
 #include "cmemory.h"
 #include "cstring.h"
 #include "uassert.h"
-#include "mutex.h"
 #include "uresimp.h"
 #include "ureslocs.h"
 #include "zonemeta.h"
@@ -47,7 +46,6 @@ static const char EMPTY[]               = "<empty>";   // place holder for empty
 static const UTimeZoneNameType ALL_NAME_TYPES[] = {
     UTZNM_LONG_GENERIC, UTZNM_LONG_STANDARD, UTZNM_LONG_DAYLIGHT,
     UTZNM_SHORT_GENERIC, UTZNM_SHORT_STANDARD, UTZNM_SHORT_DAYLIGHT,
-    UTZNM_EXEMPLAR_LOCATION,
     UTZNM_UNKNOWN // unknown as the last one
 };
 
@@ -291,6 +289,7 @@ static UMutex TextTrieMutex = U_MUTEX_INITIALIZER;
 //               needed for parsing operations, which are less common than formatting,
 //               and the Trie is big, which is why its creation is deferred until first use.
 void TextTrieMap::buildTrie(UErrorCode &status) {
+    umtx_lock(&TextTrieMutex);
     if (fLazyContents != NULL) {
         for (int32_t i=0; i<fLazyContents->size(); i+=2) {
             const UChar *key = (UChar *)fLazyContents->elementAt(i);
@@ -301,22 +300,17 @@ void TextTrieMap::buildTrie(UErrorCode &status) {
         delete fLazyContents;
         fLazyContents = NULL; 
     }
+    umtx_unlock(&TextTrieMutex);
 }
 
 void
 TextTrieMap::search(const UnicodeString &text, int32_t start,
                   TextTrieMapSearchResultHandler *handler, UErrorCode &status) const {
-    {
-        // TODO: if locking the mutex for each check proves to be a performance problem,
-        //       add a flag of type atomic_int32_t to class TextTrieMap, and use only
-        //       the ICU atomic safe functions for assigning and testing.
-        //       Don't test the pointer fLazyContents.
-        //       Don't do unless it's really required.
-        Mutex lock(&TextTrieMutex);
-        if (fLazyContents != NULL) {
-            TextTrieMap *nonConstThis = const_cast<TextTrieMap *>(this);
-            nonConstThis->buildTrie(status);
-        }
+    UBool trieNeedsInitialization = FALSE;
+    UMTX_CHECK(&TextTrieMutex, fLazyContents != NULL, trieNeedsInitialization);
+    if (trieNeedsInitialization) {
+        TextTrieMap *nonConstThis = const_cast<TextTrieMap *>(this);
+        nonConstThis->buildTrie(status);
     }
     if (fNodes == NULL) {
         return;
@@ -495,7 +489,7 @@ public:
     virtual ~ZNames();
 
     static ZNames* createInstance(UResourceBundle* rb, const char* key);
-    virtual const UChar* getName(UTimeZoneNameType type);
+    const UChar* getName(UTimeZoneNameType type);
 
 protected:
     ZNames(const UChar** names);
@@ -550,7 +544,6 @@ ZNames::getName(UTimeZoneNameType type) {
     case UTZNM_SHORT_DAYLIGHT:
         name = fNames[5];
         break;
-    case UTZNM_EXEMPLAR_LOCATION:   // implemeted by subclass
     default:
         name = NULL;
     }
@@ -601,80 +594,48 @@ class TZNames : public ZNames {
 public:
     virtual ~TZNames();
 
-    static TZNames* createInstance(UResourceBundle* rb, const char* key, const UnicodeString& tzID);
-    virtual const UChar* getName(UTimeZoneNameType type);
+    static TZNames* createInstance(UResourceBundle* rb, const char* key);
+    const UChar* getLocationName(void);
 
 private:
-    TZNames(const UChar** names);
+    TZNames(const UChar** names, const UChar* locationName);
     const UChar* fLocationName;
-    UChar* fLocationNameOwned;
 };
 
-TZNames::TZNames(const UChar** names)
-: ZNames(names), fLocationName(NULL), fLocationNameOwned(NULL) {
+TZNames::TZNames(const UChar** names, const UChar* locationName)
+: ZNames(names), fLocationName(locationName) {
 }
 
 TZNames::~TZNames() {
-    if (fLocationNameOwned) {
-        uprv_free(fLocationNameOwned);
-    }
 }
 
 const UChar*
-TZNames::getName(UTimeZoneNameType type) {
-    if (type == UTZNM_EXEMPLAR_LOCATION) {
-        return fLocationName;
-    }
-    return ZNames::getName(type);
+TZNames::getLocationName() {
+    return fLocationName;
 }
 
 TZNames*
-TZNames::createInstance(UResourceBundle* rb, const char* key, const UnicodeString& tzID) {
+TZNames::createInstance(UResourceBundle* rb, const char* key) {
     if (rb == NULL || key == NULL || *key == 0) {
         return NULL;
     }
-
-    const UChar** names = loadData(rb, key);
-    const UChar* locationName = NULL;
-    UChar* locationNameOwned = NULL;
-
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t len = 0;
-
-    UResourceBundle* table = ures_getByKeyWithFallback(rb, key, NULL, &status);
-    locationName = ures_getStringByKeyWithFallback(table, gEcTag, &len, &status);
-    // ignore missing resource here
-    status = U_ZERO_ERROR;
-
-    ures_close(table);
-
-    if (locationName == NULL) {
-        UnicodeString tmpName;
-        int32_t tmpNameLen = 0;
-        TimeZoneNamesImpl::getDefaultExemplarLocationName(tzID, tmpName);
-        tmpNameLen = tmpName.length();
-
-        if (tmpNameLen > 0) {
-            locationNameOwned = (UChar*) uprv_malloc(sizeof(UChar) * (tmpNameLen + 1));
-            if (locationNameOwned) {
-                tmpName.extract(locationNameOwned, tmpNameLen + 1, status);
-                locationName = locationNameOwned;
-            }
-        }
-    }
-
     TZNames* tznames = NULL;
-    if (locationName != NULL || names != NULL) {
-        tznames = new TZNames(names);
-        if (tznames == NULL) {
-            if (locationNameOwned) {
-                uprv_free(locationNameOwned);
-            }
+    UErrorCode status = U_ZERO_ERROR;
+    UResourceBundle* rbTable = ures_getByKeyWithFallback(rb, key, NULL, &status);
+    if (U_SUCCESS(status)) {
+        int32_t len = 0;
+        const UChar* locationName = ures_getStringByKeyWithFallback(rbTable, gEcTag, &len, &status);
+        if (U_FAILURE(status) || len == 0) {
+            locationName = NULL;
         }
-        tznames->fLocationName = locationName;
-        tznames->fLocationNameOwned = locationNameOwned;
-    }
 
+        const UChar** names = loadData(rb, key);
+
+        if (locationName != NULL || names != NULL) {
+            tznames = new TZNames(names, locationName);
+        }
+    }
+    ures_close(rbTable);
     return tznames;
 }
 
@@ -1096,7 +1057,6 @@ TimeZoneNamesImpl::getTimeZoneDisplayName(const UnicodeString& tzID, UTimeZoneNa
 
 UnicodeString&
 TimeZoneNamesImpl::getExemplarLocationName(const UnicodeString& tzID, UnicodeString& name) const {
-    name.setToBogus();  // cleanup result.
     const UChar* locName = NULL;
     TZNames *tznames = NULL;
     TimeZoneNamesImpl *nonConstThis = const_cast<TimeZoneNamesImpl *>(this);
@@ -1108,13 +1068,14 @@ TimeZoneNamesImpl::getExemplarLocationName(const UnicodeString& tzID, UnicodeStr
     umtx_unlock(&gLock);
 
     if (tznames != NULL) {
-        locName = tznames->getName(UTZNM_EXEMPLAR_LOCATION);
+        locName = tznames->getLocationName();
     }
     if (locName != NULL) {
         name.setTo(TRUE, locName, -1);
+        return name;
     }
 
-    return name;
+    return TimeZoneNames::getExemplarLocationName(tzID, name);
 }
 
 
@@ -1232,7 +1193,7 @@ TimeZoneNamesImpl::loadTimeZoneNames(const UnicodeString& tzID) {
             }
         }
         uKey.extract(0, uKey.length(), key, sizeof(key), US_INV);
-        tznames = TZNames::createInstance(fZoneStrings, key, tzID);
+        tznames = TZNames::createInstance(fZoneStrings, key);
 
         if (tznames == NULL) {
             cacheVal = (void *)EMPTY;
@@ -1343,32 +1304,6 @@ TimeZoneNamesImpl::find(const UnicodeString& text, int32_t start, uint32_t types
     umtx_unlock(&gLock);
 
     return handler.getMatches(maxLen);
-}
-
-static const UChar gEtcPrefix[]         = { 0x45, 0x74, 0x63, 0x2F }; // "Etc/"
-static const int32_t gEtcPrefixLen      = 4;
-static const UChar gSystemVPrefix[]     = { 0x53, 0x79, 0x73, 0x74, 0x65, 0x6D, 0x56, 0x2F }; // "SystemV/
-static const int32_t gSystemVPrefixLen  = 8;
-static const UChar gRiyadh8[]           = { 0x52, 0x69, 0x79, 0x61, 0x64, 0x68, 0x38 }; // "Riyadh8"
-static const int32_t gRiyadh8Len       = 7;
-
-UnicodeString& U_EXPORT2
-TimeZoneNamesImpl::getDefaultExemplarLocationName(const UnicodeString& tzID, UnicodeString& name) {
-    if (tzID.isEmpty() || tzID.startsWith(gEtcPrefix, gEtcPrefixLen)
-        || tzID.startsWith(gSystemVPrefix, gSystemVPrefixLen) || tzID.indexOf(gRiyadh8, gRiyadh8Len, 0) > 0) {
-        name.setToBogus();
-        return name;
-    }
-
-    int32_t sep = tzID.lastIndexOf((UChar)0x2F /* '/' */);
-    if (sep > 0 && sep + 1 < tzID.length()) {
-        name.setTo(tzID, sep + 1);
-        name.findAndReplace(UnicodeString((UChar)0x5f /* _ */),
-                            UnicodeString((UChar)0x20 /* space */));
-    } else {
-        name.setToBogus();
-    }
-    return name;
 }
 
 U_NAMESPACE_END

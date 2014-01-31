@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2008-2013, International Business Machines Corporation and
+* Copyright (C) 2008-2012, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -28,13 +28,10 @@ class GenderInfoTest;
 
 U_NAMESPACE_BEGIN
 
-// Forward Declaration
-void GenderInfo_initCache(UErrorCode &status);
-
 /**
  * GenderInfo computes the gender of a list as a whole given the gender of
  * each element.
- * @stable ICU 50
+ * @draft ICU 50
  */
 class U_I18N_API GenderInfo : public UObject {
 public:
@@ -51,7 +48,7 @@ public:
      *                this locale. The returned object is immutable, so it is
      *                declared as const. Caller does not own the returned
      *                pointer, so it must not attempt to free it.
-     * @stable ICU 50
+     * @draft ICU 50
      */
     static const GenderInfo* U_EXPORT2 getInstance(const Locale& locale, UErrorCode& status);
 
@@ -64,19 +61,26 @@ public:
      * @param status  Output param set to success/failure code on exit, which
      *                must not indicate a failure before the function call.
      * @return        the gender of the whole list.
-     * @stable ICU 50
+     * @draft ICU 50
      */
     UGender getListGender(const UGender* genders, int32_t length, UErrorCode& status) const;
 
     /**
      * Destructor.
      *
-     * @stable ICU 50
+     * @draft ICU 50
+     * @internal
      */
     virtual ~GenderInfo();
 
 private:
     int32_t _style;
+
+
+    /**
+     * No "poor man's RTTI"
+     */
+    virtual UClassID getDynamicClassID() const;
 
     /**
      * Copy constructor. One object per locale invariant. Clients
@@ -98,9 +102,7 @@ private:
     static const GenderInfo* getMaleTaintsInstance();
 
     static const GenderInfo* loadInstance(const Locale& locale, UErrorCode& status);
-
     friend class ::GenderInfoTest;
-    friend void GenderInfo_initCache(UErrorCode &status);
 };
 
 U_NAMESPACE_END

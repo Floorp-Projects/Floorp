@@ -1,6 +1,6 @@
 /*  
 ********************************************************************************
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -283,16 +283,7 @@ public:
          ABBREVIATED,
          WIDE,
          NARROW,
-#ifndef U_HIDE_DRAFT_API
-         /**
-          * Short width is currently only supported for weekday names.
-          * @draft ICU 51
-          */
-         SHORT,
-#endif /* U_HIDE_DRAFT_API */
-         /**
-          */
-         DT_WIDTH_COUNT = 4
+         DT_WIDTH_COUNT
     };
 
     /**
@@ -317,7 +308,7 @@ public:
     void setMonths(const UnicodeString* months, int32_t count, DtContextType context, DtWidthType width);
 
     /**
-     * Gets wide weekday strings. For example: "Sunday", "Monday", etc.
+     * Gets weekday strings. For example: "Sunday", "Monday", etc.
      * @param count        Filled in with length of the array.
      * @return the weekday strings. (DateFormatSymbols retains ownership.)
      * @stable ICU 2.0
@@ -326,7 +317,7 @@ public:
 
 
     /**
-     * Sets wide weekday strings. For example: "Sunday", "Monday", etc.
+     * Sets weekday strings. For example: "Sunday", "Monday", etc.
      * @param weekdays     the new weekday strings. (not adopted; caller retains ownership)
      * @param count        Filled in with length of the array.
      * @stable ICU 2.0
@@ -334,28 +325,26 @@ public:
     void setWeekdays(const UnicodeString* weekdays, int32_t count);
 
     /**
-     * Gets abbreviated weekday strings. For example: "Sun", "Mon", etc. (Note: The method name is
-     * misleading; it does not get the CLDR-style "short" weekday strings, e.g. "Su", "Mo", etc.)
+     * Gets short weekday strings. For example: "Sun", "Mon", etc.
      * @param count        Filled in with length of the array.
-     * @return             the abbreviated weekday strings. (DateFormatSymbols retains ownership.)
+     * @return             the short weekday strings. (DateFormatSymbols retains ownership.)
      * @stable ICU 2.0
      */
     const UnicodeString* getShortWeekdays(int32_t& count) const;
 
     /**
-     * Sets abbreviated weekday strings. For example: "Sun", "Mon", etc. (Note: The method name is
-     * misleading; it does not set the CLDR-style "short" weekday strings, e.g. "Su", "Mo", etc.)
-     * @param abbrevWeekdays  the new abbreviated weekday strings. (not adopted; caller retains ownership)
-     * @param count           Filled in with length of the array.
+     * Sets short weekday strings. For example: "Sun", "Mon", etc.
+     * @param shortWeekdays  the new short weekday strings. (not adopted; caller retains ownership)
+     * @param count          Filled in with length of the array.
      * @stable ICU 2.0
      */
-    void setShortWeekdays(const UnicodeString* abbrevWeekdays, int32_t count);
+    void setShortWeekdays(const UnicodeString* shortWeekdays, int32_t count);
 
     /**
      * Gets weekday strings by width and context. For example: "Sunday", "Monday", etc.
      * @param count   Filled in with length of the array.
      * @param context The formatting context, either FORMAT or STANDALONE
-     * @param width   The width of returned strings, either WIDE, ABBREVIATED, SHORT, or NARROW
+     * @param width   The width of returned strings, either WIDE, ABBREVIATED, or NARROW
      * @return the month strings. (DateFormatSymbols retains ownership.)
      * @stable ICU 3.4
      */
@@ -366,7 +355,7 @@ public:
      * @param weekdays  The new weekday strings. (not adopted; caller retains ownership)
      * @param count     Filled in with length of the array.
      * @param context   The formatting context, either FORMAT or STANDALONE
-     * @param width     The width of returned strings, either WIDE, ABBREVIATED, SHORT, or NARROW
+     * @param width     The width of returned strings, either WIDE, ABBREVIATED, or NARROW
      * @stable ICU 3.6
      */
     void setWeekdays(const UnicodeString* weekdays, int32_t count, DtContextType context, DtWidthType width);
@@ -505,6 +494,7 @@ public:
      */
     Locale getLocale(ULocDataLocaleType type, UErrorCode& status) const;
 
+#ifndef U_HIDE_INTERNAL_API
     /**
      * Constants for capitalization context usage types.
      * @internal
@@ -527,6 +517,7 @@ public:
         kCapContextUsageMetazoneShort,
         kCapContextUsageTypeCount
     };
+#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * ICU "poor man's RTTI", returns a UClassID for the actual class.
@@ -602,46 +593,34 @@ private:
     int32_t         fStandaloneNarrowMonthsCount;
 
     /**
-     * CLDR-style format wide weekday strings. For example: "Sunday", "Monday", etc.
+     * Weekday strings. For example: "Sunday", "Monday", etc.
      */
     UnicodeString*  fWeekdays;
     int32_t         fWeekdaysCount;
 
     /**
-     * CLDR-style format abbreviated (not short) weekday strings. For example: "Sun", "Mon", etc.
+     * Short weekday strings. For example: "Sun", "Mon", etc.
      */
     UnicodeString*  fShortWeekdays;
     int32_t         fShortWeekdaysCount;
 
     /**
-     * CLDR-style format short weekday strings. For example: "Su", "Mo", etc.
-     */
-    UnicodeString*  fShorterWeekdays;
-    int32_t         fShorterWeekdaysCount;
-
-    /**
-     * CLDR-style format narrow weekday strings. For example: "S", "M", etc.
+     * Narrow weekday strings. For example: "Sun", "Mon", etc.
      */
     UnicodeString*  fNarrowWeekdays;
     int32_t         fNarrowWeekdaysCount;
 
     /**
-     * CLDR-style standalone wide weekday strings. For example: "Sunday", "Monday", etc.
+     * Standalone Weekday strings. For example: "Sunday", "Monday", etc.
      */
     UnicodeString*  fStandaloneWeekdays;
     int32_t         fStandaloneWeekdaysCount;
 
     /**
-     * CLDR-style standalone abbreviated (not short) weekday strings. For example: "Sun", "Mon", etc.
+     * Standalone Short weekday strings. For example: "Sun", "Mon", etc.
      */
     UnicodeString*  fStandaloneShortWeekdays;
     int32_t         fStandaloneShortWeekdaysCount;
-
-    /**
-     * CLDR-style standalone short weekday strings. For example: "Su", "Mo", etc.
-     */
-    UnicodeString*  fStandaloneShorterWeekdays;
-    int32_t         fStandaloneShorterWeekdaysCount;
 
     /**
      * Standalone Narrow weekday strings. For example: "Sun", "Mon", etc.
@@ -740,12 +719,15 @@ private:
      */
     UnicodeString   fLocalPatternChars;
 
+#ifndef U_HIDE_INTERNAL_API
     /**
      * Capitalization transforms. For each usage type, the first array element indicates
      * whether to titlecase for uiListOrMenu context, the second indicates whether to
      * titlecase for stand-alone context.
      */
      UBool fCapitalization[kCapContextUsageTypeCount][2];
+#endif
+
 
 private:
     /** valid/actual locale information 

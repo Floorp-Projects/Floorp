@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2013, International Business Machines
+*   Copyright (C) 1999-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -30,7 +30,6 @@ might have to #include some other header
 #include "cmemory.h"
 #include "cstring.h"
 #include "putilimp.h"
-#include "uassert.h"
 #include "ucln_cmn.h"
 #include "ucmndata.h"
 #include "udatamem.h"
@@ -107,7 +106,6 @@ static UDataMemory *gCommonICUDataArray[10] = { NULL };
 static UBool gHaveTriedToLoadCommonData = FALSE;  /* See extendICUData(). */
 
 static UHashtable  *gCommonDataCache = NULL;  /* Global hash table of opened ICU data files.  */
-static icu::UInitOnce gCommonDataCacheInitOnce = U_INITONCE_INITIALIZER;
 
 static UDataFileAccess  gDataFileAccess = UDATA_DEFAULT_ACCESS;
 
@@ -120,7 +118,6 @@ udata_cleanup(void)
         uhash_close(gCommonDataCache);  /*   Table owns the contents, and will delete them. */
         gCommonDataCache = NULL;        /*   Cleanup is not thread safe.                */
     }
-    gCommonDataCacheInitOnce.reset();
 
     for (i = 0; i < LENGTHOF(gCommonICUDataArray) && gCommonICUDataArray[i] != NULL; ++i) {
         udata_close(gCommonICUDataArray[i]);
@@ -201,7 +198,7 @@ static UBool
 setCommonICUDataPointer(const void *pData, UBool /*warn*/, UErrorCode *pErrorCode) {
     UDataMemory tData;
     UDataMemory_init(&tData);
-    UDataMemory_setData(&tData, pData);
+    tData.pHeader = (const DataHeader *)pData;
     udata_checkCommonData(&tData, pErrorCode);
     return setCommonICUData(&tData, FALSE, pErrorCode);
 }
@@ -265,26 +262,42 @@ static void U_CALLCONV DataCacheElement_deleter(void *pDCEl) {
     uprv_free(pDCEl);                  /* delete 'this'          */
 }
 
-static void udata_initHashTable() {
-    UErrorCode err = U_ZERO_ERROR;
-    U_ASSERT(gCommonDataCache == NULL);
-    gCommonDataCache = uhash_open(uhash_hashChars, uhash_compareChars, NULL, &err);
-    if (U_FAILURE(err)) {
-        // TODO: handle errors better.
-        gCommonDataCache = NULL;
+ /*   udata_getCacheHashTable()
+ *     Get the hash table used to store the data cache entries.
+ *     Lazy create it if it doesn't yet exist.
+ */
+static UHashtable *udata_getHashTable() {
+    UErrorCode   err = U_ZERO_ERROR;
+    UBool        cacheIsInitialized;
+    UHashtable  *tHT = NULL;
+
+    UMTX_CHECK(NULL, (gCommonDataCache != NULL), cacheIsInitialized);
+
+    if (cacheIsInitialized) {
+        return gCommonDataCache;
     }
-    if (gCommonDataCache != NULL) {
-        uhash_setValueDeleter(gCommonDataCache, DataCacheElement_deleter);
+
+    tHT = uhash_open(uhash_hashChars, uhash_compareChars, NULL, &err);
+    /* Check for null pointer. */
+    if (tHT == NULL) {
+    	return NULL; /* TODO:  Handle this error better. */
+    }
+    uhash_setValueDeleter(tHT, DataCacheElement_deleter);
+
+    umtx_lock(NULL);
+    if (gCommonDataCache == NULL) {
+        gCommonDataCache = tHT;
+        tHT = NULL;
         ucln_common_registerCleanup(UCLN_COMMON_UDATA, udata_cleanup);
     }
-}
+    umtx_unlock(NULL);
+    if (tHT != NULL) {
+        uhash_close(tHT);
+    }
 
- /*   udata_getCacheHashTable()
-  *     Get the hash table used to store the data cache entries.
-  *     Lazy create it if it doesn't yet exist.
-  */
-static UHashtable *udata_getHashTable() {
-    umtx_initOnce(gCommonDataCacheInitOnce, &udata_initHashTable);
+    if (U_FAILURE(err)) {
+        return NULL;      /* TODO:  handle this error better.  */
+    }
     return gCommonDataCache;
 }
 

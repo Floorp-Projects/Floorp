@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2013, International Business Machines
+*   Copyright (C) 1998-2012, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -25,7 +25,6 @@
 #include "cmemory.h"
 #include "cstring.h"
 #include "ucln_io.h"
-#include "mutex.h"
 #include "umutex.h"
 #include "unicode/ustring.h"
 #include "unicode/uloc.h"
@@ -43,24 +42,27 @@ static UBool U_CALLCONV locbund_cleanup(void) {
 }
 U_CDECL_END
 
-static UMutex gLock = U_MUTEX_INITIALIZER;
+
 static inline UNumberFormat * copyInvariantFormatter(ULocaleBundle *result, UNumberFormatStyle style) {
-    U_NAMESPACE_USE
-    Mutex lock(&gLock);
     if (result->fNumberFormat[style-1] == NULL) {
-        if (gPosixNumberFormat[style-1] == NULL) {
-            UErrorCode status = U_ZERO_ERROR;
+        UErrorCode status = U_ZERO_ERROR;
+        UBool needsInit;
+
+        UMTX_CHECK(NULL, gPosixNumberFormat[style-1] == NULL, needsInit);
+        if (needsInit) {
             UNumberFormat *formatAlias = unum_open(style, NULL, 0, "en_US_POSIX", NULL, &status);
+
+            /* Cache upon first request. */
             if (U_SUCCESS(status)) {
+                umtx_lock(NULL);
                 gPosixNumberFormat[style-1] = formatAlias;
                 ucln_io_registerCleanup(UCLN_IO_LOCBUND, locbund_cleanup);
+                umtx_unlock(NULL);
             }
         }
+
         /* Copy the needed formatter. */
-        if (gPosixNumberFormat[style-1] != NULL) {
-            UErrorCode status = U_ZERO_ERROR;
-            result->fNumberFormat[style-1] = unum_clone(gPosixNumberFormat[style-1], &status);
-        }
+        result->fNumberFormat[style-1] = unum_clone(gPosixNumberFormat[style-1], &status);
     }
     return result->fNumberFormat[style-1];
 }
