@@ -61,7 +61,7 @@
         '../trunk/webrtc/voice_engine/include',
         '../trunk/webrtc/modules/interface',
         '../trunk/webrtc/peerconnection',
-        '../../libyuv/include',
+        '../trunk/third_party/libyuv/include/',
         '../../../netwerk/srtp/src/include',
         '../../../netwerk/srtp/src/crypto/include',
         '../../../ipc/chromium/src',
