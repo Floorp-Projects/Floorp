@@ -87,8 +87,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitTestVAndBranch(LTestVAndBranch *lir);
     bool visitFunctionDispatch(LFunctionDispatch *lir);
     bool visitTypeObjectDispatch(LTypeObjectDispatch *lir);
+    bool visitBooleanToString(LBooleanToString *lir);
+    void emitIntToString(Register input, Register output, Label *ool);
     bool visitIntToString(LIntToString *lir);
     bool visitDoubleToString(LDoubleToString *lir);
+    bool visitPrimitiveToString(LPrimitiveToString *lir);
     bool visitInteger(LInteger *lir);
     bool visitRegExp(LRegExp *lir);
     bool visitRegExpExec(LRegExpExec *lir);

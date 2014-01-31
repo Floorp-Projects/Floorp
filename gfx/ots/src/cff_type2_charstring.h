@@ -67,6 +67,7 @@ enum Type2CharStringOperator {
   kCallGSubr = 29,
   kVHCurveTo = 30,
   kHVCurveTo = 31,
+  kDotSection = 12 << 8,
   kAnd = (12 << 8) + 3,
   kOr = (12 << 8) + 4,
   kNot = (12 << 8) + 5,
@@ -91,8 +92,7 @@ enum Type2CharStringOperator {
   kFlex = (12 << 8) + 35,
   kHFlex1 = (12 << 8) + 36,
   kFlex1 = (12 << 8) + 37,
-  // Operators that are obsoleted or undocumented, such as 'blend', will be
-  // rejected.
+  // Operators that are undocumented, such as 'blend', will be rejected.
 };
 
 }  // namespace ots
