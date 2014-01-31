@@ -4206,9 +4206,8 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
     RootedObject argsobj(cx);
     if (frame.hasArgs()) {
         /* Create an arguments object. */
-        Rooted<GlobalObject*> global(cx);
-        global = &args.callee().global();
-        JSObject *proto = global->getOrCreateArrayPrototype(cx);
+        Rooted<GlobalObject*> global(cx, &args.callee().global());
+        JSObject *proto = GlobalObject::getOrCreateArrayPrototype(cx, global);
         if (!proto)
             return false;
         argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);

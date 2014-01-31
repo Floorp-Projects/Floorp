@@ -113,14 +113,14 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
     if (v.isObject())
         return &v.toObject();
 
-    GlobalObject &global = fp->global();
+    Rooted<GlobalObject*> global(cx, &fp->global());
 
     if (v.isString())
-        return global.getOrCreateStringPrototype(cx);
+        return GlobalObject::getOrCreateStringPrototype(cx, global);
     if (v.isNumber())
-        return global.getOrCreateNumberPrototype(cx);
+        return GlobalObject::getOrCreateNumberPrototype(cx, global);
     if (v.isBoolean())
-        return global.getOrCreateBooleanPrototype(cx);
+        return GlobalObject::getOrCreateBooleanPrototype(cx, global);
 
     JS_ASSERT(v.isNull() || v.isUndefined());
     js_ReportIsNullOrUndefined(cx, spindex, v, NullPtr());

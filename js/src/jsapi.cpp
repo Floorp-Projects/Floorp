@@ -1382,7 +1382,8 @@ JS_GetArrayPrototype(JSContext *cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
-    return forObj->global().getOrCreateArrayPrototype(cx);
+    Rooted<GlobalObject*> global(cx, &forObj->global());
+    return GlobalObject::getOrCreateArrayPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject *)

@@ -208,9 +208,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // that case, per the 15 July 2013 ES6 draft, section 15.19.3, its parent is
     // the GeneratorObjectPrototype singleton.
     bool isStarGenerator = obj->as<JSFunction>().isStarGenerator();
+    Rooted<GlobalObject*> global(cx, &obj->global());
     JSObject *objProto;
     if (isStarGenerator)
-        objProto = obj->global().getOrCreateStarGeneratorObjectPrototype(cx);
+        objProto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
     else
         objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
@@ -396,7 +397,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
     if (mode == XDR_DECODE) {
         JSObject *proto = nullptr;
         if (firstword & IsStarGenerator) {
-            proto = cx->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
+            proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
             if (!proto)
                 return false;
         }
@@ -444,7 +445,7 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     JSObject *cloneProto = nullptr;
     if (srcFun->isStarGenerator()) {
-        cloneProto = cx->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
+        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
     }
@@ -1654,7 +1655,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     RootedAtom anonymousAtom(cx, cx->names().anonymous);
     JSObject *proto = nullptr;
     if (isStarGenerator) {
-        proto = global->getOrCreateStarGeneratorFunctionPrototype(cx);
+        proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, global);
         if (!proto)
             return false;
     }
@@ -1776,7 +1777,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
     NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
     JSObject *cloneProto = nullptr;
     if (fun->isStarGenerator()) {
-        cloneProto = cx->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
+        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
     }
