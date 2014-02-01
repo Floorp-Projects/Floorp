@@ -881,7 +881,7 @@ nsCSSScanner::ScanNumber(nsCSSToken& aToken)
   }
 
   bool gotE = false;
-  if (IsSVGMode() && (c == 'e' || c == 'E')) {
+  if (c == 'e' || c == 'E') {
     int32_t expSignChar = Peek(1);
     int32_t nextChar = Peek(2);
     if (IsDigit(expSignChar) ||
