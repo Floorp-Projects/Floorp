@@ -186,11 +186,11 @@ let gFxAccounts = {
     });
   },
 
-  toggle: function (event) {
+  onMenuPanelCommand: function (event) {
     if (event.originalTarget.hasAttribute("signedin")) {
       this.openPreferences();
     } else {
-      this.openSignInPage();
+      this.openAccountsPage();
     }
 
     PanelUI.hide();
@@ -200,7 +200,12 @@ let gFxAccounts = {
     openPreferences("paneSync");
   },
 
-  openSignInPage: function () {
+  openAccountsPage: function () {
     switchToTabHavingURI("about:accounts", true);
+  },
+
+  openSignInAgainPage: function () {
+    // FIXME: This should actually show the pre-filled username version of about:accounts?
+    switchToTabHavingURI("about:accounts?signin=true", true);
   }
 };
