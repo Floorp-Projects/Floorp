@@ -643,19 +643,18 @@
 }
 
 .variable-or-property-non-writable-icon {
-  background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
+  background: url("chrome://browser/skin/devtools/vview-lock.png") no-repeat;
   width: 16px;
   height: 16px;
-  opacity: 0.5;
 }
 
-@media (min-resolution: 2dppx) {
+/*@media (min-resolution: 2dppx) {
   .variable-or-property-non-writable-icon {
     background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
     background-size: 32px;
   }
 }
-
+*/
 .variable-or-property-frozen-label,
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
@@ -686,6 +685,7 @@
 /* Actions first */
 
 .variables-view-container[actions-first] .variables-view-delete,
+.variables-view-container[actions-first] .variables-view-open-inspector,
 .variables-view-container[actions-first] .variables-view-add-property {
   -moz-box-ordinal-group: 0;
 }
@@ -727,18 +727,52 @@
 }
 
 .variables-view-delete:hover {
-  -moz-image-region: rect(0,32px,16px,16px);
-}
-
-.variables-view-delete:active {
   -moz-image-region: rect(0,48px,16px,32px);
 }
 
+.variables-view-delete:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-delete {
+  -moz-image-region: rect(0,16px,16px,0);
+}
+
 .variables-view-edit {
-  background: url("chrome://browser/skin/devtools/vview-edit.png") center no-repeat;
-  width: 20px;
-  height: 16px;
+  list-style-image: url("chrome://browser/skin/devtools/vview-edit.png");
+  -moz-image-region: rect(0,16px,16px,0);
   cursor: pointer;
+  padding-left: 2px;
+}
+
+.variables-view-edit:hover {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+.variables-view-edit:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-edit {
+  -moz-image-region: rect(0,16px,16px,0);
+}
+
+.variables-view-open-inspector {
+  list-style-image: url("chrome://browser/skin/devtools/vview-open-inspector.png");
+  -moz-image-region: rect(0,16px,16px,0);
+  cursor: pointer;
+}
+
+.variables-view-open-inspector:hover {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+.variables-view-open-inspector:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-open-inspector {
+  -moz-image-region: rect(0,16px,16px,0);
 }
 
 .variables-view-throbber {

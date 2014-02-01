@@ -100,7 +100,7 @@ function testExpandVariables() {
     is(thisVar.get("document").target.querySelector(".value").getAttribute("value"),
       "HTMLDocument \u2192 doc_frame-parameters.html",
       "Should have the right property value for 'document'.");
-    ok(thisVar.get("document").target.querySelector(".value").className.contains("token-other"),
+    ok(thisVar.get("document").target.querySelector(".value").className.contains("token-domnode"),
       "Should have the right token class for 'document'.");
 
     let argsProps = argsVar.target.querySelectorAll(".variables-view-property");
