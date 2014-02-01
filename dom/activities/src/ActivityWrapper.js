@@ -9,7 +9,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -38,7 +37,7 @@ ActivityWrapper.prototype = {
     // options is an nsIDOMActivityOptions object.
     var options = handler.wrappedJSObject._options;
     options.wrappedJSObject._name = aMessage.payload.name;
-    options.wrappedJSObject._data = ObjectWrapper.wrap(aMessage.payload.data, aWindow);
+    options.wrappedJSObject._data = Cu.cloneInto(aMessage.payload.data, aWindow);
 
     // When the activity window is closed, fire an error to notify the activity
     // caller of the situation.
