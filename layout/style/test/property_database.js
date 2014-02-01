@@ -2855,8 +2855,8 @@ var gCSSProperties = {
 		domProp: "opacity",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "1", "17", "397.376" ],
-		other_values: [ "0", "0.4", "0.0000", "-3" ],
+		initial_values: [ "1", "17", "397.376", "3e1", "3e+1", "3e0", "3e+0", "3e-0" ],
+		other_values: [ "0", "0.4", "0.0000", "-3", "3e-1" ],
 		invalid_values: [ "0px", "1px" ]
 	},
 	"-moz-orient": {
@@ -2875,7 +2875,7 @@ var gCSSProperties = {
 		// XXX requires display:block
 		initial_values: [ "2" ],
 		other_values: [ "1", "7" ],
-		invalid_values: [ "0", "-1", "0px", "3px" ]
+		invalid_values: [ "0", "-1", "0px", "3px", "3e1" ]
 	},
 	"outline": {
 		domProp: "outline",
@@ -3347,7 +3347,7 @@ var gCSSProperties = {
 		// XXX requires display:block
 		initial_values: [ "2" ],
 		other_values: [ "1", "7" ],
-		invalid_values: [ "0", "-1", "0px", "3px" ]
+		invalid_values: [ "0", "-1", "0px", "3px", "3e1" ]
 	},
 	"width": {
 		domProp: "width",
@@ -3358,6 +3358,10 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			"3e1px", "3e+1px", "3e0px", "3e+0px", "3e-0px", "3e-1px",
+			"3.2e1px", "3.2e+1px", "3.2e0px", "3.2e+0px", "3.2e-0px", "3.2e-1px",
+			"3e1%", "3e+1%", "3e0%", "3e+0%", "3e-0%", "3e-1%",
+			"3.2e1%", "3.2e+1%", "3.2e0%", "3.2e+0%", "3.2e-0%", "3.2e-1%",
 			/* valid -moz-calc() values */
 			"-moz-calc(-2px)",
 			"-moz-calc(2px)",
@@ -3492,7 +3496,7 @@ var gCSSProperties = {
 		/* XXX requires position */
 		initial_values: [ "auto" ],
 		other_values: [ "0", "3", "-7000", "12000" ],
-		invalid_values: [ "3.0", "17.5" ]
+		invalid_values: [ "3.0", "17.5", "3e1" ]
 	}
 	,
 	"clip-path": {
