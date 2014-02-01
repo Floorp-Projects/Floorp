@@ -572,6 +572,14 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
     return NS_ERROR_NOT_SAME_THREAD;
 
+  // The toplevel event loop normally blocks waiting for the next event, but
+  // if we're trying to shut this thread down, we must exit the event loop when
+  // the event queue is empty.
+  // This only applys to the toplevel event loop! Nested event loops (e.g.
+  // during sync dispatch) are waiting for some state change and must be able
+  // to block even if something has requested shutdown of the thread. Otherwise
+  // we'll just busywait as we endlessly look for an event, fail to find one,
+  // and repeat the nested event loop since its state change hasn't happened yet.
   bool reallyWait = mayWait && (mRunningEvent > 0 || !ShuttingDown());
 
   if (MAIN_THREAD == mIsMainThread && reallyWait)
