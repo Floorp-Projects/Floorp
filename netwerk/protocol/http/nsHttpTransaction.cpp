@@ -676,6 +676,28 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     //
     // OK, now let the caller fill this segment with data.
     //
+    if (!trans->mHaveAllHeaders) {
+        // Reading too far ahead on a chunked encoding is expensive (see below)
+        // so limit header reads to 1KB to minimize any potential damage while
+        // we figure out the message delimiter.
+        count = std::min(count, 1024U);
+    } else if (trans->mChunkedDecoder) {
+        // The API in use requires us to return entity data in 1 contiguous
+        // buffer supplied by the caller. That means
+        // all entity data needs to be moved up to cover gaps created by
+        // stripping the chunk length. We can mitigate this problem by
+        // doing short reads when we are parsing chunk lengths and limiting
+        // reads in the middle of chunks to the remaining chunk size to
+        // increase the frequency of chunk markers naturally aligning
+        // at the start.
+        if (!trans->mChunkedDecoder->GetChunkRemaining()) {
+            count = std::min(count, 6U); // 6 is 4 hex chars + CRLF
+        } else {
+            // extra 2 bytes is for CRLF that terminates the chunk
+            count = std::min(count,
+                             trans->mChunkedDecoder->GetChunkRemaining() + 2);
+        }
+    }
     rv = trans->mWriter->OnWriteSegment(buf, count, countWritten);
     if (NS_FAILED(rv)) return rv; // caller didn't want to write anything
 
