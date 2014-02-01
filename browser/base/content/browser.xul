@@ -389,7 +389,8 @@
 
     <!-- Sync Panel -->
     <panel id="sync-start-panel" class="sync-panel" type="arrow" hidden="true"
-           noautofocus="true" level="top" onclick="this.hidePopup();">
+           noautofocus="true" level="top" onclick="this.hidePopup();"
+           flip="slide">
       <hbox class="sync-panel-outer">
         <image class="sync-panel-icon"/>
         <vbox class="sync-panel-inner">
@@ -408,7 +409,8 @@
 
     <!-- Sync Error Panel -->
     <panel id="sync-error-panel" class="sync-panel" type="arrow" hidden="true"
-           noautofocus="true" level="top" onclick="this.hidePopup();">
+           noautofocus="true" level="top" onclick="this.hidePopup();"
+           flip="slide">
       <hbox class="sync-panel-outer">
         <image class="sync-panel-icon"/>
         <vbox class="sync-panel-inner">
