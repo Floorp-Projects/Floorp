@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (c) 1996-2012, International Business Machines Corporation and others.
+* Copyright (c) 1996-2013, International Business Machines Corporation and others.
 * All Rights Reserved.
 *******************************************************************************
 */
@@ -64,12 +64,12 @@ typedef struct UCollator UCollator;
 
 /**
  * UCOL_LESS is returned if source string is compared to be less than target
- * string in the u_strcoll() method.
+ * string in the ucol_strcoll() method.
  * UCOL_EQUAL is returned if source string is compared to be equal to target
- * string in the u_strcoll() method.
+ * string in the ucol_strcoll() method.
  * UCOL_GREATER is returned if source string is compared to be greater than
- * target string in the u_strcoll() method.
- * @see u_strcoll()
+ * target string in the ucol_strcoll() method.
+ * @see ucol_strcoll()
  * <p>
  * Possible values for a comparison result 
  * @stable ICU 2.0
@@ -302,6 +302,7 @@ typedef enum {
       * @stable ICU 2.0
       */
      UCOL_STRENGTH,  
+#ifndef U_HIDE_DEPRECATED_API
      /** When turned on, this attribute positions Hiragana before all  
       * non-ignorables on quaternary level This is a sneaky way to produce JIS
       * sort order.
@@ -312,7 +313,8 @@ typedef enum {
       * Since ICU 50, this attribute is not settable any more via API functions.
       * @deprecated ICU 50 Implementation detail, cannot be set via API, might be removed from implementation.
       */
-     UCOL_HIRAGANA_QUATERNARY_MODE,
+     UCOL_HIRAGANA_QUATERNARY_MODE = UCOL_STRENGTH + 1,
+#endif  /* U_HIDE_DEPRECATED_API */
      /** When turned on, this attribute generates a collation key
       * for the numeric value of substrings of digits.
       * This is a way to get '100' to sort AFTER '2'. Note that the longest
@@ -322,7 +324,7 @@ typedef enum {
       * separate digit substring associated with a separate collation element.
       * @stable ICU 2.8
       */
-     UCOL_NUMERIC_COLLATION, 
+     UCOL_NUMERIC_COLLATION = UCOL_STRENGTH + 2, 
      /**
       * The number of UColAttribute constants.
       * @stable ICU 2.0
@@ -549,9 +551,9 @@ ucol_strcoll(    const    UCollator    *coll,
 * @see ucol_greater 
 * @see ucol_greaterOrEqual 
 * @see ucol_equal 
-* @draft ICU 50 
+* @stable ICU 50 
 */ 
-U_DRAFT UCollationResult U_EXPORT2
+U_STABLE UCollationResult U_EXPORT2
 ucol_strcollUTF8(
         const UCollator *coll,
         const char      *source,
@@ -1087,26 +1089,40 @@ ucol_getVersion(const UCollator* coll, UVersionInfo info);
 U_STABLE void U_EXPORT2
 ucol_getUCAVersion(const UCollator* coll, UVersionInfo info);
 
-/** 
- * Merge two sort keys. The levels are merged with their corresponding counterparts
+/**
+ * Merges two sort keys. The levels are merged with their corresponding counterparts
  * (primaries with primaries, secondaries with secondaries etc.). Between the values
  * from the same level a separator is inserted.
- * example (uncompressed): 
- * 191B1D 01 050505 01 910505 00 and 1F2123 01 050505 01 910505 00
+ *
+ * This is useful, for example, for combining sort keys from first and last names
+ * to sort such pairs.
+ * It is possible to merge multiple sort keys by consecutively merging
+ * another one with the intermediate result.
+ *
+ * The length of the merge result is the sum of the lengths of the input sort keys.
+ *
+ * Example (uncompressed):
+ * <pre>191B1D 01 050505 01 910505 00
+ * 1F2123 01 050505 01 910505 00</pre>
  * will be merged as 
- * 191B1D 02 1F212301 050505 02 050505 01 910505 02 910505 00
- * This allows for concatenating of first and last names for sorting, among other things.
- * If the destination buffer is not big enough, the results are undefined.
- * If any of source lengths are zero or any of source pointers are NULL/undefined, 
- * result is of size zero.
- * @param src1 pointer to the first sortkey
- * @param src1Length length of the first sortkey
- * @param src2 pointer to the second sortkey
- * @param src2Length length of the second sortkey
- * @param dest buffer to hold the result
- * @param destCapacity size of the buffer for the result
- * @return size of the result. If the buffer is big enough size is always
- *         src1Length+src2Length-1
+ * <pre>191B1D 02 1F2123 01 050505 02 050505 01 910505 02 910505 00</pre>
+ *
+ * If the destination buffer is not big enough, then its contents are undefined.
+ * If any of source lengths are zero or any of the source pointers are NULL/undefined,
+ * the result is of size zero.
+ *
+ * @param src1 the first sort key
+ * @param src1Length the length of the first sort key, including the zero byte at the end;
+ *        can be -1 if the function is to find the length
+ * @param src2 the second sort key
+ * @param src2Length the length of the second sort key, including the zero byte at the end;
+ *        can be -1 if the function is to find the length
+ * @param dest the buffer where the merged sort key is written,
+ *        can be NULL if destCapacity==0
+ * @param destCapacity the number of bytes in the dest buffer
+ * @return the length of the merged sort key, src1Length+src2Length;
+ *         can be larger than destCapacity, or 0 if an error occurs (only for illegal arguments),
+ *         in which cases the contents of dest is undefined
  * @stable ICU 2.0
  */
 U_STABLE int32_t U_EXPORT2 
@@ -1196,12 +1212,13 @@ ucol_restoreVariableTop(UCollator *coll, const uint32_t varTop, UErrorCode *stat
 /**
  * Thread safe cloning operation. The result is a clone of a given collator.
  * @param coll collator to be cloned
- * @param stackBuffer user allocated space for the new clone. 
+ * @param stackBuffer <em>Deprecated functionality as of ICU 52, use NULL.</em><br>
+ * user allocated space for the new clone. 
  * If NULL new memory will be allocated. 
  *  If buffer is not large enough, new memory will be allocated.
- *  Clients can use the U_COL_SAFECLONE_BUFFERSIZE. 
- *  This will probably be enough to avoid memory allocations.
- * @param pBufferSize pointer to size of allocated space. 
+ *  Clients can use the U_COL_SAFECLONE_BUFFERSIZE.
+ * @param pBufferSize <em>Deprecated functionality as of ICU 52, use NULL or 1.</em><br>
+ *  pointer to size of allocated space. 
  *  If *pBufferSize == 0, a sufficient size for use in cloning will 
  *  be returned ('pre-flighting')
  *  If *pBufferSize is not enough for a stack-based safe clone, 
@@ -1221,10 +1238,14 @@ ucol_safeClone(const UCollator *coll,
                int32_t         *pBufferSize,
                UErrorCode      *status);
 
-/** default memory size for the new clone. It needs to be this large for os/400 large pointers 
- * @stable ICU 2.0
+#ifndef U_HIDE_DEPRECATED_API
+
+/** default memory size for the new clone.
+ * @deprecated ICU 52. Do not rely on ucol_safeClone() cloning into any provided buffer.
  */
-#define U_COL_SAFECLONE_BUFFERSIZE 528
+#define U_COL_SAFECLONE_BUFFERSIZE 1
+
+#endif /* U_HIDE_DEPRECATED_API */
 
 /**
  * Returns current rules. Delta defines whether full rules are returned or just the tailoring. 

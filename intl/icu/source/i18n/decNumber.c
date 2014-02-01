@@ -7018,7 +7018,7 @@ static void decSetCoeff(decNumber *dn, decContext *set, const Unit *lsu,
     if (cut==0) quot=*up;          /* is at bottom of unit  */
      else /* cut>0 */ {            /* it's not at bottom of unit  */
       #if DECDPUN<=4
-        U_ASSERT(cut >= 0 && cut <= 4);
+        U_ASSERT(/* cut >= 0 &&*/ cut <= 4);
         quot=QUOT10(*up, cut);
         rem=*up-quot*powers[cut];
       #else

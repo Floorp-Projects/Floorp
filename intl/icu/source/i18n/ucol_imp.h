@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2012, International Business Machines
+*   Copyright (C) 1998-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -577,18 +577,6 @@ SortKeyGenerator(const    UCollator    *coll,
         UErrorCode *status);
 
 #endif
-
-/**
- * Makes a copy of the Collator's rule data. The format is
- * that of .col files.
- *
- * @param length returns the length of the data, in bytes.
- * @param status the error status
- * @return memory, owned by the caller, of size 'length' bytes.
- * @internal INTERNAL USE ONLY
- */
-U_CFUNC uint8_t* U_EXPORT2 
-ucol_cloneRuleData(const UCollator *coll, int32_t *length, UErrorCode *status);
 
 /**
  * Used to set requested and valid locales on a collator returned by the collator

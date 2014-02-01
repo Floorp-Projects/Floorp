@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ur.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ur.xml
+ * ICU <specials> source: <path>/common/main/ur.xml
  */
 ur{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"عابدجان"}
@@ -86,6 +86,9 @@ ur{
         }
         "Africa:Johannesburg"{
             ec{"جوہانسبرگ"}
+        }
+        "Africa:Juba"{
+            ec{"جوبا"}
         }
         "Africa:Kampala"{
             ec{"کیمپالا"}
@@ -210,6 +213,9 @@ ur{
         "America:Bahia"{
             ec{"باہیا"}
         }
+        "America:Bahia_Banderas"{
+            ec{"بہیا بندراز"}
+        }
         "America:Barbados"{
             ec{"باربادوس"}
         }
@@ -269,6 +275,9 @@ ur{
         }
         "America:Costa_Rica"{
             ec{"کوسٹا ریکا"}
+        }
+        "America:Creston"{
+            ec{"کریسٹون"}
         }
         "America:Cuiaba"{
             ec{"کوئیابا"}
@@ -384,6 +393,9 @@ ur{
         "America:Kentucky:Monticello"{
             ec{"مونٹیسیلو، کینٹوکی"}
         }
+        "America:Kralendijk"{
+            ec{"کرالینڈیجک"}
+        }
         "America:La_Paz"{
             ec{"لا پاز"}
         }
@@ -414,6 +426,9 @@ ur{
         "America:Martinique"{
             ec{"مارٹینک"}
         }
+        "America:Matamoros"{
+            ec{"میٹاموروس"}
+        }
         "America:Mazatlan"{
             ec{"میزٹلان"}
         }
@@ -425,6 +440,9 @@ ur{
         }
         "America:Merida"{
             ec{"میریڈا"}
+        }
+        "America:Metlakatla"{
+            ec{"میٹلا کاٹلا"}
         }
         "America:Mexico_City"{
             ec{"میکسیکو سٹی"}
@@ -471,6 +489,9 @@ ur{
         "America:North_Dakota:New_Salem"{
             ec{"نیو سلیم، شمالی ڈکوٹا"}
         }
+        "America:Ojinaga"{
+            ec{"اوجیناگا"}
+        }
         "America:Panama"{
             ec{"پنامہ"}
         }
@@ -513,6 +534,9 @@ ur{
         "America:Rio_Branco"{
             ec{"ریئو برینکو"}
         }
+        "America:Santa_Isabel"{
+            ec{"سانتا ایزابیل"}
+        }
         "America:Santarem"{
             ec{"سنٹارین"}
         }
@@ -530,6 +554,9 @@ ur{
         }
         "America:Shiprock"{
             ec{"شپراک"}
+        }
+        "America:Sitka"{
+            ec{"سیٹکا"}
         }
         "America:St_Barthelemy"{
             ec{"سینٹ برتھیلمی"}
@@ -593,6 +620,9 @@ ur{
         }
         "Antarctica:DumontDUrville"{
             ec{"ڈومونٹ ڈی ارویلے"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"میکواری"}
         }
         "Antarctica:Mawson"{
             ec{"ماؤسن"}
@@ -693,6 +723,9 @@ ur{
         "Asia:Harbin"{
             ec{"ہربِن"}
         }
+        "Asia:Hebron"{
+            ec{"ہیبرون"}
+        }
         "Asia:Hong_Kong"{
             ec{"ہانگ کانگ"}
         }
@@ -726,6 +759,9 @@ ur{
         "Asia:Katmandu"{
             ec{"کاٹھمنڈو"}
         }
+        "Asia:Khandyga"{
+            ec{"خندیگا"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"کریسنویارسک"}
         }
@@ -755,6 +791,9 @@ ur{
         }
         "Asia:Nicosia"{
             ec{"نکوسیا"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"نوووکوزنیتسک"}
         }
         "Asia:Novosibirsk"{
             ec{"نوووسِبِرسک"}
@@ -827,6 +866,9 @@ ur{
         }
         "Asia:Urumqi"{
             ec{"یورومکی"}
+        }
+        "Asia:Ust-Nera"{
+            ec{"اوسٹ-نیرا"}
         }
         "Asia:Vientiane"{
             ec{"وینٹیانا"}
@@ -939,6 +981,9 @@ ur{
         "Europe:Budapest"{
             ec{"بدھاپیسٹ"}
         }
+        "Europe:Busingen"{
+            ec{"بزنجن"}
+        }
         "Europe:Chisinau"{
             ec{"چیسیناؤ"}
         }
@@ -947,6 +992,7 @@ ur{
         }
         "Europe:Dublin"{
             ec{"ڈبلن"}
+            ld{"آئرش کا گرما کے وقت"}
         }
         "Europe:Gibraltar"{
             ec{"جبل الطارق"}
@@ -980,6 +1026,7 @@ ur{
         }
         "Europe:London"{
             ec{"لندن"}
+            ld{"برطانوی کا گرما کے وقت"}
         }
         "Europe:Luxembourg"{
             ec{"لگژمبرگ"}
@@ -1099,7 +1146,7 @@ ur{
             ec{"ماہی"}
         }
         "Indian:Maldives"{
-            ec{"مالدیپ کا باشندہ"}
+            ec{"مالدیپ"}
         }
         "Indian:Mauritius"{
             ec{"ماریشس"}
@@ -1708,6 +1755,8 @@ ur{
             ls{"سمارا اسٹینڈرڈ ٹائم"}
         }
         "meta:Samoa"{
+            ld{"ساموآ سمر وقت"}
+            lg{"ساموآ وقت"}
             ls{"ساموآ کا معیاری وقت"}
         }
         "meta:Seychelles"{
@@ -1806,10 +1855,11 @@ ur{
             ls{"یکیترنگبرگ کا معیاری وقت"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} وقت ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وقت"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

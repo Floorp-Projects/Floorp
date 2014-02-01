@@ -1,20 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/el.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/el.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/el.xml
+ * ICU <specials> source: <path>/xml/collation/el.xml
  */
 el{
-    Version{"2.0.50.60"}
+    Version{"2.0.82.42"}
     collations{
         standard{
-            Sequence{" [normalization on ]"}
-            Version{"22.1.1"}
+            Sequence{"[normalization on][reorder Grek]"}
+            Version{"24"}
         }
     }
 }

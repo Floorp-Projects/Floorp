@@ -1174,8 +1174,6 @@ MessagePattern::setParseError(UParseError *parseError, int32_t index) {
     parseError->postContext[length]=0;
 }
 
-UOBJECT_DEFINE_NO_RTTI_IMPLEMENTATION(MessagePattern)
-
 // MessageImpl ------------------------------------------------------------- ***
 
 void

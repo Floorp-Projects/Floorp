@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ii.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ii.xml
+ * ICU <specials> source: <path>/common/main/ii.xml
  */
 ii{
     ExemplarCharacters{"[ꀀ-ꒌ]"}
@@ -22,7 +22,7 @@ ii{
             }
         }
     }
-    Version{"2.0.74.65"}
+    Version{"2.0.90.61"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -68,48 +68,6 @@ ii{
                     "ꃅꋊꊂ",
                 }
             }
-            fields{
-                day{
-                    dn{"ꑍ"}
-                    relative{
-                        "-1"{"ꀋꅔꉈ"}
-                        "-2"{"ꎴꂿꋍꑍ"}
-                        "0"{"ꀃꑍ"}
-                        "1"{"ꃆꏂꑍ"}
-                        "2"{"ꌕꀿꑍ"}
-                    }
-                }
-                dayperiod{
-                    dn{"ꎸꄑ/ꁯꋒ"}
-                }
-                era{
-                    dn{"ꃅꋊ"}
-                }
-                hour{
-                    dn{"ꄮꈉ"}
-                }
-                minute{
-                    dn{"ꃏ"}
-                }
-                month{
-                    dn{"ꆪ"}
-                }
-                second{
-                    dn{"ꇙ"}
-                }
-                week{
-                    dn{"ꑭꆏ"}
-                }
-                weekday{
-                    dn{"ꆏꑍ"}
-                }
-                year{
-                    dn{"ꈎ"}
-                }
-                zone{
-                    dn{"ꃅꄷꄮꈉ"}
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -138,6 +96,48 @@ ii{
                     }
                 }
             }
+        }
+    }
+    fields{
+        day{
+            dn{"ꑍ"}
+            relative{
+                "-1"{"ꀋꅔꉈ"}
+                "-2"{"ꎴꂿꋍꑍ"}
+                "0"{"ꀃꑍ"}
+                "1"{"ꃆꏂꑍ"}
+                "2"{"ꌕꀿꑍ"}
+            }
+        }
+        dayperiod{
+            dn{"ꎸꄑ/ꁯꋒ"}
+        }
+        era{
+            dn{"ꃅꋊ"}
+        }
+        hour{
+            dn{"ꄮꈉ"}
+        }
+        minute{
+            dn{"ꃏ"}
+        }
+        month{
+            dn{"ꆪ"}
+        }
+        second{
+            dn{"ꇙ"}
+        }
+        week{
+            dn{"ꑭꆏ"}
+        }
+        weekday{
+            dn{"ꆏꑍ"}
+        }
+        year{
+            dn{"ꈎ"}
+        }
+        zone{
+            dn{"ꃅꄷꄮꈉ"}
         }
     }
     measurementSystemNames{

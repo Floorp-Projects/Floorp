@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fa_AF.xml
 // *
 // ***************************************************************************
 fa_AF{
-    AuxExemplarCharacters{"[\u0656 \u0670 \u200C \u200D ټ ځ څ ډ ړ ږ ښ ګ ڼ ي]"}
+    AuxExemplarCharacters{"[\u200C \u200D \u0656 \u0670 ټ ځ څ ډ ړ ږ ښ ګ ڼ ي]"}
     NumberElements{
         latn{
             patterns{
@@ -15,7 +15,7 @@ fa_AF{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.80"}
     calendar{
         gregorian{
             monthNames{
