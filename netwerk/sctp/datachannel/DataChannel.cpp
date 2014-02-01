@@ -35,7 +35,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
-#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsNetUtil.h"
@@ -216,23 +215,13 @@ DataChannelConnection::~DataChannelConnection()
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
-  if (!IsSTSThread()) {
-    ASSERT_WEBRTC(NS_IsMainThread());
-    if (mTransportFlow) {
-      ASSERT_WEBRTC(mSTS);
-      RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
-                    NS_DISPATCH_NORMAL);
-    }
+  if (mTransportFlow && !IsSTSThread()) {
+    ASSERT_WEBRTC(mSTS);
+    RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
+                  NS_DISPATCH_NORMAL);
+  }
 
-    if (mInternalIOThread) {
-      // Avoid spinning the event thread from here (which if we're mainthread
-      // is in the event loop already)
-      NS_DispatchToMainThread(WrapRunnable(nsCOMPtr<nsIThread>(mInternalIOThread),
-                                           &nsIThread::Shutdown),
-                              NS_DISPATCH_NORMAL);
-    }
-  } else {
-    // on STS, safe to call shutdown
+  if (mInternalIOThread) {
     mInternalIOThread->Shutdown();
   }
 }
@@ -2278,19 +2267,15 @@ public:
   { }
 
   NS_IMETHODIMP Run() {
-    // ReadBlob() is responsible to releasing the reference
-    DataChannelConnection *self = mConnection;
-    self->ReadBlob(mConnection.forget(), mStream, mBlob);
+    mConnection->ReadBlob(mStream, mBlob);
     return NS_OK;
   }
 
 private:
-  // Make sure the Connection doesn't die while there are jobs outstanding.
-  // Let it die (if released by PeerConnectionImpl while we're running)
-  // when we send our runnable back to MainThread.  Then ~DataChannelConnection
-  // can send the IOThread to MainThread to die in a runnable, avoiding
-  // unsafe event loop recursion.  Evil.
-  nsRefPtr<DataChannelConnection> mConnection;
+  // The lifetime of DataChannelConnection will be longer than ReadBlobRunnable.
+  // In ~DataChannelConnection(), it calls mInternalIOThread::Shutdown to make
+  // sure all the jobs are ran.
+  DataChannelConnection* mConnection;
   uint16_t mStream;
   // Use RefCount for preventing the object is deleted when SendBlob returns.
   nsRefPtr<nsIInputStream> mBlob;
@@ -2314,14 +2299,11 @@ DataChannelConnection::SendBlob(uint16_t stream, nsIInputStream *aBlob)
   return 0;
 }
 
-void
-DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
-                                uint16_t aStream, nsIInputStream* aBlob)
+int32_t
+DataChannelConnection::ReadBlob(uint16_t aStream, nsIInputStream* aBlob)
 {
-  // NOTE: 'aThis' has been forgotten by the caller to avoid releasing
-  // it off mainthread; if PeerConnectionImpl has released then we want
-  // ~DataChannelConnection() to run on MainThread
-
+  DataChannel *channel = mStreams[aStream];
+  NS_ENSURE_TRUE(channel, 0);
   // XXX to do this safely, we must enqueue these atomically onto the
   // output socket.  We need a sender thread(s?) to enque data into the
   // socket and to avoid main-thread IO that might block.  Even on a
@@ -2334,20 +2316,16 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
   uint64_t len;
   aBlob->Available(&len);
   nsresult rv = NS_ReadInputStreamToString(aBlob, temp, len);
-  if (NS_FAILED(rv)) {
-    // Bug 966602:  Doesn't return an error to the caller via onerror.
-    // Let aThis (aka this) be released when we exit out of paranoia
-    // instead of calling Release()
-    nsRefPtr<DataChannelConnection> self(aThis);
-    return;
-  }
+
+  NS_ENSURE_SUCCESS(rv, 0);
   aBlob->Close();
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
-  RUN_ON_THREAD(mainThread, WrapRunnable(nsRefPtr<DataChannelConnection>(aThis),
+  RUN_ON_THREAD(mainThread, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
                                &DataChannelConnection::SendBinaryMsg,
                                aStream, temp),
                 NS_DISPATCH_NORMAL);
+  return 0;
 }
 
 int32_t
