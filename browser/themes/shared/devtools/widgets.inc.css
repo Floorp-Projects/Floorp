@@ -221,13 +221,11 @@
   color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.theme-dark .breadcrumbs-widget-item,
-.theme-dark .breadcrumbs-widget-item-classes {
+.theme-dark .breadcrumbs-widget-item {
   color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.theme-light .breadcrumbs-widget-item,
-.theme-light .breadcrumbs-widget-item-classes {
+.theme-light .breadcrumbs-widget-item {
   color: #18191a; /* Foreground (Text) - Dark */
 }
 
@@ -237,6 +235,14 @@
 
 .theme-light .breadcrumbs-widget-item-id {
   color: #585959; /* Foreground (Text) - Grey */
+}
+
+.theme-dark .breadcrumbs-widget-item-classes {
+  color: #b8c8d9; /* Content (Text) - Light */
+}
+
+.theme-light .breadcrumbs-widget-item-classes {
+  color: #667380; /* Content (Text) - Dark Grey */
 }
 
 .theme-dark .breadcrumbs-widget-item-pseudo-classes {
