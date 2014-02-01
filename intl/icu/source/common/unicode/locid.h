@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1996-2012, International Business Machines
+*   Copyright (C) 1996-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -42,6 +42,9 @@
  */
 
 U_NAMESPACE_BEGIN
+
+// Forward Declarations
+void U_CALLCONV locale_available_init(); /**< @internal */
 
 /**
  * A <code>Locale</code> object represents a specific geographical, political,
@@ -418,7 +421,7 @@ public:
     inline const char * getName() const;
 
     /**
-     * Returns the programmatic name of the entire locale as getName would return,
+     * Returns the programmatic name of the entire locale as getName() would return,
      * but without keywords.
      * @return      A pointer to "name".
      * @see getName
@@ -450,9 +453,11 @@ public:
      */
     int32_t getKeywordValue(const char* keywordName, char *buffer, int32_t bufferCapacity, UErrorCode &status) const;
 
-#ifndef U_HIDE_DRAFT_API
     /**
-     * Sets the value for a keyword.
+     * Sets or removes the value for a keyword.
+     *
+     * For removing all keywords, use getBaseName(),
+     * and construct a new Locale if it differs from getName().
      *
      * @param keywordName name of the keyword to be set. Case insensitive.
      * @param keywordValue value of the keyword to be set. If 0-length or
@@ -460,10 +465,9 @@ public:
      *  that keyword does not exist.
      * @param status Returns any error information while performing this operation.
      *
-     * @draft ICU 49
+     * @stable ICU 49
      */
     void setKeywordValue(const char* keywordName, const char* keywordValue, UErrorCode &status);
-#endif  /* U_HIDE_DRAFT_API */
 
     /**
      * returns the locale's three-letter language code, as specified
@@ -740,6 +744,11 @@ private:
      * @internal
      */
     friend Locale *locale_set_default_internal(const char *, UErrorCode& status);
+
+    /**
+     * @internal
+     */
+    friend void locale_available_init();
 };
 
 inline UBool

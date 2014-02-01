@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 1996-2012, International Business Machines
+*   Copyright (C) 1996-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 */
@@ -432,9 +432,9 @@ udat_getSymbols(const   UDateFormat     *fmt,
     const SimpleDateFormat* sdtfmt;
     const RelativeDateFormat* rdtfmt;
     if ((sdtfmt = dynamic_cast<const SimpleDateFormat*>(reinterpret_cast<const DateFormat*>(fmt))) != NULL) {
-    	syms = sdtfmt->getDateFormatSymbols();
+        syms = sdtfmt->getDateFormatSymbols();
     } else if ((rdtfmt = dynamic_cast<const RelativeDateFormat*>(reinterpret_cast<const DateFormat*>(fmt))) != NULL) {
-    	syms = rdtfmt->getDateFormatSymbols();
+        syms = rdtfmt->getDateFormatSymbols();
     } else {
         return -1;
     }
@@ -486,6 +486,10 @@ udat_getSymbols(const   UDateFormat     *fmt,
         res = syms->getMonths(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
         break;
 
+    case UDAT_SHORTER_WEEKDAYS:
+        res = syms->getWeekdays(count, DateFormatSymbols::FORMAT, DateFormatSymbols::SHORT);
+        break;
+
     case UDAT_NARROW_WEEKDAYS:
         res = syms->getWeekdays(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
         break;
@@ -508,6 +512,10 @@ udat_getSymbols(const   UDateFormat     *fmt,
 
     case UDAT_STANDALONE_SHORT_WEEKDAYS:
         res = syms->getWeekdays(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::ABBREVIATED);
+        break;
+
+    case UDAT_STANDALONE_SHORTER_WEEKDAYS:
+        res = syms->getWeekdays(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::SHORT);
         break;
 
     case UDAT_STANDALONE_NARROW_WEEKDAYS:
@@ -547,9 +555,9 @@ udat_countSymbols(    const    UDateFormat                *fmt,
     const SimpleDateFormat* sdtfmt;
     const RelativeDateFormat* rdtfmt;
     if ((sdtfmt = dynamic_cast<const SimpleDateFormat*>(reinterpret_cast<const DateFormat*>(fmt))) != NULL) {
-    	syms = sdtfmt->getDateFormatSymbols();
+        syms = sdtfmt->getDateFormatSymbols();
     } else if ((rdtfmt = dynamic_cast<const RelativeDateFormat*>(reinterpret_cast<const DateFormat*>(fmt))) != NULL) {
-    	syms = rdtfmt->getDateFormatSymbols();
+        syms = rdtfmt->getDateFormatSymbols();
     } else {
         return 0;
     }
@@ -592,6 +600,10 @@ udat_countSymbols(    const    UDateFormat                *fmt,
         syms->getMonths(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
         break;
 
+    case UDAT_SHORTER_WEEKDAYS:
+        syms->getWeekdays(count, DateFormatSymbols::FORMAT, DateFormatSymbols::SHORT);
+        break;
+
     case UDAT_NARROW_WEEKDAYS:
         syms->getWeekdays(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
         break;
@@ -614,6 +626,10 @@ udat_countSymbols(    const    UDateFormat                *fmt,
 
     case UDAT_STANDALONE_SHORT_WEEKDAYS:
         syms->getWeekdays(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::ABBREVIATED);
+        break;
+
+    case UDAT_STANDALONE_SHORTER_WEEKDAYS:
+        syms->getWeekdays(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::SHORT);
         break;
 
     case UDAT_STANDALONE_NARROW_WEEKDAYS:
@@ -755,6 +771,13 @@ public:
     }
 
     static void
+        setShorterWeekday(DateFormatSymbols *syms, int32_t index,
+        const UChar *value, int32_t valueLength, UErrorCode &errorCode)
+    {
+        setSymbol(syms->fShorterWeekdays, syms->fShorterWeekdaysCount, index, value, valueLength, errorCode);
+    }
+
+    static void
         setNarrowWeekday(DateFormatSymbols *syms, int32_t index,
         const UChar *value, int32_t valueLength, UErrorCode &errorCode)
     {
@@ -773,6 +796,13 @@ public:
         const UChar *value, int32_t valueLength, UErrorCode &errorCode)
     {
         setSymbol(syms->fStandaloneShortWeekdays, syms->fStandaloneShortWeekdaysCount, index, value, valueLength, errorCode);
+    }
+
+    static void
+        setStandaloneShorterWeekday(DateFormatSymbols *syms, int32_t index,
+        const UChar *value, int32_t valueLength, UErrorCode &errorCode)
+    {
+        setSymbol(syms->fStandaloneShorterWeekdays, syms->fStandaloneShorterWeekdaysCount, index, value, valueLength, errorCode);
     }
 
     static void
@@ -881,6 +911,10 @@ udat_setSymbols(    UDateFormat             *format,
         DateFormatSymbolsSingleSetter::setShortWeekday(syms, index, value, valueLength, *status);
         break;
 
+    case UDAT_SHORTER_WEEKDAYS:
+        DateFormatSymbolsSingleSetter::setShorterWeekday(syms, index, value, valueLength, *status);
+        break;
+
     case UDAT_NARROW_WEEKDAYS:
         DateFormatSymbolsSingleSetter::setNarrowWeekday(syms, index, value, valueLength, *status);
         break;
@@ -891,6 +925,10 @@ udat_setSymbols(    UDateFormat             *format,
 
     case UDAT_STANDALONE_SHORT_WEEKDAYS:
         DateFormatSymbolsSingleSetter::setStandaloneShortWeekday(syms, index, value, valueLength, *status);
+        break;
+
+    case UDAT_STANDALONE_SHORTER_WEEKDAYS:
+        DateFormatSymbolsSingleSetter::setStandaloneShorterWeekday(syms, index, value, valueLength, *status);
         break;
 
     case UDAT_STANDALONE_NARROW_WEEKDAYS:

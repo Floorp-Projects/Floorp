@@ -1,26 +1,29 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/bn.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/bn.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/bn.xml
+ * ICU <specials> source: <path>/xml/collation/bn.xml
  */
 bn{
-    Version{"2.0.59.17"}
+    Version{"2.0.89.0"}
     collations{
         standard{
-            Sequence{" [normalization on ]&ঔ<ং<ঃ<ঁ"}
-            Version{"22.1.1"}
+            Sequence{
+                "[normalization on][reorder Beng Deva Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
+                "&ঔ<ং<ঃ<ঁ"
+            }
+            Version{"24"}
         }
         traditional{
             Sequence{
-                " [normalization on ]"
-                "&ঔ<ং<ঃ<ঁ<ক্<খ্<গ্<ঘ্<ঙ্<চ্<ছ্<জ্<ঝ্<ঞ্<ট্<ঠ্<ড্<ঢ্<ণ্<ৎ=ত্'\u200D'<<"
-                "ত্<থ্<দ্<ধ্<ন্<প্<ফ্<ব্<ভ্<ম্<য্<র্<ৰ্<ল্<ৱ্<শ্<ষ্<স্<হ্"
+                "[normalization on][reorder Beng Deva Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
+                "&ঔ<ং<ঃ<ঁ<ক্<খ্<গ্<ঘ্<ঙ্<চ্<ছ্<জ্<ঝ্<ঞ্<ট্<ঠ্<ড্<ঢ্<ণ্<ৎ=ত্\u200D<<ত্<থ্<দ্<ধ্<ন্<প্"
+                "<ফ্<ব্<ভ্<ম্<য্<র্<ৰ্<ল্<ৱ্<শ্<ষ্<স্<হ্"
                 "&ক্অ=ক"
                 "&ক্আ=কা"
                 "&ক্ই=কি"
@@ -633,7 +636,7 @@ bn{
                 "&যৌ<<<য়ৌ"
                 "&য্<<<য়্"
             }
-            Version{"22.1.1"}
+            Version{"24"}
         }
     }
 }

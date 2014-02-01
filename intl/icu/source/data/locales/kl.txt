@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kl.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/kl.xml
+ * ICU <specials> source: <path>/common/main/kl.xml
  */
 kl{
     ExemplarCharacters{
@@ -29,12 +29,41 @@ kl{
             }
         }
     }
-    Version{"2.0.78.17"}
+    Version{"2.0.92.87"}
     calendar{
         gregorian{
             dayNames{
                 format{
                     abbreviated{
+                        "sab",
+                        "ata",
+                        "mar",
+                        "pin",
+                        "sis",
+                        "tal",
+                        "arf",
+                    }
+                    short{
+                        "sab",
+                        "ata",
+                        "mar",
+                        "pin",
+                        "sis",
+                        "tal",
+                        "arf",
+                    }
+                    wide{
+                        "sabaat",
+                        "ataasinngorneq",
+                        "marlunngorneq",
+                        "pingasunngorneq",
+                        "sisamanngorneq",
+                        "tallimanngorneq",
+                        "arfininngorneq",
+                    }
+                }
+                stand-alone{
+                    short{
                         "sab",
                         "ata",
                         "mar",
@@ -118,34 +147,183 @@ kl{
             }
         }
     }
-    units{
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
         day{
-            one{"{0} ulloq unnuarlu"}
-            other{"{0} ulloq unnuarlu"}
+            relativeTime{
+                future{
+                    one{"om {0} ulloq unnuarlu"}
+                    other{"om {0} ulloq unnuarlu"}
+                }
+                past{
+                    one{"for {0} ulloq unnuarlu siden"}
+                    other{"for {0} ulloq unnuarlu siden"}
+                }
+            }
         }
         hour{
-            one{"{0} nalunaaquttap-akunnera"}
-            other{"{0} nalunaaquttap-akunnera"}
+            relativeTime{
+                future{
+                    one{"om {0} nalunaaquttap-akunnera"}
+                    other{"om {0} nalunaaquttap-akunnera"}
+                }
+                past{
+                    one{"for {0} nalunaaquttap-akunnera siden"}
+                    other{"for {0} nalunaaquttap-akunnera siden"}
+                }
+            }
         }
         minute{
-            one{"{0} minutsi"}
-            other{"{0} minutsi"}
+            relativeTime{
+                future{
+                    one{"om {0} minutsi"}
+                    other{"om {0} minutsi"}
+                }
+                past{
+                    one{"for {0} minutsi siden"}
+                    other{"for {0} minutsi siden"}
+                }
+            }
         }
         month{
-            one{"{0} qaammat"}
-            other{"{0} qaammat"}
+            relativeTime{
+                future{
+                    one{"om {0} qaammat"}
+                    other{"om {0} qaammat"}
+                }
+                past{
+                    one{"for {0} qaammat siden"}
+                    other{"for {0} qaammat siden"}
+                }
+            }
         }
         second{
-            one{"{0} sekundi"}
-            other{"{0} sekundi"}
+            relativeTime{
+                future{
+                    one{"om {0} sekundi"}
+                    other{"om {0} sekundi"}
+                }
+                past{
+                    one{"for {0} sekundi siden"}
+                    other{"for {0} sekundi siden"}
+                }
+            }
         }
         week{
-            one{"{0} sapaatip-akunnera"}
-            other{"{0} sapaatip-akunnera"}
+            relativeTime{
+                future{
+                    one{"om {0} sapaatip-akunnera"}
+                    other{"om {0} sapaatip-akunnera"}
+                }
+                past{
+                    one{"for {0} sapaatip-akunnera siden"}
+                    other{"for {0} sapaatip-akunnera siden"}
+                }
+            }
         }
         year{
-            one{"{0} ukioq"}
-            other{"{0} ukioq"}
+            relativeTime{
+                future{
+                    one{"om {0} ukioq"}
+                    other{"om {0} ukioq"}
+                }
+                past{
+                    one{"for {0} ukioq siden"}
+                    other{"for {0} ukioq siden"}
+                }
+            }
+        }
+    }
+    unitsNarrow{
+        area{
+            acre{
+                one{"{0} ac"}
+                other{"{0} ac"}
+            }
+            square-foot{
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-mile{
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+            }
+        }
+        length{
+            mile{
+                one{"{0} mi"}
+                other{"{0} mi"}
+            }
+            yard{
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
+        }
+        pressure{
+            inch-hg{
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+        }
+        speed{
+            mile-per-hour{
+                one{"{0} mi/h"}
+                other{"{0} mi/h"}
+            }
+        }
+        volume{
+            cubic-mile{
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+        }
+    }
+    unitsShort{
+        area{
+            acre{
+                one{"{0} ac"}
+                other{"{0} ac"}
+            }
+            square-foot{
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-mile{
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+            }
+        }
+        length{
+            mile{
+                one{"{0} mi"}
+                other{"{0} mi"}
+            }
+            yard{
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
+        }
+        pressure{
+            inch-hg{
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+        }
+        speed{
+            mile-per-hour{
+                one{"{0} mi/h"}
+                other{"{0} mi/h"}
+            }
+        }
+        volume{
+            cubic-mile{
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
         }
     }
 }

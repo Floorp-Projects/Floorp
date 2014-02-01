@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fi.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/fi.xml
+ * ICU <specials> source: <path>/common/main/fi.xml
  */
 fi{
     Currencies{
@@ -65,7 +65,7 @@ fi{
         }
         ARL{
             "ARL",
-            "Argentiinan ley-peso (1970-1983)",
+            "Argentiinan ley-peso (1970–1983)",
         }
         ARM{
             "ARM",
@@ -89,7 +89,7 @@ fi{
         }
         AWG{
             "AWG",
-            "Aruban guldeni",
+            "Aruban floriini",
         }
         AZM{
             "AZM",
@@ -361,7 +361,7 @@ fi{
         }
         ESA{
             "ESA",
-            "Espanjan peseta (A-tili)",
+            "Espanjan peseta (A–tili)",
         }
         ESB{
             "ESB",
@@ -661,7 +661,7 @@ fi{
         }
         MKD{
             "MKD",
-            "Makedonian dinaari",
+            "Makedonian denaari",
         }
         MKN{
             "MKN",
@@ -1161,6 +1161,10 @@ fi{
         }
         ZMK{
             "ZMK",
+            "Sambian kwacha (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "Sambian kwacha",
         }
         ZRN{
@@ -1194,8 +1198,8 @@ fi{
             other{"Arabiemiirikuntien dirhamia"}
         }
         AFA{
-            one{"Afganistanin afgaani (1927-2002)"}
-            other{"Afganistanin afgaania (1927-2002)"}
+            one{"Afganistanin afgaani (1927–2002)"}
+            other{"Afganistanin afgaania (1927–2002)"}
         }
         AFN{
             one{"Afganistanin afgaani"}
@@ -1238,8 +1242,8 @@ fi{
             other{"Argentiinan australia"}
         }
         ARL{
-            one{"Argentiinan ley-peso (1970-1983)"}
-            other{"Argentiinan ley-pesoa (1970-1983)"}
+            one{"Argentiinan ley-peso (1970–1983)"}
+            other{"Argentiinan ley-pesoa (1970–1983)"}
         }
         ARM{
             one{"Argentiinan peso (1881–1970)"}
@@ -1262,8 +1266,8 @@ fi{
             other{"Australian dollaria"}
         }
         AWG{
-            one{"Aruban guldeni"}
-            other{"Aruban guldenia"}
+            one{"Aruban floriini"}
+            other{"Aruban floriinia"}
         }
         AZM{
             one{"Azerbaidžanin manat (1993–2006)"}
@@ -1534,8 +1538,8 @@ fi{
             other{"Eritrean nakfaa"}
         }
         ESA{
-            one{"Espanjan peseta (A-tili)"}
-            other{"Espanjan pesetaa (A-tili)"}
+            one{"Espanjan peseta (A–tili)"}
+            other{"Espanjan pesetaa (A–tili)"}
         }
         ESB{
             one{"Espanjan peseta (vaihdettava tili)"}
@@ -1834,8 +1838,8 @@ fi{
             other{"Madagaskarin frangia"}
         }
         MKD{
-            one{"Makedonian dinaari"}
-            other{"Makedonian dinaaria"}
+            one{"Makedonian denaari"}
+            other{"Makedonian denaaria"}
         }
         MKN{
             one{"Makedonian dinaari (1992–1993)"}
@@ -2334,6 +2338,10 @@ fi{
             other{"Etelä-Afrikan randia"}
         }
         ZMK{
+            one{"Sambian kwacha (1968–2012)"}
+            other{"Sambian kwachaa (1968–2012)"}
+        }
+        ZMW{
             one{"Sambian kwacha"}
             other{"Sambian kwachaa"}
         }
@@ -2362,5 +2370,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
 }

@@ -150,10 +150,28 @@ public:
   void RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,
     mozilla::dom::ConstructorEnabled* aConstructorEnabled);
+  template<size_t N>
+  void RegisterDefineDOMInterface(const char16_t (&aKey)[N],
+    mozilla::dom::DefineInterface aDefineDOMInterface,
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
+  {
+    nsLiteralString key(aKey);
+    return RegisterDefineDOMInterface(key, aDefineDOMInterface,
+                                      aConstructorEnabled);
+  }
 
   void RegisterNavigatorDOMConstructor(const nsAFlatString& aName,
     mozilla::dom::ConstructNavigatorProperty aNavConstructor,
     mozilla::dom::ConstructorEnabled* aConstructorEnabled);
+  template<size_t N>
+  void RegisterNavigatorDOMConstructor(const char16_t (&aKey)[N],
+    mozilla::dom::ConstructNavigatorProperty aNavConstructor,
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
+  {
+    nsLiteralString key(aKey);
+    return RegisterNavigatorDOMConstructor(key, aNavConstructor,
+                                           aConstructorEnabled);
+  }
 
   typedef PLDHashOperator
   (* NameEnumerator)(const nsAString& aGlobalName, void* aClosure);

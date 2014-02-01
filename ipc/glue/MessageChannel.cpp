@@ -252,6 +252,13 @@ MessageChannel::Connected() const
     return (ChannelOpening == mChannelState || ChannelConnected == mChannelState);
 }
 
+bool
+MessageChannel::CanSend() const
+{
+    MonitorAutoLock lock(*mMonitor);
+    return Connected();
+}
+
 void
 MessageChannel::Clear()
 {

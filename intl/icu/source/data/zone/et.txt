@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/et.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/et.xml
+ * ICU <specials> source: <path>/common/main/et.xml
  */
 et{
-    Version{"2.0.78.32"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Algiers"{
             ec{"Alžiir"}
@@ -32,6 +32,9 @@ et{
         }
         "America:Curacao"{
             ec{"Curaçao"}
+        }
+        "America:Godthab"{
+            ec{"Nuuk"}
         }
         "America:Havana"{
             ec{"Havanna"}
@@ -71,6 +74,9 @@ et{
         }
         "America:North_Dakota:New_Salem"{
             ec{"New Salem, North Dakota"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
@@ -156,11 +162,11 @@ et{
         "Asia:Tashkent"{
             ec{"Taškent"}
         }
-        "Asia:Tbilisi"{
-            ec{"Thbilisi"}
-        }
         "Asia:Tehran"{
             ec{"Teheran"}
+        }
+        "Asia:Tokyo"{
+            ec{"Tōkyō"}
         }
         "Asia:Yakutsk"{
             ec{"Jakutsk"}
@@ -207,6 +213,9 @@ et{
         "Europe:Copenhagen"{
             ec{"Kopenhaagen"}
         }
+        "Europe:Dublin"{
+            ld{"Iiri suveaeg"}
+        }
         "Europe:Helsinki"{
             ec{"Helsingi"}
         }
@@ -218,6 +227,9 @@ et{
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
+        }
+        "Europe:London"{
+            ld{"Briti suveaeg"}
         }
         "Europe:Moscow"{
             ec{"Moskva"}
@@ -614,14 +626,6 @@ et{
             lg{"Krasnojarski aeg"}
             ls{"Krasnojarski standardaeg"}
         }
-        "meta:Kuybyshev"{
-            ld{"Kuibõševi suveaeg"}
-            lg{"Kuibõševi aeg"}
-            ls{"Kuibõševi standardaeg"}
-        }
-        "meta:Kwajalein"{
-            ls{"Kwajalein'i aeg"}
-        }
         "meta:Kyrgystan"{
             ls{"Kõrgõzstani aeg"}
         }
@@ -768,11 +772,13 @@ et{
             ls{"Sahhalini standardaeg"}
         }
         "meta:Samara"{
-            ld{"Samara suveag"}
+            ld{"Samara suveaeg"}
             lg{"Samara aeg"}
             ls{"Samara standardaeg"}
         }
         "meta:Samoa"{
+            ld{"Samoa suveaeg"}
+            lg{"Samoa aeg"}
             ls{"Samoa standardaeg"}
         }
         "meta:Seychelles"{
@@ -814,11 +820,6 @@ et{
         }
         "meta:Truk"{
             ls{"Chuuki aeg"}
-        }
-        "meta:Turkey"{
-            ld{"Türgi suveaeg"}
-            lg{"Türgi aeg"}
-            ls{"Türgi standardaeg"}
         }
         "meta:Turkmenistan"{
             ld{"Türkmenistani suveaeg"}
@@ -876,10 +877,11 @@ et{
             ls{"Jekaterinburgi standardaeg"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} aeg"}
+        regionFormat{"({0})"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

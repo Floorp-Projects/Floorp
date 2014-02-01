@@ -266,7 +266,7 @@ uldn_keyValueDisplayName(const ULocaleDisplayNames *ldn,
                          int32_t maxResultSize,
                          UErrorCode *pErrorCode);
 
-#ifndef U_HIDE_INTERNAL_API
+#ifndef U_HIDE_DRAFT_API
 /**
 * Returns an instance of LocaleDisplayNames that returns names formatted
 * for the provided locale, using the provided UDisplayContext settings.
@@ -279,9 +279,9 @@ uldn_keyValueDisplayName(const ULocaleDisplayNames *ldn,
 *               a failure status, the function will do nothing; otherwise this will be
 *               updated with any new status from the function. 
 * @return a ULocaleDisplayNames instance 
-* @internal ICU 50 technology preview
+* @draft ICU 51
 */
-U_INTERNAL ULocaleDisplayNames * U_EXPORT2
+U_DRAFT ULocaleDisplayNames * U_EXPORT2
 uldn_openForContext(const char * locale, UDisplayContext *contexts,
                     int32_t length, UErrorCode *pErrorCode);
 
@@ -293,13 +293,13 @@ uldn_openForContext(const char * locale, UDisplayContext *contexts,
 *               a failure status, the function will do nothing; otherwise this will be
 *               updated with any new status from the function. 
 * @return the UDisplayContextValue for the specified type.
-* @internal ICU 50 technology preview
+* @draft ICU 51
 */
-U_INTERNAL UDisplayContext U_EXPORT2
+U_DRAFT UDisplayContext U_EXPORT2
 uldn_getContext(const ULocaleDisplayNames *ldn, UDisplayContextType type,
                 UErrorCode *pErrorCode);
 
-#endif  /* U_HIDE_INTERNAL_API */
+#endif  /* U_HIDE_DRAFT_API */
 
 #endif  /* !UCONFIG_NO_FORMATTING */
 #endif  /* __ULDNAMES_H__ */

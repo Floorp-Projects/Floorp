@@ -1,23 +1,23 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/ps.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/ps.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/ps.xml
+ * ICU <specials> source: <path>/xml/collation/ps.xml
  */
 ps{
-    Version{"2.0.52.7"}
+    Version{"2.0.89.0"}
     collations{
         standard{
             Sequence{
-                " [normalization on ]"
+                "[normalization on][reorder Arab]"
                 "&َ<<ِ<<ُ<<ً<<ٍ<<ٌ"
                 "&[before 1]ا<آ"
-                "&ا<<أ<<*ٲٱ<<إ<<*ٳ<ء"
+                "&ا<<*أٲٱإٳ<ء"
                 "&ت<ټ<<ٹ"
                 "&ج<ځ<<حٔ"
                 "&چ<څ"
@@ -27,12 +27,12 @@ ps{
                 "&ک<<*ڪك"
                 "&ګ<<گ"
                 "&ڼ<<ڻ"
-                "&و<<ؤ<<*ۇۉ"
+                "&و<<*ؤۇۉ"
                 "&ه<<<ۀ<<<هٔ<<*ەہھةۃ"
                 "&ی<<*ىےيېۍ<<یٔ<<<ىٔ<<<ئ"
-                "&'\u00A0'<<'\u200C'<<'\u200D'"
+                "&\u00A0<<\u200C<<\u200D"
             }
-            Version{"22.1.1"}
+            Version{"24"}
         }
     }
 }

@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/am.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/am.xml
+ * ICU <specials> source: <path>/common/main/am.xml
  */
 am{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"አቢጃን"}
@@ -86,6 +86,9 @@ am{
         }
         "Africa:Johannesburg"{
             ec{"ጆሃንስበርግ"}
+        }
+        "Africa:Juba"{
+            ec{"ጁባ"}
         }
         "Africa:Kampala"{
             ec{"ካምፓላ"}
@@ -210,6 +213,9 @@ am{
         "America:Bahia"{
             ec{"ባሂአ"}
         }
+        "America:Bahia_Banderas"{
+            ec{"ባሂያ ባንደራስ"}
+        }
         "America:Barbados"{
             ec{"ባርቤዶስ"}
         }
@@ -269,6 +275,9 @@ am{
         }
         "America:Costa_Rica"{
             ec{"ኮስታሪካ"}
+        }
+        "America:Creston"{
+            ec{"ክረስተን"}
         }
         "America:Cuiaba"{
             ec{"ኩየአባ"}
@@ -384,6 +393,9 @@ am{
         "America:Kentucky:Monticello"{
             ec{"ሞንቲሴሎ, ኪንታኪ"}
         }
+        "America:Kralendijk"{
+            ec{"ክራለንዲይክ"}
+        }
         "America:La_Paz"{
             ec{"ላ ፓዝ"}
         }
@@ -414,6 +426,9 @@ am{
         "America:Martinique"{
             ec{"ማርቲኒክ"}
         }
+        "America:Matamoros"{
+            ec{"ማታሞሮስ"}
+        }
         "America:Mazatlan"{
             ec{"ማዛትላን"}
         }
@@ -425,6 +440,9 @@ am{
         }
         "America:Merida"{
             ec{"ሜሪዳ"}
+        }
+        "America:Metlakatla"{
+            ec{"መትላካትላ"}
         }
         "America:Mexico_City"{
             ec{"ሜክሲኮ ከተማ"}
@@ -460,7 +478,7 @@ am{
             ec{"ኖሜ"}
         }
         "America:Noronha"{
-            ec{"ሎሮንሃ"}
+            ec{"ኖሮኛ"}
         }
         "America:North_Dakota:Beulah"{
             ec{"ቤኡላህ, ሰሜን ዳኮታ"}
@@ -470,6 +488,9 @@ am{
         }
         "America:North_Dakota:New_Salem"{
             ec{"አዲስ ሳሌም, ሰሜን ዳኮታ"}
+        }
+        "America:Ojinaga"{
+            ec{"ኦዪናጋ"}
         }
         "America:Panama"{
             ec{"ፓናማ"}
@@ -513,6 +534,9 @@ am{
         "America:Rio_Branco"{
             ec{"ሪዮ ብራንኮ"}
         }
+        "America:Santa_Isabel"{
+            ec{"ሳንታ ኢዛቤል"}
+        }
         "America:Santarem"{
             ec{"ሳንታሬም"}
         }
@@ -530,6 +554,9 @@ am{
         }
         "America:Shiprock"{
             ec{"ሺፕሮክ"}
+        }
+        "America:Sitka"{
+            ec{"ሲትካ"}
         }
         "America:St_Barthelemy"{
             ec{"ቅድስት ቤርተሎሜ"}
@@ -593,6 +620,9 @@ am{
         }
         "Antarctica:DumontDUrville"{
             ec{"ደሞንት ዲኡርቪል"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"ማከሪ"}
         }
         "Antarctica:Mawson"{
             ec{"ናውሰን"}
@@ -693,6 +723,9 @@ am{
         "Asia:Harbin"{
             ec{"ሃሪቢን"}
         }
+        "Asia:Hebron"{
+            ec{"ኬብሮን"}
+        }
         "Asia:Hong_Kong"{
             ec{"ሆንግ ኮንግ"}
         }
@@ -726,6 +759,9 @@ am{
         "Asia:Katmandu"{
             ec{"ካትማንዱ"}
         }
+        "Asia:Khandyga"{
+            ec{"ካንዲጋ"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"ክራስኖያርስክ"}
         }
@@ -755,6 +791,9 @@ am{
         }
         "Asia:Nicosia"{
             ec{"ኒኮሲአ"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"ኖቮኩትዝኔክ"}
         }
         "Asia:Novosibirsk"{
             ec{"ኖቮሲቢሪስክ"}
@@ -827,6 +866,9 @@ am{
         }
         "Asia:Urumqi"{
             ec{"ኡሩምኪ"}
+        }
+        "Asia:Ust-Nera"{
+            ec{"ኡስት-ኔራ"}
         }
         "Asia:Vientiane"{
             ec{"ቬንቲአን"}
@@ -909,51 +951,6 @@ am{
         "Australia:Sydney"{
             ec{"ሲድኒ"}
         }
-        "Etc:GMT"{
-            ec{"ጂ ኤም ቲ"}
-        }
-        "Etc:GMT-1"{
-            ec{"ጂ ኤም ቲ-1"}
-        }
-        "Etc:GMT-10"{
-            ec{"ጂ ኤም ቲ-10"}
-        }
-        "Etc:GMT-11"{
-            ec{"ጂ ኤም ቲ-11"}
-        }
-        "Etc:GMT-12"{
-            ec{"ጂ ኤም ቲ-12"}
-        }
-        "Etc:GMT-13"{
-            ec{"ጂ ኤም ቲ-13"}
-        }
-        "Etc:GMT-14"{
-            ec{"ጂ ኤም ቲ-14"}
-        }
-        "Etc:GMT-2"{
-            ec{"ጂ ኤም ቲ-2"}
-        }
-        "Etc:GMT-3"{
-            ec{"ጂ ኤም ቲ-3"}
-        }
-        "Etc:GMT-4"{
-            ec{"ጂ ኤም ቲ-4"}
-        }
-        "Etc:GMT-5"{
-            ec{"ጂ ኤም ቲ-5"}
-        }
-        "Etc:GMT-6"{
-            ec{"ጂ ኤም ቲ-6"}
-        }
-        "Etc:GMT-7"{
-            ec{"ጂ ኤም ቲ-7"}
-        }
-        "Etc:GMT-8"{
-            ec{"ጂ ኤም ቲ-8"}
-        }
-        "Etc:GMT-9"{
-            ec{"ጂ ኤም ቲ-9"}
-        }
         "Etc:Unknown"{
             ec{"ያልታወቀ ከተማ"}
         }
@@ -983,6 +980,9 @@ am{
         }
         "Europe:Budapest"{
             ec{"ቡዳፔስት"}
+        }
+        "Europe:Busingen"{
+            ec{"ቡሲንገን"}
         }
         "Europe:Chisinau"{
             ec{"ቺስናኡ"}
@@ -1753,6 +1753,8 @@ am{
             ls{"የሳማራ መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:Samoa"{
+            ld{"የሳሞዋ የበጋ ሰዓት"}
+            lg{"የሳሞዋ ሰዓት"}
             ls{"የሳሞዋ መደበኛ ሰዓት"}
         }
         "meta:Seychelles"{
@@ -1851,10 +1853,11 @@ am{
             ls{"የየካተሪንበርግ መደበኛ ሰዓት አቆጣጠር"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} ሰዓት({0})"}
         gmtFormat{"ጂ ኤም ቲ{0}"}
         gmtZeroFormat{"ጂ ኤም ቲ"}
         hourFormat{"+HHmm;-HHmm"}
         regionFormat{"{0} ጊዜ"}
+        regionFormatDaylight{"{0} የቀን ብርሃን ሰዓት"}
+        regionFormatStandard{"{0} መደበኛ ሰዓት"}
     }
 }

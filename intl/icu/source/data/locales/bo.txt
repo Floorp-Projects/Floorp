@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/bo.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/bo.xml
+ * ICU <specials> source: <path>/common/main/bo.xml
  */
 bo{
     AuxExemplarCharacters{"[ༀ]"}
@@ -20,7 +20,7 @@ bo{
         "\u0FAD \u0FBA ཞ \u0FAE ཟ \u0FAF འ \u0FB0 ཡ \u0FB1 \u0FBB ར ཪ \u0FB2 \u0FBC ལ"
         " \u0FB3 ཤ \u0FB4 ཥ \u0FB5 ས \u0FB6 ཧ \u0FB7 ཨ \u0FB8 \u0F72 {\u0F71\u0F72} "
         "\u0F80 {\u0F71\u0F80} \u0F74 {\u0F71\u0F74} {\u0FB2\u0F80} \u0F77 {\u0FB3"
-        "\u0F80} \u0F79-\u0F7D \u0F84]"
+        "\u0F80} \u0F79 \u0F7A \u0F7B \u0F7C \u0F7D \u0F84]"
     }
     ExemplarCharactersIndex{"[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ]"}
     LocaleScript{
@@ -44,8 +44,29 @@ bo{
             }
         }
     }
-    Version{"2.0.74.85"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "G y MMMM d, EEEE",
+                "G སྦྱི་ལོ་y MMMMའི་ཙེས་dད",
+                "G y ལོ་འི་MMMཙེས་d",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                yMMMMd{"སྦྱི་ལོ་y MMMMའི་ཙེས་dད"}
+                yMMMd{"y ལོ་འི་MMMཙེས་d"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "སྔ་དྲོ་",
@@ -56,10 +77,10 @@ bo{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, y MMMM dd",
+                "y MMMM d, EEEE",
                 "སྦྱི་ལོ་y MMMMའི་ཙེས་dད",
                 "y ལོ་འི་MMMཙེས་d",
-                "yyyy-MM-dd",
+                "y-MM-dd",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -136,36 +157,6 @@ bo{
                     "སྤྱི་ལོ།",
                 }
             }
-            fields{
-                day{
-                    dn{"ཉིན།"}
-                    relative{
-                        "-1"{"ཁས་ས་"}
-                        "-2"{"ཁས་ཉིན་ཀ་"}
-                        "0"{"དེ་རིང་"}
-                        "1"{"སང་ཉིན་"}
-                        "2"{"གནངས་ཉིན་ཀ་"}
-                    }
-                }
-                hour{
-                    dn{"ཆུ་ཙོ་"}
-                }
-                minute{
-                    dn{"སྐར་མ།"}
-                }
-                month{
-                    dn{"ཟླ་བ་"}
-                }
-                second{
-                    dn{"སྐར་ཆ།"}
-                }
-                year{
-                    dn{"ལོ།"}
-                }
-                zone{
-                    dn{"དུས་ཚོད།"}
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -198,6 +189,36 @@ bo{
                     }
                 }
             }
+        }
+    }
+    fields{
+        day{
+            dn{"ཉིན།"}
+            relative{
+                "-1"{"ཁས་ས་"}
+                "-2"{"ཁས་ཉིན་ཀ་"}
+                "0"{"དེ་རིང་"}
+                "1"{"སང་ཉིན་"}
+                "2"{"གནངས་ཉིན་ཀ་"}
+            }
+        }
+        hour{
+            dn{"ཆུ་ཙོ་"}
+        }
+        minute{
+            dn{"སྐར་མ།"}
+        }
+        month{
+            dn{"ཟླ་བ་"}
+        }
+        second{
+            dn{"སྐར་ཆ།"}
+        }
+        year{
+            dn{"ལོ།"}
+        }
+        zone{
+            dn{"དུས་ཚོད།"}
         }
     }
 }

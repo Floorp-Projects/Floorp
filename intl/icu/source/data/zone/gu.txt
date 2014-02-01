@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/gu.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/gu.xml
+ * ICU <specials> source: <path>/common/main/gu.xml
  */
 gu{
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"આબિદ્જાન"}
@@ -86,6 +86,9 @@ gu{
         }
         "Africa:Johannesburg"{
             ec{"જોહાન્સબર્ગ"}
+        }
+        "Africa:Juba"{
+            ec{"જુબા"}
         }
         "Africa:Kampala"{
             ec{"કમ્પાલા"}
@@ -210,6 +213,9 @@ gu{
         "America:Bahia"{
             ec{"બાહિયા"}
         }
+        "America:Bahia_Banderas"{
+            ec{"બહિયા બાંદ્રાસ"}
+        }
         "America:Barbados"{
             ec{"બારબાડોસ"}
         }
@@ -270,6 +276,9 @@ gu{
         "America:Costa_Rica"{
             ec{"કોસ્ટા રિકા"}
         }
+        "America:Creston"{
+            ec{"ક્રેસ્ટન"}
+        }
         "America:Cuiaba"{
             ec{"ક્યુએબા"}
         }
@@ -310,7 +319,7 @@ gu{
             ec{"ગ્લેસ બે"}
         }
         "America:Godthab"{
-            ec{"ગોડ્થાબ"}
+            ec{"નૂક"}
         }
         "America:Goose_Bay"{
             ec{"ગૂસ બે"}
@@ -384,6 +393,9 @@ gu{
         "America:Kentucky:Monticello"{
             ec{"મોંટીસેલો,કેન્ટુકી"}
         }
+        "America:Kralendijk"{
+            ec{"ક્રાલેન્ડિક"}
+        }
         "America:La_Paz"{
             ec{"લા પેઝ"}
         }
@@ -414,6 +426,9 @@ gu{
         "America:Martinique"{
             ec{"માર્ટીનીક"}
         }
+        "America:Matamoros"{
+            ec{"માતામોરોસ"}
+        }
         "America:Mazatlan"{
             ec{"મઝત્લાન"}
         }
@@ -425,6 +440,9 @@ gu{
         }
         "America:Merida"{
             ec{"મેરિદા"}
+        }
+        "America:Metlakatla"{
+            ec{"મેટ્લાકાટ્લા"}
         }
         "America:Mexico_City"{
             ec{"મેક્સિકો સિટી"}
@@ -471,6 +489,9 @@ gu{
         "America:North_Dakota:New_Salem"{
             ec{"નવું સેલમ,ઉત્તર ડેકોટા"}
         }
+        "America:Ojinaga"{
+            ec{"ઓજિનાગા"}
+        }
         "America:Panama"{
             ec{"પનામા"}
         }
@@ -513,6 +534,9 @@ gu{
         "America:Rio_Branco"{
             ec{"રિયો બ્રાંકો"}
         }
+        "America:Santa_Isabel"{
+            ec{"સાંતા ઇસાબેલ"}
+        }
         "America:Santarem"{
             ec{"સેન્તારેમ"}
         }
@@ -530,6 +554,9 @@ gu{
         }
         "America:Shiprock"{
             ec{"શિપરોક"}
+        }
+        "America:Sitka"{
+            ec{"સિટ્કા"}
         }
         "America:St_Barthelemy"{
             ec{"સેંટ બાર્થેલેમી"}
@@ -593,6 +620,9 @@ gu{
         }
         "Antarctica:DumontDUrville"{
             ec{"દુમોન્ત દી'ઉર્વિલ"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"મેક્વેરી"}
         }
         "Antarctica:Mawson"{
             ec{"મોસન"}
@@ -693,6 +723,9 @@ gu{
         "Asia:Harbin"{
             ec{"હારબિન"}
         }
+        "Asia:Hebron"{
+            ec{"હેબ્રોન"}
+        }
         "Asia:Hong_Kong"{
             ec{"હોંગકોંગ"}
         }
@@ -726,6 +759,9 @@ gu{
         "Asia:Katmandu"{
             ec{"કથમન્ડુ"}
         }
+        "Asia:Khandyga"{
+            ec{"ખંડિગા"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"ક્રિસ્નોયાર્સ્ક"}
         }
@@ -755,6 +791,9 @@ gu{
         }
         "Asia:Nicosia"{
             ec{"નિકોસિયા"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"નોવોકુઝ્નેત્સ્ક"}
         }
         "Asia:Novosibirsk"{
             ec{"નોવોસીર્બિર્સ્ક"}
@@ -827,6 +866,9 @@ gu{
         }
         "Asia:Urumqi"{
             ec{"ઉરુમ્કી"}
+        }
+        "Asia:Ust-Nera"{
+            ec{"ઉસ્ત-નેરા"}
         }
         "Asia:Vientiane"{
             ec{"વિયેનટિયેન"}
@@ -939,6 +981,9 @@ gu{
         "Europe:Budapest"{
             ec{"બુડાપેસ્ટ"}
         }
+        "Europe:Busingen"{
+            ec{"બિઝેન્ગન"}
+        }
         "Europe:Chisinau"{
             ec{"ચિસીનાઉ"}
         }
@@ -947,6 +992,7 @@ gu{
         }
         "Europe:Dublin"{
             ec{"ડબલિન"}
+            ld{"આઇરિશ ગ્રીષ્મ સમય"}
         }
         "Europe:Gibraltar"{
             ec{"જીબ્રાલ્ટર"}
@@ -980,6 +1026,7 @@ gu{
         }
         "Europe:London"{
             ec{"લંડન"}
+            ld{"બ્રિટિશ ગ્રીષ્મ સમય"}
         }
         "Europe:Luxembourg"{
             ec{"લક્ઝમબર્ગ"}
@@ -1246,20 +1293,10 @@ gu{
             lg{"પશ્ચિમ આફ્રિકા સમય"}
             ls{"પશ્ચિમ આફ્રિકા માનક સમય"}
         }
-        "meta:Aktyubinsk"{
-            ld{"અક્તયુબિન્સ્ક ગ્રીષ્મ સમય"}
-            lg{"અક્તયુબિન્સ્ક સમય"}
-            ls{"અક્તયુબિન્સ્ક પ્રમાણભૂત સમય"}
-        }
         "meta:Alaska"{
             ld{"અલાસ્કા દિવસ સમય"}
             lg{"અલાસ્કા સમય"}
             ls{"અલાસ્કા પ્રમાણભૂત સમય"}
-        }
-        "meta:Alaska_Hawaii"{
-            ld{"અલાસ્કા-હવાઇ દિવસ સમય"}
-            lg{"અલાસ્કા-હવાઇ સમય"}
-            ls{"અલાસ્કા-હવાઇ પ્રમાણભૂત સમય"}
         }
         "meta:Almaty"{
             ld{"અલ્માટી ગ્રીષ્મ સમય"}
@@ -1272,24 +1309,24 @@ gu{
             ls{"એમેઝોન માનક સમય"}
         }
         "meta:America_Central"{
-            ld{"મધ્ય દિવસ સમય"}
-            lg{"મધ્ય સમય"}
-            ls{"મધ્ય પ્રમાણભૂત સમય"}
+            ld{"ઉત્તર અમેરિકન મધ્ય દિવસ સમય"}
+            lg{"ઉત્તર અમેરિકન મધ્ય સમય"}
+            ls{"ઉત્તર અમેરિકન મધ્ય પ્રમાણભૂત સમય"}
         }
         "meta:America_Eastern"{
-            ld{"પૂર્વી દિવસ સમય"}
-            lg{"પૂર્વી સમય"}
-            ls{"પૂર્વી પ્રમાણભૂત સમય"}
+            ld{"ઉત્તર અમેરિકન પૂર્વી દિવસ સમય"}
+            lg{"ઉત્તર અમેરિકન પૂર્વી સમય"}
+            ls{"ઉત્તર અમેરિકન પૂર્વી પ્રમાણભૂત સમય"}
         }
         "meta:America_Mountain"{
-            ld{"માઉન્ટન દિવસ સમય"}
-            lg{"માઉન્ટન સમય"}
-            ls{"માઉન્ટન પ્રમાણભૂત સમય"}
+            ld{"ઉત્તર અમેરિકન માઉન્ટન દિવસ સમય"}
+            lg{"ઉત્તર અમેરિકન માઉન્ટન સમય"}
+            ls{"ઉત્તર અમેરિકન માઉન્ટન પ્રમાણભૂત સમય"}
         }
         "meta:America_Pacific"{
-            ld{"પેસિફિક દિવસ સમય"}
-            lg{"પેસિફિક સમય"}
-            ls{"પેસિફિક પ્રમાણભૂત સમય"}
+            ld{"ઉત્તર અમેરિકન પેસિફિક દિવસ સમય"}
+            lg{"ઉત્તર અમેરિકન પેસિફિક સમય"}
+            ls{"ઉત્તર અમેરિકન પેસિફિક પ્રમાણભૂત સમય"}
         }
         "meta:Anadyr"{
             ld{"અનાડિર ગ્રીષ્મ સમય"}
@@ -1326,11 +1363,6 @@ gu{
             lg{"આર્મેનિયા સમય"}
             ls{"આર્મેનિયા માનક સમય"}
         }
-        "meta:Ashkhabad"{
-            ld{"અશ્ખાબાદ ગ્રીષ્મ સમય"}
-            lg{"અશ્ખાબાદ સમય"}
-            ls{"અશ્ખાબાદ પ્રમાણભૂત સમય"}
-        }
         "meta:Atlantic"{
             ld{"અટલાન્ટિક દિવસ સમય"}
             lg{"અટલાન્ટિક સમય"}
@@ -1366,31 +1398,16 @@ gu{
             lg{"એઝોર્સ સમય"}
             ls{"એઝોર્સ માનક સમય"}
         }
-        "meta:Baku"{
-            ld{"બકુ ગ્રીષ્મ સમય"}
-            lg{"બકુ સમય"}
-            ls{"બકુ પ્રમાણભૂત સમય"}
-        }
         "meta:Bangladesh"{
             ld{"બાંગ્લાદેશ ગ્રીષ્મ સમય"}
             lg{"બાંગ્લાદેશ સમય"}
             ls{"બાંગ્લાદેશ માનક સમય"}
-        }
-        "meta:Bering"{
-            ld{"બેરિંગ દિવસ સમય"}
-            lg{"બેરિંગ સમય"}
-            ls{"બેરિંગ પ્રમાણભૂત સમય"}
         }
         "meta:Bhutan"{
             ls{"ભૂટાન સમય"}
         }
         "meta:Bolivia"{
             ls{"બોલિવિયા સમય"}
-        }
-        "meta:Borneo"{
-            ld{"બોર્નિયા ગ્રીષ્મ સમય"}
-            lg{"બોર્નિયા સમય"}
-            ls{"બોર્નિયા પ્રમાણભૂત સમય"}
         }
         "meta:Brasilia"{
             ld{"બ્રાઝિલિયા ગ્રીષ્મ સમય"}
@@ -1408,9 +1425,6 @@ gu{
         "meta:Chamorro"{
             ls{"કેમોરો માનક સમય"}
         }
-        "meta:Changbai"{
-            ls{"ચેગબાઇ સમય"}
-        }
         "meta:Chatham"{
             ld{"ચેતહામ દિવસ સમય"}
             lg{"ચેતહામ સમય"}
@@ -1427,9 +1441,9 @@ gu{
             ls{"ચીન માનક સમય"}
         }
         "meta:Choibalsan"{
-            ld{"ચોઇબાલ્સેન ગ્રીષ્મ સમય"}
+            ld{"ચોઇબાલ્સન ગ્રીષ્મ સમય"}
             lg{"ચોઇબાલ્સન સમય"}
-            ls{"ચોઇબાલ્સાન માનક સમય"}
+            ls{"ચોઇબાલ્સન માનક સમય"}
         }
         "meta:Christmas"{
             ls{"ક્રિસમસ આઇલેન્ડ સમય"}
@@ -1452,22 +1466,11 @@ gu{
             lg{"ક્યૂબા સમય"}
             ls{"ક્યૂબા માનક સમય"}
         }
-        "meta:Dacca"{
-            ls{"ડાકા સમય"}
-        }
         "meta:Davis"{
             ls{"ડેવિસ સમય"}
         }
         "meta:DumontDUrville"{
             ls{"ડ્યુમોન્ટ-ડી'ઉર્વિલ સમય"}
-        }
-        "meta:Dushanbe"{
-            ld{"દુશાન્બે ગ્રીષ્મ સમય"}
-            lg{"દુશાન્બે ગ્સમય"}
-            ls{"દુશાન્બે પ્રમાણભૂત ગ્સમય"}
-        }
-        "meta:Dutch_Guiana"{
-            ls{"ડચ ગયાના સમય"}
         }
         "meta:East_Timor"{
             ls{"પૂર્વ તિમોર સમય"}
@@ -1511,11 +1514,6 @@ gu{
         "meta:French_Southern"{
             ls{"ફ્રેન્ચ સાઉધર્ન અને એન્ટાર્કટિક સમય"}
         }
-        "meta:Frunze"{
-            ld{"ફ્રુન્ઝ ગ્રીષ્મ સમય"}
-            lg{"ફ્રુન્ઝ સમય"}
-            ls{"ફ્રુન્ઝ પ્રમાણભૂત સમય"}
-        }
         "meta:GMT"{
             ls{"ગ્રીનવિચ મધ્યમ સમય"}
         }
@@ -1532,11 +1530,6 @@ gu{
         }
         "meta:Gilbert_Islands"{
             ls{"ગિલબર્ટ આઇલેન્ડ સમય"}
-        }
-        "meta:Greenland_Central"{
-            ld{"મધ્ય ગ્રિનલેન્ડ ગ્રીષ્મ સમય"}
-            lg{"મધ્ય ગ્રિનલેન્ડ સમય"}
-            ls{"મધ્ય ગ્રિનલેન્ડ પ્રમાણભૂત સમય"}
         }
         "meta:Greenland_Eastern"{
             ld{"પૂર્વ ગ્રીનલેન્ડ ગ્રીષ્મ સમય"}
@@ -1616,12 +1609,6 @@ gu{
             lg{"પેટ્રોપેવલોવ્સ્ક-કામચતસ્કી સમય"}
             ls{"પેટ્રોપેવલોવ્સ્ક-કામચતસ્કી પ્રમાણભૂત સમય"}
         }
-        "meta:Karachi"{
-            ls{"કરાચી સમય"}
-        }
-        "meta:Kashgar"{
-            ls{"કશગાર સમય"}
-        }
         "meta:Kazakhstan_Eastern"{
             ls{"પૂર્વ કઝાકિસ્તાન સમય"}
         }
@@ -1641,14 +1628,6 @@ gu{
             lg{"ક્રેસ્નોયાર્સ્કી સમય"}
             ls{"ક્રસ્નોયાર્સ્ક માનક સમય"}
         }
-        "meta:Kuybyshev"{
-            ld{"કુયબાઇશેવ ગ્રીષ્મ સમય"}
-            lg{"કુયબાઇશેવ સમય"}
-            ls{"કુયબાઇશેવ પ્રમાણભૂત સમય"}
-        }
-        "meta:Kwajalein"{
-            ls{"ક્વાજાલીન સમય"}
-        }
         "meta:Kyrgystan"{
             ls{"કિર્ગિઝતાન સમય"}
         }
@@ -1657,9 +1636,6 @@ gu{
         }
         "meta:Line_Islands"{
             ls{"લાઇન આઇલેન્ડ્સ સમય"}
-        }
-        "meta:Long_Shu"{
-            ls{"લોંગ-શુ સમય"}
         }
         "meta:Lord_Howe"{
             ld{"લોર્ડ હોવ દિવસ સમય"}
@@ -1678,9 +1654,6 @@ gu{
             ld{"મગદન ગ્રીષ્મ સમય"}
             lg{"મેગાડન સમય"}
             ls{"માગાદાન માનક સમય"}
-        }
-        "meta:Malaya"{
-            ls{"મલય સમય"}
         }
         "meta:Malaysia"{
             ls{"મલેશિયા સમય"}
@@ -1821,21 +1794,13 @@ gu{
             lg{"સમારા સમય"}
             ls{"સમારા પ્રમાણભૂત સમય"}
         }
-        "meta:Samarkand"{
-            ld{"સમરકંદ ગ્રીષ્મ સમય"}
-            lg{"સમરકંદ સમય"}
-            ls{"સમરકંદ પ્રમાણભૂત સમય"}
-        }
         "meta:Samoa"{
+            ld{"સમોઆ ગ્રીષ્મ સમય"}
+            lg{"સમોઆ સમય"}
             ls{"સમોઆ માનક સમય"}
         }
         "meta:Seychelles"{
             ls{"સેશલ્સ સમય"}
-        }
-        "meta:Shevchenko"{
-            ld{"શેવચેન્કો ગ્રીષ્મ સમય"}
-            lg{"શેવચેન્કો સમય"}
-            ls{"શેવચેન્કો પ્રમાણભૂત સમય"}
         }
         "meta:Singapore"{
             ls{"સિંગાપુર માનક સમય"}
@@ -1848,11 +1813,6 @@ gu{
         }
         "meta:Suriname"{
             ls{"સૂરીનામ સમય"}
-        }
-        "meta:Sverdlovsk"{
-            ld{"સ્વર્ડલોવ્સ્ક ગ્રીષ્મ સમય"}
-            lg{"સ્વર્ડલોવ્સ્ક સમય"}
-            ls{"સ્વર્ડલોવ્સ્ક પ્રમાણભૂત સમય"}
         }
         "meta:Syowa"{
             ls{"સ્યોવા સમય"}
@@ -1868,16 +1828,6 @@ gu{
         "meta:Tajikistan"{
             ls{"તાજીકિસ્તાન સમય"}
         }
-        "meta:Tashkent"{
-            ld{"તાશકેન્ટ ગ્રીષ્મ સમય"}
-            lg{"તાશકેન્ટ સમય"}
-            ls{"તાશકેન્ટ પ્રમાણભૂત સમય"}
-        }
-        "meta:Tbilisi"{
-            ld{"ત્બિલિસી ગ્રીષ્મ સમય"}
-            lg{"ત્બિલિસી સમય"}
-            ls{"ત્બિલિસી પ્રમાણભૂત સમય"}
-        }
         "meta:Tokelau"{
             ls{"ટોકલાઉ સમય"}
         }
@@ -1889,11 +1839,6 @@ gu{
         "meta:Truk"{
             ls{"ચુઉક સમય"}
         }
-        "meta:Turkey"{
-            ld{"ટર્કી ગ્રીષ્મ સમય"}
-            lg{"ટર્કી સમય"}
-            ls{"ટર્કી પ્રમાણભૂત સમય"}
-        }
         "meta:Turkmenistan"{
             ld{"તુર્કમેનિસ્તાન ગ્રીષ્મ સમય"}
             lg{"તુર્કમેનિસ્તાન સમય"}
@@ -1902,18 +1847,10 @@ gu{
         "meta:Tuvalu"{
             ls{"ટવાલૂ સમય"}
         }
-        "meta:Uralsk"{
-            ld{"ઉરાલ'સ્ક ગ્રીષ્મ સમય"}
-            lg{"ઉરાલ'સ્ક સમય"}
-            ls{"ઉરાલ'સ્ક પ્રમાણભૂત સમય"}
-        }
         "meta:Uruguay"{
             ld{"ઉરૂગ્વે ગ્રીષ્મ સમય"}
             lg{"ઉરૂગ્વે સમય"}
             ls{"ઉરૂગ્વે માનક સમય"}
-        }
-        "meta:Urumqi"{
-            ls{"ઉરુમ્કી સમય"}
         }
         "meta:Uzbekistan"{
             ld{"ઉઝ્બેકિસ્તાન ગ્રીષ્મ સમય"}
@@ -1957,21 +1894,12 @@ gu{
             lg{"યેકાતેરિંબર્ગ સમય"}
             ls{"યેકાટેરીન્બર્ગ માનક સમય"}
         }
-        "meta:Yerevan"{
-            ld{"યેરેવેન ગ્રીષ્મ સમય"}
-            lg{"યેરેવેન સમય"}
-            ls{"યેરેવેન પ્રમાણભૂત સમય"}
-        }
-        "meta:Yukon"{
-            ld{"યકોન દિવસ સમય"}
-            lg{"યકોન સમય"}
-            ls{"યકોન પ્રમાણભૂત સમય"}
-        }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} સમય ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} સમય"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }
