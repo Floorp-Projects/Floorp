@@ -10,8 +10,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
@@ -64,7 +64,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     Intent intent = null;
     if (FxAccountAgeLockoutHelper.isLockedOut(SystemClock.elapsedRealtime())) {
       intent = new Intent(this, FxAccountCreateAccountNotAllowedActivity.class);
-    } else if (FxAccountAuthenticator.firefoxAccountsExist(this)) {
+    } else if (FirefoxAccounts.firefoxAccountsExist(this)) {
       intent = new Intent(this, FxAccountStatusActivity.class);
     }
     if (intent != null) {
@@ -85,15 +85,21 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
    */
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    Logger.debug(LOG_TAG, "onActivityResult: " + requestCode);
+    Logger.debug(LOG_TAG, "onActivityResult: " + requestCode + ", " + resultCode);
     if (requestCode != CHILD_REQUEST_CODE) {
       super.onActivityResult(requestCode, resultCode, data);
       return;
     }
+
+    this.setResult(requestCode, data);
     if (data != null) {
       this.setAccountAuthenticatorResult(data.getExtras());
+
+      // We want to drop ourselves off the back stack if the user successfully
+      // created or signed in to an account. We can easily determine this by
+      // checking for the presence of response data.
+      this.finish();
     }
-    this.setResult(requestCode, data);
   }
 
   protected void linkifyOldFirefoxLink() {

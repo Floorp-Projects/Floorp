@@ -563,6 +563,7 @@ sync_java_files = [
     'fxa/authenticator/FxAccountAuthenticatorService.java',
     'fxa/authenticator/FxAccountLoginDelegate.java',
     'fxa/authenticator/FxAccountLoginException.java',
+    'fxa/FirefoxAccounts.java',
     'fxa/login/BaseRequestDelegate.java',
     'fxa/login/Cohabiting.java',
     'fxa/login/Doghouse.java',

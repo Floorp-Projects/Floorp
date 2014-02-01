@@ -8,9 +8,11 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.View;
+import android.view.View.OnClickListener;
 
 /**
  * Activity which displays "Account verified" success screen.
@@ -19,8 +21,6 @@ public class FxAccountVerifiedAccountActivity extends FxAccountAbstractActivity 
   private static final String LOG_TAG = FxAccountVerifiedAccountActivity.class.getSimpleName();
 
   protected AndroidFxAccount fxAccount;
-
-  protected TextView emailText;
 
   public FxAccountVerifiedAccountActivity() {
     super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST);
@@ -35,8 +35,6 @@ public class FxAccountVerifiedAccountActivity extends FxAccountAbstractActivity 
 
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_account_verified);
-
-    emailText = (TextView) ensureFindViewById(null, R.id.email, "email text");
   }
 
   @Override
@@ -56,6 +54,13 @@ public class FxAccountVerifiedAccountActivity extends FxAccountAbstractActivity 
       finish();
       return;
     }
-    emailText.setText(fxAccount.getEmail());
+
+    View backToBrowsingButton = ensureFindViewById(null, R.id.button, "back to browsing button");
+    backToBrowsingButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        ActivityUtils.openURLInFennec(v.getContext(), null);
+      }
+    });
   }
 }

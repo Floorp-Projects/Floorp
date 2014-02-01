@@ -7,7 +7,10 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
+import org.mozilla.gecko.home.PanelLayout.PanelView;
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -16,9 +19,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+
+import java.util.EnumSet;
 
 public class PanelListView extends HomeListView
-                           implements DatasetBacked {
+                           implements DatasetBacked, PanelView {
 
     private static final String LOGTAG = "GeckoPanelListView";
 
@@ -30,6 +36,7 @@ public class PanelListView extends HomeListView
         mViewConfig = viewConfig;
         mAdapter = new PanelListAdapter(context);
         setAdapter(mAdapter);
+        setOnItemClickListener(new PanelListItemClickListener());
     }
 
     @Override
@@ -52,6 +59,21 @@ public class PanelListView extends HomeListView
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             return LayoutInflater.from(parent.getContext()).inflate(R.layout.panel_list_row, parent, false);
+        }
+    }
+
+    private class PanelListItemClickListener implements AdapterView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Cursor cursor = mAdapter.getCursor();
+            if (cursor == null || !cursor.moveToPosition(position)) {
+                throw new IllegalStateException("Couldn't move cursor to position " + position);
+            }
+
+            int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
+            final String url = cursor.getString(urlIndex);
+
+            mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.OPEN_WITH_INTENT));
         }
     }
 }
