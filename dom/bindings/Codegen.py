@@ -216,6 +216,28 @@ static const DOMJSClass Class = {
        enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
+class CGDOMProxyJSClass(CGThing):
+    """
+    Generate a DOMJSClass for a given proxy descriptor
+    """
+    def __init__(self, descriptor):
+        CGThing.__init__(self)
+        self.descriptor = descriptor
+    def declare(self):
+        return ""
+    def define(self):
+        return """
+static const DOMJSClass Class = {
+  PROXY_CLASS_DEF("%s",
+                  0, /* extra slots */
+                  JSCLASS_IS_DOMJSCLASS,
+                  nullptr, /* call */
+                  nullptr  /* construct */),
+%s
+};
+""" % (self.descriptor.interface.identifier.name,
+       CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
+
 def PrototypeIDAndDepth(descriptor):
     prototypeID = "prototypes::id::"
     if descriptor.interface.hasInterfacePrototypeObject():
@@ -1927,10 +1949,7 @@ if (!unforgeableHolder) {
             interfaceCache = "nullptr"
 
         if self.descriptor.concrete:
-            if self.descriptor.proxy:
-                domClass = "&Class"
-            else:
-                domClass = "&Class.mClass"
+            domClass = "&Class.mClass"
         else:
             domClass = "nullptr"
 
@@ -2149,8 +2168,10 @@ def CreateBindingJSObject(descriptor, properties, parent):
     objDecl = "  JS::Rooted<JSObject*> obj(aCx);\n"
     if descriptor.proxy:
         create = """  JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
+  js::ProxyOptions options;
+  options.setClass(&Class.mBase);
   obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                       proxyPrivateVal, proto, %s);
+                       proxyPrivateVal, proto, %s, options);
   if (!obj) {
     return nullptr;
   }
@@ -8093,23 +8114,6 @@ class CGProxyUnwrap(CGAbstractMethod):
   MOZ_ASSERT(IsProxy(obj));
   return static_cast<%s*>(js::GetProxyPrivate(obj).toPrivate());""" % (self.descriptor.nativeType)
 
-class CGDOMJSProxyHandlerDOMClass(CGThing):
-    def __init__(self, descriptor):
-        CGThing.__init__(self)
-        self.descriptor = descriptor
-    def declare(self):
-        return ""
-    def define(self):
-        return """
-static const DOMClass Class = """ + DOMClass(self.descriptor) + """;
-
-"""
-
-class CGDOMJSProxyHandler_CGDOMJSProxyHandler(ClassConstructor):
-    def __init__(self):
-        ClassConstructor.__init__(self, [], inline=True, visibility="private",
-                                  baseConstructors=["mozilla::dom::DOMProxyHandler(Class)"])
-
 class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
@@ -8655,7 +8659,6 @@ class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
                 descriptor.supportsNamedProperties())
-        constructors = [CGDOMJSProxyHandler_CGDOMJSProxyHandler()]
         methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor),
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
@@ -8673,7 +8676,6 @@ class CGDOMJSProxyHandler(CGClass):
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
-                         constructors=constructors,
                          methods=methods)
 
 class CGDOMJSProxyHandlerDeclarer(CGThing):
@@ -8909,8 +8911,8 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
                 cgThings.append(CGProxyIsProxy(descriptor))
                 cgThings.append(CGProxyUnwrap(descriptor))
-                cgThings.append(CGDOMJSProxyHandlerDOMClass(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDefiner(handlerThing))
+                cgThings.append(CGDOMProxyJSClass(descriptor))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
