@@ -58,10 +58,10 @@ function sha256(str) {
 function promptForRelink(acctName) {
   let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
   let continueLabel = sb.GetStringFromName("continue.label");
-  let title = sb.GetStringFromName("relink.verify.title");
-  let description = sb.formatStringFromName("relink.verify.description",
+  let title = sb.GetStringFromName("relinkVerify.title");
+  let description = sb.formatStringFromName("relinkVerify.description",
                                             [acctName], 1);
-  let body = sb.GetStringFromName("relink.verify.heading") +
+  let body = sb.GetStringFromName("relinkVerify.heading") +
              "\n\n" + description;
   let ps = Services.prompt;
   let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
@@ -76,7 +76,7 @@ function promptForRelink(acctName) {
 let wrapper = {
   iframe: null,
 
-  init: function () {
+  init: function (url=null) {
     let weave = Cc["@mozilla.org/weave/service;1"]
                   .getService(Ci.nsISupports)
                   .wrappedJSObject;
@@ -92,7 +92,7 @@ let wrapper = {
     iframe.addEventListener("load", this);
 
     try {
-      iframe.src = fxAccounts.getAccountsURI();
+      iframe.src = url || fxAccounts.getAccountsURI();
     } catch (e) {
       error("Couldn't init Firefox Account wrapper: " + e.message);
     }
@@ -236,11 +236,14 @@ function openPrefs() {
 }
 
 function init() {
-  let signinQuery = window.location.href.match(/signin=true$/);
-
-  if (signinQuery) {
+  if (window.location.href.contains("action=signin")) {
     show("remote");
     wrapper.init();
+  } else if (window.location.href.contains("action=reauth")) {
+    fxAccounts.promiseAccountsForceSigninURI().then(url => {
+      show("remote");
+      wrapper.init(url);
+    });
   } else {
     // Check if we have a local account
     fxAccounts.getSignedInUser().then(user => {

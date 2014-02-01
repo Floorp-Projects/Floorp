@@ -66,24 +66,6 @@ WeaveService.prototype = {
   },
 
   get fxAccountsEnabled() {
-    // first check if Firefox accounts is available at all.  This is so we can
-    // get this landed without forcing Fxa to be used (and require nightly
-    // testers to manually set this pref)
-    // Once we decide we want Fxa to be available, we just remove this block
-    // (although a fly in this ointment is tests - it might be that we must
-    // just set this as a pref with a default of true)
-    let fxAccountsAvailable;
-    try {
-      fxAccountsAvailable = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
-    } catch (_) {
-    }
-    if (!fxAccountsAvailable) {
-      // Currently we don't support toggling this pref after initialization, so
-      // inject the pref value as a regular boolean.
-      delete this.fxAccountsEnabled;
-      this.fxAccountsEnabled = false;
-      return false;
-    }
     // work out what identity manager to use.  This is stored in a preference;
     // if the preference exists, we trust it.
     let fxAccountsEnabled;

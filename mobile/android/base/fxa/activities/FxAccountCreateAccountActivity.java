@@ -23,7 +23,6 @@ import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.FxAccountCreateAccountTask;
-import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -31,6 +30,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -64,15 +67,6 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     super.onCreate(icicle);
     setContentView(R.layout.fxaccount_create_account);
 
-    TextView policyView = (TextView) ensureFindViewById(null, R.id.policy, "policy links");
-    final String linkTerms = getString(R.string.fxaccount_link_tos);
-    final String linkPrivacy = getString(R.string.fxaccount_link_pn);
-    final String linkedTOS = "<a href=\"" + linkTerms + "\">" + getString(R.string.fxaccount_policy_linktos) + "</a>";
-    final String linkedPN = "<a href=\"" + linkPrivacy + "\">" + getString(R.string.fxaccount_policy_linkprivacy) + "</a>";
-    policyView.setText(getString(R.string.fxaccount_create_account_policy_text, linkedTOS, linkedPN));
-    final boolean underlineLinks = true;
-    ActivityUtils.linkifyTextView(policyView, underlineLinks);
-
     emailEdit = (EditText) ensureFindViewById(null, R.id.email, "email edit");
     passwordEdit = (EditText) ensureFindViewById(null, R.id.password, "password edit");
     showPasswordButton = (Button) ensureFindViewById(null, R.id.show_password, "show password button");
@@ -88,19 +82,16 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     addListeners();
     updateButtonState();
     createShowPasswordButton();
+    linkifyPolicy();
     createChooseCheckBox();
 
     View signInInsteadLink = ensureFindViewById(null, R.id.sign_in_instead_link, "sign in instead link");
     signInInsteadLink.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        Intent intent = new Intent(FxAccountCreateAccountActivity.this, FxAccountSignInActivity.class);
-        intent.putExtra("email", emailEdit.getText().toString());
-        intent.putExtra("password", passwordEdit.getText().toString());
-        // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-        // the soft keyboard not being shown for the started activity. Why, Android, why?
-        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivityForResult(intent, CHILD_REQUEST_CODE);
+        final String email = emailEdit.getText().toString();
+        final String password = passwordEdit.getText().toString();
+        doSigninInstead(email, password);
       }
     });
 
@@ -110,6 +101,52 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
       emailEdit.setText(bundle.getString("email"));
       passwordEdit.setText(bundle.getString("password"));
     }
+  }
+
+  protected void doSigninInstead(final String email, final String password) {
+    Intent intent = new Intent(this, FxAccountSignInActivity.class);
+    if (email != null) {
+      intent.putExtra("email", email);
+    }
+    if (password != null) {
+      intent.putExtra("password", password);
+    }
+    // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+    // the soft keyboard not being shown for the started activity. Why, Android, why?
+    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    startActivityForResult(intent, CHILD_REQUEST_CODE);
+  }
+
+  @Override
+  protected void showClientRemoteException(final FxAccountClientRemoteException e) {
+    if (!e.isAccountAlreadyExists()) {
+      super.showClientRemoteException(e);
+      return;
+    }
+
+    // This horrible bit of special-casing is because we want this error message to
+    // contain a clickable, extra chunk of text, but we don't want to pollute
+    // the exception class with Android specifics.
+    final String clickablePart = getString(R.string.fxaccount_sign_in_button_label);
+    final String message = getString(e.getErrorMessageStringResource(), clickablePart);
+    final int clickableStart = message.lastIndexOf(clickablePart);
+    final int clickableEnd = clickableStart + clickablePart.length();
+
+    final Spannable span = Spannable.Factory.getInstance().newSpannable(message);
+    span.setSpan(new ClickableSpan() {
+      @Override
+      public void onClick(View widget) {
+        // Pass through the email address that already existed.
+        String email = e.body.getString("email");
+        if (email == null) {
+            email = emailEdit.getText().toString();
+        }
+        final String password = passwordEdit.getText().toString();
+        doSigninInstead(email, password);
+      }
+    }, clickableStart, clickableEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    remoteErrorTextView.setMovementMethod(LinkMovementMethod.getInstance());
+    remoteErrorTextView.setText(span);
   }
 
   /**
@@ -127,14 +164,24 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     this.finish();
   }
 
-  protected void createYearEdit() {
+  /**
+   * Return years to display in picker.
+   *
+   * @return 1990 or earlier, 1991, 1992, up to five years before current year.
+   *         (So, if it is currently 2014, up to 2009.)
+   */
+  protected String[] getYearItems() {
     int year = Calendar.getInstance().get(Calendar.YEAR);
     LinkedList<String> years = new LinkedList<String>();
-    for (int i = year - 5; i >= 1951; i--) {
+    years.add(getResources().getString(R.string.fxaccount_create_account_1990_or_earlier));
+    for (int i = 1991; i <= year - 5; i++) {
       years.add(Integer.toString(i));
     }
-    years.add(getResources().getString(R.string.fxaccount_create_account_1950_or_earlier));
-    yearItems = years.toArray(new String[0]);
+    return years.toArray(new String[0]);
+  }
+
+  protected void createYearEdit() {
+    yearItems = getYearItems();
 
     yearEdit.setOnClickListener(new OnClickListener() {
       @Override

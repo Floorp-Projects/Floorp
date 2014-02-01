@@ -136,11 +136,19 @@ add_test(function test_resourceAuthenticatorSkew() {
   do_check_eq(fxa.internal.now(), now);
   do_check_eq(fxa.internal.localtimeOffsetMsec, localtimeOffsetMsec);
 
+  do_check_eq(fxa.now(), now);
+  do_check_eq(fxa.localtimeOffsetMsec, localtimeOffsetMsec);
+
   // Mocks within mocks...
   configureFxAccountIdentity(browseridManager, identityConfig);
   browseridManager._fxaService = fxa;
+
   do_check_eq(browseridManager._fxaService.internal.now(), now);
   do_check_eq(browseridManager._fxaService.internal.localtimeOffsetMsec,
+      localtimeOffsetMsec);
+
+  do_check_eq(browseridManager._fxaService.now(), now);
+  do_check_eq(browseridManager._fxaService.localtimeOffsetMsec,
       localtimeOffsetMsec);
 
   let request = new SyncStorageRequest("https://example.net/i/like/pie/");

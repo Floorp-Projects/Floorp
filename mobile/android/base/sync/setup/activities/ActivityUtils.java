@@ -48,11 +48,22 @@ public class ActivityUtils {
     return charKey;
   }
 
+  /**
+   * Open a URL in Fennec, if one is provided; or just open Fennec.
+   *
+   * @param context Android context.
+   * @param url to visit, or null to just open Fennec.
+   */
   public static void openURLInFennec(final Context context, final String url) {
-    final Intent intent = new Intent(Intent.ACTION_VIEW);
+    Intent intent;
+    if (url != null) {
+      intent = new Intent(Intent.ACTION_VIEW);
+      intent.setData(Uri.parse(url));
+    } else {
+      intent = new Intent(Intent.ACTION_MAIN);
+    }
     intent.setClassName(GlobalConstants.BROWSER_INTENT_PACKAGE, GlobalConstants.BROWSER_INTENT_CLASS);
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    intent.setData(Uri.parse(url));
     context.startActivity(intent);
   }
 
@@ -115,12 +126,12 @@ public class ActivityUtils {
     SpannableString replaced = new SpannableString(spanned);
     URLSpan[] spans = replaced.getSpans(0, replaced.length(), URLSpan.class);
     for (URLSpan span : spans) {
-        final int start = replaced.getSpanStart(span);
-        final int end = replaced.getSpanEnd(span);
-        final int flags = replaced.getSpanFlags(span);
+      final int start = replaced.getSpanStart(span);
+      final int end = replaced.getSpanEnd(span);
+      final int flags = replaced.getSpanFlags(span);
 
-        replaced.removeSpan(span);
-        replaced.setSpan(new FennecClickableSpan(span.getURL(), underlining), start, end, flags);
+      replaced.removeSpan(span);
+      replaced.setSpan(new FennecClickableSpan(span.getURL(), underlining), start, end, flags);
     }
 
     textView.setText(replaced);

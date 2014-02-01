@@ -4,9 +4,7 @@
   font-weight: 400;
   src: local('Fira Sans'),
        local('FiraSans'),
-       url('fonts/firasans-regular.woff') format('woff'),
-       /*url('/fonts/latin/firasans-regular.ttf') format('truetype'),*/
-       /*url('/fonts/latin/firasans-regular.svg#Fira Sans') format('svg');*/
+       url('fonts/firasans-regular.woff') format('woff');
 }
 @font-face {
   font-family: 'Fira Sans';
@@ -14,9 +12,7 @@
   font-weight: 300;
   src: local('Fira Sans Light'),
        local('FiraSansLight'),
-       url('fonts/firasans-light.woff') format('woff'),
-       /*url('/fonts/latin/firasans-light.ttf') format('truetype'),*/
-       /*url('/fonts/latin/firasans-light.svg#Fira Sans') format('svg');*/
+       url('fonts/firasans-light.woff') format('woff');
 }
 @font-face {
   font-family: 'Clear Sans';
@@ -24,8 +20,6 @@
   font-weight: 400;
   src: local('Clear Sans'),
        local('ClearSans'),
-       url('fonts/clearsans-regular.woff') format('woff'),
-       /*url('/fonts/latin/clearsans-regular.ttf') format('truetype'),*/
-       /*url('/fonts/latin/clearsans-regular.svg#Clear Sans') format('svg');*/
+       url('fonts/clearsans-regular.woff') format('woff');
 }
 

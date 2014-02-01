@@ -106,7 +106,7 @@ public class DynamicPanel extends HomeFragment {
         switch(mPanelConfig.getLayoutType()) {
             case FRAME:
                 final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
-                mLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler);
+                mLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler, mUrlOpenListener);
                 break;
 
             default:

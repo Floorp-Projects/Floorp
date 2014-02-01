@@ -40,7 +40,10 @@ Box::BoxSizeChecker::~BoxSizeChecker()
   if ((cur_size - ori_size) != box_size) {
     MOZ_ASSERT(false);
   }
-  mControl->mLastWrittenBoxPos = mControl->mOutBuffer.Length();
+
+  // Keeps the last box size position, it is for counting the sample offset when
+  // generating moof.
+  mControl->mLastWrittenBoxPos += box_size;
   MOZ_COUNT_DTOR(BoxSizeChecker);
 }
 
@@ -85,8 +88,9 @@ MediaDataBox::Write()
 
       uint32_t len = frames.Length();
       for (uint32_t i = 0; i < len; i++) {
-        mControl->Write((uint8_t*)frames.ElementAt(i)->GetFrameData().Elements(),
-            frames.ElementAt(i)->GetFrameData().Length());
+        nsTArray<uint8_t> frame_buffer;
+        frames.ElementAt(i)->SwapOutFrameData(frame_buffer);
+        mControl->WriteAVData(frame_buffer);
       }
     }
   }
