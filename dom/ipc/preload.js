@@ -25,7 +25,6 @@ const BrowserElementIsPreloaded = true;
   Cu.import("resource://gre/modules/Geometry.jsm");
   Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
   Cu.import("resource://gre/modules/NetUtil.jsm");
-  Cu.import("resource://gre/modules/ObjectWrapper.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/SettingsDB.jsm");
   Cu.import("resource://gre/modules/SettingsQueue.jsm");
