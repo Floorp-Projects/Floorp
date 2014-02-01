@@ -205,7 +205,8 @@ static const DOMJSClass Class = {
     nullptr,               /* hasInstance */
     nullptr,               /* construct */
     %s, /* trace */
-    JSCLASS_NO_INTERNAL_MEMBERS
+    JS_NULL_CLASS_EXT,
+    JS_NULL_OBJECT_OPS
   },
 %s
 };
@@ -1054,9 +1055,9 @@ def DeferredFinalizeSmartPtr(descriptor):
         smartPtr = 'nsRefPtr'
     return smartPtr
 
-def finalizeHook(descriptor, hookName, context):
+def finalizeHook(descriptor, hookName, freeOp):
     if descriptor.customFinalize:
-        finalize = "self->%s(%s);" % (hookName, context)
+        finalize = "self->%s(CastToJSFreeOp(%s));" % (hookName, freeOp)
     else:
         finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
         if descriptor.wrapperCache:
@@ -1064,7 +1065,7 @@ def finalizeHook(descriptor, hookName, context):
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
         if descriptor.interface.getExtendedAttribute("Global"):
-            finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
+            finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
         finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
             (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
@@ -1074,7 +1075,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
     A hook for finalize, used to release our native object.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'obj')]
+        args = [Argument('js::FreeOp*', 'fop'), Argument('JSObject*', 'obj')]
         CGAbstractClassHook.__init__(self, descriptor, FINALIZE_HOOK_NAME,
                                      'void', args)
 
@@ -2161,7 +2162,7 @@ def CreateBindingJSObject(descriptor, properties, parent):
 
 """
     else:
-        create = """  obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
+        create = """  obj = JS_NewObject(aCx, Class.ToJSClass(), proto, %s);
   if (!obj) {
     return nullptr;
   }
@@ -2408,7 +2409,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
   obj = CreateGlobal<%s, GetProtoObject>(aCx,
                                          aObject,
                                          aCache,
-                                         &Class.mBase,
+                                         Class.ToJSClass(),
                                          aOptions,
                                          aPrincipal);
 
