@@ -1304,8 +1304,8 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
     //    progress on our compression task.
     const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
     if (length < HUGE_SCRIPT &&
-        cx->cpuCount() > 1 &&
-        cx->workerThreadCount() >= 2)
+        WorkerThreadState().cpuCount > 1 &&
+        WorkerThreadState().threadCount >= 2)
     {
         task->ss = this;
         task->chars = src;
