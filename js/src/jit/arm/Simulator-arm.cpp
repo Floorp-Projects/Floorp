@@ -677,7 +677,9 @@ ArmDebugger::debug()
                               "%" XSTR(ARG_SIZE) "s "
                               "%" XSTR(ARG_SIZE) "s",
                               cmd, arg1, arg2);
-            if ((strcmp(cmd, "si") == 0) || (strcmp(cmd, "stepi") == 0)) {
+            if (argc < 0) {
+                continue;
+            } else if ((strcmp(cmd, "si") == 0) || (strcmp(cmd, "stepi") == 0)) {
                 sim_->instructionDecode(reinterpret_cast<SimInstruction *>(sim_->get_pc()));
             } else if ((strcmp(cmd, "skip") == 0)) {
                 sim_->set_pc(sim_->get_pc() + 4);
