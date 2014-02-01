@@ -256,8 +256,12 @@ let gSyncPane = {
     window.close();
   },
 
+  signIn: function() {
+    this.openContentInBrowser("about:accounts?action=signin");
+  },
+
   reSignIn: function() {
-    this.openContentInBrowser("about:accounts");
+    this.openContentInBrowser("about:accounts?action=reauth");
   },
 
   manageFirefoxAccount: function() {
@@ -290,17 +294,19 @@ let gSyncPane = {
       // We use a string bundle shared with aboutAccounts.
       let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
       let continueLabel = sb.GetStringFromName("continue.label");
-      let title = sb.GetStringFromName("unlink.verify.title");
-      let body = sb.GetStringFromName("unlink.verify.heading") +
+      let title = sb.GetStringFromName("disconnect.verify.title");
+      let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+      let brandShortName = brandBundle.GetStringFromName("brandShortName");
+      let body = sb.GetStringFromName("disconnect.verify.heading") +
                  "\n\n" +
-                 sb.GetStringFromName("unlink.verify.description");
+                 sb.formatStringFromName("disconnect.verify.description",
+                                         [brandShortName], 1);
       let ps = Services.prompt;
       let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
                         (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
                         ps.BUTTON_POS_1_DEFAULT;
       let pressed = Services.prompt.confirmEx(window, title, body, buttonFlags,
-                                         continueLabel, null, null, null,
-                                         {});
+                                              continueLabel, null, null, null, {});
       if (pressed != 0) { // 0 is the "continue" button
         return;
       }
