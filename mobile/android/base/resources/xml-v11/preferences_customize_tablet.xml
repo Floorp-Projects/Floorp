@@ -16,17 +16,24 @@
                                                   android:title="@string/pref_sync"
                                                   android:persistent="false" />
 
+    <PreferenceScreen android:title="@string/pref_category_home"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+            <extra android:name="resource"
+                   android:value="preferences_home" />
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_search"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_search"/>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_home"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
-            <extra android:name="resource"
-                   android:value="preferences_home" />
-    </PreferenceScreen>
+    <ListPreference android:key="android.not_a_preference.restoreSession3"
+                    android:title="@string/pref_restore"
+                    android:defaultValue="quit"
+                    android:entries="@array/pref_restore_entries"
+                    android:entryValues="@array/pref_restore_values"
+                    android:persistent="true" />
 
     <org.mozilla.gecko.preferences.AndroidImportPreference
             android:key="android.not_a_preference.import_android"
@@ -37,13 +44,6 @@
             android:positiveButtonText="@string/bookmarkhistory_button_import"
             android:negativeButtonText="@string/button_cancel"
             android:persistent="false" />
-
-    <ListPreference android:key="android.not_a_preference.restoreSession3"
-                    android:title="@string/pref_restore"
-                    android:defaultValue="quit"
-                    android:entries="@array/pref_restore_entries"
-                    android:entryValues="@array/pref_restore_values"
-                    android:persistent="true" />
 
     <ListPreference android:key="app.update.autodownload"
                     android:title="@string/pref_update_autodownload"
