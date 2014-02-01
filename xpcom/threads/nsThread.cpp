@@ -572,7 +572,9 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
     return NS_ERROR_NOT_SAME_THREAD;
 
-  if (MAIN_THREAD == mIsMainThread && mayWait && !ShuttingDown())
+  bool reallyWait = mayWait && (mRunningEvent > 0 || !ShuttingDown());
+
+  if (MAIN_THREAD == mIsMainThread && reallyWait)
     HangMonitor::Suspend();
 
   // Fire a memory pressure notification, if we're the main thread and one is
@@ -602,15 +604,14 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   bool notifyMainThreadObserver =
     (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
   if (notifyMainThreadObserver) 
-   sMainThreadObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
-                                           mRunningEvent);
+   sMainThreadObserver->OnProcessNextEvent(this, reallyWait, mRunningEvent);
 
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs)
-    obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
+    obs->OnProcessNextEvent(this, reallyWait, mRunningEvent);
 
   NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent,
-                         (this, mayWait && !ShuttingDown(), mRunningEvent));
+                         (this, reallyWait, mRunningEvent));
 
   ++mRunningEvent;
 
@@ -626,7 +627,7 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
     // If we are shutting down, then do not wait for new events.
     nsCOMPtr<nsIRunnable> event;
-    mEvents->GetEvent(mayWait && !ShuttingDown(), getter_AddRefs(event));
+    mEvents->GetEvent(reallyWait, getter_AddRefs(event));
 
     *result = (event.get() != nullptr);
 
