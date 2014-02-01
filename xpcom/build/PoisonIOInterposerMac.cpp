@@ -21,15 +21,16 @@
 #include "plstr.h"
 #include "prio.h"
 
-#include <vector>
 #include <algorithm>
-#include <string.h>
+#include <vector>
 
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <aio.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 
 namespace {
 
@@ -54,47 +55,65 @@ bool IsIPCWrite(int fd, const struct stat &buf);
 class MacIOAutoObservation : public IOInterposeObserver::Observation
 {
 public:
-  MacIOAutoObservation(IOInterposeObserver::Operation aOp,
-                       const char* aReference, int aFd)
-    : mShouldObserve(sIsEnabled && IOInterposer::IsObservedOperation(aOp) &&
-                     !IsDebugFile(aFd))
+  MacIOAutoObservation(IOInterposeObserver::Operation aOp, int aFd)
+    : IOInterposeObserver::Observation(aOp, sReference, sIsEnabled &&
+                                       !IsDebugFile(aFd))
+    , mFd(aFd)
+    , mHasQueriedFilename(false)
+    , mFilename(nullptr)
   {
-    if (mShouldObserve) {
-      mOperation = aOp;
-      mReference = aReference;
-      mStart = TimeStamp::Now();
-    }
   }
 
-  MacIOAutoObservation(IOInterposeObserver::Operation aOp,
-                       const char* aReference, int aFd, const void *aBuf,
-                       size_t aCount)
-    : mShouldObserve(sIsEnabled && IOInterposer::IsObservedOperation(aOp) &&
-                     !IsDebugFile(aFd))
+  MacIOAutoObservation(IOInterposeObserver::Operation aOp, int aFd,
+                       const void *aBuf, size_t aCount)
+    : IOInterposeObserver::Observation(aOp, sReference, sIsEnabled &&
+                                       !IsDebugFile(aFd) &&
+                                       IsValidWrite(aFd, aBuf, aCount))
+    , mFd(aFd)
+    , mHasQueriedFilename(false)
+    , mFilename(nullptr)
   {
-    if (mShouldObserve) {
-      mShouldObserve = IsValidWrite(aFd, aBuf, aCount);
-      if (mShouldObserve) {
-        mOperation = aOp;
-        mReference = aReference;
-        mStart = TimeStamp::Now();
-      }
-    }
   }
+
+  // Custom implementation of IOInterposeObserver::Observation::Filename
+  const char16_t* Filename() MOZ_OVERRIDE;
 
   ~MacIOAutoObservation()
   {
-    if (mShouldObserve) {
-      mEnd = TimeStamp::Now();
-
-      // Report this observation
-      IOInterposer::Report(*this);
+    Report();
+    if (mFilename) {
+      NS_Free(mFilename);
+      mFilename = nullptr;
     }
   }
 
 private:
-  bool                mShouldObserve;
+  int                 mFd;
+  bool                mHasQueriedFilename;
+  char16_t*           mFilename;
+  static const char*  sReference;
 };
+
+const char* MacIOAutoObservation::sReference = "PoisonIOInterposer";
+
+// Get filename for this observation
+const char16_t* MacIOAutoObservation::Filename()
+{
+  // If mHasQueriedFilename is true, then we already have it
+  if (mHasQueriedFilename) {
+    return mFilename;
+  }
+  char filename[MAXPATHLEN];
+  if (fcntl(mFd, F_GETPATH, filename) != -1) {
+    mFilename = UTF8ToNewUnicode(nsDependentCString(filename));
+  } else {
+    mFilename = nullptr;
+  }
+  mHasQueriedFilename = true;
+
+  // Return filename
+  return mFilename;
+}
 
 /****************************** Write Validation ******************************/
 
@@ -194,9 +213,7 @@ typedef ssize_t (*aio_write_t)(struct aiocb *aiocbp);
 ssize_t wrap_aio_write(struct aiocb *aiocbp);
 FuncData aio_write_data = { 0, (void*) wrap_aio_write, (void*) aio_write };
 ssize_t wrap_aio_write(struct aiocb *aiocbp) {
-  const char* ref = "aio_write";
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, ref,
-                             aiocbp->aio_fildes);
+  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, aiocbp->aio_fildes);
 
   aio_write_t old_write = (aio_write_t) aio_write_data.Buffer;
   return old_write(aiocbp);
@@ -207,8 +224,7 @@ ssize_t wrap_aio_write(struct aiocb *aiocbp) {
 typedef ssize_t (*pwrite_t)(int fd, const void *buf, size_t nbyte, off_t offset);
 template<FuncData &foo>
 ssize_t wrap_pwrite_temp(int fd, const void *buf, size_t nbyte, off_t offset) {
-  const char* ref = "pwrite_*";
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, ref, fd);
+  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, fd);
   pwrite_t old_write = (pwrite_t) foo.Buffer;
   return old_write(fd, buf, nbyte, offset);
 }
@@ -229,9 +245,7 @@ DEFINE_PWRITE_DATA(pwrite_NOCANCEL, "pwrite$NOCANCEL");
 typedef ssize_t (*writev_t)(int fd, const struct iovec *iov, int iovcnt);
 template<FuncData &foo>
 ssize_t wrap_writev_temp(int fd, const struct iovec *iov, int iovcnt) {
-  const char* ref = "pwrite_*";
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, ref, fd, nullptr,
-                             iovcnt);
+  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, fd, nullptr, iovcnt);
   writev_t old_write = (writev_t) foo.Buffer;
   return old_write(fd, iov, iovcnt);
 }
@@ -251,9 +265,7 @@ DEFINE_WRITEV_DATA(writev_NOCANCEL, "writev$NOCANCEL");
 typedef ssize_t (*write_t)(int fd, const void *buf, size_t count);
 template<FuncData &foo>
 ssize_t wrap_write_temp(int fd, const void *buf, size_t count) {
-  const char* ref = "pwrite_*";
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, ref, fd, buf,
-                             count);
+  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, fd, buf, count);
   write_t old_write = (write_t) foo.Buffer;
   return old_write(fd, buf, count);
 }
