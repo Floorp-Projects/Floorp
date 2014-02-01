@@ -117,10 +117,12 @@ ISOMediaWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
   // audio/video frames. When CSD data is ready, it is sufficient to generate a
   // moov data. If encoder doesn't send CSD yet, muxer needs to wait before
   // generating anything.
-  if (mType & Audio_Track && !mAudioFragmentBuffer->HasCSD()) {
+  if (mType & Audio_Track && (!mAudioFragmentBuffer ||
+                              !mAudioFragmentBuffer->HasCSD())) {
     return NS_OK;
   }
-  if (mType & Video_Track && !mVideoFragmentBuffer->HasCSD()) {
+  if (mType & Video_Track && (!mVideoFragmentBuffer ||
+                              !mVideoFragmentBuffer->HasCSD())) {
     return NS_OK;
   }
 
@@ -193,8 +195,7 @@ ISOMediaWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
       mIsWritingComplete = true;
     }
     mBlobReady = false;
-    aOutputBufs->AppendElement();
-    return mControl->GetBuf(aOutputBufs->LastElement());
+    return mControl->GetBufs(aOutputBufs);
   }
   return NS_OK;
 }
