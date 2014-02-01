@@ -68,6 +68,26 @@ InternalMethods = function(mock) {
 InternalMethods.prototype = {
 
   /**
+   * Return the current time in milliseconds as an integer.  Allows tests to
+   * manipulate the date to simulate certificate expiration.
+   */
+  now: function() {
+    return this.fxAccountsClient.now();
+  },
+
+  /**
+   * Return clock offset in milliseconds, as reported by the fxAccountsClient.
+   * This can be overridden for testing.
+   *
+   * The offset is the number of milliseconds that must be added to the client
+   * clock to make it equal to the server clock.  For example, if the client is
+   * five minutes ahead of the server, the localtimeOffsetMsec will be -300000.
+   */
+  get localtimeOffsetMsec() {
+    return this.fxAccountsClient.localtimeOffsetMsec;
+  },
+
+  /**
    * Ask the server whether the user's email has been verified
    */
   checkEmailStatus: function checkEmailStatus(sessionToken) {
@@ -206,9 +226,13 @@ InternalMethods.prototype = {
     log.debug("getAssertionFromCert");
     let payload = {};
     let d = Promise.defer();
+    let options = {
+      localtimeOffsetMsec: internal.localtimeOffsetMsec,
+      now: internal.now()
+    };
     // "audience" should look like "http://123done.org".
     // The generated assertion will expire in two minutes.
-    jwcrypto.generateAssertion(cert, keyPair, audience, function(err, signed) {
+    jwcrypto.generateAssertion(cert, keyPair, audience, options, (err, signed) => {
       if (err) {
         log.error("getAssertionFromCert: " + err);
         d.reject(err);
@@ -228,7 +252,7 @@ InternalMethods.prototype = {
       return Promise.resolve(this.cert.cert);
     }
     // else get our cert signed
-    let willBeValidUntil = this.now() + CERT_LIFETIME;
+    let willBeValidUntil = internal.now() + CERT_LIFETIME;
     return this.getCertificateSigned(data.sessionToken,
                                      keyPair.serializedPublicKey,
                                      CERT_LIFETIME)
@@ -255,7 +279,7 @@ InternalMethods.prototype = {
       return Promise.resolve(this.keyPair.keyPair);
     }
     // Otherwse, create a keypair and set validity limit.
-    let willBeValidUntil = this.now() + KEY_LIFETIME;
+    let willBeValidUntil = internal.now() + KEY_LIFETIME;
     let d = Promise.defer();
     jwcrypto.generateKeyPair("DS160", (err, kp) => {
       if (err) {

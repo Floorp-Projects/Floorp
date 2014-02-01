@@ -90,5 +90,6 @@
 
   <color name="home_last_tab_bar_bg">#FFF5F7F9</color>
 
+  <color name="panel_grid_item_image_background">#D1D9E1</color>
 </resources>
 

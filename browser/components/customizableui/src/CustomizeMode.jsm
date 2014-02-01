@@ -174,6 +174,13 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.open = true;
       window.PanelUI.beginBatchUpdate();
 
+      // The menu panel is lazy, and registers itself when the popup shows. We
+      // need to force the menu panel to register itself, or else customization
+      // is really not going to work. We pass "true" to ensureRegistered to
+      // indicate that we're handling calling startBatchUpdate and
+      // endBatchUpdate.
+      yield window.PanelUI.ensureReady(true);
+
       // Hide the palette before starting the transition for increased perf.
       this.visiblePalette.hidden = true;
 
@@ -199,13 +206,6 @@ CustomizeMode.prototype = {
 
       // Let everybody in this window know that we're about to customize.
       this.dispatchToolboxEvent("customizationstarting");
-
-      // The menu panel is lazy, and registers itself when the popup shows. We
-      // need to force the menu panel to register itself, or else customization
-      // is really not going to work. We pass "true" to ensureRegistered to
-      // indicate that we're handling calling startBatchUpdate and
-      // endBatchUpdate.
-      yield window.PanelUI.ensureReady(true);
 
       this._mainViewContext = mainView.getAttribute("context");
       if (this._mainViewContext) {
@@ -427,26 +427,30 @@ CustomizeMode.prototype = {
    */
   _doTransition: function(aEntering) {
     let deferred = Promise.defer();
-    let deck = this.document.getElementById("tab-view-deck");
+    let deck = this.document.getElementById("content-deck");
 
     let customizeTransitionEnd = function(aEvent) {
       if (aEvent != "timedout" &&
-          (aEvent.originalTarget != deck || aEvent.propertyName != "padding-bottom")) {
+          (aEvent.originalTarget != deck || aEvent.propertyName != "margin-left")) {
         return;
       }
       this.window.clearTimeout(catchAllTimeout);
-      deck.removeEventListener("transitionend", customizeTransitionEnd);
+      // Bug 962677: We let the event loop breathe for before we do the final
+      // stage of the transition to improve perceived performance.
+      this.window.setTimeout(function () {
+        deck.removeEventListener("transitionend", customizeTransitionEnd);
 
-      if (!aEntering) {
-        this.document.documentElement.removeAttribute("customize-exiting");
-        this.document.documentElement.removeAttribute("customizing");
-      } else {
-        this.document.documentElement.setAttribute("customize-entered", true);
-        this.document.documentElement.removeAttribute("customize-entering");
-      }
-      this.dispatchToolboxEvent("customization-transitionend", aEntering);
+        if (!aEntering) {
+          this.document.documentElement.removeAttribute("customize-exiting");
+          this.document.documentElement.removeAttribute("customizing");
+        } else {
+          this.document.documentElement.setAttribute("customize-entered", true);
+          this.document.documentElement.removeAttribute("customize-entering");
+        }
+        this.dispatchToolboxEvent("customization-transitionend", aEntering);
 
-      deferred.resolve();
+        deferred.resolve();
+      }.bind(this), 0);
     }.bind(this);
     deck.addEventListener("transitionend", customizeTransitionEnd);
 

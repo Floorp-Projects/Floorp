@@ -6,7 +6,9 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TwoLinePageRow;
@@ -46,7 +48,7 @@ public class MostRecentPanel extends HomeFragment {
     private MostRecentAdapter mAdapter;
 
     // The view shown by the fragment.
-    private ListView mList;
+    private HomeListView mList;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
@@ -90,7 +92,7 @@ public class MostRecentPanel extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        mList = (ListView) view.findViewById(R.id.list);
+        mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_MOST_RECENT);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -105,6 +107,25 @@ public class MostRecentPanel extends HomeFragment {
             }
         });
 
+        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
+                info.display = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
+                info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+                final int bookmarkIdCol = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
+                if (cursor.isNull(bookmarkIdCol)) {
+                    // If this is a combined cursor, we may get a history item without a
+                    // bookmark, in which case the bookmarks ID column value will be null.
+                    info.bookmarkId =  -1;
+                } else {
+                    info.bookmarkId = cursor.getInt(bookmarkIdCol);
+                }
+                return info;
+            }
+        });
         registerForContextMenu(mList);
     }
 

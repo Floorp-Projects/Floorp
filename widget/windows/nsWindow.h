@@ -572,6 +572,10 @@ protected:
   // icon has been created on the taskbar.
   bool                  mHasTaskbarIconBeenCreated;
 
+  // Indicates that mouse events should be ignored and pass through to the
+  // window below. This is currently only used for popups.
+  bool                  mMouseTransparent;
+
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
