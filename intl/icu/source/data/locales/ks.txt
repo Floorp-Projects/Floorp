@@ -1,15 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ks.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ks.xml
+ * ICU <specials> source: <path>/common/main/ks.xml
  */
 ks{
+    AuxExemplarCharacters{"[\u200E\u200F]"}
     ExemplarCharacters{
         "[\u06EA\u06ED \u064E \u064F \u0650 \u0654 \u0655 \u0656 \u0657 \u065A \u065B"
         " ء آ أ ٲ ؤ ا ٮ ب پ ت ث ٹ ج چ ح خ د ذ ڈ ر ز ڑ ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن"
@@ -33,27 +34,27 @@ ks{
                 group{","}
                 infinity{"?"}
                 list{";"}
-                minusSign{"-"}
+                minusSign{"‎-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
+                plusSign{"‎+"}
             }
         }
         native{"arabext"}
     }
-    Version{"2.0.78.55"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, MMMM d, yyyy",
-                "MMMM d, yyyy",
-                "MMM d, yyyy",
-                "M/d/yy",
+                "EEEE, MMMM d, Gy",
+                "MMMM d, Gy",
+                "MMM d, Gy",
+                "M/d/Gy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -62,6 +63,10 @@ ks{
             }
             availableFormats{
                 GGGGyMMMMEEEEdd{"EEEE,dd MMMM GGGGy"}
+                Gy{"Gy"}
+                GyMMM{"MMM Gy"}
+                GyMMMEd{"EEE, MMM d, Gy"}
+                GyMMMd{"MMM d, Gy"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -75,12 +80,59 @@ ks{
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
-                y{"yyyy"}
-                yM{"M/yyyy"}
-                yMEd{"EEE, M/d/yyyy"}
-                yMMM{"MMM yyyy"}
-                yMMMEd{"EEE, MMM d, yyyy"}
-                yMMMM{"MMMM yyyy"}
+                y{"Gy"}
+                yyyy{"Gy"}
+                yyyyM{"M/Gy"}
+                yyyyMEd{"EEE, M/d/Gy"}
+                yyyyMMM{"MMM Gy"}
+                yyyyMMMEd{"EEE, MMM d, Gy"}
+                yyyyMMMM{"MMMM Gy"}
+                yyyyMMMd{"MMM d, Gy"}
+                yyyyQQQ{"QQQ Gy"}
+                yyyyQQQQ{"QQQQ Gy"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y",
+                "MMMM d, y",
+                "MMM d, y",
+                "M/d/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                GGGGyMMMMEEEEdd{"EEEE,dd MMMM GGGGy"}
+                Gy{"Gy"}
+                GyMMM{"MMM Gy"}
+                GyMMMEd{"EEE, MMM d, Gy"}
+                GyMMMd{"MMM d, Gy"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"d-MMM"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"EEE, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"EEE, MMM d, y"}
+                yMMMM{"MMMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -125,46 +177,6 @@ ks{
                 wide{
                     "قبٕل مسیٖح",
                     "عیٖسوی سنہٕ",
-                }
-            }
-            fields{
-                day{
-                    dn{"دۄہ"}
-                    relative{
-                        "-1"{"راتھ"}
-                        "0"{"اَز"}
-                        "1"{"پگاہ"}
-                    }
-                }
-                dayperiod{
-                    dn{"صبح/رات"}
-                }
-                era{
-                    dn{"دور"}
-                }
-                hour{
-                    dn{"گٲنٛٹہٕ"}
-                }
-                minute{
-                    dn{"مِنَٹ"}
-                }
-                month{
-                    dn{"رٮ۪تھ"}
-                }
-                second{
-                    dn{"سٮ۪کَنڑ"}
-                }
-                week{
-                    dn{"ہفتہٕ"}
-                }
-                weekday{
-                    dn{"ہفتُک دۄہ"}
-                }
-                year{
-                    dn{"ؤری"}
-                }
-                zone{
-                    dn{"زون"}
                 }
             }
             monthNames{
@@ -239,42 +251,83 @@ ks{
             }
         }
     }
+    fields{
+        day{
+            dn{"دۄہ"}
+            relative{
+                "-1"{"راتھ"}
+                "0"{"اَز"}
+                "1"{"پگاہ"}
+            }
+        }
+        dayperiod{
+            dn{"صبح/رات"}
+        }
+        era{
+            dn{"دور"}
+        }
+        hour{
+            dn{"گٲنٛٹہٕ"}
+        }
+        minute{
+            dn{"مِنَٹ"}
+        }
+        month{
+            dn{"رٮ۪تھ"}
+        }
+        second{
+            dn{"سٮ۪کَنڑ"}
+        }
+        week{
+            dn{"ہفتہٕ"}
+        }
+        weekday{
+            dn{"ہفتُک دۄہ"}
+        }
+        year{
+            dn{"ؤری"}
+        }
+        zone{
+            dn{"زون"}
+        }
+    }
     layout{
         characters{"right-to-left"}
-        lines{"top-to-bottom"}
     }
     measurementSystemNames{
         US{"یوٗ ایس"}
         metric{"میٖٹرِک"}
     }
     units{
-        day{
-            one{"{0} دۄہ"}
-            other{"{0} دۄہ"}
-        }
-        hour{
-            one{"{0} گَنٹہٕ"}
-            other{"{0} گٲنٛٹہٕ"}
-        }
-        minute{
-            one{"{0} مِنَٹ"}
-            other{"{0} مِنَٹ"}
-        }
-        month{
-            one{"{0} ریٚتھ"}
-            other{"{0} ریٚتھ"}
-        }
-        second{
-            one{"{0} سیٚکَنٛڈ"}
-            other{"{0} سیٚکَنٛڈ"}
-        }
-        week{
-            one{"{0} ہَفتہٕ"}
-            other{"{0} ہَفتہٕ"}
-        }
-        year{
-            one{"{0} ؤری"}
-            other{"{0} ؤری"}
+        duration{
+            day{
+                one{"{0} دۄہ"}
+                other{"{0} دۄہ"}
+            }
+            hour{
+                one{"{0} گَنٹہٕ"}
+                other{"{0} گٲنٛٹہٕ"}
+            }
+            minute{
+                one{"{0} مِنَٹ"}
+                other{"{0} مِنَٹ"}
+            }
+            month{
+                one{"{0} ریٚتھ"}
+                other{"{0} ریٚتھ"}
+            }
+            second{
+                one{"{0} سیٚکَنٛڈ"}
+                other{"{0} سیٚکَنٛڈ"}
+            }
+            week{
+                one{"{0} ہَفتہٕ"}
+                other{"{0} ہَفتہٕ"}
+            }
+            year{
+                one{"{0} ؤری"}
+                other{"{0} ؤری"}
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 /*
  ******************************************************************************
- * Copyright (C) 1996-2012, International Business Machines Corporation and
+ * Copyright (C) 1996-2013, International Business Machines Corporation and
  * others. All Rights Reserved.
  ******************************************************************************
  */
@@ -209,8 +209,7 @@ RuleBasedCollator& RuleBasedCollator::operator=(const RuleBasedCollator& that)
     if (this == &that) { return *this; }
 
     UErrorCode intStatus = U_ZERO_ERROR;
-    int32_t buffersize = U_COL_SAFECLONE_BUFFERSIZE;
-    UCollator *ucol = ucol_safeClone(that.ucollator, NULL, &buffersize, &intStatus);
+    UCollator *ucol = ucol_safeClone(that.ucollator, NULL, NULL, &intStatus);
     if (U_FAILURE(intStatus)) { return *this; }
 
     if (dataIsOwned) {
@@ -456,7 +455,23 @@ int32_t RuleBasedCollator::getMaxExpansion(int32_t order) const
 uint8_t* RuleBasedCollator::cloneRuleData(int32_t &length,
                                               UErrorCode &status)
 {
-    return ucol_cloneRuleData(ucollator, &length, &status);
+    if (U_FAILURE(status)) { return NULL; }
+    LocalMemory<uint8_t> buffer((uint8_t *)uprv_malloc(20000));
+    if (buffer.isNull()) {
+        status = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
+    }
+    length = cloneBinary(buffer.getAlias(), 20000, status);
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        if (buffer.allocateInsteadAndCopy(length, 0) == NULL) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+            return NULL;
+        }
+        status = U_ZERO_ERROR;
+        length = cloneBinary(buffer.getAlias(), length, status);
+    }
+    if (U_FAILURE(status)) { return NULL; }
+    return buffer.orphan();
 }
 
 

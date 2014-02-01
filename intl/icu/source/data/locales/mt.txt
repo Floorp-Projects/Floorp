@@ -1,19 +1,19 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mt.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/mt.xml
+ * ICU <specials> source: <path>/common/main/mt.xml
  */
 mt{
     AuxExemplarCharacters{"[c y]"}
     ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
     ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE} J K L M N O P Q R S T U V W X Y Ż Z]"}
-    ExemplarCharactersPunctuation{"[\- , ; \: ! ? . ' ‘ ’ \" “ ” ( ) \[ \] \{ \}]"}
+    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
     LocaleScript{
         "Latn",
     }
@@ -28,8 +28,25 @@ mt{
             }
         }
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'ta'’ MMMM y G",
+                "d 'ta'’ MMMM y G",
+                "dd MMM y G",
+                "dd/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "QN",
@@ -43,7 +60,7 @@ mt{
                 "EEEE, d 'ta'’ MMMM y",
                 "d 'ta'’ MMMM y",
                 "dd MMM y",
-                "dd/MM/yyyy",
+                "dd/MM/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -60,6 +77,15 @@ mt{
                         "Ħam",
                         "Ġim",
                         "Sib",
+                    }
+                    narrow{
+                        "Ħ",
+                        "T",
+                        "T",
+                        "E",
+                        "Ħ",
+                        "Ġ",
+                        "S",
                     }
                     wide{
                         "Il-Ħadd",
@@ -91,43 +117,6 @@ mt{
                 wide{
                     "Qabel Kristu",
                     "Wara Kristu",
-                }
-            }
-            fields{
-                day{
-                    dn{"Jum"}
-                    relative{
-                        "-1"{"Lbieraħ"}
-                        "0"{"Illum"}
-                        "1"{"Għada"}
-                    }
-                }
-                era{
-                    dn{"Epoka"}
-                }
-                hour{
-                    dn{"Siegħa"}
-                }
-                minute{
-                    dn{"Minuta"}
-                }
-                month{
-                    dn{"Xahar"}
-                }
-                second{
-                    dn{"Sekonda"}
-                }
-                week{
-                    dn{"Ġimgħa"}
-                }
-                weekday{
-                    dn{"Jum tal-Ġimgħa"}
-                }
-                year{
-                    dn{"Sena"}
-                }
-                zone{
-                    dn{"Żona"}
                 }
             }
             monthNames{
@@ -176,6 +165,20 @@ mt{
                         "N",
                         "D",
                     }
+                    wide{
+                        "Jannar",
+                        "Frar",
+                        "Marzu",
+                        "April",
+                        "Mejju",
+                        "Ġunju",
+                        "Lulju",
+                        "Awwissu",
+                        "Settembru",
+                        "Ottubru",
+                        "Novembru",
+                        "Diċembru",
+                    }
                 }
             }
             quarters{
@@ -186,6 +189,12 @@ mt{
                         "K3",
                         "K4",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
                     wide{
                         "K1",
                         "K2",
@@ -193,10 +202,104 @@ mt{
                         "K4",
                     }
                 }
+                stand-alone{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1el kwart",
+                        "2ni kwart",
+                        "3et kwart",
+                        "4ba' kwart",
+                    }
+                }
             }
         }
     }
+    fields{
+        day{
+            dn{"Jum"}
+            relative{
+                "-1"{"Ilbieraħ"}
+                "0"{"Illum"}
+                "1"{"Għada"}
+            }
+        }
+        era{
+            dn{"Epoka"}
+        }
+        hour{
+            dn{"Siegħa"}
+        }
+        minute{
+            dn{"Minuta"}
+        }
+        mon{
+            relative{
+                "-1"{"It-Tnejn li għadda"}
+                "1"{"It-Tnejn li ġej"}
+            }
+        }
+        month{
+            dn{"Xahar"}
+            relative{
+                "-1"{"Ix-xahar li għadda"}
+                "0"{"Dan ix-xahar"}
+                "1"{"Ix-xahar id-dieħel"}
+            }
+        }
+        second{
+            dn{"Sekonda"}
+        }
+        sun{
+            relative{
+                "-1"{"Il-Ħadd li għadda"}
+                "0"{"Dan il-Ħadd"}
+                "1"{"Il-Ħadd li ġej"}
+            }
+        }
+        week{
+            dn{"Ġimgħa"}
+            relative{
+                "-1"{"Il-ġimgħa li għaddiet"}
+                "0"{"Din il-ġimgħa"}
+                "1"{"Il-ġimgħa d-dieħla"}
+            }
+        }
+        weekday{
+            dn{"Jum tal-Ġimgħa"}
+        }
+        year{
+            dn{"Sena"}
+            relative{
+                "-1"{"Is-sena li għaddiet"}
+                "1"{"Is-sena d-dieħla"}
+            }
+            relativeTime{
+                past{
+                    few{"{0} snin ilu"}
+                    many{"{0} snin ilu"}
+                    one{"{0} sena ilu"}
+                    other{"{0} snin ilu"}
+                }
+            }
+        }
+        zone{
+            dn{"Żona"}
+        }
+    }
     measurementSystemNames{
+        UK{"UK"}
+        US{"US"}
         metric{"Metriku"}
     }
 }

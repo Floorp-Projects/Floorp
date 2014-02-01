@@ -1,25 +1,42 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/lv.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/lv.xml
+ * ICU <specials> source: <path>/common/main/lv.xml
  */
 lv{
-    AuxExemplarCharacters{"[q w x y]"}
+    AuxExemplarCharacters{"[y ō q ŗ w x]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0}…"}
+        word-initial{"…{0}"}
+        word-medial{"{0}…{1}"}
+    }
     ExemplarCharacters{"[a ā b c č d e ē f g ģ h i ī j k ķ l ļ m n ņ o p r s š t u ū v z ž]"}
-    ExemplarCharactersIndex{"[A B C Č D E F G Ģ H I J K Ķ L Ļ M N Ņ O P Q R S Š T U V W X Y Z Ž]"}
-    ExemplarCharactersPunctuation{"[\- ‐ – — , ; \: ! ? . … ' ‘ ’ ‚ \" “ ” „ ( ) \[ \] § @ * / \& # † ‡ ′ ″]"}
+    ExemplarCharactersIndex{"[A Ā B C Č D E Ē F G Ģ H I Ī Y J K Ķ L Ļ M N Ņ O P Q R S Š T U Ū V W X Z Ž]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ ‚ \u0022 “ ” „ ( ) \\[ \\] § @ * / \\& # † "
+        "‡ ′ ″]"
+    }
     LocaleScript{
         "Latn",
     }
+    MoreInformation{"?"}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}‒{1}"}
+            }
             patterns{
+                accountingFormat{"¤#,##0.00"}
                 currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -73,19 +90,19 @@ lv{
                         zero{"000 miljardi"}
                     }
                     1000000000000{
-                        one{"0 trilj'.'"}
-                        other{"0 trilj'.'"}
-                        zero{"0 trilj'.'"}
+                        one{"0 triljons"}
+                        other{"0 triljoni"}
+                        zero{"0 triljoni"}
                     }
                     10000000000000{
-                        one{"00 trilj'.'"}
-                        other{"00 trilj'.'"}
-                        zero{"00 trilj'.'"}
+                        one{"00 triljons"}
+                        other{"00 triljoni"}
+                        zero{"00 triljoni"}
                     }
                     100000000000000{
-                        one{"000 trilj'.'"}
-                        other{"000 trilj'.'"}
-                        zero{"000 trilj'.'"}
+                        one{"000 triljons"}
+                        other{"000 triljoni"}
+                        zero{"000 triljoni"}
                     }
                 }
             }
@@ -122,19 +139,19 @@ lv{
                         zero{"000 milj'.'"}
                     }
                     1000000000{
-                        one{"0 md"}
-                        other{"0 md"}
-                        zero{"0 md"}
+                        one{"0 mljrd'.'"}
+                        other{"0 mljrd'.'"}
+                        zero{"0 mljrd'.'"}
                     }
                     10000000000{
-                        one{"00 md"}
-                        other{"00 md"}
-                        zero{"00 md"}
+                        one{"00 mljrd'.'"}
+                        other{"00 mljrd'.'"}
+                        zero{"00 mljrd'.'"}
                     }
                     100000000000{
-                        one{"000 md"}
-                        other{"000 md"}
-                        zero{"000 md"}
+                        one{"000 mljrd'.'"}
+                        other{"000 mljrd'.'"}
+                        zero{"000 mljrd'.'"}
                     }
                     1000000000000{
                         one{"0 trilj'.'"}
@@ -164,11 +181,158 @@ lv{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"·"}
             }
         }
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, y. 'gada' d. MMMM G",
+                "y. 'gada' d. MMMM G",
+                "y. 'gada' d. MMM G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1} 'plkst.' {0}",
+                "{1} 'plkst.' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                Gy{"y. 'g'. G"}
+                GyMMM{"y. 'g'. MMM G"}
+                GyMMMEd{"E, y. 'g'. d. MMM G"}
+                GyMMMd{"y. 'g'. d. MMM G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, dd.MM."}
+                MMM{"LLL"}
+                MMMEd{"E, d. MMM"}
+                MMMMEd{"E, d. MMMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"dd.MM."}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y. 'g'. G"}
+                yyyy{"y. 'g'. G"}
+                yyyyM{"MM.y. G"}
+                yyyyMEd{"E, d.M.y. G"}
+                yyyyMMM{"y. 'g'. MMM G"}
+                yyyyMMMEd{"E, y. 'g'. d. MMM G"}
+                yyyyMMMM{"y. 'g'. MMMM G"}
+                yyyyMMMd{"y. 'g'. d. MMM G"}
+                yyyyMd{"d.MM.y. G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"y. 'gada' QQQQ G"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"MM–MM"}
+                }
+                MEd{
+                    M{"E, dd.MM–E, dd.MM"}
+                    d{"E, dd.MM–E, dd.MM"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, d. MMM–E, d. MMM"}
+                    d{"E, d. MMM–E, d. MMM"}
+                }
+                MMMd{
+                    M{"d. MMM–d. MMM"}
+                    d{"d.–d. MMM"}
+                }
+                Md{
+                    M{"dd.MM–dd.MM"}
+                    d{"dd.MM.–dd.MM."}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0}–{1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y.–y. G"}
+                }
+                yM{
+                    M{"MM.y.–MM.y. GGGGG"}
+                    y{"MM.y.–MM.y. GGGGG"}
+                }
+                yMEd{
+                    M{"E, dd.MM.y.–E, dd.MM.y. GGGGG"}
+                    d{"E, dd.MM.y.–E, dd.MM.y. GGGGG"}
+                    y{"E, dd.MM.y.–E, dd.MM.y. GGGGG"}
+                }
+                yMMM{
+                    M{"y. 'gada' MMM–MMM G"}
+                    y{"y. 'gada' MMM–y. 'gada' MMM G"}
+                }
+                yMMMEd{
+                    M{"E, y. 'gada' d. MMM–E, y. 'gada' d. MMM G"}
+                    d{"E, y. 'gada' d. MMM–E, y. 'gada' d. MMM G"}
+                    y{"E, y. 'gada' d. MMM–E, y. 'gada' d. MMM G"}
+                }
+                yMMMM{
+                    M{"y. 'gada' MMMM–MMMM G"}
+                    y{"y. 'gada' MMMM–y. 'gada' MMMM G"}
+                }
+                yMMMd{
+                    M{"y. 'gada' d. MMM–d. MMM G"}
+                    d{"y. 'gada' d.–d. MMM G"}
+                    y{"y. 'gada' d. MMM–y. 'gada' d. MMM G"}
+                }
+                yMd{
+                    M{"dd.MM.y.–dd.MM.y. GGGGG"}
+                    d{"dd.MM.y.–dd.MM.y. GGGGG"}
+                    y{"dd.MM.y.–dd.MM.y. GGGGG"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "priekšpusdienā",
@@ -189,8 +353,19 @@ lv{
                 "{1} {0}",
                 "{1} {0}",
             }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
             availableFormats{
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
+                Gy{"G y. 'g'."}
+                GyMMM{"G y. 'g'. MMM"}
+                GyMMMEd{"E, G y. 'g'. d. MMM"}
+                GyMMMd{"G y. 'g'. d. MMM"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -209,16 +384,15 @@ lv{
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y. 'g'."}
-                yM{"MM.yyyy."}
+                yM{"MM.y."}
                 yMEd{"E, d.M.y."}
-                yMMM{"yyyy. 'g'. MMM"}
+                yMMM{"y. 'g'. MMM"}
                 yMMMEd{"E, y. 'g'. d. MMM"}
                 yMMMM{"y. 'g'. MMMM"}
                 yMMMd{"y. 'g'. d. MMM"}
                 yMd{"d.M.y."}
                 yQQQ{"QQQ y"}
-                yQQQQ{"y QQQQ"}
-                yyyy{"y. 'g'."}
+                yQQQQ{"y. 'g'. QQQQ"}
             }
             dayNames{
                 format{
@@ -280,12 +454,12 @@ lv{
                     }
                     short{
                         "Sv",
-                        "P",
-                        "O",
-                        "T",
-                        "C",
+                        "Pr",
+                        "Ot",
+                        "Tr",
+                        "Ce",
                         "Pk",
-                        "S",
+                        "Se",
                     }
                     wide{
                         "Svētdiena",
@@ -303,66 +477,13 @@ lv{
                     "p.m.ē.",
                     "m.ē.",
                 }
+                narrow{
+                    "p.m.ē.",
+                    "m.ē.",
+                }
                 wide{
                     "pirms mūsu ēras",
                     "mūsu ērā",
-                }
-            }
-            fields{
-                day{
-                    dn{"Diena"}
-                    relative{
-                        "-1"{"vakar"}
-                        "-2"{"aizvakar"}
-                        "0"{"šodien"}
-                        "1"{"rīt"}
-                        "2"{"parīt"}
-                    }
-                }
-                dayperiod{
-                    dn{"Pirmspusd./pēcpusd."}
-                }
-                era{
-                    dn{"Ēra"}
-                }
-                hour{
-                    dn{"Stundas"}
-                }
-                minute{
-                    dn{"Minūtes"}
-                }
-                month{
-                    dn{"Mēnesis"}
-                    relative{
-                        "-1"{"Pagājušajā mēnesī"}
-                        "0"{"Šomēnes"}
-                        "1"{"Nākammēnes"}
-                    }
-                }
-                second{
-                    dn{"Sekundes"}
-                }
-                week{
-                    dn{"Nedēļa"}
-                    relative{
-                        "-1"{"Pagājušajā nedēļā"}
-                        "0"{"Šonedēļ"}
-                        "1"{"Nākamnedēļ"}
-                    }
-                }
-                weekday{
-                    dn{"Nedēļas diena"}
-                }
-                year{
-                    dn{"Gads"}
-                    relative{
-                        "-1"{"Pagājušajā gadā"}
-                        "0"{"Šogad"}
-                        "1"{"Nākamgad"}
-                    }
-                }
-                zone{
-                    dn{"Laika josla"}
                 }
             }
             intervalFormats{
@@ -428,26 +549,26 @@ lv{
                     y{"y.–y."}
                 }
                 yM{
-                    M{"MM.yyyy.–MM.yyyy."}
-                    y{"MM.yyyy.–MM.yyyy."}
+                    M{"MM.y.–MM.y."}
+                    y{"MM.y.–MM.y."}
                 }
                 yMEd{
-                    M{"E, dd.MM.yy. – E, dd.MM.yy."}
-                    d{"E, dd.MM.yy. – E, dd.MM.yy."}
-                    y{"E, dd.MM.yy. – E, dd.MM.yy."}
+                    M{"E, dd.MM.y. – E, dd.MM.y."}
+                    d{"E, dd.MM.y. – E, dd.MM.y."}
+                    y{"E, dd.MM.y. – E, dd.MM.y."}
                 }
                 yMMM{
                     M{"y. 'gada' MMM–MMM"}
-                    y{"y. 'gada' MMM – y. 'gada' MMM"}
+                    y{"y. 'gada' MMM – y. 'gada' MMM"}
                 }
                 yMMMEd{
                     M{"E, y. 'gada' d. MMM – E, y. 'gada' d. MMM"}
                     d{"E, y. 'gada' d. MMM – E, y. 'gada' d. MMM"}
-                    y{"E, y. 'gada' d. MMM – E, y. 'gada' d. MMM"}
+                    y{"E, y. 'gada' d. MMM – E, y. 'gada' d. MMM"}
                 }
                 yMMMM{
-                    M{"MM.yyyy.–MM.yyyy."}
-                    y{"MM.yyyy.–MM.yyyy."}
+                    M{"y. 'gada' MMMM–MMMM"}
+                    y{"y. 'gada' MMMM – y. 'gada' MMMM"}
                 }
                 yMMMd{
                     M{"y. 'gada' d. MMM – d. MMM"}
@@ -455,9 +576,9 @@ lv{
                     y{"y. 'gada' d. MMM – y. 'gada' d. MMM"}
                 }
                 yMd{
-                    M{"dd.MM.yy.–dd.MM.yy."}
-                    d{"dd.MM.yyyy.–dd.MM.yyyy."}
-                    y{"dd.MM.yy.–dd.MM.yy."}
+                    M{"dd.MM.y.–dd.MM.y."}
+                    d{"dd.MM.y.–dd.MM.y."}
+                    y{"dd.MM.y.–dd.MM.y."}
                 }
             }
             monthNames{
@@ -642,8 +763,224 @@ lv{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"Diena"}
+            relative{
+                "-1"{"vakar"}
+                "-2"{"aizvakar"}
+                "0"{"šodien"}
+                "1"{"rīt"}
+                "2"{"parīt"}
+            }
+            relativeTime{
+                future{
+                    one{"Pēc {0} dienas"}
+                    other{"Pēc {0} dienām"}
+                    zero{"Pēc {0} dienām"}
+                }
+                past{
+                    one{"Pirms {0} dienas"}
+                    other{"Pirms {0} dienām"}
+                    zero{"Pirms {0} dienām"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"Priekšpusdienā/pēcpusdienā"}
+        }
+        era{
+            dn{"Ēra"}
+        }
+        fri{
+            relative{
+                "-1"{"pagājušajā piektdienā"}
+                "0"{"šopiektdien"}
+                "1"{"nākamajā piektdienā"}
+            }
+        }
+        hour{
+            dn{"Stundas"}
+            relativeTime{
+                future{
+                    one{"Pēc {0} stundas"}
+                    other{"Pēc {0} stundām"}
+                    zero{"Pēc {0} stundām"}
+                }
+                past{
+                    one{"Pirms {0} stundas"}
+                    other{"Pirms {0} stundām"}
+                    zero{"Pirms {0} stundām"}
+                }
+            }
+        }
+        minute{
+            dn{"Minūtes"}
+            relativeTime{
+                future{
+                    one{"Pēc {0} minūtes"}
+                    other{"Pēc {0} minūtēm"}
+                    zero{"Pēc {0} minūtēm"}
+                }
+                past{
+                    one{"Pirms {0} minūtes"}
+                    other{"Pirms {0} minūtēm"}
+                    zero{"Pirms {0} minūtēm"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"pagājušajā pirmdienā"}
+                "0"{"šopirmdien"}
+                "1"{"nākampirmdien"}
+            }
+        }
+        month{
+            dn{"Mēnesis"}
+            relative{
+                "-1"{"pagājušajā mēnesī"}
+                "0"{"šomēnes"}
+                "1"{"nākammēnes"}
+            }
+            relativeTime{
+                future{
+                    one{"Pēc {0} mēneša"}
+                    other{"Pēc {0} mēnešiem"}
+                    zero{"Pēc {0} mēnešiem"}
+                }
+                past{
+                    one{"Pirms {0} mēneša"}
+                    other{"Pirms {0} mēnešiem"}
+                    zero{"Pirms {0} mēnešiem"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"pagājušajā sestdienā"}
+                "0"{"šosestdien"}
+                "1"{"nākamajā sestdienā"}
+            }
+        }
+        second{
+            dn{"Sekundes"}
+            relative{
+                "0"{"tagad"}
+            }
+            relativeTime{
+                future{
+                    one{"Pēc {0} sekundes"}
+                    other{"Pēc {0} sekundēm"}
+                    zero{"Pēc {0} sekundēm"}
+                }
+                past{
+                    one{"Pirms {0} sekundes"}
+                    other{"Pirms {0} sekundēm"}
+                    zero{"Pirms {0} sekundēm"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"pagājušajā svētdienā"}
+                "0"{"šosvētdien"}
+                "1"{"nākamsvētdien"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"pagājušajā ceturtdienā"}
+                "0"{"šoceturtdien"}
+                "1"{"nākamajā ceturtdienā"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"pagājušajā otrdienā"}
+                "0"{"šootrdien"}
+                "1"{"nākamajā otrdienā"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"pagājušajā trešdienā"}
+                "0"{"šotrešdien"}
+                "1"{"nākamajā trešdienā"}
+            }
+        }
+        week{
+            dn{"Nedēļa"}
+            relative{
+                "-1"{"pagājušajā nedēļā"}
+                "0"{"šonedēļ"}
+                "1"{"nākamnedēļ"}
+            }
+            relativeTime{
+                future{
+                    one{"Pēc {0} nedēļas"}
+                    other{"Pēc {0} nedēļām"}
+                    zero{"Pēc {0} nedēļām"}
+                }
+                past{
+                    one{"Pirms {0} nedēļas"}
+                    other{"Pirms {0} nedēļām"}
+                    zero{"Pirms {0} nedēļām"}
+                }
+            }
+        }
+        weekday{
+            dn{"Nedēļas diena"}
+        }
+        year{
+            dn{"Gads"}
+            relative{
+                "-1"{"pagājušajā gadā"}
+                "0"{"šogad"}
+                "1"{"nākamgad"}
+            }
+            relativeTime{
+                future{
+                    one{"Pēc {0} gada"}
+                    other{"Pēc {0} gadiem"}
+                    zero{"Pēc {0} gadiem"}
+                }
+                past{
+                    one{"Pirms {0} gada"}
+                    other{"Pirms {0} gadiem"}
+                    zero{"Pirms {0} gadiem"}
+                }
+            }
+        }
+        zone{
+            dn{"Laika josla"}
+        }
+    }
     listPattern{
         standard{
+            2{"{0} un {1}"}
+            end{"{0} un {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} un {1}"}
+            end{"{0} un {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-short{
             2{"{0} un {1}"}
             end{"{0} un {1}"}
             middle{"{0}, {1}"}
@@ -655,148 +992,787 @@ lv{
         US{"amerikāņu"}
         metric{"metriskā"}
     }
+    transformNames{
+        BGN{"BGN"}
+        Numeric{"Ciparu"}
+        Tone{"Intonācija"}
+        UNGEGN{"UNGEGN"}
+        x-Accents{"Diakritiskās zīmes"}
+        x-Fullwidth{"Pilna platuma"}
+        x-Halfwidth{"Pusplatuma"}
+        x-Jamo{"Džamo"}
+        x-Pinyin{"Piņjiņ"}
+        x-Publishing{"Izdevējdarbība"}
+    }
     units{
-        day{
-            one{"{0} diennakts"}
-            other{"{0} diennaktis"}
-            zero{"{0} diennaktis"}
+        acceleration{
+            g-force{
+                one{"Brīvās krišanas paātrinājums: {0}"}
+                other{"Brīvās krišanas paātrinājums: {0}"}
+                zero{"Brīvās krišanas paātrinājums: {0}"}
+            }
         }
-        day-future{
-            one{"Pēc {0} dienas"}
-            other{"Pēc {0} dienām"}
-            zero{"Pēc {0} dienām"}
+        angle{
+            arc-minute{
+                one{"{0} minūte"}
+                other{"{0} minūtes"}
+                zero{"{0} minūtes"}
+            }
+            arc-second{
+                one{"{0} sekunde"}
+                other{"{0} sekundes"}
+                zero{"{0} sekundes"}
+            }
+            degree{
+                one{"{0} grāds"}
+                other{"{0} grādi"}
+                zero{"{0} grādi"}
+            }
         }
-        day-past{
-            one{"Pirms {0} dienas"}
-            other{"Pirms {0} dienām"}
-            zero{"Pirms {0} dienām"}
+        area{
+            acre{
+                one{"{0} akrs"}
+                other{"{0} akri"}
+                zero{"{0} akri"}
+            }
+            hectare{
+                one{"{0} hektārs"}
+                other{"{0} hektāri"}
+                zero{"{0} hektāri"}
+            }
+            square-foot{
+                one{"{0} kvadrātpēda"}
+                other{"{0} kvadrātpēdas"}
+                zero{"{0} kvadrātpēdas"}
+            }
+            square-kilometer{
+                one{"{0} kvadrātkilometrs"}
+                other{"{0} kvadrātkilometri"}
+                zero{"{0} kvadrātkilometri"}
+            }
+            square-meter{
+                one{"{0} kvadrātmetrs"}
+                other{"{0} kvadrātmetri"}
+                zero{"{0} kvadrātmetri"}
+            }
+            square-mile{
+                one{"{0} kvadrātjūdze"}
+                other{"{0} kvadrātjūdzes"}
+                zero{"{0} kvadrātjūdzes"}
+            }
         }
-        hour{
-            one{"{0} stunda"}
-            other{"{0} stundas"}
-            zero{"{0} stundas"}
+        compound{
+            per{"{0}/{1}"}
         }
-        hour-future{
-            one{"Pēc {0} stundas"}
-            other{"Pēc {0} stundām"}
-            zero{"Pēc {0} stundām"}
+        duration{
+            day{
+                one{"{0} diena"}
+                other{"{0} dienas"}
+                zero{"{0} dienas"}
+            }
+            hour{
+                one{"{0} stunda"}
+                other{"{0} stundas"}
+                zero{"{0} stundas"}
+            }
+            millisecond{
+                one{"{0} milisekunde"}
+                other{"{0} milisekundes"}
+                zero{"{0} milisekundes"}
+            }
+            minute{
+                one{"{0} minūte"}
+                other{"{0} minūtes"}
+                zero{"{0} minūtes"}
+            }
+            month{
+                one{"{0} mēnesis"}
+                other{"{0} mēneši"}
+                zero{"{0} mēneši"}
+            }
+            second{
+                one{"{0} sekunde"}
+                other{"{0} sekundes"}
+                zero{"{0} sekundes"}
+            }
+            week{
+                one{"{0} nedēļa"}
+                other{"{0} nedēļas"}
+                zero{"{0} nedēļas"}
+            }
+            year{
+                one{"{0} gads"}
+                other{"{0} gadi"}
+                zero{"{0} gadi"}
+            }
         }
-        hour-past{
-            one{"Pirms {0} stundas"}
-            other{"Pirms {0} stundām"}
-            zero{"Pirms {0} stundām"}
+        length{
+            centimeter{
+                one{"{0} centimetrs"}
+                other{"{0} centimetri"}
+                zero{"{0} centimetri"}
+            }
+            foot{
+                one{"{0} pēda"}
+                other{"{0} pēdas"}
+                zero{"{0} pēdas"}
+            }
+            inch{
+                one{"{0} colla"}
+                other{"{0} collas"}
+                zero{"{0} collas"}
+            }
+            kilometer{
+                one{"{0} kilometrs"}
+                other{"{0} kilometri"}
+                zero{"{0} kilometri"}
+            }
+            light-year{
+                one{"{0} gaismas gads"}
+                other{"{0} gaismas gadi"}
+                zero{"{0} gaismas gadi"}
+            }
+            meter{
+                one{"{0} metrs"}
+                other{"{0} metri"}
+                zero{"{0} metri"}
+            }
+            mile{
+                one{"{0} jūdze"}
+                other{"{0} jūdzes"}
+                zero{"{0} jūdzes"}
+            }
+            millimeter{
+                one{"{0} milimetrs"}
+                other{"{0} milimetri"}
+                zero{"{0} milimetri"}
+            }
+            picometer{
+                one{"{0} pikometrs"}
+                other{"{0} pikometri"}
+                zero{"{0} pikometri"}
+            }
+            yard{
+                one{"{0} jards"}
+                other{"{0} jardi"}
+                zero{"{0} jardi"}
+            }
         }
-        minute{
-            one{"{0} minūte"}
-            other{"{0} minūtes"}
-            zero{"{0} minūtes"}
+        mass{
+            gram{
+                one{"{0} grams"}
+                other{"{0} grami"}
+                zero{"{0} grami"}
+            }
+            kilogram{
+                one{"{0} kilograms"}
+                other{"{0} kilogrami"}
+                zero{"{0} kilogrami"}
+            }
+            ounce{
+                one{"{0} unce"}
+                other{"{0} unces"}
+                zero{"{0} unces"}
+            }
+            pound{
+                one{"{0} mārciņa"}
+                other{"{0} mārciņas"}
+                zero{"{0} mārciņas"}
+            }
         }
-        minute-future{
-            one{"Pēc {0} minūtes"}
-            other{"Pēc {0} minūtēm"}
-            zero{"Pēc {0} minūtēm"}
+        power{
+            horsepower{
+                one{"{0} zirgspēks"}
+                other{"{0} zirgspēki"}
+                zero{"{0} zirgspēki"}
+            }
+            kilowatt{
+                one{"{0} kilovats"}
+                other{"{0} kilovati"}
+                zero{"{0} kilovati"}
+            }
+            watt{
+                one{"{0} vats"}
+                other{"{0} vati"}
+                zero{"{0} vati"}
+            }
         }
-        minute-past{
-            one{"Pirms {0} minūtes"}
-            other{"Pirms {0} minūtēm"}
-            zero{"Pirms {0} minūtēm"}
+        pressure{
+            hectopascal{
+                one{"{0} hektopaskāls"}
+                other{"{0} hektopaskāli"}
+                zero{"{0} hektopaskāli"}
+            }
+            inch-hg{
+                one{"{0} dzīvsudraba staba colla"}
+                other{"{0} dzīvsudraba staba collas"}
+                zero{"{0} dzīvsudraba staba collas"}
+            }
+            millibar{
+                one{"{0} milibārs"}
+                other{"{0} milibāri"}
+                zero{"{0} milibāri"}
+            }
         }
-        month{
-            one{"{0} mēnesis"}
-            other{"{0} mēneši"}
-            zero{"{0} mēneši"}
+        speed{
+            kilometer-per-hour{
+                one{"{0} kilometrs stundā"}
+                other{"{0} kilometri stundā"}
+                zero{"{0} kilometri stundā"}
+            }
+            meter-per-second{
+                one{"{0} metrs sekundē"}
+                other{"{0} metri sekundē"}
+                zero{"{0} metri sekundē"}
+            }
+            mile-per-hour{
+                one{"{0} jūdze stundā"}
+                other{"{0} jūdzes stundā"}
+                zero{"{0} jūdzes stundā"}
+            }
         }
-        month-future{
-            one{"Pēc {0} mēneša"}
-            other{"Pēc {0} mēnešiem"}
-            zero{"Pēc {0} mēnešiem"}
+        temperature{
+            celsius{
+                one{"{0} Celsija grāds"}
+                other{"{0} Celsija grādi"}
+                zero{"{0} Celsija grādi"}
+            }
+            fahrenheit{
+                one{"{0} Fārenheita grāds"}
+                other{"{0} Fārenheita grādi"}
+                zero{"{0} Fārenheita grādi"}
+            }
         }
-        month-past{
-            one{"Pirms {0} mēneša"}
-            other{"Pirms {0} mēnešiem"}
-            zero{"Pirms {0} mēnešiem"}
+        volume{
+            cubic-kilometer{
+                one{"{0} kubikkilometrs"}
+                other{"{0} kubikkilometri"}
+                zero{"{0} kubikkilometri"}
+            }
+            cubic-mile{
+                one{"{0} kubikjūdze"}
+                other{"{0} kubikjūdzes"}
+                zero{"{0} kubikjūdzes"}
+            }
+            liter{
+                one{"{0} litrs"}
+                other{"{0} litri"}
+                zero{"{0} litri"}
+            }
         }
-        second{
-            one{"{0} sekunde"}
-            other{"{0} sekundes"}
-            zero{"{0} sekundes"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                one{"{0}G"}
+                other{"{0}G"}
+                zero{"{0}G"}
+            }
         }
-        second-future{
-            one{"Pēc {0} sekundes"}
-            other{"Pēc {0} sekundēm"}
-            zero{"Pēc {0} sekundēm"}
+        angle{
+            arc-minute{
+                one{"{0}′"}
+                other{"{0}′"}
+                zero{"{0}′"}
+            }
+            arc-second{
+                one{"{0}″"}
+                other{"{0}″"}
+                zero{"{0}″"}
+            }
+            degree{
+                one{"{0}°"}
+                other{"{0}°"}
+                zero{"{0}°"}
+            }
         }
-        second-past{
-            one{"Pirms {0} sekundes"}
-            other{"Pirms {0} sekundēm"}
-            zero{"Pirms {0} sekundēm"}
+        area{
+            acre{
+                one{"{0}ac"}
+                other{"{0}ac"}
+                zero{"{0}ac"}
+            }
+            hectare{
+                one{"{0}ha"}
+                other{"{0}ha"}
+                zero{"{0}ha"}
+            }
+            square-foot{
+                one{"{0}ft²"}
+                other{"{0}ft²"}
+                zero{"{0}ft²"}
+            }
+            square-kilometer{
+                one{"{0}km²"}
+                other{"{0}km²"}
+                zero{"{0}km²"}
+            }
+            square-meter{
+                one{"{0}m²"}
+                other{"{0}m²"}
+                zero{"{0}m²"}
+            }
+            square-mile{
+                one{"{0}mi²"}
+                other{"{0}mi²"}
+                zero{"{0}mi²"}
+            }
         }
-        week{
-            one{"{0} nedēļa"}
-            other{"{0} nedēļas"}
-            zero{"{0} nedēļas"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            one{"Pēc {0} nedēļas"}
-            other{"Pēc {0} nedēļām"}
-            zero{"Pēc {0} nedēļām"}
+        duration{
+            day{
+                one{"{0}d"}
+                other{"{0}d"}
+                zero{"{0}d"}
+            }
+            hour{
+                one{"{0}h"}
+                other{"{0}h"}
+                zero{"{0}h"}
+            }
+            millisecond{
+                one{"{0}ms"}
+                other{"{0}ms"}
+                zero{"{0}ms"}
+            }
+            minute{
+                one{"{0} min"}
+                other{"{0} min"}
+                zero{"{0} min"}
+            }
+            month{
+                one{"{0} mēn."}
+                other{"{0} mēn."}
+                zero{"{0} mēn."}
+            }
+            second{
+                one{"{0}s"}
+                other{"{0}s"}
+                zero{"{0}s"}
+            }
+            week{
+                one{"{0} ned."}
+                other{"{0} ned."}
+                zero{"{0} ned."}
+            }
+            year{
+                one{"{0}g."}
+                other{"{0}g."}
+                zero{"{0}g."}
+            }
         }
-        week-past{
-            one{"Pirms {0} nedēļas"}
-            other{"Pirms {0} nedēļām"}
-            zero{"Pirms {0} nedēļām"}
+        length{
+            centimeter{
+                one{"{0}cm"}
+                other{"{0}cm"}
+                zero{"{0}cm"}
+            }
+            foot{
+                one{"{0}ft"}
+                other{"{0}ft"}
+                zero{"{0}ft"}
+            }
+            inch{
+                one{"{0}in"}
+                other{"{0}in"}
+                zero{"{0}in"}
+            }
+            kilometer{
+                one{"{0}km"}
+                other{"{0}km"}
+                zero{"{0}km"}
+            }
+            light-year{
+                one{"{0}ly"}
+                other{"{0}ly"}
+                zero{"{0}ly"}
+            }
+            meter{
+                one{"{0}m"}
+                other{"{0}m"}
+                zero{"{0}m"}
+            }
+            mile{
+                one{"{0}mi"}
+                other{"{0}mi"}
+                zero{"{0}mi"}
+            }
+            millimeter{
+                one{"{0}mm"}
+                other{"{0}mm"}
+                zero{"{0}mm"}
+            }
+            picometer{
+                one{"{0}pm"}
+                other{"{0}pm"}
+                zero{"{0}pm"}
+            }
+            yard{
+                one{"{0}yd"}
+                other{"{0}yd"}
+                zero{"{0}yd"}
+            }
         }
-        year{
-            one{"{0} gads"}
-            other{"{0} gadi"}
-            zero{"{0} gadi"}
+        mass{
+            gram{
+                one{"{0}g"}
+                other{"{0}g"}
+                zero{"{0}g"}
+            }
+            kilogram{
+                one{"{0}kg"}
+                other{"{0}kg"}
+                zero{"{0}kg"}
+            }
+            ounce{
+                one{"{0}oz"}
+                other{"{0}oz"}
+                zero{"{0}oz"}
+            }
+            pound{
+                one{"{0}lb"}
+                other{"{0}lb"}
+                zero{"{0}lb"}
+            }
         }
-        year-future{
-            one{"Pēc {0} gada"}
-            other{"Pēc {0} gadiem"}
-            zero{"Pēc {0} gadiem"}
+        power{
+            horsepower{
+                one{"{0} ZS"}
+                other{"{0} ZS"}
+                zero{"{0} ZS"}
+            }
+            kilowatt{
+                one{"{0}kW"}
+                other{"{0}kW"}
+                zero{"{0}kW"}
+            }
+            watt{
+                one{"{0}W"}
+                other{"{0}W"}
+                zero{"{0}W"}
+            }
         }
-        year-past{
-            one{"Pirms {0} gada"}
-            other{"Pirms {0} gadiem"}
-            zero{"Pirms {0} gadiem"}
+        pressure{
+            hectopascal{
+                one{"{0}hPa"}
+                other{"{0}hPa"}
+                zero{"{0}hPa"}
+            }
+            inch-hg{
+                one{"{0}inHg"}
+                other{"{0}inHg"}
+                zero{"{0}inHg"}
+            }
+            millibar{
+                one{"{0}mbar"}
+                other{"{0}mbar"}
+                zero{"{0}mbar"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                one{"{0}km/h"}
+                other{"{0}km/h"}
+                zero{"{0}km/h"}
+            }
+            meter-per-second{
+                one{"{0}m/s"}
+                other{"{0}m/s"}
+                zero{"{0}m/s"}
+            }
+            mile-per-hour{
+                one{"{0}mi/h"}
+                other{"{0}mi/h"}
+                zero{"{0}mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                one{"{0}°"}
+                other{"{0}°"}
+                zero{"{0}°"}
+            }
+            fahrenheit{
+                one{"{0}°F"}
+                other{"{0}°F"}
+                zero{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                one{"{0}km³"}
+                other{"{0}km³"}
+                zero{"{0}km³"}
+            }
+            cubic-mile{
+                one{"{0}mi³"}
+                other{"{0}mi³"}
+                zero{"{0}mi³"}
+            }
+            liter{
+                one{"{0}l"}
+                other{"{0}l"}
+                zero{"{0}l"}
+            }
         }
     }
     unitsShort{
-        day{
-            one{"{0} diena"}
-            other{"{0} dienas"}
-            zero{"{0} dienas"}
+        acceleration{
+            g-force{
+                one{"{0} G"}
+                other{"{0} G"}
+                zero{"{0} G"}
+            }
         }
-        hour{
-            one{"{0} h"}
-            other{"{0} h"}
-            zero{"{0} h"}
+        angle{
+            arc-minute{
+                one{"{0} min"}
+                other{"{0} min"}
+                zero{"{0} min"}
+            }
+            arc-second{
+                one{"{0} s"}
+                other{"{0} s"}
+                zero{"{0} s"}
+            }
+            degree{
+                one{"{0}°"}
+                other{"{0}°"}
+                zero{"{0}°"}
+            }
         }
-        minute{
-            one{"{0} min"}
-            other{"{0} min"}
-            zero{"{0} min"}
+        area{
+            acre{
+                one{"{0} ac"}
+                other{"{0} ac"}
+                zero{"{0} ac"}
+            }
+            hectare{
+                one{"{0} ha"}
+                other{"{0} ha"}
+                zero{"{0} ha"}
+            }
+            square-foot{
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+                zero{"{0} ft²"}
+            }
+            square-kilometer{
+                one{"{0} km²"}
+                other{"{0} km²"}
+                zero{"{0} km²"}
+            }
+            square-meter{
+                one{"{0} m²"}
+                other{"{0} m²"}
+                zero{"{0} m²"}
+            }
+            square-mile{
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+                zero{"{0} mi²"}
+            }
         }
-        month{
-            one{"{0} mēn."}
-            other{"{0} mēn."}
-            zero{"{0} mēn."}
+        compound{
+            per{"{0}/{1}"}
         }
-        second{
-            one{"{0} s"}
-            other{"{0} s"}
-            zero{"{0} s"}
+        duration{
+            day{
+                one{"{0} d"}
+                other{"{0} d"}
+                zero{"{0} d"}
+            }
+            hour{
+                one{"{0} h"}
+                other{"{0} h"}
+                zero{"{0} h"}
+            }
+            millisecond{
+                one{"{0} ms"}
+                other{"{0} ms"}
+                zero{"{0} ms"}
+            }
+            minute{
+                one{"{0} min"}
+                other{"{0} min"}
+                zero{"{0} min"}
+            }
+            month{
+                one{"{0} mēn."}
+                other{"{0} mēn."}
+                zero{"{0} mēn."}
+            }
+            second{
+                one{"{0} s"}
+                other{"{0} s"}
+                zero{"{0} s"}
+            }
+            week{
+                one{"{0} ned."}
+                other{"{0} ned."}
+                zero{"{0} ned."}
+            }
+            year{
+                one{"{0} g."}
+                other{"{0} g."}
+                zero{"{0} g."}
+            }
         }
-        week{
-            one{"{0} ned."}
-            other{"{0} ned."}
-            zero{"{0} ned."}
+        length{
+            centimeter{
+                one{"{0} cm"}
+                other{"{0} cm"}
+                zero{"{0} cm"}
+            }
+            foot{
+                one{"{0} ft"}
+                other{"{0} ft"}
+                zero{"{0} ft"}
+            }
+            inch{
+                one{"{0} in"}
+                other{"{0} in"}
+                zero{"{0} in"}
+            }
+            kilometer{
+                one{"{0} km"}
+                other{"{0} km"}
+                zero{"{0} km"}
+            }
+            light-year{
+                one{"{0} ly"}
+                other{"{0} ly"}
+                zero{"{0} ly"}
+            }
+            meter{
+                one{"{0} m"}
+                other{"{0} m"}
+                zero{"{0} m"}
+            }
+            mile{
+                one{"{0} mi"}
+                other{"{0} mi"}
+                zero{"{0} mi"}
+            }
+            millimeter{
+                one{"{0} mm"}
+                other{"{0} mm"}
+                zero{"{0} mm"}
+            }
+            picometer{
+                one{"{0} pm"}
+                other{"{0} pm"}
+                zero{"{0} pm"}
+            }
+            yard{
+                one{"{0} yd"}
+                other{"{0} yd"}
+                zero{"{0} yd"}
+            }
         }
-        year{
-            one{"{0} g."}
-            other{"{0} g."}
-            zero{"{0} g."}
+        mass{
+            gram{
+                one{"{0} g"}
+                other{"{0} g"}
+                zero{"{0} g"}
+            }
+            kilogram{
+                one{"{0} kg"}
+                other{"{0} kg"}
+                zero{"{0} kg"}
+            }
+            ounce{
+                one{"{0} oz"}
+                other{"{0} oz"}
+                zero{"{0} oz"}
+            }
+            pound{
+                one{"{0} lb"}
+                other{"{0} lb"}
+                zero{"{0} lb"}
+            }
+        }
+        power{
+            horsepower{
+                one{"{0} ZS"}
+                other{"{0} ZS"}
+                zero{"{0} ZS"}
+            }
+            kilowatt{
+                one{"{0} kW"}
+                other{"{0} kW"}
+                zero{"{0} kW"}
+            }
+            watt{
+                one{"{0} W"}
+                other{"{0} W"}
+                zero{"{0} W"}
+            }
+        }
+        pressure{
+            hectopascal{
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+                zero{"{0} hPa"}
+            }
+            inch-hg{
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+                zero{"{0} inHg"}
+            }
+            millibar{
+                one{"{0} mbar"}
+                other{"{0} mbar"}
+                zero{"{0} mbar"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                one{"{0} km/h"}
+                other{"{0} km/h"}
+                zero{"{0} km/h"}
+            }
+            meter-per-second{
+                one{"{0} m/s"}
+                other{"{0} m/s"}
+                zero{"{0} m/s"}
+            }
+            mile-per-hour{
+                one{"{0} mi/h"}
+                other{"{0} mi/h"}
+                zero{"{0} mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                one{"{0} °C"}
+                other{"{0} °C"}
+                zero{"{0} °C"}
+            }
+            fahrenheit{
+                one{"{0} °F"}
+                other{"{0} °F"}
+                zero{"{0} °F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                one{"{0} km³"}
+                other{"{0} km³"}
+                zero{"{0} km³"}
+            }
+            cubic-mile{
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+                zero{"{0} mi³"}
+            }
+            liter{
+                one{"{0} l"}
+                other{"{0} l"}
+                zero{"{0} l"}
+            }
         }
     }
 }

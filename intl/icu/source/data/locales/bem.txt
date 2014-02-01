@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/bem.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/bem.xml
+ * ICU <specials> source: <path>/common/main/bem.xml
  */
 bem{
     AuxExemplarCharacters{"[d h q r v x z]"}
@@ -19,12 +19,55 @@ bem{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "uluchelo",
@@ -38,7 +81,7 @@ bem{
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "dd/MM/yyyy",
+                "dd/MM/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -91,38 +134,6 @@ bem{
                 wide{
                     "Before Yesu",
                     "After Yesu",
-                }
-            }
-            fields{
-                day{
-                    dn{"Ubushiku"}
-                    relative{
-                        "0"{"Lelo"}
-                    }
-                }
-                dayperiod{
-                    dn{"Akasuba"}
-                }
-                era{
-                    dn{"Inkulo"}
-                }
-                hour{
-                    dn{"Insa"}
-                }
-                minute{
-                    dn{"Mineti"}
-                }
-                month{
-                    dn{"Umweshi"}
-                }
-                second{
-                    dn{"Sekondi"}
-                }
-                week{
-                    dn{"Umulungu"}
-                }
-                year{
-                    dn{"Umwaka"}
                 }
             }
             monthNames{
@@ -180,5 +191,37 @@ bem{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Ubushiku"}
+            relative{
+                "0"{"Lelo"}
+            }
+        }
+        dayperiod{
+            dn{"Akasuba"}
+        }
+        era{
+            dn{"Inkulo"}
+        }
+        hour{
+            dn{"Insa"}
+        }
+        minute{
+            dn{"Mineti"}
+        }
+        month{
+            dn{"Umweshi"}
+        }
+        second{
+            dn{"Sekondi"}
+        }
+        week{
+            dn{"Umulungu"}
+        }
+        year{
+            dn{"Umwaka"}
+        }
     }
 }

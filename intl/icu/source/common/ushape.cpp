@@ -1,7 +1,7 @@
 /*
  ******************************************************************************
  *
- *   Copyright (C) 2000-2012, International Business Machines
+ *   Copyright (C) 2000-2013, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  ******************************************************************************
@@ -44,6 +44,7 @@
  *   as a glyph fragment of wide-glyph letters
  *   + IBM Unicode conversion tables map it to U+200B (ZWSP)
  *   + IBM Egypt has proposed to encode the tail in Unicode among Arabic Presentation Forms
+ *   + Unicode 3.2 added U+FE73 ARABIC TAIL FRAGMENT
  */
 
 /* definitions for Arabic letter shaping ------------------------------------ */
@@ -272,7 +273,7 @@ static const uint8_t presBLink[]=
 static const UChar convertFBto06[] =
 {
 /***********0******1******2******3******4******5******6******7******8******9******A******B******C******D******E******F***/
-/*FB5*/   0x671, 0x671,     0,     0,     0,     0, 0x07E, 0x07E, 0x07E, 0x07E,     0,     0,     0,     0,     0,     0,
+/*FB5*/   0x671, 0x671,     0,     0,     0,     0, 0x67E, 0x67E, 0x67E, 0x67E,     0,     0,     0,     0,     0,     0,
 /*FB6*/       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
 /*FB7*/       0,     0,     0,     0,     0,     0,     0,     0,     0,     0, 0x686, 0x686, 0x686, 0x686,     0,     0,
 /*FB8*/       0,     0,     0,     0,     0,     0,     0,     0,     0,     0, 0x698, 0x698,     0,     0, 0x6A9, 0x6A9,

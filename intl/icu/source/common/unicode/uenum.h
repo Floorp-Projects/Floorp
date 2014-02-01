@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2002-2012, International Business Machines
+*   Copyright (C) 2002-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -171,7 +171,6 @@ uenum_openFromStringEnumeration(icu::StringEnumeration* adopted, UErrorCode* ec)
 
 #endif
 
-#ifndef U_HIDE_DRAFT_API
 /**
  * Given an array of const UChar* strings, return a UEnumeration.  String pointers from 0..count-1 must not be null.
  * Do not free or modify either the string array or the characters it points to until this object has been destroyed with uenum_close.
@@ -181,12 +180,11 @@ uenum_openFromStringEnumeration(icu::StringEnumeration* adopted, UErrorCode* ec)
  * @param ec error code
  * @return the new UEnumeration object. Caller is responsible for calling uenum_close to free memory.
  * @see uenum_close
- * @draft ICU 50
+ * @stable ICU 50
  */
-U_DRAFT UEnumeration* U_EXPORT2
+U_STABLE UEnumeration* U_EXPORT2
 uenum_openUCharStringsEnumeration(const UChar* const strings[], int32_t count,
                                  UErrorCode* ec);
-#endif
 
 /* Note:  next function is not hidden as draft, as it is used internally (it was formerly an internal function). */
 
@@ -199,11 +197,10 @@ uenum_openUCharStringsEnumeration(const UChar* const strings[], int32_t count,
  * @param ec error code
  * @return the new UEnumeration object. Caller is responsible for calling uenum_close to free memory
  * @see uenum_close
- * @draft ICU 50
+ * @stable ICU 50
  */
-U_DRAFT UEnumeration* U_EXPORT2
+U_STABLE UEnumeration* U_EXPORT2
 uenum_openCharStringsEnumeration(const char* const strings[], int32_t count,
                                  UErrorCode* ec);
-
 
 #endif

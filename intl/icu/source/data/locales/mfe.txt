@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mfe.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/mfe.xml
+ * ICU <specials> source: <path>/common/main/mfe.xml
  */
 mfe{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p r s t u v w x y z]"}
@@ -22,18 +22,18 @@ mfe{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.75"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE d MMMM y",
-                "d MMMM y",
-                "d MMM, y",
-                "d/M/yyyy",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM, y G",
+                "d/M/y GGGGG",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -55,15 +55,53 @@ mfe{
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
+                yMM{"MM/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yyMM{"MM/yy"}
-                yyMMM{"MMM yy"}
-                yyMMMEd{"E d MMM yy"}
-                yyMMMd{"d MMM yy"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y",
+                "d MMMM y",
+                "d MMM, y",
+                "d/M/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                M{"M"}
+                MMM{"MMM"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMMdd{"dd MMM"}
+                MMd{"d/MM"}
+                MMdd{"dd/MM"}
+                Md{"d/M"}
+                ms{"m:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
+                yMM{"MM/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E d MMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
             }
             dayNames{
                 format{
@@ -106,46 +144,6 @@ mfe{
                 wide{
                     "avan Zezi-Krist",
                     "apre Zezi-Krist",
-                }
-            }
-            fields{
-                day{
-                    dn{"Zour"}
-                    relative{
-                        "-1"{"Yer"}
-                        "0"{"Zordi"}
-                        "1"{"Demin"}
-                    }
-                }
-                dayperiod{
-                    dn{"Peryod dan lazourne"}
-                }
-                era{
-                    dn{"Lepok"}
-                }
-                hour{
-                    dn{"Ler"}
-                }
-                minute{
-                    dn{"Minit"}
-                }
-                month{
-                    dn{"Mwa"}
-                }
-                second{
-                    dn{"Segonn"}
-                }
-                week{
-                    dn{"Semenn"}
-                }
-                weekday{
-                    dn{"Zour lasemenn"}
-                }
-                year{
-                    dn{"Lane"}
-                }
-                zone{
-                    dn{"Peryod letan"}
                 }
             }
             monthNames{
@@ -219,5 +217,45 @@ mfe{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Zour"}
+            relative{
+                "-1"{"Yer"}
+                "0"{"Zordi"}
+                "1"{"Demin"}
+            }
+        }
+        dayperiod{
+            dn{"Peryod dan lazourne"}
+        }
+        era{
+            dn{"Lepok"}
+        }
+        hour{
+            dn{"Ler"}
+        }
+        minute{
+            dn{"Minit"}
+        }
+        month{
+            dn{"Mwa"}
+        }
+        second{
+            dn{"Segonn"}
+        }
+        week{
+            dn{"Semenn"}
+        }
+        weekday{
+            dn{"Zour lasemenn"}
+        }
+        year{
+            dn{"Lane"}
+        }
+        zone{
+            dn{"Peryod letan"}
+        }
     }
 }
