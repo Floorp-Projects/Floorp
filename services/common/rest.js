@@ -763,18 +763,24 @@ HAWKAuthenticatedRESTRequest.prototype = {
   __proto__: RESTRequest.prototype,
 
   dispatch: function dispatch(method, data, onComplete, onProgress) {
+    let contentType = "text/plain";
+    if (method == "POST" || method == "PUT") {
+      contentType = "application/json";
+    }
     if (this.credentials) {
       let options = {
         now: this.now,
         localtimeOffsetMsec: this.localtimeOffsetMsec,
         credentials: this.credentials,
         payload: data && JSON.stringify(data) || "",
-        contentType: "application/json; charset=utf-8",
+        contentType: contentType,
       };
       let header = CryptoUtils.computeHAWK(this.uri, method, options);
       this.setHeader("Authorization", header.field);
       this._log.trace("hawk auth header: " + header.field);
     }
+
+    this.setHeader("Content-Type", contentType);
 
     return RESTRequest.prototype.dispatch.call(
       this, method, data, onComplete, onProgress
