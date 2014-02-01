@@ -18,7 +18,7 @@
         <toolbarbutton id="PanelUI-fxa-status"
                        defaultlabel="&fxaSignIn.label;"
                        errorlabel="&fxaSignInError.label;"
-                       oncommand="gFxAccounts.toggle(event);"
+                       oncommand="gFxAccounts.onMenuPanelCommand(event);"
                        hidden="true"/>
 
         <hbox id="PanelUI-footer-inner">

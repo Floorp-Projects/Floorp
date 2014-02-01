@@ -3633,7 +3633,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   @hudButtonFocused@
 }
 
-#sync-error-panel-title {
+#sync-error-panel-title,
+#sync-start-panel-title {
   font-weight: bold;
 }
 
