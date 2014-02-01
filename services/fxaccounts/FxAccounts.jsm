@@ -645,7 +645,26 @@ this.FxAccounts.prototype = Object.freeze({
       throw new Error("Firefox Accounts server must use HTTPS");
     }
     return url;
-  }
+  },
+
+  // Returns a promise that resolves with the URL to use to force a re-signin
+  // of the current account.
+  promiseAccountsForceSigninURI: function() {
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.force_auth.uri");
+    if (!/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    // but we need to append the email address onto a query string.
+    return this.getSignedInUser().then(accountData => {
+      if (!accountData) {
+        return null;
+      }
+      let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
+      newQueryPortion += "email=" + encodeURIComponent(accountData.email);
+      return url + newQueryPortion;
+    });
+  },
+
 });
 
 /**

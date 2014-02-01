@@ -76,7 +76,7 @@ function promptForRelink(acctName) {
 let wrapper = {
   iframe: null,
 
-  init: function () {
+  init: function (url=null) {
     let weave = Cc["@mozilla.org/weave/service;1"]
                   .getService(Ci.nsISupports)
                   .wrappedJSObject;
@@ -92,7 +92,7 @@ let wrapper = {
     iframe.addEventListener("load", this);
 
     try {
-      iframe.src = fxAccounts.getAccountsURI();
+      iframe.src = url || fxAccounts.getAccountsURI();
     } catch (e) {
       error("Couldn't init Firefox Account wrapper: " + e.message);
     }
@@ -236,11 +236,14 @@ function openPrefs() {
 }
 
 function init() {
-  let signinQuery = window.location.href.match(/signin=true$/);
-
-  if (signinQuery) {
+  if (window.location.href.contains("action=signin")) {
     show("remote");
     wrapper.init();
+  } else if (window.location.href.contains("action=reauth")) {
+    fxAccounts.promiseAccountsForceSigninURI().then(url => {
+      show("remote");
+      wrapper.init(url);
+    });
   } else {
     // Check if we have a local account
     fxAccounts.getSignedInUser().then(user => {
