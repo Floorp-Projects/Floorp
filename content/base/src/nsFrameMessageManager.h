@@ -224,16 +224,15 @@ public:
                           CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal);
 
-  void AddChildManager(nsFrameMessageManager* aManager,
-                       bool aLoadScripts = true);
+  void AddChildManager(nsFrameMessageManager* aManager);
   void RemoveChildManager(nsFrameMessageManager* aManager)
   {
     mChildManagers.RemoveObject(aManager);
   }
   void Disconnect(bool aRemoveFromParent = true);
 
-  void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback,
-                   bool aLoadScripts = true);
+  void InitWithCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
+  void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
   mozilla::dom::ipc::MessageManagerCallback* GetCallback()
   {
     return mCallback;
