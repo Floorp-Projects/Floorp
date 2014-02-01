@@ -22,6 +22,8 @@ let TEST_CASES = [
   ['VK_RIGHT', -1],
   ['VK_RIGHT', -1],
   [-1, 1, 0],
+  ['VK_LEFT', -1],
+  ['VK_RIGHT', -1],
   ['VK_DOWN', -1],
   ['VK_RIGHT', -1],
   ['VK_RIGHT', -1],
@@ -31,14 +33,18 @@ let TEST_CASES = [
   ['VK_RETURN', -1],
   ['b', MAX_SUGGESTIONS, 0],
   ['a', 11, 0],
-  ['VK_TAB', 11, 0, 1],
+  ['VK_DOWN', 11, 0, 1],
   ['VK_TAB', 11, 1, 1],
   [':', -1],
   ['b', 9, 0],
   ['l', 4, 0],
   ['VK_TAB', 4, 0, 1],
+  ['VK_DOWN', 4, 1, 1],
+  ['VK_UP', 4, 0, 1],
   ['VK_TAB', 4, 1, 1],
   ['VK_TAB', 4, 2, 1],
+  ['VK_LEFT', -1],
+  ['VK_RIGHT', -1],
   ['VK_DOWN', -1],
   ['VK_RETURN', -1],
   ['b', 2, 0],
@@ -102,12 +108,13 @@ function testState() {
     key = " ";
     mods.accelKey = true;
   }
-  else if (/(down|left|right|return|home|end)/ig.test(key)) {
+  else if (/(left|right|return|home|end)/ig.test(key) ||
+           (key == "VK_DOWN" && !gPopup.isOpen)) {
     info("pressing key " + key + " to get result: [" + TEST_CASES[index] +
          "] for index " + index);
     gEditor.once("cursorActivity", checkState);
   }
-  else if (key == "VK_TAB") {
+  else if (key == "VK_TAB" || key == "VK_UP" || key == "VK_DOWN") {
     info("pressing key " + key + " to get result: [" + TEST_CASES[index] +
          "] for index " + index);
     gEditor.once("suggestion-entered", checkState);
@@ -139,8 +146,7 @@ function checkState() {
       }
     }
     else {
-      ok(gPopup._panel.state != "open" && gPopup._panel.state != "showing",
-         "Popup is closed for index " + index);
+      ok(!gPopup.isOpen, "Popup is closed for index " + index);
     }
     index++;
     testState();

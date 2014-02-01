@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 
@@ -18,8 +19,8 @@ class FramePanelLayout extends PanelLayout {
     private final View mChildView;
     private final ViewConfig mChildConfig;
 
-    public FramePanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler) {
-        super(context, panelConfig, datasetHandler);
+    public FramePanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler, OnUrlOpenListener urlOpenListener) {
+        super(context, panelConfig, datasetHandler, urlOpenListener);
 
         // This layout can only hold one view so we simply
         // take the first defined view from PanelConfig.
