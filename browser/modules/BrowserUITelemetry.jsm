@@ -443,6 +443,9 @@ this.BrowserUITelemetry = {
       menuBar && Services.appinfo.OS != "Darwin"
               && menuBar.getAttribute("autohide") != "true";
 
+    // Determine if the titlebar is currently visible.
+    result.titleBarEnabled = !Services.prefs.getBoolPref("browser.tabs.drawInTitlebar");
+
     // Examine all customizable areas and see what default items
     // are present and missing.
     let defaultKept = [];

@@ -6,22 +6,15 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AbsListView.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
@@ -41,6 +34,9 @@ public class HomeListView extends ListView
 
     // Top divider
     private boolean mShowTopDivider;
+
+    // ContextMenuInfo maker
+    private ContextMenuInfoFactory mContextMenuInfoFactory;
 
     public HomeListView(Context context) {
         this(context, null);
@@ -87,8 +83,14 @@ public class HomeListView extends ListView
         // HomeListView could hold headers too. Add a context menu info only for its children.
         if (item instanceof Cursor) {
             Cursor cursor = (Cursor) item;
-            mContextMenuInfo = new HomeContextMenuInfo(view, position, id, cursor);
+            if (cursor == null || mContextMenuInfoFactory == null) {
+                mContextMenuInfo = null;
+                return false;
+            }
+
+            mContextMenuInfo = mContextMenuInfoFactory.makeInfoForCursor(view, position, id, cursor);
             return showContextMenuForChild(HomeListView.this);
+
         } else {
             mContextMenuInfo = null;
             return false;
@@ -114,6 +116,10 @@ public class HomeListView extends ListView
         });
     }
 
+    public void setContextMenuInfoFactory(final ContextMenuInfoFactory factory) {
+        mContextMenuInfoFactory = factory;
+    }
+
     public OnUrlOpenListener getOnUrlOpenListener() {
         return mUrlOpenListener;
     }
@@ -122,84 +128,10 @@ public class HomeListView extends ListView
         mUrlOpenListener = listener;
     }
 
-    /**
-     * A ContextMenuInfo for HomeListView that adds details from the cursor.
+    /*
+     * Interface for creating ContextMenuInfo from cursors
      */
-    public static class HomeContextMenuInfo extends AdapterContextMenuInfo {
-
-        public int bookmarkId;
-        public int historyId;
-        public String url;
-        public String title;
-        public int display;
-        public boolean isFolder;
-        public boolean inReadingList;
-
-        /**
-         * This constructor assumes that the cursor was generated from a query
-         * to either the combined view or the bookmarks table.
-         */
-        public HomeContextMenuInfo(View targetView, int position, long id, Cursor cursor) {
-            super(targetView, position, id);
-
-            if (cursor == null) {
-                return;
-            }
-
-            final int typeCol = cursor.getColumnIndex(Bookmarks.TYPE);
-            if (typeCol != -1) {
-                isFolder = (cursor.getInt(typeCol) == Bookmarks.TYPE_FOLDER);
-            } else {
-                isFolder = false;
-            }
-
-            // We don't show a context menu for folders, so return early.
-            if (isFolder) {
-                return;
-            }
-
-            url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-
-            final int bookmarkIdCol = cursor.getColumnIndex(Combined.BOOKMARK_ID);
-            if (bookmarkIdCol == -1) {
-                // If there isn't a bookmark ID column, this must be a bookmarks cursor,
-                // so the regular ID column will correspond to a bookmark ID.
-                bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-            } else if (cursor.isNull(bookmarkIdCol)) {
-                // If this is a combined cursor, we may get a history item without a
-                // bookmark, in which case the bookmarks ID column value will be null.
-                bookmarkId = -1;
-            } else {
-                bookmarkId = cursor.getInt(bookmarkIdCol);
-            }
-
-            final int historyIdCol = cursor.getColumnIndex(Combined.HISTORY_ID);
-            if (historyIdCol != -1) {
-                historyId = cursor.getInt(historyIdCol);
-            } else {
-                historyId = -1;
-            }
-
-            // We only have the parent column in cursors from getBookmarksInFolder.
-            final int parentCol = cursor.getColumnIndex(Bookmarks.PARENT);
-            if (parentCol != -1) {
-                inReadingList = (cursor.getInt(parentCol) == Bookmarks.FIXED_READING_LIST_ID);
-            } else {
-                inReadingList = false;
-            }
-
-            final int displayCol = cursor.getColumnIndex(Combined.DISPLAY);
-            if (displayCol != -1) {
-                display = cursor.getInt(displayCol);
-            } else {
-                display = Combined.DISPLAY_NORMAL;
-            }
-        }
-
-        public String getDisplayTitle() {
-            return TextUtils.isEmpty(title) ?
-                StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url, StringUtils.UrlFlags.STRIP_HTTPS)) : title;
-        }
+    public interface ContextMenuInfoFactory {
+    	public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor);
     }
 }

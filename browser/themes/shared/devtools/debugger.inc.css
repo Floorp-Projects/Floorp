@@ -5,7 +5,6 @@
 
 /* Sources and breakpoints pane */
 
-
 #sources-pane[selectedIndex="0"] + #sources-and-editor-splitter {
   border-color: transparent;
 }
@@ -291,6 +290,22 @@
   color: inherit;
 }
 
+.dbg-expression-button {
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.theme-dark .dbg-expression-button {
+  color: #46afe3; /* Blue highlight color */
+}
+
+.theme-light .dbg-expression-button {
+  color: #0088cc; /* Blue highlight color */
+}
+
 /* Event listeners view */
 
 .dbg-event-listener-type {
@@ -552,31 +567,6 @@
 
 #step-out {
   list-style-image: url(debugger-step-out.png);
-}
-
-#debugger-controls > toolbarbutton,
-#sources-controls > toolbarbutton {
-  margin: 0;
-  box-shadow: none;
-  border-radius: 0;
-  border-width: 0;
-  -moz-border-end-width: 1px;
-  outline-offset: -3px;
-}
-
-#debugger-controls > toolbarbutton:last-of-type,
-#sources-controls > toolbarbutton:last-of-type {
-  -moz-border-end-width: 0;
-}
-
-#debugger-controls,
-#sources-controls {
-  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
-              0 0 0 1px hsla(210,16%,76%,.15) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-  border: 1px solid hsla(210,8%,5%,.45);
-  border-radius: 3px;
-  margin: 0 3px;
 }
 
 #instruments-pane-toggle {
