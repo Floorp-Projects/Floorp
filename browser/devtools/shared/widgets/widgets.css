@@ -79,6 +79,7 @@
 
 .variable-or-property[pseudo-item] > tooltip,
 .variable-or-property[pseudo-item] > .title > .variables-view-edit,
+.variable-or-property[pseudo-item] > .title > .variables-view-open-inspector,
 .variable-or-property[pseudo-item] > .title > .variables-view-delete,
 .variable-or-property[pseudo-item] > .title > .variables-view-add-property,
 .variable-or-property[pseudo-item] > .title > .variable-or-property-frozen-label,
@@ -89,11 +90,13 @@
 }
 
 *:not(:hover) .variables-view-delete,
+*:not(:hover) .variables-view-open-inspector,
 *:not(:hover) .variables-view-add-property {
   visibility: hidden;
 }
 
 .variables-view-delete > .toolbarbutton-text,
+.variables-view-open-inspector > .toolbarbutton-text,
 .variables-view-add-property > .toolbarbutton-text {
   display: none;
 }

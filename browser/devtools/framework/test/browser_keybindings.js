@@ -64,22 +64,6 @@ function test()
     keysetMap.inspector.synthesizeKey();
   }
 
-  function moveMouseOver(aElement, aInspector, cb)
-  {
-    EventUtils.synthesizeMouse(aElement, 2, 2, {type: "mousemove"},
-      aElement.ownerDocument.defaultView);
-    aInspector.toolbox.once("picker-node-hovered", () => {
-      executeSoon(cb);
-    });
-  }
-
-  function isHighlighting()
-  {
-    let outline = gBrowser.selectedBrowser.parentNode
-      .querySelector(".highlighter-container .highlighter-outline");
-    return outline && !outline.hasAttribute("hidden");
-  }
-
   function inspectorShouldBeOpenAndHighlighting(aInspector, aToolbox)
   {
     is (aToolbox.currentToolId, "inspector", "Correct tool has been loaded");

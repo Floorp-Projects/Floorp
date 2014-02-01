@@ -52,7 +52,7 @@ function createDocument() {
     inspector.selection.setNode(div, null);
     inspector.once("inspector-updated", () => {
       getHighlighterOutline().setAttribute("disable-transitions", "true");
-      inspector.toolbox.startPicker().then(testMouseOverH1Highlights);
+      inspector.toolbox.highlighterUtils.startPicker().then(testMouseOverH1Highlights);
     });
   });
 }
@@ -109,7 +109,7 @@ function testOutlineDimensions() {
 }
 
 function finishUp() {
-  inspector.toolbox.stopPicker().then(() => {
+  inspector.toolbox.highlighterUtils.stopPicker().then(() => {
     doc = h1 = inspector = null;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.closeToolbox(target);
