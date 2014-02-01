@@ -37,7 +37,7 @@ SettingsLock.prototype = {
   },
 
   _wrap: function _wrap(obj) {
-    return ObjectWrapper.wrap(obj, this._settingsManager._window);
+    return Cu.cloneInto(obj, this._settingsManager._window);
   },
 
   process: function process() {
@@ -257,7 +257,7 @@ SettingsManager.prototype = {
   _callbacks: null,
 
   _wrap: function _wrap(obj) {
-    return ObjectWrapper.wrap(obj, this._window);
+    return Cu.cloneInto(obj, this._window);
   },
 
   nextTick: function nextTick(aCallback, thisObj) {

@@ -10,7 +10,6 @@ Cu.import('resource://gre/modules/DataStoreChangeNotifier.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
-Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 Cu.import('resource://gre/modules/NotificationDB.jsm');
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
@@ -550,7 +549,7 @@ var shell = {
   sendCustomEvent: function shell_sendCustomEvent(type, details) {
     let content = getContentWindow();
     let event = content.document.createEvent('CustomEvent');
-    let payload = details ? ObjectWrapper.wrap(details, content) : {};
+    let payload = details ? Cu.cloneInto(details, content) : {};
     event.initCustomEvent(type, true, true, payload);
     content.dispatchEvent(event);
   },
@@ -566,7 +565,7 @@ var shell = {
     }
 
     this.sendEvent(getContentWindow(), "mozChromeEvent",
-                   ObjectWrapper.wrap(details, getContentWindow()));
+                   Cu.cloneInto(details, getContentWindow()));
   },
 
   openAppForSystemMessage: function shell_openAppForSystemMessage(msg) {
