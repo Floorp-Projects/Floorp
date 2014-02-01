@@ -53,7 +53,7 @@ function sendContentEvent(type, detail) {
 
   let content = getContentWindow();
   shell.sendEvent(content, "mozContentEvent",
-                   ObjectWrapper.wrap(detail, content));
+                   Cu.cloneInto(detail, content));
   return true;
 }
 
