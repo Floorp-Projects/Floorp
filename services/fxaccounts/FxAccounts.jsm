@@ -385,15 +385,6 @@ InternalMethods.prototype = {
     Services.obs.notifyObservers(null, topic, null);
   },
 
-  /**
-   * Give xpcshell tests an override point for duration testing. This is
-   * necessary because the tests need to manipulate the date in order to
-   * simulate certificate expiration.
-   */
-  now: function() {
-    return Date.now();
-  },
-
   pollEmailStatus: function pollEmailStatus(sessionToken, why) {
     let myGenerationCount = this.generationCount;
     log.debug("entering pollEmailStatus: " + why + " " + myGenerationCount);
@@ -488,6 +479,20 @@ this.FxAccounts = function(mockInternal) {
 }
 this.FxAccounts.prototype = Object.freeze({
   version: DATA_FORMAT_VERSION,
+
+  now: function() {
+    if (this.internal) {
+      return this.internal.now();
+    }
+    return internal.now();
+  },
+
+  get localtimeOffsetMsec() {
+    if (this.internal) {
+      return this.internal.localtimeOffsetMsec;
+    }
+    return internal.localtimeOffsetMsec;
+  },
 
   // set() makes sure that polling is happening, if necessary.
   // get() does not wait for verification, and returns an object even if
@@ -620,7 +625,6 @@ this.FxAccounts.prototype = Object.freeze({
     return internal.whenVerified(userData);
   },
 
-
   /**
    * Sign the current user out.
    *
@@ -656,7 +660,7 @@ this.FxAccounts.prototype = Object.freeze({
       newQueryPortion += "email=" + encodeURIComponent(accountData.email);
       return url + newQueryPortion;
     });
-  },
+  }
 
 });
 
