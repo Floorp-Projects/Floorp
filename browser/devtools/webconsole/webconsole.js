@@ -571,15 +571,13 @@ WebConsoleFrame.prototype = {
 
     /*
      * Focus input line whenever the output area is clicked.
-     * Only focus when the target node (or parent, as in source links) is
-     * not an anchor.
+     * Reusing _addMEssageLinkCallback since it correctly filters
+     * drag and select events.
      */
-    this.outputNode.addEventListener("click", (e) => {
-      if ((e.button == 0) &&
-          (e.target.nodeName.toLowerCase() != "a") &&
-          (e.target.parentNode.nodeName.toLowerCase() != "a")) {
+    this._addFocusCallback(this.outputNode, (evt) => {
+      if ((evt.target.nodeName.toLowerCase() != "a") &&
+          (evt.target.parentNode.nodeName.toLowerCase() != "a"))
         this.jsterm.inputNode.focus();
-      }
     });
 
     // Toggle the timestamp on preference change
@@ -2644,13 +2642,13 @@ WebConsoleFrame.prototype = {
    */
   _addMessageLinkCallback: function WCF__addMessageLinkCallback(aNode, aCallback)
   {
-    aNode.addEventListener("mousedown", function(aEvent) {
+    aNode.addEventListener("mousedown", (aEvent) => {
       this._mousedown = true;
       this._startX = aEvent.clientX;
       this._startY = aEvent.clientY;
     }, false);
 
-    aNode.addEventListener("click", function(aEvent) {
+    aNode.addEventListener("click", (aEvent) => {
       let mousedown = this._mousedown;
       this._mousedown = false;
 
@@ -2663,10 +2661,52 @@ WebConsoleFrame.prototype = {
 
       // If this event started with a mousedown event and it ends at a different
       // location, we consider this text selection.
-      if (mousedown && this._startX != aEvent.clientX &&
-          this._startY != aEvent.clientY) {
+      // Add a fuzz modifier of two pixels in any direction to account for sloppy
+      // clicking.
+      if (mousedown &&
+          (this._startX != aEvent.clientX) &&
+          (this._startY != aEvent.clientY))
+      {
+        this._startX = this._startY = undefined;
         return;
       }
+
+      this._startX = this._startY = undefined;
+
+      aCallback.call(this, aEvent);
+    }, false);
+  },
+
+  _addFocusCallback: function WCF__addFocusCallback(aNode, aCallback)
+  {
+    aNode.addEventListener("mousedown", (aEvent) => {
+      this._mousedown = true;
+      this._startX = aEvent.clientX;
+      this._startY = aEvent.clientY;
+    }, false);
+
+    aNode.addEventListener("click", (aEvent) => {
+      let mousedown = this._mousedown;
+      this._mousedown = false;
+
+      // Do not allow middle/right-click or 2+ clicks.
+      if (aEvent.detail != 1 || aEvent.button != 0) {
+        return;
+      }
+
+      // If this event started with a mousedown event and it ends at a different
+      // location, we consider this text selection.
+      // Add a fuzz modifier of two pixels in any direction to account for sloppy
+      // clicking.
+      if (mousedown &&
+          (Math.abs(aEvent.clientX - this._startX) >= 2) &&
+          (Math.abs(aEvent.clientY - this._startY) >= 1))
+      {
+        this._startX = this._startY = undefined;
+        return;
+      }
+
+      this._startX = this._startY = undefined;
 
       aCallback.call(this, aEvent);
     }, false);
