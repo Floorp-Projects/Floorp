@@ -256,8 +256,12 @@ let gSyncPane = {
     window.close();
   },
 
+  signIn: function() {
+    this.openContentInBrowser("about:accounts?action=signin");
+  },
+
   reSignIn: function() {
-    this.openContentInBrowser("about:accounts");
+    this.openContentInBrowser("about:accounts?action=reauth");
   },
 
   manageFirefoxAccount: function() {
