@@ -111,8 +111,8 @@
           <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
           <div class="stylesheet-more">
             <h3 class="stylesheet-title"></h3>
+            <h3 class="stylesheet-linked-file"></h3>
             <h3 class="stylesheet-rule-count"></h3>
-            <h3 class="stylesheet-error-message"></h3>
             <xul:spacer/>
             <h3><xul:label class="stylesheet-saveButton"
                   tooltiptext="&saveButton.tooltip;"
