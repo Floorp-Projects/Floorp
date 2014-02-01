@@ -202,7 +202,7 @@
 
         <vbox id="hasFxaAccount">
           <groupbox id="fxaGroup">
-            <caption label="&syncBrand.fxa-singular.label;"/>
+            <caption label="&syncBrand.fxAccount.label;"/>
 
             <deck id="fxaLoginStatus">
 
