@@ -1302,11 +1302,15 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
     //    thread (see WorkerThreadState::canStartParseTask) which would cause a
     //    deadlock if there wasn't a second worker thread that could make
     //    progress on our compression task.
-    const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
-    if (length < HUGE_SCRIPT &&
+#ifdef JS_THREADSAFE
+    bool canCompressOffThread =
         WorkerThreadState().cpuCount > 1 &&
-        WorkerThreadState().threadCount >= 2)
-    {
+        WorkerThreadState().threadCount >= 2;
+#else
+    bool canCompressOffThread = false;
+#endif
+    const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
+    if (length < HUGE_SCRIPT && canCompressOffThread) {
         task->ss = this;
         task->chars = src;
         ready_ = false;
