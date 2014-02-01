@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 1996-2012, International Business Machines
+*   Copyright (C) 1996-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 */
@@ -198,6 +198,21 @@ ucal_setTimeZone(    UCalendar*      cal,
   if (zone != NULL) {
       ((Calendar*)cal)->adoptTimeZone(zone);
   }
+}
+
+U_CAPI int32_t U_EXPORT2
+ucal_getTimeZoneID(const UCalendar *cal,
+                   UChar *result,
+                   int32_t resultLength,
+                   UErrorCode *status)
+{
+    if (U_FAILURE(*status)) {
+        return 0;
+    }
+    const TimeZone& tz = ((Calendar*)cal)->getTimeZone();
+    UnicodeString id;
+    tz.getID(id);
+    return id.extract(result, resultLength, *status);
 }
 
 U_CAPI int32_t U_EXPORT2
@@ -643,6 +658,11 @@ static const char * const CAL_TYPES[] = {
         "coptic",
         "ethiopic",
         "ethiopic-amete-alem",
+        "iso8601",
+        "dangi",
+        "islamic-umalqura",
+        "islamic-tbla",
+        "islamic-rgsa",
         NULL
 };
 
@@ -740,11 +760,10 @@ ucal_getTimeZoneTransitionDate(const UCalendar* cal, UTimeZoneTransitionType typ
     const BasicTimeZone * btz = dynamic_cast<const BasicTimeZone *>(&tz);
     if (btz != NULL && U_SUCCESS(*status)) {
         TimeZoneTransition tzt;
-        LocalPointer<BasicTimeZone> btzClone(static_cast<BasicTimeZone *>(btz->clone())); // getNext/PreviousTransition are non-const
         UBool inclusive = (type == UCAL_TZ_TRANSITION_NEXT_INCLUSIVE || type == UCAL_TZ_TRANSITION_PREVIOUS_INCLUSIVE);
         UBool result = (type == UCAL_TZ_TRANSITION_NEXT || type == UCAL_TZ_TRANSITION_NEXT_INCLUSIVE)?
-                        btzClone->getNextTransition(base, inclusive, tzt):
-                        btzClone->getPreviousTransition(base, inclusive, tzt);
+                        btz->getNextTransition(base, inclusive, tzt):
+                        btz->getPreviousTransition(base, inclusive, tzt);
         if (result) {
             *transition = tzt.getTime();
             return TRUE;
@@ -752,5 +771,44 @@ ucal_getTimeZoneTransitionDate(const UCalendar* cal, UTimeZoneTransitionType typ
     }
     return FALSE;
 }
+
+#ifndef U_HIDE_DRAFT_API
+U_CAPI int32_t U_EXPORT2
+ucal_getWindowsTimeZoneID(const UChar* id, int32_t len, UChar* winid, int32_t winidCapacity, UErrorCode* status) {
+    if (U_FAILURE(*status)) {
+        return 0;
+    }
+
+    int32_t resultLen = 0;
+    UnicodeString resultWinID;
+
+    TimeZone::getWindowsID(UnicodeString(id, len), resultWinID, *status);
+    if (U_SUCCESS(*status) && resultWinID.length() > 0) {
+        resultLen = resultWinID.length();
+        resultWinID.extract(winid, winidCapacity, *status);
+    }
+
+    return resultLen;
+}
+
+U_CAPI int32_t U_EXPORT2
+ucal_getTimeZoneIDForWindowsID(const UChar* winid, int32_t len, const char* region, UChar* id, int32_t idCapacity, UErrorCode* status) {
+    if (U_FAILURE(*status)) {
+        return 0;
+    }
+
+    int32_t resultLen = 0;
+    UnicodeString resultID;
+
+    TimeZone::getIDForWindowsID(UnicodeString(winid, len), region, resultID, *status);
+    if (U_SUCCESS(*status) && resultID.length() > 0) {
+        resultLen = resultID.length();
+        resultID.extract(id, idCapacity, *status);
+    }
+
+    return resultLen;
+}
+
+#endif /* U_HIDE_DRAFT_API */
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

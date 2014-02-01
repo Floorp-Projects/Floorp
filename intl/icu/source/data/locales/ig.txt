@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ig.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ig.xml
+ * ICU <specials> source: <path>/common/main/ig.xml
  */
 ig{
     ExemplarCharacters{
@@ -21,12 +21,53 @@ ig{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "A.M.",
@@ -40,7 +81,7 @@ ig{
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "dd/MM/yyyy",
+                "dd/MM/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -102,46 +143,6 @@ ig{
                     "Afọ Kristi",
                 }
             }
-            fields{
-                day{
-                    dn{"Ụbọchị"}
-                    relative{
-                        "-1"{"Nnyaafụ"}
-                        "0"{"Taata"}
-                        "1"{"Echi"}
-                    }
-                }
-                dayperiod{
-                    dn{"N'ụtụtụ/N'anyasị"}
-                }
-                era{
-                    dn{"Agba"}
-                }
-                hour{
-                    dn{"Elekere"}
-                }
-                minute{
-                    dn{"Nkeji"}
-                }
-                month{
-                    dn{"Ọnwa"}
-                }
-                second{
-                    dn{"Nkejinta"}
-                }
-                week{
-                    dn{"Izu"}
-                }
-                weekday{
-                    dn{"Ụbọchị izu"}
-                }
-                year{
-                    dn{"Afọ"}
-                }
-                zone{
-                    dn{"Mpaghara oge"}
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -197,5 +198,45 @@ ig{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Ụbọchị"}
+            relative{
+                "-1"{"Nnyaafụ"}
+                "0"{"Taata"}
+                "1"{"Echi"}
+            }
+        }
+        dayperiod{
+            dn{"N'ụtụtụ/N'anyasị"}
+        }
+        era{
+            dn{"Agba"}
+        }
+        hour{
+            dn{"Elekere"}
+        }
+        minute{
+            dn{"Nkeji"}
+        }
+        month{
+            dn{"Ọnwa"}
+        }
+        second{
+            dn{"Nkejinta"}
+        }
+        week{
+            dn{"Izu"}
+        }
+        weekday{
+            dn{"Ụbọchị izu"}
+        }
+        year{
+            dn{"Afọ"}
+        }
+        zone{
+            dn{"Mpaghara oge"}
+        }
     }
 }

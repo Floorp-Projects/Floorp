@@ -94,6 +94,8 @@ class MessageChannel : HasResultCodes
     // Make an Interrupt call to the other side of the channel
     bool Call(Message* aMsg, Message* aReply);
 
+    bool CanSend() const;
+
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
     bool IsOnCxxStack() const {

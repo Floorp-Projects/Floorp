@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2009-2012, International Business Machines
+*   Copyright (C) 2009-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -26,6 +26,7 @@
 #include "cstring.h"
 #include "mutex.h"
 #include "normalizer2impl.h"
+#include "uassert.h"
 #include "ucln_cmn.h"
 #include "uhash.h"
 
@@ -49,8 +50,6 @@ uint8_t
 Normalizer2::getCombiningClass(UChar32 /*c*/) const {
     return 0;
 }
-
-UOBJECT_DEFINE_NO_RTTI_IMPLEMENTATION(Normalizer2)
 
 // Normalizer2 implementation for the old UNORM_NONE.
 class NoopNormalizer2 : public Normalizer2 {
@@ -452,46 +451,33 @@ U_CDECL_BEGIN
 static UBool U_CALLCONV uprv_normalizer2_cleanup();
 U_CDECL_END
 
-class Norm2AllModesSingleton : public TriStateSingletonWrapper<Norm2AllModes> {
-public:
-    Norm2AllModesSingleton(TriStateSingleton &s, const char *n) :
-        TriStateSingletonWrapper<Norm2AllModes>(s), name(n) {}
-    Norm2AllModes *getInstance(UErrorCode &errorCode) {
-        return TriStateSingletonWrapper<Norm2AllModes>::getInstance(createInstance, name, errorCode);
+
+static Norm2AllModes *nfcSingleton;
+static Norm2AllModes *nfkcSingleton;
+static Norm2AllModes *nfkc_cfSingleton;
+static Normalizer2   *noopSingleton;
+static UHashtable    *cache=NULL;
+
+static icu::UInitOnce nfcInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce nfkcInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce nfkc_cfInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce noopInitOnce = U_INITONCE_INITIALIZER;
+
+// UInitOnce singleton initialization function
+static void U_CALLCONV initSingletons(const char *what, UErrorCode &errorCode) {
+    if (uprv_strcmp(what, "nfc") == 0) {
+        nfcSingleton     = Norm2AllModes::createInstance(NULL, "nfc", errorCode);
+    } else if (uprv_strcmp(what, "nfkc") == 0) {
+        nfkcSingleton    = Norm2AllModes::createInstance(NULL, "nfkc", errorCode);
+    } else if (uprv_strcmp(what, "nfkc_cf") == 0) {
+        nfkc_cfSingleton = Norm2AllModes::createInstance(NULL, "nfkc_cf", errorCode);
+    } else if (uprv_strcmp(what, "noop") == 0) {
+        noopSingleton    = new NoopNormalizer2;
+    } else {
+        U_ASSERT(FALSE);   // Unknown singleton
     }
-private:
-    static void *createInstance(const void *context, UErrorCode &errorCode) {
-        ucln_common_registerCleanup(UCLN_COMMON_NORMALIZER2, uprv_normalizer2_cleanup);
-        return Norm2AllModes::createInstance(NULL, (const char *)context, errorCode);
-    }
-
-    const char *name;
-};
-
-STATIC_TRI_STATE_SINGLETON(nfcSingleton);
-STATIC_TRI_STATE_SINGLETON(nfkcSingleton);
-STATIC_TRI_STATE_SINGLETON(nfkc_cfSingleton);
-
-class Norm2Singleton : public SimpleSingletonWrapper<Normalizer2> {
-public:
-    Norm2Singleton(SimpleSingleton &s) : SimpleSingletonWrapper<Normalizer2>(s) {}
-    Normalizer2 *getInstance(UErrorCode &errorCode) {
-        return SimpleSingletonWrapper<Normalizer2>::getInstance(createInstance, NULL, errorCode);
-    }
-private:
-    static void *createInstance(const void *, UErrorCode &errorCode) {
-        Normalizer2 *noop=new NoopNormalizer2;
-        if(noop==NULL) {
-            errorCode=U_MEMORY_ALLOCATION_ERROR;
-        }
-        ucln_common_registerCleanup(UCLN_COMMON_NORMALIZER2, uprv_normalizer2_cleanup);
-        return noop;
-    }
-};
-
-STATIC_SIMPLE_SINGLETON(noopSingleton);
-
-static UHashtable *cache=NULL;
+    ucln_common_registerCleanup(UCLN_COMMON_NORMALIZER2, uprv_normalizer2_cleanup);
+}
 
 U_CDECL_BEGIN
 
@@ -500,57 +486,63 @@ static void U_CALLCONV deleteNorm2AllModes(void *allModes) {
 }
 
 static UBool U_CALLCONV uprv_normalizer2_cleanup() {
-    Norm2AllModesSingleton(nfcSingleton, NULL).deleteInstance();
-    Norm2AllModesSingleton(nfkcSingleton, NULL).deleteInstance();
-    Norm2AllModesSingleton(nfkc_cfSingleton, NULL).deleteInstance();
-    Norm2Singleton(noopSingleton).deleteInstance();
+    delete nfcSingleton;
+    nfcSingleton = NULL;
+    delete nfkcSingleton;
+    nfkcSingleton = NULL;
+    delete nfkc_cfSingleton;
+    nfkc_cfSingleton = NULL;
+    delete noopSingleton;
+    noopSingleton = NULL;
     uhash_close(cache);
     cache=NULL;
+    nfcInitOnce.reset(); 
+    nfkcInitOnce.reset(); 
+    nfkc_cfInitOnce.reset(); 
+    noopInitOnce.reset(); 
     return TRUE;
 }
 
 U_CDECL_END
 
 const Normalizer2 *Normalizer2Factory::getNFCInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->comp : NULL;
+    umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+    return nfcSingleton!=NULL ? &nfcSingleton->comp : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getNFDInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->decomp : NULL;
+    umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+    return nfcSingleton!=NULL ? &nfcSingleton->decomp : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getFCDInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->fcd : NULL;
+    umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+    return nfcSingleton!=NULL ? &nfcSingleton->fcd : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getFCCInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->fcc : NULL;
+    umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+    return nfcSingleton!=NULL ? &nfcSingleton->fcc : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getNFKCInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfkcSingleton, "nfkc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->comp : NULL;
+    umtx_initOnce(nfkcInitOnce, &initSingletons, "nfkc", errorCode);
+    return nfkcSingleton!=NULL ? &nfkcSingleton->comp : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getNFKDInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfkcSingleton, "nfkc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->decomp : NULL;
+    umtx_initOnce(nfkcInitOnce, &initSingletons, "nfkc", errorCode);
+    return nfkcSingleton!=NULL ? &nfkcSingleton->decomp : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getNFKC_CFInstance(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfkc_cfSingleton, "nfkc_cf").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->comp : NULL;
+    umtx_initOnce(nfkc_cfInitOnce, &initSingletons, "nfkc_cf", errorCode);
+    return nfkc_cfSingleton!=NULL ? &nfkc_cfSingleton->comp : NULL;
 }
 
 const Normalizer2 *Normalizer2Factory::getNoopInstance(UErrorCode &errorCode) {
-    return Norm2Singleton(noopSingleton).getInstance(errorCode);
+    umtx_initOnce(noopInitOnce, &initSingletons, "noop", errorCode);
+    return noopSingleton;
 }
 
 const Normalizer2 *
@@ -576,23 +568,20 @@ Normalizer2Factory::getInstance(UNormalizationMode mode, UErrorCode &errorCode) 
 
 const Normalizer2Impl *
 Normalizer2Factory::getNFCImpl(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->impl : NULL;
+    umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+    return nfcSingleton!=NULL ? &nfcSingleton->impl : NULL;
 }
 
 const Normalizer2Impl *
 Normalizer2Factory::getNFKCImpl(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfkcSingleton, "nfkc").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->impl : NULL;
+    umtx_initOnce(nfkcInitOnce, &initSingletons, "nfkc", errorCode);
+    return nfkcSingleton!=NULL ? &nfkcSingleton->impl : NULL;
 }
 
 const Normalizer2Impl *
 Normalizer2Factory::getNFKC_CFImpl(UErrorCode &errorCode) {
-    Norm2AllModes *allModes=
-        Norm2AllModesSingleton(nfkc_cfSingleton, "nfkc_cf").getInstance(errorCode);
-    return allModes!=NULL ? &allModes->impl : NULL;
+    umtx_initOnce(nfkc_cfInitOnce, &initSingletons, "nfkc_cf", errorCode);
+    return nfkc_cfSingleton!=NULL ? &nfkc_cfSingleton->impl : NULL;
 }
 
 const Normalizer2Impl *
@@ -640,11 +629,14 @@ Normalizer2::getInstance(const char *packageName,
     Norm2AllModes *allModes=NULL;
     if(packageName==NULL) {
         if(0==uprv_strcmp(name, "nfc")) {
-            allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
+            umtx_initOnce(nfcInitOnce, &initSingletons, "nfc", errorCode);
+            allModes=nfcSingleton;
         } else if(0==uprv_strcmp(name, "nfkc")) {
-            allModes=Norm2AllModesSingleton(nfkcSingleton, "nfkc").getInstance(errorCode);
+            umtx_initOnce(nfkcInitOnce, &initSingletons, "nfkc", errorCode);
+            allModes=nfkcSingleton;
         } else if(0==uprv_strcmp(name, "nfkc_cf")) {
-            allModes=Norm2AllModesSingleton(nfkc_cfSingleton, "nfkc_cf").getInstance(errorCode);
+            umtx_initOnce(nfkc_cfInitOnce, &initSingletons, "nfkc_cf", errorCode);
+            allModes=nfkc_cfSingleton;
         }
     }
     if(allModes==NULL && U_SUCCESS(errorCode)) {

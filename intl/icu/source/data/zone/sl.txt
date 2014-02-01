@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sl.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/sl.xml
+ * ICU <specials> source: <path>/common/main/sl.xml
  */
 sl{
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -23,6 +23,9 @@ sl{
         }
         "Africa:Algiers"{
             ec{"Alžir"}
+        }
+        "Africa:Asmera"{
+            ec{"Asmara"}
         }
         "Africa:Cairo"{
             ec{"Kairo"}
@@ -48,6 +51,12 @@ sl{
         "America:Asuncion"{
             ec{"Asunción"}
         }
+        "America:Cayman"{
+            ec{"Kajman"}
+        }
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
+        }
         "America:Cordoba"{
             ec{"Kordova"}
         }
@@ -63,20 +72,53 @@ sl{
         "America:El_Salvador"{
             ec{"Salvador"}
         }
+        "America:Godthab"{
+            ec{"Nuuk"}
+        }
         "America:Guatemala"{
             ec{"Gvatemala"}
         }
         "America:Guyana"{
             ec{"Gvajana"}
         }
+        "America:Indiana:Knox"{
+            ec{"Knox, Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo, Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg, Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City, Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay, Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes, Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
         "America:Jamaica"{
             ec{"Jamajka"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
         }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
         }
         "America:Martinique"{
             ec{"Martinik"}
+        }
+        "America:Mexico_City"{
+            ec{"Ciudad Mexico"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, North Dakota"}
         }
         "America:North_Dakota:Center"{
             ec{"Center, Severna Dakota"}
@@ -86,6 +128,9 @@ sl{
         }
         "America:Puerto_Rico"{
             ec{"Portoriko"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
@@ -104,6 +149,9 @@ sl{
         }
         "America:St_Vincent"{
             ec{"St. Vincent"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
         }
         "Antarctica:South_Pole"{
             ec{"Južni tečaj"}
@@ -141,6 +189,15 @@ sl{
         "Asia:Brunei"{
             ec{"Brunej"}
         }
+        "Asia:Calcutta"{
+            ec{"Kolkata"}
+        }
+        "Asia:Choibalsan"{
+            ec{"Čojbalsan"}
+        }
+        "Asia:Chongqing"{
+            ec{"Čongčing"}
+        }
         "Asia:Damascus"{
             ec{"Damask"}
         }
@@ -150,11 +207,17 @@ sl{
         "Asia:Dubai"{
             ec{"Dubaj"}
         }
+        "Asia:Dushanbe"{
+            ec{"Dušanbe"}
+        }
         "Asia:Hong_Kong"{
             ec{"Hongkong"}
         }
         "Asia:Jakarta"{
             ec{"Džakarta"}
+        }
+        "Asia:Jerusalem"{
+            ec{"Jeruzalem"}
         }
         "Asia:Kamchatka"{
             ec{"Kamčatka"}
@@ -164,6 +227,12 @@ sl{
         }
         "Asia:Kashgar"{
             ec{"Kašgar"}
+        }
+        "Asia:Katmandu"{
+            ec{"Katmandu"}
+        }
+        "Asia:Khandyga"{
+            ec{"Handiga"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
@@ -177,6 +246,9 @@ sl{
         "Asia:Makassar"{
             ec{"Makasar"}
         }
+        "Asia:Muscat"{
+            ec{"Muškat"}
+        }
         "Asia:Nicosia"{
             ec{"Nikozija"}
         }
@@ -188,6 +260,12 @@ sl{
         }
         "Asia:Qatar"{
             ec{"Katar"}
+        }
+        "Asia:Qyzylorda"{
+            ec{"Kizlorda"}
+        }
+        "Asia:Rangoon"{
+            ec{"Rangun"}
         }
         "Asia:Riyadh"{
             ec{"Rijad"}
@@ -207,6 +285,9 @@ sl{
         "Asia:Singapore"{
             ec{"Singapur"}
         }
+        "Asia:Taipei"{
+            ec{"Tajpej"}
+        }
         "Asia:Tashkent"{
             ec{"Taškent"}
         }
@@ -218,6 +299,9 @@ sl{
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Bator"}
+        }
+        "Asia:Urumqi"{
+            ec{"Urumči"}
         }
         "Asia:Yakutsk"{
             ec{"Jakutsk"}
@@ -243,6 +327,9 @@ sl{
         "Atlantic:Faeroe"{
             ec{"Faroe"}
         }
+        "Atlantic:South_Georgia"{
+            ec{"Južna Georgia"}
+        }
         "Atlantic:St_Helena"{
             ec{"St. Helena"}
         }
@@ -267,11 +354,20 @@ sl{
         "Europe:Copenhagen"{
             ec{"Köbenhavn"}
         }
+        "Europe:Dublin"{
+            ld{"irski poletni čas"}
+        }
+        "Europe:Isle_of_Man"{
+            ec{"Otok Man"}
+        }
         "Europe:Kiev"{
             ec{"Kijev"}
         }
         "Europe:Lisbon"{
             ec{"Lizbona"}
+        }
+        "Europe:London"{
+            ld{"britanski poletni čas"}
         }
         "Europe:Luxembourg"{
             ec{"Luksemburg"}
@@ -284,6 +380,9 @@ sl{
         }
         "Europe:Paris"{
             ec{"Pariz"}
+        }
+        "Europe:Prague"{
+            ec{"Praga"}
         }
         "Europe:Rome"{
             ec{"Rim"}
@@ -300,6 +399,9 @@ sl{
         "Europe:Uzhgorod"{
             ec{"Užgorod"}
         }
+        "Europe:Vatican"{
+            ec{"Vatikan"}
+        }
         "Europe:Vienna"{
             ec{"Dunaj"}
         }
@@ -312,6 +414,15 @@ sl{
         "Europe:Zaporozhye"{
             ec{"Zaporožje"}
         }
+        "Indian:Christmas"{
+            ec{"Božični otok"}
+        }
+        "Indian:Cocos"{
+            ec{"Kokosovi otoki"}
+        }
+        "Indian:Comoro"{
+            ec{"Komori"}
+        }
         "Indian:Maldives"{
             ec{"Maldivi"}
         }
@@ -320,6 +431,12 @@ sl{
         }
         "Pacific:Fiji"{
             ec{"Fidži"}
+        }
+        "Pacific:Ponape"{
+            ec{"Pohnpei"}
+        }
+        "Pacific:Truk"{
+            ec{"Chuuk"}
         }
         "meta:Afghanistan"{
             ls{"Afganistanski čas"}
@@ -805,6 +922,8 @@ sl{
             ls{"Samarski standardni čas"}
         }
         "meta:Samoa"{
+            ld{"Samoanski poletni čas"}
+            lg{"Samoanski čas"}
             ls{"Samoanski standardni čas"}
         }
         "meta:Seychelles"{
@@ -846,11 +965,6 @@ sl{
         }
         "meta:Truk"{
             ls{"Čas: Otok Chuuk"}
-        }
-        "meta:Turkey"{
-            ld{"Turški poletni čas"}
-            lg{"Turški čas"}
-            ls{"Turški standardni čas"}
         }
         "meta:Turkmenistan"{
             ld{"Turkmenistanski poletni čas"}
@@ -908,10 +1022,11 @@ sl{
             ls{"Jekaterinburški standardni čas"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} čas ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} čas"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

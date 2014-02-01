@@ -1,17 +1,33 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zh_Hant_MO.xml
 // *
 // ***************************************************************************
 zh_Hant_MO{
-    Version{"2.0.75.99"}
+    %%Parent{"zh_Hant_HK"}
+    Version{"2.0.92.80"}
     calendar{
-        buddhist{
+        generic{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年MM月dd日EEEE",
+                "Gy年MM月dd日",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+            }
             availableFormats{
-                MEd{"M-d（E）"}
+                MEd{"M-d (E)"}
                 Md{"M-d"}
             }
         }
@@ -19,28 +35,22 @@ zh_Hant_MO{
             DateTimePatterns{
                 "ah:mm:ss [zzzz]",
                 "ah:mm:ss [z]",
-                "ahh:mm:ss",
+                "ah:mm:ss",
                 "ah:mm",
                 "y年MM月dd日EEEE",
                 "y年MM月dd日",
                 "y年M月d日",
                 "yy年M月d日",
+                "{1}{0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
             }
             availableFormats{
                 MEd{"E, M-d"}
                 MMdd{"dd-MM"}
                 Md{"M-d"}
-            }
-        }
-        roc{
-            availableFormats{
-                MEd{"d-M（E）"}
-                Md{"d-M"}
             }
         }
     }

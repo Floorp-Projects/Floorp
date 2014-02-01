@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/bn.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/bn.xml
+ * ICU <specials> source: <path>/common/main/bn.xml
  */
 bn{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"আবিদজান"}
@@ -86,6 +86,9 @@ bn{
         }
         "Africa:Johannesburg"{
             ec{"জোহানেসবার্গ"}
+        }
+        "Africa:Juba"{
+            ec{"জুবা"}
         }
         "Africa:Kampala"{
             ec{"কামপালা"}
@@ -210,6 +213,9 @@ bn{
         "America:Bahia"{
             ec{"বাহিয়া"}
         }
+        "America:Bahia_Banderas"{
+            ec{"বাহিয়া বানড্রাস"}
+        }
         "America:Barbados"{
             ec{"বার্বাডোজ"}
         }
@@ -270,6 +276,9 @@ bn{
         "America:Costa_Rica"{
             ec{"কোস্টারিকা"}
         }
+        "America:Creston"{
+            ec{"ক্রিস্টান"}
+        }
         "America:Cuiaba"{
             ec{"কুইয়াবা"}
         }
@@ -310,7 +319,7 @@ bn{
             ec{"গ্লাস বে"}
         }
         "America:Godthab"{
-            ec{"গদথাব"}
+            ec{"নুক"}
         }
         "America:Goose_Bay"{
             ec{"গুস বে"}
@@ -384,6 +393,9 @@ bn{
         "America:Kentucky:Monticello"{
             ec{"মন্টিচেলো, কেন্টাকি"}
         }
+        "America:Kralendijk"{
+            ec{"ক্রেলেন্ডাজিক"}
+        }
         "America:La_Paz"{
             ec{"লা পাজ"}
         }
@@ -414,6 +426,9 @@ bn{
         "America:Martinique"{
             ec{"মারটিনিক"}
         }
+        "America:Matamoros"{
+            ec{"মাতামোরস"}
+        }
         "America:Mazatlan"{
             ec{"মাজাটলান"}
         }
@@ -425,6 +440,9 @@ bn{
         }
         "America:Merida"{
             ec{"মেরিডা"}
+        }
+        "America:Metlakatla"{
+            ec{"ম্যাকওয়ারি"}
         }
         "America:Mexico_City"{
             ec{"মেক্সিকো সিটি"}
@@ -471,6 +489,9 @@ bn{
         "America:North_Dakota:New_Salem"{
             ec{"নিউ সালেম, উত্তর ডাকোটা"}
         }
+        "America:Ojinaga"{
+            ec{"ওজিঙ্গা"}
+        }
         "America:Panama"{
             ec{"পানামা"}
         }
@@ -513,6 +534,9 @@ bn{
         "America:Rio_Branco"{
             ec{"রিও ব্রাঙ্কো"}
         }
+        "America:Santa_Isabel"{
+            ec{"সান্তা ইসাবেল"}
+        }
         "America:Santarem"{
             ec{"সেনটুরেম"}
         }
@@ -526,10 +550,13 @@ bn{
             ec{"সাও পাউলো"}
         }
         "America:Scoresbysund"{
-            ec{"স্কোর্সবায়সুন্ড"}
+            ec{"ইটকুয়োরটুরমিট"}
         }
         "America:Shiprock"{
             ec{"শিপ্রক"}
+        }
+        "America:Sitka"{
+            ec{"শিটকা"}
         }
         "America:St_Barthelemy"{
             ec{"সেন্ট.বার্থেলেমি"}
@@ -593,6 +620,9 @@ bn{
         }
         "Antarctica:DumontDUrville"{
             ec{"ডুমন্ট ডি’উরভিল"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"ম্যাককুয়্যারি"}
         }
         "Antarctica:Mawson"{
             ec{"মসোন"}
@@ -693,6 +723,9 @@ bn{
         "Asia:Harbin"{
             ec{"হার্বিন"}
         }
+        "Asia:Hebron"{
+            ec{"হেব্রোন"}
+        }
         "Asia:Hong_Kong"{
             ec{"হং কং"}
         }
@@ -726,6 +759,9 @@ bn{
         "Asia:Katmandu"{
             ec{"কাঠমান্ডু"}
         }
+        "Asia:Khandyga"{
+            ec{"খানডিয়াগা"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"ক্রাসনোইয়ার্স্ক"}
         }
@@ -755,6 +791,9 @@ bn{
         }
         "Asia:Nicosia"{
             ec{"নিকোসিয়া"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"নভকুয়েতস্নক"}
         }
         "Asia:Novosibirsk"{
             ec{"নভোসিবির্স্ক"}
@@ -827,6 +866,9 @@ bn{
         }
         "Asia:Urumqi"{
             ec{"উরুমকি"}
+        }
+        "Asia:Ust-Nera"{
+            ec{"উস্ত- নেরা"}
         }
         "Asia:Vientiane"{
             ec{"ভিয়েনতায়েন"}
@@ -910,7 +952,7 @@ bn{
             ec{"সিডনি"}
         }
         "Etc:Unknown"{
-            ec{"অজানা"}
+            ec{"অজানা শহর"}
         }
         "Europe:Amsterdam"{
             ec{"আমস্টারডাম"}
@@ -939,6 +981,9 @@ bn{
         "Europe:Budapest"{
             ec{"বুডাপেস্ট"}
         }
+        "Europe:Busingen"{
+            ec{"বুসিনগেন"}
+        }
         "Europe:Chisinau"{
             ec{"কিসিনাহু"}
         }
@@ -947,6 +992,7 @@ bn{
         }
         "Europe:Dublin"{
             ec{"ডাবলিন"}
+            ld{"আইরিশ গ্রীষ্মকালীন সময়"}
         }
         "Europe:Gibraltar"{
             ec{"জিব্রাল্টার"}
@@ -980,6 +1026,7 @@ bn{
         }
         "Europe:London"{
             ec{"লন্ডন"}
+            ld{"ব্রিটিশ গ্রীষ্মকালীন সময়"}
         }
         "Europe:Luxembourg"{
             ec{"লুক্সেমবার্গ"}
@@ -1084,7 +1131,7 @@ bn{
             ec{"ছাগোস"}
         }
         "Indian:Christmas"{
-            ec{"খ্রিস্টমাস"}
+            ec{"বড়দিন"}
         }
         "Indian:Cocos"{
             ec{"কোকোস"}
@@ -1252,23 +1299,23 @@ bn{
             ls{"আমাজন মানক সময়"}
         }
         "meta:America_Central"{
-            ld{"কেন্দ্রীয় দিবালোক মসয়"}
-            lg{"কেন্দ্রীয় সময়"}
-            ls{"কেন্দ্রীয় মানক সময়"}
+            ld{"উত্তর আমিরিকা কেন্দ্রীয় দিবালোক মসয়"}
+            lg{"উত্তর আমিরিকা কেন্দ্রীয় সময়"}
+            ls{"উত্তর আমিরিকা কেন্দ্রীয় মানক সময়"}
         }
         "meta:America_Eastern"{
-            ld{"পূর্ব দিবালোক সময়"}
-            lg{"পূর্বাঞ্চলীয় সময়"}
-            ls{"পূর্ব মানক সময়"}
+            ld{"উত্তর আমিরিকা পূর্ব দিবালোক সময়"}
+            lg{"উত্তর আমিরিকা পূর্বাঞ্চলীয় সময়"}
+            ls{"উত্তর আমিরিকা পূর্ব মানক সময়"}
         }
         "meta:America_Mountain"{
-            ld{"মাউনটেন দিবালোক সময়"}
-            lg{"মাউন্টেন সময়"}
-            ls{"মাউনটেন মানক সময়"}
+            ld{"উত্তর আমেরিকা মাউনটেন দিবালোক সময়"}
+            lg{"উত্তর আমেরিকা মাউন্টেন সময়"}
+            ls{"উত্তর আমিরিকা মাউনটেন মানক সময়"}
         }
         "meta:America_Pacific"{
-            ld{"প্রশান্ত মহাসাগরীয় দিবালোক সময়"}
-            lg{"প্রশান্ত মহাসাগরীয় সময়"}
+            ld{"উত্তর আমিরিকা প্রশান্ত মহাসাগরীয় দিবালোক সময়"}
+            lg{"উত্তর আমিরিকা প্রশান্ত মহাসাগরীয় সময়"}
             ls{"প্রশান্ত মহাসাগরীয় মানক সময়"}
         }
         "meta:Anadyr"{
@@ -1699,7 +1746,7 @@ bn{
             ls{"রথেরা সময়"}
         }
         "meta:Sakhalin"{
-            ld{"সাখালিন গৃষ্মকালীন সময়"}
+            ld{"সাখালিন গ্রীষ্মকালীন সময়"}
             lg{"সাখালিন সময়"}
             ls{"সাখালিন মানক সময়"}
         }
@@ -1709,6 +1756,8 @@ bn{
             ls{"সামারা মান সময়"}
         }
         "meta:Samoa"{
+            ld{"সামোয়া গৃষ্মকালীন সময়"}
+            lg{"সামোয়া সময়"}
             ls{"সামোয়া মানক সময়"}
         }
         "meta:Seychelles"{
@@ -1807,10 +1856,11 @@ bn{
             ls{"ইয়েকাতেরিনবুর্গ মানক সময়"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} সময় ({0})"}
-        gmtFormat{"গ্রীনিচ মান সময় {0}"}
+        gmtFormat{"GMT {0}"}
         gmtZeroFormat{"গ্রীনিচ মান সময়"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} সময়"}
+        regionFormatDaylight{"{0} দিবালোক সময়"}
+        regionFormatStandard{"{0} আদর্শ সময়"}
     }
 }

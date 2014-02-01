@@ -1,28 +1,73 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sw.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/sw.xml
+ * ICU <specials> source: <path>/common/main/sw.xml
  */
 sw{
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     zoneStrings{
-        "Africa:Sao_Tome"{
-            ec{"São Tomé"}
+        "Africa:Asmera"{
+            ec{"Asmara"}
         }
-        "America:Asuncion"{
-            ec{"Asunción"}
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
+        }
+        "America:Costa_Rica"{
+            ec{"Kosta Rika"}
         }
         "America:Curacao"{
-            ec{"Curaçao"}
+            ec{"Kurakao"}
+        }
+        "America:Godthab"{
+            ec{"Nuuk"}
+        }
+        "America:Indiana:Knox"{
+            ec{"Knox, Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo, Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg, Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City, Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay, Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes, Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
         }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
+        }
+        "America:Mexico_City"{
+            ec{"Jiji la Meksiko"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, North Dakota"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Center, North Dakota"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"New Salem, North Dakota"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
@@ -30,8 +75,56 @@ sw{
         "America:St_Johns"{
             ec{"St. John’s"}
         }
-        "Indian:Reunion"{
-            ec{"Réunion"}
+        "America:St_Kitts"{
+            ec{"St. Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"St. Vincent"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
+        "Asia:Calcutta"{
+            ec{"Kolkata"}
+        }
+        "Asia:Katmandu"{
+            ec{"Kathmandu"}
+        }
+        "Asia:Saigon"{
+            ec{"Ho Chi Minh"}
+        }
+        "Atlantic:Cape_Verde"{
+            ec{"Kepuvede"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"Faroe"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"St. Helena"}
+        }
+        "Etc:Unknown"{
+            ec{"Jiji Lisilojulikana"}
+        }
+        "Europe:Dublin"{
+            ld{"Muda wa Majira ya Joto wa Ayalandi"}
+        }
+        "Europe:London"{
+            ld{"Muda wa Majira ya Joto wa Uingereza"}
+        }
+        "Indian:Christmas"{
+            ec{"Krismasi"}
+        }
+        "Pacific:Ponape"{
+            ec{"Pohnpei"}
+        }
+        "Pacific:Truk"{
+            ec{"Chuuk"}
         }
         "meta:Afghanistan"{
             ls{"Saa ya Afghanistani"}
@@ -517,6 +610,8 @@ sw{
             ls{"Saa za Wastani za Samara"}
         }
         "meta:Samoa"{
+            ld{"Saa ya Majira ya joto ya Samoa"}
+            lg{"Saa ya Samoa"}
             ls{"Saa Wastani ya Samoa"}
         }
         "meta:Seychelles"{
@@ -615,10 +710,11 @@ sw{
             ls{"Muda Wastani wa Yekaterinburg"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} Saa ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} Saa"}
+        regionFormat{"Saa za {0}"}
+        regionFormatDaylight{"Saa za Mchana za {0}"}
+        regionFormatStandard{"Saa za Msingi za {0}"}
     }
 }
