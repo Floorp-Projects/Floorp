@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2003-2012, International Business Machines
+*   Copyright (C) 2003-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -606,7 +606,7 @@ prepareFromUMappings(UCMTable *table) {
             flag&=MBCS_FROM_U_EXT_MASK;
             m->f=flag;
         }
-        if(flag==0 || flag==1 || (flag==2 && m->bLen==1)) {
+        if(flag==0 || flag==1 || (flag==2 && m->bLen==1) || flag==4) {
             map[j++]=i;
 
             if(m->uLen>1) {
@@ -672,6 +672,8 @@ getFromUBytesValue(CnvExtData *extData, UCMTable *table, UCMapping *m) {
     value|=(uint32_t)m->bLen<<UCNV_EXT_FROM_U_LENGTH_SHIFT;
     if(m->f==0) {
         value|=UCNV_EXT_FROM_U_ROUNDTRIP_FLAG;
+    } else if(m->f==4) {
+        value|=UCNV_EXT_FROM_U_GOOD_ONE_WAY_FLAG;
     }
 
     /* calculate the real UTF-16 length (see recoding in prepareFromUMappings()) */

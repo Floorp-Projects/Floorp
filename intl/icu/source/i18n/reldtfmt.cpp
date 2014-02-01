@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2007-2012, International Business Machines Corporation and
+* Copyright (C) 2007-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 */
@@ -18,6 +18,7 @@
 
 #include "gregoimp.h" // for CalendarData
 #include "cmemory.h"
+#include "uresimp.h"
 
 U_NAMESPACE_BEGIN
 
@@ -162,7 +163,7 @@ UnicodeString& RelativeDateFormat::format(  Calendar& cal,
         UnicodeString datePattern;
         if (relativeDayString.length() > 0) {
             // Need to quote the relativeDayString to make it a legal date pattern
-            relativeDayString.findAndReplace(UNICODE_STRING("'", 1), UNICODE_STRING("''", 2) ); // double any existing APOSTROPHE
+            relativeDayString.findAndReplace(UNICODE_STRING("'", 1), UNICODE_STRING("''", 2)); // double any existing APOSTROPHE
             relativeDayString.insert(0, APOSTROPHE); // add APOSTROPHE at beginning...
             relativeDayString.append(APOSTROPHE); // and at end
             datePattern.setTo(relativeDayString);
@@ -423,17 +424,22 @@ void RelativeDateFormat::loadDates(UErrorCode &status) {
         }
     }
 
-    UResourceBundle *strings = calData.getByKey3("fields", "day", "relative", status);
+    UResourceBundle *rb = ures_open(NULL, fLocale.getBaseName(), &status);
+    UResourceBundle *sb = ures_getByKeyWithFallback(rb, "fields", NULL, &status);
+    rb = ures_getByKeyWithFallback(sb, "day", rb, &status);
+    sb = ures_getByKeyWithFallback(rb, "relative", sb, &status);
+    ures_close(rb);
     // set up min/max 
     fDayMin=-1;
     fDayMax=1;
 
     if(U_FAILURE(status)) {
         fDatesLen=0;
+        ures_close(sb);
         return;
     }
 
-    fDatesLen = ures_getSize(strings);
+    fDatesLen = ures_getSize(sb);
     fDates = (URelativeString*) uprv_malloc(sizeof(fDates[0])*fDatesLen);
 
     // Load in each item into the array...
@@ -441,8 +447,8 @@ void RelativeDateFormat::loadDates(UErrorCode &status) {
 
     UResourceBundle *subString = NULL;
     
-    while(ures_hasNext(strings) && U_SUCCESS(status)) {  // iterate over items
-        subString = ures_getNextResource(strings, subString, &status);
+    while(ures_hasNext(sb) && U_SUCCESS(status)) {  // iterate over items
+        subString = ures_getNextResource(sb, subString, &status);
         
         if(U_FAILURE(status) || (subString==NULL)) break;
         
@@ -474,6 +480,7 @@ void RelativeDateFormat::loadDates(UErrorCode &status) {
         n++;
     }
     ures_close(subString);
+    ures_close(sb);
     
     // the fDates[] array could be sorted here, for direct access.
 }

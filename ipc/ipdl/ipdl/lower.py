@@ -3706,6 +3706,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #   Message descriptor = UnShare(subprocess, mId, descriptor)
             #   mShmemMap.Remove(id)
             #   Shmem::Dealloc(rawmem)
+            #   if (!mChannel.CanSend()) {
+            #     delete descriptor;
+            #     return true;
+            #   }
             #   return descriptor && Send(descriptor)
             destroyshmem.addstmts([
                 StmtDecl(Decl(_shmemIdType(), idvar.name),
@@ -3716,8 +3720,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             failif = StmtIf(ExprNot(rawvar))
             failif.addifstmt(StmtReturn.FALSE)
+            cansend = ExprCall(ExprSelect(p.channelVar(), '.', 'CanSend'), [])
+            returnif = StmtIf(ExprNot(cansend))
+            returnif.addifstmts([
+                    StmtExpr(ExprDelete(descriptorvar)),
+                    StmtReturn.TRUE])
             destroyshmem.addstmts([
                 failif,
+                Whitespace.NL,
                 StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
                          init=_shmemUnshareFrom(
                              shmemvar,
@@ -3726,6 +3736,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 Whitespace.NL,
                 StmtExpr(p.removeShmemId(idvar)),
                 StmtExpr(_shmemDealloc(rawvar)),
+                Whitespace.NL,
+                returnif,
                 Whitespace.NL,
                 StmtReturn(ExprBinary(
                     descriptorvar, '&&',

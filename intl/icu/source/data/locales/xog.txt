@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/xog.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/xog.xml
+ * ICU <specials> source: <path>/common/main/xog.xml
  */
 xog{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
@@ -22,8 +22,48 @@ xog{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "Munkyo",
@@ -37,7 +77,7 @@ xog{
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "dd/MM/yyyy",
+                "dd/MM/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -108,46 +148,6 @@ xog{
                 wide{
                     "Kulisto nga azilawo",
                     "Kulisto nga affile",
-                }
-            }
-            fields{
-                day{
-                    dn{"Olunaku"}
-                    relative{
-                        "-1"{"Edho"}
-                        "0"{"Olwaleelo (leelo)"}
-                        "1"{"Enkyo"}
-                    }
-                }
-                dayperiod{
-                    dn{"munkyo/Eigulo"}
-                }
-                era{
-                    dn{"Emulembe"}
-                }
-                hour{
-                    dn{"Essawa"}
-                }
-                minute{
-                    dn{"Edakiika"}
-                }
-                month{
-                    dn{"Omwezi"}
-                }
-                second{
-                    dn{"Obutikitiki"}
-                }
-                week{
-                    dn{"Esabiiti"}
-                }
-                weekday{
-                    dn{"Olunaka lwa sabiiti"}
-                }
-                year{
-                    dn{"Omwaka"}
-                }
-                zone{
-                    dn{"Essawa edha"}
                 }
             }
             monthNames{
@@ -221,5 +221,45 @@ xog{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Olunaku"}
+            relative{
+                "-1"{"Edho"}
+                "0"{"Olwaleelo (leelo)"}
+                "1"{"Enkyo"}
+            }
+        }
+        dayperiod{
+            dn{"munkyo/Eigulo"}
+        }
+        era{
+            dn{"Emulembe"}
+        }
+        hour{
+            dn{"Essawa"}
+        }
+        minute{
+            dn{"Edakiika"}
+        }
+        month{
+            dn{"Omwezi"}
+        }
+        second{
+            dn{"Obutikitiki"}
+        }
+        week{
+            dn{"Esabiiti"}
+        }
+        weekday{
+            dn{"Olunaka lwa sabiiti"}
+        }
+        year{
+            dn{"Omwaka"}
+        }
+        zone{
+            dn{"Essawa edha"}
+        }
     }
 }

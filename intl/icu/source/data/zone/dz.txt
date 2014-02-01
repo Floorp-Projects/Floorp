@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/dz.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/dz.xml
+ * ICU <specials> source: <path>/common/main/dz.xml
  */
 dz{
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Cairo"{
             ec{"ཀཱའི་རོ"}
@@ -158,51 +158,6 @@ dz{
         }
         "Atlantic:Faeroe"{
             ec{"ཕཱའེ་རོ་"}
-        }
-        "Etc:GMT"{
-            ec{"ཇི་ཨེམ་ཊི"}
-        }
-        "Etc:GMT-1"{
-            ec{"ཇི་ཨེམ་ཊི-༡"}
-        }
-        "Etc:GMT-10"{
-            ec{"ཇི་ཨེམ་ཊི-༡༠"}
-        }
-        "Etc:GMT-11"{
-            ec{"ཇི་ཨེམ་ཊི-༡༡"}
-        }
-        "Etc:GMT-12"{
-            ec{"ཇི་ཨེམ་ཊི-༡༢"}
-        }
-        "Etc:GMT-13"{
-            ec{"ཇི་ཨེམ་ཊི-༡༣"}
-        }
-        "Etc:GMT-14"{
-            ec{"ཇི་ཨེམ་ཊི-༡༤"}
-        }
-        "Etc:GMT-2"{
-            ec{"ཇི་ཨེམ་ཊི-༢"}
-        }
-        "Etc:GMT-3"{
-            ec{"ཇི་ཨེམ་ཊི-༣"}
-        }
-        "Etc:GMT-4"{
-            ec{"ཇི་ཨེམ་ཊི-༤"}
-        }
-        "Etc:GMT-5"{
-            ec{"ཇི་ཨེམ་ཊི-༥"}
-        }
-        "Etc:GMT-6"{
-            ec{"ཇི་ཨེམ་ཊི-༦"}
-        }
-        "Etc:GMT-7"{
-            ec{"ཇི་ཨེམ་ཊི-༧"}
-        }
-        "Etc:GMT-8"{
-            ec{"ཇི་ཨེམ་ཊི-༨"}
-        }
-        "Etc:GMT-9"{
-            ec{"ཇི་ཨེམ་ཊི-༩"}
         }
         "Etc:Unknown"{
             ec{"མ་ཤེས་པའི་ཁྲོམ་སྡེ"}
@@ -594,7 +549,6 @@ dz{
             ls{"ཡེ་ཀ་ཏེ་རིན་བརག་ཚད་ལྡན་ཆུ་ཚོད"}
         }
         fallbackFormat{"{1}། ({0}་)"}
-        fallbackRegionFormat{"{1}་ཆུ་ཚོད། ({0}་)"}
         gmtFormat{"ཇི་ཨེམ་ཏི་{0}"}
         gmtZeroFormat{"ཇི་ཨེམ་ཊི་"}
         hourFormat{"+HH:mm;-HH:mm"}

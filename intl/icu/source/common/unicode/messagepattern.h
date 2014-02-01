@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 2011-2012, International Business Machines
+*   Copyright (C) 2011-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 *   file name:  messagepattern.h
@@ -250,7 +250,7 @@ enum UMessagePatternArgType {
     /**
      * The argument is an ordinal-number PluralFormat
      * with the same style parts sequence and semantics as UMSGPAT_ARG_TYPE_PLURAL.
-     * @draft ICU 50
+     * @stable ICU 50
      */
     UMSGPAT_ARG_TYPE_SELECTORDINAL
 };
@@ -260,9 +260,10 @@ enum UMessagePatternArgType {
 typedef enum UMessagePatternArgType UMessagePatternArgType;
 
 /**
+ * \def UMSGPAT_ARG_TYPE_HAS_PLURAL_STYLE
  * Returns TRUE if the argument type has a plural style part sequence and semantics,
  * for example UMSGPAT_ARG_TYPE_PLURAL and UMSGPAT_ARG_TYPE_SELECTORDINAL.
- * @draft ICU 50
+ * @stable ICU 50
  */
 #define UMSGPAT_ARG_TYPE_HAS_PLURAL_STYLE(argType) \
     ((argType)==UMSGPAT_ARG_TYPE_PLURAL || (argType)==UMSGPAT_ARG_TYPE_SELECTORDINAL)
@@ -916,9 +917,6 @@ private:
     void addArgDoublePart(double numericValue, int32_t start, int32_t length, UErrorCode &errorCode);
 
     void setParseError(UParseError *parseError, int32_t index);
-
-    // No ICU "poor man's RTTI" for this class nor its subclasses.
-    virtual UClassID getDynamicClassID() const;
 
     UBool init(UErrorCode &errorCode);
     UBool copyStorage(const MessagePattern &other, UErrorCode &errorCode);

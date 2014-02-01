@@ -1,37 +1,73 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/pt.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/pt.xml
+ * ICU <specials> source: <path>/common/main/pt.xml
  */
 pt{
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"Acra"}
+        }
+        "Africa:Addis_Ababa"{
+            ec{"Adis-Abeba"}
+        }
         "Africa:Algiers"{
             ec{"Argel"}
         }
         "Africa:Asmera"{
             ec{"Asmara"}
         }
+        "Africa:Bamako"{
+            ec{"Bamaco"}
+        }
+        "Africa:Conakry"{
+            ec{"Conacri"}
+        }
+        "Africa:Dakar"{
+            ec{"Dacar"}
+        }
         "Africa:Djibouti"{
             ec{"Djibuti"}
+        }
+        "Africa:El_Aaiun"{
+            ec{"El Aaiún"}
         }
         "Africa:Johannesburg"{
             ec{"Johannesburgo"}
         }
+        "Africa:Kampala"{
+            ec{"Campala"}
+        }
+        "Africa:Khartoum"{
+            ec{"Cartum"}
+        }
         "Africa:Lome"{
             ec{"Lomé"}
+        }
+        "Africa:Lusaka"{
+            ec{"Lusaca"}
+        }
+        "Africa:Mogadishu"{
+            ec{"Mogadíscio"}
         }
         "Africa:Monrovia"{
             ec{"Monróvia"}
         }
         "Africa:Nairobi"{
             ec{"Nairóbi"}
+        }
+        "Africa:Niamey"{
+            ec{"Niamei"}
+        }
+        "Africa:Porto-Novo"{
+            ec{"Porto Novo"}
         }
         "Africa:Sao_Tome"{
             ec{"São Tomé"}
@@ -83,6 +119,9 @@ pt{
         }
         "America:Eirunepe"{
             ec{"Eirunepé"}
+        }
+        "America:Godthab"{
+            ec{"Nuuk"}
         }
         "America:Grenada"{
             ec{"Granada"}
@@ -141,6 +180,9 @@ pt{
         "America:Mexico_City"{
             ec{"Cidade do México"}
         }
+        "America:Monterrey"{
+            ec{"Monterrei"}
+        }
         "America:Montevideo"{
             ec{"Montevidéu"}
         }
@@ -151,7 +193,7 @@ pt{
             ec{"Fernando de Noronha"}
         }
         "America:North_Dakota:Beulah"{
-            ec{"Beulah, North Dakota"}
+            ec{"Beulah, Dakota do Norte"}
         }
         "America:North_Dakota:Center"{
             ec{"Central, Dakota do Norte"}
@@ -177,11 +219,14 @@ pt{
         "America:Sao_Paulo"{
             ec{"São Paulo"}
         }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
+        }
         "America:St_Barthelemy"{
             ec{"São Bartolomeu"}
         }
         "America:St_Johns"{
-            ec{"St. Johns"}
+            ec{"St. John’s"}
         }
         "America:St_Kitts"{
             ec{"São Cristóvão"}
@@ -201,8 +246,20 @@ pt{
         "Antarctica:South_Pole"{
             ec{"Pólo Sul"}
         }
+        "Antarctica:Syowa"{
+            ec{"Showa"}
+        }
+        "Asia:Aden"{
+            ec{"Adem"}
+        }
         "Asia:Amman"{
             ec{"Amã"}
+        }
+        "Asia:Aqtobe"{
+            ec{"Aqtöbe"}
+        }
+        "Asia:Ashgabat"{
+            ec{"Asgabate"}
         }
         "Asia:Baghdad"{
             ec{"Bagdá"}
@@ -219,23 +276,47 @@ pt{
         "Asia:Damascus"{
             ec{"Damasco"}
         }
+        "Asia:Dhaka"{
+            ec{"Dacca"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Duchambe"}
+        }
         "Asia:Jakarta"{
             ec{"Jacarta"}
         }
         "Asia:Jerusalem"{
             ec{"Jerusalém"}
         }
+        "Asia:Karachi"{
+            ec{"Carachi"}
+        }
         "Asia:Katmandu"{
             ec{"Catmandu"}
         }
+        "Asia:Kuala_Lumpur"{
+            ec{"Kuala Lampur"}
+        }
+        "Asia:Makassar"{
+            ec{"Macassar"}
+        }
+        "Asia:Muscat"{
+            ec{"Mascate"}
+        }
         "Asia:Nicosia"{
             ec{"Nicósia"}
+        }
+        "Asia:Rangoon"{
+            ec{"Yangon"}
         }
         "Asia:Riyadh"{
             ec{"Riadi"}
         }
         "Asia:Saigon"{
             ec{"Ho Chi Minh"}
+        }
+        "Asia:Sakhalin"{
+            ec{"Sacalina"}
         }
         "Asia:Samarkand"{
             ec{"Samarcanda"}
@@ -252,8 +333,14 @@ pt{
         "Asia:Tehran"{
             ec{"Teerã"}
         }
+        "Asia:Thimphu"{
+            ec{"Timphu"}
+        }
         "Asia:Tokyo"{
             ec{"Tóquio"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan Bator"}
         }
         "Asia:Yekaterinburg"{
             ec{"Ecaterimburgo"}
@@ -273,9 +360,6 @@ pt{
         "Atlantic:Faeroe"{
             ec{"Ilhas Faroe"}
         }
-        "Atlantic:Reykjavik"{
-            ec{"Reiquiavique"}
-        }
         "Atlantic:South_Georgia"{
             ec{"Geórgia do Sul"}
         }
@@ -291,6 +375,9 @@ pt{
         "Europe:Athens"{
             ec{"Atenas"}
         }
+        "Europe:Belgrade"{
+            ec{"Belgrado"}
+        }
         "Europe:Berlin"{
             ec{"Berlim"}
         }
@@ -303,6 +390,9 @@ pt{
         "Europe:Budapest"{
             ec{"Budapeste"}
         }
+        "Europe:Busingen"{
+            ec{"Büsingen"}
+        }
         "Europe:Copenhagen"{
             ec{"Copenhague"}
         }
@@ -311,6 +401,9 @@ pt{
         }
         "Europe:Helsinki"{
             ec{"Helsinque"}
+        }
+        "Europe:Isle_of_Man"{
+            ec{"Ilha de Man"}
         }
         "Europe:Istanbul"{
             ec{"Istambul"}
@@ -376,6 +469,12 @@ pt{
         "Europe:Zurich"{
             ec{"Zurique"}
         }
+        "Indian:Comoro"{
+            ec{"Comores"}
+        }
+        "Indian:Mahe"{
+            ec{"Mahé"}
+        }
         "Indian:Maldives"{
             ec{"Maldivas"}
         }
@@ -385,17 +484,29 @@ pt{
         "Indian:Reunion"{
             ec{"Reunião"}
         }
+        "Pacific:Apia"{
+            ec{"Ápia"}
+        }
         "Pacific:Easter"{
             ec{"Ilha de Páscoa"}
         }
+        "Pacific:Efate"{
+            ec{"Éfaté"}
+        }
         "Pacific:Galapagos"{
             ec{"Galápagos"}
+        }
+        "Pacific:Noumea"{
+            ec{"Nouméa"}
         }
         "Pacific:Ponape"{
             ec{"Pohnpei"}
         }
         "Pacific:Tahiti"{
             ec{"Taiti"}
+        }
+        "Pacific:Tarawa"{
+            ec{"Taraua"}
         }
         "Pacific:Truk"{
             ec{"Chuuk"}
@@ -425,20 +536,10 @@ pt{
             lg{"Horário da África Ocidental"}
             ls{"Horário Padrão da África Ocidental"}
         }
-        "meta:Aktyubinsk"{
-            ld{"Horário de Verão do Aktyubinsk"}
-            lg{"Horário do Aktyubinsk"}
-            ls{"Horário Padrão do Aktyubinsk"}
-        }
         "meta:Alaska"{
             ld{"Horário de Verão do Alasca"}
             lg{"Horário do Alasca"}
             ls{"Horário Padrão do Alasca"}
-        }
-        "meta:Alaska_Hawaii"{
-            ld{"Horário de Verão do Alasca-Havaí"}
-            lg{"Horário do Alasca-Havaí"}
-            ls{"Horário Padrão do Alasca-Havaí"}
         }
         "meta:Almaty"{
             ld{"Horário de Verão do Almaty"}
@@ -508,11 +609,6 @@ pt{
             lg{"Horário da Armênia"}
             ls{"Horário Padrão da Armênia"}
         }
-        "meta:Ashkhabad"{
-            ld{"Horário de Verão de Ashkhabad"}
-            lg{"Horário de Ashkhabad"}
-            ls{"Horário Padrão de Ashkhabad"}
-        }
         "meta:Atlantic"{
             ld{"Horário de Verão do Atlântico"}
             lg{"Horário do Atlântico"}
@@ -548,31 +644,16 @@ pt{
             lg{"Horário dos Açores"}
             ls{"Horário Padrão dos Açores"}
         }
-        "meta:Baku"{
-            ld{"Horário de Verão de Baku"}
-            lg{"Horário de Baku"}
-            ls{"Horário Padrão de Baku"}
-        }
         "meta:Bangladesh"{
             ld{"Horário de Verão de Bangladesh"}
             lg{"Horário de Bangladesh"}
             ls{"Horário Padrão de Bangladesh"}
-        }
-        "meta:Bering"{
-            ld{"Horário de Verão de Bering"}
-            lg{"Horário de Bering"}
-            ls{"Horário Padrão de Bering"}
         }
         "meta:Bhutan"{
             ls{"Horário do Butão"}
         }
         "meta:Bolivia"{
             ls{"Horário da Bolívia"}
-        }
-        "meta:Borneo"{
-            ld{"Horário de Verão de Bornéu"}
-            lg{"Horário de Bornéu"}
-            ls{"Horário Padrão de Bornéu"}
         }
         "meta:Brasilia"{
             ld{"Horário de Verão de Brasília"}
@@ -592,9 +673,6 @@ pt{
         }
         "meta:Chamorro"{
             ls{"Horário de Chamorro"}
-        }
-        "meta:Changbai"{
-            ls{"Horário de Changbai"}
         }
         "meta:Chatham"{
             ld{"Horário de Verão de Chatham"}
@@ -637,22 +715,11 @@ pt{
             lg{"Horário de Cuba"}
             ls{"Horário Padrão de Cuba"}
         }
-        "meta:Dacca"{
-            ls{"Horário de Dacca"}
-        }
         "meta:Davis"{
             ls{"Horário de Davis"}
         }
         "meta:DumontDUrville"{
             ls{"Horário de Dumont-d'Urville"}
-        }
-        "meta:Dushanbe"{
-            ld{"Horário de Verão de Dushanbe"}
-            lg{"Horário de Dushanbe"}
-            ls{"Horário Padrão de Dushanbe"}
-        }
-        "meta:Dutch_Guiana"{
-            ls{"Horário da Guiana Holandesa"}
         }
         "meta:East_Timor"{
             ls{"Horário do Timor-Leste"}
@@ -696,11 +763,6 @@ pt{
         "meta:French_Southern"{
             ls{"Horário da Antártida e do Sul da França"}
         }
-        "meta:Frunze"{
-            ld{"Horário de Verão de Frunze"}
-            lg{"Horário de Frunze"}
-            ls{"Horário Padrão de Frunze"}
-        }
         "meta:GMT"{
             ls{"Horário do Meridiano de Greenwich"}
         }
@@ -717,11 +779,6 @@ pt{
         }
         "meta:Gilbert_Islands"{
             ls{"Horário das Ilhas Gilberto"}
-        }
-        "meta:Greenland_Central"{
-            ld{"Horário de Verão da Groenlândia Central"}
-            lg{"Horário da Groelândia Central"}
-            ls{"Horário Padrão da Groelândia Central"}
         }
         "meta:Greenland_Eastern"{
             ld{"Horário de Verão da Groelândia Oriental"}
@@ -800,22 +857,11 @@ pt{
             lg{"Horário de Petropavlovsk-Kamchatski"}
             ls{"Horário Padrão de Petropavlovsk-Kamchatski"}
         }
-        "meta:Karachi"{
-            ls{"Horário de Karachi"}
-        }
-        "meta:Kashgar"{
-            ls{"Horário de Kashgar"}
-        }
         "meta:Kazakhstan_Eastern"{
             ls{"Horário do Casaquistão Oriental"}
         }
         "meta:Kazakhstan_Western"{
             ls{"Horário do Casaquistão Ocidental"}
-        }
-        "meta:Kizilorda"{
-            ld{"Horário de Verão de Kizilorda"}
-            lg{"Horário de Kizilorda"}
-            ls{"Horário Padrão de Kizilorda"}
         }
         "meta:Korea"{
             ld{"Horário de Verão da Coreia"}
@@ -830,14 +876,6 @@ pt{
             lg{"Horário de Krasnoyarsk"}
             ls{"Horário Padrão de Krasnoyarsk"}
         }
-        "meta:Kuybyshev"{
-            ld{"Horário de Verão de Kuybyshev"}
-            lg{"Horário de Kuybyshev"}
-            ls{"Horário Padrão de Kuybyshev"}
-        }
-        "meta:Kwajalein"{
-            ls{"Horário de Kwajalein"}
-        }
         "meta:Kyrgystan"{
             ls{"Horário do Quirguistão"}
         }
@@ -846,9 +884,6 @@ pt{
         }
         "meta:Line_Islands"{
             ls{"Horário das Ilhas Line"}
-        }
-        "meta:Long_Shu"{
-            ls{"Horário de Long-Shu"}
         }
         "meta:Lord_Howe"{
             ld{"Horário de Verão de Lord Howe"}
@@ -861,15 +896,12 @@ pt{
             ls{"Horário Padrão de Macau"}
         }
         "meta:Macquarie"{
-            ls{"Horário de Macquarie"}
+            ls{"Horário da Ilha Macquarie"}
         }
         "meta:Magadan"{
             ld{"Horário de Verão de Magadan"}
             lg{"Horário de Magadan"}
             ls{"Horário Padrão de Magadan"}
-        }
-        "meta:Malaya"{
-            ls{"Horário de Malaia"}
         }
         "meta:Malaysia"{
             ls{"Horário da Malásia"}
@@ -929,7 +961,7 @@ pt{
             ls{"Horário de Niue"}
         }
         "meta:Norfolk"{
-            ls{"Horário das Ilhas Norfolk"}
+            ls{"Horário da Ilha Norfolk"}
         }
         "meta:Noronha"{
             ld{"Horário de Verão de Fernando de Noronha"}
@@ -1010,21 +1042,13 @@ pt{
             lg{"Horário de Samara"}
             ls{"Horário Padrão de Samara"}
         }
-        "meta:Samarkand"{
-            ld{"Horário de Verão de Samarkand"}
-            lg{"Horário de Samarkand"}
-            ls{"Horário Padrão de Samarkand"}
-        }
         "meta:Samoa"{
+            ld{"Horário de Verão de Samoa"}
+            lg{"Horário de Samoa"}
             ls{"Horário Padrão de Samoa"}
         }
         "meta:Seychelles"{
             ls{"Horário das Ilhas Seychelles"}
-        }
-        "meta:Shevchenko"{
-            ld{"Horário de Verão de Shevchenko"}
-            lg{"Horário de Shevchenko"}
-            ls{"Horário Padrão de Shevchenko"}
         }
         "meta:Singapore"{
             ls{"Horário Padrão de Cingapura"}
@@ -1037,11 +1061,6 @@ pt{
         }
         "meta:Suriname"{
             ls{"Horário do Suriname"}
-        }
-        "meta:Sverdlovsk"{
-            ld{"Horário de Verão de Sverdlovsk"}
-            lg{"Horário de Sverdlovsk"}
-            ls{"Horário Padrão de Sverdlovsk"}
         }
         "meta:Syowa"{
             ls{"Horário de Syowa"}
@@ -1057,16 +1076,6 @@ pt{
         "meta:Tajikistan"{
             ls{"Horário do Tajiquistão"}
         }
-        "meta:Tashkent"{
-            ld{"Horário de Verão de Tashkent"}
-            lg{"Horário de Tashkent"}
-            ls{"Horário Padrão de Tashkent"}
-        }
-        "meta:Tbilisi"{
-            ld{"Horário de Verão de Tbilisi"}
-            lg{"Horário de Tbilisi"}
-            ls{"Horário Padrão de Tbilisi"}
-        }
         "meta:Tokelau"{
             ls{"Horário de Tokelau"}
         }
@@ -1078,11 +1087,6 @@ pt{
         "meta:Truk"{
             ls{"Horário de Chuuk"}
         }
-        "meta:Turkey"{
-            ld{"Horário de Verão da Turquia"}
-            lg{"Horário da Turquia"}
-            ls{"Horário Padrão da Turquia"}
-        }
         "meta:Turkmenistan"{
             ld{"Horário de Verão do Turcomenistão"}
             lg{"Horário do Turcomenistão"}
@@ -1091,18 +1095,10 @@ pt{
         "meta:Tuvalu"{
             ls{"Horário de Tuvalu"}
         }
-        "meta:Uralsk"{
-            ld{"Horário de Verão de Ural'sk"}
-            lg{"Horário de Ural'sk"}
-            ls{"Horário Padrão de Ural'sk"}
-        }
         "meta:Uruguay"{
             ld{"Horário de Verão do Uruguai"}
             lg{"Horário do Uruguai"}
             ls{"Horário Padrão do Uruguai"}
-        }
-        "meta:Urumqi"{
-            ls{"Horário de Urumqi"}
         }
         "meta:Uzbekistan"{
             ld{"Horário de Verão do Uzbequistão"}
@@ -1146,21 +1142,12 @@ pt{
             lg{"Horário de Ecaterimburgo"}
             ls{"Horário Padrão de Ecaterimburgo"}
         }
-        "meta:Yerevan"{
-            ld{"Horário de Verão de Yerevan"}
-            lg{"Horário de Yerevan"}
-            ls{"Horário Padrão de Yerevan"}
-        }
-        "meta:Yukon"{
-            ld{"Horário de Verão de Yukon"}
-            lg{"Horário de Yukon"}
-            ls{"Horário Padrão de Yukon"}
-        }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} Horário ({0})"}
         gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"Horário de Greenwich"}
+        gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Horário {0}"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

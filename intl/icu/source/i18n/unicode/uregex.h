@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2004-2012, International Business Machines
+*   Copyright (C) 2004-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  uregex.h
@@ -51,7 +51,7 @@ typedef enum URegexpFlag{
     Not implemented yet, just a placeholder, hence draft. 
     @draft ICU 2.4 */
     UREGEX_CANON_EQ         = 128,
-#endif
+#endif /* U_HIDE_DRAFT_API */
     /**  Enable case insensitive matching.  @stable ICU 2.4 */
     UREGEX_CASE_INSENSITIVE = 2,
 
@@ -1431,8 +1431,8 @@ uregex_getTimeLimit(const URegularExpression      *regexp,
  * <p>
  * @param   regexp      The compiled regular expression.
  * @param   limit       The maximum size, in bytes, of the matching backtrack stack.
- *                      A value of -1 means no limit.
- *                      The limit must be greater than zero, or -1.
+ *                      A value of zero means no limit.
+ *                      The limit must be greater than or equal to zero.
  * @param   status      A reference to a UErrorCode to receive any errors.
  *
  * @stable ICU 4.0

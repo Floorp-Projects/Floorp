@@ -70,7 +70,7 @@ public:
     JNIEnv* env = GetJNIForThread();
 
     AutoLocalJNIFrame jniFrame(env);
-    env->CallObjectMethod(aSurfaceTexture, jSurfaceTexture_updateTexImage);
+    env->CallVoidMethod(aSurfaceTexture, jSurfaceTexture_updateTexImage);
   }
 
   bool GetTransformMatrix(jobject aSurfaceTexture, gfx::Matrix4x4& aMatrix)

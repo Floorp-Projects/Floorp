@@ -1,6 +1,6 @@
 /*
  ******************************************************************************
- * Copyright (C) 1996-2012, International Business Machines Corporation and
+ * Copyright (C) 1996-2013, International Business Machines Corporation and
  * others. All Rights Reserved.
  ******************************************************************************
  */
@@ -50,6 +50,7 @@
 #include "cmemory.h"
 #include "umutex.h"
 #include "servloc.h"
+#include "uassert.h"
 #include "ustrenum.h"
 #include "uresimp.h"
 #include "ucln_in.h"
@@ -57,6 +58,8 @@
 static icu::Locale* availableLocaleList = NULL;
 static int32_t  availableLocaleListCount;
 static icu::ICULocaleService* gService = NULL;
+static icu::UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gAvailableLocaleListInitOnce;
 
 /**
  * Release all static memory held by collator.
@@ -68,13 +71,14 @@ static UBool U_CALLCONV collator_cleanup(void) {
         delete gService;
         gService = NULL;
     }
+    gServiceInitOnce.reset();
 #endif
     if (availableLocaleList) {
         delete []availableLocaleList;
         availableLocaleList = NULL;
     }
     availableLocaleListCount = 0;
-
+    gAvailableLocaleListInitOnce.reset();
     return TRUE;
 }
 
@@ -199,28 +203,16 @@ ICUCollatorService::~ICUCollatorService() {}
 
 // -------------------------------------
 
+static void U_CALLCONV initService() {
+    gService = new ICUCollatorService();
+    ucln_i18n_registerCleanup(UCLN_I18N_COLLATOR, collator_cleanup);
+}
+
+
 static ICULocaleService* 
 getService(void)
 {
-    UBool needInit;
-    UMTX_CHECK(NULL, (UBool)(gService == NULL), needInit);
-    if(needInit) {
-        ICULocaleService *newservice = new ICUCollatorService();
-        if(newservice) {
-            umtx_lock(NULL);
-            if(gService == NULL) {
-                gService = newservice;
-                newservice = NULL;
-            }
-            umtx_unlock(NULL);
-        }
-        if(newservice) {
-            delete newservice;
-        }
-        else {
-            ucln_i18n_registerCleanup(UCLN_I18N_COLLATOR, collator_cleanup);
-        }
-    }
+    umtx_initOnce(gServiceInitOnce, &initService);
     return gService;
 }
 
@@ -229,8 +221,7 @@ getService(void)
 static inline UBool
 hasService(void) 
 {
-    UBool retVal;
-    UMTX_CHECK(NULL, gService != NULL, retVal);
+    UBool retVal = !gServiceInitOnce.isReset() && (getService() != NULL);
     return retVal;
 }
 
@@ -270,56 +261,43 @@ Collator::createUCollator(const char *loc,
 }
 #endif /* UCONFIG_NO_SERVICE */
 
-static UBool isAvailableLocaleListInitialized(UErrorCode &status) {
+static void U_CALLCONV 
+initAvailableLocaleList(UErrorCode &status) {
+    U_ASSERT(availableLocaleListCount == 0);
+    U_ASSERT(availableLocaleList == NULL);
     // for now, there is a hardcoded list, so just walk through that list and set it up.
-    UBool needInit;
-    UMTX_CHECK(NULL, availableLocaleList == NULL, needInit);
-
-    if (needInit) {
-        UResourceBundle *index = NULL;
-        UResourceBundle installed;
-        Locale * temp;
-        int32_t i = 0;
-        int32_t localeCount;
+    UResourceBundle *index = NULL;
+    UResourceBundle installed;
+    int32_t i = 0;
+    
+    ures_initStackObject(&installed);
+    index = ures_openDirect(U_ICUDATA_COLL, "res_index", &status);
+    ures_getByKey(index, "InstalledLocales", &installed, &status);
+    
+    if(U_SUCCESS(status)) {
+        availableLocaleListCount = ures_getSize(&installed);
+        availableLocaleList = new Locale[availableLocaleListCount];
         
-        ures_initStackObject(&installed);
-        index = ures_openDirect(U_ICUDATA_COLL, "res_index", &status);
-        ures_getByKey(index, "InstalledLocales", &installed, &status);
-        
-        if(U_SUCCESS(status)) {
-            localeCount = ures_getSize(&installed);
-            temp = new Locale[localeCount];
-            
-            if (temp != NULL) {
-                ures_resetIterator(&installed);
-                while(ures_hasNext(&installed)) {
-                    const char *tempKey = NULL;
-                    ures_getNextString(&installed, NULL, &tempKey, &status);
-                    temp[i++] = Locale(tempKey);
-                }
-                
-                umtx_lock(NULL);
-                if (availableLocaleList == NULL)
-                {
-                    availableLocaleListCount = localeCount;
-                    availableLocaleList = temp;
-                    temp = NULL;
-                    ucln_i18n_registerCleanup(UCLN_I18N_COLLATOR, collator_cleanup);
-                } 
-                umtx_unlock(NULL);
-
-                needInit = FALSE;
-                if (temp) {
-                    delete []temp;
-                }
+        if (availableLocaleList != NULL) {
+            ures_resetIterator(&installed);
+            while(ures_hasNext(&installed)) {
+                const char *tempKey = NULL;
+                ures_getNextString(&installed, NULL, &tempKey, &status);
+                availableLocaleList[i++] = Locale(tempKey);
             }
-
-            ures_close(&installed);
         }
-        ures_close(index);
+        U_ASSERT(availableLocaleListCount == i);
+        ures_close(&installed);
     }
-    return !needInit;
+    ures_close(index);
+    ucln_i18n_registerCleanup(UCLN_I18N_COLLATOR, collator_cleanup);
 }
+
+static UBool isAvailableLocaleListInitialized(UErrorCode &status) {
+    umtx_initOnce(gAvailableLocaleListInitOnce, &initAvailableLocaleList, status);
+    return U_SUCCESS(status);
+}
+
 
 // Collator public methods -----------------------------------------------
 

@@ -1,12 +1,12 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2012, International Business Machines Corporation and    *
+* Copyright (C) 1997-2013, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
 * File CALENDAR.CPP
 *
-* Modification History:
+* Modification History: 
 *
 *   Date        Name        Description
 *   02/03/97    clhuang     Creation.
@@ -45,6 +45,7 @@
 #include "indiancal.h"
 #include "chnsecal.h"
 #include "coptccal.h"
+#include "dangical.h"
 #include "ethpccal.h"
 #include "unicode/calendar.h"
 #include "cpputils.h"
@@ -59,6 +60,7 @@
 
 #if !UCONFIG_NO_SERVICE
 static icu::ICULocaleService* gService = NULL;
+static icu::UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
 #endif
 
 // INTERNAL - for cleanup
@@ -70,6 +72,7 @@ static UBool calendar_cleanup(void) {
         delete gService;
         gService = NULL;
     }
+    gServiceInitOnce.reset();
 #endif
     return TRUE;
 }
@@ -164,6 +167,10 @@ static const char * const gCalTypes[] = {
     "ethiopic",
     "ethiopic-amete-alem",
     "iso8601",
+    "dangi",
+    "islamic-umalqura",
+    "islamic-tbla",
+    "islamic-rgsa",
     NULL
 };
 
@@ -183,7 +190,11 @@ typedef enum ECalType {
     CALTYPE_COPTIC,
     CALTYPE_ETHIOPIC,
     CALTYPE_ETHIOPIC_AMETE_ALEM,
-    CALTYPE_ISO8601
+    CALTYPE_ISO8601,
+    CALTYPE_DANGI,
+    CALTYPE_ISLAMIC_UMALQURA,
+    CALTYPE_ISLAMIC_TBLA,
+    CALTYPE_ISLAMIC_RGSA
 } ECalType;
 
 U_NAMESPACE_BEGIN
@@ -312,11 +323,19 @@ static Calendar *createStandardCalendar(ECalType calType, const Locale &loc, UEr
         case CALTYPE_PERSIAN:
             cal = new PersianCalendar(loc, status);
             break;
+        case CALTYPE_ISLAMIC_TBLA:
+            cal = new IslamicCalendar(loc, status, IslamicCalendar::TBLA);
+            break;
         case CALTYPE_ISLAMIC_CIVIL:
             cal = new IslamicCalendar(loc, status, IslamicCalendar::CIVIL);
             break;
+        case CALTYPE_ISLAMIC_RGSA:
+            // default any region specific not handled individually to islamic
         case CALTYPE_ISLAMIC:
             cal = new IslamicCalendar(loc, status, IslamicCalendar::ASTRONOMICAL);
+            break;
+        case CALTYPE_ISLAMIC_UMALQURA:
+            cal = new IslamicCalendar(loc, status, IslamicCalendar::UMALQURA);
             break;
         case CALTYPE_HEBREW:
             cal = new HebrewCalendar(loc, status);
@@ -340,6 +359,9 @@ static Calendar *createStandardCalendar(ECalType calType, const Locale &loc, UEr
             cal = new GregorianCalendar(loc, status);
             cal->setFirstDayOfWeek(UCAL_MONDAY);
             cal->setMinimalDaysInFirstWeek(4);
+            break;
+        case CALTYPE_DANGI:
+            cal = new DangiCalendar(loc, status);
             break;
         default:
             status = U_UNSUPPORTED_ERROR;
@@ -511,33 +533,29 @@ CalendarService::~CalendarService() {}
 
 static inline UBool
 isCalendarServiceUsed() {
-    UBool retVal;
-    UMTX_CHECK(NULL, gService != NULL, retVal);
-    return retVal;
+    return !gServiceInitOnce.isReset();
 }
 
 // -------------------------------------
 
-static ICULocaleService* 
-getCalendarService(UErrorCode &status)
+static void U_CALLCONV
+initCalendarService(UErrorCode &status)
 {
-    UBool needInit;
-    UMTX_CHECK(NULL, (UBool)(gService == NULL), needInit);
-    if (needInit) {
 #ifdef U_DEBUG_CALSVC
         fprintf(stderr, "Spinning up Calendar Service\n");
 #endif
-        ICULocaleService * newservice = new CalendarService();
-        if (newservice == NULL) {
+    ucln_i18n_registerCleanup(UCLN_I18N_CALENDAR, calendar_cleanup);
+    gService = new CalendarService();
+    if (gService == NULL) {
             status = U_MEMORY_ALLOCATION_ERROR;
-            return newservice;
+        return;
         }
 #ifdef U_DEBUG_CALSVC
         fprintf(stderr, "Registering classes..\n");
 #endif
 
         // Register all basic instances. 
-        newservice->registerFactory(new BasicCalendarFactory(),status);
+    gService->registerFactory(new BasicCalendarFactory(),status);
 
 #ifdef U_DEBUG_CALSVC
         fprintf(stderr, "Done..\n");
@@ -547,25 +565,15 @@ getCalendarService(UErrorCode &status)
 #ifdef U_DEBUG_CALSVC
             fprintf(stderr, "err (%s) registering classes, deleting service.....\n", u_errorName(status));
 #endif
-            delete newservice;
-            newservice = NULL;
+        delete gService;
+        gService = NULL;
+    }
         }
 
-        if (newservice) {
-            umtx_lock(NULL);
-            if (gService == NULL) {
-                gService = newservice;
-                newservice = NULL;
-            }
-            umtx_unlock(NULL);
-        }
-        if (newservice) {
-            delete newservice;
-        } else {
-            // we won the contention - we can register the cleanup.
-            ucln_i18n_registerCleanup(UCLN_I18N_CALENDAR, calendar_cleanup);
-        }
-    }
+static ICULocaleService* 
+getCalendarService(UErrorCode &status)
+{
+    umtx_initOnce(gServiceInitOnce, &initCalendarService, status);
     return gService;
 }
 
@@ -2298,6 +2306,11 @@ Calendar::getDayOfWeekType(UCalendarDaysOfWeek dayOfWeek, UErrorCode &status) co
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return UCAL_WEEKDAY;
     }
+	if (fWeekendOnset == fWeekendCease) {
+		if (dayOfWeek != fWeekendOnset)
+			return UCAL_WEEKDAY;
+		return (fWeekendOnsetMillis == 0) ? UCAL_WEEKEND : UCAL_WEEKEND_ONSET;
+	}
     if (fWeekendOnset < fWeekendCease) {
         if (dayOfWeek < fWeekendOnset || dayOfWeek > fWeekendCease) {
             return UCAL_WEEKDAY;
@@ -2311,7 +2324,7 @@ Calendar::getDayOfWeekType(UCalendarDaysOfWeek dayOfWeek, UErrorCode &status) co
         return (fWeekendOnsetMillis == 0) ? UCAL_WEEKEND : UCAL_WEEKEND_ONSET;
     }
     if (dayOfWeek == fWeekendCease) {
-        return (fWeekendCeaseMillis == 0) ? UCAL_WEEKDAY : UCAL_WEEKEND_CEASE;
+        return (fWeekendCeaseMillis >= 86400000) ? UCAL_WEEKEND : UCAL_WEEKEND_CEASE;
     }
     return UCAL_WEEKEND;
 }
@@ -3683,3 +3696,4 @@ U_NAMESPACE_END
 
 
 //eof
+
