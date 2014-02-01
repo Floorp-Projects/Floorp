@@ -10,8 +10,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
@@ -64,7 +64,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     Intent intent = null;
     if (FxAccountAgeLockoutHelper.isLockedOut(SystemClock.elapsedRealtime())) {
       intent = new Intent(this, FxAccountCreateAccountNotAllowedActivity.class);
-    } else if (FxAccountAuthenticator.firefoxAccountsExist(this)) {
+    } else if (FirefoxAccounts.firefoxAccountsExist(this)) {
       intent = new Intent(this, FxAccountStatusActivity.class);
     }
     if (intent != null) {
