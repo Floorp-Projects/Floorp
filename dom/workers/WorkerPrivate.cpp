@@ -959,13 +959,14 @@ class MessageEventRunnable MOZ_FINAL : public WorkerRunnable
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior,
-                       JSAutoStructuredCloneBuffer& aData,
+                       JSAutoStructuredCloneBuffer&& aData,
                        nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                        bool aToMessagePort, uint64_t aMessagePortSerial)
-  : WorkerRunnable(aWorkerPrivate, aBehavior),
-    mMessagePortSerial(aMessagePortSerial), mToMessagePort(aToMessagePort)
+  : WorkerRunnable(aWorkerPrivate, aBehavior)
+  , mBuffer(Move(aData))
+  , mMessagePortSerial(aMessagePortSerial)
+  , mToMessagePort(aToMessagePort)
   {
-    mBuffer.swap(aData);
     mClonedObjects.SwapElements(aClonedObjects);
   }
 
@@ -1026,7 +1027,7 @@ private:
         return
           aWorkerPrivate->DispatchMessageEventToMessagePort(aCx,
                                                             mMessagePortSerial,
-                                                            mBuffer,
+                                                            Move(mBuffer),
                                                             mClonedObjects);
       }
 
@@ -2788,7 +2789,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(ParentAsWorkerPrivate(),
                              WorkerRunnable::WorkerThreadModifyBusyCount,
-                             buffer, clonedObjects, aToMessagePort,
+                             Move(buffer), clonedObjects, aToMessagePort,
                              aMessagePortSerial);
   if (!runnable->Dispatch(aCx)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -2814,13 +2815,12 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
                                 JSContext* aCx, uint64_t aMessagePortSerial,
-                                JSAutoStructuredCloneBuffer& aBuffer,
+                                JSAutoStructuredCloneBuffer&& aBuffer,
                                 nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   AssertIsOnMainThread();
 
-  JSAutoStructuredCloneBuffer buffer;
-  buffer.swap(aBuffer);
+  JSAutoStructuredCloneBuffer buffer(Move(aBuffer));
 
   nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
   clonedObjects.SwapElements(aClonedObjects);
@@ -4993,7 +4993,7 @@ WorkerPrivate::PostMessageToParentInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(this,
                              WorkerRunnable::ParentThreadUnchangedBusyCount,
-                             buffer, clonedObjects, aToMessagePort,
+                             Move(buffer), clonedObjects, aToMessagePort,
                              aMessagePortSerial);
   if (!runnable->Dispatch(aCx)) {
     aRv = NS_ERROR_FAILURE;
