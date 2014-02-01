@@ -440,7 +440,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         }
 
         if (static_cast<int64_t>(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate).value()) {
-          LOG(PR_LOG_DEBUG, ("Values for CodecDelay and PreSkip do not match\n"))
+          LOG(PR_LOG_DEBUG, ("Values for CodecDelay and PreSkip do not match\n"));
           Cleanup();
           return NS_ERROR_FAILURE;
         }
