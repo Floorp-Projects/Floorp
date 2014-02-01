@@ -304,6 +304,25 @@ public:
 
   void AddPath(const nsAString& aPath);
 
+  /**
+   * Get size of hash table with file stats
+   */
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    size_t size;
+    size = mFileStats.SizeOfExcludingThis(SizeOfFileIOEntryTypeExcludingThis,
+                                          aMallocSizeOf) +
+           mSafeDirs.SizeOfExcludingThis(aMallocSizeOf);
+    uint32_t safeDirsLen = mSafeDirs.Length();
+    for (uint32_t i = 0; i < safeDirsLen; ++i) {
+      size += mSafeDirs[i].SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    }
+    return size;
+  }
+
 private:
   // Statistics for each filename
   AutoHashtable<FileIOEntryType> mFileStats;
@@ -317,6 +336,13 @@ private:
    */
   static bool ReflectFileStats(FileIOEntryType* entry, JSContext *cx,
                                JS::Handle<JSObject*> obj);
+
+  static size_t SizeOfFileIOEntryTypeExcludingThis(FileIOEntryType* aEntry,
+                                                   mozilla::MallocSizeOf mallocSizeOf,
+                                                   void*)
+  {
+    return aEntry->GetKey().SizeOfExcludingThisIfUnshared(mallocSizeOf);
+  }
 };
 
 TelemetryIOInterposeObserver::TelemetryIOInterposeObserver(nsIFile* aXreDir)
@@ -583,31 +609,6 @@ TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     "explicit/telemetry", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(TelemetryMallocSizeOf),
     "Memory used by the telemetry system.");
-}
-
-size_t
-TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-{
-  size_t n = aMallocSizeOf(this);
-  // Ignore the hashtables in mAddonMap; they are not significant.
-  n += mAddonMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-  n += mHistogramMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-  n += mPrivateSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-  n += mSanitizedSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-  n += mTrackedDBs.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-  n += mHangReports.SizeOfExcludingThis();
-  n += mThreadHangStats.sizeOfExcludingThis(aMallocSizeOf);
-
-  // It's a bit gross that we measure this other stuff that lives outside of
-  // TelemetryImpl... oh well.
-  StatisticsRecorder::Histograms hs;
-  StatisticsRecorder::GetHistograms(&hs);
-  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
-    Histogram *h = *it;
-    n += h->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  return n;
 }
 
 // A initializer to initialize histogram collection
@@ -2542,6 +2543,34 @@ TelemetryImpl::GetFileIOReports(JSContext *cx, JS::MutableHandleValue ret)
   }
   ret.setNull();
   return NS_OK;
+}
+
+size_t
+TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  // Ignore the hashtables in mAddonMap; they are not significant.
+  n += mAddonMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mHistogramMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mPrivateSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mSanitizedSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mTrackedDBs.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mHangReports.SizeOfExcludingThis();
+  n += mThreadHangStats.sizeOfExcludingThis(aMallocSizeOf);
+
+  // It's a bit gross that we measure this other stuff that lives outside of
+  // TelemetryImpl... oh well.
+  if (sTelemetryIOObserver) {
+    n += sTelemetryIOObserver->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  StatisticsRecorder::Histograms hs;
+  StatisticsRecorder::GetHistograms(&hs);
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
+    Histogram *h = *it;
+    n += h->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return n;
 }
 
 } // anonymous namespace
