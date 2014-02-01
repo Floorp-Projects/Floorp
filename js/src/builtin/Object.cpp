@@ -272,7 +272,23 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
 JSString *
 JS_BasicObjectToString(JSContext *cx, HandleObject obj)
 {
+    // Some classes are really common, don't allocate new strings for them.
+    // The ordering below is based on the measurements in bug 966264.
+    if (obj->is<JSObject>())
+        return cx->names().objectObject;
+    if (obj->is<StringObject>())
+        return cx->names().objectString;
+    if (obj->is<ArrayObject>())
+        return cx->names().objectArray;
+    if (obj->is<JSFunction>())
+        return cx->names().objectFunction;
+    if (obj->is<NumberObject>())
+        return cx->names().objectNumber;
+
     const char *className = JSObject::className(cx, obj);
+
+    if (strcmp(className, "Window") == 0)
+        return cx->names().objectWindow;
 
     StringBuffer sb(cx);
     if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) ||
