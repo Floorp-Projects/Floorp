@@ -3420,6 +3420,7 @@ JSTerm.prototype = {
   _createVariablesView: function JST__createVariablesView(aOptions)
   {
     let view = new VariablesView(aOptions.container);
+    view.toolbox = gDevTools.getToolbox(this.hud.owner.target);
     view.searchPlaceholder = l10n.getStr("propertiesFilterPlaceholder");
     view.emptyText = l10n.getStr("emptyPropertiesList");
     view.searchEnabled = !aOptions.hideFilterInput;

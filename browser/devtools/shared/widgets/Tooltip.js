@@ -34,6 +34,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const ENTER_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
+const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
 
 /**
  * Tooltip widget.
@@ -136,14 +137,27 @@ let PanelFactory = {
  * @param {XULDocument} doc
  *        The XUL document hosting this tooltip
  * @param {Object} options
- *        Optional options that give options to consumers
+ *        Optional options that give options to consumers:
  *        - consumeOutsideClick {Boolean} Wether the first click outside of the
  *        tooltip should close the tooltip and be consumed or not.
- *        Defaults to false
+ *        Defaults to false.
  *        - closeOnKeys {Array} An array of key codes that should close the
- *        tooltip. Defaults to [27] (escape key)
+ *        tooltip. Defaults to [27] (escape key).
+ *        - closeOnEvents [{emitter: {Object}, event: {String}, useCapture: {Boolean}}]
+ *        Provide an optional list of emitter objects and event names here to
+ *        trigger the closing of the tooltip when these events are fired by the
+ *        emitters. The emitter objects should either implement on/off(event, cb)
+ *        or addEventListener/removeEventListener(event, cb). Defaults to [].
+ *        For instance, the following would close the tooltip whenever the
+ *        toolbox selects a new tool and when a DOM node gets scrolled:
+ *        new Tooltip(doc, {
+ *          closeOnEvents: [
+ *            {emitter: toolbox, event: "select"},
+ *            {emitter: myContainer, event: "scroll", useCapture: true}
+ *          ]
+ *        });
  *        - noAutoFocus {Boolean} Should the focus automatically go to the panel
- *        when it opens. Defaults to true
+ *        when it opens. Defaults to true.
  *
  * Fires these events:
  * - showing : just before the tooltip shows
@@ -159,7 +173,8 @@ function Tooltip(doc, options) {
   this.options = new OptionsStore({
     consumeOutsideClick: false,
     closeOnKeys: [ESCAPE_KEYCODE],
-    noAutoFocus: true
+    noAutoFocus: true,
+    closeOnEvents: []
   }, options);
   this.panel = PanelFactory.get(doc, this.options);
 
@@ -167,7 +182,7 @@ function Tooltip(doc, options) {
   this.uid = "tooltip-" + Date.now();
 
   // Emit show/hide events
-  for (let event of ["shown", "hidden", "showing", "hiding"]) {
+  for (let event of POPUP_EVENTS) {
     this["_onPopup" + event] = ((e) => {
       return () => this.emit(e);
     })(event);
@@ -187,6 +202,18 @@ function Tooltip(doc, options) {
     }
   };
   win.addEventListener("keypress", this._onKeyPress, false);
+
+  // Listen to custom emitters' events to close the tooltip
+  this.hide = this.hide.bind(this);
+  let closeOnEvents = this.options.get("closeOnEvents");
+  for (let {emitter, event, useCapture} of closeOnEvents) {
+    for (let add of ["addEventListener", "on"]) {
+      if (add in emitter) {
+        emitter[add](event, this.hide, useCapture);
+        break;
+      }
+    }
+  }
 }
 
 module.exports.Tooltip = Tooltip;
@@ -264,13 +291,23 @@ Tooltip.prototype = {
   destroy: function () {
     this.hide();
 
-    for (let event of ["shown", "hidden", "showing", "hiding"]) {
+    for (let event of POPUP_EVENTS) {
       this.panel.removeEventListener("popup" + event,
         this["_onPopup" + event], false);
     }
 
     let win = this.doc.querySelector("window");
     win.removeEventListener("keypress", this._onKeyPress, false);
+
+    let closeOnEvents = this.options.get("closeOnEvents");
+    for (let {emitter, event, useCapture} of closeOnEvents) {
+      for (let remove of ["removeEventListener", "off"]) {
+        if (remove in emitter) {
+          emitter[remove](event, this.hide, useCapture);
+          break;
+        }
+      }
+    }
 
     this.content = null;
 
@@ -476,13 +513,17 @@ Tooltip.prototype = {
    *        Pass false to instantiate a brand new widget for this variable.
    *        Otherwise, if a variable was previously inspected, its widget
    *        will be reused.
+   * @param {Toolbox} toolbox [optional]
+   *        Pass the instance of the current toolbox if you want the variables
+   *        view widget to allow highlighting and selection of DOM nodes
    */
   setVariableContent: function(
     objectActor,
     viewOptions = {},
     controllerOptions = {},
     relayEvents = {},
-    extraButtons = []) {
+    extraButtons = [],
+    toolbox = null) {
 
     let vbox = this.doc.createElement("vbox");
     vbox.className = "devtools-tooltip-variables-view-box";
@@ -502,6 +543,11 @@ Tooltip.prototype = {
     }
 
     let widget = new VariablesView(innerbox, viewOptions);
+
+    // If a toolbox was provided, link it to the vview
+    if (toolbox) {
+      widget.toolbox = toolbox;
+    }
 
     // Analyzing state history isn't useful with transient object inspectors.
     widget.commitHierarchy = () => {};
