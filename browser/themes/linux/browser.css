@@ -1682,10 +1682,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 /* Sync Panel */
 
-.sync-panel {
-  padding: 10px;
-}
-
 .sync-panel-icon {
   width: 32px;
   background: url("chrome://browser/content/abouthome/sync.png") top left no-repeat;
