@@ -1680,7 +1680,7 @@ class OfflineStatusChangeRunnable : public WorkerRunnable
 {
 public:
   OfflineStatusChangeRunnable(WorkerPrivate* aWorkerPrivate, bool aIsOffline)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
       mIsOffline(aIsOffline)
   {
   }
