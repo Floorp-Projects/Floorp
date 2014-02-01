@@ -547,7 +547,7 @@ let StyleSheetActor = protocol.ActorClass({
    */
   _setSourceMapRoot: function(aSourceMap, aAbsSourceMapURL, aScriptURL) {
     const base = dirname(
-      aAbsSourceMapURL.indexOf("data:") === 0
+      aAbsSourceMapURL.startsWith("data:")
         ? aScriptURL
         : aAbsSourceMapURL);
     aSourceMap.sourceRoot = aSourceMap.sourceRoot
@@ -700,9 +700,9 @@ let StyleSheetActor = protocol.ActorClass({
   },
 
   /**
-    * This cleans up class and rule added for transition effect and then
-    * notifies that the style has been applied.
-    */
+   * This cleans up class and rule added for transition effect and then
+   * notifies that the style has been applied.
+   */
   _onTransitionEnd: function()
   {
     if (--this._transitionRefCount == 0) {
@@ -718,8 +718,8 @@ let StyleSheetActor = protocol.ActorClass({
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
-  initialize: function(conn, form, ctx, detail) {
-    protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
+  initialize: function(conn, form) {
+    protocol.Front.prototype.initialize.call(this, conn, form);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     events.on(this, "property-change", this._onPropertyChange);
@@ -775,7 +775,7 @@ let OriginalSourceActor = protocol.ActorClass({
     return {
       actor: this.actorID, // actorID is set when it's added to a pool
       url: this.url,
-      parentSource: this.parentActor.actorID
+      relatedStyleSheet: this.parentActor.form()
     };
   },
 
