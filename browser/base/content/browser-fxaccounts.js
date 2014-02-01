@@ -186,7 +186,7 @@ let gFxAccounts = {
     });
   },
 
-  toggle: function (event) {
+  onMenuPanelCommand: function (event) {
     if (event.originalTarget.hasAttribute("signedin")) {
       this.openPreferences();
     } else {
