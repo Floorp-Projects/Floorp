@@ -263,26 +263,27 @@
 
 /* SimpleListWidget */
 
-%filter substitution
-%define slw_selectionGradient linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%))
-%define slw_selectionTextColor #fff
-
 .simple-list-widget-container {
   /* Hack: force hardware acceleration */
   transform: translateZ(1px);
 }
 
-.simple-list-widget-item.selected {
-  background: @slw_selectionGradient@;
-  color: @slw_selectionTextColor@;
+.theme-dark .simple-list-widget-item.selected {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .simple-list-widget-item.selected {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-dark .simple-list-widget-item:not(.selected):hover {
-  background-color: #181d20; /* Sidebar background */
+  background-color: rgba(255,255,255,.05);
 }
 
 .theme-light .simple-list-widget-item:not(.selected):hover {
-  background-color: #f7f7f7; /* Sidebar background */
+  background-color: rgba(0,0,0,.05);
 }
 
 .simple-list-widget-empty-text,
