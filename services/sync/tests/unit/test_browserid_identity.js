@@ -8,10 +8,47 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
+Cu.import("resource://services-common/hawk.js");
+Cu.import("resource://gre/modules/FxAccounts.jsm");
+Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+
+const SECOND_MS = 1000;
+const MINUTE_MS = SECOND_MS * 60;
+const HOUR_MS = MINUTE_MS * 60;
 
 let identityConfig = makeIdentityConfig();
 let browseridManager = new BrowserIDManager();
 configureFxAccountIdentity(browseridManager, identityConfig);
+
+/**
+ * Mock client clock and skew vs server in FxAccounts signed-in user module and
+ * API client.  browserid_identity.js queries these values to construct HAWK
+ * headers.  We will use this to test clock skew compensation in these headers
+ * below.
+ */
+let MockFxAccountsClient = function() {
+  FxAccountsClient.apply(this);
+};
+MockFxAccountsClient.prototype = {
+  __proto__: FxAccountsClient.prototype
+};
+
+let MockFxAccounts = function() {
+  this._now_is = Date.now();
+
+  let mockInternal = {
+    now: () => {
+      return this._now_is;
+    },
+
+    fxAccountsClient: new MockFxAccountsClient()
+  };
+
+  FxAccounts.apply(this, [mockInternal]);
+};
+MockFxAccounts.prototype = {
+  __proto__: FxAccounts.prototype,
+};
 
 function run_test() {
   initTestLogging("Trace");
@@ -59,6 +96,111 @@ add_test(function test_getRESTRequestAuthenticator() {
     run_next_test();
   }
 );
+
+add_test(function test_resourceAuthenticatorSkew() {
+  _("BrowserIDManager Resource Authenticator compensates for clock skew in Hawk header.");
+
+  // Clock is skewed 12 hours into the future
+  // We pick a date in the past so we don't risk concealing bugs in code that
+  // uses new Date() instead of our given date.
+  let now = new Date("Fri Apr 09 2004 00:00:00 GMT-0700").valueOf() + 12 * HOUR_MS;
+  let browseridManager = new BrowserIDManager();
+  let hawkClient = new HawkClient("https://example.net/v1", "/foo");
+
+  // mock fxa hawk client skew
+  hawkClient.now = function() {
+    dump("mocked client now: " + now + '\n');
+    return now;
+  }
+  // Imagine there's already been one fxa request and the hawk client has
+  // already detected skew vs the fxa auth server.
+  let localtimeOffsetMsec = -1 * 12 * HOUR_MS;
+  hawkClient._localtimeOffsetMsec = localtimeOffsetMsec;
+
+  let fxaClient = new MockFxAccountsClient();
+  fxaClient.hawk = hawkClient;
+
+  // Sanity check
+  do_check_eq(hawkClient.now(), now);
+  do_check_eq(hawkClient.localtimeOffsetMsec, localtimeOffsetMsec);
+
+  // Properly picked up by the client
+  do_check_eq(fxaClient.now(), now);
+  do_check_eq(fxaClient.localtimeOffsetMsec, localtimeOffsetMsec);
+
+  let fxa = new MockFxAccounts();
+  fxa._now_is = now;
+  fxa.internal.fxAccountsClient = fxaClient;
+
+  // Picked up by the signed-in user module
+  do_check_eq(fxa.internal.now(), now);
+  do_check_eq(fxa.internal.localtimeOffsetMsec, localtimeOffsetMsec);
+
+  // Mocks within mocks...
+  configureFxAccountIdentity(browseridManager, identityConfig);
+  browseridManager._fxaService = fxa;
+  do_check_eq(browseridManager._fxaService.internal.now(), now);
+  do_check_eq(browseridManager._fxaService.internal.localtimeOffsetMsec,
+      localtimeOffsetMsec);
+
+  let request = new SyncStorageRequest("https://example.net/i/like/pie/");
+  let authenticator = browseridManager.getResourceAuthenticator();
+  let output = authenticator(request, 'GET');
+  dump("output" + JSON.stringify(output));
+  let authHeader = output.headers.authorization;
+  do_check_true(authHeader.startsWith('Hawk'));
+
+  // Skew correction is applied in the header and we're within the two-minute
+  // window.
+  do_check_eq(getTimestamp(authHeader), now - 12 * HOUR_MS);
+  do_check_true(
+      (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
+
+  run_next_test();
+});
+
+add_test(function test_RESTResourceAuthenticatorSkew() {
+  _("BrowserIDManager REST Resource Authenticator compensates for clock skew in Hawk header.");
+
+  // Clock is skewed 12 hours into the future from our arbitary date
+  let now = new Date("Fri Apr 09 2004 00:00:00 GMT-0700").valueOf() + 12 * HOUR_MS;
+  let browseridManager = new BrowserIDManager();
+  let hawkClient = new HawkClient("https://example.net/v1", "/foo");
+
+  // mock fxa hawk client skew
+  hawkClient.now = function() {
+    return now;
+  }
+  // Imagine there's already been one fxa request and the hawk client has
+  // already detected skew vs the fxa auth server.
+  hawkClient._localtimeOffsetMsec = -1 * 12 * HOUR_MS;
+
+  let fxaClient = new MockFxAccountsClient();
+  fxaClient.hawk = hawkClient;
+  let fxa = new MockFxAccounts();
+  fxa._now_is = now;
+  fxa.internal.fxAccountsClient = fxaClient;
+
+  configureFxAccountIdentity(browseridManager, identityConfig);
+  browseridManager._fxaService = fxa;
+
+  do_check_eq(browseridManager._fxaService.internal.now(), now);
+
+  let request = new SyncStorageRequest("https://example.net/i/like/pie/");
+  let authenticator = browseridManager.getResourceAuthenticator();
+  let output = authenticator(request, 'GET');
+  dump("output" + JSON.stringify(output));
+  let authHeader = output.headers.authorization;
+  do_check_true(authHeader.startsWith('Hawk'));
+
+  // Skew correction is applied in the header and we're within the two-minute
+  // window.
+  do_check_eq(getTimestamp(authHeader), now - 12 * HOUR_MS);
+  do_check_true(
+      (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
+
+  run_next_test();
+});
 
 add_test(function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
@@ -142,4 +284,15 @@ add_test(function test_computeXClientStateHeader() {
   do_check_eq(header, "6ae94683571c7a7c54dab4700aa3995f");
   run_next_test();
 });
+
+// End of tests
+// Utility functions follow
+
+function getTimestamp(hawkAuthHeader) {
+  return parseInt(/ts="(\d+)"/.exec(hawkAuthHeader)[1], 10) * SECOND_MS;
+}
+
+function getTimestampDelta(hawkAuthHeader, now=Date.now()) {
+  return Math.abs(getTimestamp(hawkAuthHeader) - now);
+}
 

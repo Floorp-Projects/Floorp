@@ -15,7 +15,7 @@ import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
+import org.mozilla.gecko.home.HomeContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -89,12 +89,12 @@ abstract class HomeFragment extends Fragment {
 
         // Hide the "Edit" menuitem if this item isn't a bookmark,
         // or if this is a reading list item.
-        if (info.bookmarkId < 0 || info.inReadingList) {
+        if (!info.hasBookmarkId() || info.isInReadingList()) {
             menu.findItem(R.id.home_edit_bookmark).setVisible(false);
         }
 
         // Hide the "Remove" menuitem if this item doesn't have a bookmark or history ID.
-        if (info.bookmarkId < 0 && info.historyId < 0) {
+        if (!info.hasBookmarkId() && !info.hasHistoryId()) {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
 
@@ -152,7 +152,7 @@ abstract class HomeFragment extends Fragment {
             if (item.getItemId() == R.id.home_open_private_tab)
                 flags |= Tabs.LOADURL_PRIVATE;
 
-            final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url) : info.url);
+            final String url = (info.isInReadingList() ? ReaderModeUtils.getAboutReaderForUrl(info.url) : info.url);
             Tabs.getInstance().loadUrl(url, flags);
             Toast.makeText(context, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
             return true;
@@ -172,15 +172,13 @@ abstract class HomeFragment extends Fragment {
 
         if (itemId == R.id.home_remove) {
             // Prioritize removing a history entry over a bookmark in the case of a combined item.
-            final int historyId = info.historyId;
-            if (historyId > -1) {
-                new RemoveHistoryTask(context, historyId).execute();
+            if (info.hasHistoryId()) {
+                new RemoveHistoryTask(context, info.historyId).execute();
                 return true;
             }
 
-            final int bookmarkId = info.bookmarkId;
-            if (bookmarkId > -1) {
-                new RemoveBookmarkTask(context, bookmarkId, info.url, info.inReadingList).execute();
+            if (info.hasBookmarkId()) {
+                new RemoveBookmarkTask(context, info.bookmarkId, info.url, info.isInReadingList()).execute();
                 return true;
             }
         }

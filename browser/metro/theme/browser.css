@@ -54,36 +54,53 @@
   pointer-events: none;
 }
 
+#tabs > .tabs-scrollbox > .scrollbutton-down:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-up {
   list-style-image: url("images/tab-arrows.png") !important;
   -moz-image-region: rect(15px 58px 63px 14px) !important;
   padding-right: 15px;
   width: @tabs_scrollarrow_width@;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-down:hover:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-up:hover {
   -moz-image-region: rect(14px 102px 62px 58px) !important;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-down:active:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-up:active {
   -moz-image-region: rect(14px 152px 62px 108px) !important;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-down[disabled]:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-up[disabled] {
   -moz-image-region: rect(15px 196px 63px 152px) !important;
 }
 
+#tabs > .tabs-scrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-down {
   list-style-image: url("images/tab-arrows.png") !important;
   -moz-image-region: rect(73px 58px 121px 14px) !important;
   padding-left: 15px;
   width: @tabs_scrollarrow_width@;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-up:hover:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-down:hover {
   -moz-image-region: rect(72px 102px 120px 58px) !important;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-up:active:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-down:active {
   -moz-image-region: rect(72px 152px 120px 108px) !important;
 }
+#tabs > .tabs-scrollbox > .scrollbutton-up[disabled]:-moz-locale-dir(rtl),
 #tabs > .tabs-scrollbox > .scrollbutton-down[disabled] {
   -moz-image-region: rect(73px 196px 121px 152px) !important;
+}
+
+.tabs-scrollbox > .scrollbutton-up:not([disabled]):not([collapsed]):-moz-locale-dir(rtl)::after {
+  right: calc(@tabs_scrollarrow_width@ + @metro_spacing_normal@);
+}
+
+.tabs-scrollbox > .scrollbutton-down:not([disabled]):not([collapsed]):-moz-locale-dir(rtl)::before {
+  right: auto;
+  left: calc(@tabs_scrollarrow_width@ + @newtab_button_width@);
 }
 
 .tabs-scrollbox > .scrollbutton-up:not([disabled]):not([collapsed])::after {

@@ -424,7 +424,7 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 #nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 + .toolbarbutton-1::before {
   content: "";
   display: -moz-box;
-  position: absolute;
+  position: relative;
   top: calc(50% - 9px);
   width: 1px;
   height: 18px;
@@ -435,6 +435,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   background-repeat: no-repeat;
   background-size: 1px 18px;
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
+}
+
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-box-orient: horizontal;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
@@ -2561,6 +2565,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: @loweredShadow@;
 }
 
+.tabbrowser-tab[selected=true]:-moz-lwtheme {
+  text-shadow: inherit;
+}
+
 .tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
   display: -moz-box;
   visibility: hidden;
@@ -2604,7 +2612,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /*
  * Draw the bottom border of the tabstrip when core doesn't do it for us:
  */
-#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customizing],[customize-exiting]) #TabsToolbar::after,
+#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customize-entered]) #TabsToolbar::after,
 #main-window:not([tabsintitlebar]) #TabsToolbar::after,
 #TabsToolbar:-moz-lwtheme::after {
   content: '';
@@ -4018,8 +4026,9 @@ window > chatbox {
   padding-top: 0;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
-  padding: 0 2em 2em;
+#main-window[tabsintitlebar][customize-entered] #titlebar-content {
+  margin-bottom: 0px !important;
+  margin-top: 11px !important;
 }
 
 #main-window[customize-entered] #tab-view-deck {
@@ -4064,6 +4073,12 @@ window > chatbox {
   #customization-titlebar-visibility-button > .button-box > .button-icon {
     width: 24px;
   }
+}
+
+#main-window[customizing] #navigator-toolbox::after,
+#main-window[customize-entered] #TabsToolbar::after {
+  margin-left: 2em;
+  margin-right: 2em;
 }
 
 /* End customization mode */

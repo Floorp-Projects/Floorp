@@ -56,6 +56,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
                                   "resource://gre/modules/UITelemetry.jsm");
+
+#ifdef MOZ_UPDATER
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+#endif
+
 /*
  * Services
  */
