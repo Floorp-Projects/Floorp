@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2012, International Business Machines
+*   Copyright (C) 1997-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -898,7 +898,6 @@ public:
      */
     UBool isLenient(void) const;
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Sets the behavior for handling wall time repeating multiple times
      * at negative time zone offset transitions. For example, 1:30 AM on
@@ -917,7 +916,7 @@ public:
      * @param option the behavior for handling repeating wall time, either
      * <code>UCAL_WALLTIME_FIRST</code> or <code>UCAL_WALLTIME_LAST</code>.
      * @see #getRepeatedWallTimeOption
-     * @draft ICU 49
+     * @stable ICU 49
      */
     void setRepeatedWallTimeOption(UCalendarWallTimeOption option);
 
@@ -928,7 +927,7 @@ public:
      * @return the behavior for handling repeating wall time, either
      * <code>UCAL_WALLTIME_FIRST</code> or <code>UCAL_WALLTIME_LAST</code>.
      * @see #setRepeatedWallTimeOption
-     * @draft ICU 49
+     * @stable ICU 49
      */
     UCalendarWallTimeOption getRepeatedWallTimeOption(void) const;
 
@@ -951,7 +950,7 @@ public:
      * <code>UCAL_WALLTIME_NEXT_VALID</code>.
      * @see #getSkippedWallTimeOption
      * 
-     * @draft ICU 49
+     * @stable ICU 49
      */
     void setSkippedWallTimeOption(UCalendarWallTimeOption option);
 
@@ -963,10 +962,9 @@ public:
      * <code>UCAL_WALLTIME_FIRST</code>, <code>UCAL_WALLTIME_LAST</code>
      * and <code>UCAL_WALLTIME_NEXT_VALID</code>.
      * @see #setSkippedWallTimeOption
-     * @draft ICU 49
+     * @stable ICU 49
      */
     UCalendarWallTimeOption getSkippedWallTimeOption(void) const;
-#endif  /* U_HIDE_DRAFT_API */
 
 #ifndef U_HIDE_DEPRECATED_API
     /**
@@ -1371,14 +1369,15 @@ public:
      * \endcode
      *
      * @return legacy calendar type name string
-     * @draft ICU 49
+     * @stable ICU 49
      */
     virtual const char * getType() const = 0;
 
     /**
-     * Returns whether the given day of the week is a weekday, a
-     * weekend day, or a day that transitions from one to the other,
-     * in this calendar system. If a transition occurs at midnight,
+     * Returns whether the given day of the week is a weekday, a weekend day,
+     * or a day that transitions from one to the other, for the locale and
+     * calendar system associated with this Calendar (the locale's region is
+     * often the most determinant factor). If a transition occurs at midnight,
      * then the days before and after the transition will have the
      * type UCAL_WEEKDAY or UCAL_WEEKEND. If a transition occurs at a time
      * other than midnight, then the day of the transition will have
@@ -1394,7 +1393,7 @@ public:
 
     /**
      * Returns the time during the day at which the weekend begins or ends in
-     * this calendar system.  If getDayOfWeekType() rerturns UCAL_WEEKEND_ONSET
+     * this calendar system.  If getDayOfWeekType() returns UCAL_WEEKEND_ONSET
      * for the specified dayOfWeek, return the time at which the weekend begins.
      * If getDayOfWeekType() returns UCAL_WEEKEND_CEASE for the specified dayOfWeek,
      * return the time at which the weekend ends. If getDayOfWeekType() returns
@@ -1607,11 +1606,13 @@ protected:
      * @internal
      */
     enum ELimitType {
+#ifndef U_HIDE_INTERNAL_API
       UCAL_LIMIT_MINIMUM = 0,
       UCAL_LIMIT_GREATEST_MINIMUM,
       UCAL_LIMIT_LEAST_MAXIMUM,
       UCAL_LIMIT_MAXIMUM,
       UCAL_LIMIT_COUNT
+#endif  /* U_HIDE_INTERNAL_API */
     };
 
     /**
@@ -1707,8 +1708,8 @@ protected:
      * (YEAR_WOY and WEEK_OF_YEAR) to an extended year in the case
      * where YEAR, EXTENDED_YEAR are not set.
      * The Calendar implementation assumes yearWoy is in extended gregorian form
-     * @internal
      * @return the extended year, UCAL_EXTENDED_YEAR
+     * @internal
      */
     virtual int32_t handleGetExtendedYearFromWeekFields(int32_t yearWoy, int32_t woy);
 
@@ -2387,19 +2388,19 @@ private:
 #endif /* !UCONFIG_NO_SERVICE */
 
     /**
-     * @internal
      * @return TRUE if this calendar has a default century (i.e. 03 -> 2003)
+     * @internal
      */
     virtual UBool haveDefaultCentury() const = 0;
 
     /**
-     * @internal
      * @return the start of the default century, as a UDate
+     * @internal
      */
     virtual UDate defaultCenturyStart() const = 0;
     /**
-     * @internal
      * @return the beginning year of the default century, as a year
+     * @internal
      */
     virtual int32_t defaultCenturyStartYear() const = 0;
 

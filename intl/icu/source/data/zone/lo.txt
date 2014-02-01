@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/lo.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/lo.xml
+ * ICU <specials> source: <path>/common/main/lo.xml
  */
 lo{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ອາບິດແຈນ"}
@@ -86,6 +86,9 @@ lo{
         }
         "Africa:Johannesburg"{
             ec{"ໂຈຮັນເນດສເບີກ"}
+        }
+        "Africa:Juba"{
+            ec{"ຈູບາ"}
         }
         "Africa:Kampala"{
             ec{"ຄຳປາລາ"}
@@ -210,6 +213,9 @@ lo{
         "America:Bahia"{
             ec{"ບີເຍຍ"}
         }
+        "America:Bahia_Banderas"{
+            ec{"ບາເຮຍ ແບນເດີຣາສ"}
+        }
         "America:Barbados"{
             ec{"ບາເບດອສ"}
         }
@@ -269,6 +275,9 @@ lo{
         }
         "America:Costa_Rica"{
             ec{"ຄອສຕາຣິກາ"}
+        }
+        "America:Creston"{
+            ec{"ເຄຣສຕັນ"}
         }
         "America:Cuiaba"{
             ec{"ກຸຍບາ"}
@@ -384,6 +393,9 @@ lo{
         "America:Kentucky:Monticello"{
             ec{"ມອນຕີເຊວໂລ, ເຄນທັກກີ"}
         }
+        "America:Kralendijk"{
+            ec{"ຄຣາເລນດິກ"}
+        }
         "America:La_Paz"{
             ec{"ລາປາສ"}
         }
@@ -414,6 +426,9 @@ lo{
         "America:Martinique"{
             ec{"ມາທີນິກ"}
         }
+        "America:Matamoros"{
+            ec{"ມາຕາໂມຣອສ"}
+        }
         "America:Mazatlan"{
             ec{"ມາຊາດລານ"}
         }
@@ -425,6 +440,9 @@ lo{
         }
         "America:Merida"{
             ec{"ມີຣິດາ"}
+        }
+        "America:Metlakatla"{
+            ec{"ເມັດລາກັດລາ"}
         }
         "America:Mexico_City"{
             ec{"ແມັກຊິໂກ ຊີຕີ"}
@@ -471,6 +489,9 @@ lo{
         "America:North_Dakota:New_Salem"{
             ec{"ນີວສາເລັມ, ດາໂກຕາເໜືອ"}
         }
+        "America:Ojinaga"{
+            ec{"ໂອຈິນາກາ"}
+        }
         "America:Panama"{
             ec{"ປານາມາ"}
         }
@@ -513,6 +534,9 @@ lo{
         "America:Rio_Branco"{
             ec{"ລີໂອບັງໂກ"}
         }
+        "America:Santa_Isabel"{
+            ec{"ຊານຕາ ອິດຊາເບວ"}
+        }
         "America:Santarem"{
             ec{"ຊັນຕາເລມ"}
         }
@@ -530,6 +554,9 @@ lo{
         }
         "America:Shiprock"{
             ec{"ຊີພຣອກ"}
+        }
+        "America:Sitka"{
+            ec{"ຊິດກາ"}
         }
         "America:St_Barthelemy"{
             ec{"ຊຽນບາທີລີມີ"}
@@ -593,6 +620,9 @@ lo{
         }
         "Antarctica:DumontDUrville"{
             ec{"ດູມອນດີຍູວີວສ໌"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"ແມັກຄົວຣີ"}
         }
         "Antarctica:Mawson"{
             ec{"ເມົາຊັນ"}
@@ -693,6 +723,9 @@ lo{
         "Asia:Harbin"{
             ec{"ຮາຣ໌ບິນ"}
         }
+        "Asia:Hebron"{
+            ec{"ເຮບຣອນ"}
+        }
         "Asia:Hong_Kong"{
             ec{"ຮ່ອງກົງ"}
         }
@@ -726,6 +759,9 @@ lo{
         "Asia:Katmandu"{
             ec{"ກາດສ໌ມັນດູ"}
         }
+        "Asia:Khandyga"{
+            ec{"ແຄນດີກາ"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"ຄາດສນໍຢາດສ"}
         }
@@ -755,6 +791,9 @@ lo{
         }
         "Asia:Nicosia"{
             ec{"ນິໂຄເຊຍ"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"ໂນໂວຄຸສເນັດ"}
         }
         "Asia:Novosibirsk"{
             ec{"ໂນໂວຊີບີລາດສ"}
@@ -827,6 +866,9 @@ lo{
         }
         "Asia:Urumqi"{
             ec{"ອູຣຸມຊີ"}
+        }
+        "Asia:Ust-Nera"{
+            ec{"ອຸສ ເນຣາ"}
         }
         "Asia:Vientiane"{
             ec{"ວຽງຈັນ"}
@@ -938,6 +980,9 @@ lo{
         }
         "Europe:Budapest"{
             ec{"ບູດາເປດສ"}
+        }
+        "Europe:Busingen"{
+            ec{"ບັດຊິນເກນ"}
         }
         "Europe:Chisinau"{
             ec{"ຄີຊີເນົາ"}
@@ -1248,20 +1293,10 @@ lo{
             lg{"ເວລາອາຟຣິລິກາຕາເວັນຕົກ"}
             ls{"ເວລາມາດຕະຖານອາຟຣິລິກາຕາເວັນຕົກ"}
         }
-        "meta:Aktyubinsk"{
-            ld{"ເວລາລະດູຮ້ອນອັກທຸຍບິງ"}
-            lg{"ເວລາອັກທຸຍບິງ"}
-            ls{"ເວລາມາດຕະຖານອັກທຸຍບິງ"}
-        }
         "meta:Alaska"{
             ld{"ເວລາຕອນທ່ຽງຂອງອະແລສກາ"}
             lg{"ເວລາອະແລສກາ"}
             ls{"ເວລາມາດຕະຖານອະແລສກາ"}
-        }
-        "meta:Alaska_Hawaii"{
-            ld{"ເວລາຕອນທ່ຽງຂອງອະແລສກາ-ຮາວາຍ"}
-            lg{"ເວລາອະແລສກາ-ຮາວາຍ"}
-            ls{"ເວລາມາດຕະຖານອະແລສກາ-ຮາວາຍ"}
         }
         "meta:Almaty"{
             ld{"ເວລາລະດູຮ້ອນອໍມາຕີ"}
@@ -1323,11 +1358,6 @@ lo{
             lg{"ເວລາອາເມເນຍ"}
             ls{"ເວລາມາດຕະຖານອາເມເນຍ"}
         }
-        "meta:Ashkhabad"{
-            ld{"ເວລາລະດູຮ້ອນອາກກາບັດ"}
-            lg{"ເວລາອາກກາບັດ"}
-            ls{"ເວລາມາດຕະຖານອາກກາບັດ"}
-        }
         "meta:Atlantic"{
             ld{"ເວລາຕອນທ່ຽງຂອງອາແລນຕິກ"}
             lg{"ເວລາຂອງອາແລນຕິກ"}
@@ -1368,21 +1398,11 @@ lo{
             lg{"ເວລາ ບັງກະລາເທດ"}
             ls{"ເວລາມາດຕະຖານ ບັງກະລາເທດ"}
         }
-        "meta:Bering"{
-            ld{"ເວລາຕອນທ່ຽງຂອງເບຈິງ"}
-            lg{"ເວລາຂອງເບຈິງ"}
-            ls{"ເວລາມາດຕະຖານຂອງເບຈິງ"}
-        }
         "meta:Bhutan"{
             ls{"ເວລາ ບູຖານ"}
         }
         "meta:Bolivia"{
             ls{"ເວລາໂບລີເວີຍ"}
-        }
-        "meta:Borneo"{
-            ld{"ເວລາລະດູຮ້ອນບໍນຽວ"}
-            lg{"ເວລາບໍນຽວ"}
-            ls{"ເວລາມາດຕະຖານບໍນຽວ"}
         }
         "meta:Brasilia"{
             ld{"ເວລາລະດູຮ້ອນເບຣຊີເລຍ"}
@@ -1402,9 +1422,6 @@ lo{
         }
         "meta:Chamorro"{
             ls{"ເວລາຊາມໍໂລ"}
-        }
-        "meta:Changbai"{
-            ls{"ເວລາຊ່າງໄປ"}
         }
         "meta:Chatham"{
             ld{"ເວລາກາງເວັນ ຊາທາມ"}
@@ -1447,22 +1464,11 @@ lo{
             lg{"ເວລາຄິວບາ"}
             ls{"ເວລາມາດຕະຖານຂອງຄິວບາ"}
         }
-        "meta:Dacca"{
-            ls{"ເວລາດາຄາ"}
-        }
         "meta:Davis"{
             ls{"ເວລາເດວິດ"}
         }
         "meta:DumontDUrville"{
             ls{"ເວລາດູມອງດູວິລ"}
-        }
-        "meta:Dushanbe"{
-            ld{"ເວລາລະດູຮ້ອນດູຊານເບ"}
-            lg{"ເວລາດູຊານເບ"}
-            ls{"ເວລາມາດຕະຖານດູຊານເບ"}
-        }
-        "meta:Dutch_Guiana"{
-            ls{"ເວລາຂອງດັດກີອານາ"}
         }
         "meta:East_Timor"{
             ls{"ເວລາຕີມໍຕາເວັນອອກ"}
@@ -1506,11 +1512,6 @@ lo{
         "meta:French_Southern"{
             ls{"ເວລາຝຣັ່ງຕອນໃຕ້ແລະແອນຕາກຕິກ"}
         }
-        "meta:Frunze"{
-            ld{"ເວລາລະດູຮ້ອນຝຸນ"}
-            lg{"ເວລາຝຸນ"}
-            ls{"ເວລາມາດຕະຖານຝຸນ"}
-        }
         "meta:GMT"{
             ls{"ເວລາກຣີນີສ"}
         }
@@ -1527,11 +1528,6 @@ lo{
         }
         "meta:Gilbert_Islands"{
             ls{"ເວລາຫມູ່ເກາະກິລເບີດ"}
-        }
-        "meta:Greenland_Central"{
-            ld{"ເວລາລະດູຮ້ອນກຮີນແລນກາງ"}
-            lg{"ເວລາກຮີນແລນກາງ"}
-            ls{"ເວລາມາດຕະຖານກຮີນແລນກາງ"}
         }
         "meta:Greenland_Eastern"{
             ld{"ເວລາລະດູຮ້ອນກຮີນແລນຕາເວັນອອກ"}
@@ -1605,22 +1601,11 @@ lo{
             lg{"ເວລາ ຍີ່ປຸ່ນ"}
             ls{"ເວລາມາດຕະຖານຂອງຍີ່ປຸ່ນ"}
         }
-        "meta:Karachi"{
-            ls{"ເວລາກາລາຈິ"}
-        }
-        "meta:Kashgar"{
-            ls{"ເວລາຄັດກາ"}
-        }
         "meta:Kazakhstan_Eastern"{
             ls{"ເວລາກາຊັກສະຖານຕາເວັນອອກ"}
         }
         "meta:Kazakhstan_Western"{
             ls{"ເວລາກາຊັກສະຖານຕາເວັນຕົກ"}
-        }
-        "meta:Kizilorda"{
-            ld{"ເວລາລະດູຮ້ອນຄີຊີລໍດາ"}
-            lg{"ເວລາຄີຊີລໍດາ"}
-            ls{"ເວລາມາດຕະຖານຄີຊີລໍດາ"}
         }
         "meta:Korea"{
             ld{"ເວລາກາງເວັນ ເກົາຫຼີ"}
@@ -1635,9 +1620,6 @@ lo{
             lg{"ເວລາຄຣາສໂນຢາດສ"}
             ls{"ເວລາມາດຕະຖານຄຣາສໂນຢາດສ"}
         }
-        "meta:Kwajalein"{
-            ls{"ເວລາຄວາຈາເລນ"}
-        }
         "meta:Kyrgystan"{
             ls{"ເວລາຄຣີກິສຖານ"}
         }
@@ -1646,9 +1628,6 @@ lo{
         }
         "meta:Line_Islands"{
             ls{"ເວລາຫມູ່ເກາະໄລນ໌"}
-        }
-        "meta:Long_Shu"{
-            ls{"ເວລາລອງຊູ"}
         }
         "meta:Lord_Howe"{
             ld{"ເວລາກາງເວັນ ລອດໂຮ"}
@@ -1667,9 +1646,6 @@ lo{
             ld{"ເວລາລະດູຮ້ອນເມັກກາເດນ"}
             lg{"ເວລາເມັກກາເດນ"}
             ls{"ເວລາມາດຕະຖານເມັກກາເດນ"}
-        }
-        "meta:Malaya"{
-            ls{"ເວລາມາລາຢາ"}
         }
         "meta:Malaysia"{
             ls{"ເວລາມາເລເຊັຍ"}
@@ -1805,21 +1781,13 @@ lo{
             lg{"ເວລາສາຄາລິງ"}
             ls{"ເວລາມາດຕະຖານສາຄາລິງ"}
         }
-        "meta:Samarkand"{
-            ld{"ເວລາລະດູຮ້ອນສະມາກການ"}
-            lg{"ເວລາສະມາກການ"}
-            ls{"ເວລາມາດຕະຖານສະມາກການ"}
-        }
         "meta:Samoa"{
-            ls{"ເວລາຊາມົວ"}
+            ld{"ເວລາລະດູຮ້ອນຊາມົວ"}
+            lg{"ເວລາຊາມົວ"}
+            ls{"ເວລາມາດຕະຖານຊາມົວ"}
         }
         "meta:Seychelles"{
             ls{"ເວລາເຊເຊວ"}
-        }
-        "meta:Shevchenko"{
-            ld{"ເວລາລະດູຮ້ອນເຊບເຊນໂກ"}
-            lg{"ເວລາເຊບເຊນໂກ"}
-            ls{"ເວລາມາດຕະຖານເຊບເຊນໂກ"}
         }
         "meta:Singapore"{
             ls{"ເວລາສີງກະໂປ"}
@@ -1847,11 +1815,6 @@ lo{
         "meta:Tajikistan"{
             ls{"ເວລາທາຈິກິສຖານ"}
         }
-        "meta:Tashkent"{
-            ld{"ເວລາລະດູຮ້ອນທາສເກັນ"}
-            lg{"ເວລາທາສເກັນ"}
-            ls{"ເວລາມາດຕະຖານທາສເກັນ"}
-        }
         "meta:Tokelau"{
             ls{"ເວລາໂຕເກເລົາ"}
         }
@@ -1871,18 +1834,10 @@ lo{
         "meta:Tuvalu"{
             ls{"ເວລາຕູວາລູ"}
         }
-        "meta:Uralsk"{
-            ld{"ເວລາລະດູຮ້ອນອູລາສ"}
-            lg{"ເວລາອູລາສ"}
-            ls{"ເວລາມາດຕະຖານອູລາສ"}
-        }
         "meta:Uruguay"{
             ld{"ເວລາລະດູຮ້ອນອຸກູໄວ"}
             lg{"ເວລາອຸກູໄວ"}
             ls{"ເວລາມາດຕະຖານອຸກູໄວ"}
-        }
-        "meta:Urumqi"{
-            ls{"ເວລາອຸລຳຊີ"}
         }
         "meta:Uzbekistan"{
             ld{"ເວລາລະດູຮ້ອນອຸສເບກິດສະຖານ"}
@@ -1926,16 +1881,12 @@ lo{
             lg{"ເວລາເຢກາເຕລິນເບີກ"}
             ls{"ເວລາມາດຕະຖານເຢກາເຕລິນເບີກ"}
         }
-        "meta:Yukon"{
-            ld{"ເວລາຕອນທ່ຽງຂອງຍູຄອນ"}
-            lg{"ເວລາຂອງຍູຄອນ"}
-            ls{"ເວລາມາດຕະຖານຍູຄອນ"}
-        }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"ເວລາ {0}"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

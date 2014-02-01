@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/af.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/af.xml
+ * ICU <specials> source: <path>/common/main/af.xml
  */
 af{
     Currencies{
@@ -205,7 +205,7 @@ af{
         }
         GHC{
             "GHC",
-            "Ghanese cedi (1979-2007)",
+            "Ghanese cedi (1979–2007)",
         }
         GHS{
             "GHS",
@@ -250,10 +250,6 @@ af{
         HTG{
             "HTG",
             "Haïtiaanse gourde",
-        }
-        HUF{
-            "HUF",
-            "Hongaarse forint",
         }
         IDR{
             "IDR",
@@ -381,7 +377,7 @@ af{
         }
         MMK{
             "MMK",
-            "Myanma Kyat",
+            "Myanma kyat",
         }
         MNT{
             "MNT",
@@ -417,7 +413,7 @@ af{
         }
         MZM{
             "MZM",
-            "Mosambiekse metical (1980-2006)",
+            "Mosambiekse metical (1980–2006)",
         }
         MZN{
             "MZN",
@@ -505,7 +501,7 @@ af{
         }
         SBD{
             "SBD",
-            "Salomons-eilande dollar",
+            "Salomonseilande dollar",
         }
         SCR{
             "SCR",
@@ -517,7 +513,7 @@ af{
         }
         SDP{
             "SDP",
-            "Soedannese pond (1957-1998)",
+            "Soedannese pond (1957–1998)",
         }
         SEK{
             "SEK",
@@ -581,7 +577,7 @@ af{
         }
         TRL{
             "TRL",
-            "Turkse lier (1922-2005)",
+            "Turkse lier (1922–2005)",
         }
         TRY{
             "TRY",
@@ -665,6 +661,10 @@ af{
         }
         ZMK{
             "ZMK",
+            "Zambiese kwacha (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "Zambiese kwacha",
         }
         ZWD{
@@ -673,13 +673,21 @@ af{
         }
     }
     CurrencyPlurals{
-        EUR{
-            one{"EUR"}
-            other{"EUR"}
+        AUD{
+            one{"Australiese dollar"}
+            other{"Australiese dollar"}
+        }
+        DOP{
+            one{"Dominikaanse peso"}
+            other{"Dominikaanse peso"}
         }
         RON{
             one{"Roemeense leu"}
             other{"Roemeense leu"}
+        }
+        SBD{
+            one{"Salomonseilande dollar"}
+            other{"Salomonseilande dollar"}
         }
         SSP{
             one{"Suid-Soedanese pond"}
@@ -690,5 +698,5 @@ af{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.78.32"}
+    Version{"2.0.92.87"}
 }

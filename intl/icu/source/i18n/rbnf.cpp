@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2012, International Business Machines Corporation
+* Copyright (C) 1997-2013, International Business Machines Corporation
 * and others. All Rights Reserved.
 *******************************************************************************
 */
@@ -1109,16 +1109,6 @@ RuleBasedNumberFormat::format(int64_t number,
     return toAppendTo;
 }
 
-
-// make linker happy
-UnicodeString&
-RuleBasedNumberFormat::format(const Formattable& obj,
-                              UnicodeString& toAppendTo,
-                              FieldPosition& pos,
-                              UErrorCode& status) const
-{
-    return NumberFormat::format(obj, toAppendTo, pos, status);
-}
 
 UnicodeString&
 RuleBasedNumberFormat::format(double number,

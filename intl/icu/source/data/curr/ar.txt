@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ar.xml
+ * ICU <specials> source: <path>/common/main/ar.xml
  */
 ar{
     Currencies{
@@ -732,11 +732,11 @@ ar{
             "دينار سوداني",
         }
         SDG{
-            "SDG",
+            "ج.س.",
             "جنيه سوداني",
         }
         SDP{
-            "ج.س.‏",
+            "SDP",
             "جنيه سوداني قديم",
         }
         SEK{
@@ -776,7 +776,7 @@ ar{
             "جلدر سورينامي",
         }
         SSP{
-            "SSP",
+            "ج.ج.س.",
             "جنيه جنوب السودان",
         }
         STD{
@@ -1005,6 +1005,10 @@ ar{
         }
         ZMK{
             "ZMK",
+            "كواشا زامبي - 1968-2012",
+        }
+        ZMW{
+            "ZMW",
             "كواشا زامبي",
         }
         ZRN{
@@ -2170,6 +2174,14 @@ ar{
             zero{"راند جنوب أفريقيا"}
         }
         ZMK{
+            few{"كواشا زامبي - 1968-2012"}
+            many{"كواشا زامبي - 1968-2012"}
+            one{"كواشا زامبي - 1968-2012"}
+            other{"كواشا زامبي - 1968-2012"}
+            two{"كواشا زامبي - 1968-2012"}
+            zero{"كواشا زامبي - 1968-2012"}
+        }
+        ZMW{
             few{"كواشا زامبي"}
             many{"كواشا زامبي"}
             one{"كواشا زامبي"}
@@ -2186,5 +2198,5 @@ ar{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
 }

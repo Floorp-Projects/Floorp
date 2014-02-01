@@ -2,7 +2,7 @@
 #
 # Yves Arrouye.
 #
-# Copyright (C) 2000-2012, International Business Machines Corporation and others.
+# Copyright (C) 2000-2013, International Business Machines Corporation and others.
 # All Rights Reserved.
 
 #
@@ -279,6 +279,11 @@ INVOKE = $(LDLIBRARYPATH_ENVVAR)=$(LIBRARY_PATH_PREFIX)$(LIBDIR):$(top_builddir)
 PKGDATA_INVOKE = $(LDLIBRARYPATH_ENVVAR)=$(top_builddir)/stubdata:$(top_builddir)/tools/ctestfw:$(LIBRARY_PATH_PREFIX)$(LIBDIR):$$$(LDLIBRARYPATH_ENVVAR) $(LEAK_CHECKER)
 INSTALLED_INVOKE = $(LDLIBRARYPATH_ENVVAR)=$(libdir):$$$(LDLIBRARYPATH_ENVVAR)
 
+# Current full path directory for cross compilation
+ifneq ($(strip $(cross_buildroot)),)
+include $(cross_buildroot)/config/icucross.inc
+endif
+
 # Platform-specific setup
 include @platform_make_fragment@
 
@@ -299,6 +304,11 @@ ifneq ($(strip $(cross_buildroot)),)
 include $(cross_buildroot)/config/icucross.mk
 else
 cross_buildroot = $(top_builddir)
+endif
+
+# for tests
+ifneq ($(TEST_STATUS_FILE),)
+TEST_OUTPUT_OPTS="-E$(TEST_STATUS_FILE)"
 endif
 
 # optional include at top

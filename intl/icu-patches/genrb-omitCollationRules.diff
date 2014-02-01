@@ -1,0 +1,136 @@
+diff --git a/intl/icu/source/tools/genrb/genrb.c b/intl/icu/source/tools/genrb/genrb.c
+--- a/intl/icu/source/tools/genrb/genrb.c
++++ b/intl/icu/source/tools/genrb/genrb.c
+@@ -1,7 +1,7 @@
+ /*
+ *******************************************************************************
+ *
+-*   Copyright (C) 1998-2012, International Business Machines
++*   Copyright (C) 1998-2014, International Business Machines
+ *   Corporation and others.  All Rights Reserved.
+ *
+ *******************************************************************************
+@@ -280,7 +280,7 @@
+         }
+     }
+ 
+-    initParser(options[NO_COLLATION_RULES].doesOccur);
++    initParser();
+ 
+     /*added by Jing*/
+     if(options[LANGUAGE].doesOccur) {
+@@ -557,7 +557,8 @@
+         printf("autodetected encoding %s\n", cp);
+     }
+     /* Parse the data into an SRBRoot */
+-    data = parse(ucbuf, inputDir, outputDir, !omitBinaryCollation, status);
++    data = parse(ucbuf, inputDir, outputDir,
++                 !omitBinaryCollation, options[NO_COLLATION_RULES].doesOccur, status);
+ 
+     if (data == NULL || U_FAILURE(*status)) {
+         fprintf(stderr, "couldn't parse the file %s. Error:%s\n", filename,u_errorName(*status));
+diff --git a/intl/icu/source/tools/genrb/parse.cpp b/intl/icu/source/tools/genrb/parse.cpp
+--- a/intl/icu/source/tools/genrb/parse.cpp
++++ b/intl/icu/source/tools/genrb/parse.cpp
+@@ -85,10 +85,9 @@
+     const char     *outputdir;
+     uint32_t        outputdirLength;
+     UBool           makeBinaryCollation;
++    UBool           omitCollationRules;
+ } ParseState;
+ 
+-static UBool gOmitCollationRules  = FALSE;
+-
+ typedef struct SResource *
+ ParseResourceFunction(ParseState* state, char *tag, uint32_t startline, const struct UString* comment, UErrorCode *status);
+ 
+@@ -323,7 +322,7 @@
+     }
+     uprv_strcat(filename, cs);
+ 
+-    if(gOmitCollationRules) {
++    if(state->omitCollationRules) {
+         return res_none();
+     }
+ 
+@@ -771,7 +770,7 @@
+     }
+ 
+     /* Parse the data into an SRBRoot */
+-    data = parse(ucbuf, genrbdata->inputDir, genrbdata->outputDir, FALSE, status);
++    data = parse(ucbuf, genrbdata->inputDir, genrbdata->outputDir, FALSE, FALSE, status);
+ 
+     root = data->fRoot;
+     collations = resLookup(root, "collations");
+@@ -1007,7 +1006,7 @@
+ #endif
+             /* in order to achieve smaller data files, we can direct genrb */
+             /* to omit collation rules */
+-            if(gOmitCollationRules) {
++            if(state->omitCollationRules) {
+                 bundle_closeString(state->bundle, member);
+             } else {
+                 table_add(result, member, line, status);
+@@ -1839,7 +1838,7 @@
+     {"reserved", NULL, NULL}
+ };
+ 
+-void initParser(UBool omitCollationRules)
++void initParser()
+ {
+     U_STRING_INIT(k_type_string,    "string",    6);
+     U_STRING_INIT(k_type_binary,    "binary",    6);
+@@ -1858,8 +1857,6 @@
+     U_STRING_INIT(k_type_plugin_collation,      "process(collation)",        18);
+     U_STRING_INIT(k_type_plugin_transliterator, "process(transliterator)",   23);
+     U_STRING_INIT(k_type_plugin_dependency,     "process(dependency)",       19);
+-
+-    gOmitCollationRules = omitCollationRules;
+ }
+ 
+ static inline UBool isTable(enum EResourceType type) {
+@@ -2039,8 +2036,8 @@
+ 
+ /* parse the top-level resource */
+ struct SRBRoot *
+-parse(UCHARBUF *buf, const char *inputDir, const char *outputDir, UBool makeBinaryCollation,
+-      UErrorCode *status)
++parse(UCHARBUF *buf, const char *inputDir, const char *outputDir,
++      UBool makeBinaryCollation, UBool omitCollationRules, UErrorCode *status)
+ {
+     struct UString    *tokenValue;
+     struct UString    comment;
+@@ -2064,6 +2061,7 @@
+     state.outputdir       = outputDir;
+     state.outputdirLength = (state.outputdir != NULL) ? (uint32_t)uprv_strlen(state.outputdir) : 0;
+     state.makeBinaryCollation = makeBinaryCollation;
++    state.omitCollationRules = omitCollationRules;
+ 
+     ustr_init(&comment);
+     expect(&state, TOK_STRING, &tokenValue, &comment, NULL, status);
+diff --git a/intl/icu/source/tools/genrb/parse.h b/intl/icu/source/tools/genrb/parse.h
+--- a/intl/icu/source/tools/genrb/parse.h
++++ b/intl/icu/source/tools/genrb/parse.h
+@@ -1,7 +1,7 @@
+ /*
+ *******************************************************************************
+ *
+-*   Copyright (C) 1998-2011, International Business Machines
++*   Copyright (C) 1998-2014, International Business Machines
+ *   Corporation and others.  All Rights Reserved.
+ *
+ *******************************************************************************
+@@ -24,11 +24,11 @@
+ 
+ U_CDECL_BEGIN
+ /* One time parser initalisation */
+-void initParser(UBool omitCollationRules);
++void initParser();
+ 
+ /* Parse a ResourceBundle text file */
+ struct SRBRoot* parse(UCHARBUF *buf, const char* inputDir, const char* outputDir,
+-                      UBool omitBinaryCollation, UErrorCode *status);
++                      UBool makeBinaryCollation, UBool omitCollationRules, UErrorCode *status);
+ 
+ U_CDECL_END
+ 

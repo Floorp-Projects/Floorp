@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-bug 960811 - clobber to rebuild preprocessed files when enabling synthetic APKs
+Bug 924839 - Touching ICU's configure scripts in this bug doesn't work without a clobber.  This is filed as bug 966038.

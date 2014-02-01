@@ -1,57 +1,128 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/to.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/to.xml
+ * ICU <specials> source: <path>/common/main/to.xml
  */
 to{
     AuxExemplarCharacters{
         "[à ă â å ä æ b c ç d è ĕ ê ë g ì ĭ î ï j ñ ò ŏ ô ö ø œ q r ù ŭ û ü w x y ÿ z"
         "]"
     }
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{"[a á ā e é ē f h i í ī k l m n {ng} o ó ō p s t u ú ū v ʻ]"}
     ExemplarCharactersIndex{"[A E F H I K L M N {NG} O P S T U V ʻ]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
+    }
     LocaleScript{
         "Latn",
     }
+    MoreInformation{"?"}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}—{1}"}
+            }
             patterns{
+                accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#0.###"}
-                percentFormat{"‎#0%"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0 afe"}
+                    }
+                    10000{
+                        other{"0 mano"}
+                    }
+                    100000{
+                        other{"0 kilu"}
+                    }
+                    1000000{
+                        other{"0 miliona"}
+                    }
+                    10000000{
+                        other{"00 miliona"}
+                    }
+                    100000000{
+                        other{"000 miliona"}
+                    }
+                    1000000000{
+                        other{"0 piliona"}
+                    }
+                    10000000000{
+                        other{"00 piliona"}
+                    }
+                    100000000000{
+                        other{"000 piliona"}
+                    }
+                    1000000000000{
+                        other{"0 tiliona"}
+                    }
+                    10000000000000{
+                        other{"00 tiliona"}
+                    }
+                    100000000000000{
+                        other{"000 tiliona"}
+                    }
+                }
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"TF"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
+        generic{
             DateTimePatterns{
-                "HH:mm:ss zzzz",
+                "h:mm:ss a zzzz",
                 "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE d MMMM y",
-                "d MMMM y",
-                "d MMM y",
-                "d/M/yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "d/M/yy GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
                 Ed{"d E"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
                 M{"L"}
@@ -66,17 +137,173 @@ to{
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
-                y{"y"}
-                yM{"M-yyyy"}
-                yMEd{"E, d/M/yyyy"}
+                y{"y G"}
+                yM{"M-y"}
+                yMEd{"E d/M/y"}
+                yMM{"MM-y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d-M-y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
-                yyMM{"MM-yy"}
-                yyMMM{"MMM yy"}
-                yyQQQ{"QQQ yy"}
+                yyyy{"y G"}
+                yyyyM{"y/MM GGGGG"}
+                yyyyMEd{"E dd-MM-y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E d MMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"dd/MM/y GGGGG"}
+                yyyyQQQ{"y QQQ G"}
+                yyyyQQQQ{"y QQQQ G"}
+            }
+            intervalFormats{
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E d/M - E d/M"}
+                    d{"E d/M - E d/M"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E d MMM - E d MMM"}
+                    d{"E d MMM - E d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"d/M - d/M"}
+                    d{"d/M - d/M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y G"}
+                }
+                yM{
+                    M{"M/y - M/y GGGGG"}
+                    y{"M/y - M/y GGGGG"}
+                }
+                yMEd{
+                    M{"E d/M/y - E d/M/y GGGGG"}
+                    d{"E d/M/y - E d/M/y GGGGG"}
+                    y{"E d/M/y - E d/M/y GGGGG"}
+                }
+                yMMM{
+                    M{"MMM-MMM y G"}
+                    y{"MMM y - MMM y G"}
+                }
+                yMMMEd{
+                    M{"E d MMM - E d MMM y G"}
+                    d{"E d MMM - E d MMM y G"}
+                    y{"E d MMM y - E d MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM - MMMM y G"}
+                    y{"MMMM y - MMMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM - d MMM y G"}
+                    d{"d-d MMM y G"}
+                    y{"d MMM y - d MMM y G"}
+                }
+                yMd{
+                    M{"d/M/y - d/M/y GGGGG"}
+                    d{"d/M/y - d/M/y GGGGG"}
+                    y{"d/M/y - d/M/y GGGGG"}
+                }
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            AmPmMarkersNarrow{
+                "AM",
+                "PM",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "HH:mm:ss z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "d/M/yy",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1} {0}",
+            }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
+            availableFormats{
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
+                Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E d/M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
+                yMM{"MM-y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E d MMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+                yQQQ{"y QQQ"}
+                yQQQQ{"y QQQQ"}
             }
             dayNames{
                 format{
@@ -97,6 +324,15 @@ to{
                         "T",
                         "F",
                         "T",
+                    }
+                    short{
+                        "Sāp",
+                        "Mōn",
+                        "Tus",
+                        "Pul",
+                        "Tuʻa",
+                        "Fal",
+                        "Tok",
                     }
                     wide{
                         "Sāpate",
@@ -127,6 +363,15 @@ to{
                         "F",
                         "T",
                     }
+                    short{
+                        "Sāp",
+                        "Mōn",
+                        "Tus",
+                        "Pul",
+                        "Tuʻa",
+                        "Fal",
+                        "Tok",
+                    }
                     wide{
                         "Sāpate",
                         "Mōnite",
@@ -152,62 +397,34 @@ to{
                     "taʻu ʻo Sīsū",
                 }
             }
-            fields{
-                day{
-                    dn{"ʻaho"}
-                    relative{
-                        "-1"{"ʻaneafi"}
-                        "-2"{"ʻaneheafi"}
-                        "0"{"ʻaho⸍ni"}
-                        "1"{"ʻapongipongi"}
-                        "2"{"ʻahepongipongi"}
-                    }
-                }
-                dayperiod{
-                    dn{"AM/PM"}
-                }
-                era{
-                    dn{"kuonga"}
-                }
-                hour{
-                    dn{"houa"}
-                }
-                minute{
-                    dn{"miniti"}
-                }
-                month{
-                    dn{"māhina"}
-                }
-                second{
-                    dn{"sekoni"}
-                }
-                week{
-                    dn{"uike"}
-                }
-                weekday{
-                    dn{"ʻaho ʻo e uike"}
-                }
-                year{
-                    dn{"taʻu"}
-                }
-                zone{
-                    dn{"taimi fakavahe"}
-                }
-            }
             intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
                 M{
                     M{"M–M"}
                 }
                 MEd{
-                    M{"E, d/M - E, d/M"}
-                    d{"E, d/M - E, d/M"}
+                    M{"E d/M - E d/M"}
+                    d{"E d/M - E d/M"}
                 }
                 MMM{
                     M{"LLL–LLL"}
                 }
                 MMMEd{
-                    M{"E, d MMM - E, d MMM"}
-                    d{"E, d MMM - E, d MMM"}
+                    M{"E d MMM - E d MMM"}
+                    d{"E d MMM - E d MMM"}
                 }
                 MMMd{
                     M{"d MMM - d MMM"}
@@ -243,22 +460,22 @@ to{
                     y{"y–y"}
                 }
                 yM{
-                    M{"M/yy - M/yy"}
-                    y{"M/yy - M/yy"}
+                    M{"M/y - M/y"}
+                    y{"M/y - M/y"}
                 }
                 yMEd{
-                    M{"E, d/M/yy - E, d/M/yy"}
-                    d{"E, d/M/yy - E, d/M/yy"}
-                    y{"E, d/M/yy - E, d/M/yy"}
+                    M{"E d/M/y - E d/M/y"}
+                    d{"E d/M/y - E d/M/y"}
+                    y{"E d/M/y - E d/M/y"}
                 }
                 yMMM{
                     M{"MMM-MMM y"}
                     y{"MMM y - MMM y"}
                 }
                 yMMMEd{
-                    M{"E, d MMM - E, d MMM y"}
-                    d{"E, d MMM - E, d MMM y"}
-                    y{"E, d MMM y - E, d MMM y"}
+                    M{"E d MMM - E d MMM y"}
+                    d{"E d MMM - E d MMM y"}
+                    y{"E d MMM y - E d MMM y"}
                 }
                 yMMMM{
                     M{"MMMM - MMMM y"}
@@ -266,13 +483,13 @@ to{
                 }
                 yMMMd{
                     M{"d MMM - d MMM y"}
-                    d{"MMM d-d, y"}
+                    d{"d-d MMM y"}
                     y{"d MMM y - d MMM y"}
                 }
                 yMd{
-                    M{"d/M/yy - d/M/yy"}
-                    d{"d/M/yy - d/M/yy"}
-                    y{"d/M/yy - d/M/yy"}
+                    M{"d/M/y - d/M/y"}
+                    d{"d/M/y - d/M/y"}
+                    y{"d/M/y - d/M/y"}
                 }
             }
             monthNames{
@@ -373,6 +590,12 @@ to{
                         "K3",
                         "K4",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
                     wide{
                         "kuata ʻuluaki",
                         "kuata ua",
@@ -386,6 +609,12 @@ to{
                         "K2",
                         "K3",
                         "K4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "kuata 1",
@@ -403,31 +632,700 @@ to{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"ʻaho"}
+            relative{
+                "-1"{"ʻaneafi"}
+                "-2"{"ʻaneheafi"}
+                "0"{"ʻaho⸍ni"}
+                "1"{"ʻapongipongi"}
+                "2"{"ʻahepongipongi"}
+            }
+            relativeTime{
+                future{
+                    other{"ʻi he ʻaho ʻe {0}"}
+                }
+                past{
+                    other{"ʻaho ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"AM/PM"}
+        }
+        era{
+            dn{"kuonga"}
+        }
+        fri{
+            relative{
+                "-1"{"Falaite kuoʻosi"}
+                "0"{"Falaite⸍ni"}
+                "1"{"Falaite kahaʻu"}
+            }
+        }
+        hour{
+            dn{"houa"}
+            relativeTime{
+                future{
+                    other{"ʻi he houa ʻe {0}"}
+                }
+                past{
+                    other{"houa ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        minute{
+            dn{"miniti"}
+            relativeTime{
+                future{
+                    other{"ʻi he miniti ʻe {0}"}
+                }
+                past{
+                    other{"miniti ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"Mōnite kuoʻosi"}
+                "0"{"Mōnite⸍ni"}
+                "1"{"Mōnite kahaʻu"}
+            }
+        }
+        month{
+            dn{"māhina"}
+            relative{
+                "-1"{"māhina kuoʻosi"}
+                "0"{"māhina⸍ni"}
+                "1"{"māhina kahaʻu"}
+            }
+            relativeTime{
+                future{
+                    other{"ʻi he māhina ʻe {0}"}
+                }
+                past{
+                    other{"māhina ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"Tokonaki kuoʻosi"}
+                "0"{"Tokonaki⸍ni"}
+                "1"{"Tokonaki kahaʻu"}
+            }
+        }
+        second{
+            dn{"sekoni"}
+            relative{
+                "0"{"taimiʻni"}
+            }
+            relativeTime{
+                future{
+                    other{"ʻi he sekoni ʻe {0}"}
+                }
+                past{
+                    other{"sekoni ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"Sāpate kuoʻosi"}
+                "0"{"Sāpate⸍ni"}
+                "1"{"Sāpate kahaʻu"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"Tuʻapulelulu kuoʻosi"}
+                "0"{"Tuʻapulelulu⸍ni"}
+                "1"{"Tuʻapulelulu kahaʻu"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"Tūsite kuoʻosi"}
+                "0"{"Tūsite⸍ni"}
+                "1"{"Tūsite kahaʻu"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"Pulelulu kuoʻosi"}
+                "0"{"Pulelulu⸍ni"}
+                "1"{"Pulelulu kahaʻu"}
+            }
+        }
+        week{
+            dn{"uike"}
+            relative{
+                "-1"{"uike kuoʻosi"}
+                "0"{"uike⸍ni"}
+                "1"{"uike kahaʻu"}
+            }
+            relativeTime{
+                future{
+                    other{"ʻi he uike ʻe {0}"}
+                }
+                past{
+                    other{"uike ʻe {0} kuoʻosi"}
+                }
+            }
+        }
+        weekday{
+            dn{"ʻaho ʻo e uike"}
+        }
+        year{
+            dn{"taʻu"}
+            relative{
+                "-1"{"taʻu kuoʻosi"}
+                "0"{"taʻu⸍ni"}
+                "1"{"taʻu kahaʻu"}
+            }
+            relativeTime{
+                future{
+                    other{"ʻi he taʻu ʻe {0}"}
+                }
+                past{
+                    other{"taʻu ʻe {0} kuo hili"}
+                }
+            }
+        }
+        zone{
+            dn{"taimi fakavahe"}
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0} mo {1}"}
+            end{"{0} mo {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} mo e {1}"}
+            end{"{0} mo e {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-narrow{
+            2{"{0} mo e {1}"}
+            end{"{0} mo e {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0} mo e {1}"}
+            end{"{0} mo e {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+    }
     measurementSystemNames{
+        UK{"fakapilitānia"}
         US{"fakaʻamelika"}
         metric{"fakamita"}
     }
     units{
-        day{
-            other{"{0} ʻa"}
+        acceleration{
+            g-force{
+                other{"{0} g-force"}
+            }
         }
-        hour{
-            other{"{0} h"}
+        angle{
+            arc-minute{
+                other{"miniti seakale ʻe {0}"}
+            }
+            arc-second{
+                other{"sekoni siakale ʻe {0}"}
+            }
+            degree{
+                other{"tikili seakale ʻe {0}"}
+            }
         }
-        minute{
-            other{"{0} m"}
+        area{
+            acre{
+                other{"ʻeka ʻe {0}"}
+            }
+            hectare{
+                other{"hekitale ʻe {0}"}
+            }
+            square-foot{
+                other{"fute sikuea ʻe {0}"}
+            }
+            square-kilometer{
+                other{"kilomita sikuea ʻe {0}"}
+            }
+            square-meter{
+                other{"mita sikuea ʻe {0}"}
+            }
+            square-mile{
+                other{"maile sikuea ʻe {0}"}
+            }
         }
-        month{
-            other{"{0} m"}
+        compound{
+            per{"{0} ʻi he {1}"}
         }
-        second{
-            other{"{0} s"}
+        duration{
+            day{
+                other{"ʻaho ʻe {0}"}
+            }
+            hour{
+                other{"houa ʻe {0}"}
+            }
+            millisecond{
+                other{"milisekoni ʻe {0}"}
+            }
+            minute{
+                other{"miniti ʻe {0}"}
+            }
+            month{
+                other{"māhina ʻe {0}"}
+            }
+            second{
+                other{"sekoni ʻe {0}"}
+            }
+            week{
+                other{"uike ʻe {0}"}
+            }
+            year{
+                other{"taʻu ʻe {0}"}
+            }
         }
-        week{
-            other{"{0} u"}
+        length{
+            centimeter{
+                other{"senitimita ʻe {0}"}
+            }
+            foot{
+                other{"fute ʻe {0}"}
+            }
+            inch{
+                other{"ʻinisi ʻe {0}"}
+            }
+            kilometer{
+                other{"kilomita ʻe {0}"}
+            }
+            light-year{
+                other{"taʻumaama ʻe {0}"}
+            }
+            meter{
+                other{"mita ʻe {0}"}
+            }
+            mile{
+                other{"maile ʻe {0}"}
+            }
+            millimeter{
+                other{"milimita ʻe {0}"}
+            }
+            picometer{
+                other{"pikomita ʻe {0}"}
+            }
+            yard{
+                other{"iate ʻe {0}"}
+            }
         }
-        year{
-            other{"{0} t"}
+        mass{
+            gram{
+                other{"kalami ʻe {0}"}
+            }
+            kilogram{
+                other{"kilokalami ʻe {0}"}
+            }
+            ounce{
+                other{"ʻaunisi ʻe {0}"}
+            }
+            pound{
+                other{"pāuni ʻe {0}"}
+            }
+        }
+        power{
+            horsepower{
+                other{"hoosipaoa ʻe {0}"}
+            }
+            kilowatt{
+                other{"kilouate ʻe {0}"}
+            }
+            watt{
+                other{"uate ʻe {0}"}
+            }
+        }
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"ʻinisi ʻe {0} mēkuli"}
+            }
+            millibar{
+                other{"milipā ʻe {0}"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"kilomita he houa ʻe {0}"}
+            }
+            meter-per-second{
+                other{"mita he sekoni ʻe {0}"}
+            }
+            mile-per-hour{
+                other{"maile he houa ʻe {0}"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"tikili selisiasi ʻe {0}"}
+            }
+            fahrenheit{
+                other{"tikili felenihaiti ʻe {0}"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"kilomita kiupiki ʻe {0}"}
+            }
+            cubic-mile{
+                other{"maile kiupiki ʻe {0}"}
+            }
+            liter{
+                other{"lita ʻe {0}"}
+            }
+        }
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                other{"{0} G"}
+            }
+        }
+        angle{
+            arc-minute{
+                other{"{0}′"}
+            }
+            arc-second{
+                other{"{0}″"}
+            }
+            degree{
+                other{"{0}°"}
+            }
+        }
+        area{
+            acre{
+                other{"{0} ac"}
+            }
+            hectare{
+                other{"{0}ha"}
+            }
+            square-foot{
+                other{"{0}ft²"}
+            }
+            square-kilometer{
+                other{"{0}km²"}
+            }
+            square-meter{
+                other{"{0}m²"}
+            }
+            square-mile{
+                other{"{0} mi²"}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                other{"ʻaho ʻe {0}"}
+            }
+            hour{
+                other{"{0}h"}
+            }
+            millisecond{
+                other{"{0}ms"}
+            }
+            minute{
+                other{"{0}m"}
+            }
+            month{
+                other{"{0}m"}
+            }
+            second{
+                other{"{0}s"}
+            }
+            week{
+                other{"uike ʻe {0}"}
+            }
+            year{
+                other{"{0}t"}
+            }
+        }
+        length{
+            centimeter{
+                other{"{0} cm"}
+            }
+            foot{
+                other{"{0}ft"}
+            }
+            inch{
+                other{"{0} in"}
+            }
+            kilometer{
+                other{"{0}km"}
+            }
+            light-year{
+                other{"{0}tm"}
+            }
+            meter{
+                other{"{0}m"}
+            }
+            mile{
+                other{"{0} mi"}
+            }
+            millimeter{
+                other{"{0}mm"}
+            }
+            picometer{
+                other{"{0}pm"}
+            }
+            yard{
+                other{"{0} yd"}
+            }
+        }
+        mass{
+            gram{
+                other{"{0} g"}
+            }
+            kilogram{
+                other{"{0} kg"}
+            }
+            ounce{
+                other{"{0} oz"}
+            }
+            pound{
+                other{"{0} lb"}
+            }
+        }
+        power{
+            horsepower{
+                other{"{0}hp"}
+            }
+            kilowatt{
+                other{"{0}kW"}
+            }
+            watt{
+                other{"{0}W"}
+            }
+        }
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"{0} inHg"}
+            }
+            millibar{
+                other{"{0} mbar"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0}km/h"}
+            }
+            meter-per-second{
+                other{"{0}m/s"}
+            }
+            mile-per-hour{
+                other{"{0} mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0}km³"}
+            }
+            cubic-mile{
+                other{"{0}ma³"}
+            }
+            liter{
+                other{"{0}l"}
+            }
+        }
+    }
+    unitsShort{
+        acceleration{
+            g-force{
+                other{"{0} G"}
+            }
+        }
+        angle{
+            arc-minute{
+                other{"{0}′"}
+            }
+            arc-second{
+                other{"{0}″"}
+            }
+            degree{
+                other{"{0}°"}
+            }
+        }
+        area{
+            acre{
+                other{"{0} ac"}
+            }
+            hectare{
+                other{"{0} ha"}
+            }
+            square-foot{
+                other{"{0} ft²"}
+            }
+            square-kilometer{
+                other{"{0} km²"}
+            }
+            square-meter{
+                other{"{0} m²"}
+            }
+            square-mile{
+                other{"{0} mi²"}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                other{"ʻaho ʻe {0}"}
+            }
+            hour{
+                other{"{0} h"}
+            }
+            millisecond{
+                other{"{0} ms"}
+            }
+            minute{
+                other{"{0} m"}
+            }
+            month{
+                other{"māhina ʻe {0}"}
+            }
+            second{
+                other{"{0} s"}
+            }
+            week{
+                other{"uike ʻe {0}"}
+            }
+            year{
+                other{"{0} t"}
+            }
+        }
+        length{
+            centimeter{
+                other{"{0} cm"}
+            }
+            foot{
+                other{"{0} ft"}
+            }
+            inch{
+                other{"{0} in"}
+            }
+            kilometer{
+                other{"{0} km"}
+            }
+            light-year{
+                other{"{0} tm"}
+            }
+            meter{
+                other{"{0} m"}
+            }
+            mile{
+                other{"{0} mi"}
+            }
+            millimeter{
+                other{"{0} mm"}
+            }
+            picometer{
+                other{"{0} pm"}
+            }
+            yard{
+                other{"{0} yd"}
+            }
+        }
+        mass{
+            gram{
+                other{"{0} g"}
+            }
+            kilogram{
+                other{"{0} kg"}
+            }
+            ounce{
+                other{"{0} oz"}
+            }
+            pound{
+                other{"{0} lb"}
+            }
+        }
+        power{
+            horsepower{
+                other{"{0} hp"}
+            }
+            kilowatt{
+                other{"{0} kW"}
+            }
+            watt{
+                other{"{0} W"}
+            }
+        }
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"{0} inHg"}
+            }
+            millibar{
+                other{"{0} mbar"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0} km/h"}
+            }
+            meter-per-second{
+                other{"{0} m/s"}
+            }
+            mile-per-hour{
+                other{"{0} mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0} km³"}
+            }
+            cubic-mile{
+                other{"{0} mi³"}
+            }
+            liter{
+                other{"{0} l"}
+            }
         }
     }
 }
