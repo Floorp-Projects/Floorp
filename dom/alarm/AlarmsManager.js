@@ -17,7 +17,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 const ALARMSMANAGER_CONTRACTID = "@mozilla.org/alarmsManager;1";
 const ALARMSMANAGER_CID        = Components.ID("{fea1e884-9b05-11e1-9b64-87a7016c3860}");
@@ -134,7 +133,7 @@ AlarmsManager.prototype = {
           alarms.push(alarm);
         });
         Services.DOMRequest.fireSuccess(request,
-                                        ObjectWrapper.wrap(alarms, this._window));
+                                        Cu.cloneInto(alarms, this._window));
         break;
 
       case "AlarmsManager:Add:Return:KO":
