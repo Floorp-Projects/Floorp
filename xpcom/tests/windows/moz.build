@@ -6,5 +6,6 @@
 
 CPP_UNIT_TESTS += [
     'TestCOM.cpp',
+    'TestNtPathToDosPath.cpp',
 ]
 
