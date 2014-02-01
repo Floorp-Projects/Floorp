@@ -404,6 +404,8 @@ class AutoLockSimulatorRuntime
 
 bool Simulator::ICacheCheckingEnabled = false;
 
+int Simulator::StopSimAt = -1;
+
 SimulatorRuntime *
 CreateSimulatorRuntime()
 {
@@ -418,6 +420,11 @@ CreateSimulatorRuntime()
 
     if (getenv("ARM_SIM_ICACHE_CHECKS"))
         Simulator::ICacheCheckingEnabled = true;
+
+    char *stopAtStr = getenv("ARM_SIM_STOP_AT");
+    int32_t stopAt;
+    if (stopAtStr && sscanf(stopAtStr, "%d", &stopAt) == 1)
+        Simulator::StopSimAt = stopAt;
 
     return srt;
 }
@@ -681,11 +688,14 @@ ArmDebugger::debug()
                 continue;
             } else if ((strcmp(cmd, "si") == 0) || (strcmp(cmd, "stepi") == 0)) {
                 sim_->instructionDecode(reinterpret_cast<SimInstruction *>(sim_->get_pc()));
+                sim_->icount_++;
             } else if ((strcmp(cmd, "skip") == 0)) {
                 sim_->set_pc(sim_->get_pc() + 4);
+                sim_->icount_++;
             } else if ((strcmp(cmd, "c") == 0) || (strcmp(cmd, "cont") == 0)) {
                 // Execute the one instruction we broke at with breakpoints disabled.
                 sim_->instructionDecode(reinterpret_cast<SimInstruction *>(sim_->get_pc()));
+                sim_->icount_++;
                 // Leave the debugger shell.
                 done = true;
             } else if ((strcmp(cmd, "p") == 0) || (strcmp(cmd, "print") == 0)) {
@@ -3849,6 +3859,8 @@ Simulator::instructionDecode(SimInstruction *instr)
         set_register(pc, reinterpret_cast<int32_t>(instr) + SimInstruction::kInstrSize);
 }
 
+
+template<bool EnableStopSimAt>
 void
 Simulator::execute()
 {
@@ -3858,16 +3870,21 @@ Simulator::execute()
     AsmJSActivation *activation = TlsPerThreadData.get()->asmJSActivationStackFromOwnerThread();
 
     while (program_counter != end_sim_pc) {
-        SimInstruction *instr = reinterpret_cast<SimInstruction *>(program_counter);
-        icount_++;
-        instructionDecode(instr);
+        if (EnableStopSimAt && (icount_ == Simulator::StopSimAt)) {
+            ArmDebugger dbg(this);
+            dbg.debug();
+        } else {
+            SimInstruction *instr = reinterpret_cast<SimInstruction *>(program_counter);
+            instructionDecode(instr);
+            icount_++;
 
-        int32_t rpc = resume_pc_;
-        if (MOZ_UNLIKELY(rpc != 0)) {
-            // AsmJS signal handler ran and we have to adjust the pc.
-            activation->setResumePC((void *)get_pc());
-            set_pc(rpc);
-            resume_pc_ = 0;
+            int32_t rpc = resume_pc_;
+            if (MOZ_UNLIKELY(rpc != 0)) {
+                // AsmJS signal handler ran and we have to adjust the pc.
+                activation->setResumePC((void *)get_pc());
+                set_pc(rpc);
+                resume_pc_ = 0;
+            }
         }
         program_counter = get_pc();
     }
@@ -3909,7 +3926,10 @@ Simulator::callInternal(uint8_t *entry)
     set_register(r11, callee_saved_value);
 
     // Start the simulation
-    execute();
+    if (Simulator::StopSimAt != -1)
+        execute<true>();
+    else
+        execute<false>();
 
     // Check that the callee-saved registers have been preserved.
     MOZ_ASSERT(callee_saved_value == get_register(r4));
