@@ -1710,8 +1710,11 @@ star_generator_next(JSContext *cx, CallArgs args)
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
 
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
-        return false;
+        RootedObject obj(cx, CreateItrResultObject(cx, JS::UndefinedHandleValue, true));
+        if (!obj)
+            return false;
+        args.rval().setObject(*obj);
+        return true;
     }
 
     if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
@@ -1732,7 +1735,7 @@ star_generator_throw(JSContext *cx, CallArgs args)
 
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
+        cx->setPendingException(args.get(0));
         return false;
     }
 
