@@ -392,7 +392,7 @@ uint32_t
 ThreadPool::numWorkers() const
 {
     // Subtract one for the main thread, which always exists.
-    return runtime_->cpuCount() - 1;
+    return WorkerThreadState().cpuCount - 1;
 }
 
 bool

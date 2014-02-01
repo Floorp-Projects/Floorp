@@ -1405,7 +1405,7 @@ static bool
 WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setNumber(static_cast<double>(cx->runtime()->workerThreadCount()));
+    args.rval().setInt32(cx->runtime()->useHelperThreads() ? WorkerThreadState().threadCount : 0);
     return true;
 }
 
