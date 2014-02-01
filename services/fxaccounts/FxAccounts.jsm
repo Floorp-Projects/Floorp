@@ -620,13 +620,6 @@ this.FxAccounts.prototype = Object.freeze({
     return internal.whenVerified(userData);
   },
 
-  now: function() {
-    return internal.now();
-  },
-
-  get localtimeOffsetMsec() {
-    return internal.localtimeOffsetMsec;
-  },
 
   /**
    * Sign the current user out.
