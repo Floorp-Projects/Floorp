@@ -58,10 +58,10 @@ function sha256(str) {
 function promptForRelink(acctName) {
   let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
   let continueLabel = sb.GetStringFromName("continue.label");
-  let title = sb.GetStringFromName("relink.verify.title");
-  let description = sb.formatStringFromName("relink.verify.description",
+  let title = sb.GetStringFromName("relinkVerify.title");
+  let description = sb.formatStringFromName("relinkVerify.description",
                                             [acctName], 1);
-  let body = sb.GetStringFromName("relink.verify.heading") +
+  let body = sb.GetStringFromName("relinkVerify.heading") +
              "\n\n" + description;
   let ps = Services.prompt;
   let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
