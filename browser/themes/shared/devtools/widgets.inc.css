@@ -322,8 +322,7 @@
 /* SideMenuWidget */
 
 %filter substitution
-%define smw_selectionTextColor #f5f7fa
-%define smw_marginDark #222426
+%define smw_marginDark #000
 %define smw_marginLight #aaa
 %define smw_itemDarkTopBorder rgba(0,0,0,0.2)
 %define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
@@ -419,12 +418,12 @@
 
 .theme-dark .side-menu-widget-item.selected {
   background-color: #1d4f73; /* Select Highlight Blue */
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light .side-menu-widget-item.selected {
   background-color: #4c9ed9; /* Select Highlight Blue */
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .side-menu-widget-item-arrow {
@@ -508,12 +507,12 @@
 
 .theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
   background-color: transparent;
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
   background-color: transparent;
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 /* SideMenuWidget checkboxes */
