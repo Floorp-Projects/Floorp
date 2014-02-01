@@ -194,7 +194,11 @@ HawkClient.prototype = {
     };
 
     let request = new HAWKAuthenticatedRESTRequest(uri, credentials, extra);
-    request[method](payloadObj, onComplete);
+    if (method == "post" || method == "put") {
+      request[method](payloadObj, onComplete);
+    } else {
+      request[method](onComplete);
+    }
 
     return deferred.promise;
   }

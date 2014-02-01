@@ -188,8 +188,11 @@
         <vbox id="noFxaAccount">
           <description>&welcome.description;</description>
           <label class="text-link"
-                 onclick="gSyncPane.openContentInBrowser('about:accounts?signin=true'); return false;"
-                 value="&welcome.startButton.label;"/>
+                 onclick="gSyncPane.signIn(); return false;"
+                 value="&welcome.createAccount.label;"/>
+          <label class="text-link"
+                 onclick="gSyncPane.signIn(); return false;"
+                 value="&welcome.signIn.label;"/>
           <spacer flex="1"/>
           <label class="text-link"
                  onclick="gSyncPane.openOldSyncSupportPage(); return false;"
@@ -199,7 +202,7 @@
 
         <vbox id="hasFxaAccount">
           <groupbox id="fxaGroup">
-            <caption label="&syncBrand.fxa-singular.label;"/>
+            <caption label="&syncBrand.fxAccount.label;"/>
 
             <deck id="fxaLoginStatus">
 
@@ -212,7 +215,7 @@
                 <spacer flex="1"/>
                 <vbox align="end">
                   <button onclick="gSyncPane.unlinkFirefoxAccount(true);"
-                          label="&unlink.label;" />
+                          label="&disconnect.label;" />
                 </vbox>
               </hbox>
 

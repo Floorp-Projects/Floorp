@@ -178,7 +178,6 @@ function uninstallFakePAC() {
 // to ensure that still works.
 function setDefaultIdentityConfig() {
   Cu.import("resource://gre/modules/Services.jsm");
-  Services.prefs.setBoolPref("identity.fxaccounts.enabled", false);
-//  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
+  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
 }
 setDefaultIdentityConfig();

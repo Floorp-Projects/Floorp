@@ -17,6 +17,7 @@
 
 #include <android/log.h>
 #include <cutils/properties.h>
+#include <limits>
 #include "mozilla/dom/network/NetUtils.h"
 
 #define _DEBUG 0
@@ -532,7 +533,7 @@ void NetworkUtils::setQuota(CommandChain* aChain,
                             NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setiquota %s %lld", GET_CHAR(mIfname), atoll("0xffffffffffffffff"));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setiquota %s %lld", GET_CHAR(mIfname), LLONG_MAX);
 
   doCommand(command, aChain, aCallback);
 }
