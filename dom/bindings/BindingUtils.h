@@ -130,6 +130,19 @@ IsDOMClass(const js::Class* clasp)
   return IsDOMClass(Jsvalify(clasp));
 }
 
+// Return true if the JSClass is used for non-proxy DOM objects.
+inline bool
+IsNonProxyDOMClass(const js::Class* clasp)
+{
+  return IsDOMClass(clasp) && !clasp->isProxy();
+}
+
+inline bool
+IsNonProxyDOMClass(const JSClass* clasp)
+{
+  return IsNonProxyDOMClass(js::Valueify(clasp));
+}
+
 // Returns true if the JSClass is used for DOM interface and interface 
 // prototype objects.
 inline bool
@@ -151,7 +164,7 @@ template <class T>
 inline T*
 UnwrapDOMObject(JSObject* obj)
 {
-  MOZ_ASSERT(IsDOMClass(js::GetObjectClass(obj)) || IsDOMProxy(obj),
+  MOZ_ASSERT(IsDOMClass(js::GetObjectClass(obj)),
              "Don't pass non-DOM objects to this function");
 
   JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
@@ -165,14 +178,6 @@ GetDOMClass(JSObject* obj)
   if (IsDOMClass(clasp)) {
     return &DOMJSClass::FromJSClass(clasp)->mClass;
   }
-
-  if (js::IsProxyClass(clasp)) {
-    js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
-    if (handler->family() == ProxyFamily()) {
-      return &static_cast<DOMProxyHandler*>(handler)->mClass;
-    }
-  }
-
   return nullptr;
 }
 
@@ -190,8 +195,7 @@ UnwrapDOMObjectToISupports(JSObject* aObject)
 inline bool
 IsDOMObject(JSObject* obj)
 {
-  const js::Class* clasp = js::GetObjectClass(obj);
-  return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
+  return IsDOMClass(js::GetObjectClass(obj));
 }
 
 #define UNWRAP_OBJECT(Interface, obj, value)                                 \
@@ -508,14 +512,14 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
 inline const JS::Value&
 GetSystemOnlyWrapperSlot(JSObject* obj)
 {
-  MOZ_ASSERT(IsDOMClass(js::GetObjectJSClass(obj)) &&
+  MOZ_ASSERT(IsNonProxyDOMClass(js::GetObjectJSClass(obj)) &&
              !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
   return js::GetReservedSlot(obj, DOM_OBJECT_SLOT_SOW);
 }
 inline void
 SetSystemOnlyWrapperSlot(JSObject* obj, const JS::Value& v)
 {
-  MOZ_ASSERT(IsDOMClass(js::GetObjectJSClass(obj)) &&
+  MOZ_ASSERT(IsNonProxyDOMClass(js::GetObjectJSClass(obj)) &&
              !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT_SOW, v);
 }
@@ -525,7 +529,9 @@ GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
 {
   const js::Class* clasp = js::GetObjectClass(obj);
   if (dom::IsDOMClass(clasp)) {
-    if (!(clasp->flags & JSCLASS_DOM_GLOBAL)) {
+    if (!clasp->isProxy() &&
+        !(clasp->flags & JSCLASS_DOM_GLOBAL))
+    {
       JS::Value v = GetSystemOnlyWrapperSlot(obj);
       if (v.isObject()) {
         obj = &v.toObject();
@@ -533,7 +539,7 @@ GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
     }
     return true;
   }
-  return IsDOMProxy(obj, clasp);
+  return false;
 }
 
 inline void
@@ -1954,7 +1960,6 @@ UseDOMXray(JSObject* obj)
 {
   const js::Class* clasp = js::GetObjectClass(obj);
   return IsDOMClass(clasp) ||
-         IsDOMProxy(obj, clasp) ||
          JS_IsNativeFunction(obj, Constructor) ||
          IsDOMIfaceAndProtoClass(clasp);
 }
