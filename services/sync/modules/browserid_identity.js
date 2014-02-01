@@ -194,11 +194,11 @@ this.BrowserIDManager.prototype = {
    * Provide override point for testing token expiration.
    */
   _now: function() {
-    return this._fxaService.now()
+    return this._fxaService.internal.now()
   },
 
   get _localtimeOffsetMsec() {
-    return this._fxaService.localtimeOffsetMsec;
+    return this._fxaService.internal.localtimeOffsetMsec;
   },
 
   get account() {
