@@ -98,15 +98,11 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY fxaSignIn.label "Sign in to &syncBrand.shortName.label;">
 <!ENTITY fxaSignInError.label "Reconnect to &syncBrand.shortName.label;">
-<!ENTITY syncStartPanel.title "&brandShortName; is now syncing.">
+<!ENTITY syncStartPanel.heading "&brandShortName; is now syncing">
 <!ENTITY syncStartPanel.subTitle "You can manage &syncBrand.shortName.label; in Options.">
 <!ENTITY syncStartPanel.subTitleUnix "You can manage &syncBrand.shortName.label; in Preferences.">
-<!ENTITY syncErrorPanel.title "Cannot connect to &syncBrand.shortName.label;">
+<!ENTITY syncErrorPanel.heading "Cannot connect to &syncBrand.shortName.label;">
 <!ENTITY syncErrorPanel.subTitle "Please sign in to resume syncing.">
-<!ENTITY syncErrorPanel.prefButton.label "Options">
-<!ENTITY syncErrorPanel.prefButton.accesskey "O">
-<!ENTITY syncErrorPanel.prefButtonUnix.label "Preferences">
-<!ENTITY syncErrorPanel.prefButtonUnix.accesskey "P">
 <!ENTITY syncErrorPanel.signInButton.label "Sign In">
 <!ENTITY syncErrorPanel.signInButton.accesskey "S">
 
