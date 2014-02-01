@@ -1500,7 +1500,7 @@ GetXrayExpandoChain(JSObject* obj)
   JS::Value v;
   if (IsNonProxyDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
     v = js::GetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT);
-  } else if (js::IsProxyClass(clasp)) {
+  } else if (clasp->isProxy()) {
     MOZ_ASSERT(js::GetProxyHandler(obj)->family() == ProxyFamily());
     v = js::GetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO);
   } else {
@@ -1517,7 +1517,7 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
   const js::Class* clasp = js::GetObjectClass(obj);
   if (IsNonProxyDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
     js::SetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT, v);
-  } else if (js::IsProxyClass(clasp)) {
+  } else if (clasp->isProxy()) {
     MOZ_ASSERT(js::GetProxyHandler(obj)->family() == ProxyFamily());
     js::SetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO, v);
   } else {
