@@ -1765,7 +1765,7 @@ TemporaryTypeSet::maybeEmulatesUndefined()
         // it's a WrapperObject, see EmulatesUndefined. Since all wrappers are
         // proxies, we can just check for that.
         const Class *clasp = getObjectClass(i);
-        if (clasp && (clasp->emulatesUndefined() || IsProxyClass(clasp)))
+        if (clasp && (clasp->emulatesUndefined() || clasp->isProxy()))
             return true;
     }
 
