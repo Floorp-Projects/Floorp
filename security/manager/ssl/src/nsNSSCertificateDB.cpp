@@ -1398,7 +1398,9 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!_retval)) {
+    return NS_ERROR_INVALID_POINTER;
+  }
 
   // sure would be nice to have a smart pointer class for PL_ allocations
   // unfortunately, we cannot distinguish out-of-memory from bad-input here
@@ -1421,6 +1423,24 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
       lengthDER--;
   }
 
+  nsresult rv = ConstructX509(certDER, lengthDER, _retval);
+  PL_strfree(certDER);
+  return rv;
+}
+
+/* nsIX509Cert constructX509 (in string certDER, unsigned long len); */
+NS_IMETHODIMP
+nsNSSCertificateDB::ConstructX509(const char* certDER,
+                                  uint32_t lengthDER,
+                                  nsIX509Cert** _retval)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(!_retval)) {
+    return NS_ERROR_INVALID_POINTER;
+  }
 
   SECItem secitem_cert;
   secitem_cert.type = siDERCertBuffer;
@@ -1431,8 +1451,6 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
   cert =
     CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &secitem_cert,
                             nullptr, false, true);
-  PL_strfree(certDER);
-
   if (!cert)
     return (PORT_GetError() == SEC_ERROR_NO_MEMORY)
       ? NS_ERROR_OUT_OF_MEMORY : NS_ERROR_FAILURE;
