@@ -11,7 +11,7 @@ var inner = g1();
 var outer = delegate(inner);
 assertIteratorNext(outer, 1);
 assertThrowsValue(function () { outer.throw(42) }, 42);
-assertThrowsInstanceOf(function () { outer.throw(42) }, TypeError);
+assertThrowsValue(function () { outer.throw(42) }, 42);
 
 // A caught delegated throw.
 inner = g2();
@@ -19,7 +19,7 @@ outer = delegate(inner);
 assertIteratorNext(outer, 1);
 assertIteratorResult(outer.throw(42), 42, false);
 assertThrowsValue(function () { outer.throw(42) }, 42);
-assertThrowsInstanceOf(function () { outer.throw(42) }, TypeError);
+assertThrowsValue(function () { outer.throw(42) }, 42);
 
 // What would be an uncaught delegated throw, but with a monkeypatched iterator.
 inner = g1();
@@ -42,7 +42,7 @@ assertIteratorNext(outer, 1);
 delete GeneratorObjectPrototype.throw;
 var outer_throw_42 = GeneratorObjectPrototype_throw.bind(outer, 42);
 assertThrowsValue(outer_throw_42, 42);
-assertThrowsInstanceOf(outer_throw_42, TypeError);
+assertThrowsValue(outer_throw_42, 42);
 
 // Monkeypunch a different throw handler.
 inner = g2();
