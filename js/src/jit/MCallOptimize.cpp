@@ -973,9 +973,8 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
     if (callInfo.argc() != 1 || !callInfo.constructing())
         return InliningStatus_NotInlined;
 
-    // MToString only supports int32 or string values.
-    MIRType type = callInfo.getArg(0)->type();
-    if (type != MIRType_Int32 && type != MIRType_String)
+    // ConvertToString doesn't support objects.
+    if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
     JSObject *templateObj = inspector->getTemplateObjectForNative(pc, js_String);
@@ -1133,7 +1132,7 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (callInfo.getArg(0)->type() != MIRType_String)
+    if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
@@ -1141,7 +1140,11 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
     MInstruction *exec = MRegExpExec::New(alloc(), callInfo.thisArg(), callInfo.getArg(0));
     current->add(exec);
     current->push(exec);
+
     if (!resumeAfter(exec))
+        return InliningStatus_Error;
+
+    if (!pushTypeBarrier(exec, getInlineReturnTypeSet(), true))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
@@ -1163,7 +1166,7 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     const Class *clasp = thisTypes ? thisTypes->getKnownClass() : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
-    if (callInfo.getArg(0)->type() != MIRType_String)
+    if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();

@@ -5,7 +5,9 @@
 #include "maxp.h"
 
 // maxp - Maximum Profile
-// http://www.microsoft.com/opentype/otspec/maxp.htm
+// http://www.microsoft.com/typography/otspec/maxp.htm
+
+#define TABLE_NAME "maxp"
 
 namespace ots {
 
@@ -17,19 +19,19 @@ bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   uint32_t version = 0;
   if (!table.ReadU32(&version)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read version of maxp table");
   }
 
   if (version >> 16 > 1) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad maxp version %d", version);
   }
 
   if (!table.ReadU16(&maxp->num_glyphs)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read number of glyphs from maxp table");
   }
 
   if (!maxp->num_glyphs) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad number of glyphs 0 in maxp table");
   }
 
   if (version >> 16 == 1) {
@@ -47,7 +49,7 @@ bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
         !table.ReadU16(&maxp->max_size_glyf_instructions) ||
         !table.ReadU16(&maxp->max_c_components) ||
         !table.ReadU16(&maxp->max_c_depth)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read maxp table");
     }
 
     if (maxp->max_zones == 0) {
@@ -61,7 +63,7 @@ bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     }
 
     if ((maxp->max_zones != 1) && (maxp->max_zones != 2)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad max zones %d in maxp", maxp->max_zones);
     }
   } else {
     maxp->version_1 = false;
@@ -79,7 +81,7 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
 
   if (!out->WriteU32(maxp->version_1 ? 0x00010000 : 0x00005000) ||
       !out->WriteU16(maxp->num_glyphs)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write maxp version or number of glyphs");
   }
 
   if (!maxp->version_1) return true;
@@ -88,7 +90,7 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteU16(maxp->max_contours) ||
       !out->WriteU16(maxp->max_c_points) ||
       !out->WriteU16(maxp->max_c_contours)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write maxp");
   }
 
   if (g_transcode_hints) {
@@ -99,7 +101,7 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
         !out->WriteU16(maxp->max_idefs) ||
         !out->WriteU16(maxp->max_stack) ||
         !out->WriteU16(maxp->max_size_glyf_instructions)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write more maxp");
     }
   } else {
     if (!out->WriteU16(1) ||  // max zones
@@ -109,13 +111,13 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
         !out->WriteU16(0) ||  // max instruction defs
         !out->WriteU16(0) ||  // max stack elements
         !out->WriteU16(0)) {  // max instruction byte count
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write more maxp");
     }
   }
 
   if (!out->WriteU16(maxp->max_c_components) ||
       !out->WriteU16(maxp->max_c_depth)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write yet more maxp");
   }
 
   return true;

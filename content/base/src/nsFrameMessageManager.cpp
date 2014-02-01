@@ -1066,49 +1066,58 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 }
 
 void
-nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager,
-                                       bool aLoadScripts)
+nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager)
 {
   mChildManagers.AppendObject(aManager);
-  if (aLoadScripts) {
-    nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
-    nsRefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
-    // We have parent manager if we're a window message manager.
-    // In that case we want to load the pending scripts from global
-    // message manager.
-    if (mParentManager) {
-      nsRefPtr<nsFrameMessageManager> globalMM = mParentManager;
-      for (uint32_t i = 0; i < globalMM->mPendingScripts.Length(); ++i) {
-        aManager->LoadFrameScript(globalMM->mPendingScripts[i], false,
-                                  globalMM->mPendingScriptsGlobalStates[i]);
-      }
+
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
+  // We have parent manager if we're a window message manager.
+  // In that case we want to load the pending scripts from global
+  // message manager.
+  if (mParentManager) {
+    nsRefPtr<nsFrameMessageManager> globalMM = mParentManager;
+    for (uint32_t i = 0; i < globalMM->mPendingScripts.Length(); ++i) {
+      aManager->LoadFrameScript(globalMM->mPendingScripts[i], false,
+                                globalMM->mPendingScriptsGlobalStates[i]);
     }
-    for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-      aManager->LoadFrameScript(mPendingScripts[i], false,
-                                mPendingScriptsGlobalStates[i]);
-    }
+  }
+  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
+    aManager->LoadFrameScript(mPendingScripts[i], false,
+                              mPendingScriptsGlobalStates[i]);
   }
 }
 
 void
-nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback, bool aLoadScripts)
+nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback)
 {
-  NS_ASSERTION(!mIsBroadcaster || !mCallback,
-               "Broadcasters cannot have callbacks!");
+  MOZ_ASSERT(!mIsBroadcaster || !mCallback,
+             "Broadcasters cannot have callbacks!");
   if (aCallback && mCallback != aCallback) {
     mCallback = aCallback;
     if (mOwnsCallback) {
       mOwnedCallback = aCallback;
     }
-    // First load global scripts by adding this to parent manager.
-    if (mParentManager) {
-      mParentManager->AddChildManager(this, aLoadScripts);
-    }
-    if (aLoadScripts) {
-      for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-        LoadFrameScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i]);
-      }
-    }
+  }
+}
+
+void
+nsFrameMessageManager::InitWithCallback(MessageManagerCallback* aCallback)
+{
+  if (mCallback) {
+    // Initialization should only happen once.
+    return;
+  }
+
+  SetCallback(aCallback);
+
+  // First load global scripts by adding this to parent manager.
+  if (mParentManager) {
+    mParentManager->AddChildManager(this);
+  }
+
+  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
+    LoadFrameScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i]);
   }
 }
 

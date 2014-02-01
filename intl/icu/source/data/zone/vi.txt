@@ -1,22 +1,31 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/vi.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/vi.xml
+ * ICU <specials> source: <path>/common/main/vi.xml
  */
 vi{
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
         }
+        "Africa:Sao_Tome"{
+            ec{"São Tomé"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
+        }
+        "America:Curacao"{
+            ec{"Curaçao"}
+        }
+        "America:Godthab"{
+            ec{"Nuuk"}
         }
         "America:Indiana:Knox"{
             ec{"Knox, Indiana"}
@@ -54,6 +63,12 @@ vi{
         "America:North_Dakota:New_Salem"{
             ec{"New Salem, Bắc Dakota"}
         }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
+        }
+        "America:St_Barthelemy"{
+            ec{"Saint Barthélemy"}
+        }
         "America:St_Johns"{
             ec{"St. John’s"}
         }
@@ -70,7 +85,7 @@ vi{
             ec{"St. Vincent"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Dumont D'Urville"}
+            ec{"Dumont d’Urville"}
         }
         "Asia:Calcutta"{
             ec{"Kolkata"}
@@ -121,7 +136,7 @@ vi{
             ec{"St. Helena"}
         }
         "Etc:Unknown"{
-            ec{"Không rõ"}
+            ec{"Thành phố Không xác định"}
         }
         "Europe:Dublin"{
             ld{"Giờ Mùa Hè Ai-len"}
@@ -166,20 +181,10 @@ vi{
             lg{"Giờ Tây Phi"}
             ls{"Giờ Chuẩn Tây Phi"}
         }
-        "meta:Aktyubinsk"{
-            ld{"Giờ Mùa Hè Aktyubinsk"}
-            lg{"Giờ Aktyubinsk"}
-            ls{"Giờ Chuẩn Aktyubinsk"}
-        }
         "meta:Alaska"{
             ld{"Giờ Mùa Hè Alaska"}
             lg{"Giờ Alaska"}
             ls{"Giờ Chuẩn Alaska"}
-        }
-        "meta:Alaska_Hawaii"{
-            ld{"Giờ Mùa Hè Alaska-Hawaii"}
-            lg{"Giờ Alaska-Hawaii"}
-            ls{"Giờ Chuẩn Alaska-Hawaii"}
         }
         "meta:Almaty"{
             ld{"Giờ Mùa Hè Almaty"}
@@ -227,9 +232,9 @@ vi{
             ls{"Giờ Chuẩn Aqtobe"}
         }
         "meta:Arabian"{
-            ld{"Giờ Mùa Hè A-rập"}
+            ld{"Giờ Mùa Hè Ả Rập"}
             lg{"Giờ Ả Rập"}
-            ls{"Giờ Chuẩn A-rập"}
+            ls{"Giờ chuẩn Ả Rập"}
         }
         "meta:Argentina"{
             ld{"Giờ Mùa Hè Argentina"}
@@ -245,11 +250,6 @@ vi{
             ld{"Giờ Mùa Hè Armenia"}
             lg{"Giờ Armenia"}
             ls{"Giờ Chuẩn Armenia"}
-        }
-        "meta:Ashkhabad"{
-            ld{"Giờ Mùa Hè Ashkhabad"}
-            lg{"Giờ Ashkhabad"}
-            ls{"Giờ Chuẩn Ashkhabad"}
         }
         "meta:Atlantic"{
             ld{"Giờ Mùa hè Đại Tây Dương"}
@@ -286,31 +286,16 @@ vi{
             lg{"Giờ Azores"}
             ls{"Giờ Chuẩn Azores"}
         }
-        "meta:Baku"{
-            ld{"Giờ Mùa Hè Baku"}
-            lg{"Giờ Baku"}
-            ls{"Giờ Chuẩn Baku"}
-        }
         "meta:Bangladesh"{
             ld{"Giờ Mùa Hè Bangladesh"}
             lg{"Giờ Bangladesh"}
             ls{"Giờ Chuẩn Bangladesh"}
-        }
-        "meta:Bering"{
-            ld{"Giờ Mùa Hè Bering"}
-            lg{"Giờ Bering"}
-            ls{"Giờ Chuẩn Bering"}
         }
         "meta:Bhutan"{
             ls{"Giờ Bhutan"}
         }
         "meta:Bolivia"{
             ls{"Giờ Bolivia"}
-        }
-        "meta:Borneo"{
-            ld{"Giờ Mùa Hè Borneo"}
-            lg{"Giờ Borneo"}
-            ls{"Giờ Chuẩn Borneo"}
         }
         "meta:Brasilia"{
             ld{"Giờ Mùa Hè Brasilia"}
@@ -327,9 +312,6 @@ vi{
         }
         "meta:Chamorro"{
             ls{"Giờ Chamorro"}
-        }
-        "meta:Changbai"{
-            ls{"Giờ Changbai"}
         }
         "meta:Chatham"{
             ld{"Giờ Mùa Hè Chatham"}
@@ -372,22 +354,11 @@ vi{
             lg{"Giờ Cuba"}
             ls{"Giờ Chuẩn Cuba"}
         }
-        "meta:Dacca"{
-            ls{"Giờ Dacca"}
-        }
         "meta:Davis"{
             ls{"Giờ Davis"}
         }
         "meta:DumontDUrville"{
-            ls{"Giờ Dumont-d'Urville"}
-        }
-        "meta:Dushanbe"{
-            ld{"Giờ Mùa Hè Dushanbe"}
-            lg{"Giờ Dushanbe"}
-            ls{"Giờ Chuẩn Dushanbe"}
-        }
-        "meta:Dutch_Guiana"{
-            ls{"Giờ Guiana thuộc Hà Lan"}
+            ls{"Giờ Dumont-d’Urville"}
         }
         "meta:East_Timor"{
             ls{"Giờ Đông Timor"}
@@ -431,13 +402,8 @@ vi{
         "meta:French_Southern"{
             ls{"Giờ Nam Cực và Nam Nước Pháp"}
         }
-        "meta:Frunze"{
-            ld{"Giờ Mùa Hè Frunze"}
-            lg{"Giờ Frunze"}
-            ls{"Giờ Chuẩn Frunze"}
-        }
         "meta:GMT"{
-            ls{"Giờ Trung Bình Greenwich"}
+            ls{"Giờ Trung bình Greenwich"}
         }
         "meta:Galapagos"{
             ls{"Giờ Galapagos"}
@@ -452,11 +418,6 @@ vi{
         }
         "meta:Gilbert_Islands"{
             ls{"Giờ Quần Đảo Gilbert"}
-        }
-        "meta:Greenland_Central"{
-            ld{"Giờ Mùa Hè Miền Trung Greenland"}
-            lg{"Giờ Miền Trung Greenland"}
-            ls{"Giờ Chuẩn Miền Trung Greenland"}
         }
         "meta:Greenland_Eastern"{
             ld{"Giờ Mùa Hè Miền Đông Greenland"}
@@ -502,13 +463,13 @@ vi{
             ls{"Giờ Đông Dương"}
         }
         "meta:Indonesia_Central"{
-            ls{"Giờ Miền Trung Indonexia"}
+            ls{"Giờ Miền Trung Indonesia"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"Giờ Miền Đông Indonexia"}
+            ls{"Giờ Miền Đông Indonesia"}
         }
         "meta:Indonesia_Western"{
-            ls{"Giờ Miền Tây Indonexia"}
+            ls{"Giờ Miền Tây Indonesia"}
         }
         "meta:Iran"{
             ld{"Giờ Mùa Hè Iran"}
@@ -535,22 +496,11 @@ vi{
             lg{"Giờ Petropavlovsk-Kamchatski"}
             ls{"Giờ chuẩn Petropavlovsk-Kamchatski"}
         }
-        "meta:Karachi"{
-            ls{"Giờ Karachi"}
-        }
-        "meta:Kashgar"{
-            ls{"Giờ Kashgar"}
-        }
         "meta:Kazakhstan_Eastern"{
             ls{"Giờ Miền Đông Kazakhstan"}
         }
         "meta:Kazakhstan_Western"{
             ls{"Giờ Miền Tây Kazakhstan"}
-        }
-        "meta:Kizilorda"{
-            ld{"Giờ Mùa Hè Kizilorda"}
-            lg{"Giờ Kizilorda"}
-            ls{"Giờ Chuẩn Kizilorda"}
         }
         "meta:Korea"{
             ld{"Giờ Mùa Hè Hàn Quốc"}
@@ -565,14 +515,6 @@ vi{
             lg{"Giờ Krasnoyarsk"}
             ls{"Giờ Chuẩn Krasnoyarsk"}
         }
-        "meta:Kuybyshev"{
-            ld{"Giờ Mùa Hè Kuybyshev"}
-            lg{"Giờ Kuybyshev"}
-            ls{"Giờ Chuẩn Kuybyshev"}
-        }
-        "meta:Kwajalein"{
-            ls{"Giờ Kwajalein"}
-        }
         "meta:Kyrgystan"{
             ls{"Giờ Kyrgystan"}
         }
@@ -581,9 +523,6 @@ vi{
         }
         "meta:Line_Islands"{
             ls{"Giờ Quần Đảo Line"}
-        }
-        "meta:Long_Shu"{
-            ls{"Giờ Long-Shu"}
         }
         "meta:Lord_Howe"{
             ld{"Giờ Mùa Hè Lord Howe"}
@@ -596,15 +535,12 @@ vi{
             ls{"Giờ Chuẩn Ma Cao"}
         }
         "meta:Macquarie"{
-            ls{"Giờ Macquarie"}
+            ls{"Giờ đảo Macquarie"}
         }
         "meta:Magadan"{
             ld{"Giờ mùa hè Magadan"}
             lg{"Giờ Magadan"}
             ls{"Giờ Chuẩn Magadan"}
-        }
-        "meta:Malaya"{
-            ls{"Giờ Malaya"}
         }
         "meta:Malaysia"{
             ls{"Giờ Malaysia"}
@@ -642,6 +578,9 @@ vi{
         "meta:Nauru"{
             ls{"Giờ Nauru"}
         }
+        "meta:Nepal"{
+            ls{"Giờ Nepal"}
+        }
         "meta:New_Caledonia"{
             ld{"Giờ Mùa Hè New Caledonia"}
             lg{"Giờ New Caledonia"}
@@ -661,7 +600,7 @@ vi{
             ls{"Giờ Niue"}
         }
         "meta:Norfolk"{
-            ls{"Giờ Quần Đảo Norfolk"}
+            ls{"Giờ đảo Norfolk"}
         }
         "meta:Noronha"{
             ld{"Giờ Mùa Hè Fernando de Noronha"}
@@ -742,24 +681,16 @@ vi{
             lg{"Giờ Samara"}
             ls{"Giờ Chuẩn Samara"}
         }
-        "meta:Samarkand"{
-            ld{"Giờ Mùa Hè Samarkand"}
-            lg{"Giờ Samarkand"}
-            ls{"Giờ Chuẩn Samarkand"}
-        }
         "meta:Samoa"{
+            ld{"Giờ ban ngày Samoa"}
+            lg{"Giờ Samoa"}
             ls{"Giờ Chuẩn Samoa"}
         }
         "meta:Seychelles"{
             ls{"Giờ Seychelles"}
         }
-        "meta:Shevchenko"{
-            ld{"Giờ Mùa Hè Shevchenko"}
-            lg{"Giờ Shevchenko"}
-            ls{"Giờ Chuẩn Shevchenko"}
-        }
         "meta:Singapore"{
-            ls{"Giờ Chuẩn Singapo"}
+            ls{"Giờ Singapore"}
         }
         "meta:Solomon"{
             ls{"Giờ Quần Đảo Solomon"}
@@ -769,11 +700,6 @@ vi{
         }
         "meta:Suriname"{
             ls{"Giờ Suriname"}
-        }
-        "meta:Sverdlovsk"{
-            ld{"Giờ Mùa Hè Sverdlovsk"}
-            lg{"Giờ Sverdlovsk"}
-            ls{"Giờ Chuẩn Sverdlovsk"}
         }
         "meta:Syowa"{
             ls{"Giờ Syowa"}
@@ -789,16 +715,6 @@ vi{
         "meta:Tajikistan"{
             ls{"Giờ Tajikistan"}
         }
-        "meta:Tashkent"{
-            ld{"Giờ Mùa Hè Tashkent"}
-            lg{"Giờ Tashkent"}
-            ls{"Giờ Chuẩn Tashkent"}
-        }
-        "meta:Tbilisi"{
-            ld{"Giờ Mùa Hè Tbilisi"}
-            lg{"Giờ Tbilisi"}
-            ls{"Giờ Chuẩn Tbilisi"}
-        }
         "meta:Tokelau"{
             ls{"Giờ Tokelau"}
         }
@@ -810,11 +726,6 @@ vi{
         "meta:Truk"{
             ls{"Giờ Chuuk"}
         }
-        "meta:Turkey"{
-            ld{"Giờ Mùa Hè Thổ Nhĩ Kỳ"}
-            lg{"Giờ Thổ Nhĩ Kỳ"}
-            ls{"Giờ Chuẩn Thổ Nhĩ Kỳ"}
-        }
         "meta:Turkmenistan"{
             ld{"Giờ Mùa Hè Turkmenistan"}
             lg{"Giờ Turkmenistan"}
@@ -823,18 +734,10 @@ vi{
         "meta:Tuvalu"{
             ls{"Giờ Tuvalu"}
         }
-        "meta:Uralsk"{
-            ld{"Giờ Mùa Hè Ural'sk"}
-            lg{"Giờ Ural'sk"}
-            ls{"Giờ Chuẩn Ural'sk"}
-        }
         "meta:Uruguay"{
             ld{"Giờ Mùa Hè Uruguay"}
             lg{"Giờ Uruguay"}
             ls{"Giờ Chuẩn Uruguay"}
-        }
-        "meta:Urumqi"{
-            ls{"Giờ Urumqi"}
         }
         "meta:Uzbekistan"{
             ld{"Giờ Mùa Hè Uzbekistan"}
@@ -878,21 +781,12 @@ vi{
             lg{"Giờ Yekaterinburg"}
             ls{"Giờ Chuẩn Yekaterinburg"}
         }
-        "meta:Yerevan"{
-            ld{"Giờ Mùa Hè Yerevan"}
-            lg{"Giờ Yerevan"}
-            ls{"Giờ Chuẩn Yerevan"}
-        }
-        "meta:Yukon"{
-            ld{"Giờ Mùa Hè Yukon"}
-            lg{"Giờ Yukon"}
-            ls{"Giờ Chuẩn Yukon"}
-        }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"Giờ {1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Giờ {0}"}
+        regionFormatDaylight{"Giờ ban ngày {0}"}
+        regionFormatStandard{"Giờ chuẩn {0}"}
     }
 }

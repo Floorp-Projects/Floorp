@@ -295,6 +295,18 @@ jit::DoubleToStringPar(ForkJoinSlice *slice, double d)
     return NumberToString<NoGC>(slice, d);
 }
 
+JSString *
+jit::PrimitiveToStringPar(ForkJoinSlice *slice, HandleValue input)
+{
+    // All other cases are handled in assembly.
+    JS_ASSERT(input.isDouble() || input.isInt32());
+
+    if (input.isInt32())
+        return Int32ToString<NoGC>(slice, input.toInt32());
+
+    return NumberToString<NoGC>(slice, input.toDouble());
+}
+
 bool
 jit::StringToNumberPar(ForkJoinSlice *slice, JSString *str, double *out)
 {

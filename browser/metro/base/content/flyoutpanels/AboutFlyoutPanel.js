@@ -74,10 +74,6 @@ let AboutFlyoutPanel = {
 };
 
 #ifdef MOZ_UPDATER
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-
 function onUnload(aEvent) {
   if (!gAppUpdater) {
     return;

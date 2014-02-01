@@ -50,6 +50,9 @@ let SessionHistoryInternal = {
   isEmpty: function (docShell) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
+    if (!webNavigation.currentURI) {
+      return true;
+    }
     let uri = webNavigation.currentURI.spec;
     return uri == "about:blank" && history.count == 0;
   },

@@ -1,6 +1,6 @@
 /*
 *****************************************************************************************
-* Copyright (C) 2010-2012, International Business Machines
+* Copyright (C) 2010-2013, International Business Machines
 * Corporation and others. All Rights Reserved.
 *****************************************************************************************
 */
@@ -39,27 +39,27 @@
 
 /**
  * Type of plurals and PluralRules.
- * @draft ICU 50
+ * @stable ICU 50
  */
 enum UPluralType {
     /**
      * Plural rules for cardinal numbers: 1 file vs. 2 files.
-     * @draft ICU 50
+     * @stable ICU 50
      */
     UPLURAL_TYPE_CARDINAL,
     /**
      * Plural rules for ordinal numbers: 1st file, 2nd file, 3rd file, 4th file, etc.
-     * @draft ICU 50
+     * @stable ICU 50
      */
     UPLURAL_TYPE_ORDINAL,
     /**
      * Number of Plural rules types.
-     * @draft ICU 50
+     * @stable ICU 50
      */
     UPLURAL_TYPE_COUNT
 };
 /**
- * @draft ICU 50
+ * @stable ICU 50
  */
 typedef enum UPluralType UPluralType;
 
@@ -89,7 +89,7 @@ uplrules_open(const char *locale, UErrorCode *status);
  * @param type The plural type (e.g., cardinal or ordinal).
  * @param status A pointer to a UErrorCode to receive any errors.
  * @return A UPluralRules for the specified locale, or NULL if an error occurred.
- * @draft ICU 50
+ * @stable ICU 50
  */
 U_DRAFT UPluralRules* U_EXPORT2
 uplrules_openForType(const char *locale, UPluralType type, UErrorCode *status);

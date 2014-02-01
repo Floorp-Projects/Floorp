@@ -80,7 +80,8 @@
         <item name="bookmarksListViewStyle">@style/Widget.BookmarksListView</item>
         <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
-        <item name="homeGridViewStyle">@style/Widget.HomeGridView</item>
+        <item name="panelGridViewStyle">@style/Widget.PanelGridView</item>
+        <item name="panelGridItemViewStyle">@style/Widget.PanelGridItemView</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>

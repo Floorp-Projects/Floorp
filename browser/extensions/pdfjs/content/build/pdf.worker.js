@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.934';
-PDFJS.build = 'c80df60';
+PDFJS.version = '0.8.990';
+PDFJS.build = '54f6291';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -2005,410 +2005,6 @@ var LabCS = (function LabCSClosure() {
 
 
 
-var PatternType = {
-  AXIAL: 2,
-  RADIAL: 3
-};
-
-var Pattern = (function PatternClosure() {
-  // Constructor should define this.getPattern
-  function Pattern() {
-    error('should not call Pattern constructor');
-  }
-
-  Pattern.prototype = {
-    // Input: current Canvas context
-    // Output: the appropriate fillStyle or strokeStyle
-    getPattern: function Pattern_getPattern(ctx) {
-      error('Should not call Pattern.getStyle: ' + ctx);
-    }
-  };
-
-  Pattern.shadingFromIR = function Pattern_shadingFromIR(raw) {
-    return Shadings[raw[0]].fromIR(raw);
-  };
-
-  Pattern.parseShading = function Pattern_parseShading(shading, matrix, xref,
-                                                       res) {
-
-    var dict = isStream(shading) ? shading.dict : shading;
-    var type = dict.get('ShadingType');
-
-    switch (type) {
-      case PatternType.AXIAL:
-      case PatternType.RADIAL:
-        // Both radial and axial shadings are handled by RadialAxial shading.
-        return new Shadings.RadialAxial(dict, matrix, xref, res);
-      default:
-        UnsupportedManager.notify(UNSUPPORTED_FEATURES.shadingPattern);
-        return new Shadings.Dummy();
-    }
-  };
-  return Pattern;
-})();
-
-var Shadings = {};
-
-// A small number to offset the first/last color stops so we can insert ones to
-// support extend.  Number.MIN_VALUE appears to be too small and breaks the
-// extend. 1e-7 works in FF but chrome seems to use an even smaller sized number
-// internally so we have to go bigger.
-Shadings.SMALL_NUMBER = 1e-2;
-
-// Radial and axial shading have very similar implementations
-// If needed, the implementations can be broken into two classes
-Shadings.RadialAxial = (function RadialAxialClosure() {
-  function RadialAxial(dict, matrix, xref, res, ctx) {
-    this.matrix = matrix;
-    this.coordsArr = dict.get('Coords');
-    this.shadingType = dict.get('ShadingType');
-    this.type = 'Pattern';
-    this.ctx = ctx;
-    var cs = dict.get('ColorSpace', 'CS');
-    cs = ColorSpace.parse(cs, xref, res);
-    this.cs = cs;
-
-    var t0 = 0.0, t1 = 1.0;
-    if (dict.has('Domain')) {
-      var domainArr = dict.get('Domain');
-      t0 = domainArr[0];
-      t1 = domainArr[1];
-    }
-
-    var extendStart = false, extendEnd = false;
-    if (dict.has('Extend')) {
-      var extendArr = dict.get('Extend');
-      extendStart = extendArr[0];
-      extendEnd = extendArr[1];
-    }
-
-    if (this.shadingType === PatternType.RADIAL &&
-       (!extendStart || !extendEnd)) {
-      // Radial gradient only currently works if either circle is fully within
-      // the other circle.
-      var x1 = this.coordsArr[0];
-      var y1 = this.coordsArr[1];
-      var r1 = this.coordsArr[2];
-      var x2 = this.coordsArr[3];
-      var y2 = this.coordsArr[4];
-      var r2 = this.coordsArr[5];
-      var distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-      if (r1 <= r2 + distance &&
-          r2 <= r1 + distance) {
-        warn('Unsupported radial gradient.');
-      }
-    }
-
-    this.extendStart = extendStart;
-    this.extendEnd = extendEnd;
-
-    var fnObj = dict.get('Function');
-    var fn;
-    if (isArray(fnObj)) {
-      var fnArray = [];
-      for (var j = 0, jj = fnObj.length; j < jj; j++) {
-        var obj = xref.fetchIfRef(fnObj[j]);
-        if (!isPDFFunction(obj)) {
-          error('Invalid function');
-        }
-        fnArray.push(PDFFunction.parse(xref, obj));
-      }
-      fn = function radialAxialColorFunction(arg) {
-        var out = [];
-        for (var i = 0, ii = fnArray.length; i < ii; i++) {
-          out.push(fnArray[i](arg)[0]);
-        }
-        return out;
-      };
-    } else {
-      if (!isPDFFunction(fnObj)) {
-        error('Invalid function');
-      }
-      fn = PDFFunction.parse(xref, fnObj);
-    }
-
-    // 10 samples seems good enough for now, but probably won't work
-    // if there are sharp color changes. Ideally, we would implement
-    // the spec faithfully and add lossless optimizations.
-    var diff = t1 - t0;
-    var step = diff / 10;
-
-    var colorStops = this.colorStops = [];
-
-    // Protect against bad domains so we don't end up in an infinte loop below.
-    if (t0 >= t1 || step <= 0) {
-      // Acrobat doesn't seem to handle these cases so we'll ignore for
-      // now.
-      info('Bad shading domain.');
-      return;
-    }
-
-    for (var i = t0; i <= t1; i += step) {
-      var rgbColor = cs.getRgb(fn([i]), 0);
-      var cssColor = Util.makeCssRgb(rgbColor);
-      colorStops.push([(i - t0) / diff, cssColor]);
-    }
-
-    var background = 'transparent';
-    if (dict.has('Background')) {
-      var rgbColor = cs.getRgb(dict.get('Background'), 0);
-      background = Util.makeCssRgb(rgbColor);
-    }
-
-    if (!extendStart) {
-      // Insert a color stop at the front and offset the first real color stop
-      // so it doesn't conflict with the one we insert.
-      colorStops.unshift([0, background]);
-      colorStops[1][0] += Shadings.SMALL_NUMBER;
-    }
-    if (!extendEnd) {
-      // Same idea as above in extendStart but for the end.
-      colorStops[colorStops.length - 1][0] -= Shadings.SMALL_NUMBER;
-      colorStops.push([1, background]);
-    }
-
-    this.colorStops = colorStops;
-  }
-
-  RadialAxial.fromIR = function RadialAxial_fromIR(raw) {
-    var type = raw[1];
-    var colorStops = raw[2];
-    var p0 = raw[3];
-    var p1 = raw[4];
-    var r0 = raw[5];
-    var r1 = raw[6];
-    return {
-      type: 'Pattern',
-      getPattern: function RadialAxial_getPattern(ctx) {
-        var grad;
-        if (type == PatternType.AXIAL)
-          grad = ctx.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
-        else if (type == PatternType.RADIAL)
-          grad = ctx.createRadialGradient(p0[0], p0[1], r0, p1[0], p1[1], r1);
-
-        for (var i = 0, ii = colorStops.length; i < ii; ++i) {
-          var c = colorStops[i];
-          grad.addColorStop(c[0], c[1]);
-        }
-        return grad;
-      }
-    };
-  };
-
-  RadialAxial.prototype = {
-    getIR: function RadialAxial_getIR() {
-      var coordsArr = this.coordsArr;
-      var type = this.shadingType;
-      if (type == PatternType.AXIAL) {
-        var p0 = [coordsArr[0], coordsArr[1]];
-        var p1 = [coordsArr[2], coordsArr[3]];
-        var r0 = null;
-        var r1 = null;
-      } else if (type == PatternType.RADIAL) {
-        var p0 = [coordsArr[0], coordsArr[1]];
-        var p1 = [coordsArr[3], coordsArr[4]];
-        var r0 = coordsArr[2];
-        var r1 = coordsArr[5];
-      } else {
-        error('getPattern type unknown: ' + type);
-      }
-
-      var matrix = this.matrix;
-      if (matrix) {
-        p0 = Util.applyTransform(p0, matrix);
-        p1 = Util.applyTransform(p1, matrix);
-      }
-
-      return ['RadialAxial', type, this.colorStops, p0, p1, r0, r1];
-    }
-  };
-
-  return RadialAxial;
-})();
-
-Shadings.Dummy = (function DummyClosure() {
-  function Dummy() {
-    this.type = 'Pattern';
-  }
-
-  Dummy.fromIR = function Dummy_fromIR() {
-    return {
-      type: 'Pattern',
-      getPattern: function Dummy_fromIR_getPattern() {
-        return 'hotpink';
-      }
-    };
-  };
-
-  Dummy.prototype = {
-    getIR: function Dummy_getIR() {
-      return ['Dummy'];
-    }
-  };
-  return Dummy;
-})();
-
-var TilingPattern = (function TilingPatternClosure() {
-  var PaintType = {
-    COLORED: 1,
-    UNCOLORED: 2
-  };
-
-  var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
-
-  function TilingPattern(IR, color, ctx, objs, commonObjs, baseTransform) {
-    this.name = IR[1][0].name;
-    this.operatorList = IR[2];
-    this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
-    this.bbox = IR[4];
-    this.xstep = IR[5];
-    this.ystep = IR[6];
-    this.paintType = IR[7];
-    this.tilingType = IR[8];
-    this.color = color;
-    this.objs = objs;
-    this.commonObjs = commonObjs;
-    this.baseTransform = baseTransform;
-    this.type = 'Pattern';
-    this.ctx = ctx;
-  }
-
-  TilingPattern.getIR = function TilingPattern_getIR(operatorList, dict, args) {
-    var matrix = dict.get('Matrix');
-    var bbox = dict.get('BBox');
-    var xstep = dict.get('XStep');
-    var ystep = dict.get('YStep');
-    var paintType = dict.get('PaintType');
-    var tilingType = dict.get('TilingType');
-
-    return [
-      'TilingPattern', args, operatorList, matrix, bbox, xstep, ystep,
-      paintType, tilingType
-    ];
-  };
-
-  TilingPattern.prototype = {
-    createPatternCanvas: function TilinPattern_createPatternCanvas(owner) {
-      var operatorList = this.operatorList;
-      var bbox = this.bbox;
-      var xstep = this.xstep;
-      var ystep = this.ystep;
-      var paintType = this.paintType;
-      var tilingType = this.tilingType;
-      var color = this.color;
-      var objs = this.objs;
-      var commonObjs = this.commonObjs;
-      var ctx = this.ctx;
-
-      info('TilingType: ' + tilingType);
-
-      var x0 = bbox[0], y0 = bbox[1], x1 = bbox[2], y1 = bbox[3];
-
-      var topLeft = [x0, y0];
-      // we want the canvas to be as large as the step size
-      var botRight = [x0 + xstep, y0 + ystep];
-
-      var width = botRight[0] - topLeft[0];
-      var height = botRight[1] - topLeft[1];
-
-      // Obtain scale from matrix and current transformation matrix.
-      var matrixScale = Util.singularValueDecompose2dScale(this.matrix);
-      var curMatrixScale = Util.singularValueDecompose2dScale(
-                             this.baseTransform);
-      var combinedScale = [matrixScale[0] * curMatrixScale[0],
-                           matrixScale[1] * curMatrixScale[1]];
-
-      // MAX_PATTERN_SIZE is used to avoid OOM situation.
-      // Use width and height values that are as close as possible to the end
-      // result when the pattern is used. Too low value makes the pattern look
-      // blurry. Too large value makes it look too crispy.
-      width = Math.min(Math.ceil(Math.abs(width * combinedScale[0])),
-                       MAX_PATTERN_SIZE);
-
-      height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
-                        MAX_PATTERN_SIZE);
-
-      var tmpCanvas = CachedCanvases.getCanvas('pattern', width, height, true);
-      var tmpCtx = tmpCanvas.context;
-      var graphics = new CanvasGraphics(tmpCtx, commonObjs, objs);
-      graphics.groupLevel = owner.groupLevel;
-
-      this.setFillAndStrokeStyleToContext(tmpCtx, paintType, color);
-
-      this.setScale(width, height, xstep, ystep);
-      this.transformToScale(graphics);
-
-      // transform coordinates to pattern space
-      var tmpTranslate = [1, 0, 0, 1, -topLeft[0], -topLeft[1]];
-      graphics.transform.apply(graphics, tmpTranslate);
-
-      this.clipBbox(graphics, bbox, x0, y0, x1, y1);
-
-      graphics.executeOperatorList(operatorList);
-      return tmpCanvas.canvas;
-    },
-
-    setScale: function TilingPattern_setScale(width, height, xstep, ystep) {
-      this.scale = [width / xstep, height / ystep];
-    },
-
-    transformToScale: function TilingPattern_transformToScale(graphics) {
-      var scale = this.scale;
-      var tmpScale = [scale[0], 0, 0, scale[1], 0, 0];
-      graphics.transform.apply(graphics, tmpScale);
-    },
-
-    scaleToContext: function TilingPattern_scaleToContext() {
-      var scale = this.scale;
-      this.ctx.scale(1 / scale[0], 1 / scale[1]);
-    },
-
-    clipBbox: function clipBbox(graphics, bbox, x0, y0, x1, y1) {
-      if (bbox && isArray(bbox) && 4 == bbox.length) {
-        var bboxWidth = x1 - x0;
-        var bboxHeight = y1 - y0;
-        graphics.rectangle(x0, y0, bboxWidth, bboxHeight);
-        graphics.clip();
-        graphics.endPath();
-      }
-    },
-
-    setFillAndStrokeStyleToContext:
-      function setFillAndStrokeStyleToContext(context, paintType, color) {
-      switch (paintType) {
-        case PaintType.COLORED:
-          var ctx = this.ctx;
-          context.fillStyle = ctx.fillStyle;
-          context.strokeStyle = ctx.strokeStyle;
-          break;
-        case PaintType.UNCOLORED:
-          var rgbColor = ColorSpace.singletons.rgb.getRgb(color, 0);
-          var cssColor = Util.makeCssRgb(rgbColor);
-          context.fillStyle = cssColor;
-          context.strokeStyle = cssColor;
-          break;
-        default:
-          error('Unsupported paint type: ' + paintType);
-      }
-    },
-
-    getPattern: function TilingPattern_getPattern(ctx, owner) {
-      var temporaryPatternCanvas = this.createPatternCanvas(owner);
-
-      var ctx = this.ctx;
-      ctx.setTransform.apply(ctx, this.baseTransform);
-      ctx.transform.apply(ctx, this.matrix);
-      this.scaleToContext();
-
-      return ctx.createPattern(temporaryPatternCanvas, 'repeat');
-    }
-  };
-
-  return TilingPattern;
-})();
-
-
-
 var PDFFunction = (function PDFFunctionClosure() {
   var CONSTRUCT_SAMPLED = 0;
   var CONSTRUCT_INTERPOLATED = 2;
@@ -2859,9 +2455,8 @@ var PostScriptStack = (function PostScriptStackClosure() {
   return PostScriptStack;
 })();
 var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
-  function PostScriptEvaluator(operators, operands) {
+  function PostScriptEvaluator(operators) {
     this.operators = operators;
-    this.operands = operands;
   }
   PostScriptEvaluator.prototype = {
     execute: function PostScriptEvaluator_execute(initialStack) {
@@ -3089,200 +2684,6 @@ var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
   };
   return PostScriptEvaluator;
 })();
-
-var PostScriptParser = (function PostScriptParserClosure() {
-  function PostScriptParser(lexer) {
-    this.lexer = lexer;
-    this.operators = [];
-    this.token = null;
-    this.prev = null;
-  }
-  PostScriptParser.prototype = {
-    nextToken: function PostScriptParser_nextToken() {
-      this.prev = this.token;
-      this.token = this.lexer.getToken();
-    },
-    accept: function PostScriptParser_accept(type) {
-      if (this.token.type == type) {
-        this.nextToken();
-        return true;
-      }
-      return false;
-    },
-    expect: function PostScriptParser_expect(type) {
-      if (this.accept(type))
-        return true;
-      error('Unexpected symbol: found ' + this.token.type + ' expected ' +
-            type + '.');
-    },
-    parse: function PostScriptParser_parse() {
-      this.nextToken();
-      this.expect(PostScriptTokenTypes.LBRACE);
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      return this.operators;
-    },
-    parseBlock: function PostScriptParser_parseBlock() {
-      while (true) {
-        if (this.accept(PostScriptTokenTypes.NUMBER)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-          this.parseCondition();
-        } else {
-          return;
-        }
-      }
-    },
-    parseCondition: function PostScriptParser_parseCondition() {
-      // Add two place holders that will be updated later
-      var conditionLocation = this.operators.length;
-      this.operators.push(null, null);
-
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      if (this.accept(PostScriptTokenTypes.IF)) {
-        // The true block is right after the 'if' so it just falls through on
-        // true else it jumps and skips the true block.
-        this.operators[conditionLocation] = this.operators.length;
-        this.operators[conditionLocation + 1] = 'jz';
-      } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-        var jumpLocation = this.operators.length;
-        this.operators.push(null, null);
-        var endOfTrue = this.operators.length;
-        this.parseBlock();
-        this.expect(PostScriptTokenTypes.RBRACE);
-        this.expect(PostScriptTokenTypes.IFELSE);
-        // The jump is added at the end of the true block to skip the false
-        // block.
-        this.operators[jumpLocation] = this.operators.length;
-        this.operators[jumpLocation + 1] = 'j';
-
-        this.operators[conditionLocation] = endOfTrue;
-        this.operators[conditionLocation + 1] = 'jz';
-      } else {
-        error('PS Function: error parsing conditional.');
-      }
-    }
-  };
-  return PostScriptParser;
-})();
-
-var PostScriptTokenTypes = {
-  LBRACE: 0,
-  RBRACE: 1,
-  NUMBER: 2,
-  OPERATOR: 3,
-  IF: 4,
-  IFELSE: 5
-};
-
-var PostScriptToken = (function PostScriptTokenClosure() {
-  function PostScriptToken(type, value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  var opCache = {};
-
-  PostScriptToken.getOperator = function PostScriptToken_getOperator(op) {
-    var opValue = opCache[op];
-    if (opValue)
-      return opValue;
-
-    return opCache[op] = new PostScriptToken(PostScriptTokenTypes.OPERATOR, op);
-  };
-
-  PostScriptToken.LBRACE = new PostScriptToken(PostScriptTokenTypes.LBRACE,
-                                                '{');
-  PostScriptToken.RBRACE = new PostScriptToken(PostScriptTokenTypes.RBRACE,
-                                                '}');
-  PostScriptToken.IF = new PostScriptToken(PostScriptTokenTypes.IF, 'IF');
-  PostScriptToken.IFELSE = new PostScriptToken(PostScriptTokenTypes.IFELSE,
-                                                'IFELSE');
-  return PostScriptToken;
-})();
-
-var PostScriptLexer = (function PostScriptLexerClosure() {
-  function PostScriptLexer(stream) {
-    this.stream = stream;
-    this.nextChar();
-  }
-  PostScriptLexer.prototype = {
-    nextChar: function PostScriptLexer_nextChar() {
-      return (this.currentChar = this.stream.getByte());
-    },
-    getToken: function PostScriptLexer_getToken() {
-      var s = '';
-      var comment = false;
-      var ch = this.currentChar;
-
-      // skip comments
-      while (true) {
-        if (ch < 0) {
-          return EOF;
-        }
-
-        if (comment) {
-          if (ch === 0x0A || ch === 0x0D) {
-            comment = false;
-          }
-        } else if (ch == 0x25) { // '%'
-          comment = true;
-        } else if (!Lexer.isSpace(ch)) {
-          break;
-        }
-        ch = this.nextChar();
-      }
-      switch (ch | 0) {
-        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: // '0'-'4'
-        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: // '5'-'9'
-        case 0x2B: case 0x2D: case 0x2E: // '+', '-', '.'
-          return new PostScriptToken(PostScriptTokenTypes.NUMBER,
-                                      this.getNumber());
-        case 0x7B: // '{'
-          this.nextChar();
-          return PostScriptToken.LBRACE;
-        case 0x7D: // '}'
-          this.nextChar();
-          return PostScriptToken.RBRACE;
-      }
-      // operator
-      var str = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0 && // and 'A'-'Z', 'a'-'z'
-             ((ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A))) {
-        str += String.fromCharCode(ch);
-      }
-      switch (str.toLowerCase()) {
-        case 'if':
-          return PostScriptToken.IF;
-        case 'ifelse':
-          return PostScriptToken.IFELSE;
-        default:
-          return PostScriptToken.getOperator(str);
-      }
-    },
-    getNumber: function PostScriptLexer_getNumber() {
-      var ch = this.currentChar;
-      var str = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0) {
-        if ((ch >= 0x30 && ch <= 0x39) || // '0'-'9'
-             ch === 0x2D || ch === 0x2E) { // '-', '.'
-          str += String.fromCharCode(ch);
-        } else {
-          break;
-        }
-      }
-      var value = parseFloat(str);
-      if (isNaN(value))
-        error('Invalid floating point number: ' + value);
-      return value;
-    }
-  };
-  return PostScriptLexer;
-})();
-
 
 
 var Annotation = (function AnnotationClosure() {
@@ -14174,6 +13575,807 @@ var CipherTransformFactory = (function CipherTransformFactoryClosure() {
 
 
 
+var PatternType = {
+  FUNCTION_BASED: 1,
+  AXIAL: 2,
+  RADIAL: 3,
+  FREE_FORM_MESH: 4,
+  LATTICE_FORM_MESH: 5,
+  COONS_PATCH_MESH: 6,
+  TENSOR_PATCH_MESH: 7
+};
+
+var Pattern = (function PatternClosure() {
+  // Constructor should define this.getPattern
+  function Pattern() {
+    error('should not call Pattern constructor');
+  }
+
+  Pattern.prototype = {
+    // Input: current Canvas context
+    // Output: the appropriate fillStyle or strokeStyle
+    getPattern: function Pattern_getPattern(ctx) {
+      error('Should not call Pattern.getStyle: ' + ctx);
+    }
+  };
+
+  Pattern.parseShading = function Pattern_parseShading(shading, matrix, xref,
+                                                       res) {
+
+    var dict = isStream(shading) ? shading.dict : shading;
+    var type = dict.get('ShadingType');
+
+    switch (type) {
+      case PatternType.AXIAL:
+      case PatternType.RADIAL:
+        // Both radial and axial shadings are handled by RadialAxial shading.
+        return new Shadings.RadialAxial(dict, matrix, xref, res);
+      case PatternType.FREE_FORM_MESH:
+      case PatternType.LATTICE_FORM_MESH:
+      case PatternType.COONS_PATCH_MESH:
+      case PatternType.TENSOR_PATCH_MESH:
+        return new Shadings.Mesh(shading, matrix, xref, res);
+      default:
+        UnsupportedManager.notify(UNSUPPORTED_FEATURES.shadingPattern);
+        return new Shadings.Dummy();
+    }
+  };
+  return Pattern;
+})();
+
+var Shadings = {};
+
+// A small number to offset the first/last color stops so we can insert ones to
+// support extend.  Number.MIN_VALUE appears to be too small and breaks the
+// extend. 1e-7 works in FF but chrome seems to use an even smaller sized number
+// internally so we have to go bigger.
+Shadings.SMALL_NUMBER = 1e-2;
+
+// Radial and axial shading have very similar implementations
+// If needed, the implementations can be broken into two classes
+Shadings.RadialAxial = (function RadialAxialClosure() {
+  function RadialAxial(dict, matrix, xref, res) {
+    this.matrix = matrix;
+    this.coordsArr = dict.get('Coords');
+    this.shadingType = dict.get('ShadingType');
+    this.type = 'Pattern';
+    var cs = dict.get('ColorSpace', 'CS');
+    cs = ColorSpace.parse(cs, xref, res);
+    this.cs = cs;
+
+    var t0 = 0.0, t1 = 1.0;
+    if (dict.has('Domain')) {
+      var domainArr = dict.get('Domain');
+      t0 = domainArr[0];
+      t1 = domainArr[1];
+    }
+
+    var extendStart = false, extendEnd = false;
+    if (dict.has('Extend')) {
+      var extendArr = dict.get('Extend');
+      extendStart = extendArr[0];
+      extendEnd = extendArr[1];
+    }
+
+    if (this.shadingType === PatternType.RADIAL &&
+       (!extendStart || !extendEnd)) {
+      // Radial gradient only currently works if either circle is fully within
+      // the other circle.
+      var x1 = this.coordsArr[0];
+      var y1 = this.coordsArr[1];
+      var r1 = this.coordsArr[2];
+      var x2 = this.coordsArr[3];
+      var y2 = this.coordsArr[4];
+      var r2 = this.coordsArr[5];
+      var distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+      if (r1 <= r2 + distance &&
+          r2 <= r1 + distance) {
+        warn('Unsupported radial gradient.');
+      }
+    }
+
+    this.extendStart = extendStart;
+    this.extendEnd = extendEnd;
+
+    var fnObj = dict.get('Function');
+    var fn;
+    if (isArray(fnObj)) {
+      var fnArray = [];
+      for (var j = 0, jj = fnObj.length; j < jj; j++) {
+        var obj = xref.fetchIfRef(fnObj[j]);
+        if (!isPDFFunction(obj)) {
+          error('Invalid function');
+        }
+        fnArray.push(PDFFunction.parse(xref, obj));
+      }
+      fn = function radialAxialColorFunction(arg) {
+        var out = [];
+        for (var i = 0, ii = fnArray.length; i < ii; i++) {
+          out.push(fnArray[i](arg)[0]);
+        }
+        return out;
+      };
+    } else {
+      if (!isPDFFunction(fnObj)) {
+        error('Invalid function');
+      }
+      fn = PDFFunction.parse(xref, fnObj);
+    }
+
+    // 10 samples seems good enough for now, but probably won't work
+    // if there are sharp color changes. Ideally, we would implement
+    // the spec faithfully and add lossless optimizations.
+    var diff = t1 - t0;
+    var step = diff / 10;
+
+    var colorStops = this.colorStops = [];
+
+    // Protect against bad domains so we don't end up in an infinte loop below.
+    if (t0 >= t1 || step <= 0) {
+      // Acrobat doesn't seem to handle these cases so we'll ignore for
+      // now.
+      info('Bad shading domain.');
+      return;
+    }
+
+    for (var i = t0; i <= t1; i += step) {
+      var rgbColor = cs.getRgb(fn([i]), 0);
+      var cssColor = Util.makeCssRgb(rgbColor);
+      colorStops.push([(i - t0) / diff, cssColor]);
+    }
+
+    var background = 'transparent';
+    if (dict.has('Background')) {
+      var rgbColor = cs.getRgb(dict.get('Background'), 0);
+      background = Util.makeCssRgb(rgbColor);
+    }
+
+    if (!extendStart) {
+      // Insert a color stop at the front and offset the first real color stop
+      // so it doesn't conflict with the one we insert.
+      colorStops.unshift([0, background]);
+      colorStops[1][0] += Shadings.SMALL_NUMBER;
+    }
+    if (!extendEnd) {
+      // Same idea as above in extendStart but for the end.
+      colorStops[colorStops.length - 1][0] -= Shadings.SMALL_NUMBER;
+      colorStops.push([1, background]);
+    }
+
+    this.colorStops = colorStops;
+  }
+
+  RadialAxial.prototype = {
+    getIR: function RadialAxial_getIR() {
+      var coordsArr = this.coordsArr;
+      var shadingType = this.shadingType;
+      var type, p0, p1, r0, r1;
+      if (shadingType == PatternType.AXIAL) {
+        p0 = [coordsArr[0], coordsArr[1]];
+        p1 = [coordsArr[2], coordsArr[3]];
+        r0 = null;
+        r1 = null;
+        type = 'axial';
+      } else if (shadingType == PatternType.RADIAL) {
+        p0 = [coordsArr[0], coordsArr[1]];
+        p1 = [coordsArr[3], coordsArr[4]];
+        r0 = coordsArr[2];
+        r1 = coordsArr[5];
+        type = 'radial';
+      } else {
+        error('getPattern type unknown: ' + shadingType);
+      }
+
+      var matrix = this.matrix;
+      if (matrix) {
+        p0 = Util.applyTransform(p0, matrix);
+        p1 = Util.applyTransform(p1, matrix);
+      }
+
+      return ['RadialAxial', type, this.colorStops, p0, p1, r0, r1];
+    }
+  };
+
+  return RadialAxial;
+})();
+
+// All mesh shading. For now, they will be presented as set of the triangles
+// to be drawn on the canvas and rgb color for each vertex.
+Shadings.Mesh = (function MeshClosure() {
+  function MeshStreamReader(stream, context) {
+    this.stream = stream;
+    this.context = context;
+    this.buffer = 0;
+    this.bufferLength = 0;
+  }
+  MeshStreamReader.prototype = {
+    get hasData() {
+      if (this.stream.end) {
+        return this.stream.pos < this.stream.end;
+      }
+      if (this.bufferLength > 0) {
+        return true;
+      }
+      var nextByte = this.stream.getByte();
+      if (nextByte < 0) {
+        return false;
+      }
+      this.buffer = nextByte;
+      this.bufferLength = 8;
+      return true;
+    },
+    readBits: function MeshStreamReader_readBits(n) {
+      var buffer = this.buffer;
+      var bufferLength = this.bufferLength;
+      if (n === 32) {
+        if (bufferLength === 0) {
+          return ((this.stream.getByte() << 24) |
+            (this.stream.getByte() << 16) | (this.stream.getByte() << 8) |
+            this.stream.getByte()) >>> 0;
+        }
+        buffer = (buffer << 24) | (this.stream.getByte() << 16) |
+          (this.stream.getByte() << 8) | this.stream.getByte();
+        var nextByte = this.stream.getByte();
+        this.buffer = nextByte & ((1 << bufferLength) - 1);
+        return ((buffer << (8 - bufferLength)) |
+          ((nextByte & 0xFF) >> bufferLength)) >>> 0;
+      }
+      if (n === 8 && bufferLength === 0) {
+        return this.stream.getByte();
+      }
+      while (bufferLength < n) {
+        buffer = (buffer << 8) | this.stream.getByte();
+        bufferLength += 8;
+      }
+      bufferLength -= n;
+      this.bufferLength = bufferLength;
+      this.buffer = buffer & ((1 << bufferLength) - 1);
+      return buffer >> bufferLength;
+    },
+    align: function MeshStreamReader_align() {
+      this.buffer = 0;
+      this.bufferLength = 0;
+    },
+    readFlag: function MeshStreamReader_readFlag() {
+      return this.readBits(this.context.bitsPerFlag);
+    },
+    readCoordinate: function MeshStreamReader_readCoordinate() {
+      var bitsPerCoordinate = this.context.bitsPerCoordinate;
+      var xi = this.readBits(bitsPerCoordinate);
+      var yi = this.readBits(bitsPerCoordinate);
+      var decode = this.context.decode;
+      var scale = bitsPerCoordinate < 32 ? 1 / ((1 << bitsPerCoordinate) - 1) :
+        2.3283064365386963e-10; // 2 ^ -32
+      return [
+        xi * scale * (decode[1] - decode[0]) + decode[0],
+        yi * scale * (decode[3] - decode[2]) + decode[2]
+      ];
+    },
+    readComponents: function MeshStreamReader_readComponents() {
+      var numComps = this.context.numComps;
+      var bitsPerComponent = this.context.bitsPerComponent;
+      var scale = bitsPerComponent < 32 ? 1 / ((1 << bitsPerComponent) - 1) :
+        2.3283064365386963e-10; // 2 ^ -32
+      var decode = this.context.decode;
+      var components = [];
+      for (var i = 0, j = 4; i < numComps; i++, j += 2) {
+        var ci = this.readBits(bitsPerComponent);
+        components.push(ci * scale * (decode[j + 1] - decode[j]) + decode[j]);
+      }
+      if (this.context.colorFn) {
+        components = this.context.colorFn(components);
+      }
+      return this.context.colorSpace.getRgb(components, 0);
+    }
+  };
+
+  function decodeType4Shading(mesh, reader) {
+    var coords = mesh.coords;
+    var colors = mesh.colors;
+    var operators = [];
+    var ps = []; // not maintaining cs since that will match ps
+    var verticesLeft = 0; // assuming we have all data to start a new triangle
+    while (reader.hasData) {
+      var f = reader.readFlag();
+      var coord = reader.readCoordinate();
+      var color = reader.readComponents();
+      if (verticesLeft === 0) { // ignoring flags if we started a triangle
+        assert(0 <= f && f <= 2, 'Unknown type4 flag');
+        switch (f) {
+          case 0:
+            verticesLeft = 3;
+            break;
+          case 1:
+            ps.push(ps[ps.length - 2], ps[ps.length - 1]);
+            verticesLeft = 1;
+            break;
+          case 2:
+            ps.push(ps[ps.length - 3], ps[ps.length - 1]);
+            verticesLeft = 1;
+            break;
+        }
+        operators.push(f);
+      }
+      ps.push(coords.length);
+      coords.push(coord);
+      colors.push(color);
+      verticesLeft--;
+
+      reader.align();
+    }
+
+    var psPacked = new Int32Array(ps);
+
+    mesh.figures.push({
+      type: 'triangles',
+      coords: psPacked,
+      colors: psPacked
+    });
+  }
+
+  function decodeType5Shading(mesh, reader, verticesPerRow) {
+    var coords = mesh.coords;
+    var colors = mesh.colors;
+    var operators = [];
+    var ps = []; // not maintaining cs since that will match ps
+    while (reader.hasData) {
+      var coord = reader.readCoordinate();
+      var color = reader.readComponents();
+      ps.push(coords.length);
+      coords.push(coord);
+      colors.push(color);
+    }
+
+    var psPacked = new Int32Array(ps);
+
+    mesh.figures.push({
+      type: 'lattice',
+      coords: psPacked,
+      colors: psPacked,
+      verticesPerRow: verticesPerRow
+    });
+  }
+
+  var MIN_SPLIT_PATCH_CHUNKS_AMOUNT = 3;
+  var MAX_SPLIT_PATCH_CHUNKS_AMOUNT = 20;
+
+  var TRIANGLE_DENSITY = 20; // count of triangles per entire mesh bounds
+
+  var getB = (function getBClosure() {
+    function buildB(count) {
+      var lut = [];
+      for (var i = 0; i <= count; i++) {
+        var t = i / count, t_ = 1 - t;
+        lut.push(new Float32Array([t_ * t_ * t_, 3 * t * t_ * t_,
+          3 * t * t * t_, t * t * t]));
+      }
+      return lut;
+    }
+    var cache = [];
+    return function getB(count) {
+      if (!cache[count]) {
+        cache[count] = buildB(count);
+      }
+      return cache[count];
+    };
+  })();
+
+  function buildFigureFromPatch(mesh, index) {
+    var figure = mesh.figures[index];
+    assert(figure.type === 'patch', 'Unexpected patch mesh figure');
+
+    var coords = mesh.coords, colors = mesh.colors;
+    var pi = figure.coords;
+    var ci = figure.colors;
+
+    var figureMinX = Math.min(coords[pi[0]][0], coords[pi[3]][0],
+                              coords[pi[12]][0], coords[pi[15]][0]);
+    var figureMinY = Math.min(coords[pi[0]][1], coords[pi[3]][1],
+                              coords[pi[12]][1], coords[pi[15]][1]);
+    var figureMaxX = Math.max(coords[pi[0]][0], coords[pi[3]][0],
+                              coords[pi[12]][0], coords[pi[15]][0]);
+    var figureMaxY = Math.max(coords[pi[0]][1], coords[pi[3]][1],
+                              coords[pi[12]][1], coords[pi[15]][1]);
+    var splitXBy = Math.ceil((figureMaxX - figureMinX) * TRIANGLE_DENSITY /
+                             (mesh.bounds[2] - mesh.bounds[0]));
+    splitXBy = Math.max(MIN_SPLIT_PATCH_CHUNKS_AMOUNT,
+               Math.min(MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitXBy));
+    var splitYBy = Math.ceil((figureMaxY - figureMinY) * TRIANGLE_DENSITY /
+                             (mesh.bounds[3] - mesh.bounds[1]));
+    splitYBy = Math.max(MIN_SPLIT_PATCH_CHUNKS_AMOUNT,
+               Math.min(MAX_SPLIT_PATCH_CHUNKS_AMOUNT, splitYBy));
+
+    var verticesPerRow = splitXBy + 1;
+    var figureCoords = new Int32Array((splitYBy + 1) * verticesPerRow);
+    var figureColors = new Int32Array((splitYBy + 1) * verticesPerRow);
+    var k = 0;
+    var cl = new Uint8Array(3), cr = new Uint8Array(3);
+    var c0 = colors[ci[0]], c1 = colors[ci[1]],
+      c2 = colors[ci[2]], c3 = colors[ci[3]];
+    var bRow = getB(splitYBy), bCol = getB(splitXBy);
+    for (var row = 0; row <= splitYBy; row++) {
+      cl[0] = ((c0[0] * (splitYBy - row) + c2[0] * row) / splitYBy) | 0;
+      cl[1] = ((c0[1] * (splitYBy - row) + c2[1] * row) / splitYBy) | 0;
+      cl[2] = ((c0[2] * (splitYBy - row) + c2[2] * row) / splitYBy) | 0;
+
+      cr[0] = ((c1[0] * (splitYBy - row) + c3[0] * row) / splitYBy) | 0;
+      cr[1] = ((c1[1] * (splitYBy - row) + c3[1] * row) / splitYBy) | 0;
+      cr[2] = ((c1[2] * (splitYBy - row) + c3[2] * row) / splitYBy) | 0;
+
+      for (var col = 0; col <= splitXBy; col++, k++) {
+        if ((row === 0 || row === splitYBy) &&
+            (col === 0 || col === splitXBy)) {
+          continue;
+        }
+        var x = 0, y = 0;
+        var q = 0;
+        for (var i = 0; i <= 3; i++) {
+          for (var j = 0; j <= 3; j++, q++) {
+            var m = bRow[row][i] * bCol[col][j];
+            x += coords[pi[q]][0] * m;
+            y += coords[pi[q]][1] * m;
+          }
+        }
+        figureCoords[k] = coords.length;
+        coords.push([x, y]);
+        figureColors[k] = colors.length;
+        var newColor = new Uint8Array(3);
+        newColor[0] = ((cl[0] * (splitXBy - col) + cr[0] * col) / splitXBy) | 0;
+        newColor[1] = ((cl[1] * (splitXBy - col) + cr[1] * col) / splitXBy) | 0;
+        newColor[2] = ((cl[2] * (splitXBy - col) + cr[2] * col) / splitXBy) | 0;
+        colors.push(newColor);
+      }
+    }
+    figureCoords[0] = pi[0];
+    figureColors[0] = ci[0];
+    figureCoords[splitXBy] = pi[3];
+    figureColors[splitXBy] = ci[1];
+    figureCoords[verticesPerRow * splitYBy] = pi[12];
+    figureColors[verticesPerRow * splitYBy] = ci[2];
+    figureCoords[verticesPerRow * splitYBy + splitXBy] = pi[15];
+    figureColors[verticesPerRow * splitYBy + splitXBy] = ci[3];
+
+    mesh.figures[index] = {
+      type: 'lattice',
+      coords: figureCoords,
+      colors: figureColors,
+      verticesPerRow: verticesPerRow
+    };
+  }
+
+  function decodeType6Shading(mesh, reader) {
+    // A special case of Type 7. The p11, p12, p21, p22 automatically filled
+    var coords = mesh.coords;
+    var colors = mesh.colors;
+    var ps = new Int32Array(16); // p00, p10, ..., p30, p01, ..., p33
+    var cs = new Int32Array(4); // c00, c30, c03, c33
+    while (reader.hasData) {
+      var f = reader.readFlag();
+      assert(0 <= f && f <= 3, 'Unknown type6 flag');
+      var i, ii;
+      var pi = coords.length;
+      for (i = 0, ii = (f !== 0 ? 8 : 12); i < ii; i++) {
+        coords.push(reader.readCoordinate());
+      }
+      var ci = colors.length;
+      for (i = 0, ii = (f !== 0 ? 2 : 4); i < ii; i++) {
+        colors.push(reader.readComponents());
+      }
+      var tmp1, tmp2, tmp3, tmp4;
+      switch (f) {
+        case 0:
+          ps[12] = pi + 3; ps[13] = pi + 4;  ps[14] = pi + 5;  ps[15] = pi + 6;
+          ps[ 8] = pi + 2; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 7;
+          ps[ 4] = pi + 1; /* calculated below              */ ps[ 7] = pi + 8;
+          ps[ 0] = pi;     ps[ 1] = pi + 11; ps[ 2] = pi + 10; ps[ 3] = pi + 9;
+          cs[2] = ci + 1; cs[3] = ci + 2;
+          cs[0] = ci;     cs[1] = ci + 3;
+          break;
+        case 1:
+          tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
+          ps[12] = pi + 5; ps[13] = pi + 4;  ps[14] = pi + 3;  ps[15] = pi + 2;
+          ps[ 8] = pi + 6; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 1;
+          ps[ 4] = pi + 7; /* calculated below              */ ps[ 7] = pi;
+          ps[ 0] = tmp1;   ps[ 1] = tmp2;    ps[ 2] = tmp3;    ps[ 3] = tmp4;
+          tmp1 = cs[2]; tmp2 = cs[3];
+          cs[2] = ci + 1; cs[3] = ci;
+          cs[0] = tmp1;   cs[1] = tmp2;
+          break;
+        case 2:
+          ps[12] = ps[15]; ps[13] = pi + 7; ps[14] = pi + 6;   ps[15] = pi + 5;
+          ps[ 8] = ps[11]; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 4;
+          ps[ 4] = ps[7];  /* calculated below              */ ps[ 7] = pi + 3;
+          ps[ 0] = ps[3];  ps[ 1] = pi;     ps[ 2] = pi + 1;   ps[ 3] = pi + 2;
+          cs[2] = cs[3]; cs[3] = ci + 1;
+          cs[0] = cs[1]; cs[1] = ci;
+          break;
+        case 3:
+          ps[12] = ps[0];  ps[13] = ps[1];   ps[14] = ps[2];   ps[15] = ps[3];
+          ps[ 8] = pi;     /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 7;
+          ps[ 4] = pi + 1; /* calculated below              */ ps[ 7] = pi + 6;
+          ps[ 0] = pi + 2; ps[ 1] = pi + 3;  ps[ 2] = pi + 4;  ps[ 3] = pi + 5;
+          cs[2] = cs[0]; cs[3] = cs[1];
+          cs[0] = ci;    cs[1] = ci + 1;
+          break;
+      }
+      // set p11, p12, p21, p22
+      ps[5] = coords.length;
+      coords.push([
+        (-4 * coords[ps[0]][0] - coords[ps[15]][0] +
+          6 * (coords[ps[4]][0] + coords[ps[1]][0]) -
+          2 * (coords[ps[12]][0] + coords[ps[3]][0]) +
+          3 * (coords[ps[13]][0] + coords[ps[7]][0])) / 9,
+        (-4 * coords[ps[0]][1] - coords[ps[15]][1] +
+          6 * (coords[ps[4]][1] + coords[ps[1]][1]) -
+          2 * (coords[ps[12]][1] + coords[ps[3]][1]) +
+          3 * (coords[ps[13]][1] + coords[ps[7]][1])) / 9
+      ]);
+      ps[6] = coords.length;
+      coords.push([
+        (-4 * coords[ps[3]][0] - coords[ps[12]][0] +
+          6 * (coords[ps[2]][0] + coords[ps[7]][0]) -
+          2 * (coords[ps[0]][0] + coords[ps[15]][0]) +
+          3 * (coords[ps[4]][0] + coords[ps[14]][0])) / 9,
+        (-4 * coords[ps[3]][1] - coords[ps[12]][1] +
+          6 * (coords[ps[2]][1] + coords[ps[7]][1]) -
+          2 * (coords[ps[0]][1] + coords[ps[15]][1]) +
+          3 * (coords[ps[4]][1] + coords[ps[14]][1])) / 9
+      ]);
+      ps[9] = coords.length;
+      coords.push([
+        (-4 * coords[ps[12]][0] - coords[ps[3]][0] +
+          6 * (coords[ps[8]][0] + coords[ps[13]][0]) -
+          2 * (coords[ps[0]][0] + coords[ps[15]][0]) +
+          3 * (coords[ps[11]][0] + coords[ps[1]][0])) / 9,
+        (-4 * coords[ps[12]][1] - coords[ps[3]][1] +
+          6 * (coords[ps[8]][1] + coords[ps[13]][1]) -
+          2 * (coords[ps[0]][1] + coords[ps[15]][1]) +
+          3 * (coords[ps[11]][1] + coords[ps[1]][1])) / 9
+      ]);
+      ps[10] = coords.length;
+      coords.push([
+        (-4 * coords[ps[15]][0] - coords[ps[0]][0] +
+          6 * (coords[ps[11]][0] + coords[ps[14]][0]) -
+          2 * (coords[ps[12]][0] + coords[ps[3]][0]) +
+          3 * (coords[ps[2]][0] + coords[ps[8]][0])) / 9,
+        (-4 * coords[ps[15]][1] - coords[ps[0]][1] +
+          6 * (coords[ps[11]][1] + coords[ps[14]][1]) -
+          2 * (coords[ps[12]][1] + coords[ps[3]][1]) +
+          3 * (coords[ps[2]][1] + coords[ps[8]][1])) / 9
+      ]);
+      mesh.figures.push({
+        type: 'patch',
+        coords: new Int32Array(ps), // making copies of ps and cs
+        colors: new Int32Array(cs)
+      });
+    }
+  }
+
+  function decodeType7Shading(mesh, reader) {
+    var coords = mesh.coords;
+    var colors = mesh.colors;
+    var ps = new Int32Array(16); // p00, p10, ..., p30, p01, ..., p33
+    var cs = new Int32Array(4); // c00, c30, c03, c33
+    while (reader.hasData) {
+      var f = reader.readFlag();
+      assert(0 <= f && f <= 3, 'Unknown type7 flag');
+      var i, ii;
+      var pi = coords.length;
+      for (i = 0, ii = (f !== 0 ? 12 : 16); i < ii; i++) {
+        coords.push(reader.readCoordinate());
+      }
+      var ci = colors.length;
+      for (i = 0, ii = (f !== 0 ? 2 : 4); i < ii; i++) {
+        colors.push(reader.readComponents());
+      }
+      var tmp1, tmp2, tmp3, tmp4;
+      switch (f) {
+        case 0:
+          ps[12] = pi + 3; ps[13] = pi + 4;  ps[14] = pi + 5;  ps[15] = pi + 6;
+          ps[ 8] = pi + 2; ps[ 9] = pi + 13; ps[10] = pi + 14; ps[11] = pi + 7;
+          ps[ 4] = pi + 1; ps[ 5] = pi + 12; ps[ 6] = pi + 15; ps[ 7] = pi + 8;
+          ps[ 0] = pi;     ps[ 1] = pi + 11; ps[ 2] = pi + 10; ps[ 3] = pi + 9;
+          cs[2] = ci + 1; cs[3] = ci + 2;
+          cs[0] = ci;     cs[1] = ci + 3;
+          break;
+        case 1:
+          tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
+          ps[12] = pi + 5; ps[13] = pi + 4;  ps[14] = pi + 3;  ps[15] = pi + 2;
+          ps[ 8] = pi + 6; ps[ 9] = pi + 11; ps[10] = pi + 10; ps[11] = pi + 1;
+          ps[ 4] = pi + 7; ps[ 5] = pi + 8;  ps[ 6] = pi + 9;  ps[ 7] = pi;
+          ps[ 0] = tmp1;   ps[ 1] = tmp2;    ps[ 2] = tmp3;    ps[ 3] = tmp4;
+          tmp1 = cs[2]; tmp2 = cs[3];
+          cs[2] = ci + 1; cs[3] = ci;
+          cs[0] = tmp1;   cs[1] = tmp2;
+          break;
+        case 2:
+          ps[12] = ps[15]; ps[13] = pi + 7; ps[14] = pi + 6;  ps[15] = pi + 5;
+          ps[ 8] = ps[11]; ps[ 9] = pi + 8; ps[10] = pi + 11; ps[11] = pi + 4;
+          ps[ 4] = ps[7];  ps[ 5] = pi + 9; ps[ 6] = pi + 10; ps[ 7] = pi + 3;
+          ps[ 0] = ps[3];  ps[ 1] = pi;     ps[ 2] = pi + 1;  ps[ 3] = pi + 2;
+          cs[2] = cs[3]; cs[3] = ci + 1;
+          cs[0] = cs[1]; cs[1] = ci;
+          break;
+        case 3:
+          ps[12] = ps[0];  ps[13] = ps[1];   ps[14] = ps[2];   ps[15] = ps[3];
+          ps[ 8] = pi;     ps[ 9] = pi + 9;  ps[10] = pi + 8;  ps[11] = pi + 7;
+          ps[ 4] = pi + 1; ps[ 5] = pi + 10; ps[ 6] = pi + 11; ps[ 7] = pi + 6;
+          ps[ 0] = pi + 2; ps[ 1] = pi + 3;  ps[ 2] = pi + 4;  ps[ 3] = pi + 5;
+          cs[2] = cs[0]; cs[3] = cs[1];
+          cs[0] = ci;    cs[1] = ci + 1;
+          break;
+      }
+      mesh.figures.push({
+        type: 'patch',
+        coords: new Int32Array(ps), // making copies of ps and cs
+        colors: new Int32Array(cs)
+      });
+    }
+  }
+
+  function updateBounds(mesh) {
+    var minX = mesh.coords[0][0], minY = mesh.coords[0][1],
+      maxX = minX, maxY = minY;
+    for (var i = 1, ii = mesh.coords.length; i < ii; i++) {
+      var x = mesh.coords[i][0], y = mesh.coords[i][1];
+      minX = minX > x ? x : minX;
+      minY = minY > y ? y : minY;
+      maxX = maxX < x ? x : maxX;
+      maxY = maxY < y ? y : maxY;
+    }
+    mesh.bounds = [minX, minY, maxX, maxY];
+  }
+
+  function Mesh(stream, matrix, xref, res) {
+    assert(isStream(stream), 'Mesh data is not a stream');
+    var dict = stream.dict;
+    this.matrix = matrix;
+    this.shadingType = dict.get('ShadingType');
+    this.type = 'Pattern';
+    this.bbox = dict.get('BBox');
+    var cs = dict.get('ColorSpace', 'CS');
+    cs = ColorSpace.parse(cs, xref, res);
+    this.cs = cs;
+    this.background = dict.has('Background') ?
+      cs.getRgb(dict.get('Background'), 0) : null;
+
+    var fnObj = dict.get('Function');
+    var fn;
+    if (!fnObj) {
+      fn = null;
+    } else if (isArray(fnObj)) {
+      var fnArray = [];
+      for (var j = 0, jj = fnObj.length; j < jj; j++) {
+        var obj = xref.fetchIfRef(fnObj[j]);
+        if (!isPDFFunction(obj)) {
+          error('Invalid function');
+        }
+        fnArray.push(PDFFunction.parse(xref, obj));
+      }
+      fn = function radialAxialColorFunction(arg) {
+        var out = [];
+        for (var i = 0, ii = fnArray.length; i < ii; i++) {
+          out.push(fnArray[i](arg)[0]);
+        }
+        return out;
+      };
+    } else {
+      if (!isPDFFunction(fnObj)) {
+        error('Invalid function');
+      }
+      fn = PDFFunction.parse(xref, fnObj);
+    }
+
+    this.coords = [];
+    this.colors = [];
+    this.figures = [];
+
+    var decodeContext = {
+      bitsPerCoordinate: dict.get('BitsPerCoordinate'),
+      bitsPerComponent: dict.get('BitsPerComponent'),
+      bitsPerFlag: dict.get('BitsPerFlag'),
+      decode: dict.get('Decode'),
+      colorFn: fn,
+      colorSpace: cs,
+      numComps: fn ? 1 : cs.numComps
+    };
+    var reader = new MeshStreamReader(stream, decodeContext);
+
+    var patchMesh = false;
+    switch (this.shadingType) {
+      case PatternType.FREE_FORM_MESH:
+        decodeType4Shading(this, reader);
+        break;
+      case PatternType.LATTICE_FORM_MESH:
+        var verticesPerRow = dict.get('VerticesPerRow') | 0;
+        assert(verticesPerRow >= 2, 'Invalid VerticesPerRow');
+        decodeType5Shading(this, reader, verticesPerRow);
+        break;
+      case PatternType.COONS_PATCH_MESH:
+        decodeType6Shading(this, reader);
+        patchMesh = true;
+        break;
+      case PatternType.TENSOR_PATCH_MESH:
+        decodeType7Shading(this, reader);
+        patchMesh = true;
+        break;
+      default:
+        error('Unsupported mesh type.');
+        break;
+    }
+
+    if (patchMesh) {
+      // dirty bounds calculation for determining, how dense shall be triangles
+      updateBounds(this);
+      for (var i = 0, ii = this.figures.length; i < ii; i++) {
+        buildFigureFromPatch(this, i);
+      }
+    }
+    // calculate bounds
+    updateBounds(this);
+  }
+
+  Mesh.prototype = {
+    getIR: function Mesh_getIR() {
+      var type = this.shadingType;
+      var i, ii, j;
+      var coords = this.coords;
+      var coordsPacked = new Float32Array(coords.length * 2);
+      for (i = 0, j = 0, ii = coords.length; i < ii; i++) {
+        var xy = coords[i];
+        coordsPacked[j++] = xy[0];
+        coordsPacked[j++] = xy[1];
+      }
+      var colors = this.colors;
+      var colorsPacked = new Uint8Array(colors.length * 3);
+      for (i = 0, j = 0, ii = colors.length; i < ii; i++) {
+        var c = colors[i];
+        colorsPacked[j++] = c[0];
+        colorsPacked[j++] = c[1];
+        colorsPacked[j++] = c[2];
+      }
+      var figures = this.figures;
+      var bbox = this.bbox;
+      var bounds = this.bounds;
+      var matrix = this.matrix;
+      var background = this.background;
+
+      return ['Mesh', type, coordsPacked, colorsPacked, figures, bounds,
+        matrix, bbox, background];
+    }
+  };
+
+  return Mesh;
+})();
+
+Shadings.Dummy = (function DummyClosure() {
+  function Dummy() {
+    this.type = 'Pattern';
+  }
+
+  Dummy.prototype = {
+    getIR: function Dummy_getIR() {
+      return ['Dummy'];
+    }
+  };
+  return Dummy;
+})();
+
+function getTilingPatternIR(operatorList, dict, args) {
+  var matrix = dict.get('Matrix');
+  var bbox = dict.get('BBox');
+  var xstep = dict.get('XStep');
+  var ystep = dict.get('YStep');
+  var paintType = dict.get('PaintType');
+  var tilingType = dict.get('TilingType');
+
+  return [
+    'TilingPattern', args, operatorList, matrix, bbox, xstep, ystep,
+    paintType, tilingType
+  ];
+}
+
+
 var PartialEvaluator = (function PartialEvaluatorClosure() {
   function PartialEvaluator(pdfManager, xref, handler, pageIndex,
                             uniquePrefix, idCounters, fontCache) {
@@ -14245,7 +14447,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var groupOptions = {
           matrix: matrix,
           bbox: bbox,
-          smask: !!smask,
+          smask: smask,
           isolated: false,
           knockout: false
         };
@@ -14254,8 +14456,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (isName(groupSubtype) && groupSubtype.name === 'Transparency') {
           groupOptions.isolated = group.get('I') || false;
           groupOptions.knockout = group.get('K') || false;
-          // There is also a group colorspace, but since we put everything in
-          // RGB I'm not sure we need it.
+          var colorSpace = group.get('CS');
+          groupOptions.colorSpace = colorSpace ?
+            ColorSpace.parseToIR(colorSpace, this.xref, resources) : null;
         }
         operatorList.addOp(OPS.beginGroup, [groupOptions]);
       }
@@ -14314,7 +14517,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           (w + h) < SMALL_IMAGE_DIMENSIONS) {
         var imageObj = new PDFImage(this.xref, resources, image,
                                     inline, null, null);
-        var imgData = imageObj.getImageData();
+        var imgData = imageObj.createImageData();
         operatorList.addOp(OPS.paintInlineImageXObject, [imgData]);
         return;
       }
@@ -14337,12 +14540,24 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
 
       PDFImage.buildImage(function(imageObj) {
-          var imgData = imageObj.getImageData();
+          var imgData = imageObj.createImageData();
           self.handler.send('obj', [objId, self.pageIndex, 'Image', imgData],
                             null, [imgData.data.buffer]);
         }, self.handler, self.xref, resources, image, inline);
 
       operatorList.addOp(OPS.paintImageXObject, args);
+    },
+
+    handleSMask: function PartialEvaluator_handleSmask(smask, resources,
+                                                       operatorList) {
+      var smaskContent = smask.get('G');
+      var smaskOptions = {
+        subtype: smask.get('S').name,
+        backdrop: smask.get('BC')
+      };
+
+      this.buildFormXObject(resources, smaskContent, smaskOptions,
+                            operatorList);
     },
 
     handleTilingType: function PartialEvaluator_handleTilingType(
@@ -14354,7 +14569,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       // Add the dependencies to the parent operator list so they are resolved
       // before sub operator list is executed synchronously.
       operatorList.addDependencies(tilingOpList.dependencies);
-      operatorList.addOp(fn, TilingPattern.getIR({
+      operatorList.addOp(fn, getTilingPatternIR({
                                fnArray: tilingOpList.fnArray,
                                argsArray: tilingOpList.argsArray
                               }, patternDict, args));
@@ -14414,7 +14629,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     },
 
     setGState: function PartialEvaluator_setGState(resources, gState,
-                                                   operatorList) {
+                                                   operatorList, xref) {
 
       var self = this;
       // TODO(mack): This should be rewritten so that this function returns
@@ -14444,9 +14659,18 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             gStateObj.push([key, value]);
             break;
           case 'SMask':
-            // We support the default so don't trigger a warning bar.
-            if (!isName(value) || value.name != 'None')
-              UnsupportedManager.notify(UNSUPPORTED_FEATURES.smask);
+            if (isName(value) && value.name === 'None') {
+              gStateObj.push([key, false]);
+              break;
+            }
+            var dict = xref.fetchIfRef(value);
+            if (isDict(dict)) {
+              self.handleSMask(dict, resources, operatorList);
+              gStateObj.push([key, true]);
+            } else {
+              warn('Unsupported SMask type');
+            }
+
             break;
           // Only generate info log messages for the following since
           // they are unlikey to have a big impact on the rendering.
@@ -14728,7 +14952,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 break;
 
               var gState = extGState.get(dictName.name);
-              self.setGState(resources, gState, operatorList);
+              self.setGState(resources, gState, operatorList, xref);
               args = [];
               continue;
           } // switch
@@ -15036,8 +15260,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       } else if (isStream(cmapObj)) {
         var cmap = CMapFactory.create(cmapObj).map;
         // Convert UTF-16BE
-        for (var i in cmap) {
-          var token = cmap[i];
+        // NOTE: cmap can be a sparse array, so use forEach instead of for(;;)
+        //  to iterate over all keys.
+        cmap.forEach(function(token, i) {
           var str = [];
           for (var k = 0; k < token.length; k += 2) {
             var w1 = (token.charCodeAt(k) << 8) | token.charCodeAt(k + 1);
@@ -15050,7 +15275,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             str.push(((w1 & 0x3ff) << 10) + (w2 & 0x3ff) + 0x10000);
           }
           cmap[i] = String.fromCharCode.apply(String, str);
-        }
+        });
         return cmap;
       }
       return charToUnicode;
@@ -15445,7 +15670,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         // replacing queue items
         squash(fnArray, j, count * 4, OPS.paintInlineImageXObjectGroup);
         argsArray.splice(j, count * 4,
-          [{width: imgWidth, height: imgHeight, data: imgData}, map]);
+          [{width: imgWidth, height: imgHeight, kind: 'rgba_32bpp',
+            data: imgData}, map]);
         i = j;
         ii = argsArray.length;
       }
@@ -28169,10 +28395,10 @@ var PDFImage = (function PDFImageClosure() {
       var bpc = this.bpc;
 
       // This image doesn't require any extra work.
-      if (bpc === 8)
+      if (bpc === 8) {
         return buffer;
+      }
 
-      var bufferLength = buffer.length;
       var width = this.width;
       var height = this.height;
       var numComps = this.numComps;
@@ -28319,7 +28545,14 @@ var PDFImage = (function PDFImageClosure() {
         buffer[i + 2] = clamp((buffer[i + 2] - matteRgb[2]) * k + matteRgb[2]);
       }
     },
-    fillRgbaBuffer: function PDFImage_fillRgbaBuffer(buffer, width, height) {
+    createImageData: function PDFImage_createImageData() {
+      var drawWidth = this.drawWidth;
+      var drawHeight = this.drawHeight;
+      var imgData = {       // other fields are filled in below
+        width: drawWidth,
+        height: drawHeight,
+      };
+
       var numComps = this.numComps;
       var originalWidth = this.width;
       var originalHeight = this.height;
@@ -28331,21 +28564,46 @@ var PDFImage = (function PDFImageClosure() {
 
       // imgArray can be incomplete (e.g. after CCITT fax encoding)
       var actualHeight = 0 | (imgArray.length / rowBytes *
-                         height / originalHeight);
+                         drawHeight / originalHeight);
+
+      // If it is a 1-bit-per-pixel grayscale (i.e. black-and-white) image
+      // without any complications, we pass a same-sized copy to the main
+      // thread rather than expanding by 32x to RGBA form. This saves *lots* of
+      // memory for many scanned documents. It's also much faster.
+      if (this.colorSpace.name === 'DeviceGray' && bpc === 1 &&
+          !this.smask && !this.mask && !this.needsDecode &&
+          drawWidth === originalWidth && drawHeight === originalHeight) {
+        imgData.kind = 'grayscale_1bpp';
+
+        // We must make a copy of imgArray, otherwise it'll be neutered upon
+        // transfer which will break any code that subsequently reuses it.
+        var newArray = new Uint8Array(imgArray.length);
+        newArray.set(imgArray);
+        imgData.data = newArray;
+        imgData.origLength = imgArray.length;
+        return imgData;
+      }
+
       var comps = this.getComponents(imgArray);
+
+      var rgbaBuf = new Uint8Array(drawWidth * drawHeight * 4);
 
       // Handle opacity here since color key masking needs to be performed on
       // undecoded values.
-      this.fillOpacity(buffer, width, height, actualHeight, comps);
+      this.fillOpacity(rgbaBuf, drawWidth, drawHeight, actualHeight, comps);
 
       if (this.needsDecode) {
         this.decodeBuffer(comps);
       }
 
-      this.colorSpace.fillRgb(buffer, originalWidth, originalHeight, width,
-                              height, actualHeight, bpc, comps);
+      this.colorSpace.fillRgb(rgbaBuf, originalWidth, originalHeight, drawWidth,
+                              drawHeight, actualHeight, bpc, comps);
 
-      this.undoPreblend(buffer, width, actualHeight);
+      this.undoPreblend(rgbaBuf, drawWidth, actualHeight);
+
+      imgData.kind = 'rgba_32bpp';
+      imgData.data = rgbaBuf;
+      return imgData;
     },
     fillGrayBuffer: function PDFImage_fillGrayBuffer(buffer) {
       var numComps = this.numComps;
@@ -28369,18 +28627,6 @@ var PDFImage = (function PDFImageClosure() {
       var scale = 255 / ((1 << bpc) - 1);
       for (var i = 0; i < length; ++i)
         buffer[i] = (scale * comps[i]) | 0;
-    },
-    getImageData: function PDFImage_getImageData() {
-      var drawWidth = this.drawWidth;
-      var drawHeight = this.drawHeight;
-      var imgData = {
-        width: drawWidth,
-        height: drawHeight,
-        data: new Uint8Array(drawWidth * drawHeight * 4)
-      };
-      var pixels = imgData.data;
-      this.fillRgbaBuffer(pixels, drawWidth, drawHeight);
-      return imgData;
     },
     getImageBytes: function PDFImage_getImageBytes(length) {
       this.image.reset();
@@ -31649,6 +31895,13 @@ var Lexer = (function LexerClosure() {
     this.stream = stream;
     this.nextChar();
 
+    // While lexing, we build up many strings one char at a time. Using += for
+    // this can result in lots of garbage strings. It's better to build an
+    // array of single-char strings and then join() them together at the end.
+    // And reusing a single array (i.e. |this.strBuf|) over and over for this
+    // purpose uses less memory than using a new array for each string.
+    this.strBuf = [];
+
     // The PDFs might have "glued" commands with other commands, operands or
     // literals, e.g. "q1". The knownCommands is a dictionary of the valid
     // commands and their prefixes. The prefixes are built the following way:
@@ -31703,33 +31956,50 @@ var Lexer = (function LexerClosure() {
     getNumber: function Lexer_getNumber() {
       var floating = false;
       var ch = this.currentChar;
-      var str = String.fromCharCode(ch);
+      var allDigits = ch >= 0x30 && ch <= 0x39;
+      var strBuf = this.strBuf;
+      strBuf.length = 0;
+      strBuf.push(String.fromCharCode(ch));
       while ((ch = this.nextChar()) >= 0) {
-        if (ch === 0x2E && !floating) { // '.'
-          str += '.';
+        if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
+          strBuf.push(String.fromCharCode(ch));
+        } else if (ch === 0x2E && !floating) { // '.'
+          strBuf.push('.');
           floating = true;
+          allDigits = false;
         } else if (ch === 0x2D) { // '-'
           // ignore minus signs in the middle of numbers to match
           // Adobe's behavior
           warn('Badly formated number');
-        } else if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
-          str += String.fromCharCode(ch);
+          allDigits = false;
         } else if (ch === 0x45 || ch === 0x65) { // 'E', 'e'
           floating = true;
+          allDigits = false;
         } else {
           // the last character doesn't belong to us
           break;
         }
       }
-      var value = parseFloat(str);
-      if (isNaN(value))
-        error('Invalid floating point number: ' + value);
+      var value;
+      if (allDigits) {
+        value = 0;
+        var charCodeOfZero = 48;    // '0'
+        for (var i = 0, ii = strBuf.length; i < ii; i++) {
+          value = value * 10 + (strBuf[i].charCodeAt(0) - charCodeOfZero);
+        }
+      } else {
+        value = parseFloat(strBuf.join(''));
+        if (isNaN(value)) {
+          error('Invalid floating point number: ' + value);
+        }
+      }
       return value;
     },
     getString: function Lexer_getString() {
       var numParen = 1;
       var done = false;
-      var str = '';
+      var strBuf = this.strBuf;
+      strBuf.length = 0;
 
       var ch = this.nextChar();
       while (true) {
@@ -31741,14 +32011,14 @@ var Lexer = (function LexerClosure() {
             break;
           case 0x28: // '('
             ++numParen;
-            str += '(';
+            strBuf.push('(');
             break;
           case 0x29: // ')'
             if (--numParen === 0) {
               this.nextChar(); // consume strings ')'
               done = true;
             } else {
-              str += ')';
+              strBuf.push(')');
             }
             break;
           case 0x5C: // '\\'
@@ -31759,24 +32029,24 @@ var Lexer = (function LexerClosure() {
                 done = true;
                 break;
               case 0x6E: // 'n'
-                str += '\n';
+                strBuf.push('\n');
                 break;
               case 0x72: // 'r'
-                str += '\r';
+                strBuf.push('\r');
                 break;
               case 0x74: // 't'
-                str += '\t';
+                strBuf.push('\t');
                 break;
               case 0x62: // 'b'
-                str += '\b';
+                strBuf.push('\b');
                 break;
               case 0x66: // 'f'
-                str += '\f';
+                strBuf.push('\f');
                 break;
               case 0x5C: // '\'
               case 0x28: // '('
               case 0x29: // ')'
-                str += String.fromCharCode(ch);
+                strBuf.push(String.fromCharCode(ch));
                 break;
               case 0x30: case 0x31: case 0x32: case 0x33: // '0'-'3'
               case 0x34: case 0x35: case 0x36: case 0x37: // '4'-'7'
@@ -31792,17 +32062,17 @@ var Lexer = (function LexerClosure() {
                   }
                 }
 
-                str += String.fromCharCode(x);
+                strBuf.push(String.fromCharCode(x));
                 break;
               case 0x0A: case 0x0D: // LF, CR
                 break;
               default:
-                str += String.fromCharCode(ch);
+                strBuf.push(String.fromCharCode(ch));
                 break;
             }
             break;
           default:
-            str += String.fromCharCode(ch);
+            strBuf.push(String.fromCharCode(ch));
             break;
         }
         if (done) {
@@ -31812,10 +32082,12 @@ var Lexer = (function LexerClosure() {
           ch = this.nextChar();
         }
       }
-      return str;
+      return strBuf.join('');
     },
     getName: function Lexer_getName() {
-      var str = '', ch;
+      var ch;
+      var strBuf = this.strBuf;
+      strBuf.length = 0;
       while ((ch = this.nextChar()) >= 0 && !specialChars[ch]) {
         if (ch === 0x23) { // '#'
           ch = this.nextChar();
@@ -31824,23 +32096,23 @@ var Lexer = (function LexerClosure() {
             var x2 = toHexDigit(this.nextChar());
             if (x2 == -1)
               error('Illegal digit in hex char in name: ' + x2);
-            str += String.fromCharCode((x << 4) | x2);
+            strBuf.push(String.fromCharCode((x << 4) | x2));
           } else {
-            str += '#';
-            str += String.fromCharCode(ch);
+            strBuf.push('#', String.fromCharCode(ch));
           }
         } else {
-          str += String.fromCharCode(ch);
+          strBuf.push(String.fromCharCode(ch));
         }
       }
-      if (str.length > 128) {
+      if (strBuf.length > 128) {
         error('Warning: name token is longer than allowed by the spec: ' +
-              str.length);
+              strBuf.length);
       }
-      return new Name(str);
+      return new Name(strBuf.join(''));
     },
     getHexString: function Lexer_getHexString() {
-      var str = '';
+      var strBuf = this.strBuf;
+      strBuf.length = 0;
       var ch = this.currentChar;
       var isFirstHex = true;
       var firstDigit;
@@ -31870,13 +32142,13 @@ var Lexer = (function LexerClosure() {
               ch = this.nextChar();
               continue;
             }
-            str += String.fromCharCode((firstDigit << 4) | secondDigit);
+            strBuf.push(String.fromCharCode((firstDigit << 4) | secondDigit));
           }
           isFirstHex = !isFirstHex;
           ch = this.nextChar();
         }
       }
-      return str;
+      return strBuf.join('');
     },
     getObj: function Lexer_getObj() {
       // skip whitespace and comments
@@ -32063,6 +32335,200 @@ var Linearization = (function LinearizationClosure() {
   return Linearization;
 })();
 
+
+
+var PostScriptParser = (function PostScriptParserClosure() {
+  function PostScriptParser(lexer) {
+    this.lexer = lexer;
+    this.operators = [];
+    this.token = null;
+    this.prev = null;
+  }
+  PostScriptParser.prototype = {
+    nextToken: function PostScriptParser_nextToken() {
+      this.prev = this.token;
+      this.token = this.lexer.getToken();
+    },
+    accept: function PostScriptParser_accept(type) {
+      if (this.token.type == type) {
+        this.nextToken();
+        return true;
+      }
+      return false;
+    },
+    expect: function PostScriptParser_expect(type) {
+      if (this.accept(type))
+        return true;
+      error('Unexpected symbol: found ' + this.token.type + ' expected ' +
+        type + '.');
+    },
+    parse: function PostScriptParser_parse() {
+      this.nextToken();
+      this.expect(PostScriptTokenTypes.LBRACE);
+      this.parseBlock();
+      this.expect(PostScriptTokenTypes.RBRACE);
+      return this.operators;
+    },
+    parseBlock: function PostScriptParser_parseBlock() {
+      while (true) {
+        if (this.accept(PostScriptTokenTypes.NUMBER)) {
+          this.operators.push(this.prev.value);
+        } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
+          this.operators.push(this.prev.value);
+        } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
+          this.parseCondition();
+        } else {
+          return;
+        }
+      }
+    },
+    parseCondition: function PostScriptParser_parseCondition() {
+      // Add two place holders that will be updated later
+      var conditionLocation = this.operators.length;
+      this.operators.push(null, null);
+
+      this.parseBlock();
+      this.expect(PostScriptTokenTypes.RBRACE);
+      if (this.accept(PostScriptTokenTypes.IF)) {
+        // The true block is right after the 'if' so it just falls through on
+        // true else it jumps and skips the true block.
+        this.operators[conditionLocation] = this.operators.length;
+        this.operators[conditionLocation + 1] = 'jz';
+      } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
+        var jumpLocation = this.operators.length;
+        this.operators.push(null, null);
+        var endOfTrue = this.operators.length;
+        this.parseBlock();
+        this.expect(PostScriptTokenTypes.RBRACE);
+        this.expect(PostScriptTokenTypes.IFELSE);
+        // The jump is added at the end of the true block to skip the false
+        // block.
+        this.operators[jumpLocation] = this.operators.length;
+        this.operators[jumpLocation + 1] = 'j';
+
+        this.operators[conditionLocation] = endOfTrue;
+        this.operators[conditionLocation + 1] = 'jz';
+      } else {
+        error('PS Function: error parsing conditional.');
+      }
+    }
+  };
+  return PostScriptParser;
+})();
+
+var PostScriptTokenTypes = {
+  LBRACE: 0,
+  RBRACE: 1,
+  NUMBER: 2,
+  OPERATOR: 3,
+  IF: 4,
+  IFELSE: 5
+};
+
+var PostScriptToken = (function PostScriptTokenClosure() {
+  function PostScriptToken(type, value) {
+    this.type = type;
+    this.value = value;
+  }
+
+  var opCache = {};
+
+  PostScriptToken.getOperator = function PostScriptToken_getOperator(op) {
+    var opValue = opCache[op];
+    if (opValue)
+      return opValue;
+
+    return opCache[op] = new PostScriptToken(PostScriptTokenTypes.OPERATOR, op);
+  };
+
+  PostScriptToken.LBRACE = new PostScriptToken(PostScriptTokenTypes.LBRACE,
+    '{');
+  PostScriptToken.RBRACE = new PostScriptToken(PostScriptTokenTypes.RBRACE,
+    '}');
+  PostScriptToken.IF = new PostScriptToken(PostScriptTokenTypes.IF, 'IF');
+  PostScriptToken.IFELSE = new PostScriptToken(PostScriptTokenTypes.IFELSE,
+    'IFELSE');
+  return PostScriptToken;
+})();
+
+var PostScriptLexer = (function PostScriptLexerClosure() {
+  function PostScriptLexer(stream) {
+    this.stream = stream;
+    this.nextChar();
+  }
+  PostScriptLexer.prototype = {
+    nextChar: function PostScriptLexer_nextChar() {
+      return (this.currentChar = this.stream.getByte());
+    },
+    getToken: function PostScriptLexer_getToken() {
+      var s = '';
+      var comment = false;
+      var ch = this.currentChar;
+
+      // skip comments
+      while (true) {
+        if (ch < 0) {
+          return EOF;
+        }
+
+        if (comment) {
+          if (ch === 0x0A || ch === 0x0D) {
+            comment = false;
+          }
+        } else if (ch == 0x25) { // '%'
+          comment = true;
+        } else if (!Lexer.isSpace(ch)) {
+          break;
+        }
+        ch = this.nextChar();
+      }
+      switch (ch | 0) {
+        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: // '0'-'4'
+        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: // '5'-'9'
+        case 0x2B: case 0x2D: case 0x2E: // '+', '-', '.'
+        return new PostScriptToken(PostScriptTokenTypes.NUMBER,
+          this.getNumber());
+        case 0x7B: // '{'
+          this.nextChar();
+          return PostScriptToken.LBRACE;
+        case 0x7D: // '}'
+          this.nextChar();
+          return PostScriptToken.RBRACE;
+      }
+      // operator
+      var str = String.fromCharCode(ch);
+      while ((ch = this.nextChar()) >= 0 && // and 'A'-'Z', 'a'-'z'
+        ((ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A))) {
+        str += String.fromCharCode(ch);
+      }
+      switch (str.toLowerCase()) {
+        case 'if':
+          return PostScriptToken.IF;
+        case 'ifelse':
+          return PostScriptToken.IFELSE;
+        default:
+          return PostScriptToken.getOperator(str);
+      }
+    },
+    getNumber: function PostScriptLexer_getNumber() {
+      var ch = this.currentChar;
+      var str = String.fromCharCode(ch);
+      while ((ch = this.nextChar()) >= 0) {
+        if ((ch >= 0x30 && ch <= 0x39) || // '0'-'9'
+          ch === 0x2D || ch === 0x2E) { // '-', '.'
+          str += String.fromCharCode(ch);
+        } else {
+          break;
+        }
+      }
+      var value = parseFloat(str);
+      if (isNaN(value))
+        error('Invalid floating point number: ' + value);
+      return value;
+    }
+  };
+  return PostScriptLexer;
+})();
 
 
 var Stream = (function StreamClosure() {
@@ -34597,7 +35063,11 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       PDFJS.disableCreateObjectURL = data.disableCreateObjectURL;
       PDFJS.verbosity = data.verbosity;
 
-      getPdfManager(data).then(function pdfManagerReady() {
+      getPdfManager(data).then(function () {
+        pdfManager.onLoadedStream().then(function(stream) {
+          handler.send('DataLoaded', { length: stream.bytes.byteLength });
+        });
+      }).then(function pdfManagerReady() {
         loadDocument(false).then(onSuccess, function loadFailure(ex) {
           // Try again with recoveryMode == true
           if (!(ex instanceof XRefParseException)) {
@@ -34661,12 +35131,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       pdfManager.requestLoadedStream();
       pdfManager.onLoadedStream().then(function(stream) {
         deferred.resolve(stream.bytes);
-      });
-    });
-
-    handler.on('DataLoaded', function wphSetupDataLoaded(data, deferred) {
-      pdfManager.onLoadedStream().then(function(stream) {
-        deferred.resolve({ length: stream.bytes.byteLength });
       });
     });
 

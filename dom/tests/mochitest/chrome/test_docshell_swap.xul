@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Docshell swap test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Create two identical windows, each with a <browser> element.
+  let win1 = window.openDialog("window_docshell_swap.xul", "_blank","chrome,width=300,height=200");
+  let win2 = window.openDialog("window_docshell_swap.xul", "_blank","chrome,width=300,height=200");
+
+  let loadCount = 0;
+  function loadHandler() {
+    loadCount++;
+    if (loadCount < 2)
+      return;
+
+    let browser1 = win1.document.getElementById("browser");
+    let browser2 = win2.document.getElementById("browser");
+
+    let flo1 = browser1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+    let flo2 = browser2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+
+    let pongCount = 0;
+
+    function gotPong(target_ok) {
+      pongCount++;
+      ok(target_ok, "message went to correct target");
+      if (pongCount == 1) {
+        win1.close();
+        win2.close();
+        SimpleTest.finish();
+      }
+    }
+
+    let mm1 = flo1.frameLoader.messageManager;
+    let mm2 = flo2.frameLoader.messageManager;
+    mm1.addMessageListener("pong", () => { gotPong(true); });
+    mm2.addMessageListener("pong", () => { gotPong(false); });
+
+    // Swap docshells. Everything should be identical to before, since there was nothing to
+    // distinguish these docshells.
+    flo1.swapFrameLoaders(flo2);
+
+    // mm1 shouldn't change here, but we update it in case it does due to a bug.
+    mm1 = flo1.frameLoader.messageManager;
+
+    // Load ping-pong code into first window.
+    mm1.loadFrameScript("data:,addMessageListener('ping', () => sendAsyncMessage('pong'));", false);
+
+    // A pong message received in win1 means success.
+    win1.messageManager.addMessageListener("pong", () => { gotPong(true); });
+
+    // A pong message received in win2 means failure!
+    win2.messageManager.addMessageListener("pong", () => { gotPong(false); });
+
+    // Send the ping to win1.
+    mm1.sendAsyncMessage("ping");
+  }
+
+  win1.addEventListener("load", loadHandler, false);
+  win2.addEventListener("load", loadHandler, false);
+  ]]>
+  </script>
+</window>

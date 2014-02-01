@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/jgo.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/jgo.xml
+ * ICU <specials> source: <path>/common/main/jgo.xml
  */
 jgo{
     AuxExemplarCharacters{"[e o q r x]"}
@@ -21,10 +21,11 @@ jgo{
         "[A B C D Ɛ F G H I J K L M N Ŋ Ɔ P {Pf} S {Sh} T {Ts} U Ʉ {Ʉ\u0308} V W Ẅ Y "
         "Z Ꞌ]"
     }
-    ExemplarCharactersPunctuation{"[\- , ; \: ! ? . ‹ › « »]"}
+    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ‹ › « »]"}
     LocaleScript{
         "Latn",
     }
+    MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
@@ -49,8 +50,34 @@ jgo{
         }
         native{"latn"}
     }
-    Version{"2.0.77.53"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, G y MMMM dd",
+                "G y MMMM d",
+                "G y MMM d",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                MEd{"E, d.M"}
+                Md{"d.M"}
+                yyyyMd{"M.d.y G"}
+            }
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "mba’mba’",
@@ -64,7 +91,7 @@ jgo{
                 "EEEE, y MMMM dd",
                 "y MMMM d",
                 "y MMM d",
-                "yyyy-MM-dd",
+                "y-MM-dd",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -141,13 +168,6 @@ jgo{
                 abbreviated{
                     "tsɛttsɛt mɛŋgu’ mi ɛ́ lɛɛnɛ Kɛlísɛtɔ gɔ ńɔ́",
                     "tsɛttsɛt mɛŋgu’ mi ɛ́ fúnɛ Kɛlísɛtɔ tɔ́ mɔ́",
-                }
-            }
-            fields{
-                day{
-                    relative{
-                        "0"{"lɔꞋɔ"}
-                    }
                 }
             }
             intervalFormats{
@@ -251,86 +271,113 @@ jgo{
         quotationEnd{"»"}
         quotationStart{"«"}
     }
-    layout{
-        characters{"left-to-right"}
-        lines{"top-to-bottom"}
+    fields{
+        day{
+            relative{
+                "0"{"lɔꞋɔ"}
+            }
+            relativeTime{
+                future{
+                    one{"Nǔu lɛ́Ꞌ {0}"}
+                    other{"Nǔu lɛ́Ꞌ {0}"}
+                }
+                past{
+                    one{"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}"}
+                    other{"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}"}
+                }
+            }
+        }
+        hour{
+            relativeTime{
+                future{
+                    one{"nǔu háwa {0}"}
+                    other{"nǔu háwa {0}"}
+                }
+                past{
+                    one{"ɛ́ gɛ mɔ́ {0} háwa"}
+                    other{"ɛ́ gɛ mɔ́ {0} háwa"}
+                }
+            }
+        }
+        minute{
+            relativeTime{
+                future{
+                    one{"nǔu {0} minút"}
+                    other{"nǔu {0} minút"}
+                }
+                past{
+                    one{"ɛ́ gɛ́ mɔ́ minút {0}"}
+                    other{"ɛ́ gɛ́ mɔ́ minút {0}"}
+                }
+            }
+        }
+        month{
+            relativeTime{
+                future{
+                    one{"Nǔu {0} saŋ"}
+                    other{"Nǔu {0} saŋ"}
+                }
+                past{
+                    one{"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}"}
+                    other{"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}"}
+                }
+            }
+        }
+        week{
+            relativeTime{
+                future{
+                    one{"Nǔu ŋgap-mbi {0}"}
+                    other{"Nǔu ŋgap-mbi {0}"}
+                }
+                past{
+                    one{"Ɛ́ gɛ́ mɔ {0} ŋgap-mbi"}
+                    other{"Ɛ́ gɛ́ mɔ {0} ŋgap-mbi"}
+                }
+            }
+        }
+        year{
+            relativeTime{
+                future{
+                    one{"Nǔu ŋguꞋ {0}"}
+                    other{"Nǔu ŋguꞋ {0}"}
+                }
+                past{
+                    one{"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}"}
+                    other{"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}"}
+                }
+            }
+        }
     }
     listPattern{
         standard{
             2{"{0} pɔp {1}"}
-            end{"{0}, ḿbɛn ŋ́ɡɛ {1}"}
-            middle{"{0}, ŋ́ɡɛ {1}"}
-            start{"{0}, ŋ́ɡɛ {1}"}
+            end{"{0}, ḿbɛn ŋ́gɛ {1}"}
+            middle{"{0}, ŋ́gɛ {1}"}
+            start{"{0}, ŋ́gɛ {1}"}
         }
     }
     units{
-        day{
-            one{"{0} lɛ́Ꞌ"}
-            other{"{0} lɛ́Ꞌ"}
-        }
-        day-future{
-            one{"Nǔu lɛ́Ꞌ {0}"}
-            other{"Nǔu lɛ́Ꞌ {0}"}
-        }
-        day-past{
-            one{"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}"}
-            other{"Ɛ́ gɛ́ mɔ́ lɛ́Ꞌ {0}"}
-        }
-        hour{
-            one{"{0} háwa"}
-            other{"{0} háwa"}
-        }
-        hour-future{
-            one{"nǔu háwa {0}"}
-            other{"nǔu háwa {0}"}
-        }
-        hour-past{
-            one{"ɛ́ gɛ mɔ́ {0} háwa"}
-            other{"ɛ́ gɛ mɔ́ {0} háwa"}
-        }
-        minute{
-            one{"{0} minút"}
-            other{"{0} minút"}
-        }
-        minute-future{
-            one{"nǔu {0} minút"}
-            other{"nǔu {0} minút"}
-        }
-        minute-past{
-            one{"ɛ́ gɛ́ mɔ́ minút {0}"}
-            other{"ɛ́ gɛ́ mɔ́ minút {0}"}
-        }
-        month{
-            one{"pɛsaŋ {0}"}
-            other{"pɛsaŋ {0}"}
-        }
-        month-future{
-            one{"Nǔu {0} saŋ"}
-            other{"Nǔu {0} saŋ"}
-        }
-        month-past{
-            one{"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}"}
-            other{"ɛ́ gɛ́ mɔ́ pɛsaŋ {0}"}
-        }
-        week-future{
-            one{"Nǔu ŋgap-mbi {0}"}
-            other{"Nǔu ŋgap-mbi {0}"}
-        }
-        week-past{
-            one{"Ɛ́ gɛ́ mɔ {0} ŋgap-mbi"}
-            other{"Ɛ́ gɛ́ mɔ {0} ŋgap-mbi"}
-        }
-        year{
-            one{"ŋguꞋ {0}"}
-            other{"ŋguꞋ {0}"}
-        }
-        year-future{
-            one{"Nǔu ŋguꞋ {0}"}
-            other{"Nǔu ŋguꞋ {0}"}
-        }
-        year-past{
-            one{"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}"}
-            other{"Ɛ́gɛ́ mɔ́ ŋguꞋ {0}"}
+        duration{
+            day{
+                one{"{0} lɛ́Ꞌ"}
+                other{"{0} lɛ́Ꞌ"}
+            }
+            hour{
+                one{"{0} háwa"}
+                other{"{0} háwa"}
+            }
+            minute{
+                one{"{0} minút"}
+                other{"{0} minút"}
+            }
+            month{
+                one{"pɛsaŋ {0}"}
+                other{"pɛsaŋ {0}"}
+            }
+            year{
+                one{"ŋguꞋ {0}"}
+                other{"ŋguꞋ {0}"}
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ public class PanelGridView extends GridView implements DatasetBacked {
     private final PanelGridViewAdapter mAdapter;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
-        super(context, null, R.attr.homeGridViewStyle);
+        super(context, null, R.attr.panelGridViewStyle);
         mAdapter = new PanelGridViewAdapter(context);
         setAdapter(mAdapter);
         setNumColumns(AUTO_FIT);

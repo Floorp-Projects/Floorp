@@ -8,7 +8,9 @@
 #include "maxp.h"
 
 // loca - Index to Location
-// http://www.microsoft.com/opentype/otspec/loca.htm
+// http://www.microsoft.com/typography/otspec/loca.htm
+
+#define TABLE_NAME "loca"
 
 namespace ots {
 
@@ -22,7 +24,7 @@ bool ots_loca_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   file->loca = loca;
 
   if (!file->maxp || !file->head) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("maxp or head tables missing from font, needed by loca");
   }
 
   const unsigned num_glyphs = file->maxp->num_glyphs;
@@ -37,10 +39,10 @@ bool ots_loca_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     for (unsigned i = 0; i <= num_glyphs; ++i) {
       uint16_t offset = 0;
       if (!table.ReadU16(&offset)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to read offset for glyph %d", i);
       }
       if (offset < last_offset) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Out of order offset %d < %d for glyph %d", offset, last_offset, i);
       }
       last_offset = offset;
       loca->offsets[i] = offset * 2;
@@ -49,10 +51,10 @@ bool ots_loca_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     for (unsigned i = 0; i <= num_glyphs; ++i) {
       uint32_t offset = 0;
       if (!table.ReadU32(&offset)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to read offset for glyph %d", i);
       }
       if (offset < last_offset) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Out of order offset %d < %d for glyph %d", offset, last_offset, i);
       }
       last_offset = offset;
       loca->offsets[i] = offset;
@@ -71,19 +73,19 @@ bool ots_loca_serialise(OTSStream *out, OpenTypeFile *file) {
   const OpenTypeHEAD *head = file->head;
 
   if (!head) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Missing head table in font needed by loca");
   }
 
   if (head->index_to_loc_format == 0) {
     for (unsigned i = 0; i < loca->offsets.size(); ++i) {
       if (!out->WriteU16(loca->offsets[i] >> 1)) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to write glyph offset for glyph %d", i);
       }
     }
   } else {
     for (unsigned i = 0; i < loca->offsets.size(); ++i) {
       if (!out->WriteU32(loca->offsets[i])) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG("Failed to write glyph offset for glyph %d", i);
       }
     }
   }

@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/et.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/et.xml
+ * ICU <specials> source: <path>/common/main/et.xml
  */
 et{
     Currencies{
@@ -263,7 +263,7 @@ et{
             "kr",
             "Eesti kroon",
             {
-                "#0.00¤;(#0.00¤)",
+                "#,##0.00 ¤",
                 ".",
                 " ",
             }
@@ -826,7 +826,7 @@ et{
         }
         VEB{
             "VEB",
-            "Venezuela bolívar (1871-2008)",
+            "Venezuela bolívar (1871–2008)",
         }
         VEF{
             "VEF",
@@ -938,6 +938,10 @@ et{
         }
         ZMK{
             "ZMK",
+            "Sambia kvatša (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "Sambia kvatša",
         }
         ZRZ{
@@ -1539,8 +1543,8 @@ et{
             other{"Usbekistani sommi"}
         }
         VEB{
-            one{"Venezuela bolívar (1871-2008)"}
-            other{"Venezuela boliivarit (1871-2008)"}
+            one{"Venezuela bolívar (1871–2008)"}
+            other{"Venezuela boliivarit (1871–2008)"}
         }
         VEF{
             one{"Venezuela bolívar"}
@@ -1603,6 +1607,10 @@ et{
             other{"LAVi randi"}
         }
         ZMK{
+            one{"Sambia kvatša (1968–2012)"}
+            other{"Sambia kvatšat (1968–2012)"}
+        }
+        ZMW{
             one{"Sambia kvatša"}
             other{"Sambia kvatšat"}
         }
@@ -1611,5 +1619,5 @@ et{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.78.32"}
+    Version{"2.0.92.87"}
 }

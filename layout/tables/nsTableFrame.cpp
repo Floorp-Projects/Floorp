@@ -2956,7 +2956,14 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
           mFrames.InsertFrame(nullptr, kidFrame, kidNextInFlow);
           // and in rowGroups after childX so that it will get pushed below.
           rowGroups.InsertElementAt(childX + 1,
-                      static_cast <nsTableRowGroupFrame*>(kidNextInFlow));
+                      static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
+        } else if (kidNextInFlow == kidFrame->GetNextSibling()) {
+          // OrderRowGroups excludes NIFs in the child list from 'rowGroups'
+          // so we deal with that here to make sure they get pushed.
+          MOZ_ASSERT(!rowGroups.Contains(kidNextInFlow),
+                     "OrderRowGroups must not put our NIF in 'rowGroups'");
+          rowGroups.InsertElementAt(childX + 1,
+                      static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
         }
 
         // We've used up all of our available space so push the remaining

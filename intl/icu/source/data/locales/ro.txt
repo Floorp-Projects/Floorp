@@ -1,25 +1,39 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ro.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ro.xml
+ * ICU <specials> source: <path>/common/main/ro.xml
  */
 ro{
     AuxExemplarCharacters{"[á à å ä ç é è ê ë ñ ö q ş ţ ü w y]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0}…"}
+        word-initial{"…{0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{"[a ă â b c d e f g h i î j k l m n o p r s ș t ț u v x z]"}
     ExemplarCharactersIndex{"[A Ă Â B C D E F G H I Î J K L M N O P Q R S Ș T Ț U V W X Y Z]"}
-    ExemplarCharactersPunctuation{"[\- ‐ – — , ; \: ! ? . … ' ‘ \" “ ” „ « » ( ) \[ \] @ * /]"}
+    ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ' ‘ \u0022 “ ” „ « » ( ) \\[ \\] @ * /]"}
     LocaleScript{
         "Latn",
     }
+    MoreInformation{"..."}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{">{0}"}
+                range{"{0} - {1}"}
+            }
             patterns{
+                accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
@@ -137,19 +151,19 @@ ro{
                         other{"000 mld'.'"}
                     }
                     1000000000000{
-                        few{"0 T"}
-                        one{"0 T"}
-                        other{"0 T"}
+                        few{"0 tril'.'"}
+                        one{"0 tril'.'"}
+                        other{"0 tril'.'"}
                     }
                     10000000000000{
-                        few{"00 T"}
-                        one{"00 T"}
-                        other{"00 T"}
+                        few{"00 tril'.'"}
+                        one{"00 tril'.'"}
+                        other{"00 tril'.'"}
                     }
                     100000000000000{
-                        few{"000 T"}
-                        one{"000 T"}
-                        other{"000 T"}
+                        few{"000 tril'.'"}
+                        one{"000 tril'.'"}
+                        other{"000 tril'.'"}
                     }
                 }
             }
@@ -164,31 +178,13 @@ ro{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     calendar{
         buddhist{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d MMMM, y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "d/M/yyyy",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            availableFormats{
-                MMMEd{"E d MMM"}
-                MMMd{"d MMM"}
-            }
             eras{
                 abbreviated{
                     "e.b.",
@@ -262,20 +258,16 @@ ro{
                 }
             }
         }
-        gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
+        generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, d MMMM y",
-                "d MMMM y",
-                "dd.MM.yyyy",
-                "dd.MM.yyyy",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "dd.MM.y G",
+                "dd.MM.y GGGGG",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -284,6 +276,166 @@ ro{
             }
             availableFormats{
                 Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, dd.MM"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E, d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"dd.MM"}
+                d{"d"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yyyy{"y G"}
+                yyyyM{"MM.y G"}
+                yyyyMEd{"E, dd.MM.y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"dd.MM.y G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH-HH"}
+                }
+                Hm{
+                    H{"HH:mm-HH:mm"}
+                    m{"HH:mm-HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm-HH:mm v"}
+                    m{"HH:mm-HH:mm v"}
+                }
+                Hv{
+                    H{"HH-HH v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, dd.MM - E, dd.MM"}
+                    d{"E, dd.MM - E, dd.MM"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM - E, d MMM"}
+                    d{"E, d MMM - E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"dd.MM - dd.MM"}
+                    d{"dd.MM - dd.MM"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"h a - h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    a{"h:mm a - h:mm a"}
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a - h:mm a v"}
+                    h{"h:mm-h:mm a v"}
+                    m{"h:mm-h:mm a v"}
+                }
+                hv{
+                    a{"h a - h a v"}
+                    h{"h-h a v"}
+                }
+                y{
+                    y{"y-y G"}
+                }
+                yM{
+                    M{"MM.y - MM.y G"}
+                    y{"MM.y - MM.y G"}
+                }
+                yMEd{
+                    M{"E, dd.MM.y - E, dd.MM.y G"}
+                    d{"E, dd.MM.y - E, dd.MM.y G"}
+                    y{"E, dd.MM.y - E, dd.MM.y G"}
+                }
+                yMMM{
+                    M{"MMM-MMM y G"}
+                    y{"MMM y - MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM y G"}
+                    d{"E, d MMM - E, d MMM y G"}
+                    y{"E, d MMM y - E, d MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM-MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM - d MMM y G"}
+                    d{"d-d MMM y G"}
+                    y{"d MMM y - d MMM y G"}
+                }
+                yMd{
+                    M{"dd.MM.y - dd.MM.y G"}
+                    d{"dd.MM.y - dd.MM.y G"}
+                    y{"dd.MM.y - dd.MM.y G"}
+                }
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd.MM.y",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
+            availableFormats{
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
+                Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -297,34 +449,32 @@ ro{
                 MMdd{"dd.MM"}
                 Md{"dd.MM"}
                 d{"d"}
+                h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"MM.yyyy"}
-                yMEd{"E, dd.MM.yyyy"}
+                yM{"MM.y"}
+                yMEd{"E, dd.MM.y"}
+                yMM{"MM.y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
-                yMd{"dd.MM.yyyy"}
+                yMd{"dd.MM.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yyMM{"MM.yy"}
-                yyMMM{"MMM yy"}
-                yyyyMM{"MM.yyyy"}
-                yyyyMMMM{"MMMM y"}
             }
             dayNames{
                 format{
                     abbreviated{
-                        "Du",
-                        "Lu",
-                        "Ma",
-                        "Mi",
-                        "Jo",
-                        "Vi",
-                        "Sâ",
+                        "Dum",
+                        "Lun",
+                        "Mar",
+                        "Mie",
+                        "Joi",
+                        "Vin",
+                        "Sâm",
                     }
                     narrow{
                         "D",
@@ -356,13 +506,13 @@ ro{
                 }
                 stand-alone{
                     abbreviated{
-                        "Du",
-                        "Lu",
-                        "Ma",
-                        "Mi",
-                        "Jo",
-                        "Vi",
-                        "Sâ",
+                        "Dum",
+                        "Lun",
+                        "Mar",
+                        "Mie",
+                        "Joi",
+                        "Vin",
+                        "Sâm",
                     }
                     narrow{
                         "D",
@@ -401,63 +551,6 @@ ro{
                 wide{
                     "înainte de Hristos",
                     "după Hristos",
-                }
-            }
-            fields{
-                day{
-                    dn{"zi"}
-                    relative{
-                        "-1"{"ieri"}
-                        "-2"{"alaltăieri"}
-                        "0"{"azi"}
-                        "1"{"mâine"}
-                        "2"{"poimâine"}
-                    }
-                }
-                dayperiod{
-                    dn{"perioada zilei"}
-                }
-                era{
-                    dn{"eră"}
-                }
-                hour{
-                    dn{"oră"}
-                }
-                minute{
-                    dn{"minut"}
-                }
-                month{
-                    dn{"lună"}
-                    relative{
-                        "-1"{"Luna trecută"}
-                        "0"{"Luna aceasta"}
-                        "1"{"Luna viitoare"}
-                    }
-                }
-                second{
-                    dn{"secundă"}
-                }
-                week{
-                    dn{"săptămână"}
-                    relative{
-                        "-1"{"Săptămâna trecută"}
-                        "0"{"Săptămâna aceasta"}
-                        "1"{"Săptămâna viitoare"}
-                    }
-                }
-                weekday{
-                    dn{"zi a săptămânii"}
-                }
-                year{
-                    dn{"an"}
-                    relative{
-                        "-1"{"Anul trecut"}
-                        "0"{"Anul acesta"}
-                        "1"{"Anul viitor"}
-                    }
-                }
-                zone{
-                    dn{"zonă"}
                 }
             }
             intervalFormats{
@@ -523,13 +616,13 @@ ro{
                     y{"y-y"}
                 }
                 yM{
-                    M{"MM.yyyy - MM.yyyy"}
-                    y{"MM.yyyy - MM.yyyy"}
+                    M{"MM.y - MM.y"}
+                    y{"MM.y - MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.yyyy - E, dd.MM.yyyy"}
-                    d{"E, dd.MM.yyyy - E, dd.MM.yyyy"}
-                    y{"E, dd.MM.yyyy - E, dd.MM.yyyy"}
+                    M{"E, dd.MM.y - E, dd.MM.y"}
+                    d{"E, dd.MM.y - E, dd.MM.y"}
+                    y{"E, dd.MM.y - E, dd.MM.y"}
                 }
                 yMMM{
                     M{"MMM-MMM y"}
@@ -541,7 +634,7 @@ ro{
                     y{"E, d MMM y - E, d MMM y"}
                 }
                 yMMMM{
-                    M{"MMMM-MMMM y"}
+                    M{"MMMM - MMMM y"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
@@ -550,9 +643,9 @@ ro{
                     y{"d MMM y - d MMM y"}
                 }
                 yMd{
-                    M{"dd.MM.yyyy - dd.MM.yyyy"}
-                    d{"dd.MM.yyyy - dd.MM.yyyy"}
-                    y{"dd.MM.yyyy - dd.MM.yyyy"}
+                    M{"dd.MM.y - dd.MM.y"}
+                    d{"dd.MM.y - dd.MM.y"}
+                    y{"dd.MM.y - dd.MM.y"}
                 }
             }
             monthNames{
@@ -657,7 +750,7 @@ ro{
                         "1",
                         "2",
                         "3",
-                        "T4",
+                        "4",
                     }
                     wide{
                         "trimestrul I",
@@ -674,10 +767,10 @@ ro{
                         "T4",
                     }
                     narrow{
-                        "T1",
-                        "T2",
-                        "T3",
-                        "T4",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "trimestrul I",
@@ -761,8 +854,10 @@ ro{
             }
         }
         islamic{
-            availableFormats{
-                yMEd{"E, dd.MM.yyyy"}
+            eras{
+                abbreviated{
+                    "AH",
+                }
             }
         }
     }
@@ -772,10 +867,226 @@ ro{
         quotationEnd{"”"}
         quotationStart{"„"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"zi"}
+            relative{
+                "-1"{"ieri"}
+                "-2"{"alaltăieri"}
+                "0"{"azi"}
+                "1"{"mâine"}
+                "2"{"poimâine"}
+            }
+            relativeTime{
+                future{
+                    few{"Peste {0} zile"}
+                    one{"Peste {0} zi"}
+                    other{"Peste {0} de zile"}
+                }
+                past{
+                    few{"Acum {0} zile"}
+                    one{"Acum {0} zi"}
+                    other{"Acum {0} de zile"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"a.m./p.m"}
+        }
+        era{
+            dn{"eră"}
+        }
+        fri{
+            relative{
+                "-1"{"vinerea trecută"}
+                "0"{"vinerea aceasta"}
+                "1"{"vinerea viitoare"}
+            }
+        }
+        hour{
+            dn{"oră"}
+            relativeTime{
+                future{
+                    few{"Peste {0} ore"}
+                    one{"Peste {0} oră"}
+                    other{"Peste {0} de ore"}
+                }
+                past{
+                    few{"Acum {0} ore"}
+                    one{"Acum {0} oră"}
+                    other{"Acum {0} de ore"}
+                }
+            }
+        }
+        minute{
+            dn{"minut"}
+            relativeTime{
+                future{
+                    few{"Peste {0} minute"}
+                    one{"Peste {0} minut"}
+                    other{"Peste {0} de minute"}
+                }
+                past{
+                    few{"Acum {0} minute"}
+                    one{"Acum {0} minut"}
+                    other{"Acum {0} de minute"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"lunea trecută"}
+                "0"{"lunea aceasta"}
+                "1"{"lunea viitoare"}
+            }
+        }
+        month{
+            dn{"lună"}
+            relative{
+                "-1"{"luna trecută"}
+                "0"{"luna aceasta"}
+                "1"{"luna viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"Peste {0} luni"}
+                    one{"Peste {0} lună"}
+                    other{"Peste {0} de luni"}
+                }
+                past{
+                    few{"Acum {0} luni"}
+                    one{"Acum {0} lună"}
+                    other{"Acum {0} de luni"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"sâmbăta trecută"}
+                "0"{"sâmbăta aceasta"}
+                "1"{"sâmbăta viitoare"}
+            }
+        }
+        second{
+            dn{"secundă"}
+            relative{
+                "0"{"acum"}
+            }
+            relativeTime{
+                future{
+                    few{"Peste {0} secunde"}
+                    one{"Peste {0} secundă"}
+                    other{"Peste {0} de secunde"}
+                }
+                past{
+                    few{"Acum {0} secunde"}
+                    one{"Acum {0} secundă"}
+                    other{"Acum {0} de secunde"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"duminica trecută"}
+                "0"{"duminica aceasta"}
+                "1"{"duminica viitoare"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"joia trecută"}
+                "0"{"joia aceasta"}
+                "1"{"joia viitoare"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"marțea trecută"}
+                "0"{"marțea aceasta"}
+                "1"{"marțea viitoare"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"miercurea trecută"}
+                "0"{"miercurea aceasta"}
+                "1"{"miercurea viitoare"}
+            }
+        }
+        week{
+            dn{"săptămână"}
+            relative{
+                "-1"{"săptămâna trecută"}
+                "0"{"săptămâna aceasta"}
+                "1"{"săptămâna viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"Peste {0} săptămâni"}
+                    one{"Peste {0} săptămână"}
+                    other{"Peste {0} de săptămâni"}
+                }
+                past{
+                    few{"Acum {0} săptămâni"}
+                    one{"Acum {0} săptămână"}
+                    other{"Acum {0} de săptămâni"}
+                }
+            }
+        }
+        weekday{
+            dn{"zi a săptămânii"}
+        }
+        year{
+            dn{"an"}
+            relative{
+                "-1"{"anul trecut"}
+                "0"{"anul acesta"}
+                "1"{"anul viitor"}
+            }
+            relativeTime{
+                future{
+                    few{"Peste {0} ani"}
+                    one{"Peste {0} an"}
+                    other{"Peste {0} de ani"}
+                }
+                past{
+                    few{"Acum {0} ani"}
+                    one{"Acum {0} an"}
+                    other{"Acum {0} de ani"}
+                }
+            }
+        }
+        zone{
+            dn{"fus orar"}
+        }
+    }
     listPattern{
         standard{
-            2{"{0} şi {1}"}
-            end{"{0} şi {1}"}
+            2{"{0} și {1}"}
+            end{"{0} și {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} și {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -785,148 +1096,787 @@ ro{
         US{"american"}
         metric{"metric"}
     }
+    transformNames{
+        BGN{"BGN"}
+        Numeric{"Numeric"}
+        Tone{"Ton"}
+        UNGEGN{"UNGEGN"}
+        x-Accents{"Accente"}
+        x-Fullwidth{"Cu lățime întreagă"}
+        x-Halfwidth{"Cu jumătate de lățime"}
+        x-Jamo{"Jamo"}
+        x-Pinyin{"Pinyin"}
+        x-Publishing{"Publicare"}
+    }
     units{
-        day{
-            few{"{0} zile"}
-            one{"{0} zi"}
-            other{"{0} de zile"}
+        acceleration{
+            g-force{
+                few{"{0} forță g"}
+                one{"{0} forță g"}
+                other{"{0} forță g"}
+            }
         }
-        day-future{
-            few{"În {0} zile"}
-            one{"În {0} zi"}
-            other{"În {0} de zile"}
+        angle{
+            arc-minute{
+                few{"{0} minute"}
+                one{"{0} minut"}
+                other{"{0} de minute"}
+            }
+            arc-second{
+                few{"{0} secunde"}
+                one{"{0} secundă"}
+                other{"{0} de secunde"}
+            }
+            degree{
+                few{"{0} grade"}
+                one{"{0} grad"}
+                other{"{0} de grade"}
+            }
         }
-        day-past{
-            few{"Acum {0} zile"}
-            one{"În urmă cu {0} zi"}
-            other{"Acum {0} de zile"}
+        area{
+            acre{
+                few{"{0} acri"}
+                one{"{0} acru"}
+                other{"{0} de acri"}
+            }
+            hectare{
+                few{"{0} hectare"}
+                one{"{0} hectar"}
+                other{"{0} de hectare"}
+            }
+            square-foot{
+                few{"{0} picioare pătrate"}
+                one{"{0} picior pătrat"}
+                other{"{0} picioare pătrate"}
+            }
+            square-kilometer{
+                few{"{0} kilometri pătrați"}
+                one{"{0} kilometru pătrat"}
+                other{"{0} de kilometri pătrați"}
+            }
+            square-meter{
+                few{"{0} metri pătrați"}
+                one{"{0} metru pătrat"}
+                other{"{0} de metri pătrați"}
+            }
+            square-mile{
+                few{"{0} mile pătrate"}
+                one{"{0} milă pătrată"}
+                other{"{0} de mile pătrate"}
+            }
         }
-        hour{
-            few{"{0} ore"}
-            one{"{0} oră"}
-            other{"{0} de ore"}
+        compound{
+            per{"{0} pe {1}"}
         }
-        hour-future{
-            few{"În {0} ore"}
-            one{"În {0} oră"}
-            other{"În {0} de ore"}
+        duration{
+            day{
+                few{"{0} zile"}
+                one{"{0} zi"}
+                other{"{0} de zile"}
+            }
+            hour{
+                few{"{0} ore"}
+                one{"{0} oră"}
+                other{"{0} de ore"}
+            }
+            millisecond{
+                few{"{0} milisecunde"}
+                one{"{0} milisecundă"}
+                other{"{0} de milisecunde"}
+            }
+            minute{
+                few{"{0} minute"}
+                one{"{0} minut"}
+                other{"{0} de minute"}
+            }
+            month{
+                few{"{0} luni"}
+                one{"{0} lună"}
+                other{"{0} de luni"}
+            }
+            second{
+                few{"{0} secunde"}
+                one{"{0} secundă"}
+                other{"{0} de secunde"}
+            }
+            week{
+                few{"{0} săptămâni"}
+                one{"{0} săptămână"}
+                other{"{0} de săptămâni"}
+            }
+            year{
+                few{"{0} ani"}
+                one{"{0} an"}
+                other{"{0} de ani"}
+            }
         }
-        hour-past{
-            few{"Acum {0} ore"}
-            one{"În urmă cu {0} oră"}
-            other{"Acum {0} de ore"}
+        length{
+            centimeter{
+                few{"{0} centimetri"}
+                one{"{0} centimetru"}
+                other{"{0} de centimetri"}
+            }
+            foot{
+                few{"{0} picioare"}
+                one{"{0} picior"}
+                other{"{0} de picioare"}
+            }
+            inch{
+                few{"{0} inchi"}
+                one{"{0} inch"}
+                other{"{0} de inchi"}
+            }
+            kilometer{
+                few{"{0} kilometri"}
+                one{"{0} kilometru"}
+                other{"{0} de kilometri"}
+            }
+            light-year{
+                few{"{0} ani lumină"}
+                one{"{0} an lumină"}
+                other{"{0} de ani lumină"}
+            }
+            meter{
+                few{"{0} metri"}
+                one{"{0} metru"}
+                other{"{0} de metri"}
+            }
+            mile{
+                few{"{0} mile"}
+                one{"{0} milă"}
+                other{"{0} de mile"}
+            }
+            millimeter{
+                few{"{0} milimetri"}
+                one{"{0} milimetru"}
+                other{"{0} de milimetri"}
+            }
+            picometer{
+                few{"{0} picometri"}
+                one{"{0} picometru"}
+                other{"{0} de picometri"}
+            }
+            yard{
+                few{"{0} iarzi"}
+                one{"{0} iard"}
+                other{"{0} de iarzi"}
+            }
         }
-        minute{
-            few{"{0} minute"}
-            one{"{0} minut"}
-            other{"{0} de minute"}
+        mass{
+            gram{
+                few{"{0} grame"}
+                one{"{0} gram"}
+                other{"{0} de grame"}
+            }
+            kilogram{
+                few{"{0} kilograme"}
+                one{"{0} kilogram"}
+                other{"{0} de kilograme"}
+            }
+            ounce{
+                few{"{0} uncii"}
+                one{"{0} uncie"}
+                other{"{0} de uncii"}
+            }
+            pound{
+                few{"{0} livre"}
+                one{"{0} livră"}
+                other{"{0} de livre"}
+            }
         }
-        minute-future{
-            few{"În {0} minute"}
-            one{"În {0} minut"}
-            other{"În {0} de minute"}
+        power{
+            horsepower{
+                few{"{0} cai putere"}
+                one{"{0} cal putere"}
+                other{"{0} de cai putere"}
+            }
+            kilowatt{
+                few{"{0} kilowați"}
+                one{"{0} kilowatt"}
+                other{"{0} de kilowați"}
+            }
+            watt{
+                few{"{0} wați"}
+                one{"{0} watt"}
+                other{"{0} de wați"}
+            }
         }
-        minute-past{
-            few{"Acum {0} minute"}
-            one{"În urmă cu {0} minut"}
-            other{"Acum {0} de minute"}
+        pressure{
+            hectopascal{
+                few{"{0} hectopascali"}
+                one{"{0} hectopascal"}
+                other{"{0} de hectopascali"}
+            }
+            inch-hg{
+                few{"{0} inchi coloană de mercur"}
+                one{"{0} inch coloană de mercur"}
+                other{"{0} de inchi coloană de mercur"}
+            }
+            millibar{
+                few{"{0} milibari"}
+                one{"{0} milibar"}
+                other{"{0} de milibari"}
+            }
         }
-        month{
-            few{"{0} luni"}
-            one{"{0} lună"}
-            other{"{0} de luni"}
+        speed{
+            kilometer-per-hour{
+                few{"{0} kilometri pe oră"}
+                one{"{0} kilometru pe oră"}
+                other{"{0} de kilometri pe oră"}
+            }
+            meter-per-second{
+                few{"{0} metri pe secundă"}
+                one{"{0} metru pe secundă"}
+                other{"{0} de metri pe secundă"}
+            }
+            mile-per-hour{
+                few{"{0} mile pe oră"}
+                one{"{0} milă pe oră"}
+                other{"{0} de mile pe oră"}
+            }
         }
-        month-future{
-            few{"În {0} luni"}
-            one{"În {0} lună"}
-            other{"În {0} de luni"}
+        temperature{
+            celsius{
+                few{"{0} grade Celsius"}
+                one{"{0} grad Celsius"}
+                other{"{0} de grade Celsius"}
+            }
+            fahrenheit{
+                few{"{0} grade Fahrenheit"}
+                one{"{0} grad Fahrenheit"}
+                other{"{0} de grade Fahrenheit"}
+            }
         }
-        month-past{
-            few{"Acum {0} luni"}
-            one{"În urmă cu {0} lună"}
-            other{"Acum {0} de luni"}
+        volume{
+            cubic-kilometer{
+                few{"{0} kilometri cubi"}
+                one{"{0} kilometru cub"}
+                other{"{0} de kilometri cubi"}
+            }
+            cubic-mile{
+                few{"{0} mile cubice"}
+                one{"{0} milă cubică"}
+                other{"{0} de mile cubice"}
+            }
+            liter{
+                few{"{0} litri"}
+                one{"{0} litru"}
+                other{"{0} de litri"}
+            }
         }
-        second{
-            few{"{0} secunde"}
-            one{"{0} secundă"}
-            other{"{0} de secunde"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                few{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+            }
         }
-        second-future{
-            few{"În {0} secunde"}
-            one{"În {0} secundă"}
-            other{"În {0} de secunde"}
+        angle{
+            arc-minute{
+                few{"{0}′"}
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                few{"{0}″"}
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+            degree{
+                few{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
         }
-        second-past{
-            few{"Acum {0} secunde"}
-            one{"În urmă cu {0} secundă"}
-            other{"Acum {0} de secunde"}
+        area{
+            acre{
+                few{"{0} ac."}
+                one{"{0} ac."}
+                other{"{0} ac."}
+            }
+            hectare{
+                few{"{0} ha"}
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-foot{
+                few{"{0} ft²"}
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-kilometer{
+                few{"{0} km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+            }
+            square-meter{
+                few{"{0} m²"}
+                one{"{0} m²"}
+                other{"{0} m²"}
+            }
+            square-mile{
+                few{"{0} mi²"}
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+            }
         }
-        week{
-            few{"{0} săptămâni"}
-            one{"{0} săptămână"}
-            other{"{0} de săptămâni"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            few{"În {0} săptămâni"}
-            one{"În {0} săptămână"}
-            other{"În {0} de săptămâni"}
+        duration{
+            day{
+                few{"{0} z"}
+                one{"{0} z"}
+                other{"{0} z"}
+            }
+            hour{
+                few{"{0} h"}
+                one{"{0} h"}
+                other{"{0} h"}
+            }
+            millisecond{
+                few{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                few{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            month{
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+            }
+            second{
+                few{"{0} s"}
+                one{"{0} s"}
+                other{"{0} s"}
+            }
+            week{
+                few{"{0} săpt."}
+                one{"{0} săpt."}
+                other{"{0} săpt."}
+            }
+            year{
+                few{"{0} a"}
+                one{"{0} a"}
+                other{"{0} a"}
+            }
         }
-        week-past{
-            few{"Acum {0} săptămâni"}
-            one{"În urmă cu {0} săptămână"}
-            other{"Acum {0} de săptămâni"}
+        length{
+            centimeter{
+                few{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+            }
+            foot{
+                few{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+            }
+            inch{
+                few{"{0} in"}
+                one{"{0} in"}
+                other{"{0} in"}
+            }
+            kilometer{
+                few{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
+            light-year{
+                few{"{0} a.l."}
+                one{"{0} a.l."}
+                other{"{0} a.l."}
+            }
+            meter{
+                few{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            mile{
+                few{"{0} mi"}
+                one{"{0} mi"}
+                other{"{0} mi"}
+            }
+            millimeter{
+                few{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+            picometer{
+                few{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
+            }
+            yard{
+                few{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
         }
-        year{
-            few{"{0} ani"}
-            one{"{0} an"}
-            other{"{0} de ani"}
+        mass{
+            gram{
+                few{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
+            }
+            kilogram{
+                few{"{0} kg"}
+                one{"{0} kg"}
+                other{"{0} kg"}
+            }
+            ounce{
+                few{"{0} oz"}
+                one{"{0} oz"}
+                other{"{0} oz"}
+            }
+            pound{
+                few{"{0} lb"}
+                one{"{0} lb"}
+                other{"{0} lb"}
+            }
         }
-        year-future{
-            few{"În {0} ani"}
-            one{"În {0} an"}
-            other{"În {0} de ani"}
+        power{
+            horsepower{
+                few{"{0} CP"}
+                one{"{0} CP"}
+                other{"{0} CP"}
+            }
+            kilowatt{
+                few{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+            }
+            watt{
+                few{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
+            }
         }
-        year-past{
-            few{"Acum {0} ani"}
-            one{"În urmă cu {0} an"}
-            other{"Acum {0} de ani"}
+        pressure{
+            hectopascal{
+                few{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                few{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+            millibar{
+                few{"{0} mb"}
+                one{"{0} mb"}
+                other{"{0} mb"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                few{"{0} km/h"}
+                one{"{0} km/h"}
+                other{"{0} km/h"}
+            }
+            meter-per-second{
+                few{"{0} m/s"}
+                one{"{0} m/s"}
+                other{"{0} m/s"}
+            }
+            mile-per-hour{
+                few{"{0} mi/h"}
+                one{"{0} mi/h"}
+                other{"{0} mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                few{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            fahrenheit{
+                few{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                few{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-mile{
+                few{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+            liter{
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+            }
         }
     }
     unitsShort{
-        day{
-            few{"{0} zile"}
-            one{"{0} zi"}
-            other{"{0} zile"}
+        acceleration{
+            g-force{
+                few{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+            }
         }
-        hour{
-            few{"{0} ore"}
-            one{"{0} oră"}
-            other{"{0} ore"}
+        angle{
+            arc-minute{
+                few{"{0} min."}
+                one{"{0} min."}
+                other{"{0} min."}
+            }
+            arc-second{
+                few{"{0} sec."}
+                one{"{0} sec."}
+                other{"{0} sec."}
+            }
+            degree{
+                few{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
         }
-        minute{
-            few{"{0} min."}
-            one{"{0} min."}
-            other{"{0} min."}
+        area{
+            acre{
+                few{"{0} ac."}
+                one{"{0} ac."}
+                other{"{0} ac."}
+            }
+            hectare{
+                few{"{0} ha"}
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-foot{
+                few{"{0} ft²"}
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-kilometer{
+                few{"{0} km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+            }
+            square-meter{
+                few{"{0} m²"}
+                one{"{0} m²"}
+                other{"{0} m²"}
+            }
+            square-mile{
+                few{"{0} mi²"}
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+            }
         }
-        month{
-            few{"{0} luni"}
-            one{"{0} lună"}
-            other{"{0} luni"}
+        compound{
+            per{"{0}/{1}"}
         }
-        second{
-            few{"{0} sec."}
-            one{"{0} sec."}
-            other{"{0} sec."}
+        duration{
+            day{
+                few{"{0} zile"}
+                one{"{0} zi"}
+                other{"{0} zile"}
+            }
+            hour{
+                few{"{0} ore"}
+                one{"{0} oră"}
+                other{"{0} ore"}
+            }
+            millisecond{
+                few{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                few{"{0} min."}
+                one{"{0} min."}
+                other{"{0} min."}
+            }
+            month{
+                few{"{0} luni"}
+                one{"{0} lună"}
+                other{"{0} luni"}
+            }
+            second{
+                few{"{0} sec."}
+                one{"{0} sec."}
+                other{"{0} sec."}
+            }
+            week{
+                few{"{0} săpt."}
+                one{"{0} săpt."}
+                other{"{0} săpt."}
+            }
+            year{
+                few{"{0} ani"}
+                one{"{0} an"}
+                other{"{0} ani"}
+            }
         }
-        week{
-            few{"{0} săpt."}
-            one{"{0} săpt."}
-            other{"{0} săpt."}
+        length{
+            centimeter{
+                few{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+            }
+            foot{
+                few{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+            }
+            inch{
+                few{"{0} in"}
+                one{"{0} in"}
+                other{"{0} in"}
+            }
+            kilometer{
+                few{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
+            light-year{
+                few{"{0} a.l."}
+                one{"{0} a.l."}
+                other{"{0} a.l."}
+            }
+            meter{
+                few{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            mile{
+                few{"{0} mi"}
+                one{"{0} mi"}
+                other{"{0} mi"}
+            }
+            millimeter{
+                few{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+            picometer{
+                few{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
+            }
+            yard{
+                few{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
         }
-        year{
-            few{"{0} ani"}
-            one{"{0} an"}
-            other{"{0} ani"}
+        mass{
+            gram{
+                few{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
+            }
+            kilogram{
+                few{"{0} kg"}
+                one{"{0} kg"}
+                other{"{0} kg"}
+            }
+            ounce{
+                few{"{0} oz"}
+                one{"{0} oz"}
+                other{"{0} oz"}
+            }
+            pound{
+                few{"{0} lb"}
+                one{"{0} lb"}
+                other{"{0} lb"}
+            }
+        }
+        power{
+            horsepower{
+                few{"{0} CP"}
+                one{"{0} CP"}
+                other{"{0} CP"}
+            }
+            kilowatt{
+                few{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+            }
+            watt{
+                few{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
+            }
+        }
+        pressure{
+            hectopascal{
+                few{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                few{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+            millibar{
+                few{"{0} mb"}
+                one{"{0} mb"}
+                other{"{0} mb"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                few{"{0} km/h"}
+                one{"{0} km/h"}
+                other{"{0} km/h"}
+            }
+            meter-per-second{
+                few{"{0} m/s"}
+                one{"{0} m/s"}
+                other{"{0} m/s"}
+            }
+            mile-per-hour{
+                few{"{0} mi/h"}
+                one{"{0} mi/h"}
+                other{"{0} mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                few{"{0} °C"}
+                one{"{0} °C"}
+                other{"{0} °C"}
+            }
+            fahrenheit{
+                few{"{0} °F"}
+                one{"{0} °F"}
+                other{"{0} °F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                few{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-mile{
+                few{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+            liter{
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+            }
         }
     }
 }

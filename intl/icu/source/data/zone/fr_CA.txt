@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fr_CA.xml
 // *
 // ***************************************************************************
 fr_CA{
-    Version{"2.0.78.47"}
+    Version{"2.0.92.80"}
     zoneStrings{
         "Africa:Ndjamena"{
             ec{"Ndjamena"}
@@ -17,9 +17,6 @@ fr_CA{
         }
         "America:Cayman"{
             ec{"Îles Caïmans"}
-        }
-        "America:Godthab"{
-            ec{"Nuuk"}
         }
         "America:North_Dakota:New_Salem"{
             ec{"New Salem, Dakota du Nord"}
@@ -67,11 +64,17 @@ fr_CA{
             ec{"Uvéa"}
         }
         "meta:America_Central"{
+            ld{"heure avancée du Centre"}
+            lg{"heure du Centre"}
+            ls{"heure normale du Centre"}
             sd{"HAC"}
             sg{"HC"}
             ss{"HNC"}
         }
         "meta:America_Eastern"{
+            ld{"heure avancée de l’Est"}
+            lg{"heure de l’Est"}
+            ls{"heure normale de l’Est"}
             sd{"HAE"}
             sg{"HE"}
             ss{"HNE"}
@@ -82,19 +85,29 @@ fr_CA{
             ss{"HNR"}
         }
         "meta:America_Pacific"{
+            ld{"heure avancée du Pacifique"}
+            lg{"heure du Pacifique"}
+            ls{"heure normale du Pacifique"}
             sd{"HAP"}
             sg{"HP"}
             ss{"HNP"}
         }
-        "meta:Indonesia_Eastern"{
-            ls{"heure de l’Est indonésien"}
+        "meta:Ecuador"{
+            ls{"heure normale d’Équateur"}
+        }
+        "meta:French_Guiana"{
+            ls{"heure de Guyane française"}
         }
         "meta:Newfoundland"{
             sd{"HAT"}
             sg{"HT"}
             ss{"HNT"}
         }
-        fallbackRegionFormat{"Heure de {1} ({0})"}
+        "meta:Uruguay"{
+            ld{"heure avancée de l'Uruguay"}
+            lg{"heure de l'Uruguay"}
+            ls{"heure normale de l'Uruguay"}
+        }
         regionFormat{"Heure de {0}"}
     }
 }
