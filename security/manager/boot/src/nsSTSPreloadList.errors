@@ -4,6 +4,7 @@ api.recurly.com: did not receive HSTS header
 api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header (error ignored - included regardless)
 appengine.google.com: did not receive HSTS header (error ignored - included regardless)
+bassh.net: did not receive HSTS header
 bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
@@ -55,7 +56,6 @@ jottit.com: did not receive HSTS header
 kiwiirc.com: max-age too low: 5256000
 ledgerscope.net: did not receive HSTS header
 liberty.lavabit.com: could not connect to host
-lifeguard.aecom.com: max-age too low: 3600
 lists.mayfirst.org: did not receive HSTS header
 lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -102,6 +102,7 @@ talkgadget.google.com: did not receive HSTS header (error ignored - included reg
 translate.googleapis.com: did not receive HSTS header (error ignored - included regardless)
 uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
+webmail.mayfirst.org: did not receive HSTS header
 whonix.org: did not receive HSTS header
 www.cueup.com: did not receive HSTS header
 www.developer.mydigipass.com: could not connect to host
