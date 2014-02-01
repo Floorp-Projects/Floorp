@@ -1118,7 +1118,7 @@ pref("devtools.debugger.pause-on-exceptions", false);
 pref("devtools.debugger.ignore-caught-exceptions", true);
 pref("devtools.debugger.source-maps-enabled", true);
 pref("devtools.debugger.pretty-print-enabled", true);
-pref("devtools.debugger.auto-pretty-print", true);
+pref("devtools.debugger.auto-pretty-print", false);
 pref("devtools.debugger.tracer", false);
 
 // The default Debugger UI settings

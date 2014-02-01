@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- Copyright (c) 2010-2012 International Business Machines Corporation and others. All rights reserved.
+ Copyright (c) 2010-2013 International Business Machines Corporation and others. All rights reserved.
 -->
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
 [
@@ -25,6 +25,7 @@
             </icu:boundaries>
             <icu:dictionaries>
                 <icu:dictionary type="Thai" icu:dependency="thaidict.dict"/>
+                <icu:dictionary type="Laoo" icu:dependency="laodict.dict"/>
                 <icu:dictionary type="Khmr" icu:dependency="khmerdict.dict"/>
                 <icu:dictionary type="Hani" icu:dependency="cjdict.dict"/>
                 <icu:dictionary type="Hira" icu:dependency="cjdict.dict"/>

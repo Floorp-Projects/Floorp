@@ -321,7 +321,21 @@ private:
     off_t        mOff;
 };
 
-#ifdef MOZ_OTS_REPORT_ERRORS
+static ots::TableAction
+OTSTableAction(uint32_t aTag, void *aUserData)
+{
+    // preserve Graphite and SVG tables
+    if (aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
+        aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
+        aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
+        aTag == TRUETYPE_TAG('G', 'l', 'a', 't') ||
+        aTag == TRUETYPE_TAG('F', 'e', 'a', 't') ||
+        aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
+        return ots::TABLE_ACTION_PASSTHRU;
+    }
+    return ots::TABLE_ACTION_DEFAULT;
+}
+
 struct OTSCallbackUserData {
     gfxUserFontSet     *mFontSet;
     gfxMixedFontFamily *mFamily;
@@ -346,7 +360,6 @@ gfxUserFontSet::OTSMessage(void *aUserData, const char *format, ...)
 
     return false;
 }
-#endif
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
@@ -360,19 +373,15 @@ gfxUserFontSet::SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
     ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
                                  1024 * 1024 * 256);
 
-#ifdef MOZ_OTS_REPORT_ERRORS
     OTSCallbackUserData userData;
     userData.mFontSet = this;
     userData.mFamily = aFamily;
     userData.mProxy = aProxy;
-#define ERROR_REPORTING_ARGS &gfxUserFontSet::OTSMessage, &userData,
-#else
-#define ERROR_REPORTING_ARGS
-#endif
 
-    if (ots::Process(&output, aData, aLength,
-                     ERROR_REPORTING_ARGS
-                     true)) {
+    ots::SetTableActionCallback(&OTSTableAction, nullptr);
+    ots::SetMessageCallback(&gfxUserFontSet::OTSMessage, &userData);
+
+    if (ots::Process(&output, aData, aLength)) {
         aSaneLength = output.Tell();
         return static_cast<uint8_t*>(output.forget());
     } else {

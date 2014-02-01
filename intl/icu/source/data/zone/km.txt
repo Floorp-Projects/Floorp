@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/km.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/km.xml
+ * ICU <specials> source: <path>/common/main/km.xml
  */
 km{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"អាប៊ីដ្យាន"}
@@ -76,7 +76,7 @@ km{
             ec{"អែល​អ៊ុយញៀន"}
         }
         "Africa:Freetown"{
-            ec{"ហ៊្វ្រីថោន"}
+            ec{"ហ្វ្រីថោន"}
         }
         "Africa:Gaborone"{
             ec{"ហ្គាបូរ៉ូន"}
@@ -86,6 +86,9 @@ km{
         }
         "Africa:Johannesburg"{
             ec{"ជូហានណេប៊ឺហ្គ"}
+        }
+        "Africa:Juba"{
+            ec{"ជូបា"}
         }
         "Africa:Kampala"{
             ec{"កំប៉ាឡា"}
@@ -210,6 +213,9 @@ km{
         "America:Bahia"{
             ec{"បាហៀ"}
         }
+        "America:Bahia_Banderas"{
+            ec{"បាហៀបង់ដេរ៉ាស"}
+        }
         "America:Barbados"{
             ec{"បាបាដុស"}
         }
@@ -269,6 +275,9 @@ km{
         }
         "America:Costa_Rica"{
             ec{"កូស្តារីកា"}
+        }
+        "America:Creston"{
+            ec{"ក្រេស្តុន"}
         }
         "America:Cuiaba"{
             ec{"គុយអាបា"}
@@ -384,6 +393,9 @@ km{
         "America:Kentucky:Monticello"{
             ec{"ម៉ងទីសេឡូ កេនទូគី"}
         }
+        "America:Kralendijk"{
+            ec{"ក្រាលែនឌីក"}
+        }
         "America:La_Paz"{
             ec{"ឡាប៉ាស"}
         }
@@ -414,6 +426,9 @@ km{
         "America:Martinique"{
             ec{"ម៉ាទីនីហ្គី"}
         }
+        "America:Matamoros"{
+            ec{"ម៉ាតាម៉ូរ៉ូស"}
+        }
         "America:Mazatlan"{
             ec{"ម៉ាហ្សាតឡង់"}
         }
@@ -425,6 +440,9 @@ km{
         }
         "America:Merida"{
             ec{"ម៉េរីដា"}
+        }
+        "America:Metlakatla"{
+            ec{"មេត្លា ឃែតឡា"}
         }
         "America:Mexico_City"{
             ec{"ម៉ិកស៊ីកូ​ស៊ីធី"}
@@ -471,6 +489,9 @@ km{
         "America:North_Dakota:New_Salem"{
             ec{"ញូ​សាឡឹម ដាកូតា​ខាង​ជើង"}
         }
+        "America:Ojinaga"{
+            ec{"អូជីណាហ្កា"}
+        }
         "America:Panama"{
             ec{"ប៉ាណាម៉ា"}
         }
@@ -484,7 +505,7 @@ km{
             ec{"ផូនីក"}
         }
         "America:Port-au-Prince"{
-            ec{"ព័រអូប៉្រាំង"}
+            ec{"ព័រអូប៉្រប៉ាំង"}
         }
         "America:Port_of_Spain"{
             ec{"ព័រអេស្ប៉ាញ"}
@@ -513,6 +534,9 @@ km{
         "America:Rio_Branco"{
             ec{"រ៉ៃអូប្រានកូ"}
         }
+        "America:Santa_Isabel"{
+            ec{"សាន់តាអ៊ីសាប៊ែល"}
+        }
         "America:Santarem"{
             ec{"សាន់តារឹម"}
         }
@@ -530,6 +554,9 @@ km{
         }
         "America:Shiprock"{
             ec{"ស្ស៊ីបរ៉ុក"}
+        }
+        "America:Sitka"{
+            ec{"ស៊ីតកា"}
         }
         "America:St_Barthelemy"{
             ec{"សាំង​បាធីលីម៉ី"}
@@ -593,6 +620,9 @@ km{
         }
         "Antarctica:DumontDUrville"{
             ec{"ឌុយម៉ុងដឺអ៊ុយវីល"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"ម៉ាកខ្វារី"}
         }
         "Antarctica:Mawson"{
             ec{"ម៉ៅសាន់"}
@@ -693,6 +723,9 @@ km{
         "Asia:Harbin"{
             ec{"ហាប៊ីន"}
         }
+        "Asia:Hebron"{
+            ec{"ហេវ័ន"}
+        }
         "Asia:Hong_Kong"{
             ec{"ហុងកុង"}
         }
@@ -726,6 +759,9 @@ km{
         "Asia:Katmandu"{
             ec{"កដ្ឋមណ្ឌូ"}
         }
+        "Asia:Khandyga"{
+            ec{"ខាន់ឌីហ្គា"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"ក្រាសនុយ៉ាក"}
         }
@@ -755,6 +791,9 @@ km{
         }
         "Asia:Nicosia"{
             ec{"នីកូស៊ី"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"ណូវ៉ូឃូសណេត"}
         }
         "Asia:Novosibirsk"{
             ec{"ណូវ៉ូស៊ីប៊ឺក"}
@@ -828,6 +867,9 @@ km{
         "Asia:Urumqi"{
             ec{"អ៊ូរាំហ្គី"}
         }
+        "Asia:Ust-Nera"{
+            ec{"អ៊ូសណេរ៉ា"}
+        }
         "Asia:Vientiane"{
             ec{"វៀងចន្ទន៍"}
         }
@@ -847,7 +889,7 @@ km{
             ec{"អាសូរ៉េស"}
         }
         "Atlantic:Bermuda"{
-            ec{"បាប៊ុយដា"}
+            ec{"ប៉ឺមុយដា"}
         }
         "Atlantic:Canary"{
             ec{"កាណារី"}
@@ -938,6 +980,9 @@ km{
         }
         "Europe:Budapest"{
             ec{"ប៊ុយដាប៉ែស"}
+        }
+        "Europe:Busingen"{
+            ec{"ប៊ូស៊ីងហ្គែន"}
         }
         "Europe:Chisinau"{
             ec{"ជីស៊ីណូ"}
@@ -1230,18 +1275,18 @@ km{
             ls{"ម៉ោង​នៅ​អាហ្វហ្គានីស្ថាន"}
         }
         "meta:Africa_Central"{
-            ls{"ម៉ោង​នៅ​អាព្រិក​កណ្ដាល"}
+            ls{"ម៉ោង​នៅ​អាហ្វ្រិក​កណ្ដាល"}
         }
         "meta:Africa_Eastern"{
-            ls{"ម៉ោង​នៅ​អាព្រិក​ខាង​កើត"}
+            ls{"ម៉ោង​នៅ​អាហ្វ្រិក​ខាង​កើត"}
         }
         "meta:Africa_Southern"{
-            ls{"ម៉ោង​នៅ​អាព្រិក​ខាង​ត្បូង"}
+            ls{"ម៉ោង​នៅ​អាហ្វ្រិក​ខាង​ត្បូង"}
         }
         "meta:Africa_Western"{
-            ld{"ម៉ោង​នៅ​អាព្រីក​​​ខាងលិច រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ​អាព្រិក​ខាង​លិច"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ​អាព្រិក​ខាង​លិច"}
+            ld{"ម៉ោង​​រដូវ​ក្ដៅ​នៅ​អាហ្វ្រិក​​​ខាងលិច"}
+            lg{"ម៉ោង​នៅ​អាហ្វ្រិក​ខាង​លិច"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​អាហ្វ្រិក​ខាង​លិច"}
         }
         "meta:Alaska"{
             ld{"ម៉ោង​ពេល​ថ្ងៃ​នៅ​​អាឡាស្កា"}
@@ -1348,7 +1393,7 @@ km{
             ls{"ម៉ោង​នៅ​ដារូសាឡឹម ប្រុយណេ"}
         }
         "meta:Cape_Verde"{
-            ld{"ម៉ោង​នៅ​កាប់វែរ រដូវ​ក្ដៅ"}
+            ld{"ម៉ោង​​រដូវ​ក្ដៅនៅ​កាប់វែរ"}
             lg{"ម៉ោង​នៅ​កាប់វែរ"}
             ls{"ម៉ោង​ស្តង់ដារ​នៅ​កាប់វែរ"}
         }
@@ -1444,6 +1489,9 @@ km{
         "meta:French_Southern"{
             ls{"ម៉ោង​នៅ​អែតាឃីត និង​បារាំខាង​ត្បូង"}
         }
+        "meta:GMT"{
+            ls{"ម៉ោងនៅគ្រីនវិច"}
+        }
         "meta:Galapagos"{
             ls{"ម៉ោង​នៅ​កាឡាប៉ាកូស"}
         }
@@ -1513,9 +1561,9 @@ km{
             ls{"ម៉ោង​ស្តង់ដារ​នៅ​អ៊ីរ៉ង់"}
         }
         "meta:Irkutsk"{
-            ld{"ម៉ោង​នៅ Irkutsk រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Irkutsk"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Irkutsk"}
+            ld{"ម៉ោង​នៅ​អ៊ីគុត​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​អ៊ីគុត"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​អ៊ីគុត"}
         }
         "meta:Israel"{
             ld{"ម៉ោង​ពេល​ថ្ងៃ​នៅ​អ៊ីស្រាអែល"}
@@ -1542,9 +1590,9 @@ km{
             ls{"ម៉ោង​នៅ​កូស្រៃ"}
         }
         "meta:Krasnoyarsk"{
-            ld{"ម៉ោង​នៅ Krasnoyarsk រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Krasnoyarsk"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Krasnoyarsk"}
+            ld{"ម៉ោង​នៅ​ក្រាណូយ៉ាស​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​ក្រាណូយ៉ាស"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​ក្រាណូយ៉ាស"}
         }
         "meta:Kyrgystan"{
             ls{"ម៉ោង​នៅ​ឃឺកីស្តង់"}
@@ -1561,9 +1609,9 @@ km{
             ls{"ម៉ោង​នៅ​កោះ​ម៉ាកគែរី"}
         }
         "meta:Magadan"{
-            ld{"ម៉ោង​នៅ Magadan រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Magadan"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Magadan"}
+            ld{"ម៉ោង​នៅ​ម៉ាហ្កាដាន​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​ម៉ាហ្កាដាន"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​ម៉ាហ្កាដាន"}
         }
         "meta:Malaysia"{
             ls{"ម៉ោង​នៅ​ម៉ាឡេស៊ី"}
@@ -1578,7 +1626,7 @@ km{
             ls{"ម៉ោង​នៅ​ម៉ាសាល"}
         }
         "meta:Mauritius"{
-            ld{"ម៉ោង​នៅ​ម៉ូរីស រដូវ​ក្ដៅ"}
+            ld{"ម៉ោង​​រដូវ​ក្ដៅនៅ​ម៉ូរីស"}
             lg{"ម៉ោង​នៅ​ម៉ូរីស"}
             ls{"ម៉ោង​ស្តង់ដារ​នៅ​ម៉ូរីស"}
         }
@@ -1631,14 +1679,14 @@ km{
             ls{"ម៉ោង​​ស្តង់ដារ​នៅ​ហ្វឺណាន់ដូ​ដឺណូរ៉ុនហា"}
         }
         "meta:Novosibirsk"{
-            ld{"ម៉ោង​នៅNovosibirsk រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Novosibirsk"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Novosibirsk"}
+            ld{"ម៉ោង​នៅ​ណូវ៉ូស៊ីប៊ីក​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​ណូវ៉ូស៊ីប៊ីក"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​ណូវ៉ូស៊ីប៊ីក"}
         }
         "meta:Omsk"{
-            ld{"ម៉ោង​នៅ Omsk រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Omsk"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Omsk"}
+            ld{"ម៉ោង​នៅ​អូម​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​អូម"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​អូម"}
         }
         "meta:Pakistan"{
             ld{"ម៉ោង​នៅ​ប៉ាគីស្ថាន រដូវ​ក្ដៅ"}
@@ -1687,12 +1735,14 @@ km{
             ls{"ម៉ោង​នៅ​រ៉ូធឺរ៉ា"}
         }
         "meta:Sakhalin"{
-            ld{"ម៉ោង​នៅ Sakhalin រដួវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Sakhalin"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Sakhalin"}
+            ld{"ម៉ោង​នៅ​សាក់ខាលីន​រដួវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​សាក់ខាលីន"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​សាក់ខាលីន"}
         }
         "meta:Samoa"{
-            ls{"ម៉ោង​នៅ​សាម៉ៅ"}
+            ld{"ម៉ោង​នៅ​សាម៉ៅ រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​សាម៉ៅ"}
+            ls{"ម៉ោង​ស្តង់ដារនៅ​សាម៉ៅ"}
         }
         "meta:Seychelles"{
             ls{"ម៉ោង​នៅ​សីស្ហែល"}
@@ -1761,14 +1811,14 @@ km{
             ls{"ម៉ោង​នៅ​វ៉េណេស៊ុយអេឡា"}
         }
         "meta:Vladivostok"{
-            ld{"ម៉ោង​នៅ Vladivostok រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Vladivostok"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Vladivostok"}
+            ld{"ម៉ោង​នៅ​វ៉្លាឌីវ៉ូស្តក​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​វ៉្លាឌីវ៉ូស្តក"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​វ៉្លាឌីវ៉ូស្តក"}
         }
         "meta:Volgograd"{
-            ld{"ម៉ោង​នៅ Volgograd រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Volgograd"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Volgograd"}
+            ld{"ម៉ោង​នៅ​វ៉ូហ្កាក្រាត​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​វ៉ូហ្កាក្រាត"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​វ៉ូហ្កាក្រាត"}
         }
         "meta:Vostok"{
             ls{"ម៉ោង​នៅ​វ័រស្តុក"}
@@ -1780,20 +1830,21 @@ km{
             ls{"ម៉ោង​នៅ​វ៉ាលីស និង​ផូទូណា"}
         }
         "meta:Yakutsk"{
-            ld{"ម៉ោង​នៅ Yakutsk រដូវ​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Yakutsk"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Yakutsk"}
+            ld{"ម៉ោង​នៅ​យ៉ាគុត​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​យ៉ាគុត"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​យ៉ាគុត"}
         }
         "meta:Yekaterinburg"{
-            ld{"ម៉ោង​នៅ Yekaterinburg រដួវ​​ក្ដៅ"}
-            lg{"ម៉ោង​នៅ Yekaterinburg"}
-            ls{"ម៉ោង​ស្តង់ដារ​នៅ Yekaterinburg"}
+            ld{"ម៉ោង​នៅ​អ៊ិខាធឺរីនប៊័ក​រដួវ​​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​អ៊ិខាធឺរីនប៊័ក"}
+            ls{"ម៉ោង​ស្តង់ដារ​នៅ​អ៊ិខាធឺរីនប៊័ក"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
+        gmtFormat{"ម៉ោង​សកល{0}"}
+        gmtZeroFormat{"ម៉ោង​សកល"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} ពេលវេលា"}
+        regionFormat{"ម៉ោង​នៅ​ {0}"}
+        regionFormatDaylight{"ម៉ោង​ពេល​ថ្ងៃ​នៅ​{0}"}
+        regionFormatStandard{"ម៉ោង​ស្តង់ដារ​នៅ​{0}"}
     }
 }

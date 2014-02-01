@@ -1,7 +1,7 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zh_Hans_HK.xml
 // *
@@ -10,11 +10,92 @@ zh_Hans_HK{
     NumberElements{
         latn{
             patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0千"}
+                    }
+                    10000{
+                        other{"0万"}
+                    }
+                    100000{
+                        other{"00万"}
+                    }
+                    1000000{
+                        other{"000万"}
+                    }
+                    10000000{
+                        other{"0000万"}
+                    }
+                    100000000{
+                        other{"0亿"}
+                    }
+                    1000000000{
+                        other{"00亿"}
+                    }
+                    10000000000{
+                        other{"000亿"}
+                    }
+                    100000000000{
+                        other{"0000亿"}
+                    }
+                    1000000000000{
+                        other{"0万亿"}
+                    }
+                    10000000000000{
+                        other{"00万亿"}
+                    }
+                    100000000000000{
+                        other{"000万亿"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        other{"0千"}
+                    }
+                    10000{
+                        other{"0万"}
+                    }
+                    100000{
+                        other{"00万"}
+                    }
+                    1000000{
+                        other{"000万"}
+                    }
+                    10000000{
+                        other{"0000万"}
+                    }
+                    100000000{
+                        other{"0亿"}
+                    }
+                    1000000000{
+                        other{"00亿"}
+                    }
+                    10000000000{
+                        other{"000亿"}
+                    }
+                    100000000000{
+                        other{"0000亿"}
+                    }
+                    1000000000000{
+                        other{"0万亿"}
+                    }
+                    10000000000000{
+                        other{"00万亿"}
+                    }
+                    100000000000000{
+                        other{"000万亿"}
+                    }
+                }
             }
         }
     }
-    Version{"2.0.78.47"}
+    Version{"2.0.92.87"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -26,14 +107,97 @@ zh_Hans_HK{
                 "Gy年M月d日",
                 "Gy年M月d日",
                 "Gd/M/yy",
-                "{1} {0}",
                 "{1}{0}",
                 "{1}{0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
             }
             availableFormats{
                 M{"L"}
+                MEd{"M/dE"}
+            }
+        }
+        chinese{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                {
+                    "U年MMMd日EEEE",
+                    "hanidec",
+                }
+                {
+                    "U年MMMd日",
+                    "hanidec",
+                }
+                {
+                    "U年MMMd日",
+                    "hanidec",
+                }
+                "U-M-d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+        generic{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "d/M/yyGGGGG",
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
+            }
+            availableFormats{
+                HHmm{"HH:mm"}
+                M{"L"}
+                MMM{"M月"}
+                MMMMdd{"M月d日"}
+                Md{"M-d"}
+            }
+            intervalFormats{
+                Hmv{
+                    H{"vHH:mm–HH:mm"}
+                    m{"vHH:mm–HH:mm"}
+                }
+                Hv{
+                    H{"vHH–HH"}
+                }
+                MMM{
+                    M{"M月至M月"}
+                }
+                fallback{"{0}–{1}"}
+                h{
+                    h{"ah至h时"}
+                }
+                yM{
+                    M{"y年M月至y年M月"}
+                }
+                yMEd{
+                    M{"d/M/yE至d/M/yE"}
+                    d{"d/M/yE至d/M/yE"}
+                    y{"d/M/yE至d/M/yE"}
+                }
+                yMMMEd{
+                    d{"y年M月d日E至M月d日E"}
+                }
+                yMd{
+                    M{"d/M/y至d/M/y"}
+                    d{"d/M/y至d/M/y"}
+                    y{"d/M/y至d/M/y"}
+                }
             }
         }
         gregorian{
@@ -59,11 +223,6 @@ zh_Hans_HK{
                 Md{"M-d"}
                 yM{"y年M月"}
             }
-            fields{
-                era{
-                    dn{"纪元"}
-                }
-            }
             intervalFormats{
                 Hmv{
                     H{"vHH:mm–HH:mm"}
@@ -77,20 +236,20 @@ zh_Hans_HK{
                     h{"ah至h时"}
                 }
                 yM{
-                    M{"yy年M月至yy年M月"}
+                    M{"y年M月至y年M月"}
                 }
                 yMEd{
-                    M{"d/M/yyE至d/M/yyE"}
-                    d{"d/M/yyE至d/M/yyE"}
-                    y{"d/M/yyE至d/M/yyE"}
+                    M{"d/M/yE至d/M/yE"}
+                    d{"d/M/yE至d/M/yE"}
+                    y{"d/M/yE至d/M/yE"}
                 }
                 yMMMEd{
                     d{"y年M月d日E至M月d日E"}
                 }
                 yMd{
-                    M{"d/M/yy至d/M/yy"}
-                    d{"d/M/yy至d/M/yy"}
-                    y{"d/M/yy至d/M/yy"}
+                    M{"d/M/y至d/M/y"}
+                    d{"d/M/y至d/M/y"}
+                    y{"d/M/y至d/M/y"}
                 }
             }
         }
@@ -104,16 +263,11 @@ zh_Hans_HK{
                 "Gy年M月d日",
                 "Gy年M月d日",
                 "Gd/M/yy",
-                "{1} {0}",
                 "{1}{0}",
                 "{1}{0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            availableFormats{
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
             }
         }
         japanese{
@@ -132,6 +286,10 @@ zh_Hans_HK{
                 "{1} {0}",
                 "{1} {0}",
             }
+            availableFormats{
+                MEd{"M/dE"}
+                Md{"M/d"}
+            }
         }
         roc{
             DateTimePatterns{
@@ -143,11 +301,106 @@ zh_Hans_HK{
                 "Gy年M月d日",
                 "Gy年M月d日",
                 "Gd/M/yy",
-                "{1} {0}",
                 "{1}{0}",
                 "{1}{0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
+            }
+            availableFormats{
+                M{"L"}
+                MMM{"M月"}
+                Md{"M-d"}
+            }
+        }
+    }
+    fields{
+        second{
+            relativeTime{
+                future{
+                    other{"{0}秒后"}
+                }
+                past{
+                    other{"{0}秒前"}
+                }
+            }
+        }
+    }
+    units{
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            second{
+                other{"{0}秒"}
+            }
+        }
+    }
+    unitsNarrow{
+        length{
+            centimeter{
+                other{"{0}厘米"}
+            }
+            foot{
+                other{"{0}英尺"}
+            }
+            inch{
+                other{"{0}英寸"}
+            }
+            kilometer{
+                other{"{0}公里"}
+            }
+            light-year{
+                other{"{0}光年"}
+            }
+            meter{
+                other{"{0}米"}
+            }
+            mile{
+                other{"{0}英里"}
+            }
+            millimeter{
+                other{"{0}毫米"}
+            }
+            picometer{
+                other{"{0}皮米"}
+            }
+            yard{
+                other{"{0}码"}
+            }
+        }
+    }
+    unitsShort{
+        length{
+            centimeter{
+                other{"{0}厘米"}
+            }
+            foot{
+                other{"{0}英尺"}
+            }
+            inch{
+                other{"{0}英寸"}
+            }
+            kilometer{
+                other{"{0}公里"}
+            }
+            light-year{
+                other{"{0}光年"}
+            }
+            meter{
+                other{"{0}米"}
+            }
+            mile{
+                other{"{0}英里"}
+            }
+            millimeter{
+                other{"{0}毫米"}
+            }
+            picometer{
+                other{"{0}皮米"}
+            }
+            yard{
+                other{"{0}码"}
             }
         }
     }

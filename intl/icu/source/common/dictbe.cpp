@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * Copyright (C) 2006-2012, International Business Machines Corporation
+ * Copyright (C) 2006-2013, International Business Machines Corporation
  * and others. All Rights Reserved.
  *******************************************************************************
  */
@@ -88,10 +88,10 @@ DictionaryBreakEngine::setCharacters( const UnicodeSet &set ) {
 
 /*
  ******************************************************************
+ * PossibleWord
  */
 
-
-// Helper class for improving readability of the Thai word break
+// Helper class for improving readability of the Thai/Lao/Khmer word break
 // algorithm. The implementation is completely inline.
 
 // List size, limited by the maximum number of words in the dictionary
@@ -182,6 +182,11 @@ inline void
 PossibleWord::markCurrent() {
     mark = current;
 }
+
+/*
+ ******************************************************************
+ * ThaiBreakEngine
+ */
 
 // How many words in a row are "good enough"?
 #define THAI_LOOKAHEAD 3
@@ -414,6 +419,203 @@ foundBest:
 
     return wordsFound;
 }
+
+/*
+ ******************************************************************
+ * LaoBreakEngine
+ */
+
+// How many words in a row are "good enough"?
+#define LAO_LOOKAHEAD 3
+
+// Will not combine a non-word with a preceding dictionary word longer than this
+#define LAO_ROOT_COMBINE_THRESHOLD 3
+
+// Will not combine a non-word that shares at least this much prefix with a
+// dictionary word, with a preceding word
+#define LAO_PREFIX_COMBINE_THRESHOLD 3
+
+// Minimum word size
+#define LAO_MIN_WORD 2
+
+// Minimum number of characters for two words
+#define LAO_MIN_WORD_SPAN (LAO_MIN_WORD * 2)
+
+LaoBreakEngine::LaoBreakEngine(DictionaryMatcher *adoptDictionary, UErrorCode &status)
+    : DictionaryBreakEngine((1<<UBRK_WORD) | (1<<UBRK_LINE)),
+      fDictionary(adoptDictionary)
+{
+    fLaoWordSet.applyPattern(UNICODE_STRING_SIMPLE("[[:Laoo:]&[:LineBreak=SA:]]"), status);
+    if (U_SUCCESS(status)) {
+        setCharacters(fLaoWordSet);
+    }
+    fMarkSet.applyPattern(UNICODE_STRING_SIMPLE("[[:Laoo:]&[:LineBreak=SA:]&[:M:]]"), status);
+    fMarkSet.add(0x0020);
+    fEndWordSet = fLaoWordSet;
+    fEndWordSet.remove(0x0EC0, 0x0EC4);     // prefix vowels
+    fBeginWordSet.add(0x0E81, 0x0EAE);      // basic consonants (including holes for corresponding Thai characters)
+    fBeginWordSet.add(0x0EDC, 0x0EDD);      // digraph consonants (no Thai equivalent)
+    fBeginWordSet.add(0x0EC0, 0x0EC4);      // prefix vowels
+
+    // Compact for caching.
+    fMarkSet.compact();
+    fEndWordSet.compact();
+    fBeginWordSet.compact();
+}
+
+LaoBreakEngine::~LaoBreakEngine() {
+    delete fDictionary;
+}
+
+int32_t
+LaoBreakEngine::divideUpDictionaryRange( UText *text,
+                                                int32_t rangeStart,
+                                                int32_t rangeEnd,
+                                                UStack &foundBreaks ) const {
+    if ((rangeEnd - rangeStart) < LAO_MIN_WORD_SPAN) {
+        return 0;       // Not enough characters for two words
+    }
+
+    uint32_t wordsFound = 0;
+    int32_t wordLength;
+    int32_t current;
+    UErrorCode status = U_ZERO_ERROR;
+    PossibleWord words[LAO_LOOKAHEAD];
+    UChar32 uc;
+    
+    utext_setNativeIndex(text, rangeStart);
+    
+    while (U_SUCCESS(status) && (current = (int32_t)utext_getNativeIndex(text)) < rangeEnd) {
+        wordLength = 0;
+
+        // Look for candidate words at the current position
+        int candidates = words[wordsFound%LAO_LOOKAHEAD].candidates(text, fDictionary, rangeEnd);
+        
+        // If we found exactly one, use that
+        if (candidates == 1) {
+            wordLength = words[wordsFound % LAO_LOOKAHEAD].acceptMarked(text);
+            wordsFound += 1;
+        }
+        // If there was more than one, see which one can take us forward the most words
+        else if (candidates > 1) {
+            // If we're already at the end of the range, we're done
+            if ((int32_t)utext_getNativeIndex(text) >= rangeEnd) {
+                goto foundBest;
+            }
+            do {
+                int wordsMatched = 1;
+                if (words[(wordsFound + 1) % LAO_LOOKAHEAD].candidates(text, fDictionary, rangeEnd) > 0) {
+                    if (wordsMatched < 2) {
+                        // Followed by another dictionary word; mark first word as a good candidate
+                        words[wordsFound%LAO_LOOKAHEAD].markCurrent();
+                        wordsMatched = 2;
+                    }
+                    
+                    // If we're already at the end of the range, we're done
+                    if ((int32_t)utext_getNativeIndex(text) >= rangeEnd) {
+                        goto foundBest;
+                    }
+                    
+                    // See if any of the possible second words is followed by a third word
+                    do {
+                        // If we find a third word, stop right away
+                        if (words[(wordsFound + 2) % LAO_LOOKAHEAD].candidates(text, fDictionary, rangeEnd)) {
+                            words[wordsFound % LAO_LOOKAHEAD].markCurrent();
+                            goto foundBest;
+                        }
+                    }
+                    while (words[(wordsFound + 1) % LAO_LOOKAHEAD].backUp(text));
+                }
+            }
+            while (words[wordsFound % LAO_LOOKAHEAD].backUp(text));
+foundBest:
+            wordLength = words[wordsFound % LAO_LOOKAHEAD].acceptMarked(text);
+            wordsFound += 1;
+        }
+        
+        // We come here after having either found a word or not. We look ahead to the
+        // next word. If it's not a dictionary word, we will combine it withe the word we
+        // just found (if there is one), but only if the preceding word does not exceed
+        // the threshold.
+        // The text iterator should now be positioned at the end of the word we found.
+        if ((int32_t)utext_getNativeIndex(text) < rangeEnd && wordLength < LAO_ROOT_COMBINE_THRESHOLD) {
+            // if it is a dictionary word, do nothing. If it isn't, then if there is
+            // no preceding word, or the non-word shares less than the minimum threshold
+            // of characters with a dictionary word, then scan to resynchronize
+            if (words[wordsFound % LAO_LOOKAHEAD].candidates(text, fDictionary, rangeEnd) <= 0
+                  && (wordLength == 0
+                      || words[wordsFound%LAO_LOOKAHEAD].longestPrefix() < LAO_PREFIX_COMBINE_THRESHOLD)) {
+                // Look for a plausible word boundary
+                //TODO: This section will need a rework for UText.
+                int32_t remaining = rangeEnd - (current+wordLength);
+                UChar32 pc = utext_current32(text);
+                int32_t chars = 0;
+                for (;;) {
+                    utext_next32(text);
+                    uc = utext_current32(text);
+                    // TODO: Here we're counting on the fact that the SA languages are all
+                    // in the BMP. This should get fixed with the UText rework.
+                    chars += 1;
+                    if (--remaining <= 0) {
+                        break;
+                    }
+                    if (fEndWordSet.contains(pc) && fBeginWordSet.contains(uc)) {
+                        // Maybe. See if it's in the dictionary.
+                        int candidates = words[(wordsFound + 1) % LAO_LOOKAHEAD].candidates(text, fDictionary, rangeEnd);
+                        utext_setNativeIndex(text, current + wordLength + chars);
+                        if (candidates > 0) {
+                            break;
+                        }
+                    }
+                    pc = uc;
+                }
+                
+                // Bump the word count if there wasn't already one
+                if (wordLength <= 0) {
+                    wordsFound += 1;
+                }
+                
+                // Update the length with the passed-over characters
+                wordLength += chars;
+            }
+            else {
+                // Back up to where we were for next iteration
+                utext_setNativeIndex(text, current+wordLength);
+            }
+        }
+        
+        // Never stop before a combining mark.
+        int32_t currPos;
+        while ((currPos = (int32_t)utext_getNativeIndex(text)) < rangeEnd && fMarkSet.contains(utext_current32(text))) {
+            utext_next32(text);
+            wordLength += (int32_t)utext_getNativeIndex(text) - currPos;
+        }
+        
+        // Look ahead for possible suffixes if a dictionary word does not follow.
+        // We do this in code rather than using a rule so that the heuristic
+        // resynch continues to function. For example, one of the suffix characters
+        // could be a typo in the middle of a word.
+        // NOT CURRENTLY APPLICABLE TO LAO
+
+        // Did we find a word on this iteration? If so, push it on the break stack
+        if (wordLength > 0) {
+            foundBreaks.push((current+wordLength), status);
+        }
+    }
+
+    // Don't return a break for the end of the dictionary range if there is one there.
+    if (foundBreaks.peeki() >= rangeEnd) {
+        (void) foundBreaks.popi();
+        wordsFound -= 1;
+    }
+
+    return wordsFound;
+}
+
+/*
+ ******************************************************************
+ * KhmerBreakEngine
+ */
 
 // How many words in a row are "good enough"?
 #define KHMER_LOOKAHEAD 3
@@ -667,7 +869,8 @@ CjkBreakEngine::CjkBreakEngine(DictionaryMatcher *adoptDictionary, LanguageType 
             cjSet.addAll(fHanWordSet);
             cjSet.addAll(fKatakanaWordSet);
             cjSet.addAll(fHiraganaWordSet);
-            cjSet.add(UNICODE_STRING_SIMPLE("\\uff70\\u30fc"));
+            cjSet.add(0xFF70); // HALFWIDTH KATAKANA-HIRAGANA PROLONGED SOUND MARK
+            cjSet.add(0x30FC); // KATAKANA-HIRAGANA PROLONGED SOUND MARK
             setCharacters(cjSet);
         }
     }

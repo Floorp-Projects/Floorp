@@ -831,3 +831,62 @@ add_test(function test_not_sending_cookie() {
     server.stop(run_next_test);
   });
 });
+
+add_test(function test_hawk_authenticated_request() {
+  do_test_pending();
+
+  let onProgressCalled = false;
+  let postData = {your: "data"};
+
+  // An arbitrary date - Feb 2, 1971.  It ends in a bunch of zeroes to make our
+  // computation with the hawk timestamp easier, since hawk throws away the
+  // millisecond values.
+  let then = 34329600000;
+
+  let clockSkew = 120000;
+  let timeOffset = -1 * clockSkew;
+  let localTime = then + clockSkew;
+
+  let credentials = {
+    id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
+    key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
+    algorithm: "sha256"
+  };
+
+  let server = httpd_setup({
+    "/elysium": function(request, response) {
+      do_check_true(request.hasHeader("Authorization"));
+
+      // check that the header timestamp is our arbitrary system date, not
+      // today's date.  Note that hawk header timestamps are in seconds, not
+      // milliseconds.
+      let authorization = request.getHeader("Authorization");
+      let tsMS = parseInt(/ts="(\d+)"/.exec(authorization)[1], 10) * 1000;
+      do_check_eq(tsMS, then);
+
+      let message = "yay";
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(message, message.length);
+    }
+  });
+
+  function onProgress() {
+    onProgressCalled = true;
+  }
+
+  function onComplete(error) {
+    do_check_eq(200, this.response.status);
+    do_check_eq(this.response.body, "yay");
+    do_check_true(onProgressCalled);
+    do_test_finished();
+    server.stop(run_next_test);
+  }
+
+  let url = server.baseURI + "/elysium";
+  let extra = {
+    now: localTime,
+    localtimeOffsetMsec: timeOffset
+  };
+  let request = new HAWKAuthenticatedRESTRequest(url, credentials, extra);
+  request.post(postData, onComplete, onProgress);
+});

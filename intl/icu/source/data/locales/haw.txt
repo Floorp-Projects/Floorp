@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/haw.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/haw.xml
+ * ICU <specials> source: <path>/common/main/haw.xml
  */
 haw{
     AuxExemplarCharacters{"[b c d f g j q r s t v x y z]"}
@@ -18,11 +18,12 @@ haw{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
             }
         }
     }
-    Version{"2.0.74.85"}
+    Version{"2.0.93.15"}
     calendar{
         gregorian{
             dayNames{
@@ -86,33 +87,35 @@ haw{
         metric{"Mekalika"}
     }
     units{
-        day{
-            one{"{0} lā"}
-            other{"{0} lā"}
-        }
-        hour{
-            one{"{0} hola"}
-            other{"{0} hola"}
-        }
-        minute{
-            one{"{0} minuke"}
-            other{"{0} minuke"}
-        }
-        month{
-            one{"{0} mahina"}
-            other{"{0} mahina"}
-        }
-        second{
-            one{"{0} kekona"}
-            other{"{0} kekona"}
-        }
-        week{
-            one{"{0} pule"}
-            other{"{0} pule"}
-        }
-        year{
-            one{"{0} makahiki"}
-            other{"{0} makahiki"}
+        duration{
+            day{
+                one{"{0} lā"}
+                other{"{0} lā"}
+            }
+            hour{
+                one{"{0} hola"}
+                other{"{0} hola"}
+            }
+            minute{
+                one{"{0} minuke"}
+                other{"{0} minuke"}
+            }
+            month{
+                one{"{0} mahina"}
+                other{"{0} mahina"}
+            }
+            second{
+                one{"{0} kekona"}
+                other{"{0} kekona"}
+            }
+            week{
+                one{"{0} pule"}
+                other{"{0} pule"}
+            }
+            year{
+                one{"{0} makahiki"}
+                other{"{0} makahiki"}
+            }
         }
     }
 }

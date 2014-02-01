@@ -1,5 +1,5 @@
 ## MSYS with Microsoft Visual C++ compiler specific setup
-## Copyright (c) 2001-2012, International Business Machines Corporation and
+## Copyright (c) 2001-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 # We install sbin tools into the same bin directory because

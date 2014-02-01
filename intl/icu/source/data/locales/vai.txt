@@ -1,18 +1,24 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/vai.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/vai.xml
+ * ICU <specials> source: <path>/common/main/vai.xml
  */
 vai{
     ExemplarCharacters{
-        "[꘠-꘩ ꔀ-ꔌ ꘓ ꔍ-ꔞ ꘔ ꔟ-ꔳ ꘕ ꔴ-ꕇ ꘖ ꕈ-ꕒ ꘗ ꕓ-ꕘ ꘐ ꘘ ꕙ ꕚ ꘙ ꕛ-ꕠ ꘚ ꕡ-ꕪ ꘑ ꕫ-ꕮ ꘪ ꕯ-ꖅ ꘛ ꖆ ꖇ"
-        " ꘒ ꖈ-ꖴ ꘜ ꖵ-ꗋ ꘝ ꗌ-ꗑ ꘫ ꘞ ꗒ-ꗘ ꘟ ꗙ-ꘌ]"
+        "[꘠ ꘡ ꘢ ꘣ ꘤ ꘥ ꘦ ꘧ ꘨ ꘩ ꔀ ꔁ ꔂ ꔃ ꔄ ꔅ ꔆ ꔇ ꔈ ꔉ ꔊ ꔋ ꔌ ꘓ ꔍ ꔎ ꔏ ꔐ ꔑ ꔒ ꔓ ꔔ ꔕ ꔖ ꔗ ꔘ ꔙ ꔚ"
+        " ꔛ ꔜ ꔝ ꔞ ꘔ ꔟ ꔠ ꔡ ꔢ ꔣ ꔤ ꔥ ꔦ ꔧ ꔨ ꔩ ꔪ ꔫ ꔬ ꔭ ꔮ ꔯ ꔰ ꔱ ꔲ ꔳ ꘕ ꔴ ꔵ ꔶ ꔷ ꔸ ꔹ ꔺ ꔻ ꔼ ꔽ ꔾ"
+        " ꔿ ꕀ ꕁ ꕂ ꕃ ꕄ ꕅ ꕆ ꕇ ꘖ ꕈ ꕉ ꕊ ꕋ ꕌ ꕍ ꕎ ꕏ ꕐ ꕑ ꕒ ꘗ ꕓ ꕔ ꕕ ꕖ ꕗ ꕘ ꘐ ꘘ ꕙ ꕚ ꘙ ꕛ ꕜ ꕝ ꕞ ꕟ"
+        " ꕠ ꘚ ꕡ ꕢ ꕣ ꕤ ꕥ ꕦ ꕧ ꕨ ꕩ ꕪ ꘑ ꕫ ꕬ ꕭ ꕮ ꘪ ꕯ ꕰ ꕱ ꕲ ꕳ ꕴ ꕵ ꕶ ꕷ ꕸ ꕹ ꕺ ꕻ ꕼ ꕽ ꕾ ꕿ ꖀ ꖁ ꖂ"
+        " ꖃ ꖄ ꖅ ꘛ ꖆ ꖇ ꘒ ꖈ ꖉ ꖊ ꖋ ꖌ ꖍ ꖎ ꖏ ꖐ ꖑ ꖒ ꖓ ꖔ ꖕ ꖖ ꖗ ꖘ ꖙ ꖚ ꖛ ꖜ ꖝ ꖞ ꖟ ꖠ ꖡ ꖢ ꖣ ꖤ ꖥ ꖦ"
+        " ꖧ ꖨ ꖩ ꖪ ꖫ ꖬ ꖭ ꖮ ꖯ ꖰ ꖱ ꖲ ꖳ ꖴ ꘜ ꖵ ꖶ ꖷ ꖸ ꖹ ꖺ ꖻ ꖼ ꖽ ꖾ ꖿ ꗀ ꗁ ꗂ ꗃ ꗄ ꗅ ꗆ ꗇ ꗈ ꗉ ꗊ ꗋ"
+        " ꘝ ꗌ ꗍ ꗎ ꗏ ꗐ ꗑ ꘫ ꘞ ꗒ ꗓ ꗔ ꗕ ꗖ ꗗ ꗘ ꘟ ꗙ ꗚ ꗛ ꗜ ꗝ ꗞ ꗟ ꗠ ꗡ ꗢ ꗣ ꗤ ꗥ ꗦ ꗧ ꗨ ꗩ ꗪ ꗫ ꗬ ꗭ"
+        " ꗮ ꗯ ꗰ ꗱ ꗲ ꗳ ꗴ ꗵ ꗶ ꗷ ꗸ ꗹ ꗺ ꗻ ꗼ ꗽ ꗾ ꗿ ꘀ ꘁ ꘂ ꘃ ꘄ ꘅ ꘆ ꘇ ꘈ ꘉ ꘊ ꘋ ꘌ]"
     }
     LocaleScript{
         "Vaii",
@@ -21,7 +27,8 @@ vai{
         default{"latn"}
         latn{
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
             }
             symbols{
@@ -31,18 +38,18 @@ vai{
         }
         native{"vaii"}
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, d MMMM y",
-                "d MMMM y",
-                "d MMM y",
-                "dd/MM/yyyy",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -63,12 +70,52 @@ vai{
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
-                y{"yyyy"}
-                yM{"M/yyyy"}
-                yMEd{"E, M/d/yyyy"}
-                yMMM{"MMM yyyy"}
-                yMMMEd{"E, MMM d, yyyy"}
-                yMMMM{"MMMM yyyy"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -83,37 +130,6 @@ vai{
                         "ꕉꔤꕀꕮ",
                         "ꔻꔬꔳ",
                     }
-                }
-            }
-            fields{
-                day{
-                    dn{"ꔎꔒ"}
-                    relative{
-                        "-1"{"ꖴꖸ"}
-                        "0"{"ꗦꗷ"}
-                        "1"{"ꔻꕯ"}
-                    }
-                }
-                hour{
-                    dn{"ꕌꕎ"}
-                }
-                minute{
-                    dn{"ꕆꕇ"}
-                }
-                month{
-                    dn{"ꕪꖃ"}
-                }
-                second{
-                    dn{"ꕧꕃꕧꕪ"}
-                }
-                week{
-                    dn{"ꔨꔤꕃ"}
-                }
-                weekday{
-                    dn{"ꔨꕃꕮ ꔎꔒ"}
-                }
-                year{
-                    dn{"ꕢꘋ"}
                 }
             }
             monthNames{
@@ -141,5 +157,36 @@ vai{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"ꔎꔒ"}
+            relative{
+                "-1"{"ꖴꖸ"}
+                "0"{"ꗦꗷ"}
+                "1"{"ꔻꕯ"}
+            }
+        }
+        hour{
+            dn{"ꕌꕎ"}
+        }
+        minute{
+            dn{"ꕆꕇ"}
+        }
+        month{
+            dn{"ꕪꖃ"}
+        }
+        second{
+            dn{"ꕧꕃꕧꕪ"}
+        }
+        week{
+            dn{"ꔨꔤꕃ"}
+        }
+        weekday{
+            dn{"ꔨꕃꕮ ꔎꔒ"}
+        }
+        year{
+            dn{"ꕢꘋ"}
+        }
     }
 }

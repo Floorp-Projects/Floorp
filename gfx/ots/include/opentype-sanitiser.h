@@ -44,7 +44,7 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
-#include <algorithm>  // for std::min
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -81,9 +81,9 @@ class OTSStream {
     }
 
     if (chksum_buffer_offset_ == 4) {
-      uint32_t chksum;
-      std::memcpy(&chksum, chksum_buffer_, 4);
-      chksum_ += ntohl(chksum);
+      uint32_t tmp;
+      std::memcpy(&tmp, chksum_buffer_, 4);
+      chksum_ += ntohl(tmp);
       chksum_buffer_offset_ = 0;
     }
 
@@ -199,13 +199,6 @@ class OTSStream {
   unsigned chksum_buffer_offset_;
 };
 
-#ifdef MOZ_OTS_REPORT_ERRORS
-// Signature of the function to be provided by the client in order to report errors.
-// The return type is a boolean so that it can be used within an expression,
-// but the actual value is ignored. (Suggested convention is to always return 'false'.)
-typedef bool (*MessageFunc)(void *user_data, const char *format, ...);
-#endif
-
 // -----------------------------------------------------------------------------
 // Process a given OpenType file and write out a sanitised version
 //   output: a pointer to an object implementing the OTSStream interface. The
@@ -213,17 +206,45 @@ typedef bool (*MessageFunc)(void *user_data, const char *format, ...);
 //     partial output may have been written.
 //   input: the OpenType file
 //   length: the size, in bytes, of |input|
-//   preserve_graphite_tables: whether to preserve Graphite Layout tables
 // -----------------------------------------------------------------------------
-bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length,
-#ifdef MOZ_OTS_REPORT_ERRORS
-                     MessageFunc message_func, void *user_data,
+bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length);
+
+// Signature of the function to be provided by the client in order to report errors.
+// The return type is a boolean so that it can be used within an expression,
+// but the actual value is ignored. (Suggested convention is to always return 'false'.)
+#ifdef __GCC__
+#define MSGFUNC_FMT_ATTR __attribute__((format(printf, 2, 3)))
+#else
+#define MSGFUNC_FMT_ATTR
 #endif
-                     bool preserve_graphite_tables = false);
+typedef bool (*MessageFunc)(void *user_data, const char *format, ...)  MSGFUNC_FMT_ATTR;
+
+// Set a callback function that will be called when OTS is reporting an error.
+void OTS_API SetMessageCallback(MessageFunc func, void *user_data);
+
+enum TableAction {
+  TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
+  TABLE_ACTION_SANITIZE, // Sanitize the table, potentially droping it
+  TABLE_ACTION_PASSTHRU, // Serialize the table unchanged
+  TABLE_ACTION_DROP      // Drop the table
+};
+
+// Signature of the function to be provided by the client to decide what action
+// to do for a given table.
+typedef TableAction (*TableActionFunc)(uint32_t tag, void *user_data);
+
+// Set a callback function that will be called when OTS needs to decide what to
+// do for a font table.
+void OTS_API SetTableActionCallback(TableActionFunc func, void *user_data);
 
 // Force to disable debug output even when the library is compiled with
 // -DOTS_DEBUG.
 void DisableDebugOutput();
+
+#ifdef MOZ_OTS_WOFF2
+// Enable WOFF2 support(experimental).
+void EnableWOFF2();
+#endif
 
 }  // namespace ots
 

@@ -1,22 +1,25 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/it.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/it.xml
+ * ICU <specials> source: <path>/common/main/it.xml
  */
 it{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
         }
         "Africa:Algiers"{
             ec{"Algeri"}
+        }
+        "Africa:Asmera"{
+            ec{"Asmara"}
         }
         "Africa:Cairo"{
             ec{"Il Cairo"}
@@ -45,11 +48,20 @@ it{
         "America:Asuncion"{
             ec{"Asunción"}
         }
+        "America:Bahia_Banderas"{
+            ec{"Bahía de Banderas"}
+        }
         "America:Bogota"{
             ec{"Bogotá"}
         }
         "America:Cancun"{
             ec{"Cancún"}
+        }
+        "America:Cayenne"{
+            ec{"Caienna"}
+        }
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
         }
         "America:Cordoba"{
             ec{"Cordova"}
@@ -57,8 +69,8 @@ it{
         "America:Curacao"{
             ec{"Curaçao"}
         }
-        "America:El_Salvador"{
-            ec{"Salvador"}
+        "America:Godthab"{
+            ec{"Nuuk"}
         }
         "America:Guadeloupe"{
             ec{"Guadalupa"}
@@ -66,14 +78,44 @@ it{
         "America:Guyana"{
             ec{"Guiana"}
         }
+        "America:Havana"{
+            ec{"L'Avana"}
+        }
+        "America:Indiana:Knox"{
+            ec{"Knox, Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo, Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg, Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City, Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay, Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes, Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
         "America:Jamaica"{
             ec{"Giamaica"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
         }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
         }
         "America:Martinique"{
             ec{"Martinica"}
+        }
+        "America:Merida"{
+            ec{"Mérida"}
         }
         "America:Mexico_City"{
             ec{"Città del Messico"}
@@ -90,8 +132,14 @@ it{
         "America:Puerto_Rico"{
             ec{"Portorico"}
         }
+        "America:Santarem"{
+            ec{"Santarém"}
+        }
         "America:Sao_Paulo"{
             ec{"San Paolo"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint-Barthélemy"}
@@ -106,10 +154,10 @@ it{
             ec{"Santa Lucia"}
         }
         "America:St_Thomas"{
-            ec{"St. Thomas"}
+            ec{"Saint Thomas"}
         }
         "America:St_Vincent"{
-            ec{"St. Vincent"}
+            ec{"Saint Vincent"}
         }
         "Antarctica:DumontDUrville"{
             ec{"Dumont D'Urville"}
@@ -120,6 +168,9 @@ it{
         "Asia:Bahrain"{
             ec{"Bahrein"}
         }
+        "Asia:Calcutta"{
+            ec{"Kolkata"}
+        }
         "Asia:Damascus"{
             ec{"Damasco"}
         }
@@ -129,8 +180,14 @@ it{
         "Asia:Jerusalem"{
             ec{"Gerusalemme"}
         }
+        "Asia:Katmandu"{
+            ec{"Kathmandu"}
+        }
         "Asia:Macau"{
             ec{"Macao"}
+        }
+        "Asia:Saigon"{
+            ec{"Ho Chi Minh"}
         }
         "Asia:Samarkand"{
             ec{"Samarcanda"}
@@ -163,7 +220,7 @@ it{
             ec{"Sant'Elena"}
         }
         "Etc:Unknown"{
-            ec{"Sconosciuto"}
+            ec{"Città sconosciuta"}
         }
         "Europe:Athens"{
             ec{"Atene"}
@@ -233,9 +290,6 @@ it{
         "Europe:Zagreb"{
             ec{"Zagabria"}
         }
-        "Europe:Zaporozhye"{
-            ec{"Zaporižžja"}
-        }
         "Europe:Zurich"{
             ec{"Zurigo"}
         }
@@ -257,8 +311,17 @@ it{
         "Pacific:Fiji"{
             ec{"Figi"}
         }
+        "Pacific:Marquesas"{
+            ec{"Marchesi"}
+        }
         "Pacific:Pitcairn"{
             ec{"Pitcairn, isole"}
+        }
+        "Pacific:Ponape"{
+            ec{"Pohnpei"}
+        }
+        "Pacific:Truk"{
+            ec{"Chuuk"}
         }
         "meta:Afghanistan"{
             ls{"Ora dell'Afghanistan"}
@@ -298,14 +361,14 @@ it{
             ls{"Ora standard orientale USA"}
         }
         "meta:America_Mountain"{
-            ld{"Ora legale delle Montagne Rocciose USA"}
-            lg{"Ora sulle Montagne Rocciose USA"}
-            ls{"Ora standard sulle Montagne Rocciose USA"}
+            ld{"Ora legale Montagne Rocciose USA"}
+            lg{"Ora Montagne Rocciose USA"}
+            ls{"Ora standard Montagne Rocciose USA"}
         }
         "meta:America_Pacific"{
-            ld{"Ora legale della costa del Pacifico USA"}
+            ld{"Ora legale del Pacifico USA"}
             lg{"Ora del Pacifico USA"}
-            ls{"Ora standard della costa del Pacifico USA"}
+            ls{"Ora standard del Pacifico USA"}
         }
         "meta:Anadyr"{
             ld{"Ora legale di Anadyr"}
@@ -383,10 +446,16 @@ it{
             lg{"Ora di Brasilia"}
             ls{"Ora standard di Brasilia"}
         }
+        "meta:Brunei"{
+            ls{"Ora del Brunei Darussalam"}
+        }
         "meta:Cape_Verde"{
             ld{"Ora legale di Capo Verde"}
             lg{"Ora di Capo Verde"}
             ls{"Ora standard di Capo Verde"}
+        }
+        "meta:Chamorro"{
+            ls{"Ora Chamorro"}
         }
         "meta:Chatham"{
             ld{"Ora legale delle Chatham"}
@@ -407,6 +476,9 @@ it{
             ld{"Ora legale di Choibalsan"}
             lg{"Ora di Choibalsan"}
             ls{"Ora standard di Choibalsan"}
+        }
+        "meta:Christmas"{
+            ls{"Ora dell'Isola di Natale"}
         }
         "meta:Cocos"{
             ls{"Ora delle Isole Cocos"}
@@ -483,6 +555,9 @@ it{
         "meta:French_Southern"{
             ls{"Ora delle Terre australi e antartiche francesi"}
         }
+        "meta:GMT"{
+            ls{"Ora del meridiano di Greenwich"}
+        }
         "meta:Galapagos"{
             ls{"Ora delle Galapagos"}
         }
@@ -506,6 +581,9 @@ it{
             ld{"Ora legale della Groenlandia occidentale"}
             lg{"Ora della Groenlandia occidentale"}
             ls{"Ora standard della Groenlandia occidentale"}
+        }
+        "meta:Gulf"{
+            ls{"Ora del Golfo"}
         }
         "meta:Guyana"{
             ls{"Ora della Guyana"}
@@ -718,6 +796,9 @@ it{
         "meta:Pitcairn"{
             ls{"Ora delle Pitcairn"}
         }
+        "meta:Ponape"{
+            ls{"Ora di Pohnpei"}
+        }
         "meta:Reunion"{
             ls{"Ora di Riunione"}
         }
@@ -734,14 +815,31 @@ it{
             lg{"Ora di Samara"}
             ls{"Ora standard di Samara"}
         }
+        "meta:Samoa"{
+            ld{"Ora legale di Samoa"}
+            lg{"Ora di Samoa"}
+            ls{"Ora standard di Samoa"}
+        }
         "meta:Seychelles"{
             ls{"Ora delle Seychelles"}
+        }
+        "meta:Singapore"{
+            ls{"Ora Singapore"}
+        }
+        "meta:Solomon"{
+            ls{"Ora delle Isole Salomone"}
+        }
+        "meta:South_Georgia"{
+            ls{"Ora della Georgia del Sud"}
         }
         "meta:Suriname"{
             ls{"Ora del Suriname"}
         }
         "meta:Syowa"{
             ls{"Ora di Syowa"}
+        }
+        "meta:Tahiti"{
+            ls{"Ora di Tahiti"}
         }
         "meta:Taipei"{
             ld{"Ora legale di Taipei"}
@@ -751,6 +849,14 @@ it{
         "meta:Tajikistan"{
             ls{"Ora del Tagikistan"}
         }
+        "meta:Tokelau"{
+            ls{"Ora di Tokelau"}
+        }
+        "meta:Tonga"{
+            ld{"Ora legale di Tonga"}
+            lg{"Ora di Tonga"}
+            ls{"Ora standard di Tonga"}
+        }
         "meta:Truk"{
             ls{"Ora del Chuuk"}
         }
@@ -758,6 +864,9 @@ it{
             ld{"Ora legale del Turkmenistan"}
             lg{"Ora del Turkmenistan"}
             ls{"Ora standard del Turkmenistan"}
+        }
+        "meta:Tuvalu"{
+            ls{"Ora di Tuvalu"}
         }
         "meta:Uruguay"{
             ld{"Ora legale dell'Uruguay"}
@@ -768,6 +877,11 @@ it{
             ld{"Ora legale dell'Uzbekistan"}
             lg{"Ora dell'Uzbekistan"}
             ls{"Ora standard dell'Uzbekistan"}
+        }
+        "meta:Vanuatu"{
+            ld{"Ora legale del Vanuatu"}
+            lg{"Ora del Vanuatu"}
+            ls{"Ora standard del Vanuatu"}
         }
         "meta:Venezuela"{
             ls{"Ora del Venezuela"}
@@ -785,6 +899,12 @@ it{
         "meta:Vostok"{
             ls{"Ora di Vostok"}
         }
+        "meta:Wake"{
+            ls{"Ora dell'Isola di Wake"}
+        }
+        "meta:Wallis"{
+            ls{"Ora di Wallis e Futuna"}
+        }
         "meta:Yakutsk"{
             ld{"Ora legale di Yakutsk"}
             lg{"Ora di Yakutsk"}
@@ -796,10 +916,11 @@ it{
             ls{"Ora standard di Ekaterinburg"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"Ora {1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ora {0}"}
+        regionFormatDaylight{"Ora legale: {0}"}
+        regionFormatStandard{"Ora standard: {0}"}
     }
 }

@@ -1,9 +1,12 @@
 ## -*-makefile-*-
 ## Cygwin/MinGW specific setup
-## Copyright (c) 2001-2012, International Business Machines Corporation and
+## Copyright (c) 2001-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 # TODO: Finish the rest of this port. This platform port is incomplete.
+
+# This file is similar to mh-mingw64
+# Any changes made here may also need to be made in mh-mingw64
 
 # We install sbin tools into the same bin directory because
 # pkgdata needs some of the tools in sbin, and we can't always depend on
@@ -63,11 +66,11 @@ SO_TARGET_VERSION_SUFFIX =
 endif
 
 # Static library prefix and file extension
-LIBSICU = $(LIBPREFIX)$(STATIC_PREFIX)$(ICUPREFIX)
+LIBSICU = lib$(LIBPREFIX)$(STATIC_PREFIX)$(ICUPREFIX)
 A = a
 
 ## An import library is needed for z/OS and MSVC
-IMPORT_LIB_EXT = .lib
+IMPORT_LIB_EXT = .dll.a
 
 LIBPREFIX=
 
@@ -80,7 +83,7 @@ LIBICU = $(STATIC_PREFIX_WHEN_USED)$(ICUPREFIX)
 # The #M# is used to delete lines for icu-config
 # Current full path directory.
 #CURR_FULL_DIR=$(shell pwd -W)#M# for MSYS
-CURR_FULL_DIR=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
+CURR_FULL_DIR?=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
 # Current full path directory for use in source code in a -D compiler option.
 #CURR_SRCCODE_FULL_DIR=$(subst /,\\\\,$(shell pwd -W))#M# for MSYS
 CURR_SRCCODE_FULL_DIR=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
