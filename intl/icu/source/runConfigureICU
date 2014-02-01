@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 1999-2012, International Business Machines Corporation and
+# Copyright (c) 1999-2013, International Business Machines Corporation and
 # others. All Rights Reserved.
 
 # runConfigureICU: This script will run the "configure" script for the appropriate platform
@@ -27,6 +27,11 @@ Options: -h, --help         Print this message and exit
          --enable-debug     Enable support for debugging
          --disable-release  Disable presetting optimization flags
 
+If you want to add custom CFLAGS or CXXFLAGS or similar, provide them _before_
+the runConfigureICU command:
+
+    CXXFLAGS=xyz path/to/runConfigureICU --enable-debug ...
+
 The following names can be supplied as the argument for platform:
 
     AIX                 Use the IBM Visual Age xlc_r/xlC_r compilers on AIX
@@ -38,11 +43,13 @@ The following names can be supplied as the argument for platform:
     FreeBSD             Use the GNU gcc/g++ compilers on Free BSD
     HP-UX/ACC           Use the HP ANSI C/Advanced C++ compilers on HP-UX 11
     IBMi                Use the iCC compilers on IBM i, i5/OS, OS/400
-    Linux               Use the GNU gcc/g++ compilers on Linux
+    Linux               Use the clang/clang++ or GNU gcc/g++ compilers on Linux
+    Linux/gcc           Use the GNU gcc/g++ compilers on Linux
     Linux/ECC           Use the Intel ECC compiler on Linux
     Linux/ICC           Use the Intel ICC compiler on Linux
     Linux/VA            Use the IBM Visual Age compiler on Power PC Linux
-    MacOSX              Use the GNU gcc/g++ compilers on MacOS X (Darwin)
+    MacOSX              Use the default compilers on MacOS X (Darwin)
+    MacOSX/GCC          Use the GNU gcc/g++ compilers on MacOSX (Darwin)
     MinGW               Use the GNU gcc/g++ compilers on MinGW
     QNX                 Use the QNX QCC compiler on QNX/Neutrino
     Solaris             Use the Sun cc/CC compilers on Solaris
@@ -142,7 +149,7 @@ case $platform in
         CC=gcc; export CC
         CXX=g++; export CXX
         DEBUG_CFLAGS='-g -O0'
-        DEBUG_CXFLAGS='-g -O0'
+        DEBUG_CXXFLAGS='-g -O0'
         ;;
     Solaris)
         THE_OS=SOLARIS
@@ -224,11 +231,23 @@ case $platform in
         RELEASE_CFLAGS="-O2 -qmaxmem=-1"
         RELEASE_CXXFLAGS="-O2 -qmaxmem=-1"
         ;;
-    Linux*)
+    Linux/gcc)
         THE_OS="Linux"
         THE_COMP="the GNU C++"
-        DEBUG_CFLAGS='-g -O0'
-        DEBUG_CXFLAGS='-g -O0'
+        CC=gcc; export CC
+        CXX=g++; export CXX
+        RELEASE_CFLAGS='-O3'
+        RELEASE_CXXFLAGS='-O3'
+        DEBUG_CFLAGS='-g'
+        DEBUG_CXXFLAGS='-g'
+        ;;
+    Linux*)
+        THE_OS="Linux"
+        THE_COMP="the clang or else GNU C++"
+        RELEASE_CFLAGS='-O3'
+        RELEASE_CXXFLAGS='-O3'
+        DEBUG_CFLAGS='-g'
+        DEBUG_CXXFLAGS='-g'
         ;;
     Cygwin)
         THE_OS="Cygwin"
@@ -272,17 +291,29 @@ case $platform in
         ;;
     MacOSX)
         THE_OS="MacOS X (Darwin)"
+        THE_COMP="the default"
+        RELEASE_CFLAGS='-O2'
+        RELEASE_CXXFLAGS='-O2'
+        DEBUG_CFLAGS='-g -O0'
+        DEBUG_CXXFLAGS='-g -O0'
+        ;;
+    MacOSX/GCC)
+        THE_OS="MacOS X (Darwin)"
         THE_COMP="the GNU C++"
         RELEASE_CFLAGS='-O2'
         RELEASE_CXXFLAGS='-O2'
         DEBUG_CFLAGS='-g -O0'
         DEBUG_CXXFLAGS='-g -O0'
+	CC=gcc; export CC
+	CXX=g++; export CXX
         ;;
     MinGW)
         THE_OS="MinGW"
         THE_COMP="the GNU C++"
         RELEASE_CFLAGS='-O3'
         RELEASE_CXXFLAGS='-O3'
+        CXXFLAGS="--std=c++03"
+        export CXXFLAGS
         ;;
     MSYS/MSVC)
         THE_OS="MSYS"
@@ -299,7 +330,7 @@ case $platform in
         THE_OS="BSD"
         THE_COMP="the GNU C++"
         DEBUG_CFLAGS='-g -O0'
-        DEBUG_CXFLAGS='-g -O0'
+        DEBUG_CXXFLAGS='-g -O0'
         ;;
     TRU64V5.1/CXX)
         THE_OS="OSF1"

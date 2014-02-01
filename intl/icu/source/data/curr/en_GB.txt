@@ -1,12 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_GB.xml
 // *
 // ***************************************************************************
 en_GB{
+    %%Parent{"en_001"}
     Currencies{
         AUD{
             "AU$",
@@ -15,6 +16,10 @@ en_GB{
         BRL{
             "R$",
             "Brazilian Real",
+        }
+        BYB{
+            "BYB",
+            "Belarusian New Rouble (1994–1999)",
         }
         BYR{
             "BYR",
@@ -40,6 +45,10 @@ en_GB{
             "HK$",
             "Hong Kong Dollar",
         }
+        ILR{
+            "ILR",
+            "Israeli Shekel (1980–1985)",
+        }
         ILS{
             "₪",
             "Israeli New Shekel",
@@ -51,6 +60,10 @@ en_GB{
         KRW{
             "₩",
             "South Korean Won",
+        }
+        LVR{
+            "LVR",
+            "Latvian Rouble",
         }
         MGA{
             "MGA",
@@ -72,6 +85,10 @@ en_GB{
             "RUB",
             "Russian Rouble",
         }
+        RUR{
+            "RUR",
+            "Russian Rouble (1991–1998)",
+        }
         SCR{
             "SCR",
             "Seychelles Rupee",
@@ -80,9 +97,17 @@ en_GB{
             "฿",
             "Thai Baht",
         }
+        TJR{
+            "TJR",
+            "Tajikistani Rouble",
+        }
         TWD{
             "NT$",
             "New Taiwan Dollar",
+        }
+        USD{
+            "$",
+            "US Dollar",
         }
         UZS{
             "UZS",
@@ -114,21 +139,29 @@ en_GB{
         }
     }
     CurrencyPlurals{
+        BYB{
+            one{"Belarusian new rouble (1994–1999)"}
+            other{"Belarusian new roubles (1994–1999)"}
+        }
         BYR{
             one{"Belarusian rouble"}
             other{"Belarusian roubles"}
-        }
-        EUR{
-            one{"euro"}
-            other{"euro"}
         }
         GBP{
             one{"British pound"}
             other{"British pounds"}
         }
+        ILR{
+            one{"Israeli shekel (1980–1985)"}
+            other{"Israeli shekels (1980–1985)"}
+        }
         ILS{
             one{"Israeli new shekel"}
             other{"Israeli new shekels"}
+        }
+        LVR{
+            one{"Latvian rouble"}
+            other{"Latvian roubles"}
         }
         MGA{
             one{"Malagasy ariary"}
@@ -142,9 +175,17 @@ en_GB{
             one{"Russian rouble"}
             other{"Russian roubles"}
         }
+        RUR{
+            one{"Russian rouble (1991–1998)"}
+            other{"Russian roubles (1991–1998)"}
+        }
         SCR{
             one{"Seychelles rupee"}
             other{"Seychelles rupees"}
+        }
+        TJR{
+            one{"Tajikistani rouble"}
+            other{"Tajikistani roubles"}
         }
         UZS{
             one{"Uzbekistani som"}
@@ -163,5 +204,5 @@ en_GB{
             other{"(unknown currency)"}
         }
     }
-    Version{"2.0.78.47"}
+    Version{"2.0.92.80"}
 }

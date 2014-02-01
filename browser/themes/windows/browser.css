@@ -1479,7 +1479,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
   padding: 0;
 }
 
-#TabsToolbar:not(:-moz-lwtheme) {
+#main-window:not([customizing]) #TabsToolbar:not(:-moz-lwtheme) {
   background-image: linear-gradient(to top, @toolbarShadowColor@ 2px, rgba(0,0,0,.05) 2px, transparent 50%);
 }
 
@@ -2441,14 +2441,15 @@ chatbox {
   background-attachment: fixed;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
-  padding: 0 2em 2em;
-}
-
 #customization-container {
   border-left: 1px solid @toolbarShadowColor@;
   border-right: 1px solid @toolbarShadowColor@;
   background-clip: padding-box;
+}
+
+#main-window[customizing] #navigator-toolbox::after {
+  margin-left: 2em;
+  margin-right: 2em;
 }
 
 /* End customization mode */

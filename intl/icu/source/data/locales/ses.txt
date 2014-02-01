@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ses.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ses.xml
+ * ICU <specials> source: <path>/common/main/ses.xml
  */
 ses{
     AuxExemplarCharacters{"[v]"}
@@ -26,22 +26,18 @@ ses{
             }
         }
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
-            AmPmMarkers{
-                "Adduha",
-                "Aluula",
-            }
+        generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE d MMMM y",
-                "d MMMM y",
-                "d MMM, y",
-                "d/M/yyyy",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM, y G",
+                "d/M/y GGGGG",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -63,16 +59,57 @@ ses{
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
+                yMM{"MM/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yyMM{"MM/yy"}
-                yyMMM{"MMM yy"}
-                yyMMMEd{"E d MMM yy"}
-                yyMMMd{"d MMM yy"}
-                yyyyMMMM{"MMMM yyyy"}
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "Adduha",
+                "Aluula",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y",
+                "d MMMM y",
+                "d MMM, y",
+                "d/M/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                M{"M"}
+                MMM{"MMM"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMMdd{"dd MMM"}
+                MMd{"d/MM"}
+                MMdd{"dd/MM"}
+                Md{"d/M"}
+                ms{"m:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
+                yMM{"MM/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E d MMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
             }
             dayNames{
                 format{
@@ -115,43 +152,6 @@ ses{
                 wide{
                     "Isaa jine",
                     "Isaa zamanoo",
-                }
-            }
-            fields{
-                day{
-                    dn{"Zaari"}
-                    relative{
-                        "-1"{"Bi"}
-                        "0"{"Hõo"}
-                        "1"{"Suba"}
-                    }
-                }
-                dayperiod{
-                    dn{"Adduha wala Aluula"}
-                }
-                era{
-                    dn{"Zaman"}
-                }
-                hour{
-                    dn{"Guuru"}
-                }
-                minute{
-                    dn{"Miniti"}
-                }
-                month{
-                    dn{"Handu"}
-                }
-                second{
-                    dn{"Miti"}
-                }
-                week{
-                    dn{"Hebu"}
-                }
-                year{
-                    dn{"Jiiri"}
-                }
-                zone{
-                    dn{"Leerazuu"}
                 }
             }
             monthNames{
@@ -225,5 +225,42 @@ ses{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Zaari"}
+            relative{
+                "-1"{"Bi"}
+                "0"{"Hõo"}
+                "1"{"Suba"}
+            }
+        }
+        dayperiod{
+            dn{"Adduha wala Aluula"}
+        }
+        era{
+            dn{"Zaman"}
+        }
+        hour{
+            dn{"Guuru"}
+        }
+        minute{
+            dn{"Miniti"}
+        }
+        month{
+            dn{"Handu"}
+        }
+        second{
+            dn{"Miti"}
+        }
+        week{
+            dn{"Hebu"}
+        }
+        year{
+            dn{"Jiiri"}
+        }
+        zone{
+            dn{"Leerazuu"}
+        }
     }
 }

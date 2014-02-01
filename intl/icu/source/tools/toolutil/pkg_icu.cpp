@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2008-2012, International Business Machines
+ *   Copyright (C) 2008-2013, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *******************************************************************************
  */
@@ -135,6 +135,8 @@ readList(const char *filesPath, const char *listname, UBool readContents, Packag
         fclose(file);
     } else if((listNameEnd-listname)>4 && 0==memcmp(listNameEnd-4, ".dat", 4)) {
         // read the ICU .dat package
+        // Accept a .dat file whose name differs from the ToC prefixes.
+        listPkg->setAutoPrefix();
         listPkg->readPackage(listname);
     } else {
         // list the single file itself

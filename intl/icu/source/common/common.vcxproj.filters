@@ -154,9 +154,6 @@
     <ClCompile Include="locmap.c">
       <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="mutex.cpp">
-      <Filter>configuration</Filter>
-    </ClCompile>
     <ClCompile Include="putil.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
@@ -259,7 +256,7 @@
     <ClCompile Include="udataswp.c">
       <Filter>data &amp; memory</Filter>
     </ClCompile>
-    <ClCompile Include="uinit.c">
+    <ClCompile Include="uinit.cpp">
       <Filter>data &amp; memory</Filter>
     </ClCompile>
     <ClCompile Include="umapfile.c">
@@ -406,6 +403,9 @@
     <ClCompile Include="uscript.c">
       <Filter>properties &amp; sets</Filter>
     </ClCompile>
+    <ClCompile Include="uscript_props.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
     <ClCompile Include="uset.cpp">
       <Filter>properties &amp; sets</Filter>
     </ClCompile>
@@ -523,19 +523,45 @@
     <ClCompile Include="utf_impl.c">
       <Filter>strings</Filter>
     </ClCompile>
-    <ClCompile Include="dictionarydata.cpp" />
-    <ClCompile Include="ucnv_ct.c" />
-    <ClCompile Include="patternprops.cpp" />
-    <ClCompile Include="appendable.cpp" />
-    <ClCompile Include="bytestrie.cpp" />
-    <ClCompile Include="bytestriebuilder.cpp" />
-    <ClCompile Include="bytestrieiterator.cpp" />
-    <ClCompile Include="messagepattern.cpp" />
-    <ClCompile Include="stringtriebuilder.cpp" />
-    <ClCompile Include="ucharstrie.cpp" />
-    <ClCompile Include="ucharstriebuilder.cpp" />
-    <ClCompile Include="ucharstrieiterator.cpp" />
-    <ClCompile Include="listformatter.cpp" />
+    <ClCompile Include="bytestrie.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="bytestrieiterator.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="bytestriebuilder.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="listformatter.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="messagepattern.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="appendable.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="dictionarydata.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_ct.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucharstrie.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="ucharstriebuilder.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="ucharstrieiterator.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="patternprops.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="stringtriebuilder.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ubidi_props.h">
@@ -784,9 +810,6 @@
     <ClInclude Include="ustr_imp.h">
       <Filter>strings</Filter>
     </ClInclude>
-    <ClInclude Include="dictionarydata.h" />
-    <ClInclude Include="messageimpl.h" />
-    <ClInclude Include="patternprops.h" />
     <ClInclude Include="utypeinfo.h">
       <Filter>configuration</Filter>
     </ClInclude>
@@ -808,8 +831,14 @@
     <ClInclude Include="uchar_props_data.h">
       <Filter>properties &amp; sets</Filter>
     </ClInclude>
-    <ClInclude Include="unicode\enumset.h">
-      <Filter>data &amp; memory</Filter>
+    <ClInclude Include="messageimpl.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="dictionarydata.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="patternprops.h">
+      <Filter>properties &amp; sets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1037,15 +1066,38 @@
     <CustomBuild Include="unicode\utf_old.h">
       <Filter>strings</Filter>
     </CustomBuild>
-    <CustomBuild Include="unicode\icuplug.h" />
-    <CustomBuild Include="unicode\appendable.h" />
-    <CustomBuild Include="unicode\bytestrie.h" />
-    <CustomBuild Include="unicode\bytestriebuilder.h" />
-    <CustomBuild Include="unicode\messagepattern.h" />
-    <CustomBuild Include="unicode\stringtriebuilder.h" />
-    <CustomBuild Include="unicode\ucharstrie.h" />
-    <CustomBuild Include="unicode\ucharstriebuilder.h" />
-    <CustomBuild Include="unicode\ustringtrie.h" />
-    <CustomBuild Include="unicode\listformatter.h" />
+    <CustomBuild Include="unicode\bytestrie.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\bytestriebuilder.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\messagepattern.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\listformatter.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\appendable.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ustringtrie.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucharstrie.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucharstriebuilder.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\enumset.h">
+      <Filter>data &amp; memory</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\icuplug.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\stringtriebuilder.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

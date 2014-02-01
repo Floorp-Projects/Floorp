@@ -7,7 +7,9 @@
 #include "maxp.h"
 
 // post - PostScript
-// http://www.microsoft.com/opentype/otspec/post.htm
+// http://www.microsoft.com/typography/otspec/post.htm
+
+#define TABLE_NAME "post"
 
 namespace ots {
 
@@ -22,7 +24,7 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadS16(&post->underline) ||
       !table.ReadS16(&post->underline_thickness) ||
       !table.ReadU32(&post->is_fixed_pitch)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read post header");
   }
 
   if (post->underline_thickness < 0) {
@@ -35,7 +37,7 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     return true;
   } else if (post->version != 0x00020000) {
     // 0x00025000 is deprecated. We don't accept it.
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad post version %x", post->version);
   }
 
   // We have a version 2 table with a list of Pascal strings at the end
@@ -43,21 +45,21 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   // We don't care about the memory usage fields. We'll set all these to zero
   // when serialising
   if (!table.Skip(16)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to skip memory usage in post table");
   }
 
   uint16_t num_glyphs = 0;
   if (!table.ReadU16(&num_glyphs)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to read number of glyphs");
   }
 
   if (!file->maxp) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("No maxp table required by post table");
   }
 
   if (num_glyphs == 0) {
     if (file->maxp->num_glyphs > 258) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Can't have no glyphs in the post table if there are more than 256 glyphs in the font");
     }
     OTS_WARNING("table version is 1, but no glyf names are found");
     // workaround for fonts in http://www.fontsquirrel.com/fontface
@@ -68,18 +70,17 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   if (num_glyphs != file->maxp->num_glyphs) {
     // Note: Fixedsys500c.ttf seems to have inconsistent num_glyphs values.
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad number of glyphs in post table %d", num_glyphs);
   }
 
   post->glyph_name_index.resize(num_glyphs);
   for (unsigned i = 0; i < num_glyphs; ++i) {
     if (!table.ReadU16(&post->glyph_name_index[i])) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to read post information for glyph %d", i);
     }
-    if (post->glyph_name_index[i] >= 32768) {
-      // Note: droid_arialuni.ttf fails this test.
-      return OTS_FAILURE();  // reserved area.
-    }
+    // Note: A strict interpretation of the specification requires name indexes
+    // are less than 32768. This, however, excludes fonts like unifont.ttf
+    // which cover all of unicode.
   }
 
   // Now we have an array of Pascal strings. We have to check that they are all
@@ -92,10 +93,10 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     if (strings == strings_end) break;
     const unsigned string_length = *strings;
     if (strings + 1 + string_length > strings_end) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad string length %d", string_length);
     }
     if (std::memchr(strings + 1, '\0', string_length)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad string of length %d", string_length);
     }
     post->names.push_back(
         std::string(reinterpret_cast<const char*>(strings + 1), string_length));
@@ -112,7 +113,7 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
     offset -= 258;
     if (offset >= num_strings) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Bad string index %d", offset);
     }
   }
 
@@ -128,7 +129,7 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
 
   // OpenType with CFF glyphs must have v3 post table.
   if (file->post && file->cff && file->post->version != 0x00030000) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Bad post version %x", post->version);
   }
 
   if (!out->WriteU32(post->version) ||
@@ -140,7 +141,7 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
       !out->WriteU32(0) ||
       !out->WriteU32(0) ||
       !out->WriteU32(0)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write post header");
   }
 
   if (post->version != 0x00020000) {
@@ -148,12 +149,12 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
   }
 
   if (!out->WriteU16(post->glyph_name_index.size())) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG("Failed to write number of indices");
   }
 
   for (unsigned i = 0; i < post->glyph_name_index.size(); ++i) {
     if (!out->WriteU16(post->glyph_name_index[i])) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write name index %d", i);
     }
   }
 
@@ -162,12 +163,12 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
     const std::string& s = post->names[i];
     const uint8_t string_length = s.size();
     if (!out->Write(&string_length, 1)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write string %d", i);
     }
     // Some ttf fonts (e.g., frank.ttf on Windows Vista) have zero-length name.
     // We allow them.
     if (string_length > 0 && !out->Write(s.data(), string_length)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG("Failed to write string length for string %d", i);
     }
   }
 

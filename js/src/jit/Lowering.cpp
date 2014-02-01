@@ -1837,10 +1837,22 @@ LIRGenerator::visitToString(MToString *ins)
     MDefinition *opd = ins->input();
 
     switch (opd->type()) {
-      case MIRType_Null:
-      case MIRType_Undefined:
-      case MIRType_Boolean:
-        MOZ_ASSUME_UNREACHABLE("NYI: Lower MToString");
+      case MIRType_Null: {
+        const JSAtomState &names = GetIonContext()->runtime->names();
+        LPointer *lir = new(alloc()) LPointer(names.null);
+        return define(lir, ins);
+      }
+
+      case MIRType_Undefined: {
+        const JSAtomState &names = GetIonContext()->runtime->names();
+        LPointer *lir = new(alloc()) LPointer(names.undefined);
+        return define(lir, ins);
+      }
+
+      case MIRType_Boolean: {
+        LBooleanToString *lir = new(alloc()) LBooleanToString(useRegister(opd));
+        return define(lir, ins);
+      }
 
       case MIRType_Double: {
         LDoubleToString *lir = new(alloc()) LDoubleToString(useRegister(opd), temp());
@@ -1853,6 +1865,16 @@ LIRGenerator::visitToString(MToString *ins)
       case MIRType_Int32: {
         LIntToString *lir = new(alloc()) LIntToString(useRegister(opd));
 
+        if (!define(lir, ins))
+            return false;
+        return assignSafepoint(lir, ins);
+      }
+
+      case MIRType_Value: {
+        JS_ASSERT(!opd->mightBeType(MIRType_Object));
+        LPrimitiveToString *lir = new(alloc()) LPrimitiveToString(tempToUnbox());
+        if (!useBox(lir, LPrimitiveToString::Input, opd))
+            return false;
         if (!define(lir, ins))
             return false;
         return assignSafepoint(lir, ins);

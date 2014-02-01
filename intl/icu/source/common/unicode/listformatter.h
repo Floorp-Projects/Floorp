@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2012, International Business Machines
+*   Copyright (C) 2012-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -17,15 +17,19 @@
 #ifndef __LISTFORMATTER_H__
 #define __LISTFORMATTER_H__
 
+#include "unicode/utypes.h"
+
+#ifndef U_HIDE_DRAFT_API
+
 #include "unicode/unistr.h"
 #include "unicode/locid.h"
-
 
 U_NAMESPACE_BEGIN
 
 /** @internal */
 class Hashtable;
 
+#ifndef U_HIDE_INTERNAL_API
 /** @internal */
 struct ListFormatData : public UMemory {
     UnicodeString twoPattern;
@@ -36,6 +40,7 @@ struct ListFormatData : public UMemory {
   ListFormatData(const UnicodeString& two, const UnicodeString& start, const UnicodeString& middle, const UnicodeString& end) :
       twoPattern(two), startPattern(start), middlePattern(middle), endPattern(end) {}
 };
+#endif  /* U_HIDE_INTERNAL_API */
 
 
 /**
@@ -52,10 +57,24 @@ struct ListFormatData : public UMemory {
  * as "Alice, Bob, Charlie and Delta" in English.
  *
  * The ListFormatter class is not intended for public subclassing.
+ * @draft ICU 50
  */
 class U_COMMON_API ListFormatter : public UObject{
 
   public:
+
+    /**
+     * Copy constructor.
+     * @draft ICU 52
+     */
+    ListFormatter(const ListFormatter&);
+
+    /**
+     * Assignment operator.
+     * @draft ICU 52
+     */
+    ListFormatter& operator=(const ListFormatter& other);
+
     /**
      * Creates a ListFormatter appropriate for the default locale.
      *
@@ -77,6 +96,19 @@ class U_COMMON_API ListFormatter : public UObject{
      */
     static ListFormatter* createInstance(const Locale& locale, UErrorCode& errorCode);
 
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     * Creates a ListFormatter appropriate for a locale and style.
+     *
+     * @param locale The locale.
+     * @param style the style, either "standard", "duration", or "duration-short"
+     * @param errorCode ICU error code, set if no data available for the given locale.
+     * @return A ListFormatter object created from internal data derived from
+     *     CLDR data.
+     * @internal
+     */
+    static ListFormatter* createInstance(const Locale& locale, const char* style, UErrorCode& errorCode);
+#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * Destructor.
@@ -99,36 +131,25 @@ class U_COMMON_API ListFormatter : public UObject{
     UnicodeString& format(const UnicodeString items[], int32_t n_items,
         UnicodeString& appendTo, UErrorCode& errorCode) const;
 
-    /**
-     * Gets the fallback locale for a given locale.
-     * TODO: Consider moving this to the Locale class.
-     * @param in The input locale.
-     * @param out The output locale after fallback.
-     * @internal For testing.
-     */
-    static void getFallbackLocale(const Locale& in, Locale& out, UErrorCode& errorCode);
-
+#ifndef U_HIDE_INTERNAL_API
     /**
      * @internal constructor made public for testing.
      */
-    ListFormatter(const ListFormatData& listFormatterData);
+    ListFormatter(const ListFormatData* listFormatterData);
+#endif  /* U_HIDE_INTERNAL_API */
 
   private:
     static void initializeHash(UErrorCode& errorCode);
-    static void addDataToHash(const char* locale, const char* two, const char* start, const char* middle, const char* end, UErrorCode& errorCode);
-    static const ListFormatData* getListFormatData(const Locale& locale, UErrorCode& errorCode);
+    static const ListFormatData* getListFormatData(const Locale& locale, const char *style, UErrorCode& errorCode);
 
     ListFormatter();
-    ListFormatter(const ListFormatter&);
-
-    ListFormatter& operator = (const ListFormatter&);
     void addNewString(const UnicodeString& pattern, UnicodeString& originalString,
                       const UnicodeString& newString, UErrorCode& errorCode) const;
-    virtual UClassID getDynamicClassID() const;
 
-    const ListFormatData& data;
+    const ListFormatData* data;
 };
 
 U_NAMESPACE_END
 
+#endif /* U_HIDE_DRAFT_API */
 #endif

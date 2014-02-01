@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 2005-2012, International Business Machines
+*   Copyright (C) 2005-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -254,7 +254,6 @@ uprv_detectWindowsTimeZone() {
     char apiStdName[MAX_LENGTH_ID];
     char regStdName[MAX_LENGTH_ID];
     char tmpid[MAX_LENGTH_ID];
-    int32_t apiStdLength = 0;
     int32_t len;
     int id;
     int errorCode;
@@ -280,8 +279,8 @@ uprv_detectWindowsTimeZone() {
 
     /* Convert the wchar_t* standard name to char* */
     uprv_memset(apiStdName, 0, sizeof(apiStdName));
-    u_strFromWCS(apiStd, MAX_LENGTH_ID, &apiStdLength, apiTZI.StandardName, -1, &status);
-    u_austrncpy(apiStdName, apiStd, apiStdLength);
+    u_strFromWCS(apiStd, MAX_LENGTH_ID, NULL, apiTZI.StandardName, -1, &status);
+    u_austrncpy(apiStdName, apiStd, sizeof(apiStdName) - 1);
 
     tmpid[0] = 0;
 

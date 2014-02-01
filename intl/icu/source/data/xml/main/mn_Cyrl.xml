@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Copyright (c) 2013 International Business Machines Corporation and others. All rights reserved.
+-->
+<!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
+[
+   <!ENTITY % icu SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldmlICU.dtd">
+   %icu;
+]
+>
+<ldml>
+	<identity>
+		<version number="$Revision: 33355 $"/>
+		<generation date="$Date: 2013-03-03 21:34:51 +0000 (Sun, 03 Mar 2013) $"/>
+		<language type="mn"/> 
+		<script type="Cyrl"/>
+	</identity>
+	<characters>
+		<special xmlns:icu="http://www.icu-project.org/">
+			<icu:scripts>
+				<icu:script type="1">Cyrl</icu:script>
+			</icu:scripts>
+		</special>
+	</characters>
+</ldml>
+

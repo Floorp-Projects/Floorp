@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 1996-2012, International Business Machines
+*   Copyright (C) 1996-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 * Modification History:
@@ -781,6 +781,62 @@ unum_getLocaleByType(const UNumberFormat *fmt,
         return NULL;
     }
     return ((const Format*)fmt)->getLocaleID(type, *status);
+}
+
+U_INTERNAL UFormattable * U_EXPORT2
+unum_parseToUFormattable(const UNumberFormat* fmt,
+                         UFormattable *result,
+                         const UChar* text,
+                         int32_t textLength,
+                         int32_t* parsePos, /* 0 = start */
+                         UErrorCode* status) {
+  UFormattable *newFormattable = NULL;
+  if (U_FAILURE(*status)) return result;
+  if (fmt == NULL || (text==NULL && textLength!=0)) {
+    *status = U_ILLEGAL_ARGUMENT_ERROR;
+    return result;
+  }
+  if (result == NULL) { // allocate if not allocated.
+    newFormattable = result = ufmt_open(status);
+  }
+  parseRes(*(Formattable::fromUFormattable(result)), fmt, text, textLength, parsePos, status);
+  if (U_FAILURE(*status) && newFormattable != NULL) {
+    ufmt_close(newFormattable);
+    result = NULL; // deallocate if there was a parse error
+  }
+  return result;
+}
+
+U_INTERNAL int32_t U_EXPORT2
+unum_formatUFormattable(const UNumberFormat* fmt,
+                        const UFormattable *number,
+                        UChar *result,
+                        int32_t resultLength,
+                        UFieldPosition *pos, /* ignored if 0 */
+                        UErrorCode *status) {
+    if (U_FAILURE(*status)) {
+      return 0;
+    }
+    if (fmt == NULL || number==NULL ||
+        (result==NULL ? resultLength!=0 : resultLength<0)) {
+      *status = U_ILLEGAL_ARGUMENT_ERROR;
+      return 0;
+    }
+    UnicodeString res(result, 0, resultLength);
+
+    FieldPosition fp;
+
+    if(pos != 0)
+        fp.setField(pos->field);
+
+    ((const NumberFormat*)fmt)->format(*(Formattable::fromUFormattable(number)), res, fp, *status);
+
+    if(pos != 0) {
+        pos->beginIndex = fp.getBeginIndex();
+        pos->endIndex = fp.getEndIndex();
+    }
+
+    return res.extract(result, resultLength, *status);
 }
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

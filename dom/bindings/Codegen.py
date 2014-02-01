@@ -9529,11 +9529,11 @@ class CGRegisterProtos(CGAbstractMethod):
     def _defineMacro(self):
        return """
 #define REGISTER_PROTO(_dom_class, _ctor_check) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface, _ctor_check);
+  aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_class), _dom_class##Binding::DefineDOMInterface, _ctor_check);
 #define REGISTER_CONSTRUCTOR(_dom_constructor, _dom_class, _ctor_check) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _ctor_check);
+  aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _ctor_check);
 #define REGISTER_NAVIGATOR_CONSTRUCTOR(_prop, _dom_class, _ctor_check) \\
-  aNameSpaceManager->RegisterNavigatorDOMConstructor(NS_LITERAL_STRING(_prop), _dom_class##Binding::ConstructNavigatorObject, _ctor_check);
+  aNameSpaceManager->RegisterNavigatorDOMConstructor(MOZ_UTF16(_prop), _dom_class##Binding::ConstructNavigatorObject, _ctor_check);
 
 """
     def _undefineMacro(self):

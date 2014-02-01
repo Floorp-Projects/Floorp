@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/nmg.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/nmg.xml
+ * ICU <specials> source: <path>/common/main/nmg.xml
  */
 nmg{
     AuxExemplarCharacters{"[q x z]"}
@@ -33,8 +33,49 @@ nmg{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "d/M/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E d/M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"m:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E d MMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "maná",
@@ -48,7 +89,7 @@ nmg{
                 "EEEE d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "d/M/yyyy",
+                "d/M/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -122,43 +163,6 @@ nmg{
                     "Pfiɛ Burī",
                 }
             }
-            fields{
-                day{
-                    dn{"Duö"}
-                    relative{
-                        "-1"{"Nakugú"}
-                        "0"{"Dɔl"}
-                        "1"{"Namáná"}
-                    }
-                }
-                dayperiod{
-                    dn{"Máná, Muó, Kugú, Bvul"}
-                }
-                era{
-                    dn{"Pīl/Lahlɛ̄"}
-                }
-                hour{
-                    dn{"Wulā"}
-                }
-                minute{
-                    dn{"Mpálâ"}
-                }
-                month{
-                    dn{"Ngwɛn"}
-                }
-                second{
-                    dn{"Nyiɛl"}
-                }
-                week{
-                    dn{"Sɔ́ndɔ"}
-                }
-                year{
-                    dn{"Mbvu"}
-                }
-                zone{
-                    dn{"Nkɛ̌l wulā"}
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -214,5 +218,42 @@ nmg{
         alternateQuotationStart{"«"}
         quotationEnd{"”"}
         quotationStart{"„"}
+    }
+    fields{
+        day{
+            dn{"Duö"}
+            relative{
+                "-1"{"Nakugú"}
+                "0"{"Dɔl"}
+                "1"{"Namáná"}
+            }
+        }
+        dayperiod{
+            dn{"Máná, Muó, Kugú, Bvul"}
+        }
+        era{
+            dn{"Pīl/Lahlɛ̄"}
+        }
+        hour{
+            dn{"Wulā"}
+        }
+        minute{
+            dn{"Mpálâ"}
+        }
+        month{
+            dn{"Ngwɛn"}
+        }
+        second{
+            dn{"Nyiɛl"}
+        }
+        week{
+            dn{"Sɔ́ndɔ"}
+        }
+        year{
+            dn{"Mbvu"}
+        }
+        zone{
+            dn{"Nkɛ̌l wulā"}
+        }
     }
 }

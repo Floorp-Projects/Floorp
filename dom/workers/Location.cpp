@@ -25,7 +25,8 @@ WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
                        NS_ConvertUTF8toUTF16(aInfo.mPort),
                        NS_ConvertUTF8toUTF16(aInfo.mPathname),
                        NS_ConvertUTF8toUTF16(aInfo.mSearch),
-                       NS_ConvertUTF8toUTF16(aInfo.mHash));
+                       NS_ConvertUTF8toUTF16(aInfo.mHash),
+                       aInfo.mOrigin);
 
   return location.forget();
 }

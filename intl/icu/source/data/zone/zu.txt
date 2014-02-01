@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zu.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/zu.xml
+ * ICU <specials> source: <path>/common/main/zu.xml
  */
 zu{
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Sao_Tome"{
             ec{"I-São Tomé"}
@@ -93,12 +93,12 @@ zu{
         "meta:Argentina"{
             ld{"esase-Argentina Summer Time"}
             lg{"esase-Argentina Time"}
-            ls{"Isikhathi Esimisiwe sase-Argentina"}
+            ls{"Isikhathi esimisiwe sase-Argentina"}
         }
         "meta:Argentina_Western"{
-            ld{"Isikhathi Sasehlobo sase-Ntshonalanga ne-Argentina"}
+            ld{"Isikhathi sasehlobo sase-Ntshonalanga ne-Argentina"}
             lg{"Isikhathi saseNyakatho ne-Argentina"}
-            ls{"Isikhathi Esimisiwe sase-Ntshonalanga ne-Argentina"}
+            ls{"Isikhathi esimisiwe sase-Ntshonalanga ne-Argentina"}
         }
         "meta:Armenia"{
             ld{"Isikhathi sehlobo sase-Armenia"}
@@ -154,7 +154,7 @@ zu{
         "meta:Brasilia"{
             ld{"esase-Brasilia Summer Time"}
             lg{"esase-Brasilia Time"}
-            ls{"Isikhathi Esimisiwe sase-Brasilia"}
+            ls{"Isikhathi esimisiwe sase-Brasilia"}
         }
         "meta:Brunei"{
             ls{"Isikhathi sase-Brunei Darussalam"}
@@ -448,7 +448,7 @@ zu{
         "meta:Noronha"{
             ld{"esase-Fernando de Noronha Summer Time"}
             lg{"Isikhathi sase-Fernando de Noronha"}
-            ls{"Isikhathi Esimisiwe sase-Fernando de Noronha"}
+            ls{"Isikhathi esimisiwe sase-Fernando de Noronha"}
         }
         "meta:Novosibirsk"{
             ld{"esase-Novosibirsk Summer Time"}
@@ -517,6 +517,8 @@ zu{
             ls{"esase-Samara Standard Time"}
         }
         "meta:Samoa"{
+            ld{"Isikhathi sehlobo sase-Samoa"}
+            lg{"Isikhathi sase-Samoa"}
             ls{"Isikhathi esivamile sase-Samoa"}
         }
         "meta:Seychelles"{
@@ -615,10 +617,11 @@ zu{
             ls{"Isikhathi Esimisiwe sase-Yekaterinburg"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"Isikhathi sase-{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"Isiskhathi sase-{0}"}
+        regionFormat{"Isikhathi sase-{0}"}
+        regionFormatDaylight{"{0} Isikhathi sasemini"}
+        regionFormatStandard{"{0} Isikhathi esijwayelekile"}
     }
 }

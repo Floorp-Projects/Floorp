@@ -303,7 +303,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     # top of the android java runtime.
     DEFINES['MOZ_USING_ANDROID_JAVA_WIDGETS'] = True
 
-DEFINES['MOZ_OTS_REPORT_ERRORS'] = True
 DEFINES['GRAPHITE2_STATIC'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

@@ -1,20 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/ta.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/ta.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/ta.xml
+ * ICU <specials> source: <path>/xml/collation/ta.xml
  */
 ta{
-    Version{"2.0.76.11"}
+    Version{"2.0.89.0"}
     collations{
         standard{
             Sequence{
-                " [normalization on ]"
+                "[normalization on][reorder Taml Deva Beng Guru Gujr Orya Telu Knda Mlym Sinh]"
                 "&ஔ<ஂ<ஃ"
                 "&ஹ<க்ஷ"
                 "&[before 1]க<க்"
@@ -42,7 +42,7 @@ ta{
                 "&[before 1]ஹ<ஹ்"
                 "&[before 1]க்ஷ<க்ஷ்"
             }
-            Version{"22.1.1"}
+            Version{"24"}
         }
     }
 }
