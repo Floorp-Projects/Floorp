@@ -5848,6 +5848,8 @@ main(int argc, char **argv, char **envp)
 #ifdef JS_ARM_SIMULATOR
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
                              "simulator.")
+        || !op.addIntOption('\0', "arm-sim-stop-at", "NUMBER", "Stop the ARM simulator after the given "
+                            "NUMBER of instructions.", -1)
 #endif
     )
     {
@@ -5900,6 +5902,10 @@ main(int argc, char **argv, char **envp)
 #ifdef JS_ARM_SIMULATOR
     if (op.getBoolOption("arm-sim-icache-checks"))
         jit::Simulator::ICacheCheckingEnabled = true;
+
+    int32_t stopAt = op.getIntOption("arm-sim-stop-at");
+    if (stopAt >= 0)
+        jit::Simulator::StopSimAt = stopAt;
 #endif
 
     // Start the engine.
