@@ -189,7 +189,10 @@
           <description>&welcome.description;</description>
           <label class="text-link"
                  onclick="gSyncPane.signIn(); return false;"
-                 value="&welcome.startButton.label;"/>
+                 value="&welcome.createAccount.label;"/>
+          <label class="text-link"
+                 onclick="gSyncPane.signIn(); return false;"
+                 value="&welcome.signIn.label;"/>
           <spacer flex="1"/>
           <label class="text-link"
                  onclick="gSyncPane.openOldSyncSupportPage(); return false;"
@@ -212,7 +215,7 @@
                 <spacer flex="1"/>
                 <vbox align="end">
                   <button onclick="gSyncPane.unlinkFirefoxAccount(true);"
-                          label="&unlink.label;" />
+                          label="&disconnect.label;" />
                 </vbox>
               </hbox>
 

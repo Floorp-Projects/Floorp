@@ -6,8 +6,8 @@
 <!ENTITY syncCustomize.acceptButton.label "Start">
 
 <!ENTITY syncCustomize.title              "What would you like to sync?">
-<!ENTITY syncCustomize.subTitle           "You can manage this selection in Options.">
-<!ENTITY syncCustomize.subTitleUnix       "You can manage this selection in Preferences.">
+<!ENTITY syncCustomize.description        "You can change this selection in Options.">
+<!ENTITY syncCustomizeUnix.description    "You can change this selection in Preferences.">
 
 <!--
   These engine names are the same as in browser/preferences/sync.dtd except

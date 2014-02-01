@@ -395,7 +395,7 @@
         <image class="sync-panel-icon"/>
         <vbox class="sync-panel-inner">
           <description id="sync-start-panel-title"
-                       value="&syncStartPanel.title;"/>
+                       value="&syncStartPanel.heading;"/>
           <description id="sync-start-panel-subtitle">
 #ifdef XP_UNIX
             &syncStartPanel.subTitleUnix;
@@ -415,24 +415,15 @@
         <image class="sync-panel-icon"/>
         <vbox class="sync-panel-inner">
           <description id="sync-error-panel-title"
-                       value="&syncErrorPanel.title;"/>
+                       value="&syncErrorPanel.heading;"/>
           <description id="sync-error-panel-subtitle"
                        value="&syncErrorPanel.subTitle;"/>
           <hbox class="sync-panel-button-box">
-            <button class="sync-panel-button"
-#ifdef XP_UNIX
-                    label="&syncErrorPanel.prefButtonUnix.label;"
-                    accesskey="&syncErrorPanel.prefButtonUnix.accesskey;"
-#else
-                    label="&syncErrorPanel.prefButton.label;"
-                    accesskey="&syncErrorPanel.prefButton.accesskey;"
-#endif
-                    onclick="gFxAccounts.openPreferences();"/>
             <spacer flex="1"/>
             <button class="sync-panel-button"
                     label="&syncErrorPanel.signInButton.label;"
                     accesskey="&syncErrorPanel.signInButton.accesskey;"
-                    onclick="gFxAccounts.openSignInPage();"/>
+                    onclick="gFxAccounts.openSignInAgainPage();"/>
           </hbox>
         </vbox>
       </hbox>
