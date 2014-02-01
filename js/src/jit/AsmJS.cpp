@@ -5364,20 +5364,20 @@ CheckFunctionsSequential(ModuleCompiler &m)
 // on rt->workerThreadState->asmJSCompilationInProgress.
 class ParallelCompilationGuard
 {
-    WorkerThreadState *parallelState_;
+    bool parallelState_;
   public:
-    ParallelCompilationGuard() : parallelState_(nullptr) {}
+    ParallelCompilationGuard() : parallelState_(false) {}
     ~ParallelCompilationGuard() {
         if (parallelState_) {
-            JS_ASSERT(parallelState_->asmJSCompilationInProgress == true);
-            parallelState_->asmJSCompilationInProgress = false;
+            JS_ASSERT(WorkerThreadState().asmJSCompilationInProgress == true);
+            WorkerThreadState().asmJSCompilationInProgress = false;
         }
     }
-    bool claim(WorkerThreadState *state) {
+    bool claim() {
         JS_ASSERT(!parallelState_);
-        if (!state->asmJSCompilationInProgress.compareExchange(false, true))
+        if (!WorkerThreadState().asmJSCompilationInProgress.compareExchange(false, true))
             return false;
-        parallelState_ = state;
+        parallelState_ = true;
         return true;
     }
 };
@@ -5391,22 +5391,23 @@ ParallelCompilationEnabled(ExclusiveContext *cx)
     // parsing task, ensure that there another free thread to avoid deadlock.
     // (Note: there is at most one thread used for parsing so we don't have to
     // worry about general dining philosophers.)
-    if (!cx->isJSContext())
-        return cx->workerThreadState()->numThreads > 1;
+    if (WorkerThreadState().threadCount <= 1)
+        return false;
 
+    if (!cx->isJSContext())
+        return true;
     return cx->asJSContext()->runtime()->canUseParallelIonCompilation();
 }
 
 // State of compilation as tracked and updated by the main thread.
 struct ParallelGroupState
 {
-    WorkerThreadState &state;
     js::Vector<AsmJSParallelTask> &tasks;
     int32_t outstandingJobs; // Good work, jobs!
     uint32_t compiledJobs;
 
-    ParallelGroupState(WorkerThreadState &state, js::Vector<AsmJSParallelTask> &tasks)
-      : state(state), tasks(tasks), outstandingJobs(0), compiledJobs(0)
+    ParallelGroupState(js::Vector<AsmJSParallelTask> &tasks)
+      : tasks(tasks), outstandingJobs(0), compiledJobs(0)
     { }
 };
 
@@ -5414,14 +5415,14 @@ struct ParallelGroupState
 static AsmJSParallelTask *
 GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
 {
-    AutoLockWorkerThreadState lock(*m.cx()->workerThreadState());
+    AutoLockWorkerThreadState lock;
 
-    while (!group.state.asmJSWorkerFailed()) {
-        if (!group.state.asmJSFinishedList.empty()) {
+    while (!WorkerThreadState().asmJSWorkerFailed()) {
+        if (!WorkerThreadState().asmJSFinishedList().empty()) {
             group.outstandingJobs--;
-            return group.state.asmJSFinishedList.popCopy();
+            return WorkerThreadState().asmJSFinishedList().popCopy();
         }
-        group.state.wait(WorkerThreadState::CONSUMER);
+        WorkerThreadState().wait(GlobalWorkerThreadState::CONSUMER);
     }
 
     return nullptr;
@@ -5471,9 +5472,14 @@ GetUnusedTask(ParallelGroupState &group, uint32_t i, AsmJSParallelTask **outTask
 static bool
 CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
 {
-    JS_ASSERT(group.state.asmJSWorklist.empty());
-    JS_ASSERT(group.state.asmJSFinishedList.empty());
-    group.state.resetAsmJSFailureState();
+#ifdef DEBUG
+    {
+        AutoLockWorkerThreadState lock;
+        JS_ASSERT(WorkerThreadState().asmJSWorklist().empty());
+        JS_ASSERT(WorkerThreadState().asmJSFinishedList().empty());
+    }
+#endif
+    WorkerThreadState().resetAsmJSFailureState();
 
     for (unsigned i = 0; PeekToken(m.parser()) == TOK_FUNCTION; i++) {
         // Get exclusive access to an empty LifoAlloc from the thread group's pool.
@@ -5488,7 +5494,7 @@ CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
             return false;
 
         // Perform optimizations and LIR generation on a worker thread.
-        task->init(func, mir);
+        task->init(m.cx()->compartment()->runtimeFromAnyThread(), func, mir);
         if (!StartOffThreadAsmJSCompile(m.cx(), task))
             return false;
 
@@ -5507,9 +5513,14 @@ CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
 
     JS_ASSERT(group.outstandingJobs == 0);
     JS_ASSERT(group.compiledJobs == m.numFunctions());
-    JS_ASSERT(group.state.asmJSWorklist.empty());
-    JS_ASSERT(group.state.asmJSFinishedList.empty());
-    JS_ASSERT(!group.state.asmJSWorkerFailed());
+#ifdef DEBUG
+    {
+        AutoLockWorkerThreadState lock;
+        JS_ASSERT(WorkerThreadState().asmJSWorklist().empty());
+        JS_ASSERT(WorkerThreadState().asmJSFinishedList().empty());
+    }
+#endif
+    JS_ASSERT(!WorkerThreadState().asmJSWorkerFailed());
     return true;
 }
 
@@ -5526,32 +5537,32 @@ CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
     if (!group.outstandingJobs)
         return;
 
-    AutoLockWorkerThreadState lock(*m.cx()->workerThreadState());
+    AutoLockWorkerThreadState lock;
 
     // From the compiling tasks, eliminate those waiting for worker assignation.
-    group.outstandingJobs -= group.state.asmJSWorklist.length();
-    group.state.asmJSWorklist.clear();
+    group.outstandingJobs -= WorkerThreadState().asmJSWorklist().length();
+    WorkerThreadState().asmJSWorklist().clear();
 
     // From the compiling tasks, eliminate those waiting for codegen.
-    group.outstandingJobs -= group.state.asmJSFinishedList.length();
-    group.state.asmJSFinishedList.clear();
+    group.outstandingJobs -= WorkerThreadState().asmJSFinishedList().length();
+    WorkerThreadState().asmJSFinishedList().clear();
 
     // Eliminate tasks that failed without adding to the finished list.
-    group.outstandingJobs -= group.state.harvestFailedAsmJSJobs();
+    group.outstandingJobs -= WorkerThreadState().harvestFailedAsmJSJobs();
 
     // Any remaining tasks are therefore undergoing active compilation.
     JS_ASSERT(group.outstandingJobs >= 0);
     while (group.outstandingJobs > 0) {
-        group.state.wait(WorkerThreadState::CONSUMER);
+        WorkerThreadState().wait(GlobalWorkerThreadState::CONSUMER);
 
-        group.outstandingJobs -= group.state.harvestFailedAsmJSJobs();
-        group.outstandingJobs -= group.state.asmJSFinishedList.length();
-        group.state.asmJSFinishedList.clear();
+        group.outstandingJobs -= WorkerThreadState().harvestFailedAsmJSJobs();
+        group.outstandingJobs -= WorkerThreadState().asmJSFinishedList().length();
+        WorkerThreadState().asmJSFinishedList().clear();
     }
 
     JS_ASSERT(group.outstandingJobs == 0);
-    JS_ASSERT(group.state.asmJSWorklist.empty());
-    JS_ASSERT(group.state.asmJSFinishedList.empty());
+    JS_ASSERT(WorkerThreadState().asmJSWorklist().empty());
+    JS_ASSERT(WorkerThreadState().asmJSFinishedList().empty());
 }
 
 static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
@@ -5565,12 +5576,11 @@ CheckFunctionsParallel(ModuleCompiler &m)
     // constraint by hoisting asmJS* state out of WorkerThreadState so multiple
     // concurrent asm.js parallel compilations don't race.)
     ParallelCompilationGuard g;
-    if (!ParallelCompilationEnabled(m.cx()) || !g.claim(m.cx()->workerThreadState()))
+    if (!ParallelCompilationEnabled(m.cx()) || !g.claim())
         return CheckFunctionsSequential(m);
 
     // Saturate all worker threads plus the main thread.
-    WorkerThreadState &state = *m.cx()->workerThreadState();
-    size_t numParallelJobs = state.numThreads + 1;
+    size_t numParallelJobs = WorkerThreadState().threadCount + 1;
 
     // Allocate scoped AsmJSParallelTask objects. Each contains a unique
     // LifoAlloc that provides all necessary memory for compilation.
@@ -5582,12 +5592,12 @@ CheckFunctionsParallel(ModuleCompiler &m)
         tasks.infallibleAppend(LIFO_ALLOC_PARALLEL_CHUNK_SIZE);
 
     // With compilation memory in-scope, dispatch worker threads.
-    ParallelGroupState group(state, tasks);
+    ParallelGroupState group(tasks);
     if (!CheckFunctionsParallelImpl(m, group)) {
         CancelOutstandingJobs(m, group);
 
         // If failure was triggered by a worker thread, report error.
-        if (void *maybeFunc = state.maybeAsmJSFailedFunction()) {
+        if (void *maybeFunc = WorkerThreadState().maybeAsmJSFailedFunction()) {
             ModuleCompiler::Func *func = reinterpret_cast<ModuleCompiler::Func *>(maybeFunc);
             return m.failOffset(func->srcOffset(), "allocation failure during compilation");
         }
