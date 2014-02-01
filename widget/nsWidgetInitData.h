@@ -101,7 +101,8 @@ struct nsWidgetInitData {
       mNoAutoHide(false),
       mIsDragPopup(false),
       mIsAnimationSuppressed(false),
-      mSupportTranslucency(false)
+      mSupportTranslucency(false),
+      mMouseTransparent(false)
   {
   }
 
@@ -120,6 +121,9 @@ struct nsWidgetInitData {
   bool          mIsAnimationSuppressed;
   // true if the window should support an alpha channel, if available.
   bool          mSupportTranslucency;
+  // true if the window should be transparent to mouse events. Currently this is
+  // only valid for eWindowType_popup widgets
+  bool          mMouseTransparent;
 };
 
 #endif // nsWidgetInitData_h__

@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.934';
-PDFJS.build = 'c80df60';
+PDFJS.version = '0.8.990';
+PDFJS.build = '54f6291';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -2005,410 +2005,6 @@ var LabCS = (function LabCSClosure() {
 
 
 
-var PatternType = {
-  AXIAL: 2,
-  RADIAL: 3
-};
-
-var Pattern = (function PatternClosure() {
-  // Constructor should define this.getPattern
-  function Pattern() {
-    error('should not call Pattern constructor');
-  }
-
-  Pattern.prototype = {
-    // Input: current Canvas context
-    // Output: the appropriate fillStyle or strokeStyle
-    getPattern: function Pattern_getPattern(ctx) {
-      error('Should not call Pattern.getStyle: ' + ctx);
-    }
-  };
-
-  Pattern.shadingFromIR = function Pattern_shadingFromIR(raw) {
-    return Shadings[raw[0]].fromIR(raw);
-  };
-
-  Pattern.parseShading = function Pattern_parseShading(shading, matrix, xref,
-                                                       res) {
-
-    var dict = isStream(shading) ? shading.dict : shading;
-    var type = dict.get('ShadingType');
-
-    switch (type) {
-      case PatternType.AXIAL:
-      case PatternType.RADIAL:
-        // Both radial and axial shadings are handled by RadialAxial shading.
-        return new Shadings.RadialAxial(dict, matrix, xref, res);
-      default:
-        UnsupportedManager.notify(UNSUPPORTED_FEATURES.shadingPattern);
-        return new Shadings.Dummy();
-    }
-  };
-  return Pattern;
-})();
-
-var Shadings = {};
-
-// A small number to offset the first/last color stops so we can insert ones to
-// support extend.  Number.MIN_VALUE appears to be too small and breaks the
-// extend. 1e-7 works in FF but chrome seems to use an even smaller sized number
-// internally so we have to go bigger.
-Shadings.SMALL_NUMBER = 1e-2;
-
-// Radial and axial shading have very similar implementations
-// If needed, the implementations can be broken into two classes
-Shadings.RadialAxial = (function RadialAxialClosure() {
-  function RadialAxial(dict, matrix, xref, res, ctx) {
-    this.matrix = matrix;
-    this.coordsArr = dict.get('Coords');
-    this.shadingType = dict.get('ShadingType');
-    this.type = 'Pattern';
-    this.ctx = ctx;
-    var cs = dict.get('ColorSpace', 'CS');
-    cs = ColorSpace.parse(cs, xref, res);
-    this.cs = cs;
-
-    var t0 = 0.0, t1 = 1.0;
-    if (dict.has('Domain')) {
-      var domainArr = dict.get('Domain');
-      t0 = domainArr[0];
-      t1 = domainArr[1];
-    }
-
-    var extendStart = false, extendEnd = false;
-    if (dict.has('Extend')) {
-      var extendArr = dict.get('Extend');
-      extendStart = extendArr[0];
-      extendEnd = extendArr[1];
-    }
-
-    if (this.shadingType === PatternType.RADIAL &&
-       (!extendStart || !extendEnd)) {
-      // Radial gradient only currently works if either circle is fully within
-      // the other circle.
-      var x1 = this.coordsArr[0];
-      var y1 = this.coordsArr[1];
-      var r1 = this.coordsArr[2];
-      var x2 = this.coordsArr[3];
-      var y2 = this.coordsArr[4];
-      var r2 = this.coordsArr[5];
-      var distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-      if (r1 <= r2 + distance &&
-          r2 <= r1 + distance) {
-        warn('Unsupported radial gradient.');
-      }
-    }
-
-    this.extendStart = extendStart;
-    this.extendEnd = extendEnd;
-
-    var fnObj = dict.get('Function');
-    var fn;
-    if (isArray(fnObj)) {
-      var fnArray = [];
-      for (var j = 0, jj = fnObj.length; j < jj; j++) {
-        var obj = xref.fetchIfRef(fnObj[j]);
-        if (!isPDFFunction(obj)) {
-          error('Invalid function');
-        }
-        fnArray.push(PDFFunction.parse(xref, obj));
-      }
-      fn = function radialAxialColorFunction(arg) {
-        var out = [];
-        for (var i = 0, ii = fnArray.length; i < ii; i++) {
-          out.push(fnArray[i](arg)[0]);
-        }
-        return out;
-      };
-    } else {
-      if (!isPDFFunction(fnObj)) {
-        error('Invalid function');
-      }
-      fn = PDFFunction.parse(xref, fnObj);
-    }
-
-    // 10 samples seems good enough for now, but probably won't work
-    // if there are sharp color changes. Ideally, we would implement
-    // the spec faithfully and add lossless optimizations.
-    var diff = t1 - t0;
-    var step = diff / 10;
-
-    var colorStops = this.colorStops = [];
-
-    // Protect against bad domains so we don't end up in an infinte loop below.
-    if (t0 >= t1 || step <= 0) {
-      // Acrobat doesn't seem to handle these cases so we'll ignore for
-      // now.
-      info('Bad shading domain.');
-      return;
-    }
-
-    for (var i = t0; i <= t1; i += step) {
-      var rgbColor = cs.getRgb(fn([i]), 0);
-      var cssColor = Util.makeCssRgb(rgbColor);
-      colorStops.push([(i - t0) / diff, cssColor]);
-    }
-
-    var background = 'transparent';
-    if (dict.has('Background')) {
-      var rgbColor = cs.getRgb(dict.get('Background'), 0);
-      background = Util.makeCssRgb(rgbColor);
-    }
-
-    if (!extendStart) {
-      // Insert a color stop at the front and offset the first real color stop
-      // so it doesn't conflict with the one we insert.
-      colorStops.unshift([0, background]);
-      colorStops[1][0] += Shadings.SMALL_NUMBER;
-    }
-    if (!extendEnd) {
-      // Same idea as above in extendStart but for the end.
-      colorStops[colorStops.length - 1][0] -= Shadings.SMALL_NUMBER;
-      colorStops.push([1, background]);
-    }
-
-    this.colorStops = colorStops;
-  }
-
-  RadialAxial.fromIR = function RadialAxial_fromIR(raw) {
-    var type = raw[1];
-    var colorStops = raw[2];
-    var p0 = raw[3];
-    var p1 = raw[4];
-    var r0 = raw[5];
-    var r1 = raw[6];
-    return {
-      type: 'Pattern',
-      getPattern: function RadialAxial_getPattern(ctx) {
-        var grad;
-        if (type == PatternType.AXIAL)
-          grad = ctx.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
-        else if (type == PatternType.RADIAL)
-          grad = ctx.createRadialGradient(p0[0], p0[1], r0, p1[0], p1[1], r1);
-
-        for (var i = 0, ii = colorStops.length; i < ii; ++i) {
-          var c = colorStops[i];
-          grad.addColorStop(c[0], c[1]);
-        }
-        return grad;
-      }
-    };
-  };
-
-  RadialAxial.prototype = {
-    getIR: function RadialAxial_getIR() {
-      var coordsArr = this.coordsArr;
-      var type = this.shadingType;
-      if (type == PatternType.AXIAL) {
-        var p0 = [coordsArr[0], coordsArr[1]];
-        var p1 = [coordsArr[2], coordsArr[3]];
-        var r0 = null;
-        var r1 = null;
-      } else if (type == PatternType.RADIAL) {
-        var p0 = [coordsArr[0], coordsArr[1]];
-        var p1 = [coordsArr[3], coordsArr[4]];
-        var r0 = coordsArr[2];
-        var r1 = coordsArr[5];
-      } else {
-        error('getPattern type unknown: ' + type);
-      }
-
-      var matrix = this.matrix;
-      if (matrix) {
-        p0 = Util.applyTransform(p0, matrix);
-        p1 = Util.applyTransform(p1, matrix);
-      }
-
-      return ['RadialAxial', type, this.colorStops, p0, p1, r0, r1];
-    }
-  };
-
-  return RadialAxial;
-})();
-
-Shadings.Dummy = (function DummyClosure() {
-  function Dummy() {
-    this.type = 'Pattern';
-  }
-
-  Dummy.fromIR = function Dummy_fromIR() {
-    return {
-      type: 'Pattern',
-      getPattern: function Dummy_fromIR_getPattern() {
-        return 'hotpink';
-      }
-    };
-  };
-
-  Dummy.prototype = {
-    getIR: function Dummy_getIR() {
-      return ['Dummy'];
-    }
-  };
-  return Dummy;
-})();
-
-var TilingPattern = (function TilingPatternClosure() {
-  var PaintType = {
-    COLORED: 1,
-    UNCOLORED: 2
-  };
-
-  var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
-
-  function TilingPattern(IR, color, ctx, objs, commonObjs, baseTransform) {
-    this.name = IR[1][0].name;
-    this.operatorList = IR[2];
-    this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
-    this.bbox = IR[4];
-    this.xstep = IR[5];
-    this.ystep = IR[6];
-    this.paintType = IR[7];
-    this.tilingType = IR[8];
-    this.color = color;
-    this.objs = objs;
-    this.commonObjs = commonObjs;
-    this.baseTransform = baseTransform;
-    this.type = 'Pattern';
-    this.ctx = ctx;
-  }
-
-  TilingPattern.getIR = function TilingPattern_getIR(operatorList, dict, args) {
-    var matrix = dict.get('Matrix');
-    var bbox = dict.get('BBox');
-    var xstep = dict.get('XStep');
-    var ystep = dict.get('YStep');
-    var paintType = dict.get('PaintType');
-    var tilingType = dict.get('TilingType');
-
-    return [
-      'TilingPattern', args, operatorList, matrix, bbox, xstep, ystep,
-      paintType, tilingType
-    ];
-  };
-
-  TilingPattern.prototype = {
-    createPatternCanvas: function TilinPattern_createPatternCanvas(owner) {
-      var operatorList = this.operatorList;
-      var bbox = this.bbox;
-      var xstep = this.xstep;
-      var ystep = this.ystep;
-      var paintType = this.paintType;
-      var tilingType = this.tilingType;
-      var color = this.color;
-      var objs = this.objs;
-      var commonObjs = this.commonObjs;
-      var ctx = this.ctx;
-
-      info('TilingType: ' + tilingType);
-
-      var x0 = bbox[0], y0 = bbox[1], x1 = bbox[2], y1 = bbox[3];
-
-      var topLeft = [x0, y0];
-      // we want the canvas to be as large as the step size
-      var botRight = [x0 + xstep, y0 + ystep];
-
-      var width = botRight[0] - topLeft[0];
-      var height = botRight[1] - topLeft[1];
-
-      // Obtain scale from matrix and current transformation matrix.
-      var matrixScale = Util.singularValueDecompose2dScale(this.matrix);
-      var curMatrixScale = Util.singularValueDecompose2dScale(
-                             this.baseTransform);
-      var combinedScale = [matrixScale[0] * curMatrixScale[0],
-                           matrixScale[1] * curMatrixScale[1]];
-
-      // MAX_PATTERN_SIZE is used to avoid OOM situation.
-      // Use width and height values that are as close as possible to the end
-      // result when the pattern is used. Too low value makes the pattern look
-      // blurry. Too large value makes it look too crispy.
-      width = Math.min(Math.ceil(Math.abs(width * combinedScale[0])),
-                       MAX_PATTERN_SIZE);
-
-      height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
-                        MAX_PATTERN_SIZE);
-
-      var tmpCanvas = CachedCanvases.getCanvas('pattern', width, height, true);
-      var tmpCtx = tmpCanvas.context;
-      var graphics = new CanvasGraphics(tmpCtx, commonObjs, objs);
-      graphics.groupLevel = owner.groupLevel;
-
-      this.setFillAndStrokeStyleToContext(tmpCtx, paintType, color);
-
-      this.setScale(width, height, xstep, ystep);
-      this.transformToScale(graphics);
-
-      // transform coordinates to pattern space
-      var tmpTranslate = [1, 0, 0, 1, -topLeft[0], -topLeft[1]];
-      graphics.transform.apply(graphics, tmpTranslate);
-
-      this.clipBbox(graphics, bbox, x0, y0, x1, y1);
-
-      graphics.executeOperatorList(operatorList);
-      return tmpCanvas.canvas;
-    },
-
-    setScale: function TilingPattern_setScale(width, height, xstep, ystep) {
-      this.scale = [width / xstep, height / ystep];
-    },
-
-    transformToScale: function TilingPattern_transformToScale(graphics) {
-      var scale = this.scale;
-      var tmpScale = [scale[0], 0, 0, scale[1], 0, 0];
-      graphics.transform.apply(graphics, tmpScale);
-    },
-
-    scaleToContext: function TilingPattern_scaleToContext() {
-      var scale = this.scale;
-      this.ctx.scale(1 / scale[0], 1 / scale[1]);
-    },
-
-    clipBbox: function clipBbox(graphics, bbox, x0, y0, x1, y1) {
-      if (bbox && isArray(bbox) && 4 == bbox.length) {
-        var bboxWidth = x1 - x0;
-        var bboxHeight = y1 - y0;
-        graphics.rectangle(x0, y0, bboxWidth, bboxHeight);
-        graphics.clip();
-        graphics.endPath();
-      }
-    },
-
-    setFillAndStrokeStyleToContext:
-      function setFillAndStrokeStyleToContext(context, paintType, color) {
-      switch (paintType) {
-        case PaintType.COLORED:
-          var ctx = this.ctx;
-          context.fillStyle = ctx.fillStyle;
-          context.strokeStyle = ctx.strokeStyle;
-          break;
-        case PaintType.UNCOLORED:
-          var rgbColor = ColorSpace.singletons.rgb.getRgb(color, 0);
-          var cssColor = Util.makeCssRgb(rgbColor);
-          context.fillStyle = cssColor;
-          context.strokeStyle = cssColor;
-          break;
-        default:
-          error('Unsupported paint type: ' + paintType);
-      }
-    },
-
-    getPattern: function TilingPattern_getPattern(ctx, owner) {
-      var temporaryPatternCanvas = this.createPatternCanvas(owner);
-
-      var ctx = this.ctx;
-      ctx.setTransform.apply(ctx, this.baseTransform);
-      ctx.transform.apply(ctx, this.matrix);
-      this.scaleToContext();
-
-      return ctx.createPattern(temporaryPatternCanvas, 'repeat');
-    }
-  };
-
-  return TilingPattern;
-})();
-
-
-
 var PDFFunction = (function PDFFunctionClosure() {
   var CONSTRUCT_SAMPLED = 0;
   var CONSTRUCT_INTERPOLATED = 2;
@@ -2859,9 +2455,8 @@ var PostScriptStack = (function PostScriptStackClosure() {
   return PostScriptStack;
 })();
 var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
-  function PostScriptEvaluator(operators, operands) {
+  function PostScriptEvaluator(operators) {
     this.operators = operators;
-    this.operands = operands;
   }
   PostScriptEvaluator.prototype = {
     execute: function PostScriptEvaluator_execute(initialStack) {
@@ -3089,200 +2684,6 @@ var PostScriptEvaluator = (function PostScriptEvaluatorClosure() {
   };
   return PostScriptEvaluator;
 })();
-
-var PostScriptParser = (function PostScriptParserClosure() {
-  function PostScriptParser(lexer) {
-    this.lexer = lexer;
-    this.operators = [];
-    this.token = null;
-    this.prev = null;
-  }
-  PostScriptParser.prototype = {
-    nextToken: function PostScriptParser_nextToken() {
-      this.prev = this.token;
-      this.token = this.lexer.getToken();
-    },
-    accept: function PostScriptParser_accept(type) {
-      if (this.token.type == type) {
-        this.nextToken();
-        return true;
-      }
-      return false;
-    },
-    expect: function PostScriptParser_expect(type) {
-      if (this.accept(type))
-        return true;
-      error('Unexpected symbol: found ' + this.token.type + ' expected ' +
-            type + '.');
-    },
-    parse: function PostScriptParser_parse() {
-      this.nextToken();
-      this.expect(PostScriptTokenTypes.LBRACE);
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      return this.operators;
-    },
-    parseBlock: function PostScriptParser_parseBlock() {
-      while (true) {
-        if (this.accept(PostScriptTokenTypes.NUMBER)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
-          this.operators.push(this.prev.value);
-        } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-          this.parseCondition();
-        } else {
-          return;
-        }
-      }
-    },
-    parseCondition: function PostScriptParser_parseCondition() {
-      // Add two place holders that will be updated later
-      var conditionLocation = this.operators.length;
-      this.operators.push(null, null);
-
-      this.parseBlock();
-      this.expect(PostScriptTokenTypes.RBRACE);
-      if (this.accept(PostScriptTokenTypes.IF)) {
-        // The true block is right after the 'if' so it just falls through on
-        // true else it jumps and skips the true block.
-        this.operators[conditionLocation] = this.operators.length;
-        this.operators[conditionLocation + 1] = 'jz';
-      } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
-        var jumpLocation = this.operators.length;
-        this.operators.push(null, null);
-        var endOfTrue = this.operators.length;
-        this.parseBlock();
-        this.expect(PostScriptTokenTypes.RBRACE);
-        this.expect(PostScriptTokenTypes.IFELSE);
-        // The jump is added at the end of the true block to skip the false
-        // block.
-        this.operators[jumpLocation] = this.operators.length;
-        this.operators[jumpLocation + 1] = 'j';
-
-        this.operators[conditionLocation] = endOfTrue;
-        this.operators[conditionLocation + 1] = 'jz';
-      } else {
-        error('PS Function: error parsing conditional.');
-      }
-    }
-  };
-  return PostScriptParser;
-})();
-
-var PostScriptTokenTypes = {
-  LBRACE: 0,
-  RBRACE: 1,
-  NUMBER: 2,
-  OPERATOR: 3,
-  IF: 4,
-  IFELSE: 5
-};
-
-var PostScriptToken = (function PostScriptTokenClosure() {
-  function PostScriptToken(type, value) {
-    this.type = type;
-    this.value = value;
-  }
-
-  var opCache = {};
-
-  PostScriptToken.getOperator = function PostScriptToken_getOperator(op) {
-    var opValue = opCache[op];
-    if (opValue)
-      return opValue;
-
-    return opCache[op] = new PostScriptToken(PostScriptTokenTypes.OPERATOR, op);
-  };
-
-  PostScriptToken.LBRACE = new PostScriptToken(PostScriptTokenTypes.LBRACE,
-                                                '{');
-  PostScriptToken.RBRACE = new PostScriptToken(PostScriptTokenTypes.RBRACE,
-                                                '}');
-  PostScriptToken.IF = new PostScriptToken(PostScriptTokenTypes.IF, 'IF');
-  PostScriptToken.IFELSE = new PostScriptToken(PostScriptTokenTypes.IFELSE,
-                                                'IFELSE');
-  return PostScriptToken;
-})();
-
-var PostScriptLexer = (function PostScriptLexerClosure() {
-  function PostScriptLexer(stream) {
-    this.stream = stream;
-    this.nextChar();
-  }
-  PostScriptLexer.prototype = {
-    nextChar: function PostScriptLexer_nextChar() {
-      return (this.currentChar = this.stream.getByte());
-    },
-    getToken: function PostScriptLexer_getToken() {
-      var s = '';
-      var comment = false;
-      var ch = this.currentChar;
-
-      // skip comments
-      while (true) {
-        if (ch < 0) {
-          return EOF;
-        }
-
-        if (comment) {
-          if (ch === 0x0A || ch === 0x0D) {
-            comment = false;
-          }
-        } else if (ch == 0x25) { // '%'
-          comment = true;
-        } else if (!Lexer.isSpace(ch)) {
-          break;
-        }
-        ch = this.nextChar();
-      }
-      switch (ch | 0) {
-        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: // '0'-'4'
-        case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: // '5'-'9'
-        case 0x2B: case 0x2D: case 0x2E: // '+', '-', '.'
-          return new PostScriptToken(PostScriptTokenTypes.NUMBER,
-                                      this.getNumber());
-        case 0x7B: // '{'
-          this.nextChar();
-          return PostScriptToken.LBRACE;
-        case 0x7D: // '}'
-          this.nextChar();
-          return PostScriptToken.RBRACE;
-      }
-      // operator
-      var str = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0 && // and 'A'-'Z', 'a'-'z'
-             ((ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A))) {
-        str += String.fromCharCode(ch);
-      }
-      switch (str.toLowerCase()) {
-        case 'if':
-          return PostScriptToken.IF;
-        case 'ifelse':
-          return PostScriptToken.IFELSE;
-        default:
-          return PostScriptToken.getOperator(str);
-      }
-    },
-    getNumber: function PostScriptLexer_getNumber() {
-      var ch = this.currentChar;
-      var str = String.fromCharCode(ch);
-      while ((ch = this.nextChar()) >= 0) {
-        if ((ch >= 0x30 && ch <= 0x39) || // '0'-'9'
-             ch === 0x2D || ch === 0x2E) { // '-', '.'
-          str += String.fromCharCode(ch);
-        } else {
-          break;
-        }
-      }
-      var value = parseFloat(str);
-      if (isNaN(value))
-        error('Invalid floating point number: ' + value);
-      return value;
-    }
-  };
-  return PostScriptLexer;
-})();
-
 
 
 var Annotation = (function AnnotationClosure() {
@@ -4271,10 +3672,11 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
     },
     /**
      * @return {Promise} A promise that is resolved when the document's data
-     * is loaded
+     * is loaded. It is resolved with an {Object} that contains the length
+     * property that indicates size of the PDF data in bytes.
      */
-    dataLoaded: function PDFDocumentProxy_dataLoaded() {
-      return this.transport.dataLoaded();
+    getDownloadInfo: function PDFDocumentProxy_getDownloadInfo() {
+      return this.transport.downloadInfoPromise;
     },
     /**
      * Cleans up resources allocated by the document, e.g. created @font-face.
@@ -4547,7 +3949,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
     this.pageCache = [];
     this.pagePromises = [];
     this.embeddedFontsUsed = false;
-
+    this.downloadInfoPromise = new PDFJS.LegacyPromise();
     this.passwordCallback = null;
 
     // If worker support isn't disabled explicit and the browser has worker
@@ -4717,6 +4119,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
         this.workerReadyPromise.reject(data.exception.message, data.exception);
       }, this);
 
+      messageHandler.on('DataLoaded', function transportPage(data) {
+        this.downloadInfoPromise.resolve(data);
+      }, this);
+
       messageHandler.on('GetPage', function transportPage(data) {
         var pageInfo = data.pageInfo;
         var page = new PDFPageProxy(pageInfo, this);
@@ -4881,18 +4287,6 @@ var WorkerTransport = (function WorkerTransportClosure() {
       this.messageHandler.send('GetData', null, function(data) {
         promise.resolve(data);
       });
-    },
-
-    dataLoaded: function WorkerTransport_dataLoaded() {
-      if (this.dataLoadedPromise) {
-        return this.dataLoadedPromise;
-      }
-      var promise = new PDFJS.LegacyPromise();
-      this.messageHandler.send('DataLoaded', null, function(args) {
-        promise.resolve(args);
-      });
-      this.dataLoadedPromise = promise;
-      return promise;
     },
 
     getPage: function WorkerTransport_getPage(pageNumber, promise) {
@@ -5624,6 +5018,7 @@ var CanvasExtraState = (function CanvasExtraStateClosure() {
     this.fillAlpha = 1;
     this.strokeAlpha = 1;
     this.lineWidth = 1;
+    this.activeSMask = null; // nonclonable field (see the save method below)
 
     this.old = old;
   }
@@ -5664,6 +5059,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     this.baseTransform = null;
     this.baseTransformStack = [];
     this.groupLevel = 0;
+    this.smaskStack = [];
+    this.smaskCounter = 0;
+    this.tempSMask = null;
     if (canvasCtx) {
       addContextCurrentTransform(canvasCtx);
     }
@@ -5681,45 +5079,97 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     // of putImageData(). (E.g. in Firefox we make two short-lived copies of
     // the data passed to putImageData()). |n| shouldn't be too small, however,
     // because too many putImageData() calls will slow things down.
+    //
+    // Note: as written, if the last chunk is partial, the putImageData() call
+    // will (conceptually) put pixels past the bounds of the canvas.  But
+    // that's ok; any such pixels are ignored.
 
-    var rowsInFullChunks = 16;
-    var fullChunks = (imgData.height / rowsInFullChunks) | 0;
-    var rowsInLastChunk = imgData.height - fullChunks * rowsInFullChunks;
-    var elemsInFullChunks = imgData.width * rowsInFullChunks * 4;
-    var elemsInLastChunk = imgData.width * rowsInLastChunk * 4;
+    var height = imgData.height, width = imgData.width;
+    var fullChunkHeight = 16;
+    var fracChunks = height / fullChunkHeight;
+    var fullChunks = Math.floor(fracChunks);
+    var totalChunks = Math.ceil(fracChunks);
+    var partialChunkHeight = height - fullChunks * fullChunkHeight;
 
-    var chunkImgData = ctx.createImageData(imgData.width, rowsInFullChunks);
+    var chunkImgData = ctx.createImageData(width, fullChunkHeight);
     var srcPos = 0;
     var src = imgData.data;
     var dst = chunkImgData.data;
-    var haveSetAndSubarray = 'set' in dst && 'subarray' in src;
 
-    // Do all the full-size chunks.
-    for (var i = 0; i < fullChunks; i++) {
-      if (haveSetAndSubarray) {
-        dst.set(src.subarray(srcPos, srcPos + elemsInFullChunks));
-        srcPos += elemsInFullChunks;
-      } else {
-        for (var j = 0; j < elemsInFullChunks; j++) {
-          chunkImgData.data[j] = imgData.data[srcPos++];
-        }
-      }
-      ctx.putImageData(chunkImgData, 0, i * rowsInFullChunks);
-    }
+    // There are multiple forms in which the pixel data can be passed, and
+    // imgData.kind tells us which one this is.
 
-    // Do the final, partial chunk, if required.
-    if (rowsInLastChunk !== 0) {
-      if (haveSetAndSubarray) {
-        dst.set(src.subarray(srcPos, srcPos + elemsInLastChunk));
-        srcPos += elemsInLastChunk;
-      } else {
-        for (var j = 0; j < elemsInLastChunk; j++) {
-          chunkImgData.data[j] = imgData.data[srcPos++];
-        }
+    if (imgData.kind === 'grayscale_1bpp') {
+      // Grayscale, 1 bit per pixel (i.e. black-and-white).
+      var srcData = imgData.data;
+      var destData = chunkImgData.data;
+      var destDataLength = destData.length;
+      var origLength = imgData.origLength;
+      for (var i = 3; i < destDataLength; i += 4) {
+        destData[i] = 255;
       }
-      // This (conceptually) puts pixels past the bounds of the canvas.  But
-      // that's ok; any such pixels are ignored.
-      ctx.putImageData(chunkImgData, 0, fullChunks * rowsInFullChunks);
+      for (var i = 0; i < totalChunks; i++) {
+        var thisChunkHeight =
+          (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
+        var destPos = 0;
+        for (var j = 0; j < thisChunkHeight; j++) {
+          var mask = 0;
+          var srcByte = 0;
+          for (var k = 0; k < width; k++, destPos += 4) {
+            if (mask === 0) {
+              if (srcPos >= origLength) {
+                break;
+              }
+              srcByte = srcData[srcPos++];
+              mask = 128;
+            }
+
+            if ((srcByte & mask)) {
+              destData[destPos] = 255;
+              destData[destPos + 1] = 255;
+              destData[destPos + 2] = 255;
+            } else {
+              destData[destPos] = 0;
+              destData[destPos + 1] = 0;
+              destData[destPos + 2] = 0;
+            }
+
+            mask >>= 1;
+          }
+        }
+        if (destPos < destDataLength) {
+          // We ran out of input. Make all remaining pixels transparent.
+          destPos += 3;
+          do {
+            destData[destPos] = 0;
+            destPos += 4;
+          } while (destPos < destDataLength);
+        }
+
+        ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
+      }
+
+    } else if (imgData.kind === 'rgba_32bpp') {
+      // RGBA, 32-bits per pixel.
+      var haveSetAndSubarray = 'set' in dst && 'subarray' in src;
+
+      for (var i = 0; i < totalChunks; i++) {
+        var thisChunkHeight =
+          (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
+        var elemsInThisChunk = imgData.width * thisChunkHeight * 4;
+        if (haveSetAndSubarray) {
+          dst.set(src.subarray(srcPos, srcPos + elemsInThisChunk));
+          srcPos += elemsInThisChunk;
+        } else {
+          for (var j = 0; j < elemsInThisChunk; j++) {
+            chunkImgData.data[j] = imgData.data[srcPos++];
+          }
+        }
+        ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
+      }
+
+    } else {
+        error('bad image kind: ' + imgData.kind);
     }
   }
 
@@ -5770,6 +5220,73 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
   }
 
+  function composeSMask(ctx, smask, layerCtx) {
+    var mask = smask.canvas;
+    var maskCtx = smask.context;
+    var width = mask.width, height = mask.height;
+
+    var addBackdropFn;
+    if (smask.backdrop) {
+      var cs = smask.colorSpace || ColorSpace.singletons.rgb;
+      var backdrop = cs.getRgb(smask.backdrop, 0);
+      addBackdropFn = function (r0, g0, b0, bytes) {
+        var length = bytes.length;
+        for (var i = 3; i < length; i += 4) {
+          var alpha = bytes[i] / 255;
+          if (alpha === 0) {
+            bytes[i - 3] = r0;
+            bytes[i - 2] = g0;
+            bytes[i - 1] = b0;
+          } else if (alpha < 1) {
+            var alpha_ = 1 - alpha;
+            bytes[i - 3] = (bytes[i - 3] * alpha + r0 * alpha_) | 0;
+            bytes[i - 2] = (bytes[i - 2] * alpha + g0 * alpha_) | 0;
+            bytes[i - 1] = (bytes[i - 1] * alpha + b0 * alpha_) | 0;
+          }
+        }
+      }.bind(null, backdrop[0], backdrop[1], backdrop[2]);
+    } else {
+      addBackdropFn = function () {};
+    }
+
+    var composeFn;
+    if (smask.subtype === 'Luminosity') {
+      composeFn = function (maskDataBytes, layerDataBytes) {
+        var length = maskDataBytes.length;
+        for (var i = 3; i < length; i += 4) {
+          var y = ((maskDataBytes[i - 3] * 77) +     // * 0.3 / 255 * 0x10000
+                   (maskDataBytes[i - 2] * 152) +    // * 0.59 ....
+                   (maskDataBytes[i - 1] * 28)) | 0; // * 0.11 ....
+          layerDataBytes[i] = (layerDataBytes[i] * y) >> 16;
+        }
+      };
+    } else {
+      composeFn = function (maskDataBytes, layerDataBytes) {
+        var length = maskDataBytes.length;
+        for (var i = 3; i < length; i += 4) {
+          var alpha = maskDataBytes[i];
+          layerDataBytes[i] = (layerDataBytes[i] * alpha / 255) | 0;
+        }
+      };
+    }
+
+    // processing image in chunks to save memory
+    var chunkSize = 16;
+    for (var row = 0; row < height; row += chunkSize) {
+      var chunkHeight = Math.min(chunkSize, height - row);
+      var maskData = maskCtx.getImageData(0, row, width, chunkHeight);
+      var layerData = layerCtx.getImageData(0, row, width, chunkHeight);
+
+      addBackdropFn(maskData.data);
+      composeFn(maskData.data, layerData.data);
+
+      maskCtx.putImageData(layerData, 0, row);
+    }
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(mask, smask.offsetX, smask.offsetY);
+  }
+
   var LINE_CAP_STYLES = ['butt', 'round', 'square'];
   var LINE_JOIN_STYLES = ['miter', 'round', 'bevel'];
   var NORMAL_CLIP = {};
@@ -5796,9 +5313,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
 
       var transform = viewport.transform;
-      this.baseTransform = transform.slice();
+
       this.ctx.save();
       this.ctx.transform.apply(this.ctx, transform);
+
+      this.baseTransform = this.ctx.mozCurrentTransform.slice();
 
       if (this.textLayer) {
         this.textLayer.beginLayout();
@@ -5978,18 +5497,70 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               this.ctx.globalCompositeOperation = 'source-over';
             }
             break;
+          case 'SMask':
+            if (this.current.activeSMask) {
+              this.endSMaskGroup();
+            }
+            this.current.activeSMask = value ? this.tempSMask : null;
+            if (this.current.activeSMask) {
+              this.beginSMaskGroup();
+            }
+            this.tempSMask = null;
+            break;
         }
       }
+    },
+    beginSMaskGroup: function CanvasGraphics_beginSMaskGroup() {
+
+      var activeSMask = this.current.activeSMask;
+      var drawnWidth = activeSMask.canvas.width;
+      var drawnHeight = activeSMask.canvas.height;
+      var cacheId = 'smaskGroupAt' + this.groupLevel;
+      var scratchCanvas = CachedCanvases.getCanvas(
+        cacheId, drawnWidth, drawnHeight, true);
+
+      var currentCtx = this.ctx;
+      var currentTransform = currentCtx.mozCurrentTransform;
+      this.ctx.save();
+
+      var groupCtx = scratchCanvas.context;
+      groupCtx.translate(-activeSMask.offsetX, -activeSMask.offsetY);
+      groupCtx.transform.apply(groupCtx, currentTransform);
+
+      copyCtxState(currentCtx, groupCtx);
+      this.ctx = groupCtx;
+      this.setGState([
+        ['BM', 'Normal'],
+        ['ca', 1],
+        ['CA', 1]
+      ]);
+      this.groupStack.push(currentCtx);
+      this.groupLevel++;
+    },
+    endSMaskGroup: function CanvasGraphics_endSMaskGroup() {
+      var groupCtx = this.ctx;
+      this.groupLevel--;
+      this.ctx = this.groupStack.pop();
+
+      composeSMask(this.ctx, this.current.activeSMask, groupCtx);
+      this.ctx.restore();
     },
     save: function CanvasGraphics_save() {
       this.ctx.save();
       var old = this.current;
       this.stateStack.push(old);
       this.current = old.clone();
+      if (this.current.activeSMask) {
+        this.current.activeSMask = null;
+      }
     },
     restore: function CanvasGraphics_restore() {
       var prev = this.stateStack.pop();
       if (prev) {
+        if (this.current.activeSMask) {
+          this.endSMaskGroup();
+        }
+
         this.current = prev;
         this.ctx.restore();
       }
@@ -6623,10 +6194,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         }
         var pattern = new TilingPattern(IR, color, this.ctx, this.objs,
                                         this.commonObjs, this.baseTransform);
-      } else if (IR[0] == 'RadialAxial' || IR[0] == 'Dummy') {
-        var pattern = Pattern.shadingFromIR(IR);
       } else {
-        error('Unkown IR type ' + IR[0]);
+        var pattern = getShadingPatternFromIR(IR);
       }
       return pattern;
     },
@@ -6706,8 +6275,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var ctx = this.ctx;
 
       this.save();
-      var pattern = Pattern.shadingFromIR(patternIR);
-      ctx.fillStyle = pattern.getPattern(ctx, this);
+      var pattern = getShadingPatternFromIR(patternIR);
+      ctx.fillStyle = pattern.getPattern(ctx, this, true);
 
       var inv = ctx.mozCurrentTransformInverse;
       if (inv) {
@@ -6819,9 +6388,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var drawnWidth = Math.max(Math.ceil(bounds[2] - bounds[0]), 1);
       var drawnHeight = Math.max(Math.ceil(bounds[3] - bounds[1]), 1);
 
+      var cacheId = 'groupAt' + this.groupLevel;
+      if (group.smask) {
+        // Using two cache entries is case if masks are used one after another.
+        cacheId +=  '_smask_' + ((this.smaskCounter++) % 2);
+      }
       var scratchCanvas = CachedCanvases.getCanvas(
-        'groupAt' + this.groupLevel, drawnWidth, drawnHeight, true);
+        cacheId, drawnWidth, drawnHeight, true);
       var groupCtx = scratchCanvas.context;
+
       // Since we created a new canvas that is just the size of the bounding box
       // we have to translate the group ctx.
       var offsetX = bounds[0];
@@ -6829,16 +6404,28 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       groupCtx.translate(-offsetX, -offsetY);
       groupCtx.transform.apply(groupCtx, currentTransform);
 
-      // Setup the current ctx so when the group is popped we draw it the right
-      // location.
-      currentCtx.setTransform(1, 0, 0, 1, 0, 0);
-      currentCtx.translate(offsetX, offsetY);
+      if (group.smask) {
+        // Saving state and cached mask to be used in setGState.
+        this.smaskStack.push({
+          canvas: scratchCanvas.canvas,
+          context: groupCtx,
+          offsetX: offsetX,
+          offsetY: offsetY,
+          subtype: group.smask.subtype,
+          backdrop: group.smask.backdrop,
+          colorSpace: group.colorSpace && ColorSpace.fromIR(group.colorSpace)
+        });
+      } else {
+        // Setup the current ctx so when the group is popped we draw it at the
+        // right location.
+        currentCtx.setTransform(1, 0, 0, 1, 0, 0);
+        currentCtx.translate(offsetX, offsetY);
+      }
       // The transparency group inherits all off the current graphics state
       // except the blend mode, soft mask, and alpha constants.
       copyCtxState(currentCtx, groupCtx);
       this.ctx = groupCtx;
       this.setGState([
-        ['SMask', 'None'],
         ['BM', 'Normal'],
         ['ca', 1],
         ['CA', 1]
@@ -6858,7 +6445,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       } else {
         this.ctx.mozImageSmoothingEnabled = false;
       }
-      this.ctx.drawImage(groupCtx.canvas, 0, 0);
+      if (group.smask) {
+        this.tempSMask = this.smaskStack.pop();
+      } else {
+        this.ctx.drawImage(groupCtx.canvas, 0, 0);
+      }
       this.restore();
     },
 
@@ -7176,6 +6767,395 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   return CanvasGraphics;
 })();
 
+
+
+var ShadingIRs = {};
+
+ShadingIRs.RadialAxial = {
+  fromIR: function RadialAxial_fromIR(raw) {
+    var type = raw[1];
+    var colorStops = raw[2];
+    var p0 = raw[3];
+    var p1 = raw[4];
+    var r0 = raw[5];
+    var r1 = raw[6];
+    return {
+      type: 'Pattern',
+      getPattern: function RadialAxial_getPattern(ctx) {
+        var grad;
+        if (type === 'axial') {
+          grad = ctx.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+        } else if (type === 'radial') {
+          grad = ctx.createRadialGradient(p0[0], p0[1], r0, p1[0], p1[1], r1);
+        }
+
+        for (var i = 0, ii = colorStops.length; i < ii; ++i) {
+          var c = colorStops[i];
+          grad.addColorStop(c[0], c[1]);
+        }
+        return grad;
+      }
+    };
+  }
+};
+
+var createMeshCanvas = (function createMeshCanvasClosure() {
+  function drawTriangle(data, context, p1, p2, p3, c1, c2, c3) {
+    // Very basic Gouraud-shaded triangle rasterization algorithm.
+    var coords = context.coords, colors = context.colors;
+    var bytes = data.data, rowSize = data.width * 4;
+    var tmp;
+    if (coords[p1 * 2 + 1] > coords[p2 * 2 + 1]) {
+      tmp = p1; p1 = p2; p2 = tmp; tmp = c1; c1 = c2; c2 = tmp;
+    }
+    if (coords[p2 * 2 + 1] > coords[p3 * 2 + 1]) {
+      tmp = p2; p2 = p3; p3 = tmp; tmp = c2; c2 = c3; c3 = tmp;
+    }
+    if (coords[p1 * 2 + 1] > coords[p2 * 2 + 1]) {
+      tmp = p1; p1 = p2; p2 = tmp; tmp = c1; c1 = c2; c2 = tmp;
+    }
+    var x1 = (coords[p1 * 2] + context.offsetX) * context.scaleX;
+    var y1 = (coords[p1 * 2 + 1] + context.offsetY) * context.scaleY;
+    var x2 = (coords[p2 * 2] + context.offsetX) * context.scaleX;
+    var y2 = (coords[p2 * 2 + 1] + context.offsetY) * context.scaleY;
+    var x3 = (coords[p3 * 2] + context.offsetX) * context.scaleX;
+    var y3 = (coords[p3 * 2 + 1] + context.offsetY) * context.scaleY;
+    if (y1 >= y3) {
+      return;
+    }
+    var c1i = c1 * 3, c2i = c2 * 3, c3i = c3 * 3;
+    var c1r = colors[c1i], c1g = colors[c1i + 1], c1b = colors[c1i + 2];
+    var c2r = colors[c2i], c2g = colors[c2i + 1], c2b = colors[c2i + 2];
+    var c3r = colors[c3i], c3g = colors[c3i + 1], c3b = colors[c3i + 2];
+
+    var minY = Math.round(y1), maxY = Math.round(y3);
+    var xa, car, cag, cab;
+    var xb, cbr, cbg, cbb;
+    var k;
+    for (var y = minY; y <= maxY; y++) {
+      if (y < y2) {
+        k = y < y1 ? 0 : y1 === y2 ? 1 : (y1 - y) / (y1 - y2);
+        xa = x1 - (x1 - x2) * k;
+        car = c1r - (c1r - c2r) * k;
+        cag = c1g - (c1g - c2g) * k;
+        cab = c1b - (c1b - c2b) * k;
+      } else {
+        k = y > y3 ? 1 : y2 === y3 ? 0 : (y2 - y) / (y2 - y3);
+        xa = x2 - (x2 - x3) * k;
+        car = c2r - (c2r - c3r) * k;
+        cag = c2g - (c2g - c3g) * k;
+        cab = c2b - (c2b - c3b) * k;
+      }
+      k = y < y1 ? 0 : y > y3 ? 1 : (y1 - y) / (y1 - y3);
+      xb = x1 - (x1 - x3) * k;
+      cbr = c1r - (c1r - c3r) * k;
+      cbg = c1g - (c1g - c3g) * k;
+      cbb = c1b - (c1b - c3b) * k;
+      var x1_ = Math.round(Math.min(xa, xb));
+      var x2_ = Math.round(Math.max(xa, xb));
+      var j = rowSize * y + x1_ * 4;
+      for (var x = x1_; x <= x2_; x++) {
+        k = (xa - x) / (xa - xb);
+        k = k < 0 ? 0 : k > 1 ? 1 : k;
+        bytes[j++] = (car - (car - cbr) * k) | 0;
+        bytes[j++] = (cag - (cag - cbg) * k) | 0;
+        bytes[j++] = (cab - (cab - cbb) * k) | 0;
+        bytes[j++] = 255;
+      }
+    }
+  }
+
+  function drawFigure(data, figure, context) {
+    var ps = figure.coords;
+    var cs = figure.colors;
+    switch (figure.type) {
+      case 'lattice':
+        var verticesPerRow = figure.verticesPerRow;
+        var rows = Math.floor(ps.length / verticesPerRow) - 1;
+        var cols = verticesPerRow - 1;
+        for (var i = 0; i < rows; i++) {
+          var q = i * verticesPerRow;
+          for (var j = 0; j < cols; j++, q++) {
+            drawTriangle(data, context,
+              ps[q], ps[q + 1], ps[q + verticesPerRow],
+              cs[q], cs[q + 1], cs[q + verticesPerRow]);
+            drawTriangle(data, context,
+              ps[q + verticesPerRow + 1], ps[q + 1], ps[q + verticesPerRow],
+              cs[q + verticesPerRow + 1], cs[q + 1], cs[q + verticesPerRow]);
+          }
+        }
+        break;
+      case 'triangles':
+        for (var i = 0, ii = ps.length; i < ii; i += 3) {
+          drawTriangle(data, context,
+            ps[i], ps[i + 1], ps[i + 2],
+            cs[i], cs[i + 1], cs[i + 2]);
+        }
+        break;
+      default:
+        error('illigal figure');
+        break;
+    }
+  }
+
+  function createMeshCanvas(bounds, combinesScale, coords, colors, figures,
+                            backgroundColor) {
+    // we will increase scale on some weird factor to let antialiasing take
+    // care of "rough" edges
+    var EXPECTED_SCALE = 1.1;
+    // MAX_PATTERN_SIZE is used to avoid OOM situation.
+    var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
+
+    var boundsWidth = bounds[2] - bounds[0];
+    var boundsHeight = bounds[3] - bounds[1];
+
+    var width = Math.min(Math.ceil(Math.abs(boundsWidth * combinesScale[0] *
+      EXPECTED_SCALE)), MAX_PATTERN_SIZE);
+    var height = Math.min(Math.ceil(Math.abs(boundsHeight * combinesScale[1] *
+      EXPECTED_SCALE)), MAX_PATTERN_SIZE);
+    var scaleX = width / boundsWidth;
+    var scaleY = height / boundsHeight;
+
+    var tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
+    var tmpCtx = tmpCanvas.context;
+    if (backgroundColor) {
+      tmpCtx.fillStyle = makeCssRgb(backgroundColor);
+      tmpCtx.fillRect(0, 0, width, height);
+    }
+
+    var context = {
+      coords: coords,
+      colors: colors,
+      offsetX: -bounds[0],
+      offsetY: -bounds[1],
+      scaleX: scaleX,
+      scaleY: scaleY
+    };
+
+    var data = tmpCtx.getImageData(0, 0, width, height);
+    for (var i = 0; i < figures.length; i++) {
+      drawFigure(data, figures[i], context);
+    }
+    tmpCtx.putImageData(data, 0, 0);
+
+    return {canvas: tmpCanvas.canvas, scaleX: 1 / scaleX, scaleY: 1 / scaleY};
+  }
+  return createMeshCanvas;
+})();
+
+ShadingIRs.Mesh = {
+  fromIR: function Mesh_fromIR(raw) {
+    var type = raw[1];
+    var coords = raw[2];
+    var colors = raw[3];
+    var figures = raw[4];
+    var bounds = raw[5];
+    var matrix = raw[6];
+    var bbox = raw[7];
+    var background = raw[8];
+    return {
+      type: 'Pattern',
+      getPattern: function Mesh_getPattern(ctx, owner, shadingFill) {
+        var combinedScale;
+        // Obtain scale from matrix and current transformation matrix.
+        if (shadingFill) {
+          combinedScale = Util.singularValueDecompose2dScale(
+            ctx.mozCurrentTransform);
+        } else {
+          var matrixScale = Util.singularValueDecompose2dScale(matrix);
+          var curMatrixScale = Util.singularValueDecompose2dScale(
+            owner.baseTransform);
+          combinedScale = [matrixScale[0] * curMatrixScale[0],
+            matrixScale[1] * curMatrixScale[1]];
+        }
+
+
+        // Rasterizing on the main thread since sending/queue large canvases
+        // might cause OOM.
+        // TODO consider using WebGL or asm.js to perform rasterization
+        var temporaryPatternCanvas = createMeshCanvas(bounds, combinedScale,
+          coords, colors, figures, shadingFill ? null : background);
+
+        if (!shadingFill) {
+          ctx.setTransform.apply(ctx, owner.baseTransform);
+          if (matrix) {
+            ctx.transform.apply(ctx, matrix);
+          }
+        }
+
+        ctx.translate(bounds[0], bounds[1]);
+        ctx.scale(temporaryPatternCanvas.scaleX,
+                  temporaryPatternCanvas.scaleY);
+
+        return ctx.createPattern(temporaryPatternCanvas.canvas, 'no-repeat');
+      }
+    };
+  }
+};
+
+ShadingIRs.Dummy = {
+  fromIR: function Dummy_fromIR() {
+    return {
+      type: 'Pattern',
+      getPattern: function Dummy_fromIR_getPattern() {
+        return 'hotpink';
+      }
+    };
+  }
+};
+
+function getShadingPatternFromIR(raw) {
+  var shadingIR = ShadingIRs[raw[0]];
+  if (!shadingIR) {
+    error('Unknown IR type: ' + raw[0]);
+  }
+  return shadingIR.fromIR(raw);
+}
+
+var TilingPattern = (function TilingPatternClosure() {
+  var PaintType = {
+    COLORED: 1,
+    UNCOLORED: 2
+  };
+
+  var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
+
+  function TilingPattern(IR, color, ctx, objs, commonObjs, baseTransform) {
+    this.name = IR[1][0].name;
+    this.operatorList = IR[2];
+    this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
+    this.bbox = IR[4];
+    this.xstep = IR[5];
+    this.ystep = IR[6];
+    this.paintType = IR[7];
+    this.tilingType = IR[8];
+    this.color = color;
+    this.objs = objs;
+    this.commonObjs = commonObjs;
+    this.baseTransform = baseTransform;
+    this.type = 'Pattern';
+    this.ctx = ctx;
+  }
+
+  TilingPattern.prototype = {
+    createPatternCanvas: function TilinPattern_createPatternCanvas(owner) {
+      var operatorList = this.operatorList;
+      var bbox = this.bbox;
+      var xstep = this.xstep;
+      var ystep = this.ystep;
+      var paintType = this.paintType;
+      var tilingType = this.tilingType;
+      var color = this.color;
+      var objs = this.objs;
+      var commonObjs = this.commonObjs;
+      var ctx = this.ctx;
+
+      info('TilingType: ' + tilingType);
+
+      var x0 = bbox[0], y0 = bbox[1], x1 = bbox[2], y1 = bbox[3];
+
+      var topLeft = [x0, y0];
+      // we want the canvas to be as large as the step size
+      var botRight = [x0 + xstep, y0 + ystep];
+
+      var width = botRight[0] - topLeft[0];
+      var height = botRight[1] - topLeft[1];
+
+      // Obtain scale from matrix and current transformation matrix.
+      var matrixScale = Util.singularValueDecompose2dScale(this.matrix);
+      var curMatrixScale = Util.singularValueDecompose2dScale(
+        this.baseTransform);
+      var combinedScale = [matrixScale[0] * curMatrixScale[0],
+        matrixScale[1] * curMatrixScale[1]];
+
+      // MAX_PATTERN_SIZE is used to avoid OOM situation.
+      // Use width and height values that are as close as possible to the end
+      // result when the pattern is used. Too low value makes the pattern look
+      // blurry. Too large value makes it look too crispy.
+      width = Math.min(Math.ceil(Math.abs(width * combinedScale[0])),
+        MAX_PATTERN_SIZE);
+
+      height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
+        MAX_PATTERN_SIZE);
+
+      var tmpCanvas = CachedCanvases.getCanvas('pattern', width, height, true);
+      var tmpCtx = tmpCanvas.context;
+      var graphics = new CanvasGraphics(tmpCtx, commonObjs, objs);
+      graphics.groupLevel = owner.groupLevel;
+
+      this.setFillAndStrokeStyleToContext(tmpCtx, paintType, color);
+
+      this.setScale(width, height, xstep, ystep);
+      this.transformToScale(graphics);
+
+      // transform coordinates to pattern space
+      var tmpTranslate = [1, 0, 0, 1, -topLeft[0], -topLeft[1]];
+      graphics.transform.apply(graphics, tmpTranslate);
+
+      this.clipBbox(graphics, bbox, x0, y0, x1, y1);
+
+      graphics.executeOperatorList(operatorList);
+      return tmpCanvas.canvas;
+    },
+
+    setScale: function TilingPattern_setScale(width, height, xstep, ystep) {
+      this.scale = [width / xstep, height / ystep];
+    },
+
+    transformToScale: function TilingPattern_transformToScale(graphics) {
+      var scale = this.scale;
+      var tmpScale = [scale[0], 0, 0, scale[1], 0, 0];
+      graphics.transform.apply(graphics, tmpScale);
+    },
+
+    scaleToContext: function TilingPattern_scaleToContext() {
+      var scale = this.scale;
+      this.ctx.scale(1 / scale[0], 1 / scale[1]);
+    },
+
+    clipBbox: function clipBbox(graphics, bbox, x0, y0, x1, y1) {
+      if (bbox && isArray(bbox) && 4 == bbox.length) {
+        var bboxWidth = x1 - x0;
+        var bboxHeight = y1 - y0;
+        graphics.rectangle(x0, y0, bboxWidth, bboxHeight);
+        graphics.clip();
+        graphics.endPath();
+      }
+    },
+
+    setFillAndStrokeStyleToContext:
+      function setFillAndStrokeStyleToContext(context, paintType, color) {
+        switch (paintType) {
+          case PaintType.COLORED:
+            var ctx = this.ctx;
+            context.fillStyle = ctx.fillStyle;
+            context.strokeStyle = ctx.strokeStyle;
+            break;
+          case PaintType.UNCOLORED:
+            var rgbColor = ColorSpace.singletons.rgb.getRgb(color, 0);
+            var cssColor = Util.makeCssRgb(rgbColor);
+            context.fillStyle = cssColor;
+            context.strokeStyle = cssColor;
+            break;
+          default:
+            error('Unsupported paint type: ' + paintType);
+        }
+      },
+
+    getPattern: function TilingPattern_getPattern(ctx, owner) {
+      var temporaryPatternCanvas = this.createPatternCanvas(owner);
+
+      var ctx = this.ctx;
+      ctx.setTransform.apply(ctx, this.baseTransform);
+      ctx.transform.apply(ctx, this.matrix);
+      this.scaleToContext();
+
+      return ctx.createPattern(temporaryPatternCanvas, 'repeat');
+    }
+  };
+
+  return TilingPattern;
+})();
 
 
 PDFJS.disableFontFace = false;

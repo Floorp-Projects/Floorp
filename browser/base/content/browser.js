@@ -4368,8 +4368,6 @@ var TabsInTitlebar = {
     this._menuObserver = new MutationObserver(this._onMenuMutate);
     this._menuObserver.observe(menu, {attributes: true});
 
-    gNavToolbox.addEventListener("customization-transitionend", this);
-
     this.onAreaReset = function(aArea) {
       if (aArea == CustomizableUI.AREA_TABSTRIP || aArea == CustomizableUI.AREA_MENUBAR)
         this._update(true);
@@ -4414,12 +4412,6 @@ var TabsInTitlebar = {
   observe: function (subject, topic, data) {
     if (topic == "nsPref:changed")
       this._readPref();
-  },
-
-  handleEvent: function(ev) {
-    if (ev.type == "customization-transitionend") {
-      this._update(true);
-    }
   },
 
   _onMenuMutate: function (aMutations) {

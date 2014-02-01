@@ -307,4 +307,12 @@ div.CodeMirror span.eval-text {
   border-bottom: 0;
 }
 
+.devtools-horizontal-splitter {
+  border-bottom: 1px solid #aaa;
+}
+
+.devtools-side-splitter {
+  -moz-border-end: 1px solid #aaa;
+}
+
 %include toolbars.inc.css

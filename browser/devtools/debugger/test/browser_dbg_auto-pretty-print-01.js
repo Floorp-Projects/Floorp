@@ -11,6 +11,9 @@ let gEditor, gSources, gPrefs, gOptions, gView;
 let gFirstSourceLabel = "code_ugly-5.js";
 let gSecondSourceLabel = "code_ugly-6.js";
 
+let gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
+Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
+
 function test(){
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
@@ -104,4 +107,5 @@ registerCleanupFunction(function() {
   gOptions = null;
   gPrefs = null;
   gView = null;
+  Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", gOriginalPref);
 });

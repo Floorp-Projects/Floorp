@@ -1872,7 +1872,14 @@ VariableBubbleView.prototype = {
         messages: [textContent],
         messagesClass: className,
         containerClass: "plain"
-      });
+      }, [{
+        label: L10N.getStr('addWatchExpressionButton'),
+        className: "dbg-expression-button",
+        command: () => {
+          DebuggerView.VariableBubble.hideContents();
+          DebuggerView.WatchExpressions.addExpression(evalPrefix, true);
+        }
+      }]);
     } else {
       this._tooltip.setVariableContent(objectActor, {
         searchPlaceholder: L10N.getStr("emptyPropertiesFilterText"),
@@ -1894,7 +1901,14 @@ VariableBubbleView.prototype = {
             window.emit(EVENTS.FETCHED_BUBBLE_PROPERTIES);
           }
         }
-      });
+      }, [{
+        label: L10N.getStr("addWatchExpressionButton"),
+        className: "dbg-expression-button",
+        command: () => {
+          DebuggerView.VariableBubble.hideContents();
+          DebuggerView.WatchExpressions.addExpression(evalPrefix, true);
+        }
+      }]);
     }
 
     this._tooltip.show(this._markedText.anchor);
@@ -2031,8 +2045,11 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
    *
    * @param string aExpression [optional]
    *        An optional initial watch expression text.
+   * @param boolean aSkipUserInput [optional]
+   *        Pass true to avoid waiting for additional user input
+   *        on the watch expression.
    */
-  addExpression: function(aExpression = "") {
+  addExpression: function(aExpression = "", aSkipUserInput = false) {
     // Watch expressions are UI elements which benefit from visible panes.
     DebuggerView.showInstrumentsPane();
 
@@ -2049,10 +2066,18 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
       }
     });
 
-    // Automatically focus the new watch expression input.
-    expressionItem.attachment.view.inputNode.select();
-    expressionItem.attachment.view.inputNode.focus();
-    DebuggerView.Variables.parentNode.scrollTop = 0;
+    // Automatically focus the new watch expression input
+    // if additional user input is desired.
+    if (!aSkipUserInput) {
+      expressionItem.attachment.view.inputNode.select();
+      expressionItem.attachment.view.inputNode.focus();
+      DebuggerView.Variables.parentNode.scrollTop = 0;
+    }
+    // Otherwise, add and evaluate the new watch expression immediately.
+    else {
+      this.toggleContents(false);
+      this._onBlur({ target: expressionItem.attachment.view.inputNode });
+    }
   },
 
   /**

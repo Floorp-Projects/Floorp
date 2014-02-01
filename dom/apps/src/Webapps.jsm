@@ -2588,10 +2588,6 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
   _readManifests: function(aData) {
     return Task.spawn(function*() {
-      if (!aData.length) {
-        return aData;
-      }
-
       for (let elem of aData) {
         let id = elem.id;
 
@@ -2600,17 +2596,15 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
           let baseDir = this.webapps[id].basePath == this.getCoreAppsBasePath()
                           ? "coreAppsDir" : DIRECTORY_NAME;
 
-          let file = FileUtils.getFile(baseDir, ["webapps", id, "manifest.webapp"], true);
+          let dir = FileUtils.getDir(baseDir, ["webapps", id], false, true);
 
-          if (!file.exists()) {
-            file = FileUtils.getFile(baseDir, ["webapps", id, "update.webapp"], true);
+          let fileNames = ["manifest.webapp", "update.webapp", "manifest.json"];
+          for (let fileName of fileNames) {
+            this._manifestCache[id] = yield this._loadJSONAsync(OS.Path.join(dir.path, fileName));
+            if (this._manifestCache[id]) {
+              break;
+            }
           }
-
-          if (!file.exists()) {
-            file = FileUtils.getFile(baseDir, ["webapps", id, "manifest.json"], true);
-          }
-
-          this._manifestCache[id] = yield this._loadJSONAsync(file.path);
         }
 
         elem.manifest = this._manifestCache[id];

@@ -500,6 +500,8 @@ gTests.push({
     is(grid.itemCount, 0, "slots do not count towards itemCount");
     ok(Array.every(grid.children, (node) => node.nodeName == 'richgriditem'), "slots have nodeName richgriditem");
     ok(Array.every(grid.children, isNotBoundByRichGrid_Item), "slots aren't bound by the richgrid-item binding");
+
+    ok(!grid.isItem(grid.children[0]), "slot fails isItem validation");
   },
   tearDown: gridSlotsTearDown
 });
@@ -645,6 +647,29 @@ gTests.push({
     is(grid.children.length, 6);
     is(grid.itemCount, 4);
     is(grid.items[0].getAttribute("label"), "item 2", "removeItem removes the node so the nextSibling takes its place");
+  },
+  tearDown: gridSlotsTearDown
+});
+
+gTests.push({
+  desc: "richgrid empty slot selection",
+  setUp: gridSlotsSetup,
+  run: function() {
+    let grid = this.grid;
+    // leave grid empty, it has 6 slots
+
+    is(grid.itemCount, 0, "Grid setup with 0 items");
+    is(grid.children.length, 6, "Empty grid has the expected number of slots");
+
+    info("slot is initially selected: " + grid.children[0].selected);
+    grid.selectItem(grid.children[0]);
+    info("after selectItem, slot is selected: " + grid.children[0].selected);
+
+    ok(!grid.children[0].selected, "Attempting to select an empty slot has no effect");
+
+    grid.toggleItemSelection(grid.children[0]);
+    ok(!grid.children[0].selected, "Attempting to toggle selection on an empty slot has no effect");
+
   },
   tearDown: gridSlotsTearDown
 });

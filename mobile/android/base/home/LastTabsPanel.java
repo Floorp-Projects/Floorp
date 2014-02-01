@@ -47,7 +47,7 @@ public class LastTabsPanel extends HomeFragment {
     private LastTabsAdapter mAdapter;
 
     // The view shown by the fragment.
-    private ListView mList;
+    private HomeListView mList;
 
     // The title for this HomeFragment panel.
     private TextView mTitle;
@@ -103,7 +103,7 @@ public class LastTabsPanel extends HomeFragment {
             mTitle.setText(R.string.home_last_tabs_title);
         }
 
-        mList = (ListView) view.findViewById(R.id.list);
+        mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_LAST_TABS);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -116,6 +116,16 @@ public class LastTabsPanel extends HomeFragment {
 
                 final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
                 mNewTabsListener.onNewTabs(new String[] { url });
+            }
+        });
+
+        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
+                return info;
             }
         });
 

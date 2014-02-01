@@ -7,17 +7,12 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
-  %netErrorDTD;
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
-#ifdef XP_MACOSX
-  <!ENTITY basePBMenu.label   "&fileMenu.label;">
-#else
-  <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&brandShortName;</span><span class='fileMenu'>&fileMenu.label;</span>">
-#endif
   <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
   %privatebrowsingpageDTD;
 ]>
@@ -29,12 +24,6 @@
     <style type="text/css"><![CDATA[
       body.normal .showPrivate,
       body.private .showNormal {
-        display: none;
-      }
-      body.appMenuButtonVisible .fileMenu {
-        display: none;
-      }
-      body.appMenuButtonInvisible .appMenuButton {
         display: none;
       }
     ]]></style>
@@ -82,13 +71,6 @@
         let moreInfoLink = document.getElementById("moreInfoLink");
         if (moreInfoLink)
           moreInfoLink.setAttribute("href", moreInfoURL + "private-browsing");
-
-        // Show the correct menu structure based on whether the App Menu button is
-        // shown or not.
-        var menuBar = mainWindow.document.getElementById("toolbar-menubar");
-        var appMenuButtonIsVisible = menuBar.getAttribute("autohide") == "true";
-        document.body.classList.add(appMenuButtonIsVisible ? "appMenuButtonVisible" :
-                                                             "appMenuButtonInvisible");
       }, false);
 
       function openPrivateWindow() {
@@ -134,7 +116,7 @@
         <!-- Footer -->
         <div id="footerDesc">
           <p id="footerText" class="showPrivate">&privatebrowsingpage.howToStop3;</p>
-          <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart3;</p>
+          <p id="footerTextNormal" class="showNormal">&privatebrowsingpage.howToStart4;</p>
         </div>
 
         <!-- More Info -->

@@ -223,7 +223,8 @@
            noautofocus="true"
            noautohide="true"
            flip="none"
-           consumeoutsideclicks="false">
+           consumeoutsideclicks="false"
+           mousethrough="always">
       <box id="UITourHighlight"></box>
     </panel>
 
