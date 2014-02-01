@@ -273,6 +273,7 @@ function Blocklist() {
   gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
                                      MAX_BLOCK_LEVEL);
   gPref.addObserver("extensions.blocklist.", this, false);
+  gPref.addObserver(PREF_EM_LOGGING_ENABLED, this, false);
 }
 
 Blocklist.prototype = {
@@ -300,9 +301,13 @@ Blocklist.prototype = {
       let os = getObserverService();
       os.removeObserver(this, "xpcom-shutdown");
       gPref.removeObserver("extensions.blocklist.", this);
+      gPref.removeObserver(PREF_EM_LOGGING_ENABLED, this);
       break;
     case "nsPref:changed":
       switch (aData) {
+        case PREF_EM_LOGGING_ENABLED:
+          gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
+          break;
         case PREF_BLOCKLIST_ENABLED:
           gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
           this._loadBlocklist();

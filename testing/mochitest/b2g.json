@@ -175,6 +175,7 @@
     "content/html/document/test/test_bug741266.html":"needs control of popup window size",
     "docshell/test/navigation/test_popup-navigates-children.html":"Needs multiple window.open support, also uses docshelltreenode",
     "docshell/test/test_bug590573.html":"queryinterfaces into webnavigation, might suffer from something similar as bug 823022",
+    "docshell/test/navigation/test_bug430723.html":"apz race condition, see bug 965351",
     "dom/devicestorage/ipc/test_ipc.html":"nested ipc not working",
 
     "dom/indexedDB/ipc/test_ipc.html":"nested ipc not working",
@@ -267,6 +268,7 @@
     "dom/events/test/test_bug574663.html":"",
     "dom/events/test/test_bug607464.html":"",
     "dom/events/test/test_wheel_default_action.html":"",
+    "dom/events/test/test_bug946632.html":"apz race condition, see bug 965351",
 
     "dom/file/test/test_progress_events.html":"All of these fail fairly regularly with: UnknownError: The operation failed for reasons unrelated to the database itself and not covered by any other error code. at http://mochi.test:8888/tests/dom/file/test/helpers.js:126",
     "dom/file/test/test_request_readyState.html":"",
@@ -370,6 +372,7 @@
     "layout/forms/test/test_bug571352.html":"shift-click multi-select not working?",
     "layout/forms/test/test_textarea_resize.html":"resizing textarea not available in b2g",
     "layout/forms/test/test_bug903715.html":"select elements don't use an in-page popup in B2G",
+    "layout/forms/test/test_bug564115.html":"apz race condition, see bug 965351",
     "layout/generic/test/test_bug392746.html":"ctrl mouse select not working in b2g",
     "layout/generic/test/test_bug791616.html":"Target should not have scrolled - got 114.10000610351562, expected 115.39999389648438",
     "layout/generic/test/test_invalidate_during_plugin_paint.html":"plugins not supported",

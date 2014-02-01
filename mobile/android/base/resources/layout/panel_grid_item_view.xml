@@ -6,9 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <ImageView android:id="@+id/image"
-               android:layout_width="fill_parent"
-               android:layout_height="80dp"
-               android:layout_marginRight="5dp" />
+    <org.mozilla.gecko.widget.SquaredImageView android:id="@+id/image"
+               style="@style/Widget.PanelGridItemImageView" />
 
 </merge>

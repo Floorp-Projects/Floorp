@@ -31,11 +31,11 @@
     "b2g_manifest_branch": "master",
     "b2g_manifest_intree": true,
     "additional_source_tarballs": [],
-    "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
+    "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
-            "root": "http://hg.mozilla.org/gaia-l10n"
+            "root": "https://hg.mozilla.org/gaia-l10n"
         }
     }
 }

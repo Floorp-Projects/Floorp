@@ -145,6 +145,29 @@
       <item name="android:orientation">vertical</item>
     </style>
 
+    <style name="Widget.PanelGridView" parent="Widget.GridView">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:stretchMode">columnWidth</item>
+        <item name="android:columnWidth">@dimen/panel_grid_view_column_width</item>
+        <item name="android:horizontalSpacing">2dp</item>
+        <item name="android:verticalSpacing">2dp</item>
+    </style>
+
+    <style name="Widget.PanelGridItemView">
+      <item name="android:layout_height">wrap_content</item>
+      <item name="android:layout_width">wrap_content</item>
+    </style>
+
+    <style name="Widget.PanelGridItemImageView">
+      <item name="android:layout_height">@dimen/panel_grid_view_column_width</item>
+      <item name="android:layout_width">fill_parent</item>
+      <item name="android:scaleType">centerCrop</item>
+      <item name="android:adjustViewBounds">true</item>
+      <item name="android:background">@color/panel_grid_item_image_background</item>
+    </style>
+
     <style name="Widget.BookmarkItemView" parent="Widget.TwoLineRow"/>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>

@@ -57,7 +57,7 @@ MOZ_PLACES=
 MOZ_B2G=1
 
 if test "$OS_TARGET" = "Android"; then
-MOZ_NUWA_PROCESS=
+MOZ_NUWA_PROCESS=1
 fi
 MOZ_FOLD_LIBS=1
 

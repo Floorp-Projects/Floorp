@@ -91,7 +91,6 @@ var steps = [
     installTestApp = function (url, appId, callback) {
       let installResponse, appObject;
       let installedEvent = false;
-      mm.sendAsyncMessage("install", {url: url, appId: appId});
       mm.addMessageListener("installed", function onInstalled(aResponse) {
         mm.removeMessageListener("installed", onInstalled);
         ok(true, "install request replied");
@@ -113,6 +112,7 @@ var steps = [
         if (appObject && installResponse && installedEvent)
           callback(installResponse, appObject);
       }
+      mm.sendAsyncMessage("install", {url: url, appId: appId});
     };
     SpecialPowers.autoConfirmAppInstall(next);
   },

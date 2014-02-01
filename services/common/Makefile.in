@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 modules := \
+  hawk.js \
   storageservice.js \
   stringbundle.js \
   tokenserverclient.js \

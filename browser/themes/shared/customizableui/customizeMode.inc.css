@@ -3,6 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Customization mode */
+
+#main-window:-moz-any([customize-entering],[customize-entered]) #content-deck {
+  margin: 0 2em 2em;
+}
+
+#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox > toolbar:not(#TabsToolbar) {
+  margin-left: 2em;
+  margin-right: 2em;
+}
+
 #main-window:-moz-any([customize-entering],[customize-exiting]) #tab-view-deck {
   pointer-events: none;
 }
@@ -127,12 +137,19 @@ toolbarpaletteitem[notransition][place="panel"] {
   transition: none;
 }
 
-toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon {
-  transition: transform .3s cubic-bezier(.6, 2, .75, 1.5);
+toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem > toolbaritem.panel-wide-item,
+toolbarpaletteitem > toolbarbutton[type="menu-button"] {
+  transition: transform .3s cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
 toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon {
   transform: scale(1.3);
+}
+
+toolbarpaletteitem[mousedown] > toolbaritem.panel-wide-item,
+toolbarpaletteitem[mousedown] > toolbarbutton[type="menu-button"] {
+  transform: scale(1.1);
 }
 
 /* Override the toolkit styling for items being dragged over. */

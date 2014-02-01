@@ -520,6 +520,15 @@ abstract public class BrowserApp extends GeckoApp
             }
         });
 
+        mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (isHomePagerVisible()) {
+                    mHomePager.onToolbarFocusChange(hasFocus);
+                }
+            }
+        });
+
         // Intercept key events for gamepad shortcuts
         mBrowserToolbar.setOnKeyListener(this);
 
