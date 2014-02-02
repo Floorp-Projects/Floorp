@@ -199,8 +199,8 @@ toolbarbutton.bookmark-item[open="true"] {
   background-color: rgba(0, 0, 0, .205);
 }
 
-+toolbarbutton.bookmark-item:hover:not(.subviewbutton),
-+toolbarbutton.bookmark-item[open="true"]:not(.subviewbutton) {
+toolbarbutton.bookmark-item:hover:not(.subviewbutton),
+toolbarbutton.bookmark-item[open="true"]:not(.subviewbutton) {
   color: #FFF !important;
   text-shadow: 0 1px rgba(0, 0, 0, .4) !important;
 }
