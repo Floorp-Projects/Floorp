@@ -1517,8 +1517,8 @@ class MNewPar : public MUnaryInstruction
 {
     CompilerRootObject templateObject_;
 
-    MNewPar(MDefinition *slice, JSObject *templateObject)
-      : MUnaryInstruction(slice),
+    MNewPar(MDefinition *cx, JSObject *templateObject)
+      : MUnaryInstruction(cx),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
@@ -1527,11 +1527,11 @@ class MNewPar : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(NewPar);
 
-    static MNewPar *New(TempAllocator &alloc, MDefinition *slice, JSObject *templateObject) {
-        return new(alloc) MNewPar(slice, templateObject);
+    static MNewPar *New(TempAllocator &alloc, MDefinition *cx, JSObject *templateObject) {
+        return new(alloc) MNewPar(cx, templateObject);
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 
@@ -4261,8 +4261,8 @@ class MConcat
 class MConcatPar
   : public MTernaryInstruction
 {
-    MConcatPar(MDefinition *slice, MDefinition *left, MDefinition *right)
-      : MTernaryInstruction(slice, left, right)
+    MConcatPar(MDefinition *cx, MDefinition *left, MDefinition *right)
+      : MTernaryInstruction(cx, left, right)
     {
         // Type analysis has already run, before replacing with the parallel
         // variant.
@@ -4275,11 +4275,11 @@ class MConcatPar
   public:
     INSTRUCTION_HEADER(ConcatPar)
 
-    static MConcatPar *New(TempAllocator &alloc, MDefinition *slice, MConcat *concat) {
-        return new(alloc) MConcatPar(slice, concat->lhs(), concat->rhs());
+    static MConcatPar *New(TempAllocator &alloc, MDefinition *cx, MConcat *concat) {
+        return new(alloc) MConcatPar(cx, concat->lhs(), concat->rhs());
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
     MDefinition *lhs() const {
@@ -4717,8 +4717,8 @@ class MCheckOverRecursed : public MNullaryInstruction
 // Uses the per-thread recursion limit.
 class MCheckOverRecursedPar : public MUnaryInstruction
 {
-    MCheckOverRecursedPar(MDefinition *slice)
-      : MUnaryInstruction(slice)
+    MCheckOverRecursedPar(MDefinition *cx)
+      : MUnaryInstruction(cx)
     {
         setResultType(MIRType_None);
         setGuard();
@@ -4728,11 +4728,11 @@ class MCheckOverRecursedPar : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(CheckOverRecursedPar);
 
-    static MCheckOverRecursedPar *New(TempAllocator &alloc, MDefinition *slice) {
-        return new(alloc) MCheckOverRecursedPar(slice);
+    static MCheckOverRecursedPar *New(TempAllocator &alloc, MDefinition *cx) {
+        return new(alloc) MCheckOverRecursedPar(cx);
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 };
@@ -4740,8 +4740,8 @@ class MCheckOverRecursedPar : public MUnaryInstruction
 // Check for an interrupt (or rendezvous) in parallel mode.
 class MCheckInterruptPar : public MUnaryInstruction
 {
-    MCheckInterruptPar(MDefinition *slice)
-      : MUnaryInstruction(slice)
+    MCheckInterruptPar(MDefinition *cx)
+      : MUnaryInstruction(cx)
     {
         setResultType(MIRType_None);
         setGuard();
@@ -4751,11 +4751,11 @@ class MCheckInterruptPar : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(CheckInterruptPar);
 
-    static MCheckInterruptPar *New(TempAllocator &alloc, MDefinition *slice) {
-        return new(alloc) MCheckInterruptPar(slice);
+    static MCheckInterruptPar *New(TempAllocator &alloc, MDefinition *cx) {
+        return new(alloc) MCheckInterruptPar(cx);
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 };
@@ -5093,9 +5093,9 @@ class MLambdaPar
 {
     LambdaFunctionInfo info_;
 
-    MLambdaPar(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun,
+    MLambdaPar(MDefinition *cx, MDefinition *scopeChain, JSFunction *fun,
                types::TemporaryTypeSet *resultTypes, const LambdaFunctionInfo &info)
-      : MBinaryInstruction(slice, scopeChain), info_(info)
+      : MBinaryInstruction(cx, scopeChain), info_(info)
     {
         JS_ASSERT(!info_.singletonType);
         JS_ASSERT(!info_.useNewTypeForClone);
@@ -5106,12 +5106,12 @@ class MLambdaPar
   public:
     INSTRUCTION_HEADER(LambdaPar);
 
-    static MLambdaPar *New(TempAllocator &alloc, MDefinition *slice, MLambda *lambda) {
-        return new(alloc) MLambdaPar(slice, lambda->scopeChain(), lambda->info().fun,
+    static MLambdaPar *New(TempAllocator &alloc, MDefinition *cx, MLambda *lambda) {
+        return new(alloc) MLambdaPar(cx, lambda->scopeChain(), lambda->info().fun,
                                      lambda->resultTypeSet(), lambda->info());
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 
@@ -7412,22 +7412,22 @@ class MFunctionEnvironment
     }
 };
 
-// Loads the current js::ForkJoinSlice*.
+// Loads the current js::ForkJoinContext*.
 // Only applicable in ParallelExecution.
-class MForkJoinSlice
+class MForkJoinContext
   : public MNullaryInstruction
 {
-    MForkJoinSlice()
+    MForkJoinContext()
         : MNullaryInstruction()
     {
-        setResultType(MIRType_ForkJoinSlice);
+        setResultType(MIRType_ForkJoinContext);
     }
 
   public:
-    INSTRUCTION_HEADER(ForkJoinSlice);
+    INSTRUCTION_HEADER(ForkJoinContext);
 
-    static MForkJoinSlice *New(TempAllocator &alloc) {
-        return new(alloc) MForkJoinSlice();
+    static MForkJoinContext *New(TempAllocator &alloc) {
+        return new(alloc) MForkJoinContext();
     }
 
     AliasSet getAliasSet() const {
@@ -8647,9 +8647,9 @@ class MRestPar
     public MRestCommon,
     public IntPolicy<1>
 {
-    MRestPar(MDefinition *slice, MDefinition *numActuals, unsigned numFormals,
+    MRestPar(MDefinition *cx, MDefinition *numActuals, unsigned numFormals,
              JSObject *templateObject, types::TemporaryTypeSet *resultTypes)
-      : MBinaryInstruction(slice, numActuals),
+      : MBinaryInstruction(cx, numActuals),
         MRestCommon(numFormals, templateObject)
     {
         setResultType(MIRType_Object);
@@ -8659,12 +8659,12 @@ class MRestPar
   public:
     INSTRUCTION_HEADER(RestPar);
 
-    static MRestPar *New(TempAllocator &alloc, MDefinition *slice, MRest *rest) {
-        return new(alloc) MRestPar(slice, rest->numActuals(), rest->numFormals(),
+    static MRestPar *New(TempAllocator &alloc, MDefinition *cx, MRest *rest) {
+        return new(alloc) MRestPar(cx, rest->numActuals(), rest->numFormals(),
                                    rest->templateObject(), rest->resultTypeSet());
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
     MDefinition *numActuals() const {
@@ -8682,14 +8682,14 @@ class MRestPar
     }
 };
 
-// Guard on an object being safe for writes by current parallel slice.
+// Guard on an object being safe for writes by current parallel cx.
 // Must be either thread-local or else a handle into the destination array.
 class MGuardThreadExclusive
   : public MBinaryInstruction,
     public ObjectPolicy<1>
 {
-    MGuardThreadExclusive(MDefinition *slice, MDefinition *obj)
-      : MBinaryInstruction(slice, obj)
+    MGuardThreadExclusive(MDefinition *cx, MDefinition *obj)
+      : MBinaryInstruction(cx, obj)
     {
         setResultType(MIRType_None);
         setGuard();
@@ -8698,10 +8698,10 @@ class MGuardThreadExclusive
   public:
     INSTRUCTION_HEADER(GuardThreadExclusive);
 
-    static MGuardThreadExclusive *New(TempAllocator &alloc, MDefinition *slice, MDefinition *obj) {
-        return new(alloc) MGuardThreadExclusive(slice, obj);
+    static MGuardThreadExclusive *New(TempAllocator &alloc, MDefinition *cx, MDefinition *obj) {
+        return new(alloc) MGuardThreadExclusive(cx, obj);
     }
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
     MDefinition *object() const {
@@ -8943,8 +8943,8 @@ class MNewCallObjectPar : public MBinaryInstruction
 {
     CompilerRootObject templateObj_;
 
-    MNewCallObjectPar(MDefinition *slice, JSObject *templateObj, MDefinition *slots)
-        : MBinaryInstruction(slice, slots),
+    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj, MDefinition *slots)
+        : MBinaryInstruction(cx, slots),
           templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
@@ -8953,11 +8953,11 @@ class MNewCallObjectPar : public MBinaryInstruction
   public:
     INSTRUCTION_HEADER(NewCallObjectPar);
 
-    static MNewCallObjectPar *New(TempAllocator &alloc, MDefinition *slice, MNewCallObject *callObj) {
-        return new(alloc) MNewCallObjectPar(slice, callObj->templateObject(), callObj->slots());
+    static MNewCallObjectPar *New(TempAllocator &alloc, MDefinition *cx, MNewCallObject *callObj) {
+        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject(), callObj->slots());
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 
@@ -9082,8 +9082,8 @@ class MNewDenseArrayPar : public MBinaryInstruction
 {
     CompilerRootObject templateObject_;
 
-    MNewDenseArrayPar(MDefinition *slice, MDefinition *length, JSObject *templateObject)
-      : MBinaryInstruction(slice, length),
+    MNewDenseArrayPar(MDefinition *cx, MDefinition *length, JSObject *templateObject)
+      : MBinaryInstruction(cx, length),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
@@ -9092,13 +9092,13 @@ class MNewDenseArrayPar : public MBinaryInstruction
   public:
     INSTRUCTION_HEADER(NewDenseArrayPar);
 
-    static MNewDenseArrayPar *New(TempAllocator &alloc, MDefinition *slice, MDefinition *length,
+    static MNewDenseArrayPar *New(TempAllocator &alloc, MDefinition *cx, MDefinition *length,
                                   JSObject *templateObject)
     {
-        return new(alloc) MNewDenseArrayPar(slice, length, templateObject);
+        return new(alloc) MNewDenseArrayPar(cx, length, templateObject);
     }
 
-    MDefinition *forkJoinSlice() const {
+    MDefinition *forkJoinContext() const {
         return getOperand(0);
     }
 

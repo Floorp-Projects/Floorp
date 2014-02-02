@@ -59,8 +59,6 @@ typedef void (*EnterJitCode)(void *code, unsigned argc, Value *argv, StackFrame 
 
 class IonBuilder;
 
-typedef Vector<IonBuilder*, 0, SystemAllocPolicy> OffThreadCompilationVector;
-
 // ICStubSpace is an abstraction for allocation policy and storage for stub data.
 // There are two kinds of stubs: optimized stubs and fallback stubs (the latter
 // also includes stubs that can make non-tail calls that can GC).
@@ -332,12 +330,6 @@ class JitCompartment
     // Ion state for the compartment's runtime.
     JitRuntime *rt;
 
-    // Any scripts for which off thread compilation has successfully finished,
-    // failed, or been cancelled. All off thread compilations which are started
-    // will eventually appear in this list asynchronously. Protected by the
-    // runtime's analysis lock.
-    OffThreadCompilationVector finishedOffThreadCompilations_;
-
     // Map ICStub keys to ICStub shared code objects.
     typedef WeakValueCache<uint32_t, ReadBarriered<JitCode> > ICStubCodeMap;
     ICStubCodeMap *stubCodes_;
@@ -361,10 +353,6 @@ class JitCompartment
     JitCode *generateStringConcatStub(JSContext *cx, ExecutionMode mode);
 
   public:
-    OffThreadCompilationVector &finishedOffThreadCompilations() {
-        return finishedOffThreadCompilations_;
-    }
-
     JitCode *getStubCode(uint32_t key) {
         ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         if (p)

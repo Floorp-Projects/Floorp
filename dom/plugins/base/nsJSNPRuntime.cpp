@@ -557,11 +557,13 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
 }
 
 static bool
-GetProperty(JSContext *cx, JSObject *obj, NPIdentifier id, JS::MutableHandle<JS::Value> rval)
+GetProperty(JSContext *cx, JSObject *objArg, NPIdentifier npid, JS::MutableHandle<JS::Value> rval)
 {
-  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+  NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
                "id must be either string or int!\n");
-  return ::JS_GetPropertyById(cx, obj, NPIdentifierToJSId(id), rval);
+  JS::Rooted<JSObject *> obj(cx, objArg);
+  JS::Rooted<jsid> id(cx, NPIdentifierToJSId(npid));
+  return ::JS_GetPropertyById(cx, obj, id, rval);
 }
 
 // static

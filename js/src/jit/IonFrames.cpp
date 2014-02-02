@@ -688,15 +688,15 @@ HandleException(ResumeFromException *rfe)
 void
 HandleParallelFailure(ResumeFromException *rfe)
 {
-    ForkJoinSlice *slice = ForkJoinSlice::current();
-    IonFrameIterator iter(slice->perThreadData->ionTop, ParallelExecution);
+    ForkJoinContext *cx = ForkJoinContext::current();
+    IonFrameIterator iter(cx->perThreadData->ionTop, ParallelExecution);
 
     parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
 
     while (!iter.isEntry()) {
         if (iter.isScripted()) {
-            slice->bailoutRecord->updateCause(ParallelBailoutUnsupportedVM,
-                                              iter.script(), iter.script(), nullptr);
+            cx->bailoutRecord->updateCause(ParallelBailoutUnsupportedVM,
+                                           iter.script(), iter.script(), nullptr);
             break;
         }
         ++iter;

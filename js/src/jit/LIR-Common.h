@@ -361,8 +361,8 @@ class LNewPar : public LInstructionHelper<1, 1, 2>
   public:
     LIR_HEADER(NewPar);
 
-    LNewPar(const LAllocation &slice, const LDefinition &temp1, const LDefinition &temp2) {
-        setOperand(0, slice);
+    LNewPar(const LAllocation &cx, const LDefinition &temp1, const LDefinition &temp2) {
+        setOperand(0, cx);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
@@ -371,7 +371,7 @@ class LNewPar : public LInstructionHelper<1, 1, 2>
         return mir_->toNewPar();
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
@@ -389,10 +389,10 @@ class LNewDenseArrayPar : public LCallInstructionHelper<1, 2, 3>
   public:
     LIR_HEADER(NewDenseArrayPar);
 
-    LNewDenseArrayPar(const LAllocation &slice, const LAllocation &length,
+    LNewDenseArrayPar(const LAllocation &cx, const LAllocation &length,
                       const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3)
     {
-        setOperand(0, slice);
+        setOperand(0, cx);
         setOperand(1, length);
         setTemp(0, temp1);
         setTemp(1, temp2);
@@ -403,7 +403,7 @@ class LNewDenseArrayPar : public LCallInstructionHelper<1, 2, 3>
         return mir_->toNewDenseArrayPar();
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
@@ -468,10 +468,10 @@ class LNewCallObject : public LInstructionHelper<1, 1, 0>
 
 class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
 {
-    LNewCallObjectPar(const LAllocation &slice, const LAllocation &slots,
+    LNewCallObjectPar(const LAllocation &cx, const LAllocation &slots,
                       const LDefinition &temp1, const LDefinition &temp2)
     {
-        setOperand(0, slice);
+        setOperand(0, cx);
         setOperand(1, slots);
         setTemp(0, temp1);
         setTemp(1, temp2);
@@ -481,21 +481,21 @@ public:
     LIR_HEADER(NewCallObjectPar);
 
     static LNewCallObjectPar *NewWithSlots(TempAllocator &alloc,
-                                           const LAllocation &slice, const LAllocation &slots,
+                                           const LAllocation &cx, const LAllocation &slots,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
-        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(cx, slots, temp1, temp2);
     }
 
     static LNewCallObjectPar *NewSansSlots(TempAllocator &alloc,
-                                           const LAllocation &slice,
+                                           const LAllocation &cx,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
         LAllocation slots = LConstantIndex::Bogus();
-        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(cx, slots, temp1, temp2);
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
@@ -700,12 +700,12 @@ class LCheckOverRecursedPar : public LInstructionHelper<0, 1, 1>
   public:
     LIR_HEADER(CheckOverRecursedPar);
 
-    LCheckOverRecursedPar(const LAllocation &slice, const LDefinition &tempReg) {
-        setOperand(0, slice);
+    LCheckOverRecursedPar(const LAllocation &cx, const LDefinition &tempReg) {
+        setOperand(0, cx);
         setTemp(0, tempReg);
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
@@ -742,12 +742,12 @@ class LCheckInterruptPar : public LInstructionHelper<0, 1, 1>
   public:
     LIR_HEADER(CheckInterruptPar);
 
-    LCheckInterruptPar(const LAllocation &slice, const LDefinition &tempReg) {
-        setOperand(0, slice);
+    LCheckInterruptPar(const LAllocation &cx, const LDefinition &tempReg) {
+        setOperand(0, cx);
         setTemp(0, tempReg);
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
@@ -2814,11 +2814,11 @@ class LConcatPar : public LInstructionHelper<1, 3, 4>
   public:
     LIR_HEADER(ConcatPar)
 
-    LConcatPar(const LAllocation &slice, const LAllocation &lhs, const LAllocation &rhs,
+    LConcatPar(const LAllocation &cx, const LAllocation &lhs, const LAllocation &rhs,
                const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3,
                const LDefinition &temp4)
     {
-        setOperand(0, slice);
+        setOperand(0, cx);
         setOperand(1, lhs);
         setOperand(2, rhs);
         setTemp(0, temp1);
@@ -2827,7 +2827,7 @@ class LConcatPar : public LInstructionHelper<1, 3, 4>
         setTemp(3, temp4);
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return this->getOperand(0);
     }
     const LAllocation *lhs() {
@@ -3417,15 +3417,15 @@ class LLambdaPar : public LInstructionHelper<1, 2, 2>
   public:
     LIR_HEADER(LambdaPar);
 
-    LLambdaPar(const LAllocation &slice, const LAllocation &scopeChain,
+    LLambdaPar(const LAllocation &cx, const LAllocation &scopeChain,
                const LDefinition &temp1, const LDefinition &temp2)
     {
-        setOperand(0, slice);
+        setOperand(0, cx);
         setOperand(1, scopeChain);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
     const LAllocation *scopeChain() {
@@ -4749,12 +4749,12 @@ class LFunctionEnvironment : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LForkJoinSlice : public LCallInstructionHelper<1, 0, 1>
+class LForkJoinContext : public LCallInstructionHelper<1, 0, 1>
 {
   public:
-    LIR_HEADER(ForkJoinSlice);
+    LIR_HEADER(ForkJoinContext);
 
-    LForkJoinSlice(const LDefinition &temp1) {
+    LForkJoinContext(const LDefinition &temp1) {
         setTemp(0, temp1);
     }
 
@@ -5213,16 +5213,16 @@ class LRestPar : public LCallInstructionHelper<1, 2, 3>
   public:
     LIR_HEADER(RestPar);
 
-    LRestPar(const LAllocation &slice, const LAllocation &numActuals,
+    LRestPar(const LAllocation &cx, const LAllocation &numActuals,
              const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3)
     {
-        setOperand(0, slice);
+        setOperand(0, cx);
         setOperand(1, numActuals);
         setTemp(0, temp1);
         setTemp(1, temp2);
         setTemp(2, temp3);
     }
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
     const LAllocation *numActuals() {
@@ -5238,13 +5238,13 @@ class LGuardThreadExclusive : public LCallInstructionHelper<0, 2, 1>
   public:
     LIR_HEADER(GuardThreadExclusive);
 
-    LGuardThreadExclusive(const LAllocation &slice, const LAllocation &object, const LDefinition &temp1) {
-        setOperand(0, slice);
+    LGuardThreadExclusive(const LAllocation &cx, const LAllocation &object, const LDefinition &temp1) {
+        setOperand(0, cx);
         setOperand(1, object);
         setTemp(0, temp1);
     }
 
-    const LAllocation *forkJoinSlice() {
+    const LAllocation *forkJoinContext() {
         return getOperand(0);
     }
 
