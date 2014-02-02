@@ -48,6 +48,14 @@ let gFxAccounts = {
   },
 
   get loginFailed() {
+    // Referencing Weave.Service will implicitly initialize sync, and we don't
+    // want to force that - so first check if it is ready.
+    let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+    if (!service.ready) {
+      return false;
+    }
     return Weave.Service.identity.readyToAuthenticate &&
            Weave.Status.login != Weave.LOGIN_SUCCEEDED;
   },
