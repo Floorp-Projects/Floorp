@@ -1973,7 +1973,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
         // already been created by js::StartOffThreadParseScript, so cx will not
         // be necessary.
         JSContext *cx = context->maybeJSContext();
-        proto = context->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
+        proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
         if (!proto)
             return null();
     }

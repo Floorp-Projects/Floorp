@@ -5166,7 +5166,7 @@ EmitReturn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!nle.prepareForNonLocalJump(nullptr))
         return false;
 
-    if (top + JSOP_RETURN_LENGTH != bce->offset()) {
+    if (top + static_cast<ptrdiff_t>(JSOP_RETURN_LENGTH) != bce->offset()) {
         bce->code()[top] = JSOP_SETRVAL;
         if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
             return false;

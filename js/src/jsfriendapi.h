@@ -1821,10 +1821,10 @@ inline int CheckIsParallelNative(JSParallelNative parallelNative);
         {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSJitInfo::AliasEverything,JSVAL_TYPE_MISSING,false,false,false,false,0}
 
 #define JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(infoName, wrapperName, serialOp) \
-    bool wrapperName##_ParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, \
+    bool wrapperName##_ParallelNativeThreadSafeWrapper(js::ForkJoinContext *cx, unsigned argc, \
                                                        JS::Value *vp)   \
     {                                                                   \
-        return JSParallelNativeThreadSafeWrapper<serialOp>(slice, argc, vp); \
+        return JSParallelNativeThreadSafeWrapper<serialOp>(cx, argc, vp); \
     }                                                                   \
     JS_JITINFO_NATIVE_PARALLEL(infoName, wrapperName##_ParallelNativeThreadSafeWrapper)
 

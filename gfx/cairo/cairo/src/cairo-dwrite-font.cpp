@@ -1052,10 +1052,12 @@ _cairo_dwrite_load_truetype_table(void                 *scaled_font,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    *length = size;
-    if (buffer) {
-	memcpy(buffer, data, size);
+    if (buffer && *length && (UINT32)offset < size) {
+        size = MIN(size - (UINT32)offset, *length);
+        memcpy(buffer, (const char*)data + offset, size);
     }
+    *length = size;
+
     if (tableContext) {
 	face->dwriteface->ReleaseFontTable(tableContext);
     }

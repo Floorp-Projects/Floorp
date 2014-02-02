@@ -67,7 +67,9 @@ def passesRestrictions(talosJsonUrl, fileUrl):
     in talos-bundles.pvt.build.mozilla.org
     '''
     if talosJsonUrl.startswith("http://hg.mozilla.org/try/") == True or \
-       talosJsonUrl.startswith("http://hg.mozilla.org/projects/pine/") == True:
+       talosJsonUrl.startswith("https://hg.mozilla.org/try/") == True or \
+       talosJsonUrl.startswith("http://hg.mozilla.org/projects/pine/") == True or \
+       talosJsonUrl.startswith("https://hg.mozilla.org/projects/pine/") == True:
         return True
     else:
         p = re.compile('^http://talos-bundles.pvt.build.mozilla.org/')

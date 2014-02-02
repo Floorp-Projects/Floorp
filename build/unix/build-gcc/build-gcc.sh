@@ -2,7 +2,9 @@
 
 gcc_version=4.7.3
 binutils_version=2.23.1
-gcc_bt_patch=$(readlink -f $(dirname $0))/gcc-bt.patch
+this_path=$(readlink -f $(dirname $0))
+gcc_bt_patch=${this_path}/gcc-bt.patch
+gcc_pr55650_patch=${this_path}/gcc48-pr55650.patch
 make_flags='-j12'
 
 root_dir=$(mktemp -d)
@@ -29,6 +31,8 @@ cd gcc-$gcc_version
 
 # gcc 4.7 doesn't dump a stack on ICE so hack that in
 patch -p1 < $gcc_bt_patch || exit 1
+
+patch -p0 < $gcc_pr55650_patch || exit 1
 
 cd ..
 mkdir gcc-objdir

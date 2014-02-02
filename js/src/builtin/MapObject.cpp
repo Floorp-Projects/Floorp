@@ -21,7 +21,7 @@
 
 using namespace js;
 
-using mozilla::DoubleIsInt32;
+using mozilla::DoubleEqualsInt32;
 using mozilla::Forward;
 using mozilla::IsNaN;
 using mozilla::Move;
@@ -784,7 +784,7 @@ HashableValue::setValue(JSContext *cx, HandleValue v)
     } else if (v.isDouble()) {
         double d = v.toDouble();
         int32_t i;
-        if (DoubleIsInt32(d, &i)) {
+        if (DoubleEqualsInt32(d, &i)) {
             // Normalize int32_t-valued doubles to int32_t for faster hashing and testing.
             value = Int32Value(i);
         } else if (IsNaN(d)) {
@@ -897,7 +897,7 @@ MapIteratorObject::kind() const
 bool
 GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
 {
-    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
     Rooted<JSObject*> proto(cx,
@@ -916,7 +916,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
                           MapObject::IteratorKind kind)
 {
     Rooted<GlobalObject *> global(cx, &mapobj->global());
-    Rooted<JSObject*> proto(cx, global->getOrCreateMapIteratorPrototype(cx));
+    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateMapIteratorPrototype(cx, global));
     if (!proto)
         return nullptr;
 
@@ -1492,7 +1492,7 @@ SetIteratorObject::kind() const
 bool
 GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
 {
-    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
     RootedObject proto(cx, NewObjectWithGivenProto(cx, &SetIteratorObject::class_, base, global));
@@ -1510,7 +1510,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data,
                           SetObject::IteratorKind kind)
 {
     Rooted<GlobalObject *> global(cx, &setobj->global());
-    Rooted<JSObject*> proto(cx, global->getOrCreateSetIteratorPrototype(cx));
+    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateSetIteratorPrototype(cx, global));
     if (!proto)
         return nullptr;
 

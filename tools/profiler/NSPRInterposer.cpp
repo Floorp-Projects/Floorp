@@ -28,28 +28,14 @@ class NSPRIOAutoObservation : public IOInterposeObserver::Observation
 {
 public:
   NSPRIOAutoObservation(IOInterposeObserver::Operation aOp)
-    : mShouldObserve(IOInterposer::IsObservedOperation(aOp))
+    : IOInterposeObserver::Observation(aOp, "NSPRIOInterposer")
   {
-    if (mShouldObserve) {
-      mOperation = aOp;
-      mStart = TimeStamp::Now(); 
-    }
   }
 
   ~NSPRIOAutoObservation()
   {
-    if (mShouldObserve) {
-      mEnd  = TimeStamp::Now();
-      const char* ref = "NSPRIOInterposing";
-      mReference = ref;
-
-      // Report this auto observation
-      IOInterposer::Report(*this);
-    }
+    Report();
   }
-
-private:
-  bool mShouldObserve;
 };
 
 PRStatus PR_CALLBACK interposedClose(PRFileDesc* aFd)

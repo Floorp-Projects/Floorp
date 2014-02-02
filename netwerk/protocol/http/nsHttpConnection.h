@@ -142,8 +142,11 @@ public:
     // authoritatively whether UsingSpdy() or not.
     bool ReportedNPN() { return mReportedSpdy; }
 
-    // When the connection is active this is called every 1 second
-    void  ReadTimeoutTick(PRIntervalTime now);
+    // When the connection is active this is called up to once every 1 second
+    // return the interval (in seconds) that the connection next wants to
+    // have this invoked. It might happen sooner depending on the needs of
+    // other connections.
+    uint32_t  ReadTimeoutTick(PRIntervalTime now);
 
     nsAHttpTransaction::Classifier Classification() { return mClassification; }
     void Classify(nsAHttpTransaction::Classifier newclass)
