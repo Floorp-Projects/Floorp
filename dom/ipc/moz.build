@@ -106,6 +106,7 @@ LOCAL_INCLUDES += [
     '/uriloader/exthandler',
     '/widget/xpwidgets',
     '/xpcom/base',
+    '/xpcom/threads',
 ]
 
 DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']

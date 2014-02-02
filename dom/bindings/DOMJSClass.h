@@ -168,7 +168,7 @@ struct DOMJSClass
   // It would be nice to just inherit from JSClass, but that precludes pure
   // compile-time initialization of the form |DOMJSClass = {...};|, since C++
   // only allows brace initialization for aggregate/POD types.
-  const JSClass mBase;
+  const js::Class mBase;
 
   const DOMClass mClass;
 
@@ -181,7 +181,7 @@ struct DOMJSClass
     return FromJSClass(Jsvalify(base));
   }
 
-  const JSClass* ToJSClass() const { return &mBase; }
+  const JSClass* ToJSClass() const { return Jsvalify(&mBase); }
 };
 
 // Special JSClass for DOM interface and interface prototype objects.

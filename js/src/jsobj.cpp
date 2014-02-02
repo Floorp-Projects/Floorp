@@ -4402,7 +4402,7 @@ js::NativeSet<SequentialExecution>(JSContext *cx,
                                    Handle<JSObject*> obj, Handle<JSObject*> receiver,
                                    HandleShape shape, bool strict, MutableHandleValue vp);
 template bool
-js::NativeSet<ParallelExecution>(ForkJoinSlice *slice,
+js::NativeSet<ParallelExecution>(ForkJoinContext *cx,
                                  Handle<JSObject*> obj, Handle<JSObject*> receiver,
                                  HandleShape shape, bool strict, MutableHandleValue vp);
 
@@ -4785,8 +4785,8 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 bool
 JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
 {
-    if (cxArg->isForkJoinSlice())
-        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+    if (cxArg->isForkJoinContext())
+        return cxArg->asForkJoinContext()->reportError(ParallelBailoutUnsupportedVM, report);
 
     if (!cxArg->isJSContext())
         return true;
@@ -4801,8 +4801,8 @@ JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
 bool
 JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned report)
 {
-    if (cxArg->isForkJoinSlice())
-        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+    if (cxArg->isForkJoinContext())
+        return cxArg->asForkJoinContext()->reportError(ParallelBailoutUnsupportedVM, report);
 
     if (!cxArg->isJSContext())
         return true;
@@ -4817,8 +4817,8 @@ JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned repo
 bool
 JSObject::reportNotExtensible(ThreadSafeContext *cxArg, unsigned report)
 {
-    if (cxArg->isForkJoinSlice())
-        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+    if (cxArg->isForkJoinContext())
+        return cxArg->asForkJoinContext()->reportError(ParallelBailoutUnsupportedVM, report);
 
     if (!cxArg->isJSContext())
         return true;
@@ -5080,7 +5080,7 @@ baseops::SetPropertyHelper<SequentialExecution>(JSContext *cx, HandleObject obj,
                                                 HandleId id, unsigned defineHow,
                                                 MutableHandleValue vp, bool strict);
 template bool
-baseops::SetPropertyHelper<ParallelExecution>(ForkJoinSlice *slice, HandleObject obj,
+baseops::SetPropertyHelper<ParallelExecution>(ForkJoinContext *cx, HandleObject obj,
                                               HandleObject receiver,
                                               HandleId id, unsigned defineHow,
                                               MutableHandleValue vp, bool strict);

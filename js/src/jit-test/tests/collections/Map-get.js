@@ -13,7 +13,7 @@ var keys = [undefined, null, true, false,
             -1, -65536, -2147483648,
             0.5, Math.sqrt(81), Math.PI,
             Number.MAX_VALUE, -Number.MAX_VALUE, Number.MIN_VALUE, -Number.MIN_VALUE,
-            -0, NaN, Infinity, -Infinity,
+            NaN, Infinity, -Infinity,
             "", "\0", "a", "ab", "abcdefg", rope(),
             {}, [], /a*b/, Object.prototype, Object];
 

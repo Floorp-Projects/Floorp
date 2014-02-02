@@ -6001,14 +6001,18 @@ nsGlobalWindow::CanMoveResizeWindows()
   return true;
 }
 
-void
-nsGlobalWindow::Alert(const nsAString& aMessage, mozilla::ErrorResult& aError)
+bool
+nsGlobalWindow::AlertOrConfirm(bool aAlert,
+                               const nsAString& aMessage,
+                               mozilla::ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(Alert, (aMessage, aError), aError, );
+  // XXX This method is very similar to nsGlobalWindow::Prompt, make
+  // sure any modifications here don't need to happen over there!
+  MOZ_ASSERT(IsOuterWindow());
 
   if (!AreDialogsEnabled()) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
+    return false;
   }
 
   // Reset popup state while opening a modal dialog, and firing events
@@ -6037,36 +6041,50 @@ nsGlobalWindow::Alert(const nsAString& aMessage, mozilla::ErrorResult& aError)
     do_GetService("@mozilla.org/prompter;1", &rv);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
-    return;
+    return false;
   }
 
   nsCOMPtr<nsIPrompt> prompt;
   aError = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
-                                reinterpret_cast<void**>(&prompt));
+                                getter_AddRefs(prompt));
   if (aError.Failed()) {
-    return;
+    return false;
   }
 
   nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
   if (promptBag)
     promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
 
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
-                             GetCurrentInnerWindowInternal()->mDoc :
-                             nullptr);
+  bool result = false;
+  nsAutoSyncOperation sync(mDoc);
   if (ShouldPromptToBlockDialogs()) {
     bool disallowDialog = false;
     nsXPIDLString label;
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                        "ScriptDialogLabel", label);
 
-    aError = prompt->AlertCheck(title.get(), final.get(), label.get(),
-                                &disallowDialog);
+    aError = aAlert ?
+               prompt->AlertCheck(title.get(), final.get(), label.get(),
+                                  &disallowDialog) :
+               prompt->ConfirmCheck(title.get(), final.get(), label.get(),
+                                    &disallowDialog, &result);
+
     if (disallowDialog)
       DisableDialogs();
   } else {
-    aError = prompt->Alert(title.get(), final.get());
+    aError = aAlert ?
+               prompt->Alert(title.get(), final.get()) :
+               prompt->Confirm(title.get(), final.get(), &result);
   }
+
+  return result;
+}
+
+void
+nsGlobalWindow::Alert(const nsAString& aMessage, mozilla::ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(Alert, (aMessage, aError), aError, );
+  AlertOrConfirm(/* aAlert = */ true, aMessage, aError);
 }
 
 NS_IMETHODIMP
@@ -6083,70 +6101,7 @@ nsGlobalWindow::Confirm(const nsAString& aMessage, ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(Confirm, (aMessage, aError), aError, false);
 
-  if (!AreDialogsEnabled()) {
-    aError.Throw(NS_ERROR_NOT_AVAILABLE);
-    return false;
-  }
-
-  // Reset popup state while opening a modal dialog, and firing events
-  // about the dialog, to prevent the current state from being active
-  // the whole time a modal dialog is open.
-  nsAutoPopupStatePusher popupStatePusher(openAbused, true);
-
-  // Before bringing up the window, unsuppress painting and flush
-  // pending reflows.
-  EnsureReflowFlushAndPaint();
-
-  nsAutoString title;
-  MakeScriptDialogTitle(title);
-
-  // Remove non-terminating null characters from the 
-  // string. See bug #310037. 
-  nsAutoString final;
-  nsContentUtils::StripNullChars(aMessage, final);
-
-  // Check if we're being called at a point where we can't use tab-modal
-  // prompts, because something doesn't want reentrancy.
-  bool allowTabModal = GetIsTabModalPromptAllowed();
-
-  nsresult rv;
-  nsCOMPtr<nsIPromptFactory> promptFac =
-    do_GetService("@mozilla.org/prompter;1", &rv);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return false;
-  }
-
-  nsCOMPtr<nsIPrompt> prompt;
-  aError = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
-                                reinterpret_cast<void**>(&prompt));
-  if (aError.Failed()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
-  if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
-
-  bool result = false;
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
-                             GetCurrentInnerWindowInternal()->mDoc :
-                             nullptr);
-  if (ShouldPromptToBlockDialogs()) {
-    bool disallowDialog = false;
-    nsXPIDLString label;
-    nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-                                       "ScriptDialogLabel", label);
-
-    aError = prompt->ConfirmCheck(title.get(), final.get(), label.get(),
-                                  &disallowDialog, &result);
-    if (disallowDialog)
-      DisableDialogs();
-  } else {
-    aError = prompt->Confirm(title.get(), final.get(), &result);
-  }
-
-  return result;
+  return AlertOrConfirm(/* aAlert = */ false, aMessage, aError);
 }
 
 NS_IMETHODIMP
@@ -6162,6 +6117,8 @@ void
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                        nsAString& aReturn, ErrorResult& aError)
 {
+  // XXX This method is very similar to nsGlobalWindow::AlertOrConfirm, make
+  // sure any modifications here don't need to happen over there!
   FORWARD_TO_OUTER_OR_THROW(Prompt, (aMessage, aInitial, aReturn, aError),
                             aError, );
 
@@ -6204,7 +6161,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 
   nsCOMPtr<nsIPrompt> prompt;
   aError = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
-                                reinterpret_cast<void**>(&prompt));
+                                getter_AddRefs(prompt));
   if (aError.Failed()) {
     return;
   }
@@ -6223,9 +6180,7 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                                        "ScriptDialogLabel", label);
   }
 
-  nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ? 
-                             GetCurrentInnerWindowInternal()->mDoc :
-                             nullptr);
+  nsAutoSyncOperation sync(mDoc);
   bool ok;
   aError = prompt->Prompt(title.get(), fixedMessage.get(),
                           &inoutValue, label.get(), &disallowDialog, &ok);

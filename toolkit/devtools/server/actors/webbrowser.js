@@ -781,7 +781,12 @@ BrowserTabActor.prototype = {
       reload = true;
     }
 
-    if (reload) {
+    // Reload if:
+    //  - there's an explicit `performReload` flag and it's true
+    //  - there's no `performReload` flag, but it makes sense to do so
+    let hasExplicitReloadFlag = "performReload" in options;
+    if ((hasExplicitReloadFlag && options.performReload) ||
+       (!hasExplicitReloadFlag && reload)) {
       this.onReload();
     }
   },

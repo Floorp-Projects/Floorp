@@ -15,7 +15,7 @@ function test() {
   }
 
   function showHighlighter(cb) {
-    inspector.toolbox.startPicker().then(() => {
+    inspector.toolbox.highlighterUtils.startPicker().then(() => {
       EventUtils.synthesizeMouse(content.document.body, 1, 1,
         {type: "mousemove"}, content);
       inspector.toolbox.once("picker-node-hovered", () => {
@@ -63,7 +63,7 @@ function test() {
     is(iframeLoads, 2, "iframe loads");
     ok(checksAfterLoads, "the Inspector tests got the chance to run after iframe reloads");
 
-    inspector.toolbox.stopPicker().then(() => {
+    inspector.toolbox.highlighterUtils.stopPicker().then(() => {
       iframe = null;
       gBrowser.removeCurrentTab();
       executeSoon(finish);
