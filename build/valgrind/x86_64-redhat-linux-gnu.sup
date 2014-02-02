@@ -49,3 +49,14 @@
    obj:/lib64/libgobject-2.0.so.0.2200.5
    ...
 }
+{
+   Bug 966673
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib64/libresolv-2.12.so
+   ...
+   fun:gaih_inet
+   fun:getaddrinfo
+   fun:PR_GetAddrInfoByName
+   ...
+}
