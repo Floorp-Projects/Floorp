@@ -988,7 +988,6 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
       crlDownloading ?
         CertVerifier::crl_download_allowed : CertVerifier::crl_local_only,
       odc, osc, ogc);
-
 }
 
 // Enable the TLS versions given in the prefs, defaulting to SSL 3.0 (min
@@ -1052,6 +1051,50 @@ nsNSSComponent::SkipOcspOff()
   return NS_OK;
 }
 
+static nsresult
+GetNSSProfilePath(nsAutoCString& aProfilePath)
+{
+  aProfilePath.Truncate();
+  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
+  if (dbDirOverride && strlen(dbDirOverride) > 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("Using specified MOZPSM_NSSDBDIR_OVERRIDE as NSS DB dir: %s\n",
+            dbDirOverride));
+    aProfilePath.Assign(dbDirOverride);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> profileFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileFile));
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Unable to get profile directory - continuing with no NSS DB\n"));
+    return NS_OK;
+  }
+
+#if defined(XP_WIN)
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> profileFileWin(do_QueryInterface(profileFile));
+  if (!profileFileWin) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Could not get nsILocalFileWin for profile directory.\n"));
+    return NS_ERROR_FAILURE;
+  }
+  rv = profileFileWin->GetNativeCanonicalPath(aProfilePath);
+#else
+  rv = profileFile->GetNativePath(aProfilePath);
+#endif
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Could not get native path for profile directory.\n"));
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -1068,8 +1111,6 @@ nsNSSComponent::InitializeNSS()
 
   MutexAutoLock lock(mutex);
 
-  // Init phase 1, prepare own variables used for NSS
-
   if (mNSSInitialized) {
     PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
                                                   // initialize NSS more than
@@ -1077,74 +1118,47 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
+
+  // The call to ConfigureInternalPKCS11Token needs to be done before NSS is initialized,
+  // but affects only static data.
+  // If we could assume i18n will not change between profiles, one call per application
+  // run were sufficient. As I can't predict what happens in the future, let's repeat
+  // this call for every re-init of NSS.
+
+  ConfigureInternalPKCS11Token();
+
   nsAutoCString profileStr;
-  nsCOMPtr<nsIFile> profilePath;
-
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profilePath));
+  nsresult rv = GetNSSProfilePath(profileStr);
   if (NS_FAILED(rv)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-    ConfigureInternalPKCS11Token();
-    SECStatus init_rv = NSS_NoDB_Init(nullptr);
-    if (init_rv != SECSuccess) {
-      nsPSMInitPanic::SetPanic();
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  } else {
-    const char* dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
-    if (dbdir_override && strlen(dbdir_override)) {
-      profileStr = dbdir_override;
-    } else {
-#if defined(XP_WIN)
-      // Native path will drop Unicode characters that cannot be mapped to system's
-      // codepage, using short (canonical) path as workaround.
-      nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
-      if (profilePathWin) {
-        rv = profilePathWin->GetNativeCanonicalPath(profileStr);
-      }
-#else
-      rv = profilePath->GetNativePath(profileStr);
-#endif
-      if (NS_FAILED(rv)) {
-        nsPSMInitPanic::SetPanic();
-        return rv;
-      }
-    }
-
-    // init phase 2, init calls to NSS library
-
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
-
-    // The call to ConfigureInternalPKCS11Token needs to be done before NSS is initialized,
-    // but affects only static data.
-    // If we could assume i18n will not change between profiles, one call per application
-    // run were sufficient. As I can't predict what happens in the future, let's repeat
-    // this call for every re-init of NSS.
-
-    ConfigureInternalPKCS11Token();
-
-    InitCertVerifierLog();
-
-    SECStatus init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
-    if (init_rv != SECSuccess) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
-
-      // try to init r/o
-      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true);
-      if (init_rv != SECSuccess) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
-
-        init_rv = NSS_NoDB_Init(profileStr.get());
-        if (init_rv != SECSuccess) {
-          nsPSMInitPanic::SetPanic();
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-      }
-    }
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // init phase 3, only if phase 2 was successful
+  SECStatus init_rv = SECFailure;
+  if (!profileStr.IsEmpty()) {
+    // First try to initialize the NSS DB in read/write mode.
+    SECStatus init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
+    // If that fails, attempt read-only mode.
+    if (init_rv != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("could not init NSS r/w in %s\n", profileStr.get()));
+      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true);
+    }
+    if (init_rv != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("could not init in r/o either\n"));
+    }
+  }
+  // If we haven't succeeded in initializing the DB in our profile
+  // directory or we don't have a profile at all, attempt to initialize
+  // with no DB.
+  if (init_rv != SECSuccess) {
+    init_rv = NSS_NoDB_Init(nullptr);
+  }
+  if (init_rv != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("could not initialize NSS - panicking\n"));
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   mNSSInitialized = true;
 
@@ -1165,6 +1179,8 @@ nsNSSComponent::InitializeNSS()
   }
 
   DisableMD5();
+  // Initialize the certverifier log before calling any functions that library.
+  InitCertVerifierLog();
   LoadLoadableRoots();
 
   SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
