@@ -28,15 +28,22 @@
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
+      <menuitem id="request-menu-context-copy-image-as-data-uri"
+                label="&netmonitorUI.context.copyImageAsDataUri;"
+                accesskey="&netmonitorUI.context.copyImageAsDataUri.accesskey;"/>
       <menuitem id="request-menu-context-resend"
                 label="&netmonitorUI.summary.editAndResend;"
                 accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>
+      <menuseparator/>
+      <menuitem id="request-menu-context-perf"
+                label="&netmonitorUI.context.perfTools;"
+                accesskey="&netmonitorUI.context.perfTools.accesskey;"/>
     </menupopup>
   </popupset>
 
-  <box id="body"
-       class="devtools-responsive-container theme-sidebar"
-       flex="1">
+  <deck id="body" class="theme-sidebar" flex="1">
+
+  <box id="network-inspector-view" class="devtools-responsive-container">
     <vbox id="network-table" flex="1">
       <toolbar id="requests-menu-toolbar"
                class="devtools-toolbar"
@@ -118,9 +125,20 @@
                        disabled="true"
                        tabindex="0"/>
       </toolbar>
-      <label id="requests-menu-empty-notice"
-             class="side-menu-widget-empty-text"
-             value="&netmonitorUI.emptyNotice2;"/>
+
+      <vbox id="requests-menu-empty-notice"
+            class="side-menu-widget-empty-text">
+        <hbox id="notice-perf-message" align="center">
+          <label value="&netmonitorUI.perfNotice1;"/>
+          <button id="requests-menu-perf-notice-button"
+                  class="devtools-toolbarbutton"/>
+          <label value="&netmonitorUI.perfNotice2;"/>
+        </hbox>
+        <hbox id="notice-reload-message" align="center">
+          <label value="&netmonitorUI.emptyNotice3;"/>
+        </hbox>
+      </vbox>
+
       <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
         <hbox id="requests-menu-item-template" hidden="true">
           <hbox class="requests-menu-subitem requests-menu-status-and-method"
@@ -151,70 +169,70 @@
         </hbox>
       </vbox>
       <hbox id="requests-menu-footer">
-        <spacer id="requests-menu-spacer-start"
-                class="requests-menu-footer-spacer"
-                flex="100"/>
         <button id="requests-menu-filter-all-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 checked="true"
                 data-key="all"
                 label="&netmonitorUI.footer.filterAll;">
         </button>
         <button id="requests-menu-filter-html-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="html"
                 label="&netmonitorUI.footer.filterHTML;">
         </button>
         <button id="requests-menu-filter-css-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="css"
                 label="&netmonitorUI.footer.filterCSS;">
         </button>
         <button id="requests-menu-filter-js-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="js"
                 label="&netmonitorUI.footer.filterJS;">
         </button>
         <button id="requests-menu-filter-xhr-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="xhr"
                 label="&netmonitorUI.footer.filterXHR;">
         </button>
         <button id="requests-menu-filter-fonts-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="fonts"
                 label="&netmonitorUI.footer.filterFonts;">
         </button>
         <button id="requests-menu-filter-images-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="images"
                 label="&netmonitorUI.footer.filterImages;">
         </button>
         <button id="requests-menu-filter-media-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="media"
                 label="&netmonitorUI.footer.filterMedia;">
         </button>
         <button id="requests-menu-filter-flash-button"
-                class="requests-menu-footer-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
                 data-key="flash"
                 label="&netmonitorUI.footer.filterFlash;">
         </button>
-        <spacer id="requests-menu-spacer-end"
+        <spacer id="requests-menu-spacer"
                 class="requests-menu-footer-spacer"
                 flex="100"/>
-        <label id="request-menu-network-summary"
+        <button id="requests-menu-network-summary-button"
+                class="requests-menu-footer-button"
+                tooltiptext="&netmonitorUI.footer.perf;"/>
+        <label id="requests-menu-network-summary-label"
                class="plain requests-menu-footer-label"
-               flex="1"
-               crop="end"/>
+               crop="end"
+               tooltiptext="&netmonitorUI.footer.perf;"/>
         <button id="requests-menu-clear-button"
-               class="requests-menu-footer-button"
-               label="&netmonitorUI.footer.clear;">
-        </button>
+                class="requests-menu-footer-button"
+                label="&netmonitorUI.footer.clear;"/>
       </hbox>
     </vbox>
 
-    <splitter id="splitter" class="devtools-side-splitter"/>
+    <splitter id="network-inspector-view-splitter"
+              class="devtools-side-splitter"/>
 
     <deck id="details-pane"
           hidden="true">
@@ -459,5 +477,25 @@
       </tabbox>
     </deck>
   </box>
+
+  <box id="network-statistics-view">
+    <toolbar id="network-statistics-toolbar"
+             class="devtools-toolbar">
+      <button id="network-statistics-back-button"
+              class="devtools-toolbarbutton"
+              onclick="NetMonitorView.toggleFrontendMode()"
+              label="&netmonitorUI.backButton;"/>
+    </toolbar>
+    <box id="network-statistics-charts"
+         class="devtools-responsive-container"
+         flex="1">
+      <vbox id="primed-cache-chart" pack="center" flex="1"/>
+      <splitter id="network-statistics-view-splitter"
+                class="devtools-side-splitter"/>
+      <vbox id="empty-cache-chart" pack="center" flex="1"/>
+    </box>
+  </box>
+
+  </deck>
 
 </window>

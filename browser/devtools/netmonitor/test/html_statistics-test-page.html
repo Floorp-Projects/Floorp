@@ -1,0 +1,37 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Statistics test</p>
+
+    <script type="text/javascript">
+      function get(aAddress) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aAddress, true);
+        xhr.send(null);
+      }
+
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=txt");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=xml");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=html");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=css");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=js");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=json");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=jsonp");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=font");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=image");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=audio");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=video");
+      get("sjs_content-type-test-server.sjs?sts=304&fmt=flash");
+      get("test-image.png");
+    </script>
+  </body>
+
+</html>

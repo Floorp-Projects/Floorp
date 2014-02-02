@@ -33,7 +33,7 @@ function test() {
       });
 
       Task.spawn(function() {
-        yield toolbox.startPicker();
+        yield toolbox.highlighterUtils.startPicker();
         yield toolbox.selectNextTool();
       }).then(null, Cu.reportError);
     });

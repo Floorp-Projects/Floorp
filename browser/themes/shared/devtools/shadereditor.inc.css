@@ -93,7 +93,7 @@
 
 .theme-dark .editor-label {
   background: #343c45; /* Dark toolbars */
-  border-color: #222426; /* Match the splitter color. */
+  border-color: #000; /* Match the splitter color. */
   color: #f5f7fa; /* Light foreground text */
 }
 

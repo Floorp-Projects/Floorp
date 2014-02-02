@@ -965,6 +965,13 @@ exports['test emits on url changes'] = function (assert, done) {
   });
 };
 
+exports['test panel can be constructed without any arguments'] = function (assert) {
+  const { Panel } = require('sdk/panel');
+
+  let panel = Panel();
+  assert.ok(true, "Creating a panel with no arguments does not throw");
+};
+
 if (isWindowPBSupported) {
   exports.testGetWindow = function(assert, done) {
     let activeWindow = getMostRecentBrowserWindow();
