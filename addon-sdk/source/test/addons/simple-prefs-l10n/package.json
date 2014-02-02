@@ -1,0 +1,10 @@
+{
+  "id": "test-simple-prefs-l10n",
+  "preferences": [{
+    "name": "somePreference",
+    "title": "some-title",
+    "description": "Some short description for the preference",
+    "type": "string",
+    "value": "TEST"
+  }]
+}
