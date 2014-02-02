@@ -16,24 +16,45 @@ function testInputFocus() {
   browser.removeEventListener("DOMContentLoaded", testInputFocus, false);
 
   openConsole().then((hud) => {
-    let inputNode = hud.jsterm.inputNode;
-    ok(inputNode.getAttribute("focused"), "input node is focused");
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        text: "Dolske Digs Bacon",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      }],
+    }).then(([result]) => {
+      let msg = [...result.matched][0];
+      let outputItem = msg.querySelector(".body");
+      ok(outputItem, "found a logged message");
+      let inputNode = hud.jsterm.inputNode;
+      ok(inputNode.getAttribute("focused"), "input node is focused, first");
 
-    let lostFocus = () => {
-      inputNode.removeEventListener("blur", lostFocus);
-      info("input node lost focus");
-    }
+      let lostFocus = () => {
+        inputNode.removeEventListener("blur", lostFocus);
+        info("input node lost focus");
+      }
 
-   	inputNode.addEventListener("blur", lostFocus);
+      inputNode.addEventListener("blur", lostFocus);
 
-   	browser.ownerDocument.getElementById("urlbar").click();
+      browser.ownerDocument.getElementById("urlbar").click();
 
-  	ok(!inputNode.getAttribute("focused"), "input node is not focused");
+      ok(!inputNode.getAttribute("focused"), "input node is not focused");
 
-   	hud.outputNode.click();
+      EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
 
-   	ok(inputNode.getAttribute("focused"), "input node is focused");
+      ok(inputNode.getAttribute("focused"), "input node is focused, second time")
 
-      finishTest();
+      // test click-drags are not focusing the input element.
+      EventUtils.sendMouseEvent({type: "mousedown", clientX: 3, clientY: 4},
+        outputItem);
+      EventUtils.sendMouseEvent({type: "click", clientX: 15, clientY: 5},
+        outputItem);
+
+      executeSoon(() => {
+        todo(!inputNode.getAttribute("focused"), "input node is not focused after drag");
+        finishTest();
+      });
+    });
   });
 }

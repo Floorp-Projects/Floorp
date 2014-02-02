@@ -48,6 +48,22 @@ li.unsaved > hgroup > h1 > .stylesheet-name:before {
   content: "*";
 }
 
+li.linked-file-error .stylesheet-linked-file {
+  text-decoration: line-through;
+}
+
+li.linked-file-error .stylesheet-linked-file:after {
+  content: " ✘";
+}
+
+li.linked-file-error .stylesheet-rule-count {
+  visibility: hidden;
+}
+
+.stylesheet-linked-file:not(:empty):before {
+  content: " ↳ ";
+}
+
 .stylesheet-enabled {
   display: -moz-box;
   cursor: pointer;

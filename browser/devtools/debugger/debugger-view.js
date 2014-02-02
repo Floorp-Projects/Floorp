@@ -169,6 +169,10 @@ let DebuggerView = {
       lazyEmpty: true
     });
 
+    // Attach the current toolbox to the VView so it can link DOMNodes to
+    // the inspector/highlighter
+    this.Variables.toolbox = DebuggerController._toolbox;
+
     // Attach a controller that handles interfacing with the debugger protocol.
     VariablesViewController.attach(this.Variables, {
       getEnvironmentClient: aObject => gThreadClient.environment(aObject),

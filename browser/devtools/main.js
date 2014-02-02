@@ -109,7 +109,7 @@ Tools.inspector = {
 
   preventClosingOnKey: true,
   onkey: function(panel) {
-    panel.toolbox.togglePicker();
+    panel.toolbox.highlighterUtils.togglePicker();
   },
 
   isTargetSupported: function(target) {
