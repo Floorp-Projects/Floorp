@@ -100,9 +100,9 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
 }
 
 JSObject *
-NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize, gc::InitialHeap initialHeap)
+NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap)
 {
-    return gc::NewGCThing<JSObject, CanGC>(cx, allocKind, thingSize, initialHeap);
+    return js::NewGCObject<CanGC>(cx, allocKind, 0, initialHeap);
 }
 
 bool

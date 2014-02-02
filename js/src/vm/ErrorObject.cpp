@@ -87,7 +87,7 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
                         HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
                         ScopedJSFreePtr<JSErrorReport> *report, HandleString message)
 {
-    Rooted<JSObject*> proto(cx, cx->global()->getOrCreateCustomErrorPrototype(cx, errorType));
+    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType));
     if (!proto)
         return nullptr;
 

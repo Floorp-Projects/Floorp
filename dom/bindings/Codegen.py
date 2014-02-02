@@ -205,7 +205,8 @@ static const DOMJSClass Class = {
     nullptr,               /* hasInstance */
     nullptr,               /* construct */
     %s, /* trace */
-    JSCLASS_NO_INTERNAL_MEMBERS
+    JS_NULL_CLASS_EXT,
+    JS_NULL_OBJECT_OPS
   },
 %s
 };
@@ -213,6 +214,28 @@ static const DOMJSClass Class = {
        classFlags,
        ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
        enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
+       CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
+
+class CGDOMProxyJSClass(CGThing):
+    """
+    Generate a DOMJSClass for a given proxy descriptor
+    """
+    def __init__(self, descriptor):
+        CGThing.__init__(self)
+        self.descriptor = descriptor
+    def declare(self):
+        return ""
+    def define(self):
+        return """
+static const DOMJSClass Class = {
+  PROXY_CLASS_DEF("%s",
+                  0, /* extra slots */
+                  JSCLASS_IS_DOMJSCLASS,
+                  nullptr, /* call */
+                  nullptr  /* construct */),
+%s
+};
+""" % (self.descriptor.interface.identifier.name,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):
@@ -1054,9 +1077,9 @@ def DeferredFinalizeSmartPtr(descriptor):
         smartPtr = 'nsRefPtr'
     return smartPtr
 
-def finalizeHook(descriptor, hookName, context):
+def finalizeHook(descriptor, hookName, freeOp):
     if descriptor.customFinalize:
-        finalize = "self->%s(%s);" % (hookName, context)
+        finalize = "self->%s(CastToJSFreeOp(%s));" % (hookName, freeOp)
     else:
         finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
         if descriptor.wrapperCache:
@@ -1064,7 +1087,7 @@ def finalizeHook(descriptor, hookName, context):
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
         if descriptor.interface.getExtendedAttribute("Global"):
-            finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
+            finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
         finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
             (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
@@ -1074,7 +1097,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
     A hook for finalize, used to release our native object.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'obj')]
+        args = [Argument('js::FreeOp*', 'fop'), Argument('JSObject*', 'obj')]
         CGAbstractClassHook.__init__(self, descriptor, FINALIZE_HOOK_NAME,
                                      'void', args)
 
@@ -1926,10 +1949,7 @@ if (!unforgeableHolder) {
             interfaceCache = "nullptr"
 
         if self.descriptor.concrete:
-            if self.descriptor.proxy:
-                domClass = "&Class"
-            else:
-                domClass = "&Class.mClass"
+            domClass = "&Class.mClass"
         else:
             domClass = "nullptr"
 
@@ -2148,8 +2168,10 @@ def CreateBindingJSObject(descriptor, properties, parent):
     objDecl = "  JS::Rooted<JSObject*> obj(aCx);\n"
     if descriptor.proxy:
         create = """  JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
+  js::ProxyOptions options;
+  options.setClass(&Class.mBase);
   obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                       proxyPrivateVal, proto, %s);
+                       proxyPrivateVal, proto, %s, options);
   if (!obj) {
     return nullptr;
   }
@@ -2161,7 +2183,7 @@ def CreateBindingJSObject(descriptor, properties, parent):
 
 """
     else:
-        create = """  obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
+        create = """  obj = JS_NewObject(aCx, Class.ToJSClass(), proto, %s);
   if (!obj) {
     return nullptr;
   }
@@ -2408,7 +2430,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
   obj = CreateGlobal<%s, GetProtoObject>(aCx,
                                          aObject,
                                          aCache,
-                                         &Class.mBase,
+                                         Class.ToJSClass(),
                                          aOptions,
                                          aPrincipal);
 
@@ -8092,23 +8114,6 @@ class CGProxyUnwrap(CGAbstractMethod):
   MOZ_ASSERT(IsProxy(obj));
   return static_cast<%s*>(js::GetProxyPrivate(obj).toPrivate());""" % (self.descriptor.nativeType)
 
-class CGDOMJSProxyHandlerDOMClass(CGThing):
-    def __init__(self, descriptor):
-        CGThing.__init__(self)
-        self.descriptor = descriptor
-    def declare(self):
-        return ""
-    def define(self):
-        return """
-static const DOMClass Class = """ + DOMClass(self.descriptor) + """;
-
-"""
-
-class CGDOMJSProxyHandler_CGDOMJSProxyHandler(ClassConstructor):
-    def __init__(self):
-        ClassConstructor.__init__(self, [], inline=True, visibility="private",
-                                  baseConstructors=["mozilla::dom::DOMProxyHandler(Class)"])
-
 class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
@@ -8654,7 +8659,6 @@ class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
                 descriptor.supportsNamedProperties())
-        constructors = [CGDOMJSProxyHandler_CGDOMJSProxyHandler()]
         methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor),
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
@@ -8672,7 +8676,6 @@ class CGDOMJSProxyHandler(CGClass):
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
-                         constructors=constructors,
                          methods=methods)
 
 class CGDOMJSProxyHandlerDeclarer(CGThing):
@@ -8908,8 +8911,8 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
                 cgThings.append(CGProxyIsProxy(descriptor))
                 cgThings.append(CGProxyUnwrap(descriptor))
-                cgThings.append(CGDOMJSProxyHandlerDOMClass(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDefiner(handlerThing))
+                cgThings.append(CGDOMProxyJSClass(descriptor))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
@@ -9102,9 +9105,11 @@ if (cx) {
         if memberInits:
             body += (
                 "bool isNull = val.isNullOrUndefined();\n"
-                "// We only need |temp| if !isNull, in which case we have |cx|.\n"
+                "// We only need these if !isNull, in which case we have |cx|.\n"
+                "Maybe<JS::Rooted<JSObject *> > object;\n"
                 "Maybe<JS::Rooted<JS::Value> > temp;\n"
                 "if (!isNull) {\n"
+                "  object.construct(cx, &val.toObject());\n"
                 "  temp.construct(cx);\n"
                 "}\n")
             body += "\n\n".join(memberInits) + "\n"
@@ -9170,7 +9175,7 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
 
     def initIdsMethod(self):
         assert self.needToInitIds
-        idinit = [CGGeneric('!InternJSString(cx, atomsCache->%s, "%s")' %
+        idinit = [CGGeneric('!atomsCache->%s.init(cx, "%s")' %
                             (m.identifier.name + "_id", m.identifier.name))
                   for m in self.dictionary.members]
         idinit.reverse();
@@ -9355,7 +9360,7 @@ if (""",
             replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
 
         propId = self.makeIdName(member.identifier.name);
-        propGet = ("JS_GetPropertyById(cx, &val.toObject(), atomsCache->%s, &temp.ref())" %
+        propGet = ("JS_GetPropertyById(cx, object.ref(), atomsCache->%s, &temp.ref())" %
                    propId)
 
         conversionReplacements = {
@@ -11432,7 +11437,8 @@ class CallbackGetter(CallbackAccessor):
                                                                 self.attrName)
             }
         return string.Template(
-            'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
+            'JS::Rooted<JSObject *> callback(cx, mCallback);\n'
+            'if (!JS_GetProperty(cx, callback, "${attrName}", &rval)) {\n'
             '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
             '  return${errorReturn};\n'
             '}\n').substitute(replacements);
@@ -11499,9 +11505,8 @@ class GlobalGenRoots():
                 continue
 
             classMembers = [ClassMember(m.identifier.name + "_id",
-                                        "jsid",
-                                        visibility="public",
-                                        body="JSID_VOID") for m in dictMembers]
+                                        "InternedStringId",
+                                        visibility="public") for m in dictMembers]
 
             structName = dict.identifier.name + "Atoms"
             structs.append((structName,
@@ -11524,6 +11529,11 @@ class GlobalGenRoots():
         curr = CGNamespace.build(['mozilla', 'dom'],
                                   CGWrapper(structs, pre='\n'))
         curr = CGWrapper(curr, post='\n')
+
+        # Add include statement for InternedStringId.
+        declareIncludes = ['mozilla/dom/BindingUtils.h']
+        curr = CGHeaders([], [], [], [], declareIncludes, [], 'GeneratedAtomList',
+                         curr)
 
         # Add include guards.
         curr = CGIncludeGuard('GeneratedAtomList', curr)

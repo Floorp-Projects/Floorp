@@ -130,34 +130,34 @@ MIRGraph::unmarkBlocks()
 }
 
 MDefinition *
-MIRGraph::forkJoinSlice()
+MIRGraph::forkJoinContext()
 {
-    // Search the entry block to find a par slice instruction.  If we do not
-    // find one, add one after the Start instruction.
+    // Search the entry block to find a ForkJoinContext instruction. If we do
+    // not find one, add one after the Start instruction.
     //
     // Note: the original design used a field in MIRGraph to cache the
-    // forkJoinSlice rather than searching for it again.  However, this could
-    // become out of date due to DCE.  Given that we do not generally have to
-    // search very far to find the par slice instruction if it exists, and
-    // that we don't look for it that often, I opted to simply eliminate the
-    // cache and search anew each time, so that it is that much easier to keep
-    // the IR coherent. - nmatsakis
+    // forkJoinContext rather than searching for it again.  However, this
+    // could become out of date due to DCE.  Given that we do not generally
+    // have to search very far to find the ForkJoinContext instruction if it
+    // exists, and that we don't look for it that often, I opted to simply
+    // eliminate the cache and search anew each time, so that it is that much
+    // easier to keep the IR coherent. - nmatsakis
 
     MBasicBlock *entry = entryBlock();
     JS_ASSERT(entry->info().executionMode() == ParallelExecution);
 
     MInstruction *start = nullptr;
     for (MInstructionIterator ins(entry->begin()); ins != entry->end(); ins++) {
-        if (ins->isForkJoinSlice())
+        if (ins->isForkJoinContext())
             return *ins;
         else if (ins->isStart())
             start = *ins;
     }
     JS_ASSERT(start);
 
-    MForkJoinSlice *slice = MForkJoinSlice::New(alloc());
-    entry->insertAfter(start, slice);
-    return slice;
+    MForkJoinContext *cx = MForkJoinContext::New(alloc());
+    entry->insertAfter(start, cx);
+    return cx;
 }
 
 MBasicBlock *

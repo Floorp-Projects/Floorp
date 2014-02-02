@@ -12,16 +12,20 @@
   visibility: hidden;
 }
 
-#response-content-image-box {
+#custom-pane {
   overflow: auto;
 }
 
-#custom-pane {
+#response-content-image-box {
   overflow: auto;
 }
 
 #timings-summary-blocked {
   display: none; /* This doesn't work yet. */
+}
+
+#network-statistics-charts {
+  overflow: auto;
 }
 
 /* Responsive sidebar */
@@ -35,18 +39,14 @@
   }
 }
 
-@media (min-width: 701px) and (max-width: 1024px) {
-  #body:not([pane-collapsed]) .requests-menu-footer-button,
+@media (min-width: 701px) and (max-width: 1280px) {
+  #body:not([pane-collapsed]) .requests-menu-filter-button,
   #body:not([pane-collapsed]) .requests-menu-footer-spacer {
     display: none;
   }
 }
 
 @media (min-width: 701px) {
-  #requests-menu-spacer-start {
-    display: none;
-  }
-
   #network-table[waterfall-overflows] .requests-menu-waterfall {
     display: none;
   }
