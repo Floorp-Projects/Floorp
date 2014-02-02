@@ -8,12 +8,12 @@ function handleRequest(request, response)
   response.setHeader("Cache-Control", "no-cache", false);
 
   if (request.method == "POST") {
-    setState("seenPost", "1");
+    setState("seenPost" + request.queryString, "1");
     return;
   }
 
   if (request.method == "GET") {
-    if (getState("seenPost") == "1") {
+    if (getState("seenPost" + request.queryString) == "1") {
       response.write("closed");
     }
     return;
