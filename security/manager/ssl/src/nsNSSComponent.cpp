@@ -1066,55 +1066,51 @@ nsNSSComponent::InitializeNSS()
                 nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
                 "You must update the values in nsINSSErrorsService.idl");
 
-  {
-    MutexAutoLock lock(mutex);
+  MutexAutoLock lock(mutex);
 
-    // Init phase 1, prepare own variables used for NSS
+  // Init phase 1, prepare own variables used for NSS
 
-    if (mNSSInitialized) {
-      PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
-                                                    // initialize NSS more than
-                                                    // once in a process.
-      return NS_ERROR_FAILURE;
+  if (mNSSInitialized) {
+    PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
+                                                  // initialize NSS more than
+                                                  // once in a process.
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  nsAutoCString profileStr;
+  nsCOMPtr<nsIFile> profilePath;
+
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(profilePath));
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
+    ConfigureInternalPKCS11Token();
+    SECStatus init_rv = NSS_NoDB_Init(nullptr);
+    if (init_rv != SECSuccess) {
+      nsPSMInitPanic::SetPanic();
+      return NS_ERROR_NOT_AVAILABLE;
     }
-
-    nsresult rv;
-    nsAutoCString profileStr;
-    nsCOMPtr<nsIFile> profilePath;
-
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(profilePath));
-    if (NS_FAILED(rv)) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-      ConfigureInternalPKCS11Token();
-      SECStatus init_rv = NSS_NoDB_Init(nullptr);
-      if (init_rv != SECSuccess) {
-        nsPSMInitPanic::SetPanic();
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-    }
-    else
-    {
+  } else {
     const char* dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
     if (dbdir_override && strlen(dbdir_override)) {
       profileStr = dbdir_override;
-    }
-    else {
-  #if defined(XP_WIN)
+    } else {
+#if defined(XP_WIN)
       // Native path will drop Unicode characters that cannot be mapped to system's
       // codepage, using short (canonical) path as workaround.
       nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
-      if (profilePathWin)
+      if (profilePathWin) {
         rv = profilePathWin->GetNativeCanonicalPath(profileStr);
-  #else
+      }
+#else
       rv = profilePath->GetNativePath(profileStr);
-  #endif
+#endif
       if (NS_FAILED(rv)) {
         nsPSMInitPanic::SetPanic();
         return rv;
       }
     }
-
 
     // init phase 2, init calls to NSS library
 
@@ -1145,79 +1141,78 @@ nsNSSComponent::InitializeNSS()
           return NS_ERROR_NOT_AVAILABLE;
         }
       }
-    } // have profile dir
-    } // lock
-
-    // init phase 3, only if phase 2 was successful
-
-    mNSSInitialized = true;
-
-    PK11_SetPasswordFunc(PK11PasswordPrompt);
-
-    SharedSSLState::GlobalInit();
-
-    // Register an observer so we can inform NSS when these prefs change
-    Preferences::AddStrongObserver(this, "security.");
-
-    SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
-    SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
-
-    rv = setEnabledTLSVersions();
-    if (NS_FAILED(rv)) {
-      nsPSMInitPanic::SetPanic();
-      return NS_ERROR_UNEXPECTED;
     }
+  }
 
-    DisableMD5();
-    LoadLoadableRoots();
+  // init phase 3, only if phase 2 was successful
 
-    SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
+  mNSSInitialized = true;
 
-    bool requireSafeNegotiation =
-      Preferences::GetBool("security.ssl.require_safe_negotiation",
-                           REQUIRE_SAFE_NEGOTIATION_DEFAULT);
-    SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
+  PK11_SetPasswordFunc(PK11PasswordPrompt);
 
-    bool allowUnrestrictedRenego =
-      Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
-                           ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
-    SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
-                         allowUnrestrictedRenego ?
-                           SSL_RENEGOTIATE_UNRESTRICTED :
-                           SSL_RENEGOTIATE_REQUIRES_XTN);
+  SharedSSLState::GlobalInit();
 
-    SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
-                         Preferences::GetBool("security.ssl.enable_false_start",
-                                              FALSE_START_ENABLED_DEFAULT));
+  // Register an observer so we can inform NSS when these prefs change
+  Preferences::AddStrongObserver(this, "security.");
 
-    // SSL_ENABLE_NPN and SSL_ENABLE_ALPN also require calling
-    // SSL_SetNextProtoNego in order for the extensions to be negotiated.
-    // WebRTC does not do that so it will not use NPN or ALPN even when these
-    // preferences are true.
-    SSL_OptionSetDefault(SSL_ENABLE_NPN,
-                         Preferences::GetBool("security.ssl.enable_npn",
-                                              NPN_ENABLED_DEFAULT));
-    SSL_OptionSetDefault(SSL_ENABLE_ALPN,
-                         Preferences::GetBool("security.ssl.enable_alpn",
-                                              ALPN_ENABLED_DEFAULT));
+  SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
+  SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
 
-    if (NS_FAILED(InitializeCipherSuite())) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
-      return NS_ERROR_FAILURE;
-    }
+  rv = setEnabledTLSVersions();
+  if (NS_FAILED(rv)) {
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_UNEXPECTED;
+  }
 
-    // dynamic options from prefs
-    setValidationOptions(true, lock);
+  DisableMD5();
+  LoadLoadableRoots();
 
-    mHttpForNSS.initTable();
-    mHttpForNSS.registerHttpClient();
+  SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
+
+  bool requireSafeNegotiation =
+    Preferences::GetBool("security.ssl.require_safe_negotiation",
+                         REQUIRE_SAFE_NEGOTIATION_DEFAULT);
+  SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
+
+  bool allowUnrestrictedRenego =
+    Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
+                         ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
+  SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
+                       allowUnrestrictedRenego ?
+                         SSL_RENEGOTIATE_UNRESTRICTED :
+                         SSL_RENEGOTIATE_REQUIRES_XTN);
+
+  SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
+                       Preferences::GetBool("security.ssl.enable_false_start",
+                                            FALSE_START_ENABLED_DEFAULT));
+
+  // SSL_ENABLE_NPN and SSL_ENABLE_ALPN also require calling
+  // SSL_SetNextProtoNego in order for the extensions to be negotiated.
+  // WebRTC does not do that so it will not use NPN or ALPN even when these
+  // preferences are true.
+  SSL_OptionSetDefault(SSL_ENABLE_NPN,
+                       Preferences::GetBool("security.ssl.enable_npn",
+                                            NPN_ENABLED_DEFAULT));
+  SSL_OptionSetDefault(SSL_ENABLE_ALPN,
+                       Preferences::GetBool("security.ssl.enable_alpn",
+                                            ALPN_ENABLED_DEFAULT));
+
+  if (NS_FAILED(InitializeCipherSuite())) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // dynamic options from prefs
+  setValidationOptions(true, lock);
+
+  mHttpForNSS.initTable();
+  mHttpForNSS.registerHttpClient();
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-    LaunchSmartCardThreads();
+  LaunchSmartCardThreads();
 #endif
 
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-  }
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
 }
 
