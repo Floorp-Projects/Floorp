@@ -28,6 +28,9 @@
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
+      <menuitem id="request-menu-context-copy-image-as-data-uri"
+                label="&netmonitorUI.context.copyImageAsDataUri;"
+                accesskey="&netmonitorUI.context.copyImageAsDataUri.accesskey;"/>
       <menuitem id="request-menu-context-resend"
                 label="&netmonitorUI.summary.editAndResend;"
                 accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>

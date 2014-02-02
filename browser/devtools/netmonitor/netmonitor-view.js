@@ -352,6 +352,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._onContextShowing = this._onContextShowing.bind(this);
     this._onContextNewTabCommand = this.openRequestInTab.bind(this);
     this._onContextCopyUrlCommand = this.copyUrl.bind(this);
+    this._onContextCopyImageAsDataUriCommand = this.copyImageAsDataUri.bind(this);
     this._onContextResendCommand = this.cloneSelectedRequest.bind(this);
     this._onContextPerfCommand = () => NetMonitorView.toggleFrontendMode();
 
@@ -365,6 +366,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#network-request-popup").addEventListener("popupshowing", this._onContextShowing, false);
     $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
     $("#request-menu-context-copy-url").addEventListener("command", this._onContextCopyUrlCommand, false);
+    $("#request-menu-context-copy-image-as-data-uri").addEventListener("command", this._onContextCopyImageAsDataUriCommand, false);
     $("#request-menu-context-resend").addEventListener("command", this._onContextResendCommand, false);
     $("#request-menu-context-perf").addEventListener("command", this._onContextPerfCommand, false);
 
@@ -393,6 +395,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#network-request-popup").removeEventListener("popupshowing", this._onContextShowing, false);
     $("#request-menu-context-newtab").removeEventListener("command", this._onContextNewTabCommand, false);
     $("#request-menu-context-copy-url").removeEventListener("command", this._onContextCopyUrlCommand, false);
+    $("#request-menu-context-copy-image-as-data-uri").removeEventListener("command", this._onContextCopyImageAsDataUriCommand, false);
     $("#request-menu-context-resend").removeEventListener("command", this._onContextResendCommand, false);
     $("#request-menu-context-perf").removeEventListener("command", this._onContextPerfCommand, false);
 
@@ -504,6 +507,18 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   copyUrl: function() {
     let selected = this.selectedItem.attachment;
     clipboardHelper.copyString(selected.url, document);
+  },
+
+  /**
+   * Copy image as data uri.
+   */
+  copyImageAsDataUri: function() {
+    let selected = this.selectedItem.attachment;
+    let { mimeType, text, encoding } = selected.responseContent.content;
+    gNetwork.getString(text).then(aString => {
+      let data = "data:" + mimeType + ";" + encoding + "," + aString;
+      clipboardHelper.copyString(data, document);
+    });
   },
 
   /**
@@ -1380,14 +1395,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Handle the context menu opening. Hide items if no request is selected.
    */
   _onContextShowing: function() {
+    let selectedItem = this.selectedItem;
+
     let resendElement = $("#request-menu-context-resend");
-    resendElement.hidden = !this.selectedItem || this.selectedItem.attachment.isCustom;
+    resendElement.hidden = !selectedItem || selectedItem.attachment.isCustom;
 
     let copyUrlElement = $("#request-menu-context-copy-url");
-    copyUrlElement.hidden = !this.selectedItem;
+    copyUrlElement.hidden = !selectedItem;
+
+    let copyImageAsDataUriElement = $("#request-menu-context-copy-image-as-data-uri");
+    copyImageAsDataUriElement.hidden = !selectedItem ||
+      !selectedItem.attachment.responseContent ||
+      !selectedItem.attachment.responseContent.content.mimeType.contains("image/");
 
     let newTabElement = $("#request-menu-context-newtab");
-    newTabElement.hidden = !this.selectedItem;
+    newTabElement.hidden = !selectedItem;
   },
 
   /**
