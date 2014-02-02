@@ -176,48 +176,28 @@ class RemoteAutomation(Automation):
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
-          stdout = self._remoteLog
+            stdout = self._remoteLog
 
-        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd)
+        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd, self._appName)
 
     # be careful here as this inner class doesn't have access to outer class members
     class RProcess(object):
         # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None):
+        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None, app = None):
             self.dm = dm
             self.stdoutlen = 0
             self.lastTestSeen = "remoteautomation.py"
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
             if (self.proc is None):
-              if cmd[0] == 'am':
-                self.proc = stdout
-              else:
-                raise Exception("unable to launch process")
-            exepath = cmd[0]
-            name = exepath.split('/')[-1]
-            self.procName = name
-            # Hack for Robocop: Derive the actual process name from the command line.
-            # We expect something like:
-            #  ['am', 'instrument', '-w', '-e', 'class', 'org.mozilla.fennec.tests.testBookmark', 'org.mozilla.roboexample.test/android.test.InstrumentationTestRunner']
-            # and want to derive 'org.mozilla.fennec'.
+                if cmd[0] == 'am':
+                    self.proc = stdout
+                else:
+                    raise Exception("unable to launch process")
+            self.procName = cmd[0].split('/')[-1]
             if cmd[0] == 'am' and cmd[1] == "instrument":
-              try:
-                i = cmd.index("class")
-              except ValueError:
-                # no "class" argument -- maybe this isn't robocop?
-                i = -1
-              if (i > 0):
-                classname = cmd[i+1]
-                parts = classname.split('.')
-                try:
-                  i = parts.index("tests")
-                except ValueError:
-                  # no "tests" component -- maybe this isn't robocop?
-                  i = -1
-                if (i > 0):
-                  self.procName = '.'.join(parts[0:i])
-                  print "Robocop derived process name: "+self.procName
+                self.procName = app
+                print "Robocop process name: "+self.procName
 
             # Setting timeout at 1 hour since on a remote device this takes much longer
             self.timeout = 3600
