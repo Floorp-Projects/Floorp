@@ -870,7 +870,7 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
      * reserved slot on the global object; see js::BooleanGetPrimitiveValueSlow
      * called from PreprocessValue above.
      */
-    if (!global->getOrCreateBooleanPrototype(cx))
+    if (!GlobalObject::getOrCreateBooleanPrototype(cx, global))
         return nullptr;
 
     RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));

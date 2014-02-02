@@ -285,7 +285,7 @@ private:
 
   void
   SendInternal(const nsAString& aStringBody,
-               JSAutoStructuredCloneBuffer& aBody,
+               JSAutoStructuredCloneBuffer&& aBody,
                nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                ErrorResult& aRv);
 };

@@ -1631,136 +1631,6 @@ this.DOMApplicationRegistry = {
     let id = this._appIdForManifestURL(aData.manifestURL);
     let app = this.webapps[id];
 
-    function updatePackagedApp(aManifest) {
-      debug("updatePackagedApp");
-
-      // if the app manifestURL has a app:// scheme, we can't have an
-      // update.
-      if (app.manifestURL.startsWith("app://")) {
-        aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
-        return;
-      }
-
-      // Store the new update manifest.
-      let dir = this._getAppDir(id).path;
-      let manFile = OS.Path.join(dir, "staged-update.webapp");
-      this._writeFile(manFile, JSON.stringify(aManifest));
-
-      let manifest = new ManifestHelper(aManifest, app.manifestURL);
-      // A package is available: set downloadAvailable to fire the matching
-      // event.
-      app.downloadAvailable = true;
-      app.downloadSize = manifest.size;
-      app.updateManifest = aManifest;
-      this._saveApps().then(() => {
-        this.broadcastMessage("Webapps:UpdateState", {
-          app: app,
-          manifestURL: app.manifestURL
-        });
-        this.broadcastMessage("Webapps:FireEvent", {
-          eventType: "downloadavailable",
-          manifestURL: app.manifestURL,
-          requestID: aData.requestID
-        });
-      });
-    }
-
-    // A hosted app is updated if the app manifest or the appcache needs
-    // updating. Even if the app manifest has not changed, we still check
-    // for changes in the app cache.
-    // 'aNewManifest' would contain the updated app manifest if
-    // it has actually been updated, while 'aOldManifest' contains the
-    // stored app manifest.
-    function updateHostedApp(aOldManifest, aNewManifest) {
-      debug("updateHostedApp " + aData.manifestURL);
-
-      // Clean up the deprecated manifest cache if needed.
-      if (id in this._manifestCache) {
-        delete this._manifestCache[id];
-      }
-
-      app.manifest = aNewManifest || aOldManifest;
-
-      let manifest;
-      if (aNewManifest) {
-        this.updateAppHandlers(aOldManifest, aNewManifest, app);
-
-        // Store the new manifest.
-        let dir = this._getAppDir(id).path;
-        let manFile = OS.Path.join(dir, "manifest.webapp");
-        this._writeFile(manFile, JSON.stringify(aNewManifest));
-        manifest = new ManifestHelper(aNewManifest, app.origin);
-
-        if (supportUseCurrentProfile()) {
-          // Update the permissions for this app.
-          PermissionsInstaller.installPermissions({
-            manifest: app.manifest,
-            origin: app.origin,
-            manifestURL: aData.manifestURL
-          }, true);
-        }
-
-        this.updateDataStore(this.webapps[id].localId, app.origin,
-                             app.manifestURL, app.manifest, app.appStatus);
-
-        app.name = manifest.name;
-        app.csp = manifest.csp || "";
-        app.role = manifest.role || "";
-        app.updateTime = Date.now();
-      } else {
-        manifest = new ManifestHelper(aOldManifest, app.origin);
-      }
-
-      // Update the registry.
-      this.webapps[id] = app;
-      this._saveApps().then(() => {
-        let reg = DOMApplicationRegistry;
-        if (!manifest.appcache_path) {
-          reg.broadcastMessage("Webapps:UpdateState", {
-            app: app,
-            manifest: app.manifest,
-            manifestURL: app.manifestURL
-          });
-          reg.broadcastMessage("Webapps:FireEvent", {
-            eventType: "downloadapplied",
-            manifestURL: app.manifestURL,
-            requestID: aData.requestID
-          });
-        } else {
-          // Check if the appcache is updatable, and send "downloadavailable" or
-          // "downloadapplied".
-          let updateObserver = {
-            observe: function(aSubject, aTopic, aObsData) {
-              debug("updateHostedApp: updateSvc.checkForUpdate return for " +
-                    app.manifestURL + " - event is " + aTopic);
-              let eventType =
-                aTopic == "offline-cache-update-available" ? "downloadavailable"
-                                                           : "downloadapplied";
-              app.downloadAvailable = (eventType == "downloadavailable");
-              reg._saveApps().then(() => {
-                reg.broadcastMessage("Webapps:UpdateState", {
-                  app: app,
-                  manifest: app.manifest,
-                  manifestURL: app.manifestURL
-                });
-                reg.broadcastMessage("Webapps:FireEvent", {
-                  eventType: eventType,
-                  manifestURL: app.manifestURL,
-                  requestID: aData.requestID
-                });
-              });
-            }
-          };
-          debug("updateHostedApp: updateSvc.checkForUpdate for " +
-                manifest.fullAppcachePath());
-          updateSvc.checkForUpdate(Services.io.newURI(manifest.fullAppcachePath(), null, null),
-                                   app.localId, false, updateObserver);
-        }
-        delete app.manifest;
-      });
-    }
-
-
     // We cannot update an app that does not exists.
     if (!app) {
       sendError("NO_SUCH_APP");
@@ -1776,6 +1646,15 @@ this.DOMApplicationRegistry = {
     // We may be able to remove this when Bug 839071 is fixed.
     if (app.downloading) {
       sendError("APP_IS_DOWNLOADING");
+      return;
+    }
+
+    // If the app is packaged and its manifestURL has an app:// scheme,
+    // then we can't have an update.
+    if (app.origin.startsWith("app://") &&
+        app.manifestURL.startsWith("app://")) {
+      aData.error = "NOT_UPDATABLE";
+      aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
       return;
     }
 
@@ -1879,7 +1758,7 @@ this.DOMApplicationRegistry = {
           app.lastCheckedUpdate = Date.now();
           if (isPackage) {
             if (oldHash != hash) {
-              updatePackagedApp.call(this, manifest);
+              this.updatePackagedApp(aData, id, app, manifest);
             } else {
               this._saveApps().then(() => {
                 // Like if we got a 304, just send a 'downloadapplied'
@@ -1900,7 +1779,7 @@ this.DOMApplicationRegistry = {
           } else {
             // Update only the appcache if the manifest has not changed
             // based on the hash value.
-            updateHostedApp.call(this, oldManifest,
+            this.updateHostedApp(aData, id, app, oldManifest,
                                  oldHash == hash ? null : manifest);
           }
         }
@@ -1926,7 +1805,7 @@ this.DOMApplicationRegistry = {
         } else {
           // For hosted apps, even if the manifest has not changed, we check
           // for offline cache updates.
-          updateHostedApp.call(this, oldManifest, null);
+          this.updateHostedApp(aData, id, app, oldManifest, null);
         }
       } else {
         sendError("MANIFEST_URL_ERROR");
@@ -2004,6 +1883,128 @@ this.DOMApplicationRegistry = {
          throw Cr.NS_ERROR_NO_INTERFACE;
        }
      }
+  },
+
+  updatePackagedApp: function(aData, aId, aApp, aNewManifest) {
+    debug("updatePackagedApp");
+
+    // Store the new update manifest.
+    let dir = this._getAppDir(aId).path;
+    let manFile = OS.Path.join(dir, "staged-update.webapp");
+    this._writeFile(manFile, JSON.stringify(aNewManifest));
+
+    let manifest = new ManifestHelper(aNewManifest, aApp.manifestURL);
+    // A package is available: set downloadAvailable to fire the matching
+    // event.
+    aApp.downloadAvailable = true;
+    aApp.downloadSize = manifest.size;
+    aApp.updateManifest = aNewManifest;
+    this._saveApps().then(() => {
+      this.broadcastMessage("Webapps:UpdateState", {
+        app: aApp,
+        manifestURL: aApp.manifestURL
+      });
+      this.broadcastMessage("Webapps:FireEvent", {
+        eventType: "downloadavailable",
+        manifestURL: aApp.manifestURL,
+        requestID: aData.requestID
+      });
+    });
+  },
+
+  // A hosted app is updated if the app manifest or the appcache needs
+  // updating. Even if the app manifest has not changed, we still check
+  // for changes in the app cache.
+  // 'aNewManifest' would contain the updated app manifest if
+  // it has actually been updated, while 'aOldManifest' contains the
+  // stored app manifest.
+  updateHostedApp: function(aData, aId, aApp, aOldManifest, aNewManifest) {
+    debug("updateHostedApp " + aData.manifestURL);
+
+    // Clean up the deprecated manifest cache if needed.
+    if (aId in this._manifestCache) {
+      delete this._manifestCache[aId];
+    }
+
+    aApp.manifest = aNewManifest || aOldManifest;
+
+    let manifest;
+    if (aNewManifest) {
+      this.updateAppHandlers(aOldManifest, aNewManifest, aApp);
+
+      // Store the new manifest.
+      let dir = this._getAppDir(aId).path;
+      let manFile = OS.Path.join(dir, "manifest.webapp");
+      this._writeFile(manFile, JSON.stringify(aNewManifest));
+      manifest = new ManifestHelper(aNewManifest, aApp.origin);
+
+      if (supportUseCurrentProfile()) {
+        // Update the permissions for this app.
+        PermissionsInstaller.installPermissions({
+          manifest: aApp.manifest,
+          origin: aApp.origin,
+          manifestURL: aData.manifestURL
+        }, true);
+      }
+
+      this.updateDataStore(this.webapps[aId].localId, aApp.origin,
+                           aApp.manifestURL, aApp.manifest, aApp.appStatus);
+
+      aApp.name = manifest.name;
+      aApp.csp = manifest.csp || "";
+      aApp.role = manifest.role || "";
+      aApp.updateTime = Date.now();
+    } else {
+      manifest = new ManifestHelper(aOldManifest, aApp.origin);
+    }
+
+    // Update the registry.
+    this.webapps[aId] = aApp;
+    this._saveApps().then(() => {
+      let reg = DOMApplicationRegistry;
+      if (!manifest.appcache_path) {
+        reg.broadcastMessage("Webapps:UpdateState", {
+          app: aApp,
+          manifest: aApp.manifest,
+          manifestURL: aApp.manifestURL
+        });
+        reg.broadcastMessage("Webapps:FireEvent", {
+          eventType: "downloadapplied",
+          manifestURL: aApp.manifestURL,
+          requestID: aData.requestID
+        });
+      } else {
+        // Check if the appcache is updatable, and send "downloadavailable" or
+        // "downloadapplied".
+        let updateObserver = {
+          observe: function(aSubject, aTopic, aObsData) {
+            debug("updateHostedApp: updateSvc.checkForUpdate return for " +
+                  aApp.manifestURL + " - event is " + aTopic);
+            let eventType =
+              aTopic == "offline-cache-update-available" ? "downloadavailable"
+                                                         : "downloadapplied";
+            aApp.downloadAvailable = (eventType == "downloadavailable");
+            reg._saveApps().then(() => {
+              reg.broadcastMessage("Webapps:UpdateState", {
+                app: aApp,
+                manifest: aApp.manifest,
+                manifestURL: aApp.manifestURL
+              });
+              reg.broadcastMessage("Webapps:FireEvent", {
+                eventType: eventType,
+                manifestURL: aApp.manifestURL,
+                requestID: aData.requestID
+              });
+            });
+          }
+        };
+        debug("updateHostedApp: updateSvc.checkForUpdate for " +
+              manifest.fullAppcachePath());
+        updateSvc.checkForUpdate(Services.io.newURI(manifest.fullAppcachePath(), null, null),
+                                 aApp.localId, false, updateObserver);
+      }
+      delete aApp.manifest;
+    });
   },
 
   // Downloads the manifest and run checks, then eventually triggers the

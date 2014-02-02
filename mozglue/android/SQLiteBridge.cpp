@@ -77,6 +77,19 @@ static jmethodID jCursorAddRow;
 static jobject sqliteInternalCall(JNIEnv* jenv, sqlite3 *db, jstring jQuery,
                                   jobjectArray jParams, jlongArray jQueryRes);
 
+static void throwSqliteException(JNIEnv* jenv, const char* aFormat, ...)
+{
+    va_list ap;
+    va_start(ap, aFormat);
+    char* msg = nullptr;
+    vasprintf(&msg, aFormat, ap);
+    LOG("Error in SQLiteBridge: %s\n", msg);
+    JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", msg);
+    // msg is allocated by vasprintf, it needs to be freed by libc.
+    __real_free(msg);
+    va_end(ap);
+}
+
 static void
 JNI_Setup(JNIEnv* jenv)
 {
@@ -91,9 +104,7 @@ JNI_Setup(JNIEnv* jenv)
         || lObjectClass == nullptr
         || lByteBufferClass == nullptr
         || lCursorClass == nullptr) {
-        LOG("Error finding classes");
-        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
-                  "FindClass error");
+        throwSqliteException(jenv, "FindClass error");
         return;
     }
 
@@ -107,9 +118,7 @@ JNI_Setup(JNIEnv* jenv)
     if (stringClass == nullptr || objectClass == nullptr
         || byteBufferClass == nullptr
         || cursorClass == nullptr) {
-        LOG("Error getting global references");
-        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
-                  "NewGlobalRef error");
+        throwSqliteException(jenv, "NewGlobalRef error");
         return;
     }
 
@@ -126,9 +135,7 @@ JNI_Setup(JNIEnv* jenv)
     if (jByteBufferAllocateDirect == nullptr
         || jCursorConstructor == nullptr
         || jCursorAddRow == nullptr) {
-        LOG("Error finding methods");
-        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
-                  "GetMethodId error");
+        throwSqliteException(jenv, "GetMethodId error");
         return;
     }
 
@@ -148,20 +155,17 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
     jobject jCursor = nullptr;
     const char* dbPath;
     sqlite3 *db;
-    char* errorMsg;
 
     dbPath = jenv->GetStringUTFChars(jDb, nullptr);
     rc = f_sqlite3_open(dbPath, &db);
     jenv->ReleaseStringUTFChars(jDb, dbPath);
     if (rc != SQLITE_OK) {
-        asprintf(&errorMsg, "Can't open database: %s\n", f_sqlite3_errmsg(db));
-        LOG("Error in SQLiteBridge: %s\n", errorMsg);
-        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
-        // errorMsg is allocated by asprintf, it needs to be freed by libc.
-        __real_free(errorMsg);
-    } else {
-      jCursor = sqliteInternalCall(jenv, db, jQuery, jParams, jQueryRes);
+        throwSqliteException(jenv,
+            "Can't open database: %s", f_sqlite3_errmsg(db));
+        f_sqlite3_close(db); // close db even if open failed
+        return nullptr;
     }
+    jCursor = sqliteInternalCall(jenv, db, jQuery, jParams, jQueryRes);
     f_sqlite3_close(db);
     return jCursor;
 }
@@ -190,17 +194,15 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_openDatabase(JNIEnv* jenv, jclass,
     int rc;
     const char* dbPath;
     sqlite3 *db;
-    char* errorMsg;
 
     dbPath = jenv->GetStringUTFChars(jDb, nullptr);
     rc = f_sqlite3_open(dbPath, &db);
     jenv->ReleaseStringUTFChars(jDb, dbPath);
     if (rc != SQLITE_OK) {
-        asprintf(&errorMsg, "Can't open database: %s\n", f_sqlite3_errmsg(db));
-        LOG("Error in SQLiteBridge: %s\n", errorMsg);
-        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
-        // errorMsg is allocated by asprintf, it needs to be freed by libc.
-        __real_free(errorMsg);
+        throwSqliteException(jenv,
+            "Can't open database: %s", f_sqlite3_errmsg(db));
+        f_sqlite3_close(db); // close db even if open failed
+        return 0;
     }
     return (jlong)db;
 }
@@ -225,7 +227,6 @@ sqliteInternalCall(JNIEnv* jenv,
     JNI_Setup(jenv);
 
     jobject jCursor = nullptr;
-    char* errorMsg;
     jsize numPars = 0;
 
     const char *pzTail;
@@ -237,8 +238,9 @@ sqliteInternalCall(JNIEnv* jenv,
 
     rc = f_sqlite3_prepare_v2(db, queryStr, -1, &ppStmt, &pzTail);
     if (rc != SQLITE_OK || ppStmt == nullptr) {
-        asprintf(&errorMsg, "Can't prepare statement: %s\n", f_sqlite3_errmsg(db));
-        goto error_close;
+        throwSqliteException(jenv,
+            "Can't prepare statement: %s", f_sqlite3_errmsg(db));
+        return nullptr;
     }
     jenv->ReleaseStringUTFChars(jQuery, queryStr);
 
@@ -249,9 +251,11 @@ sqliteInternalCall(JNIEnv* jenv,
     int sqlNumPars;
     sqlNumPars = f_sqlite3_bind_parameter_count(ppStmt);
     if (numPars != sqlNumPars) {
-        asprintf(&errorMsg, "Passed parameter count (%d) doesn't match SQL parameter count (%d)\n",
+        throwSqliteException(jenv,
+            "Passed parameter count (%d) "
+            "doesn't match SQL parameter count (%d)",
             numPars, sqlNumPars);
-        goto error_close;
+        return nullptr;
     }
 
     if (jParams != nullptr) {
@@ -263,8 +267,9 @@ sqliteInternalCall(JNIEnv* jenv,
                 // should be OK.
                 jboolean isString = jenv->IsInstanceOf(jObjectParam, stringClass);
                 if (isString != JNI_TRUE) {
-                    asprintf(&errorMsg, "Parameter is not of String type");
-                    goto error_close;
+                    throwSqliteException(jenv,
+                        "Parameter is not of String type");
+                    return nullptr;
                 }
                 jstring jStringParam = (jstring)jObjectParam;
                 const char* paramStr = jenv->GetStringUTFChars(jStringParam, nullptr);
@@ -272,8 +277,8 @@ sqliteInternalCall(JNIEnv* jenv,
                 rc = f_sqlite3_bind_text(ppStmt, i + 1, paramStr, -1, SQLITE_TRANSIENT);
                 jenv->ReleaseStringUTFChars(jStringParam, paramStr);
                 if (rc != SQLITE_OK) {
-                    asprintf(&errorMsg, "Error binding query parameter");
-                    goto error_close;
+                    throwSqliteException(jenv, "Error binding query parameter");
+                    return nullptr;
                 }
             }
         }
@@ -282,8 +287,9 @@ sqliteInternalCall(JNIEnv* jenv,
     // Execute the query and step through the results
     rc = f_sqlite3_step(ppStmt);
     if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
-        asprintf(&errorMsg, "Can't step statement: (%d) %s\n", rc, f_sqlite3_errmsg(db));
-        goto error_close;
+        throwSqliteException(jenv,
+            "Can't step statement: (%d) %s", rc, f_sqlite3_errmsg(db));
+        return nullptr;
     }
 
     // Get the column count and names
@@ -296,8 +302,8 @@ sqliteInternalCall(JNIEnv* jenv,
                                                          stringClass,
                                                          nullptr);
         if (jStringArray == nullptr) {
-            asprintf(&errorMsg, "Can't allocate String[]\n");
-            goto error_close;
+            throwSqliteException(jenv, "Can't allocate String[]");
+            return nullptr;
         }
 
         // Assign column names to the String[]
@@ -312,8 +318,8 @@ sqliteInternalCall(JNIEnv* jenv,
                                   jCursorConstructor,
                                   jStringArray);
         if (jCursor == nullptr) {
-            asprintf(&errorMsg, "Can't allocate MatrixBlobCursor\n");
-            goto error_close;
+            throwSqliteException(jenv, "Can't allocate MatrixBlobCursor");
+            return nullptr;
         }
     }
 
@@ -336,8 +342,8 @@ sqliteInternalCall(JNIEnv* jenv,
                                                  objectClass,
                                                  nullptr);
         if (jRow == nullptr) {
-            asprintf(&errorMsg, "Can't allocate jRow Object[]\n");
-            goto error_close;
+            throwSqliteException(jenv, "Can't allocate jRow Object[]");
+            return nullptr;
         }
 
         for (int i = 0; i < cols; i++) {
@@ -353,14 +359,17 @@ sqliteInternalCall(JNIEnv* jenv,
                                                  jByteBufferAllocateDirect,
                                                  colLen);
                 if (jByteBuffer == nullptr) {
-                    goto error_close;
+                    throwSqliteException(jenv,
+                        "Failure calling ByteBuffer.allocateDirect");
+                    return nullptr;
                 }
 
                 // Get its backing array
                 void* bufferArray = jenv->GetDirectBufferAddress(jByteBuffer);
                 if (bufferArray == nullptr) {
-                    asprintf(&errorMsg, "Failure calling GetDirectBufferAddress\n");
-                    goto error_close;
+                    throwSqliteException(jenv,
+                        "Failure calling GetDirectBufferAddress");
+                    return nullptr;
                 }
                 memcpy(bufferArray, blob, colLen);
 
@@ -387,23 +396,18 @@ sqliteInternalCall(JNIEnv* jenv,
         rc = f_sqlite3_step(ppStmt);
         // Real error?
         if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
-            asprintf(&errorMsg, "Can't re-step statement:(%d) %s\n", rc, f_sqlite3_errmsg(db));
-            goto error_close;
+            throwSqliteException(jenv,
+                "Can't re-step statement:(%d) %s", rc, f_sqlite3_errmsg(db));
+            return nullptr;
         }
     }
 
     rc = f_sqlite3_finalize(ppStmt);
     if (rc != SQLITE_OK) {
-        asprintf(&errorMsg, "Can't finalize statement: %s\n", f_sqlite3_errmsg(db));
-        goto error_close;
+        throwSqliteException(jenv,
+            "Can't finalize statement: %s", f_sqlite3_errmsg(db));
+        return nullptr;
     }
 
-    return jCursor;
-
-error_close:
-    LOG("Error in SQLiteBridge: %s\n", errorMsg);
-    JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
-    // errorMsg is allocated by asprintf, it needs to be freed by libc.
-    __real_free(errorMsg);
     return jCursor;
 }

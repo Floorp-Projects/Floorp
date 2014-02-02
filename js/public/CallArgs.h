@@ -44,7 +44,7 @@ typedef bool
 
 /* Typedef for native functions that may be called in parallel. */
 typedef bool
-(* JSParallelNative)(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp);
+(* JSParallelNative)(js::ForkJoinContext *cx, unsigned argc, JS::Value *vp);
 
 /*
  * Typedef for native functions that may be called either in parallel or
@@ -63,7 +63,7 @@ JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp);
 
 template <JSThreadSafeNative threadSafeNative>
 inline bool
-JSParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp);
+JSParallelNativeThreadSafeWrapper(js::ForkJoinContext *cx, unsigned argc, JS::Value *vp);
 
 /*
  * Compute |this| for the |vp| inside a JSNative, either boxing primitives or

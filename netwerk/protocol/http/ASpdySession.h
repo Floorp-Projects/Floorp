@@ -22,7 +22,7 @@ public:
   virtual bool CanReuse() = 0;
   virtual bool RoomForMoreStreams() = 0;
   virtual PRIntervalTime IdleTime() = 0;
-  virtual void ReadTimeoutTick(PRIntervalTime now) = 0;
+  virtual uint32_t ReadTimeoutTick(PRIntervalTime now) = 0;
   virtual void DontReuse() = 0;
 
   static ASpdySession *NewSpdySession(uint32_t version,

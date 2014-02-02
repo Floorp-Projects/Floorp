@@ -89,6 +89,40 @@ void VectorRemove(std::vector<T>& vector, const T& element)
 
 } // anonymous namespace
 
+IOInterposeObserver::Observation::Observation(Operation aOperation,
+                                              const char* aReference,
+                                              bool aShouldReport)
+  : mOperation(aOperation)
+  , mReference(aReference)
+  , mShouldReport(IOInterposer::IsObservedOperation(aOperation) &&
+                  aShouldReport)
+{
+  if (mShouldReport) {
+    mStart = TimeStamp::Now();
+  }
+}
+
+IOInterposeObserver::Observation::Observation(Operation aOperation,
+                                              const TimeStamp& aStart,
+                                              const TimeStamp& aEnd,
+                                              const char* aReference)
+  : mOperation(aOperation)
+  , mStart(aStart)
+  , mEnd(aEnd)
+  , mReference(aReference)
+  , mShouldReport(false)
+{
+}
+
+void
+IOInterposeObserver::Observation::Report()
+{
+  if (mShouldReport) {
+    mEnd = TimeStamp::Now();
+    IOInterposer::Report(*this);
+  }
+}
+
 // Flags tracking which operations are being observed
 IOInterposeObserver::Operation IOInterposer::sObservedOperations =
                                                   IOInterposeObserver::OpNone;
