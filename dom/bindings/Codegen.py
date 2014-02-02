@@ -10961,7 +10961,7 @@ class CGCallback(CGClass):
                              "eReportExceptions"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
-        args.insert(0, Argument("const T&",  "thisObj"))
+        args.insert(0, Argument("const T&",  "thisObjPtr"))
 
         setupCall = ("CallSetup s(this, aRv, aExceptionHandling);\n"
                      "if (!s.GetContext()) {\n"
@@ -10972,7 +10972,7 @@ class CGCallback(CGClass):
         bodyWithThis = string.Template(
             setupCall+
             "JS::Rooted<JSObject*> thisObjJS(s.GetContext(),\n"
-            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObj));\n"
+            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObjPtr));\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
