@@ -2086,7 +2086,31 @@ var WalkerActor = protocol.ActorClass({
     // Need to force a release of this node, because those nodes can't
     // be accessed anymore.
     this.releaseNode(documentActor, { force: true });
-  }
+  },
+
+  /**
+   * Given an ObjectActor (identified by its ID), commonly used in the debugger,
+   * webconsole and variablesView, return the corresponding inspector's NodeActor
+   */
+  getNodeActorFromObjectActor: method(function(objectActorID) {
+    let debuggerObject = this.conn.poolFor(objectActorID).get(objectActorID).obj;
+    let rawNode = debuggerObject.unsafeDereference();
+
+    // This is a special case for the document object whereby it is considered
+    // as document.documentElement (the <html> node)
+    if (rawNode.defaultView && rawNode === rawNode.defaultView.document) {
+      rawNode = rawNode.documentElement;
+    }
+
+    return this.attachElement(rawNode);
+  }, {
+    request: {
+      objectActorID: Arg(0, "string")
+    },
+    response: {
+      nodeFront: RetVal("disconnectedNode")
+    }
+  }),
 });
 
 /**
@@ -2218,6 +2242,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     });
   }, {
     impl: "_querySelector"
+  }),
+
+  getNodeActorFromObjectActor: protocol.custom(function(objectActorID) {
+    return this._getNodeActorFromObjectActor(objectActorID).then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_getNodeActorFromObjectActor"
   }),
 
   _releaseFront: function(node, force) {

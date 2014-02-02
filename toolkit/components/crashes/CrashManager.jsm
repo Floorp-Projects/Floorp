@@ -166,7 +166,6 @@ let gCrashManager;
  * The main reason it's implemented as a reusable type is to facilitate testing.
  */
 XPCOMUtils.defineLazyGetter(this.CrashManager, "Singleton", function () {
-  Cu.reportError("CrashManager.Singleton accessed!");
   if (gCrashManager) {
     return gCrashManager;
   }

@@ -1,0 +1,24 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <div>Look at this DIV! Just look at it!</div>
+
+    <script type="text/javascript">
+      function start() {
+        var theDiv = document.querySelector("div");
+        var theBody = document.body;
+        var manyDomNodes = [theDiv, theBody];
+        debugger;
+      }
+    </script>
+  </body>
+
+</html>

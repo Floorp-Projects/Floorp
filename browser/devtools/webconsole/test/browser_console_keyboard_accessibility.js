@@ -22,11 +22,13 @@ function test()
     hud = aHud;
     ok(hud, "Web Console opened");
 
-    content.console.log("foobarz1");
+    info("dump some spew into the console for scrolling");
+    for (let i = 0; i < 100; i++)
+      content.console.log("foobarz" + i);
     waitForMessages({
       webconsole: hud,
       messages: [{
-        text: "foobarz1",
+        text: "foobarz99",
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       }],
@@ -35,6 +37,14 @@ function test()
 
   function onConsoleMessage()
   {
+    let currentPosition = hud.outputNode.parentNode.scrollTop;
+    EventUtils.synthesizeKey("VK_PAGE_UP", {});
+    isnot(hud.outputNode.parentNode.scrollTop, currentPosition, "scroll position changed after page up");
+
+    currentPosition = hud.outputNode.parentNode.scrollTop;
+    EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
+    ok(hud.outputNode.parentNode.scrollTop > currentPosition, "scroll position now at bottom");
+
     hud.jsterm.once("messages-cleared", onClear);
     info("try ctrl-l to clear output");
     EventUtils.synthesizeKey("l", { ctrlKey: true });

@@ -29,7 +29,7 @@ public class testFormHistory extends BaseTest {
         ContentValues[] cvs = new ContentValues[1];
         cvs[0] = new ContentValues();
  
-        blockForGeckoReady();
+        blockForGeckoDelayedStartup();
 
         Uri formHistoryUri;
         Uri insertUri;

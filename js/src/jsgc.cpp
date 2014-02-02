@@ -1713,9 +1713,9 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
             mozilla::Maybe<AutoLockWorkerThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
             if (rt->exclusiveThreadsPresent()) {
-                lock.construct<WorkerThreadState &>(*rt->workerThreadState);
+                lock.construct();
                 while (rt->isHeapBusy())
-                    rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
+                    WorkerThreadState().wait(GlobalWorkerThreadState::PRODUCER);
             }
 
             void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind);
@@ -2113,7 +2113,7 @@ js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
     if (InParallelSection()) {
-        ForkJoinSlice::current()->requestGC(reason);
+        ForkJoinContext::current()->requestGC(reason);
         return true;
     }
 
@@ -2140,7 +2140,7 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
      * are stopped to trigger GC.
      */
     if (InParallelSection()) {
-        ForkJoinSlice::current()->requestZoneGC(zone, reason);
+        ForkJoinContext::current()->requestZoneGC(zone, reason);
         return true;
     }
 
@@ -4300,7 +4300,7 @@ AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
         // Lock the worker thread state when changing the heap state in the
         // presence of exclusive threads, to avoid racing with refillFreeList.
 #ifdef JS_THREADSAFE
-        AutoLockWorkerThreadState lock(*rt->workerThreadState);
+        AutoLockWorkerThreadState lock;
         rt->heapState = heapState;
 #else
         MOZ_CRASH();
@@ -4316,11 +4316,11 @@ AutoTraceSession::~AutoTraceSession()
 
     if (runtime->exclusiveThreadsPresent()) {
 #ifdef JS_THREADSAFE
-        AutoLockWorkerThreadState lock(*runtime->workerThreadState);
+        AutoLockWorkerThreadState lock;
         runtime->heapState = prevState;
 
         // Notify any worker threads waiting for the trace session to end.
-        runtime->workerThreadState->notifyAll(WorkerThreadState::PRODUCER);
+        WorkerThreadState().notifyAll(GlobalWorkerThreadState::PRODUCER);
 #else
         MOZ_CRASH();
 #endif

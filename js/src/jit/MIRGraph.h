@@ -669,10 +669,10 @@ class MIRGraph
     }
 
     // The per-thread context. So as not to modify the calling convention for
-    // parallel code, we obtain the current slice from thread-local storage.
-    // This helper method will lazilly insert an MForkJoinSlice instruction in
-    // the entry block and return the definition.
-    MDefinition *forkJoinSlice();
+    // parallel code, we obtain the current ForkJoinContext from thread-local
+    // storage.  This helper method will lazilly insert an MForkJoinContext
+    // instruction in the entry block and return the definition.
+    MDefinition *forkJoinContext();
 
     void dump(FILE *fp);
     void dump();

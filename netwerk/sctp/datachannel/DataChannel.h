@@ -189,7 +189,7 @@ public:
   friend class DataChannel;
   Mutex  mLock;
 
-  int32_t ReadBlob(uint16_t aStream, nsIInputStream* aBlob);
+  void ReadBlob(already_AddRefed<DataChannelConnection> aThis, uint16_t aStream, nsIInputStream* aBlob);
 
 protected:
   friend class DataChannelOnMessageAvailable;
