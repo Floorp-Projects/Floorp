@@ -266,7 +266,7 @@ exports.Reactor = Reactor;
  */
 
 function stripListeners (object) {
-  return Object.keys(object).reduce((agg, key) => {
+  return Object.keys(object || {}).reduce((agg, key) => {
     if (!EVENT_TYPE_PATTERN.test(key))
       agg[key] = object[key];
     return agg;
