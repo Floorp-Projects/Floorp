@@ -434,6 +434,13 @@ public:
   nsILinkHandler* GetLinkHandler() { return mLinkHandler; }
 
   /**
+   * Detach this pres context - i.e. cancel relevant timers,
+   * SetLinkHandler(null), SetContainer(null) etc.
+   * Only to be used by the DocumentViewer.
+   */
+  virtual void Detach();
+
+  /**
    * Get the visible area associated with this presentation context.
    * This is the size of the visible area that is used for
    * presenting the document. The returned value is in the standard
@@ -1355,10 +1362,11 @@ public:
 
 };
 
-class nsRootPresContext : public nsPresContext {
+class nsRootPresContext MOZ_FINAL : public nsPresContext {
 public:
   nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
   virtual ~nsRootPresContext();
+  virtual void Detach() MOZ_OVERRIDE;
 
   /**
    * Ensure that NotifyDidPaintForSubtree is eventually called on this
