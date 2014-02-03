@@ -1103,9 +1103,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // Skipping "blocked" because it doesn't work yet.
 
     let timingsNode = $(".requests-menu-timings", target);
-    let startCapNode = $(".requests-menu-timings-cap.start", timingsNode);
-    let endCapNode = $(".requests-menu-timings-cap.end", timingsNode);
-    let firstBox;
+    let timingsTotal = $(".requests-menu-timings-total", timingsNode);
 
     // Add a set of boxes representing timing information.
     for (let key of sections) {
@@ -1117,22 +1115,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let timingBox = document.createElement("hbox");
         timingBox.className = "requests-menu-timings-box " + key;
         timingBox.setAttribute("width", width);
-        timingsNode.insertBefore(timingBox, endCapNode);
-
-        // Make the start cap inherit the aspect of the first timing box.
-        if (!firstBox) {
-          firstBox = timingBox;
-          startCapNode.classList.add(key);
-        }
-        // Same goes for the end cap, inherit the aspect of the last timing box.
-        endCapNode.classList.add(key);
+        timingsNode.insertBefore(timingBox, timingsTotal);
       }
     }
-
-    // Since at least one timing box should've been rendered, unhide the
-    // start and end timing cap nodes.
-    startCapNode.hidden = false;
-    endCapNode.hidden = false;
 
     // Don't paint things while the waterfall view isn't even visible.
     if (NetMonitorView.currentFrontendMode != "network-inspector-view") {
@@ -1174,8 +1159,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // accurately translate and resize as needed.
     for (let { target, attachment } of this) {
       let timingsNode = $(".requests-menu-timings", target);
-      let startCapNode = $(".requests-menu-timings-cap.start", target);
-      let endCapNode = $(".requests-menu-timings-cap.end", target);
       let totalNode = $(".requests-menu-timings-total", target);
       let direction = window.isRTL ? -1 : 1;
 
@@ -1192,8 +1175,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       let revScaleX = "scaleX(" + (1 / scale) + ")";
 
       timingsNode.style.transform = scaleX + " " + translateX;
-      startCapNode.style.transform = revScaleX + " translateX(" + (direction * 0.5) + "px)";
-      endCapNode.style.transform = revScaleX + " translateX(" + (direction * -0.5) + "px)";
       totalNode.style.transform = revScaleX;
     }
   },
