@@ -570,6 +570,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
+<!ENTITY quitApplicationCmdWin.tooltip     "Exit &brandShortName;">
 <!ENTITY goBackCmd.commandKey "[">
 <!ENTITY goForwardCmd.commandKey "]">
 <!ENTITY quitApplicationCmd.label       "Quit"> 

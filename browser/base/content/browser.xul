@@ -462,6 +462,12 @@
       </vbox>
     </hbox>
 
+    <hbox id="bookmarked-notification-container" mousethrough="always">
+      <vbox id="bookmarked-notification-anchor">
+        <vbox id="bookmarked-notification"/>
+      </vbox>
+    </hbox>
+
     <tooltip id="dynamic-shortcut-tooltip"
              onpopupshowing="UpdateDynamicShortcutTooltipText(this.triggerNode)">
       <label id="dynamic-shortcut-tooltip-label"/>
