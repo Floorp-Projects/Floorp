@@ -77,6 +77,13 @@ ValidityState::GetStepMismatch(bool* aStepMismatch)
 }
 
 NS_IMETHODIMP
+ValidityState::GetBadInput(bool* aBadInput)
+{
+  *aBadInput = BadInput();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ValidityState::GetCustomError(bool* aCustomError)
 {
   *aCustomError = CustomError();

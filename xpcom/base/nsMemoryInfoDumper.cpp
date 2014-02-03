@@ -97,8 +97,9 @@ public:
     nsCOMPtr<nsIMemoryInfoDumper> dumper =
       do_GetService("@mozilla.org/memory-info-dumper;1");
 
-    dumper->DumpGCAndCCLogsToFile(
-      mIdentifier, mDumpAllTraces, mDumpChildProcesses);
+    nsString ccLogPath, gcLogPath;
+    dumper->DumpGCAndCCLogsToFile(mIdentifier, mDumpAllTraces,
+                                  mDumpChildProcesses, gcLogPath, ccLogPath);
     return NS_OK;
   }
 
@@ -573,10 +574,11 @@ EnsureNonEmptyIdentifier(nsAString& aIdentifier)
 }
 
 NS_IMETHODIMP
-nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
-  const nsAString& aIdentifier,
-  bool aDumpAllTraces,
-  bool aDumpChildProcesses)
+nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
+                                          bool aDumpAllTraces,
+                                          bool aDumpChildProcesses,
+                                          nsAString& aGCLogPath,
+                                          nsAString& aCCLogPath)
 {
   nsString identifier(aIdentifier);
   EnsureNonEmptyIdentifier(identifier);
@@ -601,6 +603,10 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
   }
 
   nsJSContext::CycleCollectNow(logger);
+
+  logger->GetGcLogPath(aGCLogPath);
+  logger->GetCcLogPath(aCCLogPath);
+
   return NS_OK;
 }
 
