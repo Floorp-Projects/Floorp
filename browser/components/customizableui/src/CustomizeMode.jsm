@@ -19,6 +19,9 @@ const kToolbarVisibilityBtn = "customization-toolbar-visibility-button";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
 const kMaxTransitionDurationMs = 2000;
 
+const kPanelItemContextMenu = "customizationPanelItemContextMenu";
+const kPaletteItemContextMenu = "customizationPaletteItemContextMenu";
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -655,9 +658,6 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
     }
 
-
-    const kPanelItemContextMenu = "customizationPanelItemContextMenu";
-    const kPaletteItemContextMenu = "customizationPaletteItemContextMenu";
     let contextMenuAttrName = aNode.getAttribute("context") ? "context" :
                                 aNode.getAttribute("contextmenu") ? "contextmenu" : "";
     let currentContextMenu = aNode.getAttribute(contextMenuAttrName);
@@ -704,6 +704,8 @@ CustomizeMode.prototype = {
     aWrapper.removeEventListener("mousedown", this);
     aWrapper.removeEventListener("mouseup", this);
 
+    let place = aWrapper.getAttribute("place");
+
     let toolbarItem = aWrapper.firstChild;
     if (!toolbarItem) {
       ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
@@ -736,6 +738,8 @@ CustomizeMode.prototype = {
       toolbarItem.setAttribute(contextAttrName, wrappedContext);
       toolbarItem.removeAttribute("wrapped-contextAttrName");
       toolbarItem.removeAttribute("wrapped-context");
+    } else if (place == "panel") {
+      toolbarItem.setAttribute("context", kPanelItemContextMenu);
     }
 
     if (aWrapper.parentNode) {

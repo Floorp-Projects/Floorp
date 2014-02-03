@@ -703,6 +703,8 @@ let CustomizableUIInternal = {
       // We remove location attributes here to make sure they're gone too when a
       // widget is removed from a toolbar to the palette. See bug 930950.
       this.removeLocationAttributes(widgetNode);
+      // We also need to remove the panel context menu if it's there:
+      this.ensureButtonContextMenu(widgetNode);
       widgetNode.removeAttribute("wrap");
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
