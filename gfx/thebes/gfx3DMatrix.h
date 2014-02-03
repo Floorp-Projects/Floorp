@@ -250,6 +250,25 @@ public:
   gfxPoint ProjectPoint(const gfxPoint& aPoint) const;
   gfxRect ProjectRectBounds(const gfxRect& aRect) const;
 
+  /**
+   * Transforms a point by the inverse of this matrix. In the case of perspective transforms, some screen
+   * points have no equivalent in the untransformed plane (if they exist past the vanishing point). To
+   * avoid this, we need to specify the bounds of the untransformed plane to restrict the search area.
+   *
+   * @param aPoint Point to untransform.
+   * @param aChildBounds Bounds of the untransformed plane.
+   * @param aOut Untransformed point.
+   * @return Returns true if a point was found within a ChildBounds, false otherwise.
+   */
+  bool UntransformPoint(const gfxPoint& aPoint, const gfxRect& aChildBounds, gfxPoint* aOut) const;
+
+
+  /**
+   * Same as UntransformPoint, but untransforms a rect and returns the bounding rect of the result.
+   * Returns an empty rect if the result doesn't intersect aChildBounds.
+   */
+  gfxRect UntransformBounds(const gfxRect& aRect, const gfxRect& aChildBounds) const;
+
 
   /**
    * Inverts this matrix, if possible. Otherwise, the matrix is left
