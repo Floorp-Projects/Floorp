@@ -137,7 +137,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 
     var url2 = new URL('http://www.example.net?e=f');
     url.searchParams = url2.searchParams;
-    isnot(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
+    is(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
     is(url.searchParams.get('e'), 'f', "URL.searchParams.get('e')");
 
     url.href = "http://www.example.net?bar=foo";
@@ -170,7 +170,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 
     var url2 = new URL('http://www.example.net?e=f');
     e.searchParams = url2.searchParams;
-    isnot(e.searchParams, url2.searchParams, "e.searchParams is not the same object");
+    is(e.searchParams, url2.searchParams, "e.searchParams is not the same object");
     is(e.searchParams.get('e'), 'f', "e.searchParams.get('e')");
 
     e.href = "http://www.example.net?bar=foo";
@@ -203,6 +203,45 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testMultiURL() {
+    var a = new URL('http://www.example.net?a=b&c=d');
+    var b = new URL('http://www.example.net?e=f');
+    var c = document.createElement('a');
+    var d = document.createElement('area');
+    ok(a.searchParams.has('a'), "a.searchParams.has('a')");
+    ok(a.searchParams.has('c'), "a.searchParams.has('c')");
+    ok(b.searchParams.has('e'), "b.searchParams.has('e')");
+    ok(c.searchParams, "c.searchParams");
+    ok(d.searchParams, "d.searchParams");
+
+    var u = new URLSearchParams();
+    a.searchParams = b.searchParams = c.searchParams = d.searchParams = u;
+    is(a.searchParams, u, "a.searchParams === u");
+    is(b.searchParams, u, "b.searchParams === u");
+    is(c.searchParams, u, "c.searchParams === u");
+    is(d.searchParams, u, "d.searchParams === u");
+    ok(!a.searchParams.has('a'), "!a.searchParams.has('a')");
+    ok(!a.searchParams.has('c'), "!a.searchParams.has('c')");
+    ok(!b.searchParams.has('e'), "!b.searchParams.has('e')");
+
+    u.append('foo', 'bar');
+    is(a.searchParams.get('foo'), 'bar', "a has foo=bar");
+    is(b.searchParams.get('foo'), 'bar', "b has foo=bar");
+    is(c.searchParams.get('foo'), 'bar', "c has foo=bar");
+    is(d.searchParams.get('foo'), 'bar', "d has foo=bar");
+    is(a + "", b + "", "stringify a == b");
+    is(c.searchParams + "", b.searchParams + "", "stringify c.searchParams == b.searchParams");
+    is(d.searchParams + "", b.searchParams + "", "stringify d.searchParams == b.searchParams");
+
+    a.search = "?bar=foo";
+    is(a.searchParams.get('bar'), 'foo', "a has bar=foo");
+    is(b.searchParams.get('bar'), 'foo', "b has bar=foo");
+    is(c.searchParams.get('bar'), 'foo', "c has bar=foo");
+    is(d.searchParams.get('bar'), 'foo', "d has bar=foo");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -210,7 +249,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testURL,
     function() { testElement(document.getElementById('anchor')) },
     function() { testElement(document.getElementById('area')) },
-    testEncoding
+    testEncoding,
+    testMultiURL
   ];
 
   function runTest() {
