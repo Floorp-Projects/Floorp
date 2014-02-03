@@ -1141,8 +1141,6 @@ let CustomizableUIInternal = {
     LOG("handleWidgetCommand");
 
     if (aWidget.type == "button") {
-      this.maybeAutoHidePanel(aEvent);
-
       if (aWidget.onCommand) {
         try {
           aWidget.onCommand.call(null, aEvent);
@@ -1164,10 +1162,6 @@ let CustomizableUIInternal = {
 
   handleWidgetClick: function(aWidget, aNode, aEvent) {
     LOG("handleWidgetClick");
-    if (aWidget.type == "button") {
-      this.maybeAutoHidePanel(aEvent);
-    }
-
     if (aWidget.onClick) {
       try {
         aWidget.onClick.call(null, aEvent);
@@ -1324,7 +1318,7 @@ let CustomizableUIInternal = {
     let target = aEvent.originalTarget;
     let closemenu = "auto";
     let widgetType = "button";
-    while (target.localName != "panel") {
+    while (target.parentNode && target.localName != "panel") {
       closemenu = target.getAttribute("closemenu");
       widgetType = target.getAttribute("widget-type");
       if (closemenu == "none" || closemenu == "single" ||
