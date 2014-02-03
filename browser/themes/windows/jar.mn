@@ -429,6 +429,7 @@ browser.jar:
         skin/classic/aero/browser/places/bookmarksMenu.png           (places/bookmarksMenu-aero.png)
         skin/classic/aero/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar-aero.png)
         skin/classic/aero/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel-aero.png)
+        skin/classic/aero/browser/places/bookmarks-notification-finish.png   (places/bookmarks-notification-finish.png)
         skin/classic/aero/browser/places/calendar.png                (places/calendar-aero.png)
         skin/classic/aero/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker-aero.png)
         skin/classic/aero/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
