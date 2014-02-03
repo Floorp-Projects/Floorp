@@ -14,8 +14,7 @@
                                   android:background="@android:color/white"
                                   android:visibility="gone">
 
-    <org.mozilla.gecko.home.TabMenuStrip android:id="@+id/tablet_menu_strip"
-                                         android:layout_width="fill_parent"
+    <org.mozilla.gecko.home.TabMenuStrip android:layout_width="fill_parent"
                                          android:layout_height="32dip"
                                          android:background="@color/background_light"
                                          android:layout_gravity="top"

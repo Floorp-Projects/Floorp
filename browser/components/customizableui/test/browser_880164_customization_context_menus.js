@@ -274,6 +274,39 @@ add_task(function() {
   yield resetCustomization();
 });
 
+// Bug 947586 - After customization, panel items show wrong context menu options
+add_task(function() {
+  yield startCustomizing();
+  yield endCustomizing();
+
+  yield PanelUI.show();
+
+  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let shownContextPromise = contextMenuShown(contextMenu);
+  let newWindowButton = document.getElementById("new-window-button");
+  ok(newWindowButton, "new-window-button was found");
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  yield shownContextPromise;
+
+  is(PanelUI.panel.state, "open", "The PanelUI should still be open.");
+
+  let expectedEntries = [
+    [".customize-context-moveToToolbar", true],
+    [".customize-context-removeFromPanel", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  ];
+  checkContextMenu(contextMenu, expectedEntries);
+
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
+
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.hide();
+  yield hiddenPromise;
+});
+
 function contextMenuShown(aContextMenu) {
   let deferred = Promise.defer();
   let win = aContextMenu.ownerDocument.defaultView;
