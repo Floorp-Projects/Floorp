@@ -36,10 +36,7 @@ let CustomizationHandler = {
     let cmd = document.getElementById("cmd_CustomizeToolbars");
     cmd.setAttribute("disabled", "true");
 
-    let splitter = document.getElementById("urlbar-search-splitter");
-    if (splitter) {
-      splitter.parentNode.removeChild(splitter);
-    }
+    UpdateUrlbarSearchSplitterState();
 
     CombinedStopReload.uninit();
     CombinedBackForward.uninit();
