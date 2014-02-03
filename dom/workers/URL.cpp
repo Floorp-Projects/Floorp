@@ -615,9 +615,7 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
     JS_ReportPendingException(mWorkerPrivate->GetJSContext());
   }
 
-  if (mSearchParams) {
-    mSearchParams->Invalidate();
-  }
+  UpdateURLSearchParams();
 }
 
 void
@@ -823,10 +821,7 @@ void
 URL::SetSearch(const nsAString& aSearch)
 {
   SetSearchInternal(aSearch);
-
-  if (mSearchParams) {
-    mSearchParams->Invalidate();
-  }
+  UpdateURLSearchParams();
 }
 
 void
@@ -856,16 +851,12 @@ URL::SetSearchParams(URLSearchParams* aSearchParams)
     return;
   }
 
-  if (!aSearchParams->HasURLAssociated()) {
-    MOZ_ASSERT(aSearchParams->IsValid());
-
-    mSearchParams = aSearchParams;
-    mSearchParams->SetObserver(this);
-  } else {
-    CreateSearchParamsIfNeeded();
-    mSearchParams->CopyFromURLSearchParams(*aSearchParams);
+  if (mSearchParams) {
+    mSearchParams->RemoveObserver(this);
   }
 
+  mSearchParams = aSearchParams;
+  mSearchParams->AddObserver(this);
 
   nsString search;
   mSearchParams->Serialize(search);
@@ -951,7 +942,7 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
 void
 URL::URLSearchParamsUpdated()
 {
-  MOZ_ASSERT(mSearchParams && mSearchParams->IsValid());
+  MOZ_ASSERT(mSearchParams);
 
   nsString search;
   mSearchParams->Serialize(search);
@@ -959,13 +950,13 @@ URL::URLSearchParamsUpdated()
 }
 
 void
-URL::URLSearchParamsNeedsUpdates()
+URL::UpdateURLSearchParams()
 {
-  MOZ_ASSERT(mSearchParams);
-
-  nsString search;
-  GetSearch(search);
-  mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)));
+  if (mSearchParams) {
+    nsString search;
+    GetSearch(search);
+    mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)), this);
+  }
 }
 
 void
@@ -973,8 +964,8 @@ URL::CreateSearchParamsIfNeeded()
 {
   if (!mSearchParams) {
     mSearchParams = new URLSearchParams();
-    mSearchParams->SetObserver(this);
-    mSearchParams->Invalidate();
+    mSearchParams->AddObserver(this);
+    UpdateURLSearchParams();
   }
 }
 
