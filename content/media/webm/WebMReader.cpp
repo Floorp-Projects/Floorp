@@ -372,7 +372,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
       mHasAudio = true;
       mInfo.mAudio.mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(mContext, track);
-      mCodecDelay = params.codec_delay;
+      mCodecDelay = params.codec_delay / NS_PER_USEC;
 
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
         // Get the Vorbis header data
@@ -435,6 +435,13 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         }
 
         if (!InitOpusDecoder()) {
+          Cleanup();
+          return NS_ERROR_FAILURE;
+        }
+
+        if (static_cast<int64_t>(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate).value()) {
+          LOG(PR_LOG_WARNING,
+              ("Invalid Opus header: CodecDelay and pre-skip do not match!\n"));
           Cleanup();
           return NS_ERROR_FAILURE;
         }
@@ -718,7 +725,7 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
         NS_WARNING("Int overflow converting WebM audio duration");
         return false;
       }
-      CheckedInt64 time = startTime - (mCodecDelay / NS_PER_USEC);
+      CheckedInt64 time = startTime - mCodecDelay;
       if (!time.isValid()) {
         NS_WARNING("Int overflow shifting tstamp by codec delay");
         nestegg_free_packet(aPacket);
