@@ -14,8 +14,7 @@
                                   android:background="@android:color/white"
                                   android:visibility="gone">
 
-    <org.mozilla.gecko.home.HomePagerTabStrip android:id="@+id/phone_menu_strip"
-                                              android:layout_width="fill_parent"
+    <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
                                               android:layout_height="32dip"
                                               android:layout_gravity="top"
                                               android:gravity="bottom"

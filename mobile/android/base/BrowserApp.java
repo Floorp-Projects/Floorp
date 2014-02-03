@@ -1649,7 +1649,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (mHomePager == null) {
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
-            mHomePager = (HomePager) homePagerStub.inflate().findViewById(R.id.home_pager);
+            mHomePager = (HomePager) homePagerStub.inflate();
         }
 
         mHomePager.show(getSupportLoaderManager(),

@@ -24,10 +24,8 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.view.ViewGroup.LayoutParams;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class HomePager extends ViewPager {
-    private static final String LOGTAG = "GeckoHomePager";
 
     private static final int LOADER_ID_CONFIG = 0;
 
@@ -43,7 +40,6 @@ public class HomePager extends ViewPager {
     private volatile boolean mLoaded;
     private Decor mDecor;
     private View mTabStrip;
-    private HomeBanner mHomeBanner;
 
     private final OnAddPanelListener mAddPanelListener;
 
@@ -51,7 +47,6 @@ public class HomePager extends ViewPager {
     private ConfigLoaderCallbacks mConfigLoaderCallbacks;
 
     private String mInitialPanelId;
-    private int mDefaultPanelIndex;
 
     // Whether or not we need to restart the loader when we show the HomePager.
     private boolean mRestartLoader;
@@ -244,10 +239,6 @@ public class HomePager extends ViewPager {
                             PropertyAnimator.Property.ALPHA,
                             1.0f);
         }
-
-        // Setup banner and decor listeners
-        mHomeBanner = (HomeBanner) ((ViewGroup) getParent()).findViewById(R.id.home_banner);
-        setOnPageChangeListener(new HomePagerOnPageChangeListener());
     }
 
     /**
@@ -257,15 +248,6 @@ public class HomePager extends ViewPager {
         mLoaded = false;
         setVisibility(GONE);
         setAdapter(null);
-    }
-
-    @Override
-    public void setVisibility(int visibility) {
-        // Ensure that no decorations are overlaying the mainlayout
-        if (mHomeBanner != null) {
-            mHomeBanner.setVisibility(visibility);
-        }
-        super.setVisibility(visibility);
     }
 
     /**
@@ -287,13 +269,6 @@ public class HomePager extends ViewPager {
         if (mDecor != null) {
             mDecor.onPageSelected(item);
         }
-        if (mHomeBanner != null) {
-            if (item == mDefaultPanelIndex) {
-                mHomeBanner.showBanner();
-            } else {
-                mHomeBanner.hideBanner();
-            }
-        }
     }
 
     @Override
@@ -304,16 +279,6 @@ public class HomePager extends ViewPager {
         }
 
         return super.onInterceptTouchEvent(event);
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        // Get touches to pages, pass to banner, and forward to pages.
-        if (mHomeBanner != null) {
-            mHomeBanner.handleHomeTouch(event);
-        }
-
-        return super.dispatchTouchEvent(event);
     }
 
     private void updateUiFromPanelConfigs(List<PanelConfig> panelConfigs) {
@@ -339,9 +304,6 @@ public class HomePager extends ViewPager {
         for (PanelConfig panelConfig : panelConfigs) {
             if (!panelConfig.isDisabled()) {
                 enabledPanels.add(panelConfig);
-                if (panelConfig.isDefault()) {
-                    mDefaultPanelIndex = enabledPanels.size() - 1;
-                }
             }
         }
 
@@ -386,36 +348,5 @@ public class HomePager extends ViewPager {
         @Override
         public void onLoaderReset(Loader<List<PanelConfig>> loader) {
         }
-    }
-
-    private class HomePagerOnPageChangeListener implements ViewPager.OnPageChangeListener {
-        @Override
-        public void onPageSelected(int position) {
-            if (mDecor != null) {
-                mDecor.onPageSelected(position);
-            }
-
-            if (mHomeBanner != null) {
-                if (position == mDefaultPanelIndex) {
-                    mHomeBanner.showBanner();
-                } else {
-                    mHomeBanner.hideBanner();
-                }
-            }
-        }
-
-        @Override
-        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            if (mDecor != null) {
-                mDecor.onPageScrolled(position, positionOffset, positionOffsetPixels);
-            }
-
-            if (mHomeBanner != null) {
-                mHomeBanner.setScrollingPages(positionOffsetPixels > 0);
-            }
-        }
-
-        @Override
-        public void onPageScrollStateChanged(int state) { }
     }
 }
