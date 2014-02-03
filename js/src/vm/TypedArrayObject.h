@@ -9,7 +9,7 @@
 
 #include "jsobj.h"
 
-#include "builtin/TypedObject.h"
+#include "builtin/TypedObjectSimple.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
 
