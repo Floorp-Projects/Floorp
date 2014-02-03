@@ -31,6 +31,7 @@ var input = document.getElementById('i');
 var form = document.getElementById('f');
 var submitFrame = document.getElementsByTagName('iframe')[0];
 var testData = [];
+var gCurrentTest = null;
 var gValidData = [];
 var gInvalidData = [];
 
@@ -46,6 +47,19 @@ function urlify(aStr) {
   return aStr.replace(':', '%3A', 'g');
 }
 
+function runTestsForNextInputType()
+{
+  try {
+    testRunner.next();
+  } catch (e) {
+    if (e.toString() == '[object StopIteration]') {
+      SimpleTest.finish();
+    } else {
+      throw StopIteration;
+    }
+  }
+}
+
 function checkValueSubmittedIsValid()
 {
   is(frames['submit_frame'].location.href,
@@ -56,6 +70,12 @@ function checkValueSubmittedIsValid()
   input.value = "";
 
   if (valueIndex >= gValidData.length) {
+    if (gCurrentTest.canHaveBadInputValidityState) {
+      // Don't run the submission tests on the invalid input if submission
+      // will be blocked by invalid input.
+      runTestsForNextInputType();
+      return;
+    }
     valueIndex = 0;
     submitFrame.onload = checkValueSubmittedIsInvalid;
     testData = gInvalidData;
@@ -74,15 +94,7 @@ function checkValueSubmittedIsInvalid()
 
   if (valueIndex >= gInvalidData.length) {
     if (submitMethod == sendKeyEventToSubmitForm) {
-      try {
-        testRunner.next();
-      } catch (e) {
-        if (e.toString() == '[object StopIteration]') {
-          SimpleTest.finish();
-        } else {
-          throw StopIteration;
-        }
-      }
+      runTestsForNextInputType();
       return;
     }
     valueIndex = 0;
@@ -109,6 +121,7 @@ function runTest()
   var data = [
     {
       type: 'number',
+      canHaveBadInputValidityState: true,
       validData: [
         "42",
         "-42", // should work for negative values
@@ -173,6 +186,8 @@ function runTest()
   ];
 
   for (test of data) {
+    gCurrentTest = test;
+
     if (test.todo) {
       input.type = test.type;
       todo_is(input.type, test.type, test.type + " is not implemented");

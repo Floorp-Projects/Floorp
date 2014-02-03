@@ -45,7 +45,7 @@ def isTypeCopyConstructible(type):
 
 def wantsAddProperty(desc):
     return desc.concrete and \
-           desc.wrapperCache and not desc.customWrapperManagement and \
+           desc.wrapperCache and \
            not desc.interface.getExtendedAttribute("Global")
 
 class CGThing():
@@ -1078,18 +1078,15 @@ def DeferredFinalizeSmartPtr(descriptor):
     return smartPtr
 
 def finalizeHook(descriptor, hookName, freeOp):
-    if descriptor.customFinalize:
-        finalize = "self->%s(CastToJSFreeOp(%s));" % (hookName, freeOp)
-    else:
-        finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
-        if descriptor.wrapperCache:
-            finalize += "ClearWrapper(self, self);\n"
-        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
-        if descriptor.interface.getExtendedAttribute("Global"):
-            finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
-        finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
-            (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
+    finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
+    if descriptor.wrapperCache:
+        finalize += "ClearWrapper(self, self);\n"
+    if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
+        finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
+    if descriptor.interface.getExtendedAttribute("Global"):
+        finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
+    finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
+        (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -10961,7 +10958,7 @@ class CGCallback(CGClass):
                              "eReportExceptions"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
-        args.insert(0, Argument("const T&",  "thisObj"))
+        args.insert(0, Argument("const T&",  "thisObjPtr"))
 
         setupCall = ("CallSetup s(this, aRv, aExceptionHandling);\n"
                      "if (!s.GetContext()) {\n"
@@ -10972,7 +10969,7 @@ class CGCallback(CGClass):
         bodyWithThis = string.Template(
             setupCall+
             "JS::Rooted<JSObject*> thisObjJS(s.GetContext(),\n"
-            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObj));\n"
+            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObjPtr));\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"

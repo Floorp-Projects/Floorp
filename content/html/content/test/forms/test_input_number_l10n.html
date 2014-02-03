@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=844744
   <title>Test localization of number control input</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="test_input_number_data.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <meta charset="UTF-8">
 </head>
@@ -30,29 +31,6 @@ SimpleTest.waitForFocus(function() {
   startTests();
   SimpleTest.finish();
 });
-
-var tests = [
-  { desc: "British English",
-    langTag: "en-GB", inputWithGrouping: "123,456.78",
-    inputWithoutGrouping: "123456.78", value: 123456.78
-  },
-  { desc: "Farsi",
-    langTag: "fa", inputWithGrouping: "۱۲۳٬۴۵۶٫۷۸",
-    inputWithoutGrouping: "۱۲۳۴۵۶٫۷۸", value: 123456.78
-  },
-  { desc: "French",
-    langTag: "fr-FR", inputWithGrouping: "123 456,78",
-    inputWithoutGrouping: "123456,78", value: 123456.78
-  },
-  { desc: "German",
-    langTag: "de", inputWithGrouping: "123.456,78",
-    inputWithoutGrouping: "123456,78", value: 123456.78
-  },
-  { desc: "Hebrew",
-    langTag: "he", inputWithGrouping: "123,456.78",
-    inputWithoutGrouping: "123456.78", value: 123456.78
-  },
-];
 
 var elem;
 

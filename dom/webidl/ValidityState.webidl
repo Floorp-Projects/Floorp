@@ -18,7 +18,7 @@ interface ValidityState {
   readonly attribute boolean rangeUnderflow;
   readonly attribute boolean rangeOverflow;
   readonly attribute boolean stepMismatch;
-//  readonly attribute boolean badInput;
+  readonly attribute boolean badInput;
   readonly attribute boolean customError;
   readonly attribute boolean valid;
 };
