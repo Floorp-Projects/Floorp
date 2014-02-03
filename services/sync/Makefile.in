@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Definitions used by constants.js.
-weave_version := 1.31.0
+weave_version := 1.32.0
 weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 
 # Preprocess files.
