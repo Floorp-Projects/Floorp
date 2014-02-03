@@ -167,6 +167,7 @@ var ContextMenuUI = {
 
     for (let command of Array.slice(this.commands.childNodes)) {
       command.hidden = true;
+      command.selected = false;
     }
 
     let optionsAvailable = false;
