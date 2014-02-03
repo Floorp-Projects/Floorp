@@ -15,25 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__pkix_h
-#define insanity_pkix__pkix_h
+#ifndef insanity__pkixcheck_h
+#define insanity__pkixcheck_h
 
-#include "pkixtypes.h"
-#include "prtime.h"
+#include "pkixutil.h"
+#include "certt.h"
 
 namespace insanity { namespace pkix {
 
-SECStatus BuildCertChain(TrustDomain& trustDomain,
-                         CERTCertificate* cert,
-                         PRTime time,
-                 /*out*/ ScopedCERTCertList& results);
-
-// Verify the given signed data using the public key of the given certificate.
-// (EC)DSA parameter inheritance is not supported.
-SECStatus VerifySignedData(const CERTSignedData* sd,
-                           const CERTCertificate* cert,
-                           void* pkcs11PinArg);
+Result CheckTimes(const CERTCertificate* cert, PRTime time);
 
 } } // namespace insanity::pkix
 
-#endif // insanity_pkix__pkix_h
+#endif // insanity__pkixcheck_h

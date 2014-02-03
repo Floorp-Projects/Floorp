@@ -59,6 +59,7 @@ MapSECStatus(SECStatus srv)
     case SEC_ERROR_EXTENSION_NOT_FOUND:
       return RecoverableError;
 
+    case PR_INVALID_STATE_ERROR:
     case SEC_ERROR_LIBRARY_FAILURE:
     case SEC_ERROR_NO_MEMORY:
       return FatalError;
@@ -67,6 +68,47 @@ MapSECStatus(SECStatus srv)
   // TODO: PORT_Assert(false); // we haven't classified the error yet
   return RecoverableError;
 }
+
+// During path building and verification, we build a linked list of BackCerts
+// from the current cert toward the end-entity certificate. The linked list
+// is used to verify properties that aren't local to the current certificate
+// and/or the direct link between the current certificate and its issuer,
+// such as name constraints.
+//
+// Each BackCert contains pointers to all the given certificate's extensions
+// so that we can parse the extension block once and then process the
+// extensions in an order that may be different than they appear in the cert.
+class BackCert
+{
+public:
+  // nssCert and childCert must be valid for the lifetime of BackCert
+  BackCert(CERTCertificate* nssCert, BackCert* childCert)
+    : childCert(childCert)
+    , nssCert(nssCert)
+  {
+  }
+
+  Result Init();
+
+  BackCert* const childCert;
+
+  const CERTCertificate* GetNSSCert() const { return nssCert; }
+
+  // This is the only place where we should be dealing with non-const
+  // CERTCertificates.
+  Result PrependNSSCertToList(CERTCertList* results);
+
+  PLArenaPool* GetArena();
+
+private:
+  CERTCertificate* nssCert;
+
+  ScopedPLArenaPool arena;
+
+  BackCert(const BackCert&) /* = delete */;
+  void operator=(const BackCert&); /* = delete */;
+};
+
 } } // namespace insanity::pkix
 
 #endif // insanity_pkix__pkixutil_h
