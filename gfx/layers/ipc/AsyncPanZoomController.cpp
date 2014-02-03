@@ -197,6 +197,20 @@ static int32_t gFlingRepaintInterval = 75;
 static float gMinSkateSpeed = 1.0f;
 
 /**
+ * Whether or not to use the estimated paint duration as a factor when projecting
+ * the displayport in the direction of scrolling. If this value is set to false,
+ * a constant 50ms paint time is used; the projection can be scaled as desired
+ * using the gVelocityBias pref below.
+ */
+static bool gUsePaintDuration = true;
+
+/**
+ * How much to adjust the displayport in the direction of scrolling. This value
+ * is multiplied by the velocity and added to the displayport offset.
+ */
+static float gVelocityBias = 1.0f;
+
+/**
  * Duration of a zoom to animation.
  */
 static const TimeDuration ZOOM_TO_DURATION = TimeDuration::FromSeconds(0.25);
@@ -385,6 +399,8 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddIntVarCache(&gPanRepaintInterval, "apz.pan_repaint_interval", gPanRepaintInterval);
   Preferences::AddIntVarCache(&gFlingRepaintInterval, "apz.fling_repaint_interval", gFlingRepaintInterval);
   Preferences::AddFloatVarCache(&gMinSkateSpeed, "apz.min_skate_speed", gMinSkateSpeed);
+  Preferences::AddBoolVarCache(&gUsePaintDuration, "apz.use_paint_duration", gUsePaintDuration);
+  Preferences::AddFloatVarCache(&gVelocityBias, "apz.velocity_bias", gVelocityBias);
   Preferences::AddIntVarCache(&gContentResponseTimeout, "apz.content_response_timeout", gContentResponseTimeout);
   Preferences::AddIntVarCache(&gNumPaintDurationSamples, "apz.num_paint_duration_samples", gNumPaintDurationSamples);
   Preferences::AddFloatVarCache(&gTouchStartTolerance, "apz.touch_start_tolerance", gTouchStartTolerance);
@@ -1281,8 +1297,12 @@ EnlargeDisplayPortAlongAxis(float* aOutOffset, float* aOutLength,
   *aOutOffset -= (newLength - (*aOutLength)) / 2;
   *aOutLength = newLength;
 
-  // Project the displayport out based on the estimated time it will take to paint
-  *aOutOffset += (aVelocity * aEstimatedPaintDurationMillis);
+  // Project the displayport out based on the estimated time it will take to paint,
+  // if the gUsePaintDuration flag is set. If not, just use a constant 50ms paint
+  // time. Setting the gVelocityBias pref appropriately can cancel this out if so
+  // desired.
+  double paintFactor = (gUsePaintDuration ? aEstimatedPaintDurationMillis : 50.0);
+  *aOutOffset += (aVelocity * aEstimatedPaintDurationMillis * gVelocityBias);
 }
 
 /* static */
