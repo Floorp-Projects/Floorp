@@ -796,7 +796,11 @@ class XPCShellTests(object):
 
         self.buildTestPath()
 
-        self.alltests = mp.active_tests(**mozinfo.info)
+        try:
+            self.alltests = mp.active_tests(**mozinfo.info)
+        except TypeError:
+            sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
+            raise
 
         if self.singleFile is None and self.totalChunks > 1:
             self.chunkTests()

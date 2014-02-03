@@ -55,16 +55,6 @@ toolbarpaletteitem[place="palette"] > #social-share-button {
   -moz-image-region: rect(0px, 448px, 32px, 416px);
 }
 
-#email-link-button[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #email-link-button {
-  -moz-image-region: rect(0, 448px, 32px, 416px);
-}
-
-#email-link-button[cui-areatype="menu-panel"] > image,
-toolbarpaletteitem[place="palette"] > #email-link-button > image {
-  -moz-image-region: rect(0, 800px, 32px, 768px);
-}
-
 #characterencoding-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #characterencoding-button {
   -moz-image-region: rect(0px, 480px, 32px, 448px);
@@ -113,6 +103,11 @@ toolbarpaletteitem[place="palette"] > #developer-button {
 #preferences-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #preferences-button {
   -moz-image-region: rect(0px, 768px, 32px, 736px);
+}
+
+#email-link-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #email-link-button {
+  -moz-image-region: rect(0, 800px, 32px, 768px);
 }
 
 /* Wide panel control icons */
