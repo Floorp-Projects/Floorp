@@ -391,12 +391,8 @@ ThreadPool::init()
 uint32_t
 ThreadPool::numWorkers() const
 {
-#ifdef JS_THREADSAFE
     // Subtract one for the main thread, which always exists.
-    return WorkerThreadState().cpuCount - 1;
-#else
-    return 0;
-#endif
+    return runtime_->cpuCount() - 1;
 }
 
 bool

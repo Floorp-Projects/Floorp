@@ -265,9 +265,9 @@ function checkPanelPosition(panel)
   panel.hidePopup();
 }
 
-function isWithinHalfPixel(a, b)
+function isWithinHalfPixel(a, b, desc)
 {
-  return Math.abs(a - b) <= 0.5;
+  ok(Math.abs(a - b) <= 0.5, desc);
 }
 
 function checkBigPanel(panel)

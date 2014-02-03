@@ -513,20 +513,15 @@ jit::FinishOffThreadBuilder(IonBuilder *builder)
 }
 
 static inline void
-FinishAllOffThreadCompilations(JSCompartment *comp)
+FinishAllOffThreadCompilations(JitCompartment *ion)
 {
-#ifdef JS_THREADSAFE
-    AutoLockWorkerThreadState lock;
-    GlobalWorkerThreadState::IonBuilderVector &finished = WorkerThreadState().ionFinishedList();
+    OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
-    for (size_t i = 0; i < finished.length(); i++) {
-        IonBuilder *builder = finished[i];
-        if (builder->compartment == CompileCompartment::get(comp)) {
-            FinishOffThreadBuilder(builder);
-            WorkerThreadState().remove(finished, &i);
-        }
+    for (size_t i = 0; i < compilations.length(); i++) {
+        IonBuilder *builder = compilations[i];
+        FinishOffThreadBuilder(builder);
     }
-#endif
+    compilations.clear();
 }
 
 /* static */ void
@@ -548,7 +543,7 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // do this for minor GCs.
     JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
     CancelOffThreadIonCompile(compartment, nullptr);
-    FinishAllOffThreadCompilations(compartment);
+    FinishAllOffThreadCompilations(this);
 
     // Free temporary OSR buffer.
     rt->freeOsrTempData();
@@ -1517,30 +1512,18 @@ AttachFinishedCompilations(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JitCompartment *ion = cx->compartment()->jitCompartment();
-    if (!ion)
+    if (!ion || !cx->runtime()->workerThreadState)
         return;
 
     types::AutoEnterAnalysis enterTypes(cx);
-    AutoLockWorkerThreadState lock;
+    AutoLockWorkerThreadState lock(*cx->runtime()->workerThreadState);
 
-    GlobalWorkerThreadState::IonBuilderVector &finished = WorkerThreadState().ionFinishedList();
+    OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
-    // Incorporate any off thread compilations for the compartment which have
-    // finished, failed or have been cancelled.
-    while (true) {
-        IonBuilder *builder = nullptr;
-
-        // Find a finished builder for the compartment.
-        for (size_t i = 0; i < finished.length(); i++) {
-            IonBuilder *testBuilder = finished[i];
-            if (testBuilder->compartment == CompileCompartment::get(cx->compartment())) {
-                builder = testBuilder;
-                WorkerThreadState().remove(finished, &i);
-                break;
-            }
-        }
-        if (!builder)
-            break;
+    // Incorporate any off thread compilations which have finished, failed or
+    // have been cancelled.
+    while (!compilations.empty()) {
+        IonBuilder *builder = compilations.popCopy();
 
         if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());
@@ -1555,7 +1538,7 @@ AttachFinishedCompilations(JSContext *cx)
             {
                 // Release the worker thread lock and root the compiler for GC.
                 AutoTempAllocatorRooter root(cx, &builder->alloc());
-                AutoUnlockWorkerThreadState unlock;
+                AutoUnlockWorkerThreadState unlock(cx->runtime());
                 AutoFlushCache afc("AttachFinishedCompilations", cx->runtime()->jitRuntime());
                 success = codegen->link(cx, builder->constraints());
             }
@@ -1572,6 +1555,8 @@ AttachFinishedCompilations(JSContext *cx)
 
         FinishOffThreadBuilder(builder);
     }
+
+    compilations.clear();
 #endif
 }
 
@@ -1580,24 +1565,16 @@ static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 static inline bool
 OffThreadCompilationAvailable(JSContext *cx)
 {
-#ifdef JS_THREADSAFE
     // Even if off thread compilation is enabled, compilation must still occur
     // on the main thread in some cases. Do not compile off thread during an
     // incremental GC, as this may trip incremental read barriers.
-    //
-    // Require cpuCount > 1 so that Ion compilation jobs and main-thread
-    // execution are not competing for the same resources.
     //
     // Skip off thread compilation if PC count profiling is enabled, as
     // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
     // when running off thread.
     return cx->runtime()->canUseParallelIonCompilation()
-        && WorkerThreadState().cpuCount > 1
         && cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL
         && !cx->runtime()->profilingScripts;
-#else
-    return false;
-#endif
 }
 
 static void
@@ -1855,12 +1832,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
-#ifdef JS_THREADSAFE
-        size_t cpuCount = WorkerThreadState().cpuCount;
-#else
-        size_t cpuCount = 1;
-#endif
-        if (cx->runtime()->canUseParallelIonCompilation() && cpuCount > 1) {
+        if (cx->runtime()->canUseParallelIonCompilation()) {
             // Even if off thread compilation is enabled, there are cases where
             // compilation must still occur on the main thread. Don't compile
             // in these cases (except when profiling scripts, as compilations
@@ -2517,7 +2489,7 @@ jit::StopAllOffThreadCompilations(JSCompartment *comp)
     if (!comp->jitCompartment())
         return;
     CancelOffThreadIonCompile(comp, nullptr);
-    FinishAllOffThreadCompilations(comp);
+    FinishAllOffThreadCompilations(comp->jitCompartment());
 }
 
 void

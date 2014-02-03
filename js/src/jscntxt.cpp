@@ -1052,6 +1052,9 @@ js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, Conte
     perThreadData(pt),
     allocator_(nullptr)
 {
+#ifdef JS_THREADSAFE
+    JS_ASSERT_IF(kind == Context_Exclusive, rt->workerThreadState != nullptr);
+#endif
 }
 
 bool
