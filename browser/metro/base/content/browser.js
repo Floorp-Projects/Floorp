@@ -1260,7 +1260,7 @@ function Tab(aURI, aParams, aOwner) {
   if ("private" in aParams) {
     this._private = aParams.private;
   } else if (aOwner) {
-    this._private = aOwner.private;
+    this._private = aOwner._private;
   }
 
   this.owner = aOwner || null;
