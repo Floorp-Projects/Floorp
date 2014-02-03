@@ -45,6 +45,10 @@ let observer = {
 
   onItemChanged: function(id, property, isAnnotationProperty, newValue,
                           lastModified, itemType) {
+    // The transaction manager is being rewritten in bug 891303, so just
+    // skip checking this for now.
+    if (property == "tags")
+      return;
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
@@ -473,31 +477,41 @@ add_test(function test_editing_item_title() {
 });
 
 add_test(function test_editing_item_uri() {
-  const OLD_TEST_URL = "http://old.test_editing_item_uri.com/";
-  const NEW_TEST_URL = "http://new.test_editing_item_uri.com/";
-  let testBkmId = bmsvc.insertBookmark(root, NetUtil.newURI(OLD_TEST_URL), bmsvc.DEFAULT_INDEX, "Test editing item title");
+  const OLD_TEST_URI = NetUtil.newURI("http://old.test_editing_item_uri.com/");
+  const NEW_TEST_URI = NetUtil.newURI("http://new.test_editing_item_uri.com/");
+  let testBkmId = bmsvc.insertBookmark(root, OLD_TEST_URI, bmsvc.DEFAULT_INDEX,
+                                       "Test editing item title");
+  tagssvc.tagURI(OLD_TEST_URI, ["tag"]);
 
-  let txn = new PlacesEditBookmarkURITransaction(testBkmId, NetUtil.newURI(NEW_TEST_URL));
+  let txn = new PlacesEditBookmarkURITransaction(testBkmId, NEW_TEST_URI);
 
   txn.doTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, NEW_TEST_URL);
+  do_check_eq(observer._itemChangedValue, NEW_TEST_URI.spec);
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
 
   txn.undoTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, OLD_TEST_URL);
+  do_check_eq(observer._itemChangedValue, OLD_TEST_URI.spec);
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
 
   txn.redoTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, NEW_TEST_URL);
+  do_check_eq(observer._itemChangedValue, NEW_TEST_URI.spec);
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
 
   txn.undoTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, OLD_TEST_URL);
+  do_check_eq(observer._itemChangedValue, OLD_TEST_URI.spec);
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
 
   run_next_test();
 });
