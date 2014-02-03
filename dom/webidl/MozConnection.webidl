@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.network.enabled"]
+[Pref="dom.network.enabled", NoInterfaceObject]
 interface MozConnection : EventTarget {
   readonly attribute unrestricted double bandwidth;
   readonly attribute boolean metered;
