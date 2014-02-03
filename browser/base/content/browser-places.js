@@ -986,6 +986,11 @@ let BookmarkingUI = {
                 : null;
   },
 
+  get notifier() {
+    delete this.notifier;
+    return this.notifier = document.getElementById("bookmarked-notification-anchor");
+  },
+
   get broadcaster() {
     delete this.broadcaster;
     let broadcaster = document.getElementById("bookmarkThisPageBroadcaster");
@@ -1260,6 +1265,42 @@ let BookmarkingUI = {
     PlacesCommandHook.updateBookmarkAllTabsCommand();
   },
 
+  _showBookmarkedNotification: function BUI_showBookmarkedNotification() {
+
+    if (this._notificationTimeout) {
+      clearTimeout(this._notificationTimeout);
+    }
+
+    if (this.notifier.style.transform == '') {
+      let buttonRect = this.button.getBoundingClientRect();
+      let notifierRect = this.notifier.getBoundingClientRect();
+      let topDiff = buttonRect.top - notifierRect.top;
+      let leftDiff = buttonRect.left - notifierRect.left;
+      let heightDiff = buttonRect.height - notifierRect.height;
+      let widthDiff = buttonRect.width - notifierRect.width;
+      let translateX = (leftDiff + .5 * widthDiff) + "px";
+      let translateY = (topDiff + .5 * heightDiff) + "px";
+      this.notifier.style.transform = "translate(" +  translateX + ", " + translateY + ")";
+    }
+
+    let isInBookmarksToolbar = this.button.classList.contains("bookmark-item");
+    if (isInBookmarksToolbar)
+      this.notifier.setAttribute("in-bookmarks-toolbar", true);
+
+    let isInOverflowPanel = this.button.classList.contains("overflowedItem");
+    if (!isInOverflowPanel) {
+      this.notifier.setAttribute("notification", "finish");
+      this.button.setAttribute("notification", "finish");
+    }
+
+    this._notificationTimeout = setTimeout( () => {
+      this.notifier.removeAttribute("notification");
+      this.notifier.removeAttribute("in-bookmarks-toolbar");
+      this.button.removeAttribute("notification");
+      this.notifier.style.transform = '';
+    }, 1000);
+  },
+
   onCommand: function BUI_onCommand(aEvent) {
     if (aEvent.target != aEvent.currentTarget) {
       return;
@@ -1268,6 +1309,8 @@ let BookmarkingUI = {
     // Handle special case when the button is in the panel.
     let widget = CustomizableUI.getWidget("bookmarks-menu-button")
                                .forWindow(window);
+    let isBookmarked = this._itemIds.length > 0;
+
     if (this._currentAreaType == CustomizableUI.TYPE_MENU_PANEL) {
       let view = document.getElementById("PanelUI-bookmarks");
       view.addEventListener("ViewShowing", this);
@@ -1280,7 +1323,7 @@ let BookmarkingUI = {
     if (widget.overflowed) {
       // Allow to close the panel if the page is already bookmarked, cause
       // we are going to open the edit bookmark panel.
-      if (this._itemIds.length > 0)
+      if (isBookmarked)
         widget.node.removeAttribute("closemenu");
       else
         widget.node.setAttribute("closemenu", "none");
@@ -1288,7 +1331,9 @@ let BookmarkingUI = {
 
     // Ignore clicks on the star if we are updating its state.
     if (!this._pendingStmt) {
-      PlacesCommandHook.bookmarkCurrentPage(this._itemIds.length > 0);
+      if (!isBookmarked)
+        this._showBookmarkedNotification();
+      PlacesCommandHook.bookmarkCurrentPage(isBookmarked);
     }
   },
 
