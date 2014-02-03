@@ -2644,7 +2644,7 @@ PlacesEditBookmarkURITransaction.prototype = {
       // only untag the old URI if this is the only bookmark
       if (PlacesUtils.getBookmarksForURI(this.item.uri, {}).length == 0)
         PlacesUtils.tagging.untagURI(this.item.uri, this.item.tags);
-      PlacesUtils.tagging.tagURI(this.new.URI, this.item.tags);
+      PlacesUtils.tagging.tagURI(this.new.uri, this.item.tags);
     }
   },
 
