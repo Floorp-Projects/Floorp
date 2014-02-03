@@ -181,7 +181,7 @@
         <!-- These panels are for the Firefox Accounts identity provider -->
         <vbox id="fxaDeterminingStatus" align="center">
           <spacer flex="1"/>
-          <p>&determiningStatus.label;</p>
+          <p>&determiningAcctStatus.label;</p>
           <spacer flex="1"/>
         </vbox>
 

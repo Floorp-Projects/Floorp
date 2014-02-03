@@ -47,6 +47,7 @@
     "content/media/webspeech/synth/test/test_speech_queue.html": "Test timed out",
     "content/media/webspeech/synth/test/test_speech_simple.html": "Test timed out",
 
+    "content/media/webaudio/test/test_audioBufferSourceNodeOffset.html": "bug 906752",
     "content/media/webaudio/test/test_mozaudiochannel.html": "",
 
     "dom/imptests/editing/selecttest/test_addRange.html": "oom?, bug 775227",

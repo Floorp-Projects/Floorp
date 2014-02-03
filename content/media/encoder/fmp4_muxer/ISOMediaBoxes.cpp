@@ -11,6 +11,7 @@
 #include "ISOTrackMetadata.h"
 #include "MP4ESDS.h"
 #include "AVCBox.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -126,19 +127,48 @@ TrackRunBox::fillSampleTable()
   }
   uint32_t len = frames.Length();
   sample_info_table = new tbl[len];
+  // Create sample table according to 14496-12 8.8.8.2.
   for (uint32_t i = 0; i < len; i++) {
-    sample_info_table[i].sample_duration = 0;
-    sample_info_table[i].sample_size = frames.ElementAt(i)->GetFrameData().Length();
-    mAllSampleSize += sample_info_table[i].sample_size;
-    table_size += sizeof(uint32_t);
+    // Sample size.
+    sample_info_table[i].sample_size = 0;
+    if (flags.to_ulong() & flags_sample_size_present) {
+      sample_info_table[i].sample_size = frames.ElementAt(i)->GetFrameData().Length();
+      mAllSampleSize += sample_info_table[i].sample_size;
+      table_size += sizeof(uint32_t);
+    }
+
+    // Sample flags.
+    sample_info_table[i].sample_flags = 0;
     if (flags.to_ulong() & flags_sample_flags_present) {
       sample_info_table[i].sample_flags =
         set_sample_flags(
           (frames.ElementAt(i)->GetFrameType() == EncodedFrame::I_FRAME));
       table_size += sizeof(uint32_t);
-    } else {
-      sample_info_table[i].sample_flags = 0;
     }
+
+    // Sample duration.
+    sample_info_table[i].sample_duration = 0;
+    if (flags.to_ulong() & flags_sample_duration_present) {
+      // Calculate each frame's duration, it is decided by "current frame
+      // timestamp - last frame timestamp".
+      uint64_t frame_time = 0;
+      if (i == 0) {
+        frame_time = frames.ElementAt(i)->GetTimeStamp() -
+                     frag->GetLastFragmentLastFrameTime();
+      } else {
+        frame_time = frames.ElementAt(i)->GetTimeStamp() -
+                     frames.ElementAt(i - 1)->GetTimeStamp();
+        // Keep the last frame time of current fagment, it will be used to calculate
+        // the first frame duration of next fragment.
+        if ((len - 1) == i) {
+          frag->SetLastFragmentLastFrameTime(frames.ElementAt(i)->GetTimeStamp());
+        }
+      }
+      sample_info_table[i].sample_duration =
+        frame_time * mMeta.mVidMeta->VideoFrequency / USECS_PER_S;
+      table_size += sizeof(uint32_t);
+    }
+
     sample_info_table[i].sample_composition_time_offset = 0;
   }
   return table_size;
@@ -180,7 +210,12 @@ TrackRunBox::Write()
     mControl->Write(data_offset);
   }
   for (uint32_t i = 0; i < sample_count; i++) {
-    mControl->Write(sample_info_table[i].sample_size);
+    if (flags.to_ulong() & flags_sample_duration_present) {
+      mControl->Write(sample_info_table[i].sample_duration);
+    }
+    if (flags.to_ulong() & flags_sample_size_present) {
+      mControl->Write(sample_info_table[i].sample_size);
+    }
     if (flags.to_ulong() & flags_sample_flags_present) {
       mControl->Write(sample_info_table[i].sample_flags);
     }
@@ -197,6 +232,7 @@ TrackRunBox::TrackRunBox(uint32_t aType, uint32_t aFlags, ISOControl* aControl)
   , mAllSampleSize(0)
   , mTrackType(aType)
 {
+  mMeta.Init(aControl);
   MOZ_COUNT_CTOR(TrackRunBox);
 }
 
@@ -218,15 +254,22 @@ TrackFragmentHeaderBox::Generate(uint32_t* aBoxSize)
   track_ID = mControl->GetTrackID(mTrackType);
   size += sizeof(track_ID);
 
-  if (flags.to_ulong() | base_data_offset_present) {
+  if (flags.to_ulong() & base_data_offset_present) {
     // base_data_offset needs to add size of 'trun', 'tfhd' and
-    // header of 'mdat 'later.
+    // header of 'mdat' later.
     base_data_offset = 0;
     size += sizeof(base_data_offset);
   }
-  if (flags.to_ulong() | default_sample_duration_present) {
+  if (flags.to_ulong() & default_sample_duration_present) {
     if (mTrackType == Video_Track) {
-      default_sample_duration = mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+      if (!mMeta.mVidMeta->FrameRate) {
+        // 0 means frame rate is variant, so it is wrong to write
+        // default_sample_duration.
+        MOZ_ASSERT(0);
+        default_sample_duration = 0;
+      } else {
+        default_sample_duration = mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+      }
     } else if (mTrackType == Audio_Track) {
       default_sample_duration = mMeta.mAudMeta->FrameDuration;
     } else {
@@ -244,22 +287,19 @@ TrackFragmentHeaderBox::Write()
 {
   WRITE_FULLBOX(mControl, size)
   mControl->Write(track_ID);
-  if (flags.to_ulong() | base_data_offset_present) {
+  if (flags.to_ulong() & base_data_offset_present) {
     mControl->Write(base_data_offset);
   }
-  if (flags.to_ulong() | default_sample_duration_present) {
+  if (flags.to_ulong() & default_sample_duration_present) {
     mControl->Write(default_sample_duration);
   }
   return NS_OK;
 }
 
 TrackFragmentHeaderBox::TrackFragmentHeaderBox(uint32_t aType,
+                                               uint32_t aFlags,
                                                ISOControl* aControl)
-  // TODO: tf_flags, we may need to customize it from caller
-  : FullBox(NS_LITERAL_CSTRING("tfhd"),
-            0,
-            base_data_offset_present | default_sample_duration_present,
-            aControl)
+  : FullBox(NS_LITERAL_CSTRING("tfhd"), 0, aFlags, aControl)
   , track_ID(0)
   , base_data_offset(0)
   , default_sample_duration(0)
@@ -274,16 +314,33 @@ TrackFragmentHeaderBox::~TrackFragmentHeaderBox()
   MOZ_COUNT_DTOR(TrackFragmentHeaderBox);
 }
 
-TrackFragmentBox::TrackFragmentBox(uint32_t aType, uint32_t aFlags,
-                                   ISOControl* aControl)
+TrackFragmentBox::TrackFragmentBox(uint32_t aType, ISOControl* aControl)
   : DefaultContainerImpl(NS_LITERAL_CSTRING("traf"), aControl)
   , mTrackType(aType)
 {
-  boxes.AppendElement(new TrackFragmentHeaderBox(aType, aControl));
+  // Flags in TrackFragmentHeaderBox.
+  uint32_t tf_flags = base_data_offset_present;
+
+  // Audio frame rate should be fixed; otherwise it will cause noise when playback.
+  // So it doesn't need to keep duration of each audio frame in TrackRunBox. It
+  // keeps the default sample duration in TrackFragmentHeaderBox.
+  tf_flags |= (mTrackType & Audio_Track ? default_sample_duration_present : 0);
+
+  boxes.AppendElement(new TrackFragmentHeaderBox(aType, tf_flags, aControl));
+
+  // Always adds flags_data_offset_present in each TrackRunBox, Android
+  // parser requires this flag to calculate the correct bitstream offset.
+  uint32_t tr_flags = flags_sample_size_present | flags_data_offset_present;
+
+  // Flags in TrackRunBox.
+  // If there is no default sample duration exists, each frame duration needs to
+  // be recored in the TrackRunBox.
+  tr_flags |= (tf_flags & default_sample_duration_present ? 0 : flags_sample_duration_present);
 
   // For video, add sample_flags to record I frame.
-  aFlags |= (mTrackType & Video_Track ? flags_sample_flags_present : 0);
-  boxes.AppendElement(new TrackRunBox(mTrackType, aFlags, aControl));
+  tr_flags |= (mTrackType & Video_Track ? flags_sample_flags_present : 0);
+
+  boxes.AppendElement(new TrackRunBox(mTrackType, tr_flags, aControl));
   MOZ_COUNT_CTOR(TrackFragmentBox);
 }
 
@@ -329,19 +386,13 @@ MovieFragmentBox::MovieFragmentBox(uint32_t aType, ISOControl* aControl)
 {
   boxes.AppendElement(new MovieFragmentHeaderBox(mTrackType, aControl));
 
-  // Always adds flags_data_offset_present in each TrackFragmentBox, Android
-  // parser requires this flag to calculate the correct bitstream offset.
   if (mTrackType & Audio_Track) {
     boxes.AppendElement(
-      new TrackFragmentBox(Audio_Track,
-                           flags_sample_size_present | flags_data_offset_present,
-                           aControl));
+      new TrackFragmentBox(Audio_Track, aControl));
   }
   if (mTrackType & Video_Track) {
     boxes.AppendElement(
-      new TrackFragmentBox(Video_Track,
-                           flags_sample_size_present | flags_data_offset_present,
-                           aControl));
+      new TrackFragmentBox(Video_Track, aControl));
   }
   MOZ_COUNT_CTOR(MovieFragmentBox);
 }
@@ -388,8 +439,12 @@ TrackExtendsBox::Generate(uint32_t* aBoxSize)
     default_sample_flags = set_sample_flags(1);
   } else if (mTrackType == Video_Track) {
     default_sample_description_index = 1;
-    default_sample_duration =
-      mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+    // Video meta data has assigned framerate, it implies that this video's
+    // frame rate should be fixed.
+    if (mMeta.mVidMeta->FrameRate) {
+      default_sample_duration =
+        mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+    }
     default_sample_size = 0;
     default_sample_flags = set_sample_flags(0);
   } else {

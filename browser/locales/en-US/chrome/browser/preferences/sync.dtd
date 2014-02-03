@@ -48,7 +48,7 @@
 
 <!-- Firefox Accounts stuff -->
 <!ENTITY fxaPrivacyNotice.link.label "Privacy Notice">
-<!ENTITY determiningStatus.label     "Determining your Firefox Account status…">
+<!ENTITY determiningAcctStatus.label     "Determining your account status…">
 <!ENTITY signedInUnverified.beforename.label "">
 <!ENTITY signedInUnverified.aftername.label "is not verified.">
 
