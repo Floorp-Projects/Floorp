@@ -51,6 +51,7 @@
 }
 
 #UITourTooltipClose {
+  visibility: hidden; /* XXX Temporarily disabled by bug 966913 */
   -moz-appearance: none;
   border: none;
   background-color: transparent;
