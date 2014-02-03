@@ -1713,9 +1713,9 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
             mozilla::Maybe<AutoLockWorkerThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
             if (rt->exclusiveThreadsPresent()) {
-                lock.construct();
+                lock.construct<WorkerThreadState &>(*rt->workerThreadState);
                 while (rt->isHeapBusy())
-                    WorkerThreadState().wait(GlobalWorkerThreadState::PRODUCER);
+                    rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
             }
 
             void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind);
@@ -4300,7 +4300,7 @@ AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
         // Lock the worker thread state when changing the heap state in the
         // presence of exclusive threads, to avoid racing with refillFreeList.
 #ifdef JS_THREADSAFE
-        AutoLockWorkerThreadState lock;
+        AutoLockWorkerThreadState lock(*rt->workerThreadState);
         rt->heapState = heapState;
 #else
         MOZ_CRASH();
@@ -4316,11 +4316,11 @@ AutoTraceSession::~AutoTraceSession()
 
     if (runtime->exclusiveThreadsPresent()) {
 #ifdef JS_THREADSAFE
-        AutoLockWorkerThreadState lock;
+        AutoLockWorkerThreadState lock(*runtime->workerThreadState);
         runtime->heapState = prevState;
 
         // Notify any worker threads waiting for the trace session to end.
-        WorkerThreadState().notifyAll(GlobalWorkerThreadState::PRODUCER);
+        runtime->workerThreadState->notifyAll(WorkerThreadState::PRODUCER);
 #else
         MOZ_CRASH();
 #endif
