@@ -15,24 +15,39 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  var worker = new Worker("closeOnGC_worker.js");
-  worker.onmessage = function(event) {
-    is(event.data, "ready");
-    worker = null;
+  var count = 0;
+
+  function testWorker(queryString) {
+    ++count;
+    var worker = new Worker("closeOnGC_worker.js?" + queryString);
+    worker.onmessage = function(event) {
+      is(event.data, "ready");
+      worker = null;
+    }
+
+    var interval = setInterval(function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "closeOnGC_server.sjs?" + queryString, false);
+      xhr.send();
+      if (xhr.responseText != "closed") {
+        SpecialPowers.gc();
+        return;
+      }
+      clearInterval(interval);
+      ok(true, "xhr correctly closed");
+      if (--count == 0) {
+        SimpleTest.finish();
+      }
+    }, 500);
+
+    return worker;
   }
 
-  var interval = setInterval(function() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "closeOnGC_server.sjs", false);
-    xhr.send();
-    if (xhr.responseText != "closed") {
-      SpecialPowers.gc();
-      return;
-    }
-    clearInterval(interval);
-    ok(true, "xhr correctly closed");
-    SimpleTest.finish();
-  }, 500);
+  testWorker("white");
+  var worker = testWorker("gray");
+  worker.onerror = function() {};
+  worker.onerror.foo = worker;
+  worker = null;
 
   SimpleTest.waitForExplicitFinish();
 

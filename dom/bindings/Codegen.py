@@ -66,7 +66,7 @@ def isTypeCopyConstructible(type):
 
 def wantsAddProperty(desc):
     return desc.concrete and \
-           desc.wrapperCache and not desc.customWrapperManagement and \
+           desc.wrapperCache and \
            not desc.interface.getExtendedAttribute("Global")
 
 class CGThing():
@@ -1069,18 +1069,15 @@ def DeferredFinalizeSmartPtr(descriptor):
     return smartPtr
 
 def finalizeHook(descriptor, hookName, context):
-    if descriptor.customFinalize:
-        finalize = "self->%s(%s);" % (hookName, context)
-    else:
-        finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
-        if descriptor.wrapperCache:
-            finalize += "ClearWrapper(self, self);\n"
-        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
-        if descriptor.interface.getExtendedAttribute("Global"):
-            finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
-        finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
-            (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
+    finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
+    if descriptor.wrapperCache:
+        finalize += "ClearWrapper(self, self);\n"
+    if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
+        finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
+    if descriptor.interface.getExtendedAttribute("Global"):
+        finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
+    finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
+        (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
