@@ -112,6 +112,14 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "json-text-mime": {
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
+        maybeMakeCached();
+        response.write("{ \"greeting\": \"Hello third-party JSON!\" }");
+        response.finish();
+        break;
+      }
       case "json-custom-mime": {
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/x-bigcorp-json; charset=utf-8", false);
