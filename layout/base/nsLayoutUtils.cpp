@@ -1303,6 +1303,11 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
       break;
     if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(f))
       break;
+    if (!f->GetParent() && ViewportHasDisplayPort(f->PresContext())) {
+      // Viewport frames in a display port need to be animated geometry roots
+      // for background-attachment:fixed elements.
+      break;
+    }
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
