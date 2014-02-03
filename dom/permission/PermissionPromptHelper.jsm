@@ -74,18 +74,10 @@ this.PermissionPromptHelper = {
     }
 
     if (permValue == Ci.nsIPermissionManager.PROMPT_ACTION) {
-      // create an array with a nsIContentPermissionType element
-      let type = {
-        type: msg.type,
-        access: msg.access ? msg.access : "unused",
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
-      };
-      let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-      typeArray.appendElement(type, false);
-
       // create a nsIContentPermissionRequest
       let request = {
-        types: typeArray,
+        type: msg.type,
+        access: msg.access ? msg.access : "unused",
         principal: principal,
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
         allow: aCallbacks.allow,
