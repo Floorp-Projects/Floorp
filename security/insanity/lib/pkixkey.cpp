@@ -16,7 +16,6 @@
  */
 
 #include "insanity/pkix.h"
-#include "insanity/pkixtypes.h"
 
 #include <limits>
 #include <stdint.h>
