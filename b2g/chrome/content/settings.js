@@ -676,6 +676,33 @@ SettingsListener.observe('apz.force-enable', false, function(value) {
   Services.prefs.setBoolPref('dom.browser_frames.useAsyncPanZoom', value);
 });
 
+SettingsListener.observe('apz.displayport.heuristics', 'default', function(value) {
+  // first reset everything to default
+  Services.prefs.setCharPref('apz.velocity_bias', '1.0');
+  Services.prefs.setBoolPref('apz.use_paint_duration', true);
+  Services.prefs.setCharPref('apz.x_skate_size_multiplier', '1.5');
+  Services.prefs.setCharPref('apz.y_skate_size_multiplier', '2.5');
+  // and then set the things that we want to change
+  switch (value) {
+  case 'default':
+    break;
+  case 'center-displayport':
+    Services.prefs.setCharPref('apz.velocity_bias', '0.0');
+    break;
+  case 'perfect-paint-times':
+    Services.prefs.setBoolPref('apz.use_paint_duration', false);
+    Services.prefs.setCharPref('apz.velocity_bias', '0.32'); // 16/50 (assumes 16ms paint times instead of 50ms)
+    break;
+  case 'taller-displayport':
+    Services.prefs.setCharPref('apz.y_skate_size_multiplier', '3.5');
+    break;
+  case 'faster-paint':
+    Services.prefs.setCharPref('apz.x_skate_size_multiplier', '1.0');
+    Services.prefs.setCharPref('apz.y_skate_size_multiplier', '1.5');
+    break;
+  }
+});
+
 SettingsListener.observe('layers.enable-tiles', false, function(value) {
   Services.prefs.setBoolPref('layers.enable-tiles', value);
 });
