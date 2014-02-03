@@ -299,6 +299,7 @@ protected:
 
   uint32_t mAllSampleSize;
   uint32_t mTrackType;
+  MetaHelper mMeta;
 };
 
 // tf_flags in TrackFragmentHeaderBox, 14496-12 8.8.7.1.
@@ -327,7 +328,7 @@ public:
   nsresult UpdateBaseDataOffset(uint64_t aOffset); // The offset of the first
                                                    // sample in file.
 
-  TrackFragmentHeaderBox(uint32_t aType, ISOControl* aControl);
+  TrackFragmentHeaderBox(uint32_t aType, uint32_t aFlags, ISOControl* aControl);
   ~TrackFragmentHeaderBox();
 
 protected:
@@ -340,7 +341,7 @@ protected:
 // TrackFragmentBox cotains TrackFragmentHeaderBox and TrackRunBox.
 class TrackFragmentBox : public DefaultContainerImpl {
 public:
-  TrackFragmentBox(uint32_t aType, uint32_t aFlags, ISOControl* aControl);
+  TrackFragmentBox(uint32_t aType, ISOControl* aControl);
   ~TrackFragmentBox();
 
 protected:
