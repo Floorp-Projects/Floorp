@@ -1016,9 +1016,17 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(0px, 320px, 64px, 256px);
   }
 
+  #bookmarks-menu-button[cui-areatype="menu-panel"].panel-multiview-anchor {
+    -moz-image-region: rect(64px, 320px, 128px, 256px);
+  }
+
   #history-panelmenu[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #history-panelmenu {
     -moz-image-region: rect(0px, 448px, 64px, 384px);
+  }
+
+  #history-panelmenu[cui-areatype="menu-panel"].panel-multiview-anchor {
+    -moz-image-region: rect(64px, 448px, 128px, 384px);
   }
 
   #downloads-button[cui-areatype="menu-panel"],
@@ -1061,6 +1069,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(0, 960px, 64px, 896px);
   }
 
+  #characterencoding-button[cui-areatype="menu-panel"].panel-multiview-anchor {
+    -moz-image-region: rect(64px, 960px, 128px, 896px);
+  }
+
   #new-window-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #new-window-button {
     -moz-image-region: rect(0px, 1024px, 64px, 960px);
@@ -1099,6 +1111,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   #developer-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #developer-button {
     -moz-image-region: rect(0px, 1472px, 64px, 1408px);
+  }
+
+  #developer-button[cui-areatype="menu-panel"].panel-multiview-anchor {
+    -moz-image-region: rect(64px, 1472px, 128px, 1408px);
   }
 
   #preferences-button[cui-areatype="menu-panel"],
