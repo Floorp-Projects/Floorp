@@ -263,8 +263,6 @@ void CERT_MapStanError();
 
 /* Like CERT_VerifyCert, except with an additional argument, flags. The
  * flags are defined immediately below.
- *
- * OCSP checking is always skipped when certUsage is certUsageStatusResponder.
  */
 SECStatus
 cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
@@ -272,14 +270,16 @@ cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
                          PRUint32 flags, void *wincx, CERTVerifyLog *log);
 
 /* Use the default settings.
- * cert_VerifyCertWithFlags(..., CERT_VERIFYCERT_USE_DEFAULTS) is equivalent
- * to CERT_VerifyCert(...);
+ * cert_VerifyCertWithFlags(..., CERT_VERIFYCERT_USE_DEFAULTS, ...) is
+ * equivalent to CERT_VerifyCert(...);
  */
 #define CERT_VERIFYCERT_USE_DEFAULTS 0
 
 /* Skip all the OCSP checks during certificate verification, regardless of
  * the global OCSP settings. By default, certificate |cert| will have its
  * revocation status checked via OCSP according to the global OCSP settings.
+ *
+ * OCSP checking is always skipped when certUsage is certUsageStatusResponder.
  */
 #define CERT_VERIFYCERT_SKIP_OCSP 1
 
