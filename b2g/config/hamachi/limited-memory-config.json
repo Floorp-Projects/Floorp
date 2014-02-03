@@ -26,11 +26,11 @@
     "b2g_manifest": "hamachi.xml",
     "b2g_manifest_branch": "v1.3",
     "additional_source_tarballs": ["backup-hamachi.tar.xz"],
-    "gecko_l10n_root": "http://hg.mozilla.org/releases/l10n/mozilla-aurora",
+    "gecko_l10n_root": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
-            "root": "http://hg.mozilla.org/releases/gaia-l10n/v1_3/"
+            "root": "https://hg.mozilla.org/releases/gaia-l10n/v1_3/"
         }
     }
 }
