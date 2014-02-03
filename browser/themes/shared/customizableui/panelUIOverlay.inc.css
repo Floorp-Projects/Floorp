@@ -601,12 +601,22 @@ panelview toolbarseparator,
   height: 16px;
 }
 
-#PanelUI-footer.panel-multiview-anchor,
-#PanelUI-footer.panel-multiview-anchor > #PanelUI-help,
+#PanelUI-footer > #PanelUI-footer-inner.panel-multiview-anchor,
 toolbarbutton.panel-multiview-anchor {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
-  background-repeat: repeat-x;
+}
+
+toolbarbutton.panel-multiview-anchor {
+  background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted.png),
+                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-position: right 5px center;
+  background-repeat: no-repeat;
+}
+
+#PanelUI-footer > #PanelUI-footer-inner.panel-multiview-anchor,
+toolbarbutton.panel-multiview-anchor,
+toolbarbutton.panel-multiview-anchor > .toolbarbutton-menubutton-button {
   color: HighlightText;
 }
 
