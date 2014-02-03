@@ -676,3 +676,15 @@ SettingsListener.observe('apz.force-enable', false, function(value) {
   Services.prefs.setBoolPref('dom.browser_frames.useAsyncPanZoom', value);
 });
 
+SettingsListener.observe('layers.enable-tiles', false, function(value) {
+  Services.prefs.setBoolPref('layers.enable-tiles', value);
+});
+
+SettingsListener.observe('layers.progressive-paint', false, function(value) {
+  Services.prefs.setBoolPref('layers.progressive-paint', value);
+});
+
+SettingsListener.observe('layers.draw-tile-borders', false, function(value) {
+  Services.prefs.setBoolPref('layers.draw-tile-borders', value);
+});
+
