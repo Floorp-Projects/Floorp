@@ -988,7 +988,6 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
       crlDownloading ?
         CertVerifier::crl_download_allowed : CertVerifier::crl_local_only,
       odc, osc, ogc);
-
 }
 
 // Enable the TLS versions given in the prefs, defaulting to SSL 3.0 (min
@@ -1052,6 +1051,50 @@ nsNSSComponent::SkipOcspOff()
   return NS_OK;
 }
 
+static nsresult
+GetNSSProfilePath(nsAutoCString& aProfilePath)
+{
+  aProfilePath.Truncate();
+  const char* dbDirOverride = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
+  if (dbDirOverride && strlen(dbDirOverride) > 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("Using specified MOZPSM_NSSDBDIR_OVERRIDE as NSS DB dir: %s\n",
+            dbDirOverride));
+    aProfilePath.Assign(dbDirOverride);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> profileFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileFile));
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Unable to get profile directory - continuing with no NSS DB\n"));
+    return NS_OK;
+  }
+
+#if defined(XP_WIN)
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> profileFileWin(do_QueryInterface(profileFile));
+  if (!profileFileWin) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Could not get nsILocalFileWin for profile directory.\n"));
+    return NS_ERROR_FAILURE;
+  }
+  rv = profileFileWin->GetNativeCanonicalPath(aProfilePath);
+#else
+  rv = profileFile->GetNativePath(aProfilePath);
+#endif
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR,
+           ("Could not get native path for profile directory.\n"));
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -1066,158 +1109,126 @@ nsNSSComponent::InitializeNSS()
                 nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
                 "You must update the values in nsINSSErrorsService.idl");
 
-  {
-    MutexAutoLock lock(mutex);
+  MutexAutoLock lock(mutex);
 
-    // Init phase 1, prepare own variables used for NSS
+  if (mNSSInitialized) {
+    PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
+                                                  // initialize NSS more than
+                                                  // once in a process.
+    return NS_ERROR_FAILURE;
+  }
 
-    if (mNSSInitialized) {
-      PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
-                                                    // initialize NSS more than
-                                                    // once in a process.
-      return NS_ERROR_FAILURE;
-    }
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
 
-    nsresult rv;
-    nsAutoCString profileStr;
-    nsCOMPtr<nsIFile> profilePath;
+  // The call to ConfigureInternalPKCS11Token needs to be done before NSS is initialized,
+  // but affects only static data.
+  // If we could assume i18n will not change between profiles, one call per application
+  // run were sufficient. As I can't predict what happens in the future, let's repeat
+  // this call for every re-init of NSS.
 
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(profilePath));
-    if (NS_FAILED(rv)) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-      ConfigureInternalPKCS11Token();
-      SECStatus init_rv = NSS_NoDB_Init(nullptr);
-      if (init_rv != SECSuccess) {
-        nsPSMInitPanic::SetPanic();
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-    }
-    else
-    {
-    const char* dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
-    if (dbdir_override && strlen(dbdir_override)) {
-      profileStr = dbdir_override;
-    }
-    else {
-  #if defined(XP_WIN)
-      // Native path will drop Unicode characters that cannot be mapped to system's
-      // codepage, using short (canonical) path as workaround.
-      nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
-      if (profilePathWin)
-        rv = profilePathWin->GetNativeCanonicalPath(profileStr);
-  #else
-      rv = profilePath->GetNativePath(profileStr);
-  #endif
-      if (NS_FAILED(rv)) {
-        nsPSMInitPanic::SetPanic();
-        return rv;
-      }
-    }
+  ConfigureInternalPKCS11Token();
 
+  nsAutoCString profileStr;
+  nsresult rv = GetNSSProfilePath(profileStr);
+  if (NS_FAILED(rv)) {
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-    // init phase 2, init calls to NSS library
-
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
-
-    // The call to ConfigureInternalPKCS11Token needs to be done before NSS is initialized,
-    // but affects only static data.
-    // If we could assume i18n will not change between profiles, one call per application
-    // run were sufficient. As I can't predict what happens in the future, let's repeat
-    // this call for every re-init of NSS.
-
-    ConfigureInternalPKCS11Token();
-
-    InitCertVerifierLog();
-
+  SECStatus init_rv = SECFailure;
+  if (!profileStr.IsEmpty()) {
+    // First try to initialize the NSS DB in read/write mode.
     SECStatus init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
+    // If that fails, attempt read-only mode.
     if (init_rv != SECSuccess) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
-
-      // try to init r/o
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("could not init NSS r/w in %s\n", profileStr.get()));
       init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true);
-      if (init_rv != SECSuccess) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
-
-        init_rv = NSS_NoDB_Init(profileStr.get());
-        if (init_rv != SECSuccess) {
-          nsPSMInitPanic::SetPanic();
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-      }
-    } // have profile dir
-    } // lock
-
-    // init phase 3, only if phase 2 was successful
-
-    mNSSInitialized = true;
-
-    PK11_SetPasswordFunc(PK11PasswordPrompt);
-
-    SharedSSLState::GlobalInit();
-
-    // Register an observer so we can inform NSS when these prefs change
-    Preferences::AddStrongObserver(this, "security.");
-
-    SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
-    SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
-
-    rv = setEnabledTLSVersions();
-    if (NS_FAILED(rv)) {
-      nsPSMInitPanic::SetPanic();
-      return NS_ERROR_UNEXPECTED;
     }
-
-    DisableMD5();
-    LoadLoadableRoots();
-
-    SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
-
-    bool requireSafeNegotiation =
-      Preferences::GetBool("security.ssl.require_safe_negotiation",
-                           REQUIRE_SAFE_NEGOTIATION_DEFAULT);
-    SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
-
-    bool allowUnrestrictedRenego =
-      Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
-                           ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
-    SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
-                         allowUnrestrictedRenego ?
-                           SSL_RENEGOTIATE_UNRESTRICTED :
-                           SSL_RENEGOTIATE_REQUIRES_XTN);
-
-    SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
-                         Preferences::GetBool("security.ssl.enable_false_start",
-                                              FALSE_START_ENABLED_DEFAULT));
-
-    // SSL_ENABLE_NPN and SSL_ENABLE_ALPN also require calling
-    // SSL_SetNextProtoNego in order for the extensions to be negotiated.
-    // WebRTC does not do that so it will not use NPN or ALPN even when these
-    // preferences are true.
-    SSL_OptionSetDefault(SSL_ENABLE_NPN,
-                         Preferences::GetBool("security.ssl.enable_npn",
-                                              NPN_ENABLED_DEFAULT));
-    SSL_OptionSetDefault(SSL_ENABLE_ALPN,
-                         Preferences::GetBool("security.ssl.enable_alpn",
-                                              ALPN_ENABLED_DEFAULT));
-
-    if (NS_FAILED(InitializeCipherSuite())) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
-      return NS_ERROR_FAILURE;
+    if (init_rv != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("could not init in r/o either\n"));
     }
+  }
+  // If we haven't succeeded in initializing the DB in our profile
+  // directory or we don't have a profile at all, attempt to initialize
+  // with no DB.
+  if (init_rv != SECSuccess) {
+    init_rv = NSS_NoDB_Init(nullptr);
+  }
+  if (init_rv != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("could not initialize NSS - panicking\n"));
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-    // dynamic options from prefs
-    setValidationOptions(true, lock);
+  mNSSInitialized = true;
 
-    mHttpForNSS.initTable();
-    mHttpForNSS.registerHttpClient();
+  PK11_SetPasswordFunc(PK11PasswordPrompt);
+
+  SharedSSLState::GlobalInit();
+
+  // Register an observer so we can inform NSS when these prefs change
+  Preferences::AddStrongObserver(this, "security.");
+
+  SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
+  SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
+
+  rv = setEnabledTLSVersions();
+  if (NS_FAILED(rv)) {
+    nsPSMInitPanic::SetPanic();
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  DisableMD5();
+  // Initialize the certverifier log before calling any functions that library.
+  InitCertVerifierLog();
+  LoadLoadableRoots();
+
+  SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
+
+  bool requireSafeNegotiation =
+    Preferences::GetBool("security.ssl.require_safe_negotiation",
+                         REQUIRE_SAFE_NEGOTIATION_DEFAULT);
+  SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
+
+  bool allowUnrestrictedRenego =
+    Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
+                         ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
+  SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
+                       allowUnrestrictedRenego ?
+                         SSL_RENEGOTIATE_UNRESTRICTED :
+                         SSL_RENEGOTIATE_REQUIRES_XTN);
+
+  SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
+                       Preferences::GetBool("security.ssl.enable_false_start",
+                                            FALSE_START_ENABLED_DEFAULT));
+
+  // SSL_ENABLE_NPN and SSL_ENABLE_ALPN also require calling
+  // SSL_SetNextProtoNego in order for the extensions to be negotiated.
+  // WebRTC does not do that so it will not use NPN or ALPN even when these
+  // preferences are true.
+  SSL_OptionSetDefault(SSL_ENABLE_NPN,
+                       Preferences::GetBool("security.ssl.enable_npn",
+                                            NPN_ENABLED_DEFAULT));
+  SSL_OptionSetDefault(SSL_ENABLE_ALPN,
+                       Preferences::GetBool("security.ssl.enable_alpn",
+                                            ALPN_ENABLED_DEFAULT));
+
+  if (NS_FAILED(InitializeCipherSuite())) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // dynamic options from prefs
+  setValidationOptions(true, lock);
+
+  mHttpForNSS.initTable();
+  mHttpForNSS.registerHttpClient();
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-    LaunchSmartCardThreads();
+  LaunchSmartCardThreads();
 #endif
 
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-  }
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
 }
 

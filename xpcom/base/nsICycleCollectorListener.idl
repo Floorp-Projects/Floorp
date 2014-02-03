@@ -35,7 +35,7 @@ interface nsICycleCollectorHandler : nsISupports
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, builtinclass, uuid(7096e77d-7834-4996-b52c-50564144d4be)]
+[scriptable, builtinclass, uuid(786215b7-1e4b-433b-b617-96b176273601)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();
@@ -49,6 +49,12 @@ interface nsICycleCollectorListener : nsISupports
 
     // This string will appear somewhere in the log's filename.
     attribute AString filenameIdentifier;
+
+    // This string will indicate the full path of the GC log if enabled.
+    readonly attribute AString gcLogPath;
+
+    // This string will indicate the full path of the CC log if enabled.
+    readonly attribute AString ccLogPath;
 
     void begin();
     void noteRefCountedObject (in unsigned long long aAddress,
