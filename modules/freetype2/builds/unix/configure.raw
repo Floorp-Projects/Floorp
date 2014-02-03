@@ -17,7 +17,7 @@ AC_CONFIG_SRCDIR([ftconfig.in])
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='16:2:10'
+version_info='17:1:11'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -292,7 +292,12 @@ if test x$with_png != xno; then
       AC_MSG_ERROR([`libpng-config' not found;
 either set the LIBPNG_CFLAGS and LIBPNG_LDFLAGS environment variables,
 or pass `--without-png' to the `configure' script.])
+    elif test ${cross_compiling} = yes; then
+      AC_MSG_ERROR([`libpng-config' should not be used in cross-building;
+either set the LIBPNG_CFLAGS and LIBPNG_LDFLAGS environment variables,
+or pass `--without-png' to the `configure' script.])
     fi
+    LIBPNG="`libpng-config --libs`"
     LIBPNG_CFLAGS="`libpng-config --cflags`"
     LIBPNG_LDFLAGS="`libpng-config --ldflags`"
   fi
@@ -717,6 +722,7 @@ esac
 AC_SUBST([ftmac_c])
 AC_SUBST([LIBZ])
 AC_SUBST([LIBBZ2])
+AC_SUBST([LIBPNG])
 AC_SUBST([FT2_EXTRA_LIBS])
 AC_SUBST([SYSTEM_ZLIB])
 
