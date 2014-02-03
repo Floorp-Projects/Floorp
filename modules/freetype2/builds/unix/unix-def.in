@@ -63,6 +63,7 @@ version_info := @version_info@
 FT2_EXTRA_LIBS     := @FT2_EXTRA_LIBS@
 LIBBZ2             := @LIBBZ2@
 LIBZ               := @LIBZ@
+LIBPNG             := @LIBPNG@
 build_libtool_libs := @build_libtool_libs@
 ft_version         := @ft_version@
 
@@ -102,6 +103,7 @@ $(OBJ_BUILD)/freetype-config: $(TOP_DIR)/builds/unix/freetype-config.in
 	sed -e 's|%FT2_EXTRA_LIBS%|$(FT2_EXTRA_LIBS)|' \
 	    -e 's|%LIBBZ2%|$(LIBBZ2)|' \
 	    -e 's|%LIBZ%|$(LIBZ)|' \
+	    -e 's|%LIBPNG%|$(LIBPNG)|' \
 	    -e 's|%build_libtool_libs%|$(build_libtool_libs)|' \
 	    -e 's|%exec_prefix%|$(exec_prefix)|' \
 	    -e 's|%ft_version%|$(ft_version)|' \
@@ -119,6 +121,7 @@ $(OBJ_BUILD)/freetype2.pc: $(TOP_DIR)/builds/unix/freetype2.in
 	sed -e 's|%FT2_EXTRA_LIBS%|$(FT2_EXTRA_LIBS)|' \
 	    -e 's|%LIBBZ2%|$(LIBBZ2)|' \
 	    -e 's|%LIBZ%|$(LIBZ)|' \
+	    -e 's|%LIBPNG%|$(LIBPNG)|' \
 	    -e 's|%build_libtool_libs%|$(build_libtool_libs)|' \
 	    -e 's|%exec_prefix%|$(exec_prefix)|' \
 	    -e 's|%ft_version%|$(ft_version)|' \
@@ -127,7 +130,6 @@ $(OBJ_BUILD)/freetype2.pc: $(TOP_DIR)/builds/unix/freetype2.in
 	    -e 's|%prefix%|$(prefix)|' \
 	    $< \
 	    > $@.tmp
-	chmod +x $@.tmp
 	chmod a-w $@.tmp
 	mv $@.tmp $@
 

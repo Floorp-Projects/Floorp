@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2002, 2003, 2006, 2008 by
+# Copyright 1996-2003, 2006, 2008, 2013 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -17,8 +17,8 @@
 # the following variables:
 #
 #   BUILD_DIR    The configuration and system-specific directory.  Usually
-#                `freetype/builds/$(PLATFORM)' but can be different for
-#                custom builds of the library.
+#                `builds/$(PLATFORM)' but can be different for custom builds
+#                of the library.
 #
 # The following variables must be defined in system specific `detect.mk'
 # files:

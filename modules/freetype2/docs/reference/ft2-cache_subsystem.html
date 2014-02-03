@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 Cache Sub-System
@@ -76,7 +76,7 @@ Cache Sub-System
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager">FTC_Manager</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -98,7 +98,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_FaceID">FTC_FaceID</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -111,7 +111,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>Never use NULL as a valid <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a>.</p>
-<p>Face IDs are passed by the client to the cache manager, which calls, when needed, the <a href="ft2-cache_subsystem.html#FTC_Face_Requester">FTC_Face_Requester</a> to translate them into new <a href="ft2-base_interface.html#FT_Face">FT_Face</a> objects.</p>
+<p>Face IDs are passed by the client to the cache manager that calls, when needed, the <a href="ft2-cache_subsystem.html#FTC_Face_Requester">FTC_Face_Requester</a> to translate them into new <a href="ft2-base_interface.html#FT_Face">FT_Face</a> objects.</p>
 <p>If the content of a given face ID changes at runtime, or if the value becomes invalid (e.g., when uninstalling a font), you should immediately call <a href="ft2-cache_subsystem.html#FTC_Manager_RemoveFaceID">FTC_Manager_RemoveFaceID</a> before any other cache function.</p>
 <p>Failure to do so will result in incorrect behaviour or even memory leaks and crashes.</p>
 </td></tr></table>
@@ -124,7 +124,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Face_Requester">FTC_Face_Requester</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -176,7 +176,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Node">FTC_Node</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -197,7 +197,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_New">FTC_Manager_New</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -257,7 +257,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_Reset">FTC_Manager_Reset</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -285,7 +285,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_Done">FTC_Manager_Done</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -313,7 +313,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_LookupFace">FTC_Manager_LookupFace</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -364,7 +364,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ScalerRec">FTC_ScalerRec</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -418,7 +418,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Scaler">FTC_Scaler</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -437,7 +437,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_LookupSize">FTC_Manager_LookupSize</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -489,7 +489,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Node_Unref">FTC_Node_Unref</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -521,7 +521,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_Manager_RemoveFaceID">FTC_Manager_RemoveFaceID</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -557,7 +557,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_CMapCache">FTC_CMapCache</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -576,7 +576,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_CMapCache_New">FTC_CMapCache_New</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -619,7 +619,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_CMapCache_Lookup">FTC_CMapCache_Lookup</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -662,7 +662,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageTypeRec">FTC_ImageTypeRec</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -705,7 +705,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageType">FTC_ImageType</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -724,7 +724,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageCache">FTC_ImageCache</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -743,7 +743,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageCache_New">FTC_ImageCache_New</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -783,7 +783,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageCache_Lookup">FTC_ImageCache_Lookup</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -840,7 +840,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_ImageCache_LookupScaler">FTC_ImageCache_LookupScaler</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -902,7 +902,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBit">FTC_SBit</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -921,7 +921,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBitRec">FTC_SBitRec</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -990,7 +990,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBitCache">FTC_SBitCache</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1009,7 +1009,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBitCache_New">FTC_SBitCache_New</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1049,7 +1049,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBitCache_Lookup">FTC_SBitCache_Lookup</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1107,7 +1107,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FTC_SBitCache_LookupScaler">FTC_SBitCache_LookupScaler</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_CACHE_H (freetype/ftcache.h).
+Defined in FT_CACHE_H (ftcache.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 

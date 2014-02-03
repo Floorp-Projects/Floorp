@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 TrueTypeGX/AAT Validation
@@ -53,7 +53,7 @@ TrueTypeGX/AAT Validation
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_VALIDATE_GX_LENGTH">FT_VALIDATE_GX_LENGTH</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -72,7 +72,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_VALIDATE_GXXXX">FT_VALIDATE_GXXXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -149,7 +149,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_TrueTypeGX_Validate">FT_TrueTypeGX_Validate</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -161,7 +161,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Validate various TrueTypeGX tables to assure that all offsets and indices are valid. The idea is that a higher-level library which actually does the text layout can access those tables without error checking (which can be quite time consuming).</p>
+<p>Validate various TrueTypeGX tables to assure that all offsets and indices are valid. The idea is that a higher-level library that actually does the text layout can access those tables without error checking (which can be quite time consuming).</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>
@@ -170,7 +170,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <p>A handle to the input face.</p>
 </td></tr>
 <tr valign=top><td><b>validation_flags</b></td><td>
-<p>A bit field which specifies the tables to be validated. See <a href="ft2-gx_validation.html#FT_VALIDATE_GXXXX">FT_VALIDATE_GXXXX</a> for possible values.</p>
+<p>A bit field that specifies the tables to be validated. See <a href="ft2-gx_validation.html#FT_VALIDATE_GXXXX">FT_VALIDATE_GXXXX</a> for possible values.</p>
 </td></tr>
 <tr valign=top><td><b>table_length</b></td><td>
 <p>The size of the &lsquo;tables&rsquo; array. Normally, <a href="ft2-gx_validation.html#FT_VALIDATE_GX_LENGTH">FT_VALIDATE_GX_LENGTH</a> should be passed.</p>
@@ -201,7 +201,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_TrueTypeGX_Free">FT_TrueTypeGX_Free</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -236,7 +236,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_VALIDATE_CKERNXXX">FT_VALIDATE_CKERNXXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -272,7 +272,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_ClassicKern_Validate">FT_ClassicKern_Validate</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -283,7 +283,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Validate classic (16-bit format) kern table to assure that the offsets and indices are valid. The idea is that a higher-level library which actually does the text layout can access those tables without error checking (which can be quite time consuming).</p>
+<p>Validate classic (16-bit format) kern table to assure that the offsets and indices are valid. The idea is that a higher-level library that actually does the text layout can access those tables without error checking (which can be quite time consuming).</p>
 <p>The &lsquo;kern&rsquo; table validator in <a href="ft2-gx_validation.html#FT_TrueTypeGX_Validate">FT_TrueTypeGX_Validate</a> deals with both the new 32-bit format and the classic 16-bit format, while FT_ClassicKern_Validate only supports the classic 16-bit format.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
@@ -293,7 +293,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <p>A handle to the input face.</p>
 </td></tr>
 <tr valign=top><td><b>validation_flags</b></td><td>
-<p>A bit field which specifies the dialect to be validated. See <a href="ft2-gx_validation.html#FT_VALIDATE_CKERNXXX">FT_VALIDATE_CKERNXXX</a> for possible values.</p>
+<p>A bit field that specifies the dialect to be validated. See <a href="ft2-gx_validation.html#FT_VALIDATE_CKERNXXX">FT_VALIDATE_CKERNXXX</a> for possible values.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -320,7 +320,7 @@ Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_ClassicKern_Free">FT_ClassicKern_Free</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GX_VALIDATE_H (freetype/ftgxval.h).
+Defined in FT_GX_VALIDATE_H (ftgxval.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
