@@ -201,7 +201,6 @@ browser.jar:
   skin/classic/browser/devtools/itemArrow-ltr.svg      (../shared/devtools/images/itemArrow-ltr.svg)
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
   skin/classic/browser/devtools/noise.png             (devtools/noise.png)
-  skin/classic/browser/devtools/inspect-button.png    (devtools/inspect-button.png)
   skin/classic/browser/devtools/dropmarker.png        (devtools/dropmarker.png)
   skin/classic/browser/devtools/layout-background-grid.png (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css        (devtools/layoutview.css)
