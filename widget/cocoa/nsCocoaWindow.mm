@@ -686,6 +686,10 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
   if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
     return NS_OK;
 
+  // Protect against re-entering.
+  if (bState && [mWindow isBeingShown])
+    return NS_OK;
+
   [mWindow setBeingShown:bState];
 
   nsIWidget* parentWidget = mParent;
@@ -694,6 +698,11 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
 
   if (bState && !mBounds.IsEmpty()) {
+    if (mPopupContentView) {
+      // Ensure our content view is visible. We never need to hide it.
+      mPopupContentView->Show(true);
+    }
+
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
       if (!nativeParentWindow || !piParentWidget)
@@ -756,6 +765,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
       // NSException.  These errors shouldn't be fatal.  So we need to wrap
       // calls to ...orderFront: in LOGONLY blocks.  See bmo bug 470864.
       NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
+      [[mWindow contentView] setNeedsDisplay:YES];
       [mWindow orderFront:nil];
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
@@ -901,11 +911,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
                         object:@"org.mozilla.gecko.PopupWindow"];
       }
     }
-  }
-  
-  if (mPopupContentView) {
-    mPopupContentView->Show(bState);
-    [[mWindow contentView] setNeedsDisplay:YES];
   }
 
   [mWindow setBeingShown:NO];
@@ -2635,6 +2640,11 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 - (void)setBeingShown:(BOOL)aValue
 {
   mBeingShown = aValue;
+}
+
+- (BOOL)isBeingShown
+{
+  return mBeingShown;
 }
 
 - (BOOL)isVisibleOrBeingShown
