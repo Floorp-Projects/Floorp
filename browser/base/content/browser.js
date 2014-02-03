@@ -2123,6 +2123,13 @@ function UpdateUrlbarSearchSplitterState()
   var urlbar = document.getElementById("urlbar-container");
   var searchbar = document.getElementById("search-container");
 
+  if (document.documentElement.getAttribute("customizing") == "true") {
+    if (splitter) {
+      splitter.remove();
+    }
+    return;
+  }
+
   // If the splitter is already in the right place, we don't need to do anything:
   if (splitter &&
       ((splitter.nextSibling == searchbar && splitter.previousSibling == urlbar) ||

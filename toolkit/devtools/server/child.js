@@ -1,33 +1,43 @@
-const {DevToolsUtils} = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
-const {DebuggerServer, ActorPool} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-if (!DebuggerServer.initialized) {
-  DebuggerServer.init();
-}
+"use strict";
 
-// In case of apps being loaded in parent process, DebuggerServer is already
-// initialized, but child specific actors are not registered.
-// Otherwise, for apps in child process, we need to load actors the first
-// time we load child.js
-DebuggerServer.addChildActors();
+// Encapsulate in its own scope to allows loading this frame script
+// more than once.
+(function () {
+  const {DevToolsUtils} = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
+  const {DebuggerServer, ActorPool} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
-let onConnect = DevToolsUtils.makeInfallible(function (msg) {
-  removeMessageListener("debug:connect", onConnect);
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+  }
 
-  let mm = msg.target;
+  // In case of apps being loaded in parent process, DebuggerServer is already
+  // initialized, but child specific actors are not registered.
+  // Otherwise, for apps in child process, we need to load actors the first
+  // time we load child.js
+  DebuggerServer.addChildActors();
 
-  let prefix = msg.data.prefix + docShell.appId;
+  let onConnect = DevToolsUtils.makeInfallible(function (msg) {
+    removeMessageListener("debug:connect", onConnect);
 
-  let conn = DebuggerServer.connectToParent(prefix, mm);
+    let mm = msg.target;
 
-  let actor = new DebuggerServer.ContentAppActor(conn, content);
-  let actorPool = new ActorPool(conn);
-  actorPool.addActor(actor);
-  conn.addActorPool(actorPool);
+    let prefix = msg.data.prefix + docShell.appId;
 
-  sendAsyncMessage("debug:actor", {actor: actor.grip(),
-                                   appId: docShell.appId,
-                                   prefix: prefix});
-});
+    let conn = DebuggerServer.connectToParent(prefix, mm);
 
-addMessageListener("debug:connect", onConnect);
+    let actor = new DebuggerServer.ContentAppActor(conn, content);
+    let actorPool = new ActorPool(conn);
+    actorPool.addActor(actor);
+    conn.addActorPool(actorPool);
+
+    sendAsyncMessage("debug:actor", {actor: actor.grip(),
+                                     appId: docShell.appId,
+                                     prefix: prefix});
+  });
+
+  addMessageListener("debug:connect", onConnect);
+})();
