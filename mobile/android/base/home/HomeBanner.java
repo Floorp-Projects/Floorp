@@ -97,13 +97,13 @@ public class HomeBanner extends LinearLayout
         GeckoAppShell.getEventDispatcher().unregisterEventListener("HomeBanner:Data", this);
     }
 
-    public void show() {
+    public void showBanner() {
         if (!mDismissed) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Get", null));
         }
     }
 
-    public void hide() {
+    public void hideBanner() {
         animateDown();
     }
 
