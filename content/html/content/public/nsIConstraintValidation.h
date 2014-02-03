@@ -19,8 +19,8 @@ class ValidityState;
 }
 
 #define NS_ICONSTRAINTVALIDATION_IID \
-{ 0xca3824dc, 0x4f5c, 0x4878, \
- { 0xa6, 0x8a, 0x95, 0x54, 0x5f, 0xfa, 0x4b, 0xf9 } }
+{ 0x983829da, 0x1aaf, 0x449c, \
+ { 0xa3, 0x06, 0x85, 0xd4, 0xf0, 0x31, 0x1c, 0xf6 } }
 
 /**
  * This interface is for form elements implementing the validity constraint API.
@@ -51,14 +51,16 @@ public:
 
   enum ValidityStateType
   {
-    VALIDITY_STATE_VALUE_MISSING    = 0x01, // 0b00000001
-    VALIDITY_STATE_TYPE_MISMATCH    = 0x02, // 0b00000010
-    VALIDITY_STATE_PATTERN_MISMATCH = 0x04, // 0b00000100
-    VALIDITY_STATE_TOO_LONG         = 0x08, // 0b00001000
-    VALIDITY_STATE_RANGE_UNDERFLOW  = 0x10, // 0b00010000
-    VALIDITY_STATE_RANGE_OVERFLOW   = 0x20, // 0b00100000
-    VALIDITY_STATE_STEP_MISMATCH    = 0x40, // 0b01000000
-    VALIDITY_STATE_CUSTOM_ERROR     = 0x80  // 0b10000000
+    VALIDITY_STATE_VALUE_MISSING    = 0x1 <<  0,
+    VALIDITY_STATE_TYPE_MISMATCH    = 0x1 <<  1,
+    VALIDITY_STATE_PATTERN_MISMATCH = 0x1 <<  2,
+    VALIDITY_STATE_TOO_LONG         = 0x1 <<  3,
+  //VALIDITY_STATE_TOO_SHORT        = 0x1 <<  4,
+    VALIDITY_STATE_RANGE_UNDERFLOW  = 0x1 <<  5,
+    VALIDITY_STATE_RANGE_OVERFLOW   = 0x1 <<  6,
+    VALIDITY_STATE_STEP_MISMATCH    = 0x1 <<  7,
+    VALIDITY_STATE_BAD_INPUT        = 0x1 <<  8,
+    VALIDITY_STATE_CUSTOM_ERROR     = 0x1 <<  9,
   };
 
   void SetValidityState(ValidityStateType mState,
@@ -103,7 +105,7 @@ private:
    * A bitfield representing the current validity state of the element.
    * Each bit represent an error. All bits to zero means the element is valid.
    */
-  int8_t                        mValidityBitField;
+  int16_t                       mValidityBitField;
 
   /**
    * Keeps track whether the element is barred from constraint validation.
