@@ -86,6 +86,8 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_RANGE_UNDERFLOW);
     } else if (GetValidityState(VALIDITY_STATE_STEP_MISMATCH)) {
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_STEP_MISMATCH);
+    } else if (GetValidityState(VALIDITY_STATE_BAD_INPUT)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_BAD_INPUT);
     } else {
       // There should not be other validity states.
       return NS_ERROR_UNEXPECTED;

@@ -62,7 +62,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   this.whenReadyToAuthenticate = null;
   this._log = Log.repository.getLogger("Sync.BrowserIDManager");
   this._log.addAppender(new Log.DumpAppender());
-  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
+  this._log.level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
 };
 
 this.BrowserIDManager.prototype = {

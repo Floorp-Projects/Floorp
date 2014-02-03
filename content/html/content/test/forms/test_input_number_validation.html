@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=827161
+-->
+<head>
+  <title>Test validation of number control input</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="test_input_number_data.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827161">Mozilla Bug 827161</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="number" step="0.01" oninvalid="invalidEventHandler(event);">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 827161.
+ * This test checks that validation works correctly for <input type=number>.
+ **/
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  startTests();
+  SimpleTest.finish();
+});
+
+var elem;
+
+function runTest(test) {
+  elem.lang = test.langTag;
+
+  gInvalid = false; // reset
+  elem.value = 0;
+  elem.focus();
+  elem.select();
+  sendString(test.inputWithGrouping);
+  checkIsValid(elem, test.desc + " ('" + test.langTag + "') with grouping separator");
+  sendChar("a");
+  checkIsInvalid(elem, test.desc + " ('" + test.langTag + "') with grouping separator");
+
+  gInvalid = false; // reset
+  elem.value = 0;
+  elem.select();
+  sendString(test.inputWithoutGrouping);
+  checkIsValid(elem, test.desc + " ('" + test.langTag + "') without grouping separator");
+  sendChar("a");
+  checkIsInvalid(elem, test.desc + " ('" + test.langTag + "') without grouping separator");
+}
+
+function startTests() {
+  elem = document.getElementById("input");
+  for (var test of tests) {
+    runTest(test);
+  }
+}
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be 'invalid'");
+  gInvalid = true;
+}
+
+function checkIsValid(element, infoStr)
+{
+  ok(!element.validity.badInput,
+     "Element should not suffer from bad input for " + infoStr);
+  ok(element.validity.valid, "Element should be valid for " + infoStr);
+  ok(element.checkValidity(), "checkValidity() should return true for " + infoStr);
+  ok(!gInvalid, "The invalid event should not have been thrown for " + infoStr);
+  is(element.validationMessage, '',
+     "Validation message should be the empty string for " + infoStr);
+  ok(element.mozMatchesSelector(":valid"), ":valid pseudo-class should apply for " + infoStr);
+}
+
+function checkIsInvalid(element, infoStr)
+{
+  ok(element.validity.badInput,
+     "Element should suffer from bad input for " + infoStr);
+  ok(!element.validity.valid, "Element should not be valid for " + infoStr);
+  ok(!element.checkValidity(), "checkValidity() should return false for " + infoStr);
+  ok(gInvalid, "The invalid event should have been thrown for " + infoStr);
+  is(element.validationMessage, "Please enter a number.",
+     "Validation message is not the expected message for " + infoStr);
+  ok(element.mozMatchesSelector(":invalid"), ":invalid pseudo-class should apply for " + infoStr);
+}
+
+</script>
+</pre>
+</body>
+</html>
