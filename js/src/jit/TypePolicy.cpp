@@ -15,6 +15,17 @@ using namespace js::jit;
 
 using JS::DoubleNaNValue;
 
+static void
+EnsureOperandNotFloat32(TempAllocator &alloc, MInstruction *def, unsigned op)
+{
+    MDefinition *in = def->getOperand(op);
+    if (in->type() == MIRType_Float32) {
+        MToDouble *replace = MToDouble::New(alloc, in);
+        def->block()->insertBefore(def, replace);
+        def->replaceOperand(op, replace);
+    }
+}
+
 MDefinition *
 BoxInputsPolicy::boxAt(TempAllocator &alloc, MInstruction *at, MDefinition *operand)
 {
@@ -409,6 +420,9 @@ ConvertToStringPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction
 
         replace = MUnbox::New(alloc, in, MIRType_String, MUnbox::Fallible);
     } else {
+        // TODO remove these two lines once 966957 has landed
+        EnsureOperandNotFloat32(alloc, ins, Op);
+        in = ins->getOperand(Op);
         replace = MToString::New(alloc, in);
     }
 
@@ -521,17 +535,6 @@ Float32Policy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def)
 template bool Float32Policy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool Float32Policy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool Float32Policy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-
-static void
-EnsureOperandNotFloat32(TempAllocator &alloc, MInstruction *def, unsigned op)
-{
-    MDefinition *in = def->getOperand(op);
-    if (in->type() == MIRType_Float32) {
-        MToDouble *replace = MToDouble::New(alloc, in);
-        def->block()->insertBefore(def, replace);
-        def->replaceOperand(op, replace);
-    }
-}
 
 template <unsigned Op>
 bool
