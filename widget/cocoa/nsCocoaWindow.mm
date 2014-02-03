@@ -590,7 +590,7 @@ bool nsCocoaWindow::IsVisible() const
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  return (mWindow && ([mWindow isVisible] || mSheetNeedsShow));
+  return (mWindow && ([mWindow isVisibleOrBeingShown] || mSheetNeedsShow));
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
