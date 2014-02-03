@@ -338,13 +338,17 @@ private:
   uint64_t mBusyCount;
   uint64_t mMessagePortSerial;
   Status mParentStatus;
-  bool mRooted;
   bool mParentSuspended;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
   WorkerType mWorkerType;
 
 protected:
+  // The worker is owned by its thread, which is represented here.  This is set
+  // in Construct() and emptied by WorkerFinishedRunnable, and conditionally
+  // traversed by the cycle collector if the busy count is zero.
+  nsRefPtr<WorkerPrivate> mSelfRef;
+
   WorkerPrivateParent(JSContext* aCx, WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
                       WorkerType aWorkerType,
@@ -384,6 +388,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerPrivateParent,
                                                          nsDOMEventTargetHelper)
+  void
+  ClearSelfRef()
+  {
+    AssertIsOnParentThread();
+    MOZ_ASSERT(mSelfRef);
+    mSelfRef = nullptr;
+  }
 
   // May be called on any thread...
   bool
@@ -418,20 +429,10 @@ public:
   SynchronizeAndResume(JSContext* aCx, nsPIDOMWindow* aWindow,
                        nsIScriptContext* aScriptContext);
 
-  void
-  _finalize(JSFreeOp* aFop);
-
-  void
-  Finish(JSContext* aCx)
-  {
-    Root(false);
-  }
-
   bool
   Terminate(JSContext* aCx)
   {
     AssertIsOnParentThread();
-    Root(false);
     return TerminatePrivate(aCx);
   }
 
@@ -440,9 +441,6 @@ public:
 
   bool
   ModifyBusyCount(JSContext* aCx, bool aIncrease);
-
-  void
-  Root(bool aRoot);
 
   void
   ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed);
