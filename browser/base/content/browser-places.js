@@ -980,8 +980,10 @@ let BookmarkingUI = {
     if (widget.overflowed)
       return widget.anchor;
 
-    return document.getAnonymousElementByAttribute(this.star, "class",
-                                                   "toolbarbutton-icon");
+    let star = this.star;
+    return star ? document.getAnonymousElementByAttribute(star, "class",
+                                                          "toolbarbutton-icon")
+                : null;
   },
 
   get broadcaster() {
@@ -1087,7 +1089,7 @@ let BookmarkingUI = {
    * Handles star styling based on page proxy state changes.
    */
   onPageProxyStateChanged: function BUI_onPageProxyStateChanged(aState) {
-    if (!this._shouldUpdateStarState()) {
+    if (!this._shouldUpdateStarState() || !this.star) {
       return;
     }
 
@@ -1158,6 +1160,7 @@ let BookmarkingUI = {
   },
 
   _hasBookmarksObserver: false,
+  _itemIds: [],
   uninit: function BUI_uninit() {
     this._updateBookmarkPageMenuItem(true);
     CustomizableUI.removeListener(this);
@@ -1232,7 +1235,7 @@ let BookmarkingUI = {
       return;
     }
 
-    if (this._itemIds && this._itemIds.length > 0) {
+    if (this._itemIds.length > 0) {
       this.button.setAttribute("starred", "true");
       this.button.setAttribute("buttontooltiptext", this._starredTooltip);
     }
@@ -1247,7 +1250,7 @@ let BookmarkingUI = {
    * to the default (Bookmark This Page) for OS X.
    */
   _updateBookmarkPageMenuItem: function BUI__updateBookmarkPageMenuItem(forceReset) {
-    let isStarred = !forceReset && this._itemIds && this._itemIds.length > 0;
+    let isStarred = !forceReset && this._itemIds.length > 0;
     let label = isStarred ? "editlabel" : "bookmarklabel";
     this.broadcaster.setAttribute("label", this.broadcaster.getAttribute(label));
   },
