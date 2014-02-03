@@ -6,6 +6,8 @@ let doc;
 let ruleWindow;
 let ruleView;
 let inspector;
+let TEST_URL = 'url("http://example.com/browser/browser/devtools/' +
+               'styleinspector/test/test-image.png")';
 
 function startTest()
 {
@@ -140,7 +142,7 @@ function testEditProperty()
             let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("border-color");
             is(value, "red", "border-color should have been set.");
             is(propEditor.isValid(), true, "red should be a valid entry");
-            finishTest();
+            testEditPropertyWithColon();
           }));
         });
 
@@ -150,6 +152,43 @@ function testEditProperty()
       }));
     });
     for (let ch of "border-color:") {
+      EventUtils.sendChar(ch, ruleWindow);
+    }
+  });
+
+  EventUtils.synthesizeMouse(propEditor.nameSpan, 32, 1,
+                             { },
+                             ruleWindow);
+}
+
+function testEditPropertyWithColon()
+{
+  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  waitForEditorFocus(propEditor.element, function onNewElement(aEditor) {
+    is(inplaceEditor(propEditor.nameSpan), aEditor, "Next focused editor should be the name editor.");
+    let input = aEditor.input;
+    waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
+      promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
+        input = aEditor.input;
+        is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
+
+        waitForEditorBlur(aEditor, function() {
+          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
+            let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("background-image");
+            is(value, TEST_URL, "background-image should have been set.");
+            is(propEditor.isValid(), true, "the test URL should be a valid entry");
+            finishTest();
+          }));
+        });
+
+
+        for (let ch of (TEST_URL + ";")) {
+          EventUtils.sendChar(ch, ruleWindow);
+        }
+      }));
+    });
+    for (let ch of "background-image:") {
       EventUtils.sendChar(ch, ruleWindow);
     }
   });

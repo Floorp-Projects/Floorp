@@ -28,13 +28,15 @@ function selectNewElement()
   let newElement = doc.createElement("div");
   newElement.textContent = "Test Element";
   doc.body.appendChild(newElement);
-  inspector.selection.setNode(newElement);
+
+  inspector.selection.setNode(newElement, "test");
   let def = promise.defer();
   ruleView.element.addEventListener("CssRuleViewRefreshed", function changed() {
     ruleView.element.removeEventListener("CssRuleViewRefreshed", changed);
     elementRuleEditor = ruleView.element.children[0]._ruleEditor;
     def.resolve();
   });
+
   return def.promise;
 }
 
