@@ -13,10 +13,9 @@
 <script type="application/javascript">
 
 /** Test for Network API **/
-
 function checkInterface(aInterface) {
-  ok(!(aInterface in window), aInterface + " should be prefixed");
-  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+  ok(!(aInterface in window), aInterface + " should not exist");
+  ok(!(("Moz" + aInterface) in window), aInterface + " should not exist");
 }
 
 function test() {
@@ -24,8 +23,6 @@ function test() {
 
   ok(navigator.mozConnection, "navigator.mozConnection returns an object");
 
-  ok(navigator.mozConnection instanceof MozConnection,
-     "navigator.mozConnection is a MozConnection object");
   ok(navigator.mozConnection instanceof EventTarget,
      "navigator.mozConnection is a EventTarget object");
 
