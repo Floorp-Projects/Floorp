@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    '../insanity/lib/pkixbuild.cpp',
+    '../insanity/lib/pkixcheck.cpp',
     '../insanity/lib/pkixder.cpp',
     '../insanity/lib/pkixkey.cpp',
     'CertVerifier.cpp',
