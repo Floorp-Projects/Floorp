@@ -2331,7 +2331,7 @@ PerformanceStatisticsView.prototype = {
       sorted: true,
       totals: {
         size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime"),
+        time: L10N.getStr("charts.totalTime2"),
         cached: L10N.getStr("charts.totalCached"),
         count: L10N.getStr("charts.totalCount")
       }
@@ -2353,7 +2353,7 @@ PerformanceStatisticsView.prototype = {
       sorted: true,
       totals: {
         size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime"),
+        time: L10N.getStr("charts.totalTime2"),
         cached: L10N.getStr("charts.totalCached"),
         count: L10N.getStr("charts.totalCount")
       }
@@ -2452,7 +2452,7 @@ PerformanceStatisticsView.prototype = {
       let size = L10N.numberWithDecimals(chartItem.size / 1024, CONTENT_SIZE_DECIMALS);
       let time = L10N.numberWithDecimals(chartItem.time / 1000, REQUEST_TIME_DECIMALS);
       chartItem.size = L10N.getFormatStr("charts.sizeKB", size);
-      chartItem.time = L10N.getFormatStr("charts.totalMS", time);
+      chartItem.time = L10N.getFormatStr("charts.totalS", time);
     }
 
     return data.filter(e => e.count > 0);

@@ -1407,6 +1407,18 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD GetGcLogPath(nsAString &aPath)
+    {
+      aPath = mGCLogPath;
+      return NS_OK;
+    }
+
+    NS_IMETHOD GetCcLogPath(nsAString &aPath)
+    {
+      aPath = mCCLogPath;
+      return NS_OK;
+    }
+
     NS_IMETHOD Begin()
     {
         mCurrentAddress.AssignLiteral("0x");
@@ -1459,6 +1471,8 @@ public:
             nsString msg = NS_LITERAL_STRING("Garbage Collector log dumped to ") +
                            gcLogPath;
             cs->LogStringMessage(msg.get());
+
+            mGCLogPath = gcLogPath;
         }
 
         // Open a file for dumping the CC graph.  We again prefix with
@@ -1616,6 +1630,8 @@ public:
                 nsString msg = NS_LITERAL_STRING("Cycle Collector log dumped to ") +
                                ccLogPath;
                 cs->LogStringMessage(msg.get());
+
+                mCCLogPath = ccLogPath;
             }
         }
         return NS_OK;
@@ -1713,6 +1729,8 @@ private:
     bool mDisableLog;
     bool mWantAfterProcessing;
     nsString mFilenameIdentifier;
+    nsString mGCLogPath;
+    nsString mCCLogPath;
     nsCString mCurrentAddress;
     mozilla::LinkedList<CCGraphDescriber> mDescribers;
 };
