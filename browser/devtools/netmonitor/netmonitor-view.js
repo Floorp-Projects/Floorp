@@ -2126,19 +2126,33 @@ NetworkDetailsView.prototype = {
       // Handle json, which we tentatively identify by checking the MIME type
       // for "json" after any word boundary. This works for the standard
       // "application/json", and also for custom types like "x-bigcorp-json".
-      // This should be marginally more reliable than just looking for "json".
-      if (/\bjson/.test(mimeType)) {
-        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
+      // Additionally, we also directly parse the response text content to
+      // verify whether it's json or not, to handle responses incorrectly
+      // labeled as text/plain instead.
+      let jsonMimeType, jsonObject, jsonObjectParseError;
+      try {
+        // Test the mime type *and* parse the string, because "JSONP" responses
+        // (json with callback) aren't actually valid json.
+        jsonMimeType = /\bjson/.test(mimeType);
+        jsonObject = JSON.parse(aString);
+      } catch (e) {
+        jsonObjectParseError = e;
+      }
+      if (jsonMimeType || jsonObject) {
+        // Extract the actual json substring in case this might be a "JSONP".
+        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g;
         let sanitizedJSON = aString.replace(jsonpRegex, "");
         let callbackPadding = aString.match(jsonpRegex);
 
         // Make sure this is a valid JSON object first. If so, nicely display
         // the parsing results in a variables view. Otherwise, simply show
         // the contents as plain text.
-        try {
-          var jsonObject = JSON.parse(sanitizedJSON);
-        } catch (e) {
-          var parsingError = e;
+        if (sanitizedJSON != aString) {
+          try {
+            jsonObject = JSON.parse(sanitizedJSON);
+          } catch (e) {
+            jsonObjectParseError = e;
+          }
         }
 
         // Valid JSON.
@@ -2157,8 +2171,8 @@ NetworkDetailsView.prototype = {
         else {
           $("#response-content-textarea-box").hidden = false;
           let infoHeader = $("#response-content-info-header");
-          infoHeader.setAttribute("value", parsingError);
-          infoHeader.setAttribute("tooltiptext", parsingError);
+          infoHeader.setAttribute("value", jsonObjectParseError);
+          infoHeader.setAttribute("tooltiptext", jsonObjectParseError);
           infoHeader.hidden = false;
           return NetMonitorView.editor("#response-content-textarea").then(aEditor => {
             aEditor.setMode(Editor.modes.js);
