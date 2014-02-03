@@ -109,6 +109,7 @@ protected:
   // to 3%-4%).  See bmo bug 395397.
   static const uint32_t  kHadMoreEventsCountMax = 3;
 
+  int32_t            mRecursionDepth;
   int32_t            mNativeEventCallbackDepth;
   // Can be set from different threads, so must be modified atomically
   int32_t            mNativeEventScheduledDepth;
