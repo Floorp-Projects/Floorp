@@ -2476,10 +2476,14 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
       MOZ_CRASH("Invalid scrollType value comes");
   }
 
+  nsIScrollableFrame::ScrollMomentum momentum =
+    aEvent->isMomentum ? nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT
+                       : nsIScrollableFrame::NOT_MOMENTUM;
+
   nsIntPoint overflow;
   aScrollableFrame->ScrollBy(actualDevPixelScrollAmount,
                              nsIScrollableFrame::DEVICE_PIXELS,
-                             mode, &overflow, origin, aEvent->isMomentum);
+                             mode, &overflow, origin, momentum);
 
   if (!scrollFrameWeak.IsAlive()) {
     // If the scroll causes changing the layout, we can think that the event
