@@ -225,9 +225,9 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "profile-do-change")) {
+    AttachToPreferences();
     CacheFileIOManager::Init();
     CacheFileIOManager::OnProfile();
-    AttachToPreferences();
     return NS_OK;
   }
 
