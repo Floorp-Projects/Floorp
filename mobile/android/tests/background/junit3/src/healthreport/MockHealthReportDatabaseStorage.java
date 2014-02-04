@@ -5,6 +5,7 @@ package org.mozilla.gecko.background.healthreport;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.background.common.GlobalConstants;
@@ -40,6 +41,10 @@ public class MockHealthReportDatabaseStorage extends HealthReportDatabaseStorage
 
   public long getGivenDaysAgoMillis(int numDays) {
     return now - numDays * GlobalConstants.MILLISECONDS_PER_DAY;
+  }
+
+  public ConcurrentHashMap<String, Integer> getEnvironmentCache() {
+    return this.envs;
   }
 
   public MockHealthReportDatabaseStorage(Context context, File fakeProfileDirectory) {
