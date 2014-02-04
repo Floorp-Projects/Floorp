@@ -124,14 +124,26 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
             os2->sTypoAscender - os2->sTypoDescender + os2->sTypoLineGap;
         lineHeight = typoHeight * yScale;
 
-        // maxAscent/maxDescent get used for frame heights, and some fonts
-        // don't have the HHEA table ascent/descent set (bug 279032).
-        // We use NS_round here to parallel the pixel-rounded values that
-        // freetype gives us for ftMetrics.ascender/descender.
-        aMetrics->maxAscent =
-            std::max(aMetrics->maxAscent, NS_round(aMetrics->emAscent));
-        aMetrics->maxDescent =
-            std::max(aMetrics->maxDescent, NS_round(aMetrics->emDescent));
+        // If the OS/2 fsSelection USE_TYPO_METRICS bit is set,
+        // or if this is an OpenType Math font,
+        // set maxAscent/Descent from the sTypo* fields instead of hhea.
+        const uint16_t kUseTypoMetricsMask = 1 << 7;
+        FT_ULong length = 0;
+        if ((os2->fsSelection & kUseTypoMetricsMask) ||
+            0 == FT_Load_Sfnt_Table(mFace, FT_MAKE_TAG('M','A','T','H'),
+                                    0, nullptr, &length)) {
+            aMetrics->maxAscent = NS_round(aMetrics->emAscent);
+            aMetrics->maxDescent = NS_round(aMetrics->emDescent);
+        } else {
+            // maxAscent/maxDescent get used for frame heights, and some fonts
+            // don't have the HHEA table ascent/descent set (bug 279032).
+            // We use NS_round here to parallel the pixel-rounded values that
+            // freetype gives us for ftMetrics.ascender/descender.
+            aMetrics->maxAscent =
+                std::max(aMetrics->maxAscent, NS_round(aMetrics->emAscent));
+            aMetrics->maxDescent =
+                std::max(aMetrics->maxDescent, NS_round(aMetrics->emDescent));
+        }
     } else {
         aMetrics->emAscent = aMetrics->maxAscent;
         aMetrics->emDescent = aMetrics->maxDescent;
