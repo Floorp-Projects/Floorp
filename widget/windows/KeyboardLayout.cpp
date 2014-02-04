@@ -1266,6 +1266,59 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   return mIsPrintableKey;
 }
 
+#ifdef MOZ_CRASHREPORTER
+
+static nsCString
+GetResultOfInSendMessageEx()
+{
+  DWORD ret = ::InSendMessageEx(nullptr);
+  if (!ret) {
+    return NS_LITERAL_CSTRING("ISMEX_NOSEND");
+  }
+  nsAutoCString result;
+  if (ret & ISMEX_CALLBACK) {
+    result = "ISMEX_CALLBACK";
+  }
+  if (ret & ISMEX_NOTIFY) {
+    if (!result.IsEmpty()) {
+      result += " | ";
+    }
+    result += "ISMEX_NOTIFY";
+  }
+  if (ret & ISMEX_REPLIED) {
+    if (!result.IsEmpty()) {
+      result += " | ";
+    }
+    result += "ISMEX_REPLIED";
+  }
+  if (ret & ISMEX_SEND) {
+    if (!result.IsEmpty()) {
+      result += " | ";
+    }
+    result += "ISMEX_SEND";
+  }
+  return result;
+}
+
+static const char*
+GetMessageName(UINT aMessage)
+{
+  switch (aMessage) {
+    case WM_KEYDOWN:     return "WM_KEYDOWN";
+    case WM_SYSKEYDOWN:  return "WM_SYSKEYDOWN";
+    case WM_KEYUP:       return "WM_KEYUP";
+    case WM_SYSKEYUP:    return "WM_SYSKEYUP";
+    case WM_CHAR:        return "WM_CHAR";
+    case WM_DEADCHAR:    return "WM_DEADCHAR";
+    case WM_SYSCHAR:     return "WM_SYSCHAR";
+    case WM_SYSDEADCHAR: return "WM_SYSDEADCHAR";
+    case WM_UNICHAR:     return "WM_UNICHAR";
+    default:             return "Unknown";
+  }
+}
+
+#endif // #ifdef MOZ_CRASHREPORTER
+
 MSG
 NativeKey::RemoveFollowingCharMessage() const
 {
@@ -1280,9 +1333,31 @@ NativeKey::RemoveFollowingCharMessage() const
 
   MSG msg;
   if (!WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                             PM_REMOVE | PM_NOYIELD) ||
-      !IsCharMessage(msg)) {
+                             PM_REMOVE | PM_NOYIELD)) {
+#ifdef MOZ_CRASHREPORTER
+    nsPrintfCString info("Handling message: %s (0x%08X), wParam: 0x%08X, "
+                         "lParam: 0x%08X, InSendMessageEx()=%s",
+                         GetMessageName(mMsg.message),
+                         mMsg.message, mMsg.wParam, mMsg.lParam,
+                         GetResultOfInSendMessageEx().get());
+    CrashReporter::AppendAppNotesToCrashReport(info);
+#endif // #ifdef MOZ_CRASHREPORTER
     MOZ_CRASH("We lost the following char message");
+  }
+  if (!IsCharMessage(msg)) {
+#ifdef MOZ_CRASHREPORTER
+    nsPrintfCString info("Handling message: %s (0x%08X), wParam: 0x%08X, "
+                         "lParam: 0x%08X, InSendMessageEx()=%s, "
+                         "Next key message: %s (0x%08X), "
+                         "wParam: 0x%08X, lParam: 0x%08X",
+                         GetMessageName(mMsg.message),
+                         mMsg.message, mMsg.wParam, mMsg.lParam,
+                         GetResultOfInSendMessageEx().get(),
+                         GetMessageName(msg.message),
+                         msg.message, msg.wParam, msg.lParam);
+    CrashReporter::AppendAppNotesToCrashReport(info);
+#endif // #ifdef MOZ_CRASHREPORTER
+    MOZ_CRASH("Next key message isn't a char message");
   }
 
   return msg;

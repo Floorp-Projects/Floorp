@@ -65,15 +65,29 @@ MacIOSurfaceTextureClientOGL::GetSize() const
   return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
 }
 
+class MacIOSurfaceTextureClientData : public TextureClientData
+{
+public:
+  MacIOSurfaceTextureClientData(MacIOSurface* aSurface)
+    : mSurface(aSurface)
+  {}
+
+  virtual void DeallocateSharedData(ISurfaceAllocator*) MOZ_OVERRIDE
+  {
+    mSurface = nullptr;
+  }
+
+private:
+  RefPtr<MacIOSurface> mSurface;
+};
+
 TextureClientData*
 MacIOSurfaceTextureClientOGL::DropTextureData()
 {
-  // MacIOSurface has proper cross-process refcounting so we can just drop
-  // our reference now, and the data will stay alive (at least) until the host
-  // has also been torn down.
+  TextureClientData* data = new MacIOSurfaceTextureClientData(mSurface);
   mSurface = nullptr;
   MarkInvalid();
-  return nullptr;
+  return data;
 }
 
 }

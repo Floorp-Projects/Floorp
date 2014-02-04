@@ -25,8 +25,8 @@ js_Stringify(JSContext *cx, js::MutableHandleValue vp, JSObject *replacer,
 namespace js {
 
 extern bool
-ParseJSONWithReviver(JSContext *cx, JS::StableCharPtr chars, size_t length, HandleValue reviver,
-                     MutableHandleValue vp);
+ParseJSONWithReviver(JSContext *cx, JS::ConstTwoByteChars chars, size_t length,
+                     HandleValue reviver, MutableHandleValue vp);
 
 } // namespace js
 

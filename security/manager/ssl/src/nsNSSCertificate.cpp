@@ -1553,6 +1553,11 @@ nsNSSCertList::nsNSSCertList(insanity::pkix::ScopedCERTCertList& certList,
   }
 }
 
+nsNSSCertList::nsNSSCertList()
+{
+  mCertList = CERT_NewCertList();
+}
+
 nsNSSCertList::~nsNSSCertList()
 {
   nsNSSShutDownPreventionLock locker;
