@@ -1,8 +1,6 @@
 . "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
 
 ac_add_options --enable-signmar
-ac_add_options --enable-profiling
-ac_add_options --disable-elf-hack # --enable-elf-hack conflicts with --enable-profiling
 
 # Nightlies only since this has a cost in performance
 ac_add_options --enable-js-diagnostics
