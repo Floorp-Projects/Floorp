@@ -49,6 +49,8 @@ namespace frontend {
 
 typedef Rooted<StaticBlockObject*> RootedStaticBlockObject;
 typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
+typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
+typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
 
 
 /*
@@ -2676,7 +2678,7 @@ Parser<ParseHandler>::reportRedeclaration(Node pn, bool isConst, JSAtom *atom)
  * must already be in such a scope.
  *
  * Throw a SyntaxError if 'atom' is an invalid name. Otherwise create a
- * property for the new variable on the block object, pc->blockChain;
+ * property for the new variable on the block object, pc->staticScope;
  * populate data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to
  * data->pn in a slot of the block object.
  */
@@ -2779,15 +2781,18 @@ template <typename ParseHandler>
 static void
 PopStatementPC(TokenStream &ts, ParseContext<ParseHandler> *pc)
 {
-    RootedStaticBlockObject blockObj(ts.context(), pc->topStmt->blockObj);
-    JS_ASSERT(!!blockObj == (pc->topStmt->isBlockScope));
+    RootedNestedScopeObject scopeObj(ts.context(), pc->topStmt->staticScope);
+    JS_ASSERT(!!scopeObj == (pc->topStmt->isBlockScope));
 
     FinishPopStatement(pc);
 
-    if (blockObj) {
-        JS_ASSERT(!blockObj->inDictionaryMode());
-        ForEachLetDef(ts, pc, blockObj, PopLetDecl<ParseHandler>());
-        blockObj->resetPrevBlockChainFromParser();
+    if (scopeObj) {
+        if (scopeObj->is<StaticBlockObject>()) {
+            RootedStaticBlockObject blockObj(ts.context(), &scopeObj->as<StaticBlockObject>());
+            JS_ASSERT(!blockObj->inDictionaryMode());
+            ForEachLetDef(ts, pc, blockObj, PopLetDecl<ParseHandler>());
+        }
+        scopeObj->resetEnclosingNestedScopeFromParser();
     }
 }
 
@@ -2820,7 +2825,7 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
         if (!stmt->isBlockScope)
             continue;
 
-        StaticBlockObject &blockObj = *stmt->blockObj;
+        StaticBlockObject &blockObj = stmt->staticBlock();
         Shape *shape = blockObj.nativeLookup(ct->sc->context, id);
         if (shape) {
             JS_ASSERT(shape->hasShortID());
@@ -3202,7 +3207,7 @@ Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockObject blockObj, StmtInf
         return null();
 
     PushStatementPC(pc, stmt, STMT_BLOCK);
-    blockObj->initPrevBlockChainFromParser(pc->blockChain);
+    blockObj->initEnclosingNestedScopeFromParser(pc->staticScope);
     FinishPushBlockScope(pc, stmt, *blockObj.get());
 
     Node pn = handler.newLexicalScope(blockbox);
@@ -3560,7 +3565,7 @@ Parser<FullParseHandler>::letDeclaration()
         }
 
         if (stmt && stmt->isBlockScope) {
-            JS_ASSERT(pc->blockChain == stmt->blockObj);
+            JS_ASSERT(pc->staticScope == stmt->staticScope);
         } else {
             if (pc->atBodyLevel()) {
                 /*
@@ -3606,9 +3611,9 @@ Parser<FullParseHandler>::letDeclaration()
             stmt->downScope = pc->topScopeStmt;
             pc->topScopeStmt = stmt;
 
-            blockObj->initPrevBlockChainFromParser(pc->blockChain);
-            pc->blockChain = blockObj;
-            stmt->blockObj = blockObj;
+            blockObj->initEnclosingNestedScopeFromParser(pc->staticScope);
+            pc->staticScope = blockObj;
+            stmt->staticScope = blockObj;
 
 #ifdef DEBUG
             ParseNode *tmp = pc->blockNode;
@@ -3628,7 +3633,7 @@ Parser<FullParseHandler>::letDeclaration()
             pc->blockNode = pn1;
         }
 
-        pn = variables(PNK_LET, nullptr, pc->blockChain, HoistVars);
+        pn = variables(PNK_LET, nullptr, &pc->staticScope->as<StaticBlockObject>(), HoistVars);
         if (!pn)
             return null();
         pn->pn_xflags = PNX_POPVAR;
@@ -5078,7 +5083,8 @@ Parser<ParseHandler>::tryStatement()
              * scoped, not a property of a new Object instance.  This is
              * an intentional change that anticipates ECMA Ed. 4.
              */
-            data.initLet(HoistVars, *pc->blockChain, JSMSG_TOO_MANY_CATCH_VARS);
+            data.initLet(HoistVars, pc->staticScope->template as<StaticBlockObject>(),
+                         JSMSG_TOO_MANY_CATCH_VARS);
             JS_ASSERT(data.let.blockObj);
 
             tt = tokenStream.getToken();
@@ -6097,8 +6103,8 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
     if (!transplanter.transplant(kid))
         return null();
 
-    JS_ASSERT(pc->blockChain && pc->blockChain == pn->pn_objbox->object);
-    data.initLet(HoistVars, *pc->blockChain, JSMSG_ARRAY_INIT_TOO_BIG);
+    JS_ASSERT(pc->staticScope && pc->staticScope == pn->pn_objbox->object);
+    data.initLet(HoistVars, pc->staticScope->as<StaticBlockObject>(), JSMSG_ARRAY_INIT_TOO_BIG);
 
     do {
         /*
