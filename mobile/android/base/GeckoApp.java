@@ -572,6 +572,8 @@ public abstract class GeckoApp
             } else if (event.equals("Reader:FaviconRequest")) {
                 final String url = message.getString("url");
                 handleFaviconRequest(url);
+            } else if (event.equals("Gecko:DelayedStartup")) {
+                ThreadUtils.postToBackgroundThread(new UninstallListener.DelayedStartupTask(this));
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
                 geckoConnected();
@@ -1325,11 +1327,6 @@ public abstract class GeckoApp
                         GeckoApp.this.onLocaleReady(uiLocale);
                     }
                 });
-
-                // Perform webapp uninstalls as appropiate.
-                if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
-                    UninstallListener.initUninstallPackageScan(getApplicationContext());
-                }
             }
         });
 
@@ -1534,6 +1531,7 @@ public abstract class GeckoApp
         registerEventListener("Menu:Remove");
         registerEventListener("Menu:Update");
         registerEventListener("Gecko:Ready");
+        registerEventListener("Gecko:DelayedStartup");
         registerEventListener("Toast:Show");
         registerEventListener("DOMFullScreen:Start");
         registerEventListener("DOMFullScreen:Stop");
@@ -2063,6 +2061,7 @@ public abstract class GeckoApp
         unregisterEventListener("Menu:Remove");
         unregisterEventListener("Menu:Update");
         unregisterEventListener("Gecko:Ready");
+        unregisterEventListener("Gecko:DelayedStartup");
         unregisterEventListener("Toast:Show");
         unregisterEventListener("DOMFullScreen:Start");
         unregisterEventListener("DOMFullScreen:Stop");
