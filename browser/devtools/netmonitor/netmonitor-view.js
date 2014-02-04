@@ -472,27 +472,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Create a new custom request form populated with the data from
-   * the currently selected request.
-   */
-  cloneSelectedRequest: function() {
-    let selected = this.selectedItem.attachment;
-
-    // Create the element node for the network request item.
-    let menuView = this._createMenuView(selected.method, selected.url);
-
-    // Append a network request item to this container.
-    let newItem = this.push([menuView], {
-      attachment: Object.create(selected, {
-        isCustom: { value: true }
-      })
-    });
-
-    // Immediately switch to new request pane.
-    this.selectedItem = newItem;
-  },
-
-  /**
    * Opens selected item in a new tab.
    */
   openRequestInTab: function() {
@@ -522,15 +501,36 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Create a new custom request form populated with the data from
+   * the currently selected request.
+   */
+  cloneSelectedRequest: function() {
+    let selected = this.selectedItem.attachment;
+
+    // Create the element node for the network request item.
+    let menuView = this._createMenuView(selected.method, selected.url);
+
+    // Append a network request item to this container.
+    let newItem = this.push([menuView], {
+      attachment: Object.create(selected, {
+        isCustom: { value: true }
+      })
+    });
+
+    // Immediately switch to new request pane.
+    this.selectedItem = newItem;
+  },
+
+  /**
    * Send a new HTTP request using the data in the custom request form.
    */
   sendCustomRequest: function() {
     let selected = this.selectedItem.attachment;
+    let data = Object.create(selected);
 
-    let data = Object.create(selected, {
-      headers: { value: selected.requestHeaders.headers }
-    });
-
+    if (selected.requestHeaders) {
+      data.headers = selected.requestHeaders.headers;
+    }
     if (selected.requestPostData) {
       data.body = selected.requestPostData.postData.text;
     }
@@ -548,9 +548,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   closeCustomRequest: function() {
     this.remove(this.selectedItem);
-
     NetMonitorView.Sidebar.toggle(false);
-   },
+  },
 
   /**
    * Filters all network requests in this container by a specified type.
