@@ -19,6 +19,11 @@ function processCSU(csu, body)
             if (target.Kind == "CSU")
                 addNestedPointer(csu, target.Name, fieldName);
         }
+        if (type.Kind == "Array") {
+            var target = type.Type;
+            if (target.Kind == "CSU")
+                addNestedStructure(csu, target.Name, fieldName);
+        }
         if (type.Kind == "CSU") {
             // Ignore nesting in classes which are AutoGCRooters. We only consider
             // types with fields that may not be properly rooted.
