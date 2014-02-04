@@ -20,12 +20,13 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
-const DB_NAME = "contacts";
-const DB_VERSION = 19;
-const STORE_NAME = "contacts";
-const SAVED_GETALL_STORE_NAME = "getallcache";
+/* all exported symbols need to be bound to this on B2G - Bug 961777 */
+this.DB_NAME = "contacts";
+this.DB_VERSION = 19;
+this.STORE_NAME = "contacts";
+this.SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
-const REVISION_STORE = "revision";
+this.REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
 function exportContact(aRecord) {
