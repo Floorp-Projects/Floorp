@@ -321,6 +321,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],
+            'DELAYLOAD_DLLS': [
+                'EXTRA_DSO_LDOPTS :=',
+            ],
         }
 
         for var, val in expected.items():
