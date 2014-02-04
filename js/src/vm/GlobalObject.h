@@ -821,6 +821,26 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj,
 
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
+/*
+ * Convenience templates to generic constructor and prototype creation functions
+ * for ClassSpecs.
+ */
+
+template<JSNative ctor, size_t atomOffset, unsigned length>
+JSObject *
+GenericCreateConstructor(JSContext *cx, JSProtoKey key)
+{
+    JSAtom *atom = AtomStateOffsetToName(cx->runtime()->atomState, atomOffset);
+    return cx->global()->createConstructor(cx, ctor, atom, length);
+}
+
+template<const Class *clasp>
+JSObject *
+GenericCreatePrototype(JSContext *cx, JSProtoKey key)
+{
+    return cx->global()->createBlankPrototype(cx, clasp);
+}
+
 } // namespace js
 
 template<>
