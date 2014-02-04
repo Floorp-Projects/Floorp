@@ -39,3 +39,6 @@ FORCE_SHARED_LIB = True
 EXPORT_LIBRARY = True
 IS_COMPONENT = True
 NO_VISIBILITY_FLAGS = True
+
+if CONFIG['_MSC_VER']:
+    DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']

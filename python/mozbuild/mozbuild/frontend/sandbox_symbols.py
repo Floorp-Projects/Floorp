@@ -149,6 +149,13 @@ VARIABLES = {
            })
         """, None),
 
+    'DELAYLOAD_DLLS': (list, list,
+        """Delay-loaded DLLs.
+
+        This variable contains a list of DLL files which the module being linked
+        should load lazily.  This only has an effect when building with MSVC.
+        """, 'binaries'),
+
     'DIRS': (list, list,
         """Child directories to descend into looking for build frontend files.
 

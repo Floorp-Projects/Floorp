@@ -530,6 +530,12 @@ ifeq ($(OS_ARCH),GNU)
 OS_CPPFLAGS += -DPATH_MAX=1024 -DMAXPATHLEN=1024
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef USE_DELAYIMP
+OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
+endif
+endif
+
 #
 # MINGW32
 #

@@ -298,38 +298,6 @@ endif
 ifdef MOZ_METRO
 OS_LIBS += $(call EXPAND_LIBNAME,uiautomationcore runtimeobject)
 endif
-ifdef _MSC_VER
-OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:psapi.dll \
-  -DELAYLOAD:dbghelp.dll \
-  -DELAYLOAD:rasapi32.dll \
-  -DELAYLOAD:rasdlg.dll \
-  -DELAYLOAD:comdlg32.dll \
-  -DELAYLOAD:winspool.drv \
-  -DELAYLOAD:secur32.dll \
-  -DELAYLOAD:wininet.dll \
-  $(NULL)
-
-# See nsDllMain for an explanation
-ifdef MOZ_METRO
-ifdef MOZ_DEBUG
-EXTRA_DSO_LDOPTS += -DELAYLOAD:VCCORLIB$(CRTDLLVERSION)D.DLL
-else
-EXTRA_DSO_LDOPTS += -DELAYLOAD:VCCORLIB$(CRTDLLVERSION).DLL
-endif
-EXTRA_DSO_LDOPTS += -DELAYLOAD:API-MS-WIN-CORE-WINRT-L$(CRTEXPDLLVERSION).DLL
-EXTRA_DSO_LDOPTS += -DELAYLOAD:API-MS-WIN-CORE-WINRT-STRING-L$(CRTEXPDLLVERSION).DLL
-EXTRA_DSO_LDOPTS += -DELAYLOAD:uiautomationcore.dll
-endif
-
-ifdef ACCESSIBILITY
-EXTRA_DSO_LDOPTS += -DELAYLOAD:oleacc.dll
-endif
-ifdef MOZ_WEBRTC
-EXTRA_DSO_LDOPTS += -DELAYLOAD:msdmo.dll
-endif
-endif
 ifdef MOZ_GAMEPAD
 ifndef GNU_CC
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
