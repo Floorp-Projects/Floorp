@@ -26,6 +26,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsThemeConstants.h"
 #include "LayerTreeInvalidation.h"
 
