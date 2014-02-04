@@ -246,6 +246,10 @@ class TreeMetadataEmitter(LoggingMixin):
         if sandbox['NO_VISIBILITY_FLAGS']:
             passthru.variables['VISIBILITY_FLAGS'] = ''
 
+        if sandbox['DELAYLOAD_DLLS']:
+            passthru.variables['DELAYLOAD_LDFLAGS'] = [('-DELAYLOAD:%s' % dll) for dll in sandbox['DELAYLOAD_DLLS']]
+            passthru.variables['USE_DELAYIMP'] = True
+
         varmap = dict(
             SOURCES={
                 '.s': 'ASFILES',
