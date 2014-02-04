@@ -1862,6 +1862,14 @@ LIRGenerator::visitToString(MToString *ins)
         return assignSafepoint(lir, ins);
       }
 
+      case MIRType_Float32: {
+        LFloatToString *lir = new(alloc()) LFloatToString(useRegister(opd), temp());
+
+        if (!define(lir, ins))
+            return false;
+        return assignSafepoint(lir, ins);
+      }
+
       case MIRType_Int32: {
         LIntToString *lir = new(alloc()) LIntToString(useRegister(opd));
 

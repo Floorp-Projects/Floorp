@@ -668,6 +668,8 @@ JSString *RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp,
 JSString *StringReplace(JSContext *cx, HandleString string, HandleString pattern,
                         HandleString repl);
 
+JSString *FloatToString(ThreadSafeContext *cx, float f);
+
 #ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
 void AssertValidStringPtr(JSContext *cx, JSString *str);
