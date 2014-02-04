@@ -264,7 +264,7 @@ function getTabForWindow(window) {
         return tab;
     }
   }
-  return null;
+  return null; 
 }
 
 function getTabURL(tab) {
