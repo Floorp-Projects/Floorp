@@ -228,6 +228,8 @@
 
     "dom/imptests/html/webgl":"",
 
+	"dom/apps/tests/test_packaged_app_update.html":"bug 915879",
+
     "dom/browser-element/mochitest/test_browserElement_inproc_Alert.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_AppFramePermission.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_AppWindowNamespace.html":"",
