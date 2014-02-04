@@ -832,8 +832,7 @@ js::TypeOfValue(const Value &v)
  * of the with block with sp + stackIndex.
  */
 static bool
-EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stackDepth,
-          HandleObject staticWith)
+EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, HandleObject staticWith)
 {
     JS_ASSERT(staticWith->is<StaticWithObject>());
     RootedObject obj(cx);
@@ -846,8 +845,7 @@ EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stack
     }
 
     RootedObject scopeChain(cx, frame.scopeChain());
-    DynamicWithObject *withobj = DynamicWithObject::create(cx, obj, scopeChain, stackDepth,
-                                                           staticWith);
+    DynamicWithObject *withobj = DynamicWithObject::create(cx, obj, scopeChain, staticWith);
     if (!withobj)
         return false;
 
@@ -1752,28 +1750,16 @@ CASE(JSOP_ENTERWITH)
     RootedValue &val = rootValue0;
     RootedObject &staticWith = rootObject0;
     val = REGS.sp[-1];
+    REGS.sp--;
     staticWith = script->getObject(REGS.pc);
 
-    if (!EnterWith(cx, REGS.fp(), val, REGS.stackDepth() - 1, staticWith))
+    if (!EnterWith(cx, REGS.fp(), val, staticWith))
         goto error;
-
-    /*
-     * We must ensure that different "with" blocks have different stack depth
-     * associated with them. This allows the try handler search to properly
-     * recover the scope chain. Thus we must keep the stack at least at the
-     * current level.
-     *
-     * We set sp[-1] to the current "with" object to help asserting the
-     * enter/leave balance in [leavewith].
-     */
-    REGS.sp[-1].setObject(*REGS.fp()->scopeChain());
 }
 END_CASE(JSOP_ENTERWITH)
 
 CASE(JSOP_LEAVEWITH)
-    JS_ASSERT(REGS.sp[-1].toObject() == *REGS.fp()->scopeChain());
     REGS.fp()->popWith(cx);
-    REGS.sp--;
 END_CASE(JSOP_LEAVEWITH)
 
 CASE(JSOP_RETURN)

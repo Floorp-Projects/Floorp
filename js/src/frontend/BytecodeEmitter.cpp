@@ -544,8 +544,6 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
             break;
 
           case STMT_WITH:
-            /* There's a With object on the stack that we need to pop. */
-            FLUSH_POPS();
             if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
                 return false;
             JS_ASSERT(stmt->isNestedScope);

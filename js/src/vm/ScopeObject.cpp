@@ -403,7 +403,7 @@ CloneStaticWithObject(JSContext *cx, HandleObject enclosingScope, Handle<StaticW
 }
 
 DynamicWithObject *
-DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclosing, uint32_t depth,
+DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclosing,
                           HandleObject staticWith)
 {
     JS_ASSERT(staticWith->is<StaticWithObject>());
@@ -426,7 +426,6 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
         return nullptr;
 
     obj->as<ScopeObject>().setEnclosingScope(enclosing);
-    obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
     obj->setFixedSlot(OBJECT_SLOT, ObjectValue(*object));
     obj->setFixedSlot(THIS_SLOT, ObjectValue(*thisp));
 
