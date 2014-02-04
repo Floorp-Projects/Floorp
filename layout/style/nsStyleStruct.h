@@ -390,6 +390,10 @@ struct nsStyleBackground {
     // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
     void SetInitialPercentValues(float aPercentVal);
 
+    // Sets both mXPosition and mYPosition to 0 (app units) for the
+    // initial property-value as a length with no percentage component.
+    void SetInitialZeroValues();
+
     // True if the effective background image position described by this depends
     // on the size of the corresponding frame.
     bool DependsOnPositioningAreaSize() const {
@@ -2011,6 +2015,11 @@ struct nsStyleDisplay {
     return nsChangeHint(0);
   }
 
+  // XXXdholbert, XXXkgilbert nsStyleBackground::Position should probably be
+  // moved to a different scope, since we're now using it in multiple style
+  // structs.
+  typedef nsStyleBackground::Position Position;
+
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   nsRefPtr<mozilla::css::URLValue> mBinding;    // [reset]
@@ -2047,6 +2056,12 @@ struct nsStyleDisplay {
 
   uint8_t mTouchAction;         // [reset] see nsStyleConsts.h
   uint8_t mScrollBehavior;      // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_BEHAVIOR_*
+  uint8_t mScrollSnapTypeX;     // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
+  uint8_t mScrollSnapTypeY;     // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
+  nsStyleCoord mScrollSnapPointsX; // [reset]
+  nsStyleCoord mScrollSnapPointsY; // [reset]
+  Position mScrollSnapDestination; // [reset]
+  nsTArray<Position> mScrollSnapCoordinate; // [reset]
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or
