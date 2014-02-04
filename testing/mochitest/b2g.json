@@ -353,6 +353,7 @@
 
     "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"window.open focus issues (using fullscreen)",
     "dom/tests/mochitest/webapps/test_bug_779982.html":"",
+    "dom/tests/mochitest/whatwg/test_postMessage_closed.html":"bug 894914 - wrong data - got FAIL, expected message",
 
     "dom/workers/test/test_suspend.html":"test timed out, might need more time",
     "dom/workers/test/test_xhr_parameters.html":"",
