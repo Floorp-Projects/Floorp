@@ -289,6 +289,13 @@ static bool gCrossSlideEnabled = false;
 static bool gUseProgressiveTilePainting = false;
 
 /**
+ * Pref that enables enlarging of the displayport along one axis when its
+ * opposite's scrollable rect is within the composition bounds. That is, we
+ * don't need to pad the opposite axis.
+ */
+static bool gEnlargeDisplayPortWhenOnlyScrollable = false;
+
+/**
  * Is aAngle within the given threshold of the horizontal axis?
  * @param aAngle an angle in radians in the range [0, pi]
  * @param aThreshold an angle in radians in the range [0, pi/2]
@@ -413,6 +420,8 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
   Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
   gUseProgressiveTilePainting = gfxPlatform::UseProgressiveTilePainting();
+  Preferences::AddBoolVarCache(&gEnlargeDisplayPortWhenOnlyScrollable, "apz.enlarge_displayport_when_only_scrollable",
+    gEnlargeDisplayPortWhenOnlyScrollable);
 
   gComputedTimingFunction = new ComputedTimingFunction();
   gComputedTimingFunction->Init(
@@ -1315,6 +1324,30 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   CSSRect displayPort(scrollOffset, compositionBounds.Size());
   CSSPoint velocity = aVelocity / aFrameMetrics.mZoom;
 
+  CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
+
+  float xSkateSizeMultiplier = gXSkateSizeMultiplier,
+        ySkateSizeMultiplier = gYSkateSizeMultiplier;
+
+  if (gEnlargeDisplayPortWhenOnlyScrollable) {
+    // Check if the displayport, without being enlarged, fits tightly inside the
+    // scrollable rect. If so, we're not going to be able to enlarge it, so we
+    // should consider enlarging the opposite axis.
+    if (scrollableRect.width - compositionBounds.width <= EPSILON ||
+        aFrameMetrics.GetDisableScrollingX()) {
+      xSkateSizeMultiplier = 1.f;
+      ySkateSizeMultiplier = gYStationarySizeMultiplier;
+    }
+    // Even if we end up overwriting the previous multipliers, it doesn't
+    // matter, since this frame's scrollable rect fits within its composition
+    // bounds on both axes and we won't be enlarging either displayport axis.
+    if (scrollableRect.height - compositionBounds.height <= EPSILON ||
+        aFrameMetrics.GetDisableScrollingY()) {
+      ySkateSizeMultiplier = 1.f;
+      xSkateSizeMultiplier = gXSkateSizeMultiplier;
+    }
+  }
+
   // If scrolling is disabled here then our actual velocity is going
   // to be zero, so treat the displayport accordingly.
   if (aFrameMetrics.GetDisableScrollingX()) {
@@ -1329,12 +1362,11 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   // to minimize checkerboarding.
   EnlargeDisplayPortAlongAxis(&(displayPort.x), &(displayPort.width),
     estimatedPaintDurationMillis, velocity.x,
-    gXStationarySizeMultiplier, gXSkateSizeMultiplier);
+    gXStationarySizeMultiplier, xSkateSizeMultiplier);
   EnlargeDisplayPortAlongAxis(&(displayPort.y), &(displayPort.height),
     estimatedPaintDurationMillis, velocity.y,
-    gYStationarySizeMultiplier, gYSkateSizeMultiplier);
+    gYStationarySizeMultiplier, ySkateSizeMultiplier);
 
-  CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
   displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
