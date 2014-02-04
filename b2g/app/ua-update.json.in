@@ -5,8 +5,6 @@
 {
   // bug 826335, globo.com
   "globo.com": "\\(Mobile#(Android; Mobile",
-  // bug 826338, yahoo.com
-  "yahoo.com": "\\(Mobile#(Android; Mobile",
   // bug 826342, mercadolivre.com.br
   "mercadolivre.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826344, abril.com.br
@@ -31,8 +29,6 @@
   "orkut.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826715, noticias.uol.com.br
   "noticias.uol.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826720, olx.com.br
-  "olx.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826845, techtudo.com.br
   "techtudo.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826958, ebay.com
@@ -57,12 +53,8 @@
   "webmotors.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827661, mercadolibre.com.co
   "mercadolibre.com.co": "\\(Mobile#(Android; Mobile",
-  // bug 827668, scribd.com
-  "scribd.com": "\\(Mobile#(Android; Mobile",
   // bug 827670, elpais.com.co
   "elpais.com.co": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
-  // bug 827672, olx.com.co
-  "olx.com.co": "\\(Mobile#(Android; Mobile",
   // bug 827674, avianca.com
   "avianca.com": "\\(Mobile#(Android; Mobile",
   // bug 827678, marca.com
@@ -99,8 +91,6 @@
   "publico.es": "\\(Mobile#(Android; Mobile",
   // bug 828425, mercadolibre.com.ve
   "mercadolibre.com.ve": "\\(Mobile#(Android; Mobile",
-  // bug 828433, olx.com.ve
-  "olx.com.ve": "\\(Mobile#(Android; Mobile",
   // bug 828439, movistar.com.ve
   "movistar.com.ve": "\\(Mobile#(Android; Mobile",
   // bug 828445, bumeran.com.ve
@@ -109,14 +99,10 @@
   "movil.bankinter.es": "\\(Mobile#(Android; Mobile",
   // bug 843114, einforma.com
   "einforma.com": "\\(Mobile#(Android; Mobile",
-  // bug 843116, wwwhatsnew.com
-  "wwwhatsnew.com": "\\(Mobile#(Android; Mobile",
   // bug 843119, askthebuilder.com
   "askthebuilder.com": "\\(Mobile#(Android; Mobile",
   // bug 843121, tor.com
   "tor.com": "\\(Mobile#(Android; Mobile",
-  // bug 843124, maruccisports.com
-  "maruccisports.com": "\\(Mobile#(Android; Mobile",
   // bug 843126, es.playstation.com
   "es.playstation.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 843129, 11870.com
@@ -125,8 +111,6 @@
   "iphonejuegosgratis.com": "\\(Mobile#(Android; Mobile",
   // bug 843132, comunio.es
   "comunio.es": "\\(Mobile#(Android; Mobile",
-  // bug 843136, deviantart.com
-  "deviantart.com": "\\(Mobile#(Android; Mobile",
   // bug 843139, consumersearch.com
   "consumersearch.com": "\\(Mobile#(Android; Mobile",
   // bug 843141, foodily.com
@@ -137,14 +121,10 @@
   "games.com": "\\(Mobile#(Android; Mobile",
   // bug 843160, ehow.com
   "ehow.com": "\\(Mobile#(Android; Mobile",
-  // bug 843162, urbanspoon.com
-  "urbanspoon.com": "\\(Mobile#(Android; Mobile",
   // bug 843165, virginatlantic.com
   "virginatlantic.com": "\\(Mobile#(Android; Mobile",
   // bug 843172, zimbio.com
   "zimbio.com": "\\(Mobile#(Android; Mobile",
-  // bug 843176, tylted.com
-  "tylted.com": "\\(Mobile#(Android; Mobile",
   // bug 843178, txt2nite.com
   "txt2nite.com": "\\(Mobile#(Android; Mobile",
   // bug 843181, slashgear.com
@@ -203,10 +183,6 @@
   "eluniversal.com.mx": "\\(Mobile#(Android; Mobile",
   // bug 878642, mercadolibre.com.mx
   "mercadolibre.com.mx": "\\(Mobile#(Android; Mobile",
-  // bug 878645, olx.com.mx
-  "olx.com.mx": "\\(Mobile#(Android; Mobile",
-  // bug 878647, sat.gob.mx
-  "sat.gob.mx": "\\(Mobile#(Android; Mobile",
   // bug 878649, univision.com
   "univision.com": "\\(Mobile#(Android; Mobile",
   // bug 878653, redstarbelgrade.info
