@@ -42,9 +42,7 @@ LightweightThemeConsumer.prototype = {
   _lastScreenWidth: null,
   _lastScreenHeight: null,
   _enabled: true,
-#ifdef XP_MACOSX
-  _chromemarginDefault: undefined,
-#endif
+  _active: false,
 
   enable: function() {
     this._enabled = true;
@@ -100,8 +98,9 @@ LightweightThemeConsumer.prototype = {
     if (!this._enabled)
       return;
 
-    var root = this._doc.documentElement;
-    var active = !!aData.headerURL;
+    let root = this._doc.documentElement;
+    let active = !!aData.headerURL;
+    let stateChanging = (active != this._active);
 
     if (active) {
       root.style.color = aData.textcolor || "black";
@@ -117,6 +116,8 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme");
     }
 
+    this._active = active;
+
     _setImage(root, active, aData.headerURL);
     if (this._footerId) {
       let footer = this._doc.getElementById(this._footerId);
@@ -129,20 +130,26 @@ LightweightThemeConsumer.prototype = {
     }
 
 #ifdef XP_MACOSX
-    // Sample whether or not we draw in the titlebar by default the first time we update.
-    // If the root has no chromemargin attribute, getAttribute will return null, and
-    // we'll remove the attribute when the lw-theme is deactivated.
-    if (this._chromemarginDefault === undefined)
-      this._chromemarginDefault = root.getAttribute("chromemargin");
+    // On OS X, we extend the lightweight theme into the titlebar, which means setting
+    // the chromemargin attribute. Some XUL applications already draw in the titlebar,
+    // so we need to save the chromemargin value before we overwrite it with the value
+    // that lets us draw in the titlebar. We stash this value on the root attribute so
+    // that XUL applications have the ability to invalidate the saved value.
+    if (stateChanging) {
+      if (!root.hasAttribute("chromemargin-nonlwtheme")) {
+        root.setAttribute("chromemargin-nonlwtheme", root.getAttribute("chromemargin"));
+      }
 
-    if (active) {
-      root.setAttribute("chromemargin", "0,-1,-1,-1");
-    }
-    else {
-      if (this._chromemarginDefault)
-        root.setAttribute("chromemargin", this._chromemarginDefault);
-      else
-        root.removeAttribute("chromemargin");
+      if (active) {
+        root.setAttribute("chromemargin", "0,-1,-1,-1");
+      } else {
+        let defaultChromemargin = root.getAttribute("chromemargin-nonlwtheme");
+        if (defaultChromemargin) {
+          root.setAttribute("chromemargin", defaultChromemargin);
+        } else {
+          root.removeAttribute("chromemargin");
+        }
+      }
     }
 #endif
   }
