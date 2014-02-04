@@ -327,6 +327,11 @@
     "dom/tests/mochitest/general/test_clipboard_events.html":"clipboard undefined",
     "content/base/test/test_copypaste.html":"clipboard undefined",
     "content/base/test/test_bug166235.html":"clipboard undefined",
+	
+    "dom/tests/mochitest/dom-level0": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level1-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-html": "Bug 932350 - Frequent timeouts",
 
     "dom/tests/mochitest/general/test_idleapi_permissions.html":"",
     "dom/tests/mochitest/general/test_paste_selection.html":"No clipboard",
