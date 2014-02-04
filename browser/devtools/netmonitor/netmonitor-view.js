@@ -2343,13 +2343,9 @@ PerformanceStatisticsView.prototype = {
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled",
       data: this._sanitizeChartDataSource(aItems),
-      sorted: true,
-      totals: {
-        size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime2"),
-        cached: L10N.getStr("charts.totalCached"),
-        count: L10N.getStr("charts.totalCount")
-      }
+      strings: this._commonChartStrings,
+      totals: this._commonChartTotals,
+      sorted: true
     });
     window.emit(EVENTS.PRIMED_CACHE_CHART_DISPLAYED);
   },
@@ -2365,15 +2361,42 @@ PerformanceStatisticsView.prototype = {
       id: "#empty-cache-chart",
       title: "charts.cacheDisabled",
       data: this._sanitizeChartDataSource(aItems, true),
-      sorted: true,
-      totals: {
-        size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime2"),
-        cached: L10N.getStr("charts.totalCached"),
-        count: L10N.getStr("charts.totalCount")
-      }
+      strings: this._commonChartStrings,
+      totals: this._commonChartTotals,
+      sorted: true
     });
     window.emit(EVENTS.EMPTY_CACHE_CHART_DISPLAYED);
+  },
+
+  /**
+   * Common stringifier predicates used for items and totals in both the
+   * "primed" and "empty" cache charts.
+   */
+  _commonChartStrings: {
+    size: value => {
+      let string = L10N.numberWithDecimals(value / 1024, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("charts.sizeKB", string);
+    },
+    time: value => {
+      let string = L10N.numberWithDecimals(value / 1000, REQUEST_TIME_DECIMALS);
+      return L10N.getFormatStr("charts.totalS", string);
+    }
+  },
+  _commonChartTotals: {
+    size: total => {
+      let string = L10N.numberWithDecimals(total / 1024, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("charts.totalSize", string);
+    },
+    time: total => {
+      let string = L10N.numberWithDecimals(total / 1000, REQUEST_TIME_DECIMALS);
+      return L10N.getFormatStr("charts.totalTime2", string);
+    },
+    cached: total => {
+      return L10N.getFormatStr("charts.totalCached", total);
+    },
+    count: total => {
+      return L10N.getFormatStr("charts.totalCount", total);
+    }
   },
 
   /**
@@ -2382,9 +2405,9 @@ PerformanceStatisticsView.prototype = {
    * @param object
    *        An object containing all or some the following properties:
    *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
-   *          - title/data/sorted/totals: @see Chart.jsm for details
+   *          - title/data/strings/totals/sorted: @see Chart.jsm for details
    */
-  _createChart: function({ id, title, data, sorted, totals }) {
+  _createChart: function({ id, title, data, strings, totals, sorted }) {
     let container = $(id);
 
     // Nuke all existing charts of the specified type.
@@ -2397,8 +2420,9 @@ PerformanceStatisticsView.prototype = {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title: L10N.getStr(title),
       data: data,
-      sorted: sorted,
-      totals: totals
+      strings: strings,
+      totals: totals,
+      sorted: sorted
     });
 
     chart.on("click", (_, item) => {
@@ -2461,13 +2485,6 @@ PerformanceStatisticsView.prototype = {
         data[type].cached++;
       }
       data[type].count++;
-    }
-
-    for (let chartItem of data) {
-      let size = L10N.numberWithDecimals(chartItem.size / 1024, CONTENT_SIZE_DECIMALS);
-      let time = L10N.numberWithDecimals(chartItem.time / 1000, REQUEST_TIME_DECIMALS);
-      chartItem.size = L10N.getFormatStr("charts.sizeKB", size);
-      chartItem.time = L10N.getFormatStr("charts.totalS", time);
     }
 
     return data.filter(e => e.count > 0);
