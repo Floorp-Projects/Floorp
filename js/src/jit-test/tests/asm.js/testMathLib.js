@@ -86,3 +86,17 @@ assertAsmTypeFail('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|
 assertAsmTypeFail('glob', USE_ASM + 'var im=glob.Math.imul; function f(i) { i=i|0; i = im(i,i); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var abs=glob.Math.abs; function f(i) { i=i|0; +abs(i|0); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var abs=glob.Math.abs; function f(d) { d=+d; abs(d)|0; } return f');
+
+assertAsmTypeFail('glob', USE_ASM + 'var tau=glob.Math.TAU; function f() {} return f');
+assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { return pi | 0 } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { return +pi() } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var pi=glob.Math.PI; function f() { pi = +3; } return f');
+assertAsmLinkAlwaysFail(asmCompile('glob', USE_ASM + 'var pi=glob.Math.PI; function f() {} return f'), {});
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var pi=glob.Math.PI; function f() {} return f'), {Math: {}});
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var pi=glob.Math.PI; function f() {} return f'), {Math: {PI: Math.cos}});
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var pi=glob.Math.PI; function f() {} return f'), {Math: {PI: Math.SQRT2}});
+
+for (var c of ['E', 'LN10', 'LN2', 'LOG2E', 'LOG10E', 'PI', 'SQRT1_2', 'SQRT2']) {
+    var f = asmLink(asmCompile('glob', USE_ASM + 'var x=glob.Math.' + c +'; function f() { return +x } return f'), this);
+    assertEq(f(), eval('Math.' + c));
+}
