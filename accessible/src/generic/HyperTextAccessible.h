@@ -99,34 +99,26 @@ public:
   // HyperTextAccessible: DOM point to text offset conversions.
 
   /**
-    * Turn a DOM Node and offset into a character offset into this hypertext.
-    * Will look for closest match when the DOM node does not have an accessible
-    * object associated with it. Will return an offset for the end of
-    * the string if the node is not found.
-    *
-    * @param aNode - the node to look for
-    * @param aNodeOffset - the offset to look for
-    *                      if -1 just look directly for the node
-    *                      if >=0 and aNode is text, this represents a char offset
-    *                      if >=0 and aNode is not text, this represents a child node offset
-    * @param aResultOffset - the character offset into the current
-    *                        HyperTextAccessible
-    * @param aIsEndOffset - if true, then then this offset is not inclusive. The character
-    *                       indicated by the offset returned is at [offset - 1]. This means
-    *                       if the passed-in offset is really in a descendant, then the offset returned
-    *                       will come just after the relevant embedded object characer.
-    *                       If false, then the offset is inclusive. The character indicated
-    *                       by the offset returned is at [offset]. If the passed-in offset in inside a
-    *                       descendant, then the returned offset will be on the relevant embedded object char.
-    *
-    * @return               the accessible child which contained the offset, if
-    *                       it is within the current HyperTextAccessible,
-    *                       otherwise nullptr
-    */
-  Accessible* DOMPointToHypertextOffset(nsINode *aNode,
-                                        int32_t aNodeOffset,
-                                        int32_t* aHypertextOffset,
-                                        bool aIsEndOffset = false) const;
+   * Turn a DOM point (node and offset) into a character offset of this
+   * hypertext. Will look for closest match when the DOM node does not have
+   * an accessible object associated with it. Will return an offset for the end
+   * of the string if the node is not found.
+   *
+   * @param aNode         [in] the node to look for
+   * @param aNodeOffset   [in] the offset to look for
+   *                       if -1 just look directly for the node
+   *                       if >=0 and aNode is text, this represents a char offset
+   *                       if >=0 and aNode is not text, this represents a child node offset
+   * @param aIsEndOffset  [in] if true, then then this offset is not inclusive. The character
+   *                       indicated by the offset returned is at [offset - 1]. This means
+   *                       if the passed-in offset is really in a descendant, then the offset returned
+   *                       will come just after the relevant embedded object characer.
+   *                       If false, then the offset is inclusive. The character indicated
+   *                       by the offset returned is at [offset]. If the passed-in offset in inside a
+   *                       descendant, then the returned offset will be on the relevant embedded object char.
+   */
+  int32_t DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
+                           bool aIsEndOffset = false) const;
 
   /**
    * Convert start and end hypertext offsets into DOM range.
@@ -480,7 +472,7 @@ protected:
    * Return hyper text offset for the specified bound of the given DOM range.
    * If the bound is outside of the hyper text then offset value is either
    * 0 or number of characters of hyper text, it depends on type of requested
-   * offset. The method is a wrapper for DOMPointToHypertextOffset.
+   * offset. The method is a wrapper for DOMPointToOffset.
    *
    * @param aRange          [in] the given range
    * @param aIsStartBound   [in] specifies whether the required range bound is

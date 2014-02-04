@@ -246,7 +246,7 @@ NS_IMETHODIMP _OldCacheEntryWrapper::GetDataSize(int64_t *aSize)
   return NS_OK;
 }
 
-NS_IMETHODIMP _OldCacheEntryWrapper::GetPersistToDisk(bool *aPersistToDisk)
+NS_IMETHODIMP _OldCacheEntryWrapper::GetPersistent(bool *aPersistToDisk)
 {
   if (!mOldDesc) {
     return NS_ERROR_NULL_POINTER;
@@ -263,34 +263,8 @@ NS_IMETHODIMP _OldCacheEntryWrapper::GetPersistToDisk(bool *aPersistToDisk)
   return NS_OK;
 }
 
-NS_IMETHODIMP _OldCacheEntryWrapper::SetPersistToDisk(bool aPersistToDisk)
-{
-  if (!mOldDesc) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv;
-
-  nsCacheStoragePolicy policy;
-  rv = mOldDesc->GetStoragePolicy(&policy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (policy == nsICache::STORE_OFFLINE) {
-    return aPersistToDisk
-      ? NS_OK
-      : NS_ERROR_NOT_AVAILABLE;
-  }
-
-  policy = aPersistToDisk
-    ? nsICache::STORE_ON_DISK
-    : nsICache::STORE_IN_MEMORY;
-  rv = mOldDesc->SetStoragePolicy(policy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP _OldCacheEntryWrapper::Recreate(nsICacheEntry** aResult)
+NS_IMETHODIMP _OldCacheEntryWrapper::Recreate(bool aMemoryOnly,
+                                              nsICacheEntry** aResult)
 {
   NS_ENSURE_TRUE(mOldDesc, NS_ERROR_NOT_AVAILABLE);
 
@@ -302,6 +276,9 @@ NS_IMETHODIMP _OldCacheEntryWrapper::Recreate(nsICacheEntry** aResult)
     return NS_ERROR_NOT_AVAILABLE;
 
   LOG(("_OldCacheEntryWrapper::Recreate [this=%p]", this));
+
+  if (aMemoryOnly)
+    mOldDesc->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
 
   nsCOMPtr<nsICacheEntry> self(this);
   self.forget(aResult);
