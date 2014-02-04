@@ -22,7 +22,7 @@ function test() {
     gSearchView = gDebugger.DebuggerView.GlobalSearch;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(doSearch)
       .then(testFocusLost)
       .then(doSearch)
@@ -53,7 +53,7 @@ function doSearch() {
       info("Current source url:\n" + gSources.selectedValue);
       info("Debugger editor text:\n" + gEditor.getText());
 
-      ok(isCaretPos(gPanel, 6),
+      ok(isCaretPos(gPanel, 1),
         "The editor shouldn't have jumped to a matching line yet.");
       ok(gSources.selectedValue.contains("-02.js"),
         "The current source shouldn't have changed after a global search.");
