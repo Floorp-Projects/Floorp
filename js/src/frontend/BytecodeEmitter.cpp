@@ -96,7 +96,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     evalCaller(evalCaller),
     topStmt(nullptr),
     topScopeStmt(nullptr),
-    blockChain(sc->context),
+    staticScope(sc->context),
     atomIndices(sc->context),
     firstLine(lineNum),
     stackDepth(0), maxStackDepth(0),
@@ -493,7 +493,7 @@ class NonLocalExitScope {
         savedScopeIndex(bce->blockScopeList.length()),
         savedDepth(bce->stackDepth),
         openScopeIndex(UINT32_MAX) {
-        if (bce->blockChain) {
+        if (bce->staticScope) {
             StmtInfoBCE *stmt = bce->topStmt;
             while (1) {
                 JS_ASSERT(stmt);
@@ -578,8 +578,7 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
         }
 
         if (stmt->isBlockScope) {
-            JS_ASSERT(stmt->blockObj);
-            StaticBlockObject &blockObj = *stmt->blockObj;
+            StaticBlockObject &blockObj = stmt->staticBlock();
             if (!popScopeForNonLocalExit(blockObj, stmt->blockScopeIndex))
                 return false;
             npops += blockObj.slotCount();
@@ -646,8 +645,8 @@ PushStatementBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, StmtType type, ptrdiff
 static JSObject *
 EnclosingStaticScope(BytecodeEmitter *bce)
 {
-    if (bce->blockChain)
-        return bce->blockChain;
+    if (bce->staticScope)
+        return bce->staticScope;
 
     if (!bce->sc->isFunctionBox()) {
         JS_ASSERT(!bce->parent);
@@ -744,7 +743,7 @@ EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmit
 // An element in the "block scope array" specifies the PC range, and links to a
 // StaticBlockObject in the object list of the script.  That block is linked to
 // the previous block in the scope, if any.  The static block chain at any
-// pre-retire PC can be retrieved using JSScript::getBlockScope(jsbytecode *pc).
+// pre-retire PC can be retrieved using JSScript::getStaticScope(jsbytecode *pc).
 //
 // When PUSHBLOCKSCOPE is executed, it assumes that the block's locals are
 // already on the stack.  Initial values of "aliased" locals are copied from the
@@ -783,9 +782,9 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, O
                 unsigned extraSlots)
 {
     uint32_t parent = BlockScopeNote::NoBlockScopeIndex;
-    if (bce->blockChain) {
+    if (bce->staticScope) {
         StmtInfoBCE *stmt = bce->topScopeStmt;
-        for (; stmt->blockObj != bce->blockChain; stmt = stmt->down) {}
+        for (; stmt->staticScope != bce->staticScope; stmt = stmt->down) {}
         parent = stmt->blockScopeIndex;
     }
 
@@ -810,7 +809,7 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, O
         return false;
 
     PushStatementBCE(bce, stmt, STMT_BLOCK, bce->offset());
-    blockObj->initEnclosingStaticScope(EnclosingStaticScope(bce));
+    blockObj->initEnclosingNestedScope(EnclosingStaticScope(bce));
     FinishPushBlockScope(bce, stmt, *blockObj);
 
     JS_ASSERT(stmt->isBlockScope);
@@ -846,12 +845,13 @@ LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce)
     JS_ASSERT(bce->blockScopeList.list[blockScopeIndex].length == 0);
     uint32_t blockObjIndex = bce->blockScopeList.list[blockScopeIndex].index;
     ObjectBox *blockObjBox = bce->objectList.find(blockObjIndex);
-    StaticBlockObject *blockObj = &blockObjBox->object->as<StaticBlockObject>();
-    JS_ASSERT(stmt->blockObj == blockObj);
-    JS_ASSERT(blockObj == bce->blockChain);
+    NestedScopeObject *staticScope = &blockObjBox->object->as<NestedScopeObject>();
+    JS_ASSERT(stmt->staticScope == staticScope);
+    JS_ASSERT(staticScope == bce->staticScope);
 #endif
 
-    bool blockOnChain = bce->blockChain->needsClone();
+    JS_ASSERT(bce->staticScope->is<StaticBlockObject>());
+    bool blockOnChain = bce->staticScope->as<StaticBlockObject>().needsClone();
 
     if (!PopStatementBCE(cx, bce))
         return false;
@@ -998,16 +998,18 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmit
     return true;
 }
 
+// Compute the number of nested scope objects that will actually be on the scope
+// chain at runtime, given the BCE's current staticScope.
 static unsigned
-ClonedBlockDepth(BytecodeEmitter *bce)
+DynamicNestedScopeDepth(BytecodeEmitter *bce)
 {
-    unsigned clonedBlockDepth = 0;
-    for (StaticBlockObject *b = bce->blockChain; b; b = b->enclosingBlock()) {
-        if (b->needsClone())
-            ++clonedBlockDepth;
+    unsigned depth = 0;
+    for (NestedScopeObject *b = bce->staticScope; b; b = b->enclosingNestedScope()) {
+        if (!b->is<StaticBlockObject>() || b->as<StaticBlockObject>().needsClone())
+            ++depth;
     }
 
-    return clonedBlockDepth;
+    return depth;
 }
 
 static bool
@@ -1078,7 +1080,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
          * enclosing function scope of the definition being accessed.
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
-            skippedScopes += ClonedBlockDepth(bceOfDef);
+            skippedScopes += DynamicNestedScopeDepth(bceOfDef);
             FunctionBox *funbox = bceOfDef->sc->asFunctionBox();
             if (funbox->isHeavyweight()) {
                 skippedScopes++;
@@ -1093,30 +1095,33 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
     }
 
     /*
-     * The final part of the skippedScopes computation depends on the type of variable. An arg or
-     * local variable is at the outer scope of a function and so includes the full
-     * ClonedBlockDepth. A let/catch-binding requires a search of the block chain to see how many
-     * (dynamic) block objects to skip.
+     * The final part of the skippedScopes computation depends on the type of
+     * variable. An arg or local variable is at the outer scope of a function
+     * and so includes the full DynamicNestedScopeDepth. A let/catch-binding
+     * requires a search of the block chain to see how many (dynamic) block
+     * objects to skip.
      */
     ScopeCoordinate sc;
     if (IsArgOp(pn->getOp())) {
-        if (!AssignHops(bce, pn, skippedScopes + ClonedBlockDepth(bceOfDef), &sc))
+        if (!AssignHops(bce, pn, skippedScopes + DynamicNestedScopeDepth(bceOfDef), &sc))
             return false;
         JS_ALWAYS_TRUE(LookupAliasedNameSlot(bceOfDef->script, pn->name(), &sc));
     } else {
         JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
         uint32_t local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
-            if (!AssignHops(bce, pn, skippedScopes + ClonedBlockDepth(bceOfDef), &sc))
+            if (!AssignHops(bce, pn, skippedScopes + DynamicNestedScopeDepth(bceOfDef), &sc))
                 return false;
             JS_ALWAYS_TRUE(LookupAliasedNameSlot(bceOfDef->script, pn->name(), &sc));
         } else {
             uint32_t depth = local - bceOfDef->script->bindings.numVars();
-            Rooted<StaticBlockObject*> b(cx, bceOfDef->blockChain);
+            JS_ASSERT(bceOfDef->staticScope->is<StaticBlockObject>());
+            Rooted<StaticBlockObject*> b(cx, &bceOfDef->staticScope->as<StaticBlockObject>());
             while (!b->containsVarAtDepth(depth)) {
                 if (b->needsClone())
                     skippedScopes++;
                 b = b->enclosingBlock();
+                JS_ASSERT(b);
             }
             if (!AssignHops(bce, pn, skippedScopes, &sc))
                 return false;
@@ -4865,7 +4870,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         if (fun->isInterpretedLazy()) {
             if (!fun->lazyScript()->sourceObject()) {
-                JSObject *scope = bce->blockChain;
+                JSObject *scope = bce->staticScope;
                 if (!scope && bce->sc->isFunctionBox())
                     scope = bce->sc->asFunctionBox()->function();
                 JSObject *source = bce->script->sourceObject();
