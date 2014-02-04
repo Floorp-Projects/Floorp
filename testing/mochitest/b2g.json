@@ -382,6 +382,8 @@
     "layout/generic/test/test_selection_expanding.html":"mouse selection not working",
 
     "layout/style/test/test_transitions_per_property.html":"times out, needs more time + various failures",
+	"layout/style/test/test_initial_storage.html":"bug 965655",
+	"layout/style/test/test_value_storage.html":"bug 965655",
 
     "content/html/content/test/test_bug209275.xhtml":"timed out, 47 tests, bug 870262, :visited support",
     "content/html/content/test/test_bug481335.xhtml":"timed out, bug 870262, :visited support",
