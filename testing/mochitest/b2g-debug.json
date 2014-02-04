@@ -450,6 +450,7 @@
     "content/html/content/test/test_ignoreuserfocus.html": "debug-only failure",
     "docshell/test/test_bug570341.html": "debug-only failure",
     "docshell/test/test_bug529119-2.html": "debug-only failure",
+    "docshell/test/navigation/test_bug430723.html": "bug 874423",
     "dom/apps/tests/test_app_update.html": "debug-only failure",
     "dom/apps/tests/test_packaged_app_install.html": "debug-only failure",
     "dom/apps/tests/test_packaged_app_update.html": "debug-only timeout",

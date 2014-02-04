@@ -1,6 +1,6 @@
 # FreeType 2 top Jamfile.
 #
-# Copyright 2001-2011 by
+# Copyright 2001-2011, 2013 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -140,9 +140,9 @@ DEFINES += FT2_BUILD_LIBRARY ;
 # FT2_MULTI = true ;
 
 
-# The file <freetype/config/ftheader.h> is used to define macros that are
-# later used in #include statements.  It needs to be parsed in order to
-# record these definitions.
+# The file <config/ftheader.h> is used to define macros that are later used
+# in #include statements.  It needs to be parsed in order to record these
+# definitions.
 #
 HDRMACRO  [ FT2_SubDir  include freetype config ftheader.h ] ;
 HDRMACRO  [ FT2_SubDir  include freetype internal internal.h ] ;
@@ -177,7 +177,7 @@ actions GenExportSymbols1 bind APINAMES
   $(APINAMES) $(2) > $(1)
 }
 
-GenExportSymbols  ftexport.sym : include/freetype include/freetype/cache ;
+GenExportSymbols  ftexport.sym : include include/cache ;
 
 # Test files (hinter debugging).  Only used by FreeType developers.
 #
@@ -195,7 +195,7 @@ rule RefDoc
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.0 --output=$(DOC_DIR) $(FT2_INCLUDE)/freetype/*.h $(FT2_INCLUDE)/freetype/config/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.2 --output=$(DOC_DIR) $(FT2_INCLUDE)/*.h $(FT2_INCLUDE)/config/*.h
 }
 
 RefDoc  refdoc ;
