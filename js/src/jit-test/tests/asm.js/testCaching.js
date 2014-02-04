@@ -98,3 +98,4 @@ assertEq(asmLink(asmCompileCached("g","ffis", USE_ASM + "var x=ffis.x|0; functio
 var i32 = new Int32Array(4096);
 i32[4] = 42;
 assertEq(asmLink(asmCompileCached("g","ffis","buf", USE_ASM + "var i32=new g.Int32Array(buf); function f(i) { i=i|0; return i32[i>>2]|0 } return f"), this, null, i32.buffer)(4*4), 42);
+assertEq(asmLink(asmCompileCached('glob', USE_ASM + 'var x=glob.Math.PI; function f() { return +x } return f'), this)(), Math.PI);
