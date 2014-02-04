@@ -229,22 +229,3 @@ function testFloorDouble() {
 }
 test(setupFloor, testFloor);
 test(setupFloorDouble, testFloorDouble);
-
-function setupTestToString() {
-    setupFloor();
-    setupFloorDouble();
-    f32[8] = 4 / 3;
-    f32[9] = 4;
-}
-function testToString() {
-    for (var i = 0; i < 10; ++i) {
-        var f = f32[i];
-        var str = f + '';
-        assertFloat32(f, true);
-
-        assertEq(str, (f + -0) + '');
-        if (f !== -0) // -0 + '' === 0
-            assertEq(parseFloat(str), f);
-    }
-}
-test(setupFloorDouble, testToString);

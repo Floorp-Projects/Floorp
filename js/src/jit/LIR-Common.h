@@ -3146,25 +3146,6 @@ class LDoubleToString : public LInstructionHelper<1, 1, 1>
     }
 };
 
-// Convert a float32 hosted on one definition to a string with a function call.
-class LFloatToString : public LInstructionHelper<1, 1, 1>
-{
-  public:
-    LIR_HEADER(FloatToString)
-
-    LFloatToString(const LAllocation &input, const LDefinition &temp) {
-        setOperand(0, input);
-        setTemp(0, temp);
-    }
-
-    const LDefinition *tempInt() {
-        return getTemp(0);
-    }
-    const MToString *mir() {
-        return mir_->toToString();
-    }
-};
-
 // Convert a primitive to a string with a function call.
 class LPrimitiveToString : public LInstructionHelper<1, BOX_PIECES, 1>
 {
