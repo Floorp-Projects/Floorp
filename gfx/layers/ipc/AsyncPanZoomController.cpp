@@ -1302,7 +1302,7 @@ EnlargeDisplayPortAlongAxis(float* aOutOffset, float* aOutLength,
   // time. Setting the gVelocityBias pref appropriately can cancel this out if so
   // desired.
   double paintFactor = (gUsePaintDuration ? aEstimatedPaintDurationMillis : 50.0);
-  *aOutOffset += (aVelocity * aEstimatedPaintDurationMillis * gVelocityBias);
+  *aOutOffset += (aVelocity * paintFactor * gVelocityBias);
 }
 
 /* static */
