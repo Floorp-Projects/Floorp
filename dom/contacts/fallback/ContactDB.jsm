@@ -28,16 +28,6 @@ const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
-function optionalDate(aValue) {
-  if (aValue) {
-    if (!(aValue instanceof Date)) {
-      return new Date(aValue);
-    }
-    return aValue;
-  }
-  return undefined;
-}
-
 function exportContact(aRecord) {
   if (aRecord) {
     delete aRecord.search;
@@ -182,7 +172,16 @@ ContactDB.prototype = {
       aDb.createObjectStore(REVISION_STORE).put(0, REVISION_KEY);
     }
 
-    if (DEBUG) debug("upgrade schema from: " + aOldVersion + " to " + aNewVersion + " called!");
+    let valueUpgradeSteps = [];
+
+    function scheduleValueUpgrade(upgradeFunc) {
+      var length = valueUpgradeSteps.push(upgradeFunc);
+      if (DEBUG) debug("Scheduled a value upgrade function, index " + (length - 1));
+    }
+
+    // We always output this debug line because it's useful and the noise ratio
+    // very low.
+    debug("upgrade schema from: " + aOldVersion + " to " + aNewVersion + " called!");
     let db = aDb;
     let objectStore;
 
@@ -491,45 +490,34 @@ ContactDB.prototype = {
       function upgrade12to13() {
         if (DEBUG) debug("Add phone substring to the search index if appropriate for country");
         if (this.substringMatching) {
-          if (!objectStore) {
-            objectStore = aTransaction.objectStore(STORE_NAME);
-          }
-          objectStore.openCursor().onsuccess = function(event) {
-            let cursor = event.target.result;
-            if (cursor) {
-              if (cursor.value.properties.tel) {
-                cursor.value.search.parsedTel = cursor.value.search.parsedTel || [];
-                cursor.value.properties.tel.forEach(
-                  function(tel) {
-                    let normalized = PhoneNumberUtils.normalize(tel.value.toString());
-                    if (normalized) {
-                      if (this.substringMatching && normalized.length > this.substringMatching) {
-                        let sub = normalized.slice(-this.substringMatching);
-                        if (cursor.value.search.parsedTel.indexOf(sub) === -1) {
-                          if (DEBUG) debug("Adding substring index: " + tel + ", " + sub);
-                          cursor.value.search.parsedTel.push(sub);
-                        }
+          scheduleValueUpgrade(function upgradeValue12to13(value) {
+            if (value.properties.tel) {
+              value.search.parsedTel = value.search.parsedTel || [];
+              value.properties.tel.forEach(
+                function(tel) {
+                  let normalized = PhoneNumberUtils.normalize(tel.value.toString());
+                  if (normalized) {
+                    if (this.substringMatching && normalized.length > this.substringMatching) {
+                      let sub = normalized.slice(-this.substringMatching);
+                      if (value.search.parsedTel.indexOf(sub) === -1) {
+                        if (DEBUG) debug("Adding substring index: " + tel + ", " + sub);
+                        value.search.parsedTel.push(sub);
                       }
                     }
-                  }.bind(this)
-                );
-                cursor.update(cursor.value);
-              }
-              cursor.continue();
+                  }
+                }.bind(this)
+              );
+              return true;
             } else {
-              next();
+              return false;
             }
-          }.bind(this);
-        } else {
-          next();
+          }.bind(this));
         }
+        next();
       },
       function upgrade13to14() {
         if (DEBUG) debug("Cleaning up empty substring entries in telMatch index");
-        if (!objectStore) {
-          objectStore = aTransaction.objectStore(STORE_NAME);
-        }
-        objectStore.openCursor().onsuccess = function(event) {
+        scheduleValueUpgrade(function upgradeValue13to14(value) {
           function removeEmptyStrings(value) {
             if (value) {
               const oldLength = value.length;
@@ -542,92 +530,70 @@ ContactDB.prototype = {
             }
           }
 
-          let cursor = event.target.result;
-          if (cursor) {
-            let modified = removeEmptyStrings(cursor.value.search.parsedTel);
-            let modified2 = removeEmptyStrings(cursor.value.search.tel);
-            if (modified || modified2) {
-              cursor.update(cursor.value);
-            }
-            cursor.continue();
-          } else {
-            next();
-          }
-        };
+          let modified = removeEmptyStrings(value.search.parsedTel);
+          let modified2 = removeEmptyStrings(value.search.tel);
+          return (modified || modified2);
+        });
+
+        next();
       },
       function upgrade14to15() {
         if (DEBUG) debug("Fix array properties saved as scalars");
-        if (!objectStore) {
-          objectStore = aTransaction.objectStore(STORE_NAME);
-        }
         const ARRAY_PROPERTIES = ["photo", "adr", "email", "url", "impp", "tel",
                                  "name", "honorificPrefix", "givenName",
                                  "additionalName", "familyName", "honorificSuffix",
                                  "nickname", "category", "org", "jobTitle",
                                  "note", "key"];
         const PROPERTIES_WITH_TYPE = ["adr", "email", "url", "impp", "tel"];
-        objectStore.openCursor().onsuccess = function(event) {
-          let cursor = event.target.result;
+
+        scheduleValueUpgrade(function upgradeValue14to15(value) {
           let changed = false;
-          if (cursor) {
-            let props = cursor.value.properties;
-            for (let prop of ARRAY_PROPERTIES) {
-              if (props[prop]) {
-                if (!Array.isArray(props[prop])) {
-                  cursor.value.properties[prop] = [props[prop]];
-                  changed = true;
-                }
-                if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
-                  let subprop = cursor.value.properties[prop];
-                  for (let i = 0; i < subprop.length; ++i) {
-                    if (!Array.isArray(subprop[i].type)) {
-                      cursor.value.properties[prop][i].type = [subprop[i].type];
-                      changed = true;
-                    }
+
+          let props = value.properties;
+          for (let prop of ARRAY_PROPERTIES) {
+            if (props[prop]) {
+              if (!Array.isArray(props[prop])) {
+                value.properties[prop] = [props[prop]];
+                changed = true;
+              }
+              if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
+                let subprop = value.properties[prop];
+                for (let i = 0; i < subprop.length; ++i) {
+                  if (!Array.isArray(subprop[i].type)) {
+                    value.properties[prop][i].type = [subprop[i].type];
+                    changed = true;
                   }
                 }
               }
             }
-            if (changed) {
-              cursor.update(cursor.value);
-            }
-            cursor.continue();
-          } else {
-           next();
           }
-        };
+
+          return changed;
+        });
+
+        next();
       },
       function upgrade15to16() {
         if (DEBUG) debug("Fix Date properties");
-        if (!objectStore) {
-          objectStore = aTransaction.objectStore(STORE_NAME);
-        }
         const DATE_PROPERTIES = ["bday", "anniversary"];
-        objectStore.openCursor().onsuccess = function(event) {
-          let cursor = event.target.result;
+
+        scheduleValueUpgrade(function upgradeValue15to16(value) {
           let changed = false;
-          if (cursor) {
-            let props = cursor.value.properties;
-            for (let prop of DATE_PROPERTIES) {
-              if (props[prop] && !(props[prop] instanceof Date)) {
-                cursor.value.properties[prop] = new Date(props[prop]);
-                changed = true;
-              }
+          let props = value.properties;
+          for (let prop of DATE_PROPERTIES) {
+            if (props[prop] && !(props[prop] instanceof Date)) {
+              value.properties[prop] = new Date(props[prop]);
+              changed = true;
             }
-            if (changed) {
-              cursor.update(cursor.value);
-            }
-            cursor.continue();
-          } else {
-           next();
           }
-        };
+
+          return changed;
+        });
+
+        next();
       },
       function upgrade16to17() {
         if (DEBUG) debug("Fix array with null values");
-        if (!objectStore) {
-          objectStore = aTransaction.objectStore(STORE_NAME);
-        }
         const ARRAY_PROPERTIES = ["photo", "adr", "email", "url", "impp", "tel",
                                  "name", "honorificPrefix", "givenName",
                                  "additionalName", "familyName", "honorificSuffix",
@@ -638,7 +604,9 @@ ContactDB.prototype = {
 
         const DATE_PROPERTIES = ["bday", "anniversary"];
 
-        objectStore.openCursor().onsuccess = function(event) {
+        scheduleValueUpgrade(function upgradeValue16to17(value) {
+          let changed;
+
           function filterInvalidValues(val) {
             let shouldKeep = val != null; // null or undefined
             if (!shouldKeep) {
@@ -651,56 +619,53 @@ ContactDB.prototype = {
             return array.filter(filterInvalidValues);
           }
 
-          let cursor = event.target.result;
-          let changed = false;
-          if (cursor) {
-            let props = cursor.value.properties;
+          let props = value.properties;
 
-            for (let prop of ARRAY_PROPERTIES) {
+          for (let prop of ARRAY_PROPERTIES) {
 
-              // properties that were empty strings weren't converted to arrays
-              // in upgrade14to15
-              if (props[prop] != null && !Array.isArray(props[prop])) {
-                props[prop] = [props[prop]];
-                changed = true;
-              }
+            // properties that were empty strings weren't converted to arrays
+            // in upgrade14to15
+            if (props[prop] != null && !Array.isArray(props[prop])) {
+              props[prop] = [props[prop]];
+              changed = true;
+            }
 
-              if (props[prop] && props[prop].length) {
-                props[prop] = filteredArray(props[prop]);
+            if (props[prop] && props[prop].length) {
+              props[prop] = filteredArray(props[prop]);
 
-                if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
-                  let subprop = props[prop];
+              if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
+                let subprop = props[prop];
 
-                  for (let i = 0; i < subprop.length; ++i) {
-                    let curSubprop = subprop[i];
-                    // upgrade14to15 transformed type props into an array
-                    // without checking invalid values
-                    if (curSubprop.type) {
-                      curSubprop.type = filteredArray(curSubprop.type);
-                    }
+                for (let i = 0; i < subprop.length; ++i) {
+                  let curSubprop = subprop[i];
+                  // upgrade14to15 transformed type props into an array
+                  // without checking invalid values
+                  if (curSubprop.type) {
+                    curSubprop.type = filteredArray(curSubprop.type);
                   }
                 }
               }
             }
-
-            for (let prop of DATE_PROPERTIES) {
-              if (props[prop] != null && !(props[prop] instanceof Date)) {
-                // props[prop] is probably '' and wasn't converted
-                // in upgrade15to16
-                props[prop] = null;
-                changed = true;
-              }
-            }
-
-            if (changed) {
-              cursor.value.properties = props;
-              cursor.update(cursor.value);
-            }
-            cursor.continue();
-          } else {
-           next();
           }
-        }
+
+          for (let prop of DATE_PROPERTIES) {
+            if (props[prop] != null && !(props[prop] instanceof Date)) {
+              // props[prop] is probably '' and wasn't converted
+              // in upgrade15to16
+              props[prop] = null;
+              changed = true;
+            }
+          }
+
+          if (changed) {
+            value.properties = props;
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        next();
       },
       function upgrade17to18() {
         // this upgrade function has been moved to the next upgrade path because
@@ -715,42 +680,94 @@ ContactDB.prototype = {
         if (!objectStore) {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
+
+        // an earlier version of this code could have run, so checking whether
+        // the index exists
         if (!objectStore.indexNames.contains("name")) {
           objectStore.createIndex("name", "properties.name", { multiEntry: true });
           objectStore.createIndex("nameLowerCase", "search.name", { multiEntry: true });
         }
 
-        objectStore.openCursor().onsuccess = function(event) {
-          let cursor = event.target.result;
-          if (cursor) {
-            let value = cursor.value;
-            value.search.name = [];
-            if (value.properties.name) {
-              value.properties.name.forEach(function addNameIndex(name) {
-                let lowerName = name.toLowerCase();
-
-                // an earlier version of this code could have added it already
-                if (value.search.name.indexOf(lowerName) === -1) {
-                  value.search.name.push(lowerName);
-                }
-              });
-            }
-            cursor.update(value);
-            cursor.continue();
-          } else {
-            next();
+        scheduleValueUpgrade(function upgradeValue18to19(value) {
+          value.search.name = [];
+          if (value.properties.name) {
+            value.properties.name.forEach(function addNameIndex(name) {
+              var lowerName = name.toLowerCase();
+              // an earlier version of this code could have added it already
+              if (value.search.name.indexOf(lowerName) === -1) {
+                value.search.name.push(lowerName);
+              }
+            });
           }
-        };
+          return true;
+        });
+
+        next();
       },
     ];
 
     let index = aOldVersion;
     let outer = this;
+
+    /* This function runs all upgrade functions that are in the
+     * valueUpgradeSteps array. These functions have the following properties:
+     * - they must be synchronous
+     * - they must take the value as parameter and modify it directly. They
+     *   must not create a new object.
+     * - they must return a boolean true/false; true if the value was actually
+     *   changed
+     */
+    function runValueUpgradeSteps(done) {
+      if (DEBUG) debug("Running the value upgrade functions.");
+      if (!objectStore) {
+        objectStore = aTransaction.objectStore(STORE_NAME);
+      }
+      objectStore.openCursor().onsuccess = function(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          let changed = false;
+          let oldValue;
+          let value = cursor.value;
+          if (DEBUG) {
+            oldValue = JSON.stringify(value);
+          }
+          valueUpgradeSteps.forEach(function(upgradeFunc, i) {
+            if (DEBUG) debug("Running upgrade function " + i);
+            changed = upgradeFunc(value) || changed;
+          });
+
+          if (changed) {
+            cursor.update(value);
+          } else if (DEBUG) {
+            let newValue = JSON.stringify(value);
+            if (newValue !== oldValue) {
+              // oops something went wrong
+              debug("upgrade: `changed` was false and still the value changed! Aborting.");
+              aTransaction.abort();
+              return;
+            }
+          }
+          cursor.continue();
+        } else {
+          done();
+        }
+      };
+    }
+
+    function finish() {
+      // We always output this debug line because it's useful and the noise ratio
+      // very low.
+      debug("Upgrade finished");
+
+      outer.incrementRevision(aTransaction);
+    }
+
     function next() {
       if (index == aNewVersion) {
-        outer.incrementRevision(aTransaction);
+        runValueUpgradeSteps(finish);
         return;
       }
+
       try {
         var i = index++;
         if (DEBUG) debug("Upgrade step: " + i + "\n");
@@ -760,7 +777,7 @@ ContactDB.prototype = {
         aTransaction.abort();
         return;
       }
-    };
+    }
 
     function fail(why) {
       why = why || "";
@@ -1176,7 +1193,7 @@ ContactDB.prototype = {
     for (let key in fields) {
       if (DEBUG) debug("key: " + fields[key]);
       if (!store.indexNames.contains(fields[key]) && fields[key] != "id") {
-        if (DEBUG) debug("Key not valid!" + fields[key] + ", " + store.indexNames);
+        if (DEBUG) debug("Key not valid!" + fields[key] + ", " + JSON.stringify(store.indexNames));
         txn.abort();
         return;
       }
