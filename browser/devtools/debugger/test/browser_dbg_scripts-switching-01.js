@@ -45,6 +45,13 @@ function testSourcesDisplay() {
   is(gSources.itemCount, 2,
     "Found the expected number of sources.");
 
+  is(gSources.items[0].target.querySelector(".dbg-source-item").getAttribute("tooltiptext"),
+    EXAMPLE_URL + "code_script-switching-01.js",
+    "The correct tooltip text is displayed for the first source.");
+  is(gSources.items[1].target.querySelector(".dbg-source-item").getAttribute("tooltiptext"),
+    EXAMPLE_URL + "code_script-switching-02.js",
+    "The correct tooltip text is displayed for the second source.");
+
   ok(gSources.containsValue(EXAMPLE_URL + gLabel1),
     "First source url is incorrect.");
   ok(gSources.containsValue(EXAMPLE_URL + gLabel2),
