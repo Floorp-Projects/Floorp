@@ -23,7 +23,7 @@ function checkCache(url, inMemory, shouldExist, cb)
     this.onCacheEntryAvailable = function oCEA(entry, isNew, appCache, status) {
       if (shouldExist) {
         ok(entry, "Entry not found");
-        is(this.inMemory, !entry.persistToDisk, "Entry is " + (inMemory ? "" : " not ") + " in memory as expected");
+        is(this.inMemory, !entry.persistent, "Entry is " + (inMemory ? "" : " not ") + " in memory as expected");
         is(status, Components.results.NS_OK, "Entry not found");
       } else {
         ok(!entry, "Entry found");

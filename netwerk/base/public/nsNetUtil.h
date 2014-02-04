@@ -1463,6 +1463,26 @@ NS_ShouldCheckAppCache(nsIURI *aURI, bool usePrivateBrowsing)
     return NS_SUCCEEDED(rv) && allowed;
 }
 
+inline bool
+NS_ShouldCheckAppCache(nsIPrincipal * aPrincipal, bool usePrivateBrowsing)
+{
+    if (usePrivateBrowsing) {
+        return false;
+    }
+
+    nsCOMPtr<nsIOfflineCacheUpdateService> offlineService =
+        do_GetService("@mozilla.org/offlinecacheupdate-service;1");
+    if (!offlineService) {
+        return false;
+    }
+
+    bool allowed;
+    nsresult rv = offlineService->OfflineAppAllowed(aPrincipal,
+                                                    nullptr,
+                                                    &allowed);
+    return NS_SUCCEEDED(rv) && allowed;
+}
+
 /**
  * Wraps an nsIAuthPrompt so that it can be used as an nsIAuthPrompt2. This
  * method is provided mainly for use by other methods in this file.

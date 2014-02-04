@@ -1301,7 +1301,7 @@ JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
     RootedValue thisv(cx, frame.thisValue());
 
     js::AutoCompartment ac(cx, env);
-    return EvaluateInEnv(cx, env, thisv, frame, StableCharPtr(chars, length), length,
+    return EvaluateInEnv(cx, env, thisv, frame, ConstTwoByteChars(chars, length), length,
                          filename, lineno, rval);
 }
 

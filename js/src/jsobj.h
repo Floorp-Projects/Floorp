@@ -1610,6 +1610,9 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
 
 namespace js {
 
+const Class *
+ProtoKeyToClass(JSProtoKey key);
+
 JSObject *
 GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey);
 

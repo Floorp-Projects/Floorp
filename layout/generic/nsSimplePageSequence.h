@@ -29,11 +29,7 @@ class nsSharedPageData {
 public:
   // This object a shared by all the nsPageFrames
   // parented to a SimplePageSequenceFrame
-  nsSharedPageData() :
-    mPageContentXMost(0),
-    mPageContentSize(0)
-  {
-  }
+  nsSharedPageData() : mShrinkToFitRatio(1.0f) {}
 
   nsString    mDateTimeStr;
   nsString    mPageNumFormat;
@@ -52,8 +48,10 @@ public:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 
-  nscoord      mPageContentXMost;      // xmost size from Reflow(width)
-  nscoord      mPageContentSize;       // constrained size (width)
+  // The scaling ratio we need to apply to make all pages fit horizontally.  It's
+  // the minimum "ComputedWidth / OverflowWidth" ratio of all page content frames
+  // that overflowed.  It's 1.0 if none overflowed horizontally.
+  float mShrinkToFitRatio;
 };
 
 // Simple page sequence frame class. Used when we're in paginated mode

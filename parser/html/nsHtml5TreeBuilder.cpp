@@ -102,6 +102,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
       pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TEMPLATE);
     }
     resetTheInsertionMode();
+    formPointer = getFormPointerForContext(contextNode);
     if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::textarea == contextName) {
       tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, contextName);
     } else if (nsHtml5Atoms::style == contextName || nsHtml5Atoms::xmp == contextName || nsHtml5Atoms::iframe == contextName || nsHtml5Atoms::noembed == contextName || nsHtml5Atoms::noframes == contextName || (scriptingEnabled && nsHtml5Atoms::noscript == contextName)) {
@@ -868,7 +869,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_FORM: {
-              if (formPointer) {
+              if (!!formPointer || isTemplateContents()) {
                 errFormWhenFormOpen();
                 NS_HTML5_BREAK(starttagloop);
               } else {
@@ -1055,7 +1056,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_FORM: {
-              if (formPointer) {
+              if (!!formPointer && !isTemplateContents()) {
                 errFormWhenFormOpen();
                 NS_HTML5_BREAK(starttagloop);
               } else {
@@ -1213,7 +1214,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             case NS_HTML5TREE_BUILDER_ISINDEX: {
               errIsindex();
-              if (formPointer) {
+              if (!!formPointer && !isTemplateContents()) {
                 NS_HTML5_BREAK(starttagloop);
               }
               implicitlyCloseP();
@@ -1247,6 +1248,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               pop();
               appendVoidElementToCurrentMayFoster(nsHtml5ElementName::ELT_HR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
               pop();
+              if (!isTemplateContents()) {
+                formPointer = nullptr;
+              }
               selfClosing = false;
               NS_HTML5_BREAK(starttagloop);
             }
@@ -2508,22 +2512,38 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             NS_HTML5_BREAK(endtagloop);
           }
           case NS_HTML5TREE_BUILDER_FORM: {
-            if (!formPointer) {
-              errStrayEndTag(name);
+            if (!isTemplateContents()) {
+              if (!formPointer) {
+                errStrayEndTag(name);
+                NS_HTML5_BREAK(endtagloop);
+              }
+              formPointer = nullptr;
+              eltPos = findLastInScope(name);
+              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                errStrayEndTag(name);
+                NS_HTML5_BREAK(endtagloop);
+              }
+              generateImpliedEndTags();
+              if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
+                errUnclosedElements(eltPos, name);
+              }
+              removeFromStack(eltPos);
+              NS_HTML5_BREAK(endtagloop);
+            } else {
+              eltPos = findLastInScope(name);
+              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                errStrayEndTag(name);
+                NS_HTML5_BREAK(endtagloop);
+              }
+              generateImpliedEndTags();
+              if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
+                errUnclosedElements(eltPos, name);
+              }
+              while (currentPtr >= eltPos) {
+                pop();
+              }
               NS_HTML5_BREAK(endtagloop);
             }
-            formPointer = nullptr;
-            eltPos = findLastInScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
-              errStrayEndTag(name);
-              NS_HTML5_BREAK(endtagloop);
-            }
-            generateImpliedEndTags();
-            if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
-              errUnclosedElements(eltPos, name);
-            }
-            removeFromStack(eltPos);
-            NS_HTML5_BREAK(endtagloop);
           }
           case NS_HTML5TREE_BUILDER_P: {
             eltPos = findLastInButtonScope(nsHtml5Atoms::p);
@@ -3855,7 +3875,9 @@ void
 nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormElementMayFoster(nsHtml5HtmlAttributes* attributes)
 {
   nsIContent** elt = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::form, attributes);
-  formPointer = elt;
+  if (!isTemplateContents()) {
+    formPointer = elt;
+  }
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->isFosterParenting()) {
 

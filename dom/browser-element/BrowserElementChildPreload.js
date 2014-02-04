@@ -811,7 +811,7 @@ BrowserElementChild.prototype = {
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    var ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.scale(scale, scale);
     ctx.drawWindow(content, 0, 0, content.innerWidth, content.innerHeight,
                    transparent ? "rgba(255,255,255,0)" : "rgb(255,255,255)");

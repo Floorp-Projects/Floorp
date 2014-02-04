@@ -5848,7 +5848,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         if (jsbytecode *pc = i.pc()) {
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
-            MaybeDumpObject("blockChain", i.script()->getBlockScope(pc));
+            MaybeDumpObject("staticScope", i.script()->getStaticScope(pc));
         }
         MaybeDumpValue("this", i.thisv());
         if (!i.isJit()) {

@@ -1643,7 +1643,9 @@ ExpressionDecompiler::loadAtom(jsbytecode *pc)
 JSAtom *
 ExpressionDecompiler::findLetVar(jsbytecode *pc, uint32_t depth)
 {
-    for (JSObject *chain = script->getBlockScope(pc); chain; chain = chain->getParent()) {
+    for (JSObject *chain = script->getStaticScope(pc); chain; chain = chain->getParent()) {
+        if (!chain->is<StaticBlockObject>())
+            continue;
         StaticBlockObject &block = chain->as<StaticBlockObject>();
         uint32_t blockDepth = block.stackDepth();
         uint32_t blockCount = block.slotCount();

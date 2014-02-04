@@ -23,8 +23,8 @@ class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
     /* Data members */
 
     JSContext * const cx;
-    StableCharPtr current;
-    const StableCharPtr begin, end;
+    JS::ConstTwoByteChars current;
+    const JS::ConstTwoByteChars begin, end;
 
     Value v;
 
@@ -107,7 +107,7 @@ class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
     /* Public API */
 
     /* Create a parser for the provided JSON data. */
-    JSONParser(JSContext *cx, JS::StableCharPtr data, size_t length,
+    JSONParser(JSContext *cx, JS::ConstTwoByteChars data, size_t length,
                ErrorHandling errorHandling = RaiseError)
       : AutoGCRooter(cx, JSONPARSER),
         cx(cx),

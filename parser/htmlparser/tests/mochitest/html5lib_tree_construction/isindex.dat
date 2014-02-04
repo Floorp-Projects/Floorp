@@ -45,3 +45,23 @@
 |   <head>
 |   <body>
 |     <form>
+
+#data
+<body><isindex><form>
+#errors
+6: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
+15: “isindex” seen.
+21: End of file seen and there were open elements.
+21: Unclosed element “form”.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <hr>
+|       <label>
+|         "This is a searchable index. Enter search keywords: "
+|         <input>
+|           name="isindex"
+|       <hr>
+|     <form>

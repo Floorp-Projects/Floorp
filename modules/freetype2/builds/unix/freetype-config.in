@@ -119,13 +119,13 @@ else
 fi
 
 if test "$echo_ft_version" = "yes" ; then
-  major=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+  major=`grep define ${SYSROOT}$includedir/freetype2/freetype.h \
          | grep FREETYPE_MAJOR \
          | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
-  minor=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+  minor=`grep define ${SYSROOT}$includedir/freetype2/freetype.h \
          | grep FREETYPE_MINOR \
          | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
-  patch=`grep define ${SYSROOT}$includedir/freetype2/freetype/freetype.h \
+  patch=`grep define ${SYSROOT}$includedir/freetype2/freetype.h \
          | grep FREETYPE_PATCH \
          | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
   echo $major.$minor.$patch
@@ -133,15 +133,11 @@ fi
 
 if test "$echo_cflags" = "yes" ; then
   cflags="-I${SYSROOT}$includedir/freetype2"
-  if test "${SYSROOT}$includedir" != "/usr/include" ; then
-    echo $cflags -I${SYSROOT}$includedir
-  else
-    echo $cflags
-  fi
+  echo $cflags
 fi
 
 if test "$echo_libs" = "yes" ; then
-  libs="-lfreetype %LIBZ% %LIBBZ2% %FT2_EXTRA_LIBS%"
+  libs="-lfreetype %LIBZ% %LIBBZ2% %LIBPNG% %FT2_EXTRA_LIBS%"
   if test "${SYSROOT}$libdir" != "/usr/lib"  &&
      test "${SYSROOT}$libdir" != "/usr/lib64"; then
     echo -L${SYSROOT}$libdir $libs
