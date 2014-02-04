@@ -38,7 +38,16 @@
             '-mfpu=vfpv3',
             '-mfpu=vfpv3-d16',
           ],
+          # XXX Doesn't work currently
+          'cflags_mozilla!': [
+            '-mfpu=vfp',
+            '-mfpu=vfpv3',
+            '-mfpu=vfpv3-d16',
+          ],
           'cflags': [
+            '-mfpu=neon',
+          ],
+          'cflags_mozilla': [
             '-mfpu=neon',
           ],
           'include_dirs': [
