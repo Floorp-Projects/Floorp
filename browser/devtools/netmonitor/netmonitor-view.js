@@ -2140,26 +2140,27 @@ NetworkDetailsView.prototype = {
       }
       if (jsonMimeType || jsonObject) {
         // Extract the actual json substring in case this might be a "JSONP".
-        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g;
-        let sanitizedJSON = aString.replace(jsonpRegex, "");
-        let callbackPadding = aString.match(jsonpRegex);
+        // This regex basically parses a function call and captures the
+        // function name and arguments in two separate groups.
+        let jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
+        let [_, callbackPadding, jsonpString] = aString.match(jsonpRegex) || [];
 
         // Make sure this is a valid JSON object first. If so, nicely display
         // the parsing results in a variables view. Otherwise, simply show
         // the contents as plain text.
-        if (sanitizedJSON != aString) {
+        if (callbackPadding && jsonpString) {
           try {
-            jsonObject = JSON.parse(sanitizedJSON);
+            jsonObject = JSON.parse(jsonpString);
           } catch (e) {
             jsonObjectParseError = e;
           }
         }
 
-        // Valid JSON.
+        // Valid JSON or JSONP.
         if (jsonObject) {
           $("#response-content-json-box").hidden = false;
           let jsonScopeName = callbackPadding
-            ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+            ? L10N.getFormatStr("jsonpScopeName", callbackPadding)
             : L10N.getStr("jsonScopeName");
 
           return this._json.controller.setSingleVariable({
