@@ -310,6 +310,7 @@ class NameResolver
                 return false;
             break;
           case PN_BINARY:
+          case PN_BINARY_OBJ:
             if (!resolve(cur->pn_left, prefix))
                 return false;
 
