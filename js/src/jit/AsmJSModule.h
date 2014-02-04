@@ -34,7 +34,7 @@ enum AsmJSCoercion
 };
 
 // The asm.js spec recognizes this set of builtin Math functions.
-enum AsmJSMathBuiltinFunction
+enum AsmJSMathBuiltin
 {
     AsmJSMathBuiltin_sin, AsmJSMathBuiltin_cos, AsmJSMathBuiltin_tan,
     AsmJSMathBuiltin_asin, AsmJSMathBuiltin_acos, AsmJSMathBuiltin_atan,
@@ -97,9 +97,8 @@ class AsmJSModule
     class Global
     {
       public:
-        enum Which { Variable, FFI, ArrayView, MathBuiltinFunction, Constant };
+        enum Which { Variable, FFI, ArrayView, MathBuiltin, Constant };
         enum VarInitKind { InitConstant, InitImport };
-        enum ConstantKind { GlobalConstant, MathConstant };
 
       private:
         struct Pod {
@@ -115,11 +114,8 @@ class AsmJSModule
                 } var;
                 uint32_t ffiIndex_;
                 ArrayBufferView::ViewType viewType_;
-                AsmJSMathBuiltinFunction mathBuiltinFunc_;
-                struct {
-                    ConstantKind kind_;
-                    double value_;
-                } constant;
+                AsmJSMathBuiltin mathBuiltin_;
+                double constantValue_;
             } u;
         } pod;
         PropertyName *name_;
@@ -183,24 +179,20 @@ class AsmJSModule
             return pod.u.viewType_;
         }
         PropertyName *mathName() const {
-            JS_ASSERT(pod.which_ == MathBuiltinFunction);
+            JS_ASSERT(pod.which_ == MathBuiltin);
             return name_;
         }
-        AsmJSMathBuiltinFunction mathBuiltinFunction() const {
-            JS_ASSERT(pod.which_ == MathBuiltinFunction);
-            return pod.u.mathBuiltinFunc_;
+        AsmJSMathBuiltin mathBuiltin() const {
+            JS_ASSERT(pod.which_ == MathBuiltin);
+            return pod.u.mathBuiltin_;
         }
         PropertyName *constantName() const {
             JS_ASSERT(pod.which_ == Constant);
             return name_;
         }
-        ConstantKind constantKind() const {
-            JS_ASSERT(pod.which_ == Constant);
-            return pod.u.constant.kind_;
-        }
         double constantValue() const {
             JS_ASSERT(pod.which_ == Constant);
-            return pod.u.constant.value_;
+            return pod.u.constantValue_;
         }
 
         size_t serializedSize() const;
@@ -496,21 +488,14 @@ class AsmJSModule
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
-    bool addMathBuiltinFunction(AsmJSMathBuiltinFunction func, PropertyName *field) {
-        Global g(Global::MathBuiltinFunction, field);
-        g.pod.u.mathBuiltinFunc_ = func;
-        return globals_.append(g);
-    }
-    bool addMathBuiltinConstant(double value, PropertyName *field) {
-        Global g(Global::Constant, field);
-        g.pod.u.constant.value_ = value;
-        g.pod.u.constant.kind_ = Global::MathConstant;
+    bool addMathBuiltin(AsmJSMathBuiltin mathBuiltin, PropertyName *field) {
+        Global g(Global::MathBuiltin, field);
+        g.pod.u.mathBuiltin_ = mathBuiltin;
         return globals_.append(g);
     }
     bool addGlobalConstant(double value, PropertyName *name) {
         Global g(Global::Constant, name);
-        g.pod.u.constant.value_ = value;
-        g.pod.u.constant.kind_ = Global::GlobalConstant;
+        g.pod.u.constantValue_ = value;
         return globals_.append(g);
     }
     bool addFuncPtrTable(unsigned numElems, uint32_t *globalDataOffset) {
