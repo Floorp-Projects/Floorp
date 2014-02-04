@@ -112,7 +112,7 @@ uint32_t GetARMFlags()
 
 #ifdef JS_ARM_SIMULATOR
     isSet = true;
-    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv4 | HWCAP_NEON;
+    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
     return flags;
 #else
 
