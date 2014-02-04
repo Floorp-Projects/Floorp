@@ -247,6 +247,8 @@ class SimInstruction {
 
     // Decoding the double immediate in the vmov instruction.
     double doubleImmedVmov() const;
+    // Decoding the float32 immediate in the vmov.f32 instruction.
+    float float32ImmedVmov() const;
 
   private:
     // Join split register codes, depending on single or double precision.
@@ -282,6 +284,24 @@ SimInstruction::doubleImmedVmov() const
 
     uint64_t imm = high16 << 48;
     return mozilla::BitwiseCast<double>(imm);
+}
+
+float
+SimInstruction::float32ImmedVmov() const
+{
+    // Reconstruct a float32 from the immediate encoded in the vmov instruction.
+    //
+    //   instruction: [xxxxxxxx,xxxxabcd,xxxxxxxx,xxxxefgh]
+    //   float32: [aBbbbbbc, defgh000, 00000000, 00000000]
+    //
+    // where B = ~b. Only the high 16 bits are affected.
+    uint32_t imm;
+    imm  = (bits(17, 16) << 23) | (bits(3, 0) << 19); // xxxxxxxc,defgh000.0.0
+    imm |= (0x1f * bit(18)) << 25;                    // xxbbbbbx,xxxxxxxx.0.0
+    imm |= (bit(18) ^ 1) << 30;                       // xBxxxxxx,xxxxxxxx.0.0
+    imm |= bit(19) << 31;                             // axxxxxxx,xxxxxxxx.0.0
+
+    return mozilla::BitwiseCast<float>(imm);
 }
 
 class CachePage
@@ -3159,10 +3179,11 @@ Simulator::decodeTypeVFP(SimInstruction *instr)
                 if (instr->szValue() == 0x1) {
                     set_d_register_from_double(vd, instr->doubleImmedVmov());
                 } else {
-                    MOZ_ASSUME_UNREACHABLE();  // Not used by v8.
+                    // vmov.f32 immediate
+                    set_s_register_from_float(vd, instr->float32ImmedVmov());
                 }
             } else {
-                MOZ_ASSUME_UNREACHABLE();  // Not used by V8.
+                decodeVCVTBetweenFloatingPointAndIntegerFrac(instr);
             }
         } else if (instr->opc1Value() == 0x3) {
             if (instr->szValue() != 0x1) {
@@ -3560,6 +3581,73 @@ Simulator::decodeVCVTBetweenFloatingPointAndInteger(SimInstruction *instr)
             else
                 set_s_register_from_float(dst, static_cast<float>(val));
         }
+    }
+}
+
+// A VFPv3 specific instruction.
+void
+Simulator::decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr)
+{
+    MOZ_ASSERT(instr->bits(27, 24) == 0xE && instr->opc1Value() == 0x7 && instr->bit(19) == 1 &&
+               instr->bit(17) == 1 && instr->bits(11,9) == 0x5 && instr->bit(6) == 1 &&
+               instr->bit(4) == 0);
+
+    int size = (instr->bit(7) == 1) ? 32 : 16;
+
+    int fraction_bits = size - ((instr->bits(3, 0) << 1) | instr->bit(5));
+    double mult = 1 << fraction_bits;
+
+    MOZ_ASSERT(size == 32); // Only handling size == 32 for now.
+
+    // Conversion between floating-point and integer.
+    bool to_fixed = (instr->bit(18) == 1);
+
+    VFPRegPrecision precision = (instr->szValue() == 1) ? kDoublePrecision : kSinglePrecision;
+
+    if (to_fixed) {
+        // We are playing with code close to the C++ standard's limits below,
+        // hence the very simple code and heavy checks.
+        //
+        // Note: C++ defines default type casting from floating point to integer as
+        // (close to) rounding toward zero ("fractional part discarded").
+
+        int dst = instr->VFPDRegValue(precision);
+
+        bool unsigned_integer = (instr->bit(16) == 1);
+        bool double_precision = (precision == kDoublePrecision);
+
+        double val = double_precision
+                     ? get_double_from_d_register(dst)
+                     : get_float_from_s_register(dst);
+
+        // Scale value by specified number of fraction bits.
+        val *= mult;
+
+        // Rounding down towards zero.  No need to account for the rounding error as this
+        // instruction always rounds down towards zero.  See SimRZ below.
+        int temp = unsigned_integer ? static_cast<uint32_t>(val) : static_cast<int32_t>(val);
+
+        inv_op_vfp_flag_ = get_inv_op_vfp_flag(SimRZ, val, unsigned_integer);
+
+        double abs_diff = unsigned_integer
+                          ? std::fabs(val - static_cast<uint32_t>(temp))
+                          : std::fabs(val - temp);
+
+        inexact_vfp_flag_ = (abs_diff != 0);
+
+        if (inv_op_vfp_flag_)
+            temp = VFPConversionSaturate(val, unsigned_integer);
+
+        // Update the destination register.
+        if (double_precision) {
+            uint32_t dbl[2];
+            dbl[0] = temp; dbl[1] = 0;
+            set_d_register(dst, dbl);
+        } else {
+            set_s_register_from_sinteger(dst, temp);
+        }
+    } else {
+        MOZ_ASSUME_UNREACHABLE();  // Not implemented, fixed to float.
     }
 }
 
