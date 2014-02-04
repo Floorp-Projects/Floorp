@@ -213,7 +213,6 @@ let gFxAccounts = {
   },
 
   openSignInAgainPage: function () {
-    // FIXME: This should actually show the pre-filled username version of about:accounts?
-    switchToTabHavingURI("about:accounts?signin=true", true);
+    switchToTabHavingURI("about:accounts?action=reauth", true);
   }
 };
