@@ -3207,14 +3207,12 @@ ScrollFrameHelper::GetScrollbarStylesFromFrame() const
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
       !(mIsRoot && presContext->HasPaginatedScrolling())) {
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN,
-                           NS_STYLE_SCROLL_BEHAVIOR_AUTO);
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
   }
 
   if (!mIsRoot) {
     const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    return ScrollbarStyles(disp->mOverflowX, disp->mOverflowY,
-                           disp->mScrollBehavior);
+    return ScrollbarStyles(disp);
   }
 
   ScrollbarStyles result = presContext->GetViewportScrollbarStylesOverride();
