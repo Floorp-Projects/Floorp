@@ -512,7 +512,7 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
 
         // Unwind scope chain (pop block objects).
         if (cx->isExceptionPending())
-            UnwindScope(cx, si, tn->stackDepth);
+            UnwindScope(cx, si, script->main() + tn->start);
 
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
