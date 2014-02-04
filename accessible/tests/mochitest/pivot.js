@@ -381,7 +381,9 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence)
   // Add modal root (if any)
   aQueue.push(new setModalRootInvoker(aDocAcc, aModalRoot, 0));
 
-  for (var i = 0; i < aSequence.length; i++) {
+  aQueue.push(new setVCPosInvoker(aDocAcc, "moveFirst", aRule, aSequence[0]));
+
+  for (var i = 1; i < aSequence.length; i++) {
     var invoker =
       new setVCPosInvoker(aDocAcc, "moveNext", aRule, aSequence[i]);
     aQueue.push(invoker);
