@@ -3147,7 +3147,6 @@ class MToString : public MUnaryInstruction
         JS_ASSERT(!input()->mightBeType(MIRType_Object));
         return AliasSet::None();
     }
-    bool canConsumeFloat32() const { return true; }
 };
 
 class MBitNot

@@ -663,9 +663,3 @@ jit::InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest,
 
     return res;
 }
-
-JSString *
-js::jit::FloatToStringPar(ForkJoinContext *cx, float f)
-{
-    return NumberToString<NoGC>(cx, double(f));
-}
