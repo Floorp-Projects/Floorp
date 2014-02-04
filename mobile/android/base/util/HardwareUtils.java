@@ -12,8 +12,8 @@ import android.os.Build;
 import android.util.Log;
 import android.view.ViewConfiguration;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.RandomAccessFile;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +28,10 @@ public final class HardwareUtils {
     // where we can't depend on Gecko to be up and running e.g. show/hide
     // reading list capabilities in HomePager.
     private static final int LOW_MEMORY_THRESHOLD_MB = 384;
+
+    // Number of bytes of /proc/meminfo to read in one go.
+    private static final int MEMINFO_BUFFER_SIZE_BYTES = 256;
+
     private static volatile int sTotalRAM = -1;
 
     private static Context sContext;
@@ -90,8 +94,57 @@ public final class HardwareUtils {
     }
 
     /**
+    * Helper functions used to extract key/value data from /proc/meminfo
+    * Pulled from:
+    * http://androidxref.com/4.2_r1/xref/frameworks/base/core/java/com/android/internal/util/MemInfoReader.java
+    */
+
+    private static boolean matchMemText(byte[] buffer, int index, int bufferLength, byte[] text) {
+        final int N = text.length;
+        if ((index + N) >= bufferLength) {
+            return false;
+        }
+        for (int i = 0; i < N; i++) {
+            if (buffer[index + i] != text[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Parses a line like:
+     *
+     *  MemTotal: 1605324 kB
+     *
+     * into 1605324.
+     *
+     * @return the first uninterrupted sequence of digits following the
+     *         specified index, parsed as an integer value in KB.
+     */
+    private static int extractMemValue(byte[] buffer, int offset, int length) {
+        if (offset >= length) {
+            return 0;
+        }
+
+        while (offset < length && buffer[offset] != '\n') {
+            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
+                int start = offset++;
+                while (offset < length &&
+                       buffer[offset] >= '0' &&
+                       buffer[offset] <= '9') {
+                    ++offset;
+                }
+                return Integer.parseInt(new String(buffer, start, offset - start), 10);
+            }
+            ++offset;
+        }
+        return 0;
+    }
+
+    /**
      * Fetch the total memory of the device in MB by parsing /proc/meminfo.
-     * 
+     *
      * Of course, Android doesn't have a neat and tidy way to find total
      * RAM, so we do it by parsing /proc/meminfo.
      *
@@ -102,48 +155,33 @@ public final class HardwareUtils {
             return sTotalRAM;
         }
 
+        // This is the string "MemTotal" that we're searching for in the buffer.
+        final byte[] MEMTOTAL = {'M', 'e', 'm', 'T', 'o', 't', 'a', 'l'};
         try {
-            RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r");
+            final byte[] buffer = new byte[MEMINFO_BUFFER_SIZE_BYTES];
+            final FileInputStream is = new FileInputStream("/proc/meminfo");
             try {
-                // MemTotal will be one of the first three lines.
-                int i = 0;
-                String memTotal = null;
-                while (i++ < 3) {
-                    memTotal = reader.readLine();
-                    if (memTotal == null ||
-                        memTotal.startsWith("MemTotal: ")) {
-                        break;
-                    }
-                    memTotal = null;
-                }
+                final int length = is.read(buffer);
 
-                if (memTotal == null) {
-                    return sTotalRAM = 0;
-                }
-
-                // Parse a line like this:
-                // MemTotal: 1605324 kB
-                Matcher m = Pattern.compile("^MemTotal:\\s+([0-9]+) kB\\s*$")
-                                   .matcher(memTotal);
-                if (m.matches()) {
-                    String kb = m.group(1);
-                    if (kb != null) {
-                        sTotalRAM = (Integer.parseInt(kb) / 1024);
+                for (int i = 0; i < length; i++) {
+                    if (matchMemText(buffer, i, length, MEMTOTAL)) {
+                        i += 8;
+                        sTotalRAM = extractMemValue(buffer, i, length) / 1024;
                         Log.d(LOGTAG, "System memory: " + sTotalRAM + "MB.");
                         return sTotalRAM;
                     }
                 }
+            } finally {
+                is.close();
+            }
 
-                Log.w(LOGTAG, "Got unexpected MemTotal line: " + memTotal);
-                return sTotalRAM = 0;
-              } finally {
-                  reader.close();
-              }
-          } catch (FileNotFoundException f) {
-              return sTotalRAM = 0;
-          } catch (IOException e) {
-              return sTotalRAM = 0;
-          }
+            Log.w(LOGTAG, "Did not find MemTotal line in /proc/meminfo.");
+            return sTotalRAM = 0;
+        } catch (FileNotFoundException f) {
+            return sTotalRAM = 0;
+        } catch (IOException e) {
+            return sTotalRAM = 0;
+        }
     }
 
     public static boolean isLowMemoryPlatform() {
