@@ -261,6 +261,7 @@ class Simulator
     void decodeVCMP(SimInstruction *instr);
     void decodeVCVTBetweenDoubleAndSingle(SimInstruction *instr);
     void decodeVCVTBetweenFloatingPointAndInteger(SimInstruction *instr);
+    void decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr);
 
     // Executes one instruction.
     void instructionDecode(SimInstruction *instr);
