@@ -2094,6 +2094,9 @@ pref("layout.css.isolation.enabled", true);
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", true);
 
+// Is support for scroll-snap enabled?
+pref("layout.css.scroll-snap.enabled", false);
+
 // Is support for basic shapes in clip-path enabled?
 pref("layout.css.clip-path-shapes.enabled", false);
 
