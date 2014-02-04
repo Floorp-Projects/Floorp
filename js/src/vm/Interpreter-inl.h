@@ -183,8 +183,8 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return false;
     } else {
         Rooted<JSObject*> normalized(cx, obj);
-        if (normalized->getClass() == &WithObject::class_ && !shape->hasDefaultGetter())
-            normalized = &normalized->as<WithObject>().object();
+        if (normalized->is<DynamicWithObject>() && !shape->hasDefaultGetter())
+            normalized = &normalized->as<DynamicWithObject>().object();
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
             JS_ASSERT(shape->hasSlot());

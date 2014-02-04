@@ -535,7 +535,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
         //
         JSObject *scope = outerpc->sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
-            if (scope->is<WithObject>())
+            if (scope->is<DynamicWithObject>())
                 inWith = true;
             scope = scope->enclosingScope();
         }
@@ -2774,7 +2774,7 @@ static void
 PopStatementPC(TokenStream &ts, ParseContext<ParseHandler> *pc)
 {
     RootedNestedScopeObject scopeObj(ts.context(), pc->topStmt->staticScope);
-    JS_ASSERT(!!scopeObj == (pc->topStmt->isBlockScope));
+    JS_ASSERT(!!scopeObj == pc->topStmt->isNestedScope);
 
     FinishPopStatement(pc);
 
@@ -3196,7 +3196,8 @@ Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockObject blockObj, StmtInf
 
     PushStatementPC(pc, stmt, STMT_BLOCK);
     blockObj->initEnclosingNestedScopeFromParser(pc->staticScope);
-    FinishPushBlockScope(pc, stmt, *blockObj.get());
+    FinishPushNestedScope(pc, stmt, *blockObj.get());
+    stmt->isBlockScope = true;
 
     Node pn = handler.newLexicalScope(blockbox);
     if (!pn)
@@ -3593,7 +3594,7 @@ Parser<FullParseHandler>::letDeclaration()
              * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
              * block.
              */
-            stmt->isBlockScope = true;
+            stmt->isBlockScope = stmt->isNestedScope = true;
             stmt->downScope = pc->topScopeStmt;
             pc->topScopeStmt = stmt;
 
@@ -4896,9 +4897,16 @@ Parser<FullParseHandler>::withStatement()
 
     StmtInfoPC stmtInfo(context);
     PushStatementPC(pc, &stmtInfo, STMT_WITH);
+    Rooted<StaticWithObject *> staticWith(context, StaticWithObject::create(context));
+    if (!staticWith)
+        return null();
+    staticWith->initEnclosingNestedScopeFromParser(pc->staticScope);
+    FinishPushNestedScope(pc, &stmtInfo, *staticWith);
+
     Node innerBlock = statement();
     if (!innerBlock)
         return null();
+
     PopStatementPC(tokenStream, pc);
 
     pc->sc->setBindingsAccessedDynamically();
@@ -4914,7 +4922,10 @@ Parser<FullParseHandler>::withStatement()
         handler.deoptimizeUsesWithin(lexdep, TokenPos(begin, pos().begin));
     }
 
-    return handler.newWithStatement(begin, objectExpr, innerBlock);
+    ObjectBox *staticWithBox = newObjectBox(staticWith);
+    if (!staticWithBox)
+        return null();
+    return handler.newWithStatement(begin, objectExpr, innerBlock, staticWithBox);
 }
 
 template <>
@@ -5860,6 +5871,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
         break;
 
       case PN_BINARY:
+      case PN_BINARY_OBJ:
         if (!transplant(pn->pn_left))
             return false;
 
