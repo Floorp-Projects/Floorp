@@ -265,7 +265,9 @@ function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets, aI
 
   this.getID = function setVCPosInvoker_getID()
   {
-    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod;
+    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod + " in " +
+      prettyName(aIdOrNameOrAcc) + ", " + boundaryToString(aBoundary) +
+      ", [" + aTextOffsets + "]";
   };
 
   if (expectMove) {
