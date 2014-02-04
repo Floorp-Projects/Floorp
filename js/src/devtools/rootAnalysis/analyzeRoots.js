@@ -59,17 +59,25 @@ for (var line of text) {
 }
 text = null;
 
+function isGCType(type)
+{
+    if (type.Kind == "CSU")
+        return type.Name in gcThings;
+    else if (type.Kind == "Array")
+        return isGCType(type.Type);
+    return false;
+}
+
 function isUnrootedType(type)
 {
-    if (type.Kind == "Pointer") {
-        var target = type.Type;
-        if (target.Kind == "CSU")
-            return target.Name in gcThings;
-        return false;
-    }
-    if (type.Kind == "CSU")
+    if (type.Kind == "Pointer")
+        return isGCType(type.Type);
+    else if (type.Kind == "Array")
+        return isUnrootedType(type.Type);
+    else if (type.Kind == "CSU")
         return type.Name in gcPointers;
-    return false;
+    else
+        return false;
 }
 
 function expressionUsesVariable(exp, variable)
