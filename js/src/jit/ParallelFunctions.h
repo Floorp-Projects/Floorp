@@ -78,6 +78,8 @@ void TraceLIR(IonLIRTraceData *current);
 
 void CallToUncompiledScriptPar(JSObject *obj);
 
+JSString *FloatToStringPar(ForkJoinContext *cx, float f);
+
 } // namespace jit
 } // namespace js
 
