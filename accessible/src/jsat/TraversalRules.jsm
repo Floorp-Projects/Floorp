@@ -132,8 +132,12 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   case Roles.LINK:
   case Roles.HEADER:
   case Roles.HEADING:
-    return hasZeroOrSingleChildDescendants() ?
-      (Filters.MATCH | Filters.IGNORE_SUBTREE) : (Filters.IGNORE);
+    if ((aAccessible.childCount > 0 || aAccessible.name) &&
+        hasZeroOrSingleChildDescendants()) {
+      return Filters.MATCH | Filters.IGNORE_SUBTREE;
+    } else {
+      return Filters.IGNORE;
+    }
   default:
     // Ignore the subtree, if there is one. So that we don't land on
     // the same content that was already presented by its parent.
@@ -217,7 +221,10 @@ this.TraversalRules = {
     }),
 
   Heading: new BaseTraversalRule(
-    [Roles.HEADING]),
+    [Roles.HEADING],
+    function Heading_match(aAccessible) {
+      return aAccessible.childCount > 0 ? Filters.MATCH : Filters.IGNORE;
+    }),
 
   ListItem: new BaseTraversalRule(
     [Roles.LISTITEM,

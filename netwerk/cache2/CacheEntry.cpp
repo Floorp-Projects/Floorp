@@ -5,6 +5,7 @@
 #include "CacheLog.h"
 #include "CacheEntry.h"
 #include "CacheStorageService.h"
+#include "CacheObserver.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -396,7 +397,8 @@ NS_IMETHODIMP CacheEntry::OnFileDoomed(nsresult aResult)
   return NS_OK;
 }
 
-already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(nsICacheEntryOpenCallback* aCallback)
+already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
+                                                               nsICacheEntryOpenCallback* aCallback)
 {
   LOG(("CacheEntry::ReopenTruncated [this=%p]", this));
 
@@ -413,7 +415,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(nsICacheEntryOpen
     // The following call dooms this entry (calls DoomAlreadyRemoved on us)
     nsresult rv = CacheStorageService::Self()->AddStorageEntry(
       GetStorageID(), GetURI(), GetEnhanceID(),
-      mUseDisk,
+      mUseDisk && !aMemoryOnly,
       true, // always create
       true, // truncate existing (this one)
       getter_AddRefs(handle));
@@ -848,34 +850,12 @@ uint32_t CacheEntry::GetMetadataMemoryConsumption()
 
 // nsICacheEntry
 
-NS_IMETHODIMP CacheEntry::GetPersistToDisk(bool *aPersistToDisk)
+NS_IMETHODIMP CacheEntry::GetPersistent(bool *aPersistToDisk)
 {
   // No need to sync when only reading.
   // When consumer needs to be consistent with state of the memory storage entries
   // table, then let it use GetUseDisk getter that must be called under the service lock.
   *aPersistToDisk = mUseDisk;
-  return NS_OK;
-}
-NS_IMETHODIMP CacheEntry::SetPersistToDisk(bool aPersistToDisk)
-{
-  LOG(("CacheEntry::SetPersistToDisk [this=%p, persist=%d]", this, aPersistToDisk));
-
-  if (mState >= READY) {
-    LOG(("  failed, called after filling the entry"));
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (mUseDisk == aPersistToDisk)
-    return NS_OK;
-
-  mozilla::MutexAutoLock lock(CacheStorageService::Self()->Lock());
-
-  mUseDisk = aPersistToDisk;
-  CacheStorageService::Self()->RecordMemoryOnlyEntry(
-    this, !aPersistToDisk, false /* don't overwrite */);
-
-  // File persistence is setup just before we open output stream on it.
-
   return NS_OK;
 }
 
@@ -966,7 +946,7 @@ NS_IMETHODIMP CacheEntry::OpenOutputStream(int64_t offset, nsIOutputStream * *_r
 
   MOZ_ASSERT(mState > EMPTY);
 
-  if (mOutputStream) {
+  if (mOutputStream && !mIsDoomed) {
     LOG(("  giving phantom output stream"));
     mOutputStream.forget(_retval);
   }
@@ -1038,6 +1018,14 @@ NS_IMETHODIMP CacheEntry::GetPredictedDataSize(int64_t *aPredictedDataSize)
 NS_IMETHODIMP CacheEntry::SetPredictedDataSize(int64_t aPredictedDataSize)
 {
   mPredictedDataSize = aPredictedDataSize;
+
+  if (CacheObserver::EntryIsTooBig(mPredictedDataSize, mUseDisk)) {
+    LOG(("CacheEntry::SetPredictedDataSize [this=%p] too big, dooming", this));
+    AsyncDoom(nullptr);
+
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
   return NS_OK;
 }
 
@@ -1210,13 +1198,14 @@ NS_IMETHODIMP CacheEntry::SetValid()
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheEntry::Recreate(nsICacheEntry **_retval)
+NS_IMETHODIMP CacheEntry::Recreate(bool aMemoryOnly,
+                                   nsICacheEntry **_retval)
 {
   LOG(("CacheEntry::Recreate [this=%p, state=%s]", this, StateString(mState)));
 
   mozilla::MutexAutoLock lock(mLock);
 
-  nsRefPtr<CacheEntryHandle> handle = ReopenTruncated(nullptr);
+  nsRefPtr<CacheEntryHandle> handle = ReopenTruncated(aMemoryOnly, nullptr);
   if (handle) {
     handle.forget(_retval);
     return NS_OK;

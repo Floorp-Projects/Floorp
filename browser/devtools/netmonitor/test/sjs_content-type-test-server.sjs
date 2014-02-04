@@ -95,6 +95,15 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "jsonp2": {
+        let fun = params.filter((s) => s.contains("jsonp="))[0].split("=")[1];
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "text/json; charset=utf-8", false);
+        maybeMakeCached();
+        response.write(" " + fun + " ( { \"greeting\": \"Hello weird JSONP!\" } ) ; ");
+        response.finish();
+        break;
+      }
       case "json-long": {
         let str = "{ \"greeting\": \"Hello long string JSON!\" },";
         response.setStatusLine(request.httpVersion, status, "OK");
@@ -109,6 +118,14 @@ function handleRequest(request, response) {
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         maybeMakeCached();
         response.write("{ \"greeting\": \"Hello malformed JSON!\" },");
+        response.finish();
+        break;
+      }
+      case "json-text-mime": {
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
+        maybeMakeCached();
+        response.write("{ \"greeting\": \"Hello third-party JSON!\" }");
         response.finish();
         break;
       }

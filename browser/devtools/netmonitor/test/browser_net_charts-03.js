@@ -9,24 +9,27 @@ function test() {
   initNetMonitor(SIMPLE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, Chart } = aMonitor.panelWin;
+    let { document, L10N, Chart } = aMonitor.panelWin;
     let container = document.createElement("box");
 
     let table = Chart.Table(document, {
       title: "Table title",
       data: [{
         label1: 1,
-        label2: "11.1foo"
+        label2: 11.1
       }, {
         label1: 2,
-        label2: "12.2bar"
+        label2: 12.2
       }, {
         label1: 3,
-        label2: "13.3baz"
+        label2: 13.3
       }],
+      strings: {
+        label2: (value, index) => value + ["foo", "bar", "baz"][index]
+      },
       totals: {
-        label1: "Hello %S",
-        label2: "World %S"
+        label1: value => "Hello " + L10N.numberWithDecimals(value, 2),
+        label2: value => "World " + L10N.numberWithDecimals(value, 2)
       }
     });
 
