@@ -18,6 +18,10 @@ LIBS = \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
 
+ifdef BUILD_ARM_NEON
+LIBS += $(DEPTH)/media/libyuv/libyuv_libyuv_neon/$(LIB_PREFIX)yuv_neon.$(LIB_SUFFIX)
+endif
+
 ifdef JS_SHARED_LIBRARY
 LIBS += $(MOZ_JS_LIBS)
 endif

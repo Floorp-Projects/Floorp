@@ -19,4 +19,3 @@ GYP_DIRS['.'].input = 'libyuv.gyp'
 GYP_DIRS['.'].variables = gyp_vars
 GYP_DIRS['.'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['.'].non_unified_sources += libyuv_non_unified_sources
-
