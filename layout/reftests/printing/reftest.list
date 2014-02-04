@@ -26,3 +26,9 @@
 == 652178-1.html 652178-1-ref2.html
 fuzzy-if(cocoaWidget,1,5000) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255,100) == 745025-1.html 745025-1-ref.html
 == 820496-1.html 820496-1-ref.html
+
+# NOTE: These tests don't yet rigorously test what they're
+# trying to test (shrink-to-fit behavior), due to bug 967311.
+== 960822.html 960822-ref.html
+== 966419-1.html 966419-1-ref.html
+== 966419-2.html 966419-2-ref.html

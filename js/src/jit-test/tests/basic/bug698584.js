@@ -15,7 +15,8 @@ try
 }
 catch (e)
 {
-  assertEq(""+e, "InternalError: allocation size overflow");
+  assertEq(""+e === "InternalError: allocation size overflow" ||
+           ""+e === "out of memory", true);
 }
 
 /* Don't crash */

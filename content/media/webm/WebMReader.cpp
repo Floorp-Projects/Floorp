@@ -329,7 +329,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
       // that our video frame creation code doesn't overflow.
       nsIntSize displaySize(params.display_width, params.display_height);
       nsIntSize frameSize(params.width, params.height);
-      if (!VideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
+      if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
         // Video track's frame sizes will overflow. Ignore the video track.
         continue;
       }
