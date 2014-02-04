@@ -8,10 +8,13 @@
 #include "nsMathUtils.h"
 #include "nsSize.h"
 #include "VorbisUtils.h"
+#include "ImageContainer.h"
 
 #include <stdint.h>
 
 namespace mozilla {
+
+using layers::PlanarYCbCrImage;
 
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.
@@ -154,6 +157,29 @@ IsVideoContentType(const nsCString& aContentType)
     return true;
   }
   return false;
+}
+
+bool
+IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
+                   const nsIntSize& aDisplay)
+{
+  return
+    aFrame.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aFrame.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aFrame.width * aFrame.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aFrame.width * aFrame.height != 0 &&
+    aPicture.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.x < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.x + aPicture.width < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.y < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.y + aPicture.height < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.width * aPicture.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aPicture.width * aPicture.height != 0 &&
+    aDisplay.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aDisplay.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aDisplay.width * aDisplay.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aDisplay.width * aDisplay.height != 0;
 }
 
 } // end namespace mozilla
