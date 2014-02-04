@@ -26,3 +26,5 @@
 == 652178-1.html 652178-1-ref2.html
 fuzzy-if(cocoaWidget,1,5000) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255,100) == 745025-1.html 745025-1-ref.html
 == 820496-1.html 820496-1-ref.html
+== 966419-1.html 966419-1-ref.html
+== 966419-2.html 966419-2-ref.html
