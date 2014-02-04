@@ -22,7 +22,7 @@ function test() {
     gFrames = gDebugger.DebuggerView.StackFrames;
     gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(initialChecks)
       .then(testNewestTwoFrames)
       .then(testOldestTwoFrames)
@@ -54,12 +54,12 @@ function testNewestTwoFrames() {
     "Newest frame should be selected in the mirrored view as well.");
   is(gSources.selectedIndex, 1,
     "The second source is selected in the widget.");
-  ok(isCaretPos(gPanel, 6),
-    "Editor caret location is correct.");
+  ok(isCaretPos(gPanel, 1),
+    "Editor caret location is correct (1).");
 
   // The editor's debug location takes a tick to update.
   executeSoon(() => {
-    is(gEditor.getDebugLocation(), 5,
+    is(gEditor.getDebugLocation(), 0,
       "Editor debug location is correct.");
 
     EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -73,7 +73,7 @@ function testNewestTwoFrames() {
     is(gSources.selectedIndex, 1,
       "The second source is still selected in the widget.");
     ok(isCaretPos(gPanel, 6),
-      "Editor caret location is correct.");
+      "Editor caret location is correct (2).");
 
     // The editor's debug location takes a tick to update.
     executeSoon(() => {
@@ -90,19 +90,19 @@ function testNewestTwoFrames() {
 function testOldestTwoFrames() {
   let deferred = promise.defer();
 
-  waitForSourceAndCaret(gPanel, "-01.js", 5).then(waitForTick).then(() => {
+  waitForSourceAndCaret(gPanel, "-01.js", 1).then(waitForTick).then(() => {
     is(gFrames.selectedIndex, 1,
       "Second frame should be selected after click.");
     is(gClassicFrames.selectedIndex, 2,
       "Second frame should be selected in the mirrored view as well.");
     is(gSources.selectedIndex, 0,
       "The first source is now selected in the widget.");
-    ok(isCaretPos(gPanel, 5),
-      "Editor caret location is correct.");
+    ok(isCaretPos(gPanel, 1),
+      "Editor caret location is correct (3).");
 
     // The editor's debug location takes a tick to update.
     executeSoon(() => {
-      is(gEditor.getDebugLocation(), 4,
+      is(gEditor.getDebugLocation(), 0,
         "Editor debug location is correct.");
 
       EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -116,7 +116,7 @@ function testOldestTwoFrames() {
       is(gSources.selectedIndex, 0,
         "The first source is still selected in the widget.");
       ok(isCaretPos(gPanel, 5),
-        "Editor caret location is correct.");
+        "Editor caret location is correct (4).");
 
       // The editor's debug location takes a tick to update.
       executeSoon(() => {
