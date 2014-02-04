@@ -288,7 +288,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
 
     nsIntSize frameSize(mTheoraState->mInfo.frame_width,
                         mTheoraState->mInfo.frame_height);
-    if (VideoInfo::ValidateVideoRegion(frameSize, picture, displaySize)) {
+    if (IsValidVideoRegion(frameSize, picture, displaySize)) {
       // Video track's frame sizes will not overflow. Activate the video track.
       mInfo.mVideo.mHasVideo = true;
       mInfo.mVideo.mDisplay = displaySize;

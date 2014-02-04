@@ -761,6 +761,40 @@ nsHtml5TreeBuilder::getDocumentFragmentForTemplate(nsIContent** aTemplate)
   return fragHandle;
 }
 
+nsIContent**
+nsHtml5TreeBuilder::getFormPointerForContext(nsIContent** aContext)
+{
+  if (!aContext) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // aContext must always be a handle to an element that already exists
+  // in the document. It must never be an empty handle.
+  nsIContent* contextNode = *aContext;
+  nsIContent* currentAncestor = contextNode;
+
+  // We traverse the ancestors of the context node to find the nearest
+  // form pointer. This traversal is why aContext must not be an emtpy handle.
+  nsIContent* nearestForm = nullptr;
+  while (currentAncestor) {
+    if (currentAncestor->IsHTML(nsGkAtoms::form)) {
+      nearestForm = currentAncestor;
+      break;
+    }
+    currentAncestor = currentAncestor->GetParent();
+  }
+
+  if (!nearestForm) {
+    return nullptr;
+  }
+
+  nsIContent** formPointer = AllocateContentHandle();
+  *formPointer = nearestForm;
+  return formPointer;
+}
+
 // Error reporting
 
 void

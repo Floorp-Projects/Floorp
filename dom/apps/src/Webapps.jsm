@@ -1575,9 +1575,8 @@ this.DOMApplicationRegistry = {
         },
         manifestURL: aApp.manifestURL
       });
-      let cacheUpdate = aProfileDir
-        ? updateSvc.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
-        : updateSvc.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
+      let cacheUpdate = updateSvc.scheduleAppUpdate(
+        appcacheURI, docURI, aApp.localId, false, aProfileDir);
 
       // We save the download details for potential further usage like
       // cancelling it.

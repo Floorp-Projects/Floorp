@@ -483,7 +483,8 @@ class Marionette(object):
                         KeyError):
                     instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
-                                           bin=self.bin, profile=self.profile, app_args=app_args)
+                                           bin=self.bin, profile=self.profile,
+                                           app_args=app_args, symbols_path=symbols_path)
             self.instance.start()
             assert(self.wait_for_port()), "Timed out waiting for port!"
 
@@ -686,9 +687,8 @@ class Marionette(object):
             if self.emulator.check_for_minidumps():
                 crashed = True
         elif self.instance:
-            # In the future, a check for crashed Firefox processes
-            # should be here.
-            pass
+            if self.instance.check_for_crashes():
+                crashed = True
         if returncode is not None:
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
                 (name, returncode))

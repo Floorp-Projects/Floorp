@@ -5087,6 +5087,9 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
     if (cachedResponseFreshness == ocspFresh) {
         CERT_DestroyOCSPCertID(certID);
+        if (rvOcsp != SECSuccess) {
+            PORT_SetError(cachedErrorCode);
+        }
         return rvOcsp;
     }
 

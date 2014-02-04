@@ -138,7 +138,6 @@ typedef struct JSStructuredCloneWriter      JSStructuredCloneWriter;
 typedef struct JSTracer                     JSTracer;
 
 class                                       JSFlatString;
-class                                       JSStableString;  // long story
 
 #ifdef JS_THREADSAFE
 typedef struct PRCallOnceType   JSCallOnceType;

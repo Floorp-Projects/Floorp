@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 TrueType Tables
@@ -60,7 +60,7 @@ TrueType Tables
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_PLATFORM_XXX">TT_PLATFORM_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -108,7 +108,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_APPLE_ID_XXX">TT_APPLE_ID_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -158,7 +158,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_MAC_ID_XXX">TT_MAC_ID_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -319,7 +319,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_ISO_ID_XXX">TT_ISO_ID_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -355,7 +355,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_MS_ID_XXX">TT_MS_ID_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -410,7 +410,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_ADOBE_ID_XXX">TT_ADOBE_ID_XXX</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
+Defined in FT_TRUETYPE_IDS_H (ttnameid.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -449,7 +449,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_Header">TT_Header</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -494,7 +494,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_HoriHeader">TT_HoriHeader</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -587,7 +587,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>IMPORTANT: The TT_HoriHeader and TT_VertHeader structures should be identical except for the names of their fields which are different.</p>
+<p>IMPORTANT: The TT_HoriHeader and TT_VertHeader structures should be identical except for the names of their fields, which are different.</p>
 <p>This ensures that a single function in the &lsquo;ttload&rsquo; module is able to read both the horizontal and vertical headers.</p>
 </td></tr></table>
 </td></tr></table>
@@ -599,7 +599,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_VertHeader">TT_VertHeader</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -696,7 +696,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
-<p>IMPORTANT: The TT_HoriHeader and TT_VertHeader structures should be identical except for the names of their fields which are different.</p>
+<p>IMPORTANT: The TT_HoriHeader and TT_VertHeader structures should be identical except for the names of their fields, which are different.</p>
 <p>This ensures that a single function in the &lsquo;ttload&rsquo; module is able to read both the horizontal and vertical headers.</p>
 </td></tr></table>
 </td></tr></table>
@@ -708,7 +708,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_OS2">TT_OS2</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -749,12 +749,12 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usWinAscent;
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usWinDescent;
 
-    /* only version 1 tables: */
+    /* only version 1 and higher: */
 
     <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>   ulCodePageRange1;       /* Bits 0-31   */
     <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>   ulCodePageRange2;       /* Bits 32-63  */
 
-    /* only version 2 tables: */
+    /* only version 2 and higher: */
 
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   sxHeight;
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   sCapHeight;
@@ -762,12 +762,17 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usBreakChar;
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usMaxContext;
 
+    /* only version 5 and higher: */
+
+    <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usLowerOpticalPointSize;       /* in twips (1/20th points) */
+    <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usUpperOpticalPointSize;       /* in twips (1/20th points) */
+
   } <b>TT_OS2</b>;
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>A structure used to model a TrueType OS/2 table. This is the long table version. All fields comply to the TrueType specification.</p>
-<p>Note that we now support old Mac fonts which do not include an OS/2 table. In this case, the &lsquo;version&rsquo; field is always set to 0xFFFF.</p>
+<p>A structure used to model a TrueType OS/2 table. All fields comply to the OpenType specification.</p>
+<p>Note that we now support old Mac fonts that do not include an OS/2 table. In this case, the &lsquo;version&rsquo; field is always set to 0xFFFF.</p>
 </td></tr></table><br>
 </td></tr></table>
 <hr width="75%">
@@ -778,7 +783,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_Postscript">TT_Postscript</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -812,7 +817,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_PCLT">TT_PCLT</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -849,7 +854,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="TT_MaxProfile">TT_MaxProfile</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -875,7 +880,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>The maximum profile is a table containing many max values which can be used to pre-allocate arrays. This ensures that no memory allocation occurs during a glyph load.</p>
+<p>The maximum profile is a table containing many max values, which can be used to pre-allocate arrays. This ensures that no memory allocation occurs during a glyph load.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>fields</b></em></td></tr><tr><td>
 <p></p>
@@ -939,7 +944,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Sfnt_Tag">FT_Sfnt_Tag</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -970,7 +975,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_Sfnt_Table">FT_Get_Sfnt_Table</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1018,7 +1023,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Load_Sfnt_Table">FT_Load_Sfnt_Table</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1083,6 +1088,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
   error = FT_Load_Sfnt_Table( face, tag, 0, buffer, &amp;length );
   if ( error ) { ... could not load table ... }
 </pre>
+<p>Note that structures like <a href="ft2-truetype_tables.html#TT_Header">TT_Header</a> or <a href="ft2-truetype_tables.html#TT_OS2">TT_OS2</a> can't be used with this function; they are limited to <a href="ft2-truetype_tables.html#FT_Get_Sfnt_Table">FT_Get_Sfnt_Table</a>. Reason is that those structures depend on the processor architecture, with varying size (e.g. 32bit vs. 64bit) or order (big endian vs. little endian).</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -1093,7 +1099,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Sfnt_Table_Info">FT_Sfnt_Table_Info</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1149,7 +1155,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_CMap_Language_ID">FT_Get_CMap_Language_ID</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1158,7 +1164,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
-<p>Return TrueType/sfnt specific cmap language ID. Definitions of language ID values are in &lsquo;freetype/ttnameid.h&rsquo;.</p>
+<p>Return TrueType/sfnt specific cmap language ID. Definitions of language ID values are in &lsquo;ttnameid.h&rsquo;.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>
@@ -1181,7 +1187,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_CMap_Format">FT_Get_CMap_Format</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
+Defined in FT_TRUETYPE_TABLES_H (tttables.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -1212,7 +1218,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_PARAM_TAG_UNPATENTED_HINTING">FT_PARAM_TAG_UNPATENTED_HINTING</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_UNPATENTED_HINTING_H (freetype/ttunpat.h).
+Defined in FT_UNPATENTED_HINTING_H (ttunpat.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 

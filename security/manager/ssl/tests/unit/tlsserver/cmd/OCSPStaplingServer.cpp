@@ -36,6 +36,7 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-needssig.example.com", ORTNeedsSig, nullptr },
   { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized, nullptr },
   { "ocsp-stapling-with-intermediate.example.com", ORTGood, "ocspEEWithIntermediate" },
+  { "ocsp-stapling-bad-signature.example.com", ORTBadSignature, nullptr },
   { nullptr, ORTNull, nullptr }
 };
 

@@ -2649,16 +2649,16 @@ FlattenSubstrings(JSContext *cx, const jschar *chars,
 }
 
 static JSString *
-AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
+AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
                  const StringRange *ranges, size_t rangesLen)
 {
     JS_ASSERT(rangesLen);
 
     /* For single substrings, construct a dependent string. */
     if (rangesLen == 1)
-        return js_NewDependentString(cx, stableStr, ranges[0].start, ranges[0].length);
+        return js_NewDependentString(cx, flatStr, ranges[0].start, ranges[0].length);
 
-    const jschar *chars = stableStr->getChars(cx);
+    const jschar *chars = flatStr->getChars(cx);
     if (!chars)
         return nullptr;
 
@@ -2680,7 +2680,7 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
         if (i == end) {
             /* Not even one range fits JSShortString, use DependentString */
             const StringRange &sr = ranges[i++];
-            part = js_NewDependentString(cx, stableStr, sr.start, sr.length);
+            part = js_NewDependentString(cx, flatStr, sr.start, sr.length);
         } else {
             /* Copy the ranges (linearly) into a JSShortString */
             part = FlattenSubstrings(cx, chars, ranges + i, end - i, substrLen);
@@ -2701,14 +2701,13 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
 static bool
 StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, MutableHandleValue rval)
 {
-    Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
-    if (!stableStr)
+    Rooted<JSFlatString*> flatStr(cx, str->ensureFlat(cx));
+    if (!flatStr)
         return false;
 
     Vector<StringRange, 16, SystemAllocPolicy> ranges;
 
-    StableCharPtr chars = stableStr->chars();
-    size_t charsLen = stableStr->length();
+    size_t charsLen = flatStr->length();
 
     MatchPair match;
     size_t startIndex = 0; /* Index used for iterating through the string. */
@@ -2720,7 +2719,8 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        RegExpRunStatus status = re.executeMatchOnly(cx, chars.get(), charsLen, &startIndex, match);
+        RegExpRunStatus status =
+            re.executeMatchOnly(cx, flatStr->chars(), charsLen, &startIndex, match);
         if (status == RegExpRunStatus_Error)
             return false;
         if (status == RegExpRunStatus_Success_NotFound)
@@ -2746,13 +2746,13 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
     /* If unmatched, return the input string. */
     if (!lastIndex) {
         if (startIndex > 0)
-            cx->global()->getRegExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
+            cx->global()->getRegExpStatics()->updateLazily(cx, flatStr, &re, lazyIndex);
         rval.setString(str);
         return true;
     }
 
     /* The last successful match updates the RegExpStatics. */
-    cx->global()->getRegExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
+    cx->global()->getRegExpStatics()->updateLazily(cx, flatStr, &re, lazyIndex);
 
     /* Include any remaining part of the string. */
     if (lastIndex < charsLen) {
@@ -2766,7 +2766,7 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
         return true;
     }
 
-    JSString *result = AppendSubstrings(cx, stableStr, ranges.begin(), ranges.length());
+    JSString *result = AppendSubstrings(cx, flatStr, ranges.begin(), ranges.length());
     if (!result)
         return false;
 
@@ -3953,16 +3953,16 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 }
 
 template <AllowGC allowGC>
-JSStableString *
+JSFlatString *
 js_NewString(ThreadSafeContext *cx, jschar *chars, size_t length)
 {
-    return JSStableString::new_<allowGC>(cx, chars, length);
+    return JSFlatString::new_<allowGC>(cx, chars, length);
 }
 
-template JSStableString *
+template JSFlatString *
 js_NewString<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
 
-template JSStableString *
+template JSFlatString *
 js_NewString<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
 
 JSLinearString *

@@ -42,6 +42,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   switch (aORT) {
     case ORTGood:
     case ORTGoodOtherCA:
+    case ORTBadSignature:
       sr = CERT_CreateOCSPSingleResponseGood(aArena, id, now, &nextUpdate);
       if (!sr) {
         PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
@@ -118,6 +119,10 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
       PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
     }
+  } else if (aORT == ORTBadSignature) {
+    // passing in a null responderCert to CERT_CreateEncodedOCSPSuccessResponse
+    // causes it to generate an invalid signature (by design, for testing).
+    ca = nullptr;
   } else {
     // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
     ca = CERT_FindCertIssuer(aCert, now, certUsageSSLCA);

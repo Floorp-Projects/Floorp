@@ -5657,6 +5657,7 @@ sftk_MapKeySize(CK_KEY_TYPE keyType)
     return 0;
 }
 
+#ifdef NSS_ENABLE_ECC
 /* Inputs:
  *  key_len: Length of derived key to be generated.
  *  SharedSecret: a shared secret that is the output of a key agreement primitive.
@@ -5675,12 +5676,13 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
     unsigned char *buffer = NULL, *output_buffer = NULL;
     PRUint32 buffer_len, max_counter, i;
     SECStatus rv;
+    CK_RV crv;
 
     /* Check that key_len isn't too long.  The maximum key length could be
      * greatly increased if the code below did not limit the 4-byte counter
      * to a maximum value of 255. */
     if (key_len > 254 * HashLen)
-	return SEC_ERROR_INVALID_ARGS;
+	return CKR_ARGUMENTS_BAD;
 
     if (SharedInfo == NULL)
 	SharedInfoLen = 0;
@@ -5688,7 +5690,7 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
     buffer_len = SharedSecret->len + 4 + SharedInfoLen;
     buffer = (CK_BYTE *)PORT_Alloc(buffer_len);
     if (buffer == NULL) {
-	rv = SEC_ERROR_NO_MEMORY;
+	crv = CKR_HOST_MEMORY;
 	goto loser;
     }
 
@@ -5698,7 +5700,7 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
 
     output_buffer = (CK_BYTE *)PORT_Alloc(max_counter * HashLen);
     if (output_buffer == NULL) {
-	rv = SEC_ERROR_NO_MEMORY;
+	crv = CKR_HOST_MEMORY;
 	goto loser;
     }
 
@@ -5715,8 +5717,11 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
 
     for(i=0; i < max_counter; i++) {
 	rv = Hash(&output_buffer[i * HashLen], buffer, buffer_len);
-	if (rv != SECSuccess)
+	if (rv != SECSuccess) {
+	    /* 'Hash' should not fail. */
+	    crv = CKR_FUNCTION_FAILED;
 	    goto loser;
+	}
 
 	/* Increment counter (assumes max_counter < 255) */
 	buffer[SharedSecret->len + 3]++;
@@ -5728,7 +5733,7 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
     }
     *key = output_buffer;
 
-    return SECSuccess;
+    return CKR_OK;
 
     loser:
 	if (buffer) {
@@ -5737,7 +5742,7 @@ static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECIte
 	if (output_buffer) {
 	    PORT_ZFree(output_buffer, max_counter * HashLen);
 	}
-	return rv;
+	return crv;
 }
 
 static CK_RV sftk_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len,
@@ -5761,8 +5766,9 @@ static CK_RV sftk_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len,
 	return sftk_compute_ANSI_X9_63_kdf(key, key_len, SharedSecret, SharedInfo,
 		   		 SharedInfoLen, SHA512_HashBuf, SHA512_LENGTH);
     else
-	return SEC_ERROR_INVALID_ALGORITHM;
+	return CKR_MECHANISM_INVALID;
 }
+#endif
 
 /*
  * SSL Key generation given pre master secret
@@ -6814,12 +6820,11 @@ key_and_mac_derive_fail:
 	    secretlen = tmp.len;
 	} else {
 	    secretlen = keySize;
-	    rv = sftk_ANSI_X9_63_kdf(&secret, keySize,
+	    crv = sftk_ANSI_X9_63_kdf(&secret, keySize,
 			&tmp, mechParams->pSharedData,
 			mechParams->ulSharedDataLen, mechParams->kdf);
 	    PORT_ZFree(tmp.data, tmp.len);
-	    if (rv != SECSuccess) {
-		crv = CKR_HOST_MEMORY;
+	    if (crv != CKR_OK) {
 		break;
 	    }
 	    tmp.data = secret;

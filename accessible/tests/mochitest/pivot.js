@@ -265,7 +265,9 @@ function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets, aI
 
   this.getID = function setVCPosInvoker_getID()
   {
-    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod;
+    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod + " in " +
+      prettyName(aIdOrNameOrAcc) + ", " + boundaryToString(aBoundary) +
+      ", [" + aTextOffsets + "]";
   };
 
   if (expectMove) {
@@ -379,7 +381,9 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence)
   // Add modal root (if any)
   aQueue.push(new setModalRootInvoker(aDocAcc, aModalRoot, 0));
 
-  for (var i = 0; i < aSequence.length; i++) {
+  aQueue.push(new setVCPosInvoker(aDocAcc, "moveFirst", aRule, aSequence[0]));
+
+  for (var i = 1; i < aSequence.length; i++) {
     var invoker =
       new setVCPosInvoker(aDocAcc, "moveNext", aRule, aSequence[i]);
     aQueue.push(invoker);

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946585
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 946585</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946585">Mozilla Bug 946585</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form><div id="formdiv"></div></form>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test for Bug 946585 **/
+var formDiv = document.getElementById("formdiv");
+formDiv.innerHTML = '<form>';
+is(formDiv.firstChild, null, "InnerHTML should not produce form element because the div has a form pointer.");
+</script>
+</body>
+</html>
