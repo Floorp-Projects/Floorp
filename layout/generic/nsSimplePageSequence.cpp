@@ -841,9 +841,6 @@ NS_IMETHODIMP
 nsSimplePageSequenceFrame::GetSTFPercent(float& aSTFPercent)
 {
   NS_ENSURE_TRUE(mPageData, NS_ERROR_UNEXPECTED);
-  aSTFPercent = 1.0f;
-  if (mPageData && (mPageData->mPageContentXMost > mPageData->mPageContentSize)) {
-    aSTFPercent = float(mPageData->mPageContentSize) / float(mPageData->mPageContentXMost);
-  }
+  aSTFPercent = mPageData->mShrinkToFitRatio;
   return NS_OK;
 }

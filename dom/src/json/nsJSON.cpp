@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
+#include "js/CharacterEncoding.h"
 #include "js/OldDebugAPI.h"
 #include "nsJSON.h"
 #include "nsIXPConnect.h"
@@ -524,8 +525,8 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   JS::Rooted<JS::Value> reviver(mCx, JS::NullValue()), value(mCx);
 
-  JS::StableCharPtr chars(reinterpret_cast<const jschar*>(mBufferedChars.Elements()),
-                          mBufferedChars.Length());
+  JS::ConstTwoByteChars chars(reinterpret_cast<const jschar*>(mBufferedChars.Elements()),
+                              mBufferedChars.Length());
   bool ok = JS_ParseJSONWithReviver(mCx, chars.get(),
                                       uint32_t(mBufferedChars.Length()),
                                       reviver, &value);

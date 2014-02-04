@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This test executes nsIOfflineCacheUpdateService.scheduleCustomProfileUpdate API
+ * This test executes nsIOfflineCacheUpdateService.scheduleAppUpdate API
  * 1. preloads an app with a manifest to a custom sudir in the profile (for simplicity)
  * 2. observes progress and completion of the update
  * 3. checks presence of index.sql and files in the expected location
@@ -114,9 +114,10 @@ function run_test()
 
   var us = Cc["@mozilla.org/offlinecacheupdate-service;1"].
            getService(Ci.nsIOfflineCacheUpdateService);
-  var update = us.scheduleCustomProfileUpdate(
+  var update = us.scheduleAppUpdate(
       make_uri("http://localhost:4444/manifest"),
       make_uri("http://localhost:4444/masterEntry"),
+      0 /* no AppID */, false /* not in browser*/,
       customDir);
 
   var expectedStates = [

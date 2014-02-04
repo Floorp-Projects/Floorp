@@ -6915,6 +6915,14 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       // app that does not use it.
       nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
       if (docShell && docShell->GetIsApp()) {
+        nsString uri;
+        GetDocumentURI(uri);
+        if (!uri.EqualsLiteral("about:blank")) {
+          nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                          NS_LITERAL_CSTRING("DOM"), this,
+                                          nsContentUtils::eDOM_PROPERTIES,
+                                          "ImplicitMetaViewportTagFallback");
+        }
         mViewportType = DisplayWidthHeightNoZoom;
         return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
       }

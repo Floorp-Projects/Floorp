@@ -192,7 +192,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(6ee353ba-11ea-4008-a78a-55b343fb2a49)]
+[scriptable, uuid(0668910d-d14f-4cee-8db5-25faebc360ab)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -223,15 +223,6 @@ interface nsIOfflineCacheUpdateService : nsISupports {
                                          in nsIDOMWindow aWindow);
 
     /**
-     * Schedule a cache update for a given offline manifest and let the data
-     * be stored to a custom profile directory.  There is no coalescing of
-     * manifests by manifest URL.
-     */
-    nsIOfflineCacheUpdate scheduleCustomProfileUpdate(in nsIURI aManifestURI,
-                                                      in nsIURI aDocumentURI,
-                                                      in nsIFile aProfileDir);
-
-    /**
      * Schedule a cache update for a given offline manifest using app cache
      * bound to the given appID+inBrowser flag.  If an existing update is
      * scheduled or running, that update will be returned. Otherwise a new
@@ -240,7 +231,8 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     nsIOfflineCacheUpdate scheduleAppUpdate(in nsIURI aManifestURI,
                                             in nsIURI aDocumentURI,
                                             in unsigned long aAppID,
-                                            in boolean aInBrowser);
+                                            in boolean aInBrowser,
+                                            in nsIFile aProfileDir);
 
     /**
      * Schedule a cache update for a manifest when the document finishes

@@ -3150,13 +3150,15 @@ nsCacheService::MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
     if (NS_SUCCEEDED(aNewCacheSubdir->Exists(&exists)) && !exists) {
         // New cache directory does not exist, try to move the old one here
         // rename needs an empty target directory
-        rv = aNewCacheSubdir->Create(nsIFile::DIRECTORY_TYPE, 0777); 
-        if (NS_SUCCEEDED(rv)) {
+
+        // Make sure the parent of the target sub-dir exists
+        rv = aNewCacheDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
+        if (NS_SUCCEEDED(rv) || NS_ERROR_FILE_ALREADY_EXISTS == rv) {
             nsAutoCString oldPath;
             rv = aOldCacheSubdir->GetNativePath(oldPath);
             if (NS_FAILED(rv))
                 return;
-            if(rename(oldPath.get(), newPath.get()) == 0)
+            if (rename(oldPath.get(), newPath.get()) == 0)
                 return;
         }
     }
