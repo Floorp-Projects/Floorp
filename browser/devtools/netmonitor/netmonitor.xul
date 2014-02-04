@@ -215,6 +215,11 @@
                 data-key="flash"
                 label="&netmonitorUI.footer.filterFlash;">
         </button>
+        <button id="requests-menu-filter-other-button"
+                class="requests-menu-filter-button requests-menu-footer-button"
+                data-key="other"
+                label="&netmonitorUI.footer.filterOther;">
+        </button>
         <spacer id="requests-menu-spacer"
                 class="requests-menu-footer-spacer"
                 flex="100"/>

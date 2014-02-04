@@ -29,6 +29,9 @@ import java.util.HashMap;
  * provide a framework to improve upon the issues discovered with the previous BaseTest
  * implementation by providing simple test authorship and framework extension, consistency,
  * and reliability.
+ *
+ * For documentation on writing tests and extending the framework, see
+ * https://wiki.mozilla.org/Mobile/Fennec/Android/UITest
  */
 abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
                       implements UITestContext {

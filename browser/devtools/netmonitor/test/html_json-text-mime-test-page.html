@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <p>JSONP test</p>
+    <p>JSON text test</p>
 
     <script type="text/javascript">
       function get(aAddress, aCallback) {
@@ -25,10 +25,8 @@
       }
 
       function performRequests() {
-        get("sjs_content-type-test-server.sjs?fmt=jsonp&jsonp=$_0123Fun", function() {
-          get("sjs_content-type-test-server.sjs?fmt=jsonp2&jsonp=$_4567Sad", function() {
-            // Done.
-          });
+        get("sjs_content-type-test-server.sjs?fmt=json-text-mime", function() {
+          // Done.
         });
       }
     </script>

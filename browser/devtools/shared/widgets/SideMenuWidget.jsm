@@ -423,7 +423,6 @@ function SideMenuGroup(aWidget, aName, aOptions={}) {
     let target = this._target = this.document.createElement("vbox");
     target.className = "side-menu-widget-group";
     target.setAttribute("name", aName);
-    target.setAttribute("tooltiptext", aName);
 
     let list = this._list = this.document.createElement("vbox");
     list.className = "side-menu-widget-group-list";

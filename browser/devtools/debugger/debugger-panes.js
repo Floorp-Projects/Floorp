@@ -128,12 +128,14 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let url = aSource.url;
     let label = SourceUtils.getSourceLabel(url.split(" -> ").pop());
     let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
+    let unicodeUrl = NetworkHelper.convertToUnicode(unescape(url));
 
     let contents = document.createElement("label");
     contents.className = "plain dbg-source-item";
     contents.setAttribute("value", label);
     contents.setAttribute("crop", "start");
     contents.setAttribute("flex", "1");
+    contents.setAttribute("tooltiptext", unicodeUrl);
 
     // Append a source item to this container.
     this.push([contents, url], {
