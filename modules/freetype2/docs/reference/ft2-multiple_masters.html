@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 Multiple Masters
@@ -57,7 +57,7 @@ Multiple Masters
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_MM_Axis">FT_MM_Axis</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -97,7 +97,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Multi_Master">FT_Multi_Master</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -137,7 +137,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Var_Axis">FT_Var_Axis</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -190,7 +190,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Var_Named_Style">FT_Var_Named_Style</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -226,7 +226,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_MM_Var">FT_MM_Var</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -255,7 +255,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <p>The number of designs; should be normally 2^num_axis for MM fonts. Not meaningful for GX (where every glyph could have a different number of designs).</p>
 </td></tr>
 <tr valign=top><td><b>num_namedstyles</b></td><td>
-<p>The number of named styles; only meaningful for GX which allows certain design coordinates to have a string ID (in the &lsquo;name&rsquo; table) associated with them. The font can tell the user that, for example, Weight=1.5 is &lsquo;Bold&rsquo;.</p>
+<p>The number of named styles; only meaningful for GX that allows certain design coordinates to have a string ID (in the &lsquo;name&rsquo; table) associated with them. The font can tell the user that, for example, Weight=1.5 is &lsquo;Bold&rsquo;.</p>
 </td></tr>
 <tr valign=top><td><b>axis</b></td><td>
 <p>A table of axis descriptors. GX fonts contain slightly more data than MM.</p>
@@ -274,7 +274,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_Multi_Master">FT_Get_Multi_Master</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -315,7 +315,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_MM_Var">FT_Get_MM_Var</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -339,7 +339,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <p></p>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>amaster</b></td><td>
-<p>The Multiple Masters/GX var descriptor. Allocates a data structure, which the user must free (a single call to FT_FREE will do it).</p>
+<p>The Multiple Masters/GX var descriptor. Allocates a data structure, which the user must free.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -355,7 +355,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -400,7 +400,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -444,7 +444,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -488,7 +488,7 @@ Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).
+Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
