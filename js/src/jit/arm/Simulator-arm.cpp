@@ -2931,23 +2931,33 @@ Simulator::decodeType3(SimInstruction *instr)
         break;
       }
       case db_x: { // sudiv
-        if (!instr->hasW()) {
-            if (instr->bits(5, 4) == 0x1) {
-                if ((instr->bit(22) == 0x0) && (instr->bit(20) == 0x1)) {
-                    // sdiv (in V8 notation matching ARM ISA format) rn = rm/rs
-                    int rm = instr->rmValue();
-                    int32_t rm_val = get_register(rm);
-                    int rs = instr->rsValue();
-                    int32_t rs_val = get_register(rs);
-                    int32_t ret_val = 0;
-                    MOZ_ASSERT(rs_val != 0);
-                    if ((rm_val == INT32_MIN) && (rs_val == -1))
-                        ret_val = INT32_MIN;
-                    else
-                        ret_val = rm_val / rs_val;
-                    set_register(rn, ret_val);
-                    return;
-                }
+        if (instr->bit(22) == 0x0 && instr->bit(20) == 0x1 &&
+            instr->bits(15,12) == 0x0f && instr->bits(7, 4) == 0x1) {
+            if (!instr->hasW()) {
+                // sdiv (in V8 notation matching ARM ISA format) rn = rm/rs
+                int rm = instr->rmValue();
+                int32_t rm_val = get_register(rm);
+                int rs = instr->rsValue();
+                int32_t rs_val = get_register(rs);
+                int32_t ret_val = 0;
+                MOZ_ASSERT(rs_val != 0);
+                if ((rm_val == INT32_MIN) && (rs_val == -1))
+                    ret_val = INT32_MIN;
+                else
+                    ret_val = rm_val / rs_val;
+                set_register(rn, ret_val);
+                return;
+            } else {
+                // udiv (in V8 notation matching ARM ISA format) rn = rm/rs
+                int rm = instr->rmValue();
+                uint32_t rm_val = get_register(rm);
+                int rs = instr->rsValue();
+                uint32_t rs_val = get_register(rs);
+                uint32_t ret_val = 0;
+                MOZ_ASSERT(rs_val != 0);
+                ret_val = rm_val / rs_val;
+                set_register(rn, ret_val);
+                return;
             }
         }
 
