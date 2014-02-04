@@ -160,6 +160,7 @@ class GlobalObject : public JSObject
         return getSlotForCompilation(APPLICATION_SLOTS + key);
     }
     bool ensureConstructor(JSContext *cx, JSProtoKey key);
+    bool initConstructor(JSContext *cx, JSProtoKey key);
 
     void setConstructor(JSProtoKey key, const Value &v) {
         JS_ASSERT(key <= JSProto_LIMIT);
