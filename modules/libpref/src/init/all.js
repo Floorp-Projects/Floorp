@@ -4092,30 +4092,27 @@ pref("layers.offmainthreadcomposition.enabled", false);
 // 0  -> full-tilt mode: Recomposite even if not transaction occured.
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 // Whether to use the deprecated texture architecture rather than the new one.
-pref("layers.use-deprecated-textures", true);
 #ifndef XP_WIN
 // Asynchonous video compositing using the ImageBridge IPDL protocol.
 // requires off-main-thread compositing.
 // Never works on Windows, so no point pref'ing it on.
 pref("layers.async-video.enabled",false);
+pref("layers.use-deprecated-textures", true);
 #endif
 
 #ifdef MOZ_X11
 // OMTC off by default on Linux, but if activated, use new textures and async-video.
-pref("layers.use-deprecated-textures", false);
 pref("layers.async-video.enabled", true);
 #endif
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
-pref("layers.use-deprecated-textures", false);
 pref("layers.async-video.enabled",true);
 #endif
 
 // ANDROID covers android and b2g
 #ifdef ANDROID
 pref("layers.offmainthreadcomposition.enabled", true);
-pref("layers.use-deprecated-textures", false);
 pref("layers.async-video.enabled",true);
 #endif
 
