@@ -1,4 +1,132 @@
 
+CHANGES BETWEEN 2.5.1 and 2.5.2
+
+  I. IMPORTANT BUG FIXES
+
+    - Improving the display of some broken TrueType fonts introduced a
+      bug  that made  FreeType crash  on some  popular (but  not fully
+      conformant) fonts like `ahronbd.ttf'.
+
+    - Another round of improvements to correct positioning and hinting
+      of composite glyphs in TrueType fonts.
+
+
+  II. MISCELLANEOUS
+
+    - Version  2.5.1  introduced a  bug  in  handling embedded  bitmap
+      strikes of  TrueType fonts,  causing garbage display  under some
+      circumstances.
+
+    - The   `ftgrid'   demo   program    couldn't   be   compiled   in
+      non-development builds.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.5 and 2.5.1
+
+  I. IMPORTANT BUG FIXES
+
+    - For  some WinFNT  files,  the last  glyph  wasn't displayed  but
+      incorrectly marked as invalid.
+
+    - The vertical size of glyphs was  incorrectly set after a call to
+      `FT_GlyphSlot_Embolden', resulting in clipped glyphs.
+
+    - Many fields of the `PCLT' table in SFNT based fonts (if accessed
+      with `FT_Get_Sfnt_Table') were computed incorrectly.
+
+    - In TrueType fonts,  hinting of composite glyphs  could sometimes
+      deliver  incorrect positions  of  components or  even  distorted
+      shapes.
+
+
+  II. IMPORTANT CHANGES
+
+    - WOFF font format support has been added.
+
+    - The auto-hinter now supports Hebrew.  Greek and Cyrillic support
+      has been improved.
+
+    - Support for the forthcoming `OS/2'  SFNT table version 5, as can
+      be found e.g. in the `Sitka' font family for Windows 8.1.
+
+    - The header  file layout  has been changed.   After installation,
+      all files are now located in `<prefix>/include/freetype2'.
+
+      Applications  that  use   (a)  `freetype-config'  or  FreeType's
+      `pkg-config' file to get the include directory for the compiler,
+      and (b) the documented way for header inclusion like
+
+        #include <ft2build.h>
+        #include FT_FREETYPE_H
+        ...
+
+      don't need any change to the source code.
+
+
+  III. MISCELLANEOUS
+
+    - The stem  darkening feature  of the  new CFF  engine can  now be
+      fine-tuned with the new `darkening-parameters' property.
+
+    - `ftgrid' has been updated to toggle various engines with the `H'
+      key, similar to `ftview' and `ftdiff'.
+
+    - The functionality of `ttdebug' has been greatly enhanced.
+
+      . It now displays twilight, storage, and control value data; key
+        `T' shows the twilight point  table, key `S' the storage data,
+        and key `C' the control value table.
+
+      . Some  keys  have  been  reassigned  from  lowercase  to  their
+        uppercase equivalents; for example `q'  to quit the program is
+        now `Q'.
+
+      . Key `f' finishes the current function.
+
+      . Key `R' restarts the debugger.
+
+      . Keys `b' and `p' set a breakpoint.
+
+      . Key `B' provides a function call backtrace.
+
+    - Better support of ARMv7 and x86_64 processors.
+
+    - Apple's `sbix' color bitmap format is now supported.
+
+    - Improved   auto-hinter  rendering   for  many   TrueType  fonts,
+      especially in the range 20-40ppem.
+
+    - A  new face  flag  `FT_FACE_FLAG_COLOR' has  been  added (to  be
+      accessed with the macro `FT_HAS_COLOR').
+
+    - `FT_Gzip_Uncompress'   (modeled    after   zlib's   `uncompress'
+      function)  has been  added; this  is a  by-product of  the newly
+      added WOFF support.
+
+    - Support for  a build with  `cmake' has been contributed  by John
+      Cary <cary@txcorp.com>.
+
+    - Support for x64  builds with Visual C++ has  been contributed by
+      Kenneth Miller <kennethadammiller@yahoo.com>
+
+    - Manual pages for most demo programs have been added.
+
+    - The GETINFO bytecode instruction for TrueType fonts was buggy if
+      used to retrieve subpixel hinting information.  It was necessary
+      to set  selector bit 6  to get  results for selector  bits 7-10,
+      which is wrong.
+
+    - Improved computation  of emulated vertical metrics  for TrueType
+      fonts.
+
+    - Fixed horizontal start-up position of vertical phantom points in
+      TrueType bytecode.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.4.12 and 2.5
 
   I. IMPORTANT BUG FIXES
