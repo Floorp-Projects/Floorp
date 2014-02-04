@@ -543,6 +543,7 @@ const Class WithObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     nullptr,                 /* trace       */
+    JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     {
         with_LookupGeneric,
