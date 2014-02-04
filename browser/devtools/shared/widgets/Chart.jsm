@@ -96,18 +96,19 @@ function PieTableChart(node, pie, table) {
  *          - data: an array of items used to display each slice in the pie
  *                  and each row in the table;
  *                  @see `createPieChart` and `createTableChart` for details.
+ *          - strings: @see `createTableChart` for details.
+ *          - totals: @see `createTableChart` for details.
  *          - sorted: a flag specifying if the `data` should be sorted
  *                    ascending by `size`.
- *          - totals: @see `createTableChart` for details.
  * @return PieTableChart
  *         A pie+table chart proxy instance, which emits the following events:
  *           - "mouseenter", when the mouse enters a slice or a row
  *           - "mouseleave", when the mouse leaves a slice or a row
  *           - "click", when the mouse enters a slice or a row
  */
-function createPieTableChart(document, { sorted, title, diameter, data, totals }) {
+function createPieTableChart(document, { title, diameter, data, strings, totals, sorted }) {
   if (sorted) {
-    data = data.slice().sort((a, b) => +(parseFloat(a.size) < parseFloat(b.size)));
+    data = data.slice().sort((a, b) => +(a.size < b.size));
   }
 
   let pie = Chart.Pie(document, {
@@ -118,6 +119,7 @@ function createPieTableChart(document, { sorted, title, diameter, data, totals }
   let table = Chart.Table(document, {
     title: title,
     data: data,
+    strings: strings,
     totals: totals
   });
 
@@ -202,7 +204,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
   let isPlaceholder = false;
 
   // Filter out very small sizes, as they'll just render invisible slices.
-  data = data ? data.filter(e => parseFloat(e.size) > EPSILON) : null;
+  data = data ? data.filter(e => e.size > EPSILON) : null;
 
   // If there's no data available, display an empty placeholder.
   if (!data || !data.length) {
@@ -222,10 +224,10 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
 
   let proxy = new PieChart(container);
 
-  let total = data.reduce((acc, e) => acc + parseFloat(e.size), 0);
-  let angles = data.map(e => parseFloat(e.size) / total * (TAU - EPSILON));
-  let largest = data.reduce((a, b) => parseFloat(a.size) > parseFloat(b.size) ? a : b);
-  let smallest = data.reduce((a, b) => parseFloat(a.size) < parseFloat(b.size) ? a : b);
+  let total = data.reduce((acc, e) => acc + e.size, 0);
+  let angles = data.map(e => e.size / total * (TAU - EPSILON));
+  let largest = data.reduce((a, b) => a.size > b.size ? a : b);
+  let smallest = data.reduce((a, b) => a.size < b.size ? a : b);
 
   let textDistance = radius / NAMED_SLICE_TEXT_DISTANCE_RATIO;
   let translateDistance = radius / HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO;
@@ -307,19 +309,25 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
  *                  should be objects representing columns, for which the
  *                  properties' values will be displayed in each cell of a row.
  *                  e.g: [{
- *                    size: 1,
- *                    label2: "1foo",
- *                    label3: "2yolo"
+ *                    label1: 1,
+ *                    label2: 3,
+ *                    label3: "foo"
  *                  }, {
- *                    size: 2,
- *                    label2: "3bar",
- *                    label3: "4swag"
+ *                    label1: 4,
+ *                    label2: 6,
+ *                    label3: "bar
  *                  }];
+ *          - strings: an object specifying for which rows in the `data` array
+ *                     their cell values should be stringified and localized
+ *                     based on a predicate function;
+ *                     e.g: {
+ *                       label1: value => l10n.getFormatStr("...", value)
+ *                     }
  *          - totals: an object specifying for which rows in the `data` array
  *                    the sum of their cells is to be displayed in the chart;
  *                    e.g: {
- *                      label1: "Total size: %S",
- *                      label3: "Total lolz: %S"
+ *                      label1: total => l10n.getFormatStr("...", total),  // 5
+ *                      label2: total => l10n.getFormatStr("...", total),  // 9
  *                    }
  * @return TableChart
  *         A table chart proxy instance, which emits the following events:
@@ -327,7 +335,9 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
  *           - "mouseleave", when the mouse leaves a row
  *           - "click", when the mouse clicks a row
  */
-function createTableChart(document, { data, totals, title }) {
+function createTableChart(document, { title, data, strings, totals }) {
+  strings = strings || {};
+  totals = totals || {};
   let isPlaceholder = false;
 
   // If there's no data available, display an empty placeholder.
@@ -365,10 +375,12 @@ function createTableChart(document, { data, totals, title }) {
     rowNode.appendChild(boxNode);
 
     for (let [key, value] in Iterator(rowInfo)) {
+      let index = data.indexOf(rowInfo);
+      let stringified = strings[key] ? strings[key](value, index) : value;
       let labelNode = document.createElement("label");
       labelNode.className = "plain table-chart-row-label";
       labelNode.setAttribute("name", key);
-      labelNode.setAttribute("value", value);
+      labelNode.setAttribute("value", stringified);
       rowNode.appendChild(labelNode);
     }
 
@@ -380,13 +392,13 @@ function createTableChart(document, { data, totals, title }) {
   let totalsNode = document.createElement("vbox");
   totalsNode.className = "table-chart-totals";
 
-  for (let [key, value] in Iterator(totals || {})) {
-    let total = data.reduce((acc, e) => acc + parseFloat(e[key]), 0);
-    let formatted = !isNaN(total) ? L10N.numberWithDecimals(total, 2) : 0;
+  for (let [key, value] in Iterator(totals)) {
+    let total = data.reduce((acc, e) => acc + e[key], 0);
+    let stringified = totals[key] ? totals[key](total || 0) : total;
     let labelNode = document.createElement("label");
     labelNode.className = "plain table-chart-summary-label";
     labelNode.setAttribute("name", key);
-    labelNode.setAttribute("value", value.replace("%S", formatted));
+    labelNode.setAttribute("value", stringified);
     totalsNode.appendChild(labelNode);
   }
 

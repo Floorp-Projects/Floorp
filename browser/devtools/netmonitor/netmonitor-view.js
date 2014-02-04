@@ -338,8 +338,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._summary = $("#requests-menu-network-summary-label");
     this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
 
+    this.sortContents(this._byTiming);
     this.allowFocusOnRightClick = true;
-    this.widget.maintainSelectionVisible = false;
+    this.maintainSelectionVisible = true;
     this.widget.autoscrollWithAppendedItems = true;
 
     this.widget.addEventListener("select", this._onSelect, false);
@@ -472,27 +473,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Create a new custom request form populated with the data from
-   * the currently selected request.
-   */
-  cloneSelectedRequest: function() {
-    let selected = this.selectedItem.attachment;
-
-    // Create the element node for the network request item.
-    let menuView = this._createMenuView(selected.method, selected.url);
-
-    // Append a network request item to this container.
-    let newItem = this.push([menuView], {
-      attachment: Object.create(selected, {
-        isCustom: { value: true }
-      })
-    });
-
-    // Immediately switch to new request pane.
-    this.selectedItem = newItem;
-  },
-
-  /**
    * Opens selected item in a new tab.
    */
   openRequestInTab: function() {
@@ -522,15 +502,36 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Create a new custom request form populated with the data from
+   * the currently selected request.
+   */
+  cloneSelectedRequest: function() {
+    let selected = this.selectedItem.attachment;
+
+    // Create the element node for the network request item.
+    let menuView = this._createMenuView(selected.method, selected.url);
+
+    // Append a network request item to this container.
+    let newItem = this.push([menuView], {
+      attachment: Object.create(selected, {
+        isCustom: { value: true }
+      })
+    });
+
+    // Immediately switch to new request pane.
+    this.selectedItem = newItem;
+  },
+
+  /**
    * Send a new HTTP request using the data in the custom request form.
    */
   sendCustomRequest: function() {
     let selected = this.selectedItem.attachment;
+    let data = Object.create(selected);
 
-    let data = Object.create(selected, {
-      headers: { value: selected.requestHeaders.headers }
-    });
-
+    if (selected.requestHeaders) {
+      data.headers = selected.requestHeaders.headers;
+    }
     if (selected.requestPostData) {
       data.body = selected.requestPostData.postData.text;
     }
@@ -548,9 +549,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   closeCustomRequest: function() {
     this.remove(this.selectedItem);
-
     NetMonitorView.Sidebar.toggle(false);
-   },
+  },
 
   /**
    * Filters all network requests in this container by a specified type.
@@ -2126,26 +2126,41 @@ NetworkDetailsView.prototype = {
       // Handle json, which we tentatively identify by checking the MIME type
       // for "json" after any word boundary. This works for the standard
       // "application/json", and also for custom types like "x-bigcorp-json".
-      // This should be marginally more reliable than just looking for "json".
-      if (/\bjson/.test(mimeType)) {
-        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
-        let sanitizedJSON = aString.replace(jsonpRegex, "");
-        let callbackPadding = aString.match(jsonpRegex);
+      // Additionally, we also directly parse the response text content to
+      // verify whether it's json or not, to handle responses incorrectly
+      // labeled as text/plain instead.
+      let jsonMimeType, jsonObject, jsonObjectParseError;
+      try {
+        // Test the mime type *and* parse the string, because "JSONP" responses
+        // (json with callback) aren't actually valid json.
+        jsonMimeType = /\bjson/.test(mimeType);
+        jsonObject = JSON.parse(aString);
+      } catch (e) {
+        jsonObjectParseError = e;
+      }
+      if (jsonMimeType || jsonObject) {
+        // Extract the actual json substring in case this might be a "JSONP".
+        // This regex basically parses a function call and captures the
+        // function name and arguments in two separate groups.
+        let jsonpRegex = /^\s*([\w$]+)\s*\(\s*([^]*)\s*\)\s*;?\s*$/;
+        let [_, callbackPadding, jsonpString] = aString.match(jsonpRegex) || [];
 
         // Make sure this is a valid JSON object first. If so, nicely display
         // the parsing results in a variables view. Otherwise, simply show
         // the contents as plain text.
-        try {
-          var jsonObject = JSON.parse(sanitizedJSON);
-        } catch (e) {
-          var parsingError = e;
+        if (callbackPadding && jsonpString) {
+          try {
+            jsonObject = JSON.parse(jsonpString);
+          } catch (e) {
+            jsonObjectParseError = e;
+          }
         }
 
-        // Valid JSON.
+        // Valid JSON or JSONP.
         if (jsonObject) {
           $("#response-content-json-box").hidden = false;
           let jsonScopeName = callbackPadding
-            ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+            ? L10N.getFormatStr("jsonpScopeName", callbackPadding)
             : L10N.getStr("jsonScopeName");
 
           return this._json.controller.setSingleVariable({
@@ -2157,8 +2172,8 @@ NetworkDetailsView.prototype = {
         else {
           $("#response-content-textarea-box").hidden = false;
           let infoHeader = $("#response-content-info-header");
-          infoHeader.setAttribute("value", parsingError);
-          infoHeader.setAttribute("tooltiptext", parsingError);
+          infoHeader.setAttribute("value", jsonObjectParseError);
+          infoHeader.setAttribute("tooltiptext", jsonObjectParseError);
           infoHeader.hidden = false;
           return NetMonitorView.editor("#response-content-textarea").then(aEditor => {
             aEditor.setMode(Editor.modes.js);
@@ -2328,13 +2343,9 @@ PerformanceStatisticsView.prototype = {
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled",
       data: this._sanitizeChartDataSource(aItems),
-      sorted: true,
-      totals: {
-        size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime2"),
-        cached: L10N.getStr("charts.totalCached"),
-        count: L10N.getStr("charts.totalCount")
-      }
+      strings: this._commonChartStrings,
+      totals: this._commonChartTotals,
+      sorted: true
     });
     window.emit(EVENTS.PRIMED_CACHE_CHART_DISPLAYED);
   },
@@ -2350,15 +2361,43 @@ PerformanceStatisticsView.prototype = {
       id: "#empty-cache-chart",
       title: "charts.cacheDisabled",
       data: this._sanitizeChartDataSource(aItems, true),
-      sorted: true,
-      totals: {
-        size: L10N.getStr("charts.totalSize"),
-        time: L10N.getStr("charts.totalTime2"),
-        cached: L10N.getStr("charts.totalCached"),
-        count: L10N.getStr("charts.totalCount")
-      }
+      strings: this._commonChartStrings,
+      totals: this._commonChartTotals,
+      sorted: true
     });
     window.emit(EVENTS.EMPTY_CACHE_CHART_DISPLAYED);
+  },
+
+  /**
+   * Common stringifier predicates used for items and totals in both the
+   * "primed" and "empty" cache charts.
+   */
+  _commonChartStrings: {
+    size: value => {
+      let string = L10N.numberWithDecimals(value / 1024, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("charts.sizeKB", string);
+    },
+    time: value => {
+      let string = L10N.numberWithDecimals(value / 1000, REQUEST_TIME_DECIMALS);
+      return L10N.getFormatStr("charts.totalS", string);
+    }
+  },
+  _commonChartTotals: {
+    size: total => {
+      let string = L10N.numberWithDecimals(total / 1024, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("charts.totalSize", string);
+    },
+    time: total => {
+      let seconds = total / 1000;
+      let string = L10N.numberWithDecimals(seconds, REQUEST_TIME_DECIMALS);
+      return PluralForm.get(seconds, L10N.getStr("charts.totalSeconds")).replace("#1", string);
+    },
+    cached: total => {
+      return L10N.getFormatStr("charts.totalCached", total);
+    },
+    count: total => {
+      return L10N.getFormatStr("charts.totalCount", total);
+    }
   },
 
   /**
@@ -2367,9 +2406,9 @@ PerformanceStatisticsView.prototype = {
    * @param object
    *        An object containing all or some the following properties:
    *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
-   *          - title/data/sorted/totals: @see Chart.jsm for details
+   *          - title/data/strings/totals/sorted: @see Chart.jsm for details
    */
-  _createChart: function({ id, title, data, sorted, totals }) {
+  _createChart: function({ id, title, data, strings, totals, sorted }) {
     let container = $(id);
 
     // Nuke all existing charts of the specified type.
@@ -2382,8 +2421,9 @@ PerformanceStatisticsView.prototype = {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title: L10N.getStr(title),
       data: data,
-      sorted: sorted,
-      totals: totals
+      strings: strings,
+      totals: totals,
+      sorted: sorted
     });
 
     chart.on("click", (_, item) => {
@@ -2446,13 +2486,6 @@ PerformanceStatisticsView.prototype = {
         data[type].cached++;
       }
       data[type].count++;
-    }
-
-    for (let chartItem of data) {
-      let size = L10N.numberWithDecimals(chartItem.size / 1024, CONTENT_SIZE_DECIMALS);
-      let time = L10N.numberWithDecimals(chartItem.time / 1000, REQUEST_TIME_DECIMALS);
-      chartItem.size = L10N.getFormatStr("charts.sizeKB", size);
-      chartItem.time = L10N.getFormatStr("charts.totalS", time);
     }
 
     return data.filter(e => e.count > 0);

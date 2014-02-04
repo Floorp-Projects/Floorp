@@ -23,13 +23,6 @@ browser.jar:
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
-  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
-  skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
-  skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)
-  skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
-  skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
-  skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
-  skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen-darknoise.png
   skin/classic/browser/Geolocation-16.png
@@ -120,6 +113,15 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/webRTC-sharingDevice-16.png
   skin/classic/browser/webRTC-sharingDevice-16@2x.png
+  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
+  skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
+  skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)
+  skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
+  skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
+  skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
+  skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+  skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
+  skin/classic/browser/customizableui/subView-arrow-back-inverted@2x.png  (../shared/customizableui/subView-arrow-back-inverted@2x.png)
 * skin/classic/browser/customizableui/panelUIOverlay.css    (customizableui/panelUIOverlay.css)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
@@ -298,7 +300,10 @@ browser.jar:
 * skin/classic/browser/devtools/profiler.css                (devtools/profiler.css)
 * skin/classic/browser/devtools/netmonitor.css              (devtools/netmonitor.css)
 * skin/classic/browser/devtools/scratchpad.css              (devtools/scratchpad.css)
-  skin/classic/browser/devtools/magnifying-glass.png        (devtools/magnifying-glass.png)
+  skin/classic/browser/devtools/magnifying-glass.png        (../shared/devtools/images/magnifying-glass.png)
+  skin/classic/browser/devtools/magnifying-glass@2x.png     (../shared/devtools/images/magnifying-glass@2x.png)
+  skin/classic/browser/devtools/magnifying-glass-light.png  (../shared/devtools/images/magnifying-glass-light.png)
+  skin/classic/browser/devtools/magnifying-glass-light@2x.png (../shared/devtools/images/magnifying-glass-light@2x.png)
   skin/classic/browser/devtools/option-icon.png             (../shared/devtools/images/option-icon.png)
   skin/classic/browser/devtools/itemToggle.png              (../shared/devtools/images/itemToggle.png)
   skin/classic/browser/devtools/itemToggle-light.png        (../shared/devtools/images/itemToggle-light.png)
@@ -308,7 +313,6 @@ browser.jar:
   skin/classic/browser/devtools/itemArrow-ltr.svg           (../shared/devtools/images/itemArrow-ltr.svg)
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
   skin/classic/browser/devtools/noise.png                   (devtools/noise.png)
-  skin/classic/browser/devtools/inspect-button.png          (devtools/inspect-button.png)
   skin/classic/browser/devtools/dropmarker.png              (devtools/dropmarker.png)
   skin/classic/browser/devtools/layout-background-grid.png  (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css              (devtools/layoutview.css)

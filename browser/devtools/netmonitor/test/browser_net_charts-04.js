@@ -17,8 +17,8 @@ function test() {
       title: "Table title",
       data: null,
       totals: {
-        label1: "Hello %S",
-        label2: "World %S"
+        label1: value => "Hello " + L10N.numberWithDecimals(value, 2),
+        label2: value => "World " + L10N.numberWithDecimals(value, 2)
       }
     });
 
