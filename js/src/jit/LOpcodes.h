@@ -145,7 +145,6 @@
     _(BooleanToString)              \
     _(IntToString)                  \
     _(DoubleToString)               \
-    _(FloatToString)                \
     _(PrimitiveToString)            \
     _(Start)                        \
     _(OsrEntry)                     \
