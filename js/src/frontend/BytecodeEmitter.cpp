@@ -2896,8 +2896,6 @@ enum VarEmitOption
     InitializeVars    = 2
 };
 
-#if JS_HAS_DESTRUCTURING
-
 typedef bool
 (*DestructuringDeclEmitter)(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn);
 
@@ -3345,8 +3343,6 @@ MaybeEmitLetGroupDecl(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
     return true;
 }
 
-#endif /* JS_HAS_DESTRUCTURING */
-
 static bool
 EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption emitOption,
               bool isLet = false)
@@ -3360,7 +3356,6 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
         ParseNode *pn3;
         if (!pn2->isKind(PNK_NAME)) {
-#if JS_HAS_DESTRUCTURING
             if (pn2->isKind(PNK_ARRAY) || pn2->isKind(PNK_OBJECT)) {
                 /*
                  * Emit variable binding ops, but not destructuring ops.  The
@@ -3376,7 +3371,6 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
                     return false;
                 break;
             }
-#endif
 
             /*
              * A destructuring initialiser assignment preceded by var will
@@ -3393,18 +3387,12 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
              * function f(){} precedes the var, detect simple name assignment
              * here and initialize the name.
              */
-#if !JS_HAS_DESTRUCTURING
-            JS_ASSERT(pn2->pn_left->isKind(PNK_NAME));
-#else
-            if (pn2->pn_left->isKind(PNK_NAME))
-#endif
-            {
+            if (pn2->pn_left->isKind(PNK_NAME)) {
                 pn3 = pn2->pn_right;
                 pn2 = pn2->pn_left;
                 goto do_name;
             }
 
-#if JS_HAS_DESTRUCTURING
             ptrdiff_t stackDepthBefore = bce->stackDepth;
             JSOp op = JSOP_POP;
             if (pn->pn_count == 1) {
@@ -3452,7 +3440,6 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
                 break;
             }
             goto emit_note_pop;
-#endif
         }
 
         /*
@@ -3519,9 +3506,7 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
                 return false;
         }
 
-#if JS_HAS_DESTRUCTURING
     emit_note_pop:
-#endif
         if (!next)
             break;
         if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -3583,11 +3568,9 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
             return false;
         offset += 2;
         break;
-#if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
         break;
-#endif
       case PNK_CALL:
         JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
         if (!EmitTree(cx, bce, lhs))
@@ -3729,13 +3712,11 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
         if (Emit1(cx, bce, JSOP_SETELEM) < 0)
             return false;
         break;
-#if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
         if (!EmitDestructuringOps(cx, bce, lhs))
             return false;
         break;
-#endif
       default:
         JS_ASSERT(0);
     }
@@ -3907,7 +3888,6 @@ EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     ParseNode *pn2 = pn->pn_kid1;
     switch (pn2->getKind()) {
-#if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
         if (!EmitDestructuringOps(cx, bce, pn2))
@@ -3915,7 +3895,6 @@ EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         break;
-#endif
 
       case PNK_NAME:
         /* Inline and specialize BindNameToSlot for pn2. */
@@ -4684,13 +4663,11 @@ EmitNormalFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff
         op = JSOP_NOP;
     } else {
         bce->emittingForInit = true;
-#if JS_HAS_DESTRUCTURING
         if (pn3->isKind(PNK_ASSIGN)) {
             JS_ASSERT(pn3->isOp(JSOP_NOP));
             if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, GroupIsNotDecl, &op))
                 return false;
         }
-#endif
         if (op == JSOP_POP) {
             if (!UpdateSourceCoordNotes(cx, bce, pn3->pn_pos.begin))
                 return false;
@@ -4760,13 +4737,11 @@ EmitNormalFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff
         if (!UpdateSourceCoordNotes(cx, bce, pn3->pn_pos.begin))
             return false;
         op = JSOP_POP;
-#if JS_HAS_DESTRUCTURING
         if (pn3->isKind(PNK_ASSIGN)) {
             JS_ASSERT(pn3->isOp(JSOP_NOP));
             if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, GroupIsNotDecl, &op))
                 return false;
         }
-#endif
         if (op == JSOP_POP && !EmitTree(cx, bce, pn3))
             return false;
 
@@ -5406,14 +5381,12 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (useful) {
         JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
         JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
-#if JS_HAS_DESTRUCTURING
         if (!wantval &&
             pn2->isKind(PNK_ASSIGN) &&
             !MaybeEmitGroupAssignment(cx, bce, op, pn2, GroupIsNotDecl, &op))
         {
             return false;
         }
-#endif
         if (op != JSOP_NOP) {
             if (!EmitTree(cx, bce, pn2))
                 return false;
@@ -5890,12 +5863,10 @@ EmitConditionalExpression(ExclusiveContext *cx, BytecodeEmitter *bce, Conditiona
 MOZ_NEVER_INLINE static bool
 EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-#if JS_HAS_DESTRUCTURING_SHORTHAND
     if (pn->pn_xflags & PNX_DESTRUCT) {
         bce->reportError(pn, JSMSG_BAD_OBJECT_INIT);
         return false;
     }
-#endif
 
     if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
