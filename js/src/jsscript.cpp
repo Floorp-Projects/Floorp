@@ -413,17 +413,17 @@ template bool
 js::XDRScriptConst(XDRState<XDR_DECODE> *, MutableHandleValue);
 
 static inline uint32_t
-FindBlockIndex(JSScript *script, StaticBlockObject &block)
+FindScopeObjectIndex(JSScript *script, NestedScopeObject &scope)
 {
     ObjectArray *objects = script->objects();
     HeapPtrObject *vector = objects->vector;
     unsigned length = objects->length;
     for (unsigned i = 0; i < length; ++i) {
-        if (vector[i] == &block)
+        if (vector[i] == &scope)
             return i;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Block not found");
+    MOZ_ASSUME_UNREACHABLE("Scope not found");
 }
 
 static bool
@@ -753,7 +753,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
     /*
      * Here looping from 0-to-length to xdr objects is essential to ensure that
-     * all references to enclosing blocks (via FindBlockIndex below) happen
+     * all references to enclosing blocks (via FindScopeObjectIndex below) happen
      * after the enclosing block has been XDR'd.
      */
     for (i = 0; i != nobjects; ++i) {
@@ -780,8 +780,9 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             /* Code the nested block's enclosing scope. */
             uint32_t blockEnclosingScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                if (StaticBlockObject *block = (*objp)->as<StaticBlockObject>().enclosingBlock())
-                    blockEnclosingScopeIndex = FindBlockIndex(script, *block);
+                NestedScopeObject &scope = (*objp)->as<NestedScopeObject>();
+                if (NestedScopeObject *enclosing = scope.enclosingNestedScope())
+                    blockEnclosingScopeIndex = FindScopeObjectIndex(script, *enclosing);
                 else
                     blockEnclosingScopeIndex = UINT32_MAX;
             }
@@ -817,7 +818,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                     JS_ASSERT(ssi.done() == !fun);
                     funEnclosingScopeIndex = UINT32_MAX;
                 } else {
-                    funEnclosingScopeIndex = FindBlockIndex(script, ssi.block());
+                    funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.block());
                     JS_ASSERT(funEnclosingScopeIndex < i);
                 }
             }
@@ -2493,16 +2494,16 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         for (unsigned i = 0; i < nobjects; i++) {
             RootedObject obj(cx, vector[i]);
             RootedObject clone(cx);
-            if (obj->is<StaticBlockObject>()) {
-                Rooted<StaticBlockObject*> innerBlock(cx, &obj->as<StaticBlockObject>());
+            if (obj->is<NestedScopeObject>()) {
+                Rooted<NestedScopeObject*> innerBlock(cx, &obj->as<NestedScopeObject>());
 
                 RootedObject enclosingScope(cx);
-                if (StaticBlockObject *enclosingBlock = innerBlock->enclosingBlock())
-                    enclosingScope = objects[FindBlockIndex(src, *enclosingBlock)];
+                if (NestedScopeObject *enclosingBlock = innerBlock->enclosingNestedScope())
+                    enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
                 else
                     enclosingScope = fun;
 
-                clone = CloneStaticBlockObject(cx, enclosingScope, innerBlock);
+                clone = CloneNestedScopeObject(cx, enclosingScope, innerBlock);
             } else if (obj->is<JSFunction>()) {
                 RootedFunction innerFun(cx, &obj->as<JSFunction>());
                 if (innerFun->isNative()) {
@@ -2518,7 +2519,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     StaticScopeIter<CanGC> ssi(cx, staticScope);
                     RootedObject enclosingScope(cx);
                     if (!ssi.done() && ssi.type() == StaticScopeIter<CanGC>::BLOCK)
-                        enclosingScope = objects[FindBlockIndex(src, ssi.block())];
+                        enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
                     else
                         enclosingScope = fun;
 
@@ -2983,8 +2984,8 @@ LazyScript::finalize(FreeOp *fop)
         fop->free_(table_);
 }
 
-StaticBlockObject *
-JSScript::getBlockScope(jsbytecode *pc)
+NestedScopeObject *
+JSScript::getStaticScope(jsbytecode *pc)
 {
     JS_ASSERT(containsPC(pc));
 
@@ -2997,7 +2998,7 @@ JSScript::getBlockScope(jsbytecode *pc)
         return nullptr;
 
     BlockScopeArray *scopes = blockScopes();
-    StaticBlockObject *blockChain = nullptr;
+    NestedScopeObject *blockChain = nullptr;
 
     // Find the innermost block chain using a binary search.
     size_t bottom = 0;
@@ -3022,7 +3023,7 @@ JSScript::getBlockScope(jsbytecode *pc)
                     if (checkNote->index == BlockScopeNote::NoBlockScopeIndex)
                         blockChain = nullptr;
                     else
-                        blockChain = &getObject(checkNote->index)->as<StaticBlockObject>();
+                        blockChain = &getObject(checkNote->index)->as<NestedScopeObject>();
                     break;
                 }
                 if (checkNote->parent == UINT32_MAX)

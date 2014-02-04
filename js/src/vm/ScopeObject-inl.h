@@ -48,8 +48,8 @@ template <AllowGC allowGC>
 inline void
 StaticScopeIter<allowGC>::operator++(int)
 {
-    if (obj->template is<StaticBlockObject>()) {
-        obj = obj->template as<StaticBlockObject>().enclosingStaticScope();
+    if (obj->template is<NestedScopeObject>()) {
+        obj = obj->template as<NestedScopeObject>().enclosingScopeForStaticScopeIter();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
         obj = obj->template as<JSFunction>().nonLazyScript()->enclosingStaticScope();
