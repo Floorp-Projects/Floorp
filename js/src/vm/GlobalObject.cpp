@@ -22,8 +22,11 @@
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+#include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"
 #include "vm/RegExpStatics.h"
+#include "vm/StopIterationObject.h"
+#include "vm/WeakMapObject.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
@@ -33,18 +36,30 @@
 
 using namespace js;
 
+struct ProtoTableEntry {
+    const Class *clasp;
+    ClassInitializerOp init;
+};
+
 #define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init,clasp) \
     extern JSObject *init(JSContext *cx, Handle<JSObject*> obj);
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
-static const ClassInitializerOp class_init_functions[JSProto_LIMIT] = {
-#define INIT_FUNC(name,code,init,clasp) init,
-#define INIT_FUNC_DUMMY(name,code,init,clasp) nullptr,
+static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
+#define INIT_FUNC(name,code,init,clasp) { clasp, init },
+#define INIT_FUNC_DUMMY(name,code,init,clasp) { nullptr, nullptr },
     JS_FOR_PROTOTYPES(INIT_FUNC, INIT_FUNC_DUMMY)
 #undef INIT_FUNC_DUMMY
 #undef INIT_FUNC
 };
+
+const js::Class *
+js::ProtoKeyToClass(JSProtoKey key)
+{
+    MOZ_ASSERT(key < JSProto_LIMIT);
+    return protoTable[key].clasp;
+}
 
 // This method is not in the header file to avoid having to include
 // TypedObject.h from GlobalObject.h. It is not generally perf
@@ -428,7 +443,7 @@ GlobalObject::ensureConstructor(JSContext *cx, JSProtoKey key)
         return true;
     MOZ_ASSERT(getConstructor(key).isUndefined());
     RootedObject self(cx, this);
-    ClassInitializerOp init = class_init_functions[key];
+    ClassInitializerOp init = protoTable[key].init;
     return !init || init(cx, self);
 }
 
