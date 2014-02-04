@@ -689,6 +689,9 @@ getRoleCB(AtkObject *aAtkObj)
 
 #undef ROLE
 
+  if (aAtkObj->role == ATK_ROLE_LIST_BOX && !IsAtkVersionAtLeast(2, 1))
+    aAtkObj->role = ATK_ROLE_LIST;
+
   return aAtkObj->role;
 }
 

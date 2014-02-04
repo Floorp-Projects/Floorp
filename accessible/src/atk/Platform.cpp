@@ -22,6 +22,8 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+int atkMajorVersion = 1, atkMinorVersion = 12;
+
 extern "C" {
 typedef GType (* AtkGetTypeType) (void);
 typedef void (*GnomeAccessibilityInit) (void);
@@ -142,6 +144,18 @@ a11y::PlatformInit()
     AtkSocketAccessible::gCanEmbed =
       AtkSocketAccessible::g_atk_socket_type != G_TYPE_INVALID &&
       AtkSocketAccessible::g_atk_socket_embed;
+  }
+
+  const char* (*atkGetVersion)() =
+    (const char* (*)()) PR_FindFunctionSymbol(sATKLib, "atk_get_version");
+  if (atkGetVersion) {
+    const char* version = atkGetVersion();
+    if (version) {
+      char* endPtr = nullptr;
+      atkMajorVersion = strtol(version, &endPtr, 10);
+      if (*endPtr == '.')
+        atkMinorVersion = strtol(endPtr + 1, &endPtr, 10);
+    }
   }
 
   // Load and initialize gail library.
@@ -336,4 +350,3 @@ static const char sGconfAccessibilityKey[] =
 
   return sShouldEnable;
 }
-
