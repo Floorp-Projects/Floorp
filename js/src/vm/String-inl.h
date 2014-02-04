@@ -40,7 +40,7 @@ NewShortString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewShortString(ExclusiveContext *cx, JS::StableTwoByteChars chars)
+NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
 {
     size_t len = chars.length();
 
@@ -54,34 +54,6 @@ NewShortString(ExclusiveContext *cx, JS::StableTwoByteChars chars)
                           : JSShortString::new_<allowGC>(cx);
     if (!str)
         return nullptr;
-
-    jschar *storage = str->init(len);
-    mozilla::PodCopy(storage, chars.start().get(), len);
-    storage[len] = 0;
-    return str;
-}
-
-template <AllowGC allowGC>
-static MOZ_ALWAYS_INLINE JSInlineString *
-NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
-{
-    size_t len = chars.length();
-
-    /*
-     * Don't bother trying to find a static atom; measurement shows that not
-     * many get here (for one, Atomize is catching them).
-     */
-    JS_ASSERT(JSShortString::lengthFits(len));
-    JSInlineString *str = JSInlineString::lengthFits(len)
-                          ? JSInlineString::new_<NoGC>(cx)
-                          : JSShortString::new_<NoGC>(cx);
-    if (!str) {
-        if (!allowGC)
-            return nullptr;
-        jschar tmp[JSShortString::MAX_SHORT_LENGTH];
-        mozilla::PodCopy(tmp, chars.start().get(), len);
-        return NewShortString<CanGC>(cx, JS::StableTwoByteChars(tmp, len));
-    }
 
     jschar *storage = str->init(len);
     mozilla::PodCopy(storage, chars.start().get(), len);
@@ -210,6 +182,28 @@ JSString::markBase(JSTracer *trc)
     js::gc::MarkStringUnbarriered(trc, &d.s.u2.base, "base");
 }
 
+MOZ_ALWAYS_INLINE void
+JSFlatString::init(const jschar *chars, size_t length)
+{
+    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
+    d.u1.chars = chars;
+}
+
+template <js::AllowGC allowGC>
+MOZ_ALWAYS_INLINE JSFlatString *
+JSFlatString::new_(js::ThreadSafeContext *cx, const jschar *chars, size_t length)
+{
+    JS_ASSERT(chars[length] == jschar(0));
+
+    if (!validateLength(cx, length))
+        return nullptr;
+    JSFlatString *str = (JSFlatString *)js_NewGCString<allowGC>(cx);
+    if (!str)
+        return nullptr;
+    str->init(chars, length);
+    return str;
+}
+
 inline js::PropertyName *
 JSFlatString::toPropertyName(JSContext *cx)
 {
@@ -223,28 +217,6 @@ JSFlatString::toPropertyName(JSContext *cx)
     if (!atom)
         return nullptr;
     return atom->asPropertyName();
-}
-
-MOZ_ALWAYS_INLINE void
-JSStableString::init(const jschar *chars, size_t length)
-{
-    d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-    d.u1.chars = chars;
-}
-
-template <js::AllowGC allowGC>
-MOZ_ALWAYS_INLINE JSStableString *
-JSStableString::new_(js::ThreadSafeContext *cx, const jschar *chars, size_t length)
-{
-    JS_ASSERT(chars[length] == jschar(0));
-
-    if (!validateLength(cx, length))
-        return nullptr;
-    JSStableString *str = (JSStableString *)js_NewGCString<allowGC>(cx);
-    if (!str)
-        return nullptr;
-    str->init(chars, length);
-    return str;
 }
 
 template <js::AllowGC allowGC>

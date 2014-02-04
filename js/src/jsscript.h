@@ -44,7 +44,7 @@ class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
 class WatchpointMap;
-class StaticBlockObject;
+class NestedScopeObject;
 
 namespace analyze {
     class ScriptAnalysis;
@@ -98,7 +98,7 @@ namespace js {
 struct BlockScopeNote {
     static const uint32_t NoBlockScopeIndex = UINT32_MAX;
 
-    uint32_t        index;      // Index of StaticScopeObject in the object
+    uint32_t        index;      // Index of NestedScopeObject in the object
                                 // array, or NoBlockScopeIndex if there is no
                                 // block scope in this range.
     uint32_t        start;      // Bytecode offset at which this scope starts,
@@ -430,7 +430,7 @@ class ScriptSource
         return argumentsNotIncluded_;
     }
     const jschar *chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp);
-    JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    JSFlatString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     // XDR handling
@@ -1422,7 +1422,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         return arr->vector[index];
     }
 
-    js::StaticBlockObject *getBlockScope(jsbytecode *pc);
+    js::NestedScopeObject *getStaticScope(jsbytecode *pc);
 
     /*
      * The isEmpty method tells whether this script has code that computes any
