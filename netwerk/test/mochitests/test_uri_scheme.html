@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for URI Manipulation</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+function dotest1()
+{
+  SimpleTest.waitForExplicitFinish();
+  var o = new URL("http://localhost/");
+  try { o.href = "foopy:bar:baz"; } catch(e) { }
+  o.protocol = "http:";
+  o.hostname;
+  try { o.href = "http://localhost/"; } catch(e) { }
+  ok(o.protocol, "http:");
+  dotest2();
+}
+
+function dotest2()
+{
+  var o = new URL("http://www.mozilla.org/");
+  try {
+      o.href ="aaaaaaaaaaa:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+  } catch(e) { }
+  o.hash = "#";
+  o.pathname = "/";
+  o.protocol = "http:";
+  try { o.href = "http://localhost/"; } catch(e) { }
+  ok(o.protocol, "http:");
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onload="dotest1();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
+
