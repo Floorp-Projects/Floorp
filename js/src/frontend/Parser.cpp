@@ -1507,6 +1507,7 @@ Parser<ParseHandler>::defineArg(Node funcpn, HandlePropertyName name,
     return pc->define(tokenStream, name, argpn, Definition::ARG);
 }
 
+#if JS_HAS_DESTRUCTURING
 template <typename ParseHandler>
 /* static */ bool
 Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler> *data,
@@ -1525,6 +1526,7 @@ Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler> *data,
 
     return pc->define(parser->tokenStream, name, data->pn, Definition::VAR);
 }
+#endif /* JS_HAS_DESTRUCTURING */
 
 template <typename ParseHandler>
 bool
@@ -1558,7 +1560,9 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
     if (parenFreeArrow || !tokenStream.matchToken(TOK_RP)) {
         bool hasDefaults = false;
         Node duplicatedArg = null();
+#if JS_HAS_DESTRUCTURING
         Node list = null();
+#endif
 
         do {
             if (*hasRest) {
@@ -1569,6 +1573,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
             TokenKind tt = tokenStream.getToken();
             JS_ASSERT_IF(parenFreeArrow, tt == TOK_NAME);
             switch (tt) {
+#if JS_HAS_DESTRUCTURING
               case TOK_LB:
               case TOK_LC:
               {
@@ -1625,6 +1630,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                 }
                 break;
               }
+#endif /* JS_HAS_DESTRUCTURING */
 
               case TOK_YIELD:
                 if (!checkYieldNameValidity())
@@ -2013,6 +2019,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
 {
     pn->pn_pos.end = pos().end;
 
+#if JS_HAS_DESTRUCTURING
     /*
      * If there were destructuring formal parameters, prepend the initializing
      * comma expression that we synthesized to body. If the body is a return
@@ -2045,6 +2052,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
         ++body->pn_count;
         body->pn_xflags |= PNX_DESTRUCT;
     }
+#endif
 
     JS_ASSERT(pn->pn_funbox == funbox);
     pn->pn_body->append(body);
@@ -2987,6 +2995,8 @@ Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
     return true;
 }
 
+#if JS_HAS_DESTRUCTURING
+
 template <>
 bool
 Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data, ParseNode *pn)
@@ -3183,6 +3193,8 @@ Parser<ParseHandler>::destructuringExpr(BindData<ParseHandler> *data, TokenKind 
         return null();
     return pn;
 }
+
+#endif /* JS_HAS_DESTRUCTURING */
 
 template <typename ParseHandler>
 typename ParseHandler::Node
@@ -3454,6 +3466,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
         first = false;
 
         TokenKind tt = tokenStream.getToken();
+#if JS_HAS_DESTRUCTURING
         if (tt == TOK_LB || tt == TOK_LC) {
             if (psimple)
                 *psimple = false;
@@ -3485,6 +3498,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
             handler.addList(pn, pn2);
             continue;
         }
+#endif /* JS_HAS_DESTRUCTURING */
 
         if (tt != TOK_NAME) {
             if (tt == TOK_YIELD) {
@@ -4054,6 +4068,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
         if (pn1->isOp(JSOP_DEFCONST))
             return false;
 
+#if JS_HAS_DESTRUCTURING
         // In JS 1.7 only, for (var [K, V] in EXPR) has a special meaning.
         // Hence all other destructuring decls are banned there.
         if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN) {
@@ -4066,6 +4081,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
             if (lhs->isKind(PNK_ARRAY) && lhs->pn_count != 2)
                 return false;
         }
+#endif
         return true;
     }
 
@@ -4076,6 +4092,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
       case PNK_ELEM:
         return true;
 
+#if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
         // In JS 1.7 only, for ([K, V] in EXPR) has a special meaning.
@@ -4083,6 +4100,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
         if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN)
             return pn1->isKind(PNK_ARRAY) && pn1->pn_count == 2;
         return true;
+#endif
 
       default:
         return false;
@@ -4233,7 +4251,12 @@ Parser<FullParseHandler>::forStatement()
          */
         if (isForDecl) {
             pn2 = pn1->pn_head;
-            if ((pn2->isKind(PNK_NAME) && pn2->maybeExpr()) || pn2->isKind(PNK_ASSIGN)) {
+            if ((pn2->isKind(PNK_NAME) && pn2->maybeExpr())
+#if JS_HAS_DESTRUCTURING
+                || pn2->isKind(PNK_ASSIGN)
+#endif
+                )
+            {
                 /*
                  * Declaration with initializer.
                  *
@@ -4262,11 +4285,13 @@ Parser<FullParseHandler>::forStatement()
                 pn1->pn_xflags |= PNX_POPVAR;
                 pn1 = nullptr;
 
+#if JS_HAS_DESTRUCTURING
                 if (pn2->isKind(PNK_ASSIGN)) {
                     pn2 = pn2->pn_left;
                     JS_ASSERT(pn2->isKind(PNK_ARRAY) || pn2->isKind(PNK_OBJECT) ||
                               pn2->isKind(PNK_NAME));
                 }
+#endif
             }
         } else {
             /* Not a declaration. */
@@ -4314,6 +4339,7 @@ Parser<FullParseHandler>::forStatement()
             pn2->markAsAssigned();
             break;
 
+#if JS_HAS_DESTRUCTURING
           case PNK_ASSIGN:
             MOZ_ASSUME_UNREACHABLE("forStatement TOK_ASSIGN");
 
@@ -4328,6 +4354,7 @@ Parser<FullParseHandler>::forStatement()
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
+#endif
 
           default:;
         }
@@ -5063,12 +5090,14 @@ Parser<ParseHandler>::tryStatement()
             tt = tokenStream.getToken();
             Node catchName;
             switch (tt) {
+#if JS_HAS_DESTRUCTURING
               case TOK_LB:
               case TOK_LC:
                 catchName = destructuringExpr(&data, tt);
                 if (!catchName)
                     return null();
                 break;
+#endif
 
               case TOK_YIELD:
                 if (!checkYieldNameValidity())
@@ -5499,6 +5528,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentF
       case PNK_ELEM:
         break;
 
+#if JS_HAS_DESTRUCTURING
       case PNK_ARRAY:
       case PNK_OBJECT:
         if (flavor == CompoundAssignment) {
@@ -5508,6 +5538,7 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode *pn, AssignmentF
         if (!checkDestructuring(nullptr, pn))
             return false;
         break;
+#endif
 
       case PNK_CALL:
         if (!makeSetCall(pn, JSMSG_BAD_LEFTSIDE_OF_ASS))
@@ -6096,6 +6127,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         RootedPropertyName name(context);
         tt = tokenStream.getToken();
         switch (tt) {
+#if JS_HAS_DESTRUCTURING
           case TOK_LB:
           case TOK_LC:
             pc->inDeclDestructuring = true;
@@ -6104,6 +6136,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             if (!pn3)
                 return null();
             break;
+#endif
 
           case TOK_NAME:
             name = tokenStream.currentName();
@@ -6155,6 +6188,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         }
 
         switch (tt) {
+#if JS_HAS_DESTRUCTURING
           case TOK_LB:
           case TOK_LC:
             if (!checkDestructuring(&data, pn3))
@@ -6176,6 +6210,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
                 pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
+#endif
 
           case TOK_NAME:
             data.pn = pn3;
@@ -6886,6 +6921,7 @@ Parser<ParseHandler>::objectLiteral()
                 if (!handler.addPropertyDefinition(literal, propname, propexpr))
                     return null();
             }
+#if JS_HAS_DESTRUCTURING_SHORTHAND
             else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
                 /*
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
@@ -6904,6 +6940,7 @@ Parser<ParseHandler>::objectLiteral()
                 if (!handler.addShorthandPropertyDefinition(literal, propname))
                     return null();
             }
+#endif
             else {
                 report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
                 return null();
