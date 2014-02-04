@@ -32,6 +32,24 @@ int32_t CacheObserver::sHalfLifeExperiment = kDefaultHalfLifeExperiment;
 static uint32_t const kDefaultHalfLifeHours = 6; // 6 hours
 uint32_t CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
+static bool const kDefaultUseDiskCache = true;
+bool CacheObserver::sUseDiskCache = kDefaultUseDiskCache;
+
+static bool const kDefaultUseMemoryCache = true;
+bool CacheObserver::sUseMemoryCache = kDefaultUseMemoryCache;
+
+static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024; // 250 MB
+uint32_t CacheObserver::sDiskCacheCapacity = kDefaultDiskCacheCapacity;
+
+static uint32_t const kDefaultMaxMemoryEntrySize = 4 * 1024; // 4 MB
+uint32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
+
+static uint32_t const kDefaultMaxDiskEntrySize = 50 * 1024; // 50 MB
+uint32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
+
+static uint32_t const kDefaultCompressionLevel = 1;
+uint32_t CacheObserver::sCompressionLevel = kDefaultCompressionLevel;
+
 NS_IMPL_ISUPPORTS2(CacheObserver,
                    nsIObserver,
                    nsISupportsWeakReference)
@@ -77,9 +95,27 @@ void
 CacheObserver::AttachToPreferences()
 {
   mozilla::Preferences::AddUintVarCache(
-    &sMemoryLimit, "browser.cache.memory_limit", kDefaultMemoryLimit);
-  mozilla::Preferences::AddUintVarCache(
     &sUseNewCache, "browser.cache.use_new_backend", kDefaultUseNewCache);
+
+  mozilla::Preferences::AddBoolVarCache(
+    &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
+  mozilla::Preferences::AddBoolVarCache(
+    &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
+
+  mozilla::Preferences::AddUintVarCache(
+    &sMemoryLimit, "browser.cache.memory_limit", kDefaultMemoryLimit);
+
+  mozilla::Preferences::AddUintVarCache(
+    &sDiskCacheCapacity, "browser.cache.disk.capacity", kDefaultDiskCacheCapacity);
+
+  mozilla::Preferences::AddUintVarCache(
+    &sMaxMemoryEntrySize, "browser.cache.memory.max_entry_size", kDefaultMaxMemoryEntrySize);
+  mozilla::Preferences::AddUintVarCache(
+    &sMaxDiskEntrySize, "browser.cache.disk.max_entry_size", kDefaultMaxDiskEntrySize);
+
+  // http://mxr.mozilla.org/mozilla-central/source/netwerk/cache/nsCacheEntryDescriptor.cpp#367
+  mozilla::Preferences::AddUintVarCache(
+    &sCompressionLevel, "browser.cache.compression_level", kDefaultCompressionLevel);
 
   sHalfLifeExperiment = mozilla::Preferences::GetInt(
     "browser.cache.frecency_experiment", kDefaultHalfLifeExperiment);
@@ -126,12 +162,6 @@ bool const CacheObserver::UseNewCache()
 
     case 1: // use the new cache backend
       return true;
-
-    case 2: // use A/B testing
-    {
-      static bool const sABTest = rand() & 1;
-      return sABTest;
-    }
   }
 
   return true;
@@ -213,6 +243,29 @@ CacheStorageEvictHelper::ClearStorage(bool const aPrivate,
 }
 
 } // anon
+
+// static
+bool const CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk)
+{
+  // If custom limit is set, check it.
+  int64_t preferredLimit = aUsingDisk
+    ? static_cast<int64_t>(sMaxDiskEntrySize) << 10
+    : static_cast<int64_t>(sMaxMemoryEntrySize) << 10;
+
+  if (preferredLimit != -1 && aSize > preferredLimit)
+    return true;
+
+  // Otherwise (or when in the custom limit), check limit
+  // based on the global limit.
+  int64_t derivedLimit = aUsingDisk
+    ? (static_cast<int64_t>(sDiskCacheCapacity) << 7) // << 7 == * 1024 / 8
+    : (static_cast<int64_t>(sMemoryLimit) << 7);
+
+  if (aSize > derivedLimit)
+    return true;
+
+  return false;
+}
 
 NS_IMETHODIMP
 CacheObserver::Observe(nsISupports* aSubject,

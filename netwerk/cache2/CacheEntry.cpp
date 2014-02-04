@@ -5,6 +5,7 @@
 #include "CacheLog.h"
 #include "CacheEntry.h"
 #include "CacheStorageService.h"
+#include "CacheObserver.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -945,7 +946,7 @@ NS_IMETHODIMP CacheEntry::OpenOutputStream(int64_t offset, nsIOutputStream * *_r
 
   MOZ_ASSERT(mState > EMPTY);
 
-  if (mOutputStream) {
+  if (mOutputStream && !mIsDoomed) {
     LOG(("  giving phantom output stream"));
     mOutputStream.forget(_retval);
   }
@@ -1017,6 +1018,14 @@ NS_IMETHODIMP CacheEntry::GetPredictedDataSize(int64_t *aPredictedDataSize)
 NS_IMETHODIMP CacheEntry::SetPredictedDataSize(int64_t aPredictedDataSize)
 {
   mPredictedDataSize = aPredictedDataSize;
+
+  if (CacheObserver::EntryIsTooBig(mPredictedDataSize, mUseDisk)) {
+    LOG(("CacheEntry::SetPredictedDataSize [this=%p] too big, dooming", this));
+    AsyncDoom(nullptr);
+
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
   return NS_OK;
 }
 
