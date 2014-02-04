@@ -832,8 +832,10 @@ js::TypeOfValue(const Value &v)
  * of the with block with sp + stackIndex.
  */
 static bool
-EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stackDepth)
+EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stackDepth,
+          HandleObject staticWith)
 {
+    JS_ASSERT(staticWith->is<StaticWithObject>());
     RootedObject obj(cx);
     if (val.isObject()) {
         obj = &val.toObject();
@@ -844,7 +846,8 @@ EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stack
     }
 
     RootedObject scopeChain(cx, frame.scopeChain());
-    WithObject *withobj = WithObject::create(cx, obj, scopeChain, stackDepth);
+    DynamicWithObject *withobj = DynamicWithObject::create(cx, obj, scopeChain, stackDepth,
+                                                           staticWith);
     if (!withobj)
         return false;
 
@@ -867,7 +870,7 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth)
                 si.frame().popBlock(cx);
             break;
           case ScopeIter::With:
-            if (si.scope().as<WithObject>().stackDepth() < stackDepth)
+            if (si.scope().as<DynamicWithObject>().stackDepth() < stackDepth)
                 return;
             si.frame().popWith(cx);
             break;
@@ -1727,13 +1730,6 @@ END_CASE(JSOP_POP)
 CASE(JSOP_POPN)
     JS_ASSERT(GET_UINT16(REGS.pc) <= REGS.stackDepth());
     REGS.sp -= GET_UINT16(REGS.pc);
-#ifdef DEBUG
-    if (NestedScopeObject *scope = script->getStaticScope(REGS.pc + JSOP_POPN_LENGTH)) {
-        JS_ASSERT(scope->is<StaticBlockObject>());
-        StaticBlockObject &blockObj = scope->as<StaticBlockObject>();
-        JS_ASSERT(REGS.stackDepth() >= blockObj.stackDepth() + blockObj.slotCount());
-    }
-#endif
 END_CASE(JSOP_POPN)
 
 CASE(JSOP_POPNV)
@@ -1742,13 +1738,6 @@ CASE(JSOP_POPNV)
     Value val = REGS.sp[-1];
     REGS.sp -= GET_UINT16(REGS.pc);
     REGS.sp[-1] = val;
-#ifdef DEBUG
-    if (NestedScopeObject *scope = script->getStaticScope(REGS.pc + JSOP_POPNV_LENGTH)) {
-        JS_ASSERT(scope->is<StaticBlockObject>());
-        StaticBlockObject &blockObj = scope->as<StaticBlockObject>();
-        JS_ASSERT(REGS.stackDepth() >= blockObj.stackDepth() + blockObj.slotCount());
-    }
-#endif
 }
 END_CASE(JSOP_POPNV)
 
@@ -1759,9 +1748,11 @@ END_CASE(JSOP_SETRVAL)
 CASE(JSOP_ENTERWITH)
 {
     RootedValue &val = rootValue0;
+    RootedObject &staticWith = rootObject0;
     val = REGS.sp[-1];
+    staticWith = script->getObject(REGS.pc);
 
-    if (!EnterWith(cx, REGS.fp(), val, REGS.stackDepth() - 1))
+    if (!EnterWith(cx, REGS.fp(), val, REGS.stackDepth() - 1, staticWith))
         goto error;
 
     /*
