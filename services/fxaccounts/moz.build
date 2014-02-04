@@ -11,7 +11,8 @@ TEST_DIRS += ['tests']
 EXTRA_JS_MODULES += [
   'FxAccounts.jsm',
   'FxAccountsClient.jsm',
-  'FxAccountsCommon.js'
+  'FxAccountsCommon.js',
+  'FxAccountsUtils.jsm'
 ]
 
 # For now, we will only be using the FxA manager in B2G.
