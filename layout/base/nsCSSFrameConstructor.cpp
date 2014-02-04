@@ -2301,7 +2301,15 @@ static bool CheckOverflow(nsPresContext* aPresContext,
                             const nsStyleDisplay* aDisplay)
 {
   if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
-      aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO) {
+      aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
+      aDisplay->mScrollSnapTypeX == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
+      aDisplay->mScrollSnapTypeY == NS_STYLE_SCROLL_SNAP_TYPE_NONE &&
+      aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
+      aDisplay->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
+      !aDisplay->mScrollSnapDestination.mXPosition.mHasPercent &&
+      !aDisplay->mScrollSnapDestination.mYPosition.mHasPercent &&
+      aDisplay->mScrollSnapDestination.mXPosition.mLength == 0 &&
+      aDisplay->mScrollSnapDestination.mYPosition.mLength == 0) {
     return false;
   }
 
@@ -2309,12 +2317,10 @@ static bool CheckOverflow(nsPresContext* aPresContext,
     aPresContext->SetViewportScrollbarStylesOverride(
                                     ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
                                                     NS_STYLE_OVERFLOW_HIDDEN,
-                                                    aDisplay->mScrollBehavior));
+                                                    aDisplay));
   } else {
     aPresContext->SetViewportScrollbarStylesOverride(
-                                    ScrollbarStyles(aDisplay->mOverflowX,
-                                                    aDisplay->mOverflowY,
-                                                    aDisplay->mScrollBehavior));
+                                    ScrollbarStyles(aDisplay));
   }
   return true;
 }
@@ -2334,8 +2340,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   nsPresContext* presContext = mPresShell->GetPresContext();
   presContext->SetViewportScrollbarStylesOverride(
                              ScrollbarStyles(NS_STYLE_OVERFLOW_AUTO,
-                                             NS_STYLE_OVERFLOW_AUTO,
-                                             NS_STYLE_SCROLL_BEHAVIOR_AUTO));
+                                             NS_STYLE_OVERFLOW_AUTO));
 
   // We never mess with the viewport scroll state
   // when printing or in print preview

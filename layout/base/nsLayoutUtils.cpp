@@ -106,7 +106,7 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "RestyleManager.h"
-
+#include "mozilla/EventDispatcher.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
