@@ -338,8 +338,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._summary = $("#requests-menu-network-summary-label");
     this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
 
+    this.sortContents(this._byTiming);
     this.allowFocusOnRightClick = true;
-    this.widget.maintainSelectionVisible = false;
+    this.maintainSelectionVisible = true;
     this.widget.autoscrollWithAppendedItems = true;
 
     this.widget.addEventListener("select", this._onSelect, false);
