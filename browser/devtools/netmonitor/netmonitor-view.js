@@ -2388,8 +2388,9 @@ PerformanceStatisticsView.prototype = {
       return L10N.getFormatStr("charts.totalSize", string);
     },
     time: total => {
-      let string = L10N.numberWithDecimals(total / 1000, REQUEST_TIME_DECIMALS);
-      return L10N.getFormatStr("charts.totalTime2", string);
+      let seconds = total / 1000;
+      let string = L10N.numberWithDecimals(seconds, REQUEST_TIME_DECIMALS);
+      return PluralForm.get(seconds, L10N.getStr("charts.totalSeconds")).replace("#1", string);
     },
     cached: total => {
       return L10N.getFormatStr("charts.totalCached", total);
