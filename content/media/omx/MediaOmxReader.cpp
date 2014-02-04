@@ -146,7 +146,7 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     // that our video frame creation code doesn't overflow.
     nsIntSize displaySize(width, height);
     nsIntSize frameSize(width, height);
-    if (!VideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
+    if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
       return NS_ERROR_FAILURE;
     }
 

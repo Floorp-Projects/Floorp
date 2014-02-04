@@ -70,9 +70,9 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     if (isInline())
         return 0;
 
-    // JSAtom, JSStableString, JSUndependedString: measure the space for the
-    // chars.  For JSUndependedString, there is no need to count the base
-    // string, for the same reason as JSDependentString above.
+    // JSAtom, JSUndependedString: measure the space for the chars.  For
+    // JSUndependedString, there is no need to count the base string, for the
+    // same reason as JSDependentString above.
     JSFlatString &flat = asFlat();
     return mallocSizeOf(flat.chars());
 }
@@ -470,21 +470,6 @@ JSDependentString::undepend(ExclusiveContext *cx)
     return &this->asFlat();
 }
 
-JSStableString *
-JSInlineString::uninline(ExclusiveContext *maybecx)
-{
-    JS_ASSERT(isInline());
-    size_t n = length();
-    jschar *news = maybecx ? maybecx->pod_malloc<jschar>(n + 1) : js_pod_malloc<jschar>(n + 1);
-    if (!news)
-        return nullptr;
-    js_strncpy(news, d.inlineStorage, n);
-    news[n] = 0;
-    d.u1.chars = news;
-    JS_ASSERT(!isInline());
-    return &asStable();
-}
-
 bool
 JSFlatString::isIndexSlow(uint32_t *indexp) const
 {
@@ -601,7 +586,7 @@ StaticStrings::init(JSContext *cx)
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };
-        JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 1);
+        JSFlatString *s = js_NewStringCopyN<NoGC>(cx, buffer, 1);
         if (!s)
             return false;
         unitStaticTable[i] = s->morphAtomizedStringIntoAtom();
@@ -609,7 +594,7 @@ StaticStrings::init(JSContext *cx)
 
     for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
         jschar buffer[] = { FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F), '\0' };
-        JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 2);
+        JSFlatString *s = js_NewStringCopyN<NoGC>(cx, buffer, 2);
         if (!s)
             return false;
         length2StaticTable[i] = s->morphAtomizedStringIntoAtom();
@@ -627,7 +612,7 @@ StaticStrings::init(JSContext *cx)
                                 jschar('0' + ((i / 10) % 10)),
                                 jschar('0' + (i % 10)),
                                 '\0' };
-            JSFlatString *s = js_NewStringCopyN<CanGC>(cx, buffer, 3);
+            JSFlatString *s = js_NewStringCopyN<NoGC>(cx, buffer, 3);
             if (!s)
                 return false;
             intStaticTable[i] = s->morphAtomizedStringIntoAtom();

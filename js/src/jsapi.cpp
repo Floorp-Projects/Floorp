@@ -279,10 +279,10 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 return false;
             *sp = STRING_TO_JSVAL(str);
             if (c == 'W') {
-                JSStableString *stable = str->ensureStable(cx);
-                if (!stable)
+                JSFlatString *flat = str->ensureFlat(cx);
+                if (!flat)
                     return false;
-                *va_arg(ap, const jschar **) = stable->chars().get();
+                *va_arg(ap, const jschar **) = flat->chars();
             } else {
                 *va_arg(ap, JSString **) = str;
             }
@@ -5485,7 +5485,7 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, NullValue());
-    return ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, vp);
+    return ParseJSONWithReviver(cx, ConstTwoByteChars(chars, len), len, reviver, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -5493,7 +5493,7 @@ JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, Handle
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, vp);
+    return ParseJSONWithReviver(cx, ConstTwoByteChars(chars, len), len, reviver, vp);
 }
 
 /************************************************************************/

@@ -594,13 +594,7 @@ const Class NormalArgumentsObject::class_ = {
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
-    ArgumentsObject::trace,
-    {
-        nullptr,    /* outerObject */
-        nullptr,    /* innerObject */
-        nullptr,    /* iteratorObject  */
-        false,      /* isWrappedNative */
-    }
+    ArgumentsObject::trace
 };
 
 /*
@@ -624,11 +618,5 @@ const Class StrictArgumentsObject::class_ = {
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
-    ArgumentsObject::trace,
-    {
-        nullptr,    /* outerObject */
-        nullptr,    /* innerObject */
-        nullptr,    /* iteratorObject  */
-        false,      /* isWrappedNative */
-    }
+    ArgumentsObject::trace
 };

@@ -22,10 +22,10 @@ interface nsIX509CertList : nsISupports {
 
 %{C++
 
-#define NS_X509CERRTLIST_CID { /* 959fb165-6517-487f-ab9b-d8913be53197 */ \
+#define NS_X509CERTLIST_CID { /* 959fb165-6517-487f-ab9b-d8913be53197 */  \
     0x959fb165,                                                           \
     0x6517,                                                               \
-    0x487f                                                                \
+    0x487f,                                                               \
     {0xab, 0x9b, 0xd8, 0x91, 0x3b, 0xe5, 0x31, 0x97}                      \
   }
 

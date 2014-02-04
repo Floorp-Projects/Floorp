@@ -2271,6 +2271,7 @@ const Class TypedObject::class_ = {
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
     TypedDatum::obj_trace,
+    JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     {
         TypedDatum::obj_lookupGeneric,
@@ -2438,6 +2439,7 @@ const Class TypedHandle::class_ = {
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
     TypedDatum::obj_trace,
+    JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     {
         TypedDatum::obj_lookupGeneric,

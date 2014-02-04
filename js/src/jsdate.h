@@ -16,9 +16,6 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
-extern JSObject *
-js_InitDateClass(JSContext *cx, JS::HandleObject obj);
-
 /*
  * These functions provide a C interface to the date/time object
  */

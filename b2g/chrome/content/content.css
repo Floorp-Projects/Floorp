@@ -71,6 +71,10 @@ xul|thumb {
   border-radius: 3px;
 }
 
+xul|scrollbarbutton {
+  background-image: none !important;
+}
+
 /* -moz-touch-enabled? media elements */
 :-moz-any(video, audio) > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");

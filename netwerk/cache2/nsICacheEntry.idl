@@ -16,7 +16,7 @@ interface nsICacheListener;
 interface nsIFile;
 interface nsICacheMetaDataVisitor;
 
-[scriptable, uuid(1785f6f1-18b3-4cb4-ae99-6c5545c1de19)]
+[scriptable, uuid(d3fbd879-6d3a-4bd0-b12e-7d86ab27ea90)]
 interface nsICacheEntry : nsISupports
 {
   /**
@@ -25,13 +25,11 @@ interface nsICacheEntry : nsISupports
   readonly attribute ACString key;
 
   /**
-   * Whether the data can be persist to disk.
-   * NOTE: This attribute must be set BEFORE opening the output stream.
-   * Switching this flag does not immediately affect creation of the disk
-   * file from memory-only data or eviction of the disk file and loading it
-   * to memory-only.
+   * Whether the entry is memory/only or persisted to disk.
+   * Note: private browsing entries are reported as persistent for consistency
+   * while are not actually persisted to disk.
    */
-  attribute boolean persistToDisk;
+  readonly attribute boolean persistent;
 
   /**
    * Get the number of times the cache entry has been opened.
@@ -142,13 +140,16 @@ interface nsICacheEntry : nsISupports
    * to exchange this entry for the newly created.
    * Used on 200 responses to conditional requests.
    *
+   * @param aMemoryOnly
+   *    - whether the entry is to be created as memory/only regardless how
+   *      the entry being recreated persistence is set
    * @returns
    *    - an entry that can be used to write to
    * @throws
    *    - NS_ERROR_NOT_AVAILABLE when the entry cannot be from some reason
    *      recreated for write
    */
-  nsICacheEntry recreate();
+  nsICacheEntry recreate([optional] in boolean aMemoryOnly);
 
   /**
    * Returns the length of data this entry holds.

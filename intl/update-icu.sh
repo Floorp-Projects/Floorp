@@ -52,6 +52,7 @@ svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-4
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/genrb-omitCollationRules.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/qualify-uinitonce-windows.diff
 

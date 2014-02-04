@@ -1339,14 +1339,12 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        JSStableString *stable = str->ensureStable(context());
-        if (!stable)
+        JSFlatString *flat = str->ensureFlat(context());
+        if (!flat)
             return false;
 
-        size_t length = stable->length();
-        const StableCharPtr chars = stable->chars();
-        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars.get(), length,
-                                                            flags, nullptr);
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), flat->chars(),
+                                                            flat->length(), flags, nullptr);
         if (!reobj)
             return false;
         vp->setObject(*reobj);

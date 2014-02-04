@@ -30,11 +30,10 @@ public:
   NS_FORWARD_NSICACHEENTRYINFO(mOldInfo->)
 
   NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener);
-  NS_IMETHOD GetPersistToDisk(bool *aPersistToDisk);
-  NS_IMETHOD SetPersistToDisk(bool aPersistToDisk);
+  NS_IMETHOD GetPersistent(bool *aPersistToDisk);
   NS_IMETHOD SetValid() { return NS_OK; }
   NS_IMETHOD MetaDataReady() { return NS_OK; }
-  NS_IMETHOD Recreate(nsICacheEntry**);
+  NS_IMETHOD Recreate(bool, nsICacheEntry**);
   NS_IMETHOD GetDataSize(int64_t *size);
   NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval);
   NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval);

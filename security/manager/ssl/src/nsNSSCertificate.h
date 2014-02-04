@@ -80,9 +80,11 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTLIST
 
-  // certList is adopted 
+  // certList is adopted
   nsNSSCertList(insanity::pkix::ScopedCERTCertList& certList,
                 const nsNSSShutDownPreventionLock& proofOfLock);
+
+  nsNSSCertList();
 
   static CERTCertList* DupCertList(CERTCertList* aCertList,
                                    const nsNSSShutDownPreventionLock&
