@@ -59,7 +59,7 @@
   }
 }
 
-#main-window[chromehidden~="toolbar"] > #titlebar {
+#main-window[chromehidden~="toolbar"]:not(:-moz-lwtheme) > #titlebar {
   padding-top: 22px;
 }
 
@@ -2642,7 +2642,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: @focusRingShadow@;
 }
 
-#titlebar {
+#main-window:not(:-moz-lwtheme) > #titlebar {
   padding-top: @spaceAboveTabbar@;
   min-height: @tabHeight@;
 }
@@ -4077,13 +4077,26 @@ window > chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customize-entered] #titlebar {
+#main-window[customize-entered] > #titlebar {
   padding-top: 0;
 }
 
-#main-window[tabsintitlebar][customize-entered] #titlebar-content {
-  margin-bottom: 0px !important;
-  margin-top: 11px !important;
+#main-window[tabsintitlebar]:not([customizing]):not(:-moz-lwtheme) > #titlebar > #titlebar-content,
+#main-window[tabsintitlebar][customize-entering] > #titlebar > #titlebar-content,
+#main-window[tabsintitlebar][customize-exiting] > #titlebar > #titlebar-content {
+  margin-top: 2px;
+  margin-bottom: 11px;
+}
+
+#main-window[tabsintitlebar][customize-entered] > #titlebar > #titlebar-content,
+#main-window:not([tabsintitlebar]):not(:-moz-lwtheme) > #titlebar > #titlebar-content {
+  margin-top: 11px;
+  margin-bottom: 0px;
+}
+
+#main-window[tabsintitlebar]:-moz-lwtheme > #titlebar > #titlebar-content {
+  margin-top: 11px;
+  margin-bottom: 11px;
 }
 
 #main-window[customize-entered] #tab-view-deck {
@@ -4108,8 +4121,11 @@ window > chatbox {
   border-bottom-width: 0;
 }
 
-#main-window[customize-entered] #TabsToolbar {
+#main-window[tabsintitlebar][customize-entered] #TabsToolbar {
   margin-top: 9px;
+}
+
+#main-window[customize-entered] #TabsToolbar {
   background-clip: padding-box;
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
