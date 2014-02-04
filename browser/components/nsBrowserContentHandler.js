@@ -589,6 +589,22 @@ nsBrowserContentHandler.prototype = {
             willRestoreSession = ss.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
+
+#if MOZ_UPDATE_CHANNEL == aurora
+            // Temporary Australis whatsnew page for Aurora (bug 966014)
+            if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "WINNT") {
+              let locale = "en-US";
+              try {
+                locale = Services.prefs.getCharPref("general.useragent.locale");
+              } catch (e) {}
+
+              if (locale == "en-US") {
+                let url = "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/whatsnew/?oldversion=%OLD_VERSION%";
+                overridePage = Services.urlFormatter.formatURL(url);
+              }
+            }
+#endif
+
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
 
