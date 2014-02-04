@@ -143,7 +143,7 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
 }
 
 static bool
-ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
+ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedValue v(cx);
     if (!GetDataProperty(cx, globalVal, cx->names().Math, &v))
@@ -153,7 +153,7 @@ ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleVa
         return false;
 
     Native native = nullptr;
-    switch (global.mathBuiltinFunction()) {
+    switch (global.mathBuiltin()) {
       case AsmJSMathBuiltin_sin: native = math_sin; break;
       case AsmJSMathBuiltin_cos: native = math_cos; break;
       case AsmJSMathBuiltin_tan: native = math_tan; break;
@@ -173,26 +173,21 @@ ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleVa
     }
 
     if (!IsNativeFunction(v, native))
-        return LinkFail(cx, "bad Math.* builtin function");
+        return LinkFail(cx, "bad Math.* builtin");
 
     return true;
 }
 
 static bool
-ValidateConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
+ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.constantName());
-    RootedValue v(cx, globalVal);
-
-    if (global.constantKind() == AsmJSModule::Global::MathConstant) {
-        if (!GetDataProperty(cx, v, cx->names().Math, &v))
-            return false;
-    }
-
-    if (!GetDataProperty(cx, v, field, &v))
+    RootedValue v(cx);
+    if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
+
     if (!v.isNumber())
-        return LinkFail(cx, "math / global constant value needs to be a number");
+        return LinkFail(cx, "global constant value needs to be a number");
 
     // NaN != NaN
     if (IsNaN(global.constantValue())) {
@@ -274,12 +269,12 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
             if (!ValidateArrayView(cx, global, globalVal, bufferVal))
                 return false;
             break;
-          case AsmJSModule::Global::MathBuiltinFunction:
-            if (!ValidateMathBuiltinFunction(cx, global, globalVal))
+          case AsmJSModule::Global::MathBuiltin:
+            if (!ValidateMathBuiltin(cx, global, globalVal))
                 return false;
             break;
           case AsmJSModule::Global::Constant:
-            if (!ValidateConstant(cx, global, globalVal))
+            if (!ValidateGlobalConstant(cx, global, globalVal))
                 return false;
             break;
         }
