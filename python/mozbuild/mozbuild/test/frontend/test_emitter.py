@@ -169,7 +169,6 @@ class TestEmitterBasic(unittest.TestCase):
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SSRCS=['bans.S', 'fans.S'],
             VISIBILITY_FLAGS='',
-            DELAYLOAD_DLLS=['foo.dll', 'bar.dll'],
         )
 
         variables = objs[0].variables
