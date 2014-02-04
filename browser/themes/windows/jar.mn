@@ -31,6 +31,7 @@ browser.jar:
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+        skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/fullscreen-darknoise.png
         skin/classic/browser/Geolocation-16.png
@@ -344,6 +345,7 @@ browser.jar:
         skin/classic/aero/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+        skin/classic/aero/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
 *       skin/classic/aero/browser/engineManager.css
         skin/classic/aero/browser/fullscreen-darknoise.png
         skin/classic/aero/browser/Geolocation-16.png
