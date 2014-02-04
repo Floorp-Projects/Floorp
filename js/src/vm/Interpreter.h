@@ -318,9 +318,10 @@ TypeOfValue(const Value &v);
 extern bool
 HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);
 
-/* Unwind block and scope chains to match the given depth. */
+// Unwind scope chain and iterator to match the static scope corresponding to
+// the given bytecode position.
 extern void
-UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth);
+UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc);
 
 /*
  * Unwind for an uncatchable exception. This means not running finalizers, etc;

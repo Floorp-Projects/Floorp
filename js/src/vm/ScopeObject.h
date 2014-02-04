@@ -629,6 +629,7 @@ class ScopeIter
     Type type() const { JS_ASSERT(!done()); return type_; }
     bool hasScopeObject() const { JS_ASSERT(!done()); return hasScopeObject_; }
     ScopeObject &scope() const;
+    NestedScopeObject* staticScope() const { return staticScope_; }
 
     StaticBlockObject &staticBlock() const {
         JS_ASSERT(type() == Block);

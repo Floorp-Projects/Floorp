@@ -855,23 +855,25 @@ EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stack
     return true;
 }
 
-/* Unwind block and scope chains to match the given depth. */
+// Unwind scope chain and iterator to match the static scope corresponding to
+// the given bytecode position.
 void
-js::UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth)
+js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 {
-    for (; !si.done(); ++si) {
+    if (si.done())
+        return;
+
+    Rooted<NestedScopeObject *> staticScope(cx, si.frame().script()->getStaticScope(pc));
+
+    for (; si.staticScope() != staticScope; ++si) {
         switch (si.type()) {
           case ScopeIter::Block:
-            if (si.staticBlock().stackDepth() < stackDepth)
-                return;
             if (cx->compartment()->debugMode())
                 DebugScopes::onPopBlock(cx, si);
             if (si.staticBlock().needsClone())
                 si.frame().popBlock(cx);
             break;
           case ScopeIter::With:
-            if (si.scope().as<DynamicWithObject>().stackDepth() < stackDepth)
-                return;
             si.frame().popWith(cx);
             break;
           case ScopeIter::Call:
@@ -884,7 +886,7 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth)
 static void
 ForcedReturn(JSContext *cx, ScopeIter &si, FrameRegs &regs)
 {
-    UnwindScope(cx, si, 0);
+    UnwindScope(cx, si, regs.fp()->script()->main());
     regs.setToEndOfScript();
 }
 
@@ -1009,7 +1011,7 @@ HandleError(JSContext *cx, FrameRegs &regs)
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, si, tn->stackDepth);
+            UnwindScope(cx, si, regs.fp()->script()->main() + tn->start);
 
             /*
              * Set pc to the first bytecode after the the try note to point
