@@ -102,26 +102,16 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 
   switch (aDeprecatedTextureClientType) {
   case TEXTURE_SHARED_GL:
-    if (parentBackend == LayersBackend::LAYERS_OPENGL) {
-      result = new DeprecatedTextureClientSharedOGL(GetForwarder(), GetTextureInfo());
-    }
-     break;
   case TEXTURE_SHARED_GL_EXTERNAL:
-    if (parentBackend == LayersBackend::LAYERS_OPENGL) {
-      result = new DeprecatedTextureClientSharedOGLExternal(GetForwarder(), GetTextureInfo());
-    }
-    break;
   case TEXTURE_STREAM_GL:
-    if (parentBackend == LayersBackend::LAYERS_OPENGL) {
-      result = new DeprecatedTextureClientStreamOGL(GetForwarder(), GetTextureInfo());
-    }
-    break;
+    MOZ_CRASH("Unsupported. this should not be reached");
   case TEXTURE_YCBCR:
-    if (parentBackend == LayersBackend::LAYERS_OPENGL ||
-        parentBackend == LayersBackend::LAYERS_D3D9 ||
+    if (parentBackend == LayersBackend::LAYERS_D3D9 ||
         parentBackend == LayersBackend::LAYERS_D3D11 ||
         parentBackend == LayersBackend::LAYERS_BASIC) {
       result = new DeprecatedTextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
+    } else {
+      MOZ_CRASH("Unsupported. this should not be reached");
     }
     break;
   case TEXTURE_CONTENT:
