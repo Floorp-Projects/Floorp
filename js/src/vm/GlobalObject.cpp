@@ -46,6 +46,12 @@ struct ProtoTableEntry {
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
+JSObject *
+js_InitViaClassSpec(JSContext *cx, Handle<JSObject*> obj)
+{
+    MOZ_ASSUME_UNREACHABLE();
+}
+
 static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
 #define INIT_FUNC(name,code,init,clasp) { clasp, init },
 #define INIT_FUNC_DUMMY(name,code,init,clasp) { nullptr, nullptr },
@@ -441,10 +447,79 @@ GlobalObject::ensureConstructor(JSContext *cx, JSProtoKey key)
 {
     if (getConstructor(key).isObject())
         return true;
+    return initConstructor(cx, key);
+}
+
+bool
+GlobalObject::initConstructor(JSContext *cx, JSProtoKey key)
+{
     MOZ_ASSERT(getConstructor(key).isUndefined());
-    RootedObject self(cx, this);
+    Rooted<GlobalObject*> self(cx, this);
+
+    // There are two different kinds of initialization hooks. One of them is
+    // the class js_InitFoo hook, defined in a JSProtoKey-keyed table at the
+    // top of this file. The other lives in the ClassSpec for classes that
+    // define it. Classes may use one or the other, but not both.
     ClassInitializerOp init = protoTable[key].init;
-    return !init || init(cx, self);
+    if (init == js_InitViaClassSpec)
+        init = nullptr;
+
+    const Class *clasp = ProtoKeyToClass(key);
+
+    // Some classes have no init routine, which means that they're disabled at
+    // compile-time. We could try to enforce that callers never pass such keys
+    // to initConstructor, but that would cramp the style of consumers like
+    // GlobalObject::initStandardClasses that want to just carpet-bomb-call
+    // ensureConstructor with every JSProtoKey. So it's easier to just handle
+    // it here.
+    bool haveSpec = clasp && clasp->spec.defined();
+    if (!init && !haveSpec)
+        return true;
+
+    // See if there's an old-style initialization hook.
+    if (init) {
+        MOZ_ASSERT(!haveSpec);
+        return init(cx, self);
+    }
+
+    //
+    // Ok, we're doing it with a class spec.
+    //
+
+    // Create the constructor.
+    RootedObject ctor(cx, clasp->spec.createConstructor(cx, key));
+    if (!ctor)
+        return false;
+
+    // Define any specified functions.
+    if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
+        if (!JS_DefineFunctions(cx, ctor, funs))
+            return false;
+    }
+
+    // We don't always have a prototype (i.e. Math and JSON). If we don't,
+    // |createPrototype| and |prototypeFunctions| should both be null.
+    RootedObject proto(cx);
+    if (clasp->spec.createPrototype) {
+        proto = clasp->spec.createPrototype(cx, key);
+        if (!proto)
+            return false;
+    }
+    if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
+        if (!JS_DefineFunctions(cx, proto, funs))
+            return false;
+    }
+
+    // If the prototype exists, link it with the constructor.
+    if (proto && !LinkConstructorAndPrototype(cx, ctor, proto))
+        return false;
+
+    // Call the post-initialization hook, if provided.
+    if (clasp->spec.finishInit && !clasp->spec.finishInit(cx, ctor, proto))
+        return false;
+
+    // Stash things in the right slots and define the constructor on the global.
+    return DefineConstructorAndPrototype(cx, self, key, ctor, proto);
 }
 
 GlobalObject *
