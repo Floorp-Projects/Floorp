@@ -91,6 +91,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitIntToString(Register input, Register output, Label *ool);
     bool visitIntToString(LIntToString *lir);
     bool visitDoubleToString(LDoubleToString *lir);
+    bool visitFloatToString(LFloatToString *lir);
     bool visitPrimitiveToString(LPrimitiveToString *lir);
     bool visitInteger(LInteger *lir);
     bool visitRegExp(LRegExp *lir);

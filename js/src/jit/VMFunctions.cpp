@@ -970,6 +970,12 @@ StringReplace(JSContext *cx, HandleString string, HandleString pattern, HandleSt
     return rval.toString();
 }
 
+JSString *
+FloatToString(ThreadSafeContext *cx, float f)
+{
+    return NumberToString<CanGC>(cx, double(f));
+}
+
 bool
 Recompile(JSContext *cx)
 {
