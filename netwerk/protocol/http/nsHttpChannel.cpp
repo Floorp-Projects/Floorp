@@ -3640,22 +3640,28 @@ nsHttpChannel::InitCacheEntry()
     LOG(("nsHttpChannel::InitCacheEntry [this=%p entry=%p]\n",
         this, mCacheEntry.get()));
 
-    if (!mCacheEntryIsWriteOnly) {
+    bool recreate = !mCacheEntryIsWriteOnly;
+    bool dontPersist = mLoadFlags & INHIBIT_PERSISTENT_CACHING;
+
+    if (!recreate && dontPersist) {
+        // If the current entry is persistent but we inhibit peristence
+        // then force recreation of the entry as memory/only.
+        rv = mCacheEntry->GetPersistent(&recreate);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    if (recreate) {
         LOG(("  we have a ready entry, but reading it again from the server -> recreating cache entry\n"));
         nsCOMPtr<nsICacheEntry> currentEntry;
         currentEntry.swap(mCacheEntry);
-        rv = currentEntry->Recreate(getter_AddRefs(mCacheEntry));
+        rv = currentEntry->Recreate(dontPersist, getter_AddRefs(mCacheEntry));
         if (NS_FAILED(rv)) {
           LOG(("  recreation failed, the response will not be cached"));
           return NS_OK;
         }
 
         mCacheEntryIsWriteOnly = true;
-    }
-
-    if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
-        rv = mCacheEntry->SetPersistToDisk(false);
-        if (NS_FAILED(rv)) return rv;
     }
 
     // Set the expiration time for this cache entry
