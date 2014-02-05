@@ -101,16 +101,16 @@ bool xpc_IsReportableErrorCode(nsresult code)
 // static
 nsresult
 nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
-                                  nsXPCWrappedJSClass** resultClazz)
+                                  nsXPCWrappedJSClass** resultClasp)
 {
-    nsXPCWrappedJSClass* clazz = nullptr;
+    nsXPCWrappedJSClass* clasp = nullptr;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
     IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
-    clazz = map->Find(aIID);
-    NS_IF_ADDREF(clazz);
+    clasp = map->Find(aIID);
+    NS_IF_ADDREF(clasp);
 
-    if (!clazz) {
+    if (!clasp) {
         nsCOMPtr<nsIInterfaceInfo> info;
         nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (info) {
@@ -118,14 +118,14 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
             if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                 nsXPConnect::IsISupportsDescendant(info)) {
-                clazz = new nsXPCWrappedJSClass(cx, aIID, info);
-                NS_ADDREF(clazz);
-                if (!clazz->mDescriptors)
-                    NS_RELEASE(clazz);  // sets clazz to nullptr
+                clasp = new nsXPCWrappedJSClass(cx, aIID, info);
+                NS_ADDREF(clasp);
+                if (!clasp->mDescriptors)
+                    NS_RELEASE(clasp);  // sets clasp to nullptr
             }
         }
     }
-    *resultClazz = clazz;
+    *resultClasp = clasp;
     return NS_OK;
 }
 
