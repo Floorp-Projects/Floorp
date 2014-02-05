@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import difflib
 import errno
 import os
+import shutil
 import sys
 import which
 
@@ -53,7 +54,7 @@ BZEXPORT_INFO = '''
 If you plan on uploading patches to Mozilla, there is an extension called
 bzexport that makes it easy to upload patches from the command line via the
 |hg bzexport| command. More info is available at
-https://hg.mozilla.org/users/tmielczarek_mozilla.com/bzexport
+https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/bzexport/README
 '''.strip()
 
 MQEXT_INFO = '''
@@ -87,6 +88,7 @@ class MercurialSetupWizard(object):
     def __init__(self, state_dir):
         self.state_dir = state_dir
         self.ext_dir = os.path.join(state_dir, 'mercurial', 'extensions')
+        self.vcs_tools_dir = os.path.join(state_dir, 'version-control-tools')
 
     def run(self, config_paths):
         try:
@@ -156,23 +158,23 @@ class MercurialSetupWizard(object):
                 print('Activated rebase extension.')
                 print('')
 
-        update_bzexport = 'bzexport' in active
+        update_vcs_tools = False
+        activate_bzexport = False
+
         if 'bzexport' not in active:
             print(BZEXPORT_INFO)
             if self._prompt_yn('Would you like to activate bzexport'):
-                update_bzexport = True
-                c.activate_extension('bzexport', os.path.join(self.ext_dir,
-                    'bzexport'))
-                print('Activated bzexport extension.')
-                print('')
+                activate_bzexport = True
+                update_vcs_tools = True
+        else:
+            activate_bzexport = True
 
-        if update_bzexport:
-            self.update_mercurial_repo(
-                hg,
-                'https://hg.mozilla.org/users/tmielczarek_mozilla.com/bzexport',
-                os.path.join(self.ext_dir, 'bzexport'),
-                'default',
-                'Ensuring bzexport extension is up to date...')
+        if activate_bzexport:
+            update_vcs_tools = True
+            c.activate_extension('bzexport',
+                os.path.join(self.vcs_tools_dir, 'hgext', 'bzexport'))
+            print('Activated bzexport extension.')
+            print('')
 
         if 'mq' not in active:
             if self._prompt_yn('Would you like to activate the mq extension '
@@ -229,6 +231,23 @@ class MercurialSetupWizard(object):
                     c.ensure_qnew_currentuser_default()
                     print('Configured qnew to set patch author by default.')
                     print('')
+
+        if update_vcs_tools:
+            self.update_mercurial_repo(
+                hg,
+                'https://hg.mozilla.org/hgcustom/version-control-tools',
+                self.vcs_tools_dir,
+                'default',
+                'Ensuring version-control-tools is up to date...')
+
+        # Look for and clean up old extensions.
+        for ext in {'bzexport',}:
+            path = os.path.join(self.ext_dir, ext)
+            if os.path.exists(path):
+                if self._prompt_yn('Would you like to remove the old and no '
+                    'longer referenced repository at %s' % path):
+                    print('Cleaning up old repository: %s' % path)
+                    shutil.rmtree(path)
 
         c.add_mozilla_host_fingerprints()
 
