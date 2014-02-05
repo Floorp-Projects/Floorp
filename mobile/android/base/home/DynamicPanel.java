@@ -11,6 +11,8 @@ import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
+import org.mozilla.gecko.home.PanelLayout.DatasetRequest;
+import org.mozilla.gecko.db.DBUtils;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -54,7 +56,7 @@ public class DynamicPanel extends HomeFragment {
     private static final String LOGTAG = "GeckoDynamicPanel";
 
     // Dataset ID to be used by the loader
-    private static final String DATASET_ID = "dataset_id";
+    private static final String DATASET_REQUEST = "dataset_request";
 
     // The panel layout associated with this panel
     private PanelLayout mLayout;
@@ -167,8 +169,8 @@ public class DynamicPanel extends HomeFragment {
      */
     private class PanelDatasetHandler implements DatasetHandler {
         @Override
-        public void requestDataset(String datasetId) {
-            Log.d(LOGTAG, "Requesting dataset: " + datasetId);
+        public void requestDataset(DatasetRequest request) {
+            Log.d(LOGTAG, "Requesting request: " + request);
 
             // Ignore dataset requests while the fragment is not
             // allowed to load its content.
@@ -177,10 +179,10 @@ public class DynamicPanel extends HomeFragment {
             }
 
             final Bundle bundle = new Bundle();
-            bundle.putString(DATASET_ID, datasetId);
+            bundle.putParcelable(DATASET_REQUEST, request);
 
             // Ensure one loader per dataset
-            final int loaderId = generateLoaderId(datasetId);
+            final int loaderId = generateLoaderId(request.datasetId);
             getLoaderManager().restartLoader(loaderId, bundle, mLoaderCallbacks);
         }
 
@@ -204,23 +206,32 @@ public class DynamicPanel extends HomeFragment {
      * Cursor loader for the panel datasets.
      */
     private static class PanelDatasetLoader extends SimpleCursorLoader {
-        private final String mDatasetId;
+        private final DatasetRequest mRequest;
 
-        public PanelDatasetLoader(Context context, String datasetId) {
+        public PanelDatasetLoader(Context context, DatasetRequest request) {
             super(context);
-            mDatasetId = datasetId;
+            mRequest = request;
         }
 
-        public String getDatasetId() {
-            return mDatasetId;
+        public DatasetRequest getRequest() {
+            return mRequest;
         }
 
         @Override
         public Cursor loadCursor() {
             final ContentResolver cr = getContext().getContentResolver();
 
-            final String selection = HomeItems.DATASET_ID + " = ?";
-            final String[] selectionArgs = new String[] { mDatasetId };
+            final String selection;
+            final String[] selectionArgs;
+
+            // Null represents the root filter
+            if (mRequest.filter == null) {
+                selection = DBUtils.concatenateWhere(HomeItems.DATASET_ID + " = ?", HomeItems.FILTER + " IS NULL");
+                selectionArgs = new String[] { mRequest.datasetId };
+            } else {
+                selection = DBUtils.concatenateWhere(HomeItems.DATASET_ID + " = ?", HomeItems.FILTER + " = ?");
+                selectionArgs = new String[] { mRequest.datasetId, mRequest.filter };
+            }
 
             // XXX: You can use CONTENT_FAKE_URI for development to pull items from fake_home_items.json.
             return cr.query(HomeItems.CONTENT_URI, null, selection, selectionArgs, null);
@@ -233,27 +244,32 @@ public class DynamicPanel extends HomeFragment {
     private class PanelLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            final String datasetId = args.getString(DATASET_ID);
+            final DatasetRequest request = (DatasetRequest) args.getParcelable(DATASET_REQUEST);
 
-            Log.d(LOGTAG, "Creating loader for dataset: " + datasetId);
-            return new PanelDatasetLoader(getActivity(), datasetId);
+            Log.d(LOGTAG, "Creating loader for request: " + request);
+            return new PanelDatasetLoader(getActivity(), request);
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-            final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
+            final DatasetRequest request = getRequestFromLoader(loader);
 
-            Log.d(LOGTAG, "Finished loader for dataset: " + datasetLoader.getDatasetId());
-            mLayout.deliverDataset(datasetLoader.getDatasetId(), cursor);
+            Log.d(LOGTAG, "Finished loader for request: " + request);
+            mLayout.deliverDataset(request, cursor);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
-            Log.d(LOGTAG, "Resetting loader for dataset: " + datasetLoader.getDatasetId());
+            final DatasetRequest request = getRequestFromLoader(loader);
+            Log.d(LOGTAG, "Resetting loader for request: " + request);
             if (mLayout != null) {
-                mLayout.releaseDataset(datasetLoader.getDatasetId());
+                mLayout.releaseDataset(request.datasetId);
             }
+        }
+
+        private DatasetRequest getRequestFromLoader(Loader<Cursor> loader) {
+            final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
+            return datasetLoader.getRequest();
         }
     }
 }
