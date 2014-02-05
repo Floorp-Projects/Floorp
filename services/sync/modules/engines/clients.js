@@ -71,6 +71,28 @@ ClientEngine.prototype = {
     return stats;
   },
 
+  /**
+   * Obtain information about device types.
+   *
+   * Returns a Map of device types to integer counts.
+   */
+  get deviceTypes() {
+    let counts = new Map();
+
+    counts.set(this.localType, 1);
+
+    for each (let record in this._store._remoteClients) {
+      let type = record.type;
+      if (!counts.has(type)) {
+        counts.set(type, 0);
+      }
+
+      counts.set(type, counts.get(type) + 1);
+    }
+
+    return counts;
+  },
+
   get localID() {
     // Generate a random GUID id we don't have one
     let localID = Svc.Prefs.get("client.GUID", "");

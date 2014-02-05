@@ -160,10 +160,14 @@ this.ProviderManager.prototype = Object.freeze({
    * @return Promise<null>
    */
   registerProvider: function (provider) {
-    if (!(provider instanceof Provider)) {
-      throw new Error("Argument must be a Provider instance.");
+    // We should perform an instanceof check here. However, due to merged
+    // compartments, the Provider type may belong to one of two JSMs
+    // isinstance gets confused depending on which module Provider comes
+    // from. Some code references Provider from dataprovider.jsm; others from
+    // Metrics.jsm.
+    if (!provider.name) {
+      throw new Error("Provider is not valid: does not have a name.");
     }
-
     if (this._providers.has(provider.name)) {
       return CommonUtils.laterTickResolvingPromise();
     }

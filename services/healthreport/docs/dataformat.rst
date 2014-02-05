@@ -1313,6 +1313,74 @@ Example
       "google.urlbar": 7
     },
 
+org.mozilla.sync.sync
+---------------------
+
+This daily measurement contains information about the Sync service.
+
+Values should be recorded for every day FHR measurements occurred.
+
+Version 1
+^^^^^^^^^
+
+This version debuted with Firefox 30 on desktop. It contains the following
+properties:
+
+enabled
+   Daily numeric indicating whether Sync is configured and enabled. 1 if so,
+   0 otherwise.
+
+preferredProtocol
+   String version of the maximum Sync protocol version the client supports.
+   This will be ``1.1`` for for legacy Sync and ``1.5`` for clients that
+   speak the Firefox Accounts protocol.
+
+actualProtocol
+   The actual Sync protocol version the client is configured to use.
+
+   This will be ``1.1`` if the client is configured with the legacy Sync
+   service or if the client only supports ``1.1``.
+
+   It will be ``1.5`` if the client supports ``1.5`` and either a) the
+   client is not configured b) the client is using Firefox Accounts Sync.
+
+syncStart
+   Count of sync operations performed.
+
+syncSuccess
+   Count of sync operations that completed successfully.
+
+syncError
+   Count of sync operations that did not complete successfully.
+
+   This is a measure of overall sync success. This does *not* reflect
+   recoverable errors (such as record conflict) that can occur during
+   sync. This is thus a rough proxy of whether the sync service is
+   operating without error.
+
+org.mozilla.sync.devices
+------------------------
+
+This daily measurement contains information about the device type composition
+for the configured Sync account.
+
+Version 1
+^^^^^^^^^
+
+Version 1 was introduced with Firefox 30.
+
+Field names are dynamic according to the client-reported device types from
+Sync records. All fields are daily last seen integer values corresponding to
+the number of devices of that type.
+
+Common values include:
+
+desktop
+   Corresponds to a Firefox desktop client.
+
+mobile
+   Corresponds to a Fennec client.
+
 org.mozilla.sysinfo.sysinfo
 ---------------------------
 
