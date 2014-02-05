@@ -95,10 +95,18 @@ class CPOWProxyHandler : public BaseProxyHandler
 
 CPOWProxyHandler CPOWProxyHandler::singleton;
 
+#define FORWARD(call, args)                                             \
+    JavaScriptParent *parent = ParentOf(proxy);                         \
+    if (!parent->active()) {                                            \
+        JS_ReportError(cx, "cannot use a CPOW whose process is gone");  \
+        return false;                                                   \
+    }                                                                   \
+    return parent->call args;
+
 bool
 CPOWProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
 {
-    return ParentOf(proxy)->preventExtensions(cx, proxy);
+    FORWARD(preventExtensions, (cx, proxy));
 }
 
 bool
@@ -117,7 +125,7 @@ bool
 CPOWProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                         MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
-    return ParentOf(proxy)->getPropertyDescriptor(cx, proxy, id, desc, flags);
+    FORWARD(getPropertyDescriptor, (cx, proxy, id, desc, flags));
 }
 
 bool
@@ -145,7 +153,7 @@ CPOWProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
                                            HandleId id, MutableHandle<JSPropertyDescriptor> desc,
                                            unsigned flags)
 {
-    return ParentOf(proxy)->getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
+    FORWARD(getOwnPropertyDescriptor, (cx, proxy, id, desc, flags));
 }
 
 bool
@@ -172,7 +180,7 @@ bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                  MutableHandle<JSPropertyDescriptor> desc)
 {
-    return ParentOf(proxy)->defineProperty(cx, proxy, id, desc);
+    FORWARD(defineProperty, (cx, proxy, id, desc));
 }
 
 bool
@@ -199,7 +207,7 @@ JavaScriptParent::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 bool
 CPOWProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    return ParentOf(proxy)->getOwnPropertyNames(cx, proxy, props);
+    FORWARD(getOwnPropertyNames, (cx, proxy, props));
 }
 
 bool
@@ -211,7 +219,7 @@ JavaScriptParent::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdV
 bool
 CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    return ParentOf(proxy)->delete_(cx, proxy, id, bp);
+    FORWARD(delete_, (cx, proxy, id, bp));
 }
 
 bool
@@ -233,7 +241,7 @@ JavaScriptParent::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *
 bool
 CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    return ParentOf(proxy)->enumerate(cx, proxy, props);
+    FORWARD(enumerate, (cx, proxy, props));
 }
 
 bool
@@ -245,7 +253,7 @@ JavaScriptParent::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &pro
 bool
 CPOWProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    return ParentOf(proxy)->has(cx, proxy, id, bp);
+    FORWARD(has, (cx, proxy, id, bp));
 }
 
 bool
@@ -267,7 +275,7 @@ JavaScriptParent::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 bool
 CPOWProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    return ParentOf(proxy)->hasOwn(cx, proxy, id, bp);
+    FORWARD(hasOwn, (cx, proxy, id, bp));
 }
 
 bool
@@ -290,7 +298,7 @@ bool
 CPOWProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                       HandleId id, MutableHandleValue vp)
 {
-    return ParentOf(proxy)->get(cx, proxy, receiver, id, vp);
+    FORWARD(get, (cx, proxy, receiver, id, vp));
 }
 
 bool
@@ -319,7 +327,7 @@ bool
 CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
                       JS::HandleId id, bool strict, JS::MutableHandleValue vp)
 {
-    return ParentOf(proxy)->set(cx, proxy, receiver, id, strict, vp);
+    FORWARD(set, (cx, proxy, receiver, id, strict, vp));
 }
 
 bool
@@ -351,7 +359,7 @@ JavaScriptParent::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject re
 bool
 CPOWProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    return ParentOf(proxy)->keys(cx, proxy, props);
+    FORWARD(keys, (cx, proxy, props));
 }
 
 bool
@@ -363,7 +371,7 @@ JavaScriptParent::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 bool
 CPOWProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 {
-    return ParentOf(proxy)->isExtensible(cx, proxy, extensible);
+    FORWARD(isExtensible, (cx, proxy, extensible));
 }
 
 bool
@@ -381,7 +389,7 @@ JavaScriptParent::isExtensible(JSContext *cx, HandleObject proxy, bool *extensib
 bool
 CPOWProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    return ParentOf(proxy)->call(cx, proxy, args);
+    FORWARD(call, (cx, proxy, args));
 }
 
 bool
@@ -456,7 +464,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 bool
 CPOWProxyHandler::objectClassIs(HandleObject proxy, js::ESClassValue classValue, JSContext *cx)
 {
-    return ParentOf(proxy)->objectClassIs(cx, proxy, classValue);
+    FORWARD(objectClassIs, (cx, proxy, classValue));
 }
 
 bool
@@ -476,7 +484,10 @@ JavaScriptParent::objectClassIs(JSContext *cx, HandleObject proxy, js::ESClassVa
 const char *
 CPOWProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
-    return ParentOf(proxy)->className(cx, proxy);
+    JavaScriptParent *parent = ParentOf(proxy);
+    if (!parent->active())
+        return "<dead CPOW>";
+    return parent->className(cx, proxy);
 }
 
 const char *
@@ -486,7 +497,7 @@ JavaScriptParent::className(JSContext *cx, HandleObject proxy)
 
     nsString name;
     if (!CallClassName(objId, &name))
-        return nullptr;
+        return "<error>";
 
     return ToNewCString(name);
 }
@@ -634,10 +645,9 @@ JavaScriptParent::incref()
 }
 
 void
-JavaScriptParent::destroyFromContent()
+JavaScriptParent::ActorDestroy(ActorDestroyReason why)
 {
     inactive_ = true;
-    decref();
 }
 
 /* static */ bool
@@ -647,9 +657,12 @@ JavaScriptParent::IsCPOW(JSObject *obj)
 }
 
 /* static */ nsresult
-JavaScriptParent::InstanceOf(JSObject *obj, const nsID *id, bool *bp)
+JavaScriptParent::InstanceOf(JSObject *proxy, const nsID *id, bool *bp)
 {
-    return ParentOf(obj)->instanceOf(obj, id, bp);
+    JavaScriptParent *parent = ParentOf(proxy);
+    if (!parent->active())
+        return NS_ERROR_UNEXPECTED;
+    return parent->instanceOf(proxy, id, bp);
 }
 
 nsresult
@@ -671,24 +684,21 @@ JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
 }
 
 /* static */ bool
-JavaScriptParent::DOMInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+JavaScriptParent::DOMInstanceOf(JSContext *cx, JSObject *proxy, int prototypeID, int depth, bool *bp)
 {
-    return ParentOf(obj)->domInstanceOf(obj, prototypeID, depth, bp);
+    FORWARD(domInstanceOf, (cx, proxy, prototypeID, depth, bp));
 }
 
 bool
-JavaScriptParent::domInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+JavaScriptParent::domInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp)
 {
     ObjectId objId = idOf(obj);
 
     ReturnStatus status;
     if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
-        return false;
+        return ipcfail(cx);
 
-    if (status.type() != ReturnStatus::TReturnSuccess)
-        return false;
-
-    return true;
+    return ok(cx, status);
 }
 
 mozilla::ipc::IProtocol*

@@ -34,22 +34,6 @@ static float gMaxEventAcceleration = 999.0f;
 static float gFlingFriction = 0.002f;
 
 /**
- * Threshold for velocity beneath which we turn off any acceleration we had
- * during repeated flings.
- */
-static float gVelocityThreshold = 0.14f;
-
-/**
- * Amount of acceleration we multiply in each time the user flings in one
- * direction. Every time they let go of the screen, we increase the acceleration
- * by this amount raised to the power of the amount of times they have let go,
- * times two (to make the curve steeper).  This stops if the user lets go and we
- * slow down enough, or if they put their finger down without moving it for a
- * moment (or in the opposite direction).
- */
-static float gAccelerationMultiplier = 1.125f;
-
-/**
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
  * velocity and rerendering unnecessarily.
@@ -67,8 +51,6 @@ static void ReadAxisPrefs()
 {
   Preferences::AddFloatVarCache(&gMaxEventAcceleration, "apz.max_event_acceleration", gMaxEventAcceleration);
   Preferences::AddFloatVarCache(&gFlingFriction, "apz.fling_friction", gFlingFriction);
-  Preferences::AddFloatVarCache(&gVelocityThreshold, "apz.velocity_threshold", gVelocityThreshold);
-  Preferences::AddFloatVarCache(&gAccelerationMultiplier, "apz.acceleration_multiplier", gAccelerationMultiplier);
   Preferences::AddFloatVarCache(&gFlingStoppedThreshold, "apz.fling_stopped_threshold", gFlingStoppedThreshold);
   Preferences::AddUintVarCache(&gMaxVelocityQueueSize, "apz.max_velocity_queue_size", gMaxVelocityQueueSize);
 }
@@ -100,7 +82,6 @@ static void InitAxisPrefs()
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
     mVelocity(0.0f),
-    mAcceleration(0),
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController)
 {
@@ -109,15 +90,6 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
-
-  bool curVelocityBelowThreshold = fabsf(newVelocity) < gVelocityThreshold;
-  bool directionChange = (mVelocity > 0) != (newVelocity > 0);
-
-  // If we've changed directions, or the current velocity threshold, stop any
-  // acceleration we've accumulated.
-  if (directionChange || curVelocityBelowThreshold) {
-    mAcceleration = 0;
-  }
 
   mVelocity = newVelocity;
   mPos = aPos;
@@ -145,23 +117,17 @@ float Axis::AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut,
   if (aScrollingDisabled) {
     // Scrolling is disabled on this axis, stop scrolling.
     aOverscrollAmountOut = aDisplacement;
-    mAcceleration = 0;
     return 0;
   }
 
-  if (fabsf(mVelocity) < gVelocityThreshold) {
-    mAcceleration = 0;
-  }
+  float displacement = aDisplacement;
 
-  float accelerationFactor = GetAccelerationFactor();
-  float displacement = aDisplacement * accelerationFactor;
   // If this displacement will cause an overscroll, throttle it. Can potentially
   // bring it to 0 even if the velocity is high.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
     mVelocity = 0.0f;
-    mAcceleration = 0;
     aOverscrollAmountOut = DisplacementWillOverscrollAmount(displacement);
     displacement -= aOverscrollAmountOut;
   }
@@ -177,8 +143,6 @@ float Axis::PanDistance(float aPos) {
 }
 
 void Axis::EndTouch() {
-  mAcceleration++;
-
   // Calculate the mean velocity and empty the queue.
   int count = mVelocityQueue.Length();
   if (count) {
@@ -193,7 +157,6 @@ void Axis::EndTouch() {
 
 void Axis::CancelTouch() {
   mVelocity = 0.0f;
-  mAcceleration = 0;
   while (!mVelocityQueue.IsEmpty()) {
     mVelocityQueue.RemoveElementAt(0);
   }
@@ -300,10 +263,6 @@ float Axis::ScaleWillOverscrollAmount(float aScale, float aFocus) {
 
 float Axis::GetVelocity() {
   return mAxisLocked ? 0 : mVelocity;
-}
-
-float Axis::GetAccelerationFactor() {
-  return powf(gAccelerationMultiplier, std::max(0, (mAcceleration - 4) * 3));
 }
 
 float Axis::GetCompositionEnd() {

@@ -12,12 +12,8 @@
 #define AUDIO_READ_BYTES 4096
 
 // Maximum number of audio frames we will accept from the audio decoder in one
-// go.  Carefully select this to work well with both the mp3 1152 max frames
-// per block and power-of-2 allocation sizes.  Since we must pre-allocate the
-// buffer we cannot use AudioCompactor without paying for an additional
-// allocation and copy.  Therefore, choosing a value that divides exactly into
-// 1152 is most memory efficient.
-#define MAX_AUDIO_FRAMES 128
+// go.
+#define MAX_AUDIO_FRAMES 4096
 
 namespace mozilla {
 
@@ -205,8 +201,7 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
   LOGD("got %u bytes, %u packets\n", aNumBytes, aNumPackets);
 
   // 1 frame per packet * num channels * 32-bit float
-  uint32_t decodedSize = MAX_AUDIO_FRAMES * mAudioChannels *
-                         sizeof(AudioDataValue);
+  uint32_t decodedSize = MAX_AUDIO_FRAMES * mAudioChannels * 4;
 
   // descriptions for _decompressed_ audio packets. ignored.
   nsAutoArrayPtr<AudioStreamPacketDescription>
@@ -240,14 +235,6 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
 
     if (rv && rv != kNeedMoreData) {
       LOGE("Error decoding audio stream: %x\n", rv);
-      break;
-    }
-
-    // If we decoded zero frames then AudiOConverterFillComplexBuffer is out
-    // of data to provide.  We drained its internal buffer completely on the
-    // last pass.
-    if (numFrames == 0 && rv == kNeedMoreData) {
-      LOGD("FillComplexBuffer out of data exactly\n");
       break;
     }
 

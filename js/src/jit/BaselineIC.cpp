@@ -5663,7 +5663,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
             return true;
         }
 
-        if (!scopeChain->is<ScopeObject>() || scopeChain->is<WithObject>())
+        if (!scopeChain->is<ScopeObject>() || scopeChain->is<DynamicWithObject>())
             return true;
 
         // Check for an 'own' property on the scope. There is no need to
