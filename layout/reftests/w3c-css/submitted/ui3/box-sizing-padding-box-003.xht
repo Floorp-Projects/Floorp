@@ -4,7 +4,7 @@
   <title>CSS Test: Box Sizing - Padding-Box with min/max width/height</title>
   <link rel="author" title="Scott Johnson" href="mailto:sjohnson@mozilla.com" />
   <link rel="help" href="http://www.w3.org/TR/css3-ui/#box-sizing" />
-  <meta name="assert" content="-moz-box-sizing: padding-box should make the element's (calc) width be the distance from the left padding edge to the right padding edge and the height be the distance from the top padding edge to the bottom padding edge."/>
+  <meta name="assert" content="box-sizing: padding-box should make the element's (calc) width be the distance from the left padding edge to the right padding edge and the height be the distance from the top padding edge to the bottom padding edge."/>
   <style type="text/css"><![CDATA[
     .container {
       min-width: 500px;
@@ -19,7 +19,7 @@
     }
 
     .box-sized {
-      -moz-box-sizing: padding-box;
+      box-sizing: padding-box;
       min-width: 250px;
       max-width: 350px;
       min-height: 70px;

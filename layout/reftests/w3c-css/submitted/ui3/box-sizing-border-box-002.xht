@@ -4,7 +4,7 @@
   <title>CSS Test: Box Sizing - Border-Box with specified width</title>
   <link rel="author" title="Scott Johnson" href="mailto:sjohnson@mozilla.com" />
   <link rel="help" href="http://www.w3.org/TR/css3-ui/#box-sizing" />
-  <meta name="assert" content="-moz-box-sizing: border-box should make the element's (percentage) width be the distance from the left border edge to the right border edge." />
+  <meta name="assert" content="box-sizing: border-box should make the element's (percentage) width be the distance from the left border edge to the right border edge." />
   <style type="text/css"><![CDATA[
     .container {
       width: 300px;
@@ -16,7 +16,7 @@
     }
 
     .box-sized {
-      -moz-box-sizing: border-box;
+      box-sizing: border-box;
       width: 50%;
       z-index: 1;
       float: left;
