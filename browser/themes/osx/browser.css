@@ -2645,9 +2645,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none;
 }
 
-.tabbrowser-tab:not(:-moz-lwtheme) {
-  color: #333;
-  text-shadow: @loweredShadow@;
+.tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
+  color: inherit;
 }
 
 .tabbrowser-tab[selected=true]:-moz-lwtheme {
@@ -2692,6 +2691,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   position: relative;
   -moz-appearance: none;
   background-repeat: repeat-x;
+}
+
+#TabsToolbar:not(:-moz-lwtheme) {
+  color: #333;
+  text-shadow: @loweredShadow@;
 }
 
 /*
