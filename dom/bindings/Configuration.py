@@ -492,7 +492,8 @@ class Descriptor(DescriptorProvider):
         return (self.interface.getExtendedAttribute("Pref") or
                 self.interface.getExtendedAttribute("ChromeOnly") or
                 self.interface.getExtendedAttribute("Func") or
-                self.interface.getExtendedAttribute("PrefControlled"))
+                self.interface.getExtendedAttribute("PrefControlled") or
+                self.interface.getExtendedAttribute("AvailableIn"))
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):
