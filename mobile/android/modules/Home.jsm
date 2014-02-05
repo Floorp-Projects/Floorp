@@ -215,6 +215,13 @@ let HomePanels = {
     }
 
     this._panels[panel.id] = panel;
+
+    if (options.autoInstall) {
+      sendMessageToJava({
+        type: "HomePanels:Install",
+        panel: this._panelToJSON(panel)
+      });
+    }
   },
 
   remove: function(id) {
