@@ -69,7 +69,7 @@ setting {
   border-top: 2px solid;
   -moz-border-top-colors: #bac2ac #ffffff;
   -moz-box-align: center;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   width: 100%;
 }
 
