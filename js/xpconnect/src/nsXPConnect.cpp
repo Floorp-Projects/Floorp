@@ -618,7 +618,8 @@ nsXPConnect::JSValToVariant(JSContext *cx,
 {
     NS_PRECONDITION(aResult, "bad param");
 
-    *aResult = XPCVariant::newVariant(cx, aJSVal);
+    nsRefPtr<XPCVariant> variant = XPCVariant::newVariant(cx, aJSVal);
+    variant.forget(aResult);
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
@@ -1073,7 +1074,8 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     NS_PRECONDITION(ctx, "bad param");
     NS_PRECONDITION(_retval, "bad param");
 
-    *_retval = XPCVariant::newVariant(ctx, value);
+    nsRefPtr<XPCVariant> variant = XPCVariant::newVariant(ctx, value);
+    variant.forget(_retval);
     if (!(*_retval))
         return NS_ERROR_FAILURE;
 
