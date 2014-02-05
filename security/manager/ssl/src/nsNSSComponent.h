@@ -39,17 +39,17 @@ MOZ_WARN_UNUSED_RESULT
 
 
 #define NS_NSSCOMPONENT_CID \
-{0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
+{0x4cb64dfd, 0xca98, 0x4e24, {0xbe, 0xfd, 0x0d, 0x92, 0x85, 0xa3, 0x3b, 0xcb}}
 
 #define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
 
 //Define an interface that we can use to look up from the
 //callbacks passed to NSS.
 
-#define NS_INSSCOMPONENT_IID_STR "6ffbb526-205b-49c5-ae3f-5959c084075e"
+#define NS_INSSCOMPONENT_IID_STR "538c5093-7cfe-4f13-bc8e-e767766a2d4d"
 #define NS_INSSCOMPONENT_IID \
-  { 0x6ffbb526, 0x205b, 0x49c5, \
-    { 0xae, 0x3f, 0x59, 0x59, 0xc0, 0x84, 0x7, 0x5e } }
+  { 0x538c5093, 0x7cfe, 0x4f13, \
+    { 0xbc, 0x8e, 0xe7, 0x67, 0x76, 0x6a, 0x2d, 0x4d } }
 
 enum EnsureNSSOperator
 {
@@ -84,14 +84,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
                                            const char16_t** params,
                                            uint32_t numParams,
                                            nsAString& outString) = 0;
-
-  // This method will just disable OCSP in NSS, it will not
-  // alter the respective pref values.
-  NS_IMETHOD SkipOcsp() = 0;
-
-  // This method will set the OCSP value according to the
-  // values in the preferences.
-  NS_IMETHOD SkipOcspOff() = 0;
 
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
@@ -155,8 +147,6 @@ public:
                                            const char16_t** params,
                                            uint32_t numParams,
                                            nsAString& outString);
-  NS_IMETHOD SkipOcsp();
-  NS_IMETHOD SkipOcspOff();
   NS_IMETHOD LogoutAuthenticatedPK11();
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
