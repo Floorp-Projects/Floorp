@@ -5231,39 +5231,9 @@ if (!${obj}) {
 
         setSlot = self.idlNode.isAttr() and self.idlNode.slotIndex is not None
         if setSlot:
-            # For the case of Cached attributes, go ahead and preserve our
-            # wrapper if needed.  We need to do this because otherwise the
-            # wrapper could get garbage-collected and the cached value would
-            # suddenly disappear, but the whole premise of cached values is that
-            # they never change without explicit action on someone's part.  We
-            # don't do this for StoreInSlot, since those get dealt with during
-            # wrapper setup, and failure would involve us trying to clear an
-            # already-preserved wrapper.
-            if (self.idlNode.getExtendedAttribute("Cached") and
-                self.descriptor.wrapperCache):
-                preserveWrapper = "PreserveWrapper(self);\n"
-            else:
-                preserveWrapper = ""
-            if self.idlNode.getExtendedAttribute("Frozen"):
-                assert self.idlNode.type.isSequence() or self.idlNode.type.isDictionary()
-                freezeValue = CGGeneric(
-                    "JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());\n"
-                    "if (!JS_FreezeObject(cx, rvalObj)) {\n"
-                    "  return false;\n"
-                    "}")
-                if self.idlNode.type.nullable():
-                    freezeValue = CGIfWrapper(freezeValue,
-                                              "args.rval().isObject()")
-                freezeValue = freezeValue.define() + "\n"
-            else:
-                freezeValue = ""
-
-            successCode = (
-                "%s"
-                "js::SetReservedSlot(reflector, %s, args.rval());\n"
-                "%s"
-                "break;" %
-                (freezeValue, memberReservedSlot(self.idlNode), preserveWrapper))
+            # For attributes in slots, we want to do some
+            # post-processing once we've wrapped them.
+            successCode = "break;"
         else:
             successCode = None
 
@@ -5282,18 +5252,54 @@ if (!${obj}) {
                              self.descriptor.interface.identifier.name,
                              self.idlNode.identifier.name))
         if setSlot:
-            # We need to make sure that our initial wrapping is done
-            # in the reflector compartment, but that we finally set
-            # args.rval() in the caller compartment.
+            # We need to make sure that our initial wrapping is done in the
+            # reflector compartment, but that we finally set args.rval() in the
+            # caller compartment.  We also need to make sure that the actual
+            # wrapping steps happen inside a do/while that they can break out
+            # of.
+
+            # postSteps are the steps that run while we're still in the
+            # reflector compartment but after we've finished the initial
+            # wrapping into args.rval().
+            postSteps = ""
+            if self.idlNode.getExtendedAttribute("Frozen"):
+                assert self.idlNode.type.isSequence() or self.idlNode.type.isDictionary()
+                freezeValue = CGGeneric(
+                    "JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());\n"
+                    "if (!JS_FreezeObject(cx, rvalObj)) {\n"
+                    "  return false;\n"
+                    "}")
+                if self.idlNode.type.nullable():
+                    freezeValue = CGIfWrapper(freezeValue,
+                                              "args.rval().isObject()")
+                postSteps += freezeValue.define() + "\n"
+            postSteps += ("js::SetReservedSlot(reflector, %s, args.rval());\n" %
+                          memberReservedSlot(self.idlNode))
+            # For the case of Cached attributes, go ahead and preserve our
+            # wrapper if needed.  We need to do this because otherwise the
+            # wrapper could get garbage-collected and the cached value would
+            # suddenly disappear, but the whole premise of cached values is that
+            # they never change without explicit action on someone's part.  We
+            # don't do this for StoreInSlot, since those get dealt with during
+            # wrapper setup, and failure would involve us trying to clear an
+            # already-preserved wrapper.
+            if (self.idlNode.getExtendedAttribute("Cached") and
+                self.descriptor.wrapperCache):
+                postSteps += "PreserveWrapper(self);\n"
+
             wrapCode = CGWrapper(
-                CGIndenter(wrapCode),
-                pre=("do { // block we break out of when done wrapping\n"
-                     "  // Make sure we wrap and store in the slot in reflector's compartment\n"
-                     "  JSAutoCompartment ac(cx, reflector);\n"),
-                post=("\n} while (0);\n"
+                CGIndenter(wrapCode, 4),
+                pre=("{ // Make sure we wrap and store in the slot in reflector's compartment\n"
+                     "  JSAutoCompartment ac(cx, reflector);\n"
+                     "  do { // block we break out of when done wrapping\n"),
+                post=("\n"
+                      "  } while (0);\n"
+                      "%s"
+                      "}\n"
                       "// And now make sure args.rval() is in the caller compartment\n"
                       "return %s(cx, args.rval());" %
-                      getMaybeWrapValueFuncForType(self.idlNode.type)))
+                      (CGIndenter(CGGeneric(postSteps)).define(),
+                       getMaybeWrapValueFuncForType(self.idlNode.type))))
         return wrapCode.define()
 
     def getErrorReport(self):
