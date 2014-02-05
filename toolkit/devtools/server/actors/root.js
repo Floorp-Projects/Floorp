@@ -179,11 +179,7 @@ RootActor.prototype = {
         editOuterHTML: true,
         // Wether the server-side highlighter actor exists and can be used to
         // remotely highlight nodes (see server/actors/highlighter.js)
-        highlightable: true,
-        // Wether the inspector actor implements the getImageDataFromURL
-        // method that returns data-uris for image URLs. This is used for image
-        // tooltips for instance
-        urlToImageDataResolver: true
+        highlightable: true
       }
     };
   },
