@@ -167,19 +167,23 @@ this.CryptoUtils = {
    * c: the number of iterations, a positive integer: e.g., 4096
    * dkLen: the length in octets of the destination
    *        key, a positive integer:                  e.g., 16
+   * hmacAlg: The algorithm to use for hmac
+   * hmacLen: The hmac length
+   *
+   * The default value of 20 for hmacLen is appropriate for SHA1.  For SHA256,
+   * hmacLen should be 32.
    *
    * The output is an octet string of length dkLen, which you
    * can encode as you wish.
    */
-  pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
+  pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen,
+                       hmacAlg=Ci.nsICryptoHMAC.SHA1, hmacLen=20) {
+
     // We don't have a default in the algo itself, as NSS does.
     // Use the constant.
     if (!dkLen) {
       dkLen = SYNC_KEY_DECODED_LENGTH;
     }
-
-    /* For HMAC-SHA-1 */
-    const HLEN = 20;
 
     function F(S, c, i, h) {
 
@@ -216,27 +220,27 @@ this.CryptoUtils = {
       }
 
       ret = U[0];
-      for (j = 1; j < c; j++) {
+      for (let j = 1; j < c; j++) {
         ret = CommonUtils.byteArrayToString(XOR(ret, U[j]));
       }
 
       return ret;
     }
 
-    let l = Math.ceil(dkLen / HLEN);
-    let r = dkLen - ((l - 1) * HLEN);
+    let l = Math.ceil(dkLen / hmacLen);
+    let r = dkLen - ((l - 1) * hmacLen);
 
     // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
-    let h = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1,
+    let h = CryptoUtils.makeHMACHasher(hmacAlg,
                                        CryptoUtils.makeHMACKey(P));
 
-    T = [];
+    let T = [];
     for (let i = 0; i < l;) {
       T[i] = F(S, c, ++i, h);
     }
 
     let ret = "";
-    for (i = 0; i < l-1;) {
+    for (let i = 0; i < l-1;) {
       ret += T[i++];
     }
     ret += T[l - 1].substr(0, r);
