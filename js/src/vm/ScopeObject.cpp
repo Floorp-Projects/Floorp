@@ -383,7 +383,7 @@ StaticWithObject::create(ExclusiveContext *cx)
     if (!shape)
         return nullptr;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, type));
     if (!obj)
         return nullptr;
 
