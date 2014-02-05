@@ -100,9 +100,6 @@ enum AttributeName {
   eConvolveMatrixKernelUnitLength,
   eConvolveMatrixPreserveAlpha,
   eOffsetOffset,
-  eDropShadowStdDeviation,
-  eDropShadowOffset,
-  eDropShadowColor,
   eDisplacementMapScale,
   eDisplacementMapXChannel,
   eDisplacementMapYChannel,
@@ -234,7 +231,6 @@ public:
     eMerge,
     eImage,
     eGaussianBlur,
-    eDropShadow,
     eDiffuseLighting,
     eSpecularLighting
   };
