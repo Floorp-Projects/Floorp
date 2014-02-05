@@ -2609,13 +2609,6 @@ NS_IMETHODIMP nsDownload::SetSha256Hash(const nsACString& aHash) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDownload::SetSignatureInfo(nsIArray* aSignatureInfo) {
-  MOZ_ASSERT(NS_IsMainThread(), "Must call SetSignatureInfo on main thread");
-  // This will be used later to query the application reputation service.
-  mSignatureInfo = aSignatureInfo;
-  return NS_OK;
-}
-
 #ifdef MOZ_ENABLE_GIO
 static void gio_set_metadata_done(GObject *source_obj, GAsyncResult *res, gpointer user_data)
 {

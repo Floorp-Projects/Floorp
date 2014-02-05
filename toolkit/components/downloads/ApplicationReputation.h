@@ -19,7 +19,6 @@ class nsIRequest;
 class nsIUrlClassifierDBService;
 class nsIScriptSecurityManager;
 class PendingLookup;
-class PRLogModuleInfo;
 
 class ApplicationReputationService MOZ_FINAL :
   public nsIApplicationReputationService {
@@ -31,15 +30,10 @@ public:
   static ApplicationReputationService* GetSingleton();
 
 private:
-  friend class PendingLookup;
   /**
    * Global singleton object for holding this factory service.
    */
   static ApplicationReputationService* gApplicationReputationService;
-  /**
-   * NSPR_LOG_MODULES=ApplicationReputation:5
-   */
-  static PRLogModuleInfo* prlog;
   /**
    * Keeps track of services used to query the local database of URLs.
    */
