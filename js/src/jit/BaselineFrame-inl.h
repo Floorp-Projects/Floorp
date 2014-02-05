@@ -33,6 +33,16 @@ BaselineFrame::popOffScopeChain()
     scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
+inline void
+BaselineFrame::popWith(JSContext *cx)
+{
+    if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
+        DebugScopes::onPopWith(this);
+
+    JS_ASSERT(scopeChain()->is<DynamicWithObject>());
+    popOffScopeChain();
+}
+
 inline bool
 BaselineFrame::pushBlock(JSContext *cx, Handle<StaticBlockObject *> block)
 {

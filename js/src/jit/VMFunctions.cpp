@@ -932,6 +932,19 @@ DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc)
 }
 
 bool
+EnterWith(JSContext *cx, BaselineFrame *frame, HandleValue val, Handle<StaticWithObject *> templ)
+{
+    return EnterWithOperation(cx, frame, val, templ);
+}
+
+bool
+LeaveWith(JSContext *cx, BaselineFrame *frame)
+{
+    frame->popWith(cx);
+    return true;
+}
+
+bool
 InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t numStackValues)
 {
     return frame->initForOsr(interpFrame, numStackValues);
