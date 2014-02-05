@@ -133,8 +133,8 @@ ClientThebesLayer::PaintBuffer(gfxContext* aContext,
     ClientManager()->SetTransactionIncomplete();
     return;
   }
-  ClientManager()->GetThebesLayerCallback()(this, 
-                                            aContext, 
+  ClientManager()->GetThebesLayerCallback()(this,
+                                            aContext,
                                             aExtendedRegionToDraw,
                                             aClip,
                                             aRegionToInvalidate,

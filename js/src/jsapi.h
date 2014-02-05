@@ -3449,6 +3449,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     JSPrincipals *principals_;
     JSPrincipals *originPrincipals_;
     const char *filename_;
+    const char *introducerFilename_;
     const jschar *sourceMapURL_;
 
     // This constructor leaves 'version' set to JSVERSION_UNKNOWN. The structure
@@ -3459,6 +3460,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
       : principals_(nullptr),
         originPrincipals_(nullptr),
         filename_(nullptr),
+        introducerFilename_(nullptr),
         sourceMapURL_(nullptr),
         version(JSVERSION_UNKNOWN),
         versionSet(false),
@@ -3475,7 +3477,11 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         werrorOption(false),
         asmJSOption(false),
         forceAsync(false),
-        sourcePolicy(SAVE_SOURCE)
+        sourcePolicy(SAVE_SOURCE),
+        introducer(nullptr),
+        introductionLineno(0),
+        introductionOffset(0),
+        hasIntroductionInfo(false)
     { }
 
     // Set all POD options (those not requiring reference counts, copies,
@@ -3488,6 +3494,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     JSPrincipals *principals() const { return principals_; }
     JSPrincipals *originPrincipals() const;
     const char *filename() const { return filename_; }
+    const char *introducerFilename() const { return introducerFilename_; }
     const jschar *sourceMapURL() const { return sourceMapURL_; }
     virtual JSObject *element() const = 0;
     virtual JSString *elementAttributeName() const = 0;
@@ -3513,6 +3520,13 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         LAZY_SOURCE,
         SAVE_SOURCE
     } sourcePolicy;
+
+    // |introducer| is a statically allocated C string:
+    // one of "eval", "Function", or "GeneratorFunction".
+    const char *introducer;
+    unsigned introductionLineno;
+    uint32_t introductionOffset;
+    bool hasIntroductionInfo;
 
     // Wrap any compilation option values that need it as appropriate for
     // use from |compartment|.
@@ -3560,6 +3574,7 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     bool setFile(JSContext *cx, const char *f);
     bool setFileAndLine(JSContext *cx, const char *f, unsigned l);
     bool setSourceMapURL(JSContext *cx, const jschar *s);
+    bool setIntroducerFilename(JSContext *cx, const char *s);
 
     /* These setters are infallible, and can be chained. */
     OwningCompileOptions &setLine(unsigned l)             { lineno = l;              return *this; }
@@ -3596,6 +3611,17 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     OwningCompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     OwningCompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     OwningCompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
+    bool setIntroductionInfo(JSContext *cx, const char *introducerFn, const char *intro,
+                             unsigned line, uint32_t offset)
+    {
+        if (!setIntroducerFilename(cx, introducerFn))
+            return false;
+        introducer = intro;
+        introductionLineno = line;
+        introductionOffset = offset;
+        hasIntroductionInfo = true;
+        return true;
+    }
 
     virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
 };
@@ -3662,6 +3688,16 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
+    CompileOptions &setIntroductionInfo(const char *introducerFn, const char *intro,
+                                        unsigned line, uint32_t offset)
+    {
+        introducerFilename_ = introducerFn;
+        introducer = intro;
+        introductionLineno = line;
+        introductionOffset = offset;
+        hasIntroductionInfo = true;
+        return *this;
+    }
 
     virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
 };

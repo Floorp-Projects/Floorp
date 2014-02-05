@@ -28,15 +28,15 @@ public:
   virtual MediaDataDecoder*
   CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                     mozilla::layers::LayersBackend aLayersBackend,
-                    mozilla::layers::ImageContainer* aImageContainer) MOZ_OVERRIDE;
+                    mozilla::layers::ImageContainer* aImageContainer,
+                    MediaTaskQueue* aVideoTaskQueue,
+                    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   // Decode thread.
   virtual MediaDataDecoder* CreateAACDecoder(
-    const mp4_demuxer::AudioDecoderConfig& aConfig) MOZ_OVERRIDE;
-
-  // Platform decoders can override these. Base implementation does nothing.
-  virtual void OnDecodeThreadStart() MOZ_OVERRIDE;
-  virtual void OnDecodeThreadFinish() MOZ_OVERRIDE;
+    const mp4_demuxer::AudioDecoderConfig& aConfig,
+    MediaTaskQueue* aAudioTaskQueue,
+    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   static void Init();
 private:

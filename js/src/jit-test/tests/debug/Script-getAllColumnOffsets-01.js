@@ -6,7 +6,7 @@ Debugger(global).onDebuggerStatement = function (frame) {
     script.getAllColumnOffsets().forEach(function (offset) {
         script.setBreakpoint(offset.offset, {
             hit: function (frame) {
-                assertEq(offset.lineNumber, 17);
+                assertEq(offset.lineNumber, 1);
                 global.log += offset.columnNumber + " ";
             }
         });

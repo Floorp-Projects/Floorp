@@ -12,6 +12,7 @@
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/box_definitions.h"
+#include "MediaTaskQueue.h"
 
 #include <deque>
 #include "mozilla/Monitor.h"
@@ -49,40 +50,103 @@ public:
                         int64_t aStartTime,
                         int64_t aEndTime,
                         int64_t aCurrentTime) MOZ_OVERRIDE;
-
-  virtual void OnDecodeThreadStart() MOZ_OVERRIDE;
-  virtual void OnDecodeThreadFinish() MOZ_OVERRIDE;
-
 private:
+
+  // Destroys all decoder resources.
+  void Shutdown();
+
   // Initializes mLayersBackendType if possible.
   void InitLayersBackendType();
-
-  MP4SampleQueue& SampleQueue(mp4_demuxer::TrackType aTrack);
 
   // Blocks until the demuxer produces an sample of specified type.
   // Returns nullptr on error on EOS. Caller must delete sample.
   mp4_demuxer::MP4Sample* PopSample(mp4_demuxer::TrackType aTrack);
 
-  bool Decode(mp4_demuxer::TrackType aTrack,
-              nsAutoPtr<MediaData>& aOutData);
-
-  MediaDataDecoder* Decoder(mp4_demuxer::TrackType aTrack);
-
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
+
+  void Output(mp4_demuxer::TrackType aType, MediaData* aSample);
+  void InputExhausted(mp4_demuxer::TrackType aTrack);
+  void Error(mp4_demuxer::TrackType aTrack);
+  bool Decode(mp4_demuxer::TrackType aTrack);
+  void Flush(mp4_demuxer::TrackType aTrack);
 
   nsAutoPtr<mp4_demuxer::MP4Demuxer> mDemuxer;
   nsAutoPtr<MP4Stream> mMP4Stream;
   nsAutoPtr<PlatformDecoderModule> mPlatform;
-  nsAutoPtr<MediaDataDecoder> mVideoDecoder;
-  nsAutoPtr<MediaDataDecoder> mAudioDecoder;
 
-  MP4SampleQueue mCompressedAudioQueue;
-  MP4SampleQueue mCompressedVideoQueue;
+  class DecoderCallback : public MediaDataDecoderCallback {
+  public:
+    DecoderCallback(MP4Reader* aReader,
+                    mp4_demuxer::TrackType aType)
+      : mReader(aReader)
+      , mType(aType)
+    {
+    }
+    virtual void Output(MediaData* aSample) MOZ_OVERRIDE {
+      mReader->Output(mType, aSample);
+    }
+    virtual void InputExhausted() MOZ_OVERRIDE {
+      mReader->InputExhausted(mType);
+    }
+    virtual void Error() MOZ_OVERRIDE {
+      mReader->Error(mType);
+    }
+  private:
+    MP4Reader* mReader;
+    mp4_demuxer::TrackType mType;
+  };
+
+  struct DecoderData {
+    DecoderData(const char* aMonitorName,
+                uint32_t aDecodeAhead)
+      : mMonitor(aMonitorName)
+      , mNumSamplesInput(0)
+      , mNumSamplesOutput(0)
+      , mDecodeAhead(aDecodeAhead)
+      , mActive(false)
+      , mInputExhausted(false)
+      , mError(false)
+      , mIsFlushing(false)
+    {
+    }
+
+    // The platform decoder.
+    RefPtr<MediaDataDecoder> mDecoder;
+    // Queue of input extracted by the demuxer, but not yet sent to the
+    // platform decoder.
+    MP4SampleQueue mDemuxedSamples;
+    // TaskQueue on which decoder can choose to decode.
+    // Only non-null up until the decoder is created.
+    RefPtr<MediaTaskQueue> mTaskQueue;
+    // Callback that receives output and error notifications from the decoder.
+    nsAutoPtr<DecoderCallback> mCallback;
+    // Monitor that protects all non-threadsafe state; the primitives
+    // that follow.
+    Monitor mMonitor;
+    uint64_t mNumSamplesInput;
+    uint64_t mNumSamplesOutput;
+    uint32_t mDecodeAhead;
+    // Whether this stream exists in the media.
+    bool mActive;
+    bool mInputExhausted;
+    bool mError;
+    bool mIsFlushing;
+  };
+  DecoderData mAudio;
+  DecoderData mVideo;
+
+  // The last number of decoded output frames that we've reported to
+  // MediaDecoder::NotifyDecoded(). We diff the number of output video
+  // frames every time that DecodeVideoData() is called, and report the
+  // delta there.
+  uint64_t mLastReportedNumDecodedFrames;
+
+  DecoderData& GetDecoderData(mp4_demuxer::TrackType aTrack);
+  MP4SampleQueue& SampleQueue(mp4_demuxer::TrackType aTrack);
+  MediaDataDecoder* Decoder(mp4_demuxer::TrackType aTrack);
 
   layers::LayersBackend mLayersBackendType;
 
-  bool mHasAudio;
-  bool mHasVideo;
 };
 
 } // namespace mozilla

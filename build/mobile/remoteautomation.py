@@ -73,22 +73,27 @@ class RemoteAutomation(Automation):
         return env
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
-        """ Wait for tests to finish (as evidenced by the process exiting),
-            or for maxTime elapse, in which case kill the process regardless.
+        """ Wait for tests to finish.
+            If maxTime seconds elapse or no output is detected for timeout
+            seconds, kill the process and fail the test.
         """
         # maxTime is used to override the default timeout, we should honor that
-        status = proc.wait(timeout = maxTime)
+        status = proc.wait(timeout = maxTime, noOutputTimeout = timeout)
         self.lastTestSeen = proc.getLastTestSeen
 
-        if (status == 1 and self._devicemanager.getTopActivity() == proc.procName):
-            # Then we timed out, make sure Fennec is dead
+        topActivity = self._devicemanager.getTopActivity()
+        if topActivity == proc.procName:
+            proc.kill()
+        if status == 1:
             if maxTime:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
                       "allowed maximum time of %s seconds" % (self.lastTestSeen, maxTime)
             else:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
                       "allowed maximum time" % (self.lastTestSeen)
-            proc.kill()
+        if status == 2:
+            print "TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output" \
+                % (self.lastTestSeen, int(timeout))
 
         return status
 
@@ -176,48 +181,28 @@ class RemoteAutomation(Automation):
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
-          stdout = self._remoteLog
+            stdout = self._remoteLog
 
-        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd)
+        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd, self._appName)
 
     # be careful here as this inner class doesn't have access to outer class members
     class RProcess(object):
         # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None):
+        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None, app = None):
             self.dm = dm
             self.stdoutlen = 0
             self.lastTestSeen = "remoteautomation.py"
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
             if (self.proc is None):
-              if cmd[0] == 'am':
-                self.proc = stdout
-              else:
-                raise Exception("unable to launch process")
-            exepath = cmd[0]
-            name = exepath.split('/')[-1]
-            self.procName = name
-            # Hack for Robocop: Derive the actual process name from the command line.
-            # We expect something like:
-            #  ['am', 'instrument', '-w', '-e', 'class', 'org.mozilla.fennec.tests.testBookmark', 'org.mozilla.roboexample.test/android.test.InstrumentationTestRunner']
-            # and want to derive 'org.mozilla.fennec'.
+                if cmd[0] == 'am':
+                    self.proc = stdout
+                else:
+                    raise Exception("unable to launch process")
+            self.procName = cmd[0].split('/')[-1]
             if cmd[0] == 'am' and cmd[1] == "instrument":
-              try:
-                i = cmd.index("class")
-              except ValueError:
-                # no "class" argument -- maybe this isn't robocop?
-                i = -1
-              if (i > 0):
-                classname = cmd[i+1]
-                parts = classname.split('.')
-                try:
-                  i = parts.index("tests")
-                except ValueError:
-                  # no "tests" component -- maybe this isn't robocop?
-                  i = -1
-                if (i > 0):
-                  self.procName = '.'.join(parts[0:i])
-                  print "Robocop derived process name: "+self.procName
+                self.procName = app
+                print "Robocop process name: "+self.procName
 
             # Setting timeout at 1 hour since on a remote device this takes much longer
             self.timeout = 3600
@@ -263,31 +248,43 @@ class RemoteAutomation(Automation):
         def getLastTestSeen(self):
             return self.lastTestSeen
 
-        def wait(self, timeout = None):
+        # Wait for the remote process to end (or for its activity to go to background).
+        # While waiting, periodically retrieve the process output and print it.
+        # If the process is still running after *timeout* seconds, return 1;
+        # If the process is still running but no output is received in *noOutputTimeout*
+        # seconds, return 2;
+        # Else, once the process exits/goes to background, return 0.
+        def wait(self, timeout = None, noOutputTimeout = None):
             timer = 0
+            noOutputTimer = 0
             interval = 20 
 
             if timeout == None:
                 timeout = self.timeout
 
+            status = 0
             while (self.dm.getTopActivity() == self.procName):
                 # retrieve log updates every 60 seconds
                 if timer % 60 == 0: 
                     t = self.stdout
                     if t != '':
                         print t
+                        noOutputTimer = 0
 
                 time.sleep(interval)
                 timer += interval
+                noOutputTimer += interval
                 if (timer > timeout):
+                    status = 1
+                    break
+                if (noOutputTimeout and noOutputTimer > noOutputTimeout):
+                    status = 2
                     break
 
             # Flush anything added to stdout during the sleep
             print self.stdout
 
-            if (timer >= timeout):
-                return 1
-            return 0
+            return status
 
         def kill(self):
             self.dm.killProcess(self.procName)
