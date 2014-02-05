@@ -994,10 +994,6 @@ const ScreenPoint AsyncPanZoomController::GetVelocityVector() {
   return ScreenPoint(mX.GetVelocity(), mY.GetVelocity());
 }
 
-const gfx::Point AsyncPanZoomController::GetAccelerationVector() {
-  return gfx::Point(mX.GetAccelerationFactor(), mY.GetAccelerationFactor());
-}
-
 void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBehaviorFlags aBehavior) {
   // Handling of cross sliding will need to be added in this method after touch-action released
   // enabled by default.
@@ -1309,7 +1305,6 @@ EnlargeDisplayPortAlongAxis(float* aOutOffset, float* aOutLength,
 const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   const FrameMetrics& aFrameMetrics,
   const ScreenPoint& aVelocity,
-  const gfx::Point& aAcceleration,
   double aEstimatedPaintDuration)
 {
   // convert to milliseconds
@@ -1343,10 +1338,9 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
-    "Calculated displayport as (%f %f %f %f) from velocity (%f %f) acceleration (%f %f) paint time %f metrics",
+    "Calculated displayport as (%f %f %f %f) from velocity (%f %f) paint time %f metrics",
     displayPort.x, displayPort.y, displayPort.width, displayPort.height,
-    aVelocity.x, aVelocity.y, aAcceleration.x, aAcceleration.y,
-    (float)estimatedPaintDurationMillis);
+    aVelocity.x, aVelocity.y, (float)estimatedPaintDurationMillis);
 
   return displayPort;
 }
@@ -1365,7 +1359,6 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
   aFrameMetrics.mDisplayPort =
     CalculatePendingDisplayPort(aFrameMetrics,
                                 GetVelocityVector(),
-                                GetAccelerationVector(),
                                 mPaintThrottler.AverageDuration().ToSeconds());
 
   // If we're trying to paint what we already think is painted, discard this
@@ -1720,7 +1713,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     endZoomToMetrics.mDisplayPort =
       CalculatePendingDisplayPort(endZoomToMetrics,
                                   ScreenPoint(0,0),
-                                  gfx::Point(0,0),
                                   0);
 
     StartAnimation(new ZoomAnimation(
