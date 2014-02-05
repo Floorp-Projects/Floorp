@@ -232,11 +232,16 @@ let HomePanels = {
   },
 
   remove: function(id) {
+    if (!(id in this._panels)) {
+      throw "Home.panels: Panel doesn't exist: id = " + id;
+    }
+
+    let panel = this._panels[id];
     delete this._panels[id];
 
     sendMessageToJava({
       type: "HomePanels:Remove",
-      id: id
+      panel: this._panelToJSON(panel)
     });
   },
 
