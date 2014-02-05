@@ -157,9 +157,13 @@ EXPORTS.mozilla.layers += [
 
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla.layers += [
+        'basic/TextureClientX11.h',
+        'basic/TextureHostX11.h',
         'ipc/ShadowLayerUtilsX11.h',
     ]
     SOURCES += [
+        'basic/TextureClientX11.cpp',
+        'basic/TextureHostX11.cpp',
         'ipc/ShadowLayerUtilsX11.cpp'
     ]
 

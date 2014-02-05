@@ -17,6 +17,9 @@
 #include "gfxWindowsPlatform.h"
 #include "gfx2DGlue.h"
 #endif
+#ifdef MOZ_X11
+#include "mozilla/layers/TextureClientX11.h"
+#endif
 
 using namespace mozilla::gfx;
 
@@ -212,6 +215,17 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
     }
   }
 #endif
+
+#ifdef MOZ_X11
+  LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
+  if (parentBackend == LayersBackend::LAYERS_BASIC &&
+      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType() == gfxSurfaceType::Xlib &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK))
+  {
+    result = new TextureClientX11(aFormat, aTextureFlags);
+  }
+#endif
+
   // Can't do any better than a buffer texture client.
   if (!result) {
     result = CreateBufferTextureClient(aFormat, aTextureFlags);
