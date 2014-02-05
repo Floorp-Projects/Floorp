@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
+  "resource://gre/modules/CharsetMenu.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
@@ -650,115 +652,64 @@ const CustomizableWidgets = [{
                window.gBrowser.docShell &&
                window.gBrowser.docShell.mayEnableCharacterEncodingMenu);
     },
-    getCharsetList: function(aSection, aDocument) {
-      let currCharset = aDocument.defaultView.content.document.characterSet;
-
-      let list = "";
-      try {
-        let pref = "intl.charsetmenu.browser." + aSection;
-        list = Services.prefs.getComplexValue(pref,
-                                              Ci.nsIPrefLocalizedString).data;
-      } catch (e) {}
-
-      list = list.trim();
-      if (!list)
-        return [];
-
-      list = list.split(",");
-
-      let items = [];
-      for (let charset of list) {
-        charset = charset.trim();
-
-        let notForBrowser = false;
-        try {
-          notForBrowser = CharsetManager.getCharsetData(charset,
-                                                        "notForBrowser");
-        } catch (e) {}
-
-        if (notForBrowser)
-          continue;
-
-        let title = charset;
-        try {
-          title = CharsetManager.getCharsetTitle(charset);
-        } catch (e) {}
-
-        items.push({value: charset, name: title, current: charset == currCharset});
-      }
-
-      return items;
-    },
-    getAutoDetectors: function(aDocument) {
-      let detectorEnum = CharsetManager.GetCharsetDetectorList();
-      let currDetector;
-      try {
-        currDetector = Services.prefs.getComplexValue(
-          "intl.charset.detector", Ci.nsIPrefLocalizedString).data;
-      } catch (e) {}
-      if (!currDetector)
-        currDetector = "off";
-      currDetector = "chardet." + currDetector;
-
-      let items = [];
-
-      while (detectorEnum.hasMore()) {
-        let detector = detectorEnum.getNext();
-
-        let title = detector;
-        try {
-          title = CharsetManager.getCharsetTitle(detector);
-        } catch (e) {}
-
-        items.push({value: detector, name: title, current: detector == currDetector});
-      }
-
-      items.sort((aItem1, aItem2) => {
-        return aItem1.name.localeCompare(aItem2.name);
-      });
-
-      return items;
-    },
     populateList: function(aDocument, aContainerId, aSection) {
       let containerElem = aDocument.getElementById(aContainerId);
 
-      while (containerElem.firstChild) {
-        containerElem.removeChild(containerElem.firstChild);
-      }
-
       containerElem.addEventListener("command", this.onCommand, false);
 
-      let list = [];
-      if (aSection == "autodetect") {
-        list = this.getAutoDetectors(aDocument);
-      } else if (aSection == "browser") {
-        let staticList = this.getCharsetList("static", aDocument);
-        let cacheList = this.getCharsetList("cache", aDocument);
-        // Combine lists, and de-duplicate.
-        let checkedIn = new Set();
-        for (let item of staticList.concat(cacheList)) {
-          let itemName = item.name.toLowerCase();
-          if (!checkedIn.has(itemName)) {
-            list.push(item);
-            checkedIn.add(itemName);
-          }
-        }
-      }
+      let list = this.charsetInfo[aSection];
 
-      // Update the appearance of the buttons when it's not possible to
-      // customize encoding.
-      let disabled = this.maybeDisableMenu(aDocument);
       for (let item of list) {
         let elem = aDocument.createElementNS(kNSXUL, "toolbarbutton");
-        elem.setAttribute("label", item.name);
-        elem.section = aSection;
-        elem.value = item.value;
-        if (item.current)
-          elem.setAttribute("current", "true");
-        if (disabled)
-          elem.setAttribute("disabled", "true");
+        elem.setAttribute("label", item.label);
+        elem.section = aSection == "detectors" ? "detectors" : "charsets";
+        elem.value = item.id;
         elem.setAttribute("class", "subviewbutton");
         containerElem.appendChild(elem);
+      }
+    },
+    updateCurrentCharset: function(aDocument) {
+      let content = aDocument.defaultView.content;
+      let currentCharset = content && content.document && content.document.characterSet;
+      if (currentCharset) {
+        currentCharset = aDocument.defaultView.FoldCharset(currentCharset);
+      }
+      currentCharset = currentCharset ? ("charset." + currentCharset) : "";
+
+      let pinnedContainer = aDocument.getElementById("PanelUI-characterEncodingView-pinned");
+      let charsetContainer = aDocument.getElementById("PanelUI-characterEncodingView-charsets");
+      let elements = [...(pinnedContainer.childNodes), ...(charsetContainer.childNodes)];
+
+      this._updateElements(elements, currentCharset);
+    },
+    updateCurrentDetector: function(aDocument) {
+      let detectorContainer = aDocument.getElementById("PanelUI-characterEncodingView-autodetect");
+      let detectorEnum = CharsetManager.GetCharsetDetectorList();
+      let currentDetector;
+      try {
+        currentDetector = Services.prefs.getComplexValue(
+          "intl.charset.detector", Ci.nsIPrefLocalizedString).data;
+      } catch (e) {}
+      currentDetector = "chardet." + (currentDetector || "off");
+
+      this._updateElements(detectorContainer.childNodes, currentDetector);
+    },
+    _updateElements: function(aElements, aCurrentItem) {
+      if (!aElements.length) {
+        return;
+      }
+      let disabled = this.maybeDisableMenu(aElements[0].ownerDocument);
+      for (let elem of aElements) {
+        if (disabled) {
+          elem.setAttribute("disabled", "true");
+        } else {
+          elem.removeAttribute("disabled");
+        }
+        if (elem.value.toLowerCase() == aCurrentItem.toLowerCase()) {
+          elem.setAttribute("current", "true");
+        } else {
+          elem.removeAttribute("current");
+        }
       }
     },
     onViewShowing: function(aEvent) {
@@ -766,15 +717,21 @@ const CustomizableWidgets = [{
 
       let autoDetectLabelId = "PanelUI-characterEncodingView-autodetect-label";
       let autoDetectLabel = document.getElementById(autoDetectLabelId);
-      let label = CharsetBundle.GetStringFromName("charsetMenuAutodet");
-      autoDetectLabel.setAttribute("value", label);
-
-      this.populateList(document,
-                        "PanelUI-characterEncodingView-customlist",
-                        "browser");
-      this.populateList(document,
-                        "PanelUI-characterEncodingView-autodetect",
-                        "autodetect");
+      if (!autoDetectLabel.hasAttribute("value")) {
+        let label = CharsetBundle.GetStringFromName("charsetMenuAutodet");
+        autoDetectLabel.setAttribute("value", label);
+        this.populateList(document,
+                          "PanelUI-characterEncodingView-pinned",
+                          "pinnedCharsets");
+        this.populateList(document,
+                          "PanelUI-characterEncodingView-charsets",
+                          "otherCharsets");
+        this.populateList(document,
+                          "PanelUI-characterEncodingView-autodetect",
+                          "detectors");
+      }
+      this.updateCurrentDetector(document);
+      this.updateCurrentCharset(document);
     },
     onCommand: function(aEvent) {
       let node = aEvent.target;
@@ -782,16 +739,16 @@ const CustomizableWidgets = [{
         return;
       }
 
-      CustomizableUI.hidePanelForNode(node);
       let window = node.ownerDocument.defaultView;
       let section = node.section;
       let value = node.value;
 
       // The behavior as implemented here is directly based off of the
       // `MultiplexHandler()` method in browser.js.
-      if (section == "browser") {
-        window.BrowserSetForcedCharacterSet(value);
-      } else if (section == "autodetect") {
+      if (section != "detectors") {
+        let charset = value.substring(value.indexOf('charset.') + 'charset.'.length);
+        window.BrowserSetForcedCharacterSet(charset);
+      } else {
         value = value.replace(/^chardet\./, "");
         if (value == "off") {
           value = "";
@@ -852,6 +809,9 @@ const CustomizableWidgets = [{
         }
       };
       CustomizableUI.addListener(listener);
+      if (!this.charsetInfo) {
+        this.charsetInfo = CharsetMenu.getData();
+      }
     }
   }, {
     id: "email-link-button",
