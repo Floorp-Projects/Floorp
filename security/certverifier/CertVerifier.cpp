@@ -11,9 +11,11 @@
 #include "pkix/pkix.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "ocsp.h"
 #include "secerr.h"
+#include "pk11pub.h"
 #include "prerror.h"
 #include "sslerr.h"
 
@@ -38,7 +40,8 @@ CertVerifier::CertVerifier(implementation_config ic,
 #endif
                            ocsp_download_config odc,
                            ocsp_strict_config osc,
-                           ocsp_get_config ogc)
+                           ocsp_get_config ogc,
+                           pinning_enforcement_config pel)
   : mImplementation(ic)
 #ifndef NSS_NO_LIBPKIX
   , mMissingCertDownloadEnabled(mcdc == missing_cert_download_on)
@@ -47,6 +50,7 @@ CertVerifier::CertVerifier(implementation_config ic,
   , mOCSPDownloadEnabled(odc == ocsp_on)
   , mOCSPStrict(osc == ocsp_strict)
   , mOCSPGETEnabled(ogc == ocsp_get_enabled)
+  , mPinningEnforcementLevel(pel)
 {
 }
 
@@ -64,7 +68,6 @@ InitCertVerifierLog()
 #endif
 }
 
-#if 0
 // Once we migrate to mozilla::pkix or change the overridable error
 // logic this will become unnecesary.
 static SECStatus
@@ -95,23 +98,100 @@ insertErrorIntoVerifyLog(CERTCertificate* cert, const PRErrorCode err,
 
   return SECSuccess;
 }
-#endif
+
+SECStatus
+IsCertBuiltInRoot(CERTCertificate* cert, bool& result) {
+  result = false;
+  ScopedPtr<PK11SlotList, PK11_FreeSlotList> slots;
+  slots = PK11_GetAllSlotsForCert(cert, nullptr);
+  if (!slots) {
+    if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {
+      // no list
+      return SECSuccess;
+    }
+    return SECFailure;
+  }
+  for (PK11SlotListElement* le = slots->head; le; le = le->next) {
+    char* token = PK11_GetTokenName(le->slot);
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("BuiltInRoot? subject=%s token=%s",cert->subjectName, token));
+    if (strcmp("Builtin Object Token", token) == 0) {
+      result = true;
+      return SECSuccess;
+    }
+  }
+  return SECSuccess;
+}
+
+struct ChainValidationCallbackState
+{
+  const char* hostname;
+  const CertVerifier::pinning_enforcement_config pinningEnforcementLevel;
+  const SECCertificateUsage usage;
+  const PRTime time;
+};
 
 SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
                                   PRBool* chainOK)
 {
+  ChainValidationCallbackState* callbackState =
+    reinterpret_cast<ChainValidationCallbackState*>(state);
+
   *chainOK = PR_FALSE;
 
-  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("verifycert: Inside the Callback \n"));
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+         ("verifycert: Inside the Callback \n"));
 
   // On sanity failure we fail closed.
   if (!certList) {
-    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("verifycert: Short circuit, callback, "
-                                            "sanity check failed \n"));
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("verifycert: Short circuit, callback, sanity check failed \n"));
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
   }
-  *chainOK = PR_TRUE;
+  if (!callbackState) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("verifycert: Short circuit, callback, no state! \n"));
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  if (callbackState->usage != certificateUsageSSLServer ||
+      callbackState->pinningEnforcementLevel == CertVerifier::pinningDisabled) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("verifycert: Callback shortcut pel=%d \n",
+            callbackState->pinningEnforcementLevel));
+    *chainOK = PR_TRUE;
+    return SECSuccess;
+  }
+
+  for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node, certList);
+       node = CERT_LIST_NEXT(node)) {
+    CERTCertificate* currentCert = node->cert;
+    if (CERT_LIST_END(CERT_LIST_NEXT(node), certList)) {
+      bool isBuiltInRoot = false;
+      SECStatus srv = IsCertBuiltInRoot(currentCert, isBuiltInRoot);
+      if (srv != SECSuccess) {
+        PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Is BuiltInRoot failure"));
+        return srv;
+      }
+      // If desired, the user can enable "allow user CA MITM mode", in which
+      // case key pinning is not enforced for certificates that chain to trust
+      // anchors that are not in Mozilla's root program
+      if (!isBuiltInRoot &&
+          (callbackState->pinningEnforcementLevel ==
+             CertVerifier::pinningAllowUserCAMITM)) {
+        *chainOK = PR_TRUE;
+        return SECSuccess;
+      }
+    }
+  }
+
+  *chainOK = PublicKeyPinningService::
+               ChainHasValidPins(certList, callbackState->hostname,
+                                 callbackState->time);
+
   return SECSuccess;
 }
 
@@ -120,42 +200,41 @@ ClassicVerifyCert(CERTCertificate* cert,
                   const SECCertificateUsage usage,
                   const PRTime time,
                   void* pinArg,
+                  ChainValidationCallbackState* callbackState,
                   /*optional out*/ ScopedCERTCertList* validationChain,
                   /*optional out*/ CERTVerifyLog* verifyLog)
 {
   SECStatus rv;
   SECCertUsage enumUsage;
-  if (validationChain) {
-    switch(usage){
-      case  certificateUsageSSLClient:
-        enumUsage = certUsageSSLClient;
-        break;
-      case  certificateUsageSSLServer:
-        enumUsage = certUsageSSLServer;
-        break;
-      case certificateUsageSSLCA:
-        enumUsage = certUsageSSLCA;
-        break;
-      case certificateUsageEmailSigner:
-        enumUsage = certUsageEmailSigner;
-        break;
-      case certificateUsageEmailRecipient:
-        enumUsage = certUsageEmailRecipient;
-        break;
-      case certificateUsageObjectSigner:
-        enumUsage = certUsageObjectSigner;
-        break;
-      case certificateUsageVerifyCA:
-        enumUsage = certUsageVerifyCA;
-        break;
-      case certificateUsageStatusResponder:
-        enumUsage = certUsageStatusResponder;
-        break;
-      default:
-        PR_NOT_REACHED("unexpected usage");
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
+  switch (usage) {
+    case certificateUsageSSLClient:
+      enumUsage = certUsageSSLClient;
+      break;
+    case certificateUsageSSLServer:
+      enumUsage = certUsageSSLServer;
+      break;
+    case certificateUsageSSLCA:
+      enumUsage = certUsageSSLCA;
+      break;
+    case certificateUsageEmailSigner:
+      enumUsage = certUsageEmailSigner;
+      break;
+    case certificateUsageEmailRecipient:
+      enumUsage = certUsageEmailRecipient;
+      break;
+    case certificateUsageObjectSigner:
+      enumUsage = certUsageObjectSigner;
+      break;
+    case certificateUsageVerifyCA:
+      enumUsage = certUsageVerifyCA;
+      break;
+    case certificateUsageStatusResponder:
+      enumUsage = certUsageStatusResponder;
+      break;
+    default:
+      PR_NOT_REACHED("unexpected usage");
+      PORT_SetError(SEC_ERROR_INVALID_ARGS);
+      return SECFailure;
   }
   if (usage == certificateUsageSSLServer) {
     // SSL server cert verification has always used CERT_VerifyCert, so we
@@ -168,13 +247,38 @@ ClassicVerifyCert(CERTCertificate* cert,
     rv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), cert, true,
                                 usage, time, pinArg, verifyLog, nullptr);
   }
-  if (rv == SECSuccess && validationChain) {
-    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("VerifyCert: getting chain in 'classic' \n"));
-    *validationChain = CERT_GetCertChainFromCert(cert, time, enumUsage);
-    if (!*validationChain) {
-      rv = SECFailure;
+
+  if (rv == SECSuccess &&
+      (validationChain || usage == certificateUsageSSLServer)) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("VerifyCert: getting chain in 'classic' \n"));
+    ScopedCERTCertList certChain(CERT_GetCertChainFromCert(cert, time,
+                                                           enumUsage));
+    if (!certChain) {
+      return SECFailure;
+    }
+    if (usage == certificateUsageSSLServer) {
+      PRBool chainOK = PR_FALSE;
+      SECStatus srv = chainValidationCallback(callbackState, certChain.get(),
+                                              &chainOK);
+      if (srv != SECSuccess) {
+        return srv;
+      }
+      if (chainOK != PR_TRUE) {
+        if (verifyLog) {
+          insertErrorIntoVerifyLog(cert,
+                                   SEC_ERROR_APPLICATION_CALLBACK_ERROR,
+                                   verifyLog);
+        }
+        PR_SetError(SEC_ERROR_APPLICATION_CALLBACK_ERROR, 0); // same as libpkix
+        return SECFailure;
+      }
+    }
+    if (rv == SECSuccess && validationChain) {
+      *validationChain = certChain.release();
     }
   }
+
   return rv;
 }
 
@@ -232,6 +336,7 @@ CertVerifier::MozillaPKIXVerifyCert(
                    const PRTime time,
                    void* pinArg,
                    const Flags flags,
+                   ChainValidationCallbackState* callbackState,
       /*optional*/ const SECItem* stapledOCSPResponse,
   /*optional out*/ mozilla::pkix::ScopedCERTCertList* validationChain,
   /*optional out*/ SECOidTag* evOidPolicy)
@@ -253,6 +358,10 @@ CertVerifier::MozillaPKIXVerifyCert(
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
+
+  CERTChainVerifyCallback callbackContainer;
+  callbackContainer.isChainValid = chainValidationCallback;
+  callbackContainer.isChainValidArg = callbackState;
 
   NSSCertDBTrustDomain::OCSPFetching ocspFetching
     = !mOCSPDownloadEnabled ||
@@ -300,7 +409,7 @@ CertVerifier::MozillaPKIXVerifyCert(
                       ocspFetching == NSSCertDBTrustDomain::NeverFetchOCSP
                         ? NSSCertDBTrustDomain::LocalOnlyOCSPForEV
                         : NSSCertDBTrustDomain::FetchOCSPForEV,
-                      mOCSPCache, pinArg);
+                      mOCSPCache, pinArg, &callbackContainer);
         rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                           KU_DIGITAL_SIGNATURE, // ECDHE/DHE
                                           KU_KEY_ENCIPHERMENT, // RSA
@@ -326,7 +435,7 @@ CertVerifier::MozillaPKIXVerifyCert(
 
       // Now try non-EV.
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
-                                       pinArg);
+                                       pinArg, &callbackContainer);
       rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                         KU_DIGITAL_SIGNATURE, // ECDHE/DHE
                                         KU_KEY_ENCIPHERMENT, // RSA
@@ -443,19 +552,25 @@ CertVerifier::MozillaPKIXVerifyCert(
 
 SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert,
-            /*optional*/ const SECItem* stapledOCSPResponse,
                          const SECCertificateUsage usage,
                          const PRTime time,
                          void* pinArg,
+                         const char* hostname,
                          const Flags flags,
+                         /*optional in*/ const SECItem* stapledOCSPResponse,
                          /*optional out*/ ScopedCERTCertList* validationChain,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
+  ChainValidationCallbackState callbackState = { hostname,
+                                                 mPinningEnforcementLevel,
+                                                 usage,
+                                                 time };
+
   if (mImplementation == mozillapkix) {
     return MozillaPKIXVerifyCert(cert, usage, time, pinArg, flags,
-                                 stapledOCSPResponse, validationChain,
-                                 evOidPolicy);
+                                 &callbackState, stapledOCSPResponse,
+                                 validationChain, evOidPolicy);
   }
 
   if (!cert)
@@ -581,7 +696,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
   CERTChainVerifyCallback callbackContainer;
   if (usage == certificateUsageSSLServer) {
     callbackContainer.isChainValid = chainValidationCallback;
-    callbackContainer.isChainValidArg = nullptr;
+    callbackContainer.isChainValidArg = &callbackState;
     cvin[i].type = cert_pi_chainVerifyCallback;
     cvin[i].value.pointer.chainVerifyCallback = &callbackContainer;
     ++i;
@@ -685,8 +800,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
   if (mImplementation == classic) {
     // XXX: we do not care about the localOnly flag (currently) as the
     // caller that wants localOnly should disable and reenable the fetching.
-    return ClassicVerifyCert(cert, usage, time, pinArg, validationChain,
-                             verifyLog);
+    return ClassicVerifyCert(cert, usage, time, pinArg, &callbackState,
+                             validationChain, verifyLog);
   }
 
 #ifdef NSS_NO_LIBPKIX
@@ -826,9 +941,9 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
   // CreateCertErrorRunnable assumes that CERT_VerifyCertName is only called
   // if VerifyCert succeeded.
   ScopedCERTCertList validationChain;
-  SECStatus rv = VerifyCert(peerCert, stapledOCSPResponse,
-                            certificateUsageSSLServer, time,
-                            pinarg, 0, &validationChain, evOidPolicy);
+  SECStatus rv = VerifyCert(peerCert, certificateUsageSSLServer, time, pinarg,
+                            hostname, 0, stapledOCSPResponse, &validationChain,
+                            evOidPolicy, nullptr);
   if (rv != SECSuccess) {
     return rv;
   }
