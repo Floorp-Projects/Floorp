@@ -1094,12 +1094,18 @@ pref("devtools.toolbox.toolbarSpec", '["splitconsole", "paintflashing toggle","t
 pref("devtools.toolbox.sideEnabled", true);
 pref("devtools.toolbox.zoomValue", "1");
 
+// Inspector preferences
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
+// What was the last active sidebar in the inspector
 pref("devtools.inspector.activeSidebar", "ruleview");
+// Enable the markup preview
 pref("devtools.inspector.markupPreview", false);
 pref("devtools.inspector.remote", false);
+// Expand pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", true);
+// The default size for image preview tooltips in the rule-view/computed-view/markup-view
+pref("devtools.inspector.imagePreviewTooltipSize", 300);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
