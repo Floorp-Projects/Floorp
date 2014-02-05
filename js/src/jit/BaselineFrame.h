@@ -110,6 +110,8 @@ class BaselineFrame
     inline void pushOnScopeChain(ScopeObject &scope);
     inline void popOffScopeChain();
 
+    inline void popWith(JSContext *cx);
+
     CalleeToken calleeToken() const {
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         return *(CalleeToken *)pointer;

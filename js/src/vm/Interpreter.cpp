@@ -831,8 +831,9 @@ js::TypeOfValue(const Value &v)
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-static bool
-EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, HandleObject staticWith)
+bool
+js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
+                       HandleObject staticWith)
 {
     JS_ASSERT(staticWith->is<StaticWithObject>());
     RootedObject obj(cx);
@@ -1753,7 +1754,7 @@ CASE(JSOP_ENTERWITH)
     REGS.sp--;
     staticWith = script->getObject(REGS.pc);
 
-    if (!EnterWith(cx, REGS.fp(), val, staticWith))
+    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith))
         goto error;
 }
 END_CASE(JSOP_ENTERWITH)
