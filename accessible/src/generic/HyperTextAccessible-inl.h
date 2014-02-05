@@ -142,6 +142,13 @@ HyperTextAccessible::IsCaretAtEndOfLine() const
     frameSelection->GetHint() == nsFrameSelection::HINTLEFT;
 }
 
+inline already_AddRefed<nsFrameSelection>
+HyperTextAccessible::FrameSelection() const
+{
+  nsIFrame* frame = GetFrame();
+  return frame ? frame->GetFrameSelection() : nullptr;
+}
+
 inline Selection*
 HyperTextAccessible::DOMSelection() const
 {
