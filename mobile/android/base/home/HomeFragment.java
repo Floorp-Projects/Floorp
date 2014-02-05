@@ -137,8 +137,8 @@ abstract class HomeFragment extends Fragment {
                 return false;
             }
 
-            // Fetch the largest cacheable icon size.
-            Favicons.getLargestFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
+            // Fetch an icon big enough for use as a home screen icon.
+            Favicons.getPreferredSizeFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
             return true;
         }
 

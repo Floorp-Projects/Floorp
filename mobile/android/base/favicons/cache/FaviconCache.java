@@ -332,7 +332,8 @@ public class FaviconCache {
 
             FaviconCacheElement cacheElement;
 
-            int cacheElementIndex = container.getNextHighestIndex(targetSize);
+            // If targetSize is -1, it means we want the largest possible icon.
+            int cacheElementIndex = (targetSize == -1) ? -1 : container.getNextHighestIndex(targetSize);
 
             // cacheElementIndex now holds either the index of the next least largest bitmap from
             // targetSize, or -1 if targetSize > all bitmaps.
@@ -362,10 +363,14 @@ public class FaviconCache {
             // If there is no such primary, we'll upscale the next least smaller one instead.
             cacheElement = container.getNextPrimary(cacheElementIndex);
 
-
             if (cacheElement == null) {
                 // The primary has been invalidated! Fail! Need to get it back from the database.
                 return null;
+            }
+
+            if (targetSize == -1) {
+                // We got the biggest primary, so that's what we'll return.
+                return cacheElement.mFaviconPayload;
             }
 
             // Having got this far, we'll be needing to write the new secondary to the cache, which
