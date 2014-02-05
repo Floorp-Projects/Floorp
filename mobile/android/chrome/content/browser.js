@@ -3910,8 +3910,6 @@ Tab.prototype = {
     if (BrowserApp.getBrowserForWindow(contentWin) == null)
       return;
 
-    Services.obs.notifyObservers(null, "Session:StoreTab", this.id);
-
     this._hostChanged = true;
 
     let fixedURI = aLocationURI;
