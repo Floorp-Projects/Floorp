@@ -641,9 +641,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FNINFO("AttachHandle",
               JSNativeThreadSafeWrapper<js::AttachHandle>,
               &js::AttachHandleJitInfo, 5, 0),
-    JS_FNINFO("ObjectIsTypeObject",
-              JSNativeThreadSafeWrapper<js::ObjectIsTypeObject>,
-              &js::ObjectIsTypeObjectJitInfo, 5, 0),
+    JS_FNINFO("ObjectIsTypeDescr",
+              JSNativeThreadSafeWrapper<js::ObjectIsTypeDescr>,
+              &js::ObjectIsTypeDescrJitInfo, 5, 0),
     JS_FNINFO("ObjectIsTypeRepresentation",
               JSNativeThreadSafeWrapper<js::ObjectIsTypeRepresentation>,
               &js::ObjectIsTypeRepresentationJitInfo, 5, 0),
@@ -663,8 +663,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
               JSNativeThreadSafeWrapper<js::Memcpy>,
               &js::MemcpyJitInfo, 5, 0),
     JS_FN("GetTypedObjectModule", js::GetTypedObjectModule, 0, 0),
-    JS_FN("GetFloat32x4TypeObject", js::GetFloat32x4TypeObject, 0, 0),
-    JS_FN("GetInt32x4TypeObject", js::GetInt32x4TypeObject, 0, 0),
+    JS_FN("GetFloat32x4TypeDescr", js::GetFloat32x4TypeDescr, 0, 0),
+    JS_FN("GetInt32x4TypeDescr", js::GetInt32x4TypeDescr, 0, 0),
 
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)               \
     JS_FNINFO("Store_" #_name,                                                \

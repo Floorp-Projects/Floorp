@@ -243,11 +243,21 @@ addEventListener("ImageContentLoaded", function (aEvent) {
   }
 }, false);
 
-Services.obs.addObserver(function (aSubject, aTopic, aData) {
-  if (aSubject == content.document) {
-    sendAsyncMessage("DocumentInserted", {synthetic: aSubject.mozSyntheticDocument});
-  }
-}, "document-element-inserted", false);
+let DocumentObserver = {
+  init: function() {
+    Services.obs.addObserver(this, "document-element-inserted", false);
+    addEventListener("unload", () => {
+      Services.obs.removeObserver(this, "document-element-inserted");
+    });
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aSubject == content.document) {
+      sendAsyncMessage("DocumentInserted", {synthetic: aSubject.mozSyntheticDocument});
+    }
+  },
+};
+DocumentObserver.init();
 
 function _getMarkupViewer() {
   return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);

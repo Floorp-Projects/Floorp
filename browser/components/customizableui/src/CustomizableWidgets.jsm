@@ -123,9 +123,6 @@ const CustomizableWidgets = [{
               item.setAttribute("label", title || uri);
               item.setAttribute("targetURI", uri);
               item.setAttribute("class", "subviewbutton");
-              item.addEventListener("command", function (aEvent) {
-                onHistoryVisit(uri, aEvent, item);
-              });
               item.addEventListener("click", function (aEvent) {
                 onHistoryVisit(uri, aEvent, item);
               });

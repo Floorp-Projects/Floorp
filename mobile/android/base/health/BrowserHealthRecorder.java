@@ -37,9 +37,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -758,11 +762,11 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     public static final String MEASUREMENT_NAME_SEARCH_COUNTS = "org.mozilla.searches.counts";
     public static final int MEASUREMENT_VERSION_SEARCH_COUNTS = 5;
 
-    public static final String[] SEARCH_LOCATIONS = {
+    public static final Set<String> SEARCH_LOCATIONS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(new String[] {
         "barkeyword",
         "barsuggest",
         "bartext",
-    };
+    })));
 
     private void initializeSearchProvider() {
         this.storage.ensureMeasurementInitialized(
@@ -771,7 +775,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             new MeasurementFields() {
                 @Override
                 public Iterable<FieldSpec> getFields() {
-                    ArrayList<FieldSpec> out = new ArrayList<FieldSpec>(SEARCH_LOCATIONS.length);
+                    ArrayList<FieldSpec> out = new ArrayList<FieldSpec>(SEARCH_LOCATIONS.size());
                     for (String location : SEARCH_LOCATIONS) {
                         // We're not using a counter, because the set of engine
                         // identifiers is potentially unbounded, and thus our
@@ -803,19 +807,31 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             return;
         }
 
+        final int env = this.env;
+
+        if (env == -1) {
+            Log.d(LOG_TAG, "No environment: not recording search.");
+            return;
+        }
+
         if (location == null) {
             throw new IllegalArgumentException("location must be provided for search.");
         }
 
+        // Ensure that we don't throw when trying to look up the field for an
+        // unknown location. If you add a search location, you must extend the
+        // list of search locations *and update the measurement version*.
+        if (!SEARCH_LOCATIONS.contains(location)) {
+            throw new IllegalArgumentException("Unexpected location: " + location);
+        }
+
         final int day = storage.getDay();
-        final int env = this.env;
         final String key = (engineID == null) ? "other" : engineID;
-        final BrowserHealthRecorder self = this;
 
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final HealthReportDatabaseStorage storage = self.storage;
+                final HealthReportDatabaseStorage storage = BrowserHealthRecorder.this.storage;
                 if (storage == null) {
                     Log.d(LOG_TAG, "No storage: not recording search. Shutting down?");
                     return;

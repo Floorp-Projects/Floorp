@@ -8,7 +8,7 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, uint32_t aFlags)
+NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, nsFrameState aFlags)
 {
   nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame(aContext);
 
