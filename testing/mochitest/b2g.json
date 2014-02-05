@@ -358,6 +358,7 @@
     "dom/tests/mochitest/localstorage/test_localStorageQuotaSessionOnly2.html":"needs https support",
     "dom/tests/mochitest/sessionstorage/test_cookieSession.html":"4 failures",
     "dom/tests/mochitest/sessionstorage/test_sessionStorageBase.html":"no storage chrome event received",
+    "dom/tests/mochitest/sessionstorage/test_sessionStorageBaseSessionOnly.html":"bug 967737",
     "dom/tests/mochitest/sessionstorage/test_sessionStorageHttpHttps.html":"needs https to work",
 
     "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"window.open focus issues (using fullscreen)",
