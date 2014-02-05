@@ -175,6 +175,8 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
 
   g_signal_connect(G_OBJECT(mPlayBin), "notify::source",
                    G_CALLBACK(GStreamerReader::PlayBinSourceSetupCb), this);
+  g_signal_connect(G_OBJECT(mPlayBin), "element-added",
+                   G_CALLBACK(GStreamerReader::PlayElementAddedCb), this);
 
   return NS_OK;
 }
@@ -921,6 +923,11 @@ GstFlowReturn GStreamerReader::AllocateVideoBufferFull(GstPad* aPad,
 {
   /* allocate an image using the container */
   ImageContainer* container = mDecoder->GetImageContainer();
+  if (!container) {
+    // We don't have an ImageContainer. We probably belong to an <audio>
+    // element.
+    return GST_FLOW_NOT_SUPPORTED;
+  }
   ImageFormat format = PLANAR_YCBCR;
   PlanarYCbCrImage* img = reinterpret_cast<PlanarYCbCrImage*>(container->CreateImage(&format, 1).get());
   nsRefPtr<PlanarYCbCrImage> image = dont_AddRef(img);
@@ -1065,6 +1072,76 @@ void GStreamerReader::Eos()
     /* Potentially unblock the decode thread in ::DecodeLoop */
     mon.NotifyAll();
   }
+}
+
+/**
+ * This callback is called while the pipeline is automatically built, after a
+ * new element has been added to the pipeline. We use it to find the
+ * uridecodebin instance used by playbin and connect to it to apply our
+ * whitelist.
+ */
+void
+GStreamerReader::PlayElementAddedCb(GstBin *aBin, GstElement *aElement,
+                                    gpointer *aUserData)
+{
+  const static char sUriDecodeBinPrefix[] = "uridecodebin";
+  gchar *name = gst_element_get_name(aElement);
+
+  // Attach this callback to uridecodebin, child of playbin.
+  if (!strncmp(name, sUriDecodeBinPrefix, sizeof(sUriDecodeBinPrefix) - 1)) {
+    g_signal_connect(G_OBJECT(aElement), "autoplug-sort",
+                     G_CALLBACK(GStreamerReader::AutoplugSortCb), aUserData);
+  }
+
+  g_free(name);
+}
+
+bool
+GStreamerReader::ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCaps)
+{
+  bool autoplug;
+  const gchar *klass = gst_element_factory_get_klass(aFactory);
+  if (strstr(klass, "Demuxer") && !strstr(klass, "Metadata")) {
+    autoplug = GStreamerFormatHelper::Instance()->CanHandleContainerCaps(aCaps);
+  } else if (strstr(klass, "Decoder") && !strstr(klass, "Generic")) {
+    autoplug = GStreamerFormatHelper::Instance()->CanHandleCodecCaps(aCaps);
+  } else {
+    /* we only filter demuxers and decoders, let everything else be autoplugged */
+    autoplug = true;
+  }
+
+  return autoplug;
+}
+
+/**
+ * This is called by uridecodebin (running inside playbin), after it has found
+ * candidate factories to continue decoding the stream. We apply the whitelist
+ * here, allowing only demuxers and decoders that output the formats we want to
+ * support.
+ */
+GValueArray*
+GStreamerReader::AutoplugSortCb(GstElement* aElement, GstPad* aPad,
+                                GstCaps* aCaps, GValueArray* aFactories)
+{
+  if (!aFactories->n_values) {
+    return nullptr;
+  }
+
+  /* aFactories[0] is the element factory that is going to be used to
+   * create the next element needed to demux or decode the stream.
+   */
+  GstElementFactory *factory = (GstElementFactory*) g_value_get_object(g_value_array_get_nth(aFactories, 0));
+  if (!ShouldAutoplugFactory(factory, aCaps)) {
+    /* We don't support this factory. Return an empty array to signal that we
+     * don't want to continue decoding this (sub)stream.
+     */
+    return g_value_array_new(0);
+  }
+
+  /* nullptr means that we're ok with the candidates and don't need to apply any
+   * sorting/filtering.
+   */
+  return nullptr;
 }
 
 /**
