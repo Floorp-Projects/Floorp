@@ -45,6 +45,13 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime
+// implementation.  With unified builds, putting this in headers is not enough.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 // Wait this number of seconds when buffering, then leave and play
 // as best as we can if the required amount of data hasn't been
 // retrieved.
