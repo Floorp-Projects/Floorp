@@ -538,7 +538,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         this.fieldID = integerQuery("named_fields", "field_id",
                                     "measurement_name = ? AND measurement_version = ? AND field_name = ?",
                                     new String[] {measurementName, measurementVersion, fieldName},
-                                    -1);
+                                    UNKNOWN_TYPE_OR_FIELD_ID);
         if (this.fieldID == UNKNOWN_TYPE_OR_FIELD_ID) {
           throw new IllegalStateException("No field with name " + fieldName +
                                           " (" + measurementName + ", " + measurementVersion + ")");
@@ -552,7 +552,9 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   // store differently stable kinds of data, hence type difference.
   // Note that we don't pre-populate the environment cache. We'll typically only
   // handle one per session.
-  private final ConcurrentHashMap<String, Integer> envs = new ConcurrentHashMap<String, Integer>();
+  //
+  // protected for testing purposes only.
+  protected final ConcurrentHashMap<String, Integer> envs = new ConcurrentHashMap<String, Integer>();
 
   /**
    * An {@link Environment} that knows how to persist to and from our database.
@@ -855,6 +857,12 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   private HashMap<String, Field> fields = new HashMap<String, Field>();
   private boolean fieldsCacheUpdated = false;
 
+  private void invalidateFieldsCache() {
+    synchronized (this.fields) {
+      fieldsCacheUpdated = false;
+    }
+  }
+
   private String getFieldKey(String mName, int mVersion, String fieldName) {
     return mVersion + "." + mName + "/" + fieldName;
   }
@@ -1014,9 +1022,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     notifyMeasurementVersionUpdated(measurement, version);
 
     // Let's be easy for now.
-    synchronized (fields) {
-      fieldsCacheUpdated = false;
-    }
+    invalidateFieldsCache();
   }
 
   /**
@@ -1152,10 +1158,16 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
     final SQLiteDatabase db = this.helper.getWritableDatabase();
     putValue(v, value);
-    try {
-      db.insertOrThrow(table, null, v);
-    } catch (SQLiteConstraintException e) {
-      throw new IllegalStateException("Event did not reference existing an environment or field.", e);
+
+    // Using SQLiteDatabase.insertOrThrow throws SQLiteConstraintException we cannot catch for
+    // unknown reasons (bug 961526 comment 13). We believe these are thrown because we attempt to
+    // record events using environment IDs removed from the database by the prune service. We
+    // invalidate the currentEnvironment ID after pruning, preventing further propagation,
+    // however, any event recording waiting for the prune service to complete on the background
+    // thread may carry an invalid ID: we expect an insertion failure and drop these events here.
+    final long res = db.insert(table, null, v);
+    if (res == -1) {
+      Logger.error(LOG_TAG, "Unable to record daily discrete event. Ignoring.");
     }
   }
 
@@ -1516,6 +1528,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     try {
       // Cascade will clear the rest.
       db.delete("measurements", null, null);
+
+      // Clear measurements and fields cache, because some of their IDs are now invalid.
+      invalidateFieldsCache(); // Let it repopulate on its own.
+      populateMeasurementVersionsCache(db); // Performed at Storage init so repopulate now.
+
       db.setTransactionSuccessful();
     } finally {
       db.endTransaction();
@@ -1524,7 +1541,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
   /**
    * Prunes the given number of least-recently used environments. Note that orphaned environments
-   * are not removed.
+   * are not removed and the environment cache is cleared.
    */
   public void pruneEnvironments(final int numToPrune) {
     final SQLiteDatabase db = this.helper.getWritableDatabase();
@@ -1538,6 +1555,9 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
           "       LIMIT " + numToPrune + ")",
           null);
       db.setTransactionSuccessful();
+
+      // Clear environment cache, because some of their IDs are now invalid.
+      this.envs.clear();
     } finally {
       db.endTransaction();
     }
