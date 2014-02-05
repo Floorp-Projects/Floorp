@@ -1844,26 +1844,39 @@ function appendSectionHeader(aP, aText)
 function saveReportsToFile()
 {
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, "Save Memory Reports", Ci.nsIFilePicker.modeSave);
   fp.appendFilter("Zipped JSON files", "*.json.gz");
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.filterIndex = 0;
   fp.addToRecentDocs = true;
   fp.defaultString = "memory-report.json.gz";
 
+  let fpFinish = function(file) {
+    let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
+                   .getService(Ci.nsIMemoryInfoDumper);
+
+    let finishDumping = () => {
+      updateMainAndFooter("Saved reports to " + file.path, HIDE_FOOTER);
+    }
+
+    dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null);
+  }
+
   let fpCallback = function(aResult) {
     if (aResult == Ci.nsIFilePicker.returnOK ||
         aResult == Ci.nsIFilePicker.returnReplace) {
-
-      let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
-                     .getService(Ci.nsIMemoryInfoDumper);
-
-      let finishDumping = () => {
-        updateMainAndFooter("Saved reports to " + fp.file.path, HIDE_FOOTER);
-      }
-
-      dumper.dumpMemoryReportsToNamedFile(fp.file.path, finishDumping, null);
+      fpFinish(fp.file);
     }
   };
+
+  try {
+    fp.init(window, "Save Memory Reports", Ci.nsIFilePicker.modeSave);
+  } catch(ex) {
+    // This will fail on Android, since there is no Save as file picker there.
+    // Just save to the default downloads dir if it does.
+    let file = Services.dirsvc.get("DfltDwnld", Ci.nsIFile);
+    file.append(fp.defaultString);
+    fpFinish(file);
+    return;
+  }
   fp.open(fpCallback);
 }
