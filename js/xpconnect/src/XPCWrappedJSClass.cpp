@@ -420,7 +420,8 @@ NS_IMETHODIMP xpcProperty::GetName(nsAString & aName)
 /* readonly attribute nsIVariant value; */
 NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
 {
-    NS_ADDREF(*aValue = mValue);
+    nsCOMPtr<nsIVariant> rval = mValue;
+    rval.forget(aValue);
     return NS_OK;
 }
 
