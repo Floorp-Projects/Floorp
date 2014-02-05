@@ -34,7 +34,7 @@ function createDocument() {
       // Open the inspector, start the picker mode, and start the tests
       openInspector(aInspector => {
         inspector = aInspector;
-        inspector.toolbox.startPicker().then(runTests);
+        inspector.toolbox.highlighterUtils.startPicker().then(runTests);
       });
     }, false);
 
@@ -75,14 +75,14 @@ function testDiv2Highlighter() {
 
 function selectRoot() {
   // Select the root document element to clear the breadcrumbs.
-  inspector.selection.setNode(doc.documentElement);
+  inspector.selection.setNode(doc.documentElement, null);
   inspector.once("inspector-updated", selectIframe);
 }
 
 function selectIframe() {
   // Directly select an element in an iframe (without navigating to it
   // with mousemoves).
-  inspector.selection.setNode(div2);
+  inspector.selection.setNode(div2, null);
   inspector.once("inspector-updated", () => {
     let breadcrumbs = inspector.breadcrumbs;
     is(breadcrumbs.nodeHierarchy.length, 9, "Should have 9 items");
@@ -91,7 +91,7 @@ function selectIframe() {
 }
 
 function finishUp() {
-  inspector.toolbox.stopPicker().then(() => {
+  inspector.toolbox.highlighterUtils.stopPicker().then(() => {
     doc = div1 = div2 = iframe1 = iframe2 = inspector = null;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.closeToolbox(target);

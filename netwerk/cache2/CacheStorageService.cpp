@@ -445,12 +445,16 @@ NS_IMETHODIMP CacheStorageService::DiskCacheStorage(nsILoadContextInfo *aLoadCon
 
   // TODO save some heap granularity - cache commonly used storages.
 
+  // When disk cache is disabled, still provide a storage, but just keep stuff
+  // in memory.
+  bool useDisk = CacheObserver::UseDiskCache();
+
   nsCOMPtr<nsICacheStorage> storage;
   if (CacheObserver::UseNewCache()) {
-    storage = new CacheStorage(aLoadContextInfo, true, aLookupAppCache);
+    storage = new CacheStorage(aLoadContextInfo, useDisk, aLookupAppCache);
   }
   else {
-    storage = new _OldStorage(aLoadContextInfo, true, aLookupAppCache, false, nullptr);
+    storage = new _OldStorage(aLoadContextInfo, useDisk, aLookupAppCache, false, nullptr);
   }
 
   storage.forget(_retval);

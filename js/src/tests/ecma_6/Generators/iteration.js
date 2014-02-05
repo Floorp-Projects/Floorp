@@ -14,7 +14,7 @@ function TestGeneratorResultPrototype() {
     var iter = g();
     assertIteratorNext(iter, 1);
     assertIteratorDone(iter, undefined);
-    assertThrowsInstanceOf(function() { iter.next() }, TypeError);
+    assertIteratorDone(iter, undefined);
 }
 TestGeneratorResultPrototype();
 
@@ -26,7 +26,7 @@ function TestGenerator(g, expected_values_for_next,
             assertIteratorResult(iter.next(), expected_values_for_next[i],
                                  i == expected_values_for_next.length - 1);
         }
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     function testSend(thunk) {
         var iter = thunk();
@@ -35,7 +35,7 @@ function TestGenerator(g, expected_values_for_next,
                                  expected_values_for_send[i],
                                  i == expected_values_for_send.length - 1);
         }
-        assertThrowsInstanceOf(function() { iter.next(send_val); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     function testThrow(thunk) {
         for (var i = 0; i < expected_values_for_next.length; i++) {
@@ -47,7 +47,7 @@ function TestGenerator(g, expected_values_for_next,
             }
             var Sentinel = function () {}
             assertThrowsInstanceOf(function () { iter.throw(new Sentinel); }, Sentinel);
-            assertThrowsInstanceOf(function () { iter.next(); }, TypeError);
+            assertIteratorDone(iter, undefined);
         }
     }
 
@@ -336,20 +336,20 @@ function TestTryCatch(instantiate) {
         assertIteratorNext(iter, 2);
         assertIteratorNext(iter, 3);
         assertIteratorDone(iter, undefined);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test1(instantiate(g));
 
     function Test2(iter) {
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test2(instantiate(g));
 
     function Test3(iter) {
         assertIteratorNext(iter, 1);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test3(instantiate(g));
 
@@ -360,7 +360,7 @@ function TestTryCatch(instantiate) {
         assertIteratorResult(iter.throw(exn), exn, false);
         assertIteratorNext(iter, 3);
         assertIteratorDone(iter, undefined);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test4(instantiate(g));
 
@@ -371,7 +371,7 @@ function TestTryCatch(instantiate) {
         assertIteratorResult(iter.throw(exn), exn, false);
         assertIteratorNext(iter, 3);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
 
     }
     Test5(instantiate(g));
@@ -382,7 +382,7 @@ function TestTryCatch(instantiate) {
         var exn = new Sentinel;
         assertIteratorResult(iter.throw(exn), exn, false);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test6(instantiate(g));
 }
@@ -400,20 +400,20 @@ function TestTryFinally(instantiate) {
         assertIteratorNext(iter, 3);
         assertIteratorNext(iter, 4);
         assertIteratorDone(iter, undefined);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test1(instantiate(g));
 
     function Test2(iter) {
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test2(instantiate(g));
 
     function Test3(iter) {
         assertIteratorNext(iter, 1);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test3(instantiate(g));
 
@@ -422,7 +422,7 @@ function TestTryFinally(instantiate) {
         assertIteratorNext(iter, 2);
         assertIteratorResult(iter.throw(new Sentinel), 3, false);
         assertThrowsInstanceOf(function() { iter.next(); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
 
     }
     Test4(instantiate(g));
@@ -432,7 +432,7 @@ function TestTryFinally(instantiate) {
         assertIteratorNext(iter, 2);
         assertIteratorResult(iter.throw(new Sentinel), 3, false);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel2); }, Sentinel2);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test5(instantiate(g));
 
@@ -441,7 +441,7 @@ function TestTryFinally(instantiate) {
         assertIteratorNext(iter, 2);
         assertIteratorNext(iter, 3);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test6(instantiate(g));
 
@@ -451,7 +451,7 @@ function TestTryFinally(instantiate) {
         assertIteratorNext(iter, 3);
         assertIteratorNext(iter, 4);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test7(instantiate(g));
 }
@@ -479,13 +479,13 @@ function TestNestedTry(instantiate) {
         assertIteratorNext(iter, 4);
         assertIteratorNext(iter, 5);
         assertIteratorDone(iter, undefined);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test1(instantiate(g));
 
     function Test2(iter) {
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test2(instantiate(g));
 
@@ -493,7 +493,7 @@ function TestNestedTry(instantiate) {
         assertIteratorNext(iter, 1);
         assertIteratorResult(iter.throw(new Sentinel), 4, false);
         assertThrowsInstanceOf(function() { iter.next(); }, Sentinel);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test3(instantiate(g));
 
@@ -501,7 +501,7 @@ function TestNestedTry(instantiate) {
         assertIteratorNext(iter, 1);
         assertIteratorResult(iter.throw(new Sentinel), 4, false);
         assertThrowsInstanceOf(function() { iter.throw(new Sentinel2); }, Sentinel2);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test4(instantiate(g));
 
@@ -514,7 +514,7 @@ function TestNestedTry(instantiate) {
         assertIteratorNext(iter, 4);
         assertIteratorNext(iter, 5);
         assertIteratorDone(iter, undefined);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
 
     }
     Test5(instantiate(g));
@@ -526,7 +526,7 @@ function TestNestedTry(instantiate) {
         assertIteratorResult(iter.throw(exn), exn, false);
         assertIteratorResult(iter.throw(new Sentinel2), 4, false);
         assertThrowsInstanceOf(function() { iter.next(); }, Sentinel2);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
     }
     Test6(instantiate(g));
 
@@ -538,7 +538,7 @@ function TestNestedTry(instantiate) {
         assertIteratorNext(iter, 3);
         assertIteratorResult(iter.throw(new Sentinel2), 4, false);
         assertThrowsInstanceOf(function() { iter.next(); }, Sentinel2);
-        assertThrowsInstanceOf(function() { iter.next(); }, TypeError);
+        assertIteratorDone(iter, undefined);
 
     }
     Test7(instantiate(g));

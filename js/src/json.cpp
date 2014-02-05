@@ -774,8 +774,8 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
 }
 
 bool
-js::ParseJSONWithReviver(JSContext *cx, StableCharPtr chars, size_t length, HandleValue reviver,
-                         MutableHandleValue vp)
+js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
+                         HandleValue reviver, MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
     JSONParser parser(cx, chars, length);
@@ -810,16 +810,17 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    JSStableString *stable = str->ensureStable(cx);
-    if (!stable)
+    Rooted<JSFlatString*> flat(cx, str->ensureFlat(cx));
+    if (!flat)
         return false;
 
-    JS::Anchor<JSString *> anchor(stable);
+    JS::Anchor<JSString *> anchor(flat);
 
     RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
 
     /* Steps 2-5. */
-    return ParseJSONWithReviver(cx, stable->chars(), stable->length(), reviver, args.rval());
+    return ParseJSONWithReviver(cx, ConstTwoByteChars(flat->chars(), flat->length()),
+                                flat->length(), reviver, args.rval());
 }
 
 /* ES5 15.12.3. */
@@ -870,7 +871,7 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
      * reserved slot on the global object; see js::BooleanGetPrimitiveValueSlow
      * called from PreprocessValue above.
      */
-    if (!global->getOrCreateBooleanPrototype(cx))
+    if (!GlobalObject::getOrCreateBooleanPrototype(cx, global))
         return nullptr;
 
     RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));

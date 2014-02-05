@@ -87,7 +87,7 @@ function hoverContainer(container) {
   let deferred = promise.defer();
   EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
       markupView.doc.defaultView);
-  inspector.markup.once("node-highlight", deferred.resolve);
+  inspector.toolbox.once("node-highlight", deferred.resolve);
   return deferred.promise;
 }
 

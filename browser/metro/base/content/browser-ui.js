@@ -142,6 +142,15 @@ var BrowserUI = {
       return IndexedDB.receiveMessage(aMessage);
     });
 
+    // hook up telemetry ping for UI data
+    try {
+      UITelemetry.addSimpleMeasureFunction("metro-ui",
+                                           BrowserUI._getMeasures.bind(BrowserUI));
+    } catch (ex) {
+      // swallow exception that occurs if metro-appbar measure is already set up
+      dump("Failed to addSimpleMeasureFunction in browser-ui: " + ex.message + "\n");
+    }
+
     // Delay the panel UI and Sync initialization
     window.addEventListener("UIReadyDelayed", function delayedInit(aEvent) {
       Util.dumpLn("* delay load started...");
@@ -379,7 +388,7 @@ var BrowserUI = {
 
       // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
       // and the proper third-party fixup can be done
-      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP | 
+      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
                        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
       let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
       gHistSvc.markPageAsTyped(uri);
@@ -744,6 +753,14 @@ var BrowserUI = {
       StyleSheetSvc.loadAndRegisterSheet(uri,
                                          Ci.nsIStyleSheetService.AGENT_SHEET);
     }
+  },
+
+  _getMeasures: function() {
+    let dimensions = {
+      "window-width": ContentAreaObserver.width,
+      "window-height": ContentAreaObserver.height
+    };
+    return dimensions;
   },
 
   /*********************************
@@ -1125,12 +1142,13 @@ var BrowserUI = {
 
   confirmSanitizeDialog: function () {
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let title = bundle.GetStringFromName("clearPrivateData.title");
-    let message = bundle.GetStringFromName("clearPrivateData.message");
+    let title = bundle.GetStringFromName("clearPrivateData.title2");
+    let options = bundle.GetStringFromName("optionsCharm");
+    let message = bundle.GetStringFromName("clearPrivateData.message2").replace("#1", options);
     let clearbutton = bundle.GetStringFromName("clearPrivateData.clearButton");
 
     let prefsClearButton = document.getElementById("prefs-clear-data");
-    prefsClearButton.disabled = true; 
+    prefsClearButton.disabled = true;
 
     let buttonPressed = Services.prompt.confirmEx(
                           null,

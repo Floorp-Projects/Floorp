@@ -114,7 +114,6 @@ public:
 
   // URLSearchParamsObserver
   void URLSearchParamsUpdated() MOZ_OVERRIDE;
-  void URLSearchParamsNeedsUpdates() MOZ_OVERRIDE;
 
 protected:
   virtual ~Link();
@@ -133,6 +132,8 @@ protected:
 
   nsIURI* GetCachedURI() const { return mCachedURI; }
   bool HasCachedURI() const { return !!mCachedURI; }
+
+  void UpdateURLSearchParams();
 
   // CC methods
   void Unlink();

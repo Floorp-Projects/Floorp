@@ -47,7 +47,7 @@ outer.next();
 assertEq(log, "indndndndndndv");
 
 // Outer's dead, man.  Outer's dead.
-assertThrowsInstanceOf(outer.next.bind(outer), TypeError);
+assertDeepEq(outer.next(), {value: undefined, done: true});
 
 // No more checking the iterator.
 assertEq(log, "indndndndndndv");

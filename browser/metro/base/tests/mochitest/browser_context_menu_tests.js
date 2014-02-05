@@ -874,6 +874,43 @@ gTests.push({
   }
 });
 
+gTests.push({
+  desc: "Bug 963067 - 'Cut' in the cut, copy, paste menu is always active " +
+        "after a browser launch.",
+  run: function test() {
+    info(chromeRoot + "browser_context_menu_tests_02.html");
+    yield addTab(chromeRoot + "browser_context_menu_tests_02.html");
+
+    purgeEventQueue();
+    emptyClipboard();
+
+    ContextUI.dismiss();
+    yield waitForCondition(() => !ContextUI.navbarVisible);
+
+    let tabWindow = Browser.selectedTab.browser.contentWindow;
+    let input = tabWindow.document.getElementById("text3-input");
+    let cutMenuItem = document.getElementById("context-cut");
+
+    input.select();
+
+    // Emulate RichListBox's behavior and set first item selected by default.
+    cutMenuItem.selected = true;
+
+    let promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(tabWindow, input);
+    yield promise;
+
+    ok(!cutMenuItem.hidden && !cutMenuItem.selected,
+       "Cut menu item is visible and not selected.");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
+  }
+});
+
 function test() {
   setDevPixelEqualToPx();
   runTests();

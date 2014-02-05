@@ -98,8 +98,7 @@ struct ParseContext : public GenericParseContext
 
     StmtInfoPC      *topStmt;       /* top of statement info stack */
     StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
-    Rooted<StaticBlockObject *> blockChain;
-                                    /* compile time block scope chain */
+    Rooted<NestedScopeObject *> staticScope;  /* compile time scope chain */
     Node            maybeFunction;  /* sc->isFunctionBox, the pn where pn->pn_funbox == sc */
 
     const unsigned  staticLevel;    /* static compilation unit nesting level */
@@ -250,7 +249,7 @@ struct ParseContext : public GenericParseContext
         blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
         topStmt(nullptr),
         topScopeStmt(nullptr),
-        blockChain(prs->context),
+        staticScope(prs->context),
         maybeFunction(maybeFunction),
         staticLevel(staticLevel),
         lastYieldOffset(NoYieldOffset),

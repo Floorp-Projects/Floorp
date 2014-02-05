@@ -79,8 +79,9 @@ bool AudioStream::sCubebLatencyPrefSet;
 /*static*/ void AudioStream::InitPreferredSampleRate()
 {
   StaticMutexAutoLock lock(sMutex);
-  if (sPreferredSampleRate != 0 ||
-      cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(), &sPreferredSampleRate) != CUBEB_OK) {
+  if (sPreferredSampleRate == 0 &&
+      cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(),
+                                      &sPreferredSampleRate) != CUBEB_OK) {
     sPreferredSampleRate = 44100;
   }
 }

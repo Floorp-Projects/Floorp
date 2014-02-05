@@ -47,6 +47,7 @@
     "content/media/webspeech/synth/test/test_speech_queue.html": "Test timed out",
     "content/media/webspeech/synth/test/test_speech_simple.html": "Test timed out",
 
+    "content/media/webaudio/test/test_audioBufferSourceNodeOffset.html": "bug 906752",
     "content/media/webaudio/test/test_mozaudiochannel.html": "",
 
     "dom/imptests/editing/selecttest/test_addRange.html": "oom?, bug 775227",
@@ -175,6 +176,7 @@
     "content/html/document/test/test_bug741266.html":"needs control of popup window size",
     "docshell/test/navigation/test_popup-navigates-children.html":"Needs multiple window.open support, also uses docshelltreenode",
     "docshell/test/test_bug590573.html":"queryinterfaces into webnavigation, might suffer from something similar as bug 823022",
+    "docshell/test/navigation/test_bug430723.html":"apz race condition, see bug 965351",
     "dom/devicestorage/ipc/test_ipc.html":"nested ipc not working",
 
     "dom/indexedDB/ipc/test_ipc.html":"nested ipc not working",
@@ -227,6 +229,8 @@
 
     "dom/imptests/html/webgl":"",
 
+	"dom/apps/tests/test_packaged_app_update.html":"bug 915879",
+
     "dom/browser-element/mochitest/test_browserElement_inproc_Alert.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_AppFramePermission.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_AppWindowNamespace.html":"",
@@ -267,6 +271,7 @@
     "dom/events/test/test_bug574663.html":"",
     "dom/events/test/test_bug607464.html":"",
     "dom/events/test/test_wheel_default_action.html":"",
+    "dom/events/test/test_bug946632.html":"apz race condition, see bug 965351",
 
     "dom/file/test/test_progress_events.html":"All of these fail fairly regularly with: UnknownError: The operation failed for reasons unrelated to the database itself and not covered by any other error code. at http://mochi.test:8888/tests/dom/file/test/helpers.js:126",
     "dom/file/test/test_request_readyState.html":"",
@@ -312,6 +317,11 @@
     "dom/tests/mochitest/general/test_clipboard_events.html":"clipboard undefined",
     "content/base/test/test_copypaste.html":"clipboard undefined",
     "content/base/test/test_bug166235.html":"clipboard undefined",
+	
+    "dom/tests/mochitest/dom-level0": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level1-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-html": "Bug 932350 - Frequent timeouts",
 
     "dom/tests/mochitest/general/test_idleapi_permissions.html":"",
     "dom/tests/mochitest/general/test_paste_selection.html":"No clipboard",
@@ -352,6 +362,7 @@
 
     "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"window.open focus issues (using fullscreen)",
     "dom/tests/mochitest/webapps/test_bug_779982.html":"",
+    "dom/tests/mochitest/whatwg/test_postMessage_closed.html":"bug 894914 - wrong data - got FAIL, expected message",
 
     "dom/workers/test/test_suspend.html":"test timed out, might need more time",
     "dom/workers/test/test_xhr_parameters.html":"",
@@ -370,6 +381,7 @@
     "layout/forms/test/test_bug571352.html":"shift-click multi-select not working?",
     "layout/forms/test/test_textarea_resize.html":"resizing textarea not available in b2g",
     "layout/forms/test/test_bug903715.html":"select elements don't use an in-page popup in B2G",
+    "layout/forms/test/test_bug564115.html":"apz race condition, see bug 965351",
     "layout/generic/test/test_bug392746.html":"ctrl mouse select not working in b2g",
     "layout/generic/test/test_bug791616.html":"Target should not have scrolled - got 114.10000610351562, expected 115.39999389648438",
     "layout/generic/test/test_invalidate_during_plugin_paint.html":"plugins not supported",
@@ -378,6 +390,8 @@
     "layout/generic/test/test_selection_expanding.html":"mouse selection not working",
 
     "layout/style/test/test_transitions_per_property.html":"times out, needs more time + various failures",
+	"layout/style/test/test_initial_storage.html":"bug 965655",
+	"layout/style/test/test_value_storage.html":"bug 965655",
 
     "content/html/content/test/test_bug209275.xhtml":"timed out, 47 tests, bug 870262, :visited support",
     "content/html/content/test/test_bug481335.xhtml":"timed out, bug 870262, :visited support",

@@ -54,10 +54,6 @@ loader.lazyGetter(this, "AutocompletePopup", () => {
  *        The inspector we're watching.
  * @param iframe aFrame
  *        An iframe in which the caller has kindly loaded markup-view.xhtml.
- *
- * Fires the following events:
- * - node-highlight: When a node in the markup-view is hovered and the
- *   corresponding node in the content gets highlighted
  */
 function MarkupView(aInspector, aFrame, aControllerWindow) {
   this._inspector = aInspector;
@@ -174,41 +170,11 @@ MarkupView.prototype = {
   },
 
   _showBoxModel: function(nodeFront, options={}) {
-    let toolbox = this._inspector.toolbox;
-
-    // If the remote highlighter exists on the target, use it
-    if (toolbox.isRemoteHighlightable) {
-      toolbox.initInspector().then(() => {
-        toolbox.highlighter.showBoxModel(nodeFront, options).then(() => {
-          this.emit("node-highlight", nodeFront);
-        });
-      });
-    }
-    // Else, revert to the "older" version of the highlighter in the walker
-    // actor
-    else {
-      this.walker.highlight(nodeFront).then(() => {
-        this.emit("node-highlight", nodeFront);
-      });
-    }
+    this._inspector.toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
 
   _hideBoxModel: function() {
-    let deferred = promise.defer();
-    let toolbox = this._inspector.toolbox;
-
-    // If the remote highlighter exists on the target, use it
-    if (toolbox.isRemoteHighlightable) {
-      toolbox.initInspector().then(() => {
-        toolbox.highlighter.hideBoxModel().then(deferred.resolve);
-      });
-    } else {
-      deferred.resolve();
-    }
-    // If not, no need to unhighlight as the older highlight method uses a
-    // setTimeout to hide itself
-
-    return deferred.promise;
+    this._inspector.toolbox.highlighterUtils.unhighlight();
   },
 
   _briefBoxModelTimer: null,

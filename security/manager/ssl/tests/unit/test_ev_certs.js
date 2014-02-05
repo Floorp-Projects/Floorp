@@ -227,21 +227,20 @@ add_test(function() {
                         isDebugBuild ? ["int-ev-valid", "ev-valid"]
                                      : ["ev-valid"]);
   check_ee_for_ev("ev-valid", isDebugBuild);
-  ocspResponder.stop(run_next_test);
+  ocspResponder.stop(function () {
+    // without net it must be able to EV verify
+    let failingOcspResponder = failingOCSPResponder();
+    let cert = certdb.findCertByNickname(null, "ev-valid");
+    let hasEVPolicy = {};
+    let verifiedChain = {};
+    let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
+                Ci.nsIX509CertDB.FLAG_MUST_BE_EV;
 
-  // without net it must be able to EV verify
-  let failingOcspResponder = failingOCSPResponder();
-  let cert = certdb.findCertByNickname(null, "ev-valid");
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
-              Ci.nsIX509CertDB.FLAG_MUST_BE_EV;
-
-  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
-                                   flags, verifiedChain, hasEVPolicy);
-  do_check_eq(hasEVPolicy.value, isDebugBuild);
-  do_check_eq(error, isDebugBuild ? 0 : SEC_ERROR_EXTENSION_NOT_FOUND);
-  failingOcspResponder.stop(run_next_test);
-
+    let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
+                                     flags, verifiedChain, hasEVPolicy);
+    do_check_eq(hasEVPolicy.value, isDebugBuild);
+    do_check_eq(error, isDebugBuild ? 0 : SEC_ERROR_EXTENSION_NOT_FOUND);
+    failingOcspResponder.stop(run_next_test);
+  });
 });
 

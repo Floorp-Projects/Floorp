@@ -304,7 +304,6 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   , mThread(nullptr)
   , mRunningEvent(0)
   , mStackSize(aStackSize)
-  , mProcessingEvent(0)
   , mShutdownContext(nullptr)
   , mShutdownRequired(false)
   , mEventsAreDoomed(false)
@@ -572,7 +571,17 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
     return NS_ERROR_NOT_SAME_THREAD;
 
-  if (MAIN_THREAD == mIsMainThread && mayWait && !ShuttingDown())
+  // The toplevel event loop normally blocks waiting for the next event, but
+  // if we're trying to shut this thread down, we must exit the event loop when
+  // the event queue is empty.
+  // This only applys to the toplevel event loop! Nested event loops (e.g.
+  // during sync dispatch) are waiting for some state change and must be able
+  // to block even if something has requested shutdown of the thread. Otherwise
+  // we'll just busywait as we endlessly look for an event, fail to find one,
+  // and repeat the nested event loop since its state change hasn't happened yet.
+  bool reallyWait = mayWait && (mRunningEvent > 0 || !ShuttingDown());
+
+  if (MAIN_THREAD == mIsMainThread && reallyWait)
     HangMonitor::Suspend();
 
   // Fire a memory pressure notification, if we're the main thread and one is
@@ -597,20 +606,17 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
     }
   }
 
-  ++mProcessingEvent;
-
   bool notifyMainThreadObserver =
     (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
   if (notifyMainThreadObserver) 
-   sMainThreadObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
-                                           mRunningEvent);
+   sMainThreadObserver->OnProcessNextEvent(this, reallyWait, mRunningEvent);
 
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs)
-    obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
+    obs->OnProcessNextEvent(this, reallyWait, mRunningEvent);
 
   NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent,
-                         (this, mayWait && !ShuttingDown(), mRunningEvent));
+                         (this, reallyWait, mRunningEvent));
 
   ++mRunningEvent;
 
@@ -626,7 +632,7 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
     // If we are shutting down, then do not wait for new events.
     nsCOMPtr<nsIRunnable> event;
-    mEvents->GetEvent(mayWait && !ShuttingDown(), getter_AddRefs(event));
+    mEvents->GetEvent(reallyWait, getter_AddRefs(event));
 
     *result = (event.get() != nullptr);
 
@@ -653,20 +659,7 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   if (notifyMainThreadObserver && sMainThreadObserver)
     sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent, *result);
 
-  --mProcessingEvent;
-
   return rv;
-}
-
-NS_IMETHODIMP
-nsThread::GetIsProcessingEvents(bool* aIsProcessing)
-{
-  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  *aIsProcessing = mProcessingEvent != 0;
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

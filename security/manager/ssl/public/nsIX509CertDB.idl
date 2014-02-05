@@ -19,7 +19,7 @@ interface nsIX509CertList;
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
 %}
 
-[scriptable, function, uuid(48411e2d-85a9-4b16-bec8-e30cde801f9e)]
+[scriptable, function, uuid(25a048e8-bb1c-4c33-ad3a-eacf2ad9e9ee)]
 interface nsIOpenSignedJARFileCallback : nsISupports
 {
   void openSignedJARFileFinished(in nsresult rv,
@@ -260,6 +260,16 @@ interface nsIX509CertDB : nsISupports {
    *  @return The new certificate object.
    */
   nsIX509Cert constructX509FromBase64(in string base64);
+
+  /*
+   *  Decode a raw data presentation and instantiate an object in memory.
+   *
+   *  @param certDER The raw representation of a certificate,
+   *                 encoded as raw DER.
+   *  @param length  The length of the DER string.
+   *  @return The new certificate object.
+   */
+  nsIX509Cert constructX509(in string certDER, in unsigned long length);
 
   /*
    *  Obtain a reference to the appropriate service for recent

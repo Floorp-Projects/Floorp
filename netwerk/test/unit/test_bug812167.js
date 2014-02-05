@@ -67,7 +67,7 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
     do_check_eq(status, 0);
 
     // Expired entry is on disk, no-store entry is in memory
-    do_check_eq(entry.persistToDisk, expectedExpiration);
+    do_check_eq(entry.persistent, expectedExpiration);
 
     // Do the request again and check the server handler is called appropriately
     var chan = make_channel(path);
@@ -82,7 +82,7 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
         // Handler had to be called second time (no-store forces validate),
         // and we are just in memory
         do_check_eq(redirectHandler_NoStore_calls, 2);
-        do_check_true(!entry.persistToDisk);
+        do_check_true(!entry.persistent);
       }
 
       continuation();

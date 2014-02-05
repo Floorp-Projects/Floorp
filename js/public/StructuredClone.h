@@ -94,6 +94,9 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     JSAutoStructuredCloneBuffer()
         : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION) {}
 
+    JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer &&other);
+    JSAutoStructuredCloneBuffer &operator=(JSAutoStructuredCloneBuffer &&other);
+
     ~JSAutoStructuredCloneBuffer() { clear(); }
 
     uint64_t *data() const { return data_; }
@@ -122,9 +125,6 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
     bool write(JSContext *cx, JS::HandleValue v, JS::HandleValue transferable,
                const JSStructuredCloneCallbacks *optionalCallbacks=nullptr, void *closure=nullptr);
-
-    // Swap ownership with another JSAutoStructuredCloneBuffer.
-    void swap(JSAutoStructuredCloneBuffer &other);
 
   private:
     // Copy and assignment are not supported.

@@ -420,12 +420,11 @@ const PanelUI = {
 #ifndef XP_WIN
 #ifdef XP_MACOSX
     let tooltipId = "quit-button.tooltiptext.mac";
+#else
+    let tooltipId = "quit-button.tooltiptext.linux2";
+#endif
     let brands = Services.strings.createBundle("chrome://branding/locale/brand.properties");
     let stringArgs = [brands.GetStringFromName("brandShortName")];
-#else
-    let tooltipId = "quit-button.tooltiptext.linux";
-    let stringArgs = [];
-#endif
 
     let key = document.getElementById("key_quitApplication");
     stringArgs.push(ShortcutUtils.prettifyShortcut(key));
