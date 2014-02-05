@@ -277,6 +277,16 @@ public:
     result.forget(aResult);
     return NS_OK;
   }
+  void Get(JSContext* aCx, JSObject* aScope, nsIPrincipal* aSubject,
+           JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError)
+  {
+    if (aSubject->Subsumes(mOrigin)) {
+      aError = nsContentUtils::XPConnect()->VariantToJS(aCx, aScope,
+                                                        mValue, aResult);
+    } else {
+      aResult.setUndefined();
+    }
+  }
   virtual ~DialogValueHolder() {}
 private:
   nsCOMPtr<nsIPrincipal> mOrigin;
@@ -580,6 +590,9 @@ public:
   {
     return mIsChrome;
   }
+
+  using nsPIDOMWindow::IsModalContentWindow;
+  static bool IsModalContentWindow(JSContext* aCx, JSObject* aGlobal);
 
   // GetScrollFrame does not flush.  Callers should do it themselves as needed,
   // depending on which info they actually want off the scrollable frame.
@@ -981,6 +994,11 @@ public:
   void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
+
+  JS::Value GetDialogArguments(JSContext* aCx, mozilla::ErrorResult& aError);
+  JS::Value GetReturnValue(JSContext* aCx, mozilla::ErrorResult& aError);
+  void SetReturnValue(JSContext* aCx, JS::Handle<JS::Value> aReturnValue,
+                      mozilla::ErrorResult& aError);
 
 protected:
   // Array of idle observers that are notified of idle events.
@@ -1440,6 +1458,9 @@ protected:
   // For |window.dialogArguments|, via |showModalDialog|.
   nsRefPtr<DialogValueHolder> mDialogArguments;
 
+  // Only used in the outer.
+  nsRefPtr<DialogValueHolder> mReturnValue;
+
   nsRefPtr<mozilla::dom::Navigator> mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsDOMWindowList>     mFrames;
@@ -1639,12 +1660,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMMODALCONTENTWINDOW
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
-
-protected:
-  // For use by outer windows only.
-  nsRefPtr<DialogValueHolder> mReturnValue;
 };
 
 /* factory function */

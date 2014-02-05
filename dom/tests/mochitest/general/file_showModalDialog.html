@@ -4,7 +4,7 @@
 <script>
   function go() {
     is(SpecialPowers.wrap(window).location.toString(), location.toString(), "sanity");
-    is(SpecialPowers.Cu.getClassName(window, /* aUnwrap = */ true), "ModalContentWindow", "We are modal");
+    ok("returnValue" in window && "dialogArguments" in window, "We are modal");
     var iwin = document.getElementById('ifr').contentWindow;
     is(SpecialPowers.Cu.getClassName(iwin, /* aUnwrap = */ true), "Window", "Descendant frames should not be modal");
 
