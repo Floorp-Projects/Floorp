@@ -99,18 +99,6 @@ class CommonTestCase(unittest.TestCase):
             result.addSuccess(self)
 
     def run(self, result=None):
-        # Bug 967566 suggests refactoring run, which would hopefully
-        # mean getting rid of this inner function, which only sits
-        # here to reduce code duplication:
-        def expected_failure(result):
-            addExpectedFailure = getattr(result, "addExpectedFailure", None)
-            if addExpectedFailure is not None:
-                addExpectedFailure(self, e.exc_info)
-            else:
-                warnings.warn("TestResult has no addExpectedFailure method, "
-                              "reporting as passes", RuntimeWarning)
-                result.addSuccess(self)
-
         self.start_time = time.time()
         orig_result = result
         if result is None:
@@ -136,19 +124,11 @@ class CommonTestCase(unittest.TestCase):
         try:
             success = False
             try:
-                if self.expected == "fail":
-                    try:
-                        self.setUp()
-                    except Exception:
-                        raise _ExpectedFailure(sys.exc_info())
-                else:
-                    self.setUp()
+                self.setUp()
             except SkipTest as e:
                 self._addSkip(result, str(e))
             except KeyboardInterrupt:
                 raise
-            except _ExpectedFailure:
-                expected_failure(result)
             except:
                 result.addError(self, sys.exc_info())
             else:
@@ -156,7 +136,7 @@ class CommonTestCase(unittest.TestCase):
                     if self.expected == 'fail':
                         try:
                             testMethod()
-                        except:
+                        except Exception:
                             raise _ExpectedFailure(sys.exc_info())
                         raise _UnexpectedSuccess
                     else:
@@ -167,8 +147,14 @@ class CommonTestCase(unittest.TestCase):
                     raise
                 except self.failureException:
                     result.addFailure(self, sys.exc_info())
-                except _ExpectedFailure:
-                    expected_failure(result)
+                except _ExpectedFailure as e:
+                    addExpectedFailure = getattr(result, 'addExpectedFailure', None)
+                    if addExpectedFailure is not None:
+                        addExpectedFailure(self, e.exc_info)
+                    else:
+                        warnings.warn("TestResult has no addExpectedFailure method, reporting as passes",
+                                      RuntimeWarning)
+                        result.addSuccess(self)
                 except _UnexpectedSuccess:
                     addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
                     if addUnexpectedSuccess is not None:
@@ -184,17 +170,9 @@ class CommonTestCase(unittest.TestCase):
                 else:
                     success = True
                 try:
-                    if self.expected == "fail":
-                        try:
-                            self.tearDown()
-                        except:
-                            raise _ExpectedFailure(sys.exc_info())
-                    else:
-                        self.tearDown()
+                    self.tearDown()
                 except KeyboardInterrupt:
                     raise
-                except _ExpectedFailure:
-                    expected_failure(result)
                 except:
                     result.addError(self, sys.exc_info())
                     success = False
