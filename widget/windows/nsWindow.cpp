@@ -3695,70 +3695,6 @@ bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event,
   return ConvertStatus(aStatus);
 }
 
-bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
-{
-  nsCOMPtr<nsIAtom> command;
-  switch (aEventCommand) {
-    case APPCOMMAND_BROWSER_BACKWARD:
-      command = nsGkAtoms::Back;
-      break;
-    case APPCOMMAND_BROWSER_FORWARD:
-      command = nsGkAtoms::Forward;
-      break;
-    case APPCOMMAND_BROWSER_REFRESH:
-      command = nsGkAtoms::Reload;
-      break;
-    case APPCOMMAND_BROWSER_STOP:
-      command = nsGkAtoms::Stop;
-      break;
-    case APPCOMMAND_BROWSER_SEARCH:
-      command = nsGkAtoms::Search;
-      break;
-    case APPCOMMAND_BROWSER_FAVORITES:
-      command = nsGkAtoms::Bookmarks;
-      break;
-    case APPCOMMAND_BROWSER_HOME:
-      command = nsGkAtoms::Home;
-      break;
-    case APPCOMMAND_CLOSE:
-      command = nsGkAtoms::Close;
-      break;
-    case APPCOMMAND_FIND:
-      command = nsGkAtoms::Find;
-      break;
-    case APPCOMMAND_HELP:
-      command = nsGkAtoms::Help;
-      break;
-    case APPCOMMAND_NEW:
-      command = nsGkAtoms::New;
-      break;
-    case APPCOMMAND_OPEN:
-      command = nsGkAtoms::Open;
-      break;
-    case APPCOMMAND_PRINT:
-      command = nsGkAtoms::Print;
-      break;
-    case APPCOMMAND_SAVE:
-      command = nsGkAtoms::Save;
-      break;
-    case APPCOMMAND_FORWARD_MAIL:
-      command = nsGkAtoms::ForwardMail;
-      break;
-    case APPCOMMAND_REPLY_TO_MAIL:
-      command = nsGkAtoms::ReplyToMail;
-      break;
-    case APPCOMMAND_SEND_MAIL:
-      command = nsGkAtoms::SendMail;
-      break;
-    default:
-      return false;
-  }
-  WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
-
-  InitEvent(event);
-  return DispatchWindowEvent(&event);
-}
-
 // Recursively dispatch synchronous paints for nsIWidget
 // descendants with invalidated rectangles.
 BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
@@ -5089,69 +5025,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_APPCOMMAND:
-    {
-      uint32_t appCommand = GET_APPCOMMAND_LPARAM(lParam);
-      uint32_t contentCommandMessage = NS_EVENT_NULL;
-      // XXX After we implement KeyboardEvent.key, we should dispatch the
-      //     key event if (GET_DEVICE_LPARAM(lParam) == FAPPCOMMAND_KEY) is.
-      switch (appCommand)
-      {
-        case APPCOMMAND_BROWSER_BACKWARD:
-        case APPCOMMAND_BROWSER_FORWARD:
-        case APPCOMMAND_BROWSER_REFRESH:
-        case APPCOMMAND_BROWSER_STOP:
-        case APPCOMMAND_BROWSER_SEARCH:
-        case APPCOMMAND_BROWSER_FAVORITES:
-        case APPCOMMAND_BROWSER_HOME:
-        case APPCOMMAND_CLOSE:
-        case APPCOMMAND_FIND:
-        case APPCOMMAND_HELP:
-        case APPCOMMAND_NEW:
-        case APPCOMMAND_OPEN:
-        case APPCOMMAND_PRINT:
-        case APPCOMMAND_SAVE:
-        case APPCOMMAND_FORWARD_MAIL:
-        case APPCOMMAND_REPLY_TO_MAIL:
-        case APPCOMMAND_SEND_MAIL:
-          // We shouldn't consume the message always because if we don't handle
-          // the message, the sender (typically, utility of keyboard or mouse)
-          // may send other key messages which indicate well known shortcut key.
-          if (DispatchCommandEvent(appCommand)) {
-            // tell the driver that we handled the event
-            *aRetValue = 1;
-            result = true;
-          }
-          break;
-
-        // Use content command for following commands:
-        case APPCOMMAND_COPY:
-          contentCommandMessage = NS_CONTENT_COMMAND_COPY;
-          break;
-        case APPCOMMAND_CUT:
-          contentCommandMessage = NS_CONTENT_COMMAND_CUT;
-          break;
-        case APPCOMMAND_PASTE:
-          contentCommandMessage = NS_CONTENT_COMMAND_PASTE;
-          break;
-        case APPCOMMAND_REDO:
-          contentCommandMessage = NS_CONTENT_COMMAND_REDO;
-          break;
-        case APPCOMMAND_UNDO:
-          contentCommandMessage = NS_CONTENT_COMMAND_UNDO;
-          break;
-      }
-
-      if (contentCommandMessage) {
-        WidgetContentCommandEvent contentCommand(true, contentCommandMessage,
-                                                 this);
-        DispatchWindowEvent(&contentCommand);
-        // tell the driver that we handled the event
-        *aRetValue = 1;
-        result = true;
-      }
-      // default = false - tell the driver that the event was not handled
-    }
-    break;
+      result = HandleAppCommandMsg(wParam, lParam, aRetValue);
+      break;
 
     // The WM_ACTIVATE event is fired when a window is raised or lowered,
     // and the loword of wParam specifies which. But we don't want to tell

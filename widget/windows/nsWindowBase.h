@@ -78,7 +78,6 @@ public:
     return (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
   }
 
-public:
   /*
    * Touch input injection apis
    */
@@ -89,7 +88,15 @@ public:
                                               uint32_t aPointerOrientation);
   virtual nsresult ClearNativeTouchSequence();
 
+  /*
+   * WM_APPCOMMAND common handler. Sends events via DispatchWindowEvent.
+   */
+  virtual bool HandleAppCommandMsg(WPARAM aWParam,
+                                   LPARAM aLParam,
+                                   LRESULT *aRetValue);
+
 protected:
+  bool DispatchCommandEvent(uint32_t aEventCommand);
   static bool InitTouchInjection();
   bool InjectTouchPoint(uint32_t aId, nsIntPoint& aPointerScreenPoint,
                         POINTER_FLAGS aFlags, uint32_t aPressure = 1024,
