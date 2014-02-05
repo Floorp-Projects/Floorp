@@ -70,12 +70,11 @@ public:
   void CancelTouch();
 
   /**
-   * Takes a requested displacement to the position of this axis, and adjusts
-   * it to account for acceleration (which might increase the displacement),
-   * overscroll (which might decrease the displacement; this is to prevent the
-   * viewport from overscrolling the page rect), and axis locking (which might
-   * prevent any displacement from happening). If overscroll ocurred, its amount
-   * is written to |aOverscrollAmountOut|.
+   * Takes a requested displacement to the position of this axis, and adjusts it
+   * to account for overscroll (which might decrease the displacement; this is
+   * to prevent the viewport from overscrolling the page rect), and axis locking
+   * (which might prevent any displacement from happening). If overscroll
+   * ocurred, its amount is written to |aOverscrollAmountOut|.
    * The adjusted displacement is returned.
    *
    * aScrollingDisabled is used to indicate that no scrolling should happen
@@ -127,12 +126,6 @@ public:
    * GetOverscroll() first.
    */
   float GetExcess();
-
-  /**
-   * Gets the factor of acceleration applied to the velocity, based on the
-   * amount of flings that have been done successively.
-   */
-  float GetAccelerationFactor();
 
   /**
    * Gets the raw velocity of this axis at this moment.
@@ -188,12 +181,6 @@ protected:
   int32_t mPos;
   int32_t mStartPos;
   float mVelocity;
-  // Acceleration is represented by an int, which is the power we raise a
-  // constant to and then multiply the velocity by whenever it is sampled. We do
-  // this only when we detect that the user wants to do a fast fling; that is,
-  // they are flinging multiple times in a row very quickly, probably trying to
-  // reach one of the extremes of the page.
-  int32_t mAcceleration;
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
   nsTArray<float> mVelocityQueue;
