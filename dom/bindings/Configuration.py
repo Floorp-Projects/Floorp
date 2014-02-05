@@ -488,6 +488,12 @@ class Descriptor(DescriptorProvider):
             any((m.isAttr() or m.isMethod()) and m.isStatic() for m
                 in self.interface.members))
 
+    def isExposedConditionally(self):
+        return (self.interface.getExtendedAttribute("Pref") or
+                self.interface.getExtendedAttribute("ChromeOnly") or
+                self.interface.getExtendedAttribute("Func") or
+                self.interface.getExtendedAttribute("PrefControlled"))
+
 # Some utility methods
 def getTypesFromDescriptor(descriptor):
     """
