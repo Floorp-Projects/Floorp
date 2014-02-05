@@ -581,7 +581,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
     const std::map<uint32_t, OpenTypeTable>::const_iterator it
         = table_map.find(Tag(table_parsers[i].tag));
 
-    ots::TableAction action = GetTableAction(it->first);
+    ots::TableAction action = GetTableAction(Tag(table_parsers[i].tag));
     if (it == table_map.end()) {
       if (table_parsers[i].required && action == ots::TABLE_ACTION_SANITIZE) {
         return OTS_FAILURE_MSG_TAG("missing required table", table_parsers[i].tag);
