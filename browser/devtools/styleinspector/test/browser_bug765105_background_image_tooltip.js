@@ -104,7 +104,7 @@ function testDivRuleView() {
   assertTooltipShownOn(ruleView.previewTooltip, uriSpan, () => {
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
-    ok(images[0].src === "chrome://global/skin/icons/warning-64.png");
+    ok(images[0].src.startsWith("data:"), "Tooltip contains a data-uri image as expected");
 
     ruleView.previewTooltip.hide();
 
@@ -147,7 +147,7 @@ function testComputedView() {
   assertTooltipShownOn(computedView.tooltip, uriSpan, () => {
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
-    ok(images[0].src === "chrome://global/skin/icons/warning-64.png");
+    ok(images[0].src.startsWith("data:"), "Tooltip contains a data-uri in the computed-view too");
 
     computedView.tooltip.hide();
 
