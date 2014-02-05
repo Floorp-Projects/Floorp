@@ -1395,6 +1395,7 @@ struct nsStyleText {
   uint8_t mTextSizeAdjust;              // [inherited] see nsStyleConsts.h
   uint8_t mTextOrientation;             // [inherited] see nsStyleConsts.h
   uint8_t mTextCombineHorizontal;       // [inherited] see nsStyleConsts.h
+  uint8_t mControlCharacterVisibility;  // [inherited] see nsStyleConsts.h
   int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
 
   nscoord mWordSpacing;                 // [inherited]
