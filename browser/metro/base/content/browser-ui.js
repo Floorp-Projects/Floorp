@@ -106,6 +106,8 @@ var BrowserUI = {
     window.addEventListener("MozPrecisePointer", this, true);
     window.addEventListener("MozImprecisePointer", this, true);
 
+    window.addEventListener("AppCommand", this, true);
+
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
 
     // Init core UI modules
@@ -781,6 +783,9 @@ var BrowserUI = {
       case "MozImprecisePointer":
         this._onImpreciseInput();
         break;
+      case "AppCommand":
+        this.handleAppCommandEvent(aEvent);
+        break;
     }
   },
 
@@ -1138,6 +1143,48 @@ var BrowserUI = {
         this.savePage();
         break;
     }
+  },
+
+  handleAppCommandEvent: function (aEvent) {
+    switch (aEvent.command) {
+      case "Back":
+        this.doCommand("cmd_back");
+        break;
+      case "Forward":
+        this.doCommand("cmd_forward");
+        break;
+      case "Reload":
+        this.doCommand("cmd_reload");
+        break;
+      case "Stop":
+        this.doCommand("cmd_stop");
+        break;
+      case "Home":
+        this.doCommand("cmd_home");
+        break;
+      case "New":
+        this.doCommand("cmd_newTab");
+        break;
+      case "Close":
+        this.doCommand("cmd_closeTab");
+        break;
+      case "Find":
+        FindHelperUI.show();
+        break;
+      case "Open":
+        this.doCommand("cmd_openFile");
+        break;
+      case "Save":
+        this.doCommand("cmd_savePage");
+        break;
+      case "Search":
+        this.doCommand("cmd_openLocation");
+        break;
+      default:
+        return;
+    }
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
   },
 
   confirmSanitizeDialog: function () {

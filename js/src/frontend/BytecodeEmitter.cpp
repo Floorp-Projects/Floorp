@@ -497,7 +497,7 @@ class NonLocalExitScope {
             StmtInfoBCE *stmt = bce->topStmt;
             while (1) {
                 JS_ASSERT(stmt);
-                if (stmt->isBlockScope) {
+                if (stmt->isNestedScope) {
                     openScopeIndex = stmt->blockScopeIndex;
                     break;
                 }
@@ -512,18 +512,12 @@ class NonLocalExitScope {
         bce->stackDepth = savedDepth;
     }
 
-    bool popScopeForNonLocalExit(StaticBlockObject &blockObj, uint32_t blockScopeIndex) {
+    bool popScopeForNonLocalExit(uint32_t blockScopeIndex) {
         uint32_t scopeObjectIndex = bce->blockScopeList.findEnclosingScope(blockScopeIndex);
         uint32_t parent = openScopeIndex;
 
-        if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
-            return false;
         if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
             return false;
-        if (blockObj.needsClone()) {
-            if (Emit1(cx, bce, JSOP_POPBLOCKSCOPE) < 0)
-                return false;
-        }
         openScopeIndex = bce->blockScopeList.length() - 1;
         return true;
     }
@@ -550,9 +544,10 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
             break;
 
           case STMT_WITH:
-            /* There's a With object on the stack that we need to pop. */
-            FLUSH_POPS();
             if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
+                return false;
+            JS_ASSERT(stmt->isNestedScope);
+            if (!popScopeForNonLocalExit(stmt->blockScopeIndex))
                 return false;
             break;
 
@@ -578,9 +573,16 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
         }
 
         if (stmt->isBlockScope) {
+            JS_ASSERT(stmt->isNestedScope);
             StaticBlockObject &blockObj = stmt->staticBlock();
-            if (!popScopeForNonLocalExit(blockObj, stmt->blockScopeIndex))
+            if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
                 return false;
+            if (!popScopeForNonLocalExit(stmt->blockScopeIndex))
+                return false;
+            if (blockObj.needsClone()) {
+                if (Emit1(cx, bce, JSOP_POPBLOCKSCOPE) < 0)
+                    return false;
+            }
             npops += blockObj.slotCount();
         }
     }
@@ -728,6 +730,55 @@ ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlo
 static bool
 EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmitter *bce);
 
+static bool
+EnterNestedScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, ObjectBox *objbox,
+                 StmtType stmtType)
+{
+    Rooted<NestedScopeObject *> scopeObj(cx, &objbox->object->as<NestedScopeObject>());
+    uint32_t scopeObjectIndex = bce->objectList.add(objbox);
+
+    switch (stmtType) {
+      case STMT_BLOCK: {
+        Rooted<StaticBlockObject *> blockObj(cx, &scopeObj->as<StaticBlockObject>());
+
+        if (!ComputeAliasedSlots(cx, bce, blockObj))
+            return false;
+
+        if (blockObj->needsClone()) {
+            if (!EmitInternedObjectOp(cx, scopeObjectIndex, JSOP_PUSHBLOCKSCOPE, bce))
+                return false;
+        }
+        break;
+      }
+      case STMT_WITH:
+        JS_ASSERT(scopeObj->is<StaticWithObject>());
+        if (!EmitInternedObjectOp(cx, scopeObjectIndex, JSOP_ENTERWITH, bce))
+            return false;
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE();
+    }
+
+    uint32_t parent = BlockScopeNote::NoBlockScopeIndex;
+    if (bce->staticScope) {
+        StmtInfoBCE *stmt = bce->topScopeStmt;
+        for (; stmt->staticScope != bce->staticScope; stmt = stmt->down) {}
+        parent = stmt->blockScopeIndex;
+    }
+
+    stmt->blockScopeIndex = bce->blockScopeList.length();
+    if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
+        return false;
+
+    PushStatementBCE(bce, stmt, stmtType, bce->offset());
+    scopeObj->initEnclosingNestedScope(EnclosingStaticScope(bce));
+    FinishPushNestedScope(bce, stmt, *scopeObj);
+    JS_ASSERT(stmt->isNestedScope);
+    stmt->isBlockScope = (stmtType == STMT_BLOCK);
+
+    return true;
+}
+
 // ~ Block Scopes ~
 //
 // A block scope is a region of a script with an additional set of named
@@ -771,50 +822,26 @@ EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmit
 // for-in loops.
 //
 // Summary: Enter block scopes with EnterBlockScope.  It will emit
-// PUSHBLOCKSCOPE if needed.  Leave them with LeaveBlockScope, which will emit
+// PUSHBLOCKSCOPE if needed.  Leave them with LeaveNestedScope, which will emit
 // DEBUGLEAVEBLOCK and may emit POPBLOCKSCOPE.  Pass EnterBlockScope a fresh
 // StmtInfoBCE object, and pass that same object to the corresponding
-// LeaveBlockScope.  Push locals before entering a scope, and pop them
+// LeaveNestedScope.  Push locals before entering a scope, and pop them
 // afterwards.  Brush your teeth, and clean behind your ears!
 //
 static bool
 EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, ObjectBox *objbox,
                 unsigned extraSlots)
 {
-    uint32_t parent = BlockScopeNote::NoBlockScopeIndex;
-    if (bce->staticScope) {
-        StmtInfoBCE *stmt = bce->topScopeStmt;
-        for (; stmt->staticScope != bce->staticScope; stmt = stmt->down) {}
-        parent = stmt->blockScopeIndex;
-    }
-
     Rooted<StaticBlockObject *> blockObj(cx, &objbox->object->as<StaticBlockObject>());
 
-    uint32_t scopeObjectIndex = bce->objectList.add(objbox);
-
+    // FIXME: Once bug 962599 lands, we won't care about the stack depth, so we
+    // won't have extraSlots and thus invocations of EnterBlockScope can become
+    // invocations of EnterNestedScope.
     int depth = bce->stackDepth - (blockObj->slotCount() + extraSlots);
     JS_ASSERT(depth >= 0);
     blockObj->setStackDepth(depth);
 
-    if (!ComputeAliasedSlots(cx, bce, blockObj))
-        return false;
-
-    if (blockObj->needsClone()) {
-        if (!EmitInternedObjectOp(cx, scopeObjectIndex, JSOP_PUSHBLOCKSCOPE, bce))
-            return false;
-    }
-
-    stmt->blockScopeIndex = bce->blockScopeList.length();
-    if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
-        return false;
-
-    PushStatementBCE(bce, stmt, STMT_BLOCK, bce->offset());
-    blockObj->initEnclosingNestedScope(EnclosingStaticScope(bce));
-    FinishPushBlockScope(bce, stmt, *blockObj);
-
-    JS_ASSERT(stmt->isBlockScope);
-
-    return true;
+    return EnterNestedScope(cx, bce, stmt, objbox, STMT_BLOCK);
 }
 
 // Patches |breaks| and |continues| unless the top statement info record
@@ -835,10 +862,11 @@ PopStatementBCE(ExclusiveContext *cx, BytecodeEmitter *bce)
 }
 
 static bool
-LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce)
+LeaveNestedScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt)
 {
-    StmtInfoBCE *stmt = bce->topStmt;
-    JS_ASSERT(stmt->isBlockScope);
+    JS_ASSERT(stmt == bce->topStmt);
+    JS_ASSERT(stmt->isNestedScope);
+    JS_ASSERT(stmt->isBlockScope == !(stmt->type == STMT_WITH));
     uint32_t blockScopeIndex = stmt->blockScopeIndex;
 
 #ifdef DEBUG
@@ -848,20 +876,18 @@ LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce)
     NestedScopeObject *staticScope = &blockObjBox->object->as<NestedScopeObject>();
     JS_ASSERT(stmt->staticScope == staticScope);
     JS_ASSERT(staticScope == bce->staticScope);
+    JS_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
 #endif
-
-    JS_ASSERT(bce->staticScope->is<StaticBlockObject>());
-    bool blockOnChain = bce->staticScope->as<StaticBlockObject>().needsClone();
 
     if (!PopStatementBCE(cx, bce))
         return false;
 
-    if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+    if (Emit1(cx, bce, stmt->isBlockScope ? JSOP_DEBUGLEAVEBLOCK : JSOP_LEAVEWITH) < 0)
         return false;
 
     bce->blockScopeList.recordEnd(blockScopeIndex, bce->offset());
 
-    if (blockOnChain) {
+    if (stmt->isBlockScope && stmt->staticScope->as<StaticBlockObject>().needsClone()) {
         if (Emit1(cx, bce, JSOP_POPBLOCKSCOPE) < 0)
             return false;
     }
@@ -1120,8 +1146,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
             while (!b->containsVarAtDepth(depth)) {
                 if (b->needsClone())
                     skippedScopes++;
-                b = b->enclosingBlock();
-                JS_ASSERT(b);
+                b = &b->enclosingNestedScope()->as<StaticBlockObject>();
             }
             if (!AssignHops(bce, pn, skippedScopes, &sc))
                 return false;
@@ -1736,6 +1761,7 @@ CheckSideEffects(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool
                CheckSideEffects(cx, bce, pn->pn_kid3, answer);
 
       case PN_BINARY:
+      case PN_BINARY_OBJ:
         if (pn->isAssignment()) {
             /*
              * Assignment is presumed to be useful, even if the next operation
@@ -1888,7 +1914,7 @@ BytecodeEmitter::needsImplicitThis()
     } else {
         JSObject *scope = sc->asGlobalSharedContext()->scopeChain();
         while (scope) {
-            if (scope->is<WithObject>())
+            if (scope->is<DynamicWithObject>())
                 return true;
             scope = scope->enclosingScope();
         }
@@ -2719,7 +2745,7 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     if (pn->pn_right->isKind(PNK_LEXICALSCOPE)) {
-        if (!LeaveBlockScope(cx, bce))
+        if (!LeaveNestedScope(cx, bce, &stmtInfo))
             return false;
         EMIT_UINT16_IMM_OP(JSOP_POPN, blockObj->slotCount());
     } else {
@@ -4269,7 +4295,7 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     if (!EmitTree(cx, bce, letBody->pn_expr))
         return false;
 
-    if (!LeaveBlockScope(cx, bce))
+    if (!LeaveNestedScope(cx, bce, &stmtInfo))
         return false;
 
     JSOp leaveOp = letBody->getOp();
@@ -4305,7 +4331,7 @@ EmitLexicalScope(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitTree(cx, bce, pn->pn_expr))
         return false;
 
-    if (!LeaveBlockScope(cx, bce))
+    if (!LeaveNestedScope(cx, bce, &stmtInfo))
         return false;
 
     EMIT_UINT16_IMM_OP(JSOP_POPN, slots);
@@ -4319,15 +4345,13 @@ EmitWith(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     StmtInfoBCE stmtInfo(cx);
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
-    PushStatementBCE(bce, &stmtInfo, STMT_WITH, bce->offset());
-    if (Emit1(cx, bce, JSOP_ENTERWITH) < 0)
+    if (!EnterNestedScope(cx, bce, &stmtInfo, pn->pn_binary_obj, STMT_WITH))
         return false;
-
     if (!EmitTree(cx, bce, pn->pn_right))
         return false;
-    if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
+    if (!LeaveNestedScope(cx, bce, &stmtInfo))
         return false;
-    return PopStatementBCE(cx, bce);
+    return true;
 }
 
 static bool
@@ -4474,7 +4498,7 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
         return false;
 
     if (letDecl) {
-        if (!LeaveBlockScope(cx, bce))
+        if (!LeaveNestedScope(cx, bce, &letStmt))
             return false;
     }
 
@@ -4637,7 +4661,7 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
         return false;
 
     if (letDecl) {
-        if (!LeaveBlockScope(cx, bce))
+        if (!LeaveNestedScope(cx, bce, &letStmt))
             return false;
         EMIT_UINT16_IMM_OP(JSOP_POPN, blockObjCount);
     }

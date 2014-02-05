@@ -152,8 +152,12 @@
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <label value="&charsetMenu.label;" class="panel-subview-header"/>
 
-      <vbox id="PanelUI-characterEncodingView-customlist"
+      <vbox id="PanelUI-characterEncodingView-pinned"
             class="PanelUI-characterEncodingView-list"/>
+      <toolbarseparator/>
+      <vbox id="PanelUI-characterEncodingView-charsets"
+            class="PanelUI-characterEncodingView-list"/>
+      <toolbarseparator/>
       <vbox>
         <label id="PanelUI-characterEncodingView-autodetect-label"/>
         <vbox id="PanelUI-characterEncodingView-autodetect"

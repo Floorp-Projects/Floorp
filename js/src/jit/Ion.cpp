@@ -347,6 +347,9 @@ JitRuntime::handleAccessViolation(JSRuntime *rt, void *faultingAddress)
     // to SEGV while still inside the signal handler, and the process will terminate.
     JSRuntime::AutoLockForOperationCallback lock(rt);
 
+    // Ion code in the runtime faulted after it was made inaccessible. Reset
+    // the code privileges and patch all loop backedges to perform an interrupt
+    // check instead.
     ensureIonCodeAccessible(rt);
     return true;
 }
@@ -362,18 +365,14 @@ JitRuntime::ensureIonCodeAccessible(JSRuntime *rt)
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 #endif
 
-    if (!ionCodeProtected_)
-        return;
-
-    // Ion code in the runtime faulted after it was made inaccessible. Reset
-    // the code privileges and patch all loop backedges to perform an interrupt
-    // check instead.
-    ionAlloc_->toggleAllCodeAsAccessible(true);
-    ionCodeProtected_ = false;
+    if (ionCodeProtected_) {
+        ionAlloc_->toggleAllCodeAsAccessible(true);
+        ionCodeProtected_ = false;
+    }
 
     if (rt->interrupt) {
-        // The interrupt handler needs to be invoked by this thread, but we
-        // are inside a signal handler and have no idea what is above us on the
+        // The interrupt handler needs to be invoked by this thread, but we may
+        // be inside a signal handler and have no idea what is above us on the
         // stack (probably we are executing Ion code at an arbitrary point, but
         // we could be elsewhere, say repatching a jump for an IonCache).
         // Patch all backedges in the runtime so they will invoke the interrupt

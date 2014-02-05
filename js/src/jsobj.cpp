@@ -5952,4 +5952,3 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Objects
 #endif
     }
 }
-

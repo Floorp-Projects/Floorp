@@ -3679,24 +3679,30 @@ JSScript::makeTypes(JSContext *cx)
 
     unsigned count = TypeScript::NumTypeSets(this);
 
-    types = (TypeScript *) cx->calloc_(sizeof(TypeScript) + (sizeof(StackTypeSet) * count));
-    if (!types) {
+    TypeScript *typeScript = (TypeScript *) cx->calloc_(sizeof(TypeScript) + (sizeof(StackTypeSet) * count));
+    if (!typeScript) {
         cx->compartment()->types.setPendingNukeTypes(cx);
         return false;
     }
 
-    new(types) TypeScript();
+    new(typeScript) TypeScript();
 
-    TypeSet *typeArray = types->typeArray();
+    TypeSet *typeArray = typeScript->typeArray();
 
     for (unsigned i = 0; i < count; i++)
         new (&typeArray[i]) StackTypeSet();
 
+    {
+        AutoLockForCompilation lock(cx);
+        types = typeScript;
+    }
+
 #ifdef DEBUG
-    for (unsigned i = 0; i < nTypeSets(); i++)
+    for (unsigned i = 0; i < nTypeSets(); i++) {
         InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
                   InferSpewColor(&typeArray[i]), &typeArray[i], InferSpewColorReset(),
                   i, id());
+    }
     TypeSet *thisTypes = TypeScript::ThisTypes(this);
     InferSpew(ISpewOps, "typeSet: %sT%p%s this #%u",
               InferSpewColor(thisTypes), thisTypes, InferSpewColorReset(),
