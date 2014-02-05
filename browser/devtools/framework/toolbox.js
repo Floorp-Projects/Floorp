@@ -1060,17 +1060,25 @@ Toolbox.prototype = {
     let deferred = promise.defer();
 
     if (this._inspector) {
-      this._selection.destroy();
-      this._selection = null;
-      this._walker.release().then(
+      // Selection is not always available.
+      if (this._selection) {
+        this._selection.destroy();
+        this._selection = null;
+      }
+
+      let walker = this._walker ? this._walker.release() : promise.resolve(null);
+      walker.then(
         () => {
           this._inspector.destroy();
-          this._highlighter.destroy();
+          if (this._highlighter) {
+            this._highlighter.destroy();
+          }
         },
         (e) => {
           console.error("Walker.release() failed: " + e);
           this._inspector.destroy();
-          return this._highlighter.destroy();
+
+          return this._highlighter ? this._highlighter.destroy() : promise.resolve(null);
         }
       ).then(() => {
         this._inspector = null;
