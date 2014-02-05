@@ -3844,12 +3844,15 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isDictionary():
         # There are no nullable dictionaries
-        assert not type.nullable()
+        assert not type.nullable() or isCallbackReturnValue
         # All optional dictionaries always have default values, so we
         # should be able to assume not isOptional here.
         assert not isOptional
+        # In the callback return value case we never have to worry
+        # about a default value; we always have a value.
+        assert not isCallbackReturnValue or defaultValue is None
 
-        typeName = CGDictionary.makeDictionaryName(type.inner)
+        typeName = CGDictionary.makeDictionaryName(type.unroll().inner)
         if not isMember and not isCallbackReturnValue:
             # Since we're not a member and not nullable or optional, no one will
             # see our real type, so we can do the fast version of the dictionary
@@ -3883,10 +3886,20 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             template = ""
 
-        template += ('if (!${declName}.Init(cx, %s, "%s")) {\n'
+        dictLoc = "${declName}"
+        if type.nullable():
+            dictLoc += ".SetValue()"
+
+        template += ('if (!%s.Init(cx, %s, "%s")) {\n'
                      "%s\n"
-                     "}" % (val, firstCap(sourceDescription),
+                     "}" % (dictLoc, val, firstCap(sourceDescription),
                             exceptionCodeIndented.define()))
+
+        if type.nullable():
+            declType = CGTemplatedType("Nullable", declType)
+            template = CGIfElseWrapper("${val}.isNullOrUndefined()",
+                                       CGGeneric("${declName}.SetNull();"),
+                                       CGGeneric(template)).define()
 
         # Dictionary arguments that might contain traceable things need to get
         # traced
