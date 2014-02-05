@@ -134,9 +134,14 @@ public:
   virtual bool PseudoMatches(nsCSSSelector* aSelector) MOZ_OVERRIDE;
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
-  NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); return NS_OK; }
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE;
+  virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
+                          nscoord aOldPos,
+                          nscoord aNewPos) MOZ_OVERRIDE;
+  virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); }
 
   // nsIScrollbarOwner
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
