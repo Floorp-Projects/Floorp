@@ -45,8 +45,7 @@ void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
 }
 
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
-  : mAudioCompactor(mAudioQueue),
-    mDecoder(aDecoder),
+  : mDecoder(aDecoder),
     mIgnoreAudioOutputFormat(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
@@ -281,3 +280,4 @@ MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
 }
 
 } // namespace mozilla
+

@@ -25,6 +25,7 @@ const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
 const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
 const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
 const WEBAPPS_DIR             = "webappsDir";
+const DOWNLOAD_DIR            = "DfltDwnld"
 
 const SYSTEM_DIST_PATH = "/system/@ANDROID_PACKAGE_NAME@/distribution";
 
@@ -71,6 +72,9 @@ DirectoryProvider.prototype = {
           return localFile;
         }
       }
+      let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+      return dm.defaultDownloadsDirectory;
+    } else if (prop == DOWNLOAD_DIR) {
       let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
       return dm.defaultDownloadsDirectory;
     }

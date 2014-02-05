@@ -29,7 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
 const GRADIENT_RE = /\b(repeating-)?(linear|radial)-gradient\(((rgb|hsl)a?\(.+?\)|[^\)])+\)/gi;
 const BORDERCOLOR_RE = /^border-[-a-z]*color$/ig;
 const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
-const BACKGROUND_IMAGE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
@@ -569,9 +568,45 @@ Tooltip.prototype = {
   },
 
   /**
-   * Fill the tooltip with an image, displayed over a tiled background useful
-   * for transparent images. Also adds the image dimension as a label at the
-   * bottom.
+   * Uses the provided inspectorFront's getImageDataFromURL method to resolve
+   * the relative URL on the server-side, in the page context, and then sets the
+   * tooltip content with the resulting image just like |setImageContent| does.
+   *
+   * @return a promise that resolves when the image is shown in the tooltip
+   */
+  setRelativeImageContent: function(imageUrl, inspectorFront, maxDim) {
+    if (imageUrl.startsWith("data:")) {
+      // If the imageUrl already is a data-url, save ourselves a round-trip
+      this.setImageContent(imageUrl, {maxDim: maxDim});
+      return promise.resolve();
+    } else if (inspectorFront) {
+      return inspectorFront.getImageDataFromURL(imageUrl, maxDim).then(res => {
+        res.size.maxDim = maxDim;
+        return res.data.string().then(str => {
+          this.setImageContent(str, res.size);
+        });
+      }, () => {
+        this.setBrokenImageContent();
+      });
+    }
+    return promise.resolve();
+  },
+
+  /**
+   * Fill the tooltip with a message explaining the the image is missing
+   */
+  setBrokenImageContent: function() {
+    this.setTextContent({
+      messages: [l10n.strings.GetStringFromName("previewTooltip.image.brokenImage")]
+    });
+  },
+
+  /**
+   * Fill the tooltip with an image and add the image dimension at the bottom.
+   *
+   * Only use this for absolute URLs that can be queried from the devtools
+   * client-side. For relative URLs, use |setRelativeImageContent|.
+   *
    * @param {string} imageUrl
    *        The url to load the image from
    * @param {Object} options
@@ -585,56 +620,45 @@ Tooltip.prototype = {
    *        a number here
    */
   setImageContent: function(imageUrl, options={}) {
-    // Main container
-    let vbox = this.doc.createElement("vbox");
-    vbox.setAttribute("align", "center");
+    if (imageUrl) {
+      // Main container
+      let vbox = this.doc.createElement("vbox");
+      vbox.setAttribute("align", "center");
 
-    // Display the image
-    let image = this.doc.createElement("image");
-    image.setAttribute("src", imageUrl);
-    if (options.maxDim) {
-      image.style.maxWidth = options.maxDim + "px";
-      image.style.maxHeight = options.maxDim + "px";
-    }
-    vbox.appendChild(image);
-
-    // Dimension label
-    let label = this.doc.createElement("label");
-    label.classList.add("devtools-tooltip-caption");
-    label.classList.add("theme-comment");
-    if (options.naturalWidth && options.naturalHeight) {
-      label.textContent = this._getImageDimensionLabel(options.naturalWidth,
-        options.naturalHeight);
-    } else {
-      // If no dimensions were provided, load the image to get them
-      label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
-      let imgObj = new this.doc.defaultView.Image();
-      imgObj.src = imageUrl;
-      imgObj.onload = () => {
-        imgObj.onload = null;
-        label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
-          imgObj.naturalHeight);
+      // Display the image
+      let image = this.doc.createElement("image");
+      image.setAttribute("src", imageUrl);
+      if (options.maxDim) {
+        image.style.maxWidth = options.maxDim + "px";
+        image.style.maxHeight = options.maxDim + "px";
       }
-    }
-    vbox.appendChild(label);
+      vbox.appendChild(image);
 
-    this.content = vbox;
+      // Dimension label
+      let label = this.doc.createElement("label");
+      label.classList.add("devtools-tooltip-caption");
+      label.classList.add("theme-comment");
+      if (options.naturalWidth && options.naturalHeight) {
+        label.textContent = this._getImageDimensionLabel(options.naturalWidth,
+          options.naturalHeight);
+      } else {
+        // If no dimensions were provided, load the image to get them
+        label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+        let imgObj = new this.doc.defaultView.Image();
+        imgObj.src = imageUrl;
+        imgObj.onload = () => {
+          imgObj.onload = null;
+          label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
+            imgObj.naturalHeight);
+        }
+      }
+      vbox.appendChild(label);
+
+      this.content = vbox;
+    }
   },
 
   _getImageDimensionLabel: (w, h) => w + " x " + h,
-
-  /**
-   * Exactly the same as the `image` function but takes a css background image
-   * value instead : url(....)
-   */
-  setCssBackgroundImageContent: function(cssBackground, sheetHref, maxDim=400) {
-    let uri = getBackgroundImageUri(cssBackground, sheetHref);
-    if (uri) {
-      this.setImageContent(uri, {
-        maxDim: maxDim
-      });
-    }
-  },
 
   /**
    * Fill the tooltip with a new instance of the spectrum color picker widget
@@ -939,24 +963,6 @@ function isColorOnly(property, value) {
   return property === "background-color" ||
          property === "color" ||
          property.match(BORDERCOLOR_RE);
-}
-
-/**
- * Internal util, returns the background image uri if any
- */
-function getBackgroundImageUri(value, sheetHref) {
-  let uriMatch = BACKGROUND_IMAGE_RE.exec(value);
-  let uri = null;
-
-  if (uriMatch && uriMatch[1]) {
-    uri = uriMatch[1];
-    if (sheetHref) {
-      let sheetUri = IOService.newURI(sheetHref, null, null);
-      uri = sheetUri.resolve(uri);
-    }
-  }
-
-  return uri;
 }
 
 /**

@@ -93,9 +93,6 @@ let PaymentManager =  {
           if (!pr) {
             continue;
           }
-          if (!(pr instanceof Ci.nsIDOMPaymentRequestInfo)) {
-            return;
-          }
           // We consider jwt type repetition an error.
           if (jwtTypes[pr.type]) {
             this.paymentFailed(requestId,
@@ -342,17 +339,7 @@ let PaymentManager =  {
     }
 
     let pldRequest = payloadObject.request;
-    let request = Cc["@mozilla.org/payment/request-info;1"]
-                  .createInstance(Ci.nsIDOMPaymentRequestInfo);
-    if (!request) {
-      this.paymentFailed(aRequestId,
-                         "INTERNAL_ERROR_ERROR_CREATING_PAY_REQUEST");
-      return true;
-    }
-    request.wrappedJSObject.init(aJwt,
-                                 payloadObject.typ,
-                                 provider.name);
-    return request;
+    return { jwt: aJwt, type: payloadObject.typ, providerName: provider.name };
   },
 
   showPaymentFlow: function showPaymentFlow(aRequestId,

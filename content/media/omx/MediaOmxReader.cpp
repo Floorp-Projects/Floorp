@@ -312,29 +312,33 @@ bool MediaOmxReader::DecodeAudioData()
   int64_t pos = mDecoder->GetResource()->Tell();
 
   // Read next frame
-  MPAPI::AudioFrame source;
-  if (!mOmxDecoder->ReadAudio(&source, mAudioSeekTimeUs)) {
+  MPAPI::AudioFrame frame;
+  if (!mOmxDecoder->ReadAudio(&frame, mAudioSeekTimeUs)) {
     return false;
   }
   mAudioSeekTimeUs = -1;
 
   // Ignore empty buffer which stagefright media read will sporadically return
-  if (source.mSize == 0) {
+  if (frame.mSize == 0) {
     return true;
   }
 
-  uint32_t frames = source.mSize / (source.mAudioChannels *
-                                    sizeof(AudioDataValue));
+  nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frame.mSize/2] );
+  memcpy(buffer.get(), frame.mData, frame.mSize);
 
-  typedef AudioCompactor::NativeCopy OmxCopy;
-  return mAudioCompactor.Push(pos,
-                              source.mTimeUs,
-                              source.mAudioSampleRate,
-                              frames,
-                              source.mAudioChannels,
-                              OmxCopy(static_cast<uint8_t *>(source.mData),
-                                      source.mSize,
-                                      source.mAudioChannels));
+  uint32_t frames = frame.mSize / (2 * frame.mAudioChannels);
+  CheckedInt64 duration = FramesToUsecs(frames, frame.mAudioSampleRate);
+  if (!duration.isValid()) {
+    return false;
+  }
+
+  mAudioQueue.Push(new AudioData(pos,
+                                 frame.mTimeUs,
+                                 duration.value(),
+                                 frames,
+                                 buffer.forget(),
+                                 frame.mAudioChannels));
+  return true;
 }
 
 nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)

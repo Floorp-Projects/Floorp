@@ -889,6 +889,10 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       break;
     }
 
+    case WM_APPCOMMAND:
+      processDefault = HandleAppCommandMsg(aWParam, aLParam, &processResult);
+      break;
+
     case WM_GETOBJECT:
     {
       DWORD dwObjId = (LPARAM)(DWORD) aLParam;

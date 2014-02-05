@@ -569,7 +569,6 @@
 
 @BINPATH@/components/Payment.js
 @BINPATH@/components/PaymentFlowInfo.js
-@BINPATH@/components/PaymentRequestInfo.js
 @BINPATH@/components/Payment.manifest
 
 #ifdef MOZ_WEBRTC

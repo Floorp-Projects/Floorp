@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.R;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -104,11 +106,18 @@ public final class HomeConfig {
 
         public enum Flags {
             DEFAULT_PANEL,
-            DISABLED_PANEL
+            DISABLED_PANEL,
+            DELETED_PANEL
         }
 
         public PanelConfig(JSONObject json) throws JSONException, IllegalArgumentException {
-            mType = PanelType.fromId(json.getString(JSON_KEY_TYPE));
+            final String panelType = json.optString(JSON_KEY_TYPE, null);
+            if (TextUtils.isEmpty(panelType)) {
+                mType = PanelType.DYNAMIC;
+            } else {
+                mType = PanelType.fromId(panelType);
+            }
+
             mTitle = json.getString(JSON_KEY_TITLE);
             mId = json.getString(JSON_KEY_ID);
 
@@ -249,6 +258,10 @@ public final class HomeConfig {
             return (mViews != null ? mViews.get(index) : null);
         }
 
+        public boolean isDynamic() {
+            return (mType == PanelType.DYNAMIC);
+        }
+
         public boolean isDefault() {
             return mFlags.contains(Flags.DEFAULT_PANEL);
         }
@@ -270,6 +283,18 @@ public final class HomeConfig {
                 mFlags.add(Flags.DISABLED_PANEL);
             } else {
                 mFlags.remove(Flags.DISABLED_PANEL);
+            }
+        }
+
+        public boolean isDeleted() {
+            return mFlags.contains(Flags.DELETED_PANEL);
+        }
+
+        public void setIsDeleted(boolean isDeleted) {
+            if (isDeleted) {
+                mFlags.add(Flags.DELETED_PANEL);
+            } else {
+                mFlags.remove(Flags.DELETED_PANEL);
             }
         }
 
@@ -306,6 +331,24 @@ public final class HomeConfig {
             }
 
             return json;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null) {
+                return false;
+            }
+
+            if (this == o) {
+                return true;
+            }
+
+            if (!(o instanceof PanelConfig)) {
+                return false;
+            }
+
+            final PanelConfig other = (PanelConfig) o;
+            return mId.equals(other.mId);
         }
 
         @Override
@@ -536,6 +579,12 @@ public final class HomeConfig {
         public void setOnChangeListener(OnChangeListener listener);
     }
 
+    // UUIDs used to create PanelConfigs for default built-in panels
+    private static final String TOP_SITES_PANEL_ID = "4becc86b-41eb-429a-a042-88fe8b5a094e";
+    private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
+    private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
+    private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
+
     private final HomeConfigBackend mBackend;
 
     public HomeConfig(HomeConfigBackend backend) {
@@ -546,12 +595,54 @@ public final class HomeConfig {
         return mBackend.load();
     }
 
-    public void save(List<PanelConfig> entries) {
-        mBackend.save(entries);
+    public void save(List<PanelConfig> panelConfigs) {
+        for (PanelConfig panelConfig : panelConfigs) {
+            if (panelConfig.isDeleted()) {
+                throw new IllegalArgumentException("Should never save a deleted PanelConfig: " + panelConfig.getId());
+            }
+        }
+
+        mBackend.save(panelConfigs);
     }
 
     public void setOnChangeListener(OnChangeListener listener) {
         mBackend.setOnChangeListener(listener);
+    }
+
+    public static PanelConfig createBuiltinPanelConfig(Context context, PanelType panelType) {
+        return createBuiltinPanelConfig(context, panelType, EnumSet.noneOf(PanelConfig.Flags.class));
+    }
+
+    public static PanelConfig createBuiltinPanelConfig(Context context, PanelType panelType, EnumSet<PanelConfig.Flags> flags) {
+        int titleId = 0;
+        String id = null;
+
+        switch(panelType) {
+            case TOP_SITES:
+                titleId = R.string.home_top_sites_title;
+                id = TOP_SITES_PANEL_ID;
+                break;
+
+            case BOOKMARKS:
+                titleId = R.string.bookmarks_title;
+                id = BOOKMARKS_PANEL_ID;
+                break;
+
+            case HISTORY:
+                titleId = R.string.home_history_title;
+                id = HISTORY_PANEL_ID;
+                break;
+
+            case READING_LIST:
+                titleId = R.string.reading_list_title;
+                id = READING_LIST_PANEL_ID;
+                break;
+
+            case DYNAMIC:
+                throw new IllegalArgumentException("createBuiltinPanelConfig() is only for built-in panels");
+        }
+
+        return new PanelConfig(panelType, context.getString(titleId), id, flags);
     }
 
     public static HomeConfig getDefault(Context context) {

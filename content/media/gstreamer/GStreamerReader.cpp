@@ -532,20 +532,20 @@ bool GStreamerReader::DecodeAudioData()
   timestamp = gst_segment_to_stream_time(&mAudioSegment,
       GST_FORMAT_TIME, timestamp);
   timestamp = GST_TIME_AS_USECONDS(timestamp);
+  int64_t duration = 0;
+  if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
+    duration = GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
 
   int64_t offset = GST_BUFFER_OFFSET(buffer);
   unsigned int size = GST_BUFFER_SIZE(buffer);
   int32_t frames = (size / sizeof(AudioDataValue)) / mInfo.mAudio.mChannels;
+  ssize_t outSize = static_cast<size_t>(size / sizeof(AudioDataValue));
+  nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outSize]);
+  memcpy(data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+  AudioData* audio = new AudioData(offset, timestamp, duration,
+      frames, data.forget(), mInfo.mAudio.mChannels);
 
-  typedef AudioCompactor::NativeCopy GstCopy;
-  mAudioCompactor.Push(offset,
-                       timestamp,
-                       mInfo.mAudio.mRate,
-                       frames,
-                       mInfo.mAudio.mChannels,
-                       GstCopy(GST_BUFFER_DATA(buffer),
-                               size,
-                               mInfo.mAudio.mChannels));
+  mAudioQueue.Push(audio);
   gst_buffer_unref(buffer);
 
   return true;

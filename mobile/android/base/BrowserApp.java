@@ -19,6 +19,8 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerMarginsAnimator;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthReporter;
+import org.mozilla.gecko.health.HealthRecorder;
+import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -29,6 +31,7 @@ import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
@@ -43,6 +46,7 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -2582,5 +2586,20 @@ abstract public class BrowserApp extends GeckoApp
             margins.hideMargins(true);
             mShowActionModeEndAnimation = false;
         }
+    }
+
+    @Override
+    protected HealthRecorder createHealthRecorder(final Context context,
+                                                  final String profilePath,
+                                                  final EventDispatcher dispatcher,
+                                                  final String osLocale,
+                                                  final String appLocale,
+                                                  final SessionInformation previousSession) {
+        return new BrowserHealthRecorder(context,
+                                         profilePath,
+                                         dispatcher,
+                                         osLocale,
+                                         appLocale,
+                                         previousSession);
     }
 }
