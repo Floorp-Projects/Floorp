@@ -79,7 +79,9 @@ static void sproc_start(void *arg, PRSize size)
 #endif  /* defined(IRIX) && !defined(_PR_PTHREADS) */
 
 #if defined(WIN32)
+#if defined(WINCE)
 #include <windows.h>
+#endif
 #include <process.h>  /* for _beginthreadex() */
 
 static PRUintn __stdcall windows_start(void *arg)
@@ -172,7 +174,7 @@ static PRStatus NSPRPUB_TESTS_CreateThread(StartFn start, void *arg)
                 0U, /* DWORD - initial thread stack size, in bytes */
                 windows_start, /* LPTHREAD_START_ROUTINE - pointer to thread function */
                 start_object, /* LPVOID - argument for new thread */
-                STACK_SIZE_PARAM_IS_A_RESERVATION, /*DWORD dwCreationFlags - creation flags */
+                0U, /*DWORD dwCreationFlags - creation flags */
                 &id /* LPDWORD - pointer to returned thread identifier */ );
 
             rv = (NULL == th) ? PR_FAILURE : PR_SUCCESS;
