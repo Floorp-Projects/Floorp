@@ -2092,73 +2092,38 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
             getConstructor = "  return GetConstructorObject(aCx, aGlobal, aDefineOnGlobal);"
         return getConstructor
 
-class CGConstructorEnabledViaPrefEnabled(CGAbstractMethod):
+class CGConstructorEnabled(CGAbstractMethod):
     """
-    A method for testing whether the preference controlling this
-    interface is enabled. This delegates to PrefEnabled() on the
-    wrapped class. The interface should only be visible on the global
-    if the method returns true.
-    """
-    def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor,
-                                  'ConstructorEnabled', 'bool',
-                                  [Argument("JSContext*", "/* unused */"),
-                                   Argument("JS::Handle<JSObject*>",
-                                            "/* unused */")])
-
-    def definition_body(self):
-        return "  return %s::PrefEnabled();" % self.descriptor.nativeType
-
-class CGConstructorEnabledViaPref(CGAbstractMethod):
-    """
-    A method for testing whether the preference controlling this
-    interface is enabled. This generates code in the binding to
-    check the given preference. The interface should only be visible
-    on the global if the pref is true.
+    A method for testing whether we should be exposing this interface
+    object or navigator property.  This can perform various tests
+    depending on what conditions are specified on the interface.
     """
     def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor,
-                                  'ConstructorEnabled', 'bool',
-                                  [Argument("JSContext*", "/* unused */"),
-                                   Argument("JS::Handle<JSObject*>",
-                                            "/* unused */")])
-
-    def definition_body(self):
-        pref = self.descriptor.interface.getExtendedAttribute("Pref")
-        assert isinstance(pref, list) and len(pref) == 1
-        return "  return Preferences::GetBool(\"%s\");" % pref[0]
-
-class CGConstructorEnabledChromeOnly(CGAbstractMethod):
-    """
-    A method for testing whether the object we're going to be defined
-    on is chrome so we can decide whether our constructor should be
-    enabled.
-    """
-    def __init__(self, descriptor):
-        assert descriptor.interface.getExtendedAttribute("ChromeOnly")
         CGAbstractMethod.__init__(self, descriptor,
                                   'ConstructorEnabled', 'bool',
                                   [Argument("JSContext*", "aCx"),
                                    Argument("JS::Handle<JSObject*>", "aObj")])
-
     def definition_body(self):
-        return "  return %s;" % GetAccessCheck(self.descriptor, "aCx", "aObj")
-
-class CGConstructorEnabledViaFunc(CGAbstractMethod):
-    """
-    A method for testing whether the interface object should be exposed on a
-    given global based on whatever the callee wants to consider.
-    """
-    def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor,
-                                  'ConstructorEnabled', 'bool',
-                                  [Argument("JSContext*", "cx"),
-                                   Argument("JS::Handle<JSObject*>", "obj")])
-
-    def definition_body(self):
-        func = self.descriptor.interface.getExtendedAttribute("Func")
-        assert isinstance(func, list) and len(func) == 1
-        return "  return %s(cx, obj);" % func[0]
+        conditions = []
+        iface = self.descriptor.interface
+        pref = iface.getExtendedAttribute("Pref")
+        if pref:
+            assert isinstance(pref, list) and len(pref) == 1
+            conditions.append('Preferences::GetBool("%s")' % pref[0])
+        if iface.getExtendedAttribute("ChromeOnly"):
+            conditions.append(GetAccessCheck(self.descriptor, "aCx", "aObj"))
+        func = iface.getExtendedAttribute("Func")
+        if func:
+            assert isinstance(func, list) and len(func) == 1
+            conditions.append("%s(aCx, aObj)" % func[0])
+        if iface.getExtendedAttribute("PrefControlled"):
+            conditions.append("%s::PrefEnabled()" % self.descriptor.nativeType)
+        # We should really have some conditions
+        assert len(conditions)
+        body = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
+                                " &&\n"),
+                         pre="return ", post=";", reindent=True)
+        return CGIndenter(body).define()
 
 def CreateBindingJSObject(descriptor, properties, parent):
     # We don't always need to root obj, but there are a variety
@@ -8883,26 +8848,10 @@ class CGDescriptor(CGThing):
 
         if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
             not descriptor.interface.isExternal() and
-            # Workers stuff is never pref-controlled
+            descriptor.isExposedConditionally() and
+            # Workers stuff is never conditional
             not descriptor.workers):
-            prefControlled = descriptor.interface.getExtendedAttribute("PrefControlled")
-            havePref = descriptor.interface.getExtendedAttribute("Pref")
-            haveChromeOnly = descriptor.interface.getExtendedAttribute("ChromeOnly")
-            haveFunc = descriptor.interface.getExtendedAttribute("Func")
-            # Make sure at most one of those is set
-            if (bool(prefControlled) + bool(havePref) +
-                bool(haveChromeOnly) + bool(haveFunc) > 1):
-                raise TypeError("Interface %s has more than one of "
-                                "'PrefControlled', 'Pref', 'Func', and "
-                                "'ChomeOnly' specified", descriptor.name)
-            if prefControlled is not None:
-                cgThings.append(CGConstructorEnabledViaPrefEnabled(descriptor))
-            elif havePref is not None:
-                cgThings.append(CGConstructorEnabledViaPref(descriptor))
-            elif haveChromeOnly is not None:
-                cgThings.append(CGConstructorEnabledChromeOnly(descriptor))
-            elif haveFunc is not None:
-                cgThings.append(CGConstructorEnabledViaFunc(descriptor))
+            cgThings.append(CGConstructorEnabled(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:
@@ -9559,10 +9508,7 @@ class CGRegisterProtos(CGAbstractMethod):
 #undef REGISTER_NAVIGATOR_CONSTRUCTOR"""
     def _registerProtos(self):
         def getCheck(desc):
-            if (desc.interface.getExtendedAttribute("PrefControlled") is None and
-                desc.interface.getExtendedAttribute("Pref") is None and
-                desc.interface.getExtendedAttribute("ChromeOnly") is None and
-                desc.interface.getExtendedAttribute("Func") is None):
+            if not desc.isExposedConditionally():
                 return "nullptr"
             return "%sBinding::ConstructorEnabled" % desc.name
         lines = []
