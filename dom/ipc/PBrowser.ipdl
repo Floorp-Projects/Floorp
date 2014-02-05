@@ -345,6 +345,13 @@ child:
     UpdateFrame(FrameMetrics frame) compress;
 
     /**
+     * Acknowledge the receipt of a scroll offset update from the content
+     * process. This is used to manage concurrent scroll updates from many
+     * sources.
+     */
+    AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
+
+    /**
      * Requests handling of a double tap. |point| is in CSS pixels, relative to
      * the scroll offset. This message is expected to round-trip back to
      * ZoomToRect() with a rect indicating where we should zoom to.

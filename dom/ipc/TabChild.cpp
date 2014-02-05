@@ -1518,6 +1518,14 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
+TabChild::RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
+                                      const uint32_t& aScrollGeneration)
+{
+  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+  return true;
+}
+
+bool
 TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
   {
     if (!mGlobal || !mTabChildGlobal) {
