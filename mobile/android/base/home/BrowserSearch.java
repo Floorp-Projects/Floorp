@@ -533,9 +533,9 @@ public class BrowserSearch extends HomeFragment
                 mAdapter.notifyDataSetChanged();
             }
 
-            // Show suggestions opt-in prompt only if user hasn't been prompted
-            // and we're not on a private browsing tab.
-            if (!suggestionsPrompted && mSuggestClient != null) {
+            // Show suggestions opt-in prompt only if suggestions are not enabled yet,
+            // user hasn't been prompted and we're not on a private browsing tab.
+            if (!mSuggestionsEnabled && !suggestionsPrompted && mSuggestClient != null) {
                 showSuggestionsOptIn();
             }
         } catch (JSONException e) {

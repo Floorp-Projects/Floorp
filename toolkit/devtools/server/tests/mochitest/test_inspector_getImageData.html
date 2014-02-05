@@ -46,8 +46,6 @@ addTest(function testLargeImage() {
       ok(imageData.size, "Image size info was sent back too");
       is(imageData.size.naturalWidth, 5333, "Natural width of the image correct");
       is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
-      is(imageData.size.width, 100, "Resized image width correct");
-      is(imageData.size.height, 56, "Resized image height correct");
       ok(imageData.size.resized, "Image was resized");
 
       imageData.data.string().then(str => {
@@ -69,8 +67,6 @@ addTest(function testLargeCanvas() {
       ok(imageData.size, "Image size info was sent back too");
       is(imageData.size.naturalWidth, 1000, "Natural width of the image correct");
       is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
-      is(imageData.size.width, 175, "Resized image width correct");
-      is(imageData.size.height, 350, "Resized image height correct");
       ok(imageData.size.resized, "Image was resized");
 
       imageData.data.string().then(str => {
@@ -92,8 +88,6 @@ addTest(function testSmallImage() {
       ok(imageData.size, "Image size info was sent back too");
       is(imageData.size.naturalWidth, 245, "Natural width of the image correct");
       is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
-      is(imageData.size.width, 245, "Resized image width correct");
-      is(imageData.size.height, 240, "Resized image height correct");
       ok(!imageData.size.resized, "Image was NOT resized");
 
       imageData.data.string().then(str => {

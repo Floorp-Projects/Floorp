@@ -133,8 +133,8 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
      * |with (it) color='red';| ends up here.
      * Avoid exposing the With object to native setters.
      */
-    if (obj->is<WithObject>()) {
-        RootedObject nobj(cx, &obj->as<WithObject>().object());
+    if (obj->is<DynamicWithObject>()) {
+        RootedObject nobj(cx, &obj->as<DynamicWithObject>().object());
         return CallJSPropertyOpSetter(cx, self->setterOp(), nobj, id, strict, vp);
     }
 

@@ -182,17 +182,14 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
     RootedObject enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
         if (i.hasDynamicScopeObject()) {
-            /*
-             * 'with' does not participate in the static scope of the script,
-             * but it does in the dynamic scope, so skip them here.
-             */
-            while (scope->is<WithObject>())
-                scope = &scope->as<WithObject>().enclosingScope();
-
             switch (i.type()) {
               case StaticScopeIter<NoGC>::BLOCK:
-                JS_ASSERT(i.block() == scope->as<ClonedBlockObject>().staticBlock());
+                JS_ASSERT(&i.block() == scope->as<ClonedBlockObject>().staticScope());
                 scope = &scope->as<ClonedBlockObject>().enclosingScope();
+                break;
+              case StaticScopeIter<NoGC>::WITH:
+                JS_ASSERT(&i.staticWith() == scope->as<DynamicWithObject>().staticScope());
+                scope = &scope->as<DynamicWithObject>().enclosingScope();
                 break;
               case StaticScopeIter<NoGC>::FUNCTION:
                 JS_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
@@ -350,7 +347,7 @@ StackFrame::popWith(JSContext *cx)
     if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onPopWith(this);
 
-    JS_ASSERT(scopeChain()->is<WithObject>());
+    JS_ASSERT(scopeChain()->is<DynamicWithObject>());
     popOffScopeChain();
 }
 
