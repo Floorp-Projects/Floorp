@@ -2012,7 +2012,7 @@ ContentParent::AllocPJavaScriptParent()
 bool
 ContentParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 {
-    static_cast<mozilla::jsipc::JavaScriptParent *>(parent)->destroyFromContent();
+    static_cast<mozilla::jsipc::JavaScriptParent *>(parent)->decref();
     return true;
 }
 
