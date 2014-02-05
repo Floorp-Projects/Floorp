@@ -22,7 +22,7 @@ function test() {
     gFrames = gDebugger.DebuggerView.StackFrames;
     gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest);
     gDebuggee.firstCall();
   });
 }
@@ -39,7 +39,7 @@ function performTest() {
   is(gEditor.getText().search(/debugger/), 172,
     "The second source is displayed.");
 
-  waitForSourceAndCaret(gPanel, "-01.js", 6).then(waitForTick).then(() => {
+  waitForSourceAndCaret(gPanel, "-01.js", 1).then(waitForTick).then(() => {
     is(gFrames.selectedIndex, 0,
       "Oldest frame should be selected after click.");
     is(gClassicFrames.selectedIndex, 3,
@@ -51,7 +51,7 @@ function performTest() {
     is(gEditor.getText().search(/debugger/), -1,
       "The second source is not displayed.");
 
-    waitForSourceAndCaret(gPanel, "-02.js", 6).then(waitForTick).then(() => {
+    waitForSourceAndCaret(gPanel, "-02.js", 1).then(waitForTick).then(() => {
       is(gFrames.selectedIndex, 3,
         "Newest frame should be selected again after click.");
       is(gClassicFrames.selectedIndex, 0,

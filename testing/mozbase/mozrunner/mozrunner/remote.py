@@ -190,6 +190,8 @@ class B2GRunner(RemoteRunner):
             self.last_test = match[-1]
 
     def on_timeout(self):
+        self.dm.killProcess('/system/b2g/b2g', sig=signal.SIGABRT)
+
         msg = "%s | application timed out after %s seconds"
 
         if self.timeout:
@@ -199,7 +201,6 @@ class B2GRunner(RemoteRunner):
             msg = "%s with no output" % msg
 
         self.log.testFail(msg % (self.last_test, timeout))
-        self.dm.killProcess('/system/b2g/b2g', sig=signal.SIGABRT)
         self.check_for_crashes()
 
     def _reboot_device(self):

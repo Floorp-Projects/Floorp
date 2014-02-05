@@ -70,39 +70,6 @@ class nsFirstLineFrame;
  * prepended to the overflow lines.
  */
 
-// see nsHTMLParts.h for the public block state bits
-
-/**
- * Something in the block has changed that requires Bidi resolution to be
- * performed on the block. This flag must be either set on all blocks in a 
- * continuation chain or none of them.
- */
-#define NS_BLOCK_NEEDS_BIDI_RESOLUTION      NS_FRAME_STATE_BIT(20)
-#define NS_BLOCK_HAS_PUSHED_FLOATS          NS_FRAME_STATE_BIT(21)
-#define NS_BLOCK_HAS_LINE_CURSOR            NS_FRAME_STATE_BIT(24)
-#define NS_BLOCK_HAS_OVERFLOW_LINES         NS_FRAME_STATE_BIT(25)
-#define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  NS_FRAME_STATE_BIT(26)
-
-// Set on any block that has descendant frames in the normal
-// flow with 'clear' set to something other than 'none'
-// (including <BR CLEAR="..."> frames)
-#define NS_BLOCK_HAS_CLEAR_CHILDREN         NS_FRAME_STATE_BIT(27)
-
-// This block has had a child marked dirty, so before we reflow we need
-// to look through the lines to find any such children and mark
-// appropriate lines dirty.
-#define NS_BLOCK_LOOK_FOR_DIRTY_FRAMES      NS_FRAME_STATE_BIT(61)
-
-// Are our cached intrinsic widths intrinsic widths for font size
-// inflation?  i.e., what was the current state of
-// GetPresContext()->mInflationDisabledForShrinkWrap at the time they
-// were computed?
-// nsBlockFrame is the only thing that caches intrinsic widths that
-// needs to track this because it's the only thing that caches intrinsic
-// widths that lives inside of things (form controls) that do intrinsic
-// sizing with font inflation enabled.
-#define NS_BLOCK_FRAME_INTRINSICS_INFLATED  NS_FRAME_STATE_BIT(62)
-
 #define nsBlockFrameSuper nsContainerFrame
 
 /*
@@ -132,7 +99,7 @@ public:
   line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
   reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
-  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags);
+  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aFlags);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME

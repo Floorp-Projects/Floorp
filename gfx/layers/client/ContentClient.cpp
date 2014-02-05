@@ -630,18 +630,22 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     mFrontClient->Unlock();
     return;
   }
-  RefPtr<DrawTarget> dt =
-    mFrontClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
-  RefPtr<DrawTarget> dtOnWhite = mFrontClientOnWhite
-    ? mFrontClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget()
-    : nullptr;
-  RotatedBuffer frontBuffer(dt,
-                            dtOnWhite,
-                            mFrontBufferRect,
-                            mFrontBufferRotation);
-  UpdateDestinationFrom(frontBuffer, updateRegion);
-  // We need to flush our buffers before we unlock our front textures
-  FlushBuffers();
+  {
+    // Restrict the DrawTargets and frontBuffer to a scope to make
+    // sure there is no more external references to the DrawTargets
+    // when we Unlock the TextureClients.
+    RefPtr<DrawTarget> dt =
+      mFrontClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
+    RefPtr<DrawTarget> dtOnWhite = mFrontClientOnWhite
+      ? mFrontClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget()
+      : nullptr;
+    RotatedBuffer frontBuffer(dt,
+                              dtOnWhite,
+                              mFrontBufferRect,
+                              mFrontBufferRotation);
+    UpdateDestinationFrom(frontBuffer, updateRegion);
+  }
+
   mFrontClient->Unlock();
   if (mFrontClientOnWhite) {
     mFrontClientOnWhite->Unlock();
@@ -667,6 +671,8 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
   if (isClippingCheap) {
     destDT->PopClip();
   }
+  // Flush the destination before the sources become inaccessible (Unlock).
+  destDT->Flush();
   ReturnDrawTargetToBuffer(destDT);
 
   if (aSource.HaveBufferOnWhite()) {
@@ -686,6 +692,8 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     if (isClippingCheap) {
       destDT->PopClip();
     }
+    // Flush the destination before the sources become inaccessible (Unlock).
+    destDT->Flush();
     ReturnDrawTargetToBuffer(destDT);
   }
 }

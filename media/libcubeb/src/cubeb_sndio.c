@@ -153,7 +153,6 @@ sndio_get_backend_id(cubeb *context)
   return "sndio";
 }
 
-
 static void
 sndio_destroy(cubeb *context)
 {
