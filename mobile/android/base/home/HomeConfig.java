@@ -258,6 +258,10 @@ public final class HomeConfig {
             return (mViews != null ? mViews.get(index) : null);
         }
 
+        public boolean isDynamic() {
+            return (mType == PanelType.DYNAMIC);
+        }
+
         public boolean isDefault() {
             return mFlags.contains(Flags.DEFAULT_PANEL);
         }
