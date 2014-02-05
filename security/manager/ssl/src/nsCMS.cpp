@@ -264,9 +264,10 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   {
-    SECStatus srv = certVerifier->VerifyCert(si->cert, nullptr,
+    SECStatus srv = certVerifier->VerifyCert(si->cert,
                                              certificateUsageEmailSigner,
-                                             PR_Now(), nullptr /*XXX pinarg*/);
+                                             PR_Now(), nullptr /*XXX pinarg*/,
+                                             nullptr /*hostname*/);
     if (srv != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
              ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
