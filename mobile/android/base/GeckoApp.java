@@ -16,8 +16,9 @@ import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.health.BrowserHealthRecorder;
+import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
+import org.mozilla.gecko.health.StubbedHealthRecorder;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
@@ -214,7 +215,7 @@ public abstract class GeckoApp
 
     private String mPrivateBrowsingSession;
 
-    private volatile BrowserHealthRecorder mHealthRecorder = null;
+    private volatile HealthRecorder mHealthRecorder = null;
 
     private int mSignalStrenth;
     private PhoneStateListener mPhoneStateListener = null;
@@ -582,7 +583,7 @@ public abstract class GeckoApp
                 // know that mHealthRecorder will exist. That doesn't stop us being
                 // paranoid.
                 // This method is cheap, so don't spawn a new runnable.
-                final BrowserHealthRecorder rec = mHealthRecorder;
+                final HealthRecorder rec = mHealthRecorder;
                 if (rec != null) {
                   rec.recordGeckoStartupTime(mGeckoReadyStartupTimer.getElapsed());
                 }
@@ -1303,7 +1304,7 @@ public abstract class GeckoApp
                 // of the activity itself.
                 final String profilePath = getProfile().getDir().getAbsolutePath();
                 final EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher();
-                Log.i(LOGTAG, "Creating BrowserHealthRecorder.");
+                Log.i(LOGTAG, "Creating HealthRecorder.");
 
                 final String osLocale = Locale.getDefault().toString();
                 String appLocale = LocaleManager.getAndApplyPersistedLocale();
@@ -1313,12 +1314,12 @@ public abstract class GeckoApp
                     appLocale = osLocale;
                 }
 
-                mHealthRecorder = new BrowserHealthRecorder(GeckoApp.this,
-                                                            profilePath,
-                                                            dispatcher,
-                                                            osLocale,
-                                                            appLocale,
-                                                            previousSession);
+                mHealthRecorder = GeckoApp.this.createHealthRecorder(GeckoApp.this,
+                                                                     profilePath,
+                                                                     dispatcher,
+                                                                     osLocale,
+                                                                     appLocale,
+                                                                     previousSession);
 
                 final String uiLocale = appLocale;
                 ThreadUtils.postToUiThread(new Runnable() {
@@ -1599,7 +1600,7 @@ public abstract class GeckoApp
         ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                final BrowserHealthRecorder rec = mHealthRecorder;
+                final HealthRecorder rec = mHealthRecorder;
                 if (rec != null) {
                     rec.recordJavaStartupTime(javaDuration);
                 }
@@ -1962,7 +1963,7 @@ public abstract class GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                // Now construct the new session on BrowserHealthRecorder's behalf. We do this here
+                // Now construct the new session on HealthRecorder's behalf. We do this here
                 // so it can benefit from a single near-startup prefs commit.
                 SessionInformation currentSession = new SessionInformation(now, realTime);
 
@@ -1972,7 +1973,7 @@ public abstract class GeckoApp
                 currentSession.recordBegin(editor);
                 editor.commit();
 
-                final BrowserHealthRecorder rec = mHealthRecorder;
+                final HealthRecorder rec = mHealthRecorder;
                 if (rec != null) {
                     rec.setCurrentSession(currentSession);
                 } else {
@@ -1995,7 +1996,7 @@ public abstract class GeckoApp
     @Override
     public void onPause()
     {
-        final BrowserHealthRecorder rec = mHealthRecorder;
+        final HealthRecorder rec = mHealthRecorder;
         final Context context = this;
 
         // In some way it's sad that Android will trigger StrictMode warnings
@@ -2114,7 +2115,7 @@ public abstract class GeckoApp
                 SmsManager.getInstance().shutdown();
         }
 
-        final BrowserHealthRecorder rec = mHealthRecorder;
+        final HealthRecorder rec = mHealthRecorder;
         mHealthRecorder = null;
         if (rec != null) {
             // Closing a BrowserHealthRecorder could incur a write.
@@ -2773,7 +2774,7 @@ public abstract class GeckoApp
 
     /**
      * Use LocaleManager to change our persisted and current locales,
-     * and poke BrowserHealthRecorder to tell it of our changed state.
+     * and poke HealthRecorder to tell it of our changed state.
      */
     private void setLocale(final String locale) {
         if (locale == null) {
@@ -2784,7 +2785,7 @@ public abstract class GeckoApp
             return;
         }
 
-        final BrowserHealthRecorder rec = mHealthRecorder;
+        final HealthRecorder rec = mHealthRecorder;
         if (rec == null) {
             return;
         }
@@ -2826,5 +2827,15 @@ public abstract class GeckoApp
                 }
             }
         });
+    }
+
+    protected HealthRecorder createHealthRecorder(final Context context,
+                                                  final String profilePath,
+                                                  final EventDispatcher dispatcher,
+                                                  final String osLocale,
+                                                  final String appLocale,
+                                                  SessionInformation previousSession) {
+        // GeckoApp does not need to record any health information - return a stub.
+        return new StubbedHealthRecorder();
     }
 }
