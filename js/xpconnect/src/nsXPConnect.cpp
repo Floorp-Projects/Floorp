@@ -159,25 +159,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
     if (xpc) {
         nsThread::SetMainThreadObserver(nullptr);
 
-#ifdef DEBUG
-        // force a dump of the JavaScript gc heap if JS is still alive
-        // if requested through XPC_SHUTDOWN_HEAP_DUMP environment variable
-        {
-            const char* dumpName = getenv("XPC_SHUTDOWN_HEAP_DUMP");
-            if (dumpName) {
-                FILE* dumpFile = (*dumpName == '\0' ||
-                                  strcmp(dumpName, "stdout") == 0)
-                                 ? stdout
-                                 : fopen(dumpName, "w");
-                if (dumpFile) {
-                    JS_DumpHeap(xpc->GetRuntime()->Runtime(), dumpFile, nullptr,
-                                JSTRACE_OBJECT, nullptr, static_cast<size_t>(-1), nullptr);
-                    if (dumpFile != stdout)
-                        fclose(dumpFile);
-                }
-            }
-        }
-#endif
         nsrefcnt cnt;
         NS_RELEASE2(xpc, cnt);
     }
