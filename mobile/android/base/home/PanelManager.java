@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -29,16 +30,31 @@ public class PanelManager implements GeckoEventListener {
     private static final String LOGTAG = "GeckoPanelManager";
 
     public class PanelInfo {
-        public final String id;
-        public final String title;
-        public final String layout;
-        public final JSONArray views;
+        private final String mId;
+        private final String mTitle;
+        private final JSONObject mJSONData;
 
-        public PanelInfo(String id, String title, String layout, JSONArray views) {
-            this.id = id;
-            this.title = title;
-            this.layout = layout;
-            this.views = views;
+        public PanelInfo(String id, String title, JSONObject jsonData) {
+            mId = id;
+            mTitle = title;
+            mJSONData = jsonData;
+        }
+
+        public String getId() {
+            return mId;
+        }
+
+        public String getTitle() {
+            return mTitle;
+        }
+
+        public PanelConfig toPanelConfig() {
+            try {
+                return new PanelConfig(mJSONData);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Failed to convert PanelInfo to PanelConfig", e);
+                return null;
+            }
         }
     }
 
@@ -112,9 +128,7 @@ public class PanelManager implements GeckoEventListener {
     private PanelInfo getPanelInfoFromJSON(JSONObject jsonPanelInfo) throws JSONException {
         final String id = jsonPanelInfo.getString("id");
         final String title = jsonPanelInfo.getString("title");
-        final String layout = jsonPanelInfo.getString("layout");
-        final JSONArray views = jsonPanelInfo.getJSONArray("views");
 
-        return new PanelInfo(id, title, layout, views);
+        return new PanelInfo(id, title, jsonPanelInfo);
     }
 }
