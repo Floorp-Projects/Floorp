@@ -2785,15 +2785,17 @@ public abstract class GeckoApp
             return;
         }
 
-        final HealthRecorder rec = mHealthRecorder;
-        if (rec == null) {
-            return;
-        }
-
         final boolean startNewSession = true;
         final boolean shouldRestart = false;
-        rec.onAppLocaleChanged(resultant);
-        rec.onEnvironmentChanged(startNewSession, SESSION_END_LOCALE_CHANGED);
+
+        // If the HealthRecorder is not yet initialized (unlikely), the locale change won't
+        // trigger a session transition and subsequent events will be recorded in an environment
+        // with the wrong locale.
+        final HealthRecorder rec = mHealthRecorder;
+        if (rec != null) {
+            rec.onAppLocaleChanged(resultant);
+            rec.onEnvironmentChanged(startNewSession, SESSION_END_LOCALE_CHANGED);
+        }
 
         if (!shouldRestart) {
             ThreadUtils.postToUiThread(new Runnable() {
