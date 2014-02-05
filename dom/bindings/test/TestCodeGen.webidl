@@ -10,6 +10,7 @@ typedef TestInterface? NullableTestInterface;
 
 interface TestExternalInterface;
 
+[AvailableIn=PrivilegedApps, Pref="xyz"]
 interface TestRenamedInterface {
 };
 
@@ -105,6 +106,7 @@ interface OnlyForUseInConstructor {
  Constructor(long arg1, IndirectlyImplementedInterface iface),
  Constructor(Date arg1),
  // Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3),
+ AvailableIn=CertifiedApps,
  NamedConstructor=Test,
  NamedConstructor=Test(DOMString str),
  NamedConstructor=Test2(DictForConstructor dict, any any1, object obj1,
