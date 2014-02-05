@@ -29,6 +29,7 @@ callback interface TestCallbackInterface {
   sequence<TestCallbackInterface>? getNullableSequenceOfCallbackInterfaces();
   sequence<TestCallbackInterface?> getSequenceOfNullableCallbackInterfaces();
   sequence<TestCallbackInterface?>? getNullableSequenceOfNullableCallbackInterfaces();
+  Dict? getDictionary();
 };
 
 callback interface TestSingleOperationCallbackInterface {
