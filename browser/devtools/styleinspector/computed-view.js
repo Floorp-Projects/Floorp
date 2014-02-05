@@ -6,24 +6,27 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const ToolDefinitions = require("main").Tools;
-const {CssLogic} = require("devtools/styleinspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
-const promise = require("sdk/core/promise");
-const {EventEmitter} = require("devtools/shared/event-emitter");
+let ToolDefinitions = require("main").Tools;
+let {CssLogic} = require("devtools/styleinspector/css-logic");
+let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
+let promise = require("sdk/core/promise");
+let {EventEmitter} = require("devtools/shared/event-emitter");
 const {OutputParser} = require("devtools/output-parser");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 
+let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+
 const FILTER_CHANGED_TIMEOUT = 300;
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 
 /**
  * Helper for long-running processes that should yield occasionally to
@@ -180,7 +183,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   // Properties preview tooltip
   this.tooltip = new Tooltip(this.styleInspector.inspector.panelDoc);
   this.tooltip.startTogglingOnHover(this.propertyContainer,
-    this._onTooltipTargetHover.bind(this));
+    this._buildTooltipContent.bind(this));
 
   this._buildContextMenu();
   this.createStyleViews();
@@ -511,39 +514,32 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * Executed by the tooltip when the pointer hovers over an element of the view.
-   * Used to decide whether the tooltip should be shown or not and to actually
-   * put content in it.
-   * Checks if the hovered target is a css value we support tooltips for.
+   * Verify that target is indeed a css value we want a tooltip on, and if yes
+   * prepare some content for the tooltip
    */
-  _onTooltipTargetHover: function(target)
+  _buildTooltipContent: function(target)
   {
-    let inspector = this.styleInspector.inspector;
-
     // Test for image url
-    if (target.classList.contains("theme-link") && inspector.hasUrlToImageDataResolver) {
+    if (target.classList.contains("theme-link")) {
       let propValue = target.parentNode;
       let propName = propValue.parentNode.querySelector(".property-name");
       if (propName.textContent === "background-image") {
-        let maxDim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-        let uri = CssLogic.getBackgroundImageUriFromProperty(propValue.textContent);
-        return this.tooltip.setRelativeImageContent(uri, inspector.inspector, maxDim);
+        this.tooltip.setCssBackgroundImageContent(propValue.textContent);
+        return true;
       }
     }
 
     // Test for css transform
     if (target.classList.contains("property-value")) {
+      let def = promise.defer();
       let propValue = target;
       let propName = target.parentNode.querySelector(".property-name");
       if (propName.textContent === "transform") {
-        return this.tooltip.setCssTransformContent(propValue.textContent,
-          this.pageStyle, this.viewedElement);
+        this.tooltip.setCssTransformContent(propValue.textContent,
+          this.pageStyle, this.viewedElement).then(def.resolve);
+        return def.promise;
       }
     }
-
-    // If the target isn't one that should receive a tooltip, signal it by rejecting
-    // a promise
-    return promise.reject();
   },
 
   /**
