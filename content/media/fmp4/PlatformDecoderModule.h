@@ -10,12 +10,16 @@
 #include "MediaDecoderReader.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsTArray.h"
+#include "mozilla/RefPtr.h"
+#include <queue>
 
 namespace mp4_demuxer {
 class VideoDecoderConfig;
 class AudioDecoderConfig;
 struct MP4Sample;
 }
+
+class nsIThreadPool;
 
 namespace mozilla {
 
@@ -24,21 +28,28 @@ class ImageContainer;
 }
 
 class MediaDataDecoder;
+class MediaDataDecoderCallback;
+class MediaInputQueue;
+class MediaTaskQueue;
 typedef int64_t Microseconds;
 
 // The PlatformDecoderModule interface is used by the MP4Reader to abstract
 // access to the H264 and AAC decoders provided by various platforms. It
 // may be extended to support other codecs in future. Each platform (Windows,
-// MacOSX, Linux etc) must implement a PlatformDecoderModule to provide access
-// to its decoders in order to get decompressed H.264/AAC from the MP4Reader.
+// MacOSX, Linux, B2G etc) must implement a PlatformDecoderModule to provide
+// access to its decoders in order to get decompressed H.264/AAC from the
+// MP4Reader.
+//
+// Video decoding is asynchronous, and should be performed on the task queue
+// provided if the underlying platform isn't already exposing an async API.
 //
 // Platforms that don't have a corresponding PlatformDecoderModule won't be
 // able to play the H.264/AAC data output by the MP4Reader. In practice this
 // means that we won't have fragmented MP4 supported in Media Source
-// Extensions on platforms without PlatformDecoderModules.
+// Extensions.
 //
 // A cross-platform decoder module that discards input and produces "blank"
-// output samples exists for testing, and is created if the pref
+// output samples exists for testing, and is created when the pref
 // "media.fragmented-mp4.use-blank-decoder" is true.
 class PlatformDecoderModule {
 public:
@@ -50,8 +61,8 @@ public:
   // the platform we're running on. Caller is responsible for deleting this
   // instance. It's expected that there will be multiple
   // PlatformDecoderModules alive at the same time. There is one
-  // PlatformDecoderModule's created per MP4Reader.
-  // This is called on the main thread.
+  // PlatformDecoderModule created per MP4Reader.
+  // This is called on the decode thread.
   static PlatformDecoderModule* Create();
 
   // Called to shutdown the decoder module and cleanup state. This should
@@ -61,122 +72,118 @@ public:
   // Called on the main thread only.
   virtual nsresult Shutdown() = 0;
 
-  // Creates and initializes an H.264 decoder. The layers backend is
-  // passed in so that decoders can determine whether hardware accelerated
-  // decoding can be used. Returns nullptr if the decoder can't be
-  // initialized.
+  // Creates an H.264 decoder. The layers backend is passed in so that
+  // decoders can determine whether hardware accelerated decoding can be used.
+  // Asynchronous decoding of video should be done in runnables dispatched
+  // to aVideoTaskQueue. If the task queue isn't needed, the decoder should
+  // not hold a reference to it.
+  // Output and errors should be returned to the reader via aCallback.
+  // On Windows the task queue's threads in have MSCOM initialized with
+  // COINIT_MULTITHREADED.
+  // Returns nullptr if the decoder can't be created.
+  // It is safe to store a reference to aConfig.
   // Called on decode thread.
   virtual MediaDataDecoder* CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                               layers::LayersBackend aLayersBackend,
-                                              layers::ImageContainer* aImageContainer) = 0;
+                                              layers::ImageContainer* aImageContainer,
+                                              MediaTaskQueue* aVideoTaskQueue,
+                                              MediaDataDecoderCallback* aCallback) = 0;
 
-  // Creates and initializes an AAC decoder with the specified properties.
-  // The raw AAC AudioSpecificConfig as contained in the esds box. Some
-  // decoders need that to initialize. The caller owns the AAC config,
-  // so it must be copied if it is to be retained by the decoder.
-  // Returns nullptr if the decoder can't be initialized.
+  // Creates an AAC decoder with the specified properties.
+  // Asynchronous decoding of audio should be done in runnables dispatched to
+  // aAudioTaskQueue. If the task queue isn't needed, the decoder should
+  // not hold a reference to it.
+  // Output and errors should be returned to the reader via aCallback.
+  // Returns nullptr if the decoder can't be created.
+  // On Windows the task queue's threads in have MSCOM initialized with
+  // COINIT_MULTITHREADED.
+  // It is safe to store a reference to aConfig.
   // Called on decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig) = 0;
-
-  // Called when a decode thread is started. Called on decode thread.
-  virtual void OnDecodeThreadStart() {}
-
-  // Called just before a decode thread is finishing. Called on decode thread.
-  virtual void OnDecodeThreadFinish() {}
+  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                                             MediaTaskQueue* aAudioTaskQueue,
+                                             MediaDataDecoderCallback* aCallback) = 0;
 
   virtual ~PlatformDecoderModule() {}
+
 protected:
   PlatformDecoderModule() {}
   // Caches pref media.fragmented-mp4.use-blank-decoder
   static bool sUseBlankDecoder;
 };
 
-// Return value of the MediaDataDecoder functions.
-enum DecoderStatus {
-  DECODE_STATUS_NOT_ACCEPTING, // Can't accept input at this time. Decoder can produce output.
-  DECODE_STATUS_NEED_MORE_INPUT, // Can't produce output. Decoder can accept input.
-  DECODE_STATUS_OK,
-  DECODE_STATUS_ERROR
+// A callback used by MediaDataDecoder to return output/errors to the
+// MP4Reader. Implementation is threadsafe, and can be called on any thread.
+class MediaDataDecoderCallback {
+public:
+  virtual ~MediaDataDecoderCallback() {}
+
+  // Called by MediaDataDecoder when a sample has been decoded. Callee is
+  // responsibile for deleting aData.
+  virtual void Output(MediaData* aData) = 0;
+
+  // Denotes an error in the decoding process. The reader will stop calling
+  // the decoder.
+  virtual void Error() = 0;
+
+  // Denotes that the last input sample has been inserted into the decoder,
+  // and no more output can be produced unless more input is sent.
+  virtual void InputExhausted() = 0;
 };
 
 // MediaDataDecoder is the interface exposed by decoders created by the
 // PlatformDecoderModule's Create*Decoder() functions. The type of
 // media data that the decoder accepts as valid input and produces as
 // output is determined when the MediaDataDecoder is created.
-// The decoder is assumed to be in one of three mutually exclusive and
-// implicit states: able to accept input, able to produce output, and
-// shutdown. The decoder is assumed to be able to accept input by the time
-// that it's returned by PlatformDecoderModule::Create*Decoder().
-class MediaDataDecoder {
+//
+// All functions must be threadsafe, and be able to be called on an
+// arbitrary thread.
+//
+// Decoding is done asynchronously. Any async work can be done on the
+// MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
+// function. This may not be necessary for platforms with async APIs
+// for decoding.
+class MediaDataDecoder : public AtomicRefCounted<MediaDataDecoder> {
 public:
   virtual ~MediaDataDecoder() {};
 
   // Initialize the decoder. The decoder should be ready to decode after
   // this returns. The decoder should do any initialization here, rather
-  // than in its constructor, so that if the MP4Reader needs to Shutdown()
-  // during initialization it can call Shutdown() to cancel this.
-  // Any initialization that requires blocking the calling thread *must*
+  // than in its constructor or PlatformDecoderModule::Create*Decoder(),
+  // so that if the MP4Reader needs to shutdown during initialization,
+  // it can call Shutdown() to cancel this operation. Any initialization
+  // that requires blocking the calling thread in this function *must*
   // be done here so that it can be canceled by calling Shutdown()!
   virtual nsresult Init() = 0;
 
-  // Inserts aData into the decoding pipeline. Decoding may begin
-  // asynchronously.
-  //
-  // If the decoder needs to assume ownership of the sample it may do so by
-  // calling forget() on aSample.
-  //
-  // If Input() returns DECODE_STATUS_NOT_ACCEPTING without forget()ing
-  // aSample, then the next call will have the same aSample. Otherwise
-  // the caller will delete aSample after Input() returns.
-  //
-  // The MP4Reader calls Input() in a loop until Input() stops returning
-  // DECODE_STATUS_OK. Input() should return DECODE_STATUS_NOT_ACCEPTING
-  // once the underlying decoder should have enough data to output decoded
-  // data.
-  //
-  // Called on the media decode thread.
-  // Returns:
-  //  - DECODE_STATUS_OK if input was successfully inserted into
-  //    the decode pipeline.
-  //  - DECODE_STATUS_NOT_ACCEPTING if the decoder cannot accept any input
-  //    at this time. The MP4Reader will assume that the decoder can now
-  //    produce one or more output samples, and call the Output() function.
-  //    The MP4Reader will call Input() again with the same data later,
-  //    after the decoder's Output() function has stopped producing output,
-  //    except if Input() called forget() on aSample, whereupon a new sample
-  //    will come in next call.
-  //  - DECODE_STATUS_ERROR if the decoder has been shutdown, or some
-  //    unspecified error.
-  // This function should not return DECODE_STATUS_NEED_MORE_INPUT.
-  virtual DecoderStatus Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample) = 0;
-
-  // Blocks until a decoded sample is produced by the deoder. The MP4Reader
-  // calls this until it stops returning DECODE_STATUS_OK.
-  // Called on the media decode thread.
-  // Returns:
-  //  - DECODE_STATUS_OK if an output sample was successfully placed in
-  //    aOutData. More samples for output may still be available, the
-  //    MP4Reader will call again to check.
-  //  - DECODE_STATUS_NEED_MORE_INPUT if the decoder needs more input to
-  //    produce a sample. The decoder should return this once it can no
-  //    longer produce output. This signals to the MP4Reader that it should
-  //    start feeding in data via the Input() function.
-  //  - DECODE_STATUS_ERROR if the decoder has been shutdown, or some
-  //    unspecified error.
-  // This function should not return DECODE_STATUS_NOT_ACCEPTING.
-  virtual DecoderStatus Output(nsAutoPtr<MediaData>& aOutData) = 0;
+  // Inserts a sample into the decoder's decode pipeline. The decoder must
+  // delete the sample once its been decoded. If Input() returns an error,
+  // aSample will be deleted by the caller.
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) = 0;
 
   // Causes all samples in the decoding pipeline to be discarded. When
   // this function returns, the decoder must be ready to accept new input
   // for decoding. This function is called when the demuxer seeks, before
   // decoding resumes after the seek.
-  // Called on the media decode thread.
-  virtual DecoderStatus Flush() = 0;
+  // While the reader calls Flush(), it ignores all output sent to it;
+  // it is safe (but pointless) to send output while Flush is called.
+  // The MP4Reader will not call Input() while it's calling Flush().
+  virtual nsresult Flush() = 0;
 
-  // Cancels all decode operations, and shuts down the decoder. This should
-  // block until shutdown is complete. The decoder should return
-  // DECODE_STATUS_ERROR for all calls to its functions once this is called.
-  // Called on main thread.
+  // Causes all complete samples in the pipeline that can be decoded to be
+  // output. If the decoder can't produce samples from the current output,
+  // it drops the input samples. The decoder may be holding onto samples
+  // that are required to decode samples that it expects to get in future.
+  // This is called when the demuxer reaches end of stream.
+  // The MP4Reader will not call Input() while it's calling Drain().
+  virtual nsresult Drain() = 0;
+
+  // Cancels all init/input/drain operations, and shuts down the
+  // decoder. The platform decoder should clean up any resources it's using
+  // and release memory etc. Shutdown() must block until the decoder has
+  // completed shutdown. The reader calls Flush() before calling Shutdown().
+  // The reader will delete the decoder once Shutdown() returns.
+  // The MediaDataDecoderCallback *must* not be called after Shutdown() has
+  // returned.
   virtual nsresult Shutdown() = 0;
 
 };
