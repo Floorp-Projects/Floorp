@@ -299,8 +299,8 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   // We're wrapping the global, so the scope is undefined.
   JS::Rooted<JSObject*> scope(aCx);
 
-  return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, scope, this,
-                                                         this, options,
+  return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
+                                                         options,
                                                          GetWorkerPrincipal());
 }
 
@@ -340,8 +340,7 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   // We're wrapping the global, so the scope is undefined.
   JS::Rooted<JSObject*> scope(aCx);
 
-  return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, scope, this, this,
-                                                      options,
+  return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                       GetWorkerPrincipal());
 }
 
