@@ -48,7 +48,7 @@ function test() {
             // this function to return first.
             executeSoon(() => aDebuggee.firstCall());
 
-            return waitForSourceAndCaretAndScopes(aPanel, ".html", 17).then(() => {
+            return waitForSourceAndCaretAndScopes(aPanel, ".html", 1).then(() => {
               gPanel = aPanel;
               gDebugger = gPanel.panelWin;
               gThreadClient = gPanel.panelWin.gThreadClient;
@@ -58,7 +58,7 @@ function test() {
         },
         post: function() {
           ok(gThreadClient, "Debugger client exists.");
-          is(gLineNumber, 14, "gLineNumber is correct.");
+          is(gLineNumber, 1, "gLineNumber is correct.");
         },
       },
       {
@@ -74,7 +74,7 @@ function test() {
           message: '',
           args: {
             file: { value: TAB_URL, message: '' },
-            line: { value: 14 }
+            line: { value: 1 }
           }
         },
         exec: {
@@ -109,8 +109,8 @@ function test() {
         exec: {
           output: [
             /Source/, /Remove/,
-            /doc_cmd-break\.html:14/,
-            /doc_cmd-break\.html:17/
+            /doc_cmd-break\.html:1/,
+            /doc_cmd-break\.html:1/
           ]
         }
       },
@@ -123,11 +123,11 @@ function test() {
         }
       },
       {
-        setup: 'break del 14',
+        setup: 'break del 1',
         check: {
-          input:  'break del 14',
-          hints:              ' -> doc_cmd-break.html:14',
-          markup: 'VVVVVVVVVVII',
+          input:  'break del 1',
+          hints:              ' -> doc_cmd-break.html:1',
+          markup: 'VVVVVVVVVVI',
           status: 'ERROR',
           args: {
             breakpoint: {
@@ -138,14 +138,14 @@ function test() {
         }
       },
       {
-        setup: 'break del doc_cmd-break.html:14',
+        setup: 'break del doc_cmd-break.html:1',
         check: {
-          input:  'break del doc_cmd-break.html:14',
+          input:  'break del doc_cmd-break.html:1',
           hints:                                 '',
-          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
           status: 'VALID',
           args: {
-            breakpoint: { arg: ' doc_cmd-break.html:14' },
+            breakpoint: { arg: ' doc_cmd-break.html:1' },
           }
         },
         exec: {

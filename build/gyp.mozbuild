@@ -22,11 +22,16 @@ gyp_vars = {
     'use_system_libvpx': 0,
     'build_libjpeg': 0,
     'build_libvpx': 0,
+    'build_libyuv': 0,
+    'libyuv_dir': '/media/libyuv',
+    'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
+
     # saves 4MB when webrtc_trace is off
     'enable_lazy_trace_alloc': 1,
 
      # turn off mandatory use of NEON and instead use NEON detection
     'arm_neon': 0,
+    'arm_neon_optional': 1,
 
     'moz_widget_toolkit_gonk': 0,
 
@@ -89,12 +94,15 @@ gyp_vars['target_arch'] = arches[CONFIG['CPU_ARCH']]
 if CONFIG['ARM_ARCH']:
     if int(CONFIG['ARM_ARCH']) < 7:
         gyp_vars['armv7'] = 0
+        gyp_vars['arm_neon_optional'] = 0
     elif os == 'Android':
         gyp_vars['armv7'] = 1
     else:
         # CPU detection for ARM works on Android only.  armv7 always uses CPU
         # detection, so we have to set armv7=0 for non-Android target
         gyp_vars['armv7'] = 0
+    # For libyuv
+    gyp_vars['arm_version'] = CONFIG['ARM_ARCH']
 
 # Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
 if CONFIG['INTEL_ARCHITECTURE']:

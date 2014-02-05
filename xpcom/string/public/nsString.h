@@ -204,16 +204,6 @@ typedef nsAutoString nsVoidableString;
 #include <stdio.h>
 #include "plhash.h"
 
-inline int32_t MinInt(int32_t x, int32_t y)
-  {
-    return XPCOM_MIN(x, y);
-  }
-
-inline int32_t MaxInt(int32_t x, int32_t y)
-  {
-    return XPCOM_MAX(x, y);
-  }
-
 /**
  * Deprecated: don't use |Recycle|, just call |nsMemory::Free| directly
  *

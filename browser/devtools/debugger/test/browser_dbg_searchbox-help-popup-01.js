@@ -20,7 +20,7 @@ function test() {
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
     gSearchBoxPanel = gDebugger.DebuggerView.Filtering._searchboxHelpPanel;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(showPopup)
       .then(hidePopup)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))

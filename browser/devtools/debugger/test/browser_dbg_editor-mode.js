@@ -20,7 +20,7 @@ function test() {
     gEditor = gDebugger.DebuggerView.editor;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceAndCaretAndScopes(gPanel, "code_test-editor-mode", 5)
+    waitForSourceAndCaretAndScopes(gPanel, "code_test-editor-mode", 1)
       .then(testInitialSource)
       .then(testSwitch1)
       .then(testSwitch2)

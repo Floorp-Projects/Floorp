@@ -24,7 +24,7 @@ function test() {
     gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
     gToolbar = gDebugger.DebuggerView.Toolbar;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest);
     gDebuggee.firstCall();
   });
 }
@@ -32,7 +32,7 @@ function test() {
 function performTest() {
   return Task.spawn(function() {
     yield selectBottomFrame();
-    testBottomFrame(5);
+    testBottomFrame(0);
 
     yield performStep("StepOver");
     testTopFrame(3);

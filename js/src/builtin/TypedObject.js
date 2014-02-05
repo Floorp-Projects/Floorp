@@ -10,8 +10,8 @@
 
 // Typed object slots
 
-#define DATUM_TYPE_OBJ(obj) \
-    UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_TYPE_OBJ)
+#define DATUM_TYPE_DESCR(obj) \
+    UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_TYPE_DESCR)
 #define DATUM_OWNER(obj) \
     UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_OWNER)
 #define DATUM_LENGTH(obj) \
@@ -35,7 +35,7 @@
 
 function DATUM_TYPE_REPR(obj) {
   // Eventually this will be a slot on typed objects
-  return TYPE_TYPE_REPR(DATUM_TYPE_OBJ(obj));
+  return TYPE_TYPE_REPR(DATUM_TYPE_DESCR(obj));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ function DATUM_TYPE_REPR(obj) {
 // TypedObjectPointers are internal structs used to represent a
 // pointer into typed object memory. They pull together:
 // - typeRepr: the internal type representation
-// - typeObj: the user-visible type object
+// - descr: the user-visible type object
 // - datum: the typed object that contains the allocated block of memory
 // - offset: an offset into that typed object
 //
@@ -58,9 +58,9 @@ function DATUM_TYPE_REPR(obj) {
 // they mutate the receiver in place, because it makes for prettier
 // code.
 
-function TypedObjectPointer(typeRepr, typeObj, datum, offset) {
+function TypedObjectPointer(typeRepr, descr, datum, offset) {
   this.typeRepr = typeRepr;
-  this.typeObj = typeObj;
+  this.descr = descr;
   this.datum = datum;
   this.offset = offset;
 }
@@ -69,25 +69,25 @@ MakeConstructible(TypedObjectPointer, {});
 
 TypedObjectPointer.fromTypedDatum = function(typed) {
   return new TypedObjectPointer(DATUM_TYPE_REPR(typed),
-                                DATUM_TYPE_OBJ(typed),
+                                DATUM_TYPE_DESCR(typed),
                                 typed,
                                 0);
 }
 
 #ifdef DEBUG
 TypedObjectPointer.prototype.toString = function() {
-  return "Ptr(" + this.typeObj.toSource() + " @ " + this.offset + ")";
+  return "Ptr(" + this.descr.toSource() + " @ " + this.offset + ")";
 };
 #endif
 
 TypedObjectPointer.prototype.copy = function() {
-  return new TypedObjectPointer(this.typeRepr, this.typeObj,
+  return new TypedObjectPointer(this.typeRepr, this.descr,
                                 this.datum, this.offset);
 };
 
 TypedObjectPointer.prototype.reset = function(inPtr) {
   this.typeRepr = inPtr.typeRepr;
-  this.typeObj = inPtr.typeObj;
+  this.descr = inPtr.descr;
   this.datum = inPtr.datum;
   this.offset = inPtr.offset;
   return this;
@@ -136,7 +136,7 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
     break;
 
   case JS_TYPEREPR_STRUCT_KIND:
-    if (HAS_PROPERTY(this.typeObj.fieldTypes, propName))
+    if (HAS_PROPERTY(this.descr.fieldTypes, propName))
       return this.moveToField(propName);
     break;
   }
@@ -157,10 +157,10 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(index >= 0 && index < this.length(),
          "moveToElem invoked with out-of-bounds index: " + index);
 
-  var elementTypeObj = this.typeObj.elementType;
+  var elementTypeObj = this.descr.elementType;
   var elementTypeRepr = TYPE_TYPE_REPR(elementTypeObj);
   this.typeRepr = elementTypeRepr;
-  this.typeObj = elementTypeObj;
+  this.descr = elementTypeObj;
   var elementSize = REPR_SIZE(elementTypeRepr);
 
   // Note: we do not allow construction of arrays where the offset
@@ -176,12 +176,12 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
 TypedObjectPointer.prototype.moveToField = function(propName) {
   assert(this.kind() == JS_TYPEREPR_STRUCT_KIND,
          "moveToField invoked on non-struct");
-  assert(HAS_PROPERTY(this.typeObj.fieldTypes, propName),
+  assert(HAS_PROPERTY(this.descr.fieldTypes, propName),
          "moveToField invoked with undefined field");
 
-  var fieldTypeObj = this.typeObj.fieldTypes[propName];
-  var fieldOffset = TO_INT32(this.typeObj.fieldOffsets[propName]);
-  this.typeObj = fieldTypeObj;
+  var fieldTypeObj = this.descr.fieldTypes[propName];
+  var fieldOffset = TO_INT32(this.descr.fieldOffsets[propName]);
+  this.descr = fieldTypeObj;
   this.typeRepr = TYPE_TYPE_REPR(fieldTypeObj);
 
   // Note: we do not allow construction of structs where the
@@ -217,10 +217,10 @@ TypedObjectPointer.prototype.get = function() {
     return this.getX4();
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
+    return NewDerivedTypedDatum(this.descr, this.datum, this.offset);
 
   case JS_TYPEREPR_STRUCT_KIND:
-    return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
+    return NewDerivedTypedDatum(this.descr, this.datum, this.offset);
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
     assert(false, "Unhandled repr kind: " + REPR_KIND(this.typeRepr));
@@ -288,14 +288,14 @@ TypedObjectPointer.prototype.getX4 = function() {
     var y = Load_float32(this.datum, this.offset + 4);
     var z = Load_float32(this.datum, this.offset + 8);
     var w = Load_float32(this.datum, this.offset + 12);
-    return GetFloat32x4TypeObject()(x, y, z, w);
+    return GetFloat32x4TypeDescr()(x, y, z, w);
 
   case JS_X4TYPEREPR_INT32:
     var x = Load_int32(this.datum, this.offset + 0);
     var y = Load_int32(this.datum, this.offset + 4);
     var z = Load_int32(this.datum, this.offset + 8);
     var w = Load_int32(this.datum, this.offset + 12);
-    return GetInt32x4TypeObject()(x, y, z, w);
+    return GetInt32x4TypeDescr()(x, y, z, w);
   }
 
   assert(false, "Unhandled x4 type: " + type);
@@ -369,7 +369,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
     // Adapt each field.
     var tempPtr = this.copy();
-    var fieldNames = this.typeObj.fieldNames;
+    var fieldNames = this.descr.fieldNames;
     for (var i = 0; i < fieldNames.length; i++) {
       var fieldName = fieldNames[i];
       tempPtr.reset(this).moveToField(fieldName).set(fromValue[fieldName]);
@@ -471,7 +471,7 @@ function ConvertAndCopyTo(destTypeRepr,
 {
   assert(IsObject(destTypeRepr) && ObjectIsTypeRepresentation(destTypeRepr),
          "ConvertAndCopyTo: not type repr");
-  assert(IsObject(destTypeObj) && ObjectIsTypeObject(destTypeObj),
+  assert(IsObject(destTypeObj) && ObjectIsTypeDescr(destTypeObj),
          "ConvertAndCopyTo: not type obj");
   assert(IsObject(destDatum) && ObjectIsTypedDatum(destDatum),
          "ConvertAndCopyTo: not type datum");
@@ -491,7 +491,7 @@ function Reify(sourceTypeRepr,
                sourceOffset) {
   assert(IsObject(sourceTypeRepr) && ObjectIsTypeRepresentation(sourceTypeRepr),
          "Reify: not type repr");
-  assert(IsObject(sourceTypeObj) && ObjectIsTypeObject(sourceTypeObj),
+  assert(IsObject(sourceTypeObj) && ObjectIsTypeDescr(sourceTypeObj),
          "Reify: not type obj");
   assert(IsObject(sourceDatum) && ObjectIsTypedDatum(sourceDatum),
          "Reify: not type datum");
@@ -524,10 +524,10 @@ function FillTypedArrayWithValue(destArray, fromValue) {
 }
 
 // Warning: user exposed!
-function TypeObjectEquivalent(otherTypeObj) {
-  if (!IsObject(this) || !ObjectIsTypeObject(this))
+function TypeDescrEquivalent(otherTypeObj) {
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
-  if (!IsObject(otherTypeObj) || !ObjectIsTypeObject(otherTypeObj))
+  if (!IsObject(otherTypeObj) || !ObjectIsTypeDescr(otherTypeObj))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "type object");
   return TYPE_TYPE_REPR(this) === TYPE_TYPE_REPR(otherTypeObj);
 }
@@ -556,12 +556,12 @@ function TypedArrayRedimension(newArrayType) {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
-  if (!IsObject(newArrayType) || !ObjectIsTypeObject(newArrayType))
+  if (!IsObject(newArrayType) || !ObjectIsTypeDescr(newArrayType))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "type object");
 
   // Peel away the outermost array layers from the type of `this` to find
   // the core element type. In the process, count the number of elements.
-  var oldArrayType = DATUM_TYPE_OBJ(this);
+  var oldArrayType = DATUM_TYPE_DESCR(this);
   var oldArrayReprKind = REPR_KIND(TYPE_TYPE_REPR(oldArrayType));
   var oldElementType = oldArrayType;
   var oldElementCount = 1;
@@ -623,7 +623,7 @@ function TypedArrayRedimension(newArrayType) {
 //
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleCreate(obj, ...path) {
-  if (!IsObject(this) || !ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "handle", "value");
 
   switch (REPR_KIND(TYPE_TYPE_REPR(this))) {
@@ -737,7 +737,7 @@ function X4ToSource() {
 
 // Warning: user exposed!
 function ArrayShorthand(...dims) {
-  if (!IsObject(this) || !ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS,
                "this", "typed object");
 
@@ -758,7 +758,7 @@ function ArrayShorthand(...dims) {
 // Warning: user exposed!
 function TypeOfTypedDatum(obj) {
   if (IsObject(obj) && ObjectIsTypedDatum(obj))
-    return DATUM_TYPE_OBJ(obj);
+    return DATUM_TYPE_DESCR(obj);
 
   // Note: Do not create bindings for `Any`, `String`, etc in
   // Utilities.js, but rather access them through
@@ -797,7 +797,7 @@ function TypedObjectArrayTypeBuild(a,b,c) {
   // Arguments (this sized) : [depth], func
   // Arguments (this unsized) : length, [depth], func
 
-  if (!IsObject(this) || !ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
   var kind = REPR_KIND(TYPE_TYPE_REPR(this));
   switch (kind) {
@@ -829,7 +829,7 @@ function TypedObjectArrayTypeBuild(a,b,c) {
 function TypedObjectArrayTypeFrom(a, b, c) {
   // Arguments: arrayLike, [depth], func
 
-  if (!IsObject(this) || !ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
 
   var untypedInput = !IsObject(a) || !ObjectIsTypedDatum(a);
@@ -865,8 +865,8 @@ function TypedObjectArrayTypeFrom(a, b, c) {
 function TypedArrayMap(a, b) {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
-  var thisType = DATUM_TYPE_OBJ(this);
-  if (!TypeObjectIsArrayType(thisType))
+  var thisType = DATUM_TYPE_DESCR(this);
+  if (!TypeDescrIsArrayType(thisType))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
   // Arguments: [depth], func
@@ -885,8 +885,8 @@ function TypedArrayReduce(a, b) {
   // Arguments: func, [initial]
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
-  var thisType = DATUM_TYPE_OBJ(this);
-  if (!TypeObjectIsArrayType(thisType))
+  var thisType = DATUM_TYPE_DESCR(this);
+  if (!TypeDescrIsArrayType(thisType))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
   if (a !== undefined && typeof a !== "function")
@@ -901,11 +901,11 @@ function TypedArrayScatter(a, b, c, d) {
   // Arguments: outputArrayType, indices, defaultValue, conflictFunction
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
-  var thisType = DATUM_TYPE_OBJ(this);
-  if (!TypeObjectIsArrayType(thisType))
+  var thisType = DATUM_TYPE_DESCR(this);
+  if (!TypeDescrIsArrayType(thisType))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
-  if (!IsObject(a) || !ObjectIsTypeObject(a) || !TypeObjectIsSizedArrayType(a))
+  if (!IsObject(a) || !ObjectIsTypeDescr(a) || !TypeDescrIsSizedArrayType(a))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "sized array type");
 
   if (d !== undefined && typeof d !== "function")
@@ -919,8 +919,8 @@ function TypedArrayFilter(func) {
   // Arguments: predicate
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
-  var thisType = DATUM_TYPE_OBJ(this);
-  if (!TypeObjectIsArrayType(thisType))
+  var thisType = DATUM_TYPE_DESCR(this);
+  if (!TypeDescrIsArrayType(thisType))
     return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
   if (typeof func !== "function")
@@ -976,8 +976,8 @@ function GET_BIT(data, index) {
   return (data[word] & mask) != 0;
 }
 
-function TypeObjectIsArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeObject(t), "TypeObjectIsArrayType called on non-type-object");
+function TypeDescrIsArrayType(t) {
+  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsArrayType called on non-type-object");
 
   var kind = REPR_KIND(TYPE_TYPE_REPR(t));
   switch (kind) {
@@ -994,8 +994,8 @@ function TypeObjectIsArrayType(t) {
   }
 }
 
-function TypeObjectIsSizedArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeObject(t), "TypeObjectIsSizedArrayType called on non-type-object");
+function TypeDescrIsSizedArrayType(t) {
+  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSizedArrayType called on non-type-object");
 
   var kind = REPR_KIND(TYPE_TYPE_REPR(t));
   switch (kind) {
@@ -1012,8 +1012,8 @@ function TypeObjectIsSizedArrayType(t) {
   }
 }
 
-function TypeObjectIsSimpleType(t) {
-  assert(IsObject(t) && ObjectIsTypeObject(t), "TypeObjectIsSimpleType called on non-type-object");
+function TypeDescrIsSimpleType(t) {
+  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSimpleType called on non-type-object");
 
   var kind = REPR_KIND(TYPE_TYPE_REPR(t));
   switch (kind) {
@@ -1032,7 +1032,7 @@ function TypeObjectIsSimpleType(t) {
 
 // Bug 956914: make performance-tuned variants tailored to 1, 2, and 3 dimensions.
 function BuildTypedSeqImpl(arrayType, len, depth, func) {
-  assert(IsObject(arrayType) && ObjectIsTypeObject(arrayType), "Build called on non-type-object");
+  assert(IsObject(arrayType) && ObjectIsTypeDescr(arrayType), "Build called on non-type-object");
 
   if (depth <= 0 || TO_INT32(depth) !== depth)
     // RangeError("bad depth")
@@ -1079,8 +1079,8 @@ function BuildTypedSeqImpl(arrayType, len, depth, func) {
 }
 
 function ComputeIterationSpace(arrayType, depth, len) {
-  assert(IsObject(arrayType) && ObjectIsTypeObject(arrayType), "ComputeIterationSpace called on non-type-object");
-  assert(TypeObjectIsArrayType(arrayType), "ComputeIterationSpace called on non-array-type");
+  assert(IsObject(arrayType) && ObjectIsTypeDescr(arrayType), "ComputeIterationSpace called on non-type-object");
+  assert(TypeDescrIsArrayType(arrayType), "ComputeIterationSpace called on non-array-type");
   assert(depth > 0, "ComputeIterationSpace called on non-positive depth");
   var iterationSpace = NewDenseArray(depth);
   iterationSpace[0] = len;
@@ -1088,7 +1088,7 @@ function ComputeIterationSpace(arrayType, depth, len) {
   var grainType = arrayType.elementType;
 
   for (var i = 1; i < depth; i++) {
-    if (TypeObjectIsArrayType(grainType)) {
+    if (TypeDescrIsArrayType(grainType)) {
       var grainLen = grainType.length;
       iterationSpace[i] = grainLen;
       totalLength *= grainLen;
@@ -1130,9 +1130,9 @@ function IncrementIterationSpace(indices, iterationSpace) {
 // Implements |from| method for untyped |inArray|.  (Depth is implicitly 1 for untyped input.)
 function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
   assert(IsObject(outputType), "1. Map/From called on non-object outputType");
-  assert(ObjectIsTypeObject(outputType), "1. Map/From called on non-type-object outputType");
+  assert(ObjectIsTypeDescr(outputType), "1. Map/From called on non-type-object outputType");
   inArray = ToObject(inArray);
-  assert(TypeObjectIsArrayType(outputType), "Map/From called on non array-type outputType");
+  assert(TypeDescrIsArrayType(outputType), "Map/From called on non array-type outputType");
 
   if (!IsCallable(maybeFunc))
     ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, maybeFunc));
@@ -1183,9 +1183,9 @@ function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
 
 // Implements |map| and |from| methods for typed |inArray|.
 function MapTypedSeqImpl(inArray, depth, outputType, func) {
-  assert(IsObject(outputType) && ObjectIsTypeObject(outputType), "2. Map/From called on non-type-object outputType");
+  assert(IsObject(outputType) && ObjectIsTypeDescr(outputType), "2. Map/From called on non-type-object outputType");
   assert(IsObject(inArray) && ObjectIsTypedDatum(inArray), "Map/From called on non-object or untyped input array.");
-  assert(TypeObjectIsArrayType(outputType), "Map/From called on non array-type outputType");
+  assert(TypeDescrIsArrayType(outputType), "Map/From called on non array-type outputType");
 
   if (depth <= 0 || TO_INT32(depth) !== depth)
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "depth", "positive int");
@@ -1194,7 +1194,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   var inputType = TypeOfTypedDatum(inArray);
   var [inIterationSpace, inGrainType, _] =
     ComputeIterationSpace(inputType, depth, inArray.length);
-  if (!IsObject(inGrainType) || !ObjectIsTypeObject(inGrainType))
+  if (!IsObject(inGrainType) || !ObjectIsTypeDescr(inGrainType))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "type object");
   var [iterationSpace, outGrainType, totalLength] =
     ComputeIterationSpace(outputType, depth, outputType.variable ? inArray.length : outputType.length);
@@ -1211,7 +1211,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   var inUnitSize = REPR_SIZE(TYPE_TYPE_REPR(inGrainType));
   var outUnitSize = REPR_SIZE(TYPE_TYPE_REPR(outGrainType));
 
-  var inGrainTypeIsSimple = TypeObjectIsSimpleType(inGrainType);
+  var inGrainTypeIsSimple = TypeDescrIsSimpleType(inGrainType);
 
   // Bug 956914: add additional variants for depth = 2, 3, etc.
 
@@ -1288,7 +1288,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
 
 function ReduceTypedSeqImpl(array, outputType, func, initial) {
   assert(IsObject(array) && ObjectIsTypedDatum(array), "Reduce called on non-object or untyped input array.");
-  assert(IsObject(outputType) && ObjectIsTypeObject(outputType), "Reduce called on non-type-object outputType");
+  assert(IsObject(outputType) && ObjectIsTypeDescr(outputType), "Reduce called on non-type-object outputType");
 
   var start, value;
 
@@ -1299,7 +1299,7 @@ function ReduceTypedSeqImpl(array, outputType, func, initial) {
   // FIXME bug 950106 Should reduce method supply an outptr handle?
   // For now, reduce never supplies an outptr, regardless of outputType.
 
-  if (TypeObjectIsSimpleType(outputType)) {
+  if (TypeDescrIsSimpleType(outputType)) {
     if (initial === undefined) {
       start = 1;
       value = array[0];
@@ -1329,8 +1329,8 @@ function ReduceTypedSeqImpl(array, outputType, func, initial) {
 
 function ScatterTypedSeqImpl(array, outputType, indices, defaultValue, conflictFunc) {
   assert(IsObject(array) && ObjectIsTypedDatum(array), "Scatter called on non-object or untyped input array.");
-  assert(IsObject(outputType) && ObjectIsTypeObject(outputType), "Scatter called on non-type-object outputType");
-  assert(TypeObjectIsSizedArrayType(outputType), "Scatter called on non-sized array type");
+  assert(IsObject(outputType) && ObjectIsTypeDescr(outputType), "Scatter called on non-type-object outputType");
+  assert(TypeDescrIsSizedArrayType(outputType), "Scatter called on non-sized array type");
   assert(conflictFunc === undefined || typeof conflictFunc === "function", "Scatter called with invalid conflictFunc");
 
   var result = new outputType();
@@ -1362,7 +1362,7 @@ function FilterTypedSeqImpl(array, func) {
   assert(typeof func === "function", "Filter called with non-function predicate");
 
   var arrayType = TypeOfTypedDatum(array);
-  if (!TypeObjectIsArrayType(arrayType))
+  if (!TypeDescrIsArrayType(arrayType))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
 
   var elementType = arrayType.elementType;

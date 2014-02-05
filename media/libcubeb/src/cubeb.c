@@ -58,7 +58,7 @@ int audiotrack_init(cubeb ** context, char const * context_name);
 int
 validate_stream_params(cubeb_stream_params stream_params)
 {
-  if (stream_params.rate < 1 || stream_params.rate > 192000 ||
+  if (stream_params.rate < 1000 || stream_params.rate > 192000 ||
       stream_params.channels < 1 || stream_params.channels > 8) {
     return CUBEB_ERROR_INVALID_FORMAT;
   }

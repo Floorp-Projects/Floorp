@@ -265,7 +265,7 @@ winmm_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
-  ctx->thread = (HANDLE) _beginthreadex(NULL, 64 * 1024, winmm_buffer_thread, ctx, 0, NULL);
+  ctx->thread = (HANDLE) _beginthreadex(NULL, 64 * 1024, winmm_buffer_thread, ctx, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
   if (!ctx->thread) {
     winmm_destroy(ctx);
     return CUBEB_ERROR;

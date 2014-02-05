@@ -23,7 +23,7 @@ function test() {
     gBreakpointsAdded = gBreakpoints._added;
     gBreakpointsRemoving = gBreakpoints._removing;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest);
     gDebuggee.firstCall();
   });
 
