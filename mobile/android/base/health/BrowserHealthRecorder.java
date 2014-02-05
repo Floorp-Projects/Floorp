@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Shut it down when you're done being a browser: {@link #close()}.
  */
-public class BrowserHealthRecorder implements GeckoEventListener {
+public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener {
     private static final String LOG_TAG = "GeckoHealthRec";
     private static final String PREF_ACCEPT_LANG = "intl.accept_languages";
     private static final String PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
@@ -97,121 +97,6 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     private final ProfileInformationCache profileCache;
     private final EventDispatcher dispatcher;
 
-    public static class SessionInformation {
-        private static final String LOG_TAG = "GeckoSessInfo";
-
-        public static final String PREFS_SESSION_START = "sessionStart";
-
-        public final long wallStartTime;    // System wall clock.
-        public final long realStartTime;    // Realtime clock.
-
-        private final boolean wasOOM;
-        private final boolean wasStopped;
-
-        private volatile long timedGeckoStartup = -1;
-        private volatile long timedJavaStartup = -1;
-
-        // Current sessions don't (right now) care about wasOOM/wasStopped.
-        // Eventually we might want to lift that logic out of GeckoApp.
-        public SessionInformation(long wallTime, long realTime) {
-            this(wallTime, realTime, false, false);
-        }
-
-        // Previous sessions do...
-        public SessionInformation(long wallTime, long realTime, boolean wasOOM, boolean wasStopped) {
-            this.wallStartTime = wallTime;
-            this.realStartTime = realTime;
-            this.wasOOM = wasOOM;
-            this.wasStopped = wasStopped;
-        }
-
-        /**
-         * Initialize a new SessionInformation instance from the supplied prefs object.
-         *
-         * This includes retrieving OOM/crash data, as well as timings.
-         *
-         * If no wallStartTime was found, that implies that the previous
-         * session was correctly recorded, and an object with a zero
-         * wallStartTime is returned.
-         */
-        public static SessionInformation fromSharedPrefs(SharedPreferences prefs) {
-            boolean wasOOM = prefs.getBoolean(GeckoApp.PREFS_OOM_EXCEPTION, false);
-            boolean wasStopped = prefs.getBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
-            long wallStartTime = prefs.getLong(PREFS_SESSION_START, 0L);
-            long realStartTime = 0L;
-            Log.d(LOG_TAG, "Building SessionInformation from prefs: " +
-                           wallStartTime + ", " + realStartTime + ", " +
-                           wasStopped + ", " + wasOOM);
-            return new SessionInformation(wallStartTime, realStartTime, wasOOM, wasStopped);
-        }
-
-        /**
-         * Initialize a new SessionInformation instance to 'split' the current
-         * session.
-         */
-        public static SessionInformation forRuntimeTransition() {
-            final boolean wasOOM = false;
-            final boolean wasStopped = true;
-            final long wallStartTime = System.currentTimeMillis();
-            final long realStartTime = android.os.SystemClock.elapsedRealtime();
-            Log.v(LOG_TAG, "Recording runtime session transition: " +
-                           wallStartTime + ", " + realStartTime);
-            return new SessionInformation(wallStartTime, realStartTime, wasOOM, wasStopped);
-        }
-
-        public boolean wasKilled() {
-            return wasOOM || !wasStopped;
-        }
-
-        /**
-         * Record the beginning of this session to SharedPreferences by
-         * recording our start time. If a session was already recorded, it is
-         * overwritten (there can only be one running session at a time). Does
-         * not commit the editor.
-         */
-        public void recordBegin(SharedPreferences.Editor editor) {
-            Log.d(LOG_TAG, "Recording start of session: " + this.wallStartTime);
-            editor.putLong(PREFS_SESSION_START, this.wallStartTime);
-        }
-
-        /**
-         * Record the completion of this session to SharedPreferences by
-         * deleting our start time. Does not commit the editor.
-         */
-        public void recordCompletion(SharedPreferences.Editor editor) {
-            Log.d(LOG_TAG, "Recording session done: " + this.wallStartTime);
-            editor.remove(PREFS_SESSION_START);
-        }
-
-        /**
-         * Return the JSON that we'll put in the DB for this session.
-         */
-        public JSONObject getCompletionJSON(String reason, long realEndTime) throws JSONException {
-            long durationSecs = (realEndTime - this.realStartTime) / 1000;
-            JSONObject out = new JSONObject();
-            out.put("r", reason);
-            out.put("d", durationSecs);
-            if (this.timedGeckoStartup > 0) {
-                out.put("sg", this.timedGeckoStartup);
-            }
-            if (this.timedJavaStartup > 0) {
-                out.put("sj", this.timedJavaStartup);
-            }
-            return out;
-        }
-
-        public JSONObject getCrashedJSON() throws JSONException {
-            JSONObject out = new JSONObject();
-            // We use ints here instead of booleans, because we're packing
-            // stuff into JSON, and saving bytes in the DB is a worthwhile
-            // goal.
-            out.put("oom", this.wasOOM ? 1 : 0);
-            out.put("stopped", this.wasStopped ? 1 : 0);
-            out.put("r", "A");
-            return out;
-        }
-    }
-
     // We track previousSession to avoid order-of-initialization confusion. We
     // accept it in the constructor, and process it after init.
     private final SessionInformation previousSession;
@@ -228,13 +113,13 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         if (this.session == null) {
             return;
         }
-        this.session.timedGeckoStartup = duration;
+        this.session.setTimedGeckoStartup(duration);
     }
     public void recordJavaStartupTime(long duration) {
         if (this.session == null) {
             return;
         }
-        this.session.timedJavaStartup = duration;
+        this.session.setTimedJavaStartup(duration);
     }
 
     /**
@@ -1017,4 +902,3 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         session.recordCompletion(editor);
     }
 }
-
