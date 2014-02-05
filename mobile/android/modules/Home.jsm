@@ -166,16 +166,20 @@ let HomePanels = {
   // Holds the currrent set of registered panels.
   _panels: {},
 
+  _panelToJSON : function(panel) {
+    return {
+      id: panel.id,
+      title: panel.title,
+      layout: panel.layout,
+      views: panel.views
+    };
+  },
+
   _handleGet: function(requestId) {
     let panels = [];
     for (let id in this._panels) {
       let panel = this._panels[id];
-      panels.push({
-        id: panel.id,
-        title: panel.title,
-        layout: panel.layout,
-        views: panel.views
-      });
+      panels.push(this._panelToJSON(panel));
     }
 
     sendMessageToJava({
