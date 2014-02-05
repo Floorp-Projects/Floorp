@@ -792,6 +792,8 @@ public:
     return nullptr;
   }
 
+  static bool WindowOnWebIDL(JSContext* /* unused */, JSObject* aObj);
+
   nsIDOMWindow* GetWindow(mozilla::ErrorResult& aError);
   nsIDOMWindow* GetSelf(mozilla::ErrorResult& aError);
   nsIDocument* GetDocument()
@@ -1056,7 +1058,7 @@ protected:
 
   // Only to be called on an inner window.
   // aDocument must not be null.
-  void InnerSetNewDocument(nsIDocument* aDocument);
+  void InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument);
 
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 
