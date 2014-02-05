@@ -721,10 +721,11 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         MOZ_ASSERT(iid,"can't do interface conversions without iid");
 
         if (iid->Equals(NS_GET_IID(nsIVariant))) {
-            XPCVariant* variant = XPCVariant::newVariant(cx, s);
+            nsCOMPtr<nsIVariant> variant = XPCVariant::newVariant(cx, s);
             if (!variant)
                 return false;
-            *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
+
+            variant.forget(static_cast<nsISupports**>(d));
             return true;
         } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
                    JSVAL_IS_STRING(s)) {
