@@ -175,11 +175,18 @@ let HomePanels = {
     };
   },
 
-  _handleGet: function(requestId) {
+  _handleGet: function(data) {
+    let requestId = data.requestId;
+    let ids = data.ids || null;
+
     let panels = [];
     for (let id in this._panels) {
       let panel = this._panels[id];
-      panels.push(this._panelToJSON(panel));
+
+      // Null ids means we want to fetch all available panels
+      if (ids == null || ids.indexOf(panel.id) >= 0) {
+        panels.push(this._panelToJSON(panel));
+      }
     }
 
     sendMessageToJava({
@@ -253,7 +260,7 @@ this.Home = {
   observe: function(subject, topic, data) {
     switch(topic) {
       case "HomePanels:Get":
-        HomePanels._handleGet(data);
+        HomePanels._handleGet(JSON.parse(data));
         break;
     }
   }
