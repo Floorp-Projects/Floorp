@@ -9,79 +9,13 @@ let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
 
-function loadTestPage(callback, host = "https://example.com/") {
-   if (gTestTab)
-    gBrowser.removeTab(gTestTab);
-
-  let url = getRootDirectory(gTestPath) + "uitour.html";
-  url = url.replace("chrome://mochitests/content/", host);
-
-  gTestTab = gBrowser.addTab(url);
-  gBrowser.selectedTab = gTestTab;
-
-  gTestTab.linkedBrowser.addEventListener("load", function onLoad() {
-    gTestTab.linkedBrowser.removeEventListener("load", onLoad);
-
-    gContentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
-    gContentAPI = gContentWindow.Mozilla.UITour;
-
-    waitForFocus(callback, gContentWindow);
-  }, true);
-}
-
 function test() {
-  Services.prefs.setBoolPref("browser.uitour.enabled", true);
-  let testUri = Services.io.newURI("http://example.com", null, null);
-  Services.perms.add(testUri, "uitour", Services.perms.ALLOW_ACTION);
-
-  waitForExplicitFinish();
-
-  registerCleanupFunction(function() {
-    delete window.UITour;
-    delete window.gContentWindow;
-    delete window.gContentAPI;
-    if (gTestTab)
-      gBrowser.removeTab(gTestTab);
-    delete window.gTestTab;
-    Services.prefs.clearUserPref("browser.uitour.enabled", true);
-    Services.perms.remove("example.com", "uitour");
-  });
-
-  function done() {
-    if (gTestTab)
-      gBrowser.removeTab(gTestTab);
-    gTestTab = null;
-
-    let highlight = document.getElementById("UITourHighlightContainer");
-    is_element_hidden(highlight, "Highlight should be closed/hidden after UITour tab is closed");
-
-    let tooltip = document.getElementById("UITourTooltip");
-    is_element_hidden(tooltip, "Tooltip should be closed/hidden after UITour tab is closed");
-
-    ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up");
-
-    is(UITour.pinnedTabs.get(window), null, "Any pinned tab should be closed after UITour tab is closed");
-
-    executeSoon(nextTest);
-  }
-
-  function nextTest() {
-    if (tests.length == 0) {
-      finish();
-      return;
-    }
-    let test = tests.shift();
-    info("Starting " + test.name);
-    loadTestPage(function() {
-      test(done);
-    });
-  }
-  nextTest();
+  UITourTest();
 }
 
 let tests = [
   function test_untrusted_host(done) {
-    loadTestPage(function() {
+    loadUITourTestPage(function() {
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");
       ise(bookmarksMenu.open, false, "Bookmark menu should initially be closed");
 
@@ -92,7 +26,7 @@ let tests = [
     }, "http://mochi.test:8888/");
   },
   function test_unsecure_host(done) {
-    loadTestPage(function() {
+    loadUITourTestPage(function() {
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");
       ise(bookmarksMenu.open, false, "Bookmark menu should initially be closed");
 
@@ -104,7 +38,7 @@ let tests = [
   },
   function test_unsecure_host_override(done) {
     Services.prefs.setBoolPref("browser.uitour.requireSecure", false);
-    loadTestPage(function() {
+    loadUITourTestPage(function() {
       let highlight = document.getElementById("UITourHighlight");
       is_element_hidden(highlight, "Highlight should initially be hidden");
 
@@ -146,6 +80,27 @@ let tests = [
 
     gContentAPI.showHighlight("urlbar");
     waitForElementToBeVisible(highlight, test_highlight_2, "Highlight should be shown after showHighlight()");
+  },
+  function test_highlight_circle(done) {
+    function check_highlight_size() {
+      let panel = highlight.parentElement;
+      let anchor = panel.anchorNode;
+      let anchorRect = anchor.getBoundingClientRect();
+      info("addons target: width: " + anchorRect.width + " height: " + anchorRect.height);
+      let maxDimension = Math.round(Math.max(anchorRect.width, anchorRect.height));
+      let highlightRect = highlight.getBoundingClientRect();
+      info("highlight: width: " + highlightRect.width + " height: " + highlightRect.height);
+      is(Math.round(highlightRect.width), maxDimension, "The width of the highlight should be equal to the largest dimension of the target");
+      is(Math.round(highlightRect.height), maxDimension, "The height of the highlight should be equal to the largest dimension of the target");
+      is(Math.round(highlightRect.height), Math.round(highlightRect.width), "The height and width of the highlight should be the same to create a circle");
+      is(highlight.style.borderRadius, "100%", "The border-radius should be 100% to create a circle");
+      done();
+    }
+    let highlight = document.getElementById("UITourHighlight");
+    is_element_hidden(highlight, "Highlight should initially be hidden");
+
+    gContentAPI.showHighlight("addons");
+    waitForElementToBeVisible(highlight, check_highlight_size, "Highlight should be shown after showHighlight()");
   },
   function test_highlight_customize_auto_open_close(done) {
     let highlight = document.getElementById("UITourHighlight");
