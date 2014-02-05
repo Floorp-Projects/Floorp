@@ -357,6 +357,7 @@ protected:
    */
   void                    DispatchFocusToTopLevelWindow(bool aIsActivate);
   bool                    DispatchStandardEvent(uint32_t aMsg);
+  bool                    DispatchCommandEvent(uint32_t aEventCommand);
   void                    RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
   virtual bool            ProcessMessage(UINT msg, WPARAM &wParam,
                                          LPARAM &lParam, LRESULT *aRetValue);
