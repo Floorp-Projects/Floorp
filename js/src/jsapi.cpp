@@ -615,6 +615,8 @@ JS_ShutDown(void)
     }
 #endif
 
+    WorkerThreadState().finish();
+
     PRMJ_NowShutdown();
 
 #if EXPOSE_INTL_API
@@ -4552,7 +4554,7 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
     if (maybecx)
         lfc.construct(maybecx);
 
-    return rt->workerThreadState->finishParseTask(maybecx, rt, token);
+    return WorkerThreadState().finishParseTask(maybecx, rt, token);
 #else
     MOZ_ASSUME_UNREACHABLE("Off thread compilation is not available.");
 #endif
