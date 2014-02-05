@@ -101,6 +101,10 @@ InspectorPanel.prototype = {
     return this._target.client.traits.editOuterHTML;
   },
 
+  get hasUrlToImageDataResolver() {
+    return this._target.client.traits.urlToImageDataResolver;
+  },
+
   _deferredOpen: function(defaultSelection) {
     let deferred = promise.defer();
 

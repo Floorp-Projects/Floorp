@@ -323,6 +323,7 @@ this.UITour = {
 
   teardownTour: function(aWindow, aWindowClosing = false) {
     aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
+    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.onAppMenuHiding);
     aWindow.removeEventListener("SSWindowClosing", this);
 
     let originTabs = this.originTabs.get(aWindow);
@@ -432,7 +433,10 @@ this.UITour = {
     }
 
     if (aTargetName == "pinnedTab") {
-      deferred.resolve({node: this.ensurePinnedTab(aWindow, aSticky)});
+      deferred.resolve({
+          targetName: aTargetName,
+          node: this.ensurePinnedTab(aWindow, aSticky)
+      });
       return deferred.promise;
     }
 
@@ -446,6 +450,7 @@ this.UITour = {
     aWindow.PanelUI.ensureReady().then(() => {
       if (typeof targetQuery == "function") {
         deferred.resolve({
+          targetName: aTargetName,
           node: targetQuery(aWindow.document),
           widgetName: targetObject.widgetName,
         });
@@ -453,6 +458,7 @@ this.UITour = {
       }
 
       deferred.resolve({
+        targetName: aTargetName,
         node: aWindow.document.querySelector(targetQuery),
         widgetName: targetObject.widgetName,
       });
@@ -573,12 +579,26 @@ this.UITour = {
         effect = this.highlightEffects[randomEffect];
       }
       highlighter.setAttribute("active", effect);
+      highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
 
       let targetRect = aTargetEl.getBoundingClientRect();
+      let highlightHeight = targetRect.height;
+      let highlightWidth = targetRect.width;
+      let minDimension = Math.min(highlightHeight, highlightWidth);
+      let maxDimension = Math.max(highlightHeight, highlightWidth);
 
-      highlighter.style.height = targetRect.height + "px";
-      highlighter.style.width = targetRect.width + "px";
+      // If the dimensions are within 40% of eachother, make the highlight a circle with the
+      // largest dimension as the diameter.
+      if (maxDimension / minDimension <= 1.4) {
+        highlightHeight = highlightWidth = maxDimension;
+        highlighter.style.borderRadius = "100%";
+      } else {
+        highlighter.style.borderRadius = "";
+      }
+
+      highlighter.style.height = highlightHeight + "px";
+      highlighter.style.width = highlightWidth + "px";
 
       // Close a previous highlight so we can relocate the panel.
       if (highlighter.parentElement.state == "open") {
@@ -591,10 +611,12 @@ this.UITour = {
       let paddingTopPx = 0 - parseFloat(containerStyle.paddingTop);
       let paddingLeftPx = 0 - parseFloat(containerStyle.paddingLeft);
       let highlightStyle = highlightWindow.getComputedStyle(highlighter);
+      let highlightHeightWithMin = Math.max(highlightHeight, parseFloat(highlightStyle.minHeight));
+      let highlightWidthWithMin = Math.max(highlightWidth, parseFloat(highlightStyle.minWidth));
       let offsetX = paddingTopPx
-                      - (Math.max(0, parseFloat(highlightStyle.minWidth) - targetRect.width) / 2);
+                      - (Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
       let offsetY = paddingLeftPx
-                      - (Math.max(0, parseFloat(highlightStyle.minHeight) - targetRect.height) / 2);
+                      - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
       highlighter.parentElement.openPopup(aTargetEl, "overlap", offsetX, offsetY);
     }
 
@@ -665,6 +687,7 @@ this.UITour = {
       let tooltipClose = document.getElementById("UITourTooltipClose");
       tooltipClose.addEventListener("command", this);
 
+      tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";
       tooltip.openPopup(aAnchorEl, alignment);
@@ -709,6 +732,7 @@ this.UITour = {
 
     if (aMenuName == "appMenu") {
       aWindow.PanelUI.panel.setAttribute("noautohide", "true");
+      aWindow.PanelUI.panel.addEventListener("popuphiding", this.onAppMenuHiding);
       if (aOpenCallback) {
         aWindow.PanelUI.panel.addEventListener("popupshown", onPopupShown);
       }
@@ -731,6 +755,31 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       closeMenuButton("bookmarks-menu-button");
     }
+  },
+
+  onAppMenuHiding: function(aEvent) {
+    let win = aEvent.target.ownerDocument.defaultView;
+    let annotationElements = new Map([
+      // [annotationElement (panel), method to hide the annotation]
+      [win.document.getElementById("UITourHighlightContainer"), UITour.hideHighlight.bind(UITour)],
+      [win.document.getElementById("UITourTooltip"), UITour.hideInfo.bind(UITour)],
+    ]);
+    annotationElements.forEach((hideMethod, annotationElement) => {
+      if (annotationElement.state != "closed") {
+        let targetName = annotationElement.getAttribute("targetName");
+        UITour.getTarget(win, targetName).then((aTarget) => {
+          // Since getTarget is async, we need to make sure that the target hasn't
+          // changed since it may have just moved to somewhere outside of the app menu.
+          if (annotationElement.getAttribute("targetName") != aTarget.targetName ||
+              annotationElement.state == "closed" ||
+              !UITour.targetIsInAppMenu(aTarget)) {
+            return;
+          }
+          hideMethod(win);
+        }).then(null, Cu.reportError);
+      }
+    });
+    UITour.appMenuOpenForAnnotation.clear();
   },
 
   startUrlbarCapture: function(aWindow, aExpectedText, aUrl) {

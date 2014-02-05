@@ -240,7 +240,6 @@ public:
   static const CSSRect CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
     const ScreenPoint& aVelocity,
-    const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
 
   /**
@@ -437,11 +436,6 @@ protected:
    * Gets a vector of the velocities of each axis.
    */
   const ScreenPoint GetVelocityVector();
-
-  /**
-   * Gets a vector of the acceleration factors of each axis.
-   */
-  const gfx::Point GetAccelerationVector();
 
   /**
    * Gets a reference to the first touch point from a MultiTouchInput.  This

@@ -168,7 +168,7 @@ class HomeAdapter extends FragmentStatePagerAdapter {
             args.putBoolean(HomePager.CAN_LOAD_ARG, mCanLoadHint);
 
             // Only DynamicPanels need the PanelConfig argument
-            if (mPanelConfig.getType() == PanelType.DYNAMIC) {
+            if (mPanelConfig.isDynamic()) {
                 args.putParcelable(HomePager.PANEL_CONFIG_ARG, mPanelConfig);
             }
 
