@@ -41,6 +41,7 @@
 #include "nsPresArena.h"
 #include "nsIImageLoadingContent.h"
 #include "nsMargin.h"
+#include "nsFrameState.h"
 
 class nsIContent;
 class nsDocShell;
@@ -92,7 +93,6 @@ class nsIWidget;
 struct nsArenaMemoryStats;
 
 typedef short SelectionType;
-typedef uint64_t nsFrameState;
 
 namespace mozilla {
 class Selection;
