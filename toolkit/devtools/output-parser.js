@@ -12,7 +12,6 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const MAX_ITERATIONS = 100;
 const REGEX_QUOTES = /^".*?"|^".*|^'.*?'|^'.*/;
-const REGEX_URL = /^url\(["']?(.+?)(?::(\d+))?["']?\)/;
 const REGEX_WHITESPACE = /^\s+/;
 const REGEX_FIRST_WORD_OR_CHAR = /^\w+|^./;
 const REGEX_CSS_PROPERTY_VALUE = /(^[^;]+)/;
@@ -120,6 +119,32 @@ OutputParser.prototype = {
   },
 
   /**
+   * Matches the beginning of the provided string to a css background-image url
+   * and return both the whole url(...) match and the url itself.
+   * This isn't handled via a regular expression to make sure we can match urls
+   * that contain parenthesis easily
+   */
+  _matchBackgroundUrl: function(text) {
+    let startToken = "url(";
+    if (text.indexOf(startToken) !== 0) {
+      return null;
+    }
+
+    let uri = text.substring(startToken.length).trim();
+    let quote = uri.substring(0, 1);
+    if (quote === "'" || quote === '"') {
+      uri = uri.substring(1, uri.search(new RegExp(quote + "\\s*\\)")));
+    } else {
+      uri = uri.substring(0, uri.indexOf(")"));
+      quote = "";
+    }
+    let end = startToken + quote + uri;
+    text = text.substring(0, text.indexOf(")", end.length) + 1);
+
+    return [text, uri.trim()];
+  },
+
+  /**
    * Parse a string.
    *
    * @param  {String} text
@@ -166,11 +191,11 @@ OutputParser.prototype = {
         continue;
       }
 
-      matched = text.match(REGEX_URL);
+      matched = this._matchBackgroundUrl(text);
       if (matched) {
         let [match, url] = matched;
-
         text = this._trimMatchFromStart(text, match);
+
         this._appendURL(match, url, options);
         continue;
       }
