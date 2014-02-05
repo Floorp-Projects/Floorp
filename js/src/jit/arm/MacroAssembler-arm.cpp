@@ -3777,7 +3777,9 @@ MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Type result)
       case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
       default: MOZ_ASSUME_UNREACHABLE("Invalid return type");
     }
+#ifdef DEBUG
     AssertValidABIFunctionType(passedArgTypes_);
+#endif
     ABIFunctionType type = ABIFunctionType(passedArgTypes_);
     fun = Simulator::RedirectNativeFunction(fun, type);
 #endif
