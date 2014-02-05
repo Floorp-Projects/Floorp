@@ -54,10 +54,6 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
 class nsPlaceholderFrame MOZ_FINAL : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
-#ifdef DEBUG
-  NS_DECL_QUERYFRAME_TARGET(nsPlaceholderFrame)
-  NS_DECL_QUERYFRAME
-#endif
 
   /**
    * Create a new placeholder frame.  aTypeBit must be one of the
