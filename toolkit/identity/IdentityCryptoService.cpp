@@ -156,7 +156,6 @@ private:
 
   void destructorSafeDestroyNSSReference()
   {
-    mKeyPair = nullptr;
   }
 
   const KeyType mKeyType; // in
