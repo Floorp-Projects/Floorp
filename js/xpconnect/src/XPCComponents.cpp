@@ -2550,8 +2550,7 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
     if (!mSandbox)
         mSandbox = NewSandboxConstructor();
 
-    nsCOMPtr<nsIXPCComponents_utils_Sandbox> rval = mSandbox;
-    rval.forget(aSandbox);
+    NS_ADDREF(*aSandbox = mSandbox);
     return NS_OK;
 }
 
