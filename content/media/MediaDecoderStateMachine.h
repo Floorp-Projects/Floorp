@@ -92,6 +92,13 @@ namespace mozilla {
 class AudioSegment;
 class VideoSegment;
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime
+// implementation.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 /*
   The state machine class. This manages the decoding and seeking in the
   MediaDecoderReader on the decode thread, and A/V sync on the shared
