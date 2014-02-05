@@ -168,6 +168,10 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         }
     }
 
+    public boolean isEnabled() {
+        return true;
+    }
+
     /**
      * Shut down database connections, unregister event listeners, and perform
      * provider-specific uninitialization.

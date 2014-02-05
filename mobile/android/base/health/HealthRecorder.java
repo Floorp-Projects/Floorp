@@ -13,6 +13,11 @@ import org.json.JSONObject;
  * HealthRecorder is an interface into the Firefox Health Report storage system.
  */
 public interface HealthRecorder {
+    /**
+     * Returns whether the Health Recorder is actively recording events.
+     */
+    public boolean isEnabled();
+
     public void setCurrentSession(SessionInformation session);
     public void checkForOrphanSessions();
 
