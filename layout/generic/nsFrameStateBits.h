@@ -436,12 +436,7 @@ FRAME_STATE_BIT(Block, 29, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
 // NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET and NS_BLOCK_FRAME_HAS_INSIDE_BULLET
 // means the block has an associated bullet frame, they are mutually exclusive.
 FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)
-
-// NS_BLOCK_HAS_FIRST_LETTER_CHILD means that there is an inflow first-letter
-// frame among the block's descendants. If there is a floating first-letter
-// frame, or the block has first-letter style but has no first letter, this
-// bit is not set. This bit is set on the first continuation only.
-FRAME_STATE_BIT(Block, 31, NS_BLOCK_HAS_FIRST_LETTER_CHILD)
+FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_BULLET)
 
 // This block has had a child marked dirty, so before we reflow we need
 // to look through the lines to find any such children and mark
@@ -458,7 +453,11 @@ FRAME_STATE_BIT(Block, 61, NS_BLOCK_LOOK_FOR_DIRTY_FRAMES)
 // sizing with font inflation enabled.
 FRAME_STATE_BIT(Block, 62, NS_BLOCK_FRAME_INTRINSICS_INFLATED)
 
-FRAME_STATE_BIT(Block, 63, NS_BLOCK_FRAME_HAS_INSIDE_BULLET)
+// NS_BLOCK_HAS_FIRST_LETTER_CHILD means that there is an inflow first-letter
+// frame among the block's descendants. If there is a floating first-letter
+// frame, or the block has first-letter style but has no first letter, this
+// bit is not set. This bit is set on the first continuation only.
+FRAME_STATE_BIT(Block, 63, NS_BLOCK_HAS_FIRST_LETTER_CHILD)
 
 
 // == Frame state bits that apply to bullet frames ============================
