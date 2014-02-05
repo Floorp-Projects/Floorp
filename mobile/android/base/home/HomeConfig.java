@@ -108,7 +108,13 @@ public final class HomeConfig {
         }
 
         public PanelConfig(JSONObject json) throws JSONException, IllegalArgumentException {
-            mType = PanelType.fromId(json.getString(JSON_KEY_TYPE));
+            final String panelType = json.optString(JSON_KEY_TYPE, null);
+            if (TextUtils.isEmpty(panelType)) {
+                mType = PanelType.DYNAMIC;
+            } else {
+                mType = PanelType.fromId(panelType);
+            }
+
             mTitle = json.getString(JSON_KEY_TITLE);
             mId = json.getString(JSON_KEY_ID);
 
