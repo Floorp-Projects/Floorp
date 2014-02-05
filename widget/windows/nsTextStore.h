@@ -587,7 +587,6 @@ protected:
       mText = aText;
       mMinTextModifiedOffset = NOT_MODIFIED;
       mInitialized = true;
-      mNotifyTSFOfLayoutChange = false;
     }
 
     const nsDependentSubstring GetSelectedText() const;
@@ -620,16 +619,6 @@ protected:
       return mInitialized && (mMinTextModifiedOffset != NOT_MODIFIED);
     }
 
-    void NeedsToNotifyTSFOfLayoutChange()
-    {
-      mNotifyTSFOfLayoutChange = true;
-    }
-
-    bool NeedToNotifyTSFOfLayoutChange() const
-    {
-      return mInitialized && mNotifyTSFOfLayoutChange;
-    }
-
     nsTextStore::Composition& Composition() { return mComposition; }
     nsTextStore::Selection& Selection() { return mSelection; }
 
@@ -646,7 +635,6 @@ protected:
     uint32_t mMinTextModifiedOffset;
 
     bool mInitialized;
-    bool mNotifyTSFOfLayoutChange;
   };
   // mContent caches "current content" of the document ONLY while the document
   // is locked.  I.e., the content is cleared at unlocking the document since
@@ -670,9 +658,15 @@ protected:
   // selection change is caused by a call of On*Composition() without document
   // lock since RequestLock() tries to flush the pending actions again (which
   // are flushing).  Therefore, OnSelectionChangeInternal() sets this true
-  // during recoding actions and then, FlushPendingActions() will call
-  // mSink->OnSelectionChange().
-  bool                         mNotifySelectionChange;
+  // during recoding actions and then, RequestLock() will call
+  // mSink->OnSelectionChange() after mLock becomes 0.
+  bool                         mPendingOnSelectionChange;
+  // If GetTextExt() or GetACPFromPoint() is called and the layout hasn't been
+  // calculated yet, these methods return TS_E_NOLAYOUT.  Then, RequestLock()
+  // will call mSink->OnLayoutChange() and
+  // ITfContextOwnerServices::OnLayoutChange() after the layout is fixed and
+  // the document is unlocked.
+  bool                         mPendingOnLayoutChange;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
 
