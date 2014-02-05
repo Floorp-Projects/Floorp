@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIST_FILES := package-name.txt.in
+DIST_FILES := \
+  package-name.txt.in \
+  $(NULL)
 
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
@@ -163,9 +165,35 @@ PP_TARGETS += preprocessed_package
 
 include $(topsrcdir)/config/rules.mk
 
+not_android_res_files := \
+  *.mkdir.done* \
+  *.DS_Store* \
+  $(NULL)
+
 # This uses the fact that Android resource directories list all
 # resource files one subdirectory below the parent resource directory.
-android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS)))))
+android_res_files := $(filter-out $(not_android_res_files),$(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS))))))
+
+# For GeckoView, we want a zip of an Android res/ directory that
+# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
+# directory must have the Android resource two-layer hierarchy.
+
+# The following helper zips files in a directory into a zip file while
+# maintaining the directory structure rooted below the directory.
+# (adding or creating said file as appropriate).  For example, if the
+# dir contains dir/subdir/file, calling with directory dir would
+# create a zip containing subdir/file.  Note: the trailing newline is
+# necessary.
+
+# $(1): zip file to add to (or create).
+# $(2): directory to zip contents of.
+define zip_directory_with_relative_paths
+cd $(2) && zip -q $(1) -r * -x $(not_android_res_files)
+
+endef
+
+geckoview_resources.zip: $(android_res_files) $(GLOBAL_DEPS)
+	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
 
 $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATED_RESFILES))))
 
@@ -241,7 +269,8 @@ fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
 
-libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
+libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
+	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
 	 (echo '*** Error: The generated JNI code has changed. Please run cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android and repeat the build.' && exit 1)
