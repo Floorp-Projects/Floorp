@@ -7,6 +7,7 @@ package org.mozilla.gecko.favicons;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -465,15 +466,19 @@ public class Favicons {
     }
 
     /**
-     * Sidestep the cache and get, from either the database or the internet, the largest available
-     * Favicon for the given page URL. Useful for creating homescreen shortcuts without being limited
-     * by possibly low-resolution values in the cache.
-     * Deduces the favicon URL from the history database and, ultimately, guesses.
+     * Sidestep the cache and get, from either the database or the internet, a favicon
+     * suitable for use as an app icon for the provided URL.
      *
-     * @param url Page URL to get a large favicon image fro.
-     * @param onFaviconLoadedListener Listener to call back with the result.
+     * Useful for creating homescreen shortcuts without being limited
+     * by possibly low-resolution values in the cache.
+     *
+     * Deduces the favicon URL from the browser database, guessing if necessary.
+     *
+     * @param url page URL to get a large favicon image for.
+     * @param onFaviconLoadedListener listener to call back with the result.
      */
-    public static void getLargestFaviconForPage(String url, OnFaviconLoadedListener onFaviconLoadedListener) {
-        loadUncachedFavicon(url, null, 0, -1, onFaviconLoadedListener);
+    public static void getPreferredSizeFaviconForPage(String url, OnFaviconLoadedListener onFaviconLoadedListener) {
+        int preferredSize = GeckoAppShell.getPreferredIconSize();
+        loadUncachedFavicon(url, null, 0, preferredSize, onFaviconLoadedListener);
     }
 }
