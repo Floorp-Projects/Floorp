@@ -143,18 +143,27 @@ nsScrollbarFrame::SetScrollbarMediatorContent(nsIContent* aMediator)
 nsIScrollbarMediator*
 nsScrollbarFrame::GetScrollbarMediator()
 {
-  if (!mScrollbarMediator)
+  if (!mScrollbarMediator) {
     return nullptr;
-  nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
-
-  // check if the frame is a scroll frame. If so, get the scrollable frame
-  // inside it.
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(f);
-  if (scrollFrame) {
-    f = scrollFrame->GetScrolledFrame();
   }
+  nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(f);
+  nsIScrollbarMediator* sbm;
 
-  nsIScrollbarMediator* sbm = do_QueryFrame(f);
+  if (scrollFrame) {
+    nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
+    sbm = do_QueryFrame(scrolledFrame);
+    if (sbm) {
+      return sbm;
+    }
+  }
+  sbm = do_QueryFrame(f);
+  if (f && !sbm) {
+    f = f->PresContext()->PresShell()->GetRootScrollFrame();
+    if (f && f->GetContent() == mScrollbarMediator) {
+      return do_QueryFrame(f);
+    }
+  }
   return sbm;
 }
 

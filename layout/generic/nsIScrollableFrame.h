@@ -14,6 +14,7 @@
 #include "ScrollbarStyles.h"
 #include "mozilla/gfx/Point.h"
 #include "nsIScrollbarOwner.h"
+#include "nsIScrollbarMediator.h"
 #include "Units.h"
 
 #define NS_DEFAULT_VERTICAL_SCROLL_DISTANCE   3
@@ -32,7 +33,8 @@ class nsIAtom;
  * APIs for examining scroll state, observing changes to scroll state,
  * and triggering scrolling.
  */
-class nsIScrollableFrame : public nsIScrollbarOwner {
+class nsIScrollableFrame : public nsIScrollbarOwner,
+                           public nsIScrollbarMediator {
 public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
 
