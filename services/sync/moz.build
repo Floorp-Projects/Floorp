@@ -8,6 +8,9 @@ DIRS += ['locales']
 TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [
-    'SyncComponents.manifest',
     'Weave.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'SyncComponents.manifest',
 ]
