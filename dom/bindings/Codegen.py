@@ -2820,13 +2820,15 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                                          aPrincipal);
 
 %s
+%s
 
   // XXXkhuey can't do this yet until workers can lazy resolve.
   // JS_FireOnNewGlobalObject(aCx, obj);
 
   return obj;""" % (AssertInheritanceChain(self.descriptor),
                     self.descriptor.nativeType,
-                    InitUnforgeableProperties(self.descriptor, self.properties))
+                    InitUnforgeableProperties(self.descriptor, self.properties),
+                    InitMemberSlots(self.descriptor, True))
 
 
 class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
@@ -6706,7 +6708,9 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
         if self.attr.slotIndex is not None:
-            if self.descriptor.hasXPConnectImpls:
+            if (self.descriptor.hasXPConnectImpls and
+                (self.descriptor.interface.identifier.name != 'Window' or
+                 self.attr.identifier.name != 'document')):
                 raise TypeError("Interface '%s' has XPConnect impls, so we "
                                 "can't use our slot for property '%s'!" %
                                 (self.descriptor.interface.identifier.name,

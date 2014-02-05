@@ -2324,6 +2324,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // having to *always* reach into the inner window to find the
   // document.
   mDoc = aDocument;
+  if (IsInnerWindow() && IsDOMBinding()) {
+    WindowBinding::ClearCachedDocumentValue(cx, this);
+  }
 
   // Take this opportunity to clear mSuspendedDoc. Our old inner window is now
   // responsible for unsuspending it.
@@ -2590,16 +2593,20 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       if (newInnerWindow->mDoc != aDocument) {
         newInnerWindow->mDoc = aDocument;
 
-        // We're reusing the inner window for a new document. In this
-        // case we don't clear the inner window's scope, but we must
-        // make sure the cached document property gets updated.
+        if (newInnerWindow->IsDOMBinding()) {
+          WindowBinding::ClearCachedDocumentValue(cx, newInnerWindow);
+        } else {
+          // We're reusing the inner window for a new document. In this
+          // case we don't clear the inner window's scope, but we must
+          // make sure the cached document property gets updated.
 
-        // XXXmarkh - tell other languages about this?
-        JS::Rooted<JSObject*> obj(cx, currentInner->GetWrapperPreserveColor());
-        ::JS_DeleteProperty(cx, obj, "document");
+          JS::Rooted<JSObject*> obj(cx,
+                                    currentInner->GetWrapperPreserveColor());
+          ::JS_DeleteProperty(cx, obj, "document");
+        }
       }
     } else {
-      newInnerWindow->InnerSetNewDocument(aDocument);
+      newInnerWindow->InnerSetNewDocument(cx, aDocument);
 
       // Initialize DOM classes etc on the inner window.
       JS::Rooted<JSObject*> obj(cx, newInnerGlobal);
@@ -2715,7 +2722,7 @@ nsGlobalWindow::ClearStatus()
 }
 
 void
-nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
+nsGlobalWindow::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
 {
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
   MOZ_ASSERT(aDocument);
@@ -2731,6 +2738,9 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 #endif
 
   mDoc = aDocument;
+  if (IsDOMBinding()) {
+    WindowBinding::ClearCachedDocumentValue(aCx, this);
+  }
   mFocusedNode = nullptr;
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
@@ -13626,6 +13636,17 @@ nsGlobalWindow::GetSidebar(OwningExternalOrWindowProxy& aResult,
 #else
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 #endif
+}
+
+/* static */
+bool
+nsGlobalWindow::WindowOnWebIDL(JSContext* aCx, JSObject* aObj)
+{
+  DebugOnly<nsGlobalWindow*> win;
+  MOZ_ASSERT_IF(IsDOMObject(aObj),
+                NS_SUCCEEDED(UNWRAP_OBJECT(Window, aObj, win)));
+
+  return IsDOMObject(aObj);
 }
 
 #ifdef MOZ_B2G
