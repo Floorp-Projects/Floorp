@@ -323,6 +323,7 @@ this.UITour = {
 
   teardownTour: function(aWindow, aWindowClosing = false) {
     aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
+    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.onAppMenuHiding);
     aWindow.removeEventListener("SSWindowClosing", this);
 
     let originTabs = this.originTabs.get(aWindow);
@@ -432,7 +433,10 @@ this.UITour = {
     }
 
     if (aTargetName == "pinnedTab") {
-      deferred.resolve({node: this.ensurePinnedTab(aWindow, aSticky)});
+      deferred.resolve({
+          targetName: aTargetName,
+          node: this.ensurePinnedTab(aWindow, aSticky)
+      });
       return deferred.promise;
     }
 
@@ -446,6 +450,7 @@ this.UITour = {
     aWindow.PanelUI.ensureReady().then(() => {
       if (typeof targetQuery == "function") {
         deferred.resolve({
+          targetName: aTargetName,
           node: targetQuery(aWindow.document),
           widgetName: targetObject.widgetName,
         });
@@ -453,6 +458,7 @@ this.UITour = {
       }
 
       deferred.resolve({
+        targetName: aTargetName,
         node: aWindow.document.querySelector(targetQuery),
         widgetName: targetObject.widgetName,
       });
@@ -573,6 +579,7 @@ this.UITour = {
         effect = this.highlightEffects[randomEffect];
       }
       highlighter.setAttribute("active", effect);
+      highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
 
       let targetRect = aTargetEl.getBoundingClientRect();
@@ -680,6 +687,7 @@ this.UITour = {
       let tooltipClose = document.getElementById("UITourTooltipClose");
       tooltipClose.addEventListener("command", this);
 
+      tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";
       tooltip.openPopup(aAnchorEl, alignment);
@@ -724,6 +732,7 @@ this.UITour = {
 
     if (aMenuName == "appMenu") {
       aWindow.PanelUI.panel.setAttribute("noautohide", "true");
+      aWindow.PanelUI.panel.addEventListener("popuphiding", this.onAppMenuHiding);
       if (aOpenCallback) {
         aWindow.PanelUI.panel.addEventListener("popupshown", onPopupShown);
       }
@@ -746,6 +755,31 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       closeMenuButton("bookmarks-menu-button");
     }
+  },
+
+  onAppMenuHiding: function(aEvent) {
+    let win = aEvent.target.ownerDocument.defaultView;
+    let annotationElements = new Map([
+      // [annotationElement (panel), method to hide the annotation]
+      [win.document.getElementById("UITourHighlightContainer"), UITour.hideHighlight.bind(UITour)],
+      [win.document.getElementById("UITourTooltip"), UITour.hideInfo.bind(UITour)],
+    ]);
+    annotationElements.forEach((hideMethod, annotationElement) => {
+      if (annotationElement.state != "closed") {
+        let targetName = annotationElement.getAttribute("targetName");
+        UITour.getTarget(win, targetName).then((aTarget) => {
+          // Since getTarget is async, we need to make sure that the target hasn't
+          // changed since it may have just moved to somewhere outside of the app menu.
+          if (annotationElement.getAttribute("targetName") != aTarget.targetName ||
+              annotationElement.state == "closed" ||
+              !UITour.targetIsInAppMenu(aTarget)) {
+            return;
+          }
+          hideMethod(win);
+        }).then(null, Cu.reportError);
+      }
+    });
+    UITour.appMenuOpenForAnnotation.clear();
   },
 
   startUrlbarCapture: function(aWindow, aExpectedText, aUrl) {
