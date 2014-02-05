@@ -597,7 +597,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
     uint32_t offset = script->pcToOffset(pc);
 
     // See if this pc is the next typeset opcode after the last one looked up.
-    if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets()) {
+    if ((*hint + 1) < script->nTypeSets() && bytecodeMap[*hint + 1] == offset) {
         (*hint)++;
         return typeArray + *hint;
     }

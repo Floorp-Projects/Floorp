@@ -92,6 +92,10 @@
 #define getpid _getpid
 #endif
 
+#ifdef MOZ_X11
+#include "mozilla/X11Util.h"
+#endif
+
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -351,6 +355,13 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
+
+#ifdef MOZ_X11
+    // Send the parent our X socket to act as a proxy reference for our X
+    // resources.
+    int xSocketFd = ConnectionNumber(DefaultXDisplay());
+    SendBackUpXResources(FileDescriptor(xSocketFd));
+#endif
 
 #ifdef MOZ_CRASHREPORTER
     SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),

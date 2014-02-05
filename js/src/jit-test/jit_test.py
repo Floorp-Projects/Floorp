@@ -95,6 +95,8 @@ def main(argv):
     op.add_option('--localLib', dest='local_lib', action='store',
                   type='string',
                   help='The location of libraries to push -- preferably stripped')
+    op.add_option('--repeat', type=int, default=1,
+                  help='Repeat tests the given number of times.')
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
