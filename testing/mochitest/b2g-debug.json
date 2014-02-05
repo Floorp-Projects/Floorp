@@ -381,6 +381,7 @@
     "dom/tests/mochitest/localstorage/test_localStorageReplace.html":"",
     "dom/tests/mochitest/sessionstorage/test_cookieSession.html":"",
     "dom/tests/mochitest/sessionstorage/test_sessionStorageBaseSessionOnly.html":"",
+    "dom/tests/mochitest/sessionstorage/test_sessionStorageClone.html":"bug 968051",
 
     "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"window.open focus issues (using fullscreen)",
     "dom/tests/mochitest/sessionstorage/test_sessionStorageBase.html":"",
