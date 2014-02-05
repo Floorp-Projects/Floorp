@@ -359,7 +359,7 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
   // For each requested table that didn't have chunk data in the database,
   // request it fresh
   for (var tableName in tableNames) {
-    request += tableName + "\n";
+    request += tableName + ";\n";
   }
 
   G_Debug(this, 'checkForUpdates: scheduling request..');
