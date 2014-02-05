@@ -23,6 +23,7 @@
     ondialogaccept="return doOKButton();"
     title="&dialog.title;"
     buttons="disclosure"
+    aria-describedby="dialog-header"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="cookieAcceptDialog.js" type="application/javascript"/>
@@ -69,42 +70,42 @@
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label value="&props.name.label;"/>
+              <label value="&props.name.label;" control="ifl_name"/>
             </hbox>
             <textbox id="ifl_name" readonly="true" class="plain"/>
           </row>
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label value="&props.value.label;"/>
+              <label value="&props.value.label;" control="ifl_value"/>
             </hbox>
             <textbox id="ifl_value" readonly="true" class="plain"/>
           </row>
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label id="ifl_isDomain" value="&props.domain.label;"/>
+              <label id="ifl_isDomain" value="&props.domain.label;" control="ifl_host"/>
             </hbox>
             <textbox id="ifl_host" readonly="true" class="plain"/>
           </row>
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label value="&props.path.label;"/>
+              <label value="&props.path.label;" control="ifl_path"/>
             </hbox>
             <textbox id="ifl_path" readonly="true" class="plain"/>
           </row>
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label value="&props.secure.label;"/>
+              <label value="&props.secure.label;" control="ifl_isSecure"/>
             </hbox>
             <textbox id="ifl_isSecure" readonly="true" class="plain"/>
           </row>
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label value="&props.expires.label;"/>
+              <label value="&props.expires.label;" control="ifl_expires"/>
             </hbox>
             <textbox id="ifl_expires" readonly="true" class="plain"/>
           </row>
