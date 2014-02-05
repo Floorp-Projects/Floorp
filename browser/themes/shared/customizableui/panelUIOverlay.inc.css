@@ -322,6 +322,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
 }
 
+#customization-panelHolder #PanelUI-customize {
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-customizeFinish.png);
+}
+
 #PanelUI-help {
   list-style-image: url(chrome://browser/skin/menuPanel-help.png);
 }
@@ -378,16 +382,15 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   background-color: #ad3434;
 }
 
-#main-window[customize-entered] #PanelUI-customize {
+#customization-panelHolder #PanelUI-customize {
   color: white;
-  background-image: linear-gradient(rgb(41,123,204), rgb(40,133,203));
-  box-shadow: inset 0 1px 1px rgba(0,0,0,0.5), 0 2px rgba(255,255,255,0.2);
-  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  background-color: rgb(116,191,67);
+  text-shadow: none;
 }
 
-#main-window[customize-entered] #PanelUI-customize:hover,
-#main-window[customize-entered] #PanelUI-customize:hover:active {
-  background-image: linear-gradient(rgb(38,115,191), rgb(38,125,191));
+#customization-panelHolder #PanelUI-customize:hover,
+#customization-panelHolder #PanelUI-customize:hover:active {
+  background-color: rgb(105,173,61);
 }
 
 #customization-palette .toolbarbutton-multiline-text,
