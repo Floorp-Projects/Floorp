@@ -35,7 +35,6 @@ void nsNSSCertCache::virtualDestroyNSSReference()
 
 void nsNSSCertCache::destructorSafeDestroyNSSReference()
 {
-  mCertList = nullptr;
 }
 
 NS_IMETHODIMP
