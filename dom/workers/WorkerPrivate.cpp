@@ -3396,6 +3396,11 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal)
 
   mLoadInfo.mPrincipal = aPrincipal;
   mLoadInfo.mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
+  uint16_t appStatus = aPrincipal->GetAppStatus();
+  mLoadInfo.mIsInPrivilegedApp =
+    (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
+     appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
+  mLoadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
 }
 
 template <class Derived>
