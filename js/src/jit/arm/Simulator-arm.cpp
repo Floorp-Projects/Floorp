@@ -404,7 +404,7 @@ class AutoLockSimulatorRuntime
 
 bool Simulator::ICacheCheckingEnabled = false;
 
-int Simulator::StopSimAt = -1;
+int64_t Simulator::StopSimAt = -1L;
 
 SimulatorRuntime *
 CreateSimulatorRuntime()
@@ -422,9 +422,11 @@ CreateSimulatorRuntime()
         Simulator::ICacheCheckingEnabled = true;
 
     char *stopAtStr = getenv("ARM_SIM_STOP_AT");
-    int32_t stopAt;
-    if (stopAtStr && sscanf(stopAtStr, "%d", &stopAt) == 1)
+    int64_t stopAt;
+    if (stopAtStr && sscanf(stopAtStr, "%lld", &stopAt) == 1) {
+        fprintf(stderr, "\nStopping simulation at icount %lld\n", stopAt);
         Simulator::StopSimAt = stopAt;
+    }
 
     return srt;
 }
@@ -1087,7 +1089,7 @@ Simulator::Simulator(SimulatorRuntime *srt)
         MOZ_CRASH();
     }
     pc_modified_ = false;
-    icount_ = 0;
+    icount_ = 0L;
     resume_pc_ = 0;
     break_pc_ = nullptr;
     break_instr_ = 0;
@@ -3871,6 +3873,7 @@ Simulator::execute()
 
     while (program_counter != end_sim_pc) {
         if (EnableStopSimAt && (icount_ == Simulator::StopSimAt)) {
+            fprintf(stderr, "\nStopped simulation at icount %lld\n", icount_);
             ArmDebugger dbg(this);
             dbg.debug();
         } else {
@@ -3915,7 +3918,7 @@ Simulator::callInternal(uint8_t *entry)
 
     // Set up the callee-saved registers with a known value. To be able to check
     // that they are preserved properly across JS execution.
-    int32_t callee_saved_value = icount_;
+    int32_t callee_saved_value = uint32_t(icount_);
     set_register(r4, callee_saved_value);
     set_register(r5, callee_saved_value);
     set_register(r6, callee_saved_value);
@@ -3926,7 +3929,7 @@ Simulator::callInternal(uint8_t *entry)
     set_register(r11, callee_saved_value);
 
     // Start the simulation
-    if (Simulator::StopSimAt != -1)
+    if (Simulator::StopSimAt != -1L)
         execute<true>();
     else
         execute<false>();
