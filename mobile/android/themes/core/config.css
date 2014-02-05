@@ -68,7 +68,7 @@ body {
     display: inline-block;
     height: 100%;
     min-width: 3em;
-    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     opacity: 0.75;
 }
 
@@ -132,7 +132,7 @@ ul {
     padding-top: 0;
     margin: 0;
     padding-left: 0;
-    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     box-shadow: 0 0 5px #000000;
     overflow-x: hidden;
 }
@@ -141,7 +141,7 @@ ul {
     width: 100%;
     margin: 0;
     background-color: #ffffff;
-    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     box-shadow: 0 0 5px #000000;
     overflow-x: hidden;
     max-width: 40em;
@@ -264,7 +264,7 @@ li {
 
 .pref-button {
     display: inline-block;
-    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     text-align: center;
     padding: 10px 1em;
     border-left: 1px solid rgba(0,0,0,0.1);
