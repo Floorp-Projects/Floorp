@@ -45,7 +45,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
  * @param host
  *        The url of the host
  */
-function HawkClient(host) {
+this.HawkClient = function(host) {
   this.host = host;
 
   // Clock offset in milliseconds between our client's clock and the date
@@ -53,7 +53,7 @@ function HawkClient(host) {
   this._localtimeOffsetMsec = 0;
 }
 
-HawkClient.prototype = {
+this.HawkClient.prototype = {
 
   /*
    * Construct an error message for a response.  Private.
