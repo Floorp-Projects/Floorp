@@ -5245,7 +5245,7 @@ if (!${obj}) {
             else:
                 preserveWrapper = ""
             if self.idlNode.getExtendedAttribute("Frozen"):
-                assert self.idlNode.type.isSequence()
+                assert self.idlNode.type.isSequence() or self.idlNode.type.isDictionary()
                 freezeValue = CGGeneric(
                     "JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());\n"
                     "if (!JS_FreezeObject(cx, rvalObj)) {\n"

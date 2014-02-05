@@ -467,6 +467,20 @@ interface TestJSImplInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
+  [Cached, Pure]
+  readonly attribute Dict readonlyDictionary;
+  // No support for nullable dictionary return values here yet
+  //  [Cached, Pure]
+  //  readonly attribute Dict? readonlyNullableDictionary;
+  [Cached, Pure]
+  attribute Dict writableDictionary;
+  [Cached, Pure, Frozen]
+  readonly attribute Dict readonlyFrozenDictionary;
+  // No support for nullable dictionary return values here yet
+  //  [Cached, Pure, Frozen]
+  //  readonly attribute Dict? readonlyFrozenNullableDictionary;
+  [Cached, Pure, Frozen]
+  attribute Dict writableFrozenDictionary;
   Dict receiveDictionary();
   // No support for nullable dictionary return values here yet
   //  Dict? receiveNullableDictionary();
