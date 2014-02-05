@@ -2594,7 +2594,7 @@ abstract public class BrowserApp extends GeckoApp
                                                   final EventDispatcher dispatcher,
                                                   final String osLocale,
                                                   final String appLocale,
-                                                  SessionInformation previousSession) {
+                                                  final SessionInformation previousSession) {
         return new BrowserHealthRecorder(context,
                                          profilePath,
                                          dispatcher,
