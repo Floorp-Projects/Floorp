@@ -642,8 +642,9 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     // something other than the APZ code, we want to tell the APZ to update
     // its scroll offset.
     nsIAtom* originOfLastScroll = scrollableFrame->OriginOfLastScroll();
-    metrics.mUpdateScrollOffset = (originOfLastScroll && originOfLastScroll != nsGkAtoms::apz);
-    scrollableFrame->ResetOriginOfLastScroll();
+    if (originOfLastScroll && originOfLastScroll != nsGkAtoms::apz) {
+      metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
+    }
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();

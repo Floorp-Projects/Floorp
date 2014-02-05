@@ -220,6 +220,8 @@ public:
                                       const nsIntSize& size,
                                       const ScreenOrientation& orientation) MOZ_OVERRIDE;
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    virtual bool RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
+                                             const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
     virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
     virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
     virtual bool RecvHandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
