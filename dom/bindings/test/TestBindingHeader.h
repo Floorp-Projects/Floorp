@@ -697,6 +697,11 @@ public:
   void Prefable17();
   void Prefable18();
   void Prefable19();
+  void Prefable20();
+  void Prefable21();
+  void Prefable22();
+  void Prefable23();
+  void Prefable24();
 
   // Miscellania
   int32_t AttrWithLenientThis();
