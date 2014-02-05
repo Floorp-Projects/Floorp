@@ -771,11 +771,11 @@ CreateHolderIfNeeded(HandleObject obj, MutableHandleValue d,
                      nsIXPConnectJSObjectHolder** dest)
 {
     if (dest) {
-        XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(obj);
+        nsRefPtr<XPCJSObjectHolder> objHolder = XPCJSObjectHolder::newHolder(obj);
         if (!objHolder)
             return false;
 
-        NS_ADDREF(*dest = objHolder);
+        objHolder.forget(dest);
     }
 
     d.setObjectOrNull(obj);
@@ -1149,9 +1149,8 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if (iface) {
                 // just pass through the exception (with extra ref and all)
-                nsIException* temp = iface;
-                NS_ADDREF(temp);
-                *exceptn = temp;
+                nsCOMPtr<nsIException> temp = iface;
+                temp.forget(exceptn);
                 return NS_OK;
             } else {
                 // it is a wrapped native, but not an exception!

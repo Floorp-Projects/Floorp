@@ -3558,7 +3558,8 @@ public:
     }
     bool GetLocationURI(LocationHint aLocationHint, nsIURI **aURI) {
         if (locationURI) {
-            NS_IF_ADDREF(*aURI = locationURI);
+            nsCOMPtr<nsIURI> rval = locationURI;
+            rval.forget(aURI);
             return true;
         }
         return TryParseLocationURI(aLocationHint, aURI);
