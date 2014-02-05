@@ -169,9 +169,6 @@ PR_IMPLEMENT(void) PR_DestroyLock(PRLock *lock)
 
 PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
 {
-    /* Nb: PR_Lock must not call PR_GetCurrentThread to access the |id| or
-     * |tid| field of the current thread's PRThread structure because
-     * _pt_root calls PR_Lock before setting thred->id and thred->tid. */
     PRIntn rv;
     PR_ASSERT(lock != NULL);
     rv = pthread_mutex_lock(&lock->mutex);
@@ -192,15 +189,14 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
 
 PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
 {
-    pthread_t self = pthread_self();
     PRIntn rv;
 
     PR_ASSERT(lock != NULL);
     PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(lock->mutex));
     PR_ASSERT(PR_TRUE == lock->locked);
-    PR_ASSERT(pthread_equal(lock->owner, self));
+    PR_ASSERT(pthread_equal(lock->owner, pthread_self()));
 
-    if (!lock->locked || !pthread_equal(lock->owner, self))
+    if (!lock->locked || !pthread_equal(lock->owner, pthread_self()))
         return PR_FAILURE;
 
     lock->locked = PR_FALSE;
@@ -297,7 +293,7 @@ static void pt_PostNotifyToCvar(PRCondVar *cvar, PRBool broadcast)
                     notified->cv[index].times = -1;
                 else if (-1 != notified->cv[index].times)
                     notified->cv[index].times += 1;
-                return;  /* we're finished */
+                goto finished;  /* we're finished */
             }
         }
         /* if not full, enter new CV in this array */
@@ -314,6 +310,10 @@ static void pt_PostNotifyToCvar(PRCondVar *cvar, PRBool broadcast)
     notified->cv[index].times = (broadcast) ? -1 : 1;
     notified->cv[index].cv = cvar;
     notified->length += 1;
+
+finished:
+    PR_ASSERT(PR_TRUE == cvar->lock->locked);
+    PR_ASSERT(pthread_equal(cvar->lock->owner, pthread_self()));
 }  /* pt_PostNotifyToCvar */
 
 PR_IMPLEMENT(PRCondVar*) PR_NewCondVar(PRLock *lock)
@@ -427,92 +427,54 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAllCondVar(PRCondVar *cvar)
 /**************************************************************/
 /**************************************************************/
 
-/*
- * Notifies just get posted to the monitor. The actual notification is done
- * when the monitor is exited so that MP systems don't contend for a monitor
- * that they can't enter.
- */
-static void pt_PostNotifyToMonitor(PRMonitor *mon, PRBool broadcast)
-{
-    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mon);
-
-    /* mon->notifyTimes is protected by the monitor, so we don't need to
-     * acquire mon->lock.
-     */
-    if (broadcast)
-        mon->notifyTimes = -1;
-    else if (-1 != mon->notifyTimes)
-        mon->notifyTimes += 1;
-}  /* pt_PostNotifyToMonitor */
-
-static void pt_PostNotifiesFromMonitor(pthread_cond_t *cv, PRIntn times)
-{
-    PRIntn rv;
-
-    /*
-     * Time to actually notify any waits that were affected while the monitor
-     * was entered.
-     */
-    PR_ASSERT(NULL != cv);
-    PR_ASSERT(0 != times);
-    if (-1 == times)
-    {
-        rv = pthread_cond_broadcast(cv);
-        PR_ASSERT(0 == rv);
-    }
-    else
-    {
-        while (times-- > 0)
-        {
-            rv = pthread_cond_signal(cv);
-            PR_ASSERT(0 == rv);
-        }
-    }
-}  /* pt_PostNotifiesFromMonitor */
-
 PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
 {
     PRMonitor *mon;
+    PRCondVar *cvar;
     int rv;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-    mon = PR_NEWZAP(PRMonitor);
-    if (mon == NULL)
+    cvar = PR_NEWZAP(PRCondVar);
+    if (NULL == cvar)
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         return NULL;
     }
+    mon = PR_NEWZAP(PRMonitor);
+    if (mon == NULL)
+    {
+        PR_Free(cvar);
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
 
-    rv = _PT_PTHREAD_MUTEX_INIT(mon->lock, _pt_mattr);
+    rv = _PT_PTHREAD_MUTEX_INIT(mon->lock.mutex, _pt_mattr); 
     PR_ASSERT(0 == rv);
     if (0 != rv)
-        goto error1;
+    {
+        PR_Free(mon);
+        PR_Free(cvar);
+        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+        return NULL;
+    }
 
     _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
 
-    rv = _PT_PTHREAD_COND_INIT(mon->entryCV, _pt_cvar_attr);
+    mon->cvar = cvar;
+    rv = _PT_PTHREAD_COND_INIT(mon->cvar->cv, _pt_cvar_attr); 
     PR_ASSERT(0 == rv);
-    if (0 != rv)
-        goto error2;
-
-    rv = _PT_PTHREAD_COND_INIT(mon->waitCV, _pt_cvar_attr);
-    PR_ASSERT(0 == rv);
-    if (0 != rv)
-        goto error3;
-
-    mon->notifyTimes = 0;
     mon->entryCount = 0;
+    mon->cvar->lock = &mon->lock;
+    if (0 != rv)
+    {
+        pthread_mutex_destroy(&mon->lock.mutex);
+        PR_Free(mon);
+        PR_Free(cvar);
+        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+        return NULL;
+    }
     return mon;
-
-error3:
-    pthread_cond_destroy(&mon->entryCV);
-error2:
-    pthread_mutex_destroy(&mon->lock);
-error1:
-    PR_Free(mon);
-    PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
-    return NULL;
 }  /* PR_NewMonitor */
 
 PR_IMPLEMENT(PRMonitor*) PR_NewNamedMonitor(const char* name)
@@ -527,14 +489,14 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
 {
     int rv;
     PR_ASSERT(mon != NULL);
-    rv = pthread_cond_destroy(&mon->waitCV); PR_ASSERT(0 == rv);
-    rv = pthread_cond_destroy(&mon->entryCV); PR_ASSERT(0 == rv);
-    rv = pthread_mutex_destroy(&mon->lock); PR_ASSERT(0 == rv);
+    PR_DestroyCondVar(mon->cvar);
+    rv = pthread_mutex_destroy(&mon->lock.mutex); PR_ASSERT(0 == rv);
 #if defined(DEBUG)
-    memset(mon, 0xaf, sizeof(PRMonitor));
+        memset(mon, 0xaf, sizeof(PRMonitor));
 #endif
     PR_Free(mon);    
 }  /* PR_DestroyMonitor */
+
 
 /* The GC uses this; it is quite arguably a bad interface.  I'm just 
  * duplicating it for now - XXXMB
@@ -542,99 +504,57 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
 PR_IMPLEMENT(PRIntn) PR_GetMonitorEntryCount(PRMonitor *mon)
 {
     pthread_t self = pthread_self();
-    PRIntn rv;
-    PRIntn count = 0;
-
-    rv = pthread_mutex_lock(&mon->lock);
-    PR_ASSERT(0 == rv);
     if (pthread_equal(mon->owner, self))
-        count = mon->entryCount;
-    rv = pthread_mutex_unlock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    return count;
+        return mon->entryCount;
+    return 0;
 }
 
 PR_IMPLEMENT(void) PR_AssertCurrentThreadInMonitor(PRMonitor *mon)
 {
-#if defined(DEBUG) || defined(FORCE_PR_ASSERT)
-    PRIntn rv;
-
-    rv = pthread_mutex_lock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    PR_ASSERT(mon->entryCount != 0 &&
-              pthread_equal(mon->owner, pthread_self()));
-    rv = pthread_mutex_unlock(&mon->lock);
-    PR_ASSERT(0 == rv);
-#endif
+    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(&mon->lock);
 }
 
 PR_IMPLEMENT(void) PR_EnterMonitor(PRMonitor *mon)
 {
     pthread_t self = pthread_self();
-    PRIntn rv;
 
     PR_ASSERT(mon != NULL);
-    rv = pthread_mutex_lock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    if (mon->entryCount != 0)
+    /*
+     * This is safe only if mon->owner (a pthread_t) can be
+     * read in one instruction.  Perhaps mon->owner should be
+     * a "PRThread *"?
+     */
+    if (!pthread_equal(mon->owner, self))
     {
-        if (pthread_equal(mon->owner, self))
-            goto done;
-        while (mon->entryCount != 0)
-        {
-            rv = pthread_cond_wait(&mon->entryCV, &mon->lock);
-            PR_ASSERT(0 == rv);
-        }
+        PR_Lock(&mon->lock);
+        /* and now I have the lock */
+        PR_ASSERT(0 == mon->entryCount);
+        PR_ASSERT(_PT_PTHREAD_THR_HANDLE_IS_INVALID(mon->owner));
+        _PT_PTHREAD_COPY_THR_HANDLE(self, mon->owner);
     }
-    /* and now I have the monitor */
-    PR_ASSERT(0 == mon->notifyTimes);
-    PR_ASSERT(_PT_PTHREAD_THR_HANDLE_IS_INVALID(mon->owner));
-    _PT_PTHREAD_COPY_THR_HANDLE(self, mon->owner);
-
-done:
     mon->entryCount += 1;
-    rv = pthread_mutex_unlock(&mon->lock);
-    PR_ASSERT(0 == rv);
 }  /* PR_EnterMonitor */
 
 PR_IMPLEMENT(PRStatus) PR_ExitMonitor(PRMonitor *mon)
 {
     pthread_t self = pthread_self();
-    PRIntn rv;
-    PRBool notifyEntryWaiter = PR_FALSE;
-    PRIntn notifyTimes = 0;
 
     PR_ASSERT(mon != NULL);
-    rv = pthread_mutex_lock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    /* the entries should be > 0 and we'd better be the owner */
-    PR_ASSERT(mon->entryCount > 0);
+    /* The lock better be that - locked */
+    PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(mon->lock.mutex));
+    /* we'd better be the owner */
     PR_ASSERT(pthread_equal(mon->owner, self));
-    if (mon->entryCount == 0 || !pthread_equal(mon->owner, self))
-    {
-        rv = pthread_mutex_unlock(&mon->lock);
-        PR_ASSERT(0 == rv);
+    if (!pthread_equal(mon->owner, self))
         return PR_FAILURE;
-    }
 
+    /* if it's locked and we have it, then the entries should be > 0 */
+    PR_ASSERT(mon->entryCount > 0);
     mon->entryCount -= 1;  /* reduce by one */
     if (mon->entryCount == 0)
     {
-        /* and if it transitioned to zero - notify an entry waiter */
-        /* make the owner unknown */
-        _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
-        notifyEntryWaiter = PR_TRUE;
-        notifyTimes = mon->notifyTimes;
-        mon->notifyTimes = 0;
-    }
-    rv = pthread_mutex_unlock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    if (notifyTimes)
-        pt_PostNotifiesFromMonitor(&mon->waitCV, notifyTimes);
-    if (notifyEntryWaiter)
-    {
-        rv = pthread_cond_signal(&mon->entryCV);
-        PR_ASSERT(0 == rv);
+        /* and if it transitioned to zero - unlock */
+        _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);  /* make the owner unknown */
+        PR_Unlock(&mon->lock);
     }
     return PR_SUCCESS;
 }  /* PR_ExitMonitor */
@@ -646,11 +566,11 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
     pthread_t saved_owner;
 
     PR_ASSERT(mon != NULL);
-    rv = pthread_mutex_lock(&mon->lock);
-    PR_ASSERT(0 == rv);
-    /* the entries better be positive */
+    /* we'd better be locked */
+    PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(mon->lock.mutex));
+    /* and the entries better be positive */
     PR_ASSERT(mon->entryCount > 0);
-    /* and it better be owned by us */
+    /* and it better be by us */
     PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
     /* tuck these away 'till later */
@@ -658,54 +578,43 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
     mon->entryCount = 0;
     _PT_PTHREAD_COPY_THR_HANDLE(mon->owner, saved_owner);
     _PT_PTHREAD_INVALIDATE_THR_HANDLE(mon->owner);
-    /*
-     * If we have pending notifies, post them now.
-     *
-     * This is not optimal. We're going to post these notifies
-     * while we're holding the lock. That means on MP systems
-     * that they are going to collide for the lock that we will
-     * hold until we actually wait.
-     */
-    if (0 != mon->notifyTimes)
-    {
-        pt_PostNotifiesFromMonitor(&mon->waitCV, mon->notifyTimes);
-        mon->notifyTimes = 0;
-    }
-    rv = pthread_cond_signal(&mon->entryCV);
-    PR_ASSERT(0 == rv);
+    
+    rv = PR_WaitCondVar(mon->cvar, timeout);
 
-    if (timeout == PR_INTERVAL_NO_TIMEOUT)
-        rv = pthread_cond_wait(&mon->waitCV, &mon->lock);
-    else
-        rv = pt_TimedWait(&mon->waitCV, &mon->lock, timeout);
-    PR_ASSERT(0 == rv);
-
-    while (mon->entryCount != 0)
-    {
-        rv = pthread_cond_wait(&mon->entryCV, &mon->lock);
-        PR_ASSERT(0 == rv);
-    }
-    PR_ASSERT(0 == mon->notifyTimes);
-    /* reinstate the interesting information */
+    /* reinstate the intresting information */
     mon->entryCount = saved_entries;
     _PT_PTHREAD_COPY_THR_HANDLE(saved_owner, mon->owner);
 
-    rv = pthread_mutex_unlock(&mon->lock);
-    PR_ASSERT(0 == rv);
     return rv;
 }  /* PR_Wait */
 
 PR_IMPLEMENT(PRStatus) PR_Notify(PRMonitor *mon)
 {
     PR_ASSERT(NULL != mon);
-    pt_PostNotifyToMonitor(mon, PR_FALSE);
+    /* we'd better be locked */
+    PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(mon->lock.mutex));
+    /* and the entries better be positive */
+    PR_ASSERT(mon->entryCount > 0);
+    /* and it better be by us */
+    PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
+
+    pt_PostNotifyToCvar(mon->cvar, PR_FALSE);
+
     return PR_SUCCESS;
 }  /* PR_Notify */
 
 PR_IMPLEMENT(PRStatus) PR_NotifyAll(PRMonitor *mon)
 {
-    PR_ASSERT(NULL != mon);
-    pt_PostNotifyToMonitor(mon, PR_TRUE);
+    PR_ASSERT(mon != NULL);
+    /* we'd better be locked */
+    PR_ASSERT(_PT_PTHREAD_MUTEX_IS_LOCKED(mon->lock.mutex));
+    /* and the entries better be positive */
+    PR_ASSERT(mon->entryCount > 0);
+    /* and it better be by us */
+    PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
+
+    pt_PostNotifyToCvar(mon->cvar, PR_TRUE);
+
     return PR_SUCCESS;
 }  /* PR_NotifyAll */
 

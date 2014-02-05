@@ -150,7 +150,7 @@ PRInt32 native_thread = 0;
 						stackSize,
 						(unsigned (__stdcall *)(void *))start,
 						arg,
-						STACK_SIZE_PARAM_IS_A_RESERVATION,
+						0,
 						&tid);		
 		return((PRThread *) thandle);
 #endif
