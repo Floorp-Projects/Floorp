@@ -7,6 +7,7 @@
 LIBRARY_NAME = 'media_gtest'
 
 UNIFIED_SOURCES += [
+    'TestAudioCompactor.cpp',
     'TestTrackEncoder.cpp',
 ]
 
