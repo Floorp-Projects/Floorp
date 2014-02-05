@@ -142,18 +142,23 @@ let wrapper = {
     // Remember who it was so we can log out next time.
     setPreviousAccountNameHash(newAccountEmail);
 
-    fxAccounts.setSignedInUser(accountData).then(
-      () => {
-        this.injectData("message", { status: "login" });
-        // until we sort out a better UX, just leave the jelly page in place.
-        // If the account email is not yet verified, it will tell the user to
-        // go check their email, but then it will *not* change state after
-        // the verification completes (the browser will begin syncing, but
-        // won't notify the user). If the email has already been verified,
-        // the jelly will say "Welcome! You are successfully signed in as
-        // EMAIL", but it won't then say "syncing started".
-      },
-      (err) => this.injectData("message", { status: "error", error: err })
+    // A sync-specific hack - we want to ensure sync has been initialized
+    // before we set the signed-in user.
+    let xps = Cc["@mozilla.org/weave/service;1"]
+              .getService(Ci.nsISupports)
+              .wrappedJSObject;
+    xps.whenLoaded().then(() => {
+      return fxAccounts.setSignedInUser(accountData);
+    }).then(() => {
+      this.injectData("message", { status: "login" });
+      // until we sort out a better UX, just leave the jelly page in place.
+      // If the account email is not yet verified, it will tell the user to
+      // go check their email, but then it will *not* change state after
+      // the verification completes (the browser will begin syncing, but
+      // won't notify the user). If the email has already been verified,
+      // the jelly will say "Welcome! You are successfully signed in as
+      // EMAIL", but it won't then say "syncing started".
+    }, (err) => this.injectData("message", { status: "error", error: err })
     );
   },
 
