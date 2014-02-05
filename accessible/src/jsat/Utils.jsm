@@ -189,25 +189,6 @@ this.Utils = {
   },
 
   getState: function getState(aAccessibleOrEvent) {
-    function State(aBase, aExtended) {
-      this.base = aBase;
-      this.extended = aExtended;
-
-      this.contains = (other) => {
-        return !!(this.base & other.base || this.extended & other.extended);
-      };
-
-      this.toString = () => {
-        let stateStrings = Utils.AccRetrieval.
-          getStringStates(this.base, this.extended);
-        let statesArray = new Array(stateStrings.length);
-        for (let i = 0; i < statesArray.length; i++) {
-          statesArray[i] = stateStrings.item(i);
-        }
-        return '[' + statesArray.join(', ') + ']';
-      };
-    }
-
     if (aAccessibleOrEvent instanceof Ci.nsIAccessibleStateChangeEvent) {
       return new State(
         aAccessibleOrEvent.isExtraState ? 0 : aAccessibleOrEvent.state,
@@ -327,6 +308,31 @@ this.Utils = {
     }
 
     return null;
+  }
+};
+
+/**
+ * State object used internally to process accessible's states.
+ * @param {Number} aBase     Base state.
+ * @param {Number} aExtended Extended state.
+ */
+function State(aBase, aExtended) {
+  this.base = aBase;
+  this.extended = aExtended;
+}
+
+State.prototype = {
+  contains: function State_contains(other) {
+    return !!(this.base & other.base || this.extended & other.extended);
+  },
+  toString: function State_toString() {
+    let stateStrings = Utils.AccRetrieval.
+      getStringStates(this.base, this.extended);
+    let statesArray = new Array(stateStrings.length);
+    for (let i = 0; i < statesArray.length; i++) {
+      statesArray[i] = stateStrings.item(i);
+    }
+    return '[' + statesArray.join(', ') + ']';
   }
 };
 

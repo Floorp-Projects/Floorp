@@ -16,9 +16,6 @@
 class imgIContainer;
 class imgRequestProxy;
 
-#define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
-#define BULLET_FRAME_HAS_FONT_INFLATION NS_FRAME_STATE_BIT(62)
-
 class nsBulletFrame;
 
 class nsBulletListener : public imgINotificationObserver

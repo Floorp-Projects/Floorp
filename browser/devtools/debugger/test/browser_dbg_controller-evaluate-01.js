@@ -47,8 +47,8 @@ function test() {
 
     // Allow this generator function to yield first.
     executeSoon(() => debuggee.firstCall());
-    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 6);
-    checkView(0, 1, 6, [/secondCall/, 118]);
+    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 1);
+    checkView(0, 1, 1, [/secondCall/, 118]);
 
     // Eval in the topmost frame, while paused.
     let updatedView = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);
@@ -58,7 +58,7 @@ function test() {
     is(result.return.class, "Function", "The evaluation return class is correct.");
 
     yield updatedView;
-    checkView(0, 1, 6, [/secondCall/, 118]);
+    checkView(0, 1, 1, [/secondCall/, 118]);
     ok(true, "Evaluating in the topmost frame works properly.");
 
     // Eval in a different frame, while paused.
@@ -72,7 +72,7 @@ function test() {
     }
 
     yield updatedView;
-    checkView(0, 1, 6, [/secondCall/, 118]);
+    checkView(0, 1, 1, [/secondCall/, 118]);
     ok(true, "Evaluating in a custom frame works properly.");
 
     // Eval in a non-existent frame, while paused.

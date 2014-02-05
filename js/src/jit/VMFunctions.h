@@ -659,7 +659,7 @@ bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);
 
-JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
+JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject descr,
                                 HandleObject owner, int32_t offset);
 
 bool Recompile(JSContext *cx);
