@@ -181,7 +181,7 @@ def main(args, env, cwd, fh=sys.stderr):
 
     if not required or performed:
         if performed and env.get('TINDERBOX_OUTPUT'):
-            print('TinderboxPrint: auto clobber')
+            print('TinderboxPrint: auto clobber', file=fh)
         return 0
 
     print(message, file=fh)
