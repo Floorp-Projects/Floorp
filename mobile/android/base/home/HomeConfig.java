@@ -334,6 +334,24 @@ public final class HomeConfig {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (o == null) {
+                return false;
+            }
+
+            if (this == o) {
+                return true;
+            }
+
+            if (!(o instanceof PanelConfig)) {
+                return false;
+            }
+
+            final PanelConfig other = (PanelConfig) o;
+            return mId.equals(other.mId);
+        }
+
+        @Override
         public int describeContents() {
             return 0;
         }
