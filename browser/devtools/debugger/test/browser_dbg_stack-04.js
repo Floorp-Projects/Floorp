@@ -19,7 +19,7 @@ function test() {
     gFrames = gDebugger.DebuggerView.StackFrames;
     gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 18).then(performTest);
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 1).then(performTest);
     gDebuggee.evalCall();
   });
 }

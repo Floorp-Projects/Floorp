@@ -39,8 +39,8 @@ function test() {
 
     // Allow this generator function to yield first.
     executeSoon(() => debuggee.firstCall());
-    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 6);
-    checkView(0, 1, 6, [/secondCall/, 118]);
+    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 1);
+    checkView(0, 1, 1, [/secondCall/, 118]);
 
     // Change the selected frame and eval inside it.
     let updatedFrame = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);

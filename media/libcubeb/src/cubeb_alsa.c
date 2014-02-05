@@ -570,7 +570,6 @@ init_local_config_with_workaround(char const * pcm_name)
   return NULL;
 }
 
-
 static int
 alsa_locked_pcm_open(snd_pcm_t ** pcm, snd_pcm_stream_t stream, snd_config_t * local_config)
 {
@@ -980,7 +979,6 @@ alsa_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency
 
   return CUBEB_OK;
 }
-
 
 static int
 alsa_stream_start(cubeb_stream * stm)

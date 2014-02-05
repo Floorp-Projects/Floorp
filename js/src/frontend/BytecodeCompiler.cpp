@@ -164,6 +164,27 @@ frontend::MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &op
     }
 }
 
+static bool
+SetScriptSourceFilename(ExclusiveContext *cx, ScriptSource *ss,
+                        const ReadOnlyCompileOptions &options)
+{
+    if (options.hasIntroductionInfo) {
+        const char *filename = options.filename() ? options.filename() : "<unknown>";
+        JS_ASSERT(options.introducer != nullptr);
+
+        if (!ss->setIntroducedFilename(cx, filename, options.introductionLineno,
+                                       options.introducer, options.introducerFilename()))
+            return false;
+
+        ss->setIntroductionOffset(options.introductionOffset);
+    } else {
+        if (options.filename() && !ss->setFilename(cx, options.filename()))
+            return false;
+    }
+
+    return true;
+}
+
 JSScript *
 frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject scopeChain,
                         HandleScript evalCaller,
@@ -200,7 +221,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return nullptr;
-    if (options.filename() && !ss->setFilename(cx, options.filename()))
+
+    if (!SetScriptSourceFilename(cx, ss, options))
         return nullptr;
 
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
@@ -495,7 +517,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return false;
-    if (options.filename() && !ss->setFilename(cx, options.filename()))
+    if (!SetScriptSourceFilename(cx, ss, options))
         return false;
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)

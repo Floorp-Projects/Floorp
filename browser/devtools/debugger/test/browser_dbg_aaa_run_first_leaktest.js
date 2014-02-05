@@ -19,7 +19,7 @@ function test() {
     ok(aDebuggee, "Should have a debuggee available.");
     ok(aPanel, "Should have a debugger pane available.");
 
-    waitForSourceAndCaretAndScopes(aPanel, "-02.js", 6).then(() => {
+    waitForSourceAndCaretAndScopes(aPanel, "-02.js", 1).then(() => {
       resumeDebuggerThenCloseAndFinish(aPanel);
     });
 

@@ -215,7 +215,7 @@ private:
   // Number of audio frames we've decoded since decoding began at mAudioStartMs.
   uint64_t mAudioFrames;
 
-  // Number of nanoseconds that must be discarded from the start of the Stream.
+  // Number of microseconds that must be discarded from the start of the Stream.
   uint64_t mCodecDelay;
 
   // Parser state and computed offset-time mappings.  Shared by multiple
