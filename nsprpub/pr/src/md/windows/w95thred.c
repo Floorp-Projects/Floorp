@@ -106,7 +106,7 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                     thread->stack->stackSize,
                     pr_root,
                     (void *)thread,
-                    CREATE_SUSPENDED,
+                    CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
                     &(thread->id));
     if(!thread->md.handle) {
         return PR_FAILURE;
