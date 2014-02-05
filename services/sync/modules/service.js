@@ -889,23 +889,7 @@ Sync11Service.prototype = {
 
     this.identity.deleteSyncCredentials();
 
-    // Reset the identity manager, then re-initialize it so the FxA manager is
-    // used.
-    this.identity.username = "";
-    Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
-    this.status.__authManager = null;
-    this.identity = Status._authManager;
-    this._clusterManager = this.identity.createClusterManager(this);
-
-    // Tell the new identity manager to initialize itself
-    this.identity.initialize().then(() => {
-      Svc.Obs.notify("weave:service:start-over:finish");
-    }).then(null, err => {
-      this._log.error("startOver failed to re-initialize the identity manager: " + err);
-      // Still send the observer notification so the current state is
-      // reflected in the UI.
-      Svc.Obs.notify("weave:service:start-over:finish");
-    });
+    Svc.Obs.notify("weave:service:start-over:finish");
   },
 
   persistLogin: function persistLogin() {
