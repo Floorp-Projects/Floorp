@@ -300,20 +300,27 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
+        JSScript *script;
         unsigned lineno;
         const char *filename;
         JSPrincipals *originPrincipals;
-        CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals,
+        uint32_t pcOffset;
+        CurrentScriptFileLineOrigin(cx, &script, &filename, &lineno, &pcOffset, &originPrincipals,
                                     evalType == DIRECT_EVAL ? CALLED_FROM_JSOP_EVAL
                                                             : NOT_CALLED_FROM_JSOP_EVAL);
 
+        const char *introducerFilename = filename;
+        if (script && script->scriptSource()->introducerFilename())
+            introducerFilename = script->scriptSource()->introducerFilename();
+
         CompileOptions options(cx);
-        options.setFileAndLine(filename, lineno)
+        options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
                .setPrincipals(principals)
-               .setOriginPrincipals(originPrincipals);
+               .setOriginPrincipals(originPrincipals)
+               .setIntroductionInfo(introducerFilename, "eval", lineno, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      chars.get(), length, flatStr, staticLevel);
@@ -366,19 +373,26 @@ js::DirectEvalStringFromIon(JSContext *cx,
     esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        unsigned lineno;
+        JSScript *script;
         const char *filename;
+        unsigned lineno;
         JSPrincipals *originPrincipals;
-        CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals,
-                                    CALLED_FROM_JSOP_EVAL);
+        uint32_t pcOffset;
+        CurrentScriptFileLineOrigin(cx, &script, &filename, &lineno, &pcOffset,
+                                    &originPrincipals, CALLED_FROM_JSOP_EVAL);
+
+        const char *introducerFilename = filename;
+        if (script && script->scriptSource()->introducerFilename())
+            introducerFilename = script->scriptSource()->introducerFilename();
 
         CompileOptions options(cx);
-        options.setFileAndLine(filename, lineno)
+        options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
                .setPrincipals(principals)
-               .setOriginPrincipals(originPrincipals);
+               .setOriginPrincipals(originPrincipals)
+               .setIntroductionInfo(introducerFilename, "eval", lineno, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      chars.get(), length, flatStr, staticLevel);

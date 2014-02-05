@@ -4,7 +4,7 @@
   <title>CSS Test: Box Sizing - Content-Box with min/max width/height</title>
   <link rel="author" title="Scott Johnson" href="mailto:sjohnson@mozilla.com" />
   <link rel="help" href="http://www.w3.org/TR/css3-ui/#box-sizing" />
-  <meta name="assert" content="-moz-box-sizing: content-box should make the element's (percentage) width be the distance from the left content edge to the right content edge and the height be the distance from the top content edge to the bottom content edge."/>
+  <meta name="assert" content="box-sizing: content-box should make the element's (percentage) width be the distance from the left content edge to the right content edge and the height be the distance from the top content edge to the bottom content edge."/>
   <style type="text/css"><![CDATA[
     .container {
       min-width: 500px;
@@ -18,7 +18,7 @@
     }
 
     .box-sized {
-      -moz-box-sizing: content-box;
+      box-sizing: content-box;
       width: 50%;
       height: 100%;
       z-index: 1;

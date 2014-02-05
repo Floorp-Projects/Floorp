@@ -457,6 +457,14 @@ let Impl = {
       revision: HISTOGRAMS_FILE_VERSION,
       locale: getLocale()
     };
+
+    // In order to share profile data, the appName used for Metro Firefox is "Firefox",
+    // (the same as desktop Firefox). We set it to "MetroFirefox" here in order to
+    // differentiate telemetry pings sent by desktop vs. metro Firefox.
+    if(Services.metro && Services.metro.immersive) {
+      ret.appName = "MetroFirefox";
+    }
+
     if (this._previousBuildID) {
       ret.previousBuildID = this._previousBuildID;
     }

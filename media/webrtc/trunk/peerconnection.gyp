@@ -39,7 +39,6 @@
 #          'webrtc/system_wrappers/source/system_wrappers.gyp:system_wrappers',
           'webrtc/video_engine/video_engine.gyp:video_engine_core',
           'webrtc/voice_engine/voice_engine.gyp:voice_engine',
-          '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',
         ],
       }, ],
     ],

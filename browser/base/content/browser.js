@@ -4481,6 +4481,9 @@ var TabsInTitlebar = {
       // Try to avoid reflows in this code by calculating dimensions first and
       // then later set the properties affecting layout together in a batch.
 
+      // Get the full height of the tabs toolbar:
+      let tabsToolbar = $("TabsToolbar");
+      let fullTabsHeight = rect(tabsToolbar).height;
       // Buttons first:
       let captionButtonsBoxWidth = rect($("titlebar-buttonbox")).width;
 #ifdef XP_MACOSX
@@ -4495,11 +4498,9 @@ var TabsInTitlebar = {
       let menuHeight = rect(menubar).height;
       let menuStyles = window.getComputedStyle(menubar);
       let fullMenuHeight = verticalMargins(menuStyles) + menuHeight;
-#endif
-      // Get the full height of the tabs toolbar:
-      let tabsToolbar = $("TabsToolbar");
       let tabsStyles = window.getComputedStyle(tabsToolbar);
-      let fullTabsHeight = rect(tabsToolbar).height + verticalMargins(tabsStyles);
+      fullTabsHeight += verticalMargins(tabsStyles);
+#endif
 
       // If the navbar overlaps the tabbar using negative margins, we need to take those into
       // account so we don't overlap it
@@ -4508,16 +4509,6 @@ var TabsInTitlebar = {
 
       // And get the height of what's in the titlebar:
       let titlebarContentHeight = rect(titlebarContent).height;
-
-      // Padding surrounds the tab-view-deck when we are in customization mode,
-      // so take that into account:
-      let areCustomizing = document.documentElement.hasAttribute("customizing") ||
-                           document.documentElement.hasAttribute("customize-exiting");
-      let customizePadding = 0;
-      if (areCustomizing) {
-        let deckStyle = window.getComputedStyle($("tab-view-deck"));
-        customizePadding = parseFloat(deckStyle.paddingTop);
-      }
 
       // Begin setting CSS properties which will cause a reflow
 
@@ -4551,10 +4542,6 @@ var TabsInTitlebar = {
       // Next, we calculate how much we need to stretch the titlebar down to
       // go all the way to the bottom of the tab strip, if necessary.
       let tabAndMenuHeight = fullTabsHeight + fullMenuHeight;
-      // Oh, and don't forget customization mode:
-      if (areCustomizing) {
-        tabAndMenuHeight += customizePadding;
-      }
 
       if (tabAndMenuHeight > titlebarContentHeight) {
         // We need to increase the titlebar content's outer height (ie including margins)
@@ -4566,12 +4553,6 @@ var TabsInTitlebar = {
         // On non-OSX, we can just use bottom margin:
 #ifndef XP_MACOSX
         titlebarContent.style.marginBottom = extraMargin + "px";
-#else
-        // Otherwise, center the content. This means taking the titlebar's
-        // padding into account:
-        let halfMargin = (extraMargin - titlebarPadding) / 2;
-        titlebarContent.style.marginTop =  halfMargin + "px";
-        titlebarContent.style.marginBottom =  (titlebarPadding + halfMargin) + "px";
 #endif
         titlebarContentHeight += extraMargin;
       }
@@ -4606,6 +4587,7 @@ var TabsInTitlebar = {
       updateTitlebarDisplay();
 
       // Reset the margins and padding that might have been modified:
+      titlebarContent.style.marginTop = "";
       titlebarContent.style.marginBottom = "";
       titlebar.style.marginBottom = "";
       menubar.style.paddingBottom = "";
@@ -4630,16 +4612,37 @@ var TabsInTitlebar = {
 
 #ifdef CAN_DRAW_IN_TITLEBAR
 function updateTitlebarDisplay() {
-  document.getElementById("titlebar").hidden = !TabsInTitlebar.enabled;
+
+#ifdef XP_MACOSX
+  // OS X and the other platforms differ enough to necessitate this kind of
+  // special-casing. Like the other platforms where we CAN_DRAW_IN_TITLEBAR,
+  // we draw in the OS X titlebar when putting the tabs up there. However, OS X
+  // also draws in the titlebar when a lightweight theme is applied, regardless
+  // of whether or not the tabs are drawn in the titlebar.
+  if (TabsInTitlebar.enabled) {
+    document.documentElement.setAttribute("chromemargin-nonlwtheme", "0,-1,-1,-1");
+    document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
+    document.documentElement.removeAttribute("drawtitle");
+  } else {
+    // We set chromemargin-nonlwtheme to "" instead of removing it as a way of
+    // making sure that LightweightThemeConsumer doesn't take it upon itself to
+    // detect this value again if and when we do a lwtheme state change.
+    document.documentElement.setAttribute("chromemargin-nonlwtheme", "");
+    let isCustomizing = document.documentElement.hasAttribute("customizing");
+    let hasLWTheme = document.documentElement.hasAttribute("lwtheme");
+    if (!hasLWTheme || isCustomizing) {
+      document.documentElement.removeAttribute("chromemargin");
+    }
+    document.documentElement.setAttribute("drawtitle", "true");
+  }
+
+#else
 
   if (TabsInTitlebar.enabled)
-#ifdef XP_WIN
     document.documentElement.setAttribute("chromemargin", "0,2,2,2");
-#else
-    document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
-#endif
   else
     document.documentElement.removeAttribute("chromemargin");
+#endif
 }
 #endif
 
@@ -5939,6 +5942,10 @@ function WindowIsClosing()
 
   if (!closeWindow(false, warnAboutClosingWindow))
     return false;
+
+  // Bug 967873 - Proxy nsDocumentViewer::PermitUnload to the child process
+  if (gMultiProcessBrowser)
+    return true;
 
   for (let browser of gBrowser.browsers) {
     let ds = browser.docShell;

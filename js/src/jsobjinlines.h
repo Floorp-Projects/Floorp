@@ -881,6 +881,18 @@ NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *
     return NewObjectWithClassProto(cx, clasp, proto, parent, allocKind, newKind);
 }
 
+template<typename T>
+inline T *
+NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+                   NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, newKind);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<T>();
+}
+
 /*
  * Create a native instance of the given class with parent and proto set
  * according to the context's active global.

@@ -109,11 +109,11 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_PROTO_SETTING_SLOW + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
-    static const unsigned FLOAT32X4_TYPE_OBJECT   = INTRINSICS + 1;
-    static const unsigned INT32X4_TYPE_OBJECT     = FLOAT32X4_TYPE_OBJECT + 1;
+    static const unsigned FLOAT32X4_TYPE_DESCR   = INTRINSICS + 1;
+    static const unsigned INT32X4_TYPE_DESCR     = FLOAT32X4_TYPE_DESCR + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = INT32X4_TYPE_OBJECT + 1;
+    static const unsigned RESERVED_SLOTS = INT32X4_TYPE_DESCR + 1;
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
@@ -405,24 +405,24 @@ class GlobalObject : public JSObject
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_TypedObject, initTypedObjectModule);
     }
 
-    void setFloat32x4TypeObject(JSObject &obj) {
-        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_OBJECT).isUndefined());
-        setSlot(FLOAT32X4_TYPE_OBJECT, ObjectValue(obj));
+    void setFloat32x4TypeDescr(JSObject &obj) {
+        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_DESCR).isUndefined());
+        setSlot(FLOAT32X4_TYPE_DESCR, ObjectValue(obj));
     }
 
-    JSObject &float32x4TypeObject() {
-        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_OBJECT).isObject());
-        return getSlotRef(FLOAT32X4_TYPE_OBJECT).toObject();
+    JSObject &float32x4TypeDescr() {
+        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_DESCR).isObject());
+        return getSlotRef(FLOAT32X4_TYPE_DESCR).toObject();
     }
 
-    void setInt32x4TypeObject(JSObject &obj) {
-        JS_ASSERT(getSlotRef(INT32X4_TYPE_OBJECT).isUndefined());
-        setSlot(INT32X4_TYPE_OBJECT, ObjectValue(obj));
+    void setInt32x4TypeDescr(JSObject &obj) {
+        JS_ASSERT(getSlotRef(INT32X4_TYPE_DESCR).isUndefined());
+        setSlot(INT32X4_TYPE_DESCR, ObjectValue(obj));
     }
 
-    JSObject &int32x4TypeObject() {
-        JS_ASSERT(getSlotRef(INT32X4_TYPE_OBJECT).isObject());
-        return getSlotRef(INT32X4_TYPE_OBJECT).toObject();
+    JSObject &int32x4TypeDescr() {
+        JS_ASSERT(getSlotRef(INT32X4_TYPE_DESCR).isObject());
+        return getSlotRef(INT32X4_TYPE_DESCR).toObject();
     }
 
     TypedObjectModuleObject &getTypedObjectModule() const;

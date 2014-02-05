@@ -22,7 +22,7 @@ function test() {
     ok(gDebugger.document.title.endsWith(EXAMPLE_URL + gLabel1),
       "Title with first source is correct.");
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(testSourcesDisplay)
       .then(testSwitchPaused1)
       .then(testSwitchPaused2)
@@ -75,15 +75,15 @@ function testSourcesDisplay() {
   ok(gDebugger.document.title.endsWith(EXAMPLE_URL + gLabel2),
     "Title with second source is correct.");
 
-  ok(isCaretPos(gPanel, 6),
+  ok(isCaretPos(gPanel, 1),
     "Editor caret location is correct.");
 
   // The editor's debug location takes a tick to update.
   executeSoon(() => {
-    is(gEditor.getDebugLocation(), 5,
+    is(gEditor.getDebugLocation(), 0,
       "Editor debugger location is correct.");
-    ok(gEditor.hasLineClass(5, "debug-line"),
-      "The debugged line is highlighted appropriately.");
+    ok(gEditor.hasLineClass(0, "debug-line"),
+      "The debugged line is highlighted appropriately (1).");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
     gSources.selectedIndex = 0;
@@ -136,12 +136,12 @@ function testSwitchPaused2() {
 
   // The editor's debug location takes a tick to update.
   executeSoon(() => {
-    ok(isCaretPos(gPanel, 6),
+    ok(isCaretPos(gPanel, 1),
       "Editor caret location is correct.");
-    is(gEditor.getDebugLocation(), 5,
+    is(gEditor.getDebugLocation(), 0,
       "Editor debugger location is correct.");
-    ok(gEditor.hasLineClass(5, "debug-line"),
-      "The debugged line is highlighted appropriately.");
+    ok(gEditor.hasLineClass(0, "debug-line"),
+      "The debugged line is highlighted appropriately (2).");
 
     // Step out three times.
     waitForThreadEvents(gPanel, "paused").then(() => {
@@ -172,12 +172,12 @@ function testSwitchRunning() {
 
   // The editor's debug location takes a tick to update.
   executeSoon(() => {
-    ok(isCaretPos(gPanel, 5),
+    ok(isCaretPos(gPanel, 1),
       "Editor caret location is correct.");
-    is(gEditor.getDebugLocation(), 4,
+    is(gEditor.getDebugLocation(), 0,
       "Editor debugger location is correct.");
-    ok(gEditor.hasLineClass(4, "debug-line"),
-      "The debugged line is highlighted appropriately.");
+    ok(gEditor.hasLineClass(0, "debug-line"),
+      "The debugged line is highlighted appropriately (3).");
 
     deferred.resolve();
   });

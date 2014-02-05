@@ -73,7 +73,7 @@ function test() {
         yield verifyView({ disabled: false, visible: true });
 
         executeSoon(() => gDebugger.gThreadClient.resume());
-        yield waitForSourceAndCaretAndScopes(aPanel, "-02.js", 6);
+        yield waitForSourceAndCaretAndScopes(aPanel, "-02.js", 1);
         yield verifyView({ disabled: false, visible: false });
       });
     }
@@ -84,11 +84,11 @@ function test() {
         yield verifyView({ disabled: false, visible: false });
 
         executeSoon(() => aDebuggee.firstCall());
-        yield waitForSourceAndCaretAndScopes(aPanel, "-01.js", 5);
+        yield waitForSourceAndCaretAndScopes(aPanel, "-01.js", 1);
         yield verifyView({ disabled: false, visible: true });
 
         executeSoon(() => gDebugger.gThreadClient.resume());
-        yield waitForSourceAndCaretAndScopes(aPanel, "-02.js", 6);
+        yield waitForSourceAndCaretAndScopes(aPanel, "-02.js", 1);
         yield verifyView({ disabled: false, visible: false });
       });
     }
@@ -101,13 +101,13 @@ function test() {
         executeSoon(() => aDebuggee.firstCall());
         yield waitForDebuggerEvents(aPanel, gEvents.FETCHED_SCOPES);
         yield ensureSourceIs(aPanel, "-02.js");
-        yield ensureCaretAt(aPanel, 6);
+        yield ensureCaretAt(aPanel, 1);
         yield verifyView({ disabled: true, visible: false });
 
         executeSoon(() => gDebugger.gThreadClient.resume());
         yield waitForDebuggerEvents(aPanel, gEvents.AFTER_FRAMES_CLEARED);
         yield ensureSourceIs(aPanel, "-02.js");
-        yield ensureCaretAt(aPanel, 6);
+        yield ensureCaretAt(aPanel, 1);
         yield verifyView({ disabled: true, visible: false });
       });
     }

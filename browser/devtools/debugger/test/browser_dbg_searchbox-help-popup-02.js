@@ -25,7 +25,7 @@ function test() {
       ok(false, "Damn it, this shouldn't have happened.");
     });
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(tryShowPopup)
       .then(focusEditor)
       .then(testFocusLost)
@@ -64,9 +64,9 @@ function focusEditor() {
 }
 
 function testFocusLost() {
-  ok(isCaretPos(gPanel, 6, 1),
+  ok(isCaretPos(gPanel, 1, 1),
     "The editor caret position appears to be correct after gaining focus.");
-  ok(isEditorSel(gPanel, [165, 165]),
+  ok(isEditorSel(gPanel, [1, 1]),
     "The editor selection appears to be correct after gaining focus.");
   is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct after gaining focus.");

@@ -227,6 +227,7 @@ private:
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
+  bool mNeedsClear;
 };
 
 /**
