@@ -18,6 +18,7 @@
     defaultButton="cancel"
     ondialogaccept="return g_dialog.appPickerOK();"
     ondialogcancel="return g_dialog.appPickerCancel();"
+    aria-describedby="content-description suggested-filename"
     persist="screenX screenY">
 
     <script type="application/javascript" src="chrome://global/content/appPicker.js"/>
@@ -30,7 +31,7 @@
       </vbox>
     </hbox>
 
-    <label id="sendto-message" value="&SendMsg.label;" for="app-picker-listbox"/>
+    <label id="sendto-message" value="&SendMsg.label;" control="app-picker-listbox"/>
 
     <listbox id="app-picker-listbox" rows="5"
              ondblclick="g_dialog.appDoubleClick();"/>
