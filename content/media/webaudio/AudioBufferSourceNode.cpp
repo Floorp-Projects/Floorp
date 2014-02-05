@@ -58,9 +58,9 @@ public:
     AudioNodeEngine(aNode),
     mStart(0), mStop(TRACK_TICKS_MAX),
     mResampler(nullptr), mRemainingResamplerTail(0),
-    mOffset(0), mBufferEnd(0),
+    mBufferEnd(0),
     mLoopStart(0), mLoopEnd(0),
-    mBufferSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
+    mBufferSampleRate(0), mBufferPosition(0), mChannels(0), mPlaybackRate(1.0f),
     mDopplerShift(1.0f),
     mDestination(static_cast<AudioNodeStream*>(aDestination->Stream())),
     mPlaybackRateTimeline(1.0f), mLoop(false)
@@ -114,7 +114,11 @@ public:
   {
     switch (aIndex) {
     case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
-    case AudioBufferSourceNode::BUFFERSTART: mOffset = aParam; break;
+    case AudioBufferSourceNode::BUFFERSTART:
+      if (mBufferPosition == 0) {
+        mBufferPosition = aParam;
+      }
+      break;
     case AudioBufferSourceNode::BUFFEREND: mBufferEnd = aParam; break;
     case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
     case AudioBufferSourceNode::LOOPSTART: mLoopStart = aParam; break;
@@ -217,8 +221,8 @@ public:
                                              inputData, &inSamples,
                                              outputData, &outSamples);
         if (++i == aChannels) {
-          mPosition += inSamples;
-          MOZ_ASSERT(mOffset + mPosition <= mBufferEnd || mLoop);
+          mBufferPosition += inSamples;
+          MOZ_ASSERT(mBufferPosition <= mBufferEnd || mLoop);
           aFramesWritten = outSamples;
           if (inSamples == availableInInputBuffer && !mLoop) {
             // If the available output space were unbounded then the input
@@ -317,7 +321,7 @@ public:
       BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
       *aOffsetWithinBlock += numFrames;
       *aCurrentPosition += numFrames;
-      mPosition += numFrames;
+      mBufferPosition += numFrames;
     } else {
       if (*aOffsetWithinBlock == 0) {
         AllocateAudioBlock(aChannels, aOutput);
@@ -327,7 +331,7 @@ public:
         CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
         *aOffsetWithinBlock += numFrames;
         *aCurrentPosition += numFrames;
-        mPosition += numFrames;
+        mBufferPosition += numFrames;
       } else {
         uint32_t framesWritten;
         CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, *aOffsetWithinBlock, framesWritten, aBufferOffset, aBufferMax);
@@ -352,9 +356,10 @@ public:
   bool ShouldResample(TrackRate aStreamSampleRate) const
   {
     // There is latency in the resampler.  If there is already a resampler,
-    // then it will have moved mPosition to after the samples it has read, but
-    // it hasn't output its buffered samples.  Keep using the resampler, even
-    // if the rates now match, so that this latency segment is output.
+    // then it will have moved mBufferPosition to after the samples it has
+    // read, but it hasn't output its buffered samples.  Keep using the
+    // resampler, even if the rates now match, so that this latent segment is
+    // output.
     return mResampler ||
       (mPlaybackRate * mDopplerShift * mBufferSampleRate != aStreamSampleRate);
   }
@@ -418,17 +423,16 @@ public:
         FillWithZeroes(aOutput, channels, &written, &streamPosition, mStart);
         continue;
       }
-      TrackTicks t = mPosition;
       if (mLoop) {
-        if (mOffset + t < mLoopEnd) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mLoopEnd);
+        if (mBufferPosition < mLoopEnd) {
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferPosition, mLoopEnd);
         } else {
-          uint32_t offsetInLoop = (mOffset + t - mLoopEnd) % (mLoopEnd - mLoopStart);
+          uint32_t offsetInLoop = (mBufferPosition - mLoopEnd) % (mLoopEnd - mLoopStart);
           CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopStart + offsetInLoop, mLoopEnd);
         }
       } else {
-        if (mOffset + t < mBufferEnd || mRemainingResamplerTail) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mBufferEnd);
+        if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferPosition, mBufferEnd);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
         }
@@ -438,7 +442,7 @@ public:
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||
-        (!mLoop && mOffset + mPosition >= mBufferEnd && !mRemainingResamplerTail)) {
+        (!mLoop && mBufferPosition >= mBufferEnd && !mRemainingResamplerTail)) {
       *aFinished = true;
     }
   }
@@ -447,15 +451,14 @@ public:
   TrackTicks mStop;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   SpeexResamplerState* mResampler;
-  // mRemainingResamplerTail, like mPosition, mOffset, and mBufferEnd, is
-  // measured in input buffer samples.
+  // mRemainingResamplerTail, like mBufferPosition, and
+  // mBufferEnd, is measured in input buffer samples.
   int mRemainingResamplerTail;
-  int32_t mOffset;
   int32_t mBufferEnd;
   int32_t mLoopStart;
   int32_t mLoopEnd;
   int32_t mBufferSampleRate;
-  int32_t mPosition;
+  int32_t mBufferPosition;
   uint32_t mChannels;
   float mPlaybackRate;
   float mDopplerShift;
