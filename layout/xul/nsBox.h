@@ -11,10 +11,6 @@
 
 class nsITheme;
 
-#define NS_STATE_IS_ROOT        NS_FRAME_STATE_BIT(24)
-#define NS_STATE_SET_TO_DEBUG   NS_FRAME_STATE_BIT(26)
-#define NS_STATE_DEBUG_WAS_SET  NS_FRAME_STATE_BIT(27)
-
 class nsBox : public nsIFrame {
 
 public:

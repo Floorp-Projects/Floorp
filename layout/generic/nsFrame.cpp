@@ -4896,7 +4896,8 @@ nsIFrame::SchedulePaint(PaintType aType)
     return;
   }
   
-  MOZ_ASSERT(pres->GetContainerWeak(), "SchedulePaint in a detached pres context");
+  // Disabled temporarily for happening too frequently. (bug 967758)
+  //MOZ_ASSERT(pres->GetContainerWeak(), "SchedulePaint in a detached pres context");
   pres->PresShell()->ScheduleViewManagerFlush(aType == PAINT_DELAYED_COMPRESS ?
                                               nsIPresShell::PAINT_DELAYED_COMPRESS :
                                               nsIPresShell::PAINT_DEFAULT);

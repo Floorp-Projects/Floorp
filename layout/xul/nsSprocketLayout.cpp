@@ -203,7 +203,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   // The frame state contains cached knowledge about our box, such as our orientation
   // and direction.
-  nsFrameState frameState = 0;
+  nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
 
   // Build a list of our children's desired sizes and computed sizes
@@ -642,7 +642,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
   nscoord biggestMinWidth = 0;
   nscoord smallestMaxWidth = NS_INTRINSICSIZE;
 
-  nsFrameState frameState = 0;
+  nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
 
   //if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
@@ -888,7 +888,7 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIFrame* aBox,
 {
   // Get the position along the box axis for the child.
   // The out-of-axis position is not set.
-  nsFrameState frameState = 0;
+  nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
 
   if (IsHorizontal(aBox)) {
@@ -911,7 +911,7 @@ void
 nsSprocketLayout::AlignChildren(nsIFrame* aBox,
                                 nsBoxLayoutState& aState)
 {
-  nsFrameState frameState = 0;
+  nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
   bool isHorizontal = (frameState & NS_STATE_IS_HORIZONTAL) != 0;
   nsRect clientRect;
@@ -1306,7 +1306,7 @@ nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    // return us the size of the box
 
    nsIFrame* child = aBox->GetChildBox();
-   nsFrameState frameState = 0;
+   nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    int32_t count = 0;
@@ -1363,7 +1363,7 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    // return us the size of the box
 
    nsIFrame* child = aBox->GetChildBox();
-   nsFrameState frameState = 0;
+   nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    int32_t count = 0;
@@ -1432,7 +1432,7 @@ nsSprocketLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    // return us the size of the box
 
    nsIFrame* child = aBox->GetChildBox();
-   nsFrameState frameState = 0;
+   nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    int32_t count = 0;
