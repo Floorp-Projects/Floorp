@@ -1315,20 +1315,25 @@ def getAvailableInTestFunc(obj):
 class MemberCondition:
     """
     An object representing the condition for a member to actually be
-    exposed.  Either pref or func or both can be None.  If not None,
-    they should be strings that have the pref name or function name.
+    exposed.  Any of pref, func, and available can be None.  If not
+    None, they should be strings that have the pref name (for "pref")
+    or function name (for "func" and "available").
     """
-    def __init__(self, pref, func):
+    def __init__(self, pref, func, available=None):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
+        assert available is None or isinstance(available, str)
         self.pref = pref
-        if func is None:
-            self.func = "nullptr"
-        else:
-            self.func = "&" + func
+        def toFuncPtr(val):
+            if val is None:
+                return "nullptr"
+            return "&" + val
+        self.func = toFuncPtr(func)
+        self.available = toFuncPtr(available)
 
     def __eq__(self, other):
-        return self.pref == other.pref and self.func == other.func
+        return (self.pref == other.pref and self.func == other.func and
+                self.available == other.available)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1390,7 +1395,8 @@ class PropertyDefiner:
         return MemberCondition(PropertyDefiner.getStringAttr(interfaceMember,
                                                              "Pref"),
                                PropertyDefiner.getStringAttr(interfaceMember,
-                                                             "Func"))
+                                                             "Func"),
+                               getAvailableInTestFunc(interfaceMember))
 
     def generatePrefableArray(self, array, name, specTemplate, specTerminator,
                               specType, getCondition, getDataTuple, doIdArrays):
@@ -1427,7 +1433,7 @@ class PropertyDefiner:
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, %s, &%s[%d] }'
+        prefableTemplate = '  { true, %s, %s, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
         def switchToCondition(props, condition):
             # Remember the info about where our pref-controlled
@@ -1439,7 +1445,9 @@ class PropertyDefiner:
                     )
             # Set up pointers to the new sets of specs inside prefableSpecs
             prefableSpecs.append(prefableTemplate %
-                                 (condition.func, name + "_specs", len(specs)))
+                                 (condition.func,
+                                  condition.available,
+                                  name + "_specs", len(specs)))
 
         switchToCondition(self, lastCondition)
 
