@@ -4776,8 +4776,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const char16_t *aURL,
     }
     errorPageUrl.AppendLiteral("&c=");
     errorPageUrl.AppendASCII(escapedCharset.get());
-    errorPageUrl.AppendLiteral("&d=");
-    errorPageUrl.AppendASCII(escapedDescription.get());
+
+    nsAutoCString frameType(FrameTypeToString(mFrameType));
+    errorPageUrl.AppendLiteral("&f=");
+    errorPageUrl.AppendASCII(frameType.get());
 
     // Append the manifest URL if the error comes from an app.
     nsString manifestURL;
@@ -4791,9 +4793,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const char16_t *aURL,
       errorPageUrl.AppendASCII(manifestParam.get());
     }
 
-    nsAutoCString frameType(FrameTypeToString(mFrameType));
-    errorPageUrl.AppendLiteral("&f=");
-    errorPageUrl.AppendASCII(frameType.get());
+    // netError.xhtml's getDescription only handles the "d" parameter at the
+    // end of the URL, so append it last.
+    errorPageUrl.AppendLiteral("&d=");
+    errorPageUrl.AppendASCII(escapedDescription.get());
 
     nsCOMPtr<nsIURI> errorPageURI;
     rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
