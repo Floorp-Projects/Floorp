@@ -53,11 +53,20 @@ function waitForElementToBeVisible(element, nextTest, msg) {
                    "Timeout waiting for visibility: " + msg);
 }
 
+function waitForElementToBeHidden(element, nextTest, msg) {
+  waitForCondition(() => is_hidden(element),
+                   () => {
+                     ok(true, msg);
+                     nextTest();
+                   },
+                   "Timeout waiting for invisibility: " + msg);
+}
+
 function waitForPopupAtAnchor(popup, anchorNode, nextTest, msg) {
   waitForCondition(() => popup.popupBoxObject.anchorNode == anchorNode,
                    () => {
                      ok(true, msg);
-                     is_element_visible(popup);
+                     is_element_visible(popup, "Popup should be visible");
                      nextTest();
                    },
                    "Timeout waiting for popup at anchor: " + msg);
