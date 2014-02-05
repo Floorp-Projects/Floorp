@@ -8,6 +8,7 @@ package org.mozilla.gecko.webapp;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.EventDispatcher;
@@ -114,7 +115,9 @@ public class EventListener implements GeckoEventListener {
         int index = allocator.getIndexForApp(aOriginalOrigin);
 
         assert aIconURL != null;
-        Bitmap icon = BitmapUtils.getBitmapFromDataURI(aIconURL);
+
+        final int preferredSize = GeckoAppShell.getPreferredIconSize();
+        Bitmap icon = FaviconDecoder.getMostSuitableBitmapFromDataURI(aIconURL, preferredSize);
 
         assert aOrigin != null && index != -1;
         allocator.updateAppAllocation(aOrigin, index, icon);

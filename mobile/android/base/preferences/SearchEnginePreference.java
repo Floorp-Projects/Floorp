@@ -135,31 +135,6 @@ public class SearchEnginePreference extends CustomListPreference {
         final String iconURI = geckoEngineJSON.getString("iconURI");
         // Keep a reference to the bitmap - we'll need it later in onBindView.
         try {
-
-            // Bug 961600: we shouldn't be doing all of this work. The favicon cache
-            // should be used, and will give us the right size icon.
-
-            LoadFaviconResult result = FaviconDecoder.decodeDataURI(iconURI);
-            if (result == null) {
-                // Nothing we can do.
-                Log.w(LOGTAG, "Unable to decode icon URI.");
-                return;
-            }
-
-            Iterator<Bitmap> bitmaps = result.getBitmaps();
-            if (!bitmaps.hasNext()) {
-                Log.w(LOGTAG, "No bitmaps in decoded icon.");
-                return;
-            }
-
-            mIconBitmap = bitmaps.next();
-
-            if (!bitmaps.hasNext()) {
-                // We're done! There was only one, so this is as big as it gets.
-                return;
-            }
-
-            // Find a bitmap of a more suitable size.
             final int desiredWidth;
             if (mFaviconView != null) {
                 desiredWidth = mFaviconView.getWidth();
@@ -174,15 +149,8 @@ public class SearchEnginePreference extends CustomListPreference {
                 }
             }
 
-            int currentWidth = mIconBitmap.getWidth();
-            while ((currentWidth < desiredWidth) &&
-                   bitmaps.hasNext()) {
-                Bitmap b = bitmaps.next();
-                if (b.getWidth() > currentWidth) {
-                    currentWidth = b.getWidth();
-                    mIconBitmap = b;
-                }
-            }
+            // TODO: use the cache. Bug 961600.
+            mIconBitmap = FaviconDecoder.getMostSuitableBitmapFromDataURI(iconURI, desiredWidth);
 
         } catch (IllegalArgumentException e) {
             Log.e(LOGTAG, "IllegalArgumentException creating Bitmap. Most likely a zero-length bitmap.", e);
