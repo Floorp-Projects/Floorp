@@ -224,7 +224,7 @@ NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
                                     nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-static StaticRefPtr<nsIXPCScriptable> gSharedScriptableHelperForJSIID;
+static mozilla::StaticRefPtr<nsIXPCScriptable> gSharedScriptableHelperForJSIID;
 static bool gClassObjectsWereInited = false;
 
 static void EnsureClassObjectsInitialized()
