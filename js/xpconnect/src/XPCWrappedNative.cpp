@@ -2404,8 +2404,8 @@ NS_IMETHODIMP XPCWrappedNative::GetNative(nsISupports * *aNative)
 {
     // No need to QI here, we already have the correct nsISupports
     // vtable.
-    nsCOMPtr<nsISupports> rval = mIdentity;
-    rval.forget(aNative);
+    *aNative = mIdentity;
+    NS_ADDREF(*aNative);
     return NS_OK;
 }
 
@@ -2446,8 +2446,9 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
     XPCNativeMember*  member;
 
     if (GetSet()->FindMember(name, &member, &iface) && iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
+        nsIInterfaceInfo* temp = iface->GetInterfaceInfo();
+        NS_IF_ADDREF(temp);
+        *_retval = temp;
     } else
         *_retval = nullptr;
     return NS_OK;
@@ -2459,8 +2460,9 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(HandleId name,
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
     if (iface) {
-        nsCOMPtr<nsIInterfaceInfo> temp = iface->GetInterfaceInfo();
-        temp.forget(_retval);
+        nsIInterfaceInfo* temp = iface->GetInterfaceInfo();
+        NS_IF_ADDREF(temp);
+        *_retval = temp;
     } else
         *_retval = nullptr;
     return NS_OK;

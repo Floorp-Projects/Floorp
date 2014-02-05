@@ -1266,8 +1266,8 @@ NS_IMETHODIMP
 nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
                                            nsISupports **_retval)
 {
-    nsCOMPtr<nsISupports> temp = aInitialThis;
-    temp.forget(_retval);
+    NS_IF_ADDREF(aInitialThis);
+    *_retval = aInitialThis;
     return NS_OK;
 }
 
@@ -1687,7 +1687,7 @@ XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
             NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
             NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("pref"))))
             return NS_ERROR_FAILURE;
-        file.forget(result);
+        NS_ADDREF(*result = file);
         return NS_OK;
     }
 
