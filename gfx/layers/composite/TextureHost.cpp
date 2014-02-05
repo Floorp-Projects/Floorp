@@ -182,6 +182,10 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
       } else {
         return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
       }
+#ifdef MOZ_X11
+    case SurfaceDescriptor::TSurfaceDescriptorX11:
+      return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+#endif
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D9:
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
