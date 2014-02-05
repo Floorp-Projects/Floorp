@@ -5,6 +5,7 @@
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-jemalloc
+ac_add_options --enable-metro
 if [ -f /c/builds/gapi.data ]; then
   _gapi_keyfile=/c/builds/gapi.data
 else
