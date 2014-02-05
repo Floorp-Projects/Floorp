@@ -19,13 +19,6 @@
 class nsTableFrame;
 
 /**
- * Additional frame-state bits
- */
-#define NS_TABLE_CELL_CONTENT_EMPTY       NS_FRAME_STATE_BIT(31)
-#define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  NS_FRAME_STATE_BIT(29)
-#define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT NS_FRAME_STATE_BIT(28)
-
-/**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
  *
