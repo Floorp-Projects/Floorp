@@ -1722,6 +1722,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArguments)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDialogArguments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValue)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
@@ -1779,6 +1780,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArguments)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDialogArguments)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValue)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
@@ -13421,13 +13423,9 @@ nsGlobalWindow::GetMessageManager(ErrorResult& aError)
 // nsGlobalModalWindow implementation
 
 // QueryInterface implementation for nsGlobalModalWindow
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsGlobalModalWindow,
-                                     nsGlobalWindow,
-                                     mReturnValue)
-
 DOMCI_DATA(ModalContentWindow, nsGlobalModalWindow)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalModalWindow)
+NS_INTERFACE_MAP_BEGIN(nsGlobalModalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMModalContentWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ModalContentWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
@@ -13435,6 +13433,25 @@ NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 NS_IMPL_ADDREF_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 NS_IMPL_RELEASE_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 
+
+JS::Value
+nsGlobalWindow::GetDialogArguments(JSContext* aCx, ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(GetDialogArguments, (aCx, aError), aError,
+                            JS::UndefinedValue());
+
+  MOZ_ASSERT(IsModalContentWindow(),
+             "This should only be called on modal windows!");
+
+  // This does an internal origin check, and returns undefined if the subject
+  // does not subsumes the origin of the arguments.
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(aCx, wrapper);
+  JS::Rooted<JS::Value> args(aCx);
+  mDialogArguments->Get(aCx, wrapper, nsContentUtils::GetSubjectPrincipal(),
+                        &args, aError);
+  return args;
+}
 
 NS_IMETHODIMP
 nsGlobalModalWindow::GetDialogArguments(nsIVariant **aArguments)
@@ -13445,6 +13462,25 @@ nsGlobalModalWindow::GetDialogArguments(nsIVariant **aArguments)
   // This does an internal origin check, and returns undefined if the subject
   // does not subsumes the origin of the arguments.
   return mDialogArguments->Get(nsContentUtils::GetSubjectPrincipal(), aArguments);
+}
+
+JS::Value
+nsGlobalWindow::GetReturnValue(JSContext* aCx, ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(GetReturnValue, (aCx, aError), aError,
+                            JS::UndefinedValue());
+
+  MOZ_ASSERT(IsModalContentWindow(),
+             "This should only be called on modal windows!");
+
+  JS::Rooted<JS::Value> returnValue(aCx);
+  if (mReturnValue) {
+    JSObject* wrapper = GetWrapper();
+    JSAutoCompartment ac(aCx, wrapper);
+    mReturnValue->Get(aCx, wrapper, nsContentUtils::GetSubjectPrincipal(),
+                      &returnValue, aError);
+  }
+  return returnValue;
 }
 
 NS_IMETHODIMP
@@ -13461,6 +13497,27 @@ nsGlobalModalWindow::GetReturnValue(nsIVariant **aRetVal)
   return mReturnValue->Get(nsContentUtils::GetSubjectPrincipal(), aRetVal);
 }
 
+void
+nsGlobalWindow::SetReturnValue(JSContext* aCx,
+                               JS::Handle<JS::Value> aReturnValue,
+                               ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(SetReturnValue, (aCx, aReturnValue, aError),
+                            aError, );
+
+  MOZ_ASSERT(IsModalContentWindow(),
+             "This should only be called on modal windows!");
+
+  nsCOMPtr<nsIVariant> returnValue;
+  aError =
+    nsContentUtils::XPConnect()->JSToVariant(aCx, aReturnValue,
+                                             getter_AddRefs(returnValue));
+  if (!aError.Failed()) {
+    mReturnValue = new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(),
+                                         returnValue);
+  }
+}
+
 NS_IMETHODIMP
 nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
 {
@@ -13469,6 +13526,20 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
   mReturnValue = new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(),
                                        aRetVal);
   return NS_OK;
+}
+
+/* static */
+bool
+nsGlobalWindow::IsModalContentWindow(JSContext* aCx, JSObject* aGlobal)
+{
+  // For now, have to deal with XPConnect objects here.
+  nsGlobalWindow* win;
+  nsresult rv = UNWRAP_OBJECT(Window, aGlobal, win);
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryWrapper(aCx, aGlobal);
+    win = static_cast<nsGlobalWindow*>(piWin.get());
+  }
+  return win->IsModalContentWindow();
 }
 
 NS_IMETHODIMP
