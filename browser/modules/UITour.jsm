@@ -576,9 +576,22 @@ this.UITour = {
       highlighter.parentElement.hidden = false;
 
       let targetRect = aTargetEl.getBoundingClientRect();
+      let highlightHeight = targetRect.height;
+      let highlightWidth = targetRect.width;
+      let minDimension = Math.min(highlightHeight, highlightWidth);
+      let maxDimension = Math.max(highlightHeight, highlightWidth);
 
-      highlighter.style.height = targetRect.height + "px";
-      highlighter.style.width = targetRect.width + "px";
+      // If the dimensions are within 40% of eachother, make the highlight a circle with the
+      // largest dimension as the diameter.
+      if (maxDimension / minDimension <= 1.4) {
+        highlightHeight = highlightWidth = maxDimension;
+        highlighter.style.borderRadius = "100%";
+      } else {
+        highlighter.style.borderRadius = "";
+      }
+
+      highlighter.style.height = highlightHeight + "px";
+      highlighter.style.width = highlightWidth + "px";
 
       // Close a previous highlight so we can relocate the panel.
       if (highlighter.parentElement.state == "open") {
@@ -591,10 +604,12 @@ this.UITour = {
       let paddingTopPx = 0 - parseFloat(containerStyle.paddingTop);
       let paddingLeftPx = 0 - parseFloat(containerStyle.paddingLeft);
       let highlightStyle = highlightWindow.getComputedStyle(highlighter);
+      let highlightHeightWithMin = Math.max(highlightHeight, parseFloat(highlightStyle.minHeight));
+      let highlightWidthWithMin = Math.max(highlightWidth, parseFloat(highlightStyle.minWidth));
       let offsetX = paddingTopPx
-                      - (Math.max(0, parseFloat(highlightStyle.minWidth) - targetRect.width) / 2);
+                      - (Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
       let offsetY = paddingLeftPx
-                      - (Math.max(0, parseFloat(highlightStyle.minHeight) - targetRect.height) / 2);
+                      - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
       highlighter.parentElement.openPopup(aTargetEl, "overlap", offsetX, offsetY);
     }
 
