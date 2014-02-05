@@ -2351,9 +2351,6 @@ public:
   }
 };
 
-bool
-ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj);
-
 /*
  * Helper function for testing whether the given object comes from a
  * privileged app.
