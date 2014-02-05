@@ -119,7 +119,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                 nsXPConnect::IsISupportsDescendant(info)) {
                 clazz = new nsXPCWrappedJSClass(cx, aIID, info);
-                if (clazz && !clazz->mDescriptors)
+                if (!clazz->mDescriptors)
                     NS_RELEASE(clazz);  // sets clazz to nullptr
             }
         }
