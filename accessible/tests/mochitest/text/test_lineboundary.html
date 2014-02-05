@@ -119,6 +119,18 @@
 
       testTextAtOffset([ "li1" ], BOUNDARY_LINE_START,
                        [ [ 0, 5, kDiscBulletChar + "Item", 0, 5 ] ]);
+      testTextAtOffset([ "li2" ], BOUNDARY_LINE_START,
+                       [ [ 0, 1, kDiscBulletChar, 0, 1 ] ]);
+      testTextAtOffset([ "li3" ], BOUNDARY_LINE_START,
+                       [ [ 0, 7, kDiscBulletChar + "a long ", 0, 8 ],
+                         [ 8, 11, "and ", 8, 12 ] ]);
+      testTextAtOffset([ "li4" ], BOUNDARY_LINE_START,
+                       [ [ 0, 6, kDiscBulletChar + "a " + kEmbedChar + " c", 0, 6 ] ]);
+      testTextAtOffset([ "ul1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 0, kEmbedChar, 0, 1 ],
+                         [ 1, 1, kEmbedChar, 1, 2 ],
+                         [ 2, 2, kEmbedChar, 2, 3 ],
+                         [ 3, 4, kEmbedChar, 3, 4 ] ]);
 
       //////////////////////////////////////////////////////////////////////////
       // Nested hypertexts
@@ -193,8 +205,11 @@ two words
   <p id="ht_4">Hello world
 </p>
 
-  <ul>
+  <ul id="ul1">
     <li id="li1">Item</li>
+    <li id="li2"></li>
+    <li id="li3" style="width:10ex; font-family:monospace; font-size:10pt;">a long and winding road that lead me to your door</li>
+    <li id="li4">a <a href=''>b</a> c</li>
   </ul>
 
   <div id="ht_5">
@@ -203,5 +218,6 @@ two words
       <p>seciofarus</p>
     </div>
   </div>
+
 </body>
 </html>

@@ -55,12 +55,8 @@ public:
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
 
-  // HyperTextAccessible
-  virtual int32_t FindOffset(int32_t aOffset, nsDirection aDirection,
-                             nsSelectionAmount aAmount,
-                             EWordMovementType aWordMovementType) MOZ_OVERRIDE;
-
   // HTMLLIAccessible
+  HTMLListBulletAccessible* Bullet() const { return mBullet; }
   void UpdateBullet(bool aHasBullet);
 
 protected:
