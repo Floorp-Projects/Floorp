@@ -4,39 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(WMFVideoDecoder_h_)
-#define WMFVideoDecoder_h_
+#if !defined(WMFVideoOutputSource_h_)
+#define WMFVideoOutputSource_h_
 
 #include "WMF.h"
 #include "MP4Reader.h"
 #include "MFTDecoder.h"
 #include "nsRect.h"
-
+#include "WMFMediaDataDecoder.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
 
 class DXVA2Manager;
 
-class WMFVideoDecoder : public MediaDataDecoder {
+class WMFVideoOutputSource : public WMFOutputSource {
 public:
-  WMFVideoDecoder(mozilla::layers::LayersBackend aLayersBackend,
-                  mozilla::layers::ImageContainer* aImageContainer,
-                  bool aDXVAEnabled);
-  ~WMFVideoDecoder();
+  WMFVideoOutputSource(mozilla::layers::LayersBackend aLayersBackend,
+                       mozilla::layers::ImageContainer* aImageContainer,
+                       bool aDXVAEnabled);
+  ~WMFVideoOutputSource();
 
-  // Decode thread.
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual TemporaryRef<MFTDecoder> Init() MOZ_OVERRIDE;
 
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
-
-  // Inserts data into the decoder's pipeline.
-  virtual DecoderStatus Input(nsAutoPtr<mp4_demuxer::MP4Sample>& aSample) MOZ_OVERRIDE;
-
-  // Blocks until a decoded sample is produced by the decoder.
-  virtual DecoderStatus Output(nsAutoPtr<MediaData>& aOutData) MOZ_OVERRIDE;
-
-  virtual DecoderStatus Flush() MOZ_OVERRIDE;
+  virtual HRESULT Output(int64_t aStreamOffset,
+                         nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
 private:
 
@@ -45,10 +37,13 @@ private:
   HRESULT ConfigureVideoFrameGeometry();
 
   HRESULT CreateBasicVideoFrame(IMFSample* aSample,
+                                int64_t aStreamOffset,
                                 VideoData** aOutVideoData);
 
   HRESULT CreateD3DVideoFrame(IMFSample* aSample,
+                              int64_t aStreamOffset,
                               VideoData** aOutVideoData);
+
   // Video frame geometry.
   VideoInfo mVideoInfo;
   uint32_t mVideoStride;
@@ -56,21 +51,17 @@ private:
   uint32_t mVideoHeight;
   nsIntRect mPictureRegion;
 
-  // The last offset into the media resource that was passed into Input().
-  // This is used to approximate the decoder's position in the media resource.
-  int64_t mLastStreamOffset;
-
-  nsAutoPtr<MFTDecoder> mDecoder;
+  RefPtr<MFTDecoder> mDecoder;
   RefPtr<layers::ImageContainer> mImageContainer;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
+  RefPtr<MediaTaskQueue> mTaskQueue;
+  MediaDataDecoderCallback* mCallback;
 
   const bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
   bool mUseHwAccel;
 };
 
-
-
 } // namespace mozilla
 
-#endif
+#endif // WMFVideoOutputSource_h_

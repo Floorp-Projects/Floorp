@@ -7,11 +7,12 @@
 #include "WMF.h"
 #include "WMFDecoderModule.h"
 #include "WMFDecoder.h"
-#include "WMFVideoDecoder.h"
-#include "WMFAudioDecoder.h"
+#include "WMFVideoOutputSource.h"
+#include "WMFAudioOutputSource.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
 #include "mp4_demuxer/audio_decoder_config.h"
+#include "WMFMediaDataDecoder.h"
 
 namespace mozilla {
 
@@ -68,40 +69,25 @@ WMFDecoderModule::Shutdown()
 MediaDataDecoder*
 WMFDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                     mozilla::layers::LayersBackend aLayersBackend,
-                                    mozilla::layers::ImageContainer* aImageContainer)
+                                    mozilla::layers::ImageContainer* aImageContainer,
+                                    MediaTaskQueue* aVideoTaskQueue,
+                                    MediaDataDecoderCallback* aCallback)
 {
-  return new WMFVideoDecoder(aLayersBackend,
-                             aImageContainer,
-                             sDXVAEnabled);
+  return new WMFMediaDataDecoder(new WMFVideoOutputSource(aLayersBackend,
+                                                          aImageContainer,
+                                                          sDXVAEnabled),
+                                 aVideoTaskQueue,
+                                 aCallback);
 }
 
 MediaDataDecoder*
-WMFDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig)
+WMFDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                                   MediaTaskQueue* aAudioTaskQueue,
+                                   MediaDataDecoderCallback* aCallback)
 {
-  return new WMFAudioDecoder(ChannelLayoutToChannelCount(aConfig.channel_layout()),
-                             aConfig.samples_per_second(),
-                             aConfig.bits_per_channel(),
-                             aConfig.extra_data(),
-                             aConfig.extra_data_size());
-}
-
-void
-WMFDecoderModule::OnDecodeThreadStart()
-{
-  MOZ_ASSERT(!NS_IsMainThread(), "Must not be on main thread.");
-  // XXX WebAudio can call this on the main thread when using deprecated APIs.
-  // That should not happen. You cannot change the concurrency model once already set.
-  // The main thread will continue to be STA, which seems to work, but MSDN
-  // recommends that MTA be used.
-  // TODO: enforce that WebAudio stops doing that!
-  CoInitializeEx(0, COINIT_MULTITHREADED);
-}
-
-void
-WMFDecoderModule::OnDecodeThreadFinish()
-{
-  MOZ_ASSERT(!NS_IsMainThread(), "Must be on main thread.");
-  CoUninitialize();
+  return new WMFMediaDataDecoder(new WMFAudioOutputSource(aConfig),
+                                 aAudioTaskQueue,
+                                 aCallback);
 }
 
 } // namespace mozilla
