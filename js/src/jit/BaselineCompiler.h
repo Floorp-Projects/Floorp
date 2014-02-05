@@ -27,6 +27,8 @@ namespace jit {
     _(JSOP_POP)                \
     _(JSOP_POPN)               \
     _(JSOP_POPNV)              \
+    _(JSOP_ENTERWITH)          \
+    _(JSOP_LEAVEWITH)          \
     _(JSOP_DUP)                \
     _(JSOP_DUP2)               \
     _(JSOP_SWAP)               \
