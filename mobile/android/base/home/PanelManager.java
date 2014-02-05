@@ -24,6 +24,7 @@ import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PanelManager implements GeckoEventListener {
@@ -68,11 +69,14 @@ public class PanelManager implements GeckoEventListener {
     private static final SparseArray<RequestCallback> sCallbacks = new SparseArray<RequestCallback>();
 
     /**
-     * Asynchronously fetches list of available panels from Gecko.
+     * Asynchronously fetches list of available panels from Gecko
+     * for the given IDs.
      *
+     * @param ids list of panel ids to be fetched. A null value will fetch all
+     *        available panels.
      * @param callback onComplete will be called on the UI thread.
      */
-    public void requestAvailablePanels(RequestCallback callback) {
+    public void requestPanelsById(Set<String> ids, RequestCallback callback) {
         final int requestId = sRequestId.getAndIncrement();
 
         synchronized(sCallbacks) {
@@ -83,7 +87,33 @@ public class PanelManager implements GeckoEventListener {
             sCallbacks.put(requestId, callback);
         }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomePanels:Get", Integer.toString(requestId)));
+        final JSONObject message = new JSONObject();
+        try {
+            message.put("requestId", requestId);
+
+            if (ids != null && ids.size() > 0) {
+                JSONArray idsArray = new JSONArray();
+                for (String id : ids) {
+                    idsArray.put(id);
+                }
+
+                message.put("ids", idsArray);
+            }
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Failed to build event to request panels by id", e);
+            return;
+        }
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomePanels:Get", message.toString()));
+    }
+
+    /**
+     * Asynchronously fetches list of available panels from Gecko.
+     *
+     * @param callback onComplete will be called on the UI thread.
+     */
+    public void requestAvailablePanels(RequestCallback callback) {
+        requestPanelsById(null, callback);
     }
 
     /**
