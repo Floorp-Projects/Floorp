@@ -654,7 +654,7 @@
   background-repeat: no-repeat;
   border: 1px threedshadow solid;
   border-radius: 5px;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 #detail-screenshot[loading="error"] {

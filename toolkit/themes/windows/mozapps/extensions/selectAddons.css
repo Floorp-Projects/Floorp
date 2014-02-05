@@ -64,7 +64,7 @@
 }
 
 #select-header .select-cell {
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 #select-header .select-keep,
@@ -102,7 +102,7 @@
 .addon-name,
 .addon-action-message,
 .addon-action-update {
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   margin: 0;
   padding-top: 1px;
   padding-bottom: 2px;
