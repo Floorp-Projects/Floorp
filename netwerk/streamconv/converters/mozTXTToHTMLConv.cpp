@@ -10,6 +10,8 @@
 #include "nsIExternalProtocolHandler.h"
 #include "nsIIOService.h"
 
+#include <algorithm>
+
 #ifdef DEBUG_BenB_Perf
 #include "prtime.h"
 #include "prinrval.h"
@@ -113,22 +115,22 @@ mozTXTToHTMLConv::UnescapeStr(const char16_t * aInString, int32_t aStartPos, int
     if (aInString[i] == '&')
     {
       subString = &aInString[i];
-      if (!nsCRT::strncmp(subString, MOZ_UTF16("&lt;"), MinInt(4, aLength - remainingChars)))
+      if (!nsCRT::strncmp(subString, MOZ_UTF16("&lt;"), std::min(4, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('<'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&gt;"), MinInt(4, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&gt;"), std::min(4, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('>'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&amp;"), MinInt(5, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&amp;"), std::min(5, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('&'));
         i += 5;
       }
-      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&quot;"), MinInt(6, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&quot;"), std::min(6, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('"'));
         i += 6;
@@ -191,7 +193,7 @@ mozTXTToHTMLConv::FindURLStart(const char16_t * aInString, int32_t aInLength,
   { // no breaks, because end of blocks is never reached
   case RFC1738:
   {
-    if (!nsCRT::strncmp(&aInString[MaxInt(pos - 4, 0)], MOZ_UTF16("<URL:"), 5))
+    if (!nsCRT::strncmp(&aInString[std::max(int32_t(pos - 4), 0)], MOZ_UTF16("<URL:"), 5))
     {
       start = pos + 1;
       return true;
@@ -1062,7 +1064,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const char16_t *line,
       // Placed here for performance increase
       const char16_t * indexString = &line[logLineStart];
            // here, |logLineStart < lineLength| is always true
-      uint32_t minlength = MinInt(6, NS_strlen(indexString));
+      uint32_t minlength = std::min(uint32_t(6), NS_strlen(indexString));
       if (Substring(indexString,
                     indexString+minlength).Equals(Substring(NS_LITERAL_STRING(">From "), 0, minlength),
                                                   nsCaseInsensitiveStringComparator()))

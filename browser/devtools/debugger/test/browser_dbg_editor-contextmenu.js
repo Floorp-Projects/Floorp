@@ -20,7 +20,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest).then(null, info);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest).then(null, info);
     gDebuggee.firstCall();
   });
 

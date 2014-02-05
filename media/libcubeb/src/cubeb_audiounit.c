@@ -188,7 +188,6 @@ audiounit_get_acceptable_latency_range(AudioValueRange * latency_range)
   return CUBEB_OK;
 }
 
-
 int
 audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
@@ -273,7 +272,6 @@ audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   return CUBEB_OK;
 }
 
-
 static void
 audiounit_destroy(cubeb * ctx)
 {
@@ -303,7 +301,6 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   UInt32 size;
   AudioDeviceID output_device_id;
   AudioValueRange latency_range;
-
 
   assert(context);
   *stream = NULL;
