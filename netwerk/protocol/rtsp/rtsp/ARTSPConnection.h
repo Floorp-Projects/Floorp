@@ -102,10 +102,10 @@ private:
     void onReceiveResponse();
 
     void flushPendingRequests();
-    void postReceiveReponseEvent();
+    void postReceiveResponseEvent();
 
     // Return false iff something went unrecoverably wrong.
-    bool receiveRTSPReponse();
+    bool receiveRTSPResponse();
     status_t receive(void *data, size_t size);
     bool receiveLine(AString *line);
     sp<ABuffer> receiveBinaryData();
