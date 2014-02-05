@@ -1125,10 +1125,10 @@ class CGClassConstructor(CGAbstractStaticMethod):
   JS::Rooted<JSObject*> obj(cx, &args.callee());
 """
         if isChromeOnly(self._ctor):
-            preamble += """  if (!%s) {
+            preamble += """  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
     return ThrowingConstructor(cx, argc, vp);
   }
-""" % GetAccessCheck(self.descriptor, "cx", "obj")
+"""
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         callGenerator = CGMethodCall(nativeName, True, self.descriptor,
@@ -1975,7 +1975,7 @@ if (!unforgeableHolder) {
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            accessCheck = GetAccessCheck(self.descriptor, "aCx", "aGlobal")
+            accessCheck = "nsContentUtils::ThreadsafeIsCallerChrome()"
             chromeProperties = accessCheck + " ? &sChromeOnlyNativeProperties : nullptr"
         else:
             chromeProperties = "nullptr"
@@ -2130,7 +2130,7 @@ class CGConstructorEnabled(CGAbstractMethod):
             assert isinstance(pref, list) and len(pref) == 1
             conditions.append('Preferences::GetBool("%s")' % pref[0])
         if iface.getExtendedAttribute("ChromeOnly"):
-            conditions.append(GetAccessCheck(self.descriptor, "aCx", "aObj"))
+            conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
         func = iface.getExtendedAttribute("Func")
         if func:
             assert isinstance(func, list) and len(func) == 1
@@ -2193,15 +2193,6 @@ def CreateBindingJSObject(descriptor, properties, parent):
 """
     return create % parent
 
-def GetAccessCheck(descriptor, context, object):
-    """
-    context is the name of a JSContext*
-    object is the name of a JSObject*
-
-    returns a string
-    """
-    return "ThreadsafeCheckIsChrome(%s, %s)" % (context, object)
-
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
     """
     properties is a PropertyArrays instance
@@ -2224,7 +2215,7 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
         unforgeables.append(
             CGIfWrapper(CGGeneric(defineUnforgeables %
                                   unforgeableAttrs.variableName(True)),
-                        GetAccessCheck(descriptor, "aCx", obj)))
+                        "nsContentUtils::ThreadsafeIsCallerChrome()"))
     return CGList(unforgeables, "\n")
 
 def InitUnforgeableProperties(descriptor, properties):
@@ -9748,7 +9739,7 @@ class CGBindingRoot(CGThing):
                     # chromeonly _create method.
                     (desc.interface.isJSImplemented() and
                      desc.interface.hasInterfaceObject()))
-        bindingHeaders["AccessCheck.h"] = any(
+        bindingHeaders["nsContentUtils.h"] = any(
             descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")

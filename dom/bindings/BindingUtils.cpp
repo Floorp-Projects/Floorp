@@ -2143,14 +2143,6 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
 }
 
 bool
-ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj)
-{
-  using mozilla::dom::workers::GetWorkerPrivateFromContext;
-  return NS_IsMainThread() ? xpc::AccessCheck::isChrome(aObj):
-                             GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
-}
-
-bool
 IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
 {
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
