@@ -10,7 +10,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "JavaScriptParent.h"
-#include "mozilla/StaticPtr.h"
 
 using namespace mozilla::dom;
 using namespace JS;
@@ -224,13 +223,14 @@ NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
                                     nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-static mozilla::StaticRefPtr<nsIXPCScriptable> gSharedScriptableHelperForJSIID;
+static nsIXPCScriptable* gSharedScriptableHelperForJSIID;
 static bool gClassObjectsWereInited = false;
 
 static void EnsureClassObjectsInitialized()
 {
     if (!gClassObjectsWereInited) {
         gSharedScriptableHelperForJSIID = new SharedScriptableHelperForJSIID();
+        NS_ADDREF(gSharedScriptableHelperForJSIID);
 
         gClassObjectsWereInited = true;
     }
@@ -241,8 +241,8 @@ NS_METHOD GetSharedScriptableHelperForJSIID(uint32_t language,
 {
     EnsureClassObjectsInitialized();
     if (language == nsIProgrammingLanguage::JAVASCRIPT) {
-        nsCOMPtr<nsIXPCScriptable> temp = gSharedScriptableHelperForJSIID.get();
-        temp.forget(helper);
+        NS_IF_ADDREF(gSharedScriptableHelperForJSIID);
+        *helper = gSharedScriptableHelperForJSIID;
     } else
         *helper = nullptr;
     return NS_OK;
@@ -268,7 +268,7 @@ void xpc_DestroyJSxIDClassObjects()
     if (gClassObjectsWereInited) {
         NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSIID));
         NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSCID));
-        gSharedScriptableHelperForJSIID = nullptr;
+        NS_IF_RELEASE(gSharedScriptableHelperForJSIID);
 
         gClassObjectsWereInited = false;
     }

@@ -721,11 +721,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         MOZ_ASSERT(iid,"can't do interface conversions without iid");
 
         if (iid->Equals(NS_GET_IID(nsIVariant))) {
-            nsCOMPtr<nsIVariant> variant = XPCVariant::newVariant(cx, s);
+            XPCVariant* variant = XPCVariant::newVariant(cx, s);
             if (!variant)
                 return false;
-
-            variant.forget(static_cast<nsISupports**>(d));
+            *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
             return true;
         } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
                    JSVAL_IS_STRING(s)) {
@@ -772,11 +771,11 @@ CreateHolderIfNeeded(HandleObject obj, MutableHandleValue d,
                      nsIXPConnectJSObjectHolder** dest)
 {
     if (dest) {
-        nsRefPtr<XPCJSObjectHolder> objHolder = XPCJSObjectHolder::newHolder(obj);
+        XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(obj);
         if (!objHolder)
             return false;
 
-        objHolder.forget(dest);
+        NS_ADDREF(*dest = objHolder);
     }
 
     d.setObjectOrNull(obj);
@@ -1150,8 +1149,9 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if (iface) {
                 // just pass through the exception (with extra ref and all)
-                nsCOMPtr<nsIException> temp = iface;
-                temp.forget(exceptn);
+                nsIException* temp = iface;
+                NS_ADDREF(temp);
+                *exceptn = temp;
                 return NS_OK;
             } else {
                 // it is a wrapped native, but not an exception!

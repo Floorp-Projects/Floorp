@@ -246,8 +246,9 @@ XPCCallContext::~XPCCallContext()
 NS_IMETHODIMP
 XPCCallContext::GetCallee(nsISupports * *aCallee)
 {
-    nsCOMPtr<nsISupports> rval = mWrapper ? mWrapper->GetIdentityObject() : nullptr;
-    rval.forget(aCallee);
+    nsISupports* temp = mWrapper ? mWrapper->GetIdentityObject() : nullptr;
+    NS_IF_ADDREF(temp);
+    *aCallee = temp;
     return NS_OK;
 }
 
@@ -263,8 +264,9 @@ XPCCallContext::GetCalleeMethodIndex(uint16_t *aCalleeMethodIndex)
 NS_IMETHODIMP
 XPCCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper)
 {
-    nsCOMPtr<nsIXPConnectWrappedNative> rval = mWrapper;
-    rval.forget(aCalleeWrapper);
+    nsIXPConnectWrappedNative* temp = mWrapper;
+    NS_IF_ADDREF(temp);
+    *aCalleeWrapper = temp;
     return NS_OK;
 }
 
@@ -272,8 +274,9 @@ XPCCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper)
 NS_IMETHODIMP
 XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
 {
-    nsCOMPtr<nsIInterfaceInfo> rval = mInterface->GetInterfaceInfo();
-    rval.forget(aCalleeInterface);
+    nsIInterfaceInfo* temp = mInterface->GetInterfaceInfo();
+    NS_IF_ADDREF(temp);
+    *aCalleeInterface = temp;
     return NS_OK;
 }
 
@@ -281,8 +284,9 @@ XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
 NS_IMETHODIMP
 XPCCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
 {
-    nsCOMPtr<nsIClassInfo> rval = mWrapper ? mWrapper->GetClassInfo() : nullptr;
-    rval.forget(aCalleeClassInfo);
+    nsIClassInfo* temp = mWrapper ? mWrapper->GetClassInfo() : nullptr;
+    NS_IF_ADDREF(temp);
+    *aCalleeClassInfo = temp;
     return NS_OK;
 }
 
