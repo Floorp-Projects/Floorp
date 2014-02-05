@@ -81,6 +81,27 @@ let tests = [
     gContentAPI.showHighlight("urlbar");
     waitForElementToBeVisible(highlight, test_highlight_2, "Highlight should be shown after showHighlight()");
   },
+  function test_highlight_circle(done) {
+    function check_highlight_size() {
+      let panel = highlight.parentElement;
+      let anchor = panel.anchorNode;
+      let anchorRect = anchor.getBoundingClientRect();
+      info("addons target: width: " + anchorRect.width + " height: " + anchorRect.height);
+      let maxDimension = Math.round(Math.max(anchorRect.width, anchorRect.height));
+      let highlightRect = highlight.getBoundingClientRect();
+      info("highlight: width: " + highlightRect.width + " height: " + highlightRect.height);
+      is(Math.round(highlightRect.width), maxDimension, "The width of the highlight should be equal to the largest dimension of the target");
+      is(Math.round(highlightRect.height), maxDimension, "The height of the highlight should be equal to the largest dimension of the target");
+      is(Math.round(highlightRect.height), Math.round(highlightRect.width), "The height and width of the highlight should be the same to create a circle");
+      is(highlight.style.borderRadius, "100%", "The border-radius should be 100% to create a circle");
+      done();
+    }
+    let highlight = document.getElementById("UITourHighlight");
+    is_element_hidden(highlight, "Highlight should initially be hidden");
+
+    gContentAPI.showHighlight("addons");
+    waitForElementToBeVisible(highlight, check_highlight_size, "Highlight should be shown after showHighlight()");
+  },
   function test_highlight_customize_auto_open_close(done) {
     let highlight = document.getElementById("UITourHighlight");
     gContentAPI.showHighlight("customize");
