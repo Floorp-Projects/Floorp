@@ -82,6 +82,17 @@ ArrayEnd(const Array<T, N>& arr)
   return &arr[0] + ArrayLength(arr);
 }
 
+namespace detail {
+
+/*
+ * Helper for the MOZ_ARRAY_LENGTH() macro to make the length a typesafe
+ * compile-time constant even on compilers lacking constexpr support.
+ */
+template <typename T, size_t N>
+char (&ArrayLengthHelper(T (&array)[N]))[N];
+
+} /* namespace detail */
+
 } /* namespace mozilla */
 
 #endif /* __cplusplus */
@@ -91,8 +102,8 @@ ArrayEnd(const Array<T, N>& arr)
  * that can't use C++ template functions and for static_assert() calls that
  * can't call ArrayLength() when it is not a C++11 constexpr function.
  */
-#ifdef MOZ_HAVE_CXX11_CONSTEXPR
-#  define MOZ_ARRAY_LENGTH(array)   mozilla::ArrayLength(array)
+#ifdef __cplusplus
+#  define MOZ_ARRAY_LENGTH(array)   sizeof(mozilla::detail::ArrayLengthHelper(array))
 #else
 #  define MOZ_ARRAY_LENGTH(array)   (sizeof(array)/sizeof((array)[0]))
 #endif
