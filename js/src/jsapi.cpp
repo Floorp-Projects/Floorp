@@ -1304,7 +1304,9 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return true;
 
-        if (!obj->as<GlobalObject>().ensureConstructor(cx, JSCLASS_CACHED_PROTO_KEY(stdnm->clasp)))
+        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
+        if (!GlobalObject::ensureConstructor(cx, global, key))
             return false;
 
         *resolved = true;
