@@ -222,6 +222,7 @@ gbjar.sources += [
     'home/HomeAdapter.java',
     'home/HomeBanner.java',
     'home/HomeConfig.java',
+    'home/HomeConfigInvalidator.java',
     'home/HomeConfigLoader.java',
     'home/HomeConfigPrefsBackend.java',
     'home/HomeContextMenuInfo.java',
