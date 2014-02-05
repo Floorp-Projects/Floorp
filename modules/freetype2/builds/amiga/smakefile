@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2005,2006, 2007, 2009 by
+# Copyright 2005-2007, 2009, 2013 by
 # Werner Lemberg and Detlef Würkner.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -40,7 +40,7 @@
 #
 # link your programs with ft2_680x0.lib and either ftsystem.o or ftsystempure.o
 # (and either ftdebug.o or ftdebugpure.o if you enabled FT_DEBUG_LEVEL_ERROR or
-# FT_DEBUG_LEVEL_TRACE in include/freetype/config/ftoption.h).
+# FT_DEBUG_LEVEL_TRACE in include/config/ftoption.h).
 
 OBJBASE = ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftcid.o ftfstype.o ftgasp.o   \
 	  ftglyph.o ftgxval.o ftlcdfil.o ftmm.o ftotval.o ftpatent.o ftpfr.o \

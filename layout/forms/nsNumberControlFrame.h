@@ -79,10 +79,23 @@ public:
   }
 
   /**
-   * When our HTMLInputElement's value changes, it calls this method to tell
-   * us to sync up our anonymous text input field child.
+   * This method attempts to localizes aValue and then sets the result as the
+   * value of our anonymous text control. It's called when our
+   * HTMLInputElement's value changes, when we need to sync up the value
+   * displayed in our anonymous text control.
    */
-  void UpdateForValueChange(const nsAString& aValue);
+  void SetValueOfAnonTextControl(const nsAString& aValue);
+
+  /**
+   * This method gets the string value of our anonymous text control,
+   * attempts to normalizes (de-localizes) it, then sets the outparam aValue to
+   * the result. It's called when user input changes the text value of our
+   * anonymous text control so that we can sync up the internal value of our
+   * HTMLInputElement.
+   */
+  void GetValueOfAnonTextControl(nsAString& aValue);
+
+  bool AnonTextControlIsEmpty();
 
   /**
    * Called to notify this frame that its HTMLInputElement is currently

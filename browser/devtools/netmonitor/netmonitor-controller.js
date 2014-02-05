@@ -57,34 +57,63 @@ const EVENTS = {
   // When the response body is displayed in the UI.
   RESPONSE_BODY_DISPLAYED: "NetMonitor:ResponseBodyAvailable",
 
-  // When `onTabSelect` is fired and subsequently rendered
+  // When `onTabSelect` is fired and subsequently rendered.
   TAB_UPDATED: "NetMonitor:TabUpdated",
 
-  // Fired when Sidebar is finished being populated
+  // Fired when Sidebar has finished being populated.
   SIDEBAR_POPULATED: "NetMonitor:SidebarPopulated",
 
-  // Fired when NetworkDetailsView is finished being populated
+  // Fired when NetworkDetailsView has finished being populated.
   NETWORKDETAILSVIEW_POPULATED: "NetMonitor:NetworkDetailsViewPopulated",
 
-  // Fired when NetworkDetailsView is finished being populated
-  CUSTOMREQUESTVIEW_POPULATED: "NetMonitor:CustomRequestViewPopulated"
+  // Fired when CustomRequestView has finished being populated.
+  CUSTOMREQUESTVIEW_POPULATED: "NetMonitor:CustomRequestViewPopulated",
+
+  // Fired when charts have been displayed in the PerformanceStatisticsView.
+  PLACEHOLDER_CHARTS_DISPLAYED: "NetMonitor:PlaceholderChartsDisplayed",
+  PRIMED_CACHE_CHART_DISPLAYED: "NetMonitor:PrimedChartsDisplayed",
+  EMPTY_CACHE_CHART_DISPLAYED: "NetMonitor:EmptyChartsDisplayed"
+};
+
+// Descriptions for what this frontend is currently doing.
+const ACTIVITY_TYPE = {
+  // Standing by and handling requests normally.
+  NONE: 0,
+
+  // Forcing the target to reload with cache enabled or disabled.
+  RELOAD: {
+    WITH_CACHE_ENABLED: 1,
+    WITH_CACHE_DISABLED: 2
+  },
+
+  // Enabling or disabling the cache without triggering a reload.
+  ENABLE_CACHE: 3,
+  DISABLE_CACHE: 4
 };
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/sourceeditor/editor");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Chart",
+  "resource:///modules/devtools/Chart.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
+  "resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
@@ -255,9 +284,81 @@ let NetMonitorController = {
     });
   },
 
+  /**
+   * Gets the activity currently performed by the frontend.
+   * @return number
+   */
+  getCurrentActivity: function() {
+    return this._currentActivity || ACTIVITY_TYPE.NONE;
+  },
+
+  /**
+   * Triggers a specific "activity" to be performed by the frontend. This can be,
+   * for example, triggering reloads or enabling/disabling cache.
+   *
+   * @param number aType
+   *        The activity type. See the ACTIVITY_TYPE const.
+   * @return object
+   *         A promise resolved once the activity finishes and the frontend
+   *         is back into "standby" mode.
+   */
+  triggerActivity: function(aType) {
+    // Puts the frontend into "standby" (when there's no particular activity).
+    let standBy = () => {
+      this._currentActivity = ACTIVITY_TYPE.NONE;
+    };
+
+    // Waits for a series of "navigation start" and "navigation stop" events.
+    let waitForNavigation = () => {
+      let deferred = promise.defer();
+      this._target.once("will-navigate", () => {
+        this._target.once("navigate", () => {
+          deferred.resolve();
+        });
+      });
+      return deferred.promise;
+    };
+
+    // Reconfigures the tab, optionally triggering a reload.
+    let reconfigureTab = aOptions => {
+      let deferred = promise.defer();
+      this._target.activeTab.reconfigure(aOptions, deferred.resolve);
+      return deferred.promise;
+    };
+
+    // Reconfigures the tab and waits for the target to finish navigating.
+    let reconfigureTabAndWaitForNavigation = aOptions => {
+      aOptions.performReload = true;
+      let navigationFinished = waitForNavigation();
+      return reconfigureTab(aOptions).then(() => navigationFinished);
+    }
+
+    if (aType == ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED) {
+      this._currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
+      this._target.once("will-navigate", () => this._currentActivity = aType);
+      return reconfigureTabAndWaitForNavigation({ cacheEnabled: true }).then(standBy);
+    }
+    if (aType == ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED) {
+      this._currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
+      this._target.once("will-navigate", () => this._currentActivity = aType);
+      return reconfigureTabAndWaitForNavigation({ cacheEnabled: false }).then(standBy);
+    }
+    if (aType == ACTIVITY_TYPE.ENABLE_CACHE) {
+      this._currentActivity = aType;
+      return reconfigureTab({ cacheEnabled: true, performReload: false }).then(standBy);
+    }
+    if (aType == ACTIVITY_TYPE.DISABLE_CACHE) {
+      this._currentActivity = aType;
+      return reconfigureTab({ cacheEnabled: false, performReload: false }).then(standBy);
+    }
+    this._currentActivity = ACTIVITY_TYPE.NONE;
+    return promise.reject(new Error("Invalid activity type"));
+  },
+
   _startup: null,
   _shutdown: null,
   _connection: null,
+  _currentActivity: null,
   client: null,
   tabClient: null,
   webConsoleClient: null
@@ -313,6 +414,11 @@ TargetEventsHandler.prototype = {
         NetMonitorView.RequestsMenu.reset();
         NetMonitorView.Sidebar.reset();
         NetMonitorView.NetworkDetails.reset();
+
+        // Switch to the default network traffic inspector view.
+        if (NetMonitorController.getCurrentActivity() == ACTIVITY_TYPE.NONE) {
+          NetMonitorView.showNetworkInspectorView();
+        }
 
         window.emit(EVENTS.TARGET_WILL_NAVIGATE);
         break;
@@ -383,7 +489,6 @@ NetworkEventsHandler.prototype = {
   _onNetworkEvent: function(aType, aPacket) {
     let { actor, startedDateTime, method, url, isXHR } = aPacket.eventActor;
     NetMonitorView.RequestsMenu.addRequest(actor, startedDateTime, method, url, isXHR);
-
     window.emit(EVENTS.NETWORK_EVENT);
   },
 
@@ -585,7 +690,8 @@ let L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
  */
 let Prefs = new ViewHelpers.Prefs("devtools.netmonitor", {
   networkDetailsWidth: ["Int", "panes-network-details-width"],
-  networkDetailsHeight: ["Int", "panes-network-details-height"]
+  networkDetailsHeight: ["Int", "panes-network-details-height"],
+  statistics: ["Bool", "statistics"]
 });
 
 /**
@@ -615,6 +721,39 @@ Object.defineProperties(window, {
     get: function() NetMonitorController.NetworkEventsHandler
   }
 });
+
+/**
+ * Makes sure certain properties are available on all objects in a data store.
+ *
+ * @param array aDataStore
+ *        A list of objects for which to check the availability of properties.
+ * @param array aMandatoryFields
+ *        A list of strings representing properties of objects in aDataStore.
+ * @return object
+ *         A promise resolved when all objects in aDataStore contain the
+ *         properties defined in aMandatoryFields.
+ */
+function whenDataAvailable(aDataStore, aMandatoryFields) {
+  let deferred = promise.defer();
+
+  let interval = setInterval(() => {
+    if (aDataStore.every(item => aMandatoryFields.every(field => field in item))) {
+      clearInterval(interval);
+      clearTimeout(timer);
+      deferred.resolve();
+    }
+  }, WDA_DEFAULT_VERIFY_INTERVAL);
+
+  let timer = setTimeout(() => {
+    clearInterval(interval);
+    deferred.reject(new Error("Timed out while waiting for data"));
+  }, WDA_DEFAULT_GIVE_UP_TIMEOUT);
+
+  return deferred.promise;
+};
+
+const WDA_DEFAULT_VERIFY_INTERVAL = 50; // ms
+const WDA_DEFAULT_GIVE_UP_TIMEOUT = 2000; // ms
 
 /**
  * Helper method for debugging.

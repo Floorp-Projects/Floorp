@@ -327,4 +327,20 @@ exports['test invisibleToDebugger: true'] = function (assert) {
   }
 };
 
+exports['test console global by default'] = function (assert) {
+  let uri = root + '/fixtures/loader/globals/';
+  let loader = Loader({ paths: { '': uri }});
+  let program = main(loader, 'main');
+ 
+  assert.ok(typeof program.console === 'object', 'global `console` exists');
+  assert.ok(typeof program.console.log === 'function', 'global `console.log` exists');
+
+  let loader2 = Loader({ paths: { '': uri }, globals: { console: fakeConsole }});
+  let program2 = main(loader2, 'main');
+
+  assert.equal(program2.console, fakeConsole,
+    'global console can be overridden with Loader options');
+  function fakeConsole () {};
+};
+
 require('test').run(exports);

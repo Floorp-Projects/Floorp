@@ -129,7 +129,7 @@ PrintBacktrace()
         if (++OOM_counter > OOM_maxAllocations) { \
             JS_OOM_EMIT_BACKTRACE();\
             js_ReportOutOfMemory(cx);\
-            return nullptr; \
+            return false; \
         } \
     } while (0)
 

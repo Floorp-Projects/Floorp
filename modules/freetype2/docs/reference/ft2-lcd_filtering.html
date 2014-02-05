@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 LCD Filtering
@@ -47,7 +47,7 @@ LCD Filtering
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
-<p>The <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> API can be used to specify a low-pass filter which is then applied to LCD-optimized bitmaps generated through <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. This is useful to reduce color fringes which would occur with unfiltered rendering.</p>
+<p>The <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> API can be used to specify a low-pass filter, which is then applied to LCD-optimized bitmaps generated through <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. This is useful to reduce color fringes that would occur with unfiltered rendering.</p>
 <p>Note that no filter is active by default, and that this function is <b>not</b> implemented in default builds of the library. You need to #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING in your &lsquo;ftoption.h&rsquo; file in order to activate it.</p>
 <p>FreeType generates alpha coverage maps, which are linear by nature. For instance, the value 0x80 in bitmap representation means that (within numerical precision) 0x80/0xff fraction of that pixel is covered by the glyph's outline. The blending function for placing text over a background is</p>
 <pre class="colored">
@@ -67,7 +67,7 @@ LCD Filtering
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_LcdFilter">FT_LcdFilter</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
+Defined in FT_LCD_FILTER_H (ftlcdfil.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -116,7 +116,7 @@ Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
+Defined in FT_LCD_FILTER_H (ftlcdfil.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -163,7 +163,7 @@ Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
+Defined in FT_LCD_FILTER_H (ftlcdfil.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 

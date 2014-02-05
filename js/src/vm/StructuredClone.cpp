@@ -1339,14 +1339,12 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        JSStableString *stable = str->ensureStable(context());
-        if (!stable)
+        JSFlatString *flat = str->ensureFlat(context());
+        if (!flat)
             return false;
 
-        size_t length = stable->length();
-        const StableCharPtr chars = stable->chars();
-        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars.get(), length,
-                                                            flags, nullptr);
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), flat->chars(),
+                                                            flat->length(), flags, nullptr);
         if (!reobj)
             return false;
         vp->setObject(*reobj);
@@ -1650,6 +1648,20 @@ JS_StructuredClone(JSContext *cx, JS::HandleValue value, JS::MutableHandleValue 
     return buf.read(cx, vp, callbacks, closure);
 }
 
+JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer &&other)
+{
+    other.steal(&data_, &nbytes_, &version_);
+}
+
+JSAutoStructuredCloneBuffer&
+JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer &&other)
+{
+    JS_ASSERT(&other != this);
+    clear();
+    other.steal(&data_, &nbytes_, &version_);
+    return *this;
+}
+
 void
 JSAutoStructuredCloneBuffer::clear()
 {
@@ -1741,22 +1753,6 @@ JSAutoStructuredCloneBuffer::write(JSContext *cx, JS::HandleValue value,
         version_ = JS_STRUCTURED_CLONE_VERSION;
     }
     return ok;
-}
-
-void
-JSAutoStructuredCloneBuffer::swap(JSAutoStructuredCloneBuffer &other)
-{
-    uint64_t *data = other.data_;
-    size_t nbytes = other.nbytes_;
-    uint32_t version = other.version_;
-
-    other.data_ = this->data_;
-    other.nbytes_ = this->nbytes_;
-    other.version_ = this->version_;
-
-    this->data_ = data;
-    this->nbytes_ = nbytes;
-    this->version_ = version;
 }
 
 JS_PUBLIC_API(void)

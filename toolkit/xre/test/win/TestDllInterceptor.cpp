@@ -125,8 +125,12 @@ int main()
       // We keep this test to hook complex code on x86. (Bug 850957)
       TestHook("ntdll.dll", "NtFlushBuffersFile") &&
 #endif
+      TestHook("ntdll.dll", "NtCreateFile") &&
+      TestHook("ntdll.dll", "NtReadFile") &&
+      TestHook("ntdll.dll", "NtReadFileScatter") &&
       TestHook("ntdll.dll", "NtWriteFile") &&
       TestHook("ntdll.dll", "NtWriteFileGather") &&
+      TestHook("ntdll.dll", "NtQueryFullAttributesFile") &&
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
       TestHook("kernel32.dll", "SetUnhandledExceptionFilter") &&
 #ifdef _M_IX86

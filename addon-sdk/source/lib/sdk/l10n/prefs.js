@@ -9,7 +9,7 @@ const { id: jetpackId} = require('../self');
 
 const OPTIONS_DISPLAYED = "addon-options-displayed";
 
-function onOptionsDisplayed({ subjec: document, data: addonId }) {
+function onOptionsDisplayed({ subject: document, data: addonId }) {
   if (addonId !== jetpackId)
     return;
   let query = 'setting[data-jetpack-id="' + jetpackId + '"][pref-name], ' +

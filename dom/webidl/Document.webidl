@@ -45,7 +45,7 @@ interface Document : Node {
   readonly attribute Element? documentElement;
   [Pure]
   HTMLCollection getElementsByTagName(DOMString localName);
-  [Pure]
+  [Pure, Throws]
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);

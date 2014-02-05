@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 Quick retrieval of advance values
@@ -52,7 +52,7 @@ Quick retrieval of advance values
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_ADVANCE_FLAG_FAST_ONLY">FT_ADVANCE_FLAG_FAST_ONLY</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
+Defined in FT_ADVANCES_H (ftadvanc.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -62,8 +62,8 @@ Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
 <table align=center width="87%"><tr><td>
 <p>A bit-flag to be OR-ed with the &lsquo;flags&rsquo; parameter of the <a href="ft2-quick_advance.html#FT_Get_Advance">FT_Get_Advance</a> and <a href="ft2-quick_advance.html#FT_Get_Advances">FT_Get_Advances</a> functions.</p>
 <p>If set, it indicates that you want these functions to fail if the corresponding hinting mode or font driver doesn't allow for very quick advance computation.</p>
-<p>Typically, glyphs which are either unscaled, unhinted, bitmapped, or light-hinted can have their advance width computed very quickly.</p>
-<p>Normal and bytecode hinted modes, which require loading, scaling, and hinting of the glyph outline, are extremely slow by comparison.</p>
+<p>Typically, glyphs that are either unscaled, unhinted, bitmapped, or light-hinted can have their advance width computed very quickly.</p>
+<p>Normal and bytecode hinted modes that require loading, scaling, and hinting of the glyph outline, are extremely slow by comparison.</p>
 </td></tr></table><br>
 </td></tr></table>
 <hr width="75%">
@@ -74,7 +74,7 @@ Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_Advance">FT_Get_Advance</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
+Defined in FT_ADVANCES_H (ftadvanc.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -127,7 +127,7 @@ Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Get_Advances">FT_Get_Advances</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_ADVANCES_H (freetype/ftadvanc.h).
+Defined in FT_ADVANCES_H (ftadvanc.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 

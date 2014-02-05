@@ -356,6 +356,11 @@ nsSocketTransportService::PollTimeout()
         if (r < minR)
             minR = r;
     }
+    // nsASocketHandler defines UINT16_MAX as do not timeout
+    if (minR == UINT16_MAX) {
+        SOCKET_LOG(("poll timeout: none\n"));
+        return NS_SOCKET_POLL_TIMEOUT;
+    }
     SOCKET_LOG(("poll timeout: %lu\n", minR));
     return PR_SecondsToInterval(minR);
 }

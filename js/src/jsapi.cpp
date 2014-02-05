@@ -279,10 +279,10 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 return false;
             *sp = STRING_TO_JSVAL(str);
             if (c == 'W') {
-                JSStableString *stable = str->ensureStable(cx);
-                if (!stable)
+                JSFlatString *flat = str->ensureFlat(cx);
+                if (!flat)
                     return false;
-                *va_arg(ap, const jschar **) = stable->chars().get();
+                *va_arg(ap, const jschar **) = flat->chars();
             } else {
                 *va_arg(ap, JSString **) = str;
             }
@@ -586,7 +586,7 @@ JS_Init(void)
         return false;
 #endif
 
-    if (!ForkJoinSlice::initialize())
+    if (!ForkJoinContext::initialize())
         return false;
 
 #if EXPOSE_INTL_API
@@ -1142,25 +1142,21 @@ JS_InitStandardClasses(JSContext *cx, HandleObject obj)
 #define EAGER_ATOM(name)            NAME_OFFSET(name)
 #define EAGER_CLASS_ATOM(name)      NAME_OFFSET(name)
 
-static JSObject *
-DummyInit(JSContext *cx, HandleObject obj)
-{
-    MOZ_ASSUME_UNREACHABLE();
-    return nullptr;
-}
+static js::Class DummyClass;
+static js::Class SentinelClass;
 
 typedef struct JSStdName {
-    ClassInitializerOp init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     const Class *clasp;
-    bool isDummy() const { return init == DummyInit; };
+    bool isDummy() const { return clasp == &DummyClass; };
+    bool isSentinel() const { return clasp == &SentinelClass; };
 } JSStdName;
 
 static const JSStdName*
 LookupStdName(JSRuntime *rt, HandleString name, const JSStdName *table)
 {
     MOZ_ASSERT(name->isAtom());
-    for (unsigned i = 0; table[i].init; i++) {
+    for (unsigned i = 0; !table[i].isSentinel(); i++) {
         if (table[i].isDummy())
             continue;
         JSAtom *atom = AtomStateOffsetToName(rt->atomState, table[i].atomOffset);
@@ -1177,11 +1173,11 @@ LookupStdName(JSRuntime *rt, HandleString name, const JSStdName *table)
  * JSProtoKey does not correspond to a class with a meaningful constructor, we
  * insert a null entry into the table.
  */
-#define STD_NAME_ENTRY(name, code, init, clasp) { init, EAGER_CLASS_ATOM(name), clasp },
-#define STD_DUMMY_ENTRY(name, code, init, dummy) { DummyInit, 0, nullptr },
+#define STD_NAME_ENTRY(name, code, init, clasp) { EAGER_CLASS_ATOM(name), clasp },
+#define STD_DUMMY_ENTRY(name, code, init, dummy) { 0, &DummyClass },
 static const JSStdName standard_class_names[] = {
   JS_FOR_PROTOTYPES(STD_NAME_ENTRY, STD_DUMMY_ENTRY)
-  { nullptr, 0, nullptr }
+  { 0, &SentinelClass }
 };
 
 /*
@@ -1189,58 +1185,58 @@ static const JSStdName standard_class_names[] = {
  * corresponding standard class that sets them up.
  */
 static const JSStdName builtin_property_names[] = {
-    {js_InitObjectClass,        EAGER_ATOM(eval), &JSObject::class_},
+    { EAGER_ATOM(eval), &JSObject::class_ },
 
     /* Global properties and functions defined by the Number class. */
-    {js_InitNumberClass,        EAGER_ATOM(NaN), OCLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(Infinity), OCLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(isNaN), OCLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(isFinite), OCLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(parseFloat), OCLASP(Number)},
-    {js_InitNumberClass,        EAGER_ATOM(parseInt), OCLASP(Number)},
+    { EAGER_ATOM(NaN), OCLASP(Number) },
+    { EAGER_ATOM(Infinity), OCLASP(Number) },
+    { EAGER_ATOM(isNaN), OCLASP(Number) },
+    { EAGER_ATOM(isFinite), OCLASP(Number) },
+    { EAGER_ATOM(parseFloat), OCLASP(Number) },
+    { EAGER_ATOM(parseInt), OCLASP(Number) },
 
     /* String global functions. */
-    {js_InitStringClass,        EAGER_ATOM(escape), OCLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(unescape), OCLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(decodeURI), OCLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(encodeURI), OCLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(decodeURIComponent), OCLASP(String)},
-    {js_InitStringClass,        EAGER_ATOM(encodeURIComponent), OCLASP(String)},
+    { EAGER_ATOM(escape), OCLASP(String) },
+    { EAGER_ATOM(unescape), OCLASP(String) },
+    { EAGER_ATOM(decodeURI), OCLASP(String) },
+    { EAGER_ATOM(encodeURI), OCLASP(String) },
+    { EAGER_ATOM(decodeURIComponent), OCLASP(String) },
+    { EAGER_ATOM(encodeURIComponent), OCLASP(String) },
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        EAGER_ATOM(uneval), OCLASP(String)},
+    { EAGER_ATOM(uneval), OCLASP(String) },
 #endif
 #ifdef ENABLE_BINARYDATA
-    {js_InitSIMDClass,          EAGER_ATOM(SIMD), OCLASP(SIMD)},
-    {js_InitTypedObjectModuleObject, EAGER_ATOM(TypedObject), OCLASP(TypedObjectModule)},
+    { EAGER_ATOM(SIMD), OCLASP(SIMD) },
+    { EAGER_ATOM(TypedObject), OCLASP(TypedObjectModule) },
 #endif
 
-    {nullptr,                     0, nullptr}
+    { 0, &SentinelClass }
 };
 
 static const JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
-    {js_InitObjectClass,        EAGER_ATOM(proto), &JSObject::class_},
+    { EAGER_ATOM(proto), &JSObject::class_ },
 #if JS_HAS_TOSOURCE
-    {js_InitObjectClass,        EAGER_ATOM(toSource), &JSObject::class_},
+    { EAGER_ATOM(toSource), &JSObject::class_ },
 #endif
-    {js_InitObjectClass,        EAGER_ATOM(toString), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(toLocaleString), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(valueOf), &JSObject::class_},
+    { EAGER_ATOM(toString), &JSObject::class_ },
+    { EAGER_ATOM(toLocaleString), &JSObject::class_ },
+    { EAGER_ATOM(valueOf), &JSObject::class_ },
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        EAGER_ATOM(watch), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(unwatch), &JSObject::class_},
+    { EAGER_ATOM(watch), &JSObject::class_ },
+    { EAGER_ATOM(unwatch), &JSObject::class_ },
 #endif
-    {js_InitObjectClass,        EAGER_ATOM(hasOwnProperty), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(isPrototypeOf), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(propertyIsEnumerable), &JSObject::class_},
+    { EAGER_ATOM(hasOwnProperty), &JSObject::class_ },
+    { EAGER_ATOM(isPrototypeOf), &JSObject::class_ },
+    { EAGER_ATOM(propertyIsEnumerable), &JSObject::class_ },
 #if JS_OLD_GETTER_SETTER_METHODS
-    {js_InitObjectClass,        EAGER_ATOM(defineGetter), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(defineSetter), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(lookupGetter), &JSObject::class_},
-    {js_InitObjectClass,        EAGER_ATOM(lookupSetter), &JSObject::class_},
+    { EAGER_ATOM(defineGetter), &JSObject::class_ },
+    { EAGER_ATOM(defineSetter), &JSObject::class_ },
+    { EAGER_ATOM(lookupGetter), &JSObject::class_ },
+    { EAGER_ATOM(lookupSetter), &JSObject::class_ },
 #endif
 
-    {nullptr,                   0, nullptr}
+    { 0, &SentinelClass }
 };
 
 #undef CLASP
@@ -1306,11 +1302,9 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return true;
 
-        if (obj->as<GlobalObject>().isStandardClassResolved(stdnm->clasp))
-            return true;
-
-        if (!stdnm->init(cx, obj))
+        if (!obj->as<GlobalObject>().ensureConstructor(cx, JSCLASS_CACHED_PROTO_KEY(stdnm->clasp)))
             return false;
+
         *resolved = true;
     }
     return true;
@@ -1323,37 +1317,8 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     MOZ_ASSERT(obj->is<GlobalObject>());
-
-    /*
-     * Check whether we need to bind 'undefined' and define it if so.
-     * Since ES5 15.1.1.3 undefined can't be deleted.
-     */
-    HandlePropertyName undefinedName = cx->names().undefined;
-    RootedValue undefinedValue(cx, UndefinedValue());
-    if (!obj->nativeContains(cx, undefinedName) &&
-        !JSObject::defineProperty(cx, obj, undefinedName, undefinedValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_PERMANENT | JSPROP_READONLY)) {
-        return false;
-    }
-
-    /*
-     * Initialize any classes that have not been initialized yet. Note that
-     * resolving everything in standard_class_names has the effect of resolving
-     * everything in builtin_property_names, so we don't need to iterate over
-     * that separately. Moreover, we'll resolve the Object constructor as well,
-     * so we can also skip object_prototype_names.
-     */
-    for (unsigned i = 0; standard_class_names[i].init; i++) {
-        const JSStdName &stdnm = standard_class_names[i];
-        // Watch out for dummy entries.
-        if (!stdnm.isDummy() && !obj->as<GlobalObject>().isStandardClassResolved(stdnm.clasp)) {
-            if (!stdnm.init(cx, obj))
-                return false;
-        }
-    }
-
-    return true;
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    return GlobalObject::initStandardClasses(cx, global);
 }
 
 JS_PUBLIC_API(bool)
@@ -1417,7 +1382,8 @@ JS_GetArrayPrototype(JSContext *cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
-    return forObj->global().getOrCreateArrayPrototype(cx);
+    Rooted<GlobalObject*> global(cx, &forObj->global());
+    return GlobalObject::getOrCreateArrayPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3366,11 +3332,8 @@ JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsi
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
+JS_GetPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-
     return JS_ForwardGetPropertyTo(cx, obj, id, obj, vp);
 }
 
@@ -3388,7 +3351,7 @@ JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
 }
 
 JS_PUBLIC_API(bool)
-JS_GetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
+JS_GetElement(JSContext *cx, HandleObject objArg, uint32_t index, MutableHandleValue vp)
 {
     return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
 }
@@ -3408,20 +3371,24 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
 }
 
 JS_PUBLIC_API(bool)
-JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
+JS_GetProperty(JSContext *cx, HandleObject obj, const char *name, MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_GetUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                  MutableHandleValue vp)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3550,10 +3517,9 @@ JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *resu
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
+JS_DeleteUCProperty2(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                      bool *result)
 {
-    RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, 0);
@@ -5519,7 +5485,7 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, NullValue());
-    return ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, vp);
+    return ParseJSONWithReviver(cx, ConstTwoByteChars(chars, len), len, reviver, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -5527,7 +5493,7 @@ JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, Handle
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, vp);
+    return ParseJSONWithReviver(cx, ConstTwoByteChars(chars, len), len, reviver, vp);
 }
 
 /************************************************************************/

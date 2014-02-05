@@ -478,6 +478,14 @@
   transform: scale(1.75, 1.75);
 }
 
+.theme-dark .dbg-source-results:not(.selected):hover {
+  background-color: #181d20; /* Sidebar background */
+}
+
+.theme-light .dbg-source-results:not(.selected):hover {
+  background-color: #f7f7f7; /* Sidebar background */
+}
+
 .theme-dark .dbg-results-header {
   background-color: #252c33; /* Tab toolbar */
   color: #b8c8d9; /* Light content text */

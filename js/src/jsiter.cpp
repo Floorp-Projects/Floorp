@@ -839,6 +839,7 @@ const Class PropertyIteratorObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     trace,
+    JS_NULL_CLASS_SPEC,
     {
         nullptr,             /* outerObject    */
         nullptr,             /* innerObject    */
@@ -1495,6 +1496,7 @@ const Class LegacyGeneratorObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     TraceGenerator<LegacyGeneratorObject>,
+    JS_NULL_CLASS_SPEC,
     {
         nullptr,             /* outerObject    */
         nullptr,             /* innerObject    */
@@ -1517,6 +1519,7 @@ const Class StarGeneratorObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     TraceGenerator<StarGeneratorObject>,
+    JS_NULL_CLASS_SPEC,
     {
         nullptr,             /* outerObject    */
         nullptr,             /* innerObject    */
@@ -1551,14 +1554,14 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
             return nullptr;
         JSObject *proto = pval.isObject() ? &pval.toObject() : nullptr;
         if (!proto) {
-            proto = global->getOrCreateStarGeneratorObjectPrototype(cx);
+            proto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
             if (!proto)
                 return nullptr;
         }
         obj = NewObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto, global);
     } else {
         JS_ASSERT(stackfp->script()->isLegacyGenerator());
-        JSObject *proto = global->getOrCreateLegacyGeneratorObjectPrototype(cx);
+        JSObject *proto = GlobalObject::getOrCreateLegacyGeneratorObjectPrototype(cx, global);
         if (!proto)
             return nullptr;
         obj = NewObjectWithGivenProto(cx, &LegacyGeneratorObject::class_, proto, global);
@@ -1710,8 +1713,11 @@ star_generator_next(JSContext *cx, CallArgs args)
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
 
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
-        return false;
+        RootedObject obj(cx, CreateItrResultObject(cx, JS::UndefinedHandleValue, true));
+        if (!obj)
+            return false;
+        args.rval().setObject(*obj);
+        return true;
     }
 
     if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
@@ -1732,7 +1738,7 @@ star_generator_throw(JSContext *cx, CallArgs args)
 
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
+        cx->setPendingException(args.get(0));
         return false;
     }
 

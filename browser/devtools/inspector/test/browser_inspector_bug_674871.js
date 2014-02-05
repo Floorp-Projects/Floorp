@@ -58,7 +58,7 @@ function test()
 
   function runTests()
   {
-    inspector.toolbox.startPicker().then(() => {
+    inspector.toolbox.highlighterUtils.startPicker().then(() => {
       moveMouseOver(iframeNode, 1, 1, isTheIframeHighlighted);
     });
   }
@@ -86,7 +86,7 @@ function test()
     let outlineRect = getHighlighterOutlineRect();
     is(outlineRect.height, 184, "highlighter height");
 
-    inspector.toolbox.stopPicker().then(() => {
+    inspector.toolbox.highlighterUtils.stopPicker().then(() => {
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.closeToolbox(target);
       finishUp();

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,14 +35,14 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 GZIP Streams
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#FT_Stream_OpenGzip">FT_Stream_OpenGzip</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#FT_Stream_OpenGzip">FT_Stream_OpenGzip</a></td><td></td><td><a href="#FT_Gzip_Uncompress">FT_Gzip_Uncompress</a></td><td></td><td></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -51,7 +51,7 @@ GZIP Streams
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Stream_OpenGzip">FT_Stream_OpenGzip</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_GZIP_H (freetype/ftgzip.h).
+Defined in FT_GZIP_H (ftgzip.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -82,6 +82,66 @@ Defined in FT_GZIP_H (freetype/ftgzip.h).
 <p>Calling the internal function &lsquo;FT_Stream_Close&rsquo; on the new stream will <b>not</b> call &lsquo;FT_Stream_Close&rsquo; on the source stream. None of the stream objects will be released to the heap.</p>
 <p>The stream implementation is very basic and resets the decompression process each time seeking backwards is needed within the stream.</p>
 <p>In certain builds of the library, gzip compression recognition is automatically handled when calling <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a> or <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a>. This means that if no font driver is capable of handling the raw compressed file, the library will try to open a gzipped stream from it and re-open the face with it.</p>
+<p>This function may return &lsquo;FT_Err_Unimplemented_Feature&rsquo; if your build of FreeType was not compiled with zlib support.</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_Gzip_Uncompress">FT_Gzip_Uncompress</a></h4>
+<table align=center width="87%"><tr><td>
+Defined in FT_GZIP_H (ftgzip.h).
+</td></tr></table><br>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Gzip_Uncompress</b>( <a href="ft2-system_interface.html#FT_Memory">FT_Memory</a>       memory,
+                      <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>*        output,
+                      <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>*       output_len,
+                      <span class="keyword">const</span> <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>*  input,
+                      <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>        input_len );
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>Decompress a zipped input buffer into an output buffer. This function is modeled after zlib's &lsquo;uncompress&rsquo; function.</p>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>memory</b></td><td>
+<p>A FreeType memory handle.</p>
+</td></tr>
+<tr valign=top><td><b>input</b></td><td>
+<p>The input buffer.</p>
+</td></tr>
+<tr valign=top><td><b>input_len</b></td><td>
+<p>The length of the input buffer.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>output</b></td><td>
+<p>The output buffer.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>inout</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>output_len</b></td><td>
+<p>Before calling the function, this is the the total size of the output buffer, which must be large enough to hold the entire uncompressed data (so the size of the uncompressed data must be known in advance). After calling the function, &lsquo;output_len&rsquo; is the size of the used data in &lsquo;output&rsquo;.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
+<p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>This function may return &lsquo;FT_Err_Unimplemented_Feature&rsquo; if your build of FreeType was not compiled with zlib support.</p>
 </td></tr></table>
 </td></tr></table>

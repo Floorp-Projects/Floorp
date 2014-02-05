@@ -47,7 +47,7 @@ function test() {
     let container = getContainerForRawNode(inspector.markup, doc.querySelector("h1"));
     EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
       inspector.markup.doc.defaultView);
-    inspector.markup.once("node-highlight", deferred.resolve);
+    inspector.toolbox.once("node-highlight", deferred.resolve);
 
     return deferred.promise;
   }

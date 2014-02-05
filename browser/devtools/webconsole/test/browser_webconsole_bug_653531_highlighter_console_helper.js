@@ -49,7 +49,7 @@ function setupHighlighterTests() {
 function runSelectionTests(aInspector) {
   inspector = aInspector;
 
-  inspector.toolbox.startPicker();
+  inspector.toolbox.highlighterUtils.startPicker();
   inspector.toolbox.once("picker-started", () => {
     info("Picker mode started, now clicking on H1 to select that node");
     executeSoon(() => {

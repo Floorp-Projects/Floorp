@@ -257,6 +257,7 @@ public:
   bool     IsRangeOverflow() const;
   bool     IsRangeUnderflow() const;
   bool     HasStepMismatch() const;
+  bool     HasBadInput() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
@@ -264,6 +265,7 @@ public:
   void     UpdateRangeOverflowValidityState();
   void     UpdateRangeUnderflowValidityState();
   void     UpdateStepMismatchValidityState();
+  void     UpdateBadInputValidityState();
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
@@ -714,6 +716,17 @@ public:
   // XPCOM SetUserInput() is OK
 
   // XPCOM GetPhonetic() is OK
+
+  /**
+   * If aValue contains a valid floating-point number in the format specified
+   * by the HTML 5 spec:
+   *
+   *   http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#floating-point-numbers
+   *
+   * then this function will return the number parsed as a Decimal, otherwise
+   * it will return a Decimal for which Decimal::isFinite() will return false.
+   */
+  static Decimal StringToDecimal(const nsAString& aValue);
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,

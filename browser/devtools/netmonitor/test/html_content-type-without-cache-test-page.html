@@ -1,0 +1,45 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Content type test</p>
+
+    <script type="text/javascript">
+      function get(aAddress, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      function performRequests() {
+        get("sjs_content-type-test-server.sjs?fmt=xml", function() {
+          get("sjs_content-type-test-server.sjs?fmt=css", function() {
+            get("sjs_content-type-test-server.sjs?fmt=js", function() {
+              get("sjs_content-type-test-server.sjs?fmt=json", function() {
+                get("sjs_content-type-test-server.sjs?fmt=bogus", function() {
+                  get("test-image.png?v=" + Math.random(), function() {
+                    // Done.
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>
