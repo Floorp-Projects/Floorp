@@ -103,12 +103,9 @@ nsresult
 nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
                                   nsXPCWrappedJSClass** resultClasp)
 {
-    nsXPCWrappedJSClass* clasp = nullptr;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-
     IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
-    clasp = map->Find(aIID);
-    NS_IF_ADDREF(clasp);
+    nsRefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
 
     if (!clasp) {
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -117,15 +114,15 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
             bool canScript, isBuiltin;
             if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
-                nsXPConnect::IsISupportsDescendant(info)) {
+                nsXPConnect::IsISupportsDescendant(info))
+            {
                 clasp = new nsXPCWrappedJSClass(cx, aIID, info);
-                NS_ADDREF(clasp);
                 if (!clasp->mDescriptors)
-                    NS_RELEASE(clasp);  // sets clasp to nullptr
+                    clasp = nullptr;
             }
         }
     }
-    *resultClasp = clasp;
+    clasp.forget(resultClasp);
     return NS_OK;
 }
 
