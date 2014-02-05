@@ -98,33 +98,6 @@ HTMLLIAccessible::GetBounds(int32_t* aX, int32_t* aY,
   return NS_OK;
 }
 
-int32_t
-HTMLLIAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
-                             nsSelectionAmount aAmount,
-                             EWordMovementType aWordMovementType)
-{
-  Accessible* child = GetChildAtOffset(aOffset);
-  if (!child)
-    return -1;
-
-  if (child != mBullet) {
-    if (aDirection == eDirPrevious &&
-        (aAmount == eSelectBeginLine || aAmount == eSelectLine))
-      return 0;
-
-    return HyperTextAccessible::FindOffset(aOffset, aDirection,
-                                           aAmount, aWordMovementType);
-  }
-
-  if (aDirection == eDirPrevious)
-    return 0;
-
-  if (aAmount == eSelectEndLine || aAmount == eSelectLine)
-    return CharacterCount();
-
-  return nsAccUtils::TextLength(child);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLLIAccessible: public
 
