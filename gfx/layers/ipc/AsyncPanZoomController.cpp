@@ -289,6 +289,11 @@ static bool gCrossSlideEnabled = false;
 static bool gUseProgressiveTilePainting = false;
 
 /**
+ * Pref that allows or disallows checkerboarding
+ */
+static bool gAllowCheckerboarding = true;
+
+/**
  * Is aAngle within the given threshold of the horizontal axis?
  * @param aAngle an angle in radians in the range [0, pi]
  * @param aThreshold an angle in radians in the range [0, pi/2]
@@ -412,6 +417,7 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddIntVarCache(&gAsyncScrollTimeout, "apz.asyncscroll.timeout", gAsyncScrollTimeout);
   Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
   Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
+  Preferences::AddBoolVarCache(&gAllowCheckerboarding, "apz.allow-checkerboarding", gAllowCheckerboarding);
   gUseProgressiveTilePainting = gfxPlatform::UseProgressiveTilePainting();
 
   gComputedTimingFunction = new ComputedTimingFunction();
@@ -1537,7 +1543,28 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
   if (mLastContentPaintMetrics.IsScrollable()) {
     lastPaintScrollOffset = mLastContentPaintMetrics.mScrollOffset;
   }
-  LayerPoint translation = (mFrameMetrics.mScrollOffset - lastPaintScrollOffset)
+
+  CSSPoint currentScrollOffset = mFrameMetrics.mScrollOffset;
+
+  // If checkerboarding has been disallowed, clamp the scroll position to stay
+  // within rendered content.
+  if (!gAllowCheckerboarding &&
+      !mLastContentPaintMetrics.mDisplayPort.IsEmpty()) {
+    CSSRect compositedRect = mLastContentPaintMetrics.CalculateCompositedRectInCssPixels();
+    CSSPoint maxScrollOffset = lastPaintScrollOffset +
+      CSSPoint(mLastContentPaintMetrics.mDisplayPort.XMost() - compositedRect.width,
+               mLastContentPaintMetrics.mDisplayPort.YMost() - compositedRect.height);
+    CSSPoint minScrollOffset = lastPaintScrollOffset + mLastContentPaintMetrics.mDisplayPort.TopLeft();
+
+    if (minScrollOffset.x < maxScrollOffset.x) {
+      currentScrollOffset.x = clamped(currentScrollOffset.x, minScrollOffset.x, maxScrollOffset.x);
+    }
+    if (minScrollOffset.y < maxScrollOffset.y) {
+      currentScrollOffset.y = clamped(currentScrollOffset.y, minScrollOffset.y, maxScrollOffset.y);
+    }
+  }
+
+  LayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
                          * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
 
   return ViewTransform(-translation,
