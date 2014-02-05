@@ -2036,12 +2036,8 @@ nsPrintEngine::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
     // Limit the shrink-to-fit scaling for some text-ish type of documents.
     nsAutoString contentType;
     aPO->mPresShell->GetDocument()->GetContentType(contentType);
-    bool applyLimit = contentType.EqualsLiteral("application/xhtml+xml");
-    if (contentType.Length() > 5) {
-      contentType.Truncate(5);
-    }
-    applyLimit = applyLimit || contentType.EqualsLiteral("text/");
-    if (applyLimit) {
+    if (contentType.EqualsLiteral("application/xhtml+xml") ||
+        StringBeginsWith(contentType, NS_LITERAL_STRING("text/"))) {
       int32_t limitPercent = 
         Preferences::GetInt("print.shrink-to-fit.scale-limit-percent", 20);
       limitPercent = std::max(0, limitPercent);
