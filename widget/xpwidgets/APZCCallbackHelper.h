@@ -62,6 +62,11 @@ public:
     static bool GetScrollIdentifiers(const nsIContent* aContent,
                                      uint32_t* aPresShellIdOut,
                                      FrameMetrics::ViewID* aViewIdOut);
+
+    /* Tell layout that we received the scroll offset update for the given view ID, so
+       that it accepts future scroll offset updates from APZ. */
+    static void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                        const uint32_t& aScrollGeneration);
 };
 
 }
