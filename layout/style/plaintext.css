@@ -5,4 +5,5 @@
 pre {
   white-space: pre-wrap;
   word-wrap: break-word;
+  -moz-control-character-visibility: visible;
 }
