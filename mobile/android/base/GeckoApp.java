@@ -2117,7 +2117,7 @@ public abstract class GeckoApp
 
         final HealthRecorder rec = mHealthRecorder;
         mHealthRecorder = null;
-        if (rec != null) {
+        if (rec != null && rec.isEnabled()) {
             // Closing a BrowserHealthRecorder could incur a write.
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
@@ -2834,7 +2834,7 @@ public abstract class GeckoApp
                                                   final EventDispatcher dispatcher,
                                                   final String osLocale,
                                                   final String appLocale,
-                                                  SessionInformation previousSession) {
+                                                  final SessionInformation previousSession) {
         // GeckoApp does not need to record any health information - return a stub.
         return new StubbedHealthRecorder();
     }

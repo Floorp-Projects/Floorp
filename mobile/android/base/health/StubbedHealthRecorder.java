@@ -14,6 +14,8 @@ import org.json.JSONObject;
  * nothing.
  */
 public class StubbedHealthRecorder implements HealthRecorder {
+    public boolean isEnabled() { return false; }
+
     public void setCurrentSession(SessionInformation session) { }
     public void checkForOrphanSessions() { }
 
