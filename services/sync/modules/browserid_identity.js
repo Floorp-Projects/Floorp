@@ -164,6 +164,7 @@ this.BrowserIDManager.prototype = {
   },
 
   observe: function (subject, topic, data) {
+    this._log.debug("observed " + topic);
     switch (topic) {
     case fxAccountsCommon.ONLOGIN_NOTIFICATION:
       this.initializeWithCurrentIdentity(true);
@@ -409,15 +410,17 @@ this.BrowserIDManager.prototype = {
     // Both Jelly and FxAccounts give us kB as hex
     let kBbytes = CommonUtils.hexToBytes(userData.kB);
     let headers = {"X-Client-State": this._computeXClientState(kBbytes)};
-    log.info("Fetching Sync token from: " + tokenServerURI);
+    log.info("Fetching assertion and token from: " + tokenServerURI);
 
     function getToken(tokenServerURI, assertion) {
+      log.debug("Getting a token");
       let deferred = Promise.defer();
       let cb = function (err, token) {
         if (err) {
           log.info("TokenServerClient.getTokenFromBrowserIDAssertion() failed with: " + err.message);
           return deferred.reject(new AuthenticationError(err.message));
         } else {
+          log.debug("Successfully got a sync token");
           return deferred.resolve(token);
         }
       };
@@ -427,6 +430,7 @@ this.BrowserIDManager.prototype = {
     }
 
     function getAssertion() {
+      log.debug("Getting an assertion");
       let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
       return fxAccounts.getAssertion(audience).then(null, err => {
         if (err.code === 401) {
