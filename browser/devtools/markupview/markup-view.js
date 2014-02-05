@@ -14,6 +14,7 @@ const COLLAPSE_ATTRIBUTE_LENGTH = 120;
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
 const CONTAINER_FLASHING_DURATION = 500;
+const IMAGE_PREVIEW_MAX_DIM = 400;
 const NEW_SELECTION_HIGHLIGHTER_TIMER = 1000;
 
 const {UndoStack} = require("devtools/shared/undo");
@@ -1269,17 +1270,16 @@ MarkupContainer.prototype = {
         data: def.promise
       };
 
-      let maxDim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-      this.node.getImageData(maxDim).then(data => {
-        data.data.string().then(str => {
-          let res = {data: str, size: data.size};
-          // Resolving the data promise and, to always keep tooltipData.data
-          // as a promise, create a new one that resolves immediately
-          def.resolve(res);
-          this.tooltipData.data = promise.resolve(res);
-        });
-      }, () => {
-        this.tooltipData.data = promise.reject();
+      this.node.getImageData(IMAGE_PREVIEW_MAX_DIM).then(data => {
+        if (data) {
+          data.data.string().then(str => {
+            let res = {data: str, size: data.size};
+            // Resolving the data promise and, to always keep tooltipData.data
+            // as a promise, create a new one that resolves immediately
+            def.resolve(res);
+            this.tooltipData.data = promise.resolve(res);
+          });
+        }
       });
     }
   },
@@ -1288,9 +1288,11 @@ MarkupContainer.prototype = {
     // We need to send again a request to gettooltipData even if one was sent for
     // the tooltip, because we want the full-size image
     this.node.getImageData().then(data => {
-      data.data.string().then(str => {
-        clipboardHelper.copyString(str, this.markup.doc);
-      });
+      if (data) {
+        data.data.string().then(str => {
+          clipboardHelper.copyString(str, this.markup.doc);
+        });
+      }
     });
   },
 
@@ -1298,8 +1300,6 @@ MarkupContainer.prototype = {
     if (this.tooltipData && target === this.tooltipData.target) {
       this.tooltipData.data.then(({data, size}) => {
         tooltip.setImageContent(data, size);
-      }, () => {
-        tooltip.setBrokenImageContent();
       });
       return true;
     }
