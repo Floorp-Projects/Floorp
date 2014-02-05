@@ -12,7 +12,6 @@ GECKOVIEW_LIBRARY_FILES := \
   build.xml \
   $(NULL)
 
-
 PP_TARGETS = properties
 
 properties = local.properties.in
@@ -32,26 +31,31 @@ GARBAGE_DIRS = \
 
 include $(topsrcdir)/config/rules.mk
 
+_ABS_DIST = $(abspath $(DIST))
+
 package: $(properties_deps)
 	# Make directory for the zips
-	$(MKDIR) -p $(DIST)/geckoview_library
+	$(MKDIR) -p $(_ABS_DIST)/geckoview_library
 
-	# Zip the assets
-	cd $(DIST)/fennec; \
-	$(ZIP) -r ../geckoview_library/geckoview_assets.zip assets
+	# Zip the assets into $(DIST)/geckoview_library/geckoview_assets.zip
+	cd $(_ABS_DIST)/fennec && \
+	$(ZIP) -q -r $(_ABS_DIST)/geckoview_library/geckoview_assets.zip assets
 
 	# Make empty directories to fit an Android project structure
-	$(MKDIR) -p bin gen libs/$(ABI_DIR) src
+	$(MKDIR) -p bin gen libs/$(ANDROID_CPU_ARCH) src
 
 	# Copy the JARs
-	cp ../base/*.jar libs/
+	cp $(DEPTH)/mobile/android/base/*.jar libs/
 
 	# Copy the SOs
-	cp $(DIST)/bin/libmozglue.so $(DIST)/bin/lib/libplugin-container.so libs/$(ABI_DIR)/
+	cp $(_ABS_DIST)/bin/libmozglue.so $(_ABS_DIST)/bin/lib/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
 
 	# Copy the resources
-	cp -R ../base/res .
+	$(RM) -rf res
+	$(MKDIR) -p res
+	cd res && \
+	$(UNZIP) -q -u -o $(_ABS_DIST)/bin/geckoview_resources.zip
 
 	# Zip the directory
-	cd ..; \
-	$(ZIP) -r ../../dist/geckoview_library/geckoview_library.zip geckoview_library --exclude geckoview_library/backend.mk geckoview_library/Makefile
+	cd $(DEPTH)/mobile/android && \
+	$(ZIP) -q -r $(_ABS_DIST)/geckoview_library/geckoview_library.zip geckoview_library -x geckoview_library/backend.mk geckoview_library/Makefile

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2011 Mozilla Foundation
+ * Copyright (c) 2008-2014 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -442,6 +442,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_EXPONENTIALE;
     static nsHtml5ElementName* ELT_FETURBULENCE;
     static nsHtml5ElementName* ELT_FEPOINTLIGHT;
+    static nsHtml5ElementName* ELT_FEDROPSHADOW;
     static nsHtml5ElementName* ELT_FEMORPHOLOGY;
     static nsHtml5ElementName* ELT_OUTERPRODUCT;
     static nsHtml5ElementName* ELT_ANIMATEMOTION;

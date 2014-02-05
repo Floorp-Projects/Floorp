@@ -49,8 +49,8 @@
     /* Long-standing JavaScript bytecodes. */ \
     macro(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1, JOF_BYTE) \
     macro(JSOP_UNUSED2,   2,  "unused2",    NULL,         1,  1,  0, JOF_BYTE) \
-    macro(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1, JOF_BYTE) \
-    macro(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  1,  0, JOF_BYTE) \
+    macro(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         5,  1,  0, JOF_OBJECT) \
+    macro(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  0,  0, JOF_BYTE) \
     macro(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0, JOF_BYTE) \
     macro(JSOP_GOTO,      6,  "goto",       NULL,         5,  0,  0, JOF_JUMP) \
     macro(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0, JOF_JUMP|JOF_DETECTING) \

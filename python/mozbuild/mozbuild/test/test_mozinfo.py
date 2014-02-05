@@ -19,6 +19,8 @@ from mozbuild.mozinfo import (
     write_mozinfo,
 )
 
+from mozfile.mozfile import NamedTemporaryFile
+
 
 class Base(object):
     def _config(self, substs={}):
@@ -238,16 +240,20 @@ class TestWriteMozinfo(unittest.TestCase, Base):
             TARGET_CPU='i386',
             MOZ_WIDGET_TOOLKIT='windows',
         ))
-        c.topsrcdir = '/tmp'
-        write_mozinfo(self.f, c, {'MOZCONFIG': 'foo'})
-        with open(self.f) as f:
-            d = json.load(f)
-            self.assertEqual('win', d['os'])
-            self.assertEqual('x86', d['processor'])
-            self.assertEqual('windows', d['toolkit'])
-            self.assertEqual('/tmp', d['topsrcdir'])
-            self.assertEqual(os.path.normpath('/tmp/foo'), d['mozconfig'])
-            self.assertEqual(32, d['bits'])
+        tempdir = tempfile.tempdir
+        c.topsrcdir = tempdir
+        with NamedTemporaryFile(dir=os.path.normpath(c.topsrcdir)) as mozconfig:
+            mozconfig.write('unused contents')
+            mozconfig.flush()
+            write_mozinfo(self.f, c, {'MOZCONFIG': mozconfig.name})
+            with open(self.f) as f:
+                d = json.load(f)
+                self.assertEqual('win', d['os'])
+                self.assertEqual('x86', d['processor'])
+                self.assertEqual('windows', d['toolkit'])
+                self.assertEqual(tempdir, d['topsrcdir'])
+                self.assertEqual(mozconfig.name, d['mozconfig'])
+                self.assertEqual(32, d['bits'])
 
     def test_fileobj(self):
         """
