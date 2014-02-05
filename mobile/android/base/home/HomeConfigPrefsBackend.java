@@ -27,7 +27,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -114,7 +113,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             panelConfigs = loadConfigFromString(jsonString);
         }
 
-        return Collections.unmodifiableList(panelConfigs);
+        return panelConfigs;
     }
 
     @Override
