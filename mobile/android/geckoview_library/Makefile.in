@@ -12,7 +12,6 @@ GECKOVIEW_LIBRARY_FILES := \
   build.xml \
   $(NULL)
 
-
 PP_TARGETS = properties
 
 properties = local.properties.in
@@ -41,13 +40,13 @@ package: $(properties_deps)
 	$(ZIP) -r ../geckoview_library/geckoview_assets.zip assets
 
 	# Make empty directories to fit an Android project structure
-	$(MKDIR) -p bin gen libs/$(ABI_DIR) src
+	$(MKDIR) -p bin gen libs/$(ANDROID_CPU_ARCH) src
 
 	# Copy the JARs
 	cp ../base/*.jar libs/
 
 	# Copy the SOs
-	cp $(DIST)/bin/libmozglue.so $(DIST)/bin/lib/libplugin-container.so libs/$(ABI_DIR)/
+	cp $(DIST)/bin/libmozglue.so $(DIST)/bin/lib/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
 
 	# Copy the resources
 	cp -R ../base/res .
