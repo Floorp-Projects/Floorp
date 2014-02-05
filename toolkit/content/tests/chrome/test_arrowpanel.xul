@@ -22,11 +22,11 @@
 </stack>
 
 <panel id="panel" type="arrow" onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
-  <label id="panellabel" value="This is some text." height="65"/>
+  <label id="panellabel" value="This is some text..." height="65"/>
 </panel>
 
 <panel id="bigpanel" type="arrow" onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
-  <button label="This is some text." height="3000"/>
+  <button label="This is some text..." height="3000"/>
 </panel>
 
 <script type="application/javascript">
