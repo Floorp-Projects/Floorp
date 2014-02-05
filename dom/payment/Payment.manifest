@@ -4,6 +4,3 @@ category JavaScript-navigator-property mozPay @mozilla.org/payment/content-helpe
 
 component {b8bce4e7-fbf0-4719-a634-b1bf9018657c} PaymentFlowInfo.js
 contract @mozilla.org/payment/flow-info;1 {b8bce4e7-fbf0-4719-a634-b1bf9018657c}
-
-component {0a58c67d-f003-48da-81d1-bd8f605f4b1c} PaymentRequestInfo.js
-contract @mozilla.org/payment/request-info;1 {0a58c67d-f003-48da-81d1-bd8f605f4b1c}
