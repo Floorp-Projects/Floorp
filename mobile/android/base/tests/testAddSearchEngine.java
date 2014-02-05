@@ -136,7 +136,15 @@ public class testAddSearchEngine extends AboutHomeTest {
         boolean correctNumSearchEnginesDisplayed = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-                return (findListViewWithTag("browser_search").getAdapter().getCount() == expectedCount);
+                ListView list = findListViewWithTag("browser_search");
+                if (list == null) {
+                    return false;
+                }
+                ListAdapter adapter = list.getAdapter();
+                if (adapter == null) {
+                    return false;
+                }
+                return (adapter.getCount() == expectedCount);
             }
         }, MAX_WAIT_TEST_MS);
         
