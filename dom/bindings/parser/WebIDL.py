@@ -977,6 +977,7 @@ class IDLInterface(IDLObjectWithScope):
                   identifier == "JSImplementation" or
                   identifier == "HeaderFile" or
                   identifier == "NavigatorProperty" or
+                  identifier == "AvailableIn" or
                   identifier == "Func"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
@@ -2813,6 +2814,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "Constant" or
               identifier == "Func" or
               identifier == "Frozen" or
+              identifier == "AvailableIn" or
               identifier == "NewObject"):
             # Known attributes that we don't need to do anything with here
             pass
@@ -3363,6 +3365,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "ChromeOnly" or
               identifier == "Pref" or
               identifier == "Func" or
+              identifier == "AvailableIn" or
               identifier == "Pure" or
               identifier == "CrossOriginCallable" or
               identifier == "WebGLHandlesContextLoss"):

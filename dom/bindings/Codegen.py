@@ -1301,6 +1301,17 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 def isChromeOnly(m):
     return m.getExtendedAttribute("ChromeOnly")
 
+def getAvailableInTestFunc(obj):
+    availableIn = obj.getExtendedAttribute("AvailableIn")
+    if availableIn is None:
+        return None
+    assert isinstance(availableIn, list) and len(availableIn) == 1
+    if availableIn[0] == "PrivilegedApps":
+        return "IsInPrivilegedApp"
+    if availableIn[0] == "CertifiedApps":
+        return "IsInCertifiedApp"
+    raise TypeError("Unknown AvailableIn value '%s'" % availableIn[0])
+
 class MemberCondition:
     """
     An object representing the condition for a member to actually be
@@ -2118,6 +2129,9 @@ class CGConstructorEnabled(CGAbstractMethod):
             conditions.append("%s(aCx, aObj)" % func[0])
         if iface.getExtendedAttribute("PrefControlled"):
             conditions.append("%s::PrefEnabled()" % self.descriptor.nativeType)
+        availableIn = getAvailableInTestFunc(iface)
+        if availableIn:
+            conditions.append("%s(aCx, aObj)" % availableIn)
         # We should really have some conditions
         assert len(conditions)
         body = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
