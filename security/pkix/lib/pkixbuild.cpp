@@ -224,6 +224,30 @@ BuildForward(TrustDomain& trustDomain,
   }
 
   if (trustLevel == TrustDomain::TrustAnchor) {
+    ScopedCERTCertList certChain(CERT_NewCertList());
+    if (!certChain) {
+      PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+      return MapSECStatus(SECFailure);
+    }
+
+    rv = subject.PrependNSSCertToList(certChain.get());
+    if (rv != Success) {
+      return rv;
+    }
+    BackCert* child = subject.childCert;
+    while (child) {
+      rv = child->PrependNSSCertToList(certChain.get());
+      if (rv != Success) {
+        return rv;
+      }
+      child = child->childCert;
+    }
+
+    SECStatus srv = trustDomain.IsChainValid(certChain.get());
+    if (srv != SECSuccess) {
+      return MapSECStatus(srv);
+    }
+
     // End of the recursion. Create the result list and add the trust anchor to
     // it.
     results = CERT_NewCertList();
