@@ -118,7 +118,7 @@ CSS_PROP_ALIAS(-moz-animation-timing-function,
 CSS_PROP_ALIAS(-moz-box-sizing,
                box_sizing,
                MozBoxSizing,
-               "")
+               "layout.css.prefixes.box-sizing")
 CSS_PROP_ALIAS(font-feature-settings,
                font_feature_settings,
                FontFeatureSettings,
