@@ -65,7 +65,7 @@
 .select-cell {
   -moz-box-align: center;
   -moz-box-pack: start;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 #select-header {
@@ -98,7 +98,7 @@
 .addon-name,
 .addon-action-message,
 .addon-action-update {
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   margin: 0;
   padding: 2px 6px;
 }
