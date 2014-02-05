@@ -572,16 +572,6 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   int32_t bufferEnd = mBuffer->Length();
   int32_t offsetSamples = std::max(0, NS_lround(mOffset * rate));
 
-  if (offsetSamples >= bufferEnd) {
-    // The offset falls past the end of the buffer.  In this case, we need to
-    // stop the playback immediately if it's in progress.
-    // Note that we can't call Stop() here since that might be overridden if
-    // web content calls Stop() too, so we just null out the buffer.
-    if (mStartCalled) {
-      aStream->SetBuffer(nullptr);
-    }
-    return;
-  }
   // Don't set parameter unnecessarily
   if (offsetSamples > 0) {
     aStream->SetInt32Parameter(BUFFERSTART, offsetSamples);
