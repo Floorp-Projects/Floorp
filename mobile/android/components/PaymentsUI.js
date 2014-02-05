@@ -133,7 +133,7 @@ PaymentUI.prototype = {
     let tab = content.BrowserApp.addTab(aPaymentFlowInfo.uri + aPaymentFlowInfo.jwt);
 
     // Inject paymentSuccess and paymentFailed methods into the document after its loaded.
-    tab.browser.addEventListener("DOMContentLoaded", function loadPaymentShim() {
+    tab.browser.addEventListener("DOMWindowCreated", function loadPaymentShim() {
       let frame = tab.browser.contentDocument.defaultView;
       try {
         frame.wrappedJSObject.mozPaymentProvider = {
@@ -172,7 +172,7 @@ PaymentUI.prototype = {
       } catch (e) {
         _error(aRequestId, "ERROR_ADDING_METHODS");
       } finally {
-        tab.browser.removeEventListener("DOMContentLoaded", loadPaymentShim);
+        tab.browser.removeEventListener("DOMWindowCreated", loadPaymentShim);
       }
     }, true);
 
