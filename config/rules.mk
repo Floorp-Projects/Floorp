@@ -1460,7 +1460,7 @@ ifeq (,$(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)))
 nsinstall_is_usable = $(if $(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)),yes)
 
 define install_cmd_override
-$(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY)) $$(1)
+$(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY) -t) $$(1)
 endef
 endif
 endif

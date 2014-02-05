@@ -512,11 +512,9 @@ def dumpScreen(utilityPath):
 
   # Run the capture
   try:
-    with mozfile.NamedTemporaryFile(suffix='.png',
-                                    prefix='mozilla-test-fail-screenshot_',
-                                    dir=parent_dir,
-                                    delete=False) as f:
-      returncode = subprocess.call(utility + [f.name])
+    tmpfd, imgfilename = tempfile.mkstemp(prefix='mozilla-test-fail-screenshot_', suffix='.png', dir=parent_dir)
+    os.close(tmpfd)
+    returncode = subprocess.call(utility + [imgfilename])
   except OSError, err:
     log.info("Failed to start %s for screenshot: %s",
              utility[0], err.strerror)

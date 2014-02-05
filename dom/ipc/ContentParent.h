@@ -11,6 +11,7 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
@@ -534,6 +535,9 @@ private:
     virtual bool RecvRemoveIdleObserver(const uint64_t& observerId,
                                         const uint32_t& aIdleTimeInS) MOZ_OVERRIDE;
 
+    virtual bool
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd) MOZ_OVERRIDE;
+
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
@@ -586,6 +590,12 @@ private:
     nsConsoleService* GetConsoleService();
 
     nsDataHashtable<nsUint64HashKey, nsCOMPtr<ParentIdleListener> > mIdleListeners;
+
+#ifdef MOZ_X11
+    // Dup of child's X socket, used to scope its resources to this
+    // object instead of the child process's lifetime.
+    ScopedClose mChildXSocketFdDup;
+#endif
 };
 
 } // namespace dom
