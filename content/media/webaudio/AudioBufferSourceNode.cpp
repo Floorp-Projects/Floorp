@@ -47,7 +47,7 @@ NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 /**
  * Media-thread playback engine for AudioBufferSourceNode.
  * Nothing is played until a non-null buffer has been set (via
- * AudioNodeStream::SetBuffer) and a non-zero duration has been set (via
+ * AudioNodeStream::SetBuffer) and a non-zero mBufferEnd has been set (via
  * AudioNodeStream::SetInt32Parameter).
  */
 class AudioBufferSourceNodeEngine : public AudioNodeEngine
@@ -58,7 +58,7 @@ public:
     AudioNodeEngine(aNode),
     mStart(0), mStop(TRACK_TICKS_MAX),
     mResampler(nullptr), mRemainingResamplerTail(0),
-    mOffset(0), mDuration(0),
+    mOffset(0), mBufferEnd(0),
     mLoopStart(0), mLoopEnd(0),
     mBufferSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
     mDopplerShift(1.0f),
@@ -114,8 +114,8 @@ public:
   {
     switch (aIndex) {
     case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
-    case AudioBufferSourceNode::OFFSET: mOffset = aParam; break;
-    case AudioBufferSourceNode::DURATION: mDuration = aParam; break;
+    case AudioBufferSourceNode::BUFFERSTART: mOffset = aParam; break;
+    case AudioBufferSourceNode::BUFFEREND: mBufferEnd = aParam; break;
     case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
     case AudioBufferSourceNode::LOOPSTART: mLoopStart = aParam; break;
     case AudioBufferSourceNode::LOOPEND: mLoopEnd = aParam; break;
@@ -218,7 +218,7 @@ public:
                                              outputData, &outSamples);
         if (++i == aChannels) {
           mPosition += inSamples;
-          MOZ_ASSERT(mPosition <= mDuration || mLoop);
+          MOZ_ASSERT(mOffset + mPosition <= mBufferEnd || mLoop);
           aFramesWritten = outSamples;
           if (inSamples == availableInInputBuffer && !mLoop) {
             // If the available output space were unbounded then the input
@@ -390,7 +390,7 @@ public:
                                  AudioChunk* aOutput,
                                  bool* aFinished)
   {
-    if (!mBuffer || !mDuration) {
+    if (!mBuffer || !mBufferEnd) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
@@ -427,8 +427,8 @@ public:
           CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopStart + offsetInLoop, mLoopEnd);
         }
       } else {
-        if (t < mDuration || mRemainingResamplerTail) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mOffset + mDuration);
+        if (mOffset + t < mBufferEnd || mRemainingResamplerTail) {
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mBufferEnd);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
         }
@@ -438,7 +438,7 @@ public:
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||
-        (!mLoop && mPosition >= mDuration && !mRemainingResamplerTail)) {
+        (!mLoop && mOffset + mPosition >= mBufferEnd && !mRemainingResamplerTail)) {
       *aFinished = true;
     }
   }
@@ -447,11 +447,11 @@ public:
   TrackTicks mStop;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   SpeexResamplerState* mResampler;
-  // mRemainingResamplerTail, like mPosition, mOffset, and mDuration, is
+  // mRemainingResamplerTail, like mPosition, mOffset, and mBufferEnd, is
   // measured in input buffer samples.
   int mRemainingResamplerTail;
   int32_t mOffset;
-  int32_t mDuration;
+  int32_t mBufferEnd;
   int32_t mLoopStart;
   int32_t mLoopEnd;
   int32_t mBufferSampleRate;
@@ -566,10 +566,10 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                "Only call this when we have a buffer and start() has been called");
 
   float rate = mBuffer->SampleRate();
-  int32_t bufferLength = mBuffer->Length();
+  int32_t bufferEnd = mBuffer->Length();
   int32_t offsetSamples = std::max(0, NS_lround(mOffset * rate));
 
-  if (offsetSamples >= bufferLength) {
+  if (offsetSamples >= bufferEnd) {
     // The offset falls past the end of the buffer.  In this case, we need to
     // stop the playback immediately if it's in progress.
     // Note that we can't call Stop() here since that might be overridden if
@@ -581,14 +581,14 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   }
   // Don't set parameter unnecessarily
   if (offsetSamples > 0) {
-    aStream->SetInt32Parameter(OFFSET, offsetSamples);
+    aStream->SetInt32Parameter(BUFFERSTART, offsetSamples);
   }
 
-  int32_t playingLength = bufferLength - offsetSamples;
   if (mDuration != std::numeric_limits<double>::min()) {
-    playingLength = std::min(NS_lround(mDuration * rate), playingLength);
+    bufferEnd = std::min(bufferEnd,
+                         offsetSamples + NS_lround(mDuration * rate));
   }
-  aStream->SetInt32Parameter(DURATION, playingLength);
+  aStream->SetInt32Parameter(BUFFEREND, bufferEnd);
 }
 
 void
