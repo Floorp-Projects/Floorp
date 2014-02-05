@@ -203,7 +203,7 @@ public:
       uint32_t num, den;
       speex_resampler_get_ratio(resampler, &num, &den);
       uint32_t inputLimit = std::min(availableInInputBuffer,
-                                     availableInOutputBuffer * den / num + 10);
+                                     availableInOutputBuffer * num / den + 10);
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = inputLimit;
         const float* inputData = mBuffer->GetData(i) + aBufferOffset;
