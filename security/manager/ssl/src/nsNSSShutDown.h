@@ -201,6 +201,11 @@ protected:
   the same lock and checks if objects it cleans up have already cleaned
   up themselves).
 
+  destructorSafeDestroyNSSReference() MUST NOT cause any other
+  nsNSSShutDownObject to be deconstructed. Doing so can cause
+  unsupported concurrent operations on the hash table in the
+  nsNSSShutDownList.
+
   class derivedClass : public nsISomeInterface,
                        public nsNSSShutDownObject
   {
