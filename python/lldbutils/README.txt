@@ -84,19 +84,6 @@ called with a smart pointer like nsRefPtr or nsCOMPtr.
   11
 
 
-* pstate EXPR
-
-  Shows the frame state bits (using their symbolic names) of a given frame.
-  EXPR is an expression that is evaluated, and must be an nsIFrame*.
-
-  (lldb) p this
-  (nsTextFrame *) $1 = 0x000000011f470b10
-  (lldb) p/x mState
-  (nsFrameState) $2 = 0x0000004080604000
-  (lldb) pstate this
-  TEXT_HAS_NONCOLLAPSED_CHARACTERS | TEXT_END_OF_LINE | TEXT_START_OF_LINE | NS_FRAME_PAINTED_THEBES | NS_FRAME_INDEPENDENT_SELECTION
-
-
 * ptag EXPR
 
   Shows the DOM tag name of a node.  EXPR is an expression that is
