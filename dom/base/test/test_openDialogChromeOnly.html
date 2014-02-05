@@ -16,11 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=931768
     openDialog("chrome://browser/content/browser.xul");
     ok(false, "Calling openDialog from unprivileged script should throw.");
   } catch (e) {
-    // FIXME e should be a ReferenceError once we switch Window to new WebIDL bindings
-    ok(e.name == "SecurityError",
-       "openDialog shouldn't be callable to unprivileged script.");
-    todo(e instanceof ReferenceError,
-         "openDialog shouldn't be available to unprivileged script.");
+    ok(e instanceof ReferenceError,
+       "openDialog shouldn't be available to unprivileged script.");
   }
 </script>
 </body>
