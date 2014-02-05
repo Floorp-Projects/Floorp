@@ -13,6 +13,7 @@
         onload="dialog.initialize();"
         style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
         persist="width height screenX screenY"
+        aria-describedby="description-text"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
@@ -28,7 +29,7 @@
   </hbox>
 
   <vbox flex="1">
-    <label id="item-action-text" for="items"/>
+    <label id="item-action-text" control="items"/>
     <richlistbox id="items" flex="1"
                  ondblclick="dialog.onDblClick();"
                  onselect="dialog.updateOKButton();">
@@ -40,7 +41,7 @@
     </richlistbox>
   </vbox>
 
-  <checkbox id="remember" oncommand="dialog.onCheck();"/>
+  <checkbox id="remember" aria-describedby="remember-text" oncommand="dialog.onCheck();"/>
   <description id="remember-text"/>
 
 </dialog>

@@ -519,6 +519,20 @@ parent:
 
     AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
     RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
+
+    /**
+     * This message is only used on X11 platforms.
+     *
+     * Send a dup of the plugin process's X socket to the parent
+     * process.  In theory, this scheme keeps the plugin's X resources
+     * around until after both the plugin process shuts down *and* the
+     * parent process closes the dup fd.  This is used to prevent the
+     * parent process from crashing on X errors if, e.g., the plugin
+     * crashes *just before* a repaint and the parent process tries to
+     * use the newly-invalid surface.
+     */
+    BackUpXResources(FileDescriptor aXSocketFd);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);

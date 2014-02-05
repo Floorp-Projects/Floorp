@@ -735,7 +735,7 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
 {
     // Unwind scope chain to stack depth 0.
     ScopeIter si(frame, pc, cx);
-    UnwindScope(cx, si, 0);
+    UnwindScope(cx, si, frame->script()->main());
 
     // If ScriptDebugEpilogue returns |true| we have to return the frame's
     // return value. If it returns |false|, the debugger threw an exception.
@@ -928,6 +928,19 @@ DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc)
 
     DebugScopes::onPopBlock(cx, frame, pc);
 
+    return true;
+}
+
+bool
+EnterWith(JSContext *cx, BaselineFrame *frame, HandleValue val, Handle<StaticWithObject *> templ)
+{
+    return EnterWithOperation(cx, frame, val, templ);
+}
+
+bool
+LeaveWith(JSContext *cx, BaselineFrame *frame)
+{
+    frame->popWith(cx);
     return true;
 }
 
