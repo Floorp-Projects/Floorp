@@ -16,12 +16,28 @@ const URL_CLASS = "url-class";
 function test() {
   waitForExplicitFinish();
 
+  function countAll(fragment) {
+    return fragment.querySelectorAll("*").length;
+  }
+  function countColors(fragment) {
+    return fragment.querySelectorAll("." + COLOR_CLASS).length;
+  }
+  function countUrls(fragment) {
+    return fragment.querySelectorAll("." + URL_CLASS).length;
+  }
+  function getColor(fragment, index) {
+    return fragment.querySelectorAll("." + COLOR_CLASS)[index||0].textContent;
+  }
+  function getUrl(fragment, index) {
+    return fragment.querySelectorAll("." + URL_CLASS)[index||0].textContent;
+  }
+
   let testData = [
     {
       name: "width",
       value: "100%",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 0);
+        is(countAll(fragment), 0);
         is(fragment.textContent, "100%");
       }
     },
@@ -29,36 +45,36 @@ function test() {
       name: "width",
       value: "blue",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 0);
+        is(countAll(fragment), 0);
       }
     },
     {
       name: "content",
       value: "'red url(test.png) repeat top left'",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 0);
+        is(countAll(fragment), 0);
       }
     },
     {
       name: "content",
       value: "\"blue\"",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 0);
+        is(countAll(fragment), 0);
       }
     },
     {
       name: "margin-left",
       value: "url(something.jpg)",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 0);
+        is(countAll(fragment), 0);
       }
     },
     {
       name: "background-color",
       value: "transparent",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
+        is(countAll(fragment), 1);
+        is(countColors(fragment), 1);
         is(fragment.textContent, "transparent");
       }
     },
@@ -66,7 +82,7 @@ function test() {
       name: "color",
       value: "red",
       test: fragment => {
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
+        is(countColors(fragment), 1);
         is(fragment.textContent, "red");
       }
     },
@@ -74,7 +90,7 @@ function test() {
       name: "color",
       value: "#F06",
       test: fragment => {
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
+        is(countColors(fragment), 1);
         is(fragment.textContent, "#F06");
       }
     },
@@ -82,8 +98,8 @@ function test() {
       name: "border-top-left-color",
       value: "rgba(14, 255, 20, .5)",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
+        is(countAll(fragment), 1);
+        is(countColors(fragment), 1);
         is(fragment.textContent, "rgba(14, 255, 20, .5)");
       }
     },
@@ -91,16 +107,16 @@ function test() {
       name: "border",
       value: "80em dotted pink",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
-        is(fragment.querySelector("." + COLOR_CLASS).textContent, "pink");
+        is(countAll(fragment), 1);
+        is(countColors(fragment), 1);
+        is(getColor(fragment), "pink");
       }
     },
     {
       name: "color",
       value: "red !important",
       test: fragment => {
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
+        is(countColors(fragment), 1);
         is(fragment.textContent, "red !important");
       }
     },
@@ -108,38 +124,38 @@ function test() {
       name: "background",
       value: "red url(test.png) repeat top left",
       test: fragment => {
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
-        is(fragment.querySelectorAll("." + URL_CLASS).length, 1);
-        is(fragment.querySelector("." + COLOR_CLASS).textContent, "red");
-        is(fragment.querySelector("." + URL_CLASS).textContent, "test.png");
-        is(fragment.querySelectorAll("*").length, 2);
+        is(countColors(fragment), 1);
+        is(countUrls(fragment), 1);
+        is(getColor(fragment), "red");
+        is(getUrl(fragment), "test.png");
+        is(countAll(fragment), 2);
       }
     },
     {
       name: "background",
       value: "blue url(test.png) repeat top left !important",
       test: fragment => {
-        is(fragment.querySelectorAll("." + COLOR_CLASS).length, 1);
-        is(fragment.querySelectorAll("." + URL_CLASS).length, 1);
-        is(fragment.querySelector("." + COLOR_CLASS).textContent, "blue");
-        is(fragment.querySelector("." + URL_CLASS).textContent, "test.png");
-        is(fragment.querySelectorAll("*").length, 2);
+        is(countColors(fragment), 1);
+        is(countUrls(fragment), 1);
+        is(getColor(fragment), "blue");
+        is(getUrl(fragment), "test.png");
+        is(countAll(fragment), 2);
       }
     },
     {
       name: "list-style-image",
       value: "url(\"images/arrow.gif\")",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelector("." + URL_CLASS).textContent, "images/arrow.gif");
+        is(countAll(fragment), 1);
+        is(getUrl(fragment), "images/arrow.gif");
       }
     },
     {
       name: "list-style-image",
       value: "url(\"images/arrow.gif\")!important",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelector("." + URL_CLASS).textContent, "images/arrow.gif");
+        is(countAll(fragment), 1);
+        is(getUrl(fragment), "images/arrow.gif");
         is(fragment.textContent, "url('images/arrow.gif')!important");
       }
     },
@@ -147,16 +163,16 @@ function test() {
       name: "-moz-binding",
       value: "url(http://somesite.com/path/to/binding.xml#someid)",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 1);
-        is(fragment.querySelectorAll("." + URL_CLASS).length, 1);
-        is(fragment.querySelector("." + URL_CLASS).textContent, "http://somesite.com/path/to/binding.xml#someid");
+        is(countAll(fragment), 1);
+        is(countUrls(fragment), 1);
+        is(getUrl(fragment), "http://somesite.com/path/to/binding.xml#someid");
       }
     },
     {
       name: "background",
       value: "linear-gradient(to right, rgba(183,222,237,1) 0%, rgba(33,180,226,1) 30%, rgba(31,170,217,.5) 44%, #F06 75%, red 100%)",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 5);
+        is(countAll(fragment), 5);
         let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
         is(allSwatches.length, 5);
         is(allSwatches[0].textContent, "rgba(183,222,237,1)");
@@ -170,11 +186,53 @@ function test() {
       name: "background",
       value: "-moz-radial-gradient(center 45deg, circle closest-side, orange 0%, red 100%)",
       test: fragment => {
-        is(fragment.querySelectorAll("*").length, 2);
+        is(countAll(fragment), 2);
         let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
         is(allSwatches.length, 2);
         is(allSwatches[0].textContent, "orange");
         is(allSwatches[1].textContent, "red");
+      }
+    },
+    {
+      name: "background",
+      value: "white  url(http://test.com/wow_such_image.png) no-repeat top left",
+      test: fragment => {
+        is(countAll(fragment), 2);
+        is(countUrls(fragment), 1);
+        is(countColors(fragment), 1);
+      }
+    },
+    {
+      name: "background",
+      value: "url(\"http://test.com/wow_such_(oh-noes)image.png?testid=1&color=red#w00t\")",
+      test: fragment => {
+        is(countAll(fragment), 1);
+        is(getUrl(fragment), "http://test.com/wow_such_(oh-noes)image.png?testid=1&color=red#w00t");
+      }
+    },
+    {
+      name: "background-image",
+      value: "url(this-is-an-incredible-image.jpeg)",
+      test: fragment => {
+        is(countAll(fragment), 1);
+        is(getUrl(fragment), "this-is-an-incredible-image.jpeg");
+      }
+    },
+    {
+      name: "background",
+      value: "red url(    \"http://wow.com/cool/../../../you're(doingit)wrong\"   ) repeat center",
+      test: fragment => {
+        is(countAll(fragment), 2);
+        is(countColors(fragment), 1);
+        is(getUrl(fragment), "http://wow.com/cool/../../../you're(doingit)wrong");
+      }
+    },
+    {
+      name: "background-image",
+      value: "url(../../../look/at/this/folder/structure/../../red.blue.green.svg   )",
+      test: fragment => {
+        is(countAll(fragment), 1);
+        is(getUrl(fragment), "../../../look/at/this/folder/structure/../../red.blue.green.svg");
       }
     }
   ];
