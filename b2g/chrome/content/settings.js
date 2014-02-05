@@ -682,6 +682,7 @@ SettingsListener.observe('apz.displayport.heuristics', 'default', function(value
   Services.prefs.setBoolPref('apz.use_paint_duration', true);
   Services.prefs.setCharPref('apz.x_skate_size_multiplier', '1.5');
   Services.prefs.setCharPref('apz.y_skate_size_multiplier', '2.5');
+  Services.prefs.setBoolPref('apz.allow-checkerboarding', true);
   // and then set the things that we want to change
   switch (value) {
   case 'default':
@@ -699,6 +700,9 @@ SettingsListener.observe('apz.displayport.heuristics', 'default', function(value
   case 'faster-paint':
     Services.prefs.setCharPref('apz.x_skate_size_multiplier', '1.0');
     Services.prefs.setCharPref('apz.y_skate_size_multiplier', '1.5');
+    break;
+  case 'no-checkerboard':
+    Services.prefs.setBoolPref('apz.allow-checkerboarding', false);
     break;
   }
 });
