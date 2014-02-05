@@ -537,8 +537,6 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
   if (aWhen > 0.0) {
     ns->SetStreamTimeParameter(START, Context(), aWhen);
   }
-
-  MarkActive();
 }
 
 void
@@ -559,6 +557,8 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
     }
   } else {
     ns->SetBuffer(nullptr);
+
+    MarkInactive();
   }
 }
 
@@ -582,6 +582,8 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                          offsetSamples + NS_lround(mDuration * rate));
   }
   aStream->SetInt32Parameter(BUFFEREND, bufferEnd);
+
+  MarkActive();
 }
 
 void
@@ -595,12 +597,6 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
   if (!mStartCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
-  }
-
-  if (!mBuffer) {
-    // We don't have a buffer, so the stream is never marked as finished.
-    // Therefore we need to drop our playing ref right now.
-    MarkInactive();
   }
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
