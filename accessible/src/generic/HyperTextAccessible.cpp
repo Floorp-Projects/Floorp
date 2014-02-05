@@ -1293,13 +1293,6 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   return caretRect;
 }
 
-already_AddRefed<nsFrameSelection>
-HyperTextAccessible::FrameSelection() const
-{
-  nsIFrame* frame = GetFrame();
-  return frame ? frame->GetFrameSelection() : nullptr;
-}
-
 void
 HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
                                            nsTArray<nsRange*>* aRanges)
