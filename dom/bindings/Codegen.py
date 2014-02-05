@@ -89,7 +89,7 @@ extern const NativePropertyHooks sNativePropertyHooks[];"""
         if self.descriptor.concrete and self.descriptor.proxy:
             resolveOwnProperty = "ResolveOwnProperty"
             enumerateOwnProperties = "EnumerateOwnProperties"
-        elif self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+        elif self.descriptor.needsXrayResolveHooks():
             resolveOwnProperty = "ResolveOwnPropertyViaNewresolve"
             enumerateOwnProperties = "EnumerateOwnPropertiesViaGetOwnPropertyNames"
         else:
@@ -8837,7 +8837,7 @@ class CGDescriptor(CGThing):
         if not descriptor.workers and descriptor.concrete and descriptor.proxy:
             cgThings.append(CGResolveOwnProperty(descriptor))
             cgThings.append(CGEnumerateOwnProperties(descriptor))
-        elif descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+        elif descriptor.needsXrayResolveHooks():
             cgThings.append(CGResolveOwnPropertyViaNewresolve(descriptor))
             cgThings.append(CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor))
 
