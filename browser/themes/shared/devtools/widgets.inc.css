@@ -221,13 +221,11 @@
   color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.theme-dark .breadcrumbs-widget-item,
-.theme-dark .breadcrumbs-widget-item-classes {
+.theme-dark .breadcrumbs-widget-item {
   color: #f5f7fa; /* Foreground (Text) - Light */
 }
 
-.theme-light .breadcrumbs-widget-item,
-.theme-light .breadcrumbs-widget-item-classes {
+.theme-light .breadcrumbs-widget-item {
   color: #18191a; /* Foreground (Text) - Dark */
 }
 
@@ -237,6 +235,14 @@
 
 .theme-light .breadcrumbs-widget-item-id {
   color: #585959; /* Foreground (Text) - Grey */
+}
+
+.theme-dark .breadcrumbs-widget-item-classes {
+  color: #b8c8d9; /* Content (Text) - Light */
+}
+
+.theme-light .breadcrumbs-widget-item-classes {
+  color: #667380; /* Content (Text) - Dark Grey */
 }
 
 .theme-dark .breadcrumbs-widget-item-pseudo-classes {
@@ -257,26 +263,27 @@
 
 /* SimpleListWidget */
 
-%filter substitution
-%define slw_selectionGradient linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%))
-%define slw_selectionTextColor #fff
-
 .simple-list-widget-container {
   /* Hack: force hardware acceleration */
   transform: translateZ(1px);
 }
 
-.simple-list-widget-item.selected {
-  background: @slw_selectionGradient@;
-  color: @slw_selectionTextColor@;
+.theme-dark .simple-list-widget-item.selected {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .simple-list-widget-item.selected {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-dark .simple-list-widget-item:not(.selected):hover {
-  background-color: #181d20; /* Sidebar background */
+  background-color: rgba(255,255,255,.05);
 }
 
 .theme-light .simple-list-widget-item:not(.selected):hover {
-  background-color: #f7f7f7; /* Sidebar background */
+  background-color: rgba(0,0,0,.05);
 }
 
 .simple-list-widget-empty-text,
@@ -316,8 +323,7 @@
 /* SideMenuWidget */
 
 %filter substitution
-%define smw_selectionTextColor #f5f7fa
-%define smw_marginDark #222426
+%define smw_marginDark #000
 %define smw_marginLight #aaa
 %define smw_itemDarkTopBorder rgba(0,0,0,0.2)
 %define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
@@ -413,12 +419,12 @@
 
 .theme-dark .side-menu-widget-item.selected {
   background-color: #1d4f73; /* Select Highlight Blue */
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light .side-menu-widget-item.selected {
   background-color: #4c9ed9; /* Select Highlight Blue */
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .side-menu-widget-item-arrow {
@@ -502,12 +508,12 @@
 
 .theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
   background-color: transparent;
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-light .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
   background-color: transparent;
-  color: @smw_selectionTextColor@;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 /* SideMenuWidget checkboxes */
@@ -643,19 +649,18 @@
 }
 
 .variable-or-property-non-writable-icon {
-  background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
+  background: url("chrome://browser/skin/devtools/vview-lock.png") no-repeat;
   width: 16px;
   height: 16px;
-  opacity: 0.5;
 }
 
-@media (min-resolution: 2dppx) {
+/*@media (min-resolution: 2dppx) {
   .variable-or-property-non-writable-icon {
     background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
     background-size: 32px;
   }
 }
-
+*/
 .variable-or-property-frozen-label,
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
@@ -686,6 +691,7 @@
 /* Actions first */
 
 .variables-view-container[actions-first] .variables-view-delete,
+.variables-view-container[actions-first] .variables-view-open-inspector,
 .variables-view-container[actions-first] .variables-view-add-property {
   -moz-box-ordinal-group: 0;
 }
@@ -727,18 +733,52 @@
 }
 
 .variables-view-delete:hover {
-  -moz-image-region: rect(0,32px,16px,16px);
-}
-
-.variables-view-delete:active {
   -moz-image-region: rect(0,48px,16px,32px);
 }
 
+.variables-view-delete:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-delete {
+  -moz-image-region: rect(0,16px,16px,0);
+}
+
 .variables-view-edit {
-  background: url("chrome://browser/skin/devtools/vview-edit.png") center no-repeat;
-  width: 20px;
-  height: 16px;
+  list-style-image: url("chrome://browser/skin/devtools/vview-edit.png");
+  -moz-image-region: rect(0,16px,16px,0);
   cursor: pointer;
+  padding-left: 2px;
+}
+
+.variables-view-edit:hover {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+.variables-view-edit:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-edit {
+  -moz-image-region: rect(0,16px,16px,0);
+}
+
+.variables-view-open-inspector {
+  list-style-image: url("chrome://browser/skin/devtools/vview-open-inspector.png");
+  -moz-image-region: rect(0,16px,16px,0);
+  cursor: pointer;
+}
+
+.variables-view-open-inspector:hover {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+.variables-view-open-inspector:active {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variable-or-property:focus .variables-view-open-inspector {
+  -moz-image-region: rect(0,16px,16px,0);
 }
 
 .variables-view-throbber {
@@ -790,6 +830,147 @@
 
 .arrow[invisible] {
   visibility: hidden;
+}
+
+/* Charts */
+
+.generic-chart-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.theme-dark .generic-chart-container {
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .generic-chart-container {
+  color: #585959; /* Grey foreground text */
+}
+
+.theme-dark .chart-colored-blob {
+  fill: #b8c8d9; /* Light content text */
+  background: #b8c8d9;
+}
+
+.theme-light .chart-colored-blob {
+  fill: #8fa1b2; /* Grey content text */
+  background: #8fa1b2;
+}
+
+/* Charts: Pie */
+
+.pie-chart-slice {
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+.theme-dark .pie-chart-slice {
+  stroke: rgba(0,0,0,0.2);
+}
+
+.theme-light .pie-chart-slice {
+  stroke: rgba(255,255,255,0.8);
+}
+
+.theme-dark .pie-chart-slice[largest] {
+  stroke-width: 2px;
+  stroke: #fff;
+}
+
+.theme-light .pie-chart-slice[largest] {
+  stroke: #000;
+}
+
+.pie-chart-label {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.theme-dark .pie-chart-label {
+  fill: #000;
+}
+
+.theme-light .pie-chart-label {
+  fill: #fff;
+}
+
+.pie-chart-container[slices="1"] > .pie-chart-slice {
+  stroke-width: 0px;
+}
+
+.pie-chart-slice,
+.pie-chart-label {
+  transition: all 0.1s ease-out;
+}
+
+.pie-chart-slice:not(:hover):not([focused]),
+.pie-chart-slice:not(:hover):not([focused]) + .pie-chart-label {
+  transform: none !important;
+}
+
+/* Charts: Table */
+
+.table-chart-title {
+  padding-bottom: 10px;
+  font-size: 120%;
+  font-weight: 600;
+}
+
+.table-chart-row {
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.table-chart-grid:hover > .table-chart-row {
+  transition: opacity 0.1s ease-in-out;
+}
+
+.table-chart-grid:not(:hover) > .table-chart-row {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.generic-chart-container:hover > .table-chart-grid:hover > .table-chart-row:not(:hover),
+.generic-chart-container:hover ~ .table-chart-container > .table-chart-grid > .table-chart-row:not([focused]) {
+  opacity: 0.4;
+}
+
+.table-chart-row-box {
+  width: 8px;
+  height: 1.5em;
+  -moz-margin-end: 10px;
+}
+
+.table-chart-row-label {
+  width: 8em;
+  -moz-padding-end: 6px;
+  cursor: inherit;
+}
+
+.table-chart-totals {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.theme-dark .table-chart-totals {
+  border-top: 1px solid #b6babf; /* Grey foreground text */
+}
+
+.theme-light .table-chart-totals {
+  border-top: 1px solid #585959; /* Grey foreground text */
+}
+
+.table-chart-summary-label {
+  font-weight: 600;
+  padding: 1px 0px;
+}
+
+.theme-dark .table-chart-summary-label {
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .table-chart-summary-label {
+  color: #18191a; /* Dark foreground text */
 }
 
 %include ../../shared/devtools/app-manager/manifest-editor.inc.css

@@ -138,7 +138,6 @@ typedef struct JSStructuredCloneWriter      JSStructuredCloneWriter;
 typedef struct JSTracer                     JSTracer;
 
 class                                       JSFlatString;
-class                                       JSStableString;  // long story
 
 #ifdef JS_THREADSAFE
 typedef struct PRCallOnceType   JSCallOnceType;
@@ -265,7 +264,7 @@ namespace js {
 enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_RETRY_AFTER_GC, TP_FATAL };
 
 struct ThreadSafeContext;
-struct ForkJoinSlice;
+struct ForkJoinContext;
 class ExclusiveContext;
 
 class Allocator;

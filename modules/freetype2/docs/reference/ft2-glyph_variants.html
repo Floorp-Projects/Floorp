@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.0 API Reference</title>
+<title>FreeType-2.5.2 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.0 API Reference</h1></center>
+<center><h1>FreeType-2.5.2 API Reference</h1></center>
 
 <center><h1>
 Glyph Variants
@@ -50,7 +50,7 @@ Glyph Variants
 <table align=center width="87%"><tr><td>
 <p>Many CJK characters have variant forms. They are a sort of grey area somewhere between being totally irrelevant and semantically distinct; for this reason, the Unicode consortium decided to introduce Ideographic Variation Sequences (IVS), consisting of a Unicode base character and one of 240 variant selectors (U+E0100-U+E01EF), instead of further extending the already huge code range for CJK characters.</p>
 <p>An IVS is registered and unique; for further details please refer to Unicode Technical Standard #37, the Ideographic Variation Database:</p>
-<p>http://www.unicode.org/reports/tr37/</p>
+<p><a href="http://www.unicode.org/reports/tr37/">http://www.unicode.org/reports/tr37/</a></p>
 <p>To date (November 2012), the character with the most variants is U+9089, having 31 such IVS.</p>
 <p>Adobe and MS decided to support IVS with a new cmap subtable (format&nbsp;14). It is an odd subtable because it is not a mapping of input code points to glyphs, but contains lists of all variants supported by the font.</p>
 <p>A variant may be either &lsquo;default&rsquo; or &lsquo;non-default&rsquo;. A default variant is the one you will get for that code point if you look it up in the standard Unicode cmap. A non-default variant is a different glyph.</p>
@@ -58,7 +58,7 @@ Glyph Variants
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Face_GetCharVariantIndex">FT_Face_GetCharVariantIndex</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_FREETYPE_H (freetype/freetype.h).
+Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -104,7 +104,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Face_GetCharVariantIsDefault">FT_Face_GetCharVariantIsDefault</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_FREETYPE_H (freetype/freetype.h).
+Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -149,7 +149,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Face_GetVariantSelectors">FT_Face_GetVariantSelectors</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_FREETYPE_H (freetype/freetype.h).
+Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -186,7 +186,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Face_GetVariantsOfChar">FT_Face_GetVariantsOfChar</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_FREETYPE_H (freetype/freetype.h).
+Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -210,7 +210,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
-<p>A pointer to an array of variant selector code points which are active for the given character, or NULL if the corresponding list is empty.</p>
+<p>A pointer to an array of variant selector code points that are active for the given character, or NULL if the corresponding list is empty.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>The last item in the array is&nbsp;0; the array is owned by the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object but can be overwritten or released on the next call to a FreeType function.</p>
@@ -227,7 +227,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="75%"><tr><td>
 <h4><a name="FT_Face_GetCharsOfVariant">FT_Face_GetCharsOfVariant</a></h4>
 <table align=center width="87%"><tr><td>
-Defined in FT_FREETYPE_H (freetype/freetype.h).
+Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table><br>
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
@@ -251,7 +251,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
-<p>A list of all the code points which are specified by this selector (both default and non-default codes are returned) or NULL if there is no valid cmap or the variant selector is invalid.</p>
+<p>A list of all the code points that are specified by this selector (both default and non-default codes are returned) or NULL if there is no valid cmap or the variant selector is invalid.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>The last item in the array is&nbsp;0; the array is owned by the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object but can be overwritten or released on the next call to a FreeType function.</p>

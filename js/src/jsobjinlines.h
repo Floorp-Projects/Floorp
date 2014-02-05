@@ -499,31 +499,15 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
     JS_ASSERT_IF(extantSlots, dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()));
 
-    js::HeapSlot *slots = extantSlots;
-    if (!slots) {
-        size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
-        if (nDynamicSlots) {
-            slots = cx->pod_malloc<js::HeapSlot>(nDynamicSlots);
-            if (!slots)
-                return nullptr;
-            js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
-        }
-    }
-
-    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
-    if (!obj) {
-        js_free(slots);
+    size_t nDynamicSlots = extantSlots ? 0 : dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
+    JSObject *obj = js::NewGCObject<js::CanGC>(cx, kind, nDynamicSlots, heap);
+    if (!obj)
         return nullptr;
-    }
-
-#ifdef JSGC_GENERATIONAL
-    if (slots && heap != js::gc::TenuredHeap)
-        cx->asJSContext()->runtime()->gcNursery.notifyInitialSlots(obj, slots);
-#endif
 
     obj->shape_.init(shape);
     obj->type_.init(type);
-    obj->slots = slots;
+    if (extantSlots)
+        obj->slots = extantSlots;
     obj->elements = js::emptyObjectElements;
 
     const js::Class *clasp = type->clasp();
@@ -553,37 +537,15 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
      * named properties stored in those fixed slots.
      */
     JS_ASSERT(shape->numFixedSlots() == 0);
-
-    /*
-     * The array initially stores its elements inline, there must be enough
-     * space for an elements header.
-     */
-    JS_ASSERT(js::gc::GetGCKindSlots(kind) >= js::ObjectElements::VALUES_PER_HEADER);
-
-    js::HeapSlot *slots = nullptr;
-    if (size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
-        slots = cx->pod_malloc<js::HeapSlot>(nDynamicSlots);
-        if (!slots)
-            return nullptr;
-        js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
-    }
-
-    JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
-    if (!obj) {
-        js_free(slots);
+    size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan());
+    JSObject *obj = js::NewGCObject<js::CanGC>(cx, kind, nDynamicSlots, heap);
+    if (!obj)
         return nullptr;
-    }
-
-#ifdef JSGC_GENERATIONAL
-    if (slots && heap != js::gc::TenuredHeap)
-        cx->asJSContext()->runtime()->gcNursery.notifyInitialSlots(obj, slots);
-#endif
 
     uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
     obj->shape_.init(shape);
     obj->type_.init(type);
-    obj->slots = slots;
     obj->setFixedElements();
     new (obj->getElementsHeader()) js::ObjectElements(capacity, length);
 

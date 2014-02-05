@@ -57,9 +57,21 @@ function truncate(text, newLength = kTruncateLength) {
 }
 
 function getMessage(error) {
-  return truncate(JSON.stringify(error.actual, replacer)) + " " +
-         (error.operator ? error.operator + " " : "") +
-         truncate(JSON.stringify(error.expected, replacer));
+  let actual, expected;
+  // Wrap calls to JSON.stringify in try...catch blocks, as they may throw. If
+  // so, fall back to toString().
+  try {
+    actual = JSON.stringify(error.actual, replacer);
+  } catch (ex) {
+    actual = Object.prototype.toString.call(error.actual);
+  }
+  try {
+    expected = JSON.stringify(error.expected, replacer);
+  } catch (ex) {
+    expected = Object.prototype.toString.call(error.expected);
+  }
+  return truncate(actual) + " " + (error.operator ? error.operator + " " : "") +
+         truncate(expected);
 }
 
 /**

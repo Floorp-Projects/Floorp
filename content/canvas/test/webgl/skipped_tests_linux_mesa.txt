@@ -1,4 +1,8 @@
 conformance/limits/gl-max-texture-dimensions.html
 conformance/misc/type-conversion-test.html
+conformance/more/conformance/quickCheckAPI-B2.html
+conformance/more/conformance/quickCheckAPI-B3.html
+conformance/more/conformance/quickCheckAPI-B4.html
+conformance/more/conformance/quickCheckAPI-C.html
 conformance/reading/read-pixels-test.html
 conformance/textures/texture-mips.html

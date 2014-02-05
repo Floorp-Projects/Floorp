@@ -6,6 +6,7 @@
 #include "nsNumberControlFrame.h"
 
 #include "HTMLInputElement.h"
+#include "ICUUtils.h"
 #include "nsIFocusManager.h"
 #include "nsIPresShell.h"
 #include "nsFocusManager.h"
@@ -284,7 +285,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // Initialize the text field value:
   nsAutoString value;
   content->GetValue(value);
-  mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, false);
+  SetValueOfAnonTextControl(value);
 
   // If we're readonly, make sure our anonymous text control is too:
   nsAutoString readonly;
@@ -527,7 +528,7 @@ nsNumberControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 }
 
 void
-nsNumberControlFrame::UpdateForValueChange(const nsAString& aValue)
+nsNumberControlFrame::SetValueOfAnonTextControl(const nsAString& aValue)
 {
   if (mHandlingInputEvent) {
     // We have been called while our HTMLInputElement is processing a DOM
@@ -541,11 +542,68 @@ nsNumberControlFrame::UpdateForValueChange(const nsAString& aValue)
     // they type).
     return;
   }
+
+  // Init to aValue so that we set aValue as the value of our text control if
+  // aValue isn't a valid number (in which case the HTMLInputElement's validity
+  // state will be set to invalid) or if aValue can't be localized:
+  nsAutoString localizedValue(aValue);
+
+#ifdef ENABLE_INTL_API
+  // Try and localize the value we will set:
+  Decimal val = HTMLInputElement::StringToDecimal(aValue);
+  if (val.isFinite()) {
+    ICUUtils::LanguageTagIterForContent langTagIter(mContent);
+    ICUUtils::LocalizeNumber(val.toDouble(), langTagIter, localizedValue);
+  }
+#endif
+
   // We need to update the value of our anonymous text control here. Note that
   // this must be its value, and not its 'value' attribute (the default value),
   // since the default value is ignored once a user types into the text
   // control.
-  HTMLInputElement::FromContent(mTextField)->SetValue(aValue);
+  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue);
+}
+
+void
+nsNumberControlFrame::GetValueOfAnonTextControl(nsAString& aValue)
+{
+  if (!mTextField) {
+    aValue.Truncate();
+    return;
+  }
+
+  HTMLInputElement::FromContent(mTextField)->GetValue(aValue);
+
+#ifdef ENABLE_INTL_API
+  // Here we check if the text field's value is a localized serialization of a
+  // number. If it is we set aValue to the de-localize value, but only if the
+  // localized value isn't also a valid floating-point number according to the
+  // HTML 5 spec:
+  //
+  //   http://www.whatwg.org/specs/web-apps/current-work/multipage/common-microsyntaxes.html#floating-point-numbers
+  //
+  // This is because content (and tests) expect us to avoid "normalizing" the
+  // number that the user types in if it's not necessary. (E.g. if the user
+  // types "2e2" then inputElement.value should be "2e2" and not "100".
+  ICUUtils::LanguageTagIterForContent langTagIter(mContent);
+  double value = ICUUtils::ParseNumber(aValue, langTagIter);
+  if (NS_finite(value) &&
+      !HTMLInputElement::StringToDecimal(aValue).isFinite()) {
+    aValue.Truncate();
+    aValue.AppendFloat(value);
+  }
+#endif
+}
+
+bool
+nsNumberControlFrame::AnonTextControlIsEmpty()
+{
+  if (!mTextField) {
+    return true;
+  }
+  nsAutoString value;
+  HTMLInputElement::FromContent(mTextField)->GetValue(value);
+  return value.IsEmpty();
 }
 
 Element*

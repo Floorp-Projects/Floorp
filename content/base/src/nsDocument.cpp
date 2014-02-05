@@ -5403,15 +5403,18 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
 
 already_AddRefed<nsContentList>
 nsIDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName)
+                                    const nsAString& aLocalName,
+                                    ErrorResult& aResult)
 {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsresult rv =
+    aResult =
       nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
                                                             nameSpaceId);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    if (aResult.Failed()) {
+      return nullptr;
+    }
   }
 
   NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
@@ -5424,9 +5427,12 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    const nsAString& aLocalName,
                                    nsIDOMNodeList** aReturn)
 {
+  ErrorResult rv;
   nsRefPtr<nsContentList> list =
-    nsIDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName);
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    nsIDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
 
   // transfer ref to aReturn
   *aReturn = list.forget().get();
@@ -6909,6 +6915,14 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       // app that does not use it.
       nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
       if (docShell && docShell->GetIsApp()) {
+        nsString uri;
+        GetDocumentURI(uri);
+        if (!uri.EqualsLiteral("about:blank")) {
+          nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                          NS_LITERAL_CSTRING("DOM"), this,
+                                          nsContentUtils::eDOM_PROPERTIES,
+                                          "ImplicitMetaViewportTagFallback");
+        }
         mViewportType = DisplayWidthHeightNoZoom;
         return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
       }

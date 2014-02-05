@@ -107,8 +107,8 @@ struct BytecodeEmitter
 
     StmtInfoBCE     *topStmt;       /* top of statement info stack */
     StmtInfoBCE     *topScopeStmt;  /* top lexical scope statement */
-    Rooted<StaticBlockObject *> blockChain;
-                                    /* compile time block scope chain */
+    Rooted<NestedScopeObject *> staticScope;
+                                    /* compile time scope chain */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */

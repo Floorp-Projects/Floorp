@@ -769,14 +769,12 @@ private:
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
-    mFinishedWorker->Finish(aCx);
-
     RuntimeService* runtime = RuntimeService::GetService();
     NS_ASSERTION(runtime, "This should never be null!");
 
     runtime->UnregisterWorker(aCx, mFinishedWorker);
 
-    mFinishedWorker->Release();
+    mFinishedWorker->ClearSelfRef();
     return true;
   }
 };
@@ -800,13 +798,11 @@ private:
   {
     AssertIsOnMainThread();
 
+    RuntimeService* runtime = RuntimeService::GetService();
+    MOZ_ASSERT(runtime);
+
     AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
-
-    mFinishedWorker->Finish(cx);
-
-    RuntimeService* runtime = RuntimeService::GetService();
-    NS_ASSERTION(runtime, "This should never be null!");
 
     runtime->UnregisterWorker(cx, mFinishedWorker);
 
@@ -822,8 +818,7 @@ private:
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
-    mFinishedWorker->Release();
-
+    mFinishedWorker->ClearSelfRef();
     return NS_OK;
   }
 };
@@ -959,13 +954,14 @@ class MessageEventRunnable MOZ_FINAL : public WorkerRunnable
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior,
-                       JSAutoStructuredCloneBuffer& aData,
+                       JSAutoStructuredCloneBuffer&& aData,
                        nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                        bool aToMessagePort, uint64_t aMessagePortSerial)
-  : WorkerRunnable(aWorkerPrivate, aBehavior),
-    mMessagePortSerial(aMessagePortSerial), mToMessagePort(aToMessagePort)
+  : WorkerRunnable(aWorkerPrivate, aBehavior)
+  , mBuffer(Move(aData))
+  , mMessagePortSerial(aMessagePortSerial)
+  , mToMessagePort(aToMessagePort)
   {
-    mBuffer.swap(aData);
     mClonedObjects.SwapElements(aClonedObjects);
   }
 
@@ -1026,7 +1022,7 @@ private:
         return
           aWorkerPrivate->DispatchMessageEventToMessagePort(aCx,
                                                             mMessagePortSerial,
-                                                            mBuffer,
+                                                            Move(mBuffer),
                                                             mClonedObjects);
       }
 
@@ -1679,7 +1675,7 @@ class OfflineStatusChangeRunnable : public WorkerRunnable
 {
 public:
   OfflineStatusChangeRunnable(WorkerPrivate* aWorkerPrivate, bool aIsOffline)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
       mIsOffline(aIsOffline)
   {
   }
@@ -2108,7 +2104,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mParent(aParent), mScriptURL(aScriptURL),
   mSharedWorkerName(aSharedWorkerName), mBusyCount(0), mMessagePortSerial(0),
-  mParentStatus(Pending), mRooted(false), mParentSuspended(false),
+  mParentStatus(Pending), mParentSuspended(false),
   mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),
   mWorkerType(aWorkerType)
 {
@@ -2142,8 +2138,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 template <class Derived>
 WorkerPrivateParent<Derived>::~WorkerPrivateParent()
 {
-  MOZ_ASSERT(!mRooted);
-
   DropJSObjects(this);
 }
 
@@ -2157,13 +2151,7 @@ WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx,
 
   AssertIsOnParentThread();
 
-  JS::Rooted<JSObject*> obj(aCx, WorkerBinding::Wrap(aCx, aScope, ParentAsWorkerPrivate()));
-
-  if (mRooted) {
-    PreserveWrapper(this);
-  }
-
-  return obj;
+  return WorkerBinding::Wrap(aCx, aScope, ParentAsWorkerPrivate());
 }
 
 template <class Derived>
@@ -2606,25 +2594,6 @@ WorkerPrivateParent<Derived>::SynchronizeAndResume(
 }
 
 template <class Derived>
-void
-WorkerPrivateParent<Derived>::_finalize(JSFreeOp* aFop)
-{
-  AssertIsOnParentThread();
-
-  MOZ_ASSERT(!mRooted);
-
-  ClearWrapper();
-
-  // Ensure that we're held alive across the TerminatePrivate call, and then
-  // release the reference our wrapper held to us.
-  nsRefPtr<WorkerPrivateParent<Derived> > kungFuDeathGrip = dont_AddRef(this);
-
-  if (!TerminatePrivate(nullptr)) {
-    NS_WARNING("Failed to terminate!");
-  }
-}
-
-template <class Derived>
 bool
 WorkerPrivateParent<Derived>::Close(JSContext* aCx)
 {
@@ -2650,14 +2619,11 @@ WorkerPrivateParent<Derived>::ModifyBusyCount(JSContext* aCx, bool aIncrease)
   NS_ASSERTION(aIncrease || mBusyCount, "Mismatched busy count mods!");
 
   if (aIncrease) {
-    if (mBusyCount++ == 0) {
-      Root(true);
-    }
+    mBusyCount++;
     return true;
   }
 
   if (--mBusyCount == 0) {
-    Root(false);
 
     bool shouldCancel;
     {
@@ -2671,32 +2637,6 @@ WorkerPrivateParent<Derived>::ModifyBusyCount(JSContext* aCx, bool aIncrease)
   }
 
   return true;
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::Root(bool aRoot)
-{
-  AssertIsOnParentThread();
-
-  if (aRoot == mRooted) {
-    return;
-  }
-
-  if (aRoot) {
-    NS_ADDREF_THIS();
-    if (GetWrapperPreserveColor()) {
-      PreserveWrapper(this);
-    }
-  }
-  else {
-    if (GetWrapperPreserveColor()) {
-      ReleaseWrapper(this);
-    }
-    NS_RELEASE_THIS();
-  }
-
-  mRooted = aRoot;
 }
 
 template <class Derived>
@@ -2788,7 +2728,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(ParentAsWorkerPrivate(),
                              WorkerRunnable::WorkerThreadModifyBusyCount,
-                             buffer, clonedObjects, aToMessagePort,
+                             Move(buffer), clonedObjects, aToMessagePort,
                              aMessagePortSerial);
   if (!runnable->Dispatch(aCx)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -2814,13 +2754,12 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
                                 JSContext* aCx, uint64_t aMessagePortSerial,
-                                JSAutoStructuredCloneBuffer& aBuffer,
+                                JSAutoStructuredCloneBuffer&& aBuffer,
                                 nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   AssertIsOnMainThread();
 
-  JSAutoStructuredCloneBuffer buffer;
-  buffer.swap(aBuffer);
+  JSAutoStructuredCloneBuffer buffer(Move(aBuffer));
 
   nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
   clonedObjects.SwapElements(aClonedObjects);
@@ -3512,16 +3451,28 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 template <class Derived>
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
                                                   nsDOMEventTargetHelper)
-  // Nothing else to traverse
+  tmp->AssertIsOnParentThread();
+
+  // The WorkerPrivate::mSelfRef has a reference to itself, which is really
+  // held by the worker thread.  We traverse this reference if and only if our
+  // busy count is zero and we have not released the main thread reference.
+  // We do not unlink it.  This allows the CC to break cycles involving the
+  // WorkerPrivate and begin shutting it down (which does happen in unlink) but
+  // ensures that the WorkerPrivate won't be deleted before we're done shutting
+  // down the thread.
+
+  if (!tmp->mBusyCount && !tmp->mMainThreadObjectsForgotten) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelfRef)
+  }
+
   // The various strong references in LoadInfo are managed manually and cannot
   // be cycle collected.
-  tmp->AssertIsOnParentThread();
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 template <class Derived>
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
                                                 nsDOMEventTargetHelper)
-  tmp->AssertIsOnParentThread();
+  tmp->Terminate(nullptr);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 template <class Derived>
@@ -3721,10 +3672,7 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // The worker will be owned by its JSObject (via the reference we return from
-  // this function), but it also needs to be owned by its thread, so AddRef it
-  // again.
-  NS_ADDREF(worker.get());
+  worker->mSelfRef = worker;
 
   return worker.forget();
 }
@@ -4993,7 +4941,7 @@ WorkerPrivate::PostMessageToParentInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(this,
                              WorkerRunnable::ParentThreadUnchangedBusyCount,
-                             buffer, clonedObjects, aToMessagePort,
+                             Move(buffer), clonedObjects, aToMessagePort,
                              aMessagePortSerial);
   if (!runnable->Dispatch(aCx)) {
     aRv = NS_ERROR_FAILURE;

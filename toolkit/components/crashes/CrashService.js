@@ -9,6 +9,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
+/**
+ * This component makes crash data available throughout the application.
+ *
+ * It is a service because some background activity will eventually occur.
+ */
 this.CrashService = function () {};
 
 CrashService.prototype = Object.freeze({

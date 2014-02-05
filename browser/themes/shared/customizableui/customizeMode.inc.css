@@ -117,7 +117,7 @@
   background-attachment: scroll, scroll, fixed, fixed, scroll;
 }
 
-toolbarpaletteitem {
+toolbarpaletteitem[place="toolbar"] {
   transition: border-width 250ms ease-in-out;
 }
 
@@ -132,6 +132,7 @@ toolbarpaletteitem[place="panel"] {
 }
 
 toolbarpaletteitem[notransition].panel-customization-placeholder,
+toolbarpaletteitem[notransition][place="toolbar"],
 toolbarpaletteitem[notransition][place="palette"],
 toolbarpaletteitem[notransition][place="panel"] {
   transition: none;

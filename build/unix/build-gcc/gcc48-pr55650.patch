@@ -1,0 +1,52 @@
+2012-12-12  Jakub Jelinek  <jakub@redhat.com>
+
+	PR gcov-profile/55650
+	* coverage.c (coverage_obj_init): Return false if no functions
+	are being emitted.
+
+	* g++.dg/other/pr55650.C: New test.
+	* g++.dg/other/pr55650.cc: New file.
+
+--- gcc/coverage.c.jj	2012-11-19 14:41:24.000000000 +0100
++++ gcc/coverage.c	2012-12-12 08:54:35.005180211 +0100
+@@ -999,6 +999,9 @@ coverage_obj_init (void)
+       /* The function is not being emitted, remove from list.  */
+       *fn_prev = fn->next;
+ 
++  if (functions_head == NULL)
++    return false;
++
+   for (ix = 0; ix != GCOV_COUNTERS; ix++)
+     if ((1u << ix) & prg_ctr_mask)
+       n_counters++;
+--- gcc/testsuite/g++.dg/other/pr55650.C.jj	2012-12-12 09:03:53.342876593 +0100
++++ gcc/testsuite/g++.dg/other/pr55650.C	2012-12-12 09:03:11.000000000 +0100
+@@ -0,0 +1,21 @@
++// PR gcov-profile/55650
++// { dg-do link }
++// { dg-options "-O2 -fprofile-generate" }
++// { dg-additional-sources "pr55650.cc" }
++
++struct A
++{
++  virtual void foo ();
++};
++
++struct B : public A
++{
++  B ();
++  void foo () {}
++};
++
++inline A *
++bar ()
++{
++  return new B;
++}
+--- gcc/testsuite/g++.dg/other/pr55650.cc.jj	2012-12-12 09:03:56.329858741 +0100
++++ gcc/testsuite/g++.dg/other/pr55650.cc	2012-12-12 09:03:48.982900718 +0100
+@@ -0,0 +1,4 @@
++int
++main ()
++{
++}

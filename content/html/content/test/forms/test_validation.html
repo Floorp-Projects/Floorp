@@ -57,6 +57,7 @@ function checkConstraintValidationAPIExist(element)
     validity = element.validity;
     ok('valueMissing' in validity, "validity.valueMissing is not available in the DOM");
     ok('typeMismatch' in validity, "validity.typeMismatch is not available in the DOM");
+    ok('badInput' in validity, "validity.badInput is not available in the DOM");
     ok('patternMismatch' in validity, "validity.patternMismatch is not available in the DOM");
     ok('tooLong' in validity, "validity.tooLong is not available in the DOM");
     ok('rangeUnderflow' in validity, "validity.rangeUnderflow is not available in the DOM");
@@ -75,6 +76,7 @@ function checkConstraintValidationAPIDefaultValues(element)
 
   ok(!element.validity.valueMissing, "The element should not suffer from a constraint validation");
   ok(!element.validity.typeMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.badInput, "The element should not suffer from a constraint validation");
   ok(!element.validity.patternMismatch, "The element should not suffer from a constraint validation");
   ok(!element.validity.tooLong, "The element should not suffer from a constraint validation");
   ok(!element.validity.rangeUnderflow, "The element should not suffer from a constraint validation");
@@ -152,6 +154,10 @@ function checkSpecificWillValidate()
   ok(!i.willValidate, "Submit state input should be barred from constraint validation");
   is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "number";
+  ok(i.willValidate, "Number state input should not be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   i.type = "";
   i.readOnly = 'true';
   ok(!i.willValidate, "Readonly input should be barred from constraint validation");
@@ -274,6 +280,8 @@ function checkValidityStateObjectAliveWithoutElement(element)
   ok(!v.valueMissing,
     "When the element is not alive, it shouldn't suffer from constraint validation");
   ok(!v.typeMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.badInput,
     "When the element is not alive, it shouldn't suffer from constraint validation");
   ok(!v.patternMismatch,
     "When the element is not alive, it shouldn't suffer from constraint validation");

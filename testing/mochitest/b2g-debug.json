@@ -334,6 +334,11 @@
     "dom/tests/mochitest/general/test_clipboard_events.html":"clipboard undefined",
     "content/base/test/test_copypaste.html":"clipboard undefined",
     "content/base/test/test_bug166235.html":"clipboard undefined",
+	
+    "dom/tests/mochitest/dom-level0": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level1-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-core": "Bug 932350 - Frequent timeouts",
+    "dom/tests/mochitest/dom-level2-html": "Bug 932350 - Frequent timeouts",
 
     "dom/tests/mochitest/general/test_idleapi_permissions.html":"",
     "dom/tests/mochitest/general/test_paste_selection.html":"No clipboard",
@@ -445,6 +450,7 @@
     "content/html/content/test/test_ignoreuserfocus.html": "debug-only failure",
     "docshell/test/test_bug570341.html": "debug-only failure",
     "docshell/test/test_bug529119-2.html": "debug-only failure",
+    "docshell/test/navigation/test_bug430723.html": "bug 874423",
     "dom/apps/tests/test_app_update.html": "debug-only failure",
     "dom/apps/tests/test_packaged_app_install.html": "debug-only failure",
     "dom/apps/tests/test_packaged_app_update.html": "debug-only timeout",

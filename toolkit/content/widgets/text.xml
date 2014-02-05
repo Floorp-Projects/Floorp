@@ -59,35 +59,46 @@
     <implementation implements="nsIDOMXULLabelElement">
       <constructor>
         <![CDATA[
-          try {
-            var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                                   getService(Components.interfaces.nsIPrefBranch);
-            this.mUnderlineAccesskey = (prefs.getIntPref("ui.key.menuAccessKey") != 0);
-
-            const nsIPrefLocalizedString =
-              Components.interfaces.nsIPrefLocalizedString;
-
-            const prefNameInsertSeparator =
-              "intl.menuitems.insertseparatorbeforeaccesskeys";
-            const prefNameAlwaysAppendAccessKey =
-              "intl.menuitems.alwaysappendaccesskeys";
-
-            var val = prefs.getComplexValue(prefNameInsertSeparator,
-                                            nsIPrefLocalizedString).data;
-            this.mInsertSeparator = (val == "true");
-
-            val = prefs.getComplexValue(prefNameAlwaysAppendAccessKey,
-                                        nsIPrefLocalizedString).data;
-            this.mAlwaysAppendAccessKey = (val == "true");
-          }
-          catch (e) { }
-          this.formatAccessKey();
+          this.formatAccessKey(true);
         ]]>
       </constructor>
 
       <method name="formatAccessKey">
+        <parameter name="firstTime"/>
         <body>
           <![CDATA[
+            var accessKey = this.accessKey;
+            // No need to remove existing formatting the first time.
+            if (firstTime && !accessKey)
+              return;
+
+            if (this.mInsertSeparator === undefined) {
+              try {
+                var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                                       getService(Components.interfaces.nsIPrefBranch);
+                this.mUnderlineAccesskey = (prefs.getIntPref("ui.key.menuAccessKey") != 0);
+
+                const nsIPrefLocalizedString =
+                  Components.interfaces.nsIPrefLocalizedString;
+
+                const prefNameInsertSeparator =
+                  "intl.menuitems.insertseparatorbeforeaccesskeys";
+                const prefNameAlwaysAppendAccessKey =
+                  "intl.menuitems.alwaysappendaccesskeys";
+
+                var val = prefs.getComplexValue(prefNameInsertSeparator,
+                                                nsIPrefLocalizedString).data;
+                this.mInsertSeparator = (val == "true");
+
+                val = prefs.getComplexValue(prefNameAlwaysAppendAccessKey,
+                                            nsIPrefLocalizedString).data;
+                this.mAlwaysAppendAccessKey = (val == "true");
+              }
+              catch (e) {
+                this.mInsertSeparator = true;
+              }
+            }
+
             if (!this.mUnderlineAccesskey)
               return;
 
@@ -116,7 +127,6 @@
               this.mergeElement(oldHiddenSpan);
             }
 
-            var accessKey = this.accessKey;
             var labelText = this.textContent;
             if (!accessKey || !labelText || !control) {
               return;
@@ -218,7 +228,7 @@
       <field name="mUnderlineAccesskey">
         !/Mac/.test(navigator.platform)
       </field>
-      <field name="mInsertSeparator">true</field>
+      <field name="mInsertSeparator"/>
       <field name="mAlwaysAppendAccessKey">false</field>
 
       <property name="accessKey">
@@ -245,7 +255,7 @@
             if (control) {
               control.setAttribute('accesskey', val);
             }
-            this.formatAccessKey();
+            this.formatAccessKey(false);
             return val;
           ]]>
         </setter>
@@ -262,7 +272,7 @@
               control.labelElement = null; // No longer pointed to be this label
             }
             this.setAttribute('control', val);
-            this.formatAccessKey();
+            this.formatAccessKey(false);
             return val;
           ]]>
         </setter>

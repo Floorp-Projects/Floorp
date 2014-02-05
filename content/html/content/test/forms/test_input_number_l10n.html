@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=844744
+-->
+<head>
+  <title>Test localization of number control input</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="test_input_number_data.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=844744">Mozilla Bug 844744</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="number" step="any">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 844744
+ * This test checks that localized input that is typed into <input type=number>
+ * is correctly handled.
+ **/
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  startTests();
+  SimpleTest.finish();
+});
+
+var elem;
+
+function runTest(test) {
+  elem.lang = test.langTag;
+  elem.value = 0;
+  elem.focus();
+  elem.select();
+  sendString(test.inputWithGrouping);
+  is(elem.value, test.value, "Test " + test.desc + " ('" + test.langTag +
+                             "') localization with grouping separator");
+  elem.value = 0;
+  elem.select();
+  sendString(test.inputWithoutGrouping);
+  is(elem.value, test.value, "Test " + test.desc + " ('" + test.langTag +
+                             "') localization without grouping separator");
+}
+
+function startTests() {
+  elem = document.getElementById("input");
+  for (var test of tests) {
+    runTest(test, elem);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

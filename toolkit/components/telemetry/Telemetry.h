@@ -156,6 +156,21 @@ void RecordSlowSQLStatement(const nsACString &statement,
                             uint32_t delay);
 
 /**
+ * Initialize I/O Reporting
+ * Initially this only records I/O for files in the binary directory.
+ *
+ * @param aXreDir - XRE directory
+ */
+void InitIOReporting(nsIFile* aXreDir);
+
+/**
+ * Set the profile directory. Once called, files in the profile directory will
+ * be included in I/O reporting. We can't use the directory
+ * service to obtain this information because it isn't running yet.
+ */
+void SetProfileDir(nsIFile* aProfD);
+
+/**
  * Thresholds for a statement to be considered slow, in milliseconds
  */
 const uint32_t kSlowSQLThresholdForMainThread = 50;

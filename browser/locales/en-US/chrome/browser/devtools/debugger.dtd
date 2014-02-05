@@ -64,35 +64,35 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
   -  checkbox that toggles pausing on exceptions. -->
-<!ENTITY debuggerUI.pauseExceptions           "Pause on exceptions">
+<!ENTITY debuggerUI.pauseExceptions           "Pause on Exceptions">
 <!ENTITY debuggerUI.pauseExceptions.accesskey "E">
 
 <!-- LOCALIZATION NOTE (debuggerUI.ignoreCaughtExceptions): This is the label for the
   -  checkbox that toggles ignoring caught exceptions. -->
-<!ENTITY debuggerUI.ignoreCaughtExceptions           "Ignore caught exceptions">
+<!ENTITY debuggerUI.ignoreCaughtExceptions           "Ignore Caught Exceptions">
 <!ENTITY debuggerUI.ignoreCaughtExceptions.accesskey "C">
 
 <!-- LOCALIZATION NOTE (debuggerUI.showPanesOnInit): This is the label for the
   -  checkbox that toggles visibility of panes when opening the debugger. -->
-<!ENTITY debuggerUI.showPanesOnInit           "Show panes on startup">
+<!ENTITY debuggerUI.showPanesOnInit           "Show Panes on Startup">
 <!ENTITY debuggerUI.showPanesOnInit.accesskey "S">
 
 <!-- LOCALIZATION NOTE (debuggerUI.showVarsFilter): This is the label for the
   -  checkbox that toggles visibility of a designated variables filter box. -->
-<!ENTITY debuggerUI.showVarsFilter           "Show variables filter box">
+<!ENTITY debuggerUI.showVarsFilter           "Show Variables Filter Box">
 <!ENTITY debuggerUI.showVarsFilter.accesskey "V">
 
 <!-- LOCALIZATION NOTE (debuggerUI.showOnlyEnum): This is the label for the
   -  checkbox that toggles visibility of hidden (non-enumerable) variables and
   -  properties in stack views. The "enumerable" flag is a state of a property
   -  defined in JavaScript. When in doubt, leave untranslated. -->
-<!ENTITY debuggerUI.showOnlyEnum           "Show only enumerable properties">
+<!ENTITY debuggerUI.showOnlyEnum           "Show Only Enumerable Properties">
 <!ENTITY debuggerUI.showOnlyEnum.accesskey "P">
 
 <!-- LOCALIZATION NOTE (debuggerUI.showOriginalSource): This is the label for
   -  the checkbox that toggles the display of original or sourcemap-derived
   -  sources. -->
-<!ENTITY debuggerUI.showOriginalSource           "Show original sources">
+<!ENTITY debuggerUI.showOriginalSource           "Show Original Sources">
 <!ENTITY debuggerUI.showOriginalSource.accesskey "O">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchPanelOperators): This is the text that
@@ -101,20 +101,20 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchFile): This is the text that appears
   -  in the source editor's context menu for the scripts search operation. -->
-<!ENTITY debuggerUI.searchFile           "Filter scripts">
+<!ENTITY debuggerUI.searchFile           "Filter Scripts">
 <!ENTITY debuggerUI.searchFile.key       "P">
 <!ENTITY debuggerUI.searchFile.altkey    "O">
 <!ENTITY debuggerUI.searchFile.accesskey "P">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchGlobal): This is the text that appears
   -  in the source editor's context menu for the global search operation. -->
-<!ENTITY debuggerUI.searchGlobal           "Search in all files">
+<!ENTITY debuggerUI.searchGlobal           "Search in All Files">
 <!ENTITY debuggerUI.searchGlobal.key       "F">
 <!ENTITY debuggerUI.searchGlobal.accesskey "F">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchFunction): This is the text that appears
   -  in the source editor's context menu for the function search operation. -->
-<!ENTITY debuggerUI.searchFunction           "Search for function definition">
+<!ENTITY debuggerUI.searchFunction           "Search for Function Definition">
 <!ENTITY debuggerUI.searchFunction.key       "D">
 <!ENTITY debuggerUI.searchFunction.accesskey "D">
 
@@ -126,19 +126,19 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchLine): This is the text that appears
   -  in the source editor's context menu for the line search operation. -->
-<!ENTITY debuggerUI.searchGoToLine           "Go to line…">
+<!ENTITY debuggerUI.searchGoToLine           "Go to Line…">
 <!ENTITY debuggerUI.searchGoToLine.key       "L">
 <!ENTITY debuggerUI.searchGoToLine.accesskey "L">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchVariable): This is the text that appears
   -  in the source editor's context menu for the variables search operation. -->
-<!ENTITY debuggerUI.searchVariable           "Filter variables">
+<!ENTITY debuggerUI.searchVariable           "Filter Variables">
 <!ENTITY debuggerUI.searchVariable.key       "V">
 <!ENTITY debuggerUI.searchVariable.accesskey "V">
 
 <!-- LOCALIZATION NOTE (debuggerUI.focusVariables): This is the text that appears
   -  in the source editor's context menu for the variables focus operation. -->
-<!ENTITY debuggerUI.focusVariables           "Focus variables tree">
+<!ENTITY debuggerUI.focusVariables           "Focus Variables Tree">
 <!ENTITY debuggerUI.focusVariables.key       "V">
 <!ENTITY debuggerUI.focusVariables.accesskey "V">
 
@@ -148,13 +148,13 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.seMenuBreak): This is the text that
   -  appears in the source editor context menu for adding a breakpoint. -->
-<!ENTITY debuggerUI.seMenuBreak     "Add breakpoint">
+<!ENTITY debuggerUI.seMenuBreak     "Add Breakpoint">
 <!ENTITY debuggerUI.seMenuBreak.key "B">
 
 <!-- LOCALIZATION NOTE (debuggerUI.seMenuCondBreak): This is the text that
   -  appears in the source editor context menu for adding a conditional
   -  breakpoint. -->
-<!ENTITY debuggerUI.seMenuCondBreak     "Add conditional breakpoint">
+<!ENTITY debuggerUI.seMenuCondBreak     "Add Conditional Breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
 <!-- LOCALIZATION NOTE (debuggerUI.tabs.*): This is the text that
@@ -167,17 +167,17 @@
 
 <!-- LOCALIZATION NOTE (debuggerUI.seMenuAddWatch): This is the text that
   -  appears in the source editor context menu for adding an expression. -->
-<!ENTITY debuggerUI.seMenuAddWatch      "Selection to watch expression">
+<!ENTITY debuggerUI.seMenuAddWatch      "Selection to Watch Expression">
 <!ENTITY debuggerUI.seMenuAddWatch.key  "E">
 
 <!-- LOCALIZATION NOTE (debuggerUI.addWatch): This is the text that
   -  appears in the watch expressions context menu for adding an expression. -->
-<!ENTITY debuggerUI.addWatch            "Add watch expression">
+<!ENTITY debuggerUI.addWatch            "Add Watch Expression">
 <!ENTITY debuggerUI.addWatch.accesskey  "E">
 
 <!-- LOCALIZATION NOTE (debuggerUI.removeWatch): This is the text that
   -  appears in the watch expressions context menu for removing all expressions. -->
-<!ENTITY debuggerUI.removeAllWatch           "Remove all watch expressions">
+<!ENTITY debuggerUI.removeAllWatch           "Remove All Watch Expressions">
 <!ENTITY debuggerUI.removeAllWatch.key       "E">
 <!ENTITY debuggerUI.removeAllWatch.accesskey "E">
 

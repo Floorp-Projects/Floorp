@@ -672,6 +672,7 @@ let Impl = {
       simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       slowSQL: Telemetry.slowSQL,
+      fileIOReports: Telemetry.fileIOReports,
       chromeHangs: Telemetry.chromeHangs,
       threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
       lateWrites: Telemetry.lateWrites,

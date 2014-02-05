@@ -454,6 +454,17 @@ AutocompletePopup.prototype = {
   },
 
   /**
+   * Getter for the height of each item in the list.
+   *
+   * @private
+   *
+   * @type number
+   */
+  get _itemHeight() {
+    return this._list.selectedItem.clientHeight;
+  },
+
+  /**
    * Select the next item in the list.
    *
    * @return object
@@ -475,7 +486,7 @@ AutocompletePopup.prototype = {
    * Select the previous item in the list.
    *
    * @return object
-   *         The newly selected item object.
+   *         The newly-selected item object.
    */
   selectPreviousItem: function AP_selectPreviousItem()
   {
@@ -485,6 +496,39 @@ AutocompletePopup.prototype = {
     else {
       this.selectedIndex = this.itemCount - 1;
     }
+
+    return this.selectedItem;
+  },
+
+  /**
+   * Select the top-most item in the next page of items or
+   * the last item in the list.
+   *
+   * @return object
+   *         The newly-selected item object.
+   */
+  selectNextPageItem: function AP_selectNextPageItem()
+  {
+    let itemsPerPane = Math.floor(this._list.scrollHeight / this._itemHeight);
+    let nextPageIndex = this.selectedIndex + itemsPerPane + 1;
+    this.selectedIndex = nextPageIndex > this.itemCount - 1 ?
+      this.itemCount - 1 : nextPageIndex;
+
+    return this.selectedItem;
+  },
+
+  /**
+   * Select the bottom-most item in the previous page of items,
+   * or the first item in the list.
+   *
+   * @return object
+   *         The newly-selected item object.
+   */
+  selectPreviousPageItem: function AP_selectPreviousPageItem()
+  {
+    let itemsPerPane = Math.floor(this._list.scrollHeight / this._itemHeight);
+    let prevPageIndex = this.selectedIndex - itemsPerPane - 1;
+    this.selectedIndex = prevPageIndex < 0 ? 0 : prevPageIndex;
 
     return this.selectedItem;
   },
