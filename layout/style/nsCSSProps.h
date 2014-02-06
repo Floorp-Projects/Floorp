@@ -191,6 +191,9 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // flushed.
 #define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
 
+// This property requires a stacking context.
+#define CSS_PROPERTY_CREATES_STACKING_CONTEXT     (1<<21)
+
 /**
  * Types of animatable values.
  */
