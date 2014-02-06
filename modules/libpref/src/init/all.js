@@ -1011,6 +1011,16 @@ pref("network.http.pacing.requests.min-parallelism", 6);
 pref("network.http.pacing.requests.hz", 100);
 pref("network.http.pacing.requests.burst", 32);
 
+// TCP Keepalive config for HTTP connections.
+pref("network.http.tcp_keepalive.short_lived_connections", true);
+// Max time from initial request during which conns are considered short-lived.
+pref("network.http.tcp_keepalive.short_lived_time", 60);
+// Idle time of TCP connection until first keepalive probe sent.
+pref("network.http.tcp_keepalive.short_lived_idle_time", 10);
+
+pref("network.http.tcp_keepalive.long_lived_connections", true);
+pref("network.http.tcp_keepalive.long_lived_idle_time", 600);
+
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
