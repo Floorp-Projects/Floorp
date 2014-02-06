@@ -132,13 +132,7 @@ public class ToolbarComponent extends BaseComponent {
         WaitHelper.waitForPageLoad(new Runnable() {
             @Override
             public void run() {
-                if (InputMethods.shouldDisableUrlBarUpdate(mActivity)) {
-                    // Bug 945521 workaround: Some IMEs do not allow the go button
-                    // to be displayed in the toolbar so we hit enter instead.
-                    mSolo.sendKey(Solo.ENTER);
-                } else {
-                    mSolo.clickOnView(getGoButton());
-                }
+                mSolo.clickOnView(getGoButton());
             }
         });
         waitForNotEditing();

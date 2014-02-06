@@ -79,6 +79,7 @@
 #define AUDIO_MP3                           "audio/mpeg"
 #define AUDIO_MP4                           "audio/mp4"
 #define AUDIO_AMR                           "audio/amr"
+#define AUDIO_MIDI                          "audio/x-midi"
 
 #define BINARY_OCTET_STREAM                 "binary/octet-stream"
 

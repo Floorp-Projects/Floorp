@@ -4447,6 +4447,7 @@ cairo-gonk)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_TOUCH=1
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 esac
