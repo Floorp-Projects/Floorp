@@ -339,3 +339,7 @@ partial interface Window {
 Window implements TouchEventHandlers;
 
 Window implements OnErrorEventHandlerForWindow;
+
+[ChromeOnly] interface ChromeWindow {};
+
+Window implements ChromeWindow;
