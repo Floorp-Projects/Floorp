@@ -161,6 +161,8 @@
                 flex="1">
             <hbox class="requests-menu-timings"
                   align="center">
+              <hbox class="start requests-menu-timings-cap" hidden="true"/>
+              <hbox class="end requests-menu-timings-cap" hidden="true"/>
               <label class="plain requests-menu-timings-total"/>
             </hbox>
           </hbox>
