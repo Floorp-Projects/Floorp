@@ -49,6 +49,17 @@ CompositableHost::UseTextureHost(TextureHost* aTexture)
 }
 
 void
+CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                            TextureHost* aTextureOnWhite)
+{
+  MOZ_ASSERT(aTextureOnBlack && aTextureOnWhite);
+  aTextureOnBlack->SetCompositor(GetCompositor());
+  aTextureOnBlack->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
+  aTextureOnWhite->SetCompositor(GetCompositor());
+  aTextureOnWhite->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
+}
+
+void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;

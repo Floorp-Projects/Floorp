@@ -233,6 +233,20 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       break;
     }
+    case CompositableOperation::TOpUseComponentAlphaTextures: {
+      const OpUseComponentAlphaTextures& op = aEdit.get_OpUseComponentAlphaTextures();
+      CompositableHost* compositable = AsCompositable(op);
+      RefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
+      RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
+
+      MOZ_ASSERT(texOnBlack && texOnWhite);
+      compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
+
+      if (IsAsync()) {
+        ScheduleComposition(op);
+      }
+      break;
+    }
     case CompositableOperation::TOpUpdateTexture: {
       const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
       RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
