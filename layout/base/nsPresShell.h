@@ -705,8 +705,6 @@ protected:
   static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
   static void MarkImagesInListVisible(const nsDisplayList& aList);
 
-  void EvictTouches();
-
   // A list of images that are visible or almost visible.
   nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > mVisibleImages;
 
