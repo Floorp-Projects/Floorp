@@ -120,10 +120,9 @@ private:
 class IOMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  IOMarkerPayload(const char* aSource, const char* aFilename, const mozilla::TimeStamp& aStartTime,
+  IOMarkerPayload(const char* aSource, const mozilla::TimeStamp& aStartTime,
                   const mozilla::TimeStamp& aEndTime,
                   ProfilerBacktrace* aStack);
-  ~IOMarkerPayload();
 
 protected:
   virtual JSCustomObjectBuilder::Object
@@ -136,7 +135,6 @@ private:
   typename Builder::Object preparePayloadImp(Builder& b);
 
   const char* mSource;
-  const char* mFilename;
 };
 
 #endif // PROFILER_MARKERS_H

@@ -110,19 +110,13 @@ template JSObjectBuilder::Object
 ProfilerMarkerImagePayload::preparePayloadImp<JSObjectBuilder>(JSObjectBuilder& b);
 
 IOMarkerPayload::IOMarkerPayload(const char* aSource,
-                                 const char* aFilename,
                                  const mozilla::TimeStamp& aStartTime,
                                  const mozilla::TimeStamp& aEndTime,
                                  ProfilerBacktrace* aStack)
   : ProfilerMarkerPayload(aStartTime, aEndTime, aStack),
-    mSource(aSource),
-    mFilename(strdup(aFilename))
+    mSource(aSource)
 {
   MOZ_ASSERT(aSource);
-}
-
-IOMarkerPayload::~IOMarkerPayload(){
-  free(mFilename);
 }
 
 template<typename Builder> typename Builder::Object
@@ -131,9 +125,6 @@ IOMarkerPayload::preparePayloadImp(Builder& b)
   typename Builder::RootedObject data(b.context(), b.CreateObject());
   prepareCommonProps("io", b, data);
   b.DefineProperty(data, "source", mSource);
-  if (mFilename != nullptr) {
-    b.DefineProperty(data, "filename", mFilename);
-  }
 
   return data;
 }
