@@ -12,8 +12,7 @@
 
 callback OfflineRenderSuccessCallback = void (AudioBuffer renderedData);
 
-[Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate),
- PrefControlled]
+[Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate)]
 interface OfflineAudioContext : AudioContext {
 
     [Throws]

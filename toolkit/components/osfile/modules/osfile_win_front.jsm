@@ -441,13 +441,35 @@
      File.makeDir = function makeDir(path, options = {}) {
        let security = options.winSecurity || null;
        let result = WinFile.CreateDirectory(path, security);
-       if (!result) {
-         if ((!("ignoreExisting" in options) || options.ignoreExisting) &&
-             ctypes.winLastError == Const.ERROR_ALREADY_EXISTS) {
-           return;
-         }
+
+       if (result) {
+         return;
+       }
+
+       if (("ignoreExisting" in options) && !options.ignoreExisting) {
          throw new File.Error("makeDir");
        }
+
+       if (ctypes.winLastError == Const.ERROR_ALREADY_EXISTS) {
+         return;
+       }
+
+       // If the user has no access, but it's a root directory, no error should be thrown
+       let splitPath = OS.Path.split(path);
+       // Removing last component if it's empty
+       // An empty last component is caused by trailing slashes in path
+       // This is always the case with root directories
+       if( splitPath.components[splitPath.components.length - 1].length === 0 ) {
+         splitPath.components.pop();
+       }
+       // One component and an absolute path implies a directory root.
+       if (ctypes.winLastError == Const.ERROR_ACCESS_DENIED &&
+           splitPath.absolute &&
+           splitPath.components.length === 1 ) {
+         return;
+       }
+
+       throw new File.Error("makeDir");
      };
 
      /**

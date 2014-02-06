@@ -14,8 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class AudioProcessingEvent : public nsDOMEvent,
-                             public EnableWebAudioCheck
+class AudioProcessingEvent : public nsDOMEvent
 {
 public:
   AudioProcessingEvent(ScriptProcessorNode* aOwner,
