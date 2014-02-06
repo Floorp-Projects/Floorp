@@ -4,6 +4,9 @@
 
 import optparse, os, re, sys
 from cStringIO import StringIO
+from mozbuild.pythonutil import iter_modules_in_path
+import mozpack.path as mozpath
+import itertools
 
 import ipdl
 
@@ -46,7 +49,9 @@ ipcmessagestartpath = os.path.join(headersdir, 'IPCMessageStart.h')
 
 # Compiling the IPDL files can take a long time, even on a fast machine.
 # Check to see whether we need to do any work.
-latestipdlmod = max(os.stat(f).st_mtime for f in files)
+latestipdlmod = max(os.stat(f).st_mtime
+                    for f in itertools.chain(files,
+                                             iter_modules_in_path(mozpath.dirname(__file__))))
 
 def outputModTime(f):
     # A non-existant file is newer than everything.

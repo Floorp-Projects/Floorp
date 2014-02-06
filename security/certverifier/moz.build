@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    '../insanity/lib/pkixder.cpp',
+    '../insanity/lib/pkixkey.cpp',
     'CertVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
 ]
@@ -17,5 +19,7 @@ if not CONFIG['NSS_NO_LIBPKIX']:
 LOCAL_INCLUDES += [
     '../insanity/include',
 ]
+
+FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
