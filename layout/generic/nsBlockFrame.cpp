@@ -5623,8 +5623,8 @@ FindLineFor(nsIFrame*             aChild,
 }
 
 nsresult
-nsBlockFrame::StealFrame(nsIFrame*      aChild,
-                         bool           aForceNormal)
+nsBlockFrame::StealFrame(nsIFrame* aChild,
+                         bool      aForceNormal)
 {
   MOZ_ASSERT(aChild->GetParent() == this);
 
@@ -5684,8 +5684,8 @@ nsBlockFrame::RemoveFrameFromLine(nsIFrame* aChild, nsLineList::iterator aLine,
 }
 
 void
-nsBlockFrame::DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
-                                    bool           aDeletingEmptyFrames)
+nsBlockFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+                                    bool      aDeletingEmptyFrames)
 {
   NS_PRECONDITION(aNextInFlow->GetPrevInFlow(), "bad next-in-flow");
 

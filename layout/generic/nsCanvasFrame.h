@@ -84,8 +84,7 @@ public:
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual nsresult StealFrame(nsIFrame*      aChild,
-                              bool           aForceNormal) MOZ_OVERRIDE
+  virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) MOZ_OVERRIDE
   {
     NS_ASSERTION(!aForceNormal, "No-one should be passing this in here");
 

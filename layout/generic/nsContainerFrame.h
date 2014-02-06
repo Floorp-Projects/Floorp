@@ -94,8 +94,7 @@ public:
    *        exists aNextInFlowResult is set to nullptr.
    * @return NS_OK if a next-in-flow already exists or is successfully created.
    */
-  nsresult CreateNextInFlow(nsIFrame*       aFrame,
-                            nsIFrame*&      aNextInFlowResult);
+  nsresult CreateNextInFlow(nsIFrame*  aFrame, nsIFrame*& aNextInFlowResult);
 
   /**
    * Delete aNextInFlow and its next-in-flows.
@@ -103,8 +102,8 @@ public:
    * content was complete before aNextInFlow, so aNextInFlow and its
    * next-in-flows no longer map any real content.
    */
-  virtual void DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
-                                     bool           aDeletingEmptyFrames);
+  virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+                                     bool      aDeletingEmptyFrames);
 
   /**
    * Helper method to wrap views around frames. Used by containers
@@ -116,9 +115,9 @@ public:
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
 
-  static nsresult ReparentFrameView(nsIFrame*       aChildFrame,
-                                    nsIFrame*       aOldParentFrame,
-                                    nsIFrame*       aNewParentFrame);
+  static nsresult ReparentFrameView(nsIFrame* aChildFrame,
+                                    nsIFrame* aOldParentFrame,
+                                    nsIFrame* aNewParentFrame);
 
   static nsresult ReparentFrameViewList(const nsFrameList& aChildFrameList,
                                         nsIFrame*          aOldParentFrame,
@@ -318,8 +317,8 @@ public:
    * If aForceNormal is true, only checks the primary and overflow lists
    * even when the NS_FRAME_IS_OVERFLOW_CONTAINER flag is set.
    */
-  virtual nsresult StealFrame(nsIFrame*      aChild,
-                              bool           aForceNormal = false);
+  virtual nsresult StealFrame(nsIFrame* aChild,
+                              bool      aForceNormal = false);
 
   /**
    * Removes the next-siblings of aChild without destroying them and without
@@ -475,8 +474,7 @@ protected:
    * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
    *            It's an error to push a parent's first child frame
    */
-  void PushChildren(nsIFrame*       aFromChild,
-                    nsIFrame*       aPrevSibling);
+  void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
   // ==========================================================================
   /*
