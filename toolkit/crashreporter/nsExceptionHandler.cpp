@@ -1739,6 +1739,13 @@ nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo)
 }
 #endif
 
+#ifdef XP_LINUX
+bool WriteMinidumpForSigInfo(int signo, siginfo_t* info, void* uc)
+{
+  return gExceptionHandler->HandleSignal(signo, info, uc);
+}
+#endif
+
 #ifdef XP_MACOSX
 nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
 {
