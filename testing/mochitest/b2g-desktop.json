@@ -172,6 +172,7 @@
 
     "content/html/content/test/forms/test_input_file_picker.html":"5 failures out of 139 and timing out, bug 901581",
     "content/html/content/test/forms/test_validation.html":"374 total, bug 901848, no keygen support",
+    "content/html/content/test/forms/test_input_sanitization.html":"times out",
 
     "content/html/content/test/test_bug430351.html":"13 failing out of 700, not focusable iframes? bug 902207",
 
