@@ -46,11 +46,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
 {
   NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mSurface) {
-    mSurface = aData.mSurface;
-    NS_ASSERTION(!aData.mGLContext, "CanvasLayer can't have both surface and GLContext");
-    mNeedsYFlip = false;
-  } else if (aData.mGLContext) {
+  if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mIsGLAlphaPremult = aData.mIsGLAlphaPremult;
     mNeedsYFlip = true;
