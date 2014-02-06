@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_TOOL_DIRS += ['chrome']
-
 HOST_SOURCES += [
     'ListCSSProperties.cpp',
 ]
@@ -14,7 +12,11 @@ HOST_SIMPLE_PROGRAMS += [
     'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
 ]
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'chrome/mochitest.ini',
+    'mochitest.ini',
+]
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 DEFINES['MOZILLA_INTERNAL_API'] = True

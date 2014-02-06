@@ -13,4 +13,5 @@ SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
 
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
 USE_STATIC_LIBS = True
