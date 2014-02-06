@@ -1301,7 +1301,10 @@ ChildImpl::CreateCallbackRunnable::GetNextCallback()
   auto threadLocalInfo =
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
   MOZ_ASSERT(threadLocalInfo);
-  MOZ_ASSERT(!threadLocalInfo->mCallbacks.IsEmpty());
+
+  if (threadLocalInfo->mCallbacks.IsEmpty()) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback;
   threadLocalInfo->mCallbacks[0].swap(callback);
@@ -1318,16 +1321,18 @@ ChildImpl::CreateCallbackRunnable::Run()
 {
   // May run on any thread!
 
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = GetNextCallback();
-  MOZ_ASSERT(callback);
-
   nsRefPtr<ChildImpl> actor;
   mActor.swap(actor);
 
-  if (actor) {
-    callback->ActorCreated(actor);
-  } else {
-    callback->ActorFailed();
+  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = GetNextCallback();
+  while (callback) {
+    if (actor) {
+      callback->ActorCreated(actor);
+    } else {
+      callback->ActorFailed();
+    }
+
+    callback = GetNextCallback();
   }
 
   return NS_OK;
@@ -1346,7 +1351,9 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
   MOZ_ASSERT(mTransport);
 
   nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = GetNextCallback();
-  MOZ_ASSERT(callback);
+  MOZ_ASSERT(callback,
+             "There should be at least one callback when first creating the "
+             "actor!");
 
   nsRefPtr<ChildImpl> strongActor;
   mActor.swap(strongActor);
@@ -1355,7 +1362,11 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
                          XRE_GetIOMessageLoop(), ChildSide)) {
     CRASH_IN_CHILD_PROCESS("Failed to open ChildImpl!");
 
-    callback->ActorFailed();
+    while (callback) {
+      callback->ActorFailed();
+      callback = GetNextCallback();
+    }
+
     return NS_OK;
   }
 
@@ -1371,7 +1382,10 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
 
   actor->SetBoundThread();
 
-  callback->ActorCreated(actor);
+  while (callback) {
+    callback->ActorCreated(actor);
+    callback = GetNextCallback();
+  }
 
   return NS_OK;
 }
@@ -1390,7 +1404,9 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
   MOZ_ASSERT(mParentMessageLoop);
 
   nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = GetNextCallback();
-  MOZ_ASSERT(callback);
+  MOZ_ASSERT(callback,
+             "There should be at least one callback when first creating the "
+             "actor!");
 
   nsRefPtr<ChildImpl> strongChildActor;
   mActor.swap(strongChildActor);
@@ -1406,7 +1422,11 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
 
     parentActor->Destroy();
 
-    callback->ActorFailed();
+    while (callback) {
+      callback->ActorFailed();
+      callback = GetNextCallback();
+    }
+
     return NS_OK;
   }
 
@@ -1424,7 +1444,10 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
 
   childActor->SetBoundThread();
 
-  callback->ActorCreated(childActor);
+  while (callback) {
+    callback->ActorCreated(childActor);
+    callback = GetNextCallback();
+  }
 
   return NS_OK;
 }
