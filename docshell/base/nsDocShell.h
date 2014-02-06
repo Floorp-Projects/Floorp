@@ -287,7 +287,8 @@ protected:
                                bool aIsNewWindowTarget,
                                bool aBypassClassifier,
                                bool aForceAllowCookies,
-                               const nsAString &aSrcdoc);
+                               const nsAString &aSrcdoc,
+                               nsIURI * baseURI);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,

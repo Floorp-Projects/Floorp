@@ -1337,6 +1337,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
     nsXPIDLString target;
     nsAutoString srcdoc;
     nsCOMPtr<nsIDocShell> sourceDocShell;
+    nsCOMPtr<nsIURI> baseURI;
 
     uint32_t loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
 
@@ -1367,6 +1368,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
         aLoadInfo->GetIsSrcdocLoad(&isSrcdoc);
         aLoadInfo->GetSrcdocData(srcdoc);
         aLoadInfo->GetSourceDocShell(getter_AddRefs(sourceDocShell));
+        aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
     }
 
 #if defined(PR_LOGGING) && defined(DEBUG)
@@ -1613,6 +1615,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         aFirstParty,
                         srcdoc,
                         sourceDocShell,
+                        baseURI,
                         nullptr,         // No nsIDocShell
                         nullptr);        // No nsIRequest
 }
@@ -4809,7 +4812,8 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const char16_t *aURL,
     return InternalLoad(errorPageURI, nullptr, nullptr,
                         INTERNAL_LOAD_FLAGS_INHERIT_OWNER, nullptr, nullptr,
                         NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
-                        nullptr, true, NullString(), this, nullptr, nullptr);
+                        nullptr, true, NullString(), this, nullptr, nullptr,
+                        nullptr);
 }
 
 
@@ -4855,6 +4859,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
         nsAutoString srcdoc;
         nsIPrincipal* principal = nullptr;
         nsAutoString contentTypeHint;
+        nsCOMPtr<nsIURI> baseURI;
         if (doc) {
             principal = doc->NodePrincipal();
             doc->GetContentType(contentTypeHint);
@@ -4862,6 +4867,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
             if (doc->IsSrcdocDocument()) {
                 doc->GetSrcdocData(srcdoc);
                 flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+                baseURI = doc->GetBaseURI();
             }
         }
         rv = InternalLoad(mCurrentURI,
@@ -4878,6 +4884,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                           true,
                           srcdoc,          // srcdoc argument for iframe
                           this,            // For reloads we are the source
+                          baseURI,
                           nullptr,         // No nsIDocShell
                           nullptr);        // No nsIRequest
     }
@@ -8683,7 +8690,8 @@ public:
                       const char* aTypeHint, nsIInputStream * aPostData,
                       nsIInputStream * aHeadersData, uint32_t aLoadType,
                       nsISHEntry * aSHEntry, bool aFirstParty,
-                      const nsAString &aSrcdoc, nsIDocShell* aSourceDocShell) :
+                      const nsAString &aSrcdoc, nsIDocShell* aSourceDocShell,
+                      nsIURI * aBaseURI) :
         mSrcdoc(aSrcdoc),
         mDocShell(aDocShell),
         mURI(aURI),
@@ -8695,7 +8703,8 @@ public:
         mFlags(aFlags),
         mLoadType(aLoadType),
         mFirstParty(aFirstParty),
-        mSourceDocShell(aSourceDocShell)
+        mSourceDocShell(aSourceDocShell),
+        mBaseURI(aBaseURI)
     {
         // Make sure to keep null things null as needed
         if (aTypeHint) {
@@ -8708,7 +8717,8 @@ public:
                                        nullptr, mTypeHint.get(),
                                        NullString(), mPostData, mHeadersData,
                                        mLoadType, mSHEntry, mFirstParty,
-                                       mSrcdoc, mSourceDocShell, nullptr, nullptr);
+                                       mSrcdoc, mSourceDocShell, mBaseURI,
+                                       nullptr, nullptr);
     }
 
 private:
@@ -8729,6 +8739,7 @@ private:
     uint32_t mLoadType;
     bool mFirstParty;
     nsCOMPtr<nsIDocShell> mSourceDocShell;
+    nsCOMPtr<nsIURI> mBaseURI;
 };
 
 /**
@@ -8763,6 +8774,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          bool aFirstParty,
                          const nsAString &aSrcdoc,
                          nsIDocShell* aSourceDocShell,
+                         nsIURI* aBaseURI,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
@@ -9018,6 +9030,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aFirstParty,
                                               aSrcdoc,
                                               aSourceDocShell,
+                                              aBaseURI,
                                               aDocShell,
                                               aRequest);
             if (rv == NS_ERROR_NO_CONTENT) {
@@ -9089,7 +9102,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 new InternalLoadEvent(this, aURI, aReferrer, aOwner, aFlags,
                                       aTypeHint, aPostData, aHeadersData,
                                       aLoadType, aSHEntry, aFirstParty, aSrcdoc,
-                                      aSourceDocShell);
+                                      aSourceDocShell, aBaseURI);
             return NS_DispatchToCurrentThread(ev);
         }
 
@@ -9538,7 +9551,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0,
                    (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0,
                    (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES) != 0,
-                   srcdoc);
+                   srcdoc, aBaseURI);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
@@ -9617,7 +9630,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                       bool aIsNewWindowTarget,
                       bool aBypassClassifier,
                       bool aForceAllowCookies,
-                      const nsAString &aSrcdoc)
+                      const nsAString &aSrcdoc,
+                      nsIURI * aBaseURI)
 {
 #ifdef MOZ_VISUAL_EVENT_TRACER
     nsAutoCString urlSpec;
@@ -9702,7 +9716,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             nsViewSourceHandler *vsh = nsViewSourceHandler::GetInstance();
             NS_ENSURE_TRUE(vsh,NS_ERROR_FAILURE);
 
-            rv = vsh->NewSrcdocChannel(aURI, aSrcdoc,getter_AddRefs(channel));
+            rv = vsh->NewSrcdocChannel(aURI, aSrcdoc, aBaseURI,
+                                       getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
         }
         else {
@@ -9711,6 +9726,9 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                                           NS_LITERAL_CSTRING("text/html"),
                                           true);
             NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
+            MOZ_ASSERT(isc);
+            isc->SetBaseURI(aBaseURI);
         }
     }
 
@@ -10969,6 +10987,9 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
             nsAutoString srcdoc;
             inStrmChan->GetSrcdocData(srcdoc);
             entry->SetSrcdocData(srcdoc);
+            nsCOMPtr<nsIURI> baseURI;
+            inStrmChan->GetBaseURI(getter_AddRefs(baseURI));
+            entry->SetBaseURI(baseURI);
         }
     }
     /* If cache got a 'no-store', ask SH not to store
@@ -11122,9 +11143,11 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
 
     nsAutoString srcdoc;
     bool isSrcdoc;
+    nsCOMPtr<nsIURI> baseURI;
     aEntry->GetIsSrcdocEntry(&isSrcdoc);
     if (isSrcdoc) {
         aEntry->GetSrcdocData(srcdoc);
+        aEntry->GetBaseURI(getter_AddRefs(baseURI));
         flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
     }
     else {
@@ -11149,6 +11172,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
                       true,
                       srcdoc,
                       nullptr,            // Source docshell, see comment above
+                      baseURI,
                       nullptr,            // No nsIDocShell
                       nullptr);           // No nsIRequest
     return rv;
@@ -12564,6 +12588,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
                              true,                      // first party site
                              NullString(),              // No srcdoc
                              this,                      // We are the source
+                             nullptr,                   // baseURI not needed
                              aDocShell,                 // DocShell out-param
                              aRequest);                 // Request out-param
   if (NS_SUCCEEDED(rv)) {
