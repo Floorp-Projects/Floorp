@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "MediaData.h"
 #include "MediaQueue.h"
+#include "AudioCompactor.h"
 
 namespace mozilla {
 
@@ -104,6 +105,12 @@ protected:
   // Queue of video frames. This queue is threadsafe, and is accessed from
   // the decoder, state machine, and main threads.
   MediaQueue<VideoData> mVideoQueue;
+
+  // An adapter to the audio queue which first copies data to buffers with
+  // minimal allocation slop and then pushes them to the queue.  This is
+  // useful for decoders working with formats that give awkward numbers of
+  // frames such as mp3.
+  AudioCompactor mAudioCompactor;
 
 public:
   // Populates aBuffered with the time ranges which are buffered. aStartTime

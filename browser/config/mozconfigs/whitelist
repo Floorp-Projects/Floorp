@@ -60,11 +60,9 @@ whitelist['nightly']['win32'] += [
     'if test "$IS_NIGHTLY" != ""; then',
     'ac_add_options --disable-auto-deps',
     'fi',
-    'ac_add_options --enable-metro',
 ]
 whitelist['nightly']['win64'] += [
     '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
-    'ac_add_options --enable-metro',
 ]
 
 for platform in all_platforms:

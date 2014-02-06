@@ -2,47 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Test that the highlighter's picker should be stopped when a different tool is selected
+// Test that the highlighter's picker should be stopped when a different tool is
+// selected
 
 function test() {
-  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  let {require} = devtools;
-  let promise = require("sdk/core/promise");
   let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
   waitForExplicitFinish();
 
-  let inspector, doc, toolbox;
-
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
     waitForFocus(setupTest, content);
   }, true);
   content.location = "data:text/html,testing the highlighter goes away on tool selection";
 
   function setupTest() {
-    openInspector((aInspector, aToolbox) => {
-      toolbox = aToolbox;
-      inspector = aInspector;
-
-      toolbox.once("picker-stopped", () => {
-        ok(true, "picker-stopped event fired after switch tools, so picker is closed");
-        finishUp();
-      });
+    openInspector((aInspector, toolbox) => {
+      let pickerStopped = toolbox.once("picker-stopped");
 
       Task.spawn(function() {
+        info("Starting the inspector picker");
         yield toolbox.highlighterUtils.startPicker();
+        info("Selecting another tool than the inspector in the toolbox");
         yield toolbox.selectNextTool();
-      }).then(null, Cu.reportError);
+        info("Waiting for the picker-stopped event to be fired")
+        yield pickerStopped;
+        ok(true, "picker-stopped event fired after switch tools, so picker is closed");
+      }).then(null, ok.bind(null, false)).then(finishUp);
     });
   }
 
   function finishUp() {
-    inspector = doc = toolbox = null;
     gBrowser.removeCurrentTab();
     finish();
   }
 }
-

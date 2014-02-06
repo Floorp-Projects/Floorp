@@ -49,17 +49,36 @@ typedef bool (*PropertyEnabled)(JSContext* cx, JSObject* global);
 template<typename T>
 struct Prefable {
   inline bool isEnabled(JSContext* cx, JSObject* obj) const {
-    return enabled &&
-      (!enabledFunc ||
-       enabledFunc(cx, js::GetGlobalForObjectCrossCompartment(obj)));
+    if (!enabled) {
+      return false;
+    }
+    if (!enabledFunc && !availableFunc) {
+      return true;
+    }
+    // Just go ahead and root obj, in case enabledFunc GCs
+    JS::Rooted<JSObject*> rootedObj(cx, obj);
+    if (enabledFunc &&
+        !enabledFunc(cx, js::GetGlobalForObjectCrossCompartment(rootedObj))) {
+      return false;
+    }
+    if (availableFunc &&
+        !availableFunc(cx, js::GetGlobalForObjectCrossCompartment(rootedObj))) {
+      return false;
+    }
+    return true;
   }
 
   // A boolean indicating whether this set of specs is enabled
   bool enabled;
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of
-  // "enabled" is used as-is.
+  // "enabled" is used as-is unless availableFunc overrides.
   PropertyEnabled enabledFunc;
+  // A function pointer to a function that can be used to disable a
+  // property even if "enabled" is true and enabledFunc allowed.  This
+  // is basically a hack to avoid having to codegen PropertyEnabled
+  // implementations in case when we need to do two separate checks.
+  PropertyEnabled availableFunc;
   // Array of specs, terminated in whatever way is customary for T.
   // Null to indicate a end-of-array for Prefable, when such an
   // indicator is needed.

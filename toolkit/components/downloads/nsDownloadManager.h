@@ -31,6 +31,7 @@
 typedef int16_t DownloadState;
 typedef int16_t DownloadType;
 
+class nsIArray;
 class nsDownload;
 
 #ifdef DOWNLOAD_SCANNER
@@ -426,6 +427,12 @@ private:
    * Stores the SHA-256 hash associated with the downloaded file.
    */
   nsAutoCString mHash;
+
+  /**
+   * Stores the certificate chains in an nsIArray of nsIX509CertList of
+   * nsIX509Cert, if this binary is signed.
+   */
+  nsCOMPtr<nsIArray> mSignatureInfo;
 
   friend class nsDownloadManager;
 };

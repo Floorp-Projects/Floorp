@@ -75,7 +75,7 @@
            fm.mScrollOffset.x, fm.mScrollOffset.y, \
            fm.mScrollableRect.x, fm.mScrollableRect.y, fm.mScrollableRect.width, fm.mScrollableRect.height, \
            fm.mDevPixelsPerCSSPixel.scale, fm.mResolution.scale, fm.mCumulativeResolution.scale, fm.mZoom.scale, \
-           fm.mUpdateScrollOffset); \
+           fm.GetScrollOffsetUpdated()); \
 
 // Static helper functions
 namespace {
@@ -1669,23 +1669,22 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
     // If the layers update was not triggered by our own repaint request, then
     // we want to take the new scroll offset.
-    if (aLayerMetrics.mUpdateScrollOffset) {
+    if (aLayerMetrics.GetScrollOffsetUpdated()) {
       APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
         mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y,
         aLayerMetrics.mScrollOffset.x, aLayerMetrics.mScrollOffset.y);
 
       mFrameMetrics.mScrollOffset = aLayerMetrics.mScrollOffset;
 
-      // It is possible that when we receive this mUpdateScrollOffset flag, we have
-      // just sent a content repaint request, and it is pending inflight. That repaint
-      // request would have our old scroll offset, and will get processed on the content
-      // thread as we're processing this mUpdateScrollOffset flag. This would leave
-      // things in a state where content has the old APZC scroll offset and the APZC
-      // has the new content-specified scroll offset. In such a case we want to trigger
-      // another repaint request to bring things back in sync. In most cases this repaint
-      // request will be a no-op and get filtered out in RequestContentRepaint, so it
-      // shouldn't have bad performance implications.
-      needContentRepaint = true;
+      // Once layout issues a scroll offset update, it becomes impervious to
+      // scroll offset updates from APZ until we acknowledge the update it sent.
+      // This prevents APZ updates from clobbering scroll updates from other
+      // more "legitimate" sources like content scripts.
+      nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+      if (controller) {
+        controller->AcknowledgeScrollUpdate(aLayerMetrics.mScrollId,
+                                            aLayerMetrics.GetScrollGeneration());
+      }
     }
   }
 

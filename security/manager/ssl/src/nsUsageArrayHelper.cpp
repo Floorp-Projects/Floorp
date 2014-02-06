@@ -202,20 +202,6 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
-  // Bug 860076, this disabling ocsp for all NSS is incorrect.
-  const bool localOSCPDisable
-    = certVerifier->mImplementation == CertVerifier::classic;
-  if (localOSCPDisable) {
-    nsresult rv;
-    nssComponent = do_GetService(kNSSComponentCID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-    
-    if (nssComponent) {
-      nssComponent->SkipOcsp();
-    }
-  }
-
   uint32_t &count = *_count;
   count = 0;
 
@@ -254,11 +240,6 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   result = check(result, suffix, certVerifier,
                  certificateUsageAnyCA, now, flags, count, outUsages);
 #endif
-
-  // Bug 860076, this disabling ocsp for all NSS is incorrect
-  if (localOSCPDisable) {
-     nssComponent->SkipOcspOff();
-  }
 
   if (isFatalError(result) || count == 0) {
     MOZ_ASSERT(result != nsIX509Cert::VERIFIED_OK);

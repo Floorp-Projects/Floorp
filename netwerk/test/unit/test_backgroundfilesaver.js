@@ -295,6 +295,14 @@ add_task(function test_combinations()
   let initialFile = getTempFile(TEST_FILE_NAME_1);
   let renamedFile = getTempFile(TEST_FILE_NAME_2);
 
+  // Keep track of the current file.
+  let currentFile = null;
+  function onTargetChange(aTarget) {
+    currentFile = null;
+    do_print("Target file changed to: " + aTarget.leafName);
+    currentFile = aTarget;
+  }
+
   // Tests various combinations of events and behaviors for both the stream
   // listener and the output stream implementations.
   for (let testFlags = 0; testFlags < 32; testFlags++) {
@@ -311,14 +319,8 @@ add_task(function test_combinations()
                     ", useStreamListener = " + useStreamListener +
                     ", useLongData = " + useLongData);
 
-    // Keep track of the current file.
-    let currentFile = null;
-    function onTargetChange(aTarget) {
-      do_print("Target file changed to: " + aTarget.leafName);
-      currentFile = aTarget;
-    }
-
     // Create the object and register the observers.
+    currentFile = null;
     let saver = useStreamListener
                 ? new BackgroundFileSaverStreamListener()
                 : new BackgroundFileSaverOutputStream();
@@ -365,7 +367,7 @@ add_task(function test_combinations()
     if (!cancelAtSomePoint) {
       // In this case, the file must exist.
       do_check_true(currentFile.exists());
-      expectedContents = testData + testData;
+      let expectedContents = testData + testData;
       yield promiseVerifyContents(currentFile, expectedContents);
       do_check_eq(EXPECTED_HASHES[expectedContents.length],
                   toHex(saver.sha256Hash));
@@ -666,6 +668,55 @@ add_task(function test_invalid_hash()
     yield completionPromise;
     do_throw("completionPromise should throw");
   } catch (ex if ex.result == Cr.NS_ERROR_FAILURE) { }
+});
+
+add_task(function test_signature()
+{
+  // Check that we get a signature if the saver is finished.
+  let destFile = getTempFile(TEST_FILE_NAME_1);
+
+  let saver = new BackgroundFileSaverOutputStream();
+  let completionPromise = promiseSaverComplete(saver);
+
+  try {
+    let signatureInfo = saver.signatureInfo;
+    do_throw("Can't get signature if saver is not complete");
+  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+
+  saver.enableSignatureInfo();
+  saver.setTarget(destFile, false);
+  yield promiseCopyToSaver(TEST_DATA_SHORT, saver, true);
+
+  saver.finish(Cr.NS_OK);
+  yield completionPromise;
+  yield promiseVerifyContents(destFile, TEST_DATA_SHORT);
+
+  // signatureInfo is an empty nsIArray
+  do_check_eq(0, saver.signatureInfo.length);
+
+  // Clean up.
+  destFile.remove(false);
+});
+
+add_task(function test_signature_not_enabled()
+{
+  // Check that we get a signature if the saver is finished on Windows.
+  let destFile = getTempFile(TEST_FILE_NAME_1);
+
+  let saver = new BackgroundFileSaverOutputStream();
+  let completionPromise = promiseSaverComplete(saver);
+  saver.setTarget(destFile, false);
+  yield promiseCopyToSaver(TEST_DATA_SHORT, saver, true);
+
+  saver.finish(Cr.NS_OK);
+  yield completionPromise;
+  try {
+    let signatureInfo = saver.signatureInfo;
+    do_throw("Can't get signature if not enabled");
+  } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+
+  // Clean up.
+  destFile.remove(false);
 });
 
 add_task(function test_teardown()

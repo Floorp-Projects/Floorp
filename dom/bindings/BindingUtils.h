@@ -2351,8 +2351,19 @@ public:
   }
 };
 
+/*
+ * Helper function for testing whether the given object comes from a
+ * privileged app.
+ */
 bool
-ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj);
+IsInPrivilegedApp(JSContext* aCx, JSObject* aObj);
+
+/*
+ * Helper function for testing whether the given object comes from a
+ * certified app.
+ */
+bool
+IsInCertifiedApp(JSContext* aCx, JSObject* aObj);
 
 void
 TraceGlobal(JSTracer* aTrc, JSObject* aObj);
