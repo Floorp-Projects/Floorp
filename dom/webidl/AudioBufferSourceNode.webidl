@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface AudioBufferSourceNode : AudioNode {
 
     attribute AudioBuffer? buffer;
@@ -34,7 +33,6 @@ interface AudioBufferSourceNode : AudioNode {
  * The origin of this IDL file is
  * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
  */
-[PrefControlled]
 partial interface AudioBufferSourceNode {
     // Same as start()
     [Throws,Pref="media.webaudio.legacy.AudioBufferSourceNode"]
