@@ -10,8 +10,7 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FaviconView;
@@ -49,11 +48,11 @@ public class PanelListRow extends TwoLineRow {
         // XXX: This will have to be updated once we come up with the
         // final schema for Panel datasets (see bug 942288).
 
-        int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
+        int titleIndex = cursor.getColumnIndexOrThrow(HomeItems.TITLE);
         final String title = cursor.getString(titleIndex);
         setPrimaryText(title);
 
-        int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
+        int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
         final String url = cursor.getString(urlIndex);
         setSecondaryText(url);
     }
