@@ -53,7 +53,14 @@ exports.env = require('./system/environment').env;
  * 'success' code 0. To exit with failure use `1`.
  * TODO: Improve platform to actually quit with an exit code.
  */
+let forcedExit = false;
 exports.exit = function exit(code) {
+  if (forcedExit) {
+    // a forced exit was already tried
+    // NOTE: exit(0) is called twice sometimes (ex when using cfx testaddons)
+    return;
+  }
+
   // This is used by 'cfx' to find out exit code.
   if ('resultFile' in options && options.resultFile) {
     let mode = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
@@ -64,6 +71,9 @@ exports.exit = function exit(code) {
     stream.close();
   }
 
+  if (code == 0) {
+    forcedExit = true;
+  }
   appStartup.quit(code ? E_ATTEMPT : E_FORCE);
 };
 

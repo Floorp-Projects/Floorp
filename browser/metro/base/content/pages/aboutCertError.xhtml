@@ -178,16 +178,18 @@
       }
 
       function toggle(id) {
-        var el = document.getElementById(id);
-        if (el.getAttribute("collapsed"))
-          el.setAttribute("collapsed", false);
-        else
-          el.setAttribute("collapsed", true);
+        var element = document.getElementById(id);
+        if (element.hasAttribute("collapsed")) {
+          element.removeAttribute("collapsed");
+        } else {
+          element.setAttribute("collapsed", true);
+        }
       }
     ]]></script>
   </head>
 
   <body id="errorPage" class="certerror" dir="&locale.dir;">
+    <div class="top-decoration"></div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer" class="section">
@@ -214,14 +216,14 @@
 
         <!-- The following sections can be unhidden by default by setting the
              "browser.xul.error_pages.expert_bad_cert" pref to true -->
-        <div id="technicalContent" collapsed="true">
-          <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
-          <p id="technicalContentText"/>
+        <div id="technicalContent" class="expandable-section" collapsed="true">
+          <h2 onclick="toggle('technicalContent');" id="technicalContentHeading" class="expandable-heading">&certerror.technical.heading;</h2>
+          <p class="expandable-content" id="technicalContentText"/>
         </div>
 
-        <div id="expertContent" collapsed="true">
-          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
-          <div>
+        <div id="expertContent" class="expandable-section" collapsed="true">
+          <h2 onclick="toggle('expertContent');" id="expertContentHeading" class="expandable-heading">&certerror.expert.heading;</h2>
+          <div class="expandable-content">
             <p>&certerror.expert.content;</p>
             <p>&certerror.expert.contentPara2;</p>
             <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='temporaryExceptionButton' label='&certerror.addTemporaryException.label;'/>

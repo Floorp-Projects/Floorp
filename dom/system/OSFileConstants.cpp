@@ -837,11 +837,14 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   // library, which is sufficient to link to the library using js-ctypes.
 
 #if defined(XP_MACOSX)
-  // Under MacOS X, for some reason, libxul is called simply "XUL"
-  nsAutoString libxul(NS_LITERAL_STRING("XUL"));
+  // Under MacOS X, for some reason, libxul is called simply "XUL",
+  // and we need to provide the full path.
+  nsAutoString libxul;
+  libxul.Append(gPaths->libDir);
+  libxul.Append(NS_LITERAL_STRING("/XUL"));
 #else
   // On other platforms, libxul is a library "xul" with regular
-  // library prefix/suffix
+  // library prefix/suffix.
   nsAutoString libxul;
   libxul.Append(NS_LITERAL_STRING(DLL_PREFIX));
   libxul.Append(NS_LITERAL_STRING("xul"));

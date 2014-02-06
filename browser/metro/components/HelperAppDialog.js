@@ -121,7 +121,7 @@ HelperAppLauncherDialog.prototype = {
                         className: "download-filename-text"
                       },
                       {
-                        text: aLauncher.downloadSize,
+                        text: downloadSize,
                         className: "download-size-text"
                       },
                       {
