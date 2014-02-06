@@ -369,7 +369,8 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
     if (!ctorPrototypePrototype)
         return nullptr;
 
-    return NewObjectWithProto<JSObject>(cx, &*ctorPrototypePrototype, nullptr);
+    return NewObjectWithProto<JSObject>(cx, &*ctorPrototypePrototype, nullptr,
+                                        TenuredObject);
 }
 
 const Class UnsizedArrayTypeDescr::class_ = {
@@ -789,9 +790,10 @@ StructMetaTypeDescr::layout(JSContext *cx,
             if (!fieldNameValues.append(value))
                 return false;
         }
-        RootedObject fieldNamesVec(
-            cx, NewDenseCopiedArray(cx, fieldNameValues.length(),
-                                    fieldNameValues.begin()));
+        RootedObject fieldNamesVec(cx);
+        fieldNamesVec = NewDenseCopiedArray(cx, fieldNameValues.length(),
+                                            fieldNameValues.begin(), nullptr,
+                                            TenuredObject);
         if (!fieldNamesVec)
             return false;
         structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES,
@@ -802,7 +804,8 @@ StructMetaTypeDescr::layout(JSContext *cx,
     {
         RootedObject fieldTypeVec(cx);
         fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
-                                           fieldTypeObjs.begin());
+                                           fieldTypeObjs.begin(), nullptr,
+                                           TenuredObject);
         if (!fieldTypeVec)
             return false;
         structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES,
@@ -819,7 +822,8 @@ StructMetaTypeDescr::layout(JSContext *cx,
         }
         RootedObject fieldOffsetsVec(cx);
         fieldOffsetsVec = NewDenseCopiedArray(cx, fieldOffsets.length(),
-                                              fieldOffsets.begin());
+                                              fieldOffsets.begin(), nullptr,
+                                              TenuredObject);
         if (!fieldOffsetsVec)
             return false;
         structType->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS,
