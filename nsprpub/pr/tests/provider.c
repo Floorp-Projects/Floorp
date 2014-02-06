@@ -753,7 +753,7 @@ static PRStatus NewThread(
                 0U, /* DWORD - initial thread stack size, in bytes */
                 windows_start, /* LPTHREAD_START_ROUTINE - pointer to thread function */
                 start_object, /* LPVOID - argument for new thread */
-                0U, /*DWORD dwCreationFlags - creation flags */
+                STACK_SIZE_PARAM_IS_A_RESERVATION, /*DWORD dwCreationFlags - creation flags */
                 &id /* LPDWORD - pointer to returned thread identifier */ );
 
             rv = (NULL == th) ? PR_FAILURE : PR_SUCCESS;
