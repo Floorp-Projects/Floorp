@@ -1286,15 +1286,19 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
     return true;
   }
   """
+        if self.descriptor.interface.identifier.name == "ChromeWindow":
+            setBp = "*bp = UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance))->IsChromeWindow()"
+        else:
+            setBp = "*bp = true"
         # Sort interaces implementing self by name so we get stable output.
         for iface in sorted(self.descriptor.interface.interfacesImplementingSelf,
                             key=lambda iface: iface.identifier.name):
             hasInstanceCode += """
   if (domClass->mInterfaceChain[PrototypeTraits<prototypes::id::%s>::Depth] == prototypes::id::%s) {
-    *bp = true;
+    %s;
     return true;
   }
-""" % (iface.identifier.name, iface.identifier.name)
+""" % (iface.identifier.name, iface.identifier.name, setBp)
         hasInstanceCode += "  return true;"
         return header + hasInstanceCode;
 
