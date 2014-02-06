@@ -1656,11 +1656,17 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local mFrameMetrics because these things are
     // determined by Gecko and our copy in mFrameMetrics may be stale.
+
+    if (mFrameMetrics.mCompositionBounds.width == aLayerMetrics.mCompositionBounds.width) {
+      float parentResolutionChange = aLayerMetrics.GetParentResolution().scale
+                                   / mFrameMetrics.GetParentResolution().scale;
+      mFrameMetrics.mZoom.scale *= parentResolutionChange;
+    } else {
+      // Take the new zoom as composition width got changed (i.e. due to orientation change)
+      mFrameMetrics.mZoom.scale = aLayerMetrics.mZoom.scale;
+    }
     mFrameMetrics.mScrollableRect = aLayerMetrics.mScrollableRect;
     mFrameMetrics.mCompositionBounds = aLayerMetrics.mCompositionBounds;
-    float parentResolutionChange = aLayerMetrics.GetParentResolution().scale
-                                 / mFrameMetrics.GetParentResolution().scale;
-    mFrameMetrics.mZoom.scale *= parentResolutionChange;
     mFrameMetrics.mResolution = aLayerMetrics.mResolution;
     mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
     mFrameMetrics.mHasScrollgrab = aLayerMetrics.mHasScrollgrab;
