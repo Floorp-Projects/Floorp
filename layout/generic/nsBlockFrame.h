@@ -276,12 +276,10 @@ public:
    */
   virtual bool DrainSelfOverflowList() MOZ_OVERRIDE;
 
-  virtual nsresult StealFrame(nsPresContext* aPresContext,
-                              nsIFrame*      aChild,
+  virtual nsresult StealFrame(nsIFrame*      aChild,
                               bool           aForceNormal = false) MOZ_OVERRIDE;
 
-  virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
-                                     nsIFrame*      aNextInFlow,
+  virtual void DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
                                      bool           aDeletingEmptyFrames) MOZ_OVERRIDE;
 
   /**

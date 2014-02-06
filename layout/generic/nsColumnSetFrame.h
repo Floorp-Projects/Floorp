@@ -49,11 +49,10 @@ public:
     return frame->GetContentInsertionFrame();
   }
 
-  virtual nsresult StealFrame(nsPresContext* aPresContext,
-                              nsIFrame*      aChild,
+  virtual nsresult StealFrame(nsIFrame*      aChild,
                               bool           aForceNormal) MOZ_OVERRIDE
   { // nsColumnSetFrame keeps overflow containers in main child list
-    return nsContainerFrame::StealFrame(aPresContext, aChild, true);
+    return nsContainerFrame::StealFrame(aChild, true);
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE

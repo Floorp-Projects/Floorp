@@ -1387,8 +1387,7 @@ MoveChildrenTo(nsPresContext* aPresContext,
 
   if (aNewParent->HasView() || aOldParent->HasView() || !sameGrandParent) {
     // Move the frames into the new view
-    nsContainerFrame::ReparentFrameViewList(aPresContext, aFrameList,
-                                            aOldParent, aNewParent);
+    nsContainerFrame::ReparentFrameViewList(aFrameList, aOldParent, aNewParent);
   }
 
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {

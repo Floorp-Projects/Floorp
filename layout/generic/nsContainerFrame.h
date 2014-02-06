@@ -94,8 +94,7 @@ public:
    *        exists aNextInFlowResult is set to nullptr.
    * @return NS_OK if a next-in-flow already exists or is successfully created.
    */
-  nsresult CreateNextInFlow(nsPresContext* aPresContext,
-                            nsIFrame*       aFrame,
+  nsresult CreateNextInFlow(nsIFrame*       aFrame,
                             nsIFrame*&      aNextInFlowResult);
 
   /**
@@ -104,8 +103,7 @@ public:
    * content was complete before aNextInFlow, so aNextInFlow and its
    * next-in-flows no longer map any real content.
    */
-  virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
-                                     nsIFrame*      aNextInFlow,
+  virtual void DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
                                      bool           aDeletingEmptyFrames);
 
   /**
@@ -118,13 +116,11 @@ public:
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
 
-  static nsresult ReparentFrameView(nsPresContext* aPresContext,
-                                    nsIFrame*       aChildFrame,
+  static nsresult ReparentFrameView(nsIFrame*       aChildFrame,
                                     nsIFrame*       aOldParentFrame,
                                     nsIFrame*       aNewParentFrame);
 
-  static nsresult ReparentFrameViewList(nsPresContext*     aPresContext,
-                                        const nsFrameList& aChildFrameList,
+  static nsresult ReparentFrameViewList(const nsFrameList& aChildFrameList,
                                         nsIFrame*          aOldParentFrame,
                                         nsIFrame*          aNewParentFrame);
 
@@ -322,8 +318,7 @@ public:
    * If aForceNormal is true, only checks the primary and overflow lists
    * even when the NS_FRAME_IS_OVERFLOW_CONTAINER flag is set.
    */
-  virtual nsresult StealFrame(nsPresContext* aPresContext,
-                              nsIFrame*      aChild,
+  virtual nsresult StealFrame(nsIFrame*      aChild,
                               bool           aForceNormal = false);
 
   /**
@@ -448,13 +443,12 @@ protected:
   /**
    * Set the overflow list.  aOverflowFrames must not be an empty list.
    */
-  void SetOverflowFrames(nsPresContext*  aPresContext,
-                         const nsFrameList& aOverflowFrames);
+  void SetOverflowFrames(const nsFrameList& aOverflowFrames);
 
   /**
    * Destroy the overflow list, which must be empty.
    */
-  inline void DestroyOverflowList(nsPresContext* aPresContext);
+  inline void DestroyOverflowList();
 
   /**
    * Moves any frames on both the prev-in-flow's overflow list and the
@@ -465,7 +459,7 @@ protected:
    *
    * @return true if any frames were moved and false otherwise
    */
-  bool MoveOverflowToChildList(nsPresContext* aPresContext);
+  bool MoveOverflowToChildList();
 
   /**
    * Push aFromChild and its next siblings to the next-in-flow. Change
@@ -481,8 +475,7 @@ protected:
    * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
    *            It's an error to push a parent's first child frame
    */
-  void PushChildren(nsPresContext*  aPresContext,
-                    nsIFrame*       aFromChild,
+  void PushChildren(nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
   // ==========================================================================
@@ -495,22 +488,19 @@ protected:
    * Get the PresContext-stored nsFrameList named aPropID for this frame.
    * May return null.
    */
-  nsFrameList* GetPropTableFrames(nsPresContext*                 aPresContext,
-                                  const FramePropertyDescriptor* aProperty) const;
+  nsFrameList* GetPropTableFrames(const FramePropertyDescriptor* aProperty) const;
 
   /**
    * Remove and return the PresContext-stored nsFrameList named aPropID for
    * this frame. May return null.
    */
-  nsFrameList* RemovePropTableFrames(nsPresContext*                 aPresContext,
-                                     const FramePropertyDescriptor* aProperty);
+  nsFrameList* RemovePropTableFrames(const FramePropertyDescriptor* aProperty);
 
   /**
    * Set the PresContext-stored nsFrameList named aPropID for this frame
    * to the given aFrameList, which must not be null.
    */
-  void SetPropTableFrames(nsPresContext*                 aPresContext,
-                          nsFrameList*                   aFrameList,
+  void SetPropTableFrames(nsFrameList*                   aFrameList,
                           const FramePropertyDescriptor* aProperty);
 
   /**
@@ -582,8 +572,7 @@ public:
    * by calling ReflowOverflowContainerChildren.) aWalkOOFFrames is ignored
    * if aSkipOverflowContainerChildren is false.
    */
-  nsOverflowContinuationTracker(nsPresContext*    aPresContext,
-                                nsContainerFrame* aFrame,
+  nsOverflowContinuationTracker(nsContainerFrame* aFrame,
                                 bool              aWalkOOFFrames,
                                 bool              aSkipOverflowContainerChildren = true);
   /**
@@ -714,11 +703,11 @@ nsContainerFrame::StealOverflowFrames()
 }
 
 inline void
-nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext)
+nsContainerFrame::DestroyOverflowList()
 {
-  nsFrameList* list = RemovePropTableFrames(aPresContext, OverflowProperty());
+  nsFrameList* list = RemovePropTableFrames(OverflowProperty());
   MOZ_ASSERT(list && list->IsEmpty());
-  list->Delete(aPresContext->PresShell());
+  list->Delete(PresContext()->PresShell());
 }
 
 #endif /* nsContainerFrame_h___ */
