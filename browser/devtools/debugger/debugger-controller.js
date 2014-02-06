@@ -1188,6 +1188,12 @@ SourceScripts.prototype = {
       return;
     }
 
+    if (aResponse.sources.length === 0) {
+      DebuggerView.Sources.emptyText = L10N.getStr("noSourcesText");
+      window.emit(EVENTS.SOURCES_ADDED);
+      return;
+    }
+
     // Add all the sources in the debugger view sources container.
     for (let source of aResponse.sources) {
       // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
@@ -1690,11 +1696,10 @@ EventListeners.prototype = {
           if (aResponse.error) {
             const msg = "Error getting function definition site: " + aResponse.message;
             DevToolsUtils.reportException("scheduleEventListenersFetch", msg);
-            deferred.reject(msg);
-            return;
+          } else {
+            aListener.function.url = aResponse.url;
           }
 
-          aListener.function.url = aResponse.url;
           deferred.resolve(aListener);
         });
 
