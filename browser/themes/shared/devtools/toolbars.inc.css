@@ -207,13 +207,23 @@
 .devtools-searchinput {
   -moz-appearance: none;
   margin: 0 3px;
-  border: 1px solid rgb(88, 94, 101);
+  border: 1px solid;
 %ifdef XP_MACOSX
   border-radius: 20px;
 %else
   border-radius: 2px;
 %endif
   padding: 4px 6px;
+}
+
+.theme-dark .devtools-textinput,
+.theme-dark .devtools-searchinput {
+  border-color: rgb(88, 94, 101);
+}
+
+.theme-light .devtools-textinput,
+.theme-light .devtools-searchinput {
+  border-color: #aaa; /* Match the splitter color */
 }
 
 .devtools-searchinput {
