@@ -115,6 +115,16 @@ ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
 }
 
 void
+ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
+                                            TextureClient* aTextureOnBlack,
+                                            TextureClient* aTextureOnWhite)
+{
+  mTxn->AddNoSwapEdit(OpUseComponentAlphaTextures(nullptr, aCompositable->GetIPDLActor(),
+                                                  nullptr, aTextureOnBlack->GetIPDLActor(),
+                                                  nullptr, aTextureOnWhite->GetIPDLActor()));
+}
+
+void
 ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
                                  TextureClient* aTexture,
                                  nsIntRegion* aRegion)

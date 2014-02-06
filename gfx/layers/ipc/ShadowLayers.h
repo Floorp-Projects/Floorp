@@ -321,6 +321,9 @@ public:
    */
   virtual void UseTexture(CompositableClient* aCompositable,
                           TextureClient* aClient) MOZ_OVERRIDE;
+  virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
+                                         TextureClient* aClientOnBlack,
+                                         TextureClient* aClientOnWhite) MOZ_OVERRIDE;
 
   /**
    * End the current transaction and forward it to LayerManagerComposite.

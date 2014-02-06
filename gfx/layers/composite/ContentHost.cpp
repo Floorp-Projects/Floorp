@@ -220,13 +220,18 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 void
 ContentHostBase::UseTextureHost(TextureHost* aTexture)
 {
-  if (aTexture->GetFlags() & TEXTURE_ON_WHITE) {
-    mTextureHostOnWhite = aTexture;
-    mTextureHostOnWhite->SetCompositor(GetCompositor());
-  } else {
-    mTextureHost = aTexture;
-    mTextureHost->SetCompositor(GetCompositor());
-  }
+  mTextureHost = aTexture;
+  mTextureHostOnWhite = nullptr;
+  mTextureHost->SetCompositor(GetCompositor());
+}
+
+void
+ContentHostBase::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                           TextureHost* aTextureOnWhite)
+{
+  CompositableHost::UseComponentAlphaTextures(aTextureOnBlack, aTextureOnWhite);
+  mTextureHost = aTextureOnBlack;
+  mTextureHostOnWhite = aTextureOnWhite;
 }
 
 void
