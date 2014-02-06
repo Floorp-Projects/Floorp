@@ -225,6 +225,21 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetSourceDocShell(nsIDocShell* aSourceDocShell
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellLoadInfo::GetBaseURI(nsIURI** aBaseURI)
+{
+   NS_ENSURE_ARG_POINTER(aBaseURI);
+
+   *aBaseURI = mBaseURI;
+   NS_IF_ADDREF(*aBaseURI);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetBaseURI(nsIURI* aBaseURI)
+{
+   mBaseURI = aBaseURI;
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
 //*****************************************************************************   
