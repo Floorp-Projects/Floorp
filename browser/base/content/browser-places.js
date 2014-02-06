@@ -1446,12 +1446,12 @@ let BookmarkingUI = {
   _starButtonLabel: null,
   get _starButtonOverflowedLabel() {
     delete this._starButtonOverflowedLabel;
-    this._starButtonOverflowedLabel =
+    return this._starButtonOverflowedLabel =
       gNavigatorBundle.getString("starButtonOverflowed.label");
   },
   get _starButtonOverflowedStarredLabel() {
     delete this._starButtonOverflowedStarredLabel;
-    this._starButtonOverflowedStarredLabel =
+    return this._starButtonOverflowedStarredLabel =
       gNavigatorBundle.getString("starButtonOverflowedStarred.label");
   },
   onWidgetOverflow: function(aNode, aContainer) {
