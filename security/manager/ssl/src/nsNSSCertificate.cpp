@@ -823,17 +823,16 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
 
   ::insanity::pkix::ScopedCERTCertList nssChain;
-  SECStatus srv;
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   // We want to test all usages, but we start with server because most of the
   // time Firefox users care about server certs.
-  srv = certVerifier->VerifyCert(mCert.get(), nullptr,
-                                 certificateUsageSSLServer, PR_Now(),
-                                 nullptr, /*XXX fixme*/
-                                 CertVerifier::FLAG_LOCAL_ONLY,
-                                 &nssChain);
+  certVerifier->VerifyCert(mCert.get(), nullptr,
+                           certificateUsageSSLServer, PR_Now(),
+                           nullptr, /*XXX fixme*/
+                           CertVerifier::FLAG_LOCAL_ONLY,
+                           &nssChain);
   // This is the whitelist of all non-SSLServer usages that are supported by
   // verifycert.
   const int otherUsagesToTest = certificateUsageSSLClient |
@@ -851,11 +850,11 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("pipnss: PKIX attempting chain(%d) for '%s'\n",
             usage, mCert->nickname));
-    srv = certVerifier->VerifyCert(mCert.get(), nullptr,
-                                   usage, PR_Now(),
-                                   nullptr, /*XXX fixme*/
-                                   CertVerifier::FLAG_LOCAL_ONLY,
-                                   &nssChain);
+    certVerifier->VerifyCert(mCert.get(), nullptr,
+                             usage, PR_Now(),
+                             nullptr, /*XXX fixme*/
+                             CertVerifier::FLAG_LOCAL_ONLY,
+                             &nssChain);
   }
 
   if (!nssChain) {

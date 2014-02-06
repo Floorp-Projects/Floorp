@@ -10,7 +10,6 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "EnableWebAudioCheck.h"
 #include "nsAutoPtr.h"
 #include "ThreeDPoint.h"
 #include "AudioContext.h"
@@ -23,8 +22,7 @@ namespace mozilla {
 
 namespace dom {
 
-class AudioListener MOZ_FINAL : public nsWrapperCache,
-                                public EnableWebAudioCheck
+class AudioListener MOZ_FINAL : public nsWrapperCache
 {
 public:
   explicit AudioListener(AudioContext* aContext);

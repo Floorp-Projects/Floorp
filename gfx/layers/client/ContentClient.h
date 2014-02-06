@@ -109,6 +109,7 @@ public:
   // call before and after painting into this content client
   virtual void BeginPaint() {}
   virtual void EndPaint() {}
+
 };
 
 /**
