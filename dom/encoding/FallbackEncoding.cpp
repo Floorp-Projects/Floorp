@@ -17,7 +17,16 @@ static const char* localesFallbacks[][3] = {
 #include "localesfallbacks.properties.h"
 };
 
+static const char* domainsFallbacks[][3] = {
+#include "domainsfallbacks.properties.h"
+};
+
+static const char* nonParticipatingDomains[][3] = {
+#include "nonparticipatingdomains.properties.h"
+};
+
 FallbackEncoding* FallbackEncoding::sInstance = nullptr;
+bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
 
 FallbackEncoding::FallbackEncoding()
 {
@@ -121,6 +130,8 @@ FallbackEncoding::Initialize()
   Preferences::RegisterCallback(FallbackEncoding::PrefChanged,
                                 "general.useragent.locale",
                                 nullptr);
+  Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
+                               "intl.charset.fallback.tld");
 }
 
 void
@@ -130,6 +141,27 @@ FallbackEncoding::Shutdown()
              "Releasing non-existent fallback cache.");
   delete FallbackEncoding::sInstance;
   FallbackEncoding::sInstance = nullptr;
+}
+
+bool
+FallbackEncoding::IsParticipatingTopLevelDomain(const nsACString& aTLD)
+{
+  nsAutoCString dummy;
+  return NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
+      nonParticipatingDomains,
+      ArrayLength(nonParticipatingDomains),
+      aTLD,
+      dummy));
+}
+
+void
+FallbackEncoding::FromTopLevelDomain(const nsACString& aTLD,
+                                     nsACString& aFallback)
+{
+  if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
+      domainsFallbacks, ArrayLength(domainsFallbacks), aTLD, aFallback))) {
+    aFallback.AssignLiteral("windows-1252");
+  }
 }
 
 } // namespace dom
