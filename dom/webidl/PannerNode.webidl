@@ -27,7 +27,6 @@ enum DistanceModelType {
   "exponential"
 };
 
-[PrefControlled]
 interface PannerNode : AudioNode {
 
     // Default for stereo is HRTF 
@@ -55,7 +54,6 @@ interface PannerNode : AudioNode {
  * The origin of this IDL file is
  * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
  */
-[PrefControlled]
 partial interface PannerNode {
     [Pref="media.webaudio.legacy.PannerNode"]
     const unsigned short EQUALPOWER = 0;

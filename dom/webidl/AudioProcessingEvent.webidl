@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface AudioProcessingEvent : Event {
 
     readonly attribute double playbackTime;

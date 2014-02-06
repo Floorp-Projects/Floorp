@@ -15,12 +15,34 @@ class FallbackEncoding
 public:
 
   /**
+   * Whether FromTopLevelDomain() should be used.
+   */
+  static bool sGuessFallbackFromTopLevelDomain;
+
+  /**
    * Gets the locale-dependent fallback encoding for legacy HTML and plain
    * text content.
    *
    * @param aFallback the outparam for the fallback encoding
    */
   static void FromLocale(nsACString& aFallback);
+
+  /**
+   * Checks if it is appropriate to call FromTopLevelDomain() for a given TLD.
+   *
+   * @param aTLD the top-level domain (in Punycode)
+   * @return true if OK to call FromTopLevelDomain()
+   */
+  static bool IsParticipatingTopLevelDomain(const nsACString& aTLD);
+
+  /**
+   * Gets a top-level domain-depedendent fallback encoding for legacy HTML
+   * and plain text content
+   *
+   * @param aTLD the top-level domain (in Punycode)
+   * @param aFallback the outparam for the fallback encoding
+   */
+  static void FromTopLevelDomain(const nsACString& aTLD, nsACString& aFallback);
 
   // public API ends here!
 
