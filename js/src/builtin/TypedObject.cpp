@@ -911,6 +911,12 @@ StructMetaTypeDescr::layout(JSContext *cx,
             return false;
     }
 
+    if (!JSObject::freeze(cx, fieldOffsets))
+        return false;
+
+    if (!JSObject::freeze(cx, fieldTypes))
+        return false;
+
     RootedValue fieldOffsetsValue(cx, ObjectValue(*fieldOffsets));
     if (!JSObject::defineProperty(cx, structType, cx->names().fieldOffsets,
                                   fieldOffsetsValue, nullptr, nullptr,
