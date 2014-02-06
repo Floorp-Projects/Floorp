@@ -526,7 +526,8 @@ ArrayMetaTypeDescr::create(JSContext *cx,
 {
     JS_ASSERT(TypeRepresentation::isOwnerObject(*arrayTypeReprObj));
 
-    Rooted<T*> obj(cx, NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr));
+    Rooted<T*> obj(cx, NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr,
+                                             TenuredObject));
     if (!obj)
         return nullptr;
     obj->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR,
@@ -811,10 +812,10 @@ StructMetaTypeDescr::layout(JSContext *cx,
     // fieldNames : [ string ]
     // fieldOffsets : { string: integer, ... }
     // fieldTypes : { string: Type, ... }
-    RootedObject fieldOffsets(
-        cx, NewObjectWithProto<JSObject>(cx, nullptr, nullptr));
-    RootedObject fieldTypes(
-        cx, NewObjectWithProto<JSObject>(cx, nullptr, nullptr));
+    RootedObject fieldOffsets(cx);
+    fieldOffsets = NewObjectWithProto<JSObject>(cx, nullptr, nullptr, TenuredObject);
+    RootedObject fieldTypes(cx);
+    fieldTypes = NewObjectWithProto<JSObject>(cx, nullptr, nullptr, TenuredObject);
     for (size_t i = 0; i < typeRepr->fieldCount(); i++) {
         const StructField &field = typeRepr->field(i);
         RootedId fieldId(cx, NameToId(field.propertyName));
@@ -858,7 +859,8 @@ StructMetaTypeDescr::create(JSContext *cx,
         return nullptr;
 
     Rooted<StructTypeDescr*> descr(cx);
-    descr = NewObjectWithProto<StructTypeDescr>(cx, structTypePrototype, nullptr);
+    descr = NewObjectWithProto<StructTypeDescr>(cx, structTypePrototype, nullptr,
+                                                TenuredObject);
     if (!descr)
         return nullptr;
 
@@ -969,7 +971,8 @@ DefineSimpleTypeDescr(JSContext *cx,
     RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
     JS_ASSERT(funcProto);
 
-    Rooted<T*> numFun(cx, NewObjectWithProto<T>(cx, funcProto, global));
+    Rooted<T*> numFun(cx, NewObjectWithProto<T>(cx, funcProto, global,
+                                                TenuredObject));
     if (!numFun)
         return false;
 

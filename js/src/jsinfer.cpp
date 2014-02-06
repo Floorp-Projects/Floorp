@@ -4639,6 +4639,10 @@ TypeObject::addTypedObjectAddendum(JSContext *cx, Handle<TypeDescr*> descr)
     if (!cx->typeInferenceEnabled())
         return true;
 
+    // Type descriptors are always pre-tenured. This is both because
+    // we expect them to live a long time and so that they can be
+    // safely accessed during ion compilation.
+    JS_ASSERT(!IsInsideNursery(cx->runtime(), descr));
     JS_ASSERT(descr);
 
     if (flags() & OBJECT_FLAG_ADDENDUM_CLEARED)
