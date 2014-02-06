@@ -504,9 +504,9 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
 }
 
 nsresult
-nsContainerFrame::ReparentFrameView(nsIFrame*       aChildFrame,
-                                    nsIFrame*       aOldParentFrame,
-                                    nsIFrame*       aNewParentFrame)
+nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
+                                    nsIFrame* aOldParentFrame,
+                                    nsIFrame* aNewParentFrame)
 {
   NS_PRECONDITION(aChildFrame, "null child frame pointer");
   NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
@@ -1229,8 +1229,8 @@ TryRemoveFrame(nsIFrame* aFrame, FramePropertyTable* aPropTable,
 }
 
 nsresult
-nsContainerFrame::StealFrame(nsIFrame*      aChild,
-                             bool           aForceNormal)
+nsContainerFrame::StealFrame(nsIFrame* aChild,
+                             bool      aForceNormal)
 {
 #ifdef DEBUG
   if (!mFrames.ContainsFrame(aChild)) {
@@ -1324,8 +1324,8 @@ nsContainerFrame::StealFramesAfter(nsIFrame* aChild)
  * created; otherwise nullptr is returned in aNextInFlowResult.
  */
 nsresult
-nsContainerFrame::CreateNextInFlow(nsIFrame*      aFrame,
-                                   nsIFrame*&     aNextInFlowResult)
+nsContainerFrame::CreateNextInFlow(nsIFrame*  aFrame,
+                                   nsIFrame*& aNextInFlowResult)
 {
   NS_PRECONDITION(GetType() != nsGkAtoms::blockFrame,
                   "you should have called nsBlockFrame::CreateContinuationFor instead");
@@ -1356,8 +1356,8 @@ nsContainerFrame::CreateNextInFlow(nsIFrame*      aFrame,
  * pointers
  */
 void
-nsContainerFrame::DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
-                                        bool           aDeletingEmptyFrames)
+nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+                                        bool      aDeletingEmptyFrames)
 {
 #ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
@@ -1455,8 +1455,8 @@ nsContainerFrame::SetPropTableFrames(nsFrameList*                   aFrameList,
  *            an error to push a parent's first child frame
  */
 void
-nsContainerFrame::PushChildren(nsIFrame*       aFromChild,
-                               nsIFrame*       aPrevSibling)
+nsContainerFrame::PushChildren(nsIFrame* aFromChild,
+                               nsIFrame* aPrevSibling)
 {
   NS_PRECONDITION(aFromChild, "null pointer");
   NS_PRECONDITION(aPrevSibling, "pushing first child");
