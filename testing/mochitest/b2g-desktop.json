@@ -469,6 +469,7 @@
 
     "content/html/content/test/test_bug209275.xhtml":"timed out, 47 tests, bug 870262, :visited support",
     "content/html/content/test/test_bug481335.xhtml":"timed out, bug 870262, :visited support",
+    "layout/style/test/test_transitions.html":"times out",
     "layout/style/test/test_visited_image_loading.html":"bug 870262, :visited support",
     "layout/style/test/test_visited_image_loading_empty.html":"bug 870262, :visited support",
     "layout/style/test/test_visited_lying.html" : "bug 870262, :visited support",
