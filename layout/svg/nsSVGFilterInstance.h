@@ -60,6 +60,52 @@ class nsSVGFilterInstance
 
 public:
   /**
+   * Paint the given filtered frame.
+   * @param aDirtyArea The area than needs to be painted, in aFilteredFrame's
+   *   frame space (i.e. relative to its origin, the top-left corner of its
+   *   border box).
+   */
+  static nsresult PaintFilteredFrame(nsSVGFilterFrame* aFilterFrame,
+                                     nsRenderingContext *aContext,
+                                     nsIFrame *aFilteredFrame,
+                                     nsSVGFilterPaintCallback *aPaintCallback,
+                                     const nsRect* aDirtyArea,
+                                     nsIFrame* aTransformRoot = nullptr);
+
+  /**
+   * Returns the post-filter area that could be dirtied when the given
+   * pre-filter area of aFilteredFrame changes.
+   * @param aPreFilterDirtyRect The pre-filter area of aFilteredFrame that has
+   *   changed, relative to aFilteredFrame, in app units.
+   */
+  static nsRect GetPostFilterDirtyArea(nsSVGFilterFrame* aFilterFrame,
+                                       nsIFrame *aFilteredFrame,
+                                       const nsRect& aPreFilterDirtyRect);
+
+  /**
+   * Returns the pre-filter area that is needed from aFilteredFrame when the
+   * given post-filter area needs to be repainted.
+   * @param aPostFilterDirtyRect The post-filter area that is dirty, relative
+   *   to aFilteredFrame, in app units.
+   */
+  static nsRect GetPreFilterNeededArea(nsSVGFilterFrame* aFilterFrame,
+                                       nsIFrame *aFilteredFrame,
+                                       const nsRect& aPostFilterDirtyRect);
+
+  /**
+   * Returns the post-filter visual overflow rect (paint bounds) of
+   * aFilteredFrame.
+   * @param aOverrideBBox A user space rect, in user units, that should be used
+   *   as aFilteredFrame's bbox ('bbox' is a specific SVG term), if non-null.
+   * @param aPreFilterBounds The pre-filter visual overflow rect of
+   *   aFilteredFrame, if non-null.
+   */
+  static nsRect GetPostFilterBounds(nsSVGFilterFrame* aFilterFrame,
+                                    nsIFrame *aFilteredFrame,
+                                    const gfxRect *aOverrideBBox = nullptr,
+                                    const nsRect *aPreFilterBounds = nullptr);
+
+  /**
    * @param aTargetFrame The frame of the filtered element under consideration.
    * @param aFilterFrame The frame of the SVG filter element.
    * @param aPaintCallback [optional] The callback that Render() should use to
@@ -118,31 +164,31 @@ public:
   nsresult Render(gfxContext* aContext);
 
   /**
-   * Sets the aPostFilterDirtyRect outparam to the post-filter bounds in filter
+   * Sets the aPostFilterDirtyRect outparam to the post-filter bounds in frame
    * space of the area that would be dirtied by mTargetFrame when a given
    * pre-filter area of mTargetFrame is dirtied. The pre-filter area must have
    * been specified before calling this method by passing it as the
    * aPreFilterDirtyRect argument to the nsSVGFilterInstance constructor.
    */
-  nsresult ComputePostFilterDirtyRect(nsIntRect* aPostFilterDirtyRect);
+  nsresult ComputePostFilterDirtyRect(nsRect* aPostFilterDirtyRect);
 
   /**
-   * Sets the aPostFilterExtents outparam to the post-filter bounds in filter
+   * Sets the aPostFilterExtents outparam to the post-filter bounds in frame
    * space for the whole filter output. This is not necessarily equivalent to
    * the area that would be dirtied in the result when the entire pre-filter
    * area is dirtied, because some filter primitives can generate output
    * without any input.
    */
-  nsresult ComputePostFilterExtents(nsIntRect* aPostFilterExtents);
+  nsresult ComputePostFilterExtents(nsRect* aPostFilterExtents);
 
   /**
-   * Sets the aDirty outparam to the pre-filter bounds in filter space of the
+   * Sets the aDirty outparam to the pre-filter bounds in frame space of the
    * area of mTargetFrame that is needed in order to paint the filtered output
    * for a given post-filter dirtied area. The post-filter area must have been
    * specified before calling this method by passing it as the aPostFilterDirtyRect
    * argument to the nsSVGFilterInstance constructor.
    */
-  nsresult ComputeSourceNeededRect(nsIntRect* aDirty);
+  nsresult ComputeSourceNeededRect(nsRect* aDirty);
 
   float GetPrimitiveNumber(uint8_t aCtxType, const nsSVGNumber2 *aNumber) const
   {
@@ -269,6 +315,7 @@ private:
    * large to be stored in an nsIntRect.
    */
   nsIntRect FrameSpaceToFilterSpace(const nsRect* aRect) const;
+  nsRect FilterSpaceToFrameSpace(const nsIntRect& aRect) const;
 
   /**
    * Returns the transform from frame space to the coordinate space that
