@@ -25,6 +25,40 @@ exports.testOptionsType = function(assert, done) {
   });
 }
 
+exports.testButton = function(assert, done) {
+  tabs.open({
+    url: 'about:addons',
+    onReady: function(tab) {
+      sp.once('sayHello', function() {
+        assert.pass('The button was pressed!');
+        tab.close(done)
+      });
+
+      tab.attach({
+        contentScriptWhen: 'end',
+        contentScript: 'function onLoad() {\n' +
+                         'unsafeWindow.removeEventListener("load", onLoad, false);\n' +
+                         'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
+                           'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
+                             'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
+                             'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
+                               'unsafeWindow.document.querySelector("button[label=\'Click me!\']").click()\n' +
+                             '}, 250);\n' +
+                           '}, false);\n' +
+                           'unsafeWindow.gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);\n' +
+                         '});\n' +
+                       '}\n' +
+                       // Wait for the load event ?
+                       'if (document.readyState == "complete") {\n' +
+                         'onLoad()\n' +
+                       '} else {\n' +
+                         'unsafeWindow.addEventListener("load", onLoad, false);\n' +
+                       '}\n',
+      });
+    }
+  });
+}
+
 if (app.is('Firefox')) {
   exports.testAOM = function(assert, done) {
       tabs.open({
@@ -41,7 +75,8 @@ if (app.is('Firefox')) {
                                      'self.postMessage({\n' +
                                        'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
                                        'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
-                                       'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']"))\n' +
+                                       'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']")),\n' +
+                                       'sayHello: getAttributes(unsafeWindow.document.querySelector("button[label=\'Click me!\']"))\n' +
                                      '});\n' +
                                  '}, 250);\n' +
                                '}, false);\n' +
@@ -53,7 +88,8 @@ if (app.is('Firefox')) {
                                  'pref: ele.getAttribute("pref"),\n' +
                                  'type: ele.getAttribute("type"),\n' +
                                  'title: ele.getAttribute("title"),\n' +
-                                 'desc: ele.getAttribute("desc")\n' +
+                                 'desc: ele.getAttribute("desc"),\n' +
+                                 '"data-jetpack-id": ele.getAttribute(\'data-jetpack-id\')\n' +
                                '}\n' +
                              '}\n' +
                            '}\n' +
@@ -69,18 +105,23 @@ if (app.is('Firefox')) {
               assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
               assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
               assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
+              assert.equal(msg.somePreference['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
 
               // test myInteger
               assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
               assert.equal(msg.myInteger.pref, 'extensions.'+self.id+'.myInteger', 'extensions.test-simple-prefs.myInteger');
               assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
               assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
+              assert.equal(msg.myInteger['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
 
               // test myHiddenInt
               assert.equal(msg.myHiddenInt.type, undefined, 'myHiddenInt was not displayed');
               assert.equal(msg.myHiddenInt.pref, undefined, 'myHiddenInt was not displayed');
               assert.equal(msg.myHiddenInt.title, undefined, 'myHiddenInt was not displayed');
               assert.equal(msg.myHiddenInt.desc, undefined, 'myHiddenInt was not displayed');
+
+              // test sayHello
+              assert.equal(msg.sayHello['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
 
               tab.close(done);
             }

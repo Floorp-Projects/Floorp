@@ -92,7 +92,7 @@ NfcContentHelper.prototype = {
    *       Strings such as 'type', 'id' 'payload' will not be acccessible to NfcWorker.
    *       Therefore this function exists till the bug is addressed.
    */
-  encodeNdefRecords: function encodeNdefRecords(records) {
+  encodeNDEFRecords: function encodeNDEFRecords(records) {
     let encodedRecords = [];
     for (let i = 0; i < records.length; i++) {
       let record = records[i];
@@ -161,7 +161,7 @@ NfcContentHelper.prototype = {
     let requestId = btoa(this.getRequestId(request));
     this._requestMap[requestId] = window;
 
-    let encodedRecords = this.encodeNdefRecords(records);
+    let encodedRecords = this.encodeNDEFRecords(records);
     cpmm.sendAsyncMessage("NFC:WriteNDEF", {
       requestId: requestId,
       sessionToken: sessionToken,
@@ -390,7 +390,7 @@ NfcContentHelper.prototype = {
       let ndefMsg = [];
       for (let i = 0; i < records.length; i++) {
         let record = records[i];
-        ndefMsg.push(new requester.MozNdefRecord(record.tnf,
+        ndefMsg.push(new requester.MozNDEFRecord(record.tnf,
                                                  record.type,
                                                  record.id,
                                                  record.payload));

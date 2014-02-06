@@ -602,6 +602,9 @@ MediaEngineWebRTCVideoSource::HandleEvent(const nsAString& error) {
 void
 MediaEngineWebRTCVideoSource::OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage) {
   MonitorAutoLock enter(mMonitor);
+  if (mState == kStopped) {
+    return;
+  }
   mImage = aImage;
   if (mWidth != aIntrinsicSize.width || mHeight != aIntrinsicSize.height) {
     mWidth = aIntrinsicSize.width;
