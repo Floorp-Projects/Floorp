@@ -638,7 +638,7 @@ public:
     NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData)
     {
-        int64_t amount;
+        int64_t amount = 0;
         nsresult rv = PageFaultsHardDistinguishedAmount(&amount);
         NS_ENSURE_SUCCESS(rv, rv);
 
