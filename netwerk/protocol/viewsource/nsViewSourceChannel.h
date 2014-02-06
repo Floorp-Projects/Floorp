@@ -49,7 +49,8 @@ public:
 
     NS_HIDDEN_(nsresult) Init(nsIURI* uri);
 
-    NS_HIDDEN_(nsresult) InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc);
+    NS_HIDDEN_(nsresult) InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc,
+                                    nsIURI* aBaseURI);
 
 protected:
     nsCOMPtr<nsIChannel>        mChannel;
