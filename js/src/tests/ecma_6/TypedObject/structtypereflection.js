@@ -36,6 +36,10 @@ function runTests() {
     assertEq(S.fieldOffsets.y, 4);
     assertEq(S.fieldOffsets.z, 8);
 
+    // fieldTypes and fieldOffsets should be frozen
+    assertEq(Object.isFrozen(S.fieldTypes), true);
+    assertEq(Object.isFrozen(S.fieldOffsets), true);
+
     if (typeof reportCompare === "function")
         reportCompare(true, true);
     print("Tests complete");
