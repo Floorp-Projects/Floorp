@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<script>
+function report() {
+  window.parent.postMessage(document.characterSet, "*");
+}
+</script>
+<body onload="report();">
