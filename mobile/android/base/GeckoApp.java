@@ -197,7 +197,6 @@ public abstract class GeckoApp
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
-    protected TabsPanel mTabsPanel;
     protected ButtonToast mToast;
 
     protected LayerView mLayerView;
@@ -1260,8 +1259,6 @@ public abstract class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
 
-        // Set up tabs panel.
-        mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
         mToast = new ButtonToast(findViewById(R.id.toast));
 
         // Determine whether we should restore tabs.
