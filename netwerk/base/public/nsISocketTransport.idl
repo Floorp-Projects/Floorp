@@ -27,7 +27,7 @@ native NetAddr(mozilla::net::NetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(A8318027-0DDC-4E60-A89B-D81AFE3B5020)]
+[scriptable, uuid(3F41704C-CD5D-4537-8C4C-7B2EBFC5D972)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -198,4 +198,11 @@ interface nsISocketTransport : nsITransport
      */
     attribute unsigned long recvBufferSize;
     attribute unsigned long sendBufferSize;
+
+    /**
+     * TCP keepalive configuration (support varies by platform).
+     */
+    attribute boolean keepaliveEnabled;
+    void setKeepaliveVals(in long keepaliveIdleTime,
+                          in long keepaliveRetryInterval);
 };
