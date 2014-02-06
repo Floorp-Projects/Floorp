@@ -27,7 +27,7 @@
  *     { id, error }
  */
 
-importScripts("resource://gre/modules/devtools/acorn.js");
+importScripts("resource://gre/modules/devtools/acorn/acorn.js");
 importScripts("resource://gre/modules/devtools/source-map.js");
 importScripts("resource://gre/modules/devtools/pretty-fast.js");
 
