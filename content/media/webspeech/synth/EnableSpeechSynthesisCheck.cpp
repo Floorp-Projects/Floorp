@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 /* static */ bool
-EnableSpeechSynthesisCheck::PrefEnabled()
+EnableSpeechSynthesisCheck::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   if (!gPrefInitialized) {
     Preferences::AddBoolVarCache(&gWebSpeechEnabled, "media.webspeech.synth.enabled");

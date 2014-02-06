@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
+[Func="mozilla::dom::SpeechGrammarList::PrefEnabled"]
 interface SpeechGrammarList {
     readonly attribute unsigned long length;
     [Throws]

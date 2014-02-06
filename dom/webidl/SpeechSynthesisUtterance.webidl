@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled,
+[Func="mozilla::dom::SpeechSynthesisUtterance::PrefEnabled",
  Constructor,
  Constructor(DOMString text)]
 interface SpeechSynthesisUtterance : EventTarget {
