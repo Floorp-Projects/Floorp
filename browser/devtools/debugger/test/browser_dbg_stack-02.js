@@ -48,11 +48,8 @@ function performTest() {
 
   is(gFrames.selectedIndex, 1,
     "Newest frame should be selected by default.");
-  /*
-  DISABLED FOR CACHE2 FAILURES, bug 948566
   is(gClassicFrames.selectedIndex, 0,
     "Newest frame should be selected by default in the mirrored view.");
-  */
 
   isnot(gFrames.selectedIndex, 0,
     "Oldest frame should not be selected.");
