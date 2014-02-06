@@ -42,7 +42,7 @@ function createDocument() {
   openInspector().then(startTests);
 }
 
-function startTests(aInspector, aToolbox) {
+function startTests({inspector: aInspector, toolbox: aToolbox}) {
   inspector = aInspector;
   markup = inspector.markup;
 
