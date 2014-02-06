@@ -108,9 +108,18 @@
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  margin: 2px 0 0;
   text-align: center;
   -moz-hyphens: auto;
+  mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
+  min-height: 3.5em;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
+  margin: 2px 0 0;
+}
+
+.panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
+  margin: -1px 0 0;
 }
 
 #wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,
@@ -165,14 +174,33 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
-.customization-palette .toolbarbutton-1,
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
-  min-width: calc(@menuPanelWidth@ / 3);
-  max-width: calc(@menuPanelWidth@ / 3);
-  height: calc(40px + 2.4em);
-  max-height: calc(40px + 2.4em);
+  width: calc(@menuPanelWidth@ / 3);
+  height: calc(40px + 4em);
+}
+
+.customization-palette .toolbarbutton-1 {
+  -moz-appearance: none;
+  -moz-box-orient: vertical;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  -moz-box-orient: vertical;
+  width: calc(@menuPanelWidth@ / 3 - 2px);
+  height: calc(38px + 4em);
+  margin-top: 3px; /* Hack needed to get type=menu-button to properly align vertically. */
+  border: 0;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
+.panelUI-grid .toolbarbutton-1:not([type="menu-button"]),
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.customization-palette .toolbarbutton-1,
+.panel-customization-placeholder-child {
+  overflow: hidden;
 }
 
 .panel-customization-placeholder-child {
@@ -186,7 +214,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   width: 16px;
   -moz-margin-start: -16px;
   height: 40px;
-  max-height: 40px;
+  margin-bottom: 4em;
   padding: 0;
 }
 
@@ -230,7 +258,18 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panel-customization-placeholder-child > .toolbarbutton-icon {
   min-width: 32px;
   min-height: 32px;
-  margin: 4px;
+  /* Explanation for calc((A / B - C) / D), simplified to calc(X / Y - Z):
+     A / B (@menuPanelWidth@ / 3)
+       Each button is @menuPanelWidth@ / 3 wide.
+     C (46px)
+       The button icon is 32 pixels wide.
+       The button has 12px of horizontal padding (6 on each side).
+       The button has 2px of horizontal border (1 on each side).
+       Total width of button should therefore be 46px.
+     D (2)
+       Divide by 2 since each button has two horizontal margins.
+  */
+  margin: 4px calc(@menuPanelWidth@ / 6 - 23px);
 }
 
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
@@ -421,10 +460,18 @@ panelview .toolbarbutton-1,
   padding: 2px 6px;
   background-color: hsla(210,4%,10%,0);
   border-radius: 2px;
-  border: 1px solid;
+  border-style: solid;
   border-color: hsla(210,4%,10%,0);
   transition-property: background-color, border-color;
   transition-duration: 150ms;
+}
+
+panelview .toolbarbutton-1,
+.subviewbutton,
+.widget-overflow-list .toolbarbutton-1,
+#edit-controls@inAnyPanel@ > toolbarbutton,
+#zoom-controls@inAnyPanel@ > toolbarbutton {
+  border-width: 1px;
 }
 
 .subviewbutton.panel-subview-footer {
@@ -463,10 +510,6 @@ panelview .toolbarbutton-1,
 panelview .toolbarbutton-1,
 .widget-overflow-list .toolbarbutton-1 {
   margin-top: 6px;
-}
-
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  border: 0;
 }
 
 panelview .toolbarbutton-1@buttonStateHover@,
@@ -558,7 +601,7 @@ toolbarbutton.panel-multiview-anchor > .toolbarbutton-menubutton-button {
   color: HighlightText;
 }
 
-toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker,
+toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-dropmarker {
   display: none;
 }

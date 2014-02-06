@@ -3119,7 +3119,7 @@ Simulator::decodeTypeVFP(SimInstruction *instr)
             } else if ((instr->opc2Value() == 0xA) && (instr->opc3Value() == 0x3) &&
                        (instr->bit(8) == 1)) {
                 // vcvt.f64.s32 Dd, Dd, #<fbits>
-                int fraction_bits = 32 - ((instr->bit(5) << 4) | instr->bits(3, 0));
+                int fraction_bits = 32 - ((instr->bits(3, 0) << 1) | instr->bit(5));
                 int fixed_value = get_sinteger_from_s_register(vd * 2);
                 double divide = 1 << fraction_bits;
                 set_d_register_from_double(vd, fixed_value / divide);

@@ -45,3 +45,9 @@ interface TextTrack : EventTarget {
   void removeRegion(VTTRegion region);
   void addRegion(VTTRegion region);
 };
+
+// Mozilla Extensions
+partial interface TextTrack {
+  [ChromeOnly]
+  readonly attribute TextTrackList? textTrackList;
+};

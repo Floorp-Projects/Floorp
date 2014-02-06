@@ -11,13 +11,6 @@
 #include "ElfLoader.h"
 #include "SQLiteBridge.h"
 
-#ifdef MOZ_MEMORY
-// libc's free().
-extern "C" void __real_free(void *);
-#else
-#define __real_free(a) free(a)
-#endif
-
 #ifdef DEBUG
 #define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
 #else
@@ -85,8 +78,7 @@ static void throwSqliteException(JNIEnv* jenv, const char* aFormat, ...)
     vasprintf(&msg, aFormat, ap);
     LOG("Error in SQLiteBridge: %s\n", msg);
     JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", msg);
-    // msg is allocated by vasprintf, it needs to be freed by libc.
-    __real_free(msg);
+    free(msg);
     va_end(ap);
 }
 

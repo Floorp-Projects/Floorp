@@ -53,6 +53,9 @@ public:
   void Shutdown();
   void DropPrivateBrowsingEntries();
 
+  // Wipes out the new or the old cache directory completely.
+  static void WipeCacheDirectory(uint32_t aVersion);
+
   static CacheStorageService* Self() { return sSelf; }
   nsresult Dispatch(nsIRunnable* aEvent);
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }

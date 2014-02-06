@@ -22,7 +22,7 @@
 using namespace insanity::pkix;
 using namespace mozilla::psm;
 
-#ifdef MOZ_LOGGING
+#ifdef PR_LOGGING
 static PRLogModuleInfo* gCertVerifierLog = nullptr;
 #endif
 
@@ -53,13 +53,14 @@ CertVerifier::~CertVerifier()
 void
 InitCertVerifierLog()
 {
-#ifdef MOZ_LOGGING
+#ifdef PR_LOGGING
   if (!gCertVerifierLog) {
     gCertVerifierLog = PR_NewLogModule("certverifier");
   }
 #endif
 }
 
+#if 0
 // Once we migrate to insanity::pkix or change the overridable error
 // logic this will become unnecesary.
 static SECStatus
@@ -90,6 +91,7 @@ insertErrorIntoVerifyLog(CERTCertificate* cert, const PRErrorCode err,
 
   return SECSuccess;
 }
+#endif
 
 static SECStatus
 ClassicVerifyCert(CERTCertificate* cert,

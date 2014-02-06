@@ -534,7 +534,8 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { AUDIO_MP4, "m4a", "MPEG-4 Audio" },
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
   { AUDIO_WAV, "wav", "Waveform Audio" },
-  { VIDEO_3GPP, "3gpp,3gp", "3GPP Video" }
+  { VIDEO_3GPP, "3gpp,3gp", "3GPP Video" },
+  { AUDIO_MIDI, "mid", "Standard MIDI Audio" }
 };
 
 #undef MAC_TYPE
@@ -1495,7 +1496,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
   rv = mSaver->EnableSha256();
   NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("Enabled hashing"));
+
+  rv = mSaver->EnableSignatureInfo();
+  NS_ENSURE_SUCCESS(rv, rv);
+  LOG(("Enabled hashing and signature verification"));
 
   rv = mSaver->SetTarget(mTempFile, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1935,6 +1939,7 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
   if (!mCanceled) {
     // Save the hash
     (void)mSaver->GetSha256Hash(mHash);
+    (void)mSaver->GetSignatureInfo(getter_AddRefs(mSignatureInfo));
     // Free the reference that the saver keeps on us, even if we couldn't get
     // the hash.
     mSaver = nullptr;
@@ -1968,6 +1973,7 @@ void nsExternalAppHandler::NotifyTransfer(nsresult aStatus)
 
   if (NS_SUCCEEDED(aStatus)) {
     (void)mTransfer->SetSha256Hash(mHash);
+    (void)mTransfer->SetSignatureInfo(mSignatureInfo);
     (void)mTransfer->OnProgressChange64(nullptr, nullptr, mProgress,
       mContentLength, mProgress, mContentLength);
   }

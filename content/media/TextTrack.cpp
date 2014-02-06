@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackBinding.h"
+#include "mozilla/dom/TextTrackList.h"
 #include "mozilla/dom/TextTrackCue.h"
 #include "mozilla/dom/TextTrackCueList.h"
 #include "mozilla/dom/TextTrackRegion.h"
@@ -16,13 +17,14 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrack,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_6(TextTrack,
                                      nsDOMEventTargetHelper,
                                      mParent,
                                      mMediaElement,
                                      mCueList,
                                      mActiveCueList,
-                                     mRegionList)
+                                     mRegionList,
+                                     mTextTrackList)
 
 NS_IMPL_ADDREF_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrack, nsDOMEventTargetHelper)
@@ -199,6 +201,18 @@ TextTrack::SetReadyState(uint16_t aState)
       mReadyState == HTMLTrackElement::READY_STATE_ERROR)) {
     mMediaElement->RemoveTextTrack(this, true);
   }
+}
+
+TextTrackList*
+TextTrack::GetTextTrackList()
+{
+  return mTextTrackList;
+}
+
+void
+TextTrack::SetTextTrackList(TextTrackList* aTextTrackList)
+{
+  mTextTrackList = aTextTrackList;
 }
 
 } // namespace dom

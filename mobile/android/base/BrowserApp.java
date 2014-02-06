@@ -543,6 +543,9 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Telemetry:Gather");
         registerEventListener("Settings:Show");
         registerEventListener("Updater:Launch");
+        registerEventListener("Menu:Add");
+        registerEventListener("Menu:Remove");
+        registerEventListener("Menu:Update");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -857,6 +860,9 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Telemetry:Gather");
         unregisterEventListener("Settings:Show");
         unregisterEventListener("Updater:Launch");
+        unregisterEventListener("Menu:Add");
+        unregisterEventListener("Menu:Remove");
+        unregisterEventListener("Menu:Update");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);

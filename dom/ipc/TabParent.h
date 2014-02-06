@@ -206,6 +206,7 @@ public:
     void Show(const nsIntSize& size);
     void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
+    void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);
     void HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers);
     void HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers);
     void HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers);

@@ -475,6 +475,8 @@ public:
 
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
+  static bool IsChromeWindow(JSContext* /* unused */, JSObject* aObj);
+
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                     JS::Handle<jsid> aId,
                     JS::MutableHandle<JSPropertyDescriptor> aDesc);
@@ -944,6 +946,26 @@ public:
     }
     return GetContent(aCx, aError);
   }
+
+  // ChromeWindow bits.  Do NOT call these unless your window is in
+  // fact an nsGlobalChromeWindow.
+  uint16_t WindowState();
+  nsIBrowserDOMWindow* GetBrowserDOMWindow(mozilla::ErrorResult& aError);
+  void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserWindow,
+                           mozilla::ErrorResult& aError);
+  void GetAttention(mozilla::ErrorResult& aError);
+  void GetAttentionWithCycleCount(int32_t aCycleCount,
+                                  mozilla::ErrorResult& aError);
+  void SetCursor(const nsAString& aCursor, mozilla::ErrorResult& aError);
+  void Maximize(mozilla::ErrorResult& aError);
+  void Minimize(mozilla::ErrorResult& aError);
+  void Restore(mozilla::ErrorResult& aError);
+  void NotifyDefaultButtonLoaded(mozilla::dom::Element& aDefaultButton,
+                                 mozilla::ErrorResult& aError);
+  nsIMessageBroadcaster* GetMessageManager(mozilla::ErrorResult& aError);
+  void BeginWindowMove(nsDOMEvent& aMouseDownEvent,
+                       mozilla::dom::Element* aPanel,
+                       mozilla::ErrorResult& aError);
 
 protected:
   // Array of idle observers that are notified of idle events.
@@ -1564,6 +1586,18 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalChromeWindow,
                                            nsGlobalWindow)
+
+  using nsGlobalWindow::GetBrowserDOMWindow;
+  using nsGlobalWindow::SetBrowserDOMWindow;
+  using nsGlobalWindow::GetAttention;
+  using nsGlobalWindow::GetAttentionWithCycleCount;
+  using nsGlobalWindow::SetCursor;
+  using nsGlobalWindow::Maximize;
+  using nsGlobalWindow::Minimize;
+  using nsGlobalWindow::Restore;
+  using nsGlobalWindow::NotifyDefaultButtonLoaded;
+  using nsGlobalWindow::GetMessageManager;
+  using nsGlobalWindow::BeginWindowMove;
 
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   nsCOMPtr<nsIMessageBroadcaster> mMessageManager;

@@ -11,6 +11,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -81,7 +82,7 @@ public class TopSitesPanel extends HomeFragment {
     private TopSitesGridAdapter mGridAdapter;
 
     // List of top sites
-    private ListView mList;
+    private HomeListView mList;
 
     // Grid of top sites
     private TopSitesGridView mGrid;
@@ -198,6 +199,25 @@ public class TopSitesPanel extends HomeFragment {
 
                 // This item is a TwoLinePageRow, so we allow switch-to-tab.
                 mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+            }
+        });
+
+        mList.setContextMenuInfoFactory(new HomeListView.ContextMenuInfoFactory() {
+            @Override
+            public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
+                info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+                final int bookmarkIdCol = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
+                if (cursor.isNull(bookmarkIdCol)) {
+                    // If this is a combined cursor, we may get a history item without a
+                    // bookmark, in which case the bookmarks ID column value will be null.
+                    info.bookmarkId =  -1;
+                } else {
+                    info.bookmarkId = cursor.getInt(bookmarkIdCol);
+                }
+                return info;
             }
         });
 
@@ -722,7 +742,7 @@ public class TopSitesPanel extends HomeFragment {
             if (!c.moveToFirst()) {
                 return;
             }
-            
+
             final ArrayList<String> urls = new ArrayList<String>();
             int i = 1;
             do {

@@ -117,10 +117,11 @@ DownloadLegacyTransfer.prototype = {
       // The last file has been received, or the download failed.  Wait for the
       // associated Download object to be available before notifying.
       this._deferDownload.promise.then(download => {
-	// At this point, the hash has been set and we need to copy it to the
-	// DownloadSaver.
-	if (Components.isSuccessCode(aStatus)) {
+        // At this point, the hash has been set and we need to copy it to the
+        // DownloadSaver.
+        if (Components.isSuccessCode(aStatus)) {
           download.saver.setSha256Hash(this._sha256Hash);
+          download.saver.setSignatureInfo(this._signatureInfo);
         }
         download.saver.onTransferFinished(aRequest, aStatus);
       }).then(null, Cu.reportError);
@@ -242,6 +243,11 @@ DownloadLegacyTransfer.prototype = {
     this._sha256Hash = hash;
   },
 
+  setSignatureInfo: function (signatureInfo)
+  {
+    this._signatureInfo = signatureInfo;
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// Private methods and properties
 
@@ -268,6 +274,11 @@ DownloadLegacyTransfer.prototype = {
    * Save the SHA-256 hash in raw bytes of the downloaded file.
    */
   _sha256Hash: null,
+
+  /**
+   * Save the signature info in a serialized protobuf of the downloaded file.
+   */
+  _signatureInfo: null,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

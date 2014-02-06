@@ -127,6 +127,8 @@ public:
 
     static bool      GetClearingEntries();
 
+    static void      GetDiskCacheDirectory(nsIFile ** result);
+
     /**
      * Methods called by any cache classes
      */
