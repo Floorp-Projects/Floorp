@@ -4090,6 +4090,19 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
   }
 }
 
+/* static */ bool
+nsGlobalWindow::IsChromeWindow(JSContext* aCx, JSObject* aObj)
+{
+  // For now, have to deal with XPConnect objects here.
+  nsGlobalWindow* win;
+  nsresult rv = UNWRAP_OBJECT(Window, aObj, win);
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryWrapper(aCx, aObj);
+    win = static_cast<nsGlobalWindow*>(piWin.get());
+  }
+  return win->IsChromeWindow();
+}
+
 nsIDOMOfflineResourceList*
 nsGlobalWindow::GetApplicationCache(ErrorResult& aError)
 {

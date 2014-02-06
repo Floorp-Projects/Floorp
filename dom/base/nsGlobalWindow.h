@@ -475,6 +475,8 @@ public:
 
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
+  static bool IsChromeWindow(JSContext* /* unused */, JSObject* aObj);
+
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                     JS::Handle<jsid> aId,
                     JS::MutableHandle<JSPropertyDescriptor> aDesc);
