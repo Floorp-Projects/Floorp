@@ -2139,8 +2139,6 @@ class CGConstructorEnabled(CGAbstractMethod):
         if func:
             assert isinstance(func, list) and len(func) == 1
             conditions.append("%s(aCx, aObj)" % func[0])
-        if iface.getExtendedAttribute("PrefControlled"):
-            conditions.append("%s::PrefEnabled()" % self.descriptor.nativeType)
         availableIn = getAvailableInTestFunc(iface)
         if availableIn:
             conditions.append("%s(aCx, aObj)" % availableIn)
