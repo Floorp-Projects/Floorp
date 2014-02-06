@@ -4059,6 +4059,22 @@ pref("stagefright.disabled", false);
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
 pref("network.tcp.sendbuffer", 131072);
 #endif
+// TCP Keepalive
+pref("network.tcp.keepalive.enabled", true);
+// Default idle time before first TCP keepalive probe; same time for interval
+// between successful probes. Can be overridden in socket transport API.
+// Win, Linux and Mac.
+pref("network.tcp.keepalive.idle_time", 600); // seconds; 10 mins
+// Default timeout for retransmission of unack'd keepalive probes.
+// Win and Linux only; not configurable on Mac.
+#if defined(XP_UNIX) && !defined(XP_MACOSX) || defined(XP_WIN)
+pref("network.tcp.keepalive.retry_interval", 1); // seconds
+#endif
+// Default maximum probe retransmissions.
+// Linux only; not configurable on Win and Mac; fixed at 10 and 8 respectively.
+#ifdef XP_UNIX && !defined(XP_MACOSX)
+pref("network.tcp.keepalive.probe_count", 4);
+#endif
 
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
