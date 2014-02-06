@@ -3030,7 +3030,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     // -moz-fit-content and -moz-available enumerated widths compute intrinsic
     // widths just like auto.
     // For -moz-max-content and -moz-min-content, we handle them like
-    // specified widths, but ignore -moz-box-sizing.
+    // specified widths, but ignore box-sizing.
     boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   } else if (!styleWidth.ConvertsToLength() &&
              !(haveFixedMinWidth && haveFixedMaxWidth && maxw <= minw)) {

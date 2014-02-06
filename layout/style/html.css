@@ -247,7 +247,7 @@ table {
   margin-top: 0;
   margin-bottom: 0;
   /* XXXldb do we want this if we're border-collapse:collapse ? */
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   text-indent: 0;
 }
 
@@ -604,7 +604,7 @@ hr {
   margin: 0.5em auto 0.5em auto;
   color: gray;
   -moz-float-edge: margin-box;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 hr[size="1"] {
@@ -730,7 +730,7 @@ video > .caption-box {
   position: relative;
   overflow: hidden;
   padding: 1.5%;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
