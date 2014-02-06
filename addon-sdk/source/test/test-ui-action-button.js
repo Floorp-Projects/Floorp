@@ -21,7 +21,7 @@ function getWidget(buttonId, window = getMostRecentBrowserWindow()) {
   const { AREA_NAVBAR } = CustomizableUI;
 
   let widgets = CustomizableUI.getWidgetIdsInArea(AREA_NAVBAR).
-    filter((id) => id.startsWith('button--') && id.endsWith(buttonId));
+    filter((id) => id.startsWith('action-button--') && id.endsWith(buttonId));
 
   if (widgets.length === 0)
     throw new Error('Widget with id `' + id +'` not found.');
@@ -594,6 +594,7 @@ exports['test button click'] = function(assert, done) {
         then(done, assert.fail);
     });
   }).then(null, assert.fail);
+
 }
 
 exports['test button icon set'] = function(assert) {
