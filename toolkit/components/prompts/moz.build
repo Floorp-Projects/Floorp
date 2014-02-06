@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['src']
-TEST_DIRS += ['test']
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 JAR_MANIFESTS += ['jar.mn']

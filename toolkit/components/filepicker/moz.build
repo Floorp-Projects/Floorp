@@ -19,8 +19,8 @@ if CONFIG['MOZ_XUL'] and \
         EXTRA_PP_COMPONENTS += [
             'nsFilePicker.manifest',
         ]
-        DIRS += [
-            'test',
+        XPCSHELL_TESTS_MANIFESTS += [
+            'test/unit/xpcshell.ini',
         ]
         FINAL_LIBRARY = 'xul'
 
