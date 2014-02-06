@@ -73,7 +73,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::psm;
 
-#ifdef MOZ_LOGGING
+#ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nullptr;
 #endif
 
