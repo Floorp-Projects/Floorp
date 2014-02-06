@@ -190,5 +190,15 @@ class TestManifestParser(unittest.TestCase):
         missing = manifest.verifyDirectory(directory, extensions=('.js',))
         self.assertEqual(missing, (set([missing_test]), set()))
 
+    def test_just_defaults(self):
+        """Ensure a manifest with just a DEFAULT section exposes that data."""
+
+        parser = ManifestParser()
+        manifest = os.path.join(here, 'just-defaults.ini')
+        parser.read(manifest)
+        self.assertEqual(len(parser.tests), 0)
+        self.assertTrue(manifest in parser.manifest_defaults)
+        self.assertEquals(parser.manifest_defaults[manifest]['foo'], 'bar')
+
 if __name__ == '__main__':
     unittest.main()
