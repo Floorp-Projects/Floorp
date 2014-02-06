@@ -154,6 +154,12 @@ public:
     return mInner->SetSha256Hash(aHash);
   }
 
+  NS_IMETHODIMP SetSignatureInfo(nsIArray* aSignatureInfo)
+  {
+    NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
+    return mInner->SetSignatureInfo(aSignatureInfo);
+  }
+
 private:
   nsCOMPtr<nsIDownload> mInner;
 };

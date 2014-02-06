@@ -1611,6 +1611,19 @@ CacheFileIOManager::EnumerateEntryFiles(EEnumerateMode aMode,
   return NS_OK;
 }
 
+// static
+void CacheFileIOManager::GetCacheDirectory(nsIFile** result)
+{
+  *result = nullptr;
+
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  if (!ioMan)
+    return;
+
+  nsCOMPtr<nsIFile> file = ioMan->mCacheDirectory;
+  file.forget(result);
+}
+
 static nsresult
 TruncFile(PRFileDesc *aFD, uint32_t aEOF)
 {

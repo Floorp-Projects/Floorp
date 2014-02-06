@@ -277,7 +277,7 @@ mozNfc.prototype = {
     let detail = {
       "detail":sessionToken
     };
-    let event = new this._window.CustomEvent(peerEvent, this._wrap(detail);
+    let event = new this._window.CustomEvent(peerEvent, this._wrap(detail));
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 

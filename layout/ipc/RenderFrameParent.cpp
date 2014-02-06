@@ -521,6 +521,24 @@ public:
                         aFrameMetrics));
   }
 
+  virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
+  {
+    if (MessageLoop::current() != mUILoop) {
+      // We have to send this message from the "UI thread" (main
+      // thread).
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &RemoteContentController::AcknowledgeScrollUpdate,
+                          aScrollId, aScrollGeneration));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+    }
+  }
+
   virtual void HandleDoubleTap(const CSSIntPoint& aPoint,
                                int32_t aModifiers) MOZ_OVERRIDE
   {

@@ -233,6 +233,17 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 }
 
 void
+APZController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                       const uint32_t& aScrollGeneration)
+{
+#ifdef DEBUG_CONTROLLER
+  WinUtils::Log("APZController::AcknowledgeScrollUpdate scrollid=%I64d gen=%lu",
+    aScrollId, aScrollGeneration);
+#endif
+  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+}
+
+void
 APZController::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
 }

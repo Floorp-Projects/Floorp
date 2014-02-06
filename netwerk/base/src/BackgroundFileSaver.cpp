@@ -5,20 +5,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "pk11pub.h"
+#include "prlog.h"
 #include "ScopedNSSTypes.h"
 #include "secoidt.h"
 
+#include "nsIAsyncInputStream.h"
 #include "nsIFile.h"
+#include "nsIMutableArray.h"
 #include "nsIPipe.h"
+#include "nsIX509Cert.h"
+#include "nsIX509CertDB.h"
+#include "nsIX509CertList.h"
+#include "nsCOMArray.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 
 #include "BackgroundFileSaver.h"
 #include "mozilla/Telemetry.h"
-#include "nsIAsyncInputStream.h"
+
+#ifdef XP_WIN
+#include <windows.h>
+#include <softpub.h>
+#include <wintrust.h>
+
+#pragma comment(lib, "wintrust.lib")
+#endif // XP_WIN
 
 namespace mozilla {
 namespace net {
+
+// NSPR_LOG_MODULES=BackgroundFileSaver:5
+#if defined(PR_LOGGING)
+PRLogModuleInfo *BackgroundFileSaver::prlog = nullptr;
+#define LOG(args) PR_LOG(BackgroundFileSaver::prlog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(BackgroundFileSaver::prlog, 4)
+#else
+#define LOG(args)
+#define LOG_ENABLED() (false)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
@@ -88,14 +112,21 @@ BackgroundFileSaver::BackgroundFileSaver()
 , mRenamedTargetKeepPartial(false)
 , mAsyncCopyContext(nullptr)
 , mSha256Enabled(false)
+, mSignatureInfoEnabled(false)
 , mActualTarget(nullptr)
 , mActualTargetKeepPartial(false)
 , mDigestContext(nullptr)
 {
+#if defined(PR_LOGGING)
+  if (!prlog)
+    prlog = PR_NewLogModule("BackgroundFileSaver");
+#endif
+  LOG(("Created BackgroundFileSaver [this = %p]", this));
 }
 
 BackgroundFileSaver::~BackgroundFileSaver()
 {
+  LOG(("Destroying BackgroundFileSaver [this = %p]", this));
   nsNSSShutDownPreventionLock lock;
   if (isAlreadyShutDown()) {
     return;
@@ -231,12 +262,12 @@ BackgroundFileSaver::EnableSha256()
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can't enable sha256 or initialize NSS off the main thread");
-  mSha256Enabled = true;
   // Ensure Personal Security Manager is initialized. This is required for
   // PK11_* operations to work.
   nsresult rv;
   nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+  mSha256Enabled = true;
   return NS_OK;
 }
 
@@ -250,6 +281,37 @@ BackgroundFileSaver::GetSha256Hash(nsACString& aHash)
     return NS_ERROR_NOT_AVAILABLE;
   }
   aHash = mSha256;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundFileSaver::EnableSignatureInfo()
+{
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Can't enable signature extraction off the main thread");
+  // Ensure Personal Security Manager is initialized.
+  nsresult rv;
+  nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mSignatureInfoEnabled = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundFileSaver::GetSignatureInfo(nsIArray** aSignatureInfo)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Can't inspect signature off the main thread");
+  // We acquire a lock because mSignatureInfo is written on the worker thread.
+  MutexAutoLock lock(mLock);
+  if (!mComplete || !mSignatureInfoEnabled) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsCOMPtr<nsIMutableArray> sigArray = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  for (int i = 0; i < mSignatureInfo.Count(); ++i) {
+    sigArray->AppendElement(mSignatureInfo[i], false);
+  }
+  *aSignatureInfo = sigArray;
+  NS_IF_ADDREF(*aSignatureInfo);
   return NS_OK;
 }
 
@@ -679,6 +741,19 @@ BackgroundFileSaver::CheckCompletion()
     }
   }
 
+  // Compute the signature of the binary. ExtractSignatureInfo doesn't do
+  // anything on non-Windows platforms except return an empty nsIArray.
+  if (!failed && mActualTarget) {
+    nsString filePath;
+    mActualTarget->GetTarget(filePath);
+    nsresult rv = ExtractSignatureInfo(filePath);
+    if (NS_FAILED(rv)) {
+      LOG(("Unable to extract signature information [this = %p].", this));
+    } else {
+      LOG(("Signature extraction success! [this = %p]", this));
+    }
+  }
+
   // Post an event to notify that the operation completed.
   nsCOMPtr<nsIRunnable> event =
     NS_NewRunnableMethod(this, &BackgroundFileSaver::NotifySaveComplete);
@@ -738,6 +813,124 @@ BackgroundFileSaver::NotifySaveComplete()
     sTelemetryMaxThreadCount = 0;
   }
 
+  return NS_OK;
+}
+
+nsresult
+BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath)
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Cannot extract signature on main thread");
+
+  nsNSSShutDownPreventionLock nssLock;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  {
+    MutexAutoLock lock(mLock);
+    if (!mSignatureInfoEnabled) {
+      return NS_OK;
+    }
+  }
+  nsresult rv;
+  nsCOMPtr<nsIX509CertDB> certDB = do_GetService(NS_X509CERTDB_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+#ifdef XP_WIN
+  // Setup the file to check.
+  WINTRUST_FILE_INFO fileToCheck = {0};
+  fileToCheck.cbStruct = sizeof(WINTRUST_FILE_INFO);
+  fileToCheck.pcwszFilePath = filePath.Data();
+  fileToCheck.hFile = nullptr;
+  fileToCheck.pgKnownSubject = nullptr;
+
+  // We want to check it is signed and trusted.
+  WINTRUST_DATA trustData = {0};
+  trustData.cbStruct = sizeof(trustData);
+  trustData.pPolicyCallbackData = nullptr;
+  trustData.pSIPClientData = nullptr;
+  trustData.dwUIChoice = WTD_UI_NONE;
+  trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
+  trustData.dwUnionChoice = WTD_CHOICE_FILE;
+  trustData.dwStateAction = WTD_STATEACTION_VERIFY;
+  trustData.hWVTStateData = nullptr;
+  trustData.pwszURLReference = nullptr;
+  // Disallow revocation checks over the network
+  trustData.dwProvFlags = WTD_CACHE_ONLY_URL_RETRIEVAL;
+  // no UI
+  trustData.dwUIContext = 0;
+  trustData.pFile = &fileToCheck;
+
+  // The WINTRUST_ACTION_GENERIC_VERIFY_V2 policy verifies that the certificate
+  // chains up to a trusted root CA and has appropriate permissions to sign
+  // code.
+  GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+  // Check if the file is signed by something that is trusted. If the file is
+  // not signed, this is a no-op.
+  LONG ret = WinVerifyTrust(nullptr, &policyGUID, &trustData);
+  CRYPT_PROVIDER_DATA* cryptoProviderData = nullptr;
+  // According to the Windows documentation, we should check against 0 instead
+  // of ERROR_SUCCESS, which is an HRESULT.
+  if (ret == 0) {
+    cryptoProviderData = WTHelperProvDataFromStateData(trustData.hWVTStateData);
+  }
+  if (cryptoProviderData) {
+    // Lock because signature information is read on the main thread.
+    MutexAutoLock lock(mLock);
+    LOG(("Downloaded trusted and signed file [this = %p].", this));
+    // A binary may have multiple signers. Each signer may have multiple certs
+    // in the chain.
+    for (DWORD i = 0; i < cryptoProviderData->csSigners; ++i) {
+      const CERT_CHAIN_CONTEXT* certChainContext =
+        cryptoProviderData->pasSigners[i].pChainContext;
+      if (!certChainContext) {
+        break;
+      }
+      for (DWORD j = 0; j < certChainContext->cChain; ++j) {
+        const CERT_SIMPLE_CHAIN* certSimpleChain =
+          certChainContext->rgpChain[j];
+        if (!certSimpleChain) {
+          break;
+        }
+        nsCOMPtr<nsIX509CertList> nssCertList =
+          do_CreateInstance(NS_X509CERTLIST_CONTRACTID);
+        if (!nssCertList) {
+          break;
+        }
+        bool extractionSuccess = true;
+        for (DWORD k = 0; k < certSimpleChain->cElement; ++k) {
+          CERT_CHAIN_ELEMENT* certChainElement = certSimpleChain->rgpElement[k];
+          if (certChainElement->pCertContext->dwCertEncodingType !=
+            X509_ASN_ENCODING) {
+              continue;
+          }
+          nsCOMPtr<nsIX509Cert> nssCert = nullptr;
+          rv = certDB->ConstructX509(
+            reinterpret_cast<char *>(
+              certChainElement->pCertContext->pbCertEncoded),
+            certChainElement->pCertContext->cbCertEncoded,
+            getter_AddRefs(nssCert));
+          if (!nssCert) {
+            extractionSuccess = false;
+            LOG(("Couldn't create NSS cert [this = %p]", this));
+            break;
+          }
+          nssCertList->AddCert(nssCert);
+          nsString subjectName;
+          nssCert->GetSubjectName(subjectName);
+          LOG(("Adding cert %s [this = %p]",
+               NS_ConvertUTF16toUTF8(subjectName).get(), this));
+        }
+        if (extractionSuccess) {
+          mSignatureInfo.AppendObject(nssCertList);
+        }
+      }
+    }
+    // Free the provider data if cryptoProviderData is not null.
+    trustData.dwStateAction = WTD_STATEACTION_CLOSE;
+    WinVerifyTrust(nullptr, &policyGUID, &trustData);
+  } else {
+    LOG(("Downloaded unsigned or untrusted file [this = %p].", this));
+  }
+#endif
   return NS_OK;
 }
 
@@ -1078,7 +1271,6 @@ DigestOutputStream::IsNonBlocking(bool *retval)
 {
   return mOutputStream->IsNonBlocking(retval);
 }
-
 
 } // namespace net
 } // namespace mozilla
