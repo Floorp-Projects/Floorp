@@ -21,12 +21,17 @@
     const FLAG_CLEAR_ALL = pluginHostIface.FLAG_CLEAR_ALL;
     const FLAG_CLEAR_CACHE = pluginHostIface.FLAG_CLEAR_CACHE;
 
-    // Make sure clearing by timerange is supported.
     var p = document.getElementById("plugin1");
-    p.setSitesWithDataCapabilities(true);
 
-    ok(PluginUtils.withTestPlugin(runTest), "Test plugin found");
-    SimpleTest.finish();
+    // Since we're running with chrome permissions, accessing the plugin wont
+    // synchronously spawn it -- wait for the async spawning to finish.
+    SimpleTest.executeSoon(function() {
+      // Make sure clearing by timerange is supported.
+      p.setSitesWithDataCapabilities(true);
+
+      ok(PluginUtils.withTestPlugin(runTest), "Test plugin found");
+      SimpleTest.finish();
+    });
 
     function stored(needles) {
       var something = pluginHost.siteHasData(this.pluginTag, null);
