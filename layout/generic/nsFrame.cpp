@@ -1986,7 +1986,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if (useStickyPosition) {
     resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, &resultList));
+        new (aBuilder) nsDisplayStickyPosition(aBuilder, this, this,
+                                               &resultList));
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap 

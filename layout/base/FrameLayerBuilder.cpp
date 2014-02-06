@@ -571,8 +571,6 @@ protected:
    * has a displayport. Updates *aVisibleRegion to be the intersection of
    * aDrawRegion and the displayport, and updates *aIsSolidColorInVisibleRegion
    * (if non-null) to false if the visible region grows.
-   * This can return the actual viewport frame for layers whose display items
-   * are directly on the viewport (e.g. background-attachment:fixed backgrounds).
    */
   const nsIFrame* FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryRoot,
                                                 const nsIntRegion& aDrawRegion,
@@ -1628,44 +1626,31 @@ ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryR
                                               nsIntRegion* aVisibleRegion,
                                               bool* aIsSolidColorInVisibleRegion)
 {
-  nsPresContext* presContext = mContainerFrame->PresContext();
-  nsIFrame* viewport = presContext->PresShell()->GetRootFrame();
-  const nsIFrame* result = nullptr;
+  nsIFrame *viewport = mContainerFrame->PresContext()->PresShell()->GetRootFrame();
+
+  // Viewports with no fixed-pos frames are not relevant.
+  if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
+    return nullptr;
+  }
   nsRect displayPort;
-
-  if (viewport == aAnimatedGeometryRoot &&
-      nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort)) {
-    // Probably a background-attachment:fixed item
-    result = viewport;
-  } else {
-    // Viewports with no fixed-pos frames are not relevant.
-    if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
-      return nullptr;
-    }
-    for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
-      if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f, &displayPort)) {
-        result = f;
-        break;
+  for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
+    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f, &displayPort)) {
+      // Display ports are relative to the viewport, convert it to be relative
+      // to our reference frame.
+      displayPort += viewport->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      nsIntRegion newVisibleRegion;
+      newVisibleRegion.And(ScaleToOutsidePixels(displayPort, false),
+                           aDrawRegion);
+      if (!aVisibleRegion->Contains(newVisibleRegion)) {
+        if (aIsSolidColorInVisibleRegion) {
+          *aIsSolidColorInVisibleRegion = false;
+        }
+        *aVisibleRegion = newVisibleRegion;
       }
-    }
-    if (!result) {
-      return nullptr;
+      return f;
     }
   }
-
-  // Display ports are relative to the viewport, convert it to be relative
-  // to our reference frame.
-  displayPort += viewport->GetOffsetToCrossDoc(mContainerReferenceFrame);
-  nsIntRegion newVisibleRegion;
-  newVisibleRegion.And(ScaleToOutsidePixels(displayPort, false),
-                       aDrawRegion);
-  if (!aVisibleRegion->Contains(newVisibleRegion)) {
-    if (aIsSolidColorInVisibleRegion) {
-      *aIsSolidColorInVisibleRegion = false;
-    }
-    *aVisibleRegion = newVisibleRegion;
-  }
-  return result;
+  return nullptr;
 }
 
 void
@@ -1677,31 +1662,19 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
     return;
   }
 
+  nsIFrame* viewportFrame = aFixedPosFrame->GetParent();
   nsPresContext* presContext = aFixedPosFrame->PresContext();
 
-  const nsIFrame* viewportFrame = aFixedPosFrame->GetParent();
-  // anchorRect will be in the container's coordinate system (aLayer's parent layer).
-  // This is the same as the display items' reference frame.
-  nsRect anchorRect;
-  if (viewportFrame) {
-    // Fixed position frames are reflowed into the scroll-port size if one has
-    // been set.
-    if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
-      anchorRect.SizeTo(presContext->PresShell()->GetScrollPositionClampingScrollPortSize());
-    } else {
-      anchorRect.SizeTo(viewportFrame->GetSize());
-    }
-  } else {
-    // A display item directly attached to the viewport.
-    // For background-attachment:fixed items, the anchor point is always the
-    // top-left of the viewport currently.
-    viewportFrame = aFixedPosFrame;
+  // Fixed position frames are reflowed into the scroll-port size if one has
+  // been set.
+  nsSize viewportSize = viewportFrame->GetSize();
+  if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+    viewportSize = presContext->PresShell()->
+      GetScrollPositionClampingScrollPortSize();
   }
-  // The anchorRect top-left is always the viewport top-left.
-  anchorRect.MoveTo(viewportFrame->GetOffsetToCrossDoc(mContainerReferenceFrame));
 
   nsLayoutUtils::SetFixedPositionLayerData(aLayer,
-      viewportFrame, anchorRect, aFixedPosFrame, presContext, mParameters);
+      viewportFrame, viewportSize, aFixedPosFrame, presContext, mParameters);
 }
 
 void
@@ -2063,14 +2036,6 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     thebesLayerData->mLayer = layer;
     thebesLayerData->mAnimatedGeometryRoot = aActiveScrolledRoot;
     thebesLayerData->mReferenceFrame = aItem->ReferenceFrame();
-    if (!aActiveScrolledRoot->GetParent() &&
-        nsLayoutUtils::ViewportHasDisplayPort(aActiveScrolledRoot->PresContext())) {
-      // The active scrolled root is the viewport, so this is background-attachment:fixed
-      // or fixed-pos elements or something like that. Async scrolling may
-      // do magic things to move these layers, so don't allow any regular content
-      // to be pushed to layers below them; that might turn out to be incorrect.
-      thebesLayerData->SetAllDrawingAbove();
-    }
   } else {
     thebesLayerData = mThebesLayerDataStack[lowestUsableLayerWithScrolledRoot];
     layer = thebesLayerData->mLayer;
