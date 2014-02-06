@@ -4,7 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+
+if not CONFIG['MOZ_JSDOWNLOADS']:
+    TEST_DIRS += ['test/browser']
+    XPCSHELL_TESTS_MANIFESTS += ['test/schema_migration/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsIApplicationReputation.idl',
