@@ -19,5 +19,10 @@
         "hidden": true,
         "value": 5,
         "title": "hidden-int"
-    }]
+    }, {
+        "name": "sayHello",
+        "type": "control",
+        "label": "Click me!",
+        "title": "hello"
+  }]
 }
