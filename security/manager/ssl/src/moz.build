@@ -90,6 +90,8 @@ UNIFIED_SOURCES += [
     'md4.c',
 ]
 
+FAIL_ON_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
