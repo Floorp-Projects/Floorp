@@ -62,6 +62,13 @@ let devtoolsWidgetPanel = {
         Services.obs.addObserver(this, 'remote-browser-frame-pending', false);
         Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
         Services.obs.addObserver(this, 'message-manager-disconnect', false);
+
+        let systemapp = document.querySelector('#systemapp').contentWindow;
+        let frames = systemapp.document.querySelectorAll('iframe[mozapp]');
+        for (let frame of frames) {
+          let manifestURL = frame.getAttribute("mozapp");
+          this.trackApp(manifestURL);
+        }
       });
     });
   },

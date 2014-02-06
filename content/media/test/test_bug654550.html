@@ -40,33 +40,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
 
   }
 
-  function ontimeupdate(event) {
+  function ontimeupdate_statsEnabled(event) {
     var v = event.target;
-    if (SpecialPowers.getBoolPref("media.video_stats.enabled")) {
-      checkStats(v, true);
-      SpecialPowers.setBoolPref("media.video_stats.enabled", false);
-    } else {
-      checkStats(v, false);
-      SpecialPowers.setBoolPref("media.video_stats.enabled", true);
-      v.removeEventListener("timeupdate", ontimeupdate);
-      SpecialPowers.clearUserPref("media.video_stats.enabled");
-      removeNodeAndSource(v);
-      manager.finished(v.token);
-    }
+    v.removeEventListener('timeupdate', ontimeupdate_statsEnabled, false);
+    checkStats(v, true);
+    SpecialPowers.popPrefEnv(
+      function() {
+        v.addEventListener("timeupdate", ontimeupdate_statsDisabled);
+    });
   }
 
+  function ontimeupdate_statsDisabled(event) {
+    var v = event.target;
+    v.removeEventListener('timeupdate', ontimeupdate_statsDisabled, false);
+    checkStats(v, false);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
 
   function startTest(test, token) {
     var v = document.createElement('video');
     v.token = token;
     v.src = test.name;
     manager.started(token);
-    v.play();
-    SpecialPowers.setBoolPref("media.video_stats.enabled", true);
-    v.addEventListener("timeupdate", ontimeupdate);
+    SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", true]]},
+      function() {
+        v.play();
+        v.addEventListener("timeupdate", ontimeupdate_statsEnabled);
+    });
   }
 
-  manager.runTests(gVideoTests, startTest);
+  SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", false]]},
+    function() {
+      manager.runTests(gVideoTests, startTest);
+  });
 
 </script>
 </pre>

@@ -375,7 +375,7 @@
        let result = UnixFile.mkdir(path, omode);
        if (result == -1) {
          if ((!("ignoreExisting" in options) || options.ignoreExisting) &&
-             ctypes.errno == Const.EEXIST) {
+             (ctypes.errno == Const.EEXIST || ctypes.errno == Const.EISDIR)) {
            return;
          }
          throw new File.Error("makeDir");

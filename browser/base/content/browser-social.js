@@ -1032,6 +1032,9 @@ let SocialStatusWidgetListener = {
 SocialStatus = {
   populateToolbarPalette: function() {
     this._toolbarHelper.populatePalette();
+
+    for (let provider of Social.providers)
+      this.updateButton(provider.origin);
   },
 
   removeProvider: function(origin) {

@@ -260,20 +260,22 @@ exports.testTabLocation = function(assert, done) {
 
 // TEST: tab.close()
 exports.testTabClose = function(assert, done) {
-  let url = "data:text/html;charset=utf-8,foo";
+  let testName = "testTabClose";
+  let url = "data:text/html;charset=utf-8," + testName;
 
   assert.notEqual(tabs.activeTab.url, url, "tab is not the active tab");
-  tabs.on('ready', function onReady(tab) {
-    tabs.removeListener('ready', onReady);
+  tabs.once('ready', function onReady(tab) {
     assert.equal(tabs.activeTab.url, tab.url, "tab is now the active tab");
+    assert.equal(url, tab.url, "tab url is the test url");
     let secondOnCloseCalled = false;
 
     // Bug 699450: Multiple calls to tab.close should not throw
     tab.close(function() secondOnCloseCalled = true);
     try {
       tab.close(function () {
+        assert.notEqual(tabs.activeTab.url, url, "tab is no longer the active tab");
         assert.ok(secondOnCloseCalled,
-          "The immediate second call to tab.close gots its callback fired");
+          "The immediate second call to tab.close happened");
         assert.notEqual(tabs.activeTab.url, url, "tab is no longer the active tab");
 
         done();
@@ -282,7 +284,6 @@ exports.testTabClose = function(assert, done) {
     catch(e) {
       assert.fail("second call to tab.close() thrown an exception: " + e);
     }
-    assert.notEqual(tabs.activeTab.url, url, "tab is no longer the active tab");
   });
 
   tabs.open(url);
