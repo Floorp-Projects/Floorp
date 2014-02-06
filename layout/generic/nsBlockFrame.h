@@ -276,11 +276,11 @@ public:
    */
   virtual bool DrainSelfOverflowList() MOZ_OVERRIDE;
 
-  virtual nsresult StealFrame(nsIFrame*      aChild,
-                              bool           aForceNormal = false) MOZ_OVERRIDE;
+  virtual nsresult StealFrame(nsIFrame* aChild,
+                              bool      aForceNormal = false) MOZ_OVERRIDE;
 
-  virtual void DeleteNextInFlowChild(nsIFrame*      aNextInFlow,
-                                     bool           aDeletingEmptyFrames) MOZ_OVERRIDE;
+  virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+                                     bool      aDeletingEmptyFrames) MOZ_OVERRIDE;
 
   /**
     * This is a special method that allows a child class of nsBlockFrame to
