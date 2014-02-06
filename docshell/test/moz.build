@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['chrome', 'navigation']
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
@@ -13,8 +11,14 @@ if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += [
+    'chrome/mochitest.ini',
     'iframesandbox/mochitest.ini',
-    'mochitest.ini'
+    'mochitest.ini',
+    'navigation/mochitest.ini',
 ]
-BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'browser/browser.ini',
+    'navigation/browser.ini',
+]
 
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']

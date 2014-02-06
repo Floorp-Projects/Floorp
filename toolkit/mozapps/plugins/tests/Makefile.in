@@ -4,14 +4,6 @@
 
 TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
-MOCHITEST_BROWSER_FILES = \
-  $(filter disabled-for-leaks--bug-751100, browser_bug435788.js) \
-  pfs_bug435788_1.rdf \
-  pfs_bug435788_2.rdf \
-  GoodExtension.xpi \
-  BadExtension.xpi \
-  $(NULL)
-
 PROGRAMS_DEST = $(TESTROOT)
 
 include $(topsrcdir)/config/rules.mk
