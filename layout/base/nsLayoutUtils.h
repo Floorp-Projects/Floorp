@@ -1075,9 +1075,9 @@ public:
    * @param aFrame Frame whose (min-/max-/)width is being computed
    * @param aContainingBlockWidth Width of aFrame's containing block.
    * @param aContentEdgeToBoxSizing The sum of any left/right padding and
-   *          border that goes inside the rect chosen by -moz-box-sizing.
+   *          border that goes inside the rect chosen by box-sizing.
    * @param aBoxSizingToMarginEdge The sum of any left/right padding, border,
-   *          and margin that goes outside the rect chosen by -moz-box-sizing.
+   *          and margin that goes outside the rect chosen by box-sizing.
    * @param aCoord The width value to compute.
    */
   static nscoord ComputeWidthValue(

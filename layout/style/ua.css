@@ -16,12 +16,12 @@
 
 *|*::-moz-table {
   display: table !important;
-  -moz-box-sizing: border-box; /* XXX do we really want this? */
+  box-sizing: border-box; /* XXX do we really want this? */
 }
 
 *|*::-moz-inline-table {
   display: inline-table !important;
-  -moz-box-sizing: border-box; /* XXX do we really want this? */
+  box-sizing: border-box; /* XXX do we really want this? */
 }
 
 *|*::-moz-table-outer {
@@ -248,7 +248,7 @@
   max-width: none !important;
   min-height: 0 !important;
   max-height: none !important;
-  -moz-box-sizing: border-box !important; 
+  box-sizing: border-box !important;
 }
 
 /* If there is a full-screen element that is not the root then
