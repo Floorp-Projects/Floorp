@@ -696,7 +696,7 @@ SpeechRecognition::SetServiceURI(const nsAString& aArg, ErrorResult& aRv)
 void
 SpeechRecognition::Start(ErrorResult& aRv)
 {
-  if (!mCurrentState == STATE_IDLE) {
+  if (mCurrentState != STATE_IDLE) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
