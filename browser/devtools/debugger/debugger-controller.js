@@ -1188,6 +1188,12 @@ SourceScripts.prototype = {
       return;
     }
 
+    if (aResponse.sources.length === 0) {
+      DebuggerView.Sources.emptyText = L10N.getStr("noSourcesText");
+      window.emit(EVENTS.SOURCES_ADDED);
+      return;
+    }
+
     // Add all the sources in the debugger view sources container.
     for (let source of aResponse.sources) {
       // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
