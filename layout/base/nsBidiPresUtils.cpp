@@ -435,7 +435,7 @@ SplitInlineAncestors(nsIFrame* aParent,
 
       // Reparent views as necessary
       nsresult rv;
-      rv = nsContainerFrame::ReparentFrameViewList(presContext, tail, parent, newParent);
+      rv = nsContainerFrame::ReparentFrameViewList(tail, parent, newParent);
       if (NS_FAILED(rv)) {
         return rv;
       }

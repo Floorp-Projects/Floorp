@@ -256,7 +256,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
       if (kidNextInFlow) {
         // Remove all of the childs next-in-flows
         static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
-          ->DeleteNextInFlowChild(aPresContext, kidNextInFlow, true);
+          ->DeleteNextInFlowChild(kidNextInFlow, true);
       }
     }
     else {
@@ -264,7 +264,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
       // have one.
       if (!IsFloating()) {
         nsIFrame* nextInFlow;
-        rv = CreateNextInFlow(aPresContext, kid, nextInFlow);
+        rv = CreateNextInFlow(kid, nextInFlow);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -272,7 +272,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
         // And then push it to our overflow list
         const nsFrameList& overflow = mFrames.RemoveFramesAfter(kid);
         if (overflow.NotEmpty()) {
-          SetOverflowFrames(aPresContext, overflow);
+          SetOverflowFrames(overflow);
         }
       } else if (!kid->GetNextInFlow()) {
         // For floating first letter frames (if a continuation wasn't already
@@ -353,8 +353,8 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
 
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      nsContainerFrame::ReparentFrameViewList(aPresContext, *overflowFrames,
-                                              prevInFlow, this);
+      nsContainerFrame::ReparentFrameViewList(*overflowFrames, prevInFlow,
+                                              this);
       mFrames.InsertFrames(this, nullptr, *overflowFrames);
     }
   }
