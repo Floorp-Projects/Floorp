@@ -489,14 +489,11 @@ MarionetteServerConnection.prototype = {
    */
 
   /**
-   * Create a new session. This creates a new BrowserObj.
+   * Create a new session. This creates a BrowserObj.
    *
-   * In a desktop environment, this opens a new browser with
-   * "about:blank" which subsequent commands will be sent to.
+   * In a desktop environment, this opens a new 'about:blank' tab for
+   * the client to test in.
    *
-   * This will send a hash map of supported capabilities to the client
-   * as part of the Marionette:register IPC command in the
-   * receiveMessage callback when a new browser is created.
    */
   newSession: function MDA_newSession() {
     this.command_id = this.getCommandId();
@@ -510,27 +507,25 @@ MarionetteServerConnection.prototype = {
       if (!win ||
           (appName == "Firefox" && !win.gBrowser) ||
           (appName == "Fennec" && !win.BrowserApp)) {
-        checkTimer.initWithCallback(waitForWindow.bind(this), 100,
-                                    Ci.nsITimer.TYPE_ONE_SHOT);
+        checkTimer.initWithCallback(waitForWindow.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       }
       else {
         this.startBrowser(win, true);
       }
     }
 
+
     if (!Services.prefs.getBoolPref("marionette.contentListener")) {
       waitForWindow.call(this);
     }
     else if ((appName != "Firefox") && (this.curBrowser == null)) {
-      // If there is a content listener, then we just wake it up
+      //if there is a content listener, then we just wake it up
       this.addBrowser(this.getCurrentWindow());
-      this.curBrowser.startSession(false, this.getCurrentWindow(),
-                                   this.whenBrowserStarted);
+      this.curBrowser.startSession(false, this.getCurrentWindow(), this.whenBrowserStarted);
       this.messageManager.broadcastAsyncMessage("Marionette:restart", {});
     }
     else {
-      this.sendError("Session already running", 500, null,
-                     this.command_id);
+      this.sendError("Session already running", 500, null, this.command_id);
     }
     this.switchToGlobalMessageManager();
   },
@@ -541,28 +536,22 @@ MarionetteServerConnection.prototype = {
     let rotatable = appName == "B2G" ? true : false;
 
     let value = {
-      'appBuildId' : Services.appinfo.appBuildID,
-      'XULappId' : Services.appinfo.ID,
-      'cssSelectorsEnabled': true,
-      'browserName': appName,
-      'handlesAlerts': false,
-      'javascriptEnabled': true,
-      'nativeEvents': false,
-      'platform': Services.appinfo.OS,
-      'platformName': Services.appinfo.OS,
-      'platformVersion': Services.appinfo.platformVersion,
-      'secureSsl': false,
-      'device': qemu == "1" ? "qemu" : (!device ? "desktop" : device),
-      'rotatable': rotatable,
-      'takesScreenshot': true,
-      'takesElementScreenshot': true,
-      'version': Services.appinfo.version
+          'appBuildId' : Services.appinfo.appBuildID,
+          'XULappId' : Services.appinfo.ID,
+          'cssSelectorsEnabled': true,
+          'browserName': appName,
+          'handlesAlerts': false,
+          'javascriptEnabled': true,
+          'nativeEvents': false,
+          'platformName': Services.appinfo.OS,
+          'platformVersion': Services.appinfo.platformVersion,
+          'secureSsl': false,
+          'device': qemu == "1" ? "qemu" : (!device ? "desktop" : device),
+          'rotatable': rotatable,
+          'takesScreenshot': true,
+          'takesElementScreenshot': true,
+          'version': Services.appinfo.version
     };
-
-    // eideticker (bug 965297) and mochitest (bug 965304)
-    // compatibility
-    if (appName == "B2G")
-      value.b2g = true;
 
     this.sendResponse(value, this.command_id);
   },
@@ -2398,7 +2387,7 @@ MarionetteServerConnection.prototype = {
             return;
           }
           if (this.curBrowser.newSession) {
-            this.getSessionCapabilities();
+            this.sendResponse(reg.id, this.newSessionCommandId);
             this.newSessionCommandId = null;
           }
         }
