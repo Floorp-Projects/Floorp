@@ -207,7 +207,8 @@ SocialUI = {
   _updateActiveUI: function SocialUI_updateActiveUI() {
     // The "active" UI isn't dependent on there being a provider, just on
     // social being "active" (but also chromeless/PB)
-    let enabled = Social.providers.length > 0 && !this._chromeless &&
+    let providers = [p for (p of Social.providers) if (p.sidebarURL)];
+    let enabled = providers.length > 0 && !this._chromeless &&
                   !PrivateBrowsingUtils.isWindowPrivate(window);
     let broadcaster = document.getElementById("socialActiveBroadcaster");
     broadcaster.hidden = !enabled;
@@ -881,7 +882,9 @@ SocialToolbar = {
   // Note: this doesn't actually handle hiding the toolbar button,
   // socialActiveBroadcaster is responsible for that.
   _updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
-    let socialEnabled = SocialUI.enabled;
+    // toolbar button should only show if we have providers with sidebars
+    let providers = [p for (p of Social.providers) if (p.sidebarURL)];
+    let socialEnabled = SocialUI.enabled && providers.length > 0;
     for (let className of ["social-statusarea-separator", "social-statusarea-user"]) {
       for (let element of document.getElementsByClassName(className))
         element.hidden = !socialEnabled;
@@ -1174,7 +1177,7 @@ SocialToolbar = {
       menu.removeChild(providerMenuSep.previousSibling);
     }
     // only show a selection if enabled and there is more than one
-    let providers = [p for (p of Social.providers) if (p.workerURL || p.sidebarURL)];
+    let providers = [p for (p of Social.providers) if (p.sidebarURL)];
     if (providers.length < 2) {
       providerMenuSep.hidden = true;
       return;
