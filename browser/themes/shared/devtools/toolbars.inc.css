@@ -67,13 +67,17 @@
 .theme-light .devtools-toolbarbutton[open=true]:hover,
 .theme-light .devtools-toolbarbutton[open=true]:hover:active,
 .theme-light .devtools-toolbarbutton[checked=true],
-.theme-light .devtools-toolbarbutton[checked=true]:hover,
-.theme-light .devtools-toolbarbutton[checked=true]:hover:active  {
+.theme-light .devtools-toolbarbutton[checked=true]:hover  {
   background: #ddd;
 }
 
 .theme-light .devtools-toolbarbutton:hover {
   background: #eee;
+}
+
+.theme-light .devtools-toolbarbutton:hover:active,
+.theme-light .devtools-toolbarbutton[checked=true]:hover:active {
+  background: #e8e8e8;
 }
 
 .theme-light .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
