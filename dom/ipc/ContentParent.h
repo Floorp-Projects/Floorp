@@ -327,10 +327,6 @@ private:
     AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                             base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    PBackgroundParent*
-    AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
-                           MOZ_OVERRIDE;
-
     virtual bool RecvGetProcessAttributes(uint64_t* aId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;

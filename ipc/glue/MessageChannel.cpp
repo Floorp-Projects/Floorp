@@ -428,10 +428,8 @@ MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
         // :TODO: Sort out Close() on this side racing with Close() on the
         // other side
         mChannelState = ChannelClosing;
-        if (LoggingEnabled()) {
-            printf("NOTE: %s process received `Goodbye', closing down\n",
-                   (mSide == ChildSide) ? "child" : "parent");
-        }
+        printf("NOTE: %s process received `Goodbye', closing down\n",
+               (mSide == ChildSide) ? "child" : "parent");
         return true;
     }
     return false;
@@ -1733,3 +1731,4 @@ MessageChannel::DumpInterruptStack(const char* const pfx) const
 
 } // ipc
 } // mozilla
+

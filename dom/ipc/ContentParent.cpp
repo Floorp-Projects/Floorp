@@ -39,8 +39,6 @@
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "SmsParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -141,11 +139,6 @@ using namespace mozilla::system;
 #include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
 
-#ifdef ENABLE_TESTS
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
-#endif
-
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -162,121 +155,6 @@ using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
 using namespace mozilla::jsipc;
-
-#ifdef ENABLE_TESTS
-
-class BackgroundTester MOZ_FINAL : public nsIIPCBackgroundChildCreateCallback,
-                                   public nsIObserver
-{
-    static uint32_t sCallbackCount;
-
-private:
-    ~BackgroundTester()
-    { }
-
-    virtual void
-    ActorCreated(PBackgroundChild* aActor) MOZ_OVERRIDE
-    {
-        MOZ_RELEASE_ASSERT(aActor,
-                           "Failed to create a PBackgroundChild actor!");
-
-        NS_NAMED_LITERAL_CSTRING(testStr, "0123456789");
-
-        PBackgroundTestChild* testActor =
-            aActor->SendPBackgroundTestConstructor(testStr);
-        MOZ_RELEASE_ASSERT(testActor);
-
-        if (!sCallbackCount) {
-            PBackgroundChild* existingBackgroundChild =
-                BackgroundChild::GetForCurrentThread();
-
-            MOZ_RELEASE_ASSERT(existingBackgroundChild);
-            MOZ_RELEASE_ASSERT(existingBackgroundChild == aActor);
-
-            bool ok =
-                existingBackgroundChild->
-                    SendPBackgroundTestConstructor(testStr);
-            MOZ_RELEASE_ASSERT(ok);
-
-            // Callback 3.
-            ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-            MOZ_RELEASE_ASSERT(ok);
-        }
-
-        sCallbackCount++;
-    }
-
-    virtual void
-    ActorFailed() MOZ_OVERRIDE
-    {
-        MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-    }
-
-    NS_IMETHOD
-    Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-            MOZ_OVERRIDE
-    {
-        nsCOMPtr<nsIObserverService> observerService =
-            mozilla::services::GetObserverService();
-        MOZ_RELEASE_ASSERT(observerService);
-
-        nsresult rv = observerService->RemoveObserver(this, aTopic);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-        if (!strcmp(aTopic, "profile-after-change")) {
-            if (Preferences::GetBool("pbackground.testing", false)) {
-                rv = observerService->AddObserver(this, "xpcom-shutdown",
-                                                  false);
-                MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-                // Callback 1.
-                bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-                MOZ_RELEASE_ASSERT(ok);
-
-                // Callback 2.
-                ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-                MOZ_RELEASE_ASSERT(ok);
-            }
-
-            return NS_OK;
-        }
-
-        if (!strcmp(aTopic, "xpcom-shutdown")) {
-            MOZ_RELEASE_ASSERT(sCallbackCount == 3);
-
-            return NS_OK;
-        }
-
-        MOZ_CRASH("Unknown observer topic!");
-    }
-
-public:
-    NS_DECL_ISUPPORTS
-};
-
-uint32_t BackgroundTester::sCallbackCount = 0;
-
-NS_IMPL_ISUPPORTS2(BackgroundTester, nsIIPCBackgroundChildCreateCallback,
-                                     nsIObserver)
-
-#endif // ENABLE_TESTS
-
-void
-MaybeTestPBackground()
-{
-#ifdef ENABLE_TESTS
-    // This is called too early at startup to test preferences directly. We have
-    // to install an observer to be notified when preferences are available.
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    MOZ_RELEASE_ASSERT(observerService);
-
-    nsCOMPtr<nsIObserver> observer = new BackgroundTester();
-    nsresult rv = observerService->AddObserver(observer, "profile-after-change",
-                                               false);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-#endif
-}
 
 namespace mozilla {
 namespace dom {
@@ -464,16 +342,10 @@ ContentParent::StartUp()
     // Note: This reporter measures all ContentParents.
     RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
-    BackgroundChild::Startup();
-
     sCanLaunchSubprocesses = true;
 
     // Try to preallocate a process that we can transform into an app later.
     PreallocatedProcessManager::AllocateAfterDelay();
-
-    // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
-    // testing preference is set.
-    MaybeTestPBackground();
 }
 
 /*static*/ void
@@ -2102,13 +1974,6 @@ ContentParent::AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                                        base::ProcessId aOtherProcess)
 {
     return ImageBridgeParent::Create(aTransport, aOtherProcess);
-}
-
-PBackgroundParent*
-ContentParent::AllocPBackgroundParent(Transport* aTransport,
-                                      ProcessId aOtherProcess)
-{
-    return BackgroundParent::Alloc(this, aTransport, aOtherProcess);
 }
 
 bool
