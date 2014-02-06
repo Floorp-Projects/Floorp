@@ -24,7 +24,6 @@ enum BiquadFilterType {
   "allpass"
 };
 
-[PrefControlled]
 interface BiquadFilterNode : AudioNode {
 
     attribute BiquadFilterType type;
@@ -43,7 +42,6 @@ interface BiquadFilterNode : AudioNode {
  * The origin of this IDL file is
  * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
  */
-[PrefControlled]
 partial interface BiquadFilterNode {
     [Pref="media.webaudio.legacy.BiquadFilterNode"]
     const unsigned short LOWPASS = 0;

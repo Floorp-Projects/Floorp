@@ -21,7 +21,6 @@ enum OscillatorType {
   "custom"
 };
 
-[PrefControlled]
 interface OscillatorNode : AudioNode {
 
     [SetterThrows]
