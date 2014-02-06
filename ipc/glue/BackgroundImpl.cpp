@@ -882,7 +882,7 @@ ParentImpl::ShutdownBackgroundThread()
   }
 
   if (sBackgroundThread) {
-    nsCOMPtr<nsIThread> thread = sBackgroundThread;
+    nsCOMPtr<nsIThread> thread = sBackgroundThread.get();
 
     sBackgroundThread = nullptr;
     sBackgroundThreadMessageLoop = nullptr;
