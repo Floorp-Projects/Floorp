@@ -3926,6 +3926,24 @@ Simulator::callInternal(uint8_t *entry)
     int32_t r10_val = get_register(r10);
     int32_t r11_val = get_register(r11);
 
+    // Remember d8 to d15 which are callee-saved.
+    uint64_t d8_val;
+    get_d_register(d8, &d8_val);
+    uint64_t d9_val;
+    get_d_register(d9, &d9_val);
+    uint64_t d10_val;
+    get_d_register(d10, &d10_val);
+    uint64_t d11_val;
+    get_d_register(d11, &d11_val);
+    uint64_t d12_val;
+    get_d_register(d12, &d12_val);
+    uint64_t d13_val;
+    get_d_register(d13, &d13_val);
+    uint64_t d14_val;
+    get_d_register(d14, &d14_val);
+    uint64_t d15_val;
+    get_d_register(d15, &d15_val);
+
     // Set up the callee-saved registers with a known value. To be able to check
     // that they are preserved properly across JS execution.
     int32_t callee_saved_value = uint32_t(icount_);
@@ -3937,6 +3955,16 @@ Simulator::callInternal(uint8_t *entry)
     set_register(r9, callee_saved_value);
     set_register(r10, callee_saved_value);
     set_register(r11, callee_saved_value);
+
+    uint64_t callee_saved_value_d = uint64_t(icount_);
+    set_d_register(d8, &callee_saved_value_d);
+    set_d_register(d9, &callee_saved_value_d);
+    set_d_register(d10, &callee_saved_value_d);
+    set_d_register(d11, &callee_saved_value_d);
+    set_d_register(d12, &callee_saved_value_d);
+    set_d_register(d13, &callee_saved_value_d);
+    set_d_register(d14, &callee_saved_value_d);
+    set_d_register(d15, &callee_saved_value_d);
 
     // Start the simulation
     if (Simulator::StopSimAt != -1L)
@@ -3954,6 +3982,24 @@ Simulator::callInternal(uint8_t *entry)
     MOZ_ASSERT(callee_saved_value == get_register(r10));
     MOZ_ASSERT(callee_saved_value == get_register(r11));
 
+    uint64_t value;
+    get_d_register(d8, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d9, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d10, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d11, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d12, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d13, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d14, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+    get_d_register(d15, &value);
+    MOZ_ASSERT(callee_saved_value_d == value);
+
     // Restore callee-saved registers with the original value.
     set_register(r4, r4_val);
     set_register(r5, r5_val);
@@ -3963,6 +4009,15 @@ Simulator::callInternal(uint8_t *entry)
     set_register(r9, r9_val);
     set_register(r10, r10_val);
     set_register(r11, r11_val);
+
+    set_d_register(d8, &d8_val);
+    set_d_register(d9, &d9_val);
+    set_d_register(d10, &d10_val);
+    set_d_register(d11, &d11_val);
+    set_d_register(d12, &d12_val);
+    set_d_register(d13, &d13_val);
+    set_d_register(d14, &d14_val);
+    set_d_register(d15, &d15_val);
 }
 
 int64_t
