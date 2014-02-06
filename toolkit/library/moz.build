@@ -15,6 +15,35 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsDllMain.cpp',
     ]
 
+# component libraries
+additional_defines = (
+    'MOZ_AUTH_EXTENSION',
+    'MOZ_GIO_COMPONENT',
+    'MOZ_JSDEBUGGER',
+    'MOZ_PERMISSIONS',
+    'MOZ_PREF_EXTENSIONS',
+    'MOZ_SPELLCHECK',
+    'MOZ_UNIVERSALCHARDET',
+    'MOZ_ZIPWRITER',
+)
+
+for var in additional_defines:
+    if CONFIG[var]:
+        DEFINES[var] = True
+
+if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
+    DEFINES['ENABLE_LAYOUTDEBUG'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'gonk', 'qt', 'os2',
+                                        'cocoa', 'windows') and \
+   CONFIG['MOZ_XUL']:
+    DEFINES['MOZ_FILEVIEW'] = True
+
+# Platform-specific icon channel stuff - supported mostly-everywhere
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'os2', 'mac', 'cocoa',
+                                    'gtk2', 'gtk3', 'qt', 'android'):
+    DEFINES['ICON_DECODER'] = True
+
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
