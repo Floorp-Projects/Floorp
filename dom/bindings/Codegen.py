@@ -1477,7 +1477,7 @@ class PropertyDefiner:
                    ',\n'.join(prefableSpecs) + "\n" +
                    "};\n\n") % (specType, name, specType, name))
         if doIdArrays:
-            arrays += ("static jsid %s_ids[%i] = { JSID_VOID };\n\n" %
+            arrays += ("static jsid %s_ids[%i];\n\n" %
                        (name, len(specs)))
         return arrays
 
@@ -1885,23 +1885,17 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 if props.hasNonChromeOnly():
                     idsToInit.append(props.variableName(False))
         if len(idsToInit) > 0:
-            initIds = CGList(
-                [CGGeneric("!InitIds(aCx, %s, %s_ids)" % (varname, varname)) for
-                 varname in idsToInit], ' ||\n')
-            if len(idsToInit) > 1:
-                initIds = CGWrapper(initIds, pre="(", post=")", reindent=True)
-            initIds = CGList(
-                [CGGeneric("%s_ids[0] == JSID_VOID &&" % idsToInit[0]),
-                 CGGeneric("NS_IsMainThread() &&"),
-                 initIds],
-                "\n")
-            initIds = CGWrapper(initIds, pre="if (", post=") {", reindent=True)
-            initIds = CGList(
-                [initIds,
-                 CGGeneric(("  %s_ids[0] = JSID_VOID;\n"
-                            "  return;") % idsToInit[0]),
-                 CGGeneric("}")],
-                "\n")
+            initIdCalls = ["!InitIds(aCx, %s, %s_ids)" % (varname, varname)
+                           for varname in idsToInit]
+            idsInitedFlag = CGGeneric("static bool sIdsInited = false;")
+            setFlag = CGGeneric("sIdsInited = true;")
+            initIdConditionals = [CGIfWrapper(CGGeneric("return;"), call)
+                                  for call in initIdCalls]
+            initIds = CGList([idsInitedFlag,
+                              CGIfWrapper(CGList(initIdConditionals + [setFlag],
+                                                 "\n"),
+                                          "!sIdsInited && NS_IsMainThread()")],
+                             "\n")
         else:
             initIds = None
 
