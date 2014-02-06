@@ -44,6 +44,7 @@ SessionStore.prototype = {
   _lastSaveTime: 0,
   _interval: 10000,
   _maxTabsUndo: 1,
+  _pendingWrite: 0,
 
   init: function ss_init() {
     // Get file references
@@ -82,6 +83,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application-granted", true);
         observerService.addObserver(this, "quit-application", true);
         observerService.addObserver(this, "Session:Restore", true);
+        observerService.addObserver(this, "application-background", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -158,7 +160,7 @@ SessionStore.prototype = {
 
         if (this._loadState == STATE_RUNNING) {
           // Save the purged state immediately
-          this.saveStateNow();
+          this.saveState();
         }
 
         Services.obs.notifyObservers(null, "sessionstore-state-purge-complete", "");
@@ -166,9 +168,12 @@ SessionStore.prototype = {
       case "timer-callback":
         // Timer call back for delayed saving
         this._saveTimer = null;
-        this.saveState();
+        if (this._pendingWrite) {
+          this.saveState();
+        }
         break;
       case "Session:Restore": {
+        Services.obs.removeObserver(this, "Session:Restore");
         if (aData) {
           // Be ready to handle any restore failures by making sure we have a valid tab opened
           let window = Services.wm.getMostRecentWindow("navigator:browser");
@@ -199,6 +204,13 @@ SessionStore.prototype = {
         }
         break;
       }
+      case "application-background":
+        // We receive this notification when Android's onPause callback is
+        // executed. After onPause, the application may be terminated at any
+        // point without notice; therefore, we must synchronously write out any
+        // pending save state to ensure that this data does not get lost.
+        this.flushPendingState();
+        break;
     }
   },
 
@@ -221,11 +233,18 @@ SessionStore.prototype = {
         this.onTabSelect(window, browser);
         break;
       }
-      case "pageshow": {
+      case "DOMTitleChanged": {
         let browser = aEvent.currentTarget;
-        // Top-level changes only
-        if (aEvent.originalTarget == browser.contentDocument)
-          this.onTabLoad(window, browser, aEvent.persisted);
+
+        // Handle only top-level DOMTitleChanged event
+        if (browser.contentDocument !== aEvent.originalTarget)
+          return;
+
+        // Use DOMTitleChanged to detect page loads over alternatives.
+        // onLocationChange happens too early, so we don't have the page title
+        // yet; pageshow happens too late, so we could lose session data if the
+        // browser were killed.
+        this.onTabLoad(window, browser);
         break;
       }
     }
@@ -291,14 +310,14 @@ SessionStore.prototype = {
   },
 
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
-    aBrowser.addEventListener("pageshow", this, true);
+    aBrowser.addEventListener("DOMTitleChanged", this, true);
     if (!aNoNotification)
       this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
   },
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
-    aBrowser.removeEventListener("pageshow", this, true);
+    aBrowser.removeEventListener("DOMTitleChanged", this, true);
 
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
@@ -327,7 +346,7 @@ SessionStore.prototype = {
     }
   },
 
-  onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aPersisted) {
+  onTabLoad: function ss_onTabLoad(aWindow, aBrowser) {
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
       return;
@@ -338,32 +357,26 @@ SessionStore.prototype = {
 
     let history = aBrowser.sessionHistory;
 
-    if (aPersisted && aBrowser.__SS_data) {
-      // Loading from the cache; just update the index
-      aBrowser.__SS_data.index = history.index + 1;
-      this.saveStateDelayed();
-    } else {
-      // Serialize the tab data
-      let entries = [];
-      let index = history.index + 1;
-      for (let i = 0; i < history.count; i++) {
-        let historyEntry = history.getEntryAtIndex(i, false);
-        // Don't try to restore wyciwyg URLs
-        if (historyEntry.URI.schemeIs("wyciwyg")) {
-          // Adjust the index to account for skipped history entries
-          if (i <= history.index)
-            index--;
-          continue;
-        }
-        let entry = this._serializeHistoryEntry(historyEntry);
-        entries.push(entry);
+    // Serialize the tab data
+    let entries = [];
+    let index = history.index + 1;
+    for (let i = 0; i < history.count; i++) {
+      let historyEntry = history.getEntryAtIndex(i, false);
+      // Don't try to restore wyciwyg URLs
+      if (historyEntry.URI.schemeIs("wyciwyg")) {
+        // Adjust the index to account for skipped history entries
+        if (i <= history.index)
+          index--;
+        continue;
       }
-      let data = { entries: entries, index: index };
-
-      delete aBrowser.__SS_data;
-      this._collectTabData(aWindow, aBrowser, data);
-      this.saveStateNow();
+      let entry = this._serializeHistoryEntry(historyEntry);
+      entries.push(entry);
     }
+    let data = { entries: entries, index: index };
+
+    delete aBrowser.__SS_data;
+    this._collectTabData(aWindow, aBrowser, data);
+    this.saveStateDelayed();
 
     this._updateCrashReportURL(aWindow);
   },
@@ -398,6 +411,7 @@ SessionStore.prototype = {
       // If we have to wait, set a timer, otherwise saveState directly
       let delay = Math.max(minimalDelay, 2000);
       if (delay > 0) {
+        this._pendingWrite++;
         this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         this._saveTimer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
       } else {
@@ -406,16 +420,25 @@ SessionStore.prototype = {
     }
   },
 
-  saveStateNow: function ss_saveStateNow() {
+  saveState: function ss_saveState() {
+    this._pendingWrite++;
+    this._saveState(true);
+  },
+
+  // Immediately and synchronously writes any pending state to disk.
+  flushPendingState: function ss_flushPendingState() {
+    if (this._pendingWrite) {
+      this._saveState(false);
+    }
+  },
+
+  _saveState: function ss_saveState(aAsync) {
     // Kill any queued timer and save immediately
     if (this._saveTimer) {
       this._saveTimer.cancel();
       this._saveTimer = null;
     }
-    this.saveState();
-  },
 
-  saveState: function ss_saveState() {
     let data = this._getCurrentState();
     let normalData = { windows: [] };
     let privateData = { windows: [] };
@@ -444,7 +467,7 @@ SessionStore.prototype = {
     }
 
     // Write only non-private data to disk
-    this._writeFile(this._sessionFile, JSON.stringify(normalData));
+    this._writeFile(this._sessionFile, JSON.stringify(normalData), aAsync);
 
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
@@ -520,7 +543,7 @@ SessionStore.prototype = {
     }
   },
 
-  _writeFile: function ss_writeFile(aFile, aData) {
+  _writeFile: function ss_writeFile(aFile, aData, aAsync) {
     let stateString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     stateString.data = aData;
     Services.obs.notifyObservers(stateString, "sessionstore-state-write", "");
@@ -529,11 +552,28 @@ SessionStore.prototype = {
     if (!stateString.data)
       return;
 
-    // Asynchronously copy the data to the file.
-    let array = new TextEncoder().encode(aData);
-    OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
-      Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
-    });
+    if (aAsync) {
+      let array = new TextEncoder().encode(aData);
+      let pendingWrite = this._pendingWrite;
+      OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
+        // Make sure this._pendingWrite is the same value it was before we
+        // fired off the async write. If the count is different, another write
+        // is pending, so we shouldn't reset this._pendingWrite yet.
+        if (pendingWrite === this._pendingWrite)
+          this._pendingWrite = 0;
+        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
+      }.bind(this));
+    } else {
+      this._pendingWrite = 0;
+      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
+                     createInstance(Ci.nsIFileOutputStream);
+      foStream.init(aFile, 0x02 | 0x08 | 0x20, 0666, 0);
+      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                      createInstance(Ci.nsIConverterOutputStream);
+      converter.init(foStream, "UTF-8", 0, 0);
+      converter.writeString(aData);
+      converter.close();
+    }
   },
 
   _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {

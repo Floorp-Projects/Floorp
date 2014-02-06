@@ -63,6 +63,11 @@ public class testSessionOOMSave extends SessionTest {
         public boolean isSatisfied() {
             try {
                 String sessionString = readProfileFile("sessionstore.js");
+                if (sessionString == null) {
+                    mLastException = new AssertException("Could not read sessionstore.js");
+                    return false;
+                }
+
                 verifySessionJSON(mSession, sessionString, mAsserter);
             } catch (AssertException e) {
                 mLastException = e;
