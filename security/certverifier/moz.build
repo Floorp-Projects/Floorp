@@ -20,4 +20,6 @@ LOCAL_INCLUDES += [
     '../insanity/include',
 ]
 
+FAIL_ON_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
