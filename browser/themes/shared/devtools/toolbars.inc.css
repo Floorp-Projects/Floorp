@@ -601,12 +601,22 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  background: #252c33;
   min-height: 28px;
-  border: 0px solid #000;
+  border: 0px solid;
   border-bottom-width: 1px;
-  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
   padding: 0;
+}
+
+.theme-light .devtools-tabbar {
+  box-shadow: 0 -2px 0 rgba(170,170,170,.1) inset;
+  background: #ebeced;
+  border-bottom-color: #aaa;
+}
+
+.theme-dark .devtools-tabbar {
+  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
+  background: #252c33;
+  border-bottom-color: #000;
 }
 
 #toolbox-tabs {
@@ -614,51 +624,64 @@
 }
 
 .devtools-tab {
+  -moz-appearance: none;
   -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
   -moz-box-align: center;
-}
-
-.devtools-tab {
-  -moz-appearance: none;
   min-width: 32px;
   min-height: 28px;
   max-width: 127px;
-  color: #b6babf;
   margin: 0;
   padding: 0;
-  -moz-border-start: 1px solid #42484f;
+  -moz-border-start: 1px solid;
   -moz-box-align: center;
 }
 
-.theme-light .devtools-tabbar {
-  background: #ebeced;
-  border-bottom-color: #aaa;
+.theme-dark .devtools-tab {
+  color: #b6babf;
+  border-color: #42484f;
 }
 
-.theme-light .devtools-tab,
-.theme-light .devtools-tab:hover {
+.theme-light .devtools-tab {
   color: #18191a;
   border-color: #aaa;
 }
 
+.theme-dark .devtools-tab:hover {
+  background-color: hsla(206,37%,4%,.2);
+  color: #ced3d9;
+}
+
 .theme-light .devtools-tab:hover {
-  background-color: #ddd;
-  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
+  background-color: rgba(170,170,170,.2);
+}
+
+.theme-dark .devtools-tab:hover:active {
+  background-color: hsla(206,37%,4%,.4);
+  color: #f5f7fa;
+}
+
+.theme-light .devtools-tab:hover:active {
+  background-color: rgba(170,170,170,.4);
+}
+
+.theme-dark .devtools-tab:not([selected])[highlighted] {
+  background-color: hsla(99,100%,14%,.2);
+  box-shadow: 0 2px 0 #7bc107 inset;
 }
 
 .theme-light .devtools-tab:not([selected])[highlighted] {
   background-color: rgba(44, 187, 15, .2);
 }
 
-.theme-light .devtools-tab:last-child {
-  -moz-border-end: 1px solid #aaa;
-}
-
 .devtools-tab:first-child {
   -moz-border-start-width: 0;
 }
 
-.devtools-tab:last-child {
+.theme-light .devtools-tab:last-child {
+  -moz-border-end: 1px solid #aaa;
+}
+
+.theme-dark .devtools-tab:last-child {
   -moz-border-end: 1px solid #42484f;
 }
 
@@ -688,17 +711,7 @@
   opacity: 1;
 }
 
-.devtools-tab:hover {
-  background-color: hsla(206,37%,4%,.2);
-  color: #ced3d9;
-}
-
-.devtools-tab:hover:active {
-  background-color: hsla(206,37%,4%,.4);
-  color: #f5f7fa;
-}
-
-#toolbox-tabs .devtools-tab[selected] {
+.theme-dark #toolbox-tabs .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -707,7 +720,11 @@
 }
 
 .theme-light #toolbox-tabs .devtools-tab[selected] {
+  color: #f5f7fa;
   background-color: #4c9ed9;
+  box-shadow: 0 2px 0 #d7f1ff inset,
+              0 8px 3px -5px #2b82bf inset,
+              0 -2px 0 rgba(0,0,0,.06) inset;
 }
 
 .devtools-tab[selected]:not(:first-child),
@@ -725,15 +742,6 @@
 .devtools-tab[highlighted] + .devtools-tab {
   -moz-border-start-width: 0;
   -moz-padding-start: 1px;
-}
-
-.theme-dark .devtools-tab:not([selected])[highlighted] {
-  background-color: hsla(99,100%,14%,.2);
-  box-shadow: 0 2px 0 #7bc107 inset;
-}
-
-.theme-dark #toolbox-tabs .devtools-tab[selected] {
-  color: #f5f7fa;
 }
 
 .devtools-tab:not([highlighted]) > .highlighted-icon,
