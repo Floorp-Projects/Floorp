@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::SpeechRecognitionResultList::PrefEnabled"]
+[Pref="media.webspeech.recognition.enable"]
 interface SpeechRecognitionResultList {
     readonly attribute unsigned long length;
     getter SpeechRecognitionResult item(unsigned long index);

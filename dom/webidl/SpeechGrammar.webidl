@@ -11,7 +11,7 @@
  */
 
 [Constructor,
- Func="mozilla::dom::SpeechGrammar::PrefEnabled"]
+ Pref="media.webspeech.recognition.enable"]
 interface SpeechGrammar {
     [Throws]
     attribute DOMString src;

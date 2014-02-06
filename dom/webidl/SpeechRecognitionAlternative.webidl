@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::SpeechRecognitionAlternative::PrefEnabled"]
+[Pref="media.webspeech.recognition.enable"]
 interface SpeechRecognitionAlternative {
     readonly attribute DOMString transcript;
     readonly attribute float confidence;

@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::SpeechSynthesisUtterance::PrefEnabled",
+[Pref="media.webspeech.synth.enabled",
  Constructor,
  Constructor(DOMString text)]
 interface SpeechSynthesisUtterance : EventTarget {
