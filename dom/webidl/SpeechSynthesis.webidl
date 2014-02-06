@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::SpeechSynthesis::PrefEnabled"]
+[Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesis {
   readonly attribute boolean pending;
   readonly attribute boolean speaking;

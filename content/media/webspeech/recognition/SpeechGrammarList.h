@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SpeechGrammarList_h
 #define mozilla_dom_SpeechGrammarList_h
 
-#include "EnableWebSpeechRecognitionCheck.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -26,8 +25,7 @@ class SpeechGrammar;
 template<typename> class Optional;
 
 class SpeechGrammarList MOZ_FINAL : public nsISupports,
-                                    public nsWrapperCache,
-                                    public EnableWebSpeechRecognitionCheck
+                                    public nsWrapperCache
 {
 public:
   SpeechGrammarList(nsISupports* aParent);

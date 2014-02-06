@@ -13,7 +13,6 @@
 #include "nsRefPtrHashtable.h"
 #include "js/TypeDecls.h"
 
-#include "EnableSpeechSynthesisCheck.h"
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
 
@@ -25,8 +24,7 @@ namespace dom {
 class nsSpeechTask;
 
 class SpeechSynthesis MOZ_FINAL : public nsISupports,
-                                  public nsWrapperCache,
-                                  public EnableSpeechSynthesisCheck
+                                  public nsWrapperCache
 {
 public:
   SpeechSynthesis(nsPIDOMWindow* aParent);
