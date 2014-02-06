@@ -10,7 +10,7 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(32de7b6e-90c3-11e1-b57e-001fbc092072)]
+[scriptable, uuid(bc5869e7-53a6-4195-8ab8-32e7116b87dd)]
 
 interface nsPISocketTransportService : nsISocketTransportService
 {
@@ -36,6 +36,21 @@ interface nsPISocketTransportService : nsISocketTransportService
    * Setting it offline will cause non-local socket detachment.
    */
   attribute boolean offline;
+
+  /**
+   * Controls the default timeout (in seconds) for sending keepalive probes.
+   */
+  readonly attribute long keepaliveIdleTime;
+
+  /**
+   * Controls the default interval (in seconds) between retrying keepalive probes.
+   */
+  readonly attribute long keepaliveRetryInterval;
+
+  /**
+   * Controls the default retransmission count for keepalive probes.
+   */
+  readonly attribute long keepaliveProbeCount;
 };
 
 %{C++
