@@ -729,21 +729,23 @@ function test22() {
   is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 22, plugin should have started");
   ok(pluginNode.activated, "Test 22, plugin should be activated");
 
-  // Reload plugin
-  var oldVal = pluginNode.getObjectValue();
-  pluginNode.src = pluginNode.src;
-  is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 22, Plugin should have retained activated state");
-  ok(pluginNode.activated, "Test 22, plugin should have remained activated");
-  // Sanity, ensure that we actually reloaded the instance, since this behavior might change in the future.
-  var pluginsDiffer;
-  try {
-    pluginNode.checkObjectValue(oldVal);
-  } catch (e) {
-    pluginsDiffer = true;
-  }
-  ok(pluginsDiffer, "Test 22, plugin should have reloaded");
+  // Spin event loop for plugin to finish spawning
+  executeSoon(function() {
+    var oldVal = pluginNode.getObjectValue();
+    pluginNode.src = pluginNode.src;
+    is(objLoadingContent.displayedType, Ci.nsIObjectLoadingContent.TYPE_PLUGIN, "Test 22, Plugin should have retained activated state");
+    ok(pluginNode.activated, "Test 22, plugin should have remained activated");
+    // Sanity, ensure that we actually reloaded the instance, since this behavior might change in the future.
+    var pluginsDiffer;
+    try {
+      pluginNode.checkObjectValue(oldVal);
+    } catch (e) {
+      pluginsDiffer = true;
+    }
+    ok(pluginsDiffer, "Test 22, plugin should have reloaded");
 
-  prepareTest(runAfterPluginBindingAttached(test23), gTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test23), gTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests that a click-to-play plugin resets its activated state when changing types
