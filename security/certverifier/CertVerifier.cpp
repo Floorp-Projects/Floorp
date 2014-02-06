@@ -22,7 +22,7 @@
 using namespace insanity::pkix;
 using namespace mozilla::psm;
 
-#ifdef MOZ_LOGGING
+#ifdef PR_LOGGING
 static PRLogModuleInfo* gCertVerifierLog = nullptr;
 #endif
 
@@ -53,7 +53,7 @@ CertVerifier::~CertVerifier()
 void
 InitCertVerifierLog()
 {
-#ifdef MOZ_LOGGING
+#ifdef PR_LOGGING
   if (!gCertVerifierLog) {
     gCertVerifierLog = PR_NewLogModule("certverifier");
   }
