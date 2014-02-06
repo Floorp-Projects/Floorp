@@ -977,6 +977,7 @@ class IDLInterface(IDLObjectWithScope):
                   identifier == "JSImplementation" or
                   identifier == "HeaderFile" or
                   identifier == "NavigatorProperty" or
+                  identifier == "AvailableIn" or
                   identifier == "Func"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
@@ -2656,7 +2657,7 @@ class IDLAttribute(IDLInterfaceMember):
             assert not isinstance(t.name, IDLUnresolvedIdentifier)
             self.type = t
 
-        if self.type.isDictionary():
+        if self.type.isDictionary() and not self.getExtendedAttribute("Cached"):
             raise WebIDLError("An attribute cannot be of a dictionary type",
                               [self.location])
         if self.type.isSequence() and not self.getExtendedAttribute("Cached"):
@@ -2693,7 +2694,11 @@ class IDLAttribute(IDLInterfaceMember):
                               "slots must be constant or pure, since the "
                               "getter won't always be called.",
                               [self.location])
-        pass
+        if self.getExtendedAttribute("Frozen"):
+            if not self.type.isSequence() and not self.type.isDictionary():
+                raise WebIDLError("[Frozen] is only allowed on sequence-valued "
+                                  "and dictionary-valued attributes",
+                                  [self.location])
 
     def handleExtendedAttribute(self, attr):
         identifier = attr.identifier()
@@ -2799,10 +2804,6 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[LenientThis] is not allowed in combination "
                                   "with [%s]" % identifier,
                                   [attr.location, self.location])
-        elif identifier == "Frozen":
-            if not self.type.isSequence():
-                raise WebIDLError("[Frozen] is only allowed on sequence-valued "
-                                  "attributes", [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
               identifier == "Pure" or
@@ -2812,6 +2813,8 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "SameObject" or
               identifier == "Constant" or
               identifier == "Func" or
+              identifier == "Frozen" or
+              identifier == "AvailableIn" or
               identifier == "NewObject"):
             # Known attributes that we don't need to do anything with here
             pass
@@ -3362,6 +3365,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "ChromeOnly" or
               identifier == "Pref" or
               identifier == "Func" or
+              identifier == "AvailableIn" or
               identifier == "Pure" or
               identifier == "CrossOriginCallable" or
               identifier == "WebGLHandlesContextLoss"):

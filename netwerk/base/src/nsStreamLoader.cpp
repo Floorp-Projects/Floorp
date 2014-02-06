@@ -78,7 +78,7 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
       }
       uint32_t contentLength32 = uint32_t(contentLength);
       // preallocate buffer
-      mData = static_cast<uint8_t*>(NS_Alloc(contentLength32));
+      mData = static_cast<uint8_t*>(moz_malloc(contentLength32));
       if (!mData) {
         return NS_ERROR_OUT_OF_MEMORY;
       }

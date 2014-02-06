@@ -54,7 +54,7 @@ public final class ANRReporter extends BroadcastReceiver
     private Handler mHandler;
     private volatile boolean mPendingANR;
 
-    private static native boolean requestNativeStack();
+    private static native boolean requestNativeStack(boolean unwind);
     private static native String getNativeStack();
     private static native void releaseNativeStack();
 
@@ -460,7 +460,9 @@ public final class ANRReporter extends BroadcastReceiver
 
     private static void processTraces(Reader traces, File pingFile) {
 
-        boolean haveNativeStack = requestNativeStack();
+        // Unwinding is memory intensive; only unwind if we have enough memory
+        boolean haveNativeStack = requestNativeStack(
+            /* unwind */ SysInfo.getMemSize() >= 640);
         try {
             OutputStream ping = new BufferedOutputStream(
                 new FileOutputStream(pingFile), TRACES_BLOCK_SIZE);

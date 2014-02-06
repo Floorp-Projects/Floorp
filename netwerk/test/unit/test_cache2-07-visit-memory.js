@@ -1,11 +1,11 @@
 function run_test()
 {
+  do_get_profile();
+
   if (!newCacheBackEndUsed()) {
     do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
     return;
   }
-
-  do_get_profile();
 
   // Add entry to the memory storage
   var mc = new MultipleCallbacks(5, function() {

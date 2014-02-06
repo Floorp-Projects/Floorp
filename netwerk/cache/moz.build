@@ -18,6 +18,7 @@ XPIDL_MODULE = 'necko_cache'
 EXPORTS += [
     'nsApplicationCacheService.h',
     'nsCacheService.h',
+    'nsDeleteDir.h'
 ]
 
 # These files cannot be built in unified mode because they force NSPR logging.

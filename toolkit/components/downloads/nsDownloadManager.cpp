@@ -7,6 +7,7 @@
 
 #include "mozIStorageService.h"
 #include "nsIAlertsService.h"
+#include "nsIArray.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMWindow.h"
 #include "nsIDownloadHistory.h"
@@ -2606,6 +2607,13 @@ NS_IMETHODIMP nsDownload::SetSha256Hash(const nsACString& aHash) {
   MOZ_ASSERT(NS_IsMainThread(), "Must call SetSha256Hash on main thread");
   // This will be used later to query the application reputation service.
   mHash = aHash;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDownload::SetSignatureInfo(nsIArray* aSignatureInfo) {
+  MOZ_ASSERT(NS_IsMainThread(), "Must call SetSignatureInfo on main thread");
+  // This will be used later to query the application reputation service.
+  mSignatureInfo = aSignatureInfo;
   return NS_OK;
 }
 

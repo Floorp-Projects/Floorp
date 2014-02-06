@@ -19,7 +19,7 @@ const TEST_URL = "/tests/layout/forms/test/bug564115_window.html";
 
 addLoadEvent(function() {
   var win = open(TEST_URL, "", "width=600,height=600");
-  window.childLoaded = function() {
+  SimpleTest.waitForFocus(function() {
     var doc = win.document;
     var input = doc.querySelector("input");
 
@@ -44,7 +44,7 @@ addLoadEvent(function() {
         });
       }, 0);
     }, 0);
-  };
+  }, win);
 });
 
 SimpleTest.waitForExplicitFinish();

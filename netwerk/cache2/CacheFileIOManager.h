@@ -224,6 +224,8 @@ public:
   static nsresult EnumerateEntryFiles(EEnumerateMode aMode,
                                       CacheEntriesEnumerator** aEnumerator);
 
+  static void GetCacheDirectory(nsIFile** result);
+
 private:
   friend class CacheFileHandle;
   friend class CacheFileChunk;

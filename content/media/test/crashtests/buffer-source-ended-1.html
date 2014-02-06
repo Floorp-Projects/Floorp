@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var context = new AudioContext();
+
+var source = context.createBufferSource();
+source.buffer = context.createBuffer(1, 2.0 * context.sampleRate, context.sampleRate);
+source.onended = function(e) {
+  document.documentElement.removeAttribute("class");
+}
+source.start(0.0, 1.0);
+setTimeout(
+    function() {
+        source.buffer = context.createBuffer(1, 1, context.sampleRate);
+    }, 0);
+</script>

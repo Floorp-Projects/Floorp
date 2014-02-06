@@ -47,6 +47,7 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     '../base/src',
+    '../cache',
 ]
 
 FAIL_ON_WARNINGS = True
