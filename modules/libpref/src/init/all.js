@@ -282,9 +282,6 @@ pref("media.encoder.webm.enabled", true);
 pref("media.encoder.omx.enabled", true);
 #endif
 
-// Whether to enable Web Audio support
-pref("media.webaudio.enabled", true);
-
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
