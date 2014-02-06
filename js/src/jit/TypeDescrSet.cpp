@@ -51,6 +51,11 @@ TypeDescrSetBuilder::TypeDescrSetBuilder()
 bool
 TypeDescrSetBuilder::insert(TypeDescr *descr)
 {
+    // All type descriptors should be tenured, so it is safe to assume
+    // that the pointers do not change during compilation, since no
+    // major GC can overlap with compilation.
+    JS_ASSERT(!GetIonContext()->runtime->isInsideNursery(descr));
+
     if (invalid_)
         return true;
 
