@@ -615,11 +615,12 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
     PORT_Assert(!ss->firstHsDone);
 
     if (ssl3_ExtensionNegotiated(ss, ssl_app_layer_protocol_xtn)) {
-	/* If the server negotiated ALPN then it has already told us what protocol
-	 * to use, so it doesn't make sense for us to try to negotiate a different
-	 * one by sending the NPN handshake message. However, if we've negotiated
-	 * NPN then we're required to send the NPN handshake message. Thus, these
-	 * two extensions cannot both be negotiated on the same connection. */
+	/* If the server negotiated ALPN then it has already told us what
+	 * protocol to use, so it doesn't make sense for us to try to negotiate
+	 * a different one by sending the NPN handshake message. However, if
+	 * we've negotiated NPN then we're required to send the NPN handshake
+	 * message. Thus, these two extensions cannot both be negotiated on the
+	 * same connection. */
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
     }
