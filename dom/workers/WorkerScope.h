@@ -138,12 +138,13 @@ public:
 
 class SharedWorkerGlobalScope MOZ_FINAL : public WorkerGlobalScope
 {
-  const nsString mName;
+  const nsCString mName;
 
   ~SharedWorkerGlobalScope() { }
 
 public:
-  SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsString& aName);
+  SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+                          const nsCString& aName);
 
   static bool
   Visible(JSContext* aCx, JSObject* aObj);
@@ -152,7 +153,7 @@ public:
   WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void GetName(DOMString& aName) const {
-    aName.AsAString() = mName;
+    aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
   }
 
   IMPL_EVENT_HANDLER(connect)
