@@ -4,18 +4,38 @@
 
 #include "cpr.h"
 #include "cpr_stdlib.h"
-#include <cpr_stdio.h>
+#include "cpr_stdio.h"
+#include "plat_api.h"
+#include "cpr_string.h"
+
+#ifdef SIP_OS_WINDOWS
+#include <windows.h>
+#include <process.h>
+#include <winuser.h>
+#else
 #include <errno.h>
 #include <sys/time.h>
 #include <time.h>
-#include <plat_api.h>
-#include "cpr_string.h"
+#endif /* SIP_OS_WINDOWS */
+
+
+#ifdef SIP_OS_WINDOWS
+extern cprMsgQueue_t sip_msgq;
+extern cprMsgQueue_t gsm_msgq;
+extern cprMsgQueue_t tmr_msgq;
+
+extern void gsm_shutdown();
+extern void sip_shutdown();
 
 /*
- * If building with debug test interface,
- * allow access to internal CPR functions
+ * Buffer to hold the messages sent/received by CPR. All
+ * CPR does is pass four bytes (CNU msg type) and an unsigned
+ * four bytes (pointer to the msg buffer).
  */
-#define STATIC static
+static char rcvBuffer[100];
+#define MSG_BUF 0xF000
+
+#else
 
 #define OS_MSGTQL 31 /* need to check number for MV linux and put here */
 
@@ -23,6 +43,7 @@
  * Internal CPR API
  */
 extern pthread_t cprGetThreadId(cprThread_t thread);
+
 
 /*
  * Extended internal message queue node
@@ -65,7 +86,7 @@ typedef struct cpr_msg_queue_s
     uint16_t extendedQDepth;
     uint16_t maxExtendedQDepth;
     pthread_mutex_t mutex;       /* lock for managing extended queue     */
-	pthread_cond_t cond;		 /* signal for queue/dequeue */
+    pthread_cond_t cond;         /* signal for queue/dequeue */
     cpr_msgq_node_t *head;       /* extended queue head (newest element) */
     cpr_msgq_node_t *tail;       /* extended queue tail (oldest element) */
 } cpr_msg_queue_t;
@@ -91,12 +112,6 @@ static cpr_msg_queue_t *msgQueueList = NULL;
  * Mutex to manage message queue list
  */
 pthread_mutex_t msgQueueListMutex;
-
-/*
- * String to represent message queue name when it is not provided
- */
-static const char unnamed_string[] = "unnamed";
-
 
 /*
  * CPR_MAX_MSG_Q_DEPTH
@@ -146,14 +161,91 @@ static const char unnamed_string[] = "unnamed";
  */
 
 
-/*
- * Prototype declarations
+/**
+ * Peg the statistics for successfully posting a message
+ *
+ * @param msgq        - message queue
+ * @param numAttempts - number of attempts to post message to message queue
+ *
+ * @return none
+ *
+ * @pre (msgq not_eq NULL)
+ */
+static void
+cprPegSendMessageStats (cpr_msg_queue_t *msgq, uint16_t numAttempts)
+{
+    /*
+     * Collect statistics
+     */
+    msgq->totalCount++;
+
+    if (numAttempts > msgq->highAttempts) {
+        msgq->highAttempts = numAttempts;
+    }
+}
+
+/**
+ * Post message to system message queue
+ *
+ * @param msgq       - message queue
+ * @param msg        - message to post
+ * @param ppUserData - ptr to ptr to option user data
+ *
+ * @return the post result which is CPR_MSGQ_POST_SUCCESS,
+ *         CPR_MSGQ_POST_FAILURE or CPR_MSGQ_POST_PENDING
+ *
+ * @pre (msgq not_eq NULL)
+ * @pre (msg not_eq NULL)
  */
 static cpr_msgq_post_result_e
-cprPostMessage(cpr_msg_queue_t *msgq, void *msg, void **ppUserData);
-static void
-cprPegSendMessageStats(cpr_msg_queue_t *msgq, uint16_t numAttempts);
+cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
+{
+    cpr_msgq_node_t *node;
 
+    /*
+     * Allocate new message queue node
+     */
+    node = cpr_malloc(sizeof(*node));
+    if (!node) {
+        errno = ENOMEM;
+        return CPR_MSGQ_POST_FAILED;
+    }
+
+    pthread_mutex_lock(&msgq->mutex);
+
+    /*
+     * Fill in data
+     */
+    node->msg = msg;
+    if (ppUserData != NULL) {
+        node->pUserData = *ppUserData;
+    } else {
+        node->pUserData = NULL;
+    }
+
+    /*
+     * Push onto list
+     */
+    node->prev = NULL;
+    node->next = msgq->head;
+    msgq->head = node;
+
+    if (node->next) {
+        node->next->prev = node;
+    }
+
+    if (msgq->tail == NULL) {
+        msgq->tail = node;
+    }
+    msgq->currentCount++;
+
+    pthread_cond_signal(&msgq->cond);
+    pthread_mutex_unlock(&msgq->mutex);
+
+    return CPR_MSGQ_POST_SUCCESS;
+
+}
+#endif /* !SIP_OS_WINDOWS */
 
 /*
  * Functions
@@ -164,7 +256,8 @@ cprPegSendMessageStats(cpr_msg_queue_t *msgq, uint16_t numAttempts);
  *
  * @param name  - name of the message queue
  * @param depth - the message queue depth, optional field which will
- *                default if set to zero(0)
+ *                default if set to zero(0).  This parameter is currently
+ *                not supported on Windows.
  *
  * @return Msg queue handle or NULL if init failed, errno provided
  *
@@ -176,25 +269,26 @@ cprPegSendMessageStats(cpr_msg_queue_t *msgq, uint16_t numAttempts);
 cprMsgQueue_t
 cprCreateMessageQueue (const char *name, uint16_t depth)
 {
-    static const char fname[] = "cprCreateMessageQueue";
     cpr_msg_queue_t *msgq;
-    static int key_id = 100; /* arbitrary starting number */
 
     msgq = cpr_calloc(1, sizeof(cpr_msg_queue_t));
     if (msgq == NULL) {
-        printf("%s: Malloc failed: %s\n", fname,
-                  name ? name : unnamed_string);
+        printf("%s: Malloc failed: %s\n", __FUNCTION__,
+               name ? name : "unnamed");
         errno = ENOMEM;
         return NULL;
     }
 
-    msgq->name = name ? name : unnamed_string;
-	msgq->queueId = key_id++;
+    msgq->name = name ? name : "unnamed";
 
-	pthread_cond_t _cond = PTHREAD_COND_INITIALIZER;
-	msgq->cond = _cond;
-	pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
-	msgq->mutex = _lock;
+#ifndef SIP_OS_WINDOWS
+    static int key_id = 100; /* arbitrary starting number */
+    pthread_cond_t _cond = PTHREAD_COND_INITIALIZER;
+    pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
+
+    msgq->queueId = key_id++;
+    msgq->cond = _cond;
+    msgq->mutex = _lock;
 
     /*
      * Add message queue to list for statistics reporting
@@ -203,65 +297,11 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
     msgq->next = msgQueueList;
     msgQueueList = msgq;
     pthread_mutex_unlock(&msgQueueListMutex);
+#endif /* SIP_OS_WINDOWS */
 
     return msgq;
 }
 
-
-/**
- * Removes all messages from the queue and then destroy the message queue
- *
- * @param msgQueue - message queue to destroy
- *
- * @return CPR_SUCCESS or CPR_FAILURE, errno provided
- */
-cprRC_t
-cprDestroyMessageQueue (cprMsgQueue_t msgQueue)
-{
-    static const char fname[] = "cprDestroyMessageQueue";
-    cpr_msg_queue_t *msgq;
-    void *msg;
-
-    msgq = (cpr_msg_queue_t *) msgQueue;
-    if (msgq == NULL) {
-        /* Bad application! */
-        CPR_ERROR("%s: Invalid input\n", fname);
-        errno = EINVAL;
-        return CPR_FAILURE;
-    }
-
-    /* Drain message queue */
-    msg = cprGetMessage(msgQueue, FALSE, NULL);
-    while (msg != NULL) {
-        cpr_free(msg);
-        msg = cprGetMessage(msgQueue, FALSE, NULL);
-    }
-
-    /* Remove message queue from list */
-    pthread_mutex_lock(&msgQueueListMutex);
-    if (msgq == msgQueueList) {
-        msgQueueList = msgq->next;
-    } else {
-        cpr_msg_queue_t *msgql = msgQueueList;
-
-        while ((msgql->next != NULL) && (msgql->next != msgq)) {
-            msgql = msgql->next;
-        }
-        if (msgql->next == msgq) {
-            msgql->next = msgq->next;
-        }
-    }
-    pthread_mutex_unlock(&msgQueueListMutex);
-
-    /* Remove message queue mutex */
-    if (pthread_mutex_destroy(&msgq->mutex) != 0) {
-        CPR_ERROR("%s: Failed to destroy msg queue (%s) mutex: %d\n",
-                  fname, msgq->name, errno);
-    }
-
-    cpr_free(msgq);
-    return CPR_SUCCESS;
-}
 
 
 /**
@@ -278,21 +318,25 @@ cprDestroyMessageQueue (cprMsgQueue_t msgQueue)
 cprRC_t
 cprSetMessageQueueThread (cprMsgQueue_t msgQueue, cprThread_t thread)
 {
-    static const char fname[] = "cprSetMessageQueueThread";
     cpr_msg_queue_t *msgq;
 
     if ((!msgQueue) || (!thread)) {
-        CPR_ERROR("%s: Invalid input\n", fname);
+        CPR_ERROR("%s: Invalid input\n", __FUNCTION__);
         return CPR_FAILURE;
     }
 
+#ifdef SIP_OS_WINDOWS
+    ((cpr_msg_queue_t *)msgQueue)->handlePtr = thread;
+#else
     msgq = (cpr_msg_queue_t *) msgQueue;
     if (msgq->thread != 0) {
         CPR_ERROR("%s: over-writing previously msgq thread name for %s",
-                  fname, msgq->name);
+                  __FUNCTION__, msgq->name);
     }
 
     msgq->thread = cprGetThreadId(thread);
+#endif /* SIP_OS_WINDOWS */
+
     return CPR_SUCCESS;
 }
 
@@ -314,84 +358,148 @@ cprSetMessageQueueThread (cprMsgQueue_t msgQueue, cprThread_t thread)
 void *
 cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 {
-    static const char fname[] = "cprGetMessage";
+    void *buffer = NULL;
 
-    void *buffer = 0;
-    cpr_msg_queue_t *msgq;
-    cpr_msgq_node_t *node;
-	struct timespec timeout;
-	struct timeval tv;
-#ifndef __APPLE__
-	struct timezone tz;
-#else
-	// On the iPhone, there is a DarwinAlias problem with "timezone"
-	struct _timezone {
-		int     tz_minuteswest; /* of Greenwich */
-		int     tz_dsttime;     /* type of dst correction to apply */
-	} tz;
+#ifdef SIP_OS_WINDOWS
+    struct msgbuffer *rcvMsg = (struct msgbuffer *)rcvBuffer;
+    cpr_msg_queue_t *pCprMsgQueue;
+    MSG msg;
+    cpr_thread_t *pThreadPtr;
 #endif
+
+    if (!msgQueue) {
+        CPR_ERROR("%s - invalid msgQueue\n", __FUNCTION__);
+        return NULL;
+    }
 
     /* Initialize ppUserData */
     if (ppUserData) {
         *ppUserData = NULL;
     }
 
-    msgq = (cpr_msg_queue_t *) msgQueue;
-    if (msgq == NULL) {
-        /* Bad application! */
-        CPR_ERROR("%s: Invalid input\n", fname);
-        errno = EINVAL;
-        return NULL;
+#ifdef SIP_OS_WINDOWS
+    pCprMsgQueue = (cpr_msg_queue_t *)msgQueue;
+    memset(&msg, 0, sizeof(MSG));
+
+    if (waitForever == TRUE) {
+        if (GetMessage(&msg, NULL, 0, 0) == -1) {
+            CPR_ERROR("%s - msgQueue = %x failed: %d\n",
+                      __FUNCTION__, msgQueue, GetLastError());
+            return NULL;
+        }
+    } else {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) == 0) {
+            /* no message present */
+            return NULL;
+        }
     }
+
+    switch (msg.message) {
+        case WM_CLOSE:
+            if (msgQueue == &gsm_msgq)
+            {
+                CPR_ERROR("%s - WM_CLOSE GSM msg queue\n", __FUNCTION__);
+                gsm_shutdown();
+            }
+            else if (msgQueue == &sip_msgq)
+            {
+                CPR_ERROR("%s - WM_CLOSE SIP msg queue\n", __FUNCTION__);
+                sip_regmgr_destroy_cc_conns();
+                sip_shutdown();
+            }
+            else if (msgQueue == &tmr_msgq)
+            {
+                CPR_ERROR("%s - WM_CLOSE TMR msg queue\n", __FUNCTION__);
+            }
+
+            pThreadPtr=(cpr_thread_t *)pCprMsgQueue->handlePtr;
+            if (pThreadPtr)
+            {
+                CloseHandle(pThreadPtr->u.handlePtr);
+            }
+            /* zap the thread ptr, since the thread is going away now */
+            pCprMsgQueue->handlePtr = NULL;
+            _endthreadex(0);
+            break;
+        case MSG_BUF:
+            rcvMsg = (struct msgbuffer *)msg.wParam;
+            buffer = rcvMsg->msgPtr;
+            if (ppUserData) {
+                *ppUserData = rcvMsg->usrPtr;
+            }
+            cpr_free((void *)msg.wParam);
+            break;
+        case MSG_ECHO_EVENT:
+            {
+                HANDLE event;
+                event = (HANDLE*)msg.wParam;
+                SetEvent( event );
+            }
+            break;
+        case WM_TIMER:
+            DispatchMessage(&msg);
+            return NULL;
+            break;
+        default:
+            break;
+    }
+#else
+    cpr_msg_queue_t *msgq;
+    cpr_msgq_node_t *node;
+    struct timespec timeout;
+    struct timeval tv;
+    struct timezone tz;
+
+    msgq = (cpr_msg_queue_t *) msgQueue;
 
     /*
      * If waitForever is set, block on the message queue
      * until a message is received, else return after
-	 * 25msec of waiting
+     * 25msec of waiting
      */
-	pthread_mutex_lock(&msgq->mutex);
+    pthread_mutex_lock(&msgq->mutex);
 
-	if (!waitForever)
-	{
-		// We'll wait till 25uSec from now
-		gettimeofday(&tv, &tz);
-		timeout.tv_nsec = (tv.tv_usec * 1000) + 25000;
-		timeout.tv_sec = tv.tv_sec;
+    if (!waitForever)
+    {
+        // We'll wait till 25uSec from now
+        gettimeofday(&tv, &tz);
+        timeout.tv_nsec = (tv.tv_usec * 1000) + 25000;
+        timeout.tv_sec = tv.tv_sec;
 
-		pthread_cond_timedwait(&msgq->cond, &msgq->mutex, &timeout);
+        pthread_cond_timedwait(&msgq->cond, &msgq->mutex, &timeout);
+    }
+    else
+    {
+        while(msgq->tail==NULL)
+        {
+            pthread_cond_wait(&msgq->cond, &msgq->mutex);
+        }
+    }
 
-	}
-	else
-	{
-		while(msgq->tail==NULL)
-		{
-			pthread_cond_wait(&msgq->cond, &msgq->mutex);
-		}
-	}
+    // If there is a message on the queue, de-queue it
+    if (msgq->tail)
+    {
+        node = msgq->tail;
+        msgq->tail = node->prev;
+        if (msgq->tail) {
+            msgq->tail->next = NULL;
+        }
+        if (msgq->head == node) {
+            msgq->head = NULL;
+        }
+        msgq->currentCount--;
+        /*
+         * Pull out the data
+         */
+        if (ppUserData) {
+            *ppUserData = node->pUserData;
+        }
+        buffer = node->msg;
 
-	// If there is a message on the queue, de-queue it
-	if (msgq->tail)
-	{
-		node = msgq->tail;
-		msgq->tail = node->prev;
-		if (msgq->tail) {
-			msgq->tail->next = NULL;
-		}
-		if (msgq->head == node) {
-			msgq->head = NULL;
-		}
-		msgq->currentCount--;
-		/*
-		 * Pull out the data
-		 */
-		if (ppUserData) {
-			*ppUserData = node->pUserData;
-		}
-		buffer = node->msg;
+    }
 
-	}
-
-	pthread_mutex_unlock(&msgq->mutex);
+    pthread_mutex_unlock(&msgq->mutex);
+#endif /* SIP_OS_WINDOWS */
 
     return buffer;
 }
@@ -432,19 +540,63 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 cprRC_t
 cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
 {
-    static const char fname[] = "cprSendMessage";
+#ifdef SIP_OS_WINDOWS
+    struct msgbuffer *sendMsg;
+    cpr_thread_t *pCprThread;
+    HANDLE *hThread;
+#endif
+
+    if (!msgQueue) {
+        CPR_ERROR("%s - msgQueue is NULL\n", __FUNCTION__);
+        return CPR_FAILURE;
+    }
+
+#ifdef SIP_OS_WINDOWS
+    pCprThread = (cpr_thread_t *)(((cpr_msg_queue_t *)msgQueue)->handlePtr);
+    if (!pCprThread) {
+        CPR_ERROR("%s - msgQueue(%x) not associated with a thread\n",
+                  __FUNCTION__, msgQueue);
+        return CPR_FAILURE;
+    }
+
+    hThread = (HANDLE*)(pCprThread->u.handlePtr);
+    if (!hThread) {
+        CPR_ERROR("%s - msgQueue(%x)'s thread(%x) not assoc. with Windows\n",
+                __FUNCTION__, msgQueue, pCprThread);
+        return CPR_FAILURE;
+    }
+
+    /* Package up the message */
+    sendMsg = (struct msgbuffer *)cpr_calloc(1, sizeof(struct msgbuffer));
+    if (!sendMsg) {
+        CPR_ERROR("%s - No memory\n", __FUNCTION__);
+        return CPR_FAILURE;
+    }
+    sendMsg->mtype = PHONE_IPC_MSG;
+
+    /* Save the address of the message */
+    sendMsg->msgPtr = msg;
+
+    /* Allow the ppUserData to be optional */
+    if (ppUserData) {
+        sendMsg->usrPtr = *ppUserData;
+    }
+
+    /* Post the message */
+    if (hThread == NULL || PostThreadMessage(pCprThread->threadId, MSG_BUF,
+        (WPARAM)sendMsg, 0) == 0 ) {
+        CPR_ERROR("%s - Msg not sent: %d\n", __FUNCTION__, GetLastError());
+        cpr_free(sendMsg);
+        return CPR_FAILURE;
+    }
+    return CPR_SUCCESS;
+
+#else
     static const char error_str[] = "%s: Msg not sent to %s queue: %s\n";
     cpr_msgq_post_result_e rc;
     cpr_msg_queue_t *msgq;
     int16_t attemptsToSend = CPR_ATTEMPTS_TO_SEND;
     uint16_t numAttempts   = 0;
-
-    /* Bad application? */
-    if (msgQueue == NULL) {
-        CPR_ERROR(error_str, fname, "undefined", "invalid input");
-        errno = EINVAL;
-        return CPR_FAILURE;
-    }
 
     msgq = (cpr_msg_queue_t *) msgQueue;
 
@@ -453,28 +605,28 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
      */
     do {
 
-		/*
-		 * Post the message to the Queue
-		 */
-		rc = cprPostMessage(msgq, msg, ppUserData);
+        /*
+         * Post the message to the Queue
+         */
+        rc = cprPostMessage(msgq, msg, ppUserData);
 
-		if (rc == CPR_MSGQ_POST_SUCCESS) {
-			cprPegSendMessageStats(msgq, numAttempts);
-			return CPR_SUCCESS;
-		} else if (rc == CPR_MSGQ_POST_FAILED) {
-			CPR_ERROR("%s: Msg not sent to %s queue: %d\n",
-					  fname, msgq->name, errno);
-			msgq->sendErrors++;
-			/*
-			 * If posting to calling thread's own queue,
-			 * then peg the self queue error.
-			 */
-			if (pthread_self() == msgq->thread) {
-				msgq->selfQErrors++;
-			}
+        if (rc == CPR_MSGQ_POST_SUCCESS) {
+            cprPegSendMessageStats(msgq, numAttempts);
+            return CPR_SUCCESS;
+        } else if (rc == CPR_MSGQ_POST_FAILED) {
+            CPR_ERROR("%s: Msg not sent to %s queue: %d\n",
+                      __FUNCTION__, msgq->name, errno);
+            msgq->sendErrors++;
+            /*
+             * If posting to calling thread's own queue,
+             * then peg the self queue error.
+             */
+            if (pthread_self() == msgq->thread) {
+                msgq->selfQErrors++;
+            }
 
-			return CPR_FAILURE;
-		}
+            return CPR_FAILURE;
+        }
 
 
         /*
@@ -497,95 +649,12 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
         }
     } while (attemptsToSend > 0);
 
-    CPR_ERROR(error_str, fname, msgq->name, "FULL");
+    CPR_ERROR(error_str, __FUNCTION__, msgq->name, "FULL");
     msgq->sendErrors++;
     return CPR_FAILURE;
+#endif /* SIP_OS_WINDOWS */
 }
 
-/**
- * Peg the statistics for successfully posting a message
- *
- * @param msgq        - message queue
- * @param numAttempts - number of attempts to post message to message queue
- *
- * @return none
- *
- * @pre (msgq not_eq NULL)
- */
-static void
-cprPegSendMessageStats (cpr_msg_queue_t *msgq, uint16_t numAttempts)
-{
-    /*
-     * Collect statistics
-     */
-    msgq->totalCount++;
-
-    if (numAttempts > msgq->highAttempts) {
-        msgq->highAttempts = numAttempts;
-    }
-}
-
-/**
- * Post message to system message queue
- *
- * @param msgq       - message queue
- * @param msg        - message to post
- * @param ppUserData - ptr to ptr to option user data
- *
- * @return the post result which is CPR_MSGQ_POST_SUCCESS,
- *         CPR_MSGQ_POST_FAILURE or CPR_MSGQ_POST_PENDING
- *
- * @pre (msgq not_eq NULL)
- * @pre (msg not_eq NULL)
- */
-static cpr_msgq_post_result_e
-cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
-{
-	cpr_msgq_node_t *node;
-
-	/*
-	 * Allocate new message queue node
-	 */
-	node = cpr_malloc(sizeof(*node));
-	if (!node) {
-		errno = ENOMEM;
-		return CPR_MSGQ_POST_FAILED;
-	}
-
-	pthread_mutex_lock(&msgq->mutex);
-
-	/*
-	 * Fill in data
-	 */
-	node->msg = msg;
-	if (ppUserData != NULL) {
-		node->pUserData = *ppUserData;
-	} else {
-		node->pUserData = NULL;
-	}
-
-	/*
-	 * Push onto list
-	 */
-	node->prev = NULL;
-	node->next = msgq->head;
-	msgq->head = node;
-
-	if (node->next) {
-		node->next->prev = node;
-	}
-
-	if (msgq->tail == NULL) {
-		msgq->tail = node;
-	}
-	msgq->currentCount++;
-
-	pthread_cond_signal(&msgq->cond);
-	pthread_mutex_unlock(&msgq->mutex);
-
-	return CPR_MSGQ_POST_SUCCESS;
-
-}
 
 
 /**
@@ -604,8 +673,13 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
  */
 uint16_t cprGetDepth (cprMsgQueue_t msgQueue)
 {
-        cpr_msg_queue_t *msgq;
-        msgq = (cpr_msg_queue_t *) msgQueue;
-        return msgq->currentCount;
+#ifdef SIP_OS_WINDOWS
+    return 0;
+#else
+    cpr_msg_queue_t *msgq;
+    msgq = (cpr_msg_queue_t *) msgQueue;
+    return msgq->currentCount;
+#endif /* SIP_OS_WINDOWS */
 }
+
 
