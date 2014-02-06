@@ -53,8 +53,6 @@ private:
     void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
     nsresult Finish();
 
-    void RefcountHitZero();
-
     enum {
         STATE_UNINITIALIZED,
         STATE_INITIALIZED,
@@ -66,7 +64,6 @@ private:
 
     bool mIsUpgrade;
     bool mSucceeded;
-    bool mIPCActivated;
 
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
