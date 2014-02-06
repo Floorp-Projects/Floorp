@@ -165,6 +165,36 @@ TestEnumWithOrdering()
   MOZ_ASSERT(atomic == EnumType_3, "CAS should have changed atomic's value.");
 }
 
+template <MemoryOrdering Order>
+static void
+TestBoolWithOrdering()
+{
+  Atomic<bool, Order> atomic(false);
+  MOZ_ASSERT(atomic == false, "Atomic variable did not initialize");
+
+  // Test assignment
+  DebugOnly<bool> result;
+  result = (atomic = true);
+  MOZ_ASSERT(atomic == true, "Atomic assignment failed");
+  MOZ_ASSERT(result == true, "Atomic assignment returned the wrong value");
+
+  // Test exchange.
+  atomic = false;
+  result = atomic.exchange(true);
+  MOZ_ASSERT(atomic == true, "Atomic exchange did not work");
+  MOZ_ASSERT(result == false, "Atomic exchange returned the wrong value");
+
+  // Test CAS.
+  atomic = false;
+  DebugOnly<bool> boolResult = atomic.compareExchange(true, false);
+  MOZ_ASSERT(!boolResult, "CAS should have returned false.");
+  MOZ_ASSERT(atomic == false, "CAS shouldn't have done anything.");
+
+  boolResult = atomic.compareExchange(false, true);
+  MOZ_ASSERT(boolResult, "CAS should have succeeded.");
+  MOZ_ASSERT(atomic == true, "CAS should have changed atomic's value.");
+}
+
 template <typename T>
 static void
 TestType()
@@ -191,6 +221,14 @@ TestEnum()
   TestEnumWithOrdering<Relaxed>();
 }
 
+static void
+TestBool()
+{
+  TestBoolWithOrdering<SequentiallyConsistent>();
+  TestBoolWithOrdering<ReleaseAcquire>();
+  TestBoolWithOrdering<Relaxed>();
+}
+
 int main()
 {
   TestType<uint32_t>();
@@ -202,4 +240,5 @@ int main()
   TestPointer<uint16_t*>();
   TestPointer<uint32_t*>();
   TestEnum();
+  TestBool();
 }
