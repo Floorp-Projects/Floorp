@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::SpeechSynthesisVoice::PrefEnabled"]
+[Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesisVoice {
   readonly attribute DOMString voiceURI;
   readonly attribute DOMString name;

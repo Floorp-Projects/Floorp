@@ -11,7 +11,7 @@
  */
 
 [Constructor,
- Func="mozilla::dom::SpeechRecognition::PrefEnabled"]
+ Pref="media.webspeech.recognition.enable"]
 interface SpeechRecognition : EventTarget {
     // recognition parameters
     [Throws]
