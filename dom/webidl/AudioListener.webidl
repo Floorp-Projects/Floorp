@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface AudioListener {
 
     // same as OpenAL (default 1) 

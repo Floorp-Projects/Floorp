@@ -8,7 +8,6 @@
 #define AudioContext_h_
 
 #include "mozilla/dom/AudioChannelBinding.h"
-#include "EnableWebAudioCheck.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TypedArray.h"
@@ -64,8 +63,7 @@ class WaveShaperNode;
 class PeriodicWave;
 
 class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
-                               public nsIMemoryReporter,
-                               public EnableWebAudioCheck
+                               public nsIMemoryReporter
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
                bool aIsOffline,
