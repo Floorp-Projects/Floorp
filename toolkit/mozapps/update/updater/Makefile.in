@@ -27,7 +27,7 @@ ifeq ($(OS_ARCH),WINNT)
 LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
 USE_STATIC_LIBS = 1
 RCINCLUDE = updater.rc
-OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32 shlwapi)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32 shlwapi)
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
@@ -64,7 +64,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-WIN32_EXE_LDFLAGS += -DELAYLOAD:wsock32.dll -DELAYLOAD:crypt32.dll -DELAYLOAD:userenv.dll
 endif
 
 ifdef MOZ_WIDGET_GTK
