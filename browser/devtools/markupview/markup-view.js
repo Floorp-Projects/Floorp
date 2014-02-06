@@ -167,6 +167,7 @@ MarkupView.prototype = {
 
   _onMouseLeave: function() {
     this._hideBoxModel();
+    this._hoveredNode = null;
   },
 
   _showBoxModel: function(nodeFront, options={}) {
@@ -258,11 +259,14 @@ MarkupView.prototype = {
    * - if it's "test" (this is a special case for mochitest. In tests, we often
    * need to select elements but don't necessarily want the highlighter to come
    * and go after a delay as this might break test scenarios)
+   * We also do not want to start a brief highlight timeout if the node is already
+   * being hovered over, since in that case it will already be highlighted.
    */
   _shouldNewSelectionBeHighlighted: function() {
     let reason = this._inspector.selection.reason;
     let unwantedReasons = ["inspector-open", "navigateaway", "test"];
-    return reason && unwantedReasons.indexOf(reason) === -1;
+    let isHighlitNode = this._hoveredNode === this._inspector.selection.nodeFront;
+    return !isHighlitNode && reason && unwantedReasons.indexOf(reason) === -1;
   },
 
   /**
