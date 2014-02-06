@@ -92,9 +92,6 @@ NS_IMETHODIMP
 nsProfiler::StopProfiler()
 {
   profiler_stop();
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-  mozilla::ShutdownEventTracing();
-#endif
   return NS_OK;
 }
 
