@@ -1103,9 +1103,9 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
 	break;
 #endif /* NSS_ENABLE_ECC */
     case CKK_NSS_JPAKE_ROUND1:
-        if (!sftk_hasAttribute(object, CKA_PRIME ||
+        if (!sftk_hasAttribute(object, CKA_PRIME) ||
             !sftk_hasAttribute(object, CKA_SUBPRIME) ||
-            !sftk_hasAttribute(object, CKA_BASE))) {
+            !sftk_hasAttribute(object, CKA_BASE)) {
             return CKR_TEMPLATE_INCOMPLETE;
         }
         /* fall through */
