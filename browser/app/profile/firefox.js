@@ -1361,7 +1361,3 @@ pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings"
 
 // The URL of the Firefox Accounts auth server backend
 pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
-
-
-// Temporarily turn the new http cache v2 on for Desktop Firefox only
-pref("browser.cache.use_new_backend_temp", true);
