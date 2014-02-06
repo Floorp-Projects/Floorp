@@ -331,12 +331,22 @@ def _autoptrForget(expr):
 def _cxxArrayType(basetype, const=0, ref=0):
     return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
 
+def _cxxFallibleArrayType(basetype, const=0, ref=0):
+    return Type('FallibleTArray', T=basetype, const=const, ref=ref)
+
 def _callCxxArrayLength(arr):
     return ExprCall(ExprSelect(arr, '.', 'Length'))
 
-def _callCxxArraySetLength(arr, lenexpr, sel='.'):
-    return ExprCall(ExprSelect(arr, sel, 'SetLength'),
-                    args=[ lenexpr ])
+def _callCxxCheckedArraySetLength(arr, lenexpr, sel='.'):
+    ifbad = StmtIf(ExprNot(ExprCall(ExprSelect(arr, sel, 'SetLength'),
+                                    args=[ lenexpr ])))
+    ifbad.addifstmt(_fatalError('Error setting the array length'))
+    ifbad.addifstmt(StmtReturn.FALSE)
+    return ifbad
+
+def _callCxxSwapArrayElements(arr1, arr2, sel='.'):
+    return ExprCall(ExprSelect(arr1, sel, 'SwapElements'),
+                    args=[ arr2 ])
 
 def _callCxxArrayInsertSorted(arr, elt):
     return ExprCall(ExprSelect(arr, '.', 'InsertElementSorted'),
@@ -4459,26 +4469,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
         read = MethodDefn(self.readMethodDecl(outtype, var))
-        avar = ExprVar('a')
+        favar = ExprVar('fa')
         forread = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
                                         ExprLiteral.ZERO),
                           cond=ExprBinary(ivar, '<', lenvar),
                           update=ExprPrefixUnop(ivar, '++'))
         forread.addstmt(
-            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(avar, ivar)),
+            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(favar, ivar)),
                              msgvar, itervar, errfnRead,
                              eltipdltype.name() + '[i]'))
         read.addstmts([
-            StmtDecl(Decl(_cxxRefType(arraytype, self.side), avar.name),
-                     init=ExprDeref(var)),
+            StmtDecl(Decl(_cxxFallibleArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
             self.checkedRead(None, ExprAddrOf(lenvar),
                              msgvar, itervar, errfnRead,
                              'length\' (' + Type.UINT32.name + ') of \'' +
                              arraytype.name()),
             Whitespace.NL,
-            StmtExpr(_callCxxArraySetLength(var, lenvar, '->')),
+            _callCxxCheckedArraySetLength(favar, lenvar),
             forread,
+            StmtExpr(_callCxxSwapArrayElements(var, favar, '->')),
             StmtReturn.TRUE
         ])
 
