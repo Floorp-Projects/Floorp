@@ -1696,11 +1696,10 @@ EventListeners.prototype = {
           if (aResponse.error) {
             const msg = "Error getting function definition site: " + aResponse.message;
             DevToolsUtils.reportException("scheduleEventListenersFetch", msg);
-            deferred.reject(msg);
-            return;
+          } else {
+            aListener.function.url = aResponse.url;
           }
 
-          aListener.function.url = aResponse.url;
           deferred.resolve(aListener);
         });
 
