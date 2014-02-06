@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface AudioParam {
 
     attribute float value;
@@ -43,7 +42,6 @@ interface AudioParam {
  * The origin of this IDL file is
  * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
  */
-[PrefControlled]
 partial interface AudioParam {
     // Same as setTargetAtTime()
     [Throws,Pref="media.webaudio.legacy.AudioParam"]

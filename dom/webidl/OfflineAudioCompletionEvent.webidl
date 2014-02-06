@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface OfflineAudioCompletionEvent : Event {
 
     readonly attribute AudioBuffer renderedBuffer;
