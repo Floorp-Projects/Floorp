@@ -230,6 +230,7 @@ class TestRecursiveMakeBackend(BackendTester):
         reader = BuildReader(env)
         emitter = TreeMetadataEmitter(env)
         backend = RecursiveMakeBackend(env)
+        backend._write_mozinfo = False
         backend.consume(emitter.emit(reader.read_topsrcdir()))
 
         self.assertEqual(os.path.getmtime(makefile_path), makefile_mtime)
@@ -475,6 +476,7 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_install_manifests_written(self):
         env, objs = self._emit('stub0')
         backend = RecursiveMakeBackend(env)
+        backend._write_mozinfo = False
 
         m = InstallManifest()
         backend._install_manifests['testing'] = m
@@ -672,6 +674,12 @@ class TestRecursiveMakeBackend(BackendTester):
             # Destination and install manifest are relative to topobjdir.
             stem = '%s/android_eclipse/%s' % (env.topobjdir, project_name)
             self.assertIn(command_template % (stem, stem), lines)
+
+    def test_mozinfo(self):
+        env = self._consume('mozinfo', RecursiveMakeBackend, write_mozinfo=True)
+
+        self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
+            'mozinfo.json')))
 
 
 if __name__ == '__main__':
