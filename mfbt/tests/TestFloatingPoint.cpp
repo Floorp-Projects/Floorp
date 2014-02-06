@@ -12,6 +12,8 @@ using mozilla::DoubleExponentBias;
 using mozilla::DoubleEqualsInt32;
 using mozilla::DoubleIsInt32;
 using mozilla::ExponentComponent;
+using mozilla::FuzzyEqualsAdditive;
+using mozilla::FuzzyEqualsMultiplicative;
 using mozilla::IsFinite;
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
@@ -19,6 +21,7 @@ using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
+using mozilla::SpecificFloatNaN;
 using mozilla::SpecificNaN;
 using mozilla::UnspecifiedNaN;
 
@@ -190,10 +193,156 @@ TestPredicates()
   MOZ_ASSERT(!DoubleEqualsInt32(UnspecifiedNaN(), &i));
 }
 
+static void
+TestFloatsAreApproximatelyEqual()
+{
+  float epsilon = mozilla::detail::FuzzyEqualsEpsilon<float>::value();
+  float lessThanEpsilon = epsilon / 2.0f;
+  float moreThanEpsilon = epsilon * 2.0f;
+
+  // Additive tests using the default epsilon
+  // ... around 1.0
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0f, 1.0f + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0f, 1.0f - lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0f, 1.0f + epsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0f, 1.0f - epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0f, 1.0f + moreThanEpsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0f, 1.0f - moreThanEpsilon));
+  // ... around 1.0e2 (this is near the upper bound of the range where
+  // adding moreThanEpsilon will still be representable and return false)
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e2f, 1.0e2f + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e2f, 1.0e2f + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e2f, 1.0e2f + moreThanEpsilon));
+  // ... around 1.0e-10
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-10f, 1.0e-10f + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-10f, 1.0e-10f + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-10f, 1.0e-10f + moreThanEpsilon));
+  // ... straddling 0
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-6f, -1.0e-6f));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-5f, -1.0e-5f));
+  // Using a small epsilon
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-5f, 1.0e-5f + 1.0e-10f, 1.0e-9f));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-5f, 1.0e-5f + 1.0e-10f, 1.0e-11f));
+  // Using a big epsilon
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e20f, 1.0e20f + 1.0e15f, 1.0e16f));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e20f, 1.0e20f + 1.0e15f, 1.0e14f));
+
+  // Multiplicative tests using the default epsilon
+  // ... around 1.0
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0f, 1.0f + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0f, 1.0f - lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0f, 1.0f + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0f, 1.0f - epsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0f, 1.0f + moreThanEpsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0f, 1.0f - moreThanEpsilon));
+  // ... around 1.0e10
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e10f, 1.0e10f + (lessThanEpsilon * 1.0e10f)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e10f, 1.0e10f + (moreThanEpsilon * 1.0e10f)));
+  // ... around 1.0e-10
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-10f, 1.0e-10f + (lessThanEpsilon * 1.0e-10f)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-10f, 1.0e-10f + (moreThanEpsilon * 1.0e-10f)));
+  // ... straddling 0
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-6f, -1.0e-6f));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-6f, -1.0e-6f, 1.0e2f));
+  // Using a small epsilon
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-5f, 1.0e-5f + 1.0e-10f, 1.0e-4f));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-5f, 1.0e-5f + 1.0e-10f, 1.0e-5f));
+  // Using a big epsilon
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0f, 2.0f, 1.0f));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0f, 2.0f, 0.1f));
+
+  // "real world case"
+  float oneThird = 10.0f / 3.0f;
+  MOZ_ASSERT(FuzzyEqualsAdditive(10.0f, 3.0f * oneThird));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(10.0f, 3.0f * oneThird));
+  // NaN check
+  MOZ_ASSERT(!FuzzyEqualsAdditive(SpecificFloatNaN(1, 1), SpecificFloatNaN(1, 1)));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(SpecificFloatNaN(1, 2), SpecificFloatNaN(0, 8)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(SpecificFloatNaN(1, 1), SpecificFloatNaN(1, 1)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(SpecificFloatNaN(1, 2), SpecificFloatNaN(0, 200)));
+}
+
+static void
+TestDoublesAreApproximatelyEqual()
+{
+  double epsilon = mozilla::detail::FuzzyEqualsEpsilon<double>::value();
+  double lessThanEpsilon = epsilon / 2.0;
+  double moreThanEpsilon = epsilon * 2.0;
+
+  // Additive tests using the default epsilon
+  // ... around 1.0
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0, 1.0 + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0, 1.0 - lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0, 1.0 + epsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0, 1.0 - epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0, 1.0 + moreThanEpsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0, 1.0 - moreThanEpsilon));
+  // ... around 1.0e4 (this is near the upper bound of the range where
+  // adding moreThanEpsilon will still be representable and return false)
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e4, 1.0e4 + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e4, 1.0e4 + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e4, 1.0e4 + moreThanEpsilon));
+  // ... around 1.0e-25
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-25, 1.0e-25 + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-25, 1.0e-25 + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-25, 1.0e-25 + moreThanEpsilon));
+  // ... straddling 0
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-13, -1.0e-13));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-12, -1.0e-12));
+  // Using a small epsilon
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e-15, 1.0e-15 + 1.0e-30, 1.0e-29));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e-15, 1.0e-15 + 1.0e-30, 1.0e-31));
+  // Using a big epsilon
+  MOZ_ASSERT(FuzzyEqualsAdditive(1.0e40, 1.0e40 + 1.0e25, 1.0e26));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(1.0e40, 1.0e40 + 1.0e25, 1.0e24));
+
+  // Multiplicative tests using the default epsilon
+  // ... around 1.0
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0, 1.0 + lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0, 1.0 - lessThanEpsilon));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0, 1.0 + epsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0, 1.0 - epsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0, 1.0 + moreThanEpsilon));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0, 1.0 - moreThanEpsilon));
+  // ... around 1.0e30
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e30, 1.0e30 + (lessThanEpsilon * 1.0e30)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e30, 1.0e30 + (moreThanEpsilon * 1.0e30)));
+  // ... around 1.0e-30
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-30, 1.0e-30 + (lessThanEpsilon * 1.0e-30)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-30, 1.0e-30 + (moreThanEpsilon * 1.0e-30)));
+  // ... straddling 0
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-6, -1.0e-6));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-6, -1.0e-6, 1.0e2));
+  // Using a small epsilon
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e-15, 1.0e-15 + 1.0e-30, 1.0e-15));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e-15, 1.0e-15 + 1.0e-30, 1.0e-16));
+  // Using a big epsilon
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(1.0e40, 2.0e40, 1.0));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(1.0e40, 2.0e40, 0.1));
+
+  // "real world case"
+  double oneThird = 10.0 / 3.0;
+  MOZ_ASSERT(FuzzyEqualsAdditive(10.0, 3.0 * oneThird));
+  MOZ_ASSERT(FuzzyEqualsMultiplicative(10.0, 3.0 * oneThird));
+  // NaN check
+  MOZ_ASSERT(!FuzzyEqualsAdditive(SpecificNaN(1, 1), SpecificNaN(1, 1)));
+  MOZ_ASSERT(!FuzzyEqualsAdditive(SpecificNaN(1, 2), SpecificNaN(0, 8)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(SpecificNaN(1, 1), SpecificNaN(1, 1)));
+  MOZ_ASSERT(!FuzzyEqualsMultiplicative(SpecificNaN(1, 2), SpecificNaN(0, 200)));
+}
+
+static void
+TestAreApproximatelyEqual()
+{
+  TestFloatsAreApproximatelyEqual();
+  TestDoublesAreApproximatelyEqual();
+}
+
 int
 main()
 {
   TestDoublesAreIdentical();
   TestExponentComponent();
   TestPredicates();
+  TestAreApproximatelyEqual();
 }

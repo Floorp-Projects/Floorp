@@ -945,7 +945,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 }
 
 NS_EXPORT jboolean JNICALL
-Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
+Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass, jboolean aUnwind)
 {
     if (profiler_is_active()) {
         // Don't proceed if profiler is already running
@@ -955,11 +955,25 @@ Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
     // generally unsafe to use the profiler from off the main thread. However,
     // the risk here is limited because for most users, the profiler is not run
     // elsewhere. See the discussion in Bug 863777, comment 13
-    const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads", "privacy"};
+    const char *NATIVE_STACK_FEATURES[] =
+        {"leaf", "threads", "privacy"};
+    const char *NATIVE_STACK_UNWIND_FEATURES[] =
+        {"leaf", "threads", "privacy", "stackwalk"};
+
+    const char **features = NATIVE_STACK_FEATURES;
+    size_t features_size = sizeof(NATIVE_STACK_FEATURES);
+    if (aUnwind) {
+        features = NATIVE_STACK_UNWIND_FEATURES;
+        features_size = sizeof(NATIVE_STACK_UNWIND_FEATURES);
+        // We want the new unwinder if the unwind mode has not been set yet
+        putenv("MOZ_PROFILER_NEW=1");
+    }
+
+    const char *NATIVE_STACK_THREADS[] =
+        {"GeckoMain", "Compositor"};
     // Buffer one sample and let the profiler wait a long time
-    profiler_start(100, 10000, NATIVE_STACK_FEATURES,
-        sizeof(NATIVE_STACK_FEATURES) / sizeof(char*),
-        nullptr, 0);
+    profiler_start(100, 10000, features, features_size / sizeof(char*),
+        NATIVE_STACK_THREADS, sizeof(NATIVE_STACK_THREADS) / sizeof(char*));
     return JNI_TRUE;
 }
 

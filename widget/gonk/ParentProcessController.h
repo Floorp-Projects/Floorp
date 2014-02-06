@@ -17,6 +17,8 @@ class ParentProcessController : public mozilla::layers::GeckoContentController
 
 public:
     virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aViewId,
+                                         const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
     virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
 
     // No-ops

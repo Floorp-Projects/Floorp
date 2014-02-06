@@ -603,6 +603,14 @@ public:
 
   // Dictionary tests
   void PassDictionary(JSContext*, const Dict&);
+  void GetReadonlyDictionary(JSContext*, Dict&);
+  void GetReadonlyNullableDictionary(JSContext*, Nullable<Dict>&);
+  void GetWritableDictionary(JSContext*, Dict&);
+  void SetWritableDictionary(JSContext*, const Dict&);
+  void GetReadonlyFrozenDictionary(JSContext*, Dict&);
+  void GetReadonlyFrozenNullableDictionary(JSContext*, Nullable<Dict>&);
+  void GetWritableFrozenDictionary(JSContext*, Dict&);
+  void SetWritableFrozenDictionary(JSContext*, const Dict&);
   void ReceiveDictionary(JSContext*, Dict&);
   void ReceiveNullableDictionary(JSContext*, Nullable<Dict>&);
   void PassOtherDictionary(const GrandparentDict&);
@@ -689,6 +697,11 @@ public:
   void Prefable17();
   void Prefable18();
   void Prefable19();
+  void Prefable20();
+  void Prefable21();
+  void Prefable22();
+  void Prefable23();
+  void Prefable24();
 
   // Miscellania
   int32_t AttrWithLenientThis();

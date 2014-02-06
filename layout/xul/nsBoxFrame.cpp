@@ -104,6 +104,12 @@ NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBoxFrame)
 
+#ifdef DEBUG
+NS_QUERYFRAME_HEAD(nsBoxFrame)
+  NS_QUERYFRAME_ENTRY(nsBoxFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+#endif
+
 nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
                        nsStyleContext* aContext,
                        bool aIsRoot,

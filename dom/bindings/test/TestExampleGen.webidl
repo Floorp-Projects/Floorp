@@ -445,6 +445,18 @@ interface TestExampleInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
+  [Cached, Pure]
+  readonly attribute Dict readonlyDictionary;
+  [Cached, Pure]
+  readonly attribute Dict? readonlyNullableDictionary;
+  [Cached, Pure]
+  attribute Dict writableDictionary;
+  [Cached, Pure, Frozen]
+  readonly attribute Dict readonlyFrozenDictionary;
+  [Cached, Pure, Frozen]
+  readonly attribute Dict? readonlyFrozenNullableDictionary;
+  [Cached, Pure, Frozen]
+  attribute Dict writableFrozenDictionary;
   Dict receiveDictionary();
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);

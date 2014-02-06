@@ -24,6 +24,7 @@
 class gfxASurface;
 class gfxImageSurface;
 class nsIFrame;
+class nsSVGFilterFrame;
 class nsSVGFilterPaintCallback;
 
 namespace mozilla {
@@ -60,57 +61,34 @@ class nsSVGFilterInstance
 public:
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
+   * @param aFilterFrame The frame of the SVG filter element.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
-   * @param aFilterElement The filter element referenced by aTargetFrame's
-   *   element.
-   * @param aTargetBBox The filtered element's bbox, in the filtered element's
-   *   user space.
-   * @param aFilterRegion The "filter region", in the filtered element's user
-   *   space. The caller must have already expanded the region out so that its
-   *   edges coincide with pixel boundaries in the offscreen surface that
-   *   would/will be created to paint the filter output.
-   * @param aFilterSpaceSize The size of the user specified "filter region",
-   *   in filter space units.
-   * @param aFilterSpaceToDeviceSpaceTransform The transform from filter
-   *   space to outer-<svg> device space.
-   * @param aTargetBounds The pre-filter paint bounds of the filtered element,
-   *   in filter space.
    * @param aPostFilterDirtyRect [optional] The bounds of the post-filter area
    *   that has to be repainted, in filter space. Only required if you will
    *   call ComputeSourceNeededRect() or Render().
    * @param aPreFilterDirtyRect [optional] The bounds of the pre-filter area of
    *   the filtered element that changed, in filter space. Only required if you
    *   will call ComputePostFilterDirtyRect().
-   * @param aPrimitiveUnits The value from the 'primitiveUnits' attribute.
+   * @param aOverridePreFilterVisualOverflowRect [optional] Use a different
+   *   visual overflow rect for the target element.
+   * @param aOverrideBBox [optional] Use a different SVG bbox for the target
+   *   element.
+   * @param aTransformRoot [optional] The transform root frame for painting.
    */
   nsSVGFilterInstance(nsIFrame *aTargetFrame,
+                      nsSVGFilterFrame *aFilterFrame,
                       nsSVGFilterPaintCallback *aPaintCallback,
-                      const mozilla::dom::SVGFilterElement *aFilterElement,
-                      const gfxRect &aTargetBBox,
-                      const gfxRect& aFilterRegion,
-                      const nsIntSize& aFilterSpaceSize,
-                      const gfxMatrix &aFilterSpaceToDeviceSpaceTransform,
-                      const gfxMatrix &aFilterSpaceToFrameSpaceInCSSPxTransform,
-                      const nsIntRect& aTargetBounds,
-                      const nsIntRect& aPostFilterDirtyRect,
-                      const nsIntRect& aPreFilterDirtyRect,
-                      uint16_t aPrimitiveUnits,
-                      nsIFrame* aTransformRoot) :
-    mTargetFrame(aTargetFrame),
-    mPaintCallback(aPaintCallback),
-    mFilterElement(aFilterElement),
-    mTargetBBox(aTargetBBox),
-    mFilterSpaceToDeviceSpaceTransform(aFilterSpaceToDeviceSpaceTransform),
-    mFilterSpaceToFrameSpaceInCSSPxTransform(aFilterSpaceToFrameSpaceInCSSPxTransform),
-    mFilterRegion(aFilterRegion),
-    mFilterSpaceBounds(nsIntPoint(0, 0), aFilterSpaceSize),
-    mTargetBounds(aTargetBounds),
-    mPostFilterDirtyRect(aPostFilterDirtyRect),
-    mPreFilterDirtyRect(aPreFilterDirtyRect),
-    mPrimitiveUnits(aPrimitiveUnits),
-    mTransformRoot(aTransformRoot) {
-  }
+                      const nsRect *aPostFilterDirtyRect = nullptr,
+                      const nsRect *aPreFilterDirtyRect = nullptr,
+                      const nsRect *aOverridePreFilterVisualOverflowRect = nullptr,
+                      const gfxRect *aOverrideBBox = nullptr,
+                      nsIFrame* aTransformRoot = nullptr);
+
+  /**
+   * Returns true if the filter instance was created successfully.
+   */
+  bool IsInitialized() const { return mInitialized; }
 
   /**
    * Returns the user specified "filter region", in the filtered element's user
@@ -209,9 +187,7 @@ public:
     return mFilterSpaceToFrameSpaceInCSSPxTransform;
   }
 
-  int32_t AppUnitsPerCSSPixel() const {
-    return mTargetFrame->PresContext()->AppUnitsPerCSSPixel();
-  }
+  int32_t AppUnitsPerCSSPixel() const { return mAppUnitsPerCSSPx; }
 
 private:
   struct SourceInfo {
@@ -287,11 +263,30 @@ private:
   gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
 
   /**
+   * Converts an nsRect that is relative to a filtered frame's origin (i.e. the
+   * top-left corner of its border box) into filter space.
+   * Returns the entire filter region if aRect is null, or if the result is too
+   * large to be stored in an nsIntRect.
+   */
+  nsIntRect FrameSpaceToFilterSpace(const nsRect* aRect) const;
+
+  /**
+   * Returns the transform from frame space to the coordinate space that
+   * GetCanvasTM transforms to. "Frame space" is the origin of a frame, aka the
+   * top-left corner of its border box, aka the top left corner of its mRect.
+   */
+  gfxMatrix GetUserSpaceToFrameSpaceInCSSPxTransform() const;
+
+  /**
    * The frame for the element that is currently being filtered.
    */
   nsIFrame*               mTargetFrame;
 
   nsSVGFilterPaintCallback* mPaintCallback;
+
+  /**
+   * The filter element referenced by mTargetFrame's element.
+   */
   const mozilla::dom::SVGFilterElement* mFilterElement;
 
   /**
@@ -299,8 +294,20 @@ private:
    */
   gfxRect                 mTargetBBox;
 
+  /**
+   * The transform from filter space to outer-<svg> device space.
+   */
   gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
+
+  /**
+   * Transform rects between filter space and frame space in CSS pixels.
+   */
   gfxMatrix               mFilterSpaceToFrameSpaceInCSSPxTransform;
+  gfxMatrix               mFrameSpaceInCSSPxToFilterSpaceTransform;
+
+  /**
+   * The "filter region", in the filtered element's user space.
+   */
   gfxRect                 mFilterRegion;
   nsIntRect               mFilterSpaceBounds;
 
@@ -336,6 +343,8 @@ private:
   nsIFrame*               mTransformRoot;
   nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
+  int32_t                 mAppUnitsPerCSSPx;
+  bool                    mInitialized;
 };
 
 #endif

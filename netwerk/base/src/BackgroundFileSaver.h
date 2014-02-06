@@ -13,6 +13,7 @@
 #define BackgroundFileSaver_h__
 
 #include "mozilla/Mutex.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsNSSShutDown.h"
 #include "nsIAsyncOutputStream.h"
@@ -23,6 +24,8 @@
 
 class nsIAsyncInputStream;
 class nsIThread;
+class nsIX509CertList;
+class PRLogModuleInfo;
 
 namespace mozilla {
 namespace net {
@@ -70,6 +73,8 @@ public:
 
 protected:
   virtual ~BackgroundFileSaver();
+
+  static PRLogModuleInfo *prlog;
 
   /**
    * Helper function for managing NSS objects (mDigestContext).
@@ -211,6 +216,17 @@ private:
    */
   bool mSha256Enabled;
 
+  /**
+   * Store the signature info.
+   */
+  nsCOMArray<nsIX509CertList> mSignatureInfo;
+
+  /**
+   * Whether or not to extract the signature. Must be set on the main thread
+   * before setTarget is called.
+   */
+  bool mSignatureInfoEnabled;
+
   //////////////////////////////////////////////////////////////////////////////
   //// State handled exclusively by the worker thread
 
@@ -281,6 +297,13 @@ private:
    * Event called on the control thread to send the final notification.
    */
   nsresult NotifySaveComplete();
+
+  /**
+   * Verifies the signature of the binary at the specified file path and stores
+   * the signature data in mSignatureInfo. We extract only X.509 certificates,
+   * since that is what Google's Safebrowsing protocol specifies.
+   */
+  nsresult ExtractSignatureInfo(const nsAString& filePath);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

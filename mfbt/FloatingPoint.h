@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Types.h"
 
 #include <stdint.h>
@@ -288,6 +289,70 @@ SpecificFloatNaN(int signbit, uint32_t significand)
                                  significand);
   MOZ_ASSERT(IsFloatNaN(f));
   return f;
+}
+
+namespace detail {
+
+template<typename T>
+struct FuzzyEqualsEpsilon;
+
+template<>
+struct FuzzyEqualsEpsilon<float>
+{
+  // A number near 1e-5 that is exactly representable in
+  // floating point
+  static const float value() { return 1.0f / (1 << 17); }
+};
+
+template<>
+struct FuzzyEqualsEpsilon<double>
+{
+  // A number near 1e-12 that is exactly representable in
+  // a double
+  static const double value() { return 1.0 / (1LL << 40); }
+};
+
+} // namespace detail
+
+/**
+ * Compare two floating point values for equality, modulo rounding error. That
+ * is, the two values are considered equal if they are both not NaN and if they
+ * are less than or equal to epsilon apart. The default value of epsilon is near
+ * 1e-5.
+ *
+ * For most scenarios you will want to use FuzzyEqualsMultiplicative instead,
+ * as it is more reasonable over the entire range of floating point numbers.
+ * This additive version should only be used if you know the range of the numbers
+ * you are dealing with is bounded and stays around the same order of magnitude.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE bool
+FuzzyEqualsAdditive(T val1, T val2, T epsilon = detail::FuzzyEqualsEpsilon<T>::value())
+{
+  static_assert(IsFloatingPoint<T>::value, "floating point type required");
+  return Abs(val1 - val2) <= epsilon;
+}
+
+/**
+ * Compare two floating point values for equality, allowing for rounding error
+ * relative to the magnitude of the values. That is, the two values are
+ * considered equal if they are both not NaN and they are less than or equal to
+ * some epsilon apart, where the epsilon is scaled by the smaller of the two
+ * argument values.
+ *
+ * In most cases you will want to use this rather than FuzzyEqualsAdditive, as
+ * this function effectively masks out differences in the bottom few bits of
+ * the floating point numbers being compared, regardless of what order of magnitude
+ * those numbers are at.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE bool
+FuzzyEqualsMultiplicative(T val1, T val2, T epsilon = detail::FuzzyEqualsEpsilon<T>::value())
+{
+  static_assert(IsFloatingPoint<T>::value, "floating point type required");
+  // can't use std::min because of bug 965340
+  T smaller = Abs(val1) < Abs(val2) ? Abs(val1) : Abs(val2);
+  return Abs(val1 - val2) <= epsilon * smaller;
 }
 
 /**

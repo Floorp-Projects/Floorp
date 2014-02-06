@@ -329,7 +329,7 @@ AbstractFile.read = function read(path, bytes, options = {}) {
   let file = exports.OS.File.open(path);
   try {
     let buffer = file.read(bytes, options);
-    if (options.compression == "lz4") {
+    if ("compression" in options && options.compression == "lz4") {
       return Lz4.decompressFileContent(buffer, options);
     } else {
       return buffer;
@@ -399,7 +399,7 @@ AbstractFile.writeAtomic =
     buffer = new TextEncoder(encoding).encode(buffer);
   }
 
-  if (options.compression == "lz4") {
+  if ("compression" in options && options.compression == "lz4") {
     buffer = Lz4.compressFileContent(buffer, options);
     options = Object.create(options);
     options.bytes = buffer.byteLength;
