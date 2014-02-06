@@ -25,9 +25,6 @@ uint32_t CacheObserver::sMemoryLimit = kDefaultMemoryLimit;
 
 static uint32_t const kDefaultUseNewCache = 0; // Don't use the new cache by default
 uint32_t CacheObserver::sUseNewCache = kDefaultUseNewCache;
-
-static bool sUseNewCacheTemp = false; // Temp trigger to not lose early adopters
-
 static int32_t const kAutoDeleteCacheVersion = -1; // Auto-delete off by default
 static int32_t sAutoDeleteCacheVersion = kAutoDeleteCacheVersion;
 
@@ -105,8 +102,6 @@ CacheObserver::AttachToPreferences()
 
   mozilla::Preferences::AddUintVarCache(
     &sUseNewCache, "browser.cache.use_new_backend", kDefaultUseNewCache);
-  mozilla::Preferences::AddBoolVarCache(
-    &sUseNewCacheTemp, "browser.cache.use_new_backend_temp", false);
 
   mozilla::Preferences::AddBoolVarCache(
     &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
@@ -182,12 +177,7 @@ void CacheObserver::SchduleAutoDelete()
 // static
 bool const CacheObserver::UseNewCache()
 {
-  uint32_t useNewCache = sUseNewCache;
-
-  if (sUseNewCacheTemp)
-    useNewCache = 1;
-
-  switch (useNewCache) {
+  switch (sUseNewCache) {
     case 0: // use the old cache backend
       return false;
 
