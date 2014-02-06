@@ -752,10 +752,8 @@ var PlacesMenuDNDHandler = {
     if (!this._isStaticContainer(event.target))
       return;
 
-    /*
-     * If we re-enter the same menu or anchor before the close timer runs out,
-     * we should ensure that we do not close:
-     */
+    // If we re-enter the same menu or anchor before the close timer runs out,
+    // we should ensure that we do not close:
     if (this._closeTimer && this._closingTimerNode === event.currentTarget) {
       this._closeTimer.cancel();
       this._closingTimerNode = null;
