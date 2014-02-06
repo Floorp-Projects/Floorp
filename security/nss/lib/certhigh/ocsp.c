@@ -18,6 +18,7 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "cert.h"
+#include "certi.h"
 #include "xconst.h"
 #include "secerr.h"
 #include "secoid.h"
@@ -4184,8 +4185,9 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
         } else {
             certUsage = certUsageStatusResponder;
         }
-        rv = CERT_VerifyCert(handle, signerCert, PR_TRUE,
-                             certUsage, producedAt, pwArg, NULL);
+        rv = cert_VerifyCertWithFlags(handle, signerCert, PR_TRUE, certUsage,
+                                      producedAt, CERT_VERIFYCERT_SKIP_OCSP,
+                                      pwArg, NULL);
         if (rv != SECSuccess) {
             PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
             goto finish;
@@ -4227,8 +4229,7 @@ finish:
  * algorithm was used.
  */
 static PRBool
-ocsp_CertIDsMatch(CERTCertDBHandle *handle,
-		  CERTOCSPCertID *requestCertID,
+ocsp_CertIDsMatch(CERTOCSPCertID *requestCertID,
 		  CERTOCSPCertID *responseCertID)
 {
     PRBool match = PR_FALSE;
@@ -4285,7 +4286,7 @@ ocsp_CertIDsMatch(CERTCertDBHandle *handle,
 	break;
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
- 	return SECFailure;
+ 	return PR_FALSE;
     }
 
     if ((keyHash != NULL)
@@ -4319,7 +4320,7 @@ ocsp_GetSingleResponseForCertID(CERTOCSPSingleResponse **responses,
 
     for (i = 0; responses[i] != NULL; i++) {
 	single = responses[i];
-	if (ocsp_CertIDsMatch(handle, certID, single->certID)) {
+	if (ocsp_CertIDsMatch(certID, single->certID)) {
 	    return single;
 	}
     }
@@ -5086,6 +5087,9 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
     if (cachedResponseFreshness == ocspFresh) {
         CERT_DestroyOCSPCertID(certID);
+        if (rvOcsp != SECSuccess) {
+            PORT_SetError(cachedErrorCode);
+        }
         return rvOcsp;
     }
 

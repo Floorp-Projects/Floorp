@@ -342,6 +342,7 @@ struct CERTCertListStr {
 };
 
 #define CERT_LIST_HEAD(l) ((CERTCertListNode *)PR_LIST_HEAD(&l->list))
+#define CERT_LIST_TAIL(l) ((CERTCertListNode *)PR_LIST_TAIL(&l->list))
 #define CERT_LIST_NEXT(n) ((CERTCertListNode *)n->links.next)
 #define CERT_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
 #define CERT_LIST_EMPTY(l) CERT_LIST_END(CERT_LIST_HEAD(l), l)

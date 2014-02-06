@@ -1200,7 +1200,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
 
         /*
          * Check OCSP revocation status, but only if the cert we are checking
-         * is not a status reponder itself.  We only do this in the case
+         * is not a status responder itself. We only do this in the case
          * where we checked the cert chain (above); explicit trust "wins"
          * (avoids status checking, just as it avoids CRL checking) by
          * bypassing this code.
@@ -1235,10 +1235,19 @@ CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
 		PRBool checkSig, SECCertUsage certUsage, PRTime t,
 		void *wincx, CERTVerifyLog *log)
 {
+    return cert_VerifyCertWithFlags(handle, cert, checkSig, certUsage, t,
+                                    CERT_VERIFYCERT_USE_DEFAULTS, wincx, log);
+}
+
+SECStatus
+cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
+                         PRBool checkSig, SECCertUsage certUsage, PRTime t,
+                         PRUint32 flags, void *wincx, CERTVerifyLog *log)
+{
     SECStatus rv;
     unsigned int requiredKeyUsage;
     unsigned int requiredCertType;
-    unsigned int flags;
+    unsigned int failedFlags;
     unsigned int certType;
     PRBool       trusted;
     PRBool       allowOverride;
@@ -1307,10 +1316,10 @@ CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
 	LOG_ERROR_OR_EXIT(log,cert,0,requiredCertType);
     }
 
-    rv = cert_CheckLeafTrust(cert,certUsage, &flags, &trusted);
+    rv = cert_CheckLeafTrust(cert, certUsage, &failedFlags, &trusted);
     if (rv  == SECFailure) {
 	PORT_SetError(SEC_ERROR_UNTRUSTED_CERT);
-	LOG_ERROR_OR_EXIT(log,cert,0,flags);
+	LOG_ERROR_OR_EXIT(log, cert, 0, failedFlags);
     } else if (trusted) {
 	goto done;
     }
@@ -1323,15 +1332,17 @@ CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
 
     /*
-     * Check revocation status, but only if the cert we are checking
-     * is not a status reponder itself.  We only do this in the case
-     * where we checked the cert chain (above); explicit trust "wins"
-     * (avoids status checking, just as it avoids CRL checking, which
-     * is all done inside VerifyCertChain) by bypassing this code.
+     * Check revocation status, but only if the cert we are checking is not a
+     * status responder itself and the caller did not ask us to skip the check.
+     * We only do this in the case where we checked the cert chain (above);
+     * explicit trust "wins" (avoids status checking, just as it avoids CRL
+     * checking, which is all done inside VerifyCertChain) by bypassing this
+     * code.
      */
-    statusConfig = CERT_GetStatusConfig(handle);
-    if (certUsage != certUsageStatusResponder && statusConfig != NULL) {
-	if (statusConfig->statusChecker != NULL) {
+    if (!(flags & CERT_VERIFYCERT_SKIP_OCSP) &&
+	certUsage != certUsageStatusResponder) {
+	statusConfig = CERT_GetStatusConfig(handle);
+	if (statusConfig && statusConfig->statusChecker) {
 	    rv = (* statusConfig->statusChecker)(handle, cert,
 							 t, wincx);
 	    if (rv != SECSuccess) {
