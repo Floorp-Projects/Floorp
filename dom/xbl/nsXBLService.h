@@ -24,7 +24,6 @@ class nsIDocument;
 class nsString;
 class nsIURI;
 class nsIPrincipal;
-class nsSupportsHashtable;
 class nsHashtable;
 
 namespace mozilla {
