@@ -15,16 +15,21 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
+import com.squareup.picasso.Picasso;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.ImageView;
 
 import java.lang.ref.WeakReference;
 
 public class PanelListRow extends TwoLineRow {
+
+    private final ImageView mIcon;
 
     public PanelListRow(Context context) {
         this(context, null);
@@ -33,10 +38,7 @@ public class PanelListRow extends TwoLineRow {
     public PanelListRow(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        // XXX: Never show icon for now. We have to figure out
-        // how the images will be passed through the cursor.
-        final View iconView = findViewById(R.id.icon);
-        iconView.setVisibility(View.GONE);
+        mIcon = (ImageView) findViewById(R.id.icon);
     }
 
     @Override
@@ -55,5 +57,13 @@ public class PanelListRow extends TwoLineRow {
         int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
         final String url = cursor.getString(urlIndex);
         setSecondaryText(url);
+
+        int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
+        final String imageUrl = cursor.getString(imageIndex);
+
+        Picasso.with(getContext())
+               .load(imageUrl)
+               .error(R.drawable.favicon)
+               .into(mIcon);
     }
 }
