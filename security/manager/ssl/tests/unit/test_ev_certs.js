@@ -41,6 +41,8 @@ function failingOCSPResponder() {
   httpServer.registerPrefixHandler("/", function(request, response) {
     do_check_true(false);
   });
+  httpServer.identity.setPrimary("http", "www.example.com", SERVER_PORT);
+  httpServer.identity.add("http", "crl.example.com", SERVER_PORT);
   httpServer.start(SERVER_PORT);
   return httpServer;
 }
@@ -118,27 +120,26 @@ function run_test() {
 
 add_test(function() {
   clearOCSPCache();
-  // Until bug 950129 has been fixed on this branch, a request will
-  // also be made for "int-ev-valid" on non-debug builds.
   let ocspResponder = start_ocsp_responder(
                         isDebugBuild ? ["int-ev-valid", "ev-valid"]
-                                     : ["ev-valid", "int-ev-valid"]);
+                                     : ["ev-valid"]);
   check_ee_for_ev("ev-valid", isDebugBuild);
   ocspResponder.stop(run_next_test);
 });
 
 add_test(function() {
   clearOCSPCache();
-  // Until bug 950129 has been fixed on this branch, a request will
-  // also be made for "int-non-ev-root", which is unnecessary work.
-  let ocspResponder = start_ocsp_responder(["non-ev-root", "int-non-ev-root"]);
+  let ocspResponder = start_ocsp_responder(["non-ev-root"]);
   check_ee_for_ev("non-ev-root", false);
   ocspResponder.stop(run_next_test);
 });
 
 add_test(function() {
   clearOCSPCache();
-  let ocspResponder = failingOCSPResponder();
+  // libpkix will attempt to validate the intermediate, which does have an
+  // OCSP URL.
+  let ocspResponder = isDebugBuild ? start_ocsp_responder(["int-ev-valid"])
+                                   : failingOCSPResponder();
   check_ee_for_ev("no-ocsp-url-cert", false);
   ocspResponder.stop(run_next_test);
 });
@@ -165,11 +166,9 @@ add_test(function() {
                       Ci.nsIX509CertDB.TRUSTED_OBJSIGN);
 
   clearOCSPCache();
-  // Until bug 950129 has been fixed on this branch, a request will
-  // also be made for "int-ev-valid" on non-debug builds.
   let ocspResponder = start_ocsp_responder(
                         isDebugBuild ? ["int-ev-valid", "ev-valid"]
-                                     : ["ev-valid", "int-ev-valid"]);
+                                     : ["ev-valid"]);
   check_ee_for_ev("ev-valid", isDebugBuild);
   ocspResponder.stop(run_next_test);
 });
@@ -209,3 +208,29 @@ add_test(function() {
 add_test(function() {
   check_no_ocsp_requests("no-ocsp-url-cert");
 });
+
+
+// Test the EV continues to work with flags after successful EV verification
+add_test(function() {
+  clearOCSPCache();
+  let ocspResponder = start_ocsp_responder(
+                        isDebugBuild ? ["int-ev-valid", "ev-valid"]
+                                     : ["ev-valid"]);
+  check_ee_for_ev("ev-valid", isDebugBuild);
+  ocspResponder.stop(function() {
+    // without net it must be able to EV verify
+    let failingOcspResponder = failingOCSPResponder();
+    let cert = certdb.findCertByNickname(null, "ev-valid");
+    let hasEVPolicy = {};
+    let verifiedChain = {};
+    let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
+                Ci.nsIX509CertDB.FLAG_NO_DV_FALLBACK_FOR_EV;
+    
+    let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
+                                     flags, verifiedChain, hasEVPolicy);
+    do_check_eq(hasEVPolicy.value, isDebugBuild);
+    do_check_eq(error, 0);
+    failingOcspResponder.stop(run_next_test);
+  });
+});
+
