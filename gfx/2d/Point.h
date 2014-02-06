@@ -26,7 +26,7 @@ struct IntPointTyped :
   public units {
   typedef BasePoint< int32_t, IntPointTyped<units> > Super;
 
-  IntPointTyped() : Super() {}
+  MOZ_CONSTEXPR IntPointTyped() : Super() {}
   MOZ_CONSTEXPR IntPointTyped(int32_t aX, int32_t aY) : Super(aX, aY) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
@@ -48,9 +48,9 @@ struct PointTyped :
   public units {
   typedef BasePoint< Float, PointTyped<units> > Super;
 
-  PointTyped() : Super() {}
-  PointTyped(Float aX, Float aY) : Super(aX, aY) {}
-  PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
+  MOZ_CONSTEXPR PointTyped() : Super() {}
+  MOZ_CONSTEXPR PointTyped(Float aX, Float aY) : Super(aX, aY) {}
+  MOZ_CONSTEXPR PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -120,8 +120,8 @@ struct SizeTyped :
   public units {
   typedef BaseSize< Float, SizeTyped<units> > Super;
 
-  SizeTyped() : Super() {}
-  SizeTyped(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
+  MOZ_CONSTEXPR SizeTyped() : Super() {}
+  MOZ_CONSTEXPR SizeTyped(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<units>& size) :
     Super(float(size.width), float(size.height)) {}
 
