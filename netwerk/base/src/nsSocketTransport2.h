@@ -192,7 +192,6 @@ private:
           }
         }
         mFd = mSocketTransport->GetFD_Locked();
-        NS_WARN_IF_FALSE(mFd, "PRFileDescAutoLock cannot get fd!");
       }
       ~PRFileDescAutoLock() {
         MutexAutoLock lock(mSocketTransport->mLock);
