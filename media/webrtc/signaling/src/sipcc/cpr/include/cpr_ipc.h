@@ -6,6 +6,11 @@
 #define _CPR_IPC_H_
 
 #include "cpr_types.h"
+#include "cpr_threads.h"
+
+#ifndef SIP_OS_WINDOWS
+#include <pthread.h>
+#endif /* !SIP_OS_WINDOWS */
 
 __BEGIN_DECLS
 
@@ -21,13 +26,32 @@ typedef void* cprMsgQueue_t;
  */
 #define WAIT_FOREVER -1
 
-#if defined SIP_OS_LINUX
-#include "../linux/cpr_linux_ipc.h"
-#elif defined SIP_OS_WINDOWS
-#include "../win32/cpr_win_ipc.h"
-#elif defined SIP_OS_OSX
-#include "../darwin/cpr_darwin_ipc.h"
-#endif
+/* Enable support for cprSetMessageQueueThread API */
+#define CPR_USE_SET_MESSAGE_QUEUE_THREAD
+
+/* Maximum message size allowed by CNU */
+#define CPR_MAX_MSG_SIZE  8192
+
+/* Our CNU msgtype */
+#ifdef SIP_OS_WINDOWS
+#define PHONE_IPC_MSG 0xF005
+
+/* Msg buffer layout */
+struct msgbuffer {
+    int32_t mtype; /* Message type */
+    void *msgPtr;  /* Ptr to msg */
+    void *usrPtr;  /* Ptr to user data */
+};
+
+#else
+#define PHONE_IPC_MSG 1
+
+/*
+ * Mutex for updating the message queue list
+ */
+extern pthread_mutex_t msgQueueListMutex;
+
+#endif /* SIP_OS_WINDOWS */
 
 /* Function prototypes */
 /**
@@ -59,23 +83,6 @@ typedef void* cprMsgQueue_t;
 cprMsgQueue_t
 cprCreateMessageQueue(const char *name, uint16_t depth);
 
-
-/**
-  * cprDestroyMessageQueue
- * @brief Removes all messages from the queue and then destroy the message queue
- *
- * The cprDestroyMessageQueue function is called to destroy a message queue. The
- * function drains any messages from the queue and the frees the
- * message queue. Any messages on the queue are to be deleted, and not sent to the intended
- * recipient. It is the application's responsibility to ensure that no threads are
- * blocked on a message queue when it is destroyed.
- *
- * @param[in] msgQueue - message queue to destroy
- *
- * @return CPR_SUCCESS or CPR_FAILURE, errno should be provided in this case
- */
-cprRC_t
-cprDestroyMessageQueue(cprMsgQueue_t msgQueue);
 
 #ifdef CPR_USE_SET_MESSAGE_QUEUE_THREAD
 /**
@@ -158,6 +165,13 @@ cprRC_t
 cprSendMessage(cprMsgQueue_t msgQueue,
                void* msg,
                void** usrPtr);
+
+/**
+ * cprGetDepth
+ *
+ * Get depth of a message queue
+ */
+uint16_t cprGetDepth(cprMsgQueue_t msgQueue);
 
 __END_DECLS
 
