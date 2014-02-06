@@ -214,7 +214,7 @@
                        value="&manage.label;"/>
                 <spacer flex="1"/>
                 <vbox align="end">
-                  <button onclick="gSyncPane.unlinkFirefoxAccount(true);"
+                  <button oncommand="gSyncPane.unlinkFirefoxAccount(true);"
                           label="&disconnect.label;" />
                 </vbox>
               </hbox>
@@ -228,7 +228,7 @@
                 </description>
                 <spacer flex="1"/>
                 <vbox align="end">
-                  <button onclick="gSyncPane.verifyFirefoxAccount();"
+                  <button oncommand="gSyncPane.verifyFirefoxAccount();"
                           label="&verify.label;"/>
                   <label class="text-link"
                          onclick="/* no warning as account can't have previously synced */ gSyncPane.unlinkFirefoxAccount(false);"
@@ -245,7 +245,7 @@
                 </description>
                 <spacer flex="1"/>
                 <vbox align="end">
-                  <button onclick="gSyncPane.reSignIn();"
+                  <button oncommand="gSyncPane.reSignIn();"
                          label="&signIn.label;"/>
                   <label class="text-link"
                          onclick="gSyncPane.unlinkFirefoxAccount(true);"
