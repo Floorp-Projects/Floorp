@@ -78,7 +78,9 @@ static sslOptions ssl_defaults = {
     PR_FALSE,   /* requireSafeNegotiation */
     PR_FALSE,   /* enableFalseStart   */
     PR_TRUE,    /* cbcRandomIV        */
-    PR_FALSE    /* enableOCSPStapling */
+    PR_FALSE,   /* enableOCSPStapling */
+    PR_TRUE,    /* enableNPN          */
+    PR_FALSE    /* enableALPN         */
 };
 
 /*
@@ -152,6 +154,11 @@ ssl_GetPrivate(PRFileDesc *fd)
     }
 
     ss = (sslSocket *)fd->secret;
+    /* Set ss->fd lazily. We can't rely on the value of ss->fd set by
+     * ssl_PushIOLayer because another PR_PushIOLayer call will switch the
+     * contents of the PRFileDesc pointed by ss->fd and the new layer.
+     * See bug 807250.
+     */
     ss->fd = fd;
     return ss;
 }
@@ -177,6 +184,11 @@ ssl_FindSocket(PRFileDesc *fd)
     }
 
     ss = (sslSocket *)layer->secret;
+    /* Set ss->fd lazily. We can't rely on the value of ss->fd set by
+     * ssl_PushIOLayer because another PR_PushIOLayer call will switch the
+     * contents of the PRFileDesc pointed by ss->fd and the new layer.
+     * See bug 807250.
+     */
     ss->fd = layer;
     return ss;
 }
@@ -764,6 +776,14 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
        ss->opt.enableOCSPStapling = on;
        break;
 
+      case SSL_ENABLE_NPN:
+	ss->opt.enableNPN = on;
+	break;
+
+      case SSL_ENABLE_ALPN:
+	ss->opt.enableALPN = on;
+	break;
+
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	rv = SECFailure;
@@ -834,6 +854,8 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_FALSE_START:  on = ss->opt.enableFalseStart;   break;
     case SSL_CBC_RANDOM_IV:       on = ss->opt.cbcRandomIV;        break;
     case SSL_ENABLE_OCSP_STAPLING: on = ss->opt.enableOCSPStapling; break;
+    case SSL_ENABLE_NPN:          on = ss->opt.enableNPN;          break;
+    case SSL_ENABLE_ALPN:         on = ss->opt.enableALPN;         break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -895,6 +917,8 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_OCSP_STAPLING:
        on = ssl_defaults.enableOCSPStapling;
        break;
+    case SSL_ENABLE_NPN:          on = ssl_defaults.enableNPN;          break;
+    case SSL_ENABLE_ALPN:         on = ssl_defaults.enableALPN;         break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1061,6 +1085,14 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
       case SSL_ENABLE_OCSP_STAPLING:
        ssl_defaults.enableOCSPStapling = on;
        break;
+
+      case SSL_ENABLE_NPN:
+	ssl_defaults.enableNPN = on;
+	break;
+
+      case SSL_ENABLE_ALPN:
+	ssl_defaults.enableALPN = on;
+	break;
 
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -2375,6 +2407,7 @@ static PRInt32 PR_CALLBACK
 ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors, 
            PRIntervalTime timeout)
 {
+    PRInt32            i;
     PRInt32            bufLen;
     PRInt32            left;
     PRInt32            rv;
@@ -2385,9 +2418,19 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
     PRIOVec            myIov	 = { 0, 0 };
     char               buf[MAX_FRAGMENT_LENGTH];
 
+    if (vectors < 0) {
+    	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+	return -1;
+    }
     if (vectors > PR_MAX_IOVECTOR_SIZE) {
     	PORT_SetError(PR_BUFFER_OVERFLOW_ERROR);
 	return -1;
+    }
+    for (i = 0; i < vectors; i++) {
+	if (iov[i].iov_len < 0) {
+	    PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+	    return -1;
+	}
     }
     blocking = ssl_FdIsBlocking(fd);
 

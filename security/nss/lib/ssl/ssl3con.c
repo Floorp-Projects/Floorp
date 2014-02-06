@@ -4840,6 +4840,7 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
     int              actual_count = 0;
     PRBool           isTLS = PR_FALSE;
     PRInt32          total_exten_len = 0;
+    unsigned         paddingExtensionLen;
     unsigned         numCompressionMethods;
     PRInt32          flags;
 
@@ -5113,6 +5114,20 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 	length += 1 + ss->ssl3.hs.cookieLen;
     }
 
+    /* A padding extension may be included to ensure that the record containing
+     * the ClientHello doesn't have a length between 256 and 511 bytes
+     * (inclusive). Initial, ClientHello records with such lengths trigger bugs
+     * in F5 devices.
+     *
+     * This is not done for DTLS nor for renegotiation. */
+    if (!IS_DTLS(ss) && isTLS && !ss->firstHsDone) {
+        paddingExtensionLen = ssl3_CalculatePaddingExtensionLength(length);
+        total_exten_len += paddingExtensionLen;
+        length += paddingExtensionLen;
+    } else {
+        paddingExtensionLen = 0;
+    }
+
     rv = ssl3_AppendHandshakeHeader(ss, client_hello, length);
     if (rv != SECSuccess) {
 	if (sid->u.ssl3.lock) { PR_RWLock_Unlock(sid->u.ssl3.lock); }
@@ -5247,6 +5262,14 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 	    return SECFailure;
 	}
 	maxBytes -= extLen;
+
+	extLen = ssl3_AppendPaddingExtension(ss, paddingExtensionLen, maxBytes);
+	if (extLen < 0) {
+	    if (sid->u.ssl3.lock) { PR_RWLock_Unlock(sid->u.ssl3.lock); }
+	    return SECFailure;
+	}
+	maxBytes -= extLen;
+
 	PORT_Assert(!maxBytes);
     } 
 
@@ -10162,8 +10185,10 @@ ssl3_SendNextProto(sslSocket *ss)
     int padding_len;
     static const unsigned char padding[32] = {0};
 
-    if (ss->ssl3.nextProto.len == 0)
+    if (ss->ssl3.nextProto.len == 0 ||
+	ss->ssl3.nextProtoState == SSL_NEXT_PROTO_SELECTED) {
 	return SECSuccess;
+    }
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
