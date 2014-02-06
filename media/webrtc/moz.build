@@ -169,7 +169,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/sipcc/cpr/darwin/cpr_darwin_stdio.c',
         'signaling/src/sipcc/cpr/darwin/cpr_darwin_timers_using_select.c',
         'signaling/src/sipcc/cpr/linux/cpr_linux_init.c',
-        'signaling/src/sipcc/cpr/linux/cpr_linux_ipc.c',
         'signaling/src/sipcc/cpr/linux/cpr_linux_stdio.c',
         'signaling/src/sipcc/cpr/linux/cpr_linux_timers_using_select.c',
         'signaling/src/sipcc/cpr/win32/cpr_win_stdio.c',
