@@ -1835,7 +1835,7 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
                                 MAGIC_PREALLOCATED_APP_MANIFEST_URL,
                                 aPid,
                                 aFds,
-                                base::PRIVILEGES_DEFAULT);
+                                base::PRIVILEGES_INHERIT);
     content->Init();
     PreallocatedProcessManager::PublishSpareProcess(content);
     return true;

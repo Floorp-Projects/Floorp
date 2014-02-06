@@ -20,8 +20,10 @@ public class testAdobeFlash extends PixelTest {
 
     public void testLoad() {
         // This test only works on ICS and higher
-        if (Build.VERSION.SDK_INT < 15)
+        if (Build.VERSION.SDK_INT < 15) {
+            blockForGeckoReady();
             return;
+        }
 
         // Enable plugins
         JSONObject jsonPref = new JSONObject();

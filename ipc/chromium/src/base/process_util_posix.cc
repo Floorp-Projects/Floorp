@@ -267,6 +267,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
 
   if (WIFSIGNALED(status)) {
     switch(WTERMSIG(status)) {
+      case SIGSYS:
       case SIGSEGV:
       case SIGILL:
       case SIGABRT:
