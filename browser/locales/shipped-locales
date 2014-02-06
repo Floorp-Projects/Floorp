@@ -1,6 +1,8 @@
+ach
 af
-ak
+an
 ar
+as
 ast
 be
 bg
@@ -10,6 +12,7 @@ br
 bs
 ca
 cs
+csb
 cy
 da
 de
@@ -25,6 +28,7 @@ es-MX
 et
 eu
 fa
+ff
 fi
 fr
 fy-NL
@@ -43,10 +47,11 @@ it
 ja linux win32
 ja-JP-mac osx
 kk
+km
 kn
 ko
 ku
-lg
+lij
 lt
 lv
 mai
@@ -56,7 +61,6 @@ mr
 nb-NO
 nl
 nn-NO
-nso
 or
 pa-IN
 pl
@@ -72,13 +76,14 @@ son
 sq
 sr
 sv-SE
+sw
 ta
-ta-LK
 te
 th
 tr
 uk
 vi
+xh
 zh-CN
 zh-TW
 zu
