@@ -241,6 +241,7 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
       // relaunches Metro Firefox with this command line arg.
       mainFlags = XRE_MAIN_FLAG_USE_METRO;
     } else {
+#ifndef RELEASE_BUILD
       // This command-line flag is used to test the metro browser in a desktop
       // environment.
       for (int idx = 1; idx < argc; idx++) {
@@ -252,6 +253,7 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
           break;
         } 
       }
+#endif
     }
   }
 #endif
@@ -295,13 +297,6 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
   nsAutoCString path;
   if (NS_FAILED(iniFile->GetNativePath(path))) {
     Output("Couldn't get ini file path.\n");
-    return 255;
-  }
-
-  char appEnv[MAXPATHLEN];
-  snprintf(appEnv, MAXPATHLEN, "XUL_APP_FILE=%s", path.get());
-  if (putenv(appEnv)) {
-    Output("Couldn't set %s.\n", appEnv);
     return 255;
   }
 
