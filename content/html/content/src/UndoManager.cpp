@@ -1227,11 +1227,3 @@ UndoManager::Disconnect()
 {
   mIsDisconnected = true;
 }
-
-bool
-UndoManager::PrefEnabled()
-{
-  static bool sPrefValue = Preferences::GetBool("dom.undo_manager.enabled", false);
-  return sPrefValue;
-}
-

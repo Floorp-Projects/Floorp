@@ -85,8 +85,6 @@ public:
 
   void Close();
 
-  static bool PrefEnabled();
-
   nsPIDOMWindow* GetParentObject()
   {
     return GetOwner();

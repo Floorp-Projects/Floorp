@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
+[Constructor,
+ Func="mozilla::dom::SpeechGrammar::PrefEnabled"]
 interface SpeechGrammar {
     [Throws]
     attribute DOMString src;
