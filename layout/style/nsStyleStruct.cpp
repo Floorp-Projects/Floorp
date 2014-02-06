@@ -2467,7 +2467,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
-  if (mWillChangeBitField != aOther.mWillChangeBitField) {
+  uint8_t willChangeBitsChanged =
+    mWillChangeBitField ^ aOther.mWillChangeBitField;
+  if (willChangeBitsChanged & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+  if (willChangeBitsChanged & ~uint8_t(NS_STYLE_WILL_CHANGE_STACKING_CONTEXT)) {
+    // FIXME (Bug 974125): Don't reconstruct the frame
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
   }
 
