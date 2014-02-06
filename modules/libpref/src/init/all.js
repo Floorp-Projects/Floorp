@@ -282,9 +282,6 @@ pref("media.encoder.webm.enabled", true);
 pref("media.encoder.omx.enabled", true);
 #endif
 
-// Whether to enable Web Audio support
-pref("media.webaudio.enabled", true);
-
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
@@ -1392,6 +1389,7 @@ pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
 pref("intl.charset.fallback.override",      "");
+pref("intl.charset.fallback.tld",           true);
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 pref("intl.locale.matchOS",                 false);
 // fallback charset list for Unicode conversion (converting from Unicode)
