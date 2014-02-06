@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
+[Constructor,
+ Func="mozilla::dom::SpeechRecognition::PrefEnabled"]
 interface SpeechRecognition : EventTarget {
     // recognition parameters
     [Throws]

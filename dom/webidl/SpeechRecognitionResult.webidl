@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
+[Func="mozilla::dom::SpeechRecognitionResult::PrefEnabled"]
 interface SpeechRecognitionResult {
     readonly attribute unsigned long length;
     getter SpeechRecognitionAlternative item(unsigned long index);

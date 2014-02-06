@@ -23,7 +23,7 @@ class Touch MOZ_FINAL : public nsISupports
                       , public nsWrapperCache
 {
 public:
-  static bool PrefEnabled();
+  static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
 
   Touch(mozilla::dom::EventTarget* aTarget,
         int32_t aIdentifier,

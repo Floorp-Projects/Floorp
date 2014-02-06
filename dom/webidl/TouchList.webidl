@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
+[Func="nsDOMTouchList::PrefEnabled"]
 interface TouchList {
   [Pure]
   readonly attribute unsigned long length;

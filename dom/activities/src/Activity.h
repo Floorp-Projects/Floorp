@@ -23,11 +23,6 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  static bool PrefEnabled()
-  {
-    return Preferences::GetBool("dom.sysmsg.enabled", false);
-  }
-
   static already_AddRefed<Activity>
   Constructor(const GlobalObject& aOwner,
               nsIDOMMozActivityOptions* aOptions,

@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
+[Pref="dom.webcomponents.enabled"]
 interface ShadowRoot : DocumentFragment
 {
   Element? getElementById(DOMString elementId);

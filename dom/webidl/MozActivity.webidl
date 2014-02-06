@@ -6,6 +6,7 @@
 
 interface ActivityOptions;
 
-[PrefControlled, Constructor(ActivityOptions options)]
+[Pref="dom.sysmsg.enabled",
+ Constructor(ActivityOptions options)]
 interface MozActivity : DOMRequest {
 };

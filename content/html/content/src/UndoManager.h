@@ -46,7 +46,6 @@ public:
   uint32_t GetPosition(ErrorResult& aRv);
   void ClearUndo(ErrorResult& aRv);
   void ClearRedo(ErrorResult& aRv);
-  static bool PrefEnabled();
   void Disconnect();
 
   nsISupports* GetParentObject() const
