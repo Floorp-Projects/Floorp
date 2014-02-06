@@ -617,6 +617,16 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
           radioInterface.receiveMessage(msg);
         }).bind(this);
 
+        // In 2G network, modem takes 35+ seconds to process deactivate data
+        // call request if device has active voice call (please see bug 964974
+        // for more details). Therefore we should hangup all active voice calls
+        // first. And considering some DSDS architecture, toggling one radio may
+        // toggle both, so we send hangUpAll to all clients.
+        for (let i = 0, N = this.ril.numRadioInterfaces; i < N; ++i) {
+          let iface = this.ril.getRadioInterface(i);
+          iface.workerMessenger.send("hangUpAll");
+        }
+
         // In some DSDS architecture with only one modem, toggling one radio may
         // toggle both. Therefore, for safely turning off, we should first
         // explicitly deactivate all data calls from all clients.
