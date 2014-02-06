@@ -146,6 +146,23 @@ HwcComposer2D::ReallocLayerList()
     return true;
 }
 
+void
+HwcComposer2D::setCrop(HwcLayer* layer, hwc_rect_t srcCrop)
+{
+#if ANDROID_VERSION >= 19
+    if (mHwc->common.version >= HWC_DEVICE_API_VERSION_1_3) {
+        layer->sourceCropf.left = srcCrop.left;
+        layer->sourceCropf.top = srcCrop.top;
+        layer->sourceCropf.right = srcCrop.right;
+        layer->sourceCropf.bottom = srcCrop.bottom;
+    } else {
+        layer->sourceCrop = srcCrop;
+    }
+#else
+    layer->sourceCrop = srcCrop;
+#endif
+}
+
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
                                 const nsIntRect& aClip,
@@ -264,17 +281,19 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     HwcLayer& hwcLayer = mList->hwLayers[current];
+    hwc_rect_t sourceCrop;
 
     if(!HwcUtils::PrepareLayerRects(visibleRect,
                           transform * aGLWorldTransform,
                           clip,
                           bufferRect,
-                          &(hwcLayer.sourceCrop),
+                          &(sourceCrop),
                           &(hwcLayer.displayFrame)))
     {
         return true;
     }
 
+    setCrop(&hwcLayer, sourceCrop);
     buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
     hwcLayer.handle = handle;
 
@@ -603,10 +622,10 @@ HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
     mList->hwLayers[idx].handle = fbHandle;
     mList->hwLayers[idx].blending = HWC_BLENDING_PREMULT;
     mList->hwLayers[idx].compositionType = HWC_FRAMEBUFFER_TARGET;
-    mList->hwLayers[idx].sourceCrop = r;
+    setCrop(&mList->hwLayers[idx], r);
     mList->hwLayers[idx].displayFrame = r;
     mList->hwLayers[idx].visibleRegionScreen.numRects = 1;
-    mList->hwLayers[idx].visibleRegionScreen.rects = &mList->hwLayers[idx].sourceCrop;
+    mList->hwLayers[idx].visibleRegionScreen.rects = &mList->hwLayers[idx].displayFrame;
     mList->hwLayers[idx].acquireFenceFd = fence;
     mList->hwLayers[idx].releaseFenceFd = -1;
     mList->hwLayers[idx].planeAlpha = 0xFF;

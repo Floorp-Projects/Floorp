@@ -11,16 +11,13 @@
 <script class="testbody" type="text/javascript">
 
 function startTest() {
-  var element = document.createElement('audio');
-
-  element.src = 'detodos.opus';
-  element.stream = element.mozCaptureStream();
   // the expect sequence should be
   // 1. onerror
   // 2. ondataavailable
   // 3. onstop
   var callbackStep = 0;
-  var mediaRecorder = new MediaRecorder(element.stream);
+  var stream = new AudioContext().createMediaStreamDestination().stream;
+  var mediaRecorder = new MediaRecorder(stream);
 
   mediaRecorder.onerror = function (e) {
     is(callbackStep, 0, 'should fired onstop callback');
@@ -28,7 +25,6 @@ function startTest() {
     is(mediaRecorder.mimeType, '', 'mimetype should be empty');
     is(mediaRecorder.state, 'recording', 'state is recording');
     info('onerror callback fired');
-    SpecialPowers.setBoolPref('media.ogg.enabled', true);
     callbackStep = 1;
   };
 
@@ -54,20 +50,16 @@ function startTest() {
     callbackStep = 2;
   };
 
-  // Start recording once canplaythrough fires
-  element.oncanplaythrough = function() {
-    SpecialPowers.setBoolPref("media.ogg.enabled", false);
-    mediaRecorder.start(250);
-    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-    is(mediaRecorder.stream, element.stream,
-       'Media recorder stream = element stream at the start of recording');
-  };
-
-  element.play();
+  // Start recording
+  mediaRecorder.start(250);
+  is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+  is(mediaRecorder.stream, stream,
+     'Media recorder stream = element stream at the start of recording');
 }
 
-startTest();
 SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]}, startTest);
+
 </script>
 </pre>
 </body>

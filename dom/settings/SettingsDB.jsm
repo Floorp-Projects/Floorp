@@ -19,7 +19,7 @@ function debug(s) {
 }
 
 this.SETTINGSDB_NAME = "settings";
-this.SETTINGSDB_VERSION = 2;
+this.SETTINGSDB_VERSION = 3;
 this.SETTINGSSTORE_NAME = "settings";
 
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");

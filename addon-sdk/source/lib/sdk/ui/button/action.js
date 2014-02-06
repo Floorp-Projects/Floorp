@@ -34,7 +34,14 @@ const { events: stateEvents } = require('../state/events');
 const { events: viewEvents } = require('./view/events');
 const events = require('../../event/utils');
 
+const { id: addonID } = require('../../self');
+const { identify } = require('../id');
+
 const buttons = new Map();
+
+const toWidgetId = id =>
+  ('action-button--' + addonID.toLowerCase()+ '-' + id).
+    replace(/[^a-z0-9_-]/g, '');
 
 const ActionButton = Class({
   extends: EventTarget,
@@ -48,31 +55,36 @@ const ActionButton = Class({
       disabled: false
     }, buttonContract(options));
 
+    let id = toWidgetId(options.id);
+
     register(this, state);
 
     // Setup listeners.
     setListeners(this, options);
 
-    buttons.set(options.id, this);
+    buttons.set(id, this);
 
-    view.create(state);
+    view.create(merge({}, state, { id: id }));
   },
 
   dispose: function dispose() {
-    buttons.delete(this.id);
+    let id = toWidgetId(this.id);
+    buttons.delete(id);
 
     off(this);
 
-    view.dispose(this.id);
+    view.dispose(id);
 
     unregister(this);
   },
 
   get id() this.state().id,
 
-  click: function click() { view.click(this.id) }
+  click: function click() { view.click(toWidgetId(this.id)) }
 });
 exports.ActionButton = ActionButton;
+
+identify.define(ActionButton, ({id}) => toWidgetId(id));
 
 let actionButtonStateEvents = events.filter(stateEvents,
   e => e.target instanceof ActionButton);
@@ -95,7 +107,7 @@ on(updateEvents, 'data', ({target: id, window}) => {
 });
 
 on(actionButtonStateEvents, 'data', ({target, window, state}) => {
-  let { id } = target;
+  let id = toWidgetId(target.id);
   view.setIcon(id, window, state.icon);
   view.setLabel(id, window, state.label);
   view.setDisabled(id, window, state.disabled);

@@ -24,6 +24,23 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothDBusService : public BluetoothService
 {
 public:
+  /**
+   * For DBus Control method of "UpdateNotification", event id should be
+   * specified as following:
+   * (Please see specification of AVRCP 1.3, Table 5.28 for more details.)
+   */
+  enum ControlEventId {
+    EVENT_PLAYBACK_STATUS_CHANGED            = 0x01,
+    EVENT_TRACK_CHANGED                      = 0x02,
+    EVENT_TRACK_REACHED_END                  = 0x03,
+    EVENT_TRACK_REACHED_START                = 0x04,
+    EVENT_PLAYBACK_POS_CHANGED               = 0x05,
+    EVENT_BATT_STATUS_CHANGED                = 0x06,
+    EVENT_SYSTEM_STATUS_CHANGED              = 0x07,
+    EVENT_PLAYER_APPLICATION_SETTING_CHANGED = 0x08,
+    EVENT_UNKNOWN
+  };
+
   BluetoothDBusService();
   ~BluetoothDBusService();
 
@@ -159,23 +176,6 @@ public:
   SendInputMessage(const nsAString& aDeviceAddresses,
                    const nsAString& aMessage) MOZ_OVERRIDE;
 private:
-  /**
-   * For DBus Control method of "UpdateNotification", event id should be
-   * specified as following:
-   * (Please see specification of AVRCP 1.3, Table 5.28 for more details.)
-   */
-  enum ControlEventId {
-    EVENT_PLAYBACK_STATUS_CHANGED            = 0x01,
-    EVENT_TRACK_CHANGED                      = 0x02,
-    EVENT_TRACK_REACHED_END                  = 0x03,
-    EVENT_TRACK_REACHED_START                = 0x04,
-    EVENT_PLAYBACK_POS_CHANGED               = 0x05,
-    EVENT_BATT_STATUS_CHANGED                = 0x06,
-    EVENT_SYSTEM_STATUS_CHANGED              = 0x07,
-    EVENT_PLAYER_APPLICATION_SETTING_CHANGED = 0x08,
-    EVENT_UNKNOWN
-  };
-
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,
                                   void (*aCB)(DBusMessage *, void *),

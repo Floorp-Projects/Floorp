@@ -8,7 +8,6 @@ DEFAULT_COMMON_PREFS = {
     # sets this preference)
     'browser.dom.window.dump.enabled': True,
     # warn about possibly incorrect code
-    'javascript.options.strict': True,
     'javascript.options.showInConsole': True,
 
     # Allow remote connections to the debugger

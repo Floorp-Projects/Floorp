@@ -27,7 +27,7 @@ enum NFCTechType {
 interface MozNFCTag {
   DOMRequest getDetailsNDEF();
   DOMRequest readNDEF();
-  DOMRequest writeNDEF(sequence<MozNdefRecord> records);
+  DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
   DOMRequest makeReadOnlyNDEF();
 
   DOMRequest connect(NFCTechType techType);

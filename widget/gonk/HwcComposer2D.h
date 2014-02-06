@@ -70,6 +70,7 @@ private:
     bool ReallocLayerList();
     bool PrepareLayerList(layers::Layer* aContainer, const nsIntRect& aClip,
           const gfxMatrix& aParentTransform, const gfxMatrix& aGLWorldTransform);
+    void setCrop(HwcLayer* layer, hwc_rect_t srcCrop);
 
     HwcDevice*              mHwc;
     HwcList*                mList;

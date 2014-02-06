@@ -13,9 +13,7 @@ module.metadata = {
 const { Cu } = require('chrome');
 const { on, off, emit } = require('../../event/core');
 
-const { id: addonID, data } = require('sdk/self');
-const buttonPrefix =
-  'button--' + addonID.toLowerCase().replace(/[^a-z0-9-_]/g, '');
+const { data } = require('sdk/self');
 
 const { isObject } = require('../../lang/type');
 
@@ -27,9 +25,6 @@ const { AREA_PANEL, AREA_NAVBAR } = CustomizableUI;
 const { events: viewEvents } = require('./view/events');
 
 const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-
-const toWidgetID = id => buttonPrefix + '-' + id;
-const toButtonID = id => id.substr(buttonPrefix.length + 1);
 
 const views = new Map();
 const customizedWindows = new WeakMap();
@@ -47,14 +42,14 @@ const buttonListener = {
     customizedWindows.delete(window);
 
     for (let [id, ] of views) {
-      let placement = CustomizableUI.getPlacementOfWidget(toWidgetID(id));
+      let placement = CustomizableUI.getPlacementOfWidget(id);
 
       if (placement)
         emit(viewEvents, 'data', { type: 'update', target: id, window: window });
     }
   },
   onWidgetAfterDOMChange: (node, nextNode, container) => {
-    let id = toButtonID(node.id);
+    let { id } = node;
     let view = views.get(id);
     let window = node.ownerDocument.defaultView;
 
@@ -73,11 +68,11 @@ require('../../system/unload').when( _ =>
 function getNode(id, window) {
   return !views.has(id) || ignoreWindow(window)
     ? null
-    : CustomizableUI.getWidget(toWidgetID(id)).forWindow(window).node
+    : CustomizableUI.getWidget(id).forWindow(window).node
 };
 
 function isInToolbar(id) {
-  let placement = CustomizableUI.getPlacementOfWidget(toWidgetID(id));
+  let placement = CustomizableUI.getPlacementOfWidget(id);
 
   return placement && CustomizableUI.getAreaType(placement.area) === 'toolbar';
 }
@@ -120,7 +115,7 @@ function create(options) {
     throw new Error('The ID "' + id + '" seems already used.');
 
   CustomizableUI.createWidget({
-    id: toWidgetID(id),
+    id: id,
     type: 'custom',
     removable: true,
     defaultArea: AREA_NAVBAR,
@@ -131,7 +126,7 @@ function create(options) {
 
       let node = document.createElementNS(XUL_NS, 'toolbarbutton');
 
-      let image = getImage(icon, false, window.devicePixelRatio);
+      let image = getImage(icon, true, window.devicePixelRatio);
 
       if (ignoreWindow(window))
         node.style.display = 'none';
@@ -170,7 +165,7 @@ function dispose(id) {
   if (!views.has(id)) return;
 
   views.delete(id);
-  CustomizableUI.destroyWidget(toWidgetID(id));
+  CustomizableUI.destroyWidget(id);
 }
 exports.dispose = dispose;
 

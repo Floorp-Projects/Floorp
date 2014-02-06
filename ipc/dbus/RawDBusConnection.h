@@ -7,14 +7,7 @@
 #ifndef mozilla_ipc_dbus_gonk_rawdbusconnection_h__
 #define mozilla_ipc_dbus_gonk_rawdbusconnection_h__
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include "nscore.h"
 #include "mozilla/Scoped.h"
-#include <mozilla/Mutex.h>
 
 struct DBusConnection;
 struct DBusError;
