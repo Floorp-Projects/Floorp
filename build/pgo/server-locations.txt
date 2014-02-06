@@ -205,3 +205,10 @@ https://www2.w3c-test.org:443
 https://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:443
 https://xn--lve-6lad.w3c-test.org:443
 http://test.w3.org:80
+
+# Hosts for testing TLD-based fallback encoding
+http://example.tw:80                privileged
+http://example.cn:80                privileged
+http://example.co.jp:80             privileged
+http://example.fi:80                privileged
+

@@ -288,6 +288,8 @@ public:
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
 
   virtual void UseTextureHost(TextureHost* aTexture);
+  virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                         TextureHost* aTextureOnWhite);
 
 protected:
   TextureInfo mTextureInfo;
