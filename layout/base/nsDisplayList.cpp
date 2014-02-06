@@ -3330,9 +3330,10 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame,
+                                                 nsIFrame* aStickyPosFrame,
                                                  nsDisplayList* aList)
   : nsDisplayOwnLayer(aBuilder, aFrame, aList)
-{
+  , mStickyPosFrame(aStickyPosFrame) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
 
@@ -3367,9 +3368,9 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
       GetScrollPositionClampingScrollPortSize();
   }
 
-  nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame,
-    nsRect(scrollFrame->GetOffsetToCrossDoc(ReferenceFrame()), scrollFrameSize),
-    mFrame, presContext, aContainerParameters);
+  nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame, scrollFrameSize,
+                                           mStickyPosFrame,
+                                           presContext, aContainerParameters);
 
   ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
@@ -3404,7 +3405,7 @@ bool nsDisplayStickyPosition::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplay
     return false;
   // Items with the same fixed position frame can be merged.
   nsDisplayStickyPosition* other = static_cast<nsDisplayStickyPosition*>(aItem);
-  if (other->mFrame != mFrame)
+  if (other->mStickyPosFrame != mStickyPosFrame)
     return false;
   if (aItem->GetClip() != GetClip())
     return false;
