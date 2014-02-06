@@ -28,6 +28,8 @@ LOCAL_INCLUDES += [
 ]
 
 GENERATED_FILES += [
+    'domainsfallbacks.properties.h',
     'labelsencodings.properties.h',
     'localesfallbacks.properties.h',
+    'nonparticipatingdomains.properties.h',
 ]
