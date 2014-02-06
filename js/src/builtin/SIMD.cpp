@@ -204,7 +204,7 @@ CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
     // Create type constructor itself and initialize its reserved slots.
 
     Rooted<X4TypeDescr*> x4(cx);
-    x4 = NewObjectWithProto<X4TypeDescr>(cx, funcProto, global);
+    x4 = NewObjectWithProto<X4TypeDescr>(cx, funcProto, global, TenuredObject);
     if (!x4 || !InitializeCommonTypeDescriptorProperties(cx, x4, typeReprObj))
         return nullptr;
     x4->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
