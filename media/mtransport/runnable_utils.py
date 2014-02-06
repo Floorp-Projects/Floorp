@@ -77,20 +77,23 @@ def runnable_class_name(args, ret=False, member=True):
 
     if ret:
         class_suffix = "_ret"
+        enum_specializer = "detail::ReturnsResult"
     else:
         class_suffix = ""
+        enum_specializer = "detail::NoResult"
 
-    return "runnable_args_%s_%d%s" % (nm, args, class_suffix)
+    return "runnable_args_%s_%d%s" % (nm, args, class_suffix), enum_specializer
 
 def generate_class_template(args, ret = False, member = True):
     print "// %d arguments --"%args
 
-    class_name = runnable_class_name(args, ret, member)
+    class_name, specializer = runnable_class_name(args, ret, member)
+    base_class = "detail::runnable_args_base<%s>" % specializer
 
     if not ret:
-        print "template<"+ gen_typenames(args, member) + "> class %s : public runnable_args_base {" % class_name
+        print "template<"+ gen_typenames(args, member) + "> class %s : public %s {" % (class_name, base_class)
     else:
-        print "template<"+ gen_typenames(args, member) + ", typename R> class %s : public runnable_args_base {" % class_name
+        print "template<"+ gen_typenames(args, member) + ", typename R> class %s : public %s {" % (class_name, base_class)
 
     print " public:"
 
@@ -100,7 +103,6 @@ def generate_class_template(args, ret = False, member = True):
     else:
         print "  %s(" % class_name + gen_args_type(args, member) + ", R *r) :"
         print "    " + gen_init(args, True, member) + "  {}"
-        print "  virtual bool returns_value() const { return true; }"
     print
     print "  NS_IMETHOD Run() {"
     if ret:
@@ -134,7 +136,7 @@ def generate_function_template(args, member):
     else:
         NM = "NM";
 
-    class_name = runnable_class_name(args, False, member)
+    class_name, _ = runnable_class_name(args, False, member)
 
     print "// %d arguments --"%args
     print "template<" + gen_typenames(args, member) + ">"
@@ -150,7 +152,7 @@ def generate_function_template_ret(args, member):
     else:
         NM = "NM";
 
-    class_name = runnable_class_name(args, True, member)
+    class_name, _ = runnable_class_name(args, True, member)
 
     print "// %d arguments --"%args
     print "template<" + gen_typenames(args, member) + ", typename R>"

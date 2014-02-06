@@ -4,7 +4,7 @@
 
 
 // 0 arguments --
-template<typename M> class runnable_args_nm_0 : public runnable_args_base {
+template<typename M> class runnable_args_nm_0 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_0(M m) :
     m_(m)  {}
@@ -21,11 +21,10 @@ template<typename M> class runnable_args_nm_0 : public runnable_args_base {
 
 
 // 0 arguments --
-template<typename M, typename R> class runnable_args_nm_0_ret : public runnable_args_base {
+template<typename M, typename R> class runnable_args_nm_0_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_0_ret(M m, R *r) :
     m_(m), r_(r)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_();
@@ -40,7 +39,7 @@ template<typename M, typename R> class runnable_args_nm_0_ret : public runnable_
 
 
 // 0 arguments --
-template<typename C, typename M> class runnable_args_m_0 : public runnable_args_base {
+template<typename C, typename M> class runnable_args_m_0 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_0(C o, M m) :
     o_(o), m_(m)  {}
@@ -58,11 +57,10 @@ template<typename C, typename M> class runnable_args_m_0 : public runnable_args_
 
 
 // 0 arguments --
-template<typename C, typename M, typename R> class runnable_args_m_0_ret : public runnable_args_base {
+template<typename C, typename M, typename R> class runnable_args_m_0_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_0_ret(C o, M m, R *r) :
     o_(o), m_(m), r_(r)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)();
@@ -78,7 +76,7 @@ template<typename C, typename M, typename R> class runnable_args_m_0_ret : publi
 
 
 // 1 arguments --
-template<typename M, typename A0> class runnable_args_nm_1 : public runnable_args_base {
+template<typename M, typename A0> class runnable_args_nm_1 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_1(M m, A0 a0) :
     m_(m), a0_(a0)  {}
@@ -96,11 +94,10 @@ template<typename M, typename A0> class runnable_args_nm_1 : public runnable_arg
 
 
 // 1 arguments --
-template<typename M, typename A0, typename R> class runnable_args_nm_1_ret : public runnable_args_base {
+template<typename M, typename A0, typename R> class runnable_args_nm_1_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_1_ret(M m, A0 a0, R *r) :
     m_(m), r_(r), a0_(a0)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_);
@@ -116,7 +113,7 @@ template<typename M, typename A0, typename R> class runnable_args_nm_1_ret : pub
 
 
 // 1 arguments --
-template<typename C, typename M, typename A0> class runnable_args_m_1 : public runnable_args_base {
+template<typename C, typename M, typename A0> class runnable_args_m_1 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_1(C o, M m, A0 a0) :
     o_(o), m_(m), a0_(a0)  {}
@@ -135,11 +132,10 @@ template<typename C, typename M, typename A0> class runnable_args_m_1 : public r
 
 
 // 1 arguments --
-template<typename C, typename M, typename A0, typename R> class runnable_args_m_1_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename R> class runnable_args_m_1_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_1_ret(C o, M m, A0 a0, R *r) :
     o_(o), m_(m), r_(r), a0_(a0)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_);
@@ -156,7 +152,7 @@ template<typename C, typename M, typename A0, typename R> class runnable_args_m_
 
 
 // 2 arguments --
-template<typename M, typename A0, typename A1> class runnable_args_nm_2 : public runnable_args_base {
+template<typename M, typename A0, typename A1> class runnable_args_nm_2 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_2(M m, A0 a0, A1 a1) :
     m_(m), a0_(a0), a1_(a1)  {}
@@ -175,11 +171,10 @@ template<typename M, typename A0, typename A1> class runnable_args_nm_2 : public
 
 
 // 2 arguments --
-template<typename M, typename A0, typename A1, typename R> class runnable_args_nm_2_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename R> class runnable_args_nm_2_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_2_ret(M m, A0 a0, A1 a1, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_);
@@ -196,7 +191,7 @@ template<typename M, typename A0, typename A1, typename R> class runnable_args_n
 
 
 // 2 arguments --
-template<typename C, typename M, typename A0, typename A1> class runnable_args_m_2 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1> class runnable_args_m_2 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_2(C o, M m, A0 a0, A1 a1) :
     o_(o), m_(m), a0_(a0), a1_(a1)  {}
@@ -216,11 +211,10 @@ template<typename C, typename M, typename A0, typename A1> class runnable_args_m
 
 
 // 2 arguments --
-template<typename C, typename M, typename A0, typename A1, typename R> class runnable_args_m_2_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename R> class runnable_args_m_2_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_2_ret(C o, M m, A0 a0, A1 a1, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_);
@@ -238,7 +232,7 @@ template<typename C, typename M, typename A0, typename A1, typename R> class run
 
 
 // 3 arguments --
-template<typename M, typename A0, typename A1, typename A2> class runnable_args_nm_3 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2> class runnable_args_nm_3 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_3(M m, A0 a0, A1 a1, A2 a2) :
     m_(m), a0_(a0), a1_(a1), a2_(a2)  {}
@@ -258,11 +252,10 @@ template<typename M, typename A0, typename A1, typename A2> class runnable_args_
 
 
 // 3 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename R> class runnable_args_nm_3_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename R> class runnable_args_nm_3_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_3_ret(M m, A0 a0, A1 a1, A2 a2, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_);
@@ -280,7 +273,7 @@ template<typename M, typename A0, typename A1, typename A2, typename R> class ru
 
 
 // 3 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2> class runnable_args_m_3 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2> class runnable_args_m_3 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_3(C o, M m, A0 a0, A1 a1, A2 a2) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2)  {}
@@ -301,11 +294,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2> class ru
 
 
 // 3 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename R> class runnable_args_m_3_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename R> class runnable_args_m_3_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_3_ret(C o, M m, A0 a0, A1 a1, A2 a2, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_);
@@ -324,7 +316,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 4 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3> class runnable_args_nm_4 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3> class runnable_args_nm_4 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_4(M m, A0 a0, A1 a1, A2 a2, A3 a3) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3)  {}
@@ -345,11 +337,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3> class r
 
 
 // 4 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename R> class runnable_args_nm_4_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename R> class runnable_args_nm_4_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_4_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_);
@@ -368,7 +359,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 4 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3> class runnable_args_m_4 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3> class runnable_args_m_4 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_4(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3)  {}
@@ -390,11 +381,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 4 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename R> class runnable_args_m_4_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename R> class runnable_args_m_4_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_4_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_);
@@ -414,7 +404,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 5 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4> class runnable_args_nm_5 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4> class runnable_args_nm_5 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_5(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4)  {}
@@ -436,11 +426,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 5 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename R> class runnable_args_nm_5_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename R> class runnable_args_nm_5_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_5_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_);
@@ -460,7 +449,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 5 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4> class runnable_args_m_5 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4> class runnable_args_m_5 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_5(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4)  {}
@@ -483,11 +472,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 5 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename R> class runnable_args_m_5_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename R> class runnable_args_m_5_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_5_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_);
@@ -508,7 +496,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 6 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5> class runnable_args_nm_6 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5> class runnable_args_nm_6 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_6(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5)  {}
@@ -531,11 +519,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 6 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename R> class runnable_args_nm_6_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename R> class runnable_args_nm_6_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_6_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_);
@@ -556,7 +543,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 6 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5> class runnable_args_m_6 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5> class runnable_args_m_6 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_6(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5)  {}
@@ -580,11 +567,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 6 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename R> class runnable_args_m_6_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename R> class runnable_args_m_6_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_6_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_);
@@ -606,7 +592,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 7 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> class runnable_args_nm_7 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> class runnable_args_nm_7 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_7(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6)  {}
@@ -630,11 +616,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 7 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename R> class runnable_args_nm_7_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename R> class runnable_args_nm_7_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_7_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_);
@@ -656,7 +641,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 7 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> class runnable_args_m_7 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> class runnable_args_m_7 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_7(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6)  {}
@@ -681,11 +666,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 7 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename R> class runnable_args_m_7_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename R> class runnable_args_m_7_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_7_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_);
@@ -708,7 +692,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 8 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7> class runnable_args_nm_8 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7> class runnable_args_nm_8 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_8(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7)  {}
@@ -733,11 +717,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 8 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename R> class runnable_args_nm_8_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename R> class runnable_args_nm_8_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_8_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_);
@@ -760,7 +743,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 8 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7> class runnable_args_m_8 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7> class runnable_args_m_8 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_8(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7)  {}
@@ -786,11 +769,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 8 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename R> class runnable_args_m_8_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename R> class runnable_args_m_8_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_8_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_);
@@ -814,7 +796,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 9 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8> class runnable_args_nm_9 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8> class runnable_args_nm_9 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_9(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8)  {}
@@ -840,11 +822,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 9 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename R> class runnable_args_nm_9_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename R> class runnable_args_nm_9_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_9_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_);
@@ -868,7 +849,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 9 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8> class runnable_args_m_9 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8> class runnable_args_m_9 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_9(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8)  {}
@@ -895,11 +876,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 9 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename R> class runnable_args_m_9_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename R> class runnable_args_m_9_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_9_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_);
@@ -924,7 +904,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 10 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9> class runnable_args_nm_10 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9> class runnable_args_nm_10 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_10(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9)  {}
@@ -951,11 +931,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 10 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename R> class runnable_args_nm_10_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename R> class runnable_args_nm_10_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_10_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_);
@@ -980,7 +959,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 10 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9> class runnable_args_m_10 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9> class runnable_args_m_10 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_10(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9)  {}
@@ -1008,11 +987,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 10 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename R> class runnable_args_m_10_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename R> class runnable_args_m_10_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_10_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_);
@@ -1038,7 +1016,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 11 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10> class runnable_args_nm_11 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10> class runnable_args_nm_11 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_11(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10)  {}
@@ -1066,11 +1044,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 11 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename R> class runnable_args_nm_11_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename R> class runnable_args_nm_11_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_11_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_);
@@ -1096,7 +1073,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 11 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10> class runnable_args_m_11 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10> class runnable_args_m_11 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_11(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10)  {}
@@ -1125,11 +1102,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 11 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename R> class runnable_args_m_11_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename R> class runnable_args_m_11_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_11_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_);
@@ -1156,7 +1132,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 12 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11> class runnable_args_nm_12 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11> class runnable_args_nm_12 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_12(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11)  {}
@@ -1185,11 +1161,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 12 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename R> class runnable_args_nm_12_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename R> class runnable_args_nm_12_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_12_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_);
@@ -1216,7 +1191,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 12 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11> class runnable_args_m_12 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11> class runnable_args_m_12 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_12(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11)  {}
@@ -1246,11 +1221,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 12 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename R> class runnable_args_m_12_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename R> class runnable_args_m_12_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_12_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_);
@@ -1278,7 +1252,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 13 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12> class runnable_args_nm_13 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12> class runnable_args_nm_13 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_13(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12)  {}
@@ -1308,11 +1282,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 13 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename R> class runnable_args_nm_13_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename R> class runnable_args_nm_13_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_13_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_, a12_);
@@ -1340,7 +1313,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 13 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12> class runnable_args_m_13 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12> class runnable_args_m_13 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_13(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12)  {}
@@ -1371,11 +1344,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 13 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename R> class runnable_args_m_13_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename R> class runnable_args_m_13_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_13_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_, a12_);
@@ -1404,7 +1376,7 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 14 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13> class runnable_args_nm_14 : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13> class runnable_args_nm_14 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_nm_14(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, A13 a13) :
     m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12), a13_(a13)  {}
@@ -1435,11 +1407,10 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 14 arguments --
-template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename R> class runnable_args_nm_14_ret : public runnable_args_base {
+template<typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename R> class runnable_args_nm_14_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_nm_14_ret(M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, A13 a13, R *r) :
     m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12), a13_(a13)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = m_(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_, a12_, a13_);
@@ -1468,7 +1439,7 @@ template<typename M, typename A0, typename A1, typename A2, typename A3, typenam
 
 
 // 14 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13> class runnable_args_m_14 : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13> class runnable_args_m_14 : public detail::runnable_args_base<detail::NoResult> {
  public:
   runnable_args_m_14(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, A13 a13) :
     o_(o), m_(m), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12), a13_(a13)  {}
@@ -1500,11 +1471,10 @@ template<typename C, typename M, typename A0, typename A1, typename A2, typename
 
 
 // 14 arguments --
-template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename R> class runnable_args_m_14_ret : public runnable_args_base {
+template<typename C, typename M, typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9, typename A10, typename A11, typename A12, typename A13, typename R> class runnable_args_m_14_ret : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   runnable_args_m_14_ret(C o, M m, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8, A9 a9, A10 a10, A11 a11, A12 a12, A13 a13, R *r) :
     o_(o), m_(m), r_(r), a0_(a0), a1_(a1), a2_(a2), a3_(a3), a4_(a4), a5_(a5), a6_(a6), a7_(a7), a8_(a8), a9_(a9), a10_(a10), a11_(a11), a12_(a12), a13_(a13)  {}
-  virtual bool returns_value() const { return true; }
 
   NS_IMETHOD Run() {
     *r_ = ((*o_).*m_)(a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_, a8_, a9_, a10_, a11_, a12_, a13_);
