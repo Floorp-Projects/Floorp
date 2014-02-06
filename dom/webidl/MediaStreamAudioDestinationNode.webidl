@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[PrefControlled]
 interface MediaStreamAudioDestinationNode : AudioNode {
 
     readonly attribute MediaStream stream;

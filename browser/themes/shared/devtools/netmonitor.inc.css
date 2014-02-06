@@ -158,81 +158,51 @@ box.requests-menu-status {
 }
 
 .theme-dark box.requests-menu-status:not([code]) {
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.4) inset,
-    0 -6px 4px 0 rgba(32,32,32,1.0) inset,
-    0 0 8px 0 rgba(32,0,0,0.4);
+  background-color: rgba(95, 115, 135, 1); /* dark grey */
 }
 
 .theme-light box.requests-menu-status:not([code]) {
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.4) inset,
-    0 -6px 4px 0 rgba(32,32,32, 0.5) inset;
+  background-color: rgba(143, 161, 178, 1); /* grey */
 }
 
 .theme-dark box.requests-menu-status[code^="1"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(0,0,64,1.0) inset,
-    0 0 8px 0 rgba(0,0,128,1.0);
+  background-color: rgba(70, 175, 227, 1); /* light blue */
 }
 
 .theme-light box.requests-menu-status[code^="1"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(0,0,128,1) inset;
+  background-color: rgba(0, 136, 204, 1); /* light blue */
 }
 
 .theme-dark box.requests-menu-status[code^="2"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(0,64,0,1.0) inset,
-    0 0 8px 0 rgba(0,128,0,1.0);
+  background-color: rgba(112, 191, 83, 1); /* green */
 }
 
 .theme-light box.requests-menu-status[code^="2"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(0,128,0,1) inset;
+  background-color: rgba(44, 187, 15, 1); /* green */
 }
 
 .theme-dark box.requests-menu-status[code^="3"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(64,32,0,1.0) inset,
-    0 0 8px 0 rgba(128,128,0,1.0);
+  background-color: rgba(94, 136, 176, 1); /* grey */
 }
 
 .theme-light box.requests-menu-status[code^="3"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(128,64,0,1) inset;
+  background-color: rgba(95, 136, 176, 1); /* blue grey */
 }
 
 .theme-dark box.requests-menu-status[code^="4"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(64,0,0,1.0) inset,
-    0 0 8px 0 rgba(128,0,0,1.0);
+  background-color: rgba(235, 83, 104, 1); /* red */
 }
 
 .theme-light box.requests-menu-status[code^="4"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(128,0,0,1) inset;
+  background-color: rgba(237, 38, 85, 1); /* red */
 }
 
 .theme-dark box.requests-menu-status[code^="5"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(64,0,64,1.0) inset,
-    0 0 8px 0 rgba(128,0,128,1.0);
+  background-color: rgba(223, 128, 255, 1); /* pink? */
 }
 
 .theme-light box.requests-menu-status[code^="5"] {
-  box-shadow:
-    0 0 2px 1px rgba(255,255,255,0.8) inset,
-    0 -6px 4px 0 rgba(128,0,128,1.0) inset;
+  background-color: rgba(184, 46, 229, 1); /* pink! */
 }
 
 /* Network requests table: waterfall header */
@@ -294,7 +264,7 @@ box.requests-menu-status {
 /* Network requests table: waterfall items */
 
 .requests-menu-subitem.requests-menu-waterfall {
-  -moz-padding-start: 4px;
+  -moz-padding-start: 0px;
   -moz-padding-end: 4px;
   background-repeat: repeat-y; /* Background created on a <canvas> in js. */
   background-position: -1px center;
@@ -323,129 +293,50 @@ box.requests-menu-status {
 }
 
 .requests-menu-timings-total {
-  -moz-padding-start: 8px;
+  -moz-padding-start: 4px;
   font-size: 85%;
   font-weight: 600;
 }
 
-.requests-menu-timings-cap {
-  width: 4px;
-  height: 8px;
-  box-shadow: none !important;
-}
-
-.theme-dark .requests-menu-timings-cap {
-  border: 1px solid #b8c8d9; /* Light content text */
-}
-
-.theme-light .requests-menu-timings-cap {
-  border: 1px solid #292e33; /* Dark content text */
-}
-
-.requests-menu-timings-cap.start {
-  -moz-border-end: none;
-}
-
-.requests-menu-timings-cap.end {
-  -moz-border-start: none;
-}
-
-.requests-menu-timings-cap.start:-moz-locale-dir(ltr) {
-  border-radius: 4px 0 0 4px;
-  transform-origin: right center;
-}
-
-.requests-menu-timings-cap.start:-moz-locale-dir(rtl) {
-  border-radius: 0 4px 4px 0;
-  transform-origin: left center;
-}
-
-.requests-menu-timings-cap.end:-moz-locale-dir(ltr) {
-  border-radius: 0 4px 4px 0;
-  transform-origin: left center;
-}
-
-.requests-menu-timings-cap.end:-moz-locale-dir(rtl) {
-  border-radius: 4px 0 0 4px;
-  transform-origin: right center;
-}
-
 .requests-menu-timings-box {
-  height: 8px;
+  height: 9px;
 }
 
-.theme-dark .requests-menu-timings-box {
-  border-top: 1px solid #b8c8d9; /* Light content text */
-  border-bottom: 1px solid #b8c8d9;
+.requests-menu-timings-box.blocked {
+  background-color: rgba(235, 83, 104, 0.8); /* red */
 }
 
-.theme-light .requests-menu-timings-box {
-  border-top: 1px solid #292e33; /* Dark content text */
-  border-bottom: 1px solid #292e33;
+.requests-menu-timings-box.dns {
+  background-color: rgba(223, 128, 255, 0.8); /* pink */
 }
 
-.requests-menu-timings-box.blocked,
-.requests-menu-timings-cap.blocked {
-  background-color: rgba(255,32,32,0.8);
-  box-shadow: 0 0 2px 0 rgba(128,32,32,0.8),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
-}
-
-.requests-menu-timings-box.dns,
-.requests-menu-timings-cap.dns {
-  background-color: rgba(255,128,255,0.6);
-  box-shadow: 0 0 2px 0 rgba(128,128,255,1.0),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
-}
-
-.requests-menu-timings-box.connect,
-.requests-menu-timings-cap.connect {
-  background-color: rgba(255,128,16,0.4);
-  box-shadow: 0 0 2px 0 rgba(128,128,16,0.8),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.requests-menu-timings-box.connect {
+  background-color: rgba(217, 102, 41, 0.8); /* orange */
 }
 
 /* Use custom colors for dark and light theme on remaining timing types. */
-.theme-dark .requests-menu-timings-box.send,
-.theme-dark .requests-menu-timings-cap.send {
-  background-color: rgba(255,255,128,0.4);
-  box-shadow: 0 0 2px 0 rgba(128,255,128,0.8),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.theme-dark .requests-menu-timings-box.send {
+  background-color: rgba(70, 175, 227, 0.8); /* light blue */
 }
 
-.theme-light .requests-menu-timings-box.send,
-.theme-light .requests-menu-timings-cap.send {
-  background-color: rgba(255,255,128,0.4);
-  box-shadow: 0 0 2px 0 rgba(128,255,128,0.8),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.theme-light .requests-menu-timings-box.send {
+  background-color: rgba(0, 136, 204, 0.8); /* blue */
 }
 
-.theme-dark .requests-menu-timings-box.wait,
-.theme-dark .requests-menu-timings-cap.wait {
-  background-color: rgba(255,255,255,0.2);
-  box-shadow: 0 0 2px 0 rgba(128,255,255,0.4),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.theme-dark .requests-menu-timings-box.wait {
+  background-color: rgba(94, 136, 176, 0.8); /* blue grey */
 }
 
-.theme-light .requests-menu-timings-box.wait,
-.theme-light .requests-menu-timings-cap.wait {
-  background-color: rgba(200, 200, 200, 0.8);
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.4),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.theme-light .requests-menu-timings-box.wait {
+  background-color: rgba(95, 136, 176, 0.8); /* blue grey */
 }
 
-.theme-dark .requests-menu-timings-box.receive,
-.theme-dark .requests-menu-timings-cap.receive {
-  background-color: rgba(255,255,255,1.0);
-  box-shadow: 0 0 2px 0 rgba(128,255,255,1.0),
-              0 0 1px 0 rgba(255,255,255,1.0) inset;
+.theme-dark .requests-menu-timings-box.receive {
+  background-color: rgba(112, 191, 83, 0.8); /* green */
 }
 
-.theme-light .requests-menu-timings-box.receive,
-.theme-light .requests-menu-timings-cap.receive {
-  background-color: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.8),
-              0 0 1px 0 rgba(0,0,0,1.0) inset;
+.theme-light .requests-menu-timings-box.receive {
+  background-color: rgba(44, 187, 15, 0.8); /* green */
 }
 
 /* SideMenuWidget */

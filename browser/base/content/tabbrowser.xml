@@ -1049,7 +1049,7 @@
 
             if (!this._previewMode) {
               this.mCurrentTab.removeAttribute("unread");
-              this.selectedTab.lastAccessed = Date.now();
+              oldTab.lastAccessed = Date.now();
 
               let oldFindBar = oldTab._findBar;
               if (oldFindBar &&
@@ -4719,10 +4719,19 @@
         </getter>
       </property>
 
+      <property name="lastAccessed">
+        <getter>
+          return this.selected ? Date.now() : this._lastAccessed;
+        </getter>
+        <setter>
+          this._lastAccessed = val;
+        </setter>
+      </property>
+      <field name="_lastAccessed">0</field>
+
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
       <field name="closing">false</field>
-      <field name="lastAccessed">0</field>
 
       <method name="_mouseenter">
         <body><![CDATA[

@@ -162,14 +162,27 @@ InlineSpellChecker.prototype = {
         curlang = spellchecker.GetCurrentDictionary();
     } catch(e) {}
 
+    var sortedList = [];
     for (var i = 0; i < list.length; i ++) {
-      this.mDictionaryNames.push(list[i]);
+      sortedList.push({"id": list[i],
+                       "label": this.getDictionaryDisplayName(list[i])});
+    }
+    sortedList.sort(function(a, b) {
+      if (a.label < b.label)
+        return -1;
+      if (a.label > b.label)
+        return 1;
+      return 0;
+    });
+
+    for (var i = 0; i < sortedList.length; i ++) {
+      this.mDictionaryNames.push(sortedList[i].id);
       var item = menu.ownerDocument.createElement("menuitem");
-      item.setAttribute("id", "spell-check-dictionary-" + list[i]);
-      item.setAttribute("label", this.getDictionaryDisplayName(list[i]));
+      item.setAttribute("id", "spell-check-dictionary-" + sortedList[i].id);
+      item.setAttribute("label", sortedList[i].label);
       item.setAttribute("type", "radio");
       this.mDictionaryItems.push(item);
-      if (curlang == list[i]) {
+      if (curlang == sortedList[i].id) {
         item.setAttribute("checked", "true");
       } else {
         var callback = function(me, val) { return function(evt) { me.selectDictionary(val); } };

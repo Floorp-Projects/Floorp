@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 module.metadata = {
@@ -11,7 +10,7 @@ module.metadata = {
 };
 
 const { isTabOpen, activateTab, openTab,
-        closeTab, getURI } = require('sdk/tabs/utils');
+        closeTab, getTabURL, getWindowHoldingTab } = require('sdk/tabs/utils');
 const windows = require('sdk/deprecated/window-utils');
 const { LoaderWithHookedConsole } = require('sdk/test/loader');
 const { setTimeout } = require('sdk/timers');
@@ -19,9 +18,26 @@ const { is } = require('sdk/system/xul-app');
 const tabs = require('sdk/tabs');
 const isAustralis = "gCustomizeMode" in windows.activeBrowserWindow;
 const { set: setPref } = require("sdk/preferences/service");
+const { defer } = require('sdk/core/promise');
+
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 let uri = require('sdk/self').data.url('index.html');
+
+function closeTabPromise(tab) {
+  let { promise, resolve } = defer();
+  let url = getTabURL(tab);
+
+  tabs.on('close', function onCloseTab(t) {
+    if (t.url == url) {
+      tabs.removeListener('close', onCloseTab);
+      setTimeout(_ => resolve(tab))
+    }
+  });
+  closeTab(tab);
+
+  return promise;
+}
 
 function isChromeVisible(window) {
   let x = window.document.documentElement.getAttribute('disablechrome')
@@ -61,11 +77,12 @@ exports['test that add-on page has no chrome'] = function(assert, done) {
     assert.equal(isChromeVisible(window), is('Fennec') || isAustralis,
       'chrome is not visible for addon page');
 
-    closeTab(tab);
-    assert.ok(isChromeVisible(window), 'chrome is visible again');
-    loader.unload();
-    assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
-    done();
+    closeTabPromise(tab).then(function() {
+      assert.ok(isChromeVisible(window), 'chrome is visible again');
+      loader.unload();
+      assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
+      done();
+    }).then(null, assert.fail);
   });
 };
 
@@ -86,11 +103,12 @@ exports['test that add-on page with hash has no chrome'] = function(assert, done
     assert.equal(isChromeVisible(window), is('Fennec') || isAustralis,
       'chrome is not visible for addon page');
 
-    closeTab(tab);
-    assert.ok(isChromeVisible(window), 'chrome is visible again');
-    loader.unload();
-    assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
-    done();
+    closeTabPromise(tab).then(function() {
+      assert.ok(isChromeVisible(window), 'chrome is visible again');
+      loader.unload();
+      assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
+      done();
+    }).then(null, assert.fail);
   });
 };
 
@@ -111,11 +129,12 @@ exports['test that add-on page with querystring has no chrome'] = function(asser
     assert.equal(isChromeVisible(window), is('Fennec') || isAustralis,
       'chrome is not visible for addon page');
 
-    closeTab(tab);
-    assert.ok(isChromeVisible(window), 'chrome is visible again');
-    loader.unload();
-    assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
-    done();
+    closeTabPromise(tab).then(function() {
+      assert.ok(isChromeVisible(window), 'chrome is visible again');
+      loader.unload();
+      assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
+      done();
+    }).then(null, assert.fail);
   });
 };
 
@@ -136,11 +155,12 @@ exports['test that add-on page with hash and querystring has no chrome'] = funct
     assert.equal(isChromeVisible(window), is('Fennec') || isAustralis,
       'chrome is not visible for addon page');
 
-    closeTab(tab);
-    assert.ok(isChromeVisible(window), 'chrome is visible again');
-    loader.unload();
-    assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
-    done();
+    closeTabPromise(tab).then(function() {
+      assert.ok(isChromeVisible(window), 'chrome is visible again');
+      loader.unload();
+      assert.ok(!isTabOpen(tab), 'add-on page tab is closed on unload');
+      done();
+    }).then(null, assert.fail);
   });
 };
 
@@ -158,9 +178,10 @@ exports['test that malformed uri is not an addon-page'] = function(assert, done)
 
     assert.ok(isChromeVisible(window), 'chrome is visible for malformed uri');
 
-    closeTab(tab);
-    loader.unload();
-    done();
+    closeTabPromise(tab).then(function() {
+      loader.unload();
+      done();
+    }).then(null, assert.fail);
   });
 };
 
