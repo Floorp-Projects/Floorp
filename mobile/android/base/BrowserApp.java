@@ -73,6 +73,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.ViewTreeObserver;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -119,6 +120,7 @@ abstract public class BrowserApp extends GeckoApp
     public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
     private HomePager mHomePager;
+    private TabsPanel mTabsPanel;
     private View mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private ActionModeCompat mActionMode;
@@ -522,11 +524,6 @@ abstract public class BrowserApp extends GeckoApp
 
         // Intercept key events for gamepad shortcuts
         mBrowserToolbar.setOnKeyListener(this);
-
-        if (mTabsPanel != null) {
-            mTabsPanel.setTabsLayoutChangeListener(this);
-            updateSideBarState();
-        }
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
@@ -1038,8 +1035,12 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void refreshChrome() {
         invalidateOptionsMenu();
-        updateSideBarState();
-        mTabsPanel.refresh();
+
+        if (mTabsPanel != null) {
+            updateSideBarState();
+            mTabsPanel.refresh();
+        }
+
         mBrowserToolbar.refresh();
     }
 
@@ -1159,6 +1160,17 @@ abstract public class BrowserApp extends GeckoApp
                 resetFeedbackLaunchCount();
             } else if (event.equals("Feedback:LastUrl")) {
                 getLastUrl();
+            } else if (event.equals("Gecko:DelayedStartup")) {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Force tabs panel inflation once the initial
+                        // pageload is finished.
+                        ensureTabsPanelExists();
+                    }
+                });
+
+                super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
                 // Handle this message in GeckoApp, but also enable the Settings
                 // menuitem, which is specific to BrowserApp.
@@ -1250,11 +1262,45 @@ abstract public class BrowserApp extends GeckoApp
         showTabs(TabsPanel.Panel.REMOTE_TABS);
     }
 
-    private void showTabs(TabsPanel.Panel panel) {
+    /**
+     * Ensure the TabsPanel view is properly inflated and returns
+     * true when the view has been inflated, false otherwise.
+     */
+    private boolean ensureTabsPanelExists() {
+        if (mTabsPanel != null) {
+            return false;
+        }
+
+        ViewStub tabsPanelStub = (ViewStub) findViewById(R.id.tabs_panel);
+        mTabsPanel = (TabsPanel) tabsPanelStub.inflate();
+
+        mTabsPanel.setTabsLayoutChangeListener(this);
+        updateSideBarState();
+
+        return true;
+    }
+
+    private void showTabs(final TabsPanel.Panel panel) {
         if (Tabs.getInstance().getDisplayCount() == 0)
             return;
 
-        mTabsPanel.show(panel);
+        if (ensureTabsPanelExists()) {
+            // If we've just inflated the tabs panel, only show it once the current
+            // layout pass is done to avoid displayed temporary UI states during
+            // relayout.
+            ViewTreeObserver vto = mTabsPanel.getViewTreeObserver();
+            if (vto.isAlive()) {
+                vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mTabsPanel.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                        mTabsPanel.show(panel);
+                    }
+                });
+            }
+        } else {
+            mTabsPanel.show(panel);
+        }
     }
 
     @Override
@@ -1273,7 +1319,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean areTabsShown() {
-        return mTabsPanel.isShown();
+        return (mTabsPanel != null && mTabsPanel.isShown());
     }
 
     @Override
