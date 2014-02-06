@@ -207,6 +207,11 @@ nsHttpHandler::nsHttpHandler()
     , mRequestTokenBucketHz(100)
     , mRequestTokenBucketBurst(32)
     , mCriticalRequestPrioritization(true)
+    , mTCPKeepaliveShortLivedEnabled(false)
+    , mTCPKeepaliveShortLivedTimeS(60)
+    , mTCPKeepaliveShortLivedIdleTimeS(10)
+    , mTCPKeepaliveLongLivedEnabled(false)
+    , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEthernetBytesRead(0)
     , mEthernetBytesWritten(0)
     , mCellBytesRead(0)
@@ -286,7 +291,8 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
         prefBranch->AddObserver(DONOTTRACK_HEADER_VALUE, this, true);
         prefBranch->AddObserver(TELEMETRY_ENABLED, this, true);
-
+        prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.short_lived_connections"), this, true);
+        prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.long_lived_connections"), this, true);
         PrefsChanged(prefBranch, nullptr);
     }
 
@@ -1420,6 +1426,47 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         mRequestTokenBucket =
             new EventTokenBucket(RequestTokenBucketHz(),
                                  RequestTokenBucketBurst());
+    }
+
+    // Keepalive values for initial and idle connections.
+    if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_connections"))) {
+        rv = prefs->GetBoolPref(
+            HTTP_PREF("tcp_keepalive.short_lived_connections"), &cVar);
+        if (NS_SUCCEEDED(rv) && cVar != mTCPKeepaliveShortLivedEnabled) {
+            mTCPKeepaliveShortLivedEnabled = cVar;
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_time"))) {
+        rv = prefs->GetIntPref(
+            HTTP_PREF("tcp_keepalive.short_lived_time"), &val);
+        if (NS_SUCCEEDED(rv) && val > 0)
+            mTCPKeepaliveShortLivedTimeS = clamped(val, 1, 300); // Max 5 mins.
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_idle_time"))) {
+        rv = prefs->GetIntPref(
+            HTTP_PREF("tcp_keepalive.short_lived_idle_time"), &val);
+        if (NS_SUCCEEDED(rv) && val > 0)
+            mTCPKeepaliveShortLivedIdleTimeS = clamped(val,
+                                                       1, kMaxTCPKeepIdle);
+    }
+
+    // Keepalive values for Long-lived Connections.
+    if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.long_lived_connections"))) {
+        rv = prefs->GetBoolPref(
+            HTTP_PREF("tcp_keepalive.long_lived_connections"), &cVar);
+        if (NS_SUCCEEDED(rv) && cVar != mTCPKeepaliveLongLivedEnabled) {
+            mTCPKeepaliveLongLivedEnabled = cVar;
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.long_lived_idle_time"))) {
+        rv = prefs->GetIntPref(
+            HTTP_PREF("tcp_keepalive.long_lived_idle_time"), &val);
+        if (NS_SUCCEEDED(rv) && val > 0)
+            mTCPKeepaliveLongLivedIdleTimeS = clamped(val,
+                                                      1, kMaxTCPKeepIdle);
     }
 
 #undef PREF_CHANGED
