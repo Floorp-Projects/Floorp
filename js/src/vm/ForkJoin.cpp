@@ -174,7 +174,7 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal)
         return false;
     args.setCallee(funVal);
     args.setThis(UndefinedValue());
-    args[0].setBoolean(!!cx->runtime()->parallelWarmup);
+    args[0].setBoolean(!!cx->runtime()->forkJoinWarmup);
     return fig.invoke(cx);
 }
 
@@ -389,7 +389,7 @@ class ForkJoinShared : public ParallelJob, public Monitor
     void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
 
     // Requests that computation abort.
-    void setAbortFlag(bool fatal);
+    void setAbortFlagAndTriggerOperationCallback(bool fatal);
 
     // Set the fatal flag for the next abort.
     void setPendingAbortFatal() { fatal_ = true; }
@@ -407,8 +407,8 @@ class AutoEnterWarmup
     JSRuntime *runtime_;
 
   public:
-    AutoEnterWarmup(JSRuntime *runtime) : runtime_(runtime) { runtime_->parallelWarmup++; }
-    ~AutoEnterWarmup() { runtime_->parallelWarmup--; }
+    AutoEnterWarmup(JSRuntime *runtime) : runtime_(runtime) { runtime_->forkJoinWarmup++; }
+    ~AutoEnterWarmup() { runtime_->forkJoinWarmup--; }
 };
 
 class AutoSetForkJoinContext
@@ -841,18 +841,8 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
             }
         }
 
-        if (allScriptsPresent) {
-            // For testing modes, we want to make sure that all off thread
-            // compilation tasks are finished, so we don't race with
-            // off-main-thread-compilation setting an interrupt flag while we
-            // are in the middle of a test, causing unexpected bailouts.
-            if (mode_ != ForkJoinModeNormal) {
-                StopAllOffThreadCompilations(cx_->compartment());
-                if (!js_HandleExecutionInterrupt(cx_))
-                    return fatalError(status);
-            }
+        if (allScriptsPresent)
             break;
-        }
     }
 
     Spew(SpewCompile, "Compilation complete (final worklist length %d)",
@@ -1406,7 +1396,7 @@ ForkJoinShared::execute()
     // Sometimes a GC request occurs *just before* we enter into the
     // parallel section.  Rather than enter into the parallel section
     // and then abort, we just check here and abort early.
-    if (cx_->runtime()->interrupt)
+    if (cx_->runtime()->interruptPar)
         return TP_RETRY_SEQUENTIALLY;
 
     AutoLockMonitor lock(*this);
@@ -1464,7 +1454,7 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 {
     PerThreadData thisThread(cx_->runtime());
     if (!thisThread.init()) {
-        setAbortFlag(true);
+        setAbortFlagAndTriggerOperationCallback(true);
         return false;
     }
     TlsPerThreadData.set(&thisThread);
@@ -1526,7 +1516,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
         // and fallback.
         Spew(SpewOps, "Down (Script no longer present)");
         cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
-        setAbortFlag(false);
+        setAbortFlagAndTriggerOperationCallback(false);
     } else {
         ParallelIonInvoke<2> fii(cx_->runtime(), fun_, 1);
 
@@ -1535,7 +1525,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
         bool ok = fii.invoke(perThread);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);
         if (!ok)
-            setAbortFlag(false);
+            setAbortFlagAndTriggerOperationCallback(false);
     }
 
     Spew(SpewOps, "Down");
@@ -1544,7 +1534,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
 bool
 ForkJoinShared::check(ForkJoinContext &cx)
 {
-    JS_ASSERT(cx_->runtime()->interrupt);
+    JS_ASSERT(cx_->runtime()->interruptPar);
 
     if (abort_)
         return false;
@@ -1555,14 +1545,14 @@ ForkJoinShared::check(ForkJoinContext &cx)
     if (cx.isMainThread() || !threadPool_->isMainThreadActive()) {
         JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
-        if (cx_->runtime()->interrupt) {
+        if (cx_->runtime()->interruptPar) {
             // The GC Needed flag should not be set during parallel
             // execution.  Instead, one of the requestGC() or
             // requestZoneGC() methods should be invoked.
             JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
             cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
-            setAbortFlag(false);
+            setAbortFlagAndTriggerOperationCallback(false);
             return false;
         }
     }
@@ -1571,16 +1561,16 @@ ForkJoinShared::check(ForkJoinContext &cx)
 }
 
 void
-ForkJoinShared::setAbortFlag(bool fatal)
+ForkJoinShared::setAbortFlagAndTriggerOperationCallback(bool fatal)
 {
     AutoLockMonitor lock(*this);
 
     abort_ = true;
     fatal_ = fatal_ || fatal;
 
-    // Note: DontStopIon here avoids the expensive memory protection needed to
+    // Note: The ForkJoin trigger here avoids the expensive memory protection needed to
     // interrupt Ion code compiled for sequential execution.
-    cx_->runtime()->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
+    cx_->runtime()->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadForkJoin);
 }
 
 void
@@ -1681,7 +1671,7 @@ ForkJoinContext::hasAcquiredJSContext() const
 bool
 ForkJoinContext::check()
 {
-    if (runtime()->interrupt)
+    if (runtime()->interruptPar)
         return shared->check(*this);
     else
         return true;
@@ -1692,7 +1682,7 @@ ForkJoinContext::requestGC(JS::gcreason::Reason reason)
 {
     shared->requestGC(reason);
     bailoutRecord->setCause(ParallelBailoutRequestedGC);
-    shared->setAbortFlag(false);
+    shared->setAbortFlagAndTriggerOperationCallback(false);
 }
 
 void
@@ -1700,7 +1690,7 @@ ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared->requestZoneGC(zone, reason);
     bailoutRecord->setCause(ParallelBailoutRequestedZoneGC);
-    shared->setAbortFlag(false);
+    shared->setAbortFlagAndTriggerOperationCallback(false);
 }
 
 bool
@@ -2143,6 +2133,14 @@ js::ParallelTestsShouldPass(JSContext *cx)
            !jit::js_JitOptions.eagerCompilation &&
            jit::js_JitOptions.baselineUsesBeforeCompile != 0 &&
            cx->runtime()->gcZeal() == 0;
+}
+
+void
+js::TriggerOperationCallbackForForkJoin(JSRuntime *rt,
+                                        JSRuntime::OperationCallbackTrigger trigger)
+{
+    if (trigger != JSRuntime::TriggerCallbackAnyThreadDontStopIon)
+        rt->interruptPar = true;
 }
 
 bool

@@ -213,7 +213,7 @@ namespace jit {
     _(RestPar)                                                              \
     _(ForkJoinContext)                                                      \
     _(GuardThreadExclusive)                                                 \
-    _(CheckInterruptPar)                                                    \
+    _(InterruptCheckPar)                                                    \
     _(RecompileCheck)
 
 // Forward declarations of MIR types.

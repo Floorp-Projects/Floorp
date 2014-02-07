@@ -2140,10 +2140,10 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
 }
 
 bool
-LIRGenerator::visitCheckInterruptPar(MCheckInterruptPar *ins)
+LIRGenerator::visitInterruptCheckPar(MInterruptCheckPar *ins)
 {
-    LCheckInterruptPar *lir =
-        new(alloc()) LCheckInterruptPar(useRegister(ins->forkJoinContext()), temp());
+    LInterruptCheckPar *lir =
+        new(alloc()) LInterruptCheckPar(useRegister(ins->forkJoinContext()), temp());
     if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))

@@ -120,6 +120,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     ),
     mainThread(this),
     interrupt(0),
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    interruptPar(false),
+#endif
     handlingSignal(false),
     operationCallback(nullptr),
 #ifdef JS_THREADSAFE
@@ -293,7 +296,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     threadPool(this),
     defaultJSContextCallback(nullptr),
     ctypesActivityCallback(nullptr),
-    parallelWarmup(0),
+    forkJoinWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
     parallelIonCompilationEnabled_(true),
@@ -654,6 +657,10 @@ JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
     interrupt = 1;
 
 #ifdef JS_ION
+#ifdef JS_THREADSAFE
+    TriggerOperationCallbackForForkJoin(this, trigger);
+#endif
+
     /*
      * asm.js and, optionally, normal Ion code use memory protection and signal
      * handlers to halt running code.
