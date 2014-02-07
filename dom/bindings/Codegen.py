@@ -9045,7 +9045,7 @@ class CGDictionary(CGThing):
     def base(self):
         if self.dictionary.parent:
             return self.makeClassName(self.dictionary.parent)
-        return "MainThreadDictionaryBase"
+        return "DictionaryBase"
 
     def initMethod(self):
         body = (
