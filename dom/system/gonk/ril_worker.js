@@ -3811,37 +3811,39 @@ let RIL = {
       debug("handle supp svc notification: " + JSON.stringify(info));
     }
 
+    if (info.notificationType !== 1) {
+      // We haven't supported MO intermediate result code, i.e.
+      // info.notificationType === 0, which refers to code1 defined in 3GPP
+      // 27.007 7.17. We only support partial MT unsolicited result code,
+      // referring to code2, for now.
+      return;
+    }
+
     let notification = null;
     let callIndex = -1;
 
-    if (info.notificationType === 0) {
-      // MO intermediate result code. Refer to code1 defined in 3GPP 27.007
-      // 7.17.
-    } else if (info.notificationType === 1) {
-      // MT unsolicited result code. Refer to code2 defined in 3GPP 27.007 7.17.
-      switch (info.code) {
-        case SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD:
-        case SUPP_SVC_NOTIFICATION_CODE2_RETRIEVED:
-          notification = GECKO_SUPP_SVC_NOTIFICATION_FROM_CODE2[info.code];
-          break;
-        default:
-          // Notification type not supported.
-          return;
-      }
+    switch (info.code) {
+      case SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD:
+      case SUPP_SVC_NOTIFICATION_CODE2_RETRIEVED:
+        notification = GECKO_SUPP_SVC_NOTIFICATION_FROM_CODE2[info.code];
+        break;
+      default:
+        // Notification type not supported.
+        return;
+    }
 
-      // Get the target call object for this notification.
-      let currentCallIndexes = Object.keys(this.currentCalls);
-      if (currentCallIndexes.length === 1) {
-        // Only one call exists. This should be the target.
-        callIndex = currentCallIndexes[0];
-      } else {
-        // Find the call in |currentCalls| by the given number.
-        if (info.number) {
-          for each (let currentCall in this.currentCalls) {
-            if (currentCall.number == info.number) {
-              callIndex = currentCall.callIndex;
-              break;
-            }
+    // Get the target call object for this notification.
+    let currentCallIndexes = Object.keys(this.currentCalls);
+    if (currentCallIndexes.length === 1) {
+      // Only one call exists. This should be the target.
+      callIndex = currentCallIndexes[0];
+    } else {
+      // Find the call in |currentCalls| by the given number.
+      if (info.number) {
+        for each (let currentCall in this.currentCalls) {
+          if (currentCall.number == info.number) {
+            callIndex = currentCall.callIndex;
+            break;
           }
         }
       }
