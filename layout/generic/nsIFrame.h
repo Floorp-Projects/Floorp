@@ -2808,7 +2808,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * continuations of the first inline in it.
    */
   bool FrameIsNonFirstInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
       FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
   }
 
@@ -2817,7 +2817,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * continuations of the last inline in it.
    */
   bool FrameIsNonLastInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
       FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialSibling());
   }
 

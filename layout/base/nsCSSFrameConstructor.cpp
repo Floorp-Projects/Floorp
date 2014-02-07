@@ -413,7 +413,7 @@ ReparentFrames(nsCSSFrameConstructor* aFrameConstructor,
 static inline bool
 IsFrameSpecial(nsIFrame* aFrame)
 {
-  return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) != 0;
+  return (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0;
 }
 
 static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
@@ -468,7 +468,7 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
                "should have no non-special continuations here");
 
   // Mark the frame as "special".
-  aFrame->AddStateBits(NS_FRAME_IS_SPECIAL);
+  aFrame->AddStateBits(NS_FRAME_PART_OF_IBSPLIT);
 
   if (aSpecialSibling) {
     NS_ASSERTION(!aSpecialSibling->GetPrevContinuation(),
@@ -10400,7 +10400,8 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // and inlines that contain our children.
   //
   // {ib} splits maintain the following invariants:
-  // 1) All frames in the split have the NS_FRAME_IS_SPECIAL bit set.
+  // 1) All frames in the split have the NS_FRAME_PART_OF_IBSPLIT bit
+  //    set.
   // 2) Each frame in the split has the nsIFrame::IBSplitSpecialSibling
   //    property pointing to the next frame in the split, except for the last
   //    one, which does not have it set.
