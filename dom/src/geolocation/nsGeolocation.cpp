@@ -646,7 +646,7 @@ nsresult nsGeolocationService::Init()
 
   if (settings) {
     nsCOMPtr<nsISettingsServiceLock> settingsLock;
-    nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
+    nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<GeolocationSettingsCallback> callback = new GeolocationSettingsCallback();

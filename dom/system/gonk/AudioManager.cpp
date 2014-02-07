@@ -397,7 +397,7 @@ AudioManager::AudioManager()
     do_GetService("@mozilla.org/settingsService;1");
   NS_ENSURE_TRUE_VOID(settingsService);
   nsCOMPtr<nsISettingsServiceLock> lock;
-  nsresult rv = settingsService->CreateLock(getter_AddRefs(lock));
+  nsresult rv = settingsService->CreateLock(nullptr, getter_AddRefs(lock));
   NS_ENSURE_SUCCESS_VOID(rv);
   nsCOMPtr<nsISettingsServiceCallback> callback = new AudioChannelVolInitCallback();
   NS_ENSURE_TRUE_VOID(callback);

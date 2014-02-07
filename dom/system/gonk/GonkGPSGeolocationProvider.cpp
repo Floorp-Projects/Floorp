@@ -383,7 +383,7 @@ GonkGPSGeolocationProvider::RequestSettingValue(char* aKey)
     return;
   }
   nsCOMPtr<nsISettingsServiceLock> lock;
-  ss->CreateLock(getter_AddRefs(lock));
+  ss->CreateLock(nullptr, getter_AddRefs(lock));
   lock->Get(aKey, this);
 }
 
