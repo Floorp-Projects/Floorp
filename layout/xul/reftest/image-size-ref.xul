@@ -17,12 +17,12 @@ div div { background: blue; display: inline; float: left; }
       src="image4x3.png" style="width: 20px; height: 15px;"/><html:img
       src="image4x3.png" style="width: 20px; height: 15px;"/><html:img
       src="image4x3.png" style="width: 40px; height: 30px; border: 8px solid green;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 80px; height: 64px; border: 8px solid yellow;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 72px; height: 58px; border: 8px solid green;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid yellow;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 74px; height: 53px; border: solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 18px; height: 11px; border: solid green; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
+      src="image4x3.png" style="box-sizing: border-box; width: 80px; height: 64px; border: 8px solid yellow;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 72px; height: 58px; border: 8px solid green;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid yellow;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 74px; height: 53px; border: solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 18px; height: 11px; border: solid green; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
 </html:div>
 
 <html:div><html:img
@@ -35,12 +35,12 @@ div div { background: blue; display: inline; float: left; }
       src="image4x3.png" style="width: 20px; height: 15px;"/><html:img
       src="image4x3.png" style="width: 60px; height: 25px;"/><html:img
       src="image4x3.png" style="width: 20px; height: 75px;"/><html:img
-      src="image4x3.png" style="width: 80px; height: 64px; padding: 8px; -moz-box-sizing: border-box;"/><html:img
-      src="image4x3.png" style="width: 72px; height: 58px; padding: 8px; -moz-box-sizing: border-box;"/><html:img
-      src="image4x3.png" style="width: 24px; height: 22px; padding: 8px; -moz-box-sizing: border-box;"/><html:img
-      src="image4x3.png" style="width: 24px; height: 22px; padding: 8px; -moz-box-sizing: border-box;"/><html:img
-      src="image4x3.png" style="width: 67px; height: 60px; padding: 4px 2px 8px 1px; -moz-box-sizing: border-box;"/><html:img
-      src="image4x3.png" style="width: 11px; height: 18px; padding: 4px 2px 8px 1px; -moz-box-sizing: border-box;"/>
+      src="image4x3.png" style="width: 80px; height: 64px; padding: 8px; box-sizing: border-box;"/><html:img
+      src="image4x3.png" style="width: 72px; height: 58px; padding: 8px; box-sizing: border-box;"/><html:img
+      src="image4x3.png" style="width: 24px; height: 22px; padding: 8px; box-sizing: border-box;"/><html:img
+      src="image4x3.png" style="width: 24px; height: 22px; padding: 8px; box-sizing: border-box;"/><html:img
+      src="image4x3.png" style="width: 67px; height: 60px; padding: 4px 2px 8px 1px; box-sizing: border-box;"/><html:img
+      src="image4x3.png" style="width: 11px; height: 18px; padding: 4px 2px 8px 1px; box-sizing: border-box;"/>
 </html:div>
 
 <html:div><html:img
@@ -68,32 +68,32 @@ div div { background: blue; display: inline; float: left; }
 </html:div>
 
 <html:div><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/>
+      src="image4x3.png" style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/>
 </html:div>
 
 <html:div><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/>
+      src="image4x3.png" style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/>
 </html:div>
 
 <html:div><html:img
       src="image4x3.png" style="width: 40px; height: 30px;"/><html:img
       src="image4x3.png" style="width: 40px; height: 30px;"/><html:img
       src="image4x3.png" style="width: 40px; height: 30px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 60px; height: 49px; border: 8px solid green;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 112px; height: 88px; border: 8px solid yellow;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 96px; height: 76px; border: 8px solid green;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 112px; height: 88px; border: 8px solid yellow;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 106px; height: 77px; border: solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
+      src="image4x3.png" style="box-sizing: border-box; width: 60px; height: 49px; border: 8px solid green;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 112px; height: 88px; border: 8px solid yellow;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 96px; height: 76px; border: 8px solid green;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 112px; height: 88px; border: 8px solid yellow;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 106px; height: 77px; border: solid yellow; border-top-width: 1px; border-right-width: 2px; border-bottom-width: 4px; border-left-width: 8px;"/>
 </html:div>
 
 <html:div><html:img
       src="image4x3.png" style="width: 60px; height: 45px;"/><html:img
       src="image4x3.png" style="width: 120px; height: 90px;"/><html:img
       src="image4x3.png" style="width 60px; height: 45px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 60px; height: 49px; padding: 8px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 112px; height: 88px; padding: 8px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 96px; height: 76px; padding: 8px;"/><html:img
-      src="image4x3.png" style="-moz-box-sizing: border-box; width: 112px; height: 88px; padding: 8px;"/>
+      src="image4x3.png" style="box-sizing: border-box; width: 60px; height: 49px; padding: 8px;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 112px; height: 88px; padding: 8px;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 96px; height: 76px; padding: 8px;"/><html:img
+      src="image4x3.png" style="box-sizing: border-box; width: 112px; height: 88px; padding: 8px;"/>
 </html:div>
 
 <html:div><html:div
@@ -108,8 +108,8 @@ div div { background: blue; display: inline; float: left; }
 
 <html:div><html:div style="width: 20px; height: 15px;"/></html:div>
 
-<html:div><html:div style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/></html:div>
+<html:div><html:div style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/></html:div>
 
-<html:div><html:div style="-moz-box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/></html:div>
+<html:div><html:div style="box-sizing: border-box; width: 24px; height: 22px; border: 8px solid green;"/></html:div>
 
 </window>

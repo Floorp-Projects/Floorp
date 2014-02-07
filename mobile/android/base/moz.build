@@ -408,10 +408,47 @@ gbjar.generated_sources += sync_generated_java_files
 gbjar.extra_jars = [
     'gecko-mozglue.jar',
     'gecko-util.jar',
+    'squareup-picasso.jar',
     'sync-thirdparty.jar',
     'websockets.jar',
 ]
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough']
+
+spjar = add_java_jar('squareup-picasso')
+spjar.sources += [ thirdparty_source_dir + f for f in [
+    'com/squareup/picasso/Action.java',
+    'com/squareup/picasso/AssetBitmapHunter.java',
+    'com/squareup/picasso/BitmapHunter.java',
+    'com/squareup/picasso/Cache.java',
+    'com/squareup/picasso/Callback.java',
+    'com/squareup/picasso/ContactsPhotoBitmapHunter.java',
+    'com/squareup/picasso/ContentStreamBitmapHunter.java',
+    'com/squareup/picasso/DeferredRequestCreator.java',
+    'com/squareup/picasso/Dispatcher.java',
+    'com/squareup/picasso/Downloader.java',
+    'com/squareup/picasso/FetchAction.java',
+    'com/squareup/picasso/FileBitmapHunter.java',
+    'com/squareup/picasso/GetAction.java',
+    'com/squareup/picasso/ImageViewAction.java',
+    'com/squareup/picasso/LruCache.java',
+    'com/squareup/picasso/MarkableInputStream.java',
+    'com/squareup/picasso/MediaStoreBitmapHunter.java',
+    'com/squareup/picasso/NetworkBitmapHunter.java',
+    'com/squareup/picasso/Picasso.java',
+    'com/squareup/picasso/PicassoDrawable.java',
+    'com/squareup/picasso/PicassoExecutorService.java',
+    'com/squareup/picasso/Request.java',
+    'com/squareup/picasso/RequestCreator.java',
+    'com/squareup/picasso/ResourceBitmapHunter.java',
+    'com/squareup/picasso/Stats.java',
+    'com/squareup/picasso/StatsSnapshot.java',
+    'com/squareup/picasso/Target.java',
+    'com/squareup/picasso/TargetAction.java',
+    'com/squareup/picasso/Transformation.java',
+    'com/squareup/picasso/UrlConnectionDownloader.java',
+    'com/squareup/picasso/Utils.java',
+] ]
+#spjar.javac_flags += ['-Xlint:all']
 
 ANDROID_RES_DIRS += [
     SRCDIR + '/resources',

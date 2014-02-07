@@ -10,13 +10,16 @@ xul|window xul|scrollbar {
   display: none;
 }
 
+html xul|scrollbar[root="true"] {
+  position: relative;
+  z-index: 2147483647;
+}
+
 html xul|scrollbar {
   -moz-appearance: none !important;
-  position: relative;
   background-color: transparent !important;
   background-image: none !important;
   border: 0px solid transparent !important;
-  z-index: 2147483647;
   pointer-events: none;
   opacity: 1;
 }

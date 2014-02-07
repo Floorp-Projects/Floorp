@@ -32,6 +32,14 @@
 
 //----------------------------------------------------------------------------
 
+namespace mozilla {
+  extern const char kProxyType_HTTP[];
+  extern const char kProxyType_SOCKS[];
+  extern const char kProxyType_SOCKS4[];
+  extern const char kProxyType_SOCKS5[];
+  extern const char kProxyType_DIRECT[];
+}
+
 using namespace mozilla;
 
 #include "prlog.h"
@@ -649,13 +657,13 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
 // kProxyType\* may be referred to externally in
 // nsProxyInfo in order to compare by string pointer
 namespace mozilla {
-const char *kProxyType_HTTP    = "http";
-const char *kProxyType_PROXY   = "proxy";
-const char *kProxyType_SOCKS   = "socks";
-const char *kProxyType_SOCKS4  = "socks4";
-const char *kProxyType_SOCKS5  = "socks5";
-const char *kProxyType_DIRECT  = "direct";
-const char *kProxyType_UNKNOWN = "unknown";
+const char kProxyType_HTTP[]    = "http";
+const char kProxyType_PROXY[]   = "proxy";
+const char kProxyType_SOCKS[]   = "socks";
+const char kProxyType_SOCKS4[]  = "socks4";
+const char kProxyType_SOCKS5[]  = "socks5";
+const char kProxyType_DIRECT[]  = "direct";
+const char kProxyType_UNKNOWN[] = "unknown";
 }
 
 const char *

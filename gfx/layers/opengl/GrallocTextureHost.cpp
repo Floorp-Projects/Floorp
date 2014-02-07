@@ -236,6 +236,8 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   mGrallocActor =
     static_cast<GrallocBufferActor*>(aDescriptor.bufferParent());
 
+  mGrallocActor->AddTextureHost(this);
+
   android::GraphicBuffer* graphicBuffer = mGrallocActor->GetGraphicBuffer();
 
   mSize = aDescriptor.size();
@@ -250,6 +252,10 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
 {
   mTextureSource = nullptr;
+  if (mGrallocActor) {
+    mGrallocActor->RemoveTextureHost();
+    mGrallocActor = nullptr;
+  }
 }
 
 void
@@ -288,7 +294,9 @@ GrallocTextureHostOGL::DeallocateSharedData()
   if (mTextureSource) {
     mTextureSource->ForgetBuffer();
   }
-  PGrallocBufferParent::Send__delete__(mGrallocActor);
+  if (mGrallocActor) {
+    PGrallocBufferParent::Send__delete__(mGrallocActor);
+  }
 }
 
 void

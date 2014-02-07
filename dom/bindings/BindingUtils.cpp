@@ -1529,9 +1529,9 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
 }
 
 bool
-MainThreadDictionaryBase::ParseJSON(JSContext *aCx,
-                                    const nsAString& aJSON,
-                                    JS::MutableHandle<JS::Value> aVal)
+DictionaryBase::ParseJSON(JSContext* aCx,
+                          const nsAString& aJSON,
+                          JS::MutableHandle<JS::Value> aVal)
 {
   if (aJSON.IsEmpty()) {
     return true;

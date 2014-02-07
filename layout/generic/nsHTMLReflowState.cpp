@@ -896,7 +896,7 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
   } else if (NS_STYLE_POSITION_STICKY == display->mPosition &&
              !aFrame->GetNextContinuation() &&
              !aFrame->GetPrevContinuation() &&
-             !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+             !(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // Sticky positioning for elements with multiple frames needs to be
     // computed all at once. We can't safely do that here because we might be
     // partway through (re)positioning the frames, so leave it until the scroll
@@ -994,7 +994,7 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize, nsIAtom* aFrameTyp
 
 /**
  * aInsideBoxSizing returns the part of the horizontal padding, border,
- * and margin that goes inside the edge given by -moz-box-sizing;
+ * and margin that goes inside the edge given by box-sizing;
  * aOutsideBoxSizing returns the rest.
  */
 void
@@ -2263,7 +2263,7 @@ nsCSSOffsetState::InitOffsets(nscoord aHorizontalPercentBasis,
       // border-collapsed tables don't use any of their padding, and
       // only part of their border.  We need to do this here before we
       // try to do anything like handling 'auto' widths,
-      // '-moz-box-sizing', or 'auto' margins.
+      // 'box-sizing', or 'auto' margins.
       ComputedPhysicalPadding().SizeTo(0,0,0,0);
       ComputedPhysicalBorderPadding() = tableFrame->GetIncludedOuterBCBorder();
     }

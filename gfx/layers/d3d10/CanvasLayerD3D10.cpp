@@ -40,13 +40,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 {
   NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mSurface) {
-    mSurface = aData.mSurface;
-    NS_ASSERTION(!aData.mGLContext && !aData.mDrawTarget,
-                 "CanvasLayer can't have both surface and WebGLContext/DrawTarget");
-    mNeedsYFlip = false;
-    mDataIsPremultiplied = true;
-  } else if (aData.mGLContext) {
+  if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     NS_ASSERTION(mGLContext->IsOffscreen(), "Canvas GLContext must be offscreen.");
     mDataIsPremultiplied = aData.mIsGLAlphaPremult;
@@ -78,8 +72,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     if (texture) {
       mTexture = static_cast<ID3D10Texture2D*>(texture);
 
-      NS_ASSERTION(!aData.mGLContext && !aData.mSurface,
-                   "CanvasLayer can't have both surface and WebGLContext/Surface");
+      NS_ASSERTION(!aData.mGLContext,
+                   "CanvasLayer can't have both DrawTarget and WebGLContext/Surface");
 
       mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
       device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));

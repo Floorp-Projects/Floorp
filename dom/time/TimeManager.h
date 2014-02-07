@@ -21,7 +21,7 @@ class TimeManager MOZ_FINAL : public nsISupports
                             , public nsWrapperCache
 {
 public:
-  static bool PrefEnabled()
+  static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   {
 #ifdef MOZ_TIME_MANAGER
     return true;

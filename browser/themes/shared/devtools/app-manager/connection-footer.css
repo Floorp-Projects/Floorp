@@ -78,7 +78,7 @@ body.edit-connection #banner-editing {
 * {
   margin: 0;
   padding: 0;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   font-size: 0.9rem;
 }
 

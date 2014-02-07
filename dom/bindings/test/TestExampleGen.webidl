@@ -129,6 +129,8 @@ interface TestExampleInterface {
   void passNullableSelf(TestInterface? arg);
   attribute TestInterface nonNullSelf;
   attribute TestInterface? nullableSelf;
+  [Cached, Pure]
+  readonly attribute TestInterface cachedSelf;
   // Optional arguments
   void passOptionalSelf(optional TestInterface? arg);
   void passOptionalNonNullSelf(optional TestInterface arg);

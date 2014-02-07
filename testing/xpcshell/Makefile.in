@@ -20,7 +20,6 @@ TEST_HARNESS_FILES := \
   moz-spdy \
   node-http2 \
   moz-http2 \
-  node \
   $(NULL)
 
 # Extra files needed from $(topsrcdir)/build

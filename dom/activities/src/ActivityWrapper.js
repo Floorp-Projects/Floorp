@@ -30,6 +30,13 @@ function ActivityWrapper() {
 ActivityWrapper.prototype = {
   wrapMessage: function wrapMessage(aMessage, aWindow) {
     debug("Wrapping " + JSON.stringify(aMessage));
+
+    // This message is useful to communicate that the activity message has been
+    // properly received by the app. If the app will be killed, the
+    // ActivitiesService will be able to fire an error and complete the
+    // Activity workflow.
+    cpmm.sendAsyncMessage("Activity:Ready", { id: aMessage.id });
+
     let handler = Cc["@mozilla.org/dom/activities/request-handler;1"]
                     .createInstance(Ci.nsIDOMMozActivityRequestHandler);
     handler.wrappedJSObject._id = aMessage.id;

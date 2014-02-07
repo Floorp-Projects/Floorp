@@ -229,7 +229,7 @@ static void
 InvalidateAllContinuations(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
     f->InvalidateFrame();
   }
 }

@@ -838,7 +838,6 @@ html[dir="rtl"] .secondaryToolbarButton.print::before {
 
 .toolbarButton.bookmark,
 .secondaryToolbarButton.bookmark {
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
   outline: none;
   padding-top: 4px;

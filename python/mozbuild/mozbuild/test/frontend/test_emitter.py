@@ -169,6 +169,8 @@ class TestEmitterBasic(unittest.TestCase):
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SSRCS=['bans.S', 'fans.S'],
             VISIBILITY_FLAGS='',
+            DELAYLOAD_LDFLAGS=['-DELAYLOAD:foo.dll', '-DELAYLOAD:bar.dll'],
+            USE_DELAYIMP=True,
         )
 
         variables = objs[0].variables
@@ -239,6 +241,18 @@ class TestEmitterBasic(unittest.TestCase):
 
         with self.assertRaisesRegexp(SandboxValidationError, 'Empty test manifest'):
             self.read_topsrcdir(reader)
+
+
+    def test_test_manifest_just_support_files(self):
+        """A test manifest with no tests but support-files is supported."""
+        reader = self.reader('test-manifest-just-support')
+
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        o = objs[0]
+        self.assertEqual(len(o.installs), 2)
+        paths = sorted([k[len(o.directory)+1:] for k in o.installs.keys()])
+        self.assertEqual(paths, ["foo.txt", "just-support.ini"])
 
     def test_test_manifest_keys_extracted(self):
         """Ensure all metadata from test manifests is extracted."""
