@@ -26,6 +26,7 @@ namespace insanity { namespace pkix {
 SECStatus BuildCertChain(TrustDomain& trustDomain,
                          CERTCertificate* cert,
                          PRTime time,
+            /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
                  /*out*/ ScopedCERTCertList& results);
 
 // Verify the given signed data using the public key of the given certificate.
