@@ -310,6 +310,18 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "texture_half_float_linear",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_half_float_pixel,
+            GLContext::ARB_texture_float,
+            GLContext::NV_half_float,
+            GLContext::OES_texture_half_float_linear,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "texture_non_power_of_two",
         200, // OpenGL version
         300, // OpenGL ES version

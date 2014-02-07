@@ -59,6 +59,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionTextureFloat.cpp',
         'WebGLExtensionTextureFloatLinear.cpp',
         'WebGLExtensionTextureHalfFloat.cpp',
+        'WebGLExtensionTextureHalfFloatLinear.cpp',
         'WebGLExtensionVertexArray.cpp',
         'WebGLFramebuffer.cpp',
         'WebGLObjectModel.cpp',

@@ -84,6 +84,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_texture_float_linear",
     "GL_ARB_texture_float",
     "GL_OES_texture_half_float",
+    "GL_OES_texture_half_float_linear",
     "GL_NV_half_float",
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
