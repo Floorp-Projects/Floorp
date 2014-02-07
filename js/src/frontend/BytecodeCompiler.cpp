@@ -170,10 +170,10 @@ SetScriptSourceFilename(ExclusiveContext *cx, ScriptSource *ss,
 {
     if (options.hasIntroductionInfo) {
         const char *filename = options.filename() ? options.filename() : "<unknown>";
-        JS_ASSERT(options.introducer != nullptr);
+        JS_ASSERT(options.introductionType != nullptr);
 
         if (!ss->setIntroducedFilename(cx, filename, options.introductionLineno,
-                                       options.introducer, options.introducerFilename()))
+                                       options.introductionType, options.introducerFilename()))
             return false;
 
         ss->setIntroductionOffset(options.introductionOffset);
