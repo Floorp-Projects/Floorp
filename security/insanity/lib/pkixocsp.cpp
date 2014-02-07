@@ -840,4 +840,110 @@ CheckExtensionsForCriticality(der::Input& input)
 //
 // http://tools.ietf.org/html/rfc5019#section-4
 
+SECItem*
+CreateEncodedOCSPRequest(PLArenaPool* arena,
+                         const CERTCertificate* cert,
+                         const CERTCertificate* issuerCert)
+{
+  if (!arena || !cert || !issuerCert) {
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return nullptr;
+  }
+
+  // We do not add any extensions to the request.
+
+  // RFC 6960 says "An OCSP client MAY wish to specify the kinds of response
+  // types it understands. To do so, it SHOULD use an extension with the OID
+  // id-pkix-ocsp-response." This use of MAY and SHOULD is unclear. MSIE11
+  // on Windows 8.1 does not include any extensions, whereas NSS has always
+  // included the id-pkix-ocsp-response extension. Avoiding the sending the
+  // extension is better for OCSP GET because it makes the request smaller,
+  // and thus more likely to fit within the 255 byte limit for OCSP GET that
+  // is specified in RFC 5019 Section 5.
+
+  // Bug 966856: Add the id-pkix-ocsp-pref-sig-algs extension.
+
+  // Since we don't know whether the OCSP responder supports anything other
+  // than SHA-1, we have no choice but to use SHA-1 for issuerNameHash and
+  // issuerKeyHash.
+  static const uint8_t hashAlgorithm[11] = {
+    0x30, 0x09,                               // SEQUENCE
+    0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, //   OBJECT IDENTIFIER id-sha1
+    0x05, 0x00,                               //   NULL
+  };
+  static const uint8_t hashLen = SHA1_LENGTH;
+
+  static const unsigned int totalLenWithoutSerialNumberData
+    = 2                             // OCSPRequest
+    + 2                             //   tbsRequest
+    + 2                             //     requestList
+    + 2                             //       Request
+    + 2                             //         reqCert (CertID)
+    + PR_ARRAY_SIZE(hashAlgorithm)  //           hashAlgorithm
+    + 2 + hashLen                   //           issuerNameHash
+    + 2 + hashLen                   //           issuerKeyHash
+    + 2;                            //           serialNumber (header)
+
+  // The only way we could have a request this large is if the serialNumber was
+  // ridiculously and unreasonably large. RFC 5280 says "Conforming CAs MUST
+  // NOT use serialNumber values longer than 20 octets." With this restriction,
+  // we allow for some amount of non-conformance with that requirement while
+  // still ensuring we can encode the length values in the ASN.1 TLV structures
+  // in a single byte.
+  if (issuerCert->serialNumber.len > 127u - totalLenWithoutSerialNumberData) {
+    PR_SetError(SEC_ERROR_BAD_DATA, 0);
+    return nullptr;
+  }
+
+  uint8_t totalLen = static_cast<uint8_t>(totalLenWithoutSerialNumberData +
+    cert->serialNumber.len);
+
+  SECItem* encodedRequest = SECITEM_AllocItem(arena, nullptr, totalLen);
+  if (!encodedRequest) {
+    return nullptr;
+  }
+
+  uint8_t* d = encodedRequest->data;
+  *d++ = 0x30; *d++ = totalLen - 2;  // OCSPRequest (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 4;  //   tbsRequest (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 6;  //     requestList (SEQUENCE OF)
+  *d++ = 0x30; *d++ = totalLen - 8;  //       Request (SEQUENCE)
+  *d++ = 0x30; *d++ = totalLen - 10; //         reqCert (CertID SEQUENCE)
+
+  // reqCert.hashAlgorithm
+  for (size_t i = 0; i < PR_ARRAY_SIZE(hashAlgorithm); ++i) {
+    *d++ = hashAlgorithm[i];
+  }
+
+  // reqCert.issuerNameHash (OCTET STRING)
+  *d++ = 0x04;
+  *d++ = hashLen;
+  if (PK11_HashBuf(SEC_OID_SHA1, d, issuerCert->derSubject.data,
+                   issuerCert->derSubject.len) != SECSuccess) {
+    return nullptr;
+  }
+  d += hashLen;
+
+  // reqCert.issuerKeyHash (OCTET STRING)
+  *d++ = 0x04;
+  *d++ = hashLen;
+  SECItem key = issuerCert->subjectPublicKeyInfo.subjectPublicKey;
+  DER_ConvertBitString(&key);
+  if (PK11_HashBuf(SEC_OID_SHA1, d, key.data, key.len) != SECSuccess) {
+    return nullptr;
+  }
+  d += hashLen;
+
+  // reqCert.serialNumber (INTEGER)
+  *d++ = 0x02; // INTEGER
+  *d++ = static_cast<uint8_t>(cert->serialNumber.len);
+  for (size_t i = 0; i < cert->serialNumber.len; ++i) {
+    *d++ = cert->serialNumber.data[i];
+  }
+
+  PR_ASSERT(d == encodedRequest->data + totalLen);
+
+  return encodedRequest;
+}
+
 } } // namespace insanity::pkix
