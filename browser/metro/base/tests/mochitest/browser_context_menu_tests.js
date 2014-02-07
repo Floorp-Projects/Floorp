@@ -911,6 +911,48 @@ gTests.push({
   }
 });
 
+gTests.push({
+  desc: "Bug 867499 - Selecting 'copy' from context menu for selected text " +
+        "dismisses selection.",
+  run: function test() {
+    info(chromeRoot + "browser_context_menu_tests_02.html");
+    yield addTab(chromeRoot + "browser_context_menu_tests_02.html");
+
+    emptyClipboard();
+    ContextUI.dismiss();
+
+    yield waitForCondition(() => !ContextUI.navbarVisible);
+
+    let tabWindow = Browser.selectedTab.browser.contentWindow;
+    let testSpan = tabWindow.document.getElementById("text1");
+
+    let promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(tabWindow, testSpan, 5, 5);
+    yield promise;
+
+    yield waitForCondition(()=>SelectionHelperUI.isSelectionUIVisible);
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToSelection(tabWindow);
+    yield promise;
+
+    let copyMenuItem = document.getElementById("context-copy");
+
+    ok(!copyMenuItem.hidden, "Copy menu item should be visible.");
+
+    promise = waitForEvent(document, "popuphidden");
+    sendNativeTap(copyMenuItem, 5, 5);
+    yield promise;
+    yield waitForCondition(() =>
+        !!SpecialPowers.getClipboardData("text/unicode"));
+
+    ok(SelectionHelperUI.isSelectionUIVisible,
+        "Selection monocles should stay active after copy action.");
+
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
+  }
+});
+
 function test() {
   setDevPixelEqualToPx();
   runTests();
