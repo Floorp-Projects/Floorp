@@ -1550,7 +1550,7 @@ nsPresContext::SetContainer(nsIDocShell* aDocShell)
   } else {
     mContainer = WeakPtr<nsDocShell>();
   }
-  InvalidateIsChromeCache();
+  UpdateIsChrome();
   if (mContainer) {
     GetDocumentColorPreferences();
   }
@@ -2043,19 +2043,11 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 }
 #endif
 
-bool
-nsPresContext::IsChromeSlow() const
+void
+nsPresContext::UpdateIsChrome()
 {
   mIsChrome = mContainer &&
               nsIDocShellTreeItem::typeChrome == mContainer->ItemType();
-  mIsChromeIsCached = true;
-  return mIsChrome;
-}
-
-void
-nsPresContext::InvalidateIsChromeCacheExternal()
-{
-  InvalidateIsChromeCacheInternal();
 }
 
 /* virtual */ bool
