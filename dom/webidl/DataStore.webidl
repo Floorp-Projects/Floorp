@@ -6,7 +6,7 @@
 
 typedef (DOMString or unsigned long) DataStoreKey;
 
-[Pref="dom.datastore.enabled",
+[Func="Navigator::HasDataStoreSupport",
  JSImplementation="@mozilla.org/dom/datastore;1"]
 interface DataStore : EventTarget {
   // Returns the label of the DataSource.

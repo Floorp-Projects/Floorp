@@ -203,7 +203,6 @@ body {
   white-space:pre;
 }
 .sideBar {
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
   position: absolute;
   left: 0;

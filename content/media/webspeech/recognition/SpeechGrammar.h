@@ -16,16 +16,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
-#include "EnableWebSpeechRecognitionCheck.h"
-
 namespace mozilla {
 namespace dom {
 
 class GlobalObject;
 
 class SpeechGrammar MOZ_FINAL : public nsISupports,
-                                public nsWrapperCache,
-                                public EnableWebSpeechRecognitionCheck
+                                public nsWrapperCache
 {
 public:
   SpeechGrammar(nsISupports* aParent);

@@ -526,6 +526,8 @@ nsFrameLoader::ReallyStartLoadingInternal()
     rv = NS_NewURI(getter_AddRefs(referrer), referrerStr);
 
     loadInfo->SetSrcdocData(srcdoc);
+    nsCOMPtr<nsIURI> baseURI = mOwnerContent->GetBaseURI();
+    loadInfo->SetBaseURI(baseURI);
   }
   else {
     rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));

@@ -23,7 +23,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/Preferences.h"
 
-#include "EnableWebSpeechRecognitionCheck.h"
 #include "SpeechGrammarList.h"
 #include "SpeechRecognitionResultList.h"
 #include "SpeechStreamListener.h"
@@ -56,7 +55,6 @@ PRLogModuleInfo* GetSpeechRecognitionLog();
 
 class SpeechRecognition MOZ_FINAL : public nsDOMEventTargetHelper,
                                     public nsIObserver,
-                                    public EnableWebSpeechRecognitionCheck,
                                     public SupportsWeakPtr<SpeechRecognition>
 {
 public:

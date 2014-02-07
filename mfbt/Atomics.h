@@ -845,7 +845,10 @@ class AtomicBase
     MOZ_CONSTEXPR AtomicBase() : mValue() {}
     MOZ_CONSTEXPR AtomicBase(T aInit) : mValue(aInit) {}
 
-    operator T() const { return Intrinsics::load(mValue); }
+    // Note: we can't provide operator T() here because Atomic<bool> inherits
+    // from AtomcBase with T=uint32_t and not T=bool. If we implemented
+    // operator T() here, it would cause errors when comparing Atomic<bool> with
+    // a regular bool.
 
     T operator=(T aValue) {
       Intrinsics::store(mValue, aValue);
@@ -891,6 +894,7 @@ class AtomicBaseIncDec : public AtomicBase<T, Order>
 
     using Base::operator=;
 
+    operator T() const { return Base::Intrinsics::load(Base::mValue); }
     T operator++(int) { return Base::Intrinsics::inc(Base::mValue); }
     T operator--(int) { return Base::Intrinsics::dec(Base::mValue); }
     T operator++() { return Base::Intrinsics::inc(Base::mValue) + 1; }
@@ -934,7 +938,7 @@ class Atomic;
  * swap method is provided.
  */
 template<typename T, MemoryOrdering Order>
-class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value>::Type>
+class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value && !IsSame<T, bool>::value>::Type>
   : public detail::AtomicBaseIncDec<T, Order>
 {
     typedef typename detail::AtomicBaseIncDec<T, Order> Base;
@@ -1000,10 +1004,50 @@ class Atomic<T, Order, typename EnableIf<IsEnum<T>::value>::Type>
     MOZ_CONSTEXPR Atomic() : Base() {}
     MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
 
+    operator T() const { return Base::Intrinsics::load(Base::mValue); }
+
     using Base::operator=;
 
   private:
     Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
+};
+
+/**
+ * Atomic<T> implementation for boolean types.
+ *
+ * The atomic store and load operations and the atomic swap method is provided.
+ *
+ * Note:
+ *
+ * - sizeof(Atomic<bool>) != sizeof(bool) for some implementations of
+ *   bool and/or some implementations of std::atomic. This is allowed in
+ *   [atomic.types.generic]p9.
+ *
+ * - It's not obvious whether the 8-bit atomic functions on Windows are always
+ *   inlined or not. If they are not inlined, the corresponding functions in the
+ *   runtime library are not available on Windows XP. This is why we implement
+ *   Atomic<bool> with an underlying type of uint32_t.
+ */
+template<MemoryOrdering Order>
+class Atomic<bool, Order>
+  : protected detail::AtomicBase<uint32_t, Order>
+{
+    typedef typename detail::AtomicBase<uint32_t, Order> Base;
+
+  public:
+    MOZ_CONSTEXPR Atomic() : Base() {}
+    MOZ_CONSTEXPR Atomic(bool aInit) : Base(aInit) {}
+
+    // We provide boolean wrappers for the underlying AtomicBase methods.
+    operator bool() const { return Base::Intrinsics::load(Base::mValue); }
+    bool operator=(bool aValue) { return Base::operator=(aValue); }
+    bool exchange(bool aValue) { return Base::exchange(aValue); }
+    bool compareExchange(bool aOldValue, bool aNewValue) {
+      return Base::compareExchange(aOldValue, aNewValue);
+    }
+
+  private:
+    Atomic(Atomic<bool, Order>& aOther) MOZ_DELETE;
 };
 
 } // namespace mozilla

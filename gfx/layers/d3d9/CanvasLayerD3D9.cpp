@@ -49,12 +49,6 @@ CanvasLayerD3D9::Initialize(const Data& aData)
     mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
-  } else if (aData.mSurface) {
-    mSurface = aData.mSurface;
-    NS_ASSERTION(aData.mGLContext == nullptr,
-                 "CanvasLayer can't have both surface and WebGLContext");
-    mNeedsYFlip = false;
-    mDataIsPremultiplied = true;
   } else if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     NS_ASSERTION(mGLContext->IsOffscreen(), "Canvas GLContext must be offscreen.");

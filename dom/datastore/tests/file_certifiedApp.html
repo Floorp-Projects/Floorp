@@ -16,6 +16,8 @@
     alert('DONE');
   }
 
+  ok(!("DataStore" in window), "DataStore is not an available interface");
+  ok(!("DataStoreChangeEvent" in window), "DataStore is not an available interface");
   ok(!("getDataStores" in navigator), "DataStore not available");
   finish();
   </script>

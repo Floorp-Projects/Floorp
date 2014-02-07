@@ -109,7 +109,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
   // If this is our first reflow, and our out-of-flow has already received its
   // first reflow (before us), complain.
   // XXXdholbert This "look for a previous continuation or IB-split sibling"
-  // code could use nsLayoutUtils::GetPrevContinuationOrSpecialSibling(), if
+  // code could use nsLayoutUtils::GetPrevContinuationOrIBSplitSibling(), if
   // we ever add a function like that. (We currently have a "Next" version.)
   if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       !(mOutOfFlowFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
@@ -122,7 +122,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* ancestor = this;
     while ((ancestor = ancestor->GetParent())) {
       if (ancestor->GetPrevContinuation() ||
-          ancestor->Properties().Get(IBSplitSpecialPrevSibling())) {
+          ancestor->Properties().Get(IBSplitPrevSibling())) {
         isInContinuationOrIBSplit = true;
         break;
       }
