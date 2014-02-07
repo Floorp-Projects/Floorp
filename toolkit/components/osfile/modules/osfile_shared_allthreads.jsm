@@ -337,6 +337,24 @@ Type.prototype = {
   },
 
   /**
+   * Lazy variant of releaseWith.
+   * Attach a finalizer lazily to a type.
+   *
+   * @param {function} getFinalizer The function that
+   * returns finalizer lazily.
+   */
+  releaseWithLazy: function releaseWithLazy(getFinalizer) {
+    let parent = this;
+    let type = this.withName("[auto " + this.name + ", (lazy)] ");
+    type.importFromC = function importFromC(value, operation) {
+      return ctypes.CDataFinalizer(
+        parent.importFromC(value, operation),
+        getFinalizer());
+    };
+    return type;
+  },
+
+  /**
    * Return an alias to a type with a different name.
    */
   withName: function withName(name) {
@@ -912,6 +930,7 @@ Library.prototype = Object.freeze({
     for (let candidate of this._candidates) {
       try {
         library = ctypes.open(candidate);
+        break;
       } catch (ex) {
         LOG("Could not open library", candidate, ex);
       }
@@ -951,6 +970,33 @@ Library.prototype = Object.freeze({
       get: function() {
         delete this[field];
         let ffi = declareFFI(lib.library, ...args);
+        if (ffi) {
+          return this[field] = ffi;
+        }
+        return undefined;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  },
+
+  /**
+   * Define a js-ctypes function lazily using ctypes method declare.
+   *
+   * @param {object} The object containing the function as a field.
+   * @param {string} The name of the field containing the function.
+   * @param {string} symbol The name of the function, as defined in the
+   * library.
+   * @param {ctypes.abi} abi The abi to use, or |null| for default.
+   * @param {ctypes.CType} returnType The type of values returned by the function.
+   * @param {...ctypes.CType} argTypes The type of arguments to the function.
+   */
+  declareLazy: function(object, field, ...args) {
+    let lib = this;
+    Object.defineProperty(object, field, {
+      get: function() {
+        delete this[field];
+        let ffi = lib.library.declare(...args);
         if (ffi) {
           return this[field] = ffi;
         }
