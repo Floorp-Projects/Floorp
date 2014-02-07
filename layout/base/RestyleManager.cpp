@@ -1850,10 +1850,10 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
     // We're the last continuation, so we have to hop back to the first
     // before getting the frame property
     nextContinuation = static_cast<nsIFrame*>(aFrame->FirstContinuation()->
-      Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+      Properties().Get(nsIFrame::IBSplitSibling()));
     if (nextContinuation) {
       nextContinuation = static_cast<nsIFrame*>(
-        nextContinuation->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling()));
     }
   }
 
@@ -2021,7 +2021,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
           !aFrame->GetPrevContinuation()) {
         nsIFrame* sib = static_cast<nsIFrame*>
-          (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+          (aFrame->Properties().Get(nsIFrame::IBSplitSibling()));
         if (sib) {
           ReparentStyleContext(sib);
         }
@@ -2847,7 +2847,7 @@ GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
   }
 
   return static_cast<nsIFrame*>
-    (aPropTable->Get(aFrame, nsIFrame::IBSplitSpecialSibling()));
+    (aPropTable->Get(aFrame, nsIFrame::IBSplitSibling()));
 }
 
 void
