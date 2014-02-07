@@ -52,6 +52,17 @@ var SettingsCharm = {
         onselected: function() FlyoutPanelsUI.show('AboutFlyoutPanel')
     });
 
+    // Feedback
+    this.addEntry({
+        // feedbackLabel is a temporary measure to expose this string
+        // from the baseMenuOverlay.dtd
+        label: Elements.feedbackLabel.value,
+        onselected: function() {
+          let url = Elements.feedbackLabel.getAttribute("href");
+          BrowserUI.addAndShowTab(url, Browser.selectedTab);
+        }
+    });
+
     // Help
     this.addEntry({
         label: Strings.browser.GetStringFromName("helpOnlineCharm"),
