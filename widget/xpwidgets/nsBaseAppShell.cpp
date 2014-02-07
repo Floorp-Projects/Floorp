@@ -23,7 +23,7 @@ nsBaseAppShell::nsBaseAppShell()
   , mEventloopNestingLevel(0)
   , mBlockedWait(nullptr)
   , mFavorPerf(0)
-  , mNativeEventPending(0)
+  , mNativeEventPending(false)
   , mStarvationDelay(0)
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
@@ -61,7 +61,7 @@ nsBaseAppShell::Init()
 void
 nsBaseAppShell::NativeEventCallback()
 {
-  if (!mNativeEventPending.exchange(0))
+  if (!mNativeEventPending.exchange(false))
     return;
 
   // If DoProcessNextNativeEvent is on the stack, then we assume that we can
@@ -106,7 +106,7 @@ nsBaseAppShell::NativeEventCallback()
 }
 
 // Note, this is currently overidden on windows, see comments in nsAppShell for
-// details. 
+// details.
 void
 nsBaseAppShell::DoProcessMoreGeckoEvents()
 {
@@ -225,7 +225,7 @@ nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
   if (mBlockNativeEvent)
     return NS_OK;
 
-  if (mNativeEventPending.exchange(1))
+  if (mNativeEventPending.exchange(true))
     return NS_OK;
 
   // Returns on the main thread in NativeEventCallback above
@@ -402,7 +402,7 @@ nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
                                       uint32_t recursionDepth,
                                       bool eventWasProcessed)
 {
-  // We've just finished running an event, so we're in a stable state. 
+  // We've just finished running an event, so we're in a stable state.
   RunSyncSections(true, recursionDepth);
   return NS_OK;
 }
