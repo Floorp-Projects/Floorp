@@ -1092,8 +1092,13 @@
             // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
             if (!this._previewMode) {
               // We've selected the new tab, so go ahead and notify listeners.
-              let event = document.createEvent("Events");
-              event.initEvent("TabSelect", true, false);
+              let event = new CustomEvent("TabSelect", {
+                bubbles: true,
+                cancelable: false,
+                detail: {
+                  previousTab: oldTab
+                }
+              });
               this.mCurrentTab.dispatchEvent(event);
 
               this._tabAttrModified(oldTab);

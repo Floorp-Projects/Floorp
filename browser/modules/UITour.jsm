@@ -18,14 +18,30 @@ XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
   "resource://gre/modules/PermissionsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
+  "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
+  "resource:///modules/BrowserUITelemetry.jsm");
 
 
 const UITOUR_PERMISSION   = "uitour";
 const PREF_PERM_BRANCH    = "browser.uitour.";
 const MAX_BUTTONS         = 4;
 
+const BUCKET_NAME         = "UITour";
+const BUCKET_TIMESTEPS    = [
+  1 * 60 * 1000, // Until 1 minute after tab is closed/inactive.
+  3 * 60 * 1000, // Until 3 minutes after tab is closed/inactive.
+  10 * 60 * 1000, // Until 10 minutes after tab is closed/inactive.
+  60 * 60 * 1000, // Until 1 hour after tab is closed/inactive.
+];
+
+
 
 this.UITour = {
+  seenPageIDs: new Set(),
+  pageIDSourceTabs: new WeakMap(),
+  pageIDSourceWindows: new WeakMap(),
   originTabs: new WeakMap(),
   pinnedTabs: new WeakMap(),
   urlbarCapture: new WeakMap(),
@@ -80,7 +96,7 @@ this.UITour = {
         let element = aDocument.getAnonymousElementByAttribute(selectedtab,
                                                                "anonid",
                                                                "tab-icon-image");
-        if (!element || !_isElementVisible(element)) {
+        if (!element || !this.isElementVisible(element)) {
           return null;
         }
         return element;
@@ -91,6 +107,11 @@ this.UITour = {
       widgetName: "urlbar-container",
     }],
   ]),
+
+  init: function() {
+    UITelemetry.addSimpleMeasureFunction("UITour",
+                                         this.getTelemetry.bind(this));
+  },
 
   onPageEvent: function(aEvent) {
     let contentDocument = null;
@@ -117,8 +138,26 @@ this.UITour = {
       return false;
 
     let window = this.getChromeWindow(contentDocument);
+    let tab = window.gBrowser._getTabForContentWindow(contentDocument.defaultView);
 
     switch (action) {
+      case "registerPageID": {
+        // We don't want to allow BrowserUITelemetry.BUCKET_SEPARATOR in the
+        // pageID, as it could make parsing the telemetry bucket name difficult.
+        if (typeof data.pageID == "string" &&
+            !data.pageID.contains(BrowserUITelemetry.BUCKET_SEPARATOR)) {
+          this.seenPageIDs.add(data.pageID);
+
+          // Store tabs and windows separately so we don't need to loop over all
+          // tabs when a window is closed.
+          this.pageIDSourceTabs.set(tab, data.pageID);
+          this.pageIDSourceWindows.set(window, data.pageID);
+
+          this.setTelemetryBucket(data.pageID);
+        }
+        break;
+      }
+
       case "showHighlight": {
         let targetPromise = this.getTarget(window, data.target);
         targetPromise.then(target => {
@@ -258,7 +297,6 @@ this.UITour = {
       }
     }
 
-    let tab = window.gBrowser._getTabForContentWindow(contentDocument.defaultView);
     if (!this.originTabs.has(window))
       this.originTabs.set(window, new Set());
     this.originTabs.get(window).add(tab);
@@ -279,12 +317,34 @@ this.UITour = {
       }
 
       case "TabClose": {
-        let window = aEvent.target.ownerDocument.defaultView;
+        let tab = aEvent.target;
+        if (this.pageIDSourceTabs.has(tab)) {
+          let pageID = this.pageIDSourceTabs.get(tab);
+
+          // Delete this from the window cache, so if the window is closed we
+          // don't expire this page ID twice.
+          let window = tab.ownerDocument.defaultView;
+          if (this.pageIDSourceWindows.get(window) == pageID)
+            this.pageIDSourceWindows.delete(window);
+
+          this.setExpiringTelemetryBucket(pageID, "closed");
+        }
+
+        let window = tab.ownerDocument.defaultView;
         this.teardownTour(window);
         break;
       }
 
       case "TabSelect": {
+        if (aEvent.detail && aEvent.detail.previousTab) {
+          let previousTab = aEvent.detail.previousTab;
+
+          if (this.pageIDSourceTabs.has(previousTab)) {
+            let pageID = this.pageIDSourceTabs.get(previousTab);
+            this.setExpiringTelemetryBucket(pageID, "inactive");
+          }
+        }
+
         let window = aEvent.target.ownerDocument.defaultView;
         let pinnedTab = this.pinnedTabs.get(window);
         if (pinnedTab && pinnedTab.tab == window.gBrowser.selectedTab)
@@ -299,6 +359,11 @@ this.UITour = {
 
       case "SSWindowClosing": {
         let window = aEvent.target;
+        if (this.pageIDSourceWindows.has(window)) {
+          let pageID = this.pageIDSourceWindows.get(window);
+          this.setExpiringTelemetryBucket(pageID, "closed");
+        }
+
         this.teardownTour(window, true);
         break;
       }
@@ -319,6 +384,25 @@ this.UITour = {
         break;
       }
     }
+  },
+
+  setTelemetryBucket: function(aPageID) {
+    let bucket = BUCKET_NAME + BrowserUITelemetry.BUCKET_SEPARATOR + aPageID;
+    BrowserUITelemetry.setBucket(bucket);
+  },
+
+  setExpiringTelemetryBucket: function(aPageID, aType) {
+    let bucket = BUCKET_NAME + BrowserUITelemetry.BUCKET_SEPARATOR + aPageID +
+                 BrowserUITelemetry.BUCKET_SEPARATOR + aType;
+
+    BrowserUITelemetry.setExpiringBucket(bucket,
+                                         BUCKET_TIMESTEPS);
+  },
+
+  getTelemetry: function() {
+    return {
+      seenPageIDs: [...this.seenPageIDs],
+    };
   },
 
   teardownTour: function(aWindow, aWindowClosing = false) {
@@ -424,6 +508,11 @@ this.UITour = {
     });
 
     aDocument.dispatchEvent(event);
+  },
+
+  isElementVisible: function(aElement) {
+    let targetStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
+    return (targetStyle.display != "none" && targetStyle.visibility == "visible");
   },
 
   getTarget: function(aWindow, aTargetName, aSticky = false) {
@@ -622,7 +711,7 @@ this.UITour = {
     }
 
     // Prevent showing a panel at an undefined position.
-    if (!_isElementVisible(aTarget.node))
+    if (!this.isElementVisible(aTarget.node))
       return;
 
     this._setAppMenuStateForAnnotation(aTarget.node.ownerDocument.defaultView, "highlight",
@@ -695,7 +784,7 @@ this.UITour = {
     }
 
     // Prevent showing a panel at an undefined position.
-    if (!_isElementVisible(aAnchor.node))
+    if (!this.isElementVisible(aAnchor.node))
       return;
 
     this._setAppMenuStateForAnnotation(aAnchor.node.ownerDocument.defaultView, "info",
@@ -835,7 +924,4 @@ this.UITour = {
   },
 };
 
-function _isElementVisible(aElement) {
-  let targetStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
-  return (targetStyle.display != "none" && targetStyle.visibility == "visible");
-}
+this.UITour.init();
