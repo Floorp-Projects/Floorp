@@ -39,10 +39,11 @@ add_task(function checkRegisteringAndUnregistering() {
                        [/customizableui-special-spring\d+/,
                         kButtonId,
                         /customizableui-special-spring\d+/]);
-  ok(!CustomizableUI.inDefaultState, "With a new toolbar it is no longer in a default state.");
+  ok(CustomizableUI.inDefaultState, "With a new toolbar and default placements, " +
+     "everything should still be in a default state.");
   removeCustomToolbars(); // Will call unregisterArea for us
   ok(CustomizableUI.inDefaultState, "When the toolbar is unregistered, " +
-     "everything will return to the default state.");
+     "everything should still be in a default state.");
 });
 
 add_task(function asyncCleanup() {
