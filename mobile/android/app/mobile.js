@@ -825,3 +825,9 @@ pref("browser.snippets.syncPromo.enabled", false);
 // This currently points to the development server.
 pref("browser.webapps.apkFactoryUrl", "http://dapk.net/application.apk");
 #endif
+
+// Whether or not to only sync home provider data when the user is on wifi.
+pref("home.sync.wifiOnly", false);
+
+// How frequently to check if we should sync home provider data.
+pref("home.sync.checkIntervalSecs", 3600);
