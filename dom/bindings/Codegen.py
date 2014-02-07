@@ -1633,8 +1633,10 @@ class MethodDefiner(PropertyDefiner):
                     jitinfo = ("reinterpret_cast<const JSJitInfo*>(&%s_methodinfo)" % accessor)
                     if m.get("allowCrossOriginThis", False):
                         accessor = "genericCrossOriginMethod"
-                    else:
+                    elif self.descriptor.needsSpecialGenericOps():
                         accessor = "genericMethod"
+                    else:
+                        accessor = "GenericBindingMethod"
                 else:
                     jitinfo = "nullptr"
 
@@ -1691,8 +1693,10 @@ class AttrDefiner(PropertyDefiner):
                     accessor = "genericLenientGetter"
                 elif attr.getExtendedAttribute("CrossOriginReadable"):
                     accessor = "genericCrossOriginGetter"
-                else:
+                elif self.descriptor.needsSpecialGenericOps():
                     accessor = "genericGetter"
+                else:
+                    accessor = "GenericBindingGetter"
                 jitinfo = "&%s_getterinfo" % attr.identifier.name
             return "{ { JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s } }" % \
                    (accessor, jitinfo)
@@ -1710,8 +1714,10 @@ class AttrDefiner(PropertyDefiner):
                     accessor = "genericLenientSetter"
                 elif attr.getExtendedAttribute("CrossOriginWritable"):
                     accessor = "genericCrossOriginSetter"
-                else:
+                elif self.descriptor.needsSpecialGenericOps():
                     accessor = "genericSetter"
+                else:
+                    accessor = "GenericBindingSetter"
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
             return "{ { JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s } }" % \
                    (accessor, jitinfo)
@@ -8739,7 +8745,7 @@ class CGDescriptor(CGThing):
                 continue
             if (m.isMethod() and m == descriptor.operations['Jsonifier']):
                 hasJsonifier = True
-                hasMethod = True
+                hasMethod = descriptor.needsSpecialGenericOps()
                 jsonifierMethod = m
             elif (m.isMethod() and
                   (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
@@ -8751,7 +8757,7 @@ class CGDescriptor(CGThing):
                     cgThings.append(CGMemberJITInfo(descriptor, m))
                     if m.getExtendedAttribute("CrossOriginCallable"):
                         crossOriginMethods.add(m.identifier.name)
-                    else:
+                    elif descriptor.needsSpecialGenericOps():
                         hasMethod = True
             elif m.isAttr():
                 if m.stringifier:
@@ -8767,7 +8773,7 @@ class CGDescriptor(CGThing):
                         hasLenientGetter = True
                     elif m.getExtendedAttribute("CrossOriginReadable"):
                         crossOriginGetters.add(m.identifier.name)
-                    else:
+                    elif descriptor.needsSpecialGenericOps():
                         hasGetter = True
                 if not m.readonly:
                     for extAttr in ["PutForwards", "Replaceable"]:
@@ -8785,17 +8791,18 @@ class CGDescriptor(CGThing):
                             hasLenientSetter = True
                         elif m.getExtendedAttribute("CrossOriginWritable"):
                             crossOriginSetters.add(m.identifier.name)
-                        else:
+                        elif descriptor.needsSpecialGenericOps():
                             hasSetter = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
                     if m.getExtendedAttribute("CrossOriginWritable"):
                         crossOriginSetters.add(m.identifier.name)
-                    else:
+                    elif descriptor.needsSpecialGenericOps():
                         hasSetter = True
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
-                    hasSetter = True
+                    if descriptor.needsSpecialGenericOps():
+                        hasSetter = True
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
                     cgThings.append(CGMemberJITInfo(descriptor, m))

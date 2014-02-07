@@ -89,6 +89,23 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   return false;
 }
 
+bool
+ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                 const ErrNum aErrorNumber,
+                 prototypes::ID aProtoId)
+{
+  return ThrowInvalidThis(aCx, aArgs, aErrorNumber,
+                          NamesOfInterfacesWithProtos[aProtoId]);
+}
+
+bool
+ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
+{
+  nsPrintfCString errorMessage("%s attribute setter",
+                               NamesOfInterfacesWithProtos[aProtoId]);
+  return ThrowErrorMessage(aCx, MSG_MISSING_ARGUMENTS, errorMessage.get());
+}
+
 } // namespace dom
 
 struct ErrorResult::Message {
@@ -2200,6 +2217,95 @@ bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
   return JS_EnumerateStandardClasses(aCx, aObj);
+}
+
+bool
+GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+  prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
+  if (!args.thisv().isObject()) {
+    return ThrowInvalidThis(cx, args,
+                            MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE,
+                            protoID);
+  }
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+
+  void* self;
+  {
+    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    if (NS_FAILED(rv)) {
+      return ThrowInvalidThis(cx, args,
+                              GetInvalidThisErrorForGetter(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO),
+                              protoID);
+    }
+  }
+
+  MOZ_ASSERT(info->type() == JSJitInfo::Getter);
+  JSJitGetterOp getter = info->getter;
+  return getter(cx, obj, self, JSJitGetterCallArgs(args));
+}
+
+bool
+GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+  prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
+  if (!args.thisv().isObject()) {
+    return ThrowInvalidThis(cx, args,
+                            MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE,
+                            protoID);
+  }
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+
+  void* self;
+  {
+    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    if (NS_FAILED(rv)) {
+      return ThrowInvalidThis(cx, args,
+                              GetInvalidThisErrorForSetter(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO),
+                              protoID);
+    }
+  }
+  if (args.length() == 0) {
+    return ThrowNoSetterArg(cx, protoID);
+  }
+  MOZ_ASSERT(info->type() == JSJitInfo::Setter);
+  JSJitSetterOp setter = info->setter;
+  if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {
+    return false;
+  }
+  args.rval().set(JSVAL_VOID);
+  return true;
+}
+
+bool
+GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+  prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
+  if (!args.thisv().isObject()) {
+    return ThrowInvalidThis(cx, args,
+                            MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE,
+                            protoID);
+  }
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+
+  void* self;
+  {
+    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    if (NS_FAILED(rv)) {
+      return ThrowInvalidThis(cx, args,
+                              GetInvalidThisErrorForMethod(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO),
+                              protoID);
+    }
+  }
+  MOZ_ASSERT(info->type() == JSJitInfo::Method);
+  JSJitMethodOp method = info->method;
+  return method(cx, obj, self, JSJitMethodCallArgs(args));
 }
 
 } // namespace dom
