@@ -21,11 +21,18 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 
 public class TwoLinePageRow extends TwoLineRow
                             implements Tabs.OnTabsChangedListener {
+
+    private static final int NO_ICON = 0;
+
+    private final TextView mDescription;
+    private int mSwitchToTabIconId;
+    private int mPageTypeIconId;
 
     private final FaviconView mFavicon;
 
@@ -72,6 +79,10 @@ public class TwoLinePageRow extends TwoLineRow
 
         mShowIcons = true;
 
+        mDescription = (TextView) findViewById(R.id.description);
+        mSwitchToTabIconId = NO_ICON;
+        mPageTypeIconId = NO_ICON;
+
         mFavicon = (FaviconView) findViewById(R.id.icon);
         mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
     }
@@ -104,6 +115,24 @@ public class TwoLinePageRow extends TwoLineRow
         }
     }
 
+    private void setSwitchToTabIcon(int iconId) {
+        if (mSwitchToTabIconId == iconId) {
+            return;
+        }
+
+        mSwitchToTabIconId = iconId;
+        mDescription.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+    }
+
+    private void setPageTypeIcon(int iconId) {
+        if (mPageTypeIconId == iconId) {
+            return;
+        }
+
+        mPageTypeIconId = iconId;
+        mDescription.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+    }
+
     /**
      * Stores the page URL, so that we can use it to replace "Switch to tab" if the open
      * tab changes or is closed.
@@ -122,11 +151,11 @@ public class TwoLinePageRow extends TwoLineRow
         boolean isPrivate = Tabs.getInstance().getSelectedTab().isPrivate();
         Tab tab = Tabs.getInstance().getFirstTabForUrl(mPageUrl, isPrivate);
         if (!mShowIcons || tab == null) {
-            setSecondaryText(mPageUrl);
-            setSecondaryIcon(NO_ICON);
+            setDescription(mPageUrl);
+            setSwitchToTabIcon(NO_ICON);
         } else {
-            setSecondaryText(R.string.switch_to_tab);
-            setSecondaryIcon(R.drawable.ic_url_bar_tab);
+            setDescription(R.string.switch_to_tab);
+            setSwitchToTabIcon(R.drawable.ic_url_bar_tab);
         }
     }
 
@@ -162,20 +191,20 @@ public class TwoLinePageRow extends TwoLineRow
                 // The bookmark id will be 0 (null in database) when the url
                 // is not a bookmark.
                 if (bookmarkId == 0) {
-                    setPrimaryIcon(NO_ICON);
+                    setPageTypeIcon(NO_ICON);
                 } else if (display == Combined.DISPLAY_READER) {
-                    setPrimaryIcon(R.drawable.ic_url_bar_reader);
+                    setPageTypeIcon(R.drawable.ic_url_bar_reader);
                 } else {
-                    setPrimaryIcon(R.drawable.ic_url_bar_star);
+                    setPageTypeIcon(R.drawable.ic_url_bar_star);
                 }
             } else {
-                setPrimaryIcon(NO_ICON);
+                setPageTypeIcon(NO_ICON);
             }
         }
 
         // Use the URL instead of an empty title for consistency with the normal URL
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-        setPrimaryText(TextUtils.isEmpty(title) ? url : title);
+        setTitle(TextUtils.isEmpty(title) ? url : title);
 
         // No point updating the below things if URL has not changed. Prevents evil Favicon flicker.
         if (url.equals(mPageUrl)) {
