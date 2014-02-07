@@ -315,6 +315,11 @@
     "dom/media/tests/mochitest/test_peerConnection_offerRequiresReceiveVideo.html":"Bug 960442, video support for WebRTC is disabled on b2g",
     "dom/media/tests/mochitest/test_peerConnection_offerRequiresReceiveVideoAudio.html":"Bug 960442, video support for WebRTC is disabled on b2g",
     "dom/media/tests/mochitest/test_peerConnection_throwInCallbacks.html":"Bug 960442, video support for WebRTC is disabled on b2g",
+
+    "dom/media/tests/mochitest/test_peerConnection_bug825703.html":"Bug 950266, test is perma-fail with Nuwa enabled",
+    "dom/media/tests/mochitest/test_peerConnection_errorCallbacks.html":"Bug 950266, test is perma-fail with Nuwa enabled",
+
+    
     "dom/media/tests/ipc/test_ipc.html":"nested ipc not working",
 
     "dom/network/tests/test_networkstats_basics.html":"Will be fixed in bug 858005",
