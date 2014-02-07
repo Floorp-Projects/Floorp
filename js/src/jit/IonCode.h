@@ -7,6 +7,7 @@
 #ifndef jit_IonCode_h
 #define jit_IonCode_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
