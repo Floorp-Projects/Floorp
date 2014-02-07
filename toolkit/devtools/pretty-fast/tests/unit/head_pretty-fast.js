@@ -8,7 +8,7 @@ const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {})
 const { require } = devtools;
 
 this.sourceMap = require("source-map");
-this.acorn = require("acorn");
+this.acorn = require("acorn/acorn");
 this.prettyFast = require("devtools/pretty-fast");
 const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
