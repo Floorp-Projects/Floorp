@@ -323,7 +323,8 @@ this.UITour = {
 
   teardownTour: function(aWindow, aWindowClosing = false) {
     aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
-    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.onAppMenuHiding);
+    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hidePanelAnnotations);
+    aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hidePanelAnnotations);
     aWindow.removeEventListener("SSWindowClosing", this);
 
     let originTabs = this.originTabs.get(aWindow);
@@ -732,7 +733,8 @@ this.UITour = {
 
     if (aMenuName == "appMenu") {
       aWindow.PanelUI.panel.setAttribute("noautohide", "true");
-      aWindow.PanelUI.panel.addEventListener("popuphiding", this.onAppMenuHiding);
+      aWindow.PanelUI.panel.addEventListener("popuphiding", this.hidePanelAnnotations);
+      aWindow.PanelUI.panel.addEventListener("ViewShowing", this.hidePanelAnnotations);
       if (aOpenCallback) {
         aWindow.PanelUI.panel.addEventListener("popupshown", onPopupShown);
       }
@@ -757,7 +759,7 @@ this.UITour = {
     }
   },
 
-  onAppMenuHiding: function(aEvent) {
+  hidePanelAnnotations: function(aEvent) {
     let win = aEvent.target.ownerDocument.defaultView;
     let annotationElements = new Map([
       // [annotationElement (panel), method to hide the annotation]
