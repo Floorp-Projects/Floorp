@@ -76,6 +76,7 @@ public class PromptInput {
             mView = (View)input;
             return mView;
         }
+
         @Override
         public Object getValue() {
             EditText edit = (EditText)mView;
@@ -111,6 +112,7 @@ public class PromptInput {
                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
             return input;
         }
+
         @Override
         public Object getValue() {
             EditText edit = (EditText)mView;
@@ -135,6 +137,7 @@ public class PromptInput {
             mView = (View)checkbox;
             return mView;
         }
+
         @Override
         public Object getValue() {
             CheckBox checkbox = (CheckBox)mView;
@@ -213,6 +216,7 @@ public class PromptInput {
         private static String formatDateString(String dateFormat, Calendar calendar) {
             return new SimpleDateFormat(dateFormat).format(calendar.getTime());
         }
+
         @Override
         public Object getValue() {
             if (Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
@@ -293,6 +297,7 @@ public class PromptInput {
 
             return spinner;
         }
+
         @Override
         public Object getValue() {
             return new Integer(spinner.getSelectedItemPosition());
@@ -311,10 +316,6 @@ public class PromptInput {
             view.setText(Html.fromHtml(mLabel));
             mView = view;
             return mView;
-        }
-        @Override
-        public Object getValue() {
-            return "";
         }
     }
 
@@ -344,6 +345,8 @@ public class PromptInput {
             return new IconGridInput(obj);
         } else if (ColorPickerInput.INPUT_TYPE.equals(type)) {
             return new ColorPickerInput(obj);
+        } else if (TabInput.INPUT_TYPE.equals(type)) {
+            return new TabInput(obj);
         } else {
             for (String dtType : DateTimeInput.INPUT_TYPES) {
                 if (dtType.equals(type)) {
@@ -363,7 +366,7 @@ public class PromptInput {
     }
 
     public Object getValue() {
-        return "";
+        return null;
     }
 
     public boolean getScrollable() {
@@ -371,6 +374,6 @@ public class PromptInput {
     }
 
     public boolean canApplyInputStyle() {
-	return true;
+        return true;
     }
 }
