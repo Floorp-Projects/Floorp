@@ -14,6 +14,7 @@ add_task(function() {
   skippedItem.id = "test-skipintoolbarset-item";
   skippedItem.setAttribute("label", "Test");
   skippedItem.setAttribute("skipintoolbarset", "true");
+  skippedItem.setAttribute("removable", "true");
   navbar.customizationTarget.appendChild(skippedItem);
   let downloadsButton = document.getElementById("downloads-button");
   yield startCustomizing();
