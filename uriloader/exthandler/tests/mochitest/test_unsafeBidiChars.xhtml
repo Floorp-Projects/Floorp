@@ -4,7 +4,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="load();">
 <p id="display"></p>
 <iframe id="test"></iframe>
 <script type="text/javascript">
@@ -45,91 +45,99 @@ function make_test(param, expected) {
   });
 }
 
-var iframe = document.getElementById("test");
-var gCallback = null;
-function run_test(test, cb) {
-  iframe.src = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
-  gCallback = cb;
-}
-
-var gCounter = -1;
-function run_next_test() {
-  if (++gCounter == gTests.length)
-    finish_test();
-  else
-    run_test(gTests[gCounter], run_next_test);
-}
-
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const HELPERAPP_DIALOG_CONTRACT = "@mozilla.org/helperapplauncherdialog;1";
-const HELPERAPP_DIALOG_CID = SpecialPowers.wrap(SpecialPowers.Components).ID(SpecialPowers.Cc[HELPERAPP_DIALOG_CONTRACT].number);
-
-const FAKE_CID = SpecialPowers.Cc["@mozilla.org/uuid-generator;1"].
-  getService(SpecialPowers.Ci.nsIUUIDGenerator).generateUUID();
-
-function HelperAppLauncherDialog() {}
-HelperAppLauncherDialog.prototype = {
-  REASON_CANTHANDLE: 0,
-  REASON_SERVERREQUEST: 1,
-  REASON_TYPESNIFFED: 2,
-  show: function(aLauncher, aWindowContext, aReason) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var test = gTests[gCounter];
-    is(aLauncher.suggestedFileName, test.expected,
-       "The filename should be correctly sanitized");
-    gCallback();
-  },
-  promptForSaveToFile: function(aLauncher, aWindowContext, aDefaultFileName, aSuggestedFileExtension, aForcePrompt) {
-    return null;
-  },
-  QueryInterface: function(aIID) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (aIID.equals(SpecialPowers.Ci.nsISupports) ||
-        aIID.equals(SpecialPowers.Ci.nsIHelperAppLauncherDialog))
-      return this;
-    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+function load() {
+  info("Started the load handler");
+  var iframe = document.getElementById("test");
+  var gCallback = null;
+  function run_test(test, cb) {
+    iframe.src = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
+    gCallback = cb;
   }
-};
 
-var factory = {
-  createInstance: function(aOuter, aIID) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (aOuter != null)
-      throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
-    return new HelperAppLauncherDialog().QueryInterface(aIID);
+  var gCounter = -1;
+  function run_next_test() {
+    info("run_next_test called, gCounter = " + gCounter);
+    if (++gCounter == gTests.length)
+      finish_test();
+    else
+      run_test(gTests[gCounter], run_next_test);
   }
-};
 
-dump("RegisterFactory...\n");
-SpecialPowers.wrap(SpecialPowers.Components).manager
-          .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
-          .registerFactory(FAKE_CID, "",
-                           HELPERAPP_DIALOG_CONTRACT,
-                           factory);
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-function finish_test() {
-  dump("UnregisterFactory...\n");
+  const HELPERAPP_DIALOG_CONTRACT = "@mozilla.org/helperapplauncherdialog;1";
+  const HELPERAPP_DIALOG_CID = SpecialPowers.wrap(SpecialPowers.Components).ID(SpecialPowers.Cc[HELPERAPP_DIALOG_CONTRACT].number);
+
+  const FAKE_CID = SpecialPowers.Cc["@mozilla.org/uuid-generator;1"].
+    getService(SpecialPowers.Ci.nsIUUIDGenerator).generateUUID();
+
+  function HelperAppLauncherDialog() {}
+  HelperAppLauncherDialog.prototype = {
+    REASON_CANTHANDLE: 0,
+    REASON_SERVERREQUEST: 1,
+    REASON_TYPESNIFFED: 2,
+    show: function(aLauncher, aWindowContext, aReason) {
+      info("show() called");
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var test = gTests[gCounter];
+      is(aLauncher.suggestedFileName, test.expected,
+         "The filename should be correctly sanitized");
+      gCallback();
+    },
+    promptForSaveToFile: function(aLauncher, aWindowContext, aDefaultFileName, aSuggestedFileExtension, aForcePrompt) {
+      info("promptForSaveToFile called");
+      return null;
+    },
+    QueryInterface: function(aIID) {
+      info("QueryInterface called");
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (aIID.equals(SpecialPowers.Ci.nsISupports) ||
+          aIID.equals(SpecialPowers.Ci.nsIHelperAppLauncherDialog))
+        return this;
+      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    }
+  };
+
+  var factory = {
+    createInstance: function(aOuter, aIID) {
+      info("createInstance called");
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (aOuter != null)
+        throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
+      return new HelperAppLauncherDialog().QueryInterface(aIID);
+    }
+  };
+
+  info("RegisterFactory...\n");
   SpecialPowers.wrap(SpecialPowers.Components).manager
             .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
-            .registerFactory(HELPERAPP_DIALOG_CID, "",
+            .registerFactory(FAKE_CID, "",
                              HELPERAPP_DIALOG_CONTRACT,
-                             null);
-  SimpleTest.finish();
-}
+                             factory);
 
-var i,j;
-
-for (i = 0; i < tests.length; ++i) {
-  for (j in unsafeBidiChars) {
-    make_test(replace(tests[i], unsafeBidiChars[j]),
-              sanitize(tests[i]));
+  function finish_test() {
+    info("UnregisterFactory...\n");
+    SpecialPowers.wrap(SpecialPowers.Components).manager
+              .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
+              .registerFactory(HELPERAPP_DIALOG_CID, "",
+                               HELPERAPP_DIALOG_CONTRACT,
+                               null);
+    SimpleTest.finish();
   }
-}
 
-run_next_test();
+  var i,j;
+
+  for (i = 0; i < tests.length; ++i) {
+    for (j in unsafeBidiChars) {
+      make_test(replace(tests[i], unsafeBidiChars[j]),
+                sanitize(tests[i]));
+    }
+  }
+
+  run_next_test();
+}
 
 ]]>
 </script>
