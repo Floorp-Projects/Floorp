@@ -54,7 +54,7 @@ public:
    * of a gesture, then we pass it along to AsyncPanZoomController. Otherwise,
    * it gets consumed here and never forwarded along.
    */
-  nsEventStatus HandleInputEvent(const InputData& aEvent);
+  nsEventStatus HandleInputEvent(const MultiTouchInput& aEvent);
 
   /**
    * Cancels any currently active gesture. May not properly handle situations
