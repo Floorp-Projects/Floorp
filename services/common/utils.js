@@ -196,21 +196,12 @@ this.CommonUtils = {
     return [String.fromCharCode(byte) for each (byte in bytes)].join("");
   },
 
-  stringToByteArray: function stringToByteArray(bytesString) {
-    return [String.charCodeAt(byte) for each (byte in bytesString)];
-  },
-
   bytesAsHex: function bytesAsHex(bytes) {
-    return [("0" + bytes.charCodeAt(byte).toString(16)).slice(-2)
-      for (byte in bytes)].join("");
-  },
-
-  stringAsHex: function stringAsHex(str) {
-    return CommonUtils.bytesAsHex(CommonUtils.encodeUTF8(str));
-  },
-
-  stringToBytes: function stringToBytes(str) {
-    return CommonUtils.hexToBytes(CommonUtils.stringAsHex(str));
+    let hex = "";
+    for (let i = 0; i < bytes.length; i++) {
+      hex += ("0" + bytes[i].charCodeAt().toString(16)).slice(-2);
+    }
+    return hex;
   },
 
   hexToBytes: function hexToBytes(str) {
@@ -219,10 +210,6 @@ this.CommonUtils = {
       bytes.push(parseInt(str.substr(i, 2), 16));
     }
     return String.fromCharCode.apply(String, bytes);
-  },
-
-  hexAsString: function hexAsString(hex) {
-    return CommonUtils.decodeUTF8(CommonUtils.hexToBytes(hex));
   },
 
   /**
