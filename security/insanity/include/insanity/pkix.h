@@ -38,6 +38,7 @@ SECStatus VerifySignedData(const CERTSignedData* sd,
                            const CERTCertificate* cert,
                            void* pkcs11PinArg);
 
+// The return value, if non-null, is owned by the arena and MUST NOT be freed.
 SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
                                   const CERTCertificate* cert,
                                   const CERTCertificate* issuerCert);
