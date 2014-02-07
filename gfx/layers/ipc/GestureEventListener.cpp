@@ -50,10 +50,6 @@ GestureEventListener::~GestureEventListener()
 
 nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
 {
-  if (aEvent.mInputType != MULTITOUCH_INPUT) {
-    return nsEventStatus_eIgnore;
-  }
-
   const MultiTouchInput& event = static_cast<const MultiTouchInput&>(aEvent);
 
   // Cache the current event since it may become the single or long tap that we
