@@ -17,5 +17,6 @@ function test() {
   }
 }
 
-if (getBuildConfiguration().parallelJS)
-  test();
+// FIXME: Bug 949296. Broken due to all interrupt triggers aborting PJS.
+//if (getBuildConfiguration().parallelJS)
+//  test();
