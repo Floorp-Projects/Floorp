@@ -252,6 +252,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
   background-color: rgba(0, 0, 0, 0.05);
   box-shadow: 0 -1px 0 rgba(0,0,0,.15);
