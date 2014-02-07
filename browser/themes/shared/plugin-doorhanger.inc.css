@@ -26,7 +26,8 @@
 }
 
 .click-to-play-plugins-notification-button-container {
-  background: linear-gradient(rgba(0,0,0,0.04) 60%, transparent);
+  background-color: hsla(210,4%,10%,.07);
+  border-top: 1px solid hsla(210,4%,10%,.12);
   padding: 10px;
   margin-top: 5px;
 }
