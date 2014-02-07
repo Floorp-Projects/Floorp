@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/pasteandgo"
+          android:title="@string/contextmenu_pasteandgo"/>
+
+    <item android:id="@+id/paste"
+          android:title="@string/contextmenu_paste"/>
+
+    <item android:id="@+id/copyurl"
+          android:title="@string/contextmenu_copyurl"/>
+
+    <item android:id="@+id/add_to_launcher"
+          android:title="@string/contextmenu_add_to_launcher"/>
+
+</menu>
