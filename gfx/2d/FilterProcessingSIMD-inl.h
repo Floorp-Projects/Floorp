@@ -382,8 +382,11 @@ inline void ApplyMorphologyHorizontal_SIMD(uint8_t* aSourceData, int32_t aSource
   MOZ_ASSERT(completeKernelSizeForFourPixels % 4 == 0 ||
              completeKernelSizeForFourPixels % 4 == 2);
 
-  // aSourceData[0] and aDestData[-aRadius] are both aligned to 16 bytes, just
+  // aSourceData[-aRadius] and aDestData[0] are both aligned to 16 bytes, just
   // the way we need them to be.
+
+  IntRect sourceRect = aDestRect;
+  sourceRect.Inflate(aRadius, 0);
 
   for (int32_t y = aDestRect.y; y < aDestRect.YMost(); y++) {
     int32_t kernelStartX = aDestRect.x - aRadius;
@@ -398,7 +401,9 @@ inline void ApplyMorphologyHorizontal_SIMD(uint8_t* aSourceData, int32_t aSource
       u8x16_t m1234 = p1234;
 
       for (int32_t i = 4; i < completeKernelSizeForFourPixels; i += 4) {
-        u8x16_t p5678 = simd::Load8<u8x16_t>(&aSourceData[sourceIndex + 4 * i]);
+        u8x16_t p5678 = (kernelStartX + i < sourceRect.XMost()) ?
+          simd::Load8<u8x16_t>(&aSourceData[sourceIndex + 4 * i]) :
+          simd::FromZero8<u8x16_t>();
         u8x16_t p2345 = simd::Rotate8<4>(p1234, p5678);
         u8x16_t p3456 = simd::Rotate8<8>(p1234, p5678);
         m1234 = Morph8<op,u8x16_t>(m1234, p2345);
