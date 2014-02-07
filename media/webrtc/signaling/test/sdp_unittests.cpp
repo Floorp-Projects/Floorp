@@ -192,6 +192,15 @@ class SdpTest : public ::testing::Test {
       return inst_num;
     }
 
+    u16 AddNewExtMap(int level, const char* uri) {
+      u16 inst_num = 0;
+      EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_EXTMAP,
+                                 &inst_num), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_extmap(sdp_ptr_, level, 0,
+                                    uri, inst_num), SDP_SUCCESS);
+      return inst_num;
+    }
+
     u16 AddNewFmtpMaxFs(int level, u32 max_fs) {
       u16 inst_num = 0;
       EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_FMTP,
@@ -724,6 +733,21 @@ TEST_F(SdpTest, parseRtcpFbAllPayloads) {
     ASSERT_EQ(sdp_attr_get_rtcp_fb_ack(sdp_ptr_, 1, i, 1),
               SDP_RTCP_FB_ACK_RPSI);
   }
+}
+
+TEST_F(SdpTest, addExtMap) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewExtMap(level, SDP_EXTMAP_AUDIO_LEVEL);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, parseExtMap) {
+  ParseSdp(kVideoSdp +
+    "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n");
+  ASSERT_STREQ(sdp_attr_get_extmap_uri(sdp_ptr_, 1, 0, 1),
+            SDP_EXTMAP_AUDIO_LEVEL);
 }
 
 TEST_F(SdpTest, parseFmtpMaxFs) {

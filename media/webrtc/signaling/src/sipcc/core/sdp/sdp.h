@@ -74,6 +74,8 @@
 #define SDP_CONTEXT_RESET_MASTER_KEY(cw)    ((cw) &= ~(SDP_SRTCP_KEY_MASK))
 #define SDP_CONTEXT_RESET_MASTER_SALT(cw)   ((cw) &= ~(SDP_SRTCP_SALT_MASK))
 
+#define SDP_EXTMAP_AUDIO_LEVEL "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
+
 /* SDP Enum Types */
 
 typedef enum {
@@ -893,6 +895,18 @@ typedef struct sdp_media_profiles {
     u16             payload_type[SDP_MAX_PROFILES][SDP_MAX_PAYLOAD_TYPES];
 } sdp_media_profiles_t;
 
+/*
+ * a=extmap:<value>["/"<direction>] <URI> <extensionattributes>
+ *
+ */
+typedef struct sdp_extmap {
+    u16              id;
+    sdp_direction_e  media_direction;
+    char             uri[SDP_MAX_STRING_LEN+1];
+    char             extension_attributes[SDP_MAX_STRING_LEN+1];
+} sdp_extmap_t;
+
+
 
 /*
  * sdp_srtp_crypto_context_t
@@ -982,6 +996,7 @@ typedef struct sdp_attr {
         sdp_fmtp_fb_t         rtcp_fb;
         sdp_setup_type_e      setup;
         sdp_connection_type_e connection;
+        sdp_extmap_t          extmap;
     } attr;
     struct sdp_attr          *next_p;
 } sdp_attr_t;
@@ -2103,5 +2118,11 @@ sdp_attr_set_rtcp_fb_trr_int(void *sdp_ptr, u16 level, u16 payload_type,
 sdp_result_e
 sdp_attr_set_rtcp_fb_ccm(void *sdp_ptr, u16 level, u16 payload_type, u16 inst,
                          sdp_rtcp_fb_ccm_type_e);
+
+const char *
+sdp_attr_get_extmap_uri(void *sdp_ptr, u16 level, u16 id, u16 inst);
+
+sdp_result_e
+sdp_attr_set_extmap(void *sdp_ptr, u16 level, u16 id, const char* uri, u16 inst);
 
 #endif /* _SDP_H_ */
