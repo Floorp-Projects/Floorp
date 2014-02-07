@@ -494,7 +494,7 @@ static const float    kDefaultSmartLimitRatio =     .4f;
 #endif
 
 QuotaManager* gInstance = nullptr;
-mozilla::Atomic<uint32_t> gShutdown(0);
+mozilla::Atomic<bool> gShutdown(false);
 
 int32_t gStorageQuotaMB = kDefaultQuotaMB;
 
@@ -1000,7 +1000,7 @@ QuotaManager::FactoryCreate()
 bool
 QuotaManager::IsShuttingDown()
 {
-  return !!gShutdown;
+  return gShutdown;
 }
 
 nsresult
@@ -2383,7 +2383,7 @@ QuotaManager::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID)) {
     // Setting this flag prevents the service from being recreated and prevents
     // further storagess from being created.
-    if (gShutdown.exchange(1)) {
+    if (gShutdown.exchange(true)) {
       NS_ERROR("Shutdown more than once?!");
     }
 
@@ -3780,7 +3780,7 @@ AsyncUsageRunnable::Run()
 NS_IMETHODIMP
 AsyncUsageRunnable::Cancel()
 {
-  if (mCanceled.exchange(1)) {
+  if (mCanceled.exchange(true)) {
     NS_WARNING("Canceled more than once?!");
     return NS_ERROR_UNEXPECTED;
   }
