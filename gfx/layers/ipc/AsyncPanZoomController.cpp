@@ -577,15 +577,16 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
 
   switch (aEvent.mInputType) {
   case MULTITOUCH_INPUT: {
+    const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
+
     nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
     if (listener) {
-      rv = listener->HandleInputEvent(aEvent);
+      rv = listener->HandleInputEvent(multiTouchInput);
       if (rv == nsEventStatus_eConsumeNoDefault) {
         return rv;
       }
     }
 
-    const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
     switch (multiTouchInput.mType) {
       case MultiTouchInput::MULTITOUCH_START: rv = OnTouchStart(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_MOVE: rv = OnTouchMove(multiTouchInput); break;
