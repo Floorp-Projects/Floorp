@@ -60,6 +60,12 @@ if (typeof Mozilla == 'undefined') {
 
 	Mozilla.UITour.DEFAULT_THEME_CYCLE_DELAY = 10 * 1000;
 
+	Mozilla.UITour.registerPageID = function(pageID) {
+		_sendEvent('registerPageID', {
+			pageID: pageID
+		});
+	};
+
 	Mozilla.UITour.showHighlight = function(target, effect) {
 		_sendEvent('showHighlight', {
 			target: target,
