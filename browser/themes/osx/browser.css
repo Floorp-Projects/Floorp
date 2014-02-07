@@ -4018,7 +4018,6 @@ toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-l
 }
 
 #social-share-panel {
-  margin-top: 3px;
   max-height: 600px;
   min-height: 100px;
   max-width: 800px;
