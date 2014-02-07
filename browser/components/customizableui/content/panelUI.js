@@ -329,22 +329,6 @@ const PanelUI = {
   },
 
   /**
-   * This function can be used as a command event listener for subviews
-   * so that the panel knows if and when to close itself.
-   */
-  onCommandHandler: function(aEvent) {
-    let closemenu = aEvent.originalTarget.getAttribute("closemenu");
-    if (closemenu == "none") {
-      return;
-    }
-    if (closemenu == "single") {
-      this.showMainView();
-      return;
-    }
-    this.hide();
-  },
-
-  /**
    * Open a dialog window that allow the user to customize listed character sets.
    */
   onCharsetCustomizeCommand: function() {
