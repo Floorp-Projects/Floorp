@@ -8999,7 +8999,7 @@ class CGNamespacedEnum(CGThing):
     def declare(self):
         return self.node.declare()
     def define(self):
-        assert False # Only for headers.
+        return ""
 
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
@@ -11540,11 +11540,14 @@ class GlobalGenRoots():
             remaining = [CGGeneric(declare="prototypes::id::_ID_Count")] * (config.maxProtoChainLength - ifaceCount)
             macro = CGWrapper(CGList(supplied, ", "),
                               pre="#define INTERFACE_CHAIN_" + str(ifaceCount) + "(",
-                              post=") \\\n")
+                              post=") \\\n",
+                              declareOnly=True)
             macroContent = CGIndenter(CGList(supplied + remaining, ", \\\n"))
             macroContent = CGIndenter(CGWrapper(macroContent, pre="{ \\\n",
-                                                post=" \\\n}"))
-            return CGWrapper(CGList([macro, macroContent]), post="\n\n")
+                                                post=" \\\n}",
+                                                declareOnly=True))
+            return CGWrapper(CGList([macro, macroContent]), post="\n\n",
+                             declareOnly=True)
 
         idEnum.append(ifaceChainMacro(1))
 
@@ -11587,6 +11590,18 @@ template <prototypes::ID PrototypeID>
 struct PrototypeTraits;
 """)]
         traitsDecls.extend(CGPrototypeTraitsClass(d) for d in descriptorsWithPrototype)
+
+        ifaceNamesWithProto = ['  "%s"' % d.interface.identifier.name
+                               for d in descriptorsWithPrototype]
+        traitsDecls.append(CGGeneric(
+                declare=("extern const char* NamesOfInterfacesWithProtos[%d];\n\n" %
+                         len(ifaceNamesWithProto)),
+                define=("\n"
+                        "const char* NamesOfInterfacesWithProtos[%d] = {\n"
+                        "%s"
+                        "\n};\n\n" %
+                        (len(ifaceNamesWithProto),
+                         ",\n".join(ifaceNamesWithProto)))))
 
         traitsDecl = CGNamespace.build(['mozilla', 'dom'],
                                         CGList(traitsDecls, "\n"))
