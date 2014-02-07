@@ -193,20 +193,24 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
     break;
   }
   case MultiTouchInput::MULTITOUCH_CANCEL:
-    // This gets called if there's a touch that has to bail for weird reasons
-    // like pinching and then moving away from the window that the pinch was
-    // started in without letting go of the screen.
-    return HandlePinchGestureEvent(aEvent, true);
+    // FIXME: we should probably clear a bunch of gesture state here
+    break;
   }
 
-  return HandlePinchGestureEvent(aEvent, false);
+  return HandlePinchGestureEvent(aEvent);
 }
 
-nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInput& aEvent, bool aClearTouches)
+nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInput& aEvent)
 {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (mTouches.Length() > 1 && !aClearTouches) {
+  if (aEvent.mType == MultiTouchInput::MULTITOUCH_CANCEL) {
+    mTouches.Clear();
+    mState = GESTURE_NONE;
+    return rv;
+  }
+
+  if (mTouches.Length() > 1) {
     const ScreenIntPoint& firstTouch = mTouches[0].mScreenPoint,
                          secondTouch = mTouches[1].mScreenPoint;
     ScreenPoint focusPoint = ScreenPoint(firstTouch + secondTouch) / 2;
@@ -281,10 +285,6 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
     rv = nsEventStatus_eConsumeNoDefault;
   } else if (mState == GESTURE_WAITING_PINCH) {
     mState = GESTURE_NONE;
-  }
-
-  if (aClearTouches) {
-    mTouches.Clear();
   }
 
   return rv;
