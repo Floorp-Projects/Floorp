@@ -275,7 +275,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     // parallel execution. We want to avoid the situation of OSRing during
     // warmup and only gathering type information for the loop, and not the
     // rest of the function.
-    if (IsJSDEnabled(cx) || cx->runtime()->parallelWarmup > 0) {
+    if (IsJSDEnabled(cx) || cx->runtime()->forkJoinWarmup > 0) {
         if (osr)
             return Method_Skipped;
     } else if (script->incUseCount() <= js_JitOptions.baselineUsesBeforeCompile) {
