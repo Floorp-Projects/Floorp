@@ -41,11 +41,11 @@ public class PanelListRow extends TwoLineRow {
 
         int titleIndex = cursor.getColumnIndexOrThrow(HomeItems.TITLE);
         final String title = cursor.getString(titleIndex);
-        setPrimaryText(title);
+        setTitle(title);
 
         int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
         final String url = cursor.getString(urlIndex);
-        setSecondaryText(url);
+        setDescription(url);
 
         int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
         final String imageUrl = cursor.getString(imageIndex);

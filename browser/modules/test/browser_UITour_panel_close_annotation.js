@@ -96,6 +96,44 @@ let tests = [
     }, "Highlight should be shown after showHighlight() for fixed panel items");
   },
 
+  function test_highlight_panel_open_subview(done) {
+    gContentAPI.showHighlight("customize");
+    gContentAPI.showInfo("backForward", "test title", "test text");
+    waitForElementToBeVisible(highlight, function checkPanelIsOpen() {
+      isnot(PanelUI.panel.state, "closed", "Panel should have opened");
+
+      // Click the help button which should open the subview in the panel menu.
+      let helpButton = document.getElementById("PanelUI-help");
+      EventUtils.synthesizeMouseAtCenter(helpButton, {});
+      waitForElementToBeHidden(highlight, function highlightHidden() {
+        is(PanelUI.panel.state, "open",
+           "Panel should have stayed open when the subview opened");
+        is(tooltip.state, "open", "The info panel should have remained open");
+        PanelUI.hide();
+        done();
+      }, "Highlight should have disappeared when the subview opened");
+    }, "Highlight should be shown after showHighlight() for fixed panel items");
+  },
+
+  function test_info_panel_open_subview(done) {
+    gContentAPI.showHighlight("urlbar");
+    gContentAPI.showInfo("customize", "customize me!", "Open a subview");
+    waitForElementToBeVisible(tooltip, function checkPanelIsOpen() {
+      isnot(PanelUI.panel.state, "closed", "Panel should have opened");
+
+      // Click the help button which should open the subview in the panel menu.
+      let helpButton = document.getElementById("PanelUI-help");
+      EventUtils.synthesizeMouseAtCenter(helpButton, {});
+      waitForElementToBeHidden(tooltip, function tooltipHidden() {
+        is(PanelUI.panel.state, "open",
+           "Panel should have stayed open when the subview opened");
+        is(highlight.parentElement.state, "open", "The highlight should have remained open");
+        PanelUI.hide();
+        done();
+      }, "Tooltip should have disappeared when the subview opened");
+    }, "Highlight should be shown after showHighlight() for fixed panel items");
+  },
+
   function test_info_move_outside_panel(done) {
     gContentAPI.showInfo("addons", "test title", "test text");
     gContentAPI.showHighlight("urlbar");
