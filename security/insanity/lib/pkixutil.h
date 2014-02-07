@@ -83,12 +83,17 @@ class BackCert
 public:
   // nssCert and childCert must be valid for the lifetime of BackCert
   BackCert(CERTCertificate* nssCert, BackCert* childCert)
-    : childCert(childCert)
+    : encodedBasicConstraints(nullptr)
+    , encodedKeyUsage(nullptr)
+    , childCert(childCert)
     , nssCert(nssCert)
   {
   }
 
   Result Init();
+
+  const SECItem* encodedBasicConstraints;
+  const SECItem* encodedKeyUsage;
 
   BackCert* const childCert;
 
