@@ -207,7 +207,8 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
       !GetForwarder()->ForwardsToDifferentProcess() &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
-    if (!gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
+    // non-DIB textures don't work with alpha, see notes in TextureD3D9.
+    if (ContentForFormat(aFormat) != gfxContentType::COLOR) {
       result = new DIBTextureClientD3D9(aFormat, aTextureFlags);
     } else {
       result = new CairoTextureClientD3D9(aFormat, aTextureFlags);
