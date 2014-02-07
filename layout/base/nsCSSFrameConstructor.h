@@ -1552,7 +1552,7 @@ private:
    *                    will be empty.
    * @param aSiblings the nsFrameItems to put the newly-created siblings into.
    *
-   * This method is responsible for making any SetFrameIsSpecial calls that are
+   * This method is responsible for making any SetFrameIsIBSplit calls that are
    * needed.
    */
   void CreateIBSiblings(nsFrameConstructorState& aState,
