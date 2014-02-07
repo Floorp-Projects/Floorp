@@ -37,7 +37,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
-  
+
   NS_HIDDEN_(nsresult) Init();
   NS_HIDDEN_(nsresult) Shutdown();
 
@@ -56,7 +56,7 @@ public:
 private:
   ~TimerThread();
 
-  mozilla::Atomic<int32_t> mInitInProgress;
+  mozilla::Atomic<bool> mInitInProgress;
   bool    mInitialized;
 
   // These two internal helper methods must be called while mLock is held.
@@ -72,7 +72,7 @@ private:
   bool mShutdown;
   bool mWaiting;
   bool mSleeping;
-  
+
   nsTArray<nsTimerImpl*> mTimers;
 };
 
