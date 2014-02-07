@@ -23,11 +23,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.import("resource://gre/modules/Promise.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
-
-Services.prefs.setBoolPref("toolkit.osfile.log", true);
 
 // We need some internal bits of AddonManager
 let AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
@@ -449,7 +444,6 @@ function shutdownManager() {
   // This would be cleaner if I could get it as the rejection reason from
   // the AddonManagerInternal.shutdown() promise
   gXPISaveError = XPIscope.XPIProvider._shutdownError;
-  do_print("gXPISaveError set to: " + gXPISaveError);
   AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
   Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
 }
@@ -697,8 +691,6 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
  *
  * @param aExt   a file pointing to either the packed extension or its unpacked directory.
  * @param aTime  the time to which we set the lastModifiedTime of the extension
- *
- * @deprecated Please use promiseSetExtensionModifiedTime instead
  */
 function setExtensionModifiedTime(aExt, aTime) {
   aExt.lastModifiedTime = aTime;
@@ -709,25 +701,6 @@ function setExtensionModifiedTime(aExt, aTime) {
       setExtensionModifiedTime(entries.nextFile, aTime);
     entries.close();
   }
-}
-function promiseSetExtensionModifiedTime(aPath, aTime) {
-  return Task.spawn(function* () {
-    yield OS.File.setDates(aPath, aTime, aTime);
-    let entries, iterator;
-    try {
-      let iterator = new OS.File.DirectoryIterator(aPath);
-      entries = yield iterator.nextBatch();
-    } catch (ex if ex instanceof OS.File.Error) {
-      return;
-    } finally {
-      if (iterator) {
-        iterator.close();
-      }
-    }
-    for (let entry of entries) {
-      yield promiseSetExtensionModifiedTime(entry.path, aTime);
-    }
-  });
 }
 
 /**
@@ -1109,11 +1082,7 @@ function completeAllInstalls(aInstalls, aCallback) {
 function installAllFiles(aFiles, aCallback, aIgnoreIncompatible) {
   let count = aFiles.length;
   let installs = [];
-  function callback() {
-    if (aCallback) {
-      aCallback();
-    }
-  }
+
   aFiles.forEach(function(aFile) {
     AddonManager.getInstallForFile(aFile, function(aInstall) {
       if (!aInstall)
@@ -1124,16 +1093,9 @@ function installAllFiles(aFiles, aCallback, aIgnoreIncompatible) {
         installs.push(aInstall);
 
       if (--count == 0)
-        completeAllInstalls(installs, callback);
+        completeAllInstalls(installs, aCallback);
     });
   });
-}
-
-function promiseInstallAllFiles(aFiles, aIgnoreIncompatible) {
-  let deferred = Promise.defer();
-  installAllFiles(aFiles, deferred.resolve, aIgnoreIncompatible);
-  return deferred.promise;
-
 }
 
 if ("nsIWindowsRegKey" in AM_Ci) {
@@ -1510,18 +1472,4 @@ function callback_soon(aFunction) {
       aFunction.apply(null, args);
     }, aFunction.name ? "delayed callback " + aFunction.name : "delayed callback");
   }
-}
-
-/**
- * A promise-based variant of AddonManager.getAddonsByIDs.
- *
- * @param {array} list As the first argument of AddonManager.getAddonsByIDs
- * @return {promise}
- * @resolve {array} The list of add-ons sent by AddonManaget.getAddonsByIDs to
- * its callback.
- */
-function promiseAddonsByIDs(list) {
-  let deferred = Promise.defer();
-  AddonManager.getAddonsByIDs(list, deferred.resolve);
-  return deferred.promise;
 }

@@ -50,7 +50,6 @@ Cu.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 
 // The implementation of communications
 Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
@@ -84,9 +83,6 @@ const EXCEPTION_CONSTRUCTORS = {
   },
   URIError: function(error) {
     return new URIError(error.message, error.fileName, error.lineNumber);
-  },
-  OSError: function(error) {
-    return OS.File.Error.fromMsg(error);
   }
 };
 
@@ -149,25 +145,9 @@ let Scheduler = {
   shutdown: false,
 
   /**
-   * A promise resolved once all operations are complete.
-   *
-   * This promise is never rejected and the result is always undefined.
+   * The latest promise returned.
    */
-  queue: Promise.resolve(),
-
-  /**
-   * The latest message sent and still waiting for a reply. This
-   * field is stored only in DEBUG builds, to avoid hoarding memory in
-   * release builds.
-   */
-  latestSent: undefined,
-
-  /**
-   * The latest reply received, or null if we are waiting for a reply.
-   * This field is stored only in DEBUG builds, to avoid hoarding
-   * memory in release builds.
-   */
-  latestReceived: undefined,
+  latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
 
   /**
    * A timer used to automatically shut down the worker after some time.
@@ -189,32 +169,6 @@ let Scheduler = {
     this.resetTimer = setTimeout(File.resetWorker, delay);
   },
 
-  /**
-   * Push a task at the end of the queue.
-   *
-   * @param {function} code A function returning a Promise.
-   * This function will be executed once all the previously
-   * pushed tasks have completed.
-   * @return {Promise} A promise with the same behavior as
-   * the promise returned by |code|.
-   */
-  push: function(code) {
-    let promise = this.queue.then(code);
-    // By definition, |this.queue| can never reject.
-    this.queue = promise.then(null, () => undefined);
-    // Fork |promise| to ensure that uncaught errors are reported
-    return promise.then(null, null);
-  },
-
-  /**
-   * Post a message to the worker thread.
-   *
-   * @param {string} method The name of the method to call.
-   * @param {...} args The arguments to pass to the method. These arguments
-   * must be clonable.
-   * @return {Promise} A promise conveying the result/error caused by
-   * calling |method| with arguments |args|.
-   */
   post: function post(method, ...args) {
     if (this.shutdown) {
       LOG("OS.File is not available anymore. The following request has been rejected.",
@@ -240,33 +194,9 @@ let Scheduler = {
     if (methodArgs) {
       options = methodArgs[methodArgs.length - 1];
     }
-    return this.push(() => Task.spawn(function*() {
-      if (OS.Constants.Sys.DEBUG) {
-        // Update possibly memory-expensive debugging information
-        Scheduler.latestReceived = null;
-        Scheduler.latestSent = [method, ...args];
-      }
-      let data;
-      let reply;
-      try {
-        data = yield worker.post(method, ...args);
-        reply = data;
-      } catch (error if error instanceof PromiseWorker.WorkerError) {
-        reply = error;
-        throw EXCEPTION_CONSTRUCTORS[error.data.exn || "OSError"](error.data);
-      } catch (error if error instanceof ErrorEvent) {
-        reply = error;
-        let message = error.message;
-        if (message == "uncaught exception: [object StopIteration]") {
-          throw StopIteration;
-        }
-        throw new Error(message, error.filename, error.lineno);
-      } finally {
-        if (OS.Constants.Sys.DEBUG) {
-          // Update possibly memory-expensive debugging information
-          Scheduler.latestSent = null;
-          Scheduler.latestReceived = reply;
-        }
+    let promise = worker.post(method,...args);
+    return this.latestPromise = promise.then(
+      function onSuccess(data) {
         if (firstLaunch) {
           Scheduler._updateTelemetry();
         }
@@ -276,35 +206,65 @@ let Scheduler = {
         if (method != "Meta_reset") {
           Scheduler.restartTimer();
         }
-      }
 
-      // Check for duration and return result.
-      if (!options) {
+        // Check for duration and return result.
+        if (!options) {
+          return data.ok;
+        }
+        // Check for options.outExecutionDuration.
+        if (typeof options !== "object" ||
+          !("outExecutionDuration" in options)) {
+          return data.ok;
+        }
+        // If data.durationMs is not present, return data.ok (there was an
+        // exception applying the method).
+        if (!("durationMs" in data)) {
+          return data.ok;
+        }
+        // Bug 874425 demonstrates that two successive calls to Date.now()
+        // can actually produce an interval with negative duration.
+        // We assume that this is due to an operation that is so short
+        // that Date.now() is not monotonic, so we round this up to 0.
+        let durationMs = Math.max(0, data.durationMs);
+        // Accumulate (or initialize) outExecutionDuration
+        if (typeof options.outExecutionDuration == "number") {
+          options.outExecutionDuration += durationMs;
+        } else {
+          options.outExecutionDuration = durationMs;
+        }
         return data.ok;
+      },
+      function onError(error) {
+        if (firstLaunch) {
+          Scheduler._updateTelemetry();
+        }
+
+        // Don't restart the timer when reseting the worker, since that will
+        // lead to an endless "resetWorker()" loop.
+        if (method != "Meta_reset") {
+          Scheduler.restartTimer();
+        }
+        // Check and throw EvalError | InternalError | RangeError
+        // | ReferenceError | SyntaxError | TypeError | URIError
+        if (error.data && error.data.exn in EXCEPTION_CONSTRUCTORS) {
+          throw EXCEPTION_CONSTRUCTORS[error.data.exn](error.data);
+        }
+        // Decode any serialized error
+        if (error instanceof PromiseWorker.WorkerError) {
+          throw OS.File.Error.fromMsg(error.data);
+        }
+        // Extract something meaningful from ErrorEvent
+        if (error instanceof ErrorEvent) {
+          let message = error.message;
+          if (message == "uncaught exception: [object StopIteration]") {
+            throw StopIteration;
+          }
+          throw new Error(message, error.filename, error.lineno);
+        }
+
+        throw error;
       }
-      // Check for options.outExecutionDuration.
-      if (typeof options !== "object" ||
-        !("outExecutionDuration" in options)) {
-        return data.ok;
-      }
-      // If data.durationMs is not present, return data.ok (there was an
-      // exception applying the method).
-      if (!("durationMs" in data)) {
-        return data.ok;
-      }
-      // Bug 874425 demonstrates that two successive calls to Date.now()
-      // can actually produce an interval with negative duration.
-      // We assume that this is due to an operation that is so short
-      // that Date.now() is not monotonic, so we round this up to 0.
-      let durationMs = Math.max(0, data.durationMs);
-      // Accumulate (or initialize) outExecutionDuration
-      if (typeof options.outExecutionDuration == "number") {
-        options.outExecutionDuration += durationMs;
-      } else {
-        options.outExecutionDuration = durationMs;
-      }
-      return data.ok;
-    }));
+    );
   },
 
   /**
@@ -1283,18 +1243,8 @@ this.OS.Path = Path;
 // clients should register using AsyncShutdown.addBlocker.
 AsyncShutdown.profileBeforeChange.addBlocker(
   "OS.File: flush I/O queued before profile-before-change",
-  // Wait until the latest currently enqueued promise is satisfied/rejected
-  (() => Scheduler.queue),
-  function getDetails() {
-    let result = {
-      launched: Scheduler.launched,
-      shutdown: Scheduler.shutdown,
-      pendingReset: !!Scheduler.resetTimer,
-    };
-    if (OS.Constants.Sys.DEBUG) {
-      result.latestSent = Scheduler.latestSent;
-      result.latestReceived - Scheduler.latestReceived;
-    };
-    return result;
-  }
+  () =>
+    // Wait until the latest currently enqueued promise is satisfied/rejected
+    Scheduler.latestPromise.then(null,
+      function onError() { /* ignore error */})
 );
