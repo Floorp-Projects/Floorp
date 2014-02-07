@@ -557,12 +557,28 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
-  padding: 3px 7px;
+  padding: 2px 6px;
   border: 1px solid transparent;
   border-radius: 2px;
   transition-property: background-color, border-color;
   transition-duration: 250ms;
 }
+
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  padding: 3px 7px;
+}
+
+/* Help SDK icons fit: */
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  width: 16px;
+}
+
+:-moz-any(#TabsToolbar, #nav-bar) toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  /* XXXgijs box models strike again: this is 16px + 2 * 7px padding + 2 * 1px border (from the rules above) */
+  width: 32px;
+}
+
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([buttonover]):not([open]):hover > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
