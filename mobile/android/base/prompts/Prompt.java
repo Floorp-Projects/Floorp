@@ -38,7 +38,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener {
+public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener,
+                               PromptInput.OnChangeListener {
     private static final String LOGTAG = "GeckoPromptService";
 
     private String[] mButtons;
@@ -203,23 +204,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     @Override
     public void onClick(DialogInterface dialog, int which) {
         ThreadUtils.assertOnUiThread();
-        JSONObject ret = new JSONObject();
-        try {
-            addButtonResult(ret, which);
-            addInputValues(ret);
-
-            if (mAdapter != null) {
-                addListResult(ret, which);
-            }
-        } catch(Exception ex) {
-            Log.i(LOGTAG, "Error building return: " + ex);
-        }
-
-        if (dialog != null) {
-            dialog.dismiss();
-        }
-
-        finishDialog(ret);
+        closeIfNoButtons(which);
     }
 
     /* Adds a set of list items to the prompt. This can be used for either context menu type dialogs, checked lists,
@@ -360,6 +345,19 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ThreadUtils.assertOnUiThread();
         mAdapter.toggleSelected(position);
+
+        // If there are no buttons on this dialog, then we take selecting an item as a sign to close
+        // the dialog. Note that means it will be hard to select multiple things in this list, but
+        // given there is no way to confirm+close the dialog, it seems reasonable.
+        closeIfNoButtons(position);
+    }
+
+    private boolean closeIfNoButtons(int selected) {
+        if (mButtons == null || mButtons.length == 0) {
+            closeDialog(selected);
+            return true;
+        }
+        return false;
     }
 
     /* @DialogInterface.OnCancelListener
@@ -384,6 +382,20 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             ret.put("button", -1);
         } catch(Exception ex) { }
         addInputValues(ret);
+        finishDialog(ret);
+    }
+
+    /* Called any time we're closing the dialog to cleanup and notify listeners that the dialog
+     * is closing.
+     */
+    public void closeDialog(int which) {
+        JSONObject ret = new JSONObject();
+        mDialog.dismiss();
+
+        addButtonResult(ret, which);
+        addListResult(ret, which);
+        addInputValues(ret);
+
         finishDialog(ret);
     }
 
@@ -421,6 +433,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         for (int i = 0; i < mInputs.length; i++) {
             try {
                 mInputs[i] = PromptInput.getInput(inputs.getJSONObject(i));
+                mInputs[i].setListener(this);
             } catch(Exception ex) { }
         }
 
@@ -435,6 +448,14 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
 
         show(title, text, menuitems, choiceMode);
+    }
+
+    // Called when the prompt inputs on the dialog change
+    public void onChange(PromptInput input) {
+        // If there are no buttons on this dialog, assuming that "changing" an input
+        // means something was selected and we can close. This provides a way to tap
+        // on a list item and close the dialog automatically.
+        closeIfNoButtons(-1);
     }
 
     private static JSONArray getSafeArray(JSONObject json, String key) {
