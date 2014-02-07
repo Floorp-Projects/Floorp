@@ -340,7 +340,7 @@ MP4Reader::Decode(TrackType aTrack)
            (data.mNumSamplesInput - data.mNumSamplesOutput) < data.mDecodeAhead)) {
       data.mMonitor.AssertCurrentThreadOwns();
       data.mMonitor.Unlock();
-      nsAutoPtr<MP4Sample> compressed = PopSample(aTrack);
+      nsAutoPtr<MP4Sample> compressed(PopSample(aTrack));
       if (!compressed) {
         // EOS, or error. Let the state machine know there are no more
         // frames coming.

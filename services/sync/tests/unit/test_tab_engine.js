@@ -16,9 +16,6 @@ function fakeSessionSvc() {
       }],
       attributes: {
         image: "image"
-      },
-      extData: {
-        weaveLastUsed: 1
       }
     });
   }

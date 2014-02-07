@@ -63,6 +63,8 @@ function AuthenticationError(message) {
 }
 
 this.BrowserIDManager = function BrowserIDManager() {
+  // NOTE: _fxaService and _tokenServerClient are replaced with mocks by
+  // the test suite.
   this._fxaService = fxAccounts;
   this._tokenServerClient = new TokenServerClient();
   // will be a promise that resolves when we are ready to authenticate
@@ -112,7 +114,7 @@ this.BrowserIDManager.prototype = {
     this.whenReadyToAuthenticate = Promise.defer();
     this._shouldHaveSyncKeyBundle = false;
 
-    return fxAccounts.getSignedInUser().then(accountData => {
+    return this._fxaService.getSignedInUser().then(accountData => {
       if (!accountData) {
         this._log.info("initializeWithCurrentIdentity has no user logged in");
         this._account = null;
@@ -124,7 +126,7 @@ this.BrowserIDManager.prototype = {
       // this and the rest of initialization off in the background (ie, we
       // don't return the promise)
       this._log.info("Waiting for user to be verified.");
-      fxAccounts.whenVerified(accountData).then(accountData => {
+      this._fxaService.whenVerified(accountData).then(accountData => {
         // We do the background keybundle fetch...
         this._log.info("Starting fetch for key bundle.");
         if (this.needsCustomization) {
@@ -141,7 +143,7 @@ this.BrowserIDManager.prototype = {
             Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
           } else {
             // Log out if the user canceled the dialog.
-            return fxAccounts.signOut();
+            return this._fxaService.signOut();
           }
         }
       }).then(() => {
@@ -411,6 +413,7 @@ this.BrowserIDManager.prototype = {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
     let log = this._log;
     let client = this._tokenServerClient;
+    let fxa = this._fxaService;
 
     // Both Jelly and FxAccounts give us kB as hex
     let kBbytes = CommonUtils.hexToBytes(userData.kB);
@@ -437,7 +440,7 @@ this.BrowserIDManager.prototype = {
     function getAssertion() {
       log.debug("Getting an assertion");
       let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
-      return fxAccounts.getAssertion(audience).then(null, err => {
+      return fxa.getAssertion(audience).then(null, err => {
         if (err.code === 401) {
           throw new AuthenticationError("Unable to get assertion for user");
         } else {
@@ -448,7 +451,7 @@ this.BrowserIDManager.prototype = {
 
     // wait until the account email is verified and we know that
     // getAssertion() will return a real assertion (not null).
-    return this._fxaService.whenVerified(userData)
+    return fxa.whenVerified(userData)
       .then(() => getAssertion())
       .then(assertion => getToken(tokenServerURI, assertion))
       .then(token => {
@@ -561,8 +564,9 @@ BrowserIDClusterManager.prototype = {
   __proto__: ClusterManager.prototype,
 
   _findCluster: function() {
+    let fxa = this.identity._fxaService; // will be mocked for tests.
     let promiseClusterURL = function() {
-      return fxAccounts.getSignedInUser().then(userData => {
+      return fxa.getSignedInUser().then(userData => {
         return this.identity._fetchTokenForUser(userData).then(token => {
           let endpoint = token.endpoint;
           // For Sync 1.5 storage endpoints, we use the base endpoint verbatim.
